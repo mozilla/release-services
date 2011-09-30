@@ -34,10 +34,11 @@ def guess_aside_file(filename):
     at the filename"""
     rv = systempath.isfile(filename) and filename.endswith('.aside')
     log.debug('%s %s an aside file' % (filename, 'is' if rv else 'is NOT'))
+    return rv
 
 def find_aside_files(locations, recurse=False):
     """I find all .aside files at locations.  If a location
-    is already a .aside file, I include it verbatim.  If I
+    is already an .aside file, I include it verbatim.  If I
     am told do, I will recurse directories passed as locations"""
     aside_files = []
     for location in locations:
@@ -48,24 +49,29 @@ def find_aside_files(locations, recurse=False):
             for root,dirs,files in os.walk(location):
                 for f in files:
                     if guess_aside_file(systempath.join(root,f)):
+                        log.debug('adding %s to the list of aside_files' % systempath.join(root,f))
                         aside_files.append(validate_aside_file(systempath.join(root,f)))
                 if not recurse:
                     break
     # TODO: remove duplicates in this list
+    log.debug('found these aside files %s' % pretty_files(aside_files))
     return aside_files
 
 
+def get_all(locations, recurse=False):
+    aside_files = find_aside_files(cmd_args, recurse=recurse)
+    log.info('Fetching all files in:')
+    for aside_file in aside_files:
+        log.info('  -%s' % aside_file.split()[0])
 
 def process_command(args, recurse=False):
     cmd = args[0]
     cmd_args = args[1:]
     log.debug('using command %s' % cmd)
-    if cmd == 'retreive':
-        log.debug('validating aside files %s' % pretty_files(cmd_args))
-        aside_files = find_aside_files(cmd_args, recurse=recurse)
+    if cmd == 'get-all':
+        get_all(cmd_args, recurse)
     else:
         log.critical('command "%s" is not implemented' % cmd)
-
 
 
 def main():
@@ -76,6 +82,8 @@ def main():
 
     # Set up option parsing
     parser = optparse.OptionParser()
+    # I wish there was a way to say "only allow args to be
+    # sequential and at the end of the argv
     parser.add_option('-q', '--quiet', default=False,
             dest='quiet', action='store_true')
     parser.add_option('-v', '--verbose', default=False,
