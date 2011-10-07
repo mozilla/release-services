@@ -2,18 +2,23 @@
 
 # An aside file specifies files in that directory that are stored
 # elsewhere.  This file should only contain file in the directory
-# which the aside file resides in
+# which the aside file resides in and it should be called '.aside'
 
+import sys
 import os
 import os.path as systempath
 import posixpath
 import optparse
 import logging
+try:
+    import simplejson as json # I hear simplejson is faster
+except ImportError:
+    import json
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-class InvalidAsideFile(Exception): pass
+class InvalidAsideFileException(Exception): pass
 
 def pretty_files(files):
     """ I am a function that makes a list of filename strings
@@ -29,40 +34,72 @@ def validate_aside_file(aside_filename):
     log.debug('%s is a valid aside file NOOP' % aside_filename)
     return aside_filename
 
-def guess_aside_file(filename):
+def find_aside_file(location):
     """I will guess if a filename is an aside file.  I only look
     at the filename"""
-    rv = systempath.isfile(filename) and filename.endswith('.aside')
-    log.debug('%s %s an aside file' % (filename, 'is' if rv else 'is NOT'))
-    return rv
+    aside_filename = None
+    if systempath.isdir(location) and systempath.isfile(systempath.join(location, '.aside')):
+        aside_filename = systempath.join(location, '.aside')
+        log.debug('aside for %s is %s' % (location, aside_filename))
+    else:
+        log.debug('no aside present for %s' % location)
+    return aside_filename
 
 def find_aside_files(locations, recurse=False):
-    """I find all .aside files at locations.  If a location
-    is already an .aside file, I include it verbatim.  If I
-    am told do, I will recurse directories passed as locations"""
+    """I scan directories for their .aside file. If I am
+    told to recurse, I do that."""
+    # TODO: support a syntax to skip specific dirs while recursing
     aside_files = []
     for location in locations:
-        if systempath.isfile(location):
-            log.debug('checking %s' % location)
-            aside_files.append(validate_aside_file(location))
-        elif systempath.isdir(location):
+        if systempath.isdir(location):
             for root,dirs,files in os.walk(location):
-                for f in files:
-                    if guess_aside_file(systempath.join(root,f)):
-                        log.debug('adding %s to the list of aside_files' % systempath.join(root,f))
-                        aside_files.append(validate_aside_file(systempath.join(root,f)))
+                aside_filename = find_aside_file(root)
+                if aside_filename:
+                    log.debug('adding %s to the list of aside_files' % aside_filename)
+                    aside_files.append(validate_aside_file(aside_filename))
                 if not recurse:
                     break
-    # TODO: remove duplicates in this list
+        else:
+            log.critical('%s is not a directory' % location)
     log.debug('found these aside files %s' % pretty_files(aside_files))
     return aside_files
 
 
 def get_all(locations, recurse=False):
-    aside_files = find_aside_files(cmd_args, recurse=recurse)
-    log.info('Fetching all files in:')
+    aside_files = find_aside_files(locations, recurse=recurse)
+    log.info('Retrieving all files in:')
     for aside_file in aside_files:
-        log.info('  -%s' % aside_file.split()[0])
+        log.info('  -%s' % systempath.split(aside_file)[0])
+
+def add_to_aside_file(aside_file, filename):
+    """I know how to add a file to an aside_file.
+    If the aside file doesn't exist, I know how to create it"""
+    if not systempath.isfile(aside_file):
+        pass #Create it here!
+        log.warn('if you are version tracking, you should add "%s" to your repository as it was just created' % aside_file
+    pass # Add to the file here
+    log.info("adding %s to aside files" % pretty_files(
+
+def add_files(filenames):
+    #this function is stupid
+    files_by_location = {}
+    for filename in filenames:
+        location = systempath.split(filename)[0]
+        aside_file = find_aside_file(location)
+        if files_by_location.has_key(location):
+            record = files_by_location[location]
+            assert files_by_location[location]['aside_file'] == aside_file
+        else:
+            record = {}
+            files_by_location[location] = record
+        record['aside_file'] = aside_file
+        if record.has_key('filenames'):
+            record['filenames'].append(filename)
+        else:
+            record['filenames'] = [filename]
+
+    #NEED TO DO THIS SOMEWHERE if not systempath.isfile(aside_file):
+            #log.warn('this command will create %s. you should add it to your repository')
 
 def process_command(args, recurse=False):
     cmd = args[0]
@@ -70,6 +107,8 @@ def process_command(args, recurse=False):
     log.debug('using command %s' % cmd)
     if cmd == 'get-all':
         get_all(cmd_args, recurse)
+    elif cmd == 'add-file':
+        add_files(cmd_args, recurse)
     else:
         log.critical('command "%s" is not implemented' % cmd)
 
@@ -83,7 +122,8 @@ def main():
     # Set up option parsing
     parser = optparse.OptionParser()
     # I wish there was a way to say "only allow args to be
-    # sequential and at the end of the argv
+    # sequential and at the end of the argv.
+    # OH! i could step through sys.argv and check for things starting without -/-- before things starting with them
     parser.add_option('-q', '--quiet', default=False,
             dest='quiet', action='store_true')
     parser.add_option('-v', '--verbose', default=False,
@@ -107,7 +147,17 @@ def main():
         ch.setLevel(logging.WARN)
     log.addHandler(ch)
 
-    log.debug('processing files at "%s"' % '", "'.join(args))
+    # Doing this because I want all options before all arguments
+    yet_seen_arg = False
+    for i in sys.argv[1:]:
+        if i.startswith('-') and yet_seen_arg:
+            log.critical("arguments should occur before options")
+            exit(1)
+        if not i.startswith('-'):
+            yet_seen_arg = True
+
+
+    log.debug('processing command "%s"' % '", "'.join(args))
     if len(args) < 1:
         log.critical('You must specify a command')
         exit(1)
