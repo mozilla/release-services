@@ -10,6 +10,7 @@ import os.path as systempath
 import posixpath
 import optparse
 import logging
+import hashlib
 try:
     import simplejson as json # I hear simplejson is faster
 except ImportError:
@@ -19,6 +20,65 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 class InvalidAsideFileException(Exception): pass
+class ExceptionWithFilename(Exception):
+    def __init__(self, filename):
+        Exception.__init__(self)
+        self.filename = filename
+
+class DigestMismatchException(ExceptionWithFilename): pass
+class MissingFileException(ExceptionWithFilename): pass
+
+class FileRecord(object):
+    def __init__(self, filename, size, digest, algorithm):
+        object.__init__(self)
+        self.filename = filename
+        self.size = size
+        self.digest = digest
+        self.algorithm = algorithm
+        log.debug("creating AsideRecord %d", id(self))
+
+    def present(self):
+        # Doesn't check validity
+        return os.path.exists(self.filename)
+
+    def validate_size(self):
+        if self.present():
+            return self.size == os.path.getsize(self.filename)
+        else:
+            log.debug("trying to validate size on a missing file, %s", self.filename)
+            raise MissingFileException(filename=self.filename)
+
+    def validate_digest(self):
+        if self.present():
+            with open(self.filename) as f:
+                return self.digest == hash_file(f, self.algorithm)
+        else:
+            log.debug("trying to validate digest on a missing file, %s', self.filename")
+            raise MissingFileException(filename=self.filename)
+
+    def validate(self):
+        if self.validate_size():
+            if self.validate_digest():
+                return True
+        return False
+
+
+def hash_file(f,a):
+    """I take a file like object 'f' and return a hex-string containing
+    of the result of the algorithm 'a' applied to 'f'."""
+    h = hashlib.new(a)
+    chunk_size = 1024*10
+    data = f.read(chunk_size)
+    while data:
+        h.update(data)
+        data = f.read(chunk_size)
+    if hasattr(f, 'name'):
+        log.debug('hashed %s with %s to be %s', f.name, a, h.hexdigest())
+    else:
+        log.debug('hashed a file with %s to be %s', a, h.hexdigest())
+    return h.hexdigest()
+
+
 
 def pretty_files(files):
     """ I convert a list of filenames into something that
@@ -78,9 +138,9 @@ def add_to_aside_file(aside_file, filename):
     know how to add that file to a version control system."""
     if not systempath.isfile(aside_file):
         pass #Create it here!
-        log.warn('if you are version tracking, you should add "%s" to your repository as it was just created' % aside_file
-    pass # Add to the file here
-    log.info("adding %s to aside files" % pretty_files(
+        log.warn('if you are version tracking, you should add "%s" to your repository as it was just created' % aside_file)
+    # Add to the file here
+    log.info("adding %s to aside files") # BROKEN HERE
 
 def add_files(filenames):
     #this function is stupid
@@ -170,4 +230,4 @@ def main():
 if __name__ == "__main__":
     main()
 else:
-    log.setHandler(logging.NullHandler())
+    log.addHandler(logging.NullHandler())
