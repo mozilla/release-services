@@ -21,9 +21,8 @@ log.setLevel(logging.DEBUG)
 class InvalidAsideFileException(Exception): pass
 
 def pretty_files(files):
-    """ I am a function that makes a list of filename strings
-    into a string that surrounds each filename in a quote and
-    inserts a comma between filenames"""
+    """ I convert a list of filenames into something that
+    is easier to print out for human consumption"""
     return '"%s"' % '", "'.join(files)
 
 def validate_aside_file(aside_filename):
@@ -66,14 +65,17 @@ def find_aside_files(locations, recurse=False):
 
 
 def get_all(locations, recurse=False):
+    """I know how to retreive all files specified by
+    a lookaside cache"""
     aside_files = find_aside_files(locations, recurse=recurse)
     log.info('Retrieving all files in:')
     for aside_file in aside_files:
         log.info('  -%s' % systempath.split(aside_file)[0])
 
 def add_to_aside_file(aside_file, filename):
-    """I know how to add a file to an aside_file.
-    If the aside file doesn't exist, I know how to create it"""
+    """I know how to add a file to an aside_file. If the aside
+    file doesn't exist, I know how to create it, but I don't
+    know how to add that file to a version control system."""
     if not systempath.isfile(aside_file):
         pass #Create it here!
         log.warn('if you are version tracking, you should add "%s" to your repository as it was just created' % aside_file
@@ -102,6 +104,8 @@ def add_files(filenames):
             #log.warn('this command will create %s. you should add it to your repository')
 
 def process_command(args, recurse=False):
+    """ I know how to take a list of program arguments and
+    start doing the right thing with them"""
     cmd = args[0]
     cmd_args = args[1:]
     log.debug('using command %s' % cmd)
