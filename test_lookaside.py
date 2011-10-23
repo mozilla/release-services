@@ -21,11 +21,11 @@ class DigestTests(unittest.TestCase):
     def setUp(self):
         self.sample_data = open('test_file.ogg')
         self.sample_algo = 'sha1'
-        self.sample_hash = 'de3e3bbffd83c328ad7d9537ad2d03f68fc02e52'
+        self.sample_digest = 'de3e3bbffd83c328ad7d9537ad2d03f68fc02e52'
 
-    def test_hash_file(self):
-        test_hash = lookaside.hash_file(self.sample_data, self.sample_algo)
-        self.assertEqual(test_hash, self.sample_hash)
+    def test_digest_file(self):
+        test_digest = lookaside.digest_file(self.sample_data, self.sample_algo)
+        self.assertEqual(test_digest, self.sample_digest)
 
 #Ugh, I've managed to have a few different test naming schemes already :(
 #TODO: clean this up!
@@ -36,7 +36,7 @@ class BaseFileRecordTest(unittest.TestCase):
         self.sample_algo = 'sha1'
         self.sample_size = os.path.getsize(self.sample_file)
         with open(self.sample_file) as f:
-            self.sample_hash = lookaside.hash_file(f, self.sample_algo)
+            self.sample_hash = lookaside.digest_file(f, self.sample_algo)
         self.test_record = lookaside.FileRecord(
                 filename=self.sample_file,
                 size=self.sample_size,

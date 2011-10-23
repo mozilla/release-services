@@ -74,7 +74,7 @@ class FileRecord(object):
     def validate_digest(self):
         if self.present():
             with open(self.filename) as f:
-                return self.digest == hash_file(f, self.algorithm)
+                return self.digest == digest_file(f, self.algorithm)
         else:
             log.debug("trying to validate digest on a missing file, %s', self.filename")
             raise MissingFileException(filename=self.filename)
@@ -211,7 +211,7 @@ class AsideFile(object):
             return json.dumps(self.file_records, cls=FileRecordJSONEncoder)
 
 
-def hash_file(f,a):
+def digest_file(f,a):
     """I take a file like object 'f' and return a hex-string containing
     of the result of the algorithm 'a' applied to 'f'."""
     h = hashlib.new(a)
