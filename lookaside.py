@@ -30,12 +30,29 @@ class MissingFileException(ExceptionWithFilename): pass
 
 class FileRecord(object):
     def __init__(self, filename, size, digest, algorithm):
+        #TODO: Add the ability to create a FileRecord that generates
+        # the size and digest based on filesystem contents
         object.__init__(self)
         self.filename = filename
         self.size = size
         self.digest = digest
         self.algorithm = algorithm
         log.debug("creating AsideRecord %d", id(self))
+
+    def __eq__(self, other):
+        if self is other:
+            return True
+        if self.filename == other.filename:
+            if self.size == other.size:
+                if self.digest == other.digest:
+                    if self.algorithm == other.algorithm:
+                        return True
+        return False
+
+    def __str__(self):
+        return "%s@0x%x: filename: %s, size: %s, digest: %s, algorithm: %s" % \
+                (self.__class__.__name__, id(self), self.filename, self.size,
+                 self.digest, self.algorithm)
 
     def present(self):
         # Doesn't check validity
@@ -66,7 +83,7 @@ class FileRecordJSONEncoder(json.JSONEncoder):
     def encode_file_record(self, obj):
         if not issubclass(type(obj), FileRecord):
             err="FileRecordJSONEncoder is only for FileRecord and lists of FileRecords, not %s" % obj.__class__.__name__
-            log.error(err)
+            log.warn(err)
             raise FileRecordJSONEncoderException(err)
         else:
             return {'filename': obj.filename, 'size': obj.size, 'algorithm': obj.algorithm, 'digest': obj.digest}
@@ -79,21 +96,6 @@ class FileRecordJSONEncoder(json.JSONEncoder):
             return record_list
         else:
             return self.encode_file_record(f)
-
-
-class AsideFile(object):
-    def __init__(self, file_records=[]):
-        self.file_records = []
-        for record in file_records:
-            self.file_records.append(record)
-
-
-
-def read_aside_file(jsonfile):
-    return json.load(jsonfile, cls=FileRecordJSONDecoder)
-
-def write_aside_file(jsonfile, records):
-    return json.dump(records, jsonfile, cls=FileRecordJSONEncoder)
 
 
 class FileRecordJSONDecoder(json.JSONDecoder):
@@ -117,7 +119,7 @@ class FileRecordJSONDecoder(json.JSONDecoder):
            obj.has_key('algorithm') and \
            obj.has_key('digest'):
             rv = FileRecord(obj['filename'], obj['size'], obj['digest'], obj['algorithm'])
-            log.debug("materialized a FileRecord for %s" % rv)
+            log.debug("materialized %s" % rv)
             return rv
         return obj
 
@@ -125,6 +127,75 @@ class FileRecordJSONDecoder(json.JSONDecoder):
         decoded = json.JSONDecoder.decode(self, s)
         rv = self.process_file_records(decoded)
         return rv
+
+
+class AsideFile(object):
+
+    valid_formats = ('json',)
+
+    def __init__(self, file_records=[]):
+        self.file_records = file_records
+
+    def __eq__(self, other):
+        if self is other:
+            return True
+        if len(self.file_records) != len(other.file_records):
+            log.debug('AsideFiles differ in number of files')
+            return False
+        #TODO: Lists in a different order should be equal
+        for record in range(0,len(self.file_records)):
+            if self.file_records[record] != other.file_records[record]:
+                log.debug('FileRecords differ, %s vs %s' % (self.file_records[record],
+                                                            other.file_records[record]))
+                return False
+        return True
+
+    def copy(self):
+        return AsideFile(self.file_records[:])
+
+    def present(self):
+        for i in self.file_records:
+            if not i.present():
+                return False
+        return True
+
+    def validate_sizes(self):
+        for i in self.file_records:
+            if not i.validate_size():
+                return False
+        return True
+
+    def validate_digests(self):
+        for i in self.file_records:
+            if not i.validate_digest():
+                return False
+        return True
+
+    def validate(self):
+        for i in self.file_records:
+            if not i.validate():
+                return False
+        return True
+
+    def load(self, data_file, fmt='json'):
+        assert fmt in self.valid_formats
+        if fmt == 'json':
+            self.file_records.extend(json.load(data_file, cls=FileRecordJSONDecoder))
+
+    def loads(self, data_string, fmt='json'):
+        assert fmt in self.valid_formats
+        if fmt == 'json':
+            self.file_records.extend(json.loads(data_string, cls=FileRecordJSONDecoder))
+
+    def dump(self, output_file, fmt='json'):
+        assert fmt in self.valid_formats
+        if fmt == 'json':
+            json.dump(self.file_records, output_file, cls=FileRecordJSONEncoder)
+
+    def dumps(self, output_file, fmt='json'):
+        assert fmt in self.valid_formats
+        if fmt == 'json':
+            json.dumps(self.file_records, output_file, cls=FileRecordJSONEncoder)
 
 
 def hash_file(f,a):

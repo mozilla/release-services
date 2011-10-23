@@ -1,4 +1,5 @@
 check:
+	clear
 	python test_lookaside.py
 
 check-%:
