@@ -119,6 +119,7 @@ class TestFileRecord(BaseFileRecordTest):
             test_record2 = copy.deepcopy(self.test_record)
             test_record2.__dict__[i] = 'wrong!'
             self.assertNotEqual(self.test_record, test_record2)
+
     def test_repr(self):
         a = eval(repr(self.test_record))
         self.assertEqual(str(a), str(self.test_record))
@@ -240,6 +241,69 @@ class TestAsideFile(BaseFileRecordTest):
         new_aside = lookaside.AsideFile()
         new_aside.loads(s, fmt='json')
         self.assertEqual(new_aside, self.test_aside)
+
+class TestAsideFileOperations(BaseFileRecordTest):
+    def setUp(self):
+        BaseFileRecordTest.setUp(self)
+        self.sample_aside = lookaside.AsideFile([self.test_record])
+        self.sample_aside_file = '.testaside'
+        self.test_dir = 'test-dir'
+        self.startingwd = os.getcwd()
+        if os.path.exists(self.test_dir):
+            shutil.rmtree(self.test_dir)
+        os.mkdir(self.test_dir)
+        with open(os.path.join(self.test_dir, self.sample_aside_file), 'w') as tmpfile:
+            self.sample_aside.dump(tmpfile, fmt='json')
+
+    def tearDown(self):
+        os.chdir(self.startingwd)
+        shutil.rmtree(self.test_dir)
+
+    def create_test_dirs(self, root, dirnames):
+        """In root, create and pupulate dirs named dirnames.
+        I blow away and recreate the root.  I return the list
+        of aside files copied"""
+        if os.path.exists(root): shutil.rmtree(root)
+        os.mkdir(root)
+        rv = []
+        for (loc, copyfiles) in dirnames:
+            copydir = os.path.join(root, loc)
+            os.mkdir(copydir)
+            if copyfiles:
+                shutil.copy(self.sample_aside_file, copydir)
+                shutil.copy(self.sample_aside.file_records[0].filename, copydir)
+                rv.append(os.path.join(copydir, self.sample_aside_file))
+        return rv
+
+
+
+
+    def test_sample_aside(self):
+        self.assertTrue(self.sample_aside.validate())
+
+    def test_find_single_aside(self):
+        f=lookaside.find_aside_files([self.test_dir], aside_filename=self.sample_aside_file)
+        expected = os.path.join(self.test_dir, self.sample_aside_file)
+        self.assertEqual(f, [expected])
+
+    def test_find_aside_recursively(self):
+        expected = self.create_test_dirs(self.test_dir, [('a', True), ('b', True)])
+        f=lookaside.find_aside_files(
+                [self.test_dir],
+                aside_filename=self.sample_aside_file,
+                recurse=True)
+        self.assertEqual(f, expected)
+
+    def test_find_aside_missing(self):
+        expected = self.create_test_dirs(self.test_dir,
+                [('a', True), ('b', False), (os.path.join('b','c'), True)])
+        f=lookaside.find_aside_files(
+                [self.test_dir],
+                aside_filename=self.sample_aside_file,
+                recurse=True)
+        self.assertEqual(f, expected)
+
+
 
 
 log = logging.getLogger(lookaside.__name__)

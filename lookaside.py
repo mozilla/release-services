@@ -226,9 +226,7 @@ def digest_file(f,a):
         log.debug('hashed a file with %s to be %s', a, h.hexdigest())
     return h.hexdigest()
 
-
-
-def find_aside_files(locations, recurse=False):
+def find_aside_files(locations, aside_filename='.aside', recurse=False):
     """I scan directories for their .aside file. If I am
     told to recurse, I do that."""
     # TODO: support a syntax to skip specific dirs while recursing
@@ -236,19 +234,17 @@ def find_aside_files(locations, recurse=False):
     for location in locations:
         if systempath.isdir(location):
             for root,dirs,files in os.walk(location):
-                aside_filename = find_aside_file(root)
-                if aside_filename:
+                if os.path.exists(os.path.join(root, aside_filename)):
                     log.debug('adding %s to the list of aside_files' % aside_filename)
-                    aside_files.append(validate_aside_file(aside_filename))
+                    aside_files.append(os.path.join(root,aside_filename))
                 if not recurse:
                     break
         else:
             log.critical('%s is not a directory' % location)
-    log.debug('found these aside files %s' % pretty_files(aside_files))
     return aside_files
 
 
-def get_all(locations, recurse=False):
+def list_allfiles(locations, recurse=False):
     """I know how to retreive all files specified by
     a lookaside cache"""
     aside_files = find_aside_files(locations, recurse=recurse)
