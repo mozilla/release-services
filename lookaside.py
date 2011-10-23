@@ -49,6 +49,9 @@ class FileRecord(object):
                         return True
         return False
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __str__(self):
         return "%s@0x%x: filename: %s, size: %s, digest: %s, algorithm: %s" % \
                 (self.__class__.__name__, id(self), self.filename, self.size,
@@ -150,6 +153,13 @@ class AsideFile(object):
                 return False
         return True
 
+    def __deepcopy__(self, memo):
+        # This is required for a deep copy
+        return AsideFile(self.file_records[:])
+
+    def __copy__(self):
+        return AsideFile(self.file_records)
+
     def copy(self):
         return AsideFile(self.file_records[:])
 
@@ -190,12 +200,12 @@ class AsideFile(object):
     def dump(self, output_file, fmt='json'):
         assert fmt in self.valid_formats
         if fmt == 'json':
-            json.dump(self.file_records, output_file, cls=FileRecordJSONEncoder)
+            return json.dump(self.file_records, output_file, cls=FileRecordJSONEncoder)
 
-    def dumps(self, output_file, fmt='json'):
+    def dumps(self, fmt='json'):
         assert fmt in self.valid_formats
         if fmt == 'json':
-            json.dumps(self.file_records, output_file, cls=FileRecordJSONEncoder)
+            return json.dumps(self.file_records, cls=FileRecordJSONEncoder)
 
 
 def hash_file(f,a):

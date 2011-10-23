@@ -117,7 +117,7 @@ class TestFileRecord(BaseFileRecordTest):
     def test_inequality(self):
         for i in ['filename', 'size', 'algorithm', 'digest']:
             test_record2 = copy.deepcopy(self.test_record)
-            test_record2.i = 'wrong!' # this works, shockingly
+            test_record2.__dict__[i] = 'wrong!'
             self.assertNotEqual(self.test_record, test_record2)
 
 class TestFileRecordJSONCodecs(BaseFileRecordListTest):
@@ -206,11 +206,18 @@ class TestAsideFile(BaseFileRecordTest):
         self.test_aside.file_records[1].digest = 'wrong'
         self.assertFalse(self.test_aside.validate_digests())
 
-    def test_equality(self):
-        one = lookaside.AsideFile([self.test_record, self.other_test_record])
-        self.assertEqual(one,one)
-        two = one.copy() #copy.deepcopy(one)
-        self.assertEqual(one,two)
+    def test_equality_same_object(self):
+        self.assertEqual(self.test_aside, self.test_aside)
+
+    def test_equality_deepcopy(self):
+        a_deepcopy = copy.deepcopy(self.test_aside)
+        self.assertEqual(self.test_aside,a_deepcopy)
+
+    def test_equality_copy_method(self):
+        a_copy = self.test_aside.copy()
+        self.assertEqual(self.test_aside,a_copy)
+
+    def test_equality_unrelated(self):
         one = lookaside.AsideFile([self.test_record, self.other_test_record])
         two = lookaside.AsideFile([self.test_record, self.other_test_record])
         self.assertEqual(one,two)
@@ -221,10 +228,13 @@ class TestAsideFile(BaseFileRecordTest):
         tmpaside.seek(0)
         new_aside = lookaside.AsideFile()
         new_aside.load(tmpaside, fmt='json')
-        for record in range(0,len(self.test_aside.file_records)):
-            self.assertEqual(new_aside.file_records[record], self.test_aside.file_records[record])
+        self.assertEqual(new_aside, self.test_aside)
 
-
+    def test_json_file(self):
+        s = self.test_aside.dumps(fmt='json')
+        new_aside = lookaside.AsideFile()
+        new_aside.loads(s, fmt='json')
+        self.assertEqual(new_aside, self.test_aside)
 
 
 log = logging.getLogger(lookaside.__name__)
