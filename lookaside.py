@@ -62,16 +62,46 @@ class FileRecord(object):
                 return True
         return False
 
-# http://blog.quaternio.net/2009/07/16/json-encoding-and-decoding-with-custom-objects-in-python/
 class FileRecordJSONEncoder(json.JSONEncoder):
-    def default(self, f):
-        if not issubclass(type(f), FileRecord):
-            log.error("FileRecordJSONEncoder is only for FileRecord, not %s", f.__class__.__name__)
-            raise FileRecordJSONEncoderException()
+    def encode_file_record(self, obj):
+        if not issubclass(type(obj), FileRecord):
+            err="FileRecordJSONEncoder is only for FileRecord and lists of FileRecords, not %s" % obj.__class__.__name__
+            log.error(err)
+            raise FileRecordJSONEncoderException(err)
         else:
-            return {'filename': f.filename, 'size': f.size, 'algorithm': f.algorithm, 'digest': f.digest}
+            return {'filename': obj.filename, 'size': obj.size, 'algorithm': obj.algorithm, 'digest': obj.digest}
+
+    def default(self, f):
+        if issubclass(type(f), list):
+            record_list = []
+            for i in f:
+                record_list.append(self.encode_file_record(i))
+            return record_list
+        else:
+            return self.encode_file_record(f)
+
+
+class AsideFile(object):
+    def __init__(self, file_records=[]):
+        self.file_records = []
+        for record in file_records:
+            self.file_records.append(record)
+
+
+
+def read_aside_file(jsonfile):
+    return json.load(jsonfile, cls=FileRecordJSONDecoder)
+
+def write_aside_file(jsonfile, records):
+    return json.dump(records, jsonfile, cls=FileRecordJSONEncoder)
+
 
 class FileRecordJSONDecoder(json.JSONDecoder):
+    """I help the json module materialize a FileRecord from
+    a JSON file.  I understand FileRecords and lists of
+    FileRecords.  I ignore things that I don't expect for now"""
+    # TODO: make this more explicit in what it's looking for
+    # and error out on unexpected things
     def process_file_records(self, obj):
         if isinstance(obj, list):
             record_list = []
@@ -97,13 +127,6 @@ class FileRecordJSONDecoder(json.JSONDecoder):
         return rv
 
 
-
-def read_aside_file(jsonfile):
-    record_list = json.load(jsonfile, cls=FileRecordJSONDecoder)
-
-def write_aside_file(jsonfile):
-    record_list = json.dump(jsonfile, cls=FileRecordJSONEncoder)
-
 def hash_file(f,a):
     """I take a file like object 'f' and return a hex-string containing
     of the result of the algorithm 'a' applied to 'f'."""
@@ -120,30 +143,6 @@ def hash_file(f,a):
     return h.hexdigest()
 
 
-
-def pretty_files(files):
-    """ I convert a list of filenames into something that
-    is easier to print out for human consumption"""
-    return '"%s"' % '", "'.join(files)
-
-def validate_aside_file(aside_filename):
-    """Once implemented, I will take a filename and validate
-    it as an aside file.  For now, I do nothing.  I return the
-    filename that I am given and raise an exception if it's
-    invalid.  I only work with file content"""
-    log.debug('%s is a valid aside file NOOP' % aside_filename)
-    return aside_filename
-
-def find_aside_file(location):
-    """I will guess if a filename is an aside file.  I only look
-    at the filename"""
-    aside_filename = None
-    if systempath.isdir(location) and systempath.isfile(systempath.join(location, '.aside')):
-        aside_filename = systempath.join(location, '.aside')
-        log.debug('aside for %s is %s' % (location, aside_filename))
-    else:
-        log.debug('no aside present for %s' % location)
-    return aside_filename
 
 def find_aside_files(locations, recurse=False):
     """I scan directories for their .aside file. If I am

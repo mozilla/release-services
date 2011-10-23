@@ -1,5 +1,8 @@
 check:
-	clear
 	python test_lookaside.py
 
-.PHONY: check
+check-%:
+	clear
+	python test_lookaside.py $*
+
+.PHONY: check-% check-all

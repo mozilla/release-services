@@ -85,6 +85,16 @@ class TestFileRecordJSONEncoder(BaseFileRecordTest):
         for i in ['filename', 'size', 'algorithm', 'digest']:
             self.assertEqual(dict_from_encoder[i], self.test_record.__dict__[i])
 
+    def test_default_list(self):
+        record_list = []
+        for i in range(0,4):
+            record = copy.deepcopy(self.test_record)
+            record.filename = i
+            record_list.append(record)
+        encoder = lookaside.FileRecordJSONEncoder()
+        list_from_encoder = encoder.default(record_list)
+        
+
     def test_unrelated_class(self):
         encoder = lookaside.FileRecordJSONEncoder()
         class Junk: pass
@@ -122,6 +132,20 @@ class FileRecordJSONDecoder(BaseFileRecordTest):
                 self.assertEqual(getattr(record_list[record],i),
                                  getattr(new_list[record],i))
 
+    def test_read_write_aside_file(self):
+        record_list = []
+        for i in range(0,4):
+            record = copy.deepcopy(self.test_record)
+            record.filename = i
+            record_list.append(record)
+        tmpaside = tempfile.TemporaryFile()
+        lookaside.write_aside_file(tmpaside, record_list)
+        tmpaside.seek(0)
+        new_list = lookaside.read_aside_file(tmpaside)
+        for record in range(0,len(record_list)):
+            for i in ['filename', 'size', 'algorithm', 'digest']:
+                self.assertEqual(getattr(record_list[record],i),
+                                 getattr(new_list[record],i))
 
 
 
