@@ -278,25 +278,19 @@ def list_tracked_files(locations, aside_filename='.aside', recurse=False):
             log.info("%s is %s and %s" % (name, present, valid))
 
 def add_files(filenames):
-    #this function is stupid
-    files_by_location = {}
+    #this function's logic on how to create these things
+    #should be moved to FileRecord/AsideFile
     for filename in filenames:
-        location = systempath.split(filename)[0]
-        aside_file = find_aside_file(location)
-        if files_by_location.has_key(location):
-            record = files_by_location[location]
-            assert files_by_location[location]['aside_file'] == aside_file
-        else:
-            record = {}
-            files_by_location[location] = record
-        record['aside_file'] = aside_file
-        if record.has_key('filenames'):
-            record['filenames'].append(filename)
-        else:
-            record['filenames'] = [filename]
-
-    #NEED TO DO THIS SOMEWHERE if not systempath.isfile(aside_file):
-            #log.warn('this command will create %s. you should add it to your repository')
+        path,name = os.path.split(filename)
+        aside_name = os.path.join(path, '.aside')
+        if os.path.exists(aside_name):
+            aside_file = AsideFile()
+            with open(aside_name) as f, open(name) as data:
+                aside_file.load(f)
+                new_digest = digest_file(data)
+                for record in aside_file.file_records:
+                    if new_digest == record.digest:
+                        log.info("Already tracked")
 
 def process_command(args, recurse=False):
     """ I know how to take a list of program arguments and
@@ -306,6 +300,8 @@ def process_command(args, recurse=False):
     log.debug('using command %s' % cmd)
     if cmd == 'list':
         list_tracked_files(cmd_args, recurse=recurse)
+    elif cmd == 'add':
+        list_tracked_files(cmd_args)
     else:
         log.critical('command "%s" is not implemented' % cmd)
 

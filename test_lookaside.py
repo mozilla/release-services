@@ -324,7 +324,7 @@ class TestAsideFileOperations(BaseFileRecordTest):
 
 
 log = logging.getLogger(lookaside.__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.ERROR)
 log.addHandler(logging.StreamHandler())
 
 unittest.main()
