@@ -19,7 +19,7 @@ except ImportError:
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-class InvalidAsideFileException(Exception): pass
+class FileRecordJSONEncoderException(Exception): pass
 class ExceptionWithFilename(Exception):
     def __init__(self, filename):
         Exception.__init__(self)
@@ -62,6 +62,47 @@ class FileRecord(object):
                 return True
         return False
 
+# http://blog.quaternio.net/2009/07/16/json-encoding-and-decoding-with-custom-objects-in-python/
+class FileRecordJSONEncoder(json.JSONEncoder):
+    def default(self, f):
+        if not issubclass(type(f), FileRecord):
+            log.error("FileRecordJSONEncoder is only for FileRecord, not %s", f.__class__.__name__)
+            raise FileRecordJSONEncoderException()
+        else:
+            return {'filename': f.filename, 'size': f.size, 'algorithm': f.algorithm, 'digest': f.digest}
+
+class FileRecordJSONDecoder(json.JSONDecoder):
+    def process_file_records(self, obj):
+        if isinstance(obj, list):
+            record_list = []
+            for i in obj:
+                record = self.process_file_records(i)
+                if issubclass(type(record), FileRecord):
+                    record_list.append(record)
+            return record_list
+        if isinstance(obj, dict) and \
+           len(obj.keys()) == 4 and \
+           obj.has_key('filename') and \
+           obj.has_key('size') and \
+           obj.has_key('algorithm') and \
+           obj.has_key('digest'):
+            rv = FileRecord(obj['filename'], obj['size'], obj['digest'], obj['algorithm'])
+            log.debug("materialized a FileRecord for %s" % rv)
+            return rv
+        return obj
+
+    def decode(self, s):
+        decoded = json.JSONDecoder.decode(self, s)
+        rv = self.process_file_records(decoded)
+        return rv
+
+
+
+def read_aside_file(jsonfile):
+    record_list = json.load(jsonfile, cls=FileRecordJSONDecoder)
+
+def write_aside_file(jsonfile):
+    record_list = json.dump(jsonfile, cls=FileRecordJSONEncoder)
 
 def hash_file(f,a):
     """I take a file like object 'f' and return a hex-string containing
@@ -231,3 +272,4 @@ if __name__ == "__main__":
     main()
 else:
     log.addHandler(logging.NullHandler())
+    #log.addHandler(logging.StreamHandler())
