@@ -242,6 +242,19 @@ class TestAsideFile(BaseFileRecordTest):
         new_aside.loads(s, fmt='json')
         self.assertEqual(new_aside, self.test_aside)
 
+    def test_load_empty_json_file(self):
+        empty = tempfile.TemporaryFile()
+        aside = lookaside.AsideFile()
+        self.assertRaises(lookaside.InvalidAsideFile,
+                aside.load, empty, fmt='json')
+
+    def test_load_empty_json_string(self):
+        empty = ''
+        aside = lookaside.AsideFile()
+        self.assertRaises(lookaside.InvalidAsideFile,
+                aside.loads, empty, fmt='json')
+
+
 class TestAsideFileOperations(BaseFileRecordTest):
     def setUp(self):
         BaseFileRecordTest.setUp(self)
@@ -275,9 +288,6 @@ class TestAsideFileOperations(BaseFileRecordTest):
                 rv.append(os.path.join(copydir, self.sample_aside_file))
         return rv
 
-
-
-
     def test_sample_aside(self):
         self.assertTrue(self.sample_aside.validate())
 
@@ -303,11 +313,18 @@ class TestAsideFileOperations(BaseFileRecordTest):
                 recurse=True)
         self.assertEqual(f, expected)
 
+    def test_list_tracked_files(self):
+        # This function should be more testable
+        expected = self.create_test_dirs(self.test_dir,
+                [('a', True), ('b', False), ('c', True)])
+        lookaside.list_tracked_files([self.test_dir], recurse=True,
+                                     aside_filename=self.sample_aside_file)
+
 
 
 
 log = logging.getLogger(lookaside.__name__)
-log.setLevel(logging.ERROR)
+log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 
 unittest.main()

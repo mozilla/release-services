@@ -20,6 +20,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 class FileRecordJSONEncoderException(Exception): pass
+class InvalidAsideFile(Exception): pass
 class ExceptionWithFilename(Exception):
     def __init__(self, filename):
         Exception.__init__(self)
@@ -37,7 +38,7 @@ class FileRecord(object):
         self.size = size
         self.digest = digest
         self.algorithm = algorithm
-        log.debug("creating AsideRecord %d", id(self))
+        log.debug("creating %s 0x%x" % (self.__class__.__name__, id(self)))
 
     def __eq__(self, other):
         if self is other:
@@ -193,12 +194,18 @@ class AsideFile(object):
     def load(self, data_file, fmt='json'):
         assert fmt in self.valid_formats
         if fmt == 'json':
-            self.file_records.extend(json.load(data_file, cls=FileRecordJSONDecoder))
+            try:
+                self.file_records.extend(json.load(data_file, cls=FileRecordJSONDecoder))
+            except ValueError:
+                raise InvalidAsideFile("trying to read invalid aside file")
 
     def loads(self, data_string, fmt='json'):
         assert fmt in self.valid_formats
         if fmt == 'json':
-            self.file_records.extend(json.loads(data_string, cls=FileRecordJSONDecoder))
+            try:
+                self.file_records.extend(json.loads(data_string, cls=FileRecordJSONDecoder))
+            except ValueError:
+                raise InvalidAsideFile("trying to read invalid aside file")
 
     def dump(self, output_file, fmt='json'):
         assert fmt in self.valid_formats
@@ -237,6 +244,7 @@ def find_aside_files(locations, aside_filename='.aside', recurse=False):
                 if os.path.exists(os.path.join(root, aside_filename)):
                     log.debug('adding %s to the list of aside_files' % aside_filename)
                     aside_files.append(os.path.join(root,aside_filename))
+                    log.debug('found aside file in %s' % root)
                 if not recurse:
                     break
         else:
@@ -244,23 +252,30 @@ def find_aside_files(locations, aside_filename='.aside', recurse=False):
     return aside_files
 
 
-def list_allfiles(locations, recurse=False):
-    """I know how to retreive all files specified by
-    a lookaside cache"""
-    aside_files = find_aside_files(locations, recurse=recurse)
-    log.info('Retrieving all files in:')
-    for aside_file in aside_files:
-        log.info('  -%s' % systempath.split(aside_file)[0])
-
-def add_to_aside_file(aside_file, filename):
-    """I know how to add a file to an aside_file. If the aside
-    file doesn't exist, I know how to create it, but I don't
-    know how to add that file to a version control system."""
-    if not systempath.isfile(aside_file):
-        pass #Create it here!
-        log.warn('if you are version tracking, you should add "%s" to your repository as it was just created' % aside_file)
-    # Add to the file here
-    log.info("adding %s to aside files") # BROKEN HERE
+def list_tracked_files(locations, aside_filename='.aside', recurse=False):
+    """I know how print all the files in a location"""
+    aside_files = find_aside_files(locations,
+            aside_filename=aside_filename,
+            recurse=recurse)
+    for aside_name in aside_files:
+        aside = AsideFile()
+        with open(aside_name) as a:
+            aside.load(a)
+        for f in aside.file_records:
+            name = f.filename
+            present = "present" if f.present() else "absent"
+            if f.present():
+                if f.validate():
+                    valid = "valid"
+                elif not f.validate_size():
+                    valid = "the wrong size"
+                elif not f.validate_digest():
+                    valid = "has the wrong digest"
+                else:
+                    valid = "INVALID"
+            else:
+                valid = "missing"
+            log.info("%s is %s and %s" % (name, present, valid))
 
 def add_files(filenames):
     #this function is stupid
@@ -289,10 +304,8 @@ def process_command(args, recurse=False):
     cmd = args[0]
     cmd_args = args[1:]
     log.debug('using command %s' % cmd)
-    if cmd == 'get-all':
-        get_all(cmd_args, recurse)
-    elif cmd == 'add-file':
-        add_files(cmd_args, recurse)
+    if cmd == 'list':
+        list_tracked_files(cmd_args, recurse=recurse)
     else:
         log.critical('command "%s" is not implemented' % cmd)
 
