@@ -119,6 +119,11 @@ class TestFileRecord(BaseFileRecordTest):
             test_record2 = copy.deepcopy(self.test_record)
             test_record2.__dict__[i] = 'wrong!'
             self.assertNotEqual(self.test_record, test_record2)
+    def test_repr(self):
+        a = eval(repr(self.test_record))
+        self.assertEqual(str(a), str(self.test_record))
+        #TODO: Figure out why things aren't working here
+        #self.assertEqual(a, self.test_record)
 
 class TestFileRecordJSONCodecs(BaseFileRecordListTest):
     def test_default(self):

@@ -53,9 +53,12 @@ class FileRecord(object):
         return not self.__eq__(other)
 
     def __str__(self):
-        return "%s@0x%x: filename: %s, size: %s, digest: %s, algorithm: %s" % \
-                (self.__class__.__name__, id(self), self.filename, self.size,
-                 self.digest, self.algorithm)
+        return repr(self)
+
+    def __repr__(self):
+        return "%s.%s(filename='%s', size='%s', digest='%s', algorithm='%s')" % (__name__,
+                self.__class__.__name__,
+                self.filename, self.size, self.digest, self.algorithm)
 
     def present(self):
         # Doesn't check validity
