@@ -126,6 +126,10 @@ class TestFileRecord(BaseFileRecordTest):
         #TODO: Figure out why things aren't working here
         #self.assertEqual(a, self.test_record)
 
+    def test_create_file_record(self):
+        fr = lookaside.create_file_record(self.sample_file, self.sample_algo)
+        self.assertEqual(self.test_record, fr)
+
 class TestFileRecordJSONCodecs(BaseFileRecordListTest):
     def test_default(self):
         encoder = lookaside.FileRecordJSONEncoder()
@@ -288,37 +292,6 @@ class TestAsideFileOperations(BaseFileRecordTest):
                 rv.append(os.path.join(copydir, self.sample_aside_file))
         return rv
 
-    def test_sample_aside(self):
-        self.assertTrue(self.sample_aside.validate())
-
-    def test_find_single_aside(self):
-        f=lookaside.find_aside_files([self.test_dir], aside_filename=self.sample_aside_file)
-        expected = os.path.join(self.test_dir, self.sample_aside_file)
-        self.assertEqual(f, [expected])
-
-    def test_find_aside_recursively(self):
-        expected = self.create_test_dirs(self.test_dir, [('a', True), ('b', True)])
-        f=lookaside.find_aside_files(
-                [self.test_dir],
-                aside_filename=self.sample_aside_file,
-                recurse=True)
-        self.assertEqual(f, expected)
-
-    def test_find_aside_missing(self):
-        expected = self.create_test_dirs(self.test_dir,
-                [('a', True), ('b', False), (os.path.join('b','c'), True)])
-        f=lookaside.find_aside_files(
-                [self.test_dir],
-                aside_filename=self.sample_aside_file,
-                recurse=True)
-        self.assertEqual(f, expected)
-
-    def test_list_tracked_files(self):
-        # This function should be more testable
-        expected = self.create_test_dirs(self.test_dir,
-                [('a', True), ('b', False), ('c', True)])
-        lookaside.list_tracked_files([self.test_dir], recurse=True,
-                                     aside_filename=self.sample_aside_file)
 
 
 

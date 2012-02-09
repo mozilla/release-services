@@ -2,7 +2,7 @@
 
 # An aside file specifies files in that directory that are stored
 # elsewhere.  This file should only contain file in the directory
-# which the aside file resides in and it should be called '.aside'
+# which the aside file resides in and it should be called 'manifest.aside'
 
 import sys
 import os
@@ -85,6 +85,14 @@ class FileRecord(object):
             if self.validate_digest():
                 return True
         return False
+
+
+def create_file_record(filename, algorithm):
+    fo = open(filename, 'rb')
+    fr = FileRecord(filename, os.path.getsize(filename), digest_file(fo, algorithm), algorithm)
+    fo.close()
+    return fr
+
 
 class FileRecordJSONEncoder(json.JSONEncoder):
     def encode_file_record(self, obj):
@@ -233,7 +241,7 @@ def digest_file(f,a):
         log.debug('hashed a file with %s to be %s', a, h.hexdigest())
     return h.hexdigest()
 
-def find_aside_files(locations, aside_filename='.aside', recurse=False):
+def find_aside_files(locations, aside_filename='manifest.aside', recurse=False):
     """I scan directories for their .aside file. If I am
     told to recurse, I do that."""
     # TODO: support a syntax to skip specific dirs while recursing
@@ -252,7 +260,7 @@ def find_aside_files(locations, aside_filename='.aside', recurse=False):
     return aside_files
 
 
-def list_tracked_files(locations, aside_filename='.aside', recurse=False):
+def list_tracked_files(locations, aside_filename='manifest.aside', recurse=False):
     """I know how print all the files in a location"""
     aside_files = find_aside_files(locations,
             aside_filename=aside_filename,
@@ -263,6 +271,7 @@ def list_tracked_files(locations, aside_filename='.aside', recurse=False):
             aside.load(a)
         for f in aside.file_records:
             name = f.filename
+            # TODO: show all attributes in one line
             present = "present" if f.present() else "absent"
             if f.present():
                 if f.validate():
@@ -278,19 +287,31 @@ def list_tracked_files(locations, aside_filename='.aside', recurse=False):
             log.info("%s is %s and %s" % (name, present, valid))
 
 def add_files(filenames):
-    #this function's logic on how to create these things
-    #should be moved to FileRecord/AsideFile
     for filename in filenames:
+        log.info("adding %s" % filename)
         path,name = os.path.split(filename)
-        aside_name = os.path.join(path, '.aside')
+        aside_name = os.path.join(path, 'manifest.aside')
+        aside_file = AsideFile()
         if os.path.exists(aside_name):
-            aside_file = AsideFile()
-            with open(aside_name) as f, open(name) as data:
-                aside_file.load(f)
-                new_digest = digest_file(data)
-                for record in aside_file.file_records:
-                    if new_digest == record.digest:
-                        log.info("Already tracked")
+            with open(aside_name) as f:
+                log.info("opening existing aside file")
+                aside_file.load(f, fmt='json')
+        else:
+            log.info("creating a new aside file")
+        new_fr = create_file_record(filename, 'sha1')
+        log.info("appending a new file record")
+        add = True
+        for fr in aside_file.file_records:
+            if new_fr == fr and new_fr.validate():
+                log.info("file already in aside file and matches")
+                add = False
+            elif new_fr == fr and not new_fr.validate():
+                log.error("file already in aside file but is invalid")
+                add = False
+        if add:
+            aside_file.file_records.append(new_fr)
+        with open(aside_name, 'wb') as f:
+            aside_file.dump(f, fmt='json')
 
 def process_command(args, recurse=False):
     """ I know how to take a list of program arguments and
@@ -301,7 +322,7 @@ def process_command(args, recurse=False):
     if cmd == 'list':
         list_tracked_files(cmd_args, recurse=recurse)
     elif cmd == 'add':
-        list_tracked_files(cmd_args)
+        add_files(cmd_args)
     else:
         log.critical('command "%s" is not implemented' % cmd)
 
@@ -321,8 +342,6 @@ def main():
             dest='quiet', action='store_true')
     parser.add_option('-v', '--verbose', default=False,
             dest='verbose', action='store_true')
-    parser.add_option('-d', '--debug', default=False,
-            dest='debug', action='store_true')
     parser.add_option('-r', '--recurse', default=False,
             dest='recurse', action='store_true',
             help='if specified, directories will be recursed when scanning for .aside files')
@@ -330,14 +349,12 @@ def main():
 
     # Use some of the option parser to figure out application
     # log level
-    if options.debug:
+    if options.verbose:
         ch.setLevel(logging.DEBUG)
-    elif options.verbose:
-        ch.setLevel(logging.INFO)
     elif options.quiet:
         ch.setLevel(logging.ERROR)
     else:
-        ch.setLevel(logging.WARN)
+        ch.setLevel(logging.INFO)
     log.addHandler(ch)
 
     # Doing this because I want all options before all arguments
