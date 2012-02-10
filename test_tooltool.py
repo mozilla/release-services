@@ -10,7 +10,7 @@ except ImportError: import json
 
 # We want access to the module we are testing
 sys.path.append('.')
-import lookaside
+import tooltool
 try:
     import cStringIO as StringIO
 except ImportError:
@@ -24,7 +24,7 @@ class DigestTests(unittest.TestCase):
         self.sample_digest = 'de3e3bbffd83c328ad7d9537ad2d03f68fc02e52'
 
     def test_digest_file(self):
-        test_digest = lookaside.digest_file(self.sample_data, self.sample_algo)
+        test_digest = tooltool.digest_file(self.sample_data, self.sample_algo)
         self.assertEqual(test_digest, self.sample_digest)
 
 #Ugh, I've managed to have a few different test naming schemes already :(
@@ -36,8 +36,8 @@ class BaseFileRecordTest(unittest.TestCase):
         self.sample_algo = 'sha512'
         self.sample_size = os.path.getsize(self.sample_file)
         with open(self.sample_file) as f:
-            self.sample_hash = lookaside.digest_file(f, self.sample_algo)
-        self.test_record = lookaside.FileRecord(
+            self.sample_hash = tooltool.digest_file(f, self.sample_algo)
+        self.test_record = tooltool.FileRecord(
                 filename=self.sample_file,
                 size=self.sample_size,
                 digest=self.sample_hash,
@@ -81,7 +81,7 @@ class TestFileRecord(BaseFileRecordTest):
 
     def test_size_of_missing_file(self):
         self.test_record.filename = self.absent_file
-        self.assertRaises(lookaside.MissingFileException,self.test_record.validate_size)
+        self.assertRaises(tooltool.MissingFileException,self.test_record.validate_size)
 
     def test_valid_digest(self):
         self.assertTrue(self.test_record.validate_digest())
@@ -92,7 +92,7 @@ class TestFileRecord(BaseFileRecordTest):
 
     def test_digest_of_missing_file(self):
         self.test_record.filename = self.absent_file
-        self.assertRaises(lookaside.MissingFileException,self.test_record.validate_digest)
+        self.assertRaises(tooltool.MissingFileException,self.test_record.validate_digest)
 
     def test_overall_valid(self):
         self.assertTrue(self.test_record.validate())
@@ -107,7 +107,7 @@ class TestFileRecord(BaseFileRecordTest):
 
     def test_overall_invalid_missing_file(self):
         self.test_record.filename = self.absent_file
-        self.assertRaises(lookaside.MissingFileException,self.test_record.validate)
+        self.assertRaises(tooltool.MissingFileException,self.test_record.validate)
 
     def test_equality(self):
         test_record2 = copy.deepcopy(self.test_record)
@@ -127,57 +127,57 @@ class TestFileRecord(BaseFileRecordTest):
         #self.assertEqual(a, self.test_record)
 
     def test_create_file_record(self):
-        fr = lookaside.create_file_record(self.sample_file, self.sample_algo)
+        fr = tooltool.create_file_record(self.sample_file, self.sample_algo)
         self.assertEqual(self.test_record, fr)
 
 class TestFileRecordJSONCodecs(BaseFileRecordListTest):
     def test_default(self):
-        encoder = lookaside.FileRecordJSONEncoder()
+        encoder = tooltool.FileRecordJSONEncoder()
         dict_from_encoder = encoder.default(self.test_record)
         for i in ['filename', 'size', 'algorithm', 'digest']:
             self.assertEqual(dict_from_encoder[i], self.test_record.__dict__[i])
 
     def test_default_list(self):
-        encoder = lookaside.FileRecordJSONEncoder()
+        encoder = tooltool.FileRecordJSONEncoder()
         new_list = encoder.default(self.record_list)
         for record in range(0,len(self.record_list)):
             self.assertEqual(new_list[record],
                              encoder.default(self.record_list[record]))
 
     def test_unrelated_class(self):
-        encoder = lookaside.FileRecordJSONEncoder()
+        encoder = tooltool.FileRecordJSONEncoder()
         class Junk: pass
         self.assertRaises(
-                lookaside.FileRecordJSONEncoderException,
+                tooltool.FileRecordJSONEncoderException,
                 encoder.default,
                 Junk()
         )
 
     def test_list_with_unrelated_class(self):
-        encoder = lookaside.FileRecordJSONEncoder()
+        encoder = tooltool.FileRecordJSONEncoder()
         class Junk: pass
         self.assertRaises(
-                lookaside.FileRecordJSONEncoderException,
+                tooltool.FileRecordJSONEncoderException,
                 encoder.default,
                 [self.test_record, Junk(), self.test_record],
         )
 
     def test_decode(self):
-        json_string = json.dumps(self.test_record, cls=lookaside.FileRecordJSONEncoder)
-        decoder = lookaside.FileRecordJSONDecoder()
+        json_string = json.dumps(self.test_record, cls=tooltool.FileRecordJSONEncoder)
+        decoder = tooltool.FileRecordJSONDecoder()
         f=decoder.decode(json_string)
         for i in ['filename', 'size', 'algorithm', 'digest']:
             self.assertEqual(getattr(f,i), self.test_record.__dict__[i])
 
     def test_json_dumps(self):
-        json_string = json.dumps(self.test_record, cls=lookaside.FileRecordJSONEncoder)
+        json_string = json.dumps(self.test_record, cls=tooltool.FileRecordJSONEncoder)
         dict_from_json = json.loads(json_string)
         for i in ['filename', 'size', 'algorithm', 'digest']:
             self.assertEqual(dict_from_json[i], self.test_record.__dict__[i])
 
     def test_decode_list(self):
-        json_string = json.dumps(self.record_list, cls=lookaside.FileRecordJSONEncoder)
-        new_list = json.loads(json_string, cls=lookaside.FileRecordJSONDecoder)
+        json_string = json.dumps(self.record_list, cls=tooltool.FileRecordJSONEncoder)
+        new_list = json.loads(json_string, cls=tooltool.FileRecordJSONDecoder)
         self.assertEquals(len(new_list), len(self.record_list))
         for record in range(0,len(self.record_list)):
             self.assertEqual(new_list[record], self.record_list[record])
@@ -193,7 +193,7 @@ class TestAsideFile(BaseFileRecordTest):
         shutil.copyfile(self.sample_file, self.other_sample_file)
         self.other_test_record = copy.deepcopy(self.test_record)
         self.other_test_record.filename = self.other_sample_file
-        self.test_aside = lookaside.AsideFile([self.test_record, self.other_test_record])
+        self.test_aside = tooltool.AsideFile([self.test_record, self.other_test_record])
 
     def test_present(self):
         self.assertTrue(self.test_aside.present())
@@ -228,41 +228,41 @@ class TestAsideFile(BaseFileRecordTest):
         self.assertEqual(self.test_aside,a_copy)
 
     def test_equality_unrelated(self):
-        one = lookaside.AsideFile([self.test_record, self.other_test_record])
-        two = lookaside.AsideFile([self.test_record, self.other_test_record])
+        one = tooltool.AsideFile([self.test_record, self.other_test_record])
+        two = tooltool.AsideFile([self.test_record, self.other_test_record])
         self.assertEqual(one,two)
 
     def test_json_file(self):
         tmpaside = tempfile.TemporaryFile()
         self.test_aside.dump(tmpaside, fmt='json')
         tmpaside.seek(0)
-        new_aside = lookaside.AsideFile()
+        new_aside = tooltool.AsideFile()
         new_aside.load(tmpaside, fmt='json')
         self.assertEqual(new_aside, self.test_aside)
 
     def test_json_file(self):
         s = self.test_aside.dumps(fmt='json')
-        new_aside = lookaside.AsideFile()
+        new_aside = tooltool.AsideFile()
         new_aside.loads(s, fmt='json')
         self.assertEqual(new_aside, self.test_aside)
 
     def test_load_empty_json_file(self):
         empty = tempfile.TemporaryFile()
-        aside = lookaside.AsideFile()
-        self.assertRaises(lookaside.InvalidAsideFile,
+        aside = tooltool.AsideFile()
+        self.assertRaises(tooltool.InvalidAsideFile,
                 aside.load, empty, fmt='json')
 
     def test_load_empty_json_string(self):
         empty = ''
-        aside = lookaside.AsideFile()
-        self.assertRaises(lookaside.InvalidAsideFile,
+        aside = tooltool.AsideFile()
+        self.assertRaises(tooltool.InvalidAsideFile,
                 aside.loads, empty, fmt='json')
 
 
 class TestAsideFileOperations(BaseFileRecordTest):
     def setUp(self):
         BaseFileRecordTest.setUp(self)
-        self.sample_aside = lookaside.AsideFile([self.test_record])
+        self.sample_aside = tooltool.AsideFile([self.test_record])
         self.sample_aside_file = '.testaside'
         self.test_dir = 'test-dir'
         self.startingwd = os.getcwd()
@@ -296,7 +296,7 @@ class TestAsideFileOperations(BaseFileRecordTest):
 
 
 
-log = logging.getLogger(lookaside.__name__)
+log = logging.getLogger(tooltool.__name__)
 log.setLevel(logging.ERROR)
 log.addHandler(logging.StreamHandler())
 
