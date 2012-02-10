@@ -33,7 +33,7 @@ class DigestTests(unittest.TestCase):
 class BaseFileRecordTest(unittest.TestCase):
     def setUp(self):
         self.sample_file = 'test_file.ogg'
-        self.sample_algo = 'sha1'
+        self.sample_algo = 'sha512'
         self.sample_size = os.path.getsize(self.sample_file)
         with open(self.sample_file) as f:
             self.sample_hash = lookaside.digest_file(f, self.sample_algo)

@@ -89,7 +89,8 @@ class FileRecord(object):
 
 def create_file_record(filename, algorithm):
     fo = open(filename, 'rb')
-    fr = FileRecord(filename, os.path.getsize(filename), digest_file(fo, algorithm), algorithm)
+    stored_filename = os.path.split(filename)[1]
+    fr = FileRecord(stored_filename, os.path.getsize(filename), digest_file(fo, algorithm), algorithm)
     fo.close()
     return fr
 
@@ -241,10 +242,9 @@ def digest_file(f,a):
         log.debug('hashed a file with %s to be %s', a, h.hexdigest())
     return h.hexdigest()
 
-def find_aside_files(locations, aside_filename='manifest.aside', recurse=False):
+def find_aside_files(locations, aside_filename='manifest.aside', recurse=True):
     """I scan directories for their .aside file. If I am
     told to recurse, I do that."""
-    # TODO: support a syntax to skip specific dirs while recursing
     aside_files = []
     for location in locations:
         if systempath.isdir(location):
@@ -260,8 +260,9 @@ def find_aside_files(locations, aside_filename='manifest.aside', recurse=False):
     return aside_files
 
 
-def list_tracked_files(locations, aside_filename='manifest.aside', recurse=False):
+def list_tracked_files(locations, aside_filename='manifest.aside', recurse=True):
     """I know how print all the files in a location"""
+    assert len(locations) > 0, "must have more than one directory"
     aside_files = find_aside_files(locations,
             aside_filename=aside_filename,
             recurse=recurse)
@@ -269,22 +270,23 @@ def list_tracked_files(locations, aside_filename='manifest.aside', recurse=False
         aside = AsideFile()
         with open(aside_name) as a:
             aside.load(a)
+        log.info("listing %s" % aside_name)
         for f in aside.file_records:
             name = f.filename
             # TODO: show all attributes in one line
-            present = "present" if f.present() else "absent"
+            conditions = []
             if f.present():
+                conditions.append('present')
                 if f.validate():
-                    valid = "valid"
-                elif not f.validate_size():
-                    valid = "the wrong size"
-                elif not f.validate_digest():
-                    valid = "has the wrong digest"
+                    conditions.append("valid")
                 else:
-                    valid = "INVALID"
+                    if not f.validate_size():
+                        conditions.append("incorrectly sized")
+                    if not f.validate_digest():
+                        conditions.append("checksum mismatch")
             else:
-                valid = "missing"
-            log.info("%s is %s and %s" % (name, present, valid))
+                conditions.append('absent')
+            log.info("%s is %s" % (name, ', '.join(conditions)))
 
 def add_files(filenames):
     for filename in filenames:
@@ -298,7 +300,7 @@ def add_files(filenames):
                 aside_file.load(f, fmt='json')
         else:
             log.info("creating a new aside file")
-        new_fr = create_file_record(filename, 'sha1')
+        new_fr = create_file_record(filename, 'sha512')
         log.info("appending a new file record")
         add = True
         for fr in aside_file.file_records:
@@ -342,9 +344,12 @@ def main():
             dest='quiet', action='store_true')
     parser.add_option('-v', '--verbose', default=False,
             dest='verbose', action='store_true')
-    parser.add_option('-r', '--recurse', default=False,
-            dest='recurse', action='store_true',
+    parser.add_option('-r', '--recurse', default=True,
+            dest='recurse', action='store_false',
             help='if specified, directories will be recursed when scanning for .aside files')
+    parser.add_option('-f', '--file', default=True,
+            dest='file', action='store',
+            help='specify the manifest file to be operated on')
     (options, args) = parser.parse_args()
 
     # Use some of the option parser to figure out application
@@ -356,6 +361,10 @@ def main():
     else:
         ch.setLevel(logging.INFO)
     log.addHandler(ch)
+
+    if not options.file:
+        log.critical("no manifest file specified")
+        exit(1)
 
     # Doing this because I want all options before all arguments
     yet_seen_arg = False
