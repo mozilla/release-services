@@ -1,4 +1,4 @@
-.sw?
-.hg
-.diff
-.pyc
+*.sw?
+*.hg
+*.diff
+*.pyc
