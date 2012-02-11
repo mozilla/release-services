@@ -13,6 +13,7 @@ import posixpath
 import optparse
 import logging
 import hashlib
+import urllib2
 try:
     import simplejson as json # I hear simplejson is faster
 except ImportError:
@@ -296,6 +297,93 @@ def add_files(manifest_file, algorithm, filenames):
     with open(manifest_file, 'wb') as output:
         new_aside.dump(output, fmt='json')
 
+def fetch_file(base_url, file_record, grabchunk=1024*8):
+    # Generate the URL for the file on the server side
+    url = "%s/%s/%s" % (base_url, file_record.algorithm, file_record.filename)
+
+    # Lets see if the file already exists.  If it does, lets
+    # validate that the digest is equal to the one in the manifest
+    if os.path.exists(file_record.filename):
+        log.info("file already exists %s" % file_record.filename)
+        with open(file_record.filename, 'rb') as f:
+            d = digest_file(f, file_record.algorithm)
+            if not d == file_record.digest:
+                # Well, it doesn't match the local copy.
+                log.error("digest mismatch between manifest(%s) and local file(%s)" % (file_record.digest, d))
+                # Let's bail!
+                return False
+            else:
+                log.info("existing file has correct digest")
+                return True
+
+    # Well, the file doesn't exist locally.  Lets fetch it.
+    try:
+        f = urllib2.urlopen(url)
+        log.debug("opened %s for reading" % url)
+        with open(file_record.filename, 'wb') as out:
+            k = True
+            size = 0
+            while k:
+                indata = f.read(grabchunk)
+                out.write(indata)
+                size += len(indata)
+                log.debug("transfered %s bytes" % len(indata))
+                if indata == '':
+                    k = False
+            log.debug("transfered %d bytes in total, should be %d" % (size, file_record.size))
+            if size != file_record.size:
+                log.error("transfer from %s to %s failed due to a difference of %d bytes" % (url,
+                            file_record.filename, file_record.size - size))
+                return False
+    except urllib2.URLError as urlerror:
+        log.error("FAILED TO GRAB %s: %s" % (url, urlerror))
+        return False
+    except urllib2.HTTPError as httperror:
+        log.error("FAILED TO GRAB %s: %s" % (url, httperror))
+        return False
+    except IOError as ioerror:
+        log.error("FAILED TO WRITE TO %s" % file_record.filename)
+        return False
+    return True
+
+
+def fetch_files(manifest_file, base_url, filenames=None):
+    # Lets load the manifest file
+    aside_file = AsideFile()
+    if os.path.exists(manifest_file):
+        with open(manifest_file) as input:
+            log.info("opening existing aside file")
+            aside_file.load(input, fmt='json')
+    else:
+        log.error("specified manifest file does not exist")
+        return False
+
+    # We want to track files that fail to be fetched as well as
+    # files that are fetched
+    failed_files = []
+
+    # Lets go through the manifest and fetch the files that we want
+    fetched_files = []
+    for f in aside_file.file_records:
+        if filenames is None or f.filename in filenames:
+            if fetch_file(base_url, f):
+                fetched_files.append(f)
+            else:
+                failed_files.append(f.filename)
+                log.error("'%s' failed" % f.filename)
+
+    # Even if we get the file, lets ensure that it matches what the
+    # manifest specified
+    for lf in fetched_files:
+        if not lf.validate():
+            log.error("'%s' failed validation" % f.filename)
+
+    # If we failed to fetch or validate a file, we need to fail
+    if len(failed_files) > 0:
+        log.error("The following files failed: '%s'" % "', ".join(failed_files))
+        return False
+    return True
+
 
 def process_command(manifest_file, algorithm, args):
     """ I know how to take a list of program arguments and
@@ -307,9 +395,16 @@ def process_command(manifest_file, algorithm, args):
         list_manifest(manifest_file)
     elif cmd == 'add':
         add_files(manifest_file, algorithm, cmd_args)
+    elif cmd == 'fetch':
+        fetch_files(manifest_file, 'http://localhost:8080')
     else:
         log.critical('command "%s" is not implemented' % cmd)
 
+# fetching api:
+#   http://hostname/algorithm/hash
+#   example: http://people.mozilla.org/sha1/1234567890abcedf
+# This will make it possible to have the server allow clients to
+# use different algorithms than what was uploaded to the server
 
 def main():
     # Set up logging, for now just to the console
