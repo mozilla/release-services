@@ -246,68 +246,45 @@ def digest_file(f,a):
         log.debug('hashed a file with %s to be %s', a, h.hexdigest())
     return h.hexdigest()
 
-def find_aside_files(locations, aside_filename='manifest.aside', recurse=True):
-    """I scan directories for their .aside file. If I am
-    told to recurse, I do that."""
-    aside_files = []
-    for location in locations:
-        if systempath.isdir(location):
-            for root,dirs,files in os.walk(location):
-                if os.path.exists(os.path.join(root, aside_filename)):
-                    log.debug('adding %s to the list of aside_files' % aside_filename)
-                    aside_files.append(os.path.join(root,aside_filename))
-                    log.debug('found aside file in %s' % root)
-                if not recurse:
-                    break
-        else:
-            log.critical('%s is not a directory' % location)
-    return aside_files
 
-
-def list_tracked_files(locations, aside_filename='manifest.aside', recurse=True):
+def list_manifest(manifest_file):
     """I know how print all the files in a location"""
-    assert len(locations) > 0, "must have more than one directory"
-    aside_files = find_aside_files(locations,
-            aside_filename=aside_filename,
-            recurse=recurse)
-    for aside_name in aside_files:
-        aside = AsideFile()
-        with open(aside_name) as a:
-            aside.load(a)
-        log.info("listing %s" % aside_name)
-        for f in aside.file_records:
-            name = f.filename
-            # TODO: show all attributes in one line
-            conditions = []
-            if f.present():
-                conditions.append('present')
-                if f.validate():
-                    conditions.append("valid")
-                else:
-                    if not f.validate_size():
-                        conditions.append("incorrectly sized")
-                    if not f.validate_digest():
-                        conditions.append("checksum mismatch")
+    aside = AsideFile()
+    with open(manifest_file) as a:
+        aside.load(a)
+    for f in aside.file_records:
+        name = f.filename
+        conditions = []
+        if f.present():
+            conditions.append('present')
+            if f.validate():
+                conditions.append("valid")
             else:
-                conditions.append('absent')
-            log.info("%s is %s" % (name, ', '.join(conditions)))
+                if not f.validate_size():
+                    conditions.append("incorrectly sized")
+                if not f.validate_digest():
+                    conditions.append("checksum mismatch")
+        else:
+            conditions.append('absent')
+        print "%s is %s" % (name, ', '.join(conditions))
 
-def add_files(filenames):
+def add_files(manifest_file, algorithm, filenames):
+    aside_file = AsideFile()
+    if os.path.exists(manifest_file):
+        with open(manifest_file) as input:
+            log.info("opening existing aside file")
+            aside_file.load(input, fmt='json')
+    else:
+        log.info("creating a new aside file")
+    new_aside = AsideFile()
     for filename in filenames:
         log.info("adding %s" % filename)
-        path,name = os.path.split(filename)
-        aside_name = os.path.join(path, 'manifest.aside')
-        aside_file = AsideFile()
-        if os.path.exists(aside_name):
-            with open(aside_name) as f:
-                log.info("opening existing aside file")
-                aside_file.load(f, fmt='json')
-        else:
-            log.info("creating a new aside file")
+        path, name = os.path.split(filename)
         new_fr = create_file_record(filename, 'sha512')
-        log.info("appending a new file record")
+        log.info("appending a new file record to aside file")
         add = True
         for fr in aside_file.file_records:
+            log.debug("aside file has '%s'" % "', ".join([x.filename for x in aside_file.file_records]))
             if new_fr == fr and new_fr.validate():
                 log.info("file already in aside file and matches")
                 add = False
@@ -315,20 +292,21 @@ def add_files(filenames):
                 log.error("file already in aside file but is invalid")
                 add = False
         if add:
-            aside_file.file_records.append(new_fr)
-        with open(aside_name, 'wb') as f:
-            aside_file.dump(f, fmt='json')
+            new_aside.file_records.append(new_fr)
+    with open(manifest_file, 'wb') as output:
+        new_aside.dump(output, fmt='json')
 
-def process_command(args, recurse=False):
+
+def process_command(manifest_file, algorithm, args):
     """ I know how to take a list of program arguments and
     start doing the right thing with them"""
     cmd = args[0]
     cmd_args = args[1:]
     log.debug('using command %s' % cmd)
     if cmd == 'list':
-        list_tracked_files(cmd_args, recurse=recurse)
+        list_manifest(manifest_file)
     elif cmd == 'add':
-        add_files(cmd_args)
+        add_files(manifest_file, algorithm, cmd_args)
     else:
         log.critical('command "%s" is not implemented' % cmd)
 
@@ -336,7 +314,7 @@ def process_command(args, recurse=False):
 def main():
     # Set up logging, for now just to the console
     ch = logging.StreamHandler()
-    cf = logging.Formatter("%(asctime)s - %(pathname)s - %(levelname)s - %(message)s")
+    cf = logging.Formatter("%(levelname)s - %(message)s")
     ch.setFormatter(cf)
 
     # Set up option parsing
@@ -351,9 +329,12 @@ def main():
     parser.add_option('-r', '--recurse', default=True,
             dest='recurse', action='store_false',
             help='if specified, directories will be recursed when scanning for .aside files')
-    parser.add_option('-f', '--file', default=True,
-            dest='file', action='store',
+    parser.add_option('-m', '--manifest', default=True,
+            dest='manifest', action='store',
             help='specify the manifest file to be operated on')
+    parser.add_option('-d', '--algorithm', default='sha512',
+            dest='algorithm', action='store',
+            help='openssl hashing algorithm to use')
     (options, args) = parser.parse_args()
 
     # Use some of the option parser to figure out application
@@ -366,7 +347,7 @@ def main():
         ch.setLevel(logging.INFO)
     log.addHandler(ch)
 
-    if not options.file:
+    if not options.manifest:
         log.critical("no manifest file specified")
         exit(1)
 
@@ -384,7 +365,7 @@ def main():
     if len(args) < 1:
         log.critical('You must specify a command')
         exit(1)
-    process_command(args, options.recurse)
+    process_command(options.manifest, options.algorithm, args)
 
 if __name__ == "__main__":
     main()
