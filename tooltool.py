@@ -374,9 +374,9 @@ def fetch_files(manifest_file, base_url, filenames=None):
 
     # Even if we get the file, lets ensure that it matches what the
     # manifest specified
-    for lf in fetched_files:
-        if not lf.validate():
-            log.error("'%s' failed validation" % f.filename)
+    for localfile in fetched_files:
+        if not localfile.validate():
+            log.error("'%s' failed validation" % localfile.filename)
 
     # If we failed to fetch or validate a file, we need to fail
     if len(failed_files) > 0:
