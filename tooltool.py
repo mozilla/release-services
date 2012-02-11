@@ -4,6 +4,8 @@
 # elsewhere.  This file should only contain file in the directory
 # which the aside file resides in and it should be called 'manifest.aside'
 
+__version__ = '1'
+
 import sys
 import os
 import os.path as systempath
@@ -219,7 +221,9 @@ class AsideFile(object):
     def dump(self, output_file, fmt='json'):
         assert fmt in self.valid_formats
         if fmt == 'json':
-            return json.dump(self.file_records, output_file, cls=FileRecordJSONEncoder)
+            rv = json.dump(self.file_records, output_file, indent=0, cls=FileRecordJSONEncoder)
+            print >> output_file, ''
+            return rv
 
     def dumps(self, fmt='json'):
         assert fmt in self.valid_formats
