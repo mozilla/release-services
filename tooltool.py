@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 class FileRecordJSONEncoderException(Exception): pass
-class InvalidAsideFile(Exception): pass
+class InvalidManifest(Exception): pass
 class ExceptionWithFilename(Exception):
     def __init__(self, filename):
         Exception.__init__(self)
@@ -148,7 +148,7 @@ class FileRecordJSONDecoder(json.JSONDecoder):
         return rv
 
 
-class AsideFile(object):
+class Manifest(object):
 
     valid_formats = ('json',)
 
@@ -159,7 +159,7 @@ class AsideFile(object):
         if self is other:
             return True
         if len(self.file_records) != len(other.file_records):
-            log.debug('AsideFiles differ in number of files')
+            log.debug('Manifests differ in number of files')
             return False
         #TODO: Lists in a different order should be equal
         for record in range(0,len(self.file_records)):
@@ -171,13 +171,13 @@ class AsideFile(object):
 
     def __deepcopy__(self, memo):
         # This is required for a deep copy
-        return AsideFile(self.file_records[:])
+        return Manifest(self.file_records[:])
 
     def __copy__(self):
-        return AsideFile(self.file_records)
+        return Manifest(self.file_records)
 
     def copy(self):
-        return AsideFile(self.file_records[:])
+        return Manifest(self.file_records[:])
 
     def present(self):
         for i in self.file_records:
@@ -209,7 +209,7 @@ class AsideFile(object):
             try:
                 self.file_records.extend(json.load(data_file, cls=FileRecordJSONDecoder))
             except ValueError:
-                raise InvalidAsideFile("trying to read invalid aside file")
+                raise InvalidManifest("trying to read invalid aside file")
 
     def loads(self, data_string, fmt='json'):
         assert fmt in self.valid_formats
@@ -217,7 +217,7 @@ class AsideFile(object):
             try:
                 self.file_records.extend(json.loads(data_string, cls=FileRecordJSONDecoder))
             except ValueError:
-                raise InvalidAsideFile("trying to read invalid aside file")
+                raise InvalidManifest("trying to read invalid aside file")
 
     def dump(self, output_file, fmt='json'):
         assert fmt in self.valid_formats
@@ -250,7 +250,7 @@ def digest_file(f,a):
 
 def list_manifest(manifest_file):
     """I know how print all the files in a location"""
-    aside = AsideFile()
+    aside = Manifest()
     with open(manifest_file) as a:
         aside.load(a)
     for f in aside.file_records:
@@ -270,14 +270,14 @@ def list_manifest(manifest_file):
         print "%s is %s" % (name, ', '.join(conditions))
 
 def add_files(manifest_file, algorithm, filenames):
-    aside_file = AsideFile()
+    aside_file = Manifest()
     if os.path.exists(manifest_file):
         with open(manifest_file) as input:
             log.info("opening existing aside file")
             aside_file.load(input, fmt='json')
     else:
         log.info("creating a new aside file")
-    new_aside = AsideFile()
+    new_aside = Manifest()
     for filename in filenames:
         log.info("adding %s" % filename)
         path, name = os.path.split(filename)
@@ -349,7 +349,7 @@ def fetch_file(base_url, file_record, grabchunk=1024*8):
 
 def fetch_files(manifest_file, base_url, filenames=None):
     # Lets load the manifest file
-    aside_file = AsideFile()
+    aside_file = Manifest()
     if os.path.exists(manifest_file):
         with open(manifest_file) as input:
             log.info("opening existing aside file")

@@ -184,7 +184,7 @@ class TestFileRecordJSONCodecs(BaseFileRecordListTest):
 
 
 
-class TestAsideFile(BaseFileRecordTest):
+class TestManifest(BaseFileRecordTest):
     def setUp(self):
         BaseFileRecordTest.setUp(self)
         self.other_sample_file = 'other-%s' % self.sample_file
@@ -193,7 +193,7 @@ class TestAsideFile(BaseFileRecordTest):
         shutil.copyfile(self.sample_file, self.other_sample_file)
         self.other_test_record = copy.deepcopy(self.test_record)
         self.other_test_record.filename = self.other_sample_file
-        self.test_aside = tooltool.AsideFile([self.test_record, self.other_test_record])
+        self.test_aside = tooltool.Manifest([self.test_record, self.other_test_record])
 
     def test_present(self):
         self.assertTrue(self.test_aside.present())
@@ -228,41 +228,41 @@ class TestAsideFile(BaseFileRecordTest):
         self.assertEqual(self.test_aside,a_copy)
 
     def test_equality_unrelated(self):
-        one = tooltool.AsideFile([self.test_record, self.other_test_record])
-        two = tooltool.AsideFile([self.test_record, self.other_test_record])
+        one = tooltool.Manifest([self.test_record, self.other_test_record])
+        two = tooltool.Manifest([self.test_record, self.other_test_record])
         self.assertEqual(one,two)
 
     def test_json_file(self):
         tmpaside = tempfile.TemporaryFile()
         self.test_aside.dump(tmpaside, fmt='json')
         tmpaside.seek(0)
-        new_aside = tooltool.AsideFile()
+        new_aside = tooltool.Manifest()
         new_aside.load(tmpaside, fmt='json')
         self.assertEqual(new_aside, self.test_aside)
 
     def test_json_file(self):
         s = self.test_aside.dumps(fmt='json')
-        new_aside = tooltool.AsideFile()
+        new_aside = tooltool.Manifest()
         new_aside.loads(s, fmt='json')
         self.assertEqual(new_aside, self.test_aside)
 
     def test_load_empty_json_file(self):
         empty = tempfile.TemporaryFile()
-        aside = tooltool.AsideFile()
-        self.assertRaises(tooltool.InvalidAsideFile,
+        aside = tooltool.Manifest()
+        self.assertRaises(tooltool.InvalidManifest,
                 aside.load, empty, fmt='json')
 
     def test_load_empty_json_string(self):
         empty = ''
-        aside = tooltool.AsideFile()
-        self.assertRaises(tooltool.InvalidAsideFile,
+        aside = tooltool.Manifest()
+        self.assertRaises(tooltool.InvalidManifest,
                 aside.loads, empty, fmt='json')
 
 
-class TestAsideFileOperations(BaseFileRecordTest):
+class TestManifestOperations(BaseFileRecordTest):
     def setUp(self):
         BaseFileRecordTest.setUp(self)
-        self.sample_aside = tooltool.AsideFile([self.test_record])
+        self.sample_aside = tooltool.Manifest([self.test_record])
         self.sample_aside_file = '.testaside'
         self.test_dir = 'test-dir'
         self.startingwd = os.getcwd()
