@@ -316,11 +316,14 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
             d = digest_file(f, file_record.algorithm)
             if not d == file_record.digest:
                 # Well, it doesn't match the local copy.
-                log.error("digest mismatch between manifest(%s...) and local file(%s...)" % \
+                if overwrite:
+                    log.info("overwriting local %s as requested" % file_record.filename)
+                else:
+                    log.error("digest mismatch between manifest(%s...) and local file(%s...)" % \
                           (file_record.digest[:8], d[:8]))
-                log.debug("full digests: manifest (%s) local file (%s)" % (file_record.digest, d))
-                # Let's bail!
-                return False
+                    log.debug("full digests: manifest (%s) local file (%s)" % (file_record.digest, d))
+                    # Let's bail!
+                    return False
             else:
                 log.info("existing file has correct digest")
                 return True
@@ -339,7 +342,6 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
                 log.debug("transfered %s bytes" % len(indata))
                 if indata == '':
                     k = False
-            log.debug("transfered %d bytes in total, should be %d" % (size, file_record.size))
             if size != file_record.size:
                 log.error("transfer from %s to %s failed due to a difference of %d bytes" % (url,
                             file_record.filename, file_record.size - size))
@@ -357,12 +359,11 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
     return True
 
 
-def fetch_files(manifest_file, base_url, filenames=None):
+def fetch_files(manifest_file, base_url, overwrite, filenames=[]):
     # Lets load the manifest file
     manifest = Manifest()
     if os.path.exists(manifest_file):
         with open(manifest_file) as input:
-            log.info("opening existing manifest file")
             manifest.load(input, fmt='json')
     else:
         log.error("specified manifest file does not exist")
@@ -375,12 +376,16 @@ def fetch_files(manifest_file, base_url, filenames=None):
     # Lets go through the manifest and fetch the files that we want
     fetched_files = []
     for f in manifest.file_records:
-        if filenames is None or f.filename in filenames:
             if fetch_file(base_url, f):
+        if f.filename in filenames:
+            log.debug("fetching %s" % f.filename)
+            if fetch_file(base_url, f, overwrite):
                 fetched_files.append(f)
             else:
                 failed_files.append(f.filename)
                 log.error("'%s' failed" % f.filename)
+        else:
+            log.debug("skipping %s" % f.filename)
 
     # Even if we get the file, lets ensure that it matches what the
     # manifest specified
@@ -395,20 +400,22 @@ def fetch_files(manifest_file, base_url, filenames=None):
     return True
 
 
-def process_command(manifest_file, algorithm, args):
+def process_command(options, args):
     """ I know how to take a list of program arguments and
     start doing the right thing with them"""
     cmd = args[0]
     cmd_args = args[1:]
     log.debug('using command %s' % cmd)
     if cmd == 'list':
-        list_manifest(manifest_file)
+        return list_manifest(options.manifest)
     elif cmd == 'add':
         add_files(manifest_file, algorithm, cmd_args)
+        return add_files(options.manifest, options.algorithm, cmd_args)
     elif cmd == 'fetch':
-        fetch_files(manifest_file, 'http://localhost:8080')
+        return fetch_files(options.manifest, 'http://localhost:8080', options.overwrite, cmd_args)
     else:
         log.critical('command "%s" is not implemented' % cmd)
+        return False
 
 # fetching api:
 #   http://hostname/algorithm/hash
@@ -440,6 +447,10 @@ def main():
     parser.add_option('-d', '--algorithm', default='sha512',
             dest='algorithm', action='store',
             help='openssl hashing algorithm to use')
+    parser.add_option('-o', '--overwrite', default=False,
+            dest='overwrite', action='store_true',
+            help='if fetching, remote copy will overwrite a local copy that is different. ' +
+                 'UNIMPLEMENTED: if adding, the local file will overwrite the manifest copy')
     (options, args) = parser.parse_args()
 
     # Use some of the option parser to figure out application
@@ -470,7 +481,7 @@ def main():
     if len(args) < 1:
         log.critical('You must specify a command')
         exit(1)
-    process_command(options.manifest, options.algorithm, args)
+    exit(0 if process_command(options, args) else 1)
 
 if __name__ == "__main__":
     main()
