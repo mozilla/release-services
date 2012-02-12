@@ -274,7 +274,7 @@ def add_files(manifest_file, algorithm, filenames):
     if os.path.exists(manifest_file):
         with open(manifest_file) as input:
             log.info("opening existing manifest file")
-            manifest_file.load(input, fmt='json')
+            manifest.load(input, fmt='json')
     else:
         log.info("creating a new manifest file")
     new_manifest = Manifest()
