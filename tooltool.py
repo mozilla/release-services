@@ -275,17 +275,17 @@ def add_files(manifest_file, algorithm, filenames):
     if os.path.exists(manifest_file):
         # If the manifest file already exists, lets load the data from it
         with open(manifest_file) as input:
-            log.info("opening existing manifest file")
+            log.debug("opening existing manifest file")
             manifest.load(input, fmt='json')
     else:
         # If the manifest does not already exist we start with a blank slate
-        log.info("creating a new manifest file")
+        log.debug("creating a new manifest file")
     new_manifest = Manifest() # use a different manifest for the output
     for filename in filenames:
-        log.info("adding %s" % filename)
+        log.debug("adding %s" % filename)
         path, name = os.path.split(filename)
         new_fr = create_file_record(filename, 'sha512')
-        log.info("appending a new file record to manifest file")
+        log.debug("appending a new file record to manifest file")
         add = True
         for fr in manifest.file_records:
             log.debug("manifest file has '%s'" % "', ".join([x.filename for x in manifest.file_records]))
@@ -303,14 +303,15 @@ def add_files(manifest_file, algorithm, filenames):
     with open(manifest_file, 'wb') as output:
         new_manifest.dump(output, fmt='json')
 
-def fetch_file(base_url, file_record, grabchunk=1024*8):
+def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
     # Generate the URL for the file on the server side
     url = "%s/%s/%s" % (base_url, file_record.algorithm, file_record.filename)
 
-    # Lets see if the file already exists.  If it does, lets
-    # validate that the digest is equal to the one in the manifest
+    # A file which is requested to be fetched that exists locally will be hashed.
+    # If the hash matches the requested file's hash, nothing will be done and the
+    # function will return.  If the function is told to overwrite and there is a 
+    # digest mismatch, the exiting file will be overwritten
     if os.path.exists(file_record.filename):
-        log.info("file already exists %s" % file_record.filename)
         with open(file_record.filename, 'rb') as f:
             d = digest_file(f, file_record.algorithm)
             if not d == file_record.digest:
@@ -343,6 +344,7 @@ def fetch_file(base_url, file_record, grabchunk=1024*8):
                 log.error("transfer from %s to %s failed due to a difference of %d bytes" % (url,
                             file_record.filename, file_record.size - size))
                 return False
+            log.info("fetched %s" % file_record.filename)
     except urllib2.URLError as urlerror:
         log.error("FAILED TO GRAB %s: %s" % (url, urlerror))
         return False
