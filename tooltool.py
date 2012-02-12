@@ -270,14 +270,17 @@ def list_manifest(manifest_file):
         print "%s is %s" % (name, ', '.join(conditions))
 
 def add_files(manifest_file, algorithm, filenames):
+    # Create a manifest object to add to
     manifest = Manifest()
     if os.path.exists(manifest_file):
+        # If the manifest file already exists, lets load the data from it
         with open(manifest_file) as input:
             log.info("opening existing manifest file")
             manifest.load(input, fmt='json')
     else:
+        # If the manifest does not already exist we start with a blank slate
         log.info("creating a new manifest file")
-    new_manifest = Manifest()
+    new_manifest = Manifest() # use a different manifest for the output
     for filename in filenames:
         log.info("adding %s" % filename)
         path, name = os.path.split(filename)
