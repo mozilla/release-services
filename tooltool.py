@@ -272,7 +272,7 @@ def list_manifest(manifest_file):
 def add_files(manifest_file, algorithm, filenames):
     manifest = Manifest()
     if os.path.exists(manifest_file):
-        with open(wmanifest) as input:
+        with open(manifest_file) as input:
             log.info("opening existing manifest file")
             manifest_file.load(input, fmt='json')
     else:
