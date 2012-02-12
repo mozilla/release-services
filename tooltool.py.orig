@@ -31,6 +31,7 @@ class ExceptionWithFilename(Exception):
 
 class DigestMismatchException(ExceptionWithFilename): pass
 class MissingFileException(ExceptionWithFilename): pass
+class StorageFormatException(ExceptionWithFilename): pass
 
 class FileRecord(object):
     def __init__(self, filename, size, digest, algorithm):
@@ -232,6 +233,81 @@ class Manifest(object):
             return json.dumps(self.file_records, cls=FileRecordJSONEncoder)
 
 
+class StorageFormat(object):
+    def __init__(self, config):
+        object.__init__(self)
+        self.config = config
+
+    def __str__(self):
+        return self.config
+
+    def fetch(self, file_record, location):
+        raise Exception("this storage format has not implemented fetching")
+
+    def store(self, file_record, location):
+        raise Exception("this storage format has not implemented storing")
+
+
+class HTTPStorage(StorageFormat):
+    def __init__(self, config):
+        StorageFormat.__init__(self)
+        self.scheme = config.get('scheme', 'http://')
+        self.host = config.get('host', None).strip('/')
+        self.port = config.get('port', 80)
+        self.path = config.get('path', '').strip('/')
+        #self.user = config.get('user', None)
+        #self.password = config.get('password', None)
+
+    def fetch(self, file_record, location):
+    #def fetch_file(base_url, file_record, grabchunk=1024*8):
+        # Generate the URL for the file on the server side
+        url = "%s/%s/%s" % (base_url, file_record.algorithm, file_record.filename)
+
+        # Lets see if the file already exists.  If it does, lets
+        # validate that the digest is equal to the one in the manifest
+        if os.path.exists(file_record.filename):
+            log.info("file already exists %s" % file_record.filename)
+            with open(file_record.filename, 'rb') as f:
+                d = digest_file(f, file_record.algorithm)
+                if not d == file_record.digest:
+                    # Well, it doesn't match the local copy.
+                    log.error("digest mismatch between manifest(%s) and local file(%s)" % (file_record.digest, d))
+                    # Let's bail!
+                    return False
+                else:
+                    log.info("existing file has correct digest")
+                    return True
+
+        # Well, the file doesn't exist locally.  Lets fetch it.
+        try:
+            f = urllib2.urlopen(url)
+            log.debug("opened %s for reading" % url)
+            with open(file_record.filename, 'wb') as out:
+                k = True
+                size = 0
+                while k:
+                    indata = f.read(grabchunk)
+                    out.write(indata)
+                    size += len(indata)
+                    log.debug("transfered %s bytes" % len(indata))
+                    if indata == '':
+                        k = False
+                log.debug("transfered %d bytes in total, should be %d" % (size, file_record.size))
+                if size != file_record.size:
+                    log.error("transfer from %s to %s failed due to a difference of %d bytes" % (url,
+                                file_record.filename, file_record.size - size))
+                    return False
+        except urllib2.URLError as urlerror:
+            log.error("FAILED TO GRAB %s: %s" % (url, urlerror))
+            return False
+        except urllib2.HTTPError as httperror:
+            log.error("FAILED TO GRAB %s: %s" % (url, httperror))
+            return False
+        except IOError as ioerror:
+            log.error("FAILED TO WRITE TO %s" % file_record.filename)
+            return False
+        return True
+
 def digest_file(f,a):
     """I take a file like object 'f' and return a hex-string containing
     of the result of the algorithm 'a' applied to 'f'."""
@@ -297,56 +373,7 @@ def add_files(manifest_file, algorithm, filenames):
     with open(manifest_file, 'wb') as output:
         new_manifest.dump(output, fmt='json')
 
-def fetch_file(base_url, file_record, grabchunk=1024*8):
-    # Generate the URL for the file on the server side
-    url = "%s/%s/%s" % (base_url, file_record.algorithm, file_record.filename)
 
-    # Lets see if the file already exists.  If it does, lets
-    # validate that the digest is equal to the one in the manifest
-    if os.path.exists(file_record.filename):
-        log.info("file already exists %s" % file_record.filename)
-        with open(file_record.filename, 'rb') as f:
-            d = digest_file(f, file_record.algorithm)
-            if not d == file_record.digest:
-                # Well, it doesn't match the local copy.
-                log.error("digest mismatch between manifest(%s...) and local file(%s...)" % \
-                          (file_record.digest[:8], d[:8]))
-                log.debug("full digests: manifest (%s) local file (%s)" % (file_record.digest, d))
-                # Let's bail!
-                return False
-            else:
-                log.info("existing file has correct digest")
-                return True
-
-    # Well, the file doesn't exist locally.  Lets fetch it.
-    try:
-        f = urllib2.urlopen(url)
-        log.debug("opened %s for reading" % url)
-        with open(file_record.filename, 'wb') as out:
-            k = True
-            size = 0
-            while k:
-                indata = f.read(grabchunk)
-                out.write(indata)
-                size += len(indata)
-                log.debug("transfered %s bytes" % len(indata))
-                if indata == '':
-                    k = False
-            log.debug("transfered %d bytes in total, should be %d" % (size, file_record.size))
-            if size != file_record.size:
-                log.error("transfer from %s to %s failed due to a difference of %d bytes" % (url,
-                            file_record.filename, file_record.size - size))
-                return False
-    except urllib2.URLError as urlerror:
-        log.error("FAILED TO GRAB %s: %s" % (url, urlerror))
-        return False
-    except urllib2.HTTPError as httperror:
-        log.error("FAILED TO GRAB %s: %s" % (url, httperror))
-        return False
-    except IOError as ioerror:
-        log.error("FAILED TO WRITE TO %s" % file_record.filename)
-        return False
-    return True
 
 
 def fetch_files(manifest_file, base_url, filenames=None):
