@@ -351,11 +351,11 @@ def fetch_file(base_url, file_record, grabchunk=1024*8):
 
 def fetch_files(manifest_file, base_url, filenames=None):
     # Lets load the manifest file
-    manifest_file = Manifest()
+    manifest = Manifest()
     if os.path.exists(manifest_file):
         with open(manifest_file) as input:
             log.info("opening existing manifest file")
-            manifest_file.load(input, fmt='json')
+            manifest.load(input, fmt='json')
     else:
         log.error("specified manifest file does not exist")
         return False
@@ -366,7 +366,7 @@ def fetch_files(manifest_file, base_url, filenames=None):
 
     # Lets go through the manifest and fetch the files that we want
     fetched_files = []
-    for f in manifest_file.file_records:
+    for f in manifest.file_records:
         if filenames is None or f.filename in filenames:
             if fetch_file(base_url, f):
                 fetched_files.append(f)
