@@ -448,15 +448,15 @@ def main():
         log.critical("no manifest file specified")
         exit(1)
 
-    # Doing this because I want all options before all arguments
-    yet_seen_arg = False
-    for i in sys.argv[1:]:
-        if i.startswith('-') and yet_seen_arg:
-            log.critical("arguments should occur before options")
-            exit(1)
-        if not i.startswith('-'):
-            yet_seen_arg = True
-
+# THIS IS BUSTED
+#    # Doing this because I want all options before all arguments
+#    yet_seen_arg = False
+#    for i in sys.argv[1:]:
+#        if i.startswith('-') and yet_seen_arg:
+#            log.critical("arguments should occur before options")
+#            exit(1)
+#        if not i.startswith('-'):
+#            yet_seen_arg = True
 
     log.debug('processing command "%s"' % '", "'.join(args))
     if len(args) < 1:
