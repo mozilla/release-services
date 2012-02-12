@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-# An aside file specifies files in that directory that are stored
+# An manifest file specifies files in that directory that are stored
 # elsewhere.  This file should only contain file in the directory
-# which the aside file resides in and it should be called 'manifest.aside'
+# which the manifest file resides in and it should be called 'manifest.manifest'
 
 __version__ = '1'
 
@@ -209,7 +209,7 @@ class Manifest(object):
             try:
                 self.file_records.extend(json.load(data_file, cls=FileRecordJSONDecoder))
             except ValueError:
-                raise InvalidManifest("trying to read invalid aside file")
+                raise InvalidManifest("trying to read invalid manifest file")
 
     def loads(self, data_string, fmt='json'):
         assert fmt in self.valid_formats
@@ -217,7 +217,7 @@ class Manifest(object):
             try:
                 self.file_records.extend(json.loads(data_string, cls=FileRecordJSONDecoder))
             except ValueError:
-                raise InvalidManifest("trying to read invalid aside file")
+                raise InvalidManifest("trying to read invalid manifest file")
 
     def dump(self, output_file, fmt='json'):
         assert fmt in self.valid_formats
@@ -250,10 +250,10 @@ def digest_file(f,a):
 
 def list_manifest(manifest_file):
     """I know how print all the files in a location"""
-    aside = Manifest()
+    manifest = Manifest()
     with open(manifest_file) as a:
-        aside.load(a)
-    for f in aside.file_records:
+        manifest.load(a)
+    for f in manifest.file_records:
         name = f.filename
         conditions = []
         if f.present():
@@ -270,32 +270,32 @@ def list_manifest(manifest_file):
         print "%s is %s" % (name, ', '.join(conditions))
 
 def add_files(manifest_file, algorithm, filenames):
-    aside_file = Manifest()
+    manifest_file = Manifest()
     if os.path.exists(manifest_file):
         with open(manifest_file) as input:
-            log.info("opening existing aside file")
-            aside_file.load(input, fmt='json')
+            log.info("opening existing manifest file")
+            manifest_file.load(input, fmt='json')
     else:
-        log.info("creating a new aside file")
-    new_aside = Manifest()
+        log.info("creating a new manifest file")
+    new_manifest = Manifest()
     for filename in filenames:
         log.info("adding %s" % filename)
         path, name = os.path.split(filename)
         new_fr = create_file_record(filename, 'sha512')
-        log.info("appending a new file record to aside file")
+        log.info("appending a new file record to manifest file")
         add = True
-        for fr in aside_file.file_records:
-            log.debug("aside file has '%s'" % "', ".join([x.filename for x in aside_file.file_records]))
+        for fr in manifest_file.file_records:
+            log.debug("manifest file has '%s'" % "', ".join([x.filename for x in manifest_file.file_records]))
             if new_fr == fr and new_fr.validate():
-                log.info("file already in aside file and matches")
+                log.info("file already in manifest file and matches")
                 add = False
             elif new_fr == fr and not new_fr.validate():
-                log.error("file already in aside file but is invalid")
+                log.error("file already in manifest file but is invalid")
                 add = False
         if add:
-            new_aside.file_records.append(new_fr)
+            new_manifest.file_records.append(new_fr)
     with open(manifest_file, 'wb') as output:
-        new_aside.dump(output, fmt='json')
+        new_manifest.dump(output, fmt='json')
 
 def fetch_file(base_url, file_record, grabchunk=1024*8):
     # Generate the URL for the file on the server side
@@ -349,11 +349,11 @@ def fetch_file(base_url, file_record, grabchunk=1024*8):
 
 def fetch_files(manifest_file, base_url, filenames=None):
     # Lets load the manifest file
-    aside_file = Manifest()
+    manifest_file = Manifest()
     if os.path.exists(manifest_file):
         with open(manifest_file) as input:
-            log.info("opening existing aside file")
-            aside_file.load(input, fmt='json')
+            log.info("opening existing manifest file")
+            manifest_file.load(input, fmt='json')
     else:
         log.error("specified manifest file does not exist")
         return False
@@ -364,7 +364,7 @@ def fetch_files(manifest_file, base_url, filenames=None):
 
     # Lets go through the manifest and fetch the files that we want
     fetched_files = []
-    for f in aside_file.file_records:
+    for f in manifest_file.file_records:
         if filenames is None or f.filename in filenames:
             if fetch_file(base_url, f):
                 fetched_files.append(f)
@@ -423,7 +423,7 @@ def main():
             dest='verbose', action='store_true')
     parser.add_option('-r', '--recurse', default=True,
             dest='recurse', action='store_false',
-            help='if specified, directories will be recursed when scanning for .aside files')
+            help='if specified, directories will be recursed when scanning for .manifest files')
     parser.add_option('-m', '--manifest', default=True,
             dest='manifest', action='store',
             help='specify the manifest file to be operated on')

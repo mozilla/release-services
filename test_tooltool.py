@@ -193,39 +193,39 @@ class TestManifest(BaseFileRecordTest):
         shutil.copyfile(self.sample_file, self.other_sample_file)
         self.other_test_record = copy.deepcopy(self.test_record)
         self.other_test_record.filename = self.other_sample_file
-        self.test_aside = tooltool.Manifest([self.test_record, self.other_test_record])
+        self.test_manifest = tooltool.Manifest([self.test_record, self.other_test_record])
 
     def test_present(self):
-        self.assertTrue(self.test_aside.present())
+        self.assertTrue(self.test_manifest.present())
 
     def test_absent(self):
         os.remove(self.other_sample_file)
-        self.assertFalse(self.test_aside.present())
+        self.assertFalse(self.test_manifest.present())
 
     def test_validate_sizes(self):
-        self.assertTrue(self.test_aside.validate_sizes())
+        self.assertTrue(self.test_manifest.validate_sizes())
 
     def test_incorrect_size(self):
-        self.test_aside.file_records[1].size = 1
-        self.assertFalse(self.test_aside.validate_sizes())
+        self.test_manifest.file_records[1].size = 1
+        self.assertFalse(self.test_manifest.validate_sizes())
 
     def test_validate_digest(self):
-        self.assertTrue(self.test_aside.validate_digests())
+        self.assertTrue(self.test_manifest.validate_digests())
 
     def test_incorrect_digest(self):
-        self.test_aside.file_records[1].digest = 'wrong'
-        self.assertFalse(self.test_aside.validate_digests())
+        self.test_manifest.file_records[1].digest = 'wrong'
+        self.assertFalse(self.test_manifest.validate_digests())
 
     def test_equality_same_object(self):
-        self.assertEqual(self.test_aside, self.test_aside)
+        self.assertEqual(self.test_manifest, self.test_manifest)
 
     def test_equality_deepcopy(self):
-        a_deepcopy = copy.deepcopy(self.test_aside)
-        self.assertEqual(self.test_aside,a_deepcopy)
+        a_deepcopy = copy.deepcopy(self.test_manifest)
+        self.assertEqual(self.test_manifest,a_deepcopy)
 
     def test_equality_copy_method(self):
-        a_copy = self.test_aside.copy()
-        self.assertEqual(self.test_aside,a_copy)
+        a_copy = self.test_manifest.copy()
+        self.assertEqual(self.test_manifest,a_copy)
 
     def test_equality_unrelated(self):
         one = tooltool.Manifest([self.test_record, self.other_test_record])
@@ -233,44 +233,44 @@ class TestManifest(BaseFileRecordTest):
         self.assertEqual(one,two)
 
     def test_json_file(self):
-        tmpaside = tempfile.TemporaryFile()
-        self.test_aside.dump(tmpaside, fmt='json')
-        tmpaside.seek(0)
-        new_aside = tooltool.Manifest()
-        new_aside.load(tmpaside, fmt='json')
-        self.assertEqual(new_aside, self.test_aside)
+        tmp_manifest = tempfile.TemporaryFile()
+        self.test_manifest.dump(tmp_manifest, fmt='json')
+        tmp_manifest.seek(0)
+        new_manifest = tooltool.Manifest()
+        new_manifest.load(tmp_manifest, fmt='json')
+        self.assertEqual(new_manifest, self.test_manifest)
 
     def test_json_file(self):
-        s = self.test_aside.dumps(fmt='json')
-        new_aside = tooltool.Manifest()
-        new_aside.loads(s, fmt='json')
-        self.assertEqual(new_aside, self.test_aside)
+        s = self.test_manifest.dumps(fmt='json')
+        new_manifest = tooltool.Manifest()
+        new_manifest.loads(s, fmt='json')
+        self.assertEqual(new_manifest, self.test_manifest)
 
     def test_load_empty_json_file(self):
         empty = tempfile.TemporaryFile()
-        aside = tooltool.Manifest()
+        manifest = tooltool.Manifest()
         self.assertRaises(tooltool.InvalidManifest,
-                aside.load, empty, fmt='json')
+                manifest.load, empty, fmt='json')
 
     def test_load_empty_json_string(self):
         empty = ''
-        aside = tooltool.Manifest()
+        manifest = tooltool.Manifest()
         self.assertRaises(tooltool.InvalidManifest,
-                aside.loads, empty, fmt='json')
+                manifest.loads, empty, fmt='json')
 
 
 class TestManifestOperations(BaseFileRecordTest):
     def setUp(self):
         BaseFileRecordTest.setUp(self)
-        self.sample_aside = tooltool.Manifest([self.test_record])
-        self.sample_aside_file = '.testaside'
+        self.sample_manifest = tooltool.Manifest([self.test_record])
+        self.sample_manifest_file = '.testmanifest'
         self.test_dir = 'test-dir'
         self.startingwd = os.getcwd()
         if os.path.exists(self.test_dir):
             shutil.rmtree(self.test_dir)
         os.mkdir(self.test_dir)
-        with open(os.path.join(self.test_dir, self.sample_aside_file), 'w') as tmpfile:
-            self.sample_aside.dump(tmpfile, fmt='json')
+        with open(os.path.join(self.test_dir, self.sample_manifest_file), 'w') as tmpfile:
+            self.sample_manifest.dump(tmpfile, fmt='json')
 
     def tearDown(self):
         os.chdir(self.startingwd)
@@ -279,7 +279,7 @@ class TestManifestOperations(BaseFileRecordTest):
     def create_test_dirs(self, root, dirnames):
         """In root, create and pupulate dirs named dirnames.
         I blow away and recreate the root.  I return the list
-        of aside files copied"""
+        of manifest files copied"""
         if os.path.exists(root): shutil.rmtree(root)
         os.mkdir(root)
         rv = []
@@ -287,9 +287,9 @@ class TestManifestOperations(BaseFileRecordTest):
             copydir = os.path.join(root, loc)
             os.mkdir(copydir)
             if copyfiles:
-                shutil.copy(self.sample_aside_file, copydir)
-                shutil.copy(self.sample_aside.file_records[0].filename, copydir)
-                rv.append(os.path.join(copydir, self.sample_aside_file))
+                shutil.copy(self.sample_manifest_file, copydir)
+                shutil.copy(self.sample_manifest.file_records[0].filename, copydir)
+                rv.append(os.path.join(copydir, self.sample_manifest_file))
         return rv
 
 
