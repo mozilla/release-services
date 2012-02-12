@@ -295,6 +295,9 @@ def add_files(manifest_file, algorithm, filenames):
             elif new_fr == fr and not new_fr.validate():
                 log.error("file already in manifest file but is invalid")
                 add = False
+            if filename == fr.filename:
+                log.error("manifest already contains file named %s" % filename)
+                add = False
         if add:
             new_manifest.file_records.append(new_fr)
     with open(manifest_file, 'wb') as output:
