@@ -270,9 +270,9 @@ def list_manifest(manifest_file):
         print "%s is %s" % (name, ', '.join(conditions))
 
 def add_files(manifest_file, algorithm, filenames):
-    manifest_file = Manifest()
+    manifest = Manifest()
     if os.path.exists(manifest_file):
-        with open(manifest_file) as input:
+        with open(wmanifest) as input:
             log.info("opening existing manifest file")
             manifest_file.load(input, fmt='json')
     else:
@@ -284,8 +284,8 @@ def add_files(manifest_file, algorithm, filenames):
         new_fr = create_file_record(filename, 'sha512')
         log.info("appending a new file record to manifest file")
         add = True
-        for fr in manifest_file.file_records:
-            log.debug("manifest file has '%s'" % "', ".join([x.filename for x in manifest_file.file_records]))
+        for fr in manifest.file_records:
+            log.debug("manifest file has '%s'" % "', ".join([x.filename for x in manifest.file_records]))
             if new_fr == fr and new_fr.validate():
                 log.info("file already in manifest file and matches")
                 add = False
