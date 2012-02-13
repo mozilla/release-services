@@ -305,7 +305,7 @@ def add_files(manifest_file, algorithm, filenames):
 
 def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
     # Generate the URL for the file on the server side
-    url = "%s/%s/%s" % (base_url, file_record.algorithm, file_record.filename)
+    url = "%s/%s/%s" % (base_url, file_record.algorithm, file_record.digest)
 
     # A file which is requested to be fetched that exists locally will be hashed.
     # If the hash matches the requested file's hash, nothing will be done and the
@@ -364,6 +364,7 @@ def fetch_files(manifest_file, base_url, overwrite, filenames=[]):
     manifest = Manifest()
     if os.path.exists(manifest_file):
         with open(manifest_file) as input:
+            log.debug("opening existing manifest file")
             manifest.load(input, fmt='json')
     else:
         log.error("specified manifest file does not exist")
@@ -376,14 +377,13 @@ def fetch_files(manifest_file, base_url, overwrite, filenames=[]):
     # Lets go through the manifest and fetch the files that we want
     fetched_files = []
     for f in manifest.file_records:
-            if fetch_file(base_url, f):
         if f.filename in filenames:
             log.debug("fetching %s" % f.filename)
             if fetch_file(base_url, f, overwrite):
                 fetched_files.append(f)
             else:
                 failed_files.append(f.filename)
-                log.error("'%s' failed" % f.filename)
+                log.error("fetching '%s' failed" % f.filename)
         else:
             log.debug("skipping %s" % f.filename)
 
@@ -409,7 +409,6 @@ def process_command(options, args):
     if cmd == 'list':
         return list_manifest(options.manifest)
     elif cmd == 'add':
-        add_files(manifest_file, algorithm, cmd_args)
         return add_files(options.manifest, options.algorithm, cmd_args)
     elif cmd == 'fetch':
         return fetch_files(options.manifest, 'http://localhost:8080', options.overwrite, cmd_args)
