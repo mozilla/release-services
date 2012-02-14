@@ -15,6 +15,7 @@ import logging
 import hashlib
 import urllib2
 import time
+import ConfigParser
 try:
     import simplejson as json # I hear simplejson is faster
 except ImportError:
@@ -419,11 +420,14 @@ def process_command(options, args):
     log.debug("processing '%s' command with args '%s'" % (cmd, '", "'.join(cmd_args)))
     log.debug("using options: %s" % options)
     if cmd == 'list':
-        return list_manifest(options.manifest)
+        return list_manifest(options['manifest'])
     elif cmd == 'add':
-        return add_files(options.manifest, options.algorithm, cmd_args)
+        return add_files(options['manifest'], options['algorithm'], cmd_args)
     elif cmd == 'fetch':
-        return fetch_files(options.manifest, 'http://localhost:8080', options.overwrite, cmd_args)
+        if not options.has_key('base_url') or options.get('base_url') is None:
+            log.critical('fetch command requires url option')
+            return False
+        return fetch_files(options['manifest'], options['base_url'], options['overwrite'], cmd_args)
     else:
         log.critical('command "%s" is not implemented' % cmd)
         return False
@@ -462,19 +466,39 @@ def main():
             dest='overwrite', action='store_true',
             help='if fetching, remote copy will overwrite a local copy that is different. ' +
                  'UNIMPLEMENTED: if adding, the local file will overwrite the manifest copy')
-    (options, args) = parser.parse_args()
+    parser.add_option('--url', dest='base_url', action='store',
+            help='base url for fetching files')
+    (options_obj, args) = parser.parse_args()
+    # Dictionaries are easier to work with
+    options = vars(options_obj)
+
 
     # Use some of the option parser to figure out application
     # log level
-    if options.verbose:
+    if options.get('verbose'):
         ch.setLevel(logging.DEBUG)
-    elif options.quiet:
+    elif options.get('quiet'):
         ch.setLevel(logging.ERROR)
     else:
         ch.setLevel(logging.INFO)
     log.addHandler(ch)
 
-    if not options.manifest:
+    cfg_file = ConfigParser.SafeConfigParser()
+    read_files = cfg_file.read(['/etc/tooltool', os.path.expanduser('~/.tooltool'),
+                   os.path.join(os.getcwd(), '.tooltool')])
+    log.debug("read in the config files '%s'" % '", '.join(read_files))
+
+    for option in ('base_url', 'algorithm'):
+        if not options.get(option):
+            try:
+                options[option] = cfg_file.get('general', option)
+                log.debug("read '%s' as '%s' from cfg_file" % (option, options[option]))
+            except ConfigParser.NoSectionError, s:
+                log.debug("%s in config file" % s)
+            except ConfigParser.NoOptionError, o:
+                log.debug("%s in config file" % o)
+
+    if not options.has_key('manifest'):
         log.critical("no manifest file specified")
         exit(1)
 
