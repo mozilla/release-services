@@ -382,7 +382,7 @@ def fetch_files(manifest_file, base_url, overwrite, filenames=[]):
     # Lets go through the manifest and fetch the files that we want
     fetched_files = []
     for f in manifest.file_records:
-        if f.filename in filenames:
+        if f.filename in filenames or len(filenames) == 0:
             log.debug("fetching %s" % f.filename)
             if fetch_file(base_url, f, overwrite):
                 fetched_files.append(f)
