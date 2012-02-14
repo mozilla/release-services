@@ -25,6 +25,8 @@ class DigestTests(unittest.TestCase):
 
     def test_digest_file(self):
         test_digest = tooltool.digest_file(self.sample_data, self.sample_algo)
+        # If this assertion fails, verify that test_file.ogg is an ogg file
+        # of Linus Torvalds explaining how he pronounces 'Linux'
         self.assertEqual(test_digest, self.sample_digest)
 
 #Ugh, I've managed to have a few different test naming schemes already :(
@@ -291,21 +293,6 @@ class TestManifestOperations(BaseFileRecordTest):
         os.chdir(self.startingwd)
         shutil.rmtree(self.test_dir)
 
-    def create_test_dirs(self, root, dirnames):
-        """In root, create and pupulate dirs named dirnames.
-        I blow away and recreate the root.  I return the list
-        of manifest files copied"""
-        if os.path.exists(root): shutil.rmtree(root)
-        os.mkdir(root)
-        rv = []
-        for (loc, copyfiles) in dirnames:
-            copydir = os.path.join(root, loc)
-            os.mkdir(copydir)
-            if copyfiles:
-                shutil.copy(self.sample_manifest_file, copydir)
-                shutil.copy(self.sample_manifest.file_records[0].filename, copydir)
-                rv.append(os.path.join(copydir, self.sample_manifest_file))
-        return rv
 
 
 log = logging.getLogger(tooltool.__name__)
