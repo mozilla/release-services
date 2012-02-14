@@ -14,6 +14,7 @@ import optparse
 import logging
 import hashlib
 import urllib2
+import time
 try:
     import simplejson as json # I hear simplejson is faster
 except ImportError:
@@ -344,11 +345,14 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
         with open(file_record.filename, 'wb') as out:
             k = True
             size = 0
+            t = time.time()
             while k:
                 indata = f.read(grabchunk)
                 out.write(indata)
                 size += len(indata)
-                log.debug("transfered %s bytes" % len(indata))
+                # TODO: verify that this speed is valid
+                log.debug("AVG SPEED: %0.2f Bytes/Second TOTAL TRANSFERED: %i" % (float(size / (time.time() - t)),
+                                                                                 size))
                 if indata == '':
                     k = False
             if size != file_record.size:
