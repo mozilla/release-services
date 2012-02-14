@@ -130,6 +130,21 @@ class TestFileRecord(BaseFileRecordTest):
         fr = tooltool.create_file_record(self.sample_file, self.sample_algo)
         self.assertEqual(self.test_record, fr)
 
+    def test_describe_absent(self):
+        self.test_record.filename = self.absent_file
+        self.assertEqual("'%s' is absent" % self.absent_file, self.test_record.describe())
+
+    def test_describe_present_valid(self):
+        self.assertEqual("'%s' is present and valid" % self.test_record.filename,
+                         self.test_record.describe())
+
+    def test_describe_present_invalid(self):
+        self.test_record.size = 4
+        self.test_record.digest = 'NotValidDigest'
+        self.assertEqual("'%s' is present and invalid" % self.test_record.filename,
+                         self.test_record.describe())
+
+
 class TestFileRecordJSONCodecs(BaseFileRecordListTest):
     def test_default(self):
         encoder = tooltool.FileRecordJSONEncoder()

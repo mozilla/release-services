@@ -91,7 +91,6 @@ class FileRecord(object):
         return False
 
     def describe(self):
-        # TODO: write test for this
         if self.present() and self.validate():
             return "'%s' is present and valid" % self.filename
         elif self.present():
@@ -271,7 +270,6 @@ def open_manifest(manifest_file):
 
 def list_manifest(manifest_file):
     """I know how print all the files in a location"""
-    # TODO: make this a generic Manifest method and change this function to consume it
     try:
         manifest = open_manifest(manifest_file)
     except InvalidManifest:
