@@ -90,6 +90,15 @@ class FileRecord(object):
                 return True
         return False
 
+    def describe(self):
+        # TODO: write test for this
+        if self.present() and self.validate():
+            return "'%s' is present and valid" % self.filename
+        elif self.present():
+            return "'%s' is present and invalid" % self.filename
+        else:
+            return "'%s' is absent" % self.filename
+
 
 def create_file_record(filename, algorithm):
     fo = open(filename, 'rb')
@@ -269,20 +278,7 @@ def list_manifest(manifest_file):
         log.error("failed to load manifest file at '%s'" % manifest_file)
         return False
     for f in manifest.file_records:
-        name = f.filename
-        conditions = []
-        if f.present():
-            conditions.append('present')
-            if f.validate():
-                conditions.append("valid")
-            else:
-                if not f.validate_size():
-                    conditions.append("incorrectly sized")
-                if not f.validate_digest():
-                    conditions.append("checksum mismatch")
-        else:
-            conditions.append('absent')
-        print "%s is %s" % (name, ', '.join(conditions))
+        print f.describe()
 
 def add_files(manifest_file, algorithm, filenames):
     # Create a manifest object to add to
