@@ -308,9 +308,6 @@ class TestManifestOperations(BaseFileRecordTest):
         return rv
 
 
-
-
-
 log = logging.getLogger(tooltool.__name__)
 log.setLevel(logging.ERROR)
 log.addHandler(logging.StreamHandler())

@@ -277,6 +277,7 @@ def list_manifest(manifest_file):
         return False
     for f in manifest.file_records:
         print f.describe()
+    return True
 
 def add_files(manifest_file, algorithm, filenames):
     # Create a manifest object to add to
@@ -288,7 +289,7 @@ def add_files(manifest_file, algorithm, filenames):
     for filename in filenames:
         log.debug("adding %s" % filename)
         path, name = os.path.split(filename)
-        new_fr = create_file_record(filename, 'sha512')
+        new_fr = create_file_record(filename, algorithm)
         log.debug("appending a new file record to manifest file")
         add = True
         for fr in manifest.file_records:
@@ -306,6 +307,7 @@ def add_files(manifest_file, algorithm, filenames):
             new_manifest.file_records.append(new_fr)
     with open(manifest_file, 'wb') as output:
         new_manifest.dump(output, fmt='json')
+
 
 def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
     # A file which is requested to be fetched that exists locally will be hashed.
@@ -331,6 +333,7 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
     # Generate the URL for the file on the server side
     url = "%s/%s/%s" % (base_url, file_record.algorithm, file_record.digest)
 
+    # TODO: This should be abstracted to make generic retreival protocol handling easy
     # Well, the file doesn't exist locally.  Lets fetch it.
     try:
         f = urllib2.urlopen(url)
@@ -354,13 +357,13 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
                 return False
             log.info("fetched %s" % file_record.filename)
     except urllib2.URLError as urlerror:
-        log.error("FAILED TO GRAB %s: %s" % (url, urlerror))
+        log.error("failed to fetch '%s': %s" % (url, urlerror))
         return False
     except urllib2.HTTPError as httperror:
-        log.error("FAILED TO GRAB %s: %s" % (url, httperror))
+        log.error("failed to fetch '%s': %s" % (url, httperror))
         return False
     except IOError as ioerror:
-        log.error("FAILED TO WRITE TO %s" % file_record.filename)
+        log.error("failed to write to '%s'" % file_record.filename)
         return False
     return True
 
@@ -393,7 +396,7 @@ def fetch_files(manifest_file, base_url, overwrite, filenames=[]):
     # manifest specified
     for localfile in fetched_files:
         if not localfile.validate():
-            log.error("'%s' failed validation" % localfile.filename)
+            log.error("'%s'" % localfile.describe())
 
     # If we failed to fetch or validate a file, we need to fail
     if len(failed_files) > 0:
