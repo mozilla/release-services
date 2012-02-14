@@ -286,10 +286,9 @@ def list_manifest(manifest_file):
 
 def add_files(manifest_file, algorithm, filenames):
     # Create a manifest object to add to
-    try:
+    if os.path.exists(manifest_file):
         manifest = open_manifest(manifest_file)
-    except InvalidManifest:
-        # If the manifest does not already exist we start with a blank slate
+    else:
         log.debug("creating a new manifest file")
     new_manifest = Manifest() # use a different manifest for the output
     for filename in filenames:
@@ -315,9 +314,6 @@ def add_files(manifest_file, algorithm, filenames):
         new_manifest.dump(output, fmt='json')
 
 def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
-    # Generate the URL for the file on the server side
-    url = "%s/%s/%s" % (base_url, file_record.algorithm, file_record.digest)
-
     # A file which is requested to be fetched that exists locally will be hashed.
     # If the hash matches the requested file's hash, nothing will be done and the
     # function will return.  If the function is told to overwrite and there is a 
@@ -337,6 +333,9 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
             log.debug("full digests: manifest (%s) local file (%s)" % (file_record.digest, d))
             # Let's bail!
             return False
+
+    # Generate the URL for the file on the server side
+    url = "%s/%s/%s" % (base_url, file_record.algorithm, file_record.digest)
 
     # Well, the file doesn't exist locally.  Lets fetch it.
     try:
