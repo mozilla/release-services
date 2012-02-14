@@ -287,6 +287,7 @@ def add_files(manifest_file, algorithm, filenames):
     if os.path.exists(manifest_file):
         manifest = open_manifest(manifest_file)
     else:
+        manifest = Manifest()
         log.debug("creating a new manifest file")
     new_manifest = Manifest() # use a different manifest for the output
     for filename in filenames:
