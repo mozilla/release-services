@@ -247,12 +247,26 @@ def digest_file(f,a):
         log.debug('hashed a file with %s to be %s', a, h.hexdigest())
     return h.hexdigest()
 
+def open_manifest(manifest_file):
+    """I know how to take a filename and load it into a Manifest object"""
+    manifest = Manifest()
+    if os.path.exists(manifest_file):
+        with open(manifest_file) as f:
+            manifest.load(f)
+            log.debug("loaded manifest from file '%s'" % manifest_file)
+            return manifest
+    else:
+        log.debug("tried to load absent file '%s' as manifest" % manifest_file)
+        raise InvalidManifest("manifest file '%s' does not exist" % manifest_file)
 
 def list_manifest(manifest_file):
     """I know how print all the files in a location"""
-    manifest = Manifest()
-    with open(manifest_file) as a:
-        manifest.load(a)
+    # TODO: make this a generic Manifest method and change this function to consume it
+    try:
+        manifest = open_manifest(manifest_file)
+    except InvalidManifest:
+        log.error("failed to load manifest file at '%s'" % manifest_file)
+        return False
     for f in manifest.file_records:
         name = f.filename
         conditions = []
@@ -271,13 +285,9 @@ def list_manifest(manifest_file):
 
 def add_files(manifest_file, algorithm, filenames):
     # Create a manifest object to add to
-    manifest = Manifest()
-    if os.path.exists(manifest_file):
-        # If the manifest file already exists, lets load the data from it
-        with open(manifest_file) as input:
-            log.debug("opening existing manifest file")
-            manifest.load(input, fmt='json')
-    else:
+    try:
+        manifest = open_manifest(manifest_file)
+    except InvalidManifest:
         # If the manifest does not already exist we start with a blank slate
         log.debug("creating a new manifest file")
     new_manifest = Manifest() # use a different manifest for the output
@@ -361,15 +371,11 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
 
 def fetch_files(manifest_file, base_url, overwrite, filenames=[]):
     # Lets load the manifest file
-    manifest = Manifest()
-    if os.path.exists(manifest_file):
-        with open(manifest_file) as input:
-            log.debug("opening existing manifest file")
-            manifest.load(input, fmt='json')
-    else:
-        log.error("specified manifest file does not exist")
+    try:
+        manifest = open_manifest(manifest_file)
+    except InvalidManifest:
+        log.error("failed to load manifest file at '%s'" % manifest_file)
         return False
-
     # We want to track files that fail to be fetched as well as
     # files that are fetched
     failed_files = []
@@ -440,7 +446,7 @@ def main():
     parser.add_option('-r', '--recurse', default=True,
             dest='recurse', action='store_false',
             help='if specified, directories will be recursed when scanning for .manifest files')
-    parser.add_option('-m', '--manifest', default=True,
+    parser.add_option('-m', '--manifest', default='manifest.tt',
             dest='manifest', action='store',
             help='specify the manifest file to be operated on')
     parser.add_option('-d', '--algorithm', default='sha512',
