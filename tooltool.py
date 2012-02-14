@@ -321,22 +321,21 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
     # If the hash matches the requested file's hash, nothing will be done and the
     # function will return.  If the function is told to overwrite and there is a 
     # digest mismatch, the exiting file will be overwritten
-    if os.path.exists(file_record.filename):
-        with open(file_record.filename, 'rb') as f:
-            d = digest_file(f, file_record.algorithm)
-            if not d == file_record.digest:
-                # Well, it doesn't match the local copy.
-                if overwrite:
-                    log.info("overwriting local %s as requested" % file_record.filename)
-                else:
-                    log.error("digest mismatch between manifest(%s...) and local file(%s...)" % \
-                          (file_record.digest[:8], d[:8]))
-                    log.debug("full digests: manifest (%s) local file (%s)" % (file_record.digest, d))
-                    # Let's bail!
-                    return False
-            else:
-                log.info("existing file has correct digest")
-                return True
+    if file_record.present():
+        if file_record.validate():
+            log.info("existing '%s' is valid, not fetching" % file_record.filename)
+            return True
+        if overwrite:
+            log.info("overwriting '%s' as requested" % file_record.filename)
+        else:
+            # All of the following is for a useful error message
+            with open(file_record.filename, 'rb') as f:
+                d = digest_file(f, file_record.algorithm)
+            log.error("digest mismatch between manifest(%s...) and local file(%s...)" % \
+                    (file_record.digest[:8], d[:8]))
+            log.debug("full digests: manifest (%s) local file (%s)" % (file_record.digest, d))
+            # Let's bail!
+            return False
 
     # Well, the file doesn't exist locally.  Lets fetch it.
     try:
