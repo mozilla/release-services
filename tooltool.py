@@ -256,6 +256,7 @@ def digest_file(f,a):
         log.debug('hashed a file with %s to be %s', a, h.hexdigest())
     return h.hexdigest()
 
+# TODO: write tests for this function
 def open_manifest(manifest_file):
     """I know how to take a filename and load it into a Manifest object"""
     manifest = Manifest()
@@ -268,6 +269,7 @@ def open_manifest(manifest_file):
         log.debug("tried to load absent file '%s' as manifest" % manifest_file)
         raise InvalidManifest("manifest file '%s' does not exist" % manifest_file)
 
+# TODO: write tests for this function
 def list_manifest(manifest_file):
     """I know how print all the files in a location"""
     try:
@@ -279,6 +281,7 @@ def list_manifest(manifest_file):
         print f.describe()
     return True
 
+# TODO: write tests for this function
 def add_files(manifest_file, algorithm, filenames):
     # Create a manifest object to add to
     if os.path.exists(manifest_file):
@@ -309,7 +312,8 @@ def add_files(manifest_file, algorithm, filenames):
         new_manifest.dump(output, fmt='json')
 
 
-def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
+# TODO: write tests for this function
+def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*4):
     # A file which is requested to be fetched that exists locally will be hashed.
     # If the hash matches the requested file's hash, nothing will be done and the
     # function will return.  If the function is told to overwrite and there is a 
@@ -333,6 +337,8 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
     # Generate the URL for the file on the server side
     url = "%s/%s/%s" % (base_url, file_record.algorithm, file_record.digest)
 
+    log.debug("fetching from '%s'" % url)
+
     # TODO: This should be abstracted to make generic retreival protocol handling easy
     # Well, the file doesn't exist locally.  Lets fetch it.
     try:
@@ -343,12 +349,10 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
             size = 0
             t = time.time()
             while k:
+                # TODO: print statistics as file transfers happen
                 indata = f.read(grabchunk)
                 out.write(indata)
                 size += len(indata)
-                # TODO: verify that this speed is valid
-                log.debug("AVG SPEED: %0.2f Bytes/Second TOTAL TRANSFERED: %i" % (float(size / (time.time() - t)),
-                                                                                 size))
                 if indata == '':
                     k = False
             if size != file_record.size:
@@ -357,10 +361,10 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
                 return False
             log.info("fetched %s" % file_record.filename)
     except urllib2.URLError as urlerror:
-        log.error("failed to fetch '%s': %s" % (url, urlerror))
+        log.error("failed to fetch '%s': %s" % (file_record.filename, urlerror))
         return False
     except urllib2.HTTPError as httperror:
-        log.error("failed to fetch '%s': %s" % (url, httperror))
+        log.error("failed to fetch '%s': %s" % (file_record.filename, httperror))
         return False
     except IOError as ioerror:
         log.error("failed to write to '%s'" % file_record.filename)
@@ -368,6 +372,7 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*8):
     return True
 
 
+# TODO: write tests for this function
 def fetch_files(manifest_file, base_url, overwrite, filenames=[]):
     # Lets load the manifest file
     try:
@@ -388,7 +393,6 @@ def fetch_files(manifest_file, base_url, overwrite, filenames=[]):
                 fetched_files.append(f)
             else:
                 failed_files.append(f.filename)
-                log.error("fetching '%s' failed" % f.filename)
         else:
             log.debug("skipping %s" % f.filename)
 
@@ -405,12 +409,14 @@ def fetch_files(manifest_file, base_url, overwrite, filenames=[]):
     return True
 
 
+# TODO: write tests for this function
 def process_command(options, args):
     """ I know how to take a list of program arguments and
     start doing the right thing with them"""
     cmd = args[0]
     cmd_args = args[1:]
-    log.debug('using command %s' % cmd)
+    log.debug("processing '%s' command with args '%s'" % (cmd, '", "'.join(cmd_args)))
+    log.debug("using options: %s" % options)
     if cmd == 'list':
         return list_manifest(options.manifest)
     elif cmd == 'add':
@@ -471,17 +477,6 @@ def main():
         log.critical("no manifest file specified")
         exit(1)
 
-# THIS IS BUSTED
-#    # Doing this because I want all options before all arguments
-#    yet_seen_arg = False
-#    for i in sys.argv[1:]:
-#        if i.startswith('-') and yet_seen_arg:
-#            log.critical("arguments should occur before options")
-#            exit(1)
-#        if not i.startswith('-'):
-#            yet_seen_arg = True
-
-    log.debug('processing command "%s"' % '", "'.join(args))
     if len(args) < 1:
         log.critical('You must specify a command')
         exit(1)
