@@ -2,3 +2,4 @@
 *.hg
 *.diff
 *.pyc
+testdir

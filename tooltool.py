@@ -312,6 +312,7 @@ def add_files(manifest_file, algorithm, filenames):
             new_manifest.file_records.append(new_fr)
     with open(manifest_file, 'wb') as output:
         new_manifest.dump(output, fmt='json')
+    return True # TODO: THIS IS HIGHLY INVALID
 
 
 # TODO: write tests for this function
@@ -351,7 +352,8 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*4):
             size = 0
             t = time.time()
             while k:
-                # TODO: print statistics as file transfers happen
+                # TODO: print statistics as file transfers happen both for info and to stop
+                # buildbot timeouts
                 indata = f.read(grabchunk)
                 out.write(indata)
                 size += len(indata)
@@ -453,9 +455,6 @@ def main():
             dest='quiet', action='store_true')
     parser.add_option('-v', '--verbose', default=False,
             dest='verbose', action='store_true')
-    parser.add_option('-r', '--recurse', default=True,
-            dest='recurse', action='store_false',
-            help='if specified, directories will be recursed when scanning for .manifest files')
     parser.add_option('-m', '--manifest', default='manifest.tt',
             dest='manifest', action='store',
             help='specify the manifest file to be operated on')
@@ -468,6 +467,8 @@ def main():
                  'UNIMPLEMENTED: if adding, the local file will overwrite the manifest copy')
     parser.add_option('--url', dest='base_url', action='store',
             help='base url for fetching files')
+    parser.add_option('--ignore-config-files', action='store_true', default=False,
+                     dest='ignore_cfg_files')
     (options_obj, args) = parser.parse_args()
     # Dictionaries are easier to work with
     options = vars(options_obj)
@@ -484,9 +485,12 @@ def main():
     log.addHandler(ch)
 
     cfg_file = ConfigParser.SafeConfigParser()
-    read_files = cfg_file.read(['/etc/tooltool', os.path.expanduser('~/.tooltool'),
+    if not options.get("ignore_cfg_files"):
+        read_files = cfg_file.read(['/etc/tooltool', os.path.expanduser('~/.tooltool'),
                    os.path.join(os.getcwd(), '.tooltool')])
-    log.debug("read in the config files '%s'" % '", '.join(read_files))
+        log.debug("read in the config files '%s'" % '", '.join(read_files))
+    else:
+        log.debug("skipping config files")
 
     for option in ('base_url', 'algorithm'):
         if not options.get(option):

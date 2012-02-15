@@ -1,4 +1,7 @@
-check: python-tests
+check: python-tests shell-tests
+
+shell-tests:
+	sh test.sh
 
 python-tests: 
 	clear
@@ -8,4 +11,4 @@ python-test-%:
 	clear
 	python test_tooltool.py $*
 
-.PHONY: check sh-tests python-tests python-tests-%
+.PHONY: check shell-tests python-tests python-tests-%
