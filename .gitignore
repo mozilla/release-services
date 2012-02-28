@@ -2,4 +2,12 @@
 *.hg
 *.diff
 *.pyc
+*.dmg
+*.bz2
+*.zip
+*.gz
+*.xz
+*.exe
+*.pkg
+*.mpkg
 testdir
