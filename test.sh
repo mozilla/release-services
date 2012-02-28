@@ -71,8 +71,15 @@ assert_nonzero $? "adding non-existant file"
 $tt list
 assert_zero $? "listing valid manifest"
 ###############
+rm a
+$tt list
+assert_zero $? "listing should work when there are absent files"
+###############
 $tt add b
 assert_zero $? "adding a second file"
+###############
+$tt add b
+assert_nonzero $? "adding a duplicate file shouldn't work"
 ###############
 curl -LI $TEST_BASE_URL &> /dev/null
 assert_zero $? "need a webserver, trying $TEST_BASE_URL"
@@ -119,5 +126,6 @@ if [[ $FAILCOUNT -ne 0 || $PASSCOUNT -lt 1 ]] ; then
     echo TESTS FAILED
     exit 1
 else
+    (cd .. && rm -rf testdir)
     exit 0
 fi

@@ -36,8 +36,6 @@ class MissingFileException(ExceptionWithFilename): pass
 
 class FileRecord(object):
     def __init__(self, filename, size, digest, algorithm):
-        #TODO: Add the ability to create a FileRecord that generates
-        # the size and digest based on filesystem contents
         object.__init__(self)
         self.filename = filename
         self.size = size
@@ -279,16 +277,23 @@ def list_manifest(manifest_file):
         log.error("failed to load manifest file at '%s'" % manifest_file)
         return False
     for f in manifest.file_records:
-        print f.describe()
+        print "%s\t%s\t%s" % ("P" if f.present() else "-",
+                              "V" if f.present() and f.validate() else "-",
+                              f.filename)
     return True
 
 # TODO: write tests for this function
 def add_files(manifest_file, algorithm, filenames):
-    # Create a manifest object to add to
+    # returns True if all files successfully added, False if not
+    # and doesn't catch library Exceptions.  If any files are already
+    # tracked in the manifest, return will be False because they weren't
+    # added
+    all_files_added = True
+    # Create a old_manifest object to add to
     if os.path.exists(manifest_file):
-        manifest = open_manifest(manifest_file)
+        old_manifest = open_manifest(manifest_file)
     else:
-        manifest = Manifest()
+        old_manifest = Manifest()
         log.debug("creating a new manifest file")
     new_manifest = Manifest() # use a different manifest for the output
     for filename in filenames:
@@ -297,22 +302,26 @@ def add_files(manifest_file, algorithm, filenames):
         new_fr = create_file_record(filename, algorithm)
         log.debug("appending a new file record to manifest file")
         add = True
-        for fr in manifest.file_records:
-            log.debug("manifest file has '%s'" % "', ".join([x.filename for x in manifest.file_records]))
+        for fr in old_manifest.file_records:
+            log.debug("manifest file has '%s'" % "', ".join([x.filename for x in old_manifest.file_records]))
             if new_fr == fr and new_fr.validate():
-                log.info("file already in manifest file and matches")
+                # TODO: Decide if this case should really cause a False return
+                log.info("file already in old_manifest file and matches")
                 add = False
             elif new_fr == fr and not new_fr.validate():
-                log.error("file already in manifest file but is invalid")
+                log.error("file already in old_manifest file but is invalid")
                 add = False
             if filename == fr.filename:
                 log.error("manifest already contains file named %s" % filename)
                 add = False
         if add:
             new_manifest.file_records.append(new_fr)
+            log.debug("added '%s' to manifest" % filename)
+        else:
+            all_files_added = False
     with open(manifest_file, 'wb') as output:
         new_manifest.dump(output, fmt='json')
-    return True # TODO: THIS IS HIGHLY INVALID
+    return all_files_added
 
 
 # TODO: write tests for this function
@@ -439,6 +448,19 @@ def process_command(options, args):
 #   example: http://people.mozilla.org/sha1/1234567890abcedf
 # This will make it possible to have the server allow clients to
 # use different algorithms than what was uploaded to the server
+
+# TODO: Implement the following features:
+#   -optimization: do small files first, justification is that they are faster
+#    and cause a faster failure if they are invalid
+#   -store permissions
+#   -local renames i.e. call the file one thing on the server and
+#    something different locally
+#   -deal with the cases:
+#     -local data matches file requested with different filename
+#     -two different files with same name, different hash
+#   -?only ever locally to digest as filename, symlink to real name
+#   -?maybe deal with files as a dir of the filename with all files in that dir as the versions of that file
+#      - e.g. ./python-2.6.7.dmg/0123456789abcdef and ./python-2.6.7.dmg/abcdef0123456789
 
 def main():
     # Set up logging, for now just to the console
