@@ -211,11 +211,16 @@ class Manifest(object):
                 return False
         return True
 
+    def sort(self):
+        #TODO: WRITE TESTS
+        self.file_records.sort(key=lambda x: x.size)
+
     def load(self, data_file, fmt='json'):
         assert fmt in self.valid_formats
         if fmt == 'json':
             try:
                 self.file_records.extend(json.load(data_file, cls=FileRecordJSONDecoder))
+                self.sort()
             except ValueError:
                 raise InvalidManifest("trying to read invalid manifest file")
 
@@ -224,11 +229,13 @@ class Manifest(object):
         if fmt == 'json':
             try:
                 self.file_records.extend(json.loads(data_string, cls=FileRecordJSONDecoder))
+                self.sort()
             except ValueError:
                 raise InvalidManifest("trying to read invalid manifest file")
 
     def dump(self, output_file, fmt='json'):
         assert fmt in self.valid_formats
+        self.sort()
         if fmt == 'json':
             rv = json.dump(self.file_records, output_file, indent=0, cls=FileRecordJSONEncoder)
             print >> output_file, ''
@@ -236,6 +243,7 @@ class Manifest(object):
 
     def dumps(self, fmt='json'):
         assert fmt in self.valid_formats
+        self.sort()
         if fmt == 'json':
             return json.dumps(self.file_records, cls=FileRecordJSONEncoder)
 
