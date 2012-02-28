@@ -282,6 +282,27 @@ def list_manifest(manifest_file):
                               f.filename)
     return True
 
+def validate_manifest(manifest_file):
+    """I validate that all files in a manifest are present and valid but
+    don't fetch or delete them if they aren't"""
+    try:
+        manifest = open_manifest(manifest_file)
+    except InvalidManifest:
+        log.error("failed to load manifest file at '%s'" % manifest_file)
+        return False
+    invalid_files = []
+    absent_files = []
+    for f in manifest.file_records:
+        if not f.present():
+            absent_files.append(f)
+        else:
+            if not f.validate():
+                invalid_files.append(f)
+    if len(invalid_files + absent_files) == 0:
+        return True
+    else:
+        return False
+
 # TODO: write tests for this function
 def add_files(manifest_file, algorithm, filenames):
     # returns True if all files successfully added, False if not
@@ -432,6 +453,8 @@ def process_command(options, args):
     log.debug("using options: %s" % options)
     if cmd == 'list':
         return list_manifest(options['manifest'])
+    if cmd == 'validate':
+        return validate_manifest(options['manifest'])
     elif cmd == 'add':
         return add_files(options['manifest'], options['algorithm'], cmd_args)
     elif cmd == 'fetch':

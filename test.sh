@@ -110,8 +110,9 @@ $tt fetch a --overwrite
 assert_zero $? "with overwriting, should overwrite"
 test `cat a` -eq 1
 assert_zero $? "contents should be per manifest"
-
-
+#############
+$tt validate
+assert_zero $? "validate works"
 
 
 
