@@ -6,15 +6,11 @@
 
 __version__ = '1'
 
-import sys
 import os
-import os.path as systempath
-import posixpath
 import optparse
 import logging
 import hashlib
 import urllib2
-import time
 import ConfigParser
 try:
     import simplejson as json # I hear simplejson is faster
@@ -22,7 +18,6 @@ except ImportError:
     import json
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
 
 class FileRecordJSONEncoderException(Exception): pass
 class InvalidManifest(Exception): pass
@@ -46,12 +41,13 @@ class FileRecord(object):
     def __eq__(self, other):
         if self is other:
             return True
-        if self.filename == other.filename:
-            if self.size == other.size:
-                if self.digest == other.digest:
-                    if self.algorithm == other.algorithm:
-                        return True
-        return False
+        if self.filename == other.filename and \
+            self.size == other.size and \
+            self.digest == other.digest and \
+            self.algorithm == other.algorithm:
+            return True
+        else:
+            return False
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -77,7 +73,7 @@ class FileRecord(object):
 
     def validate_digest(self):
         if self.present():
-            with open(self.filename) as f:
+            with open(self.filename, 'rb') as f:
                 return self.digest == digest_file(f, self.algorithm)
         else:
             log.debug("trying to validate digest on a missing file, %s', self.filename")
@@ -109,7 +105,7 @@ def create_file_record(filename, algorithm):
 class FileRecordJSONEncoder(json.JSONEncoder):
     def encode_file_record(self, obj):
         if not issubclass(type(obj), FileRecord):
-            err="FileRecordJSONEncoder is only for FileRecord and lists of FileRecords, not %s" % obj.__class__.__name__
+            err = "FileRecordJSONEncoder is only for FileRecord and lists of FileRecords, not %s" % obj.__class__.__name__
             log.warn(err)
             raise FileRecordJSONEncoderException(err)
         else:
@@ -188,28 +184,16 @@ class Manifest(object):
         return Manifest(self.file_records[:])
 
     def present(self):
-        for i in self.file_records:
-            if not i.present():
-                return False
-        return True
+        return all(i.present() for i in self.file_records)
 
     def validate_sizes(self):
-        for i in self.file_records:
-            if not i.validate_size():
-                return False
-        return True
+        return all(i.validate_size() for i in self.file_records)
 
     def validate_digests(self):
-        for i in self.file_records:
-            if not i.validate_digest():
-                return False
-        return True
+        return all(i.validate_digest() for i in self.file_records)
 
     def validate(self):
-        for i in self.file_records:
-            if not i.validate():
-                return False
-        return True
+        return all(i.validate() for i in self.file_records)
 
     def sort(self):
         #TODO: WRITE TESTS
@@ -248,7 +232,7 @@ class Manifest(object):
             return json.dumps(self.file_records, cls=FileRecordJSONEncoder)
 
 
-def digest_file(f,a):
+def digest_file(f, a):
     """I take a file like object 'f' and return a hex-string containing
     of the result of the algorithm 'a' applied to 'f'."""
     h = hashlib.new(a)
@@ -266,12 +250,12 @@ def digest_file(f,a):
 # TODO: write tests for this function
 def open_manifest(manifest_file):
     """I know how to take a filename and load it into a Manifest object"""
-    manifest = Manifest()
     if os.path.exists(manifest_file):
+        manifest = Manifest()
         with open(manifest_file) as f:
             manifest.load(f)
             log.debug("loaded manifest from file '%s'" % manifest_file)
-            return manifest
+        return manifest
     else:
         log.debug("tried to load absent file '%s' as manifest" % manifest_file)
         raise InvalidManifest("manifest file '%s' does not exist" % manifest_file)
@@ -388,7 +372,6 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*4):
         with open(file_record.filename, 'wb') as out:
             k = True
             size = 0
-            t = time.time()
             while k:
                 # TODO: print statistics as file transfers happen both for info and to stop
                 # buildbot timeouts
@@ -402,14 +385,13 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*4):
                             file_record.filename, file_record.size - size))
                 return False
             log.info("fetched %s" % file_record.filename)
-    except urllib2.URLError as urlerror:
-        log.error("failed to fetch '%s': %s" % (file_record.filename, urlerror))
+    except (urllib2.URLError, urllib2.HTTPError) as e:
+        log.error("failed to fetch '%s': %s" % (file_record.filename, e),
+                  exc_info=True)
         return False
-    except urllib2.HTTPError as httperror:
-        log.error("failed to fetch '%s': %s" % (file_record.filename, httperror))
-        return False
-    except IOError as ioerror:
-        log.error("failed to write to '%s'" % file_record.filename)
+    except IOError:
+        log.error("failed to write to '%s'" % file_record.filename,
+                  exc_info=True)
         return False
     return True
 
@@ -550,18 +532,14 @@ def main():
             try:
                 options[option] = cfg_file.get('general', option)
                 log.debug("read '%s' as '%s' from cfg_file" % (option, options[option]))
-            except ConfigParser.NoSectionError, s:
-                log.debug("%s in config file" % s)
-            except ConfigParser.NoOptionError, o:
-                log.debug("%s in config file" % o)
+            except (ConfigParser.NoSectionError, ConfigParser.NoOptionError) as e:
+                log.debug("%s in config file" % e, exc_info=True)
 
     if not options.has_key('manifest'):
-        log.critical("no manifest file specified")
-        exit(1)
+        parser.error("no manifest file specified")
 
     if len(args) < 1:
-        log.critical('You must specify a command')
-        exit(1)
+        parser.error('You must specify a command')
     exit(0 if process_command(options, args) else 1)
 
 if __name__ == "__main__":

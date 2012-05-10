@@ -249,7 +249,7 @@ class TestManifest(BaseFileRecordTest):
         two = tooltool.Manifest([self.test_record, self.other_test_record])
         self.assertEqual(one,two)
 
-    def test_json_file(self):
+    def test_json_dump(self):
         tmp_manifest = tempfile.TemporaryFile()
         self.test_manifest.dump(tmp_manifest, fmt='json')
         tmp_manifest.seek(0)
@@ -257,7 +257,7 @@ class TestManifest(BaseFileRecordTest):
         new_manifest.load(tmp_manifest, fmt='json')
         self.assertEqual(new_manifest, self.test_manifest)
 
-    def test_json_file(self):
+    def test_json_dumps(self):
         s = self.test_manifest.dumps(fmt='json')
         new_manifest = tooltool.Manifest()
         new_manifest.loads(s, fmt='json')
