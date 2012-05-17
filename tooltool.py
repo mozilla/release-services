@@ -514,8 +514,7 @@ def main():
             help='openssl hashing algorithm to use')
     parser.add_option('-o', '--overwrite', default=False,
             dest='overwrite', action='store_true',
-            help='if fetching, remote copy will overwrite a local copy that is different. ' +
-                 'UNIMPLEMENTED: if adding, the local file will overwrite the manifest copy')
+            help='if fetching, remote copy will overwrite a local copy that is different. ')
     parser.add_option('--url', dest='base_url', action='store',
             help='base url for fetching files')
     parser.add_option('--ignore-config-files', action='store_true', default=False,
