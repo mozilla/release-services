@@ -18,10 +18,15 @@ mapfile_last_check = {}
 mapfile_stat_cache = {}
 
 
-@route('/<project>/git/<rev>')
-def get_git_rev(project, rev):
-    """Get the git revision for a mercurial revision"""
-    mapfile = os.path.join(mapfile_dir, project, "mapfile")
+@route('/<project>/<vcs>/<rev>')
+def get_rev(project, vcs, rev):
+    """Translate git/hg revisions"""
+    assert vcs in ("git", "hg")
+    if vcs == 'git':
+        mapfile = 'hg2git'
+    elif vcs == 'hg':
+        mapfile = 'git2hg'
+    mapfile = os.path.join(mapfile_dir, project, mapfile)
     if not os.path.exists(mapfile):
         log.debug("%s doesn't exist", mapfile)
         abort(404, "%s's mapfile not found" % project)
@@ -48,8 +53,8 @@ def get_git_rev(project, rev):
         mapfile_stat_cache[mapfile] = (s.st_ino, s.st_size, s.st_mtime)
 
     s = time.time()
-    git_rev = mapfile_binary_search(m, rev)
-    return {"git_rev": git_rev}
+    rev = mapfile_binary_search(m, rev)
+    return {"%s_rev" % vcs: rev}
 
 
 def main():
