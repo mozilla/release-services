@@ -27,7 +27,7 @@ import optparse
 import logging
 import hashlib
 import urllib2
-import ConfigParser
+
 try:
     import simplejson as json # I hear simplejson is faster
 except ImportError:
@@ -375,7 +375,8 @@ def add_files(manifest_file, algorithm, filenames):
 
 
 # TODO: write tests for this function
-def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024 * 4):
+
+def fetch_file(base_urls, file_record, overwrite=False, grabchunk=1024 * 4):
     # A file which is requested to be fetched that exists locally will be hashed.
     # If the hash matches the requested file's hash, nothing will be done and the
     # function will return.  If the function is told to overwrite and there is a
@@ -396,45 +397,46 @@ def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024 * 4):
             # Let's bail!
             return False
 
-    # Generate the URL for the file on the server side
-    url = "%s/%s/%s" % (base_url, file_record.algorithm, file_record.digest)
+    for base_url in base_urls:
+        # Generate the URL for the file on the server side
+        url = "%s/%s/%s" % (base_url, file_record.algorithm, file_record.digest)
 
-    log.debug("fetching from '%s'" % url)
+        log.info("Attempting to fetch from '%s'..." % base_url)
 
-    # TODO: This should be abstracted to make generic retreival protocol handling easy
-    # Well, the file doesn't exist locally.  Lets fetch it.
-    try:
-        f = urllib2.urlopen(url)
-        log.debug("opened %s for reading" % url)
-        with open(file_record.filename, 'wb') as out:
-            k = True
-            size = 0
-            while k:
-                # TODO: print statistics as file transfers happen both for info and to stop
-                # buildbot timeouts
-                indata = f.read(grabchunk)
-                out.write(indata)
-                size += len(indata)
-                if indata == '':
-                    k = False
-            if size != file_record.size:
-                log.error("transfer from %s to %s failed due to a difference of %d bytes" % (url,
-                            file_record.filename, file_record.size - size))
-                return False
-            log.info("fetched %s" % file_record.filename)
-    except (urllib2.URLError, urllib2.HTTPError) as e:
-        log.error("failed to fetch '%s': %s" % (file_record.filename, e),
-                  exc_info=True)
-        return False
-    except IOError:
-        log.error("failed to write to '%s'" % file_record.filename,
-                  exc_info=True)
-        return False
-    return True
-
+        # TODO: This should be abstracted to make generic retrival protocol handling easy
+        # Well, the file doesn't exist locally.  Let's fetch it.
+        try:
+            f = urllib2.urlopen(url)
+            log.debug("opened %s for reading" % url)
+            with open(file_record.filename, 'wb') as out:
+                k = True
+                size = 0
+                while k:
+                    # TODO: print statistics as file transfers happen both for info and to stop
+                    # buildbot timeouts
+                    indata = f.read(grabchunk)
+                    out.write(indata)
+                    size += len(indata)
+                    if indata == '':
+                        k = False
+                if size != file_record.size:
+                    log.error("transfer from %s to %s failed due to a difference of %d bytes" % (url,
+                                file_record.filename, file_record.size - size))
+                else:
+                    log.info("Success! File %s fetched from %s" % (file_record.filename, base_url))
+                    return True
+        except (urllib2.URLError, urllib2.HTTPError, ValueError) as e:
+            log.info("..failed to fetch '%s' from %s" % (file_record.filename, base_url))
+            log.debug("%s" % e)
+        except IOError:
+            log.info("failed to write to '%s'" % file_record.filename,
+                      exc_info=True)
+    return False
 
 # TODO: write tests for this function
-def fetch_files(manifest_file, base_url, overwrite, filenames=[]):
+
+
+def fetch_files(manifest_file, base_urls, overwrite, filenames=[]):
     # Lets load the manifest file
     try:
         manifest = open_manifest(manifest_file)
@@ -450,7 +452,7 @@ def fetch_files(manifest_file, base_url, overwrite, filenames=[]):
     for f in manifest.file_records:
         if f.filename in filenames or len(filenames) == 0:
             log.debug("fetching %s" % f.filename)
-            if fetch_file(base_url, f, overwrite):
+            if fetch_file(base_urls, f, overwrite):
                 fetched_files.append(f)
             else:
                 failed_files.append(f.filename)
@@ -485,13 +487,17 @@ def process_command(options, args):
     elif cmd == 'add':
         return add_files(options['manifest'], options['algorithm'], cmd_args)
     elif cmd == 'fetch':
-        if not 'base_url' in options or options.get('base_url') is None:
-            log.critical('fetch command requires url option')
+        if not options.get('base_url'):
+            log.critical('fetch command requires at least one url provided using ' +
+                         'the url option in the command line')
             return False
         return fetch_files(options['manifest'], options['base_url'], options['overwrite'], cmd_args)
     else:
         log.critical('command "%s" is not implemented' % cmd)
         return False
+
+
+
 
 # fetching api:
 #   http://hostname/algorithm/hash
@@ -515,6 +521,7 @@ def process_command(options, args):
 
 def main():
     # Set up logging, for now just to the console
+    log.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
     cf = logging.Formatter("%(levelname)s - %(message)s")
     ch.setFormatter(cf)
@@ -537,10 +544,9 @@ def main():
     parser.add_option('-o', '--overwrite', default=False,
             dest='overwrite', action='store_true',
             help='if fetching, remote copy will overwrite a local copy that is different. ')
-    parser.add_option('--url', dest='base_url', action='store',
+    parser.add_option('--url', dest='base_url', action='append',
             help='base url for fetching files')
-    parser.add_option('--ignore-config-files', action='store_true', default=False,
-                     dest='ignore_cfg_files')
+
     (options_obj, args) = parser.parse_args()
     # Dictionaries are easier to work with
     options = vars(options_obj)
@@ -555,22 +561,6 @@ def main():
     else:
         ch.setLevel(logging.INFO)
     log.addHandler(ch)
-
-    cfg_file = ConfigParser.SafeConfigParser()
-    if not options.get("ignore_cfg_files"):
-        read_files = cfg_file.read(['/etc/tooltool', os.path.expanduser('~/.tooltool'),
-                   os.path.join(os.getcwd(), '.tooltool')])
-        log.debug("read in the config files '%s'" % '", '.join(read_files))
-    else:
-        log.debug("skipping config files")
-
-    for option in ('base_url', 'algorithm'):
-        if not options.get(option):
-            try:
-                options[option] = cfg_file.get('general', option)
-                log.debug("read '%s' as '%s' from cfg_file" % (option, options[option]))
-            except (ConfigParser.NoSectionError, ConfigParser.NoOptionError) as e:
-                log.debug("%s in config file" % e, exc_info=True)
 
     if not 'manifest' in options:
         parser.error("no manifest file specified")
