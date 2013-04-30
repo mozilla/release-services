@@ -29,7 +29,7 @@ import hashlib
 import urllib2
 
 try:
-    import simplejson as json # I hear simplejson is faster
+    import simplejson as json  # I hear simplejson is faster
 except ImportError:
     import json
 
@@ -73,9 +73,9 @@ class FileRecord(object):
         if self is other:
             return True
         if self.filename == other.filename and \
-            self.size == other.size and \
-            self.digest == other.digest and \
-            self.algorithm == other.algorithm:
+           self.size == other.size and \
+           self.digest == other.digest and \
+           self.algorithm == other.algorithm:
             return True
         else:
             return False
@@ -88,8 +88,10 @@ class FileRecord(object):
 
     def __repr__(self):
         return "%s.%s(filename='%s', size='%s', digest='%s', algorithm='%s')" % (__name__,
-                self.__class__.__name__,
-                self.filename, self.size, self.digest, self.algorithm)
+                                                                                 self.__class__.__name__,
+                                                                                 self.filename,
+                                                                                 self.size,
+                                                                                 self.digest, self.algorithm)
 
     def present(self):
         # Doesn't check validity
@@ -189,8 +191,8 @@ class Manifest(object):
 
     valid_formats = ('json',)
 
-    def __init__(self, file_records=[]):
-        self.file_records = file_records
+    def __init__(self, file_records=None):
+        self.file_records = file_records or []
 
     def __eq__(self, other):
         if self is other:
@@ -345,7 +347,7 @@ def add_files(manifest_file, algorithm, filenames):
     else:
         old_manifest = Manifest()
         log.debug("creating a new manifest file")
-    new_manifest = Manifest() # use a different manifest for the output
+    new_manifest = Manifest()  # use a different manifest for the output
     for filename in filenames:
         log.debug("adding %s" % filename)
         path, name = os.path.split(filename)
@@ -391,8 +393,8 @@ def fetch_file(base_urls, file_record, overwrite=False, grabchunk=1024 * 4):
             # All of the following is for a useful error message
             with open(file_record.filename, 'rb') as f:
                 d = digest_file(f, file_record.algorithm)
-            log.error("digest mismatch between manifest(%s...) and local file(%s...)" % \
-                    (file_record.digest[:8], d[:8]))
+            log.error("digest mismatch between manifest(%s...) and local file(%s...)" %
+                      (file_record.digest[:8], d[:8]))
             log.debug("full digests: manifest (%s) local file (%s)" % (file_record.digest, d))
             # Let's bail!
             return False
@@ -420,8 +422,8 @@ def fetch_file(base_urls, file_record, overwrite=False, grabchunk=1024 * 4):
                     if indata == '':
                         k = False
                 if size != file_record.size:
-                    log.error("transfer from %s to %s failed due to a difference of %d bytes" % (url,
-                                file_record.filename, file_record.size - size))
+                    log.error("transfer from %s to %s failed due to a difference of %d bytes" %
+                              (url, file_record.filename, file_record.size - size))
                 else:
                     log.info("Success! File %s fetched from %s" % (file_record.filename, base_url))
                     return True
@@ -429,13 +431,11 @@ def fetch_file(base_urls, file_record, overwrite=False, grabchunk=1024 * 4):
             log.info("..failed to fetch '%s' from %s" % (file_record.filename, base_url))
             log.debug("%s" % e)
         except IOError:
-            log.info("failed to write to '%s'" % file_record.filename,
-                      exc_info=True)
+            log.info("failed to write to '%s'" % file_record.filename, exc_info=True)
     return False
 
+
 # TODO: write tests for this function
-
-
 def fetch_files(manifest_file, base_urls, overwrite, filenames=[]):
     # Lets load the manifest file
     try:
@@ -497,8 +497,6 @@ def process_command(options, args):
         return False
 
 
-
-
 # fetching api:
 #   http://hostname/algorithm/hash
 #   example: http://people.mozilla.org/sha1/1234567890abcedf
@@ -517,8 +515,6 @@ def process_command(options, args):
 #   -?only ever locally to digest as filename, symlink to real name
 #   -?maybe deal with files as a dir of the filename with all files in that dir as the versions of that file
 #      - e.g. ./python-2.6.7.dmg/0123456789abcdef and ./python-2.6.7.dmg/abcdef0123456789
-
-
 def main():
     # Set up logging, for now just to the console
     log.setLevel(logging.DEBUG)
@@ -532,26 +528,24 @@ def main():
     # sequential and at the end of the argv.
     # OH! i could step through sys.argv and check for things starting without -/-- before things starting with them
     parser.add_option('-q', '--quiet', default=False,
-            dest='quiet', action='store_true')
+                      dest='quiet', action='store_true')
     parser.add_option('-v', '--verbose', default=False,
-            dest='verbose', action='store_true')
+                      dest='verbose', action='store_true')
     parser.add_option('-m', '--manifest', default='manifest.tt',
-            dest='manifest', action='store',
-            help='specify the manifest file to be operated on')
+                      dest='manifest', action='store',
+                      help='specify the manifest file to be operated on')
     parser.add_option('-d', '--algorithm', default='sha512',
-            dest='algorithm', action='store',
-            help='openssl hashing algorithm to use')
+                      dest='algorithm', action='store',
+                      help='openssl hashing algorithm to use')
     parser.add_option('-o', '--overwrite', default=False,
-            dest='overwrite', action='store_true',
-            help='if fetching, remote copy will overwrite a local copy that is different. ')
+                      dest='overwrite', action='store_true',
+                      help='if fetching, remote copy will overwrite a local copy that is different. ')
     parser.add_option('--url', dest='base_url', action='append',
-            help='base url for fetching files')
+                      help='base url for fetching files')
 
     (options_obj, args) = parser.parse_args()
     # Dictionaries are easier to work with
     options = vars(options_obj)
-
-
     # Use some of the option parser to figure out application
     # log level
     if options.get('verbose'):
