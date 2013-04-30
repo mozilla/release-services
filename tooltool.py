@@ -35,17 +35,32 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-class FileRecordJSONEncoderException(Exception): pass
-class InvalidManifest(Exception): pass
+
+class FileRecordJSONEncoderException(Exception):
+    pass
+
+
+class InvalidManifest(Exception):
+    pass
+
+
 class ExceptionWithFilename(Exception):
+
     def __init__(self, filename):
         Exception.__init__(self)
         self.filename = filename
 
-class DigestMismatchException(ExceptionWithFilename): pass
-class MissingFileException(ExceptionWithFilename): pass
+
+class DigestMismatchException(ExceptionWithFilename):
+    pass
+
+
+class MissingFileException(ExceptionWithFilename):
+    pass
+
 
 class FileRecord(object):
+
     def __init__(self, filename, size, digest, algorithm):
         object.__init__(self)
         self.filename = filename
@@ -119,6 +134,7 @@ def create_file_record(filename, algorithm):
 
 
 class FileRecordJSONEncoder(json.JSONEncoder):
+
     def encode_file_record(self, obj):
         if not issubclass(type(obj), FileRecord):
             err = "FileRecordJSONEncoder is only for FileRecord and lists of FileRecords, not %s" % obj.__class__.__name__
@@ -143,6 +159,7 @@ class FileRecordJSONDecoder(json.JSONDecoder):
     FileRecords.  I ignore things that I don't expect for now"""
     # TODO: make this more explicit in what it's looking for
     # and error out on unexpected things
+
     def process_file_records(self, obj):
         if isinstance(obj, list):
             record_list = []
@@ -153,10 +170,10 @@ class FileRecordJSONDecoder(json.JSONDecoder):
             return record_list
         if isinstance(obj, dict) and \
            len(obj.keys()) == 4 and \
-           obj.has_key('filename') and \
-           obj.has_key('size') and \
-           obj.has_key('algorithm') and \
-           obj.has_key('digest'):
+           'filename' in obj and \
+           'size' in obj and \
+           'algorithm' in obj and \
+           'digest' in obj:
             rv = FileRecord(obj['filename'], obj['size'], obj['digest'], obj['algorithm'])
             log.debug("materialized %s" % rv)
             return rv
@@ -182,7 +199,7 @@ class Manifest(object):
             log.debug('Manifests differ in number of files')
             return False
         #TODO: Lists in a different order should be equal
-        for record in range(0,len(self.file_records)):
+        for record in range(0, len(self.file_records)):
             if self.file_records[record] != other.file_records[record]:
                 log.debug('FileRecords differ, %s vs %s' % (self.file_records[record],
                                                             other.file_records[record]))
@@ -252,7 +269,7 @@ def digest_file(f, a):
     """I take a file like object 'f' and return a hex-string containing
     of the result of the algorithm 'a' applied to 'f'."""
     h = hashlib.new(a)
-    chunk_size = 1024*10
+    chunk_size = 1024 * 10
     data = f.read(chunk_size)
     while data:
         h.update(data)
@@ -262,6 +279,7 @@ def digest_file(f, a):
     else:
         log.debug('hashed a file with %s to be %s', a, h.hexdigest())
     return h.hexdigest()
+
 
 # TODO: write tests for this function
 def open_manifest(manifest_file):
@@ -276,6 +294,7 @@ def open_manifest(manifest_file):
         log.debug("tried to load absent file '%s' as manifest" % manifest_file)
         raise InvalidManifest("manifest file '%s' does not exist" % manifest_file)
 
+
 # TODO: write tests for this function
 def list_manifest(manifest_file):
     """I know how print all the files in a location"""
@@ -289,6 +308,7 @@ def list_manifest(manifest_file):
                               "V" if f.present() and f.validate() else "-",
                               f.filename)
     return True
+
 
 def validate_manifest(manifest_file):
     """I validate that all files in a manifest are present and valid but
@@ -310,6 +330,7 @@ def validate_manifest(manifest_file):
         return True
     else:
         return False
+
 
 # TODO: write tests for this function
 def add_files(manifest_file, algorithm, filenames):
@@ -354,10 +375,10 @@ def add_files(manifest_file, algorithm, filenames):
 
 
 # TODO: write tests for this function
-def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024*4):
+def fetch_file(base_url, file_record, overwrite=False, grabchunk=1024 * 4):
     # A file which is requested to be fetched that exists locally will be hashed.
     # If the hash matches the requested file's hash, nothing will be done and the
-    # function will return.  If the function is told to overwrite and there is a 
+    # function will return.  If the function is told to overwrite and there is a
     # digest mismatch, the exiting file will be overwritten
     if file_record.present():
         if file_record.validate():
@@ -464,7 +485,7 @@ def process_command(options, args):
     elif cmd == 'add':
         return add_files(options['manifest'], options['algorithm'], cmd_args)
     elif cmd == 'fetch':
-        if not options.has_key('base_url') or options.get('base_url') is None:
+        if not 'base_url' in options or options.get('base_url') is None:
             log.critical('fetch command requires url option')
             return False
         return fetch_files(options['manifest'], options['base_url'], options['overwrite'], cmd_args)
@@ -490,6 +511,7 @@ def process_command(options, args):
 #   -?only ever locally to digest as filename, symlink to real name
 #   -?maybe deal with files as a dir of the filename with all files in that dir as the versions of that file
 #      - e.g. ./python-2.6.7.dmg/0123456789abcdef and ./python-2.6.7.dmg/abcdef0123456789
+
 
 def main():
     # Set up logging, for now just to the console
@@ -550,7 +572,7 @@ def main():
             except (ConfigParser.NoSectionError, ConfigParser.NoOptionError) as e:
                 log.debug("%s in config file" % e, exc_info=True)
 
-    if not options.has_key('manifest'):
+    if not 'manifest' in options:
         parser.error("no manifest file specified")
 
     if len(args) < 1:
