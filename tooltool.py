@@ -517,7 +517,6 @@ def process_command(options, args):
 #      - e.g. ./python-2.6.7.dmg/0123456789abcdef and ./python-2.6.7.dmg/abcdef0123456789
 def main():
     # Set up logging, for now just to the console
-    log.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
     cf = logging.Formatter("%(levelname)s - %(message)s")
     ch.setFormatter(cf)
