@@ -212,6 +212,12 @@ class TestManifest(BaseFileRecordTest):
         self.other_test_record.filename = self.other_sample_file
         self.test_manifest = tooltool.Manifest([self.test_record, self.other_test_record])
 
+    def tearDown(self):
+        try:
+            os.remove(self.other_sample_file)
+        except OSError:
+            pass
+
     def test_present(self):
         self.assertTrue(self.test_manifest.present())
 
