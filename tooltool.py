@@ -27,6 +27,9 @@ import optparse
 import logging
 import hashlib
 import urllib2
+import shutil
+import sys
+import time
 
 try:
     import simplejson as json  # I hear simplejson is faster
@@ -376,13 +379,23 @@ def add_files(manifest_file, algorithm, filenames):
     return all_files_added
 
 
-# TODO: write tests for this function
+def touch(f):
+    """Used to modify mtime in cached files;
+    mtime is used by the purge command"""
+    try:
+        os.utime(f, None)
+    except:
+        log.warn('impossible to update utime of file %s' % f)
 
-def fetch_file(base_urls, file_record, overwrite=False, grabchunk=1024 * 4):
+
+# TODO: write tests for this function
+def fetch_file(base_urls, file_record, overwrite=False, grabchunk=1024 * 4, cache_folder=None):
     # A file which is requested to be fetched that exists locally will be hashed.
     # If the hash matches the requested file's hash, nothing will be done and the
     # function will return.  If the function is told to overwrite and there is a
     # digest mismatch, the exiting file will be overwritten
+
+    #case 1: file already in current working directory
     if file_record.present():
         if file_record.validate():
             log.info("existing '%s' is valid, not fetching" % file_record.filename)
@@ -399,6 +412,18 @@ def fetch_file(base_urls, file_record, overwrite=False, grabchunk=1024 * 4):
             # Let's bail!
             return False
 
+    # case 2: file already in cache
+    if cache_folder:
+        try:
+            shutil.copy(os.path.join(cache_folder, file_record.digest), os.path.join(os.getcwd(), file_record.filename))
+            log.info("File %s retrieved from local cache %s" % (file_record.filename, cache_folder))
+            touch(os.path.join(cache_folder, file_record.digest))
+            return True
+        except IOError:
+            log.info("File %s not present in local cache folder %s" % (file_record.filename, cache_folder))
+
+    #case 3: file needs to be fetched from remote url; local cache (if any) needs to be updated
+    fetched = False
     for base_url in base_urls:
         # Generate the URL for the file on the server side
         url = "%s/%s/%s" % (base_url, file_record.algorithm, file_record.digest)
@@ -421,22 +446,28 @@ def fetch_file(base_urls, file_record, overwrite=False, grabchunk=1024 * 4):
                     size += len(indata)
                     if indata == '':
                         k = False
-                if size != file_record.size:
-                    log.error("transfer from %s to %s failed due to a difference of %d bytes" %
-                              (url, file_record.filename, file_record.size - size))
-                else:
-                    log.info("Success! File %s fetched from %s" % (file_record.filename, base_url))
-                    return True
+                log.info("File %s fetched from %s" % (file_record.filename, base_url))
+                fetched = True
         except (urllib2.URLError, urllib2.HTTPError, ValueError) as e:
-            log.info("..failed to fetch '%s' from %s" % (file_record.filename, base_url))
+            log.info("...failed to fetch '%s' from %s" % (file_record.filename, base_url))
             log.debug("%s" % e)
         except IOError:
             log.info("failed to write to '%s'" % file_record.filename, exc_info=True)
-    return False
+
+    # I am managing a cache and a new file has just been retrieved from a remote location
+    if cache_folder and fetched:
+        log.info("Updating local cache %s..." % cache_folder)
+        try:
+            shutil.copy(os.path.join(os.getcwd(), file_record.filename), os.path.join(cache_folder, file_record.digest))
+            log.info("Local cache %s updated with %s" % (cache_folder, file_record.filename))
+            touch(os.path.join(cache_folder, file_record.digest))
+        except IOError:
+            log.info('Impossible to add file %s to cache folder %s' % (file_record.filename, cache_folder), exc_info=True)
+    return fetched
 
 
 # TODO: write tests for this function
-def fetch_files(manifest_file, base_urls, overwrite, filenames=[]):
+def fetch_files(manifest_file, base_urls, overwrite, filenames=[], cache_folder=None):
     # Lets load the manifest file
     try:
         manifest = open_manifest(manifest_file)
@@ -452,7 +483,7 @@ def fetch_files(manifest_file, base_urls, overwrite, filenames=[]):
     for f in manifest.file_records:
         if f.filename in filenames or len(filenames) == 0:
             log.debug("fetching %s" % f.filename)
-            if fetch_file(base_urls, f, overwrite):
+            if fetch_file(base_urls, f, overwrite, cache_folder=cache_folder):
                 fetched_files.append(f)
             else:
                 failed_files.append(f.filename)
@@ -463,6 +494,7 @@ def fetch_files(manifest_file, base_urls, overwrite, filenames=[]):
     # manifest specified
     for localfile in fetched_files:
         if not localfile.validate():
+            failed_files.append(f.filename)
             log.error("'%s'" % localfile.describe())
 
     # If we failed to fetch or validate a file, we need to fail
@@ -470,6 +502,66 @@ def fetch_files(manifest_file, base_urls, overwrite, filenames=[]):
         log.error("The following files failed: '%s'" % "', ".join(failed_files))
         return False
     return True
+
+if sys.platform == 'win32':
+    # os.statvfs doesn't work on Windows
+    import win32file
+
+    def freespace(p):
+        secsPerClus, bytesPerSec, nFreeClus, totClus = win32file.GetDiskFreeSpace(p)
+        return secsPerClus * bytesPerSec * nFreeClus
+else:
+
+    def freespace(p):
+        "Returns the number of bytes free under directory `p`"
+        r = os.statvfs(p)
+        return r.f_frsize * r.f_bavail
+
+
+def remove(absolute_file_path):
+    try:
+        os.remove(absolute_file_path)
+    except OSError as e:
+        log.info("Impossible to remove %s" % absolute_file_path, exc_info=True)
+
+
+def purge(folder, gigs):
+    """If gigs is non 0, it deletes files in `folder` until `gigs` GB are free, starting from older files.
+    If gigs is 0, a full purge will be performed.
+    No recursive deletion of files in subfolder is performed."""
+
+    gigs *= 1024 * 1024 * 1024
+
+    files = []
+    try:
+        for f in os.listdir(folder):
+            p = os.path.join(folder, f)
+            # it delete files in folder without going into subfolders, assuming the cache has a flat structure
+            if not os.path.isfile(p):
+                continue
+            mtime = os.path.getmtime(p)
+            files.append((mtime, p))
+    except:
+        log.info('Impossible to list content of folder %s' % folder, exc_info=True)
+
+    files.sort()
+
+    if gigs:
+        enough_free_space_yet = False
+        while files and not enough_free_space_yet:
+            mtime, f = files.pop(0)
+
+            if freespace(folder) >= gigs:
+                enough_free_space_yet = True
+            else:
+                log.info("removing %s to free up space" % f)
+                remove(f)
+    else:
+        #full cleanup
+        while files:
+            mtime, f = files.pop(0)
+            log.info("Full cache purge: removing %s" % f)
+            remove(f)
 
 
 # TODO: write tests for this function
@@ -480,18 +572,36 @@ def process_command(options, args):
     cmd_args = args[1:]
     log.debug("processing '%s' command with args '%s'" % (cmd, '", "'.join(cmd_args)))
     log.debug("using options: %s" % options)
+
+    #better to check early and exit in case the provided cache folder does not exist
+    if options.get('cache_folder'):
+        if (not os.path.exists(options.get('cache_folder'))):
+            try:
+                log.info("The specified cache_folder %s does not exist" % options.get('cache_folder'))
+                os.makedirs(options.get('cache_folder'), 0700)
+                log.info("cache_folder %s has been created" % options.get('cache_folder'))
+            except OSError:
+                log.critical('Impossible to create folder "%s"' % options.get('cache_folder'), exc_info=True)
+                return False
+
     if cmd == 'list':
         return list_manifest(options['manifest'])
     if cmd == 'validate':
         return validate_manifest(options['manifest'])
     elif cmd == 'add':
         return add_files(options['manifest'], options['algorithm'], cmd_args)
+    elif cmd == 'purge':
+        if not options.get('cache_folder'):
+            log.critical('please specify the cache_folder to be purged with -c or --cache_folder option')
+            return False
+        else:
+            purge(folder=options['cache_folder'], gigs=options['size'])
     elif cmd == 'fetch':
         if not options.get('base_url'):
             log.critical('fetch command requires at least one url provided using ' +
                          'the url option in the command line')
             return False
-        return fetch_files(options['manifest'], options['base_url'], options['overwrite'], cmd_args)
+        return fetch_files(options['manifest'], options['base_url'], options['overwrite'], cmd_args, cache_folder=options['cache_folder'])
     else:
         log.critical('command "%s" is not implemented' % cmd)
         return False
@@ -515,6 +625,8 @@ def process_command(options, args):
 #   -?only ever locally to digest as filename, symlink to real name
 #   -?maybe deal with files as a dir of the filename with all files in that dir as the versions of that file
 #      - e.g. ./python-2.6.7.dmg/0123456789abcdef and ./python-2.6.7.dmg/abcdef0123456789
+
+
 def main():
     # Set up logging, for now just to the console
     ch = logging.StreamHandler()
@@ -541,6 +653,11 @@ def main():
                       help='if fetching, remote copy will overwrite a local copy that is different. ')
     parser.add_option('--url', dest='base_url', action='append',
                       help='base url for fetching files')
+    parser.add_option('-c', '--cache_folder', dest='cache_folder',
+                      help='Local cache folder')
+    parser.add_option('-s', '--size',
+                      help='free space required (in GB)', dest='size',
+                      type='float', default=0.)
 
     (options_obj, args) = parser.parse_args()
     # Dictionaries are easier to work with

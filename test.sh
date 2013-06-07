@@ -48,7 +48,7 @@ function assert_nonzero() {
 }
 
 mkdir -p testdir && cd testdir
-tt="../tooltool.py --url $TEST_BASE_URL -v --ignore-config-files"
+tt="../tooltool.py --url $TEST_BASE_URL -v"
 info "$tt"
 ###############
 setup
