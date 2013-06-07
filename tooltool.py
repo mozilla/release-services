@@ -29,7 +29,6 @@ import hashlib
 import urllib2
 import shutil
 import sys
-import time
 
 try:
     import simplejson as json  # I hear simplejson is faster
@@ -384,7 +383,7 @@ def touch(f):
     mtime is used by the purge command"""
     try:
         os.utime(f, None)
-    except:
+    except OSError:
         log.warn('impossible to update utime of file %s' % f)
 
 
@@ -412,17 +411,20 @@ def fetch_file(base_urls, file_record, overwrite=False, grabchunk=1024 * 4, cach
             # Let's bail!
             return False
 
-    # case 2: file already in cache
+    # case 2: check if file is already in cache
     if cache_folder:
         try:
-            shutil.copy(os.path.join(cache_folder, file_record.digest), os.path.join(os.getcwd(), file_record.filename))
-            log.info("File %s retrieved from local cache %s" % (file_record.filename, cache_folder))
+            shutil.copy(os.path.join(cache_folder, file_record.digest),
+                        os.path.join(os.getcwd(), file_record.filename))
+            log.info("File %s retrieved from local cache %s" %
+                     (file_record.filename, cache_folder))
             touch(os.path.join(cache_folder, file_record.digest))
             return True
         except IOError:
-            log.info("File %s not present in local cache folder %s" % (file_record.filename, cache_folder))
+            log.info("File %s not present in local cache folder %s" %
+                     (file_record.filename, cache_folder))
 
-    #case 3: file needs to be fetched from remote url; local cache (if any) needs to be updated
+    #case 3: fetch the file; update the cache
     fetched = False
     for base_url in base_urls:
         # Generate the URL for the file on the server side
@@ -454,15 +456,22 @@ def fetch_file(base_urls, file_record, overwrite=False, grabchunk=1024 * 4, cach
         except IOError:
             log.info("failed to write to '%s'" % file_record.filename, exc_info=True)
 
-    # I am managing a cache and a new file has just been retrieved from a remote location
+    # I am managing a cache and a new file has just been retrieved from a
+    # remote location
     if cache_folder and fetched:
         log.info("Updating local cache %s..." % cache_folder)
         try:
-            shutil.copy(os.path.join(os.getcwd(), file_record.filename), os.path.join(cache_folder, file_record.digest))
-            log.info("Local cache %s updated with %s" % (cache_folder, file_record.filename))
+            if not os.path.exists(cache_folder):
+                log.info("Creating cache in %s..." % cache_folder)
+                os.makedirs(cache_folder, 0700)
+            shutil.copy(os.path.join(os.getcwd(), file_record.filename),
+                        os.path.join(cache_folder, file_record.digest))
+            log.info("Local cache %s updated with %s" % (cache_folder,
+                                                         file_record.filename))
             touch(os.path.join(cache_folder, file_record.digest))
-        except IOError:
-            log.info('Impossible to add file %s to cache folder %s' % (file_record.filename, cache_folder), exc_info=True)
+        except (OSError, IOError):
+            log.warning('Impossible to add file %s to cache folder %s' %
+                        (file_record.filename, cache_folder), exc_info=True)
     return fetched
 
 
@@ -494,7 +503,7 @@ def fetch_files(manifest_file, base_urls, overwrite, filenames=[], cache_folder=
     # manifest specified
     for localfile in fetched_files:
         if not localfile.validate():
-            failed_files.append(f.filename)
+            failed_files.append(localfile.filename)
             log.error("'%s'" % localfile.describe())
 
     # If we failed to fetch or validate a file, we need to fail
@@ -503,17 +512,16 @@ def fetch_files(manifest_file, base_urls, overwrite, filenames=[], cache_folder=
         return False
     return True
 
-if sys.platform == 'win32':
-    # os.statvfs doesn't work on Windows
-    import win32file
 
-    def freespace(p):
+def freespace(p):
+    "Returns the number of bytes free under directory `p`"
+    if sys.platform == 'win32':
+        # os.statvfs doesn't work on Windows
+        import win32file
+
         secsPerClus, bytesPerSec, nFreeClus, totClus = win32file.GetDiskFreeSpace(p)
         return secsPerClus * bytesPerSec * nFreeClus
-else:
-
-    def freespace(p):
-        "Returns the number of bytes free under directory `p`"
+    else:
         r = os.statvfs(p)
         return r.f_frsize * r.f_bavail
 
@@ -521,7 +529,7 @@ else:
 def remove(absolute_file_path):
     try:
         os.remove(absolute_file_path)
-    except OSError as e:
+    except OSError:
         log.info("Impossible to remove %s" % absolute_file_path, exc_info=True)
 
 
@@ -530,38 +538,34 @@ def purge(folder, gigs):
     If gigs is 0, a full purge will be performed.
     No recursive deletion of files in subfolder is performed."""
 
+    full_purge = bool(gigs == 0)
     gigs *= 1024 * 1024 * 1024
+
+    if not full_purge and freespace(folder) >= gigs:
+        log.info("No need to cleanup")
+        return
 
     files = []
     try:
         for f in os.listdir(folder):
             p = os.path.join(folder, f)
-            # it delete files in folder without going into subfolders, assuming the cache has a flat structure
+            # it deletes files in folder without going into subfolders,
+            # assuming the cache has a flat structure
             if not os.path.isfile(p):
                 continue
             mtime = os.path.getmtime(p)
             files.append((mtime, p))
-    except:
-        log.info('Impossible to list content of folder %s' % folder, exc_info=True)
+    except OSError:
+        log.info('Impossible to list content of folder %s' % folder,
+                 exc_info=True)
+        return
 
-    files.sort()
-
-    if gigs:
-        enough_free_space_yet = False
-        while files and not enough_free_space_yet:
-            mtime, f = files.pop(0)
-
-            if freespace(folder) >= gigs:
-                enough_free_space_yet = True
-            else:
-                log.info("removing %s to free up space" % f)
-                remove(f)
-    else:
-        #full cleanup
-        while files:
-            mtime, f = files.pop(0)
-            log.info("Full cache purge: removing %s" % f)
-            remove(f)
+    # iterate files sorted by mtime
+    for _, f in sorted(files):
+        log.info("removing %s to free up space" % f)
+        remove(f)
+        if not full_purge and freespace(folder) >= gigs:
+            break
 
 
 # TODO: write tests for this function
@@ -573,17 +577,6 @@ def process_command(options, args):
     log.debug("processing '%s' command with args '%s'" % (cmd, '", "'.join(cmd_args)))
     log.debug("using options: %s" % options)
 
-    #better to check early and exit in case the provided cache folder does not exist
-    if options.get('cache_folder'):
-        if (not os.path.exists(options.get('cache_folder'))):
-            try:
-                log.info("The specified cache_folder %s does not exist" % options.get('cache_folder'))
-                os.makedirs(options.get('cache_folder'), 0700)
-                log.info("cache_folder %s has been created" % options.get('cache_folder'))
-            except OSError:
-                log.critical('Impossible to create folder "%s"' % options.get('cache_folder'), exc_info=True)
-                return False
-
     if cmd == 'list':
         return list_manifest(options['manifest'])
     if cmd == 'validate':
@@ -591,17 +584,19 @@ def process_command(options, args):
     elif cmd == 'add':
         return add_files(options['manifest'], options['algorithm'], cmd_args)
     elif cmd == 'purge':
-        if not options.get('cache_folder'):
-            log.critical('please specify the cache_folder to be purged with -c or --cache_folder option')
-            return False
-        else:
+        if options['cache_folder']:
             purge(folder=options['cache_folder'], gigs=options['size'])
+        else:
+            log.critical('please specify the cache folder to be purged')
+            return False
     elif cmd == 'fetch':
         if not options.get('base_url'):
             log.critical('fetch command requires at least one url provided using ' +
                          'the url option in the command line')
             return False
-        return fetch_files(options['manifest'], options['base_url'], options['overwrite'], cmd_args, cache_folder=options['cache_folder'])
+        return fetch_files(options['manifest'], options['base_url'],
+                           options['overwrite'], cmd_args,
+                           cache_folder=options['cache_folder'])
     else:
         log.critical('command "%s" is not implemented' % cmd)
         return False
@@ -653,7 +648,7 @@ def main():
                       help='if fetching, remote copy will overwrite a local copy that is different. ')
     parser.add_option('--url', dest='base_url', action='append',
                       help='base url for fetching files')
-    parser.add_option('-c', '--cache_folder', dest='cache_folder',
+    parser.add_option('-c', '--cache-folder', dest='cache_folder',
                       help='Local cache folder')
     parser.add_option('-s', '--size',
                       help='free space required (in GB)', dest='size',
