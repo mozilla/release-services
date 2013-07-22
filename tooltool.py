@@ -694,7 +694,7 @@ def process_command(options, args):
              return False
         return upload(options.get('package'), options.get('user'), options.get('host'), options.get('path'))
     elif cmd == 'distribute':
-        if not options.get('folder') or not options.get('user') or not options.get('host') or not options.get('path') or not options.get('message'):
+        if not options.get('folder') or not options.get('message') or not options.get('user') or not options.get('host') or not options.get('path') :
              log.critical('distribute command requires the following parameters: --folder, --message, --user, --host, --path')
              return False
         return distribute(options.get('folder'), options.get('message'), options.get('user'), options.get('host'), options.get('path'), options.get('algorithm'))
