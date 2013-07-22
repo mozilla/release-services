@@ -30,6 +30,8 @@ import urllib2
 import shutil
 import sys
 
+DEFAULT_MANIFEST_NAME = 'manifest.tt'
+
 try:
     import simplejson as json  # I hear simplejson is faster
 except ImportError:
@@ -337,7 +339,7 @@ def validate_manifest(manifest_file):
 
 
 # TODO: write tests for this function
-def add_files(manifest_file, algorithm, filenames):
+def add_files(manifest_file, algorithm, filenames, create_package=False):
     # returns True if all files successfully added, False if not
     # and doesn't catch library Exceptions.  If any files are already
     # tracked in the manifest, return will be False because they weren't
@@ -354,6 +356,9 @@ def add_files(manifest_file, algorithm, filenames):
         log.debug("adding %s" % filename)
         path, name = os.path.split(filename)
         new_fr = create_file_record(filename, algorithm)
+        if create_package:
+            shutil.copy(filename,
+                        os.path.join(os.path.split(manifest_file)[0], new_fr.digest))
         log.debug("appending a new file record to manifest file")
         add = True
         for fr in old_manifest.file_records:
@@ -568,6 +573,33 @@ def purge(folder, gigs):
             break
 
 
+def package(folder, algorithm):
+    #TODO s check whether it is a real existing folder
+    from os import walk
+
+    dirname, basename = os.path.split(folder)
+
+    filenames = []
+    for (_dirpath, _dirnames, files) in walk(folder):
+        filenames.extend(files)
+        break  # not to navigate subfolders
+
+    default_package_name = basename + '.TOOLTOOL-PACKAGE'
+
+    package_name = default_package_name
+    manifest_name = basename + '.tt'
+
+    suffix = 1
+    while os.path.exists(os.path.join(dirname, package_name)):
+        package_name = default_package_name + str(suffix)
+        manifest_name = basename + str(suffix)+'.tt'
+        suffix = suffix + 1
+
+    os.makedirs(os.path.join(dirname, package_name))
+
+    add_files(os.path.join(os.path.join(dirname, package_name), manifest_name), algorithm, [os.path.join(folder, x) for x in filenames], create_package=True)
+
+
 # TODO: write tests for this function
 def process_command(options, args):
     """ I know how to take a list of program arguments and
@@ -597,6 +629,11 @@ def process_command(options, args):
         return fetch_files(options['manifest'], options['base_url'],
                            options['overwrite'], cmd_args,
                            cache_folder=options['cache_folder'])
+    elif cmd == 'package':
+        if not options.get('folder'):
+            log.critical('package command requires a folder to be specified, containing the files to be added to the tooltool package')
+            return False
+        return package(options['folder'], options['algorithm'])
     else:
         log.critical('command "%s" is not implemented' % cmd)
         return False
@@ -623,6 +660,7 @@ def process_command(options, args):
 
 
 def main():
+    log.setLevel(logging.DEBUG)
     # Set up logging, for now just to the console
     ch = logging.StreamHandler()
     cf = logging.Formatter("%(levelname)s - %(message)s")
@@ -637,7 +675,7 @@ def main():
                       dest='quiet', action='store_true')
     parser.add_option('-v', '--verbose', default=False,
                       dest='verbose', action='store_true')
-    parser.add_option('-m', '--manifest', default='manifest.tt',
+    parser.add_option('-m', '--manifest', default=DEFAULT_MANIFEST_NAME,
                       dest='manifest', action='store',
                       help='specify the manifest file to be operated on')
     parser.add_option('-d', '--algorithm', default='sha512',
@@ -653,6 +691,8 @@ def main():
     parser.add_option('-s', '--size',
                       help='free space required (in GB)', dest='size',
                       type='float', default=0.)
+    parser.add_option('--folder',
+                      help='the folder containing files to be added to a tooltool package ready to be uploaded to tooltool servers', dest='folder')
 
     (options_obj, args) = parser.parse_args()
     # Dictionaries are easier to work with
