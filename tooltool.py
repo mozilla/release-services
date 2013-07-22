@@ -359,6 +359,7 @@ def add_files(manifest_file, algorithm, filenames, create_package=False):
         if create_package:
             shutil.copy(filename,
                         os.path.join(os.path.split(manifest_file)[0], new_fr.digest))
+            log.debug("Added file %s to tooltool package %s with hash %s" % (filename, os.path.split(manifest_file)[0], new_fr.digest))
         log.debug("appending a new file record to manifest file")
         add = True
         for fr in old_manifest.file_records:
@@ -573,8 +574,11 @@ def purge(folder, gigs):
             break
 
 
-def package(folder, algorithm):
-    #TODO s check whether it is a real existing folder
+def package(folder, algorithm, message):
+    if not os.path.exists(folder) or not os.path.isdir(folder):
+        log.error('Folder %s does not exist!' % folder)
+        return
+
     from os import walk
 
     dirname, basename = os.path.split(folder)
@@ -588,16 +592,34 @@ def package(folder, algorithm):
 
     package_name = default_package_name
     manifest_name = basename + '.tt'
+    notes_name = basename + '.txt'
 
     suffix = 1
     while os.path.exists(os.path.join(dirname, package_name)):
         package_name = default_package_name + str(suffix)
-        manifest_name = basename + str(suffix)+'.tt'
+        manifest_name = basename + str(suffix) +'.tt'
+        notes_name = basename + str(suffix) + '.txt'
         suffix = suffix + 1
 
     os.makedirs(os.path.join(dirname, package_name))
 
     add_files(os.path.join(os.path.join(dirname, package_name), manifest_name), algorithm, [os.path.join(folder, x) for x in filenames], create_package=True)
+
+    try:
+        # This will create a new file or **overwrite an existing file**.
+        f = open(os.path.join(os.path.join(dirname, package_name), notes_name)  , 'wb')
+        try:
+            f.write(message) # Write a string to a file
+        finally:
+            f.close()
+    except IOError:
+        pass
+
+    return os.path.join(os.path.join(dirname, package_name))
+
+
+    
+    
 
 
 # TODO: write tests for this function
@@ -633,7 +655,7 @@ def process_command(options, args):
         if not options.get('folder'):
             log.critical('package command requires a folder to be specified, containing the files to be added to the tooltool package')
             return False
-        return package(options['folder'], options['algorithm'])
+        return package(options['folder'], options['algorithm'], options['message'])
     else:
         log.critical('command "%s" is not implemented' % cmd)
         return False
@@ -660,7 +682,7 @@ def process_command(options, args):
 
 
 def main():
-    log.setLevel(logging.DEBUG)
+    
     # Set up logging, for now just to the console
     ch = logging.StreamHandler()
     cf = logging.Formatter("%(levelname)s - %(message)s")
@@ -693,6 +715,8 @@ def main():
                       type='float', default=0.)
     parser.add_option('--folder',
                       help='the folder containing files to be added to a tooltool package ready to be uploaded to tooltool servers', dest='folder')
+    parser.add_option('--message',
+                      help='Any additional information about the tooltool package being generated and the files it includes', dest='message')
 
     (options_obj, args) = parser.parse_args()
     # Dictionaries are easier to work with
@@ -705,8 +729,9 @@ def main():
         ch.setLevel(logging.ERROR)
     else:
         ch.setLevel(logging.INFO)
+    log.setLevel(logging.DEBUG)
     log.addHandler(ch)
-
+   
     if not 'manifest' in options:
         parser.error("no manifest file specified")
 
