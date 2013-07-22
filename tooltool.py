@@ -603,6 +603,8 @@ def package(folder, algorithm, message):
 
     os.makedirs(os.path.join(dirname, package_name))
 
+    log.info("Creating package %s from folder %s..." % (os.path.join(os.path.join(dirname, package_name)), folder))
+
     add_files(os.path.join(os.path.join(dirname, package_name), manifest_name), algorithm, [os.path.join(folder, x) for x in filenames], create_package=True)
 
     try:
@@ -615,11 +617,41 @@ def package(folder, algorithm, message):
     except IOError:
         pass
 
+    log.info("Package %s has been created from folder %s" % (os.path.join(os.path.join(dirname, package_name)), folder))
+
     return os.path.join(os.path.join(dirname, package_name))
 
+from subprocess import Popen, PIPE
+def execute(cmd):
+    process = Popen(cmd, shell=True, stdout=PIPE, bufsize=0)
+    while True:
+        line = process.stdout.readline()
+        if not line: break
+        log.info(line.replace('\n', ''))
+        
 
+def upload(package, user, host, path):
+    #TODO s: validate package
+    cmd1 = "rsync  %s/* %s@%s:%s --progress -f '- *.tt' -f '- *.txt'" % ( package, user, host, path) 
     
+    cmd2 = "rsync  %s/* %s@%s:%s --progress -f '+ *.tt' -f '+ *.txt'" % ( package, user, host, path) 
+
+    log.info("The following two rsync commands will be executed to transfer the tooltool package:")
+    log.info("1) %s"%cmd1)
+    log.info("2) %s"%cmd2)
+    log.info("Please note that the order of execution IS relevant!")
+    log.info("Uploading hashed files with command: %s" % cmd1)
+    execute(cmd1)
+    log.info("Uploading metadata files (manifest and notes) with command: %s" % cmd2)
+    execute(cmd2)
+
+    log.info("Package %s has been correctly uploaded to %s:%s" % (package, host, path))
+
+    return True
     
+def distribute(folder, message,user, host, path, algorithm):
+    return upload(package(folder, algorithm, message), user, host, path)
+	    
 
 
 # TODO: write tests for this function
@@ -652,10 +684,20 @@ def process_command(options, args):
                            options['overwrite'], cmd_args,
                            cache_folder=options['cache_folder'])
     elif cmd == 'package':
-        if not options.get('folder'):
-            log.critical('package command requires a folder to be specified, containing the files to be added to the tooltool package')
+        if not options.get('folder') or not options.get('message'):
+            log.critical('package command requires a folder to be specified, containing the files to be added to the tooltool package, and a message providing info about the package')
             return False
         return package(options['folder'], options['algorithm'], options['message'])
+    elif cmd == 'upload':
+        if not options.get('package') or not options.get('user') or not options.get('host') or not options.get('path'):
+             log.critical('upload command requires the package folder to be uploaded, and the user, host and path to be used to upload the tooltool upload server ')
+             return False
+        return upload(options.get('package'), options.get('user'), options.get('host'), options.get('path'))
+    elif cmd == 'distribute':
+        if not options.get('folder') or not options.get('user') or not options.get('host') or not options.get('path') or not options.get('message'):
+             log.critical('distribute command requires the following parameters: --folder, --message, --user, --host, --path')
+             return False
+        return distribute(options.get('folder'), options.get('message'), options.get('user'), options.get('host'), options.get('path'), options.get('algorithm'))
     else:
         log.critical('command "%s" is not implemented' % cmd)
         return False
@@ -713,10 +755,21 @@ def main():
     parser.add_option('-s', '--size',
                       help='free space required (in GB)', dest='size',
                       type='float', default=0.)
+
     parser.add_option('--folder',
                       help='the folder containing files to be added to a tooltool package ready to be uploaded to tooltool servers', dest='folder')
     parser.add_option('--message',
                       help='Any additional information about the tooltool package being generated and the files it includes', dest='message')
+
+    parser.add_option('--package',
+                      help='the folder containing files to be added to a tooltool package ready to be uploaded to tooltool servers', dest='package')
+    parser.add_option('--user',
+                      help='user to be used when uploading a tooltool package to a tooltool upload folder', dest='user')
+    parser.add_option('--host',
+                      help='host where to upload a tooltool package', dest='host')
+    parser.add_option('--path',
+                      help='Path on the tooltool upload server where to upload', dest='path')
+    
 
     (options_obj, args) = parser.parse_args()
     # Dictionaries are easier to work with
