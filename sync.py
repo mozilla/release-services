@@ -35,7 +35,7 @@ log = logging.getLogger(__name__)
 log.setLevel(DEFAULT_LOG_LEVEL)
 
 handler = logging.handlers.RotatingFileHandler(LOG_FILENAME,
-                                               maxBytes=100,
+                                               maxBytes=1000000,
                                                backupCount=100,
                                                )
 
