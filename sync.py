@@ -113,7 +113,7 @@ if not os.path.exists(PROCESSED_DIGESTS):
 
 #{digest:(manifest)}
 
-processed_files = load_json(PROCESSED_DIGESTS)
+processed_digests = load_json(PROCESSED_DIGESTS)
 
 PROCESSED_MANIFESTS = "processed_manifests.json"
 if not os.path.exists(PROCESSED_MANIFESTS):
@@ -125,7 +125,7 @@ processed_manifests = load_json(PROCESSED_MANIFESTS)
 
 
 def already_processed(digest):
-    return digest in processed_files
+    return digest in processed_digests
     #TODO
 
 
@@ -215,7 +215,7 @@ def main():
                     if copyOK:
                         # updating metadata
                         for digest, _algorithm in digests:
-                            processed_files[digest] = processed_manifest_name
+                            processed_digests[digest] = processed_manifest_name
                         processed_manifests[processed_manifest_name] = (user, comment, distribution_type)
 
                         renamingOK = True
@@ -235,7 +235,7 @@ def main():
                             # rename the comment file, just appending a timestamp
                             os.rename(comment_filepath, os.path.join(upload_folder, "%s.%s" % (timestamp, comment_filename)))
                             # persists the json metadata files
-                            persist_json(processed_files, PROCESSED_DIGESTS)
+                            persist_json(processed_digests, PROCESSED_DIGESTS)
                             persist_json(processed_manifests, PROCESSED_MANIFESTS)
                         else:
                             # no changes to the metadata, no changes to the original upload folder, maybe next time...
