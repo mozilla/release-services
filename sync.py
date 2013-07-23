@@ -99,7 +99,7 @@ def load_json(filename):
 
 def persist_json(data, filepath):
     with open(filepath, 'w') as outfile:
-        json.dump(data, outfile)
+        json.dump(data, outfile, indent = 2)
 
 
 def load_config():
@@ -147,10 +147,8 @@ def isnew(upload_folder, manifestname):
 
 
 def begins_with_timestamp(filename):
-    print filename
     p = re.compile("\d+_\d+_\d+-\d+.\d+.\d+")
-    result = p.match(filename)
-    return result
+    return p.match(filename)
 
 
 def main():
