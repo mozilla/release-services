@@ -17,6 +17,7 @@
 #Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
+import logging.handlers
 import json
 import os
 import shutil
@@ -29,9 +30,21 @@ import datetime
 
 LOG_FILENAME = 'tooltool_sync.log'
 DEFAULT_LOG_LEVEL = logging.DEBUG
-logging.basicConfig(filename=LOG_FILENAME,
-                    level=DEFAULT_LOG_LEVEL,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+
+log = logging.getLogger(__name__)
+log.setLevel(DEFAULT_LOG_LEVEL)
+
+handler = logging.handlers.RotatingFileHandler(LOG_FILENAME,
+                                               maxBytes=100,
+                                               backupCount=100,
+                                               )
+
+
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+handler.setLevel(DEFAULT_LOG_LEVEL)
+handler.setFormatter(formatter)
+log.addHandler(handler)
 
 
 CONFIG_FILENAME = 'config.json'
@@ -45,20 +58,20 @@ def validate_config(config):
     if config['root'] and os.path.exists(config['root']) and os.path.isdir(config['root']):
         root = config['root']
     else:
-        logging.critical("The configuration file does not contain a valid root folder")
+        log.critical("The configuration file does not contain a valid root folder")
         exit(1)
 
     if config['matching'] and type(config['matching']) is dict:
         matching = config['matching']
     else:
-        logging.critical("The configuration file does not contain a matching section (a dictionary)")
+        log.critical("The configuration file does not contain a matching section (a dictionary)")
         exit(1)
 
     pathsOK = True
     for distribution_level in matching:
         destination = matching[distribution_level]
         if not (os.path.exists(destination) and os.path.isdir(destination)):
-            logging.critical("The folder %s, mentioned in the configuration file,  does not exist" % destination)
+            log.critical("The folder %s, mentioned in the configuration file,  does not exist" % destination)
             pathsOK = False
     if not pathsOK:
         exit(1)
@@ -72,13 +85,13 @@ def load_json(filename):
         data = json.load(f)
         f.close()
     except IOError as e:
-        logging.critical("Impossible to read file %s; I/O error(%s): %s" % (filename, e.errno, e.strerror))
+        log.critical("Impossible to read file %s; I/O error(%s): %s" % (filename, e.errno, e.strerror))
         exit(1)
     except ValueError as e:
-        logging.critical("Impossible to load file %s; Value error: %s" % (filename, e))
+        log.critical("Impossible to load file %s; Value error: %s" % (filename, e))
         exit(1)
     except:
-        logging.critical("Unexpected error: %s" % sys.exc_info()[0])
+        log.critical("Unexpected error: %s" % sys.exc_info()[0])
         exit(1)
 
     return data
@@ -172,16 +185,16 @@ def main():
                     digest_path = os.path.join(upload_folder, digest)
                     if not os.path.exists(digest_path):
                         allFilesAreOK = False
-                        logging.error("Impossible to process manifest %s because one of the mentioned file does not exist" % new_manifest)
+                        log.error("Impossible to process manifest %s because one of the mentioned file does not exist" % new_manifest)
                     else:
-                        logging.debug("Found file %s, let's check the content" % digest)
+                        log.debug("Found file %s, let's check the content" % digest)
                         with open(digest_path, 'rb') as f:
                             d = tooltool.digest_file(f, algorithm)
                             if d == digest:
-                                logging.debug("Great! File %s is what he declares to be!")
+                                log.debug("Great! File %s is what he declares to be!")
                             else:
                                 allFilesAreOK = False
-                                logging.error("Impossible to process manifest %s because the mentioned file %s has an incorrect content" % (new_manifest, digest))
+                                log.error("Impossible to process manifest %s because the mentioned file %s has an incorrect content" % (new_manifest, digest))
 
                 if allFilesAreOK:
 
@@ -198,7 +211,7 @@ def main():
                         try:
                             shutil.copy(digest_path, os.path.join(destination, "temp%s" % digest))
                         except IOError as e:
-                            logging.error("Impossible to copy file %s to %s; I/O error(%s): %s" % (digest_path, destination, e.errno, e.strerror))
+                            log.error("Impossible to copy file %s to %s; I/O error(%s): %s" % (digest_path, destination, e.errno, e.strerror))
                             copyOK = False
                             break
                     if copyOK:
@@ -212,7 +225,7 @@ def main():
                             try:
                                 os.rename(os.path.join(destination, "temp%s" % digest), os.path.join(destination, digest))
                             except:
-                                logging.error("Impossible to rename file %s to %s;" % (os.path.join(destination, "temp%s" % digest), os.path.join(destination, digest)))
+                                log.error("Impossible to rename file %s to %s;" % (os.path.join(destination, "temp%s" % digest), os.path.join(destination, digest)))
                                 renamingOK = False
                             # persist changes to json files
 
@@ -232,7 +245,7 @@ def main():
                 if allFilesAreOK and copyOK and renamingOK:
                     pass
                 else:
-                    logging.error("Manifest %s has NOT been processed" % new_manifest)
+                    log.error("Manifest %s has NOT been processed" % new_manifest)
 
 if __name__ == "__main__":
     main()
