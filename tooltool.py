@@ -608,7 +608,6 @@ def package(folder, algorithm, message):
     add_files(os.path.join(os.path.join(dirname, package_name), manifest_name), algorithm, [os.path.join(folder, x) for x in filenames], create_package=True)
 
     try:
-        # This will create a new file or **overwrite an existing file**.
         f = open(os.path.join(os.path.join(dirname, package_name), notes_name)  , 'wb')
         try:
             f.write(message) # Write a string to a file
@@ -623,7 +622,7 @@ def package(folder, algorithm, message):
 
 from subprocess import Popen, PIPE
 def execute(cmd):
-    process = Popen(cmd, shell=True, stdout=PIPE, bufsize=0)
+    process = Popen(cmd, shell=True, stdout=PIPE)
     while True:
         line = process.stdout.readline()
         if not line: break
