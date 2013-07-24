@@ -1,8 +1,6 @@
 {
   "root":"/Users/sbruno/root",
   "matching":{"pvt": "/Users/sbruno/pvt",
-            "pub": "/Users/sbruno/"},
-  
-  "log_level":"error"
+            "pub": "/Users/sbruno/pub"}
 
 }
