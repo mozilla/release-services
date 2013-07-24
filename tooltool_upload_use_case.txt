@@ -12,9 +12,9 @@ This means that:
 
 Now, I have some files which need to be available to tooltool users (file1.pdf, file2.pdf, file3.pdf) so I need to perform the following steps:
 
-1. I create a folder containing the files I want to make available to tooltool users
-2. I create a tooltool package using the brand new tooltool "package" command 
-3. I upload the newly created tooltool package using the brand new tooltool "upload" command
+1. Create a folder containing the files I want to make available to tooltool users
+2. Create a tooltool package using the brand new tooltool "package" command 
+3. Upload the newly created tooltool package using the brand new tooltool "upload" command
 
 Let's do it!
 
@@ -56,6 +56,7 @@ Let's see what it contains:
 	my-tooltool-files.txt
 	
 It contains three types of files:
+
 - the original files have been renamed according to the usual tooltool hashing mechanism
 - a tooltool manifest has been added, my-tooltool-files.tt
 - a text file, containing the message I added while creating the package, which has the same name as the manifest (but extension txt, instead of tt)
@@ -119,7 +120,7 @@ Let's see what the result is:
 	INFO - Package /Users/sbruno/my-tooltool-files.TOOLTOOL-PACKAGE has been correctly uploaded to 78.47.146.153:/home/sbruno/pvt
 
 
-###  The distribute command to run  Step 2 + Step 3 in one go
+###  The "distribute" command to run  Step 2 + Step 3 in one go
 
 In git, the "git pull" command is actually a shortcut to run "git fetch" and "git merge" in sequence
 
@@ -223,19 +224,19 @@ Two informations provided are just two:
 
 Let's say I have two uploaders, Alice and Bob; this is how the root folder will look like:
 
-	root
-	├── alice
-	│   ├── pub
-	│   └── pvt
-	└── bob
-	    ├── pub
-	    │   ├── 58941214a8334331e52114aab851fc3d8d5da5dd14983f933da8735c24b0ddcac134e8f13692553199c4d9a14a4b3188b62878a30b9d696edda1204666b60837
-	    │   ├── 630d01a329c70aedb66ae7118d12ff7dc6fe06223d1c27b793e1bacc0ca84dd469ec1a6050184f8d9c35a0636546b0e2e5be08d9b51285e53eb1c9f959fef59d
-	    │   ├── 931eb84f798dc9add1a10c7bbd4cc85fe08efda26cac473411638d1f856865524a517209d4c7184d838ee542c8ebc9909dc64ef60f8653a681270ce23524e8e4
-	    │   ├── b2a463249bb3a9e7f2a3604697b000d2393db4f37b623fc099beb8456fbfdb332567013a3131ad138d8633cb19c50a8b77df3990d67500af896cada8b6f698b4
-	    │   ├── package_test1.tt
-	    │   └── package_test1.txt
-	    └── pvt
+	root/
+	.   alice
+    .   .    pub/
+    .   .    pvt/
+	.   bob/
+	.   .    pub/
+	.   .    .     58941214a8334331e52114aab851fc3d8d5da5dd14983f933da8735c24b0ddcac134e8f13692553199c4d9a14a4b3188b62878a30b9d696edda1204666b60837
+	.   .    .     630d01a329c70aedb66ae7118d12ff7dc6fe06223d1c27b793e1bacc0ca84dd469ec1a6050184f8d9c35a0636546b0e2e5be08d9b51285e53eb1c9f959fef59d
+	.   .    .     931eb84f798dc9add1a10c7bbd4cc85fe08efda26cac473411638d1f856865524a517209d4c7184d838ee542c8ebc9909dc64ef60f8653a681270ce23524e8e4
+	.   .    .     b2a463249bb3a9e7f2a3604697b000d2393db4f37b623fc099beb8456fbfdb332567013a3131ad138d8633cb19c50a8b77df3990d67500af896cada8b6f698b4
+	.   .    .     package_test1.tt
+	.   .    .     package_test1.txt
+    .   .    pvt/
 	
 A few points here:
 
