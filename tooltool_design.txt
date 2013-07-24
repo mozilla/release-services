@@ -1,0 +1,78 @@
+Rethinking tooltool.py upload mechanism
+=======================================
+
+The existing upload mechanism to upload artifacts for tooltool usage is based on direct ssh access to the web server(s) serving tooltool artifacts, and is subject to the following limitations:
+
+1. it is not secure, and it is poorly scalable in case of more than one webserver (which were the original motivations to rethking the upload mechanism in the first place)
+2. files are stored in the serving web servers using an hash as file name, and no extra information is available once a file is uploaded. Examples of extra information which could be useful to associate to a file are: original file name, info about the tooltool manifest the file is part of, generic notes/comments the uploader may want to associate to the file.
+3. there is currently no way to allow uploads without the necessity of being inside a VPN
+4. there is no historic information associated to uploads
+
+In order to tackle these limitations, it is necessary to design a different upload mechanism.
+After some discussions (mainly with Rail Aliiev and Dustin Mitchell), I put together this proposal, which aims to solve the problems above while keeping the overall architecture as simple as possible.
+
+The intended architecture: fundamental concepts
+===============================================
+
+I am aware giving "formal" definitions may sound pedantic but I like to give things unique names in order to avoid misunderstandings :-)
+Introducing these concepts is also a good way to present the intended architecture.
+
+Introducing the "Tooltool Package"
+----------------------------------
+
+A tooltool package is a folder containing at least the following:
+1. a tooltool manifest (.tt extension)
+2. all the binary files referenced in the manifest 
+3. a text file with the same name of the manifest (but .txt extension instead of .tt), including any comments the author of the manifest may want to add
+
+tooltool.py will be extended with a dedicated "package" command to generate a Tooltool Package
+
+Introducing the "Tooltool Upload Server"
+----------------------------------------
+The Tooltool Upload Server is a server to which users can upload tooltool packages using rsync with ssh keys authentication.
+
+The tooltool client will be extended with a dedicated "upload" command which will operate the transfer, using rsync over ssh as transfer technology behind the scenes.
+
+Each authorized uploader will have an account on the Tooltool Upload Server which will allow him to upload tooltool packages.
+
+Since some tooltool packages need to be made available only internally to moco/mofo employees (private distrinution, so to speak), while others can be made publicly available (public distribution, so to speak), each user will need to upload packages to an appropriate folder (one folder per distrinution type)
+
+In the case of to distribution models only (private and public), the folder structure on the Tooltool Upload Server will be as follows:
+
+	/data/tooltool.uploads.root/dmitchell/pub
+	/data/tooltool.uploads.root/dmitchell/pvt
+	/data/tooltool.uploads.root/sbruno/pub
+	/data/tooltool.uploads.root/sbruno/pvt
+
+Please see also Bug 768879 (where the esistence of public and private tooltool repositories is discussed), and Bug 768123 (where support for multiple tooltool servers is introduced).
+
+Introducing the "Tooltool Synchronization Script"
+-------------------------------------------------
+So far we talked about users uploading Tooltool Packages to specific folders in the Tooltool Upload Server.
+Once the packages have been uploaded, a mechanism to propagate the packages to the tooltool servers needs to be put in place.
+Such mechanism is the Tooltool Synchronization Script, which is a python script supposed to be scheduled (via cron) on the Tooltool Upload Server for periodic execution.
+More specifically, the Tooltool Synchronization Script will perform the following steps:
+1. For each newly uploaded tooltool package by any of the authorized users, it will check its validity (manifest, hashes), and perform a hash collision check to avoid overwriting an existing tooltool artifact with a different one with the same hash.
+2. For each newly uploaded tooltool package by any of the authorized users, it will propagate the included files to an appropriate reference folder (one per distribution type)
+3. it will store on a local file based datastore informations about the uploads: uploader, timestamp of upload, manifests, filenames, and notes written by the users about the tooltool packages.
+
+In other words, the Synchronization Script will collect manifests and artifacts from the individual uploader folders and aggregate them according to their distribution type (private, public, etc.) in appropriate folders. This folder will then need to be kept in sync (with rsync) with all the apache servers distributing tooltool artifacts. 
+
+Benefits and limitations
+========================
+
+All requirements describe at the beginning of this doc are met by the described design. Furthermore, enabling a new uploader will be as simple as creating an account on the Upload Server (using puppet) and the upload folders.
+All uploads would be tracked and relevant information regarding each uploaded file would be available.
+
+Some limitations of this approach are:
+1. A user deleting files in his own upload folders does not trigger a corresponding cleanup on the target tooltool servers. The tooltool servers cleanup (e.g. for older files) is not addressed by this design.
+2. A new "live" component (the Sync Script) is introduced. If the Tooltool Synchronization Script is not running, uploads to the Upload Server will not result in the availability of corresponding files in the tooltool servers.
+
+Implementation
+==============
+
+On the IT side, the implementation of this design will require the choice of a server to be used as Tooltool Upload Server, the management of accounts and scheduling/running the Sync Script.
+
+On releng side, the following implementation steps are needed:
+1. some changes are required to the tooltool client to allow the creation of tooltool packages with a dedicated command. As a secondary requirement, the upload to the Upload server could also be implemented within tooltool.py
+2. The Synchronization Script will need to be written from scratch.
