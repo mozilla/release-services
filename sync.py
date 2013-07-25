@@ -28,6 +28,9 @@ import tooltool  # to read manifests
 
 import datetime
 
+STRFRTIME="%Y_%m_%d-%H.%M.%S"
+TIMESTAMP_REGEX=re.sub(r"%\D", "\d+", STRFRTIME)
+
 LOG_FILENAME = 'tooltool_sync.log'
 DEFAULT_LOG_LEVEL = logging.DEBUG
 
@@ -113,7 +116,7 @@ def getDigests(manifest):
 
 
 def begins_with_timestamp(filename):
-    p = re.compile("\d+_\d+_\d+-\d+.\d+.\d+")
+    p = re.compile(TIMESTAMP_REGEX)
     return p.match(filename)
 
 
@@ -140,7 +143,7 @@ def main():
             for new_manifest in new_manifests:
                 new_manifest_path = os.path.join(upload_folder, new_manifest)
                 destination = matching[distribution_type]
-                timestamp = datetime.datetime.now().strftime("%Y_%m_%d-%H.%M.%S")
+                timestamp = datetime.datetime.now().strftime(STRFRTIME)
                 timestamped_manifest_name = "%s.%s" % (timestamp, new_manifest)
                 
                 digests = getDigests(new_manifest_path)
