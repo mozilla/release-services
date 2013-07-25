@@ -141,7 +141,7 @@ def main():
                 new_manifest_path = os.path.join(upload_folder, new_manifest)
                 destination = matching[distribution_type]
                 timestamp = datetime.datetime.now().strftime("%Y_%m_%d-%H.%M.%S")
-                processed_manifest_name = "%s.%s" % (timestamp, new_manifest)
+                timestamped_manifest_name = "%s.%s" % (timestamp, new_manifest)
                 
                 digests = getDigests(new_manifest_path)
                 # checking that ALL files mentioned in the manifest are in the upload folder, otherwise I cannot proceed copying
@@ -194,7 +194,7 @@ def main():
                         if renamingOK:
                             # update digest with new manifest dealing with it
                             with open("%s.MANIFESTS" % digest, 'a') as file:
-                                stored_manifest_name = "%s.%s.%s" % (user, distribution_type, processed_manifest_name)
+                                stored_manifest_name = "%s.%s.%s" % (user, distribution_type, timestamped_manifest_name)
                                 file.write("%s\n"% stored_manifest_name)
                             
                             # keep a local copy of the processed manifest
@@ -207,7 +207,7 @@ def main():
                             # rename the comment file, just appending a timestamp
                             
                             # rename original manifest name appending timestanp
-                            os.rename(new_manifest_path, os.path.join(upload_folder, processed_manifest_name))
+                            os.rename(new_manifest_path, os.path.join(upload_folder, timestamped_manifest_name))
                            
 
                         else:
