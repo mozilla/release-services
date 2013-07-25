@@ -97,36 +97,9 @@ def load_json(filename):
     return data
 
 
-def persist_json(data, filepath):
-    with open(filepath, 'w') as outfile:
-        json.dump(data, outfile, indent = 2)
-
-
 def load_config():
     config = load_json(CONFIG_FILENAME)
     return validate_config(config)
-
-
-PROCESSED_DIGESTS = "processed_digests.json"
-if not os.path.exists(PROCESSED_DIGESTS):
-    persist_json({}, PROCESSED_DIGESTS)
-
-#{digest:(manifest)}
-
-processed_digests = load_json(PROCESSED_DIGESTS)
-
-PROCESSED_MANIFESTS = "processed_manifests.json"
-if not os.path.exists(PROCESSED_MANIFESTS):
-    persist_json({}, PROCESSED_MANIFESTS)
-
-#{processed_manifest:(user, notes, distribution_type )}
-
-processed_manifests = load_json(PROCESSED_MANIFESTS)
-
-
-def already_processed(digest):
-    return digest in processed_digests
-    #TODO
 
 
 def get_upload_folder(root, user, distribution_type):
@@ -137,13 +110,6 @@ def get_upload_folder(root, user, distribution_type):
 def getDigests(manifest):
     manifest = tooltool.open_manifest(manifest)
     return [(x.digest, x.algorithm) for x in manifest.file_records]
-
-
-def isnew(upload_folder, manifestname):
-    for digest in [x for (x, y) in getDigests(os.path.join(upload_folder, manifestname))]:
-        if already_processed(digest):
-            return False
-    return True
 
 
 def begins_with_timestamp(filename):
@@ -169,13 +135,14 @@ def main():
                 break  # not to navigate subfolders
 
             # "new" means that it has to be processed
-            new_manifests = [filename for filename in files if (filename.endswith(".tt") and not begins_with_timestamp(filename) and isnew(upload_folder, filename))]
+            new_manifests = [filename for filename in files if (filename.endswith(".tt") and not begins_with_timestamp(filename) )]
 
             for new_manifest in new_manifests:
                 new_manifest_path = os.path.join(upload_folder, new_manifest)
                 destination = matching[distribution_type]
                 timestamp = datetime.datetime.now().strftime("%Y_%m_%d-%H.%M.%S")
                 processed_manifest_name = "%s.%s" % (timestamp, new_manifest)
+                
                 digests = getDigests(new_manifest_path)
                 # checking that ALL files mentioned in the manifest are in the upload folder, otherwise I cannot proceed copying
                 allFilesAreOK = True  # I am an optimist!
@@ -199,9 +166,10 @@ def main():
                     # copying the digest files to destination
                     copyOK = True
                     for digest, _algorithm in digests:
-                        comment = ""
+                        comment = None
                         comment_filename = new_manifest.replace(".tt", ".txt")
                         comment_filepath = os.path.join(upload_folder, new_manifest.replace(".tt", ".txt"))
+                        
                         if os.path.exists(comment_filepath):
                             with open(comment_filepath) as f:
                                 comment = f.read()
@@ -213,11 +181,7 @@ def main():
                             copyOK = False
                             break
                     if copyOK:
-                        # updating metadata
-                        for digest, _algorithm in digests:
-                            processed_digests[digest] = processed_manifest_name
-                        processed_manifests[processed_manifest_name] = (user, comment, distribution_type)
-
+                        
                         renamingOK = True
                         for digest, _algorithm in digests:
                             try:
@@ -228,15 +192,24 @@ def main():
                             # persist changes to json files
 
                         if renamingOK:
+                            # update digest with new manifest dealing with it
+                            with open("%s.MANIFESTS" % digest, 'a') as file:
+                                stored_manifest_name = "%s.%s.%s" % (user, distribution_type, processed_manifest_name)
+                                file.write("%s\n"% stored_manifest_name)
+                            
+                            # keep a local copy of the processed manifest
+                            shutil.copy(new_manifest_path, os.path.join(os.getcwd(), stored_manifest_name))
+                            if os.path.exists(comment_filepath):
+                                
+                                                           
+                                shutil.copy(comment_filepath, os.path.join(os.getcwd(), "%s.%s.%s.%s" % (user, distribution_type, timestamp, comment_filename) ))
+                                os.rename(comment_filepath, os.path.join(upload_folder, "%s.%s" % (timestamp, comment_filename))) 
+                            # rename the comment file, just appending a timestamp
+                            
                             # rename original manifest name appending timestanp
                             os.rename(new_manifest_path, os.path.join(upload_folder, processed_manifest_name))
-                            # keep a local copy of the processed manifest
-                            shutil.copy(os.path.join(upload_folder, processed_manifest_name), os.getcwd())
-                            # rename the comment file, just appending a timestamp
-                            os.rename(comment_filepath, os.path.join(upload_folder, "%s.%s" % (timestamp, comment_filename)))
-                            # persists the json metadata files
-                            persist_json(processed_digests, PROCESSED_DIGESTS)
-                            persist_json(processed_manifests, PROCESSED_MANIFESTS)
+                           
+
                         else:
                             # no changes to the metadata, no changes to the original upload folder, maybe next time...
                             pass
