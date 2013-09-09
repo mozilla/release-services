@@ -183,6 +183,7 @@ def main():
                             log.error("Impossible to copy file %s to %s; I/O error(%s): %s" % (digest_path, destination, e.errno, e.strerror))
                             copyOK = False
                             break
+
                     if copyOK:
                         
                         renamingOK = True
@@ -192,30 +193,29 @@ def main():
                             except:
                                 log.error("Impossible to rename file %s to %s;" % (os.path.join(destination, "temp%s" % digest), os.path.join(destination, digest)))
                                 renamingOK = False
-                            # persist changes to json files
 
                         if renamingOK:
-                            # update digest with new manifest dealing with it
-                            with open("%s.MANIFESTS" % digest, 'a') as file:
-                                stored_manifest_name = "%s.%s.%s" % (user, distribution_type, timestamped_manifest_name)
-                                file.write("%s\n"% stored_manifest_name)
+                            for digest, _algorithm in digests:
+                                # update digest with new manifest dealing with it
+                                with open("%s.MANIFESTS" % digest, 'a') as file:
+                                    stored_manifest_name = "%s.%s.%s" % (user, distribution_type, timestamped_manifest_name)
+                                    file.write("%s\n"% stored_manifest_name)
                             
-                            # keep a local copy of the processed manifest
-                            shutil.copy(new_manifest_path, os.path.join(os.getcwd(), stored_manifest_name))
-                            if os.path.exists(comment_filepath):
-                                
-                                                           
-                                shutil.copy(comment_filepath, os.path.join(os.getcwd(), "%s.%s.%s.%s" % (user, distribution_type, timestamp, comment_filename) ))
-                                os.rename(comment_filepath, os.path.join(upload_folder, "%s.%s" % (timestamp, comment_filename))) 
-                            # rename the comment file, just appending a timestamp
-                            
-                            # rename original manifest name appending timestanp
-                            os.rename(new_manifest_path, os.path.join(upload_folder, timestamped_manifest_name))
-                           
+                        # keep a local copy of the processed manifest
+                        shutil.copy(new_manifest_path, os.path.join(os.getcwd(), stored_manifest_name))
 
-                        else:
-                            # no changes to the metadata, no changes to the original upload folder, maybe next time...
-                            pass
+                        if os.path.exists(comment_filepath):
+                            shutil.copy(comment_filepath, os.path.join(os.getcwd(), "%s.%s.%s.%s" % (user, distribution_type, timestamp, comment_filename) ))
+                        
+                            #rename original manifest and comment file    
+                            os.rename(comment_filepath, os.path.join(upload_folder, "%s.%s" % (timestamp, comment_filename))) 
+
+                        # rename original manifest name
+                        os.rename(new_manifest_path, os.path.join(upload_folder, timestamped_manifest_name))
+                    else:
+                        #TODO: remove copied files beginning with "temp"
+                        pass       
+
                 if allFilesAreOK and copyOK and renamingOK:
                     pass
                 else:
