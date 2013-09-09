@@ -64,7 +64,7 @@ def validate_config(config):
         log.critical("The configuration file does not contain a valid upload_root value")
         raise SystemExit
 
-    if 'target_folders' in config and config['target_folders'] and type(config['target_folders']) is dict:
+    if 'target_folders' in config and config['target_folders'] and isinstance(config['target_folders'], dict):
         matching = config['target_folders']
     else:
         log.critical("The configuration file does not specify the target folders for each distribution type (a dictionary named target_folders is needed)")
