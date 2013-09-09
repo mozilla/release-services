@@ -62,13 +62,13 @@ def validate_config(config):
         root = config['root']
     else:
         log.critical("The configuration file does not contain a valid root folder")
-        exit(1)
+        raise SystemExit
 
     if config['matching'] and type(config['matching']) is dict:
         matching = config['matching']
     else:
         log.critical("The configuration file does not contain a matching section (a dictionary)")
-        exit(1)
+        raise SystemExit
 
     pathsOK = True
     for distribution_level in matching:
@@ -77,7 +77,7 @@ def validate_config(config):
             log.critical("The folder %s, mentioned in the configuration file,  does not exist" % destination)
             pathsOK = False
     if not pathsOK:
-        exit(1)
+        raise SystemExit
 
     return root, matching
 
@@ -89,13 +89,13 @@ def load_json(filename):
         f.close()
     except IOError as e:
         log.critical("Impossible to read file %s; I/O error(%s): %s" % (filename, e.errno, e.strerror))
-        exit(1)
+        raise SystemExit
     except ValueError as e:
         log.critical("Impossible to load file %s; Value error: %s" % (filename, e))
-        exit(1)
+        raise SystemExit
     except:
         log.critical("Unexpected error: %s" % sys.exc_info()[0])
-        exit(1)
+        raise SystemExit
 
     return data
 
