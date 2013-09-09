@@ -169,6 +169,7 @@ def main():
                     # copying the digest files to destination
                     copyOK = True
                     for digest, _algorithm in digests:
+                        digest_path = os.path.join(upload_folder, digest)
                         comment = None
                         comment_filename = new_manifest.replace(".tt", ".txt")
                         comment_filepath = os.path.join(upload_folder, new_manifest.replace(".tt", ".txt"))
@@ -213,11 +214,15 @@ def main():
                         # rename original manifest name
                         os.rename(new_manifest_path, os.path.join(upload_folder, timestamped_manifest_name))
                     else:
-                        #TODO: remove copied files beginning with "temp"
-                        pass       
+                        #TODO: cleanup removing copied files beginning with "temp"
+                        pass
+
 
                 if allFilesAreOK and copyOK and renamingOK:
-                    pass
+                    # cleaning up source directory of copied files
+                    for digest, _algorithm in digests:
+                        digest_path = os.path.join(upload_folder, digest)
+                        os.remove(digest_path)
                 else:
                     log.error("Manifest %s has NOT been processed" % new_manifest)
 
