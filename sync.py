@@ -58,16 +58,16 @@ def validate_config(config):
     matching = {}
     root = ""
 
-    if config['root'] and os.path.exists(config['root']) and os.path.isdir(config['root']):
-        root = config['root']
+    if 'upload_root' in config and config['upload_root'] and os.path.exists(config['upload_root']) and os.path.isdir(config['upload_root']):
+        root = config['upload_root']
     else:
-        log.critical("The configuration file does not contain a valid root folder")
+        log.critical("The configuration file does not contain a valid upload_root value")
         raise SystemExit
 
-    if config['matching'] and type(config['matching']) is dict:
-        matching = config['matching']
+    if 'target_folders' in config and config['target_folders'] and type(config['target_folders']) is dict:
+        matching = config['target_folders']
     else:
-        log.critical("The configuration file does not contain a matching section (a dictionary)")
+        log.critical("The configuration file does not specify the target folders for each distribution type (a dictionary named target_folders is needed)")
         raise SystemExit
 
     pathsOK = True
