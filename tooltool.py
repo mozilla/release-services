@@ -30,6 +30,11 @@ import urllib2
 import shutil
 import sys
 
+import string
+import random
+
+TEMP_SUFFIX=''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
+
 try:
     import simplejson as json  # I hear simplejson is faster
 except ImportError:
