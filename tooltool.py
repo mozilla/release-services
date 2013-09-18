@@ -33,7 +33,7 @@ import sys
 import string
 import random
 
-TEMP_SUFFIX=''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
+TEMP_SUFFIX = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
 
 try:
     import simplejson as json  # I hear simplejson is faster
@@ -396,8 +396,6 @@ def touch(f):
 def fetch_file(base_urls, file_record, grabchunk=1024 * 4, cache_folder=None, temp_suffix=''):
     # A file which is requested to be fetched that exists locally will be overwritten by this function
 
-
-    #case 2: fetch the file
     fetched = False
     for base_url in base_urls:
         # Generate the URL for the file on the server side
@@ -429,7 +427,6 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, cache_folder=None, te
         except IOError:
             log.info("failed to write to '%s'" % file_record.filename, exc_info=True)
 
-
     return fetched
 
 
@@ -442,16 +439,15 @@ def fetch_files(manifest_file, base_urls, overwrite, filenames=[], cache_folder=
         log.error("failed to load manifest file at '%s'" % manifest_file)
         return False
 
-
     # we want to track files already in current working directory AND valid
     # we will not need to fetch these
-    present_files=[]
-    
+    present_files = []
+
     # We want to track files that fail to be fetched as well as
     # files that are fetched
     failed_files = []
     fetched_files = []
-    
+
     # Lets go through the manifest and fetch the files that we want
     for f in manifest.file_records:
         # case 1: files are already present
@@ -468,7 +464,7 @@ def fetch_files(manifest_file, base_urls, overwrite, filenames=[], cache_folder=
         if cache_folder and f.filename not in present_files:
             try:
                 shutil.copy(os.path.join(cache_folder, f.digest),
-                            os.path.join(os.getcwd(), f.filename  ))
+                            os.path.join(os.getcwd(), f.filename))
                 log.info("File %s retrieved from local cache %s" %
                          (f.filename, cache_folder))
                 touch(os.path.join(cache_folder, f.digest))
@@ -483,7 +479,7 @@ def fetch_files(manifest_file, base_urls, overwrite, filenames=[], cache_folder=
         # now I will try to fetch all files which are not already present and valid, appending a suffix to avoid race conditions
 
         # 'filenames' is the list of filenames to be managed, if this variable is a non empty list it can be used to filter
-        # if filename is in present_files, it means that I have it already because it was already either in the working dir or in the cache 
+        # if filename is in present_files, it means that I have it already because it was already either in the working dir or in the cache
         if (f.filename in filenames or len(filenames) == 0) and f.filename not in present_files:
             log.debug("fetching %s" % f.filename)
             if fetch_file(base_urls, f, cache_folder=cache_folder, temp_suffix=TEMP_SUFFIX):
@@ -498,13 +494,12 @@ def fetch_files(manifest_file, base_urls, overwrite, filenames=[], cache_folder=
         # since I appended a temp suffix while downloading, I need to perform all validations on the file with the temp suffix
         # this is why filerecord_for_validation is created
 
-        filerecord_for_validation = FileRecord( "%s%s" % (localfile.filename,TEMP_SUFFIX), localfile.size, localfile.digest, localfile.algorithm)
+        filerecord_for_validation = FileRecord("%s%s" % (localfile.filename, TEMP_SUFFIX), localfile.size, localfile.digest, localfile.algorithm)
 
         if filerecord_for_validation.validate():
             # great!
             # I can remove the temporary suffix
             os.rename(os.path.join(os.getcwd(), filerecord_for_validation.filename), os.path.join(os.getcwd(), localfile.filename))
-            
             # if I am using a cache and a new file has just been retrieved from a
             # remote location, I need to update the cache as well
             if cache_folder:
