@@ -481,6 +481,9 @@ def fetch_files(manifest_file, base_urls, overwrite, filenames=[], cache_folder=
                          (f.filename, cache_folder))
 
         # now I will try to fetch all files which are not already present and valid, appending a suffix to avoid race conditions
+
+        # 'filenames' is the list of filenames to be managed, if this variable is a non empty list it can be used to filter
+        # if filename is in present_files, it means that I have it already because it was already either in the working dir or in the cache 
         if (f.filename in filenames or len(filenames) == 0) and f.filename not in present_files:
             log.debug("fetching %s" % f.filename)
             if fetch_file(base_urls, f, cache_folder=cache_folder, temp_suffix=TEMP_SUFFIX):
