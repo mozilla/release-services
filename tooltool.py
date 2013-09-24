@@ -785,7 +785,6 @@ def main():
         ch.setLevel(logging.ERROR)
     else:
         ch.setLevel(logging.INFO)
-    log.setLevel(logging.DEBUG)
     log.addHandler(ch)
 
     if not 'manifest' in options:
