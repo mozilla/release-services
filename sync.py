@@ -28,8 +28,8 @@ import tooltool  # to read manifests
 
 import datetime
 
-STRFRTIME="%Y_%m_%d-%H.%M.%S"
-TIMESTAMP_REGEX=re.sub(r"%\D", "\d+", STRFRTIME)
+STRFRTIME = "%Y_%m_%d-%H.%M.%S"
+TIMESTAMP_REGEX = re.sub(r"%\D", "\d+", STRFRTIME)
 
 LOG_FILENAME = 'tooltool_sync.log'
 DEFAULT_LOG_LEVEL = logging.DEBUG
@@ -138,7 +138,7 @@ def main():
                 break  # not to navigate subfolders
 
             # "new" means that it has to be processed
-            new_manifests = [filename for filename in files if (filename.endswith(".tt") and not begins_with_timestamp(filename) )]
+            new_manifests = [filename for filename in files if (filename.endswith(".tt") and not begins_with_timestamp(filename))]
 
             for new_manifest in new_manifests:
                 new_manifest_path = os.path.join(upload_folder, new_manifest)
@@ -146,93 +146,108 @@ def main():
                 timestamp = datetime.datetime.now().strftime(STRFRTIME)
                 timestamped_manifest_name = "%s.%s" % (timestamp, new_manifest)
 
+                comment_filename = new_manifest.replace(".tt", ".txt")
+                comment_filepath = os.path.join(upload_folder, new_manifest.replace(".tt", ".txt"))
 
-                content_folder_path=new_manifest_path.replace(".tt", tooltool.TOOLTOOL_PACKAGE_SUFFIX)
-                
-                digests = getDigests(new_manifest_path)
-                # checking that ALL files mentioned in the manifest are in the upload folder, otherwise I cannot proceed copying
+                manifestOK = True
+                content_folder_path = new_manifest_path.replace(".tt", tooltool.TOOLTOOL_PACKAGE_SUFFIX)
+                digests = ()
+                try:
+                    digests = getDigests(new_manifest_path)
+                except InvalidManifest:
+                    manifestOK = False
 
-
-                allFilesAreOK = True  # I am an optimist!
-
-                #S content_folder
-                if not os.path.exists(content_folder_path) or not os.path.isdir(content_folder_path) :
-                    allFilesAreOK = False
-                    log.error("Impossible to process manifest %s because content has not been uploaded to folder" % content_folder_path)
-                else:
-                    for digest, algorithm in digests:
-                        digest_path = os.path.join(content_folder_path, digest)
-                        if not os.path.exists(digest_path):
-                            allFilesAreOK = False
-                            log.error("Impossible to process manifest %s because one of the mentioned file does not exist" % new_manifest)
-                        else:
-                            log.debug("Found file %s, let's check the content" % digest)
-                            with open(digest_path, 'rb') as f:
-                                d = tooltool.digest_file(f, algorithm)
-                                if d == digest:
-                                    log.debug("Great! File %s is what he declares to be!")
-                                else:
-                                    allFilesAreOK = False
-                                    log.error("Impossible to process manifest %s because the mentioned file %s has an incorrect content" % (new_manifest, digest))
-
-                if allFilesAreOK:
-
-                    # copying the digest files to destination
-                    copyOK = True
-                    for digest, _algorithm in digests:
-                        digest_path = os.path.join(content_folder_path, digest)
-                        comment = None
-                        comment_filename = new_manifest.replace(".tt", ".txt")
-                        comment_filepath = os.path.join(upload_folder, new_manifest.replace(".tt", ".txt"))
-                        
-                        if os.path.exists(comment_filepath):
-                            with open(comment_filepath) as f:
-                                comment = f.read()
-
-                        try:
-                            shutil.copy(digest_path, os.path.join(destination, "temp%s" % digest))
-                        except IOError as e:
-                            log.error("Impossible to copy file %s to %s; I/O error(%s): %s" % (digest_path, destination, e.errno, e.strerror))
-                            copyOK = False
-                            break
-
-                    if copyOK:
-                        
-                        renamingOK = True
-                        for digest, _algorithm in digests:
-                            try:
-                                os.rename(os.path.join(destination, "temp%s" % digest), os.path.join(destination, digest))
-                            except:
-                                log.error("Impossible to rename file %s to %s;" % (os.path.join(destination, "temp%s" % digest), os.path.join(destination, digest)))
-                                renamingOK = False
-
-                        if renamingOK:
-                            for digest, _algorithm in digests:
-                                # update digest with new manifest dealing with it
-                                with open("%s.MANIFESTS" % digest, 'a') as file:
-                                    stored_manifest_name = "%s.%s.%s" % (user, distribution_type, timestamped_manifest_name)
-                                    file.write("%s\n"% stored_manifest_name)
-                            
-                        # keep a local copy of the processed manifest
-                        shutil.copy(new_manifest_path, os.path.join(os.getcwd(), stored_manifest_name))
-
-                        if os.path.exists(comment_filepath):
-                            shutil.copy(comment_filepath, os.path.join(os.getcwd(), "%s.%s.%s.%s" % (user, distribution_type, timestamp, comment_filename) ))
-                        
-                            #rename original manifest and comment file    
-                            os.rename(comment_filepath, os.path.join(upload_folder, "%s.%s" % (timestamp, comment_filename))) 
-
-                        # rename original manifest name
-                        os.rename(new_manifest_path, os.path.join(upload_folder, timestamped_manifest_name))
+                if manifestOK:
+                    allFilesAreOK = True
+                    # checking that ALL files mentioned in the manifest are in the upload folder, otherwise I cannot proceed copying
+                    if not os.path.exists(content_folder_path) or not os.path.isdir(content_folder_path):
+                        allFilesAreOK = False
+                        log.error("Impossible to process manifest %s because content has not been uploaded to folder" % content_folder_path)
                     else:
-                        #TODO: cleanup removing copied files beginning with "temp"
+                        for digest, algorithm in digests:
+                            digest_path = os.path.join(content_folder_path, digest)
+                            if not os.path.exists(digest_path):
+                                allFilesAreOK = False
+                                log.error("Impossible to process manifest %s because one of the mentioned file does not exist" % new_manifest)
+                            else:
+                                log.debug("Found file %s, let's check the content" % digest)
+                                with open(digest_path, 'rb') as f:
+                                    d = tooltool.digest_file(f, algorithm)
+                                    if d == digest:
+                                        log.debug("Great! File %s is what he declares to be!")
+                                    else:
+                                        allFilesAreOK = False
+                                        log.error("Impossible to process manifest %s because the mentioned file %s has an incorrect content" % (new_manifest, digest))
+
+                    if allFilesAreOK:
+
+                        # copying the digest files to destination
+                        copyOK = True
+                        for digest, _algorithm in digests:
+                            digest_path = os.path.join(content_folder_path, digest)
+                            comment = None
+
+                            if os.path.exists(comment_filepath):
+                                with open(comment_filepath) as f:
+                                    comment = f.read()
+
+                            try:
+                                shutil.copy(digest_path, os.path.join(destination, "temp%s" % digest))
+                            except IOError as e:
+                                log.error("Impossible to copy file %s to %s; I/O error(%s): %s" % (digest_path, destination, e.errno, e.strerror))
+                                copyOK = False
+                                break
+
+                        if copyOK:
+                            renamingOK = True
+                            for digest, _algorithm in digests:
+                                try:
+                                    os.rename(os.path.join(destination, "temp%s" % digest), os.path.join(destination, digest))
+                                except:
+                                    log.error("Impossible to rename file %s to %s;" % (os.path.join(destination, "temp%s" % digest), os.path.join(destination, digest)))
+                                    renamingOK = False
+
+                            if renamingOK:
+                                for digest, _algorithm in digests:
+                                    # update digest with new manifest dealing with it
+                                    with open("%s.MANIFESTS" % digest, 'a') as file:
+                                        stored_manifest_name = "%s.%s.%s" % (user, distribution_type, timestamped_manifest_name)
+                                        file.write("%s\n" % stored_manifest_name)
+                                # if renaming is not successful, there's probably some problem in the upload server
+
+                                # keep a local copy of the processed manifest
+                                shutil.copy(new_manifest_path, os.path.join(os.getcwd(), stored_manifest_name))
+
+                                if os.path.exists(comment_filepath):
+                                    shutil.copy(comment_filepath, os.path.join(os.getcwd(), "%s.%s.%s.%s" % (user, distribution_type, timestamp, comment_filename)))
+
+                                #rename original comment file
+                                os.rename(comment_filepath, os.path.join(upload_folder, "%s.%s" % (timestamp, comment_filename)))
+
+                                # rename original manifest name
+                                os.rename(new_manifest_path, os.path.join(upload_folder, timestamped_manifest_name))
+                        else:
+                            #TODO: cleanup removing copied files beginning with "temp"
+                            pass
+
+                if manifestOK and allFilesAreOK:
+                    if copyOK:
+                        if renamingOK:
+                            # cleaning up source directory of copied files
+                            shutil.rmtree(content_folder_path)
+                        else:
+                            # TODO: notify internal error both to uploader and to sync maintainer
+                            pass
+                    else:
                         pass
-
-
-                if allFilesAreOK and copyOK and renamingOK:
-                    # cleaning up source directory of copied files
-                    shutil.rmtree(content_folder_path)
+                        # TODO: notify internal error both to uploader and to sync maintainer
                 else:
+                    # general cleanup: the uploader will need to re-upload the package
+                    if os.path.exists(content_folder_path):
+                        shutil.rmtree(content_folder_path)
+                    os.remove(comment_filepath)
+                    os.remove(new_manifest_path)
+                    #TODO: notify error to user: a new upload needs to be made!
                     log.error("Manifest %s has NOT been processed" % new_manifest)
 
 if __name__ == "__main__":
