@@ -31,6 +31,7 @@ import shutil
 import sys
 
 DEFAULT_MANIFEST_NAME = 'manifest.tt'
+TOOLTOOL_PACKAGE_SUFFIX = '.TOOLTOOL-PACKAGE'
 
 try:
     import simplejson as json  # I hear simplejson is faster
@@ -576,8 +577,9 @@ def purge(folder, gigs):
 
 def package(folder, algorithm, message):
     if not os.path.exists(folder) or not os.path.isdir(folder):
-        log.error('Folder %s does not exist!' % folder)
-        return
+        msg = 'Folder %s does not exist!' % folder
+        log.error(msg)
+        raise Exception(msg)
 
     from os import walk
 
@@ -588,15 +590,15 @@ def package(folder, algorithm, message):
         filenames.extend(files)
         break  # not to navigate subfolders
 
-    default_package_name = basename + '.TOOLTOOL-PACKAGE'
+   
 
-    package_name = default_package_name
+    package_name = basename + TOOLTOOL_PACKAGE_SUFFIX
     manifest_name = basename + '.tt'
     notes_name = basename + '.txt'
 
     suffix = 1
     while os.path.exists(os.path.join(dirname, package_name)):
-        package_name = default_package_name + str(suffix)
+        package_name = basename + str(suffix) + TOOLTOOL_PACKAGE_SUFFIX
         manifest_name = basename + str(suffix) +'.tt'
         notes_name = basename + str(suffix) + '.txt'
         suffix = suffix + 1
@@ -631,18 +633,22 @@ def execute(cmd):
 
 def upload(package, user, host, path):
     #TODO s: validate package
-    cmd1 = "rsync  %s/* %s@%s:%s --progress -f '- *.tt' -f '- *.txt'" % ( package, user, host, path) 
+    cmd1 = "rsync  -a %s %s@%s:%s --progress -f '- *.tt' -f '- *.txt'" % ( package, user, host, path) 
     
-    cmd2 = "rsync  %s/* %s@%s:%s --progress -f '+ *.tt' -f '+ *.txt'" % ( package, user, host, path) 
+    cmd2 = "rsync  %s/*.txt %s@%s:%s --progress" % ( package, user, host, path)
+    cmd3 = "rsync  %s/*.tt %s@%s:%s --progress" % ( package, user, host, path) 
 
-    log.info("The following two rsync commands will be executed to transfer the tooltool package:")
+    log.info("The following three rsync commands will be executed to transfer the tooltool package:")
     log.info("1) %s"%cmd1)
     log.info("2) %s"%cmd2)
+    log.info("3) %s"%cmd3)
     log.info("Please note that the order of execution IS relevant!")
     log.info("Uploading hashed files with command: %s" % cmd1)
     execute(cmd1)
-    log.info("Uploading metadata files (manifest and notes) with command: %s" % cmd2)
+    log.info("Uploading metadata files (notes)    with command: %s" % cmd2)
     execute(cmd2)
+    log.info("Uploading metadata files (manifest) with command: %s" % cmd3)
+    execute(cmd3)
 
     log.info("Package %s has been correctly uploaded to %s:%s" % (package, host, path))
 

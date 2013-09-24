@@ -145,31 +145,42 @@ def main():
                 destination = matching[distribution_type]
                 timestamp = datetime.datetime.now().strftime(STRFRTIME)
                 timestamped_manifest_name = "%s.%s" % (timestamp, new_manifest)
+
+
+                content_folder_path=new_manifest_path.replace(".tt", tooltool.TOOLTOOL_PACKAGE_SUFFIX)
                 
                 digests = getDigests(new_manifest_path)
                 # checking that ALL files mentioned in the manifest are in the upload folder, otherwise I cannot proceed copying
+
+
                 allFilesAreOK = True  # I am an optimist!
-                for digest, algorithm in digests:
-                    digest_path = os.path.join(upload_folder, digest)
-                    if not os.path.exists(digest_path):
-                        allFilesAreOK = False
-                        log.error("Impossible to process manifest %s because one of the mentioned file does not exist" % new_manifest)
-                    else:
-                        log.debug("Found file %s, let's check the content" % digest)
-                        with open(digest_path, 'rb') as f:
-                            d = tooltool.digest_file(f, algorithm)
-                            if d == digest:
-                                log.debug("Great! File %s is what he declares to be!")
-                            else:
-                                allFilesAreOK = False
-                                log.error("Impossible to process manifest %s because the mentioned file %s has an incorrect content" % (new_manifest, digest))
+
+                #S content_folder
+                if not os.path.exists(content_folder_path) or not os.path.isdir(content_folder_path) :
+                    allFilesAreOK = False
+                    log.error("Impossible to process manifest %s because content has not been uploaded to folder" % content_folder_path)
+                else:
+                    for digest, algorithm in digests:
+                        digest_path = os.path.join(content_folder_path, digest)
+                        if not os.path.exists(digest_path):
+                            allFilesAreOK = False
+                            log.error("Impossible to process manifest %s because one of the mentioned file does not exist" % new_manifest)
+                        else:
+                            log.debug("Found file %s, let's check the content" % digest)
+                            with open(digest_path, 'rb') as f:
+                                d = tooltool.digest_file(f, algorithm)
+                                if d == digest:
+                                    log.debug("Great! File %s is what he declares to be!")
+                                else:
+                                    allFilesAreOK = False
+                                    log.error("Impossible to process manifest %s because the mentioned file %s has an incorrect content" % (new_manifest, digest))
 
                 if allFilesAreOK:
 
                     # copying the digest files to destination
                     copyOK = True
                     for digest, _algorithm in digests:
-                        digest_path = os.path.join(upload_folder, digest)
+                        digest_path = os.path.join(content_folder_path, digest)
                         comment = None
                         comment_filename = new_manifest.replace(".tt", ".txt")
                         comment_filepath = os.path.join(upload_folder, new_manifest.replace(".tt", ".txt"))
@@ -220,9 +231,7 @@ def main():
 
                 if allFilesAreOK and copyOK and renamingOK:
                     # cleaning up source directory of copied files
-                    for digest, _algorithm in digests:
-                        digest_path = os.path.join(upload_folder, digest)
-                        os.remove(digest_path)
+                    shutil.rmtree(content_folder_path)
                 else:
                     log.error("Manifest %s has NOT been processed" % new_manifest)
 
