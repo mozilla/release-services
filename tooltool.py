@@ -590,8 +590,6 @@ def package(folder, algorithm, message):
         filenames.extend(files)
         break  # not to navigate subfolders
 
-   
-
     package_name = basename + TOOLTOOL_PACKAGE_SUFFIX
     manifest_name = basename + '.tt'
     notes_name = basename + '.txt'
@@ -599,7 +597,7 @@ def package(folder, algorithm, message):
     suffix = 1
     while os.path.exists(os.path.join(dirname, package_name)):
         package_name = basename + str(suffix) + TOOLTOOL_PACKAGE_SUFFIX
-        manifest_name = basename + str(suffix) +'.tt'
+        manifest_name = basename + str(suffix) + '.tt'
         notes_name = basename + str(suffix) + '.txt'
         suffix = suffix + 1
 
@@ -610,9 +608,9 @@ def package(folder, algorithm, message):
     add_files(os.path.join(os.path.join(dirname, package_name), manifest_name), algorithm, [os.path.join(folder, x) for x in filenames], create_package=True)
 
     try:
-        f = open(os.path.join(os.path.join(dirname, package_name), notes_name)  , 'wb')
+        f = open(os.path.join(os.path.join(dirname, package_name), notes_name), 'wb')
         try:
-            f.write(message) # Write a string to a file
+            f.write(message)  # Write a string to a file
         finally:
             f.close()
     except IOError:
@@ -623,25 +621,27 @@ def package(folder, algorithm, message):
     return os.path.join(os.path.join(dirname, package_name))
 
 from subprocess import Popen, PIPE
+
+
 def execute(cmd):
     process = Popen(cmd, shell=True, stdout=PIPE)
     while True:
         line = process.stdout.readline()
-        if not line: break
+        if not line:
+            break
         log.info(line.replace('\n', ''))
-        
+
 
 def upload(package, user, host, path):
     #TODO s: validate package
-    cmd1 = "rsync  -a %s %s@%s:%s --progress -f '- *.tt' -f '- *.txt'" % ( package, user, host, path) 
-    
-    cmd2 = "rsync  %s/*.txt %s@%s:%s --progress" % ( package, user, host, path)
-    cmd3 = "rsync  %s/*.tt %s@%s:%s --progress" % ( package, user, host, path) 
+    cmd1 = "rsync  -a %s %s@%s:%s --progress -f '- *.tt' -f '- *.txt'" % (package, user, host, path)
+    cmd2 = "rsync  %s/*.txt %s@%s:%s --progress" % (package, user, host, path)
+    cmd3 = "rsync  %s/*.tt %s@%s:%s --progress" % (package, user, host, path)
 
     log.info("The following three rsync commands will be executed to transfer the tooltool package:")
-    log.info("1) %s"%cmd1)
-    log.info("2) %s"%cmd2)
-    log.info("3) %s"%cmd3)
+    log.info("1) %s" % cmd1)
+    log.info("2) %s" % cmd2)
+    log.info("3) %s" % cmd3)
     log.info("Please note that the order of execution IS relevant!")
     log.info("Uploading hashed files with command: %s" % cmd1)
     execute(cmd1)
@@ -653,10 +653,10 @@ def upload(package, user, host, path):
     log.info("Package %s has been correctly uploaded to %s:%s" % (package, host, path))
 
     return True
-    
-def distribute(folder, message,user, host, path, algorithm):
+
+
+def distribute(folder, message, user, host, path, algorithm):
     return upload(package(folder, algorithm, message), user, host, path)
-	    
 
 
 # TODO: write tests for this function
@@ -695,13 +695,13 @@ def process_command(options, args):
         return package(options['folder'], options['algorithm'], options['message'])
     elif cmd == 'upload':
         if not options.get('package') or not options.get('user') or not options.get('host') or not options.get('path'):
-             log.critical('upload command requires the package folder to be uploaded, and the user, host and path to be used to upload the tooltool upload server ')
-             return False
+            log.critical('upload command requires the package folder to be uploaded, and the user, host and path to be used to upload the tooltool upload server ')
+            return False
         return upload(options.get('package'), options.get('user'), options.get('host'), options.get('path'))
     elif cmd == 'distribute':
-        if not options.get('folder') or not options.get('message') or not options.get('user') or not options.get('host') or not options.get('path') :
-             log.critical('distribute command requires the following parameters: --folder, --message, --user, --host, --path')
-             return False
+        if not options.get('folder') or not options.get('message') or not options.get('user') or not options.get('host') or not options.get('path'):
+            log.critical('distribute command requires the following parameters: --folder, --message, --user, --host, --path')
+            return False
         return distribute(options.get('folder'), options.get('message'), options.get('user'), options.get('host'), options.get('path'), options.get('algorithm'))
     else:
         log.critical('command "%s" is not implemented' % cmd)
@@ -729,7 +729,6 @@ def process_command(options, args):
 
 
 def main():
-    
     # Set up logging, for now just to the console
     ch = logging.StreamHandler()
     cf = logging.Formatter("%(levelname)s - %(message)s")
@@ -774,7 +773,6 @@ def main():
                       help='host where to upload a tooltool package', dest='host')
     parser.add_option('--path',
                       help='Path on the tooltool upload server where to upload', dest='path')
-    
 
     (options_obj, args) = parser.parse_args()
     # Dictionaries are easier to work with
@@ -789,7 +787,7 @@ def main():
         ch.setLevel(logging.INFO)
     log.setLevel(logging.DEBUG)
     log.addHandler(ch)
-   
+
     if not 'manifest' in options:
         parser.error("no manifest file specified")
 
