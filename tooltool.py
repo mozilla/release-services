@@ -29,11 +29,7 @@ import hashlib
 import urllib2
 import shutil
 import sys
-
-import string
-import random
-
-TEMP_SUFFIX = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
+import tempfile
 
 try:
     import simplejson as json  # I hear simplejson is faster
@@ -393,10 +389,12 @@ def touch(f):
 
 
 # TODO: write tests for this function
-def fetch_file(base_urls, file_record, grabchunk=1024 * 4, cache_folder=None, temp_suffix=''):
+def fetch_file(base_urls, file_record, grabchunk=1024 * 4, cache_folder=None, dest = None):
     # A file which is requested to be fetched that exists locally will be overwritten by this function
-
-    fetched = False
+        
+    fd, temp_path = tempfile.mkstemp(dir = dest if dest else os.getcwd())
+    os.close(fd)
+    fetched_path = None
     for base_url in base_urls:
         # Generate the URL for the file on the server side
         url = "%s/%s/%s" % (base_url, file_record.algorithm, file_record.digest)
@@ -408,7 +406,7 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, cache_folder=None, te
         try:
             f = urllib2.urlopen(url)
             log.debug("opened %s for reading" % url)
-            with open("%s%s" % (file_record.filename, temp_suffix), 'wb') as out:
+            with open(temp_path, 'wb') as out:
                 k = True
                 size = 0
                 while k:
@@ -419,15 +417,19 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, cache_folder=None, te
                     size += len(indata)
                     if indata == '':
                         k = False
-                log.info("File %s%s fetched from %s" % (file_record.filename, temp_suffix, base_url))
-                fetched = True
+                log.info("File %s fetched from %s as %s" % (file_record.filename, base_url, temp_path))
+                fetched_path = temp_path
         except (urllib2.URLError, urllib2.HTTPError, ValueError) as e:
             log.info("...failed to fetch '%s' from %s" % (file_record.filename, base_url))
             log.debug("%s" % e)
         except IOError:
             log.info("failed to write to '%s'" % file_record.filename, exc_info=True)
+        
+        # cleanup temp file in case of issues
+        if not fetched_path:
+            os.remove(temp_path)
 
-    return fetched
+    return fetched_path
 
 
 # TODO: write tests for this function
@@ -477,29 +479,31 @@ def fetch_files(manifest_file, base_urls, overwrite, filenames=[], cache_folder=
                          (f.filename, cache_folder))
 
         # now I will try to fetch all files which are not already present and valid, appending a suffix to avoid race conditions
-
+        temp_file_name = None
         # 'filenames' is the list of filenames to be managed, if this variable is a non empty list it can be used to filter
         # if filename is in present_files, it means that I have it already because it was already either in the working dir or in the cache
         if (f.filename in filenames or len(filenames) == 0) and f.filename not in present_files:
             log.debug("fetching %s" % f.filename)
-            if fetch_file(base_urls, f, cache_folder=cache_folder, temp_suffix=TEMP_SUFFIX):
-                fetched_files.append(f)
+            temp_file_name = fetch_file(base_urls, f, cache_folder=cache_folder)
+            if temp_file_name:
+                fetched_files.append((f, temp_file_name))
             else:
                 failed_files.append(f.filename)
         else:
             log.debug("skipping %s" % f.filename)
 
     # lets ensure that fetched files match what the manifest specified
-    for localfile in fetched_files:
-        # since I appended a temp suffix while downloading, I need to perform all validations on the file with the temp suffix
+    for localfile, temp_file_name in fetched_files:
+        # since I downloaded to a temp file, I need to perform all validations on the temp file
         # this is why filerecord_for_validation is created
 
-        filerecord_for_validation = FileRecord("%s%s" % (localfile.filename, TEMP_SUFFIX), localfile.size, localfile.digest, localfile.algorithm)
+        filerecord_for_validation = FileRecord(temp_file_name, localfile.size, localfile.digest, localfile.algorithm)
 
         if filerecord_for_validation.validate():
             # great!
-            # I can remove the temporary suffix
-            os.rename(os.path.join(os.getcwd(), filerecord_for_validation.filename), os.path.join(os.getcwd(), localfile.filename))
+            # I can rename the temp file
+            log.info("File integrity verified, renaming %s to %s" % (temp_file_name, f.filename))
+            os.rename(temp_file_name, os.path.join(os.getcwd(), localfile.filename))
             # if I am using a cache and a new file has just been retrieved from a
             # remote location, I need to update the cache as well
             if cache_folder:
@@ -518,7 +522,7 @@ def fetch_files(manifest_file, base_urls, overwrite, filenames=[], cache_folder=
                                 (localfile.filename, cache_folder), exc_info=True)
         else:
             failed_files.append(localfile.filename)
-            log.error("'%s'" % filerecord_for_validation.describe(TEMP_SUFFIX))
+            log.error("'%s'" % filerecord_for_validation.describe())
 
     # If we failed to fetch or validate a file, we need to fail
     if len(failed_files) > 0:
@@ -679,6 +683,7 @@ def main():
         ch.setLevel(logging.ERROR)
     else:
         ch.setLevel(logging.INFO)
+    log.setLevel(logging.DEBUG)
     log.addHandler(ch)
 
     if not 'manifest' in options:
