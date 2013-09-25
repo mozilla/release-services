@@ -471,10 +471,16 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
                 log.info("File %s retrieved from local cache %s" %
                          (f.filename, cache_folder))
                 touch(os.path.join(cache_folder, f.digest))
-                # the file is now present and, since it has been taken from cache, is certainly valid
-                # because no object is ever copied into the local cache without validation
-                present_files.append(f.filename)
-                return True
+
+                filerecord_for_validation = FileRecord(os.path.join(os.getcwd(), f.filename), f.size, f.digest, f.algorithm)
+                if filerecord_for_validation.validate():
+                    present_files.append(f.filename)
+                    return True
+                else:
+                    #the file copied from the cache is invalid, better to clean up the cache version itself as well
+                    log.warn("File %s retrieved from cache is invalid! I am deleting it from the cache as well" % f.filename)
+                    os.remove(os.path.join(os.getcwd(), f.filename))
+                    os.remove(os.path.join(cache_folder, f.digest))
             except IOError:
                 log.info("File %s not present in local cache folder %s" %
                          (f.filename, cache_folder))
