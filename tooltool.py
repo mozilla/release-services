@@ -475,7 +475,6 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
                 filerecord_for_validation = FileRecord(os.path.join(os.getcwd(), f.filename), f.size, f.digest, f.algorithm)
                 if filerecord_for_validation.validate():
                     present_files.append(f.filename)
-                    return True
                 else:
                     #the file copied from the cache is invalid, better to clean up the cache version itself as well
                     log.warn("File %s retrieved from cache is invalid! I am deleting it from the cache as well" % f.filename)
