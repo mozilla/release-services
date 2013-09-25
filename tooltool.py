@@ -433,7 +433,7 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, dest = None):
 
 
 # TODO: write tests for this function
-def fetch_files(manifest_file, base_urls, overwrite, filenames=[], cache_folder=None):
+def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
     # Lets load the manifest file
     try:
         manifest = open_manifest(manifest_file)
@@ -612,8 +612,7 @@ def process_command(options, args):
             log.critical('fetch command requires at least one url provided using ' +
                          'the url option in the command line')
             return False
-        return fetch_files(options['manifest'], options['base_url'],
-                           options['overwrite'], cmd_args,
+        return fetch_files(options['manifest'], options['base_url'], cmd_args,
                            cache_folder=options['cache_folder'])
     else:
         log.critical('command "%s" is not implemented' % cmd)
@@ -661,9 +660,6 @@ def main():
     parser.add_option('-d', '--algorithm', default='sha512',
                       dest='algorithm', action='store',
                       help='openssl hashing algorithm to use')
-    parser.add_option('-o', '--overwrite', default=False,
-                      dest='overwrite', action='store_true',
-                      help='if fetching, remote copy will overwrite a local copy that is different. ')
     parser.add_option('--url', dest='base_url', action='append',
                       help='base url for fetching files')
     parser.add_option('-c', '--cache-folder', dest='cache_folder',
