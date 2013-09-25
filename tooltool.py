@@ -389,7 +389,7 @@ def touch(f):
 
 
 # TODO: write tests for this function
-def fetch_file(base_urls, file_record, grabchunk=1024 * 4, cache_folder=None, dest = None):
+def fetch_file(base_urls, file_record, grabchunk=1024 * 4, dest = None):
     # A file which is requested to be fetched that exists locally will be overwritten by this function
         
     fd, temp_path = tempfile.mkstemp(dir = dest if dest else os.getcwd())
@@ -484,7 +484,7 @@ def fetch_files(manifest_file, base_urls, overwrite, filenames=[], cache_folder=
         # if filename is in present_files, it means that I have it already because it was already either in the working dir or in the cache
         if (f.filename in filenames or len(filenames) == 0) and f.filename not in present_files:
             log.debug("fetching %s" % f.filename)
-            temp_file_name = fetch_file(base_urls, f, cache_folder=cache_folder)
+            temp_file_name = fetch_file(base_urls, f)
             if temp_file_name:
                 fetched_files.append((f, temp_file_name))
             else:
