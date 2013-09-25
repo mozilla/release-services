@@ -460,6 +460,7 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
                 # we have an invalid file here, better to cleanup!
                 # this invalid file needs to be replaced with a good one
                 # from the local cash or fetched from a tooltool server
+                log.info("File %s is present locally but it is invalid, so I will remove it and fetch it" % f.filename)
                 os.remove(os.path.join(os.getcwd(), f.filename))
 
         # check if file is already in cache
