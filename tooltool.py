@@ -389,10 +389,10 @@ def touch(f):
 
 
 # TODO: write tests for this function
-def fetch_file(base_urls, file_record, grabchunk=1024 * 4, dest = None):
+def fetch_file(base_urls, file_record, grabchunk=1024 * 4, dest=None):
     # A file which is requested to be fetched that exists locally will be overwritten by this function
-        
-    fd, temp_path = tempfile.mkstemp(dir = dest if dest else os.getcwd())
+
+    fd, temp_path = tempfile.mkstemp(dir=dest if dest else os.getcwd())
     os.close(fd)
     fetched_path = None
     for base_url in base_urls:
@@ -424,7 +424,7 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, dest = None):
             log.debug("%s" % e)
         except IOError:
             log.info("failed to write to '%s'" % file_record.filename, exc_info=True)
-        
+
         # cleanup temp file in case of issues
         if not fetched_path:
             os.remove(temp_path)
@@ -460,7 +460,7 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
                 # we have an invalid file here, better to cleanup!
                 # this invalid file needs to be replaced with a good one
                 # from the local cash or fetched from a tooltool server
-                log.info("File %s is present locally but it is invalid, so I will remove it and fetch it" % f.filename)
+                log.info("File %s is present locally but it is invalid, so I will remove it and try to fetch it" % f.filename)
                 os.remove(os.path.join(os.getcwd(), f.filename))
 
         # check if file is already in cache
