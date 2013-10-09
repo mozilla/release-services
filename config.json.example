@@ -7,5 +7,5 @@
   "email_addresses": {"alice":"alice@some_email.com", "bob":"Bob <bob@some_email.com>"},
   "smtp_user":"sync",
   "smtp_from":"sync@tooltool.com",
-  "smtp_password":"pasword"
+  "smtp_password":"password"
 }
