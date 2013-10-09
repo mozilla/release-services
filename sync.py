@@ -185,7 +185,6 @@ class Notifier:
         self.smtp_password = smtp_password
         self.smtp_from = smtp_from
         self.email_addresses = email_addresses
-        print 'created object'
 
     def get_address(self, user):
         if user in self.email_addresses:
@@ -194,12 +193,9 @@ class Notifier:
             return "%s@mozilla.com" % user
 
     def sendmail(self, user_to_be_notified, subject, body):
-        print "creating smtp object"
         s = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=5)
-        print "created smtlib object"
         s.starttls()
         s.login(self.smtp_user, self.smtp_password)
-        print 'logged in'
         msg = MIMEText(body)
         recipients = []
         recipients.append(self.get_address(user_to_be_notified))
@@ -213,10 +209,7 @@ class Notifier:
 
 
 def main():
-    print "validating config"
-
     root, matching, smtp_server, smtp_port, smtp_from, email_addresses, smtp_user, smtp_password = load_config()
-    print "Config validated!"
 
     notifier = Notifier(smtp_server, smtp_port, smtp_user, smtp_password, smtp_from, email_addresses)
 
