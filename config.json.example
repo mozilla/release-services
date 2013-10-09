@@ -1,0 +1,11 @@
+{
+  "upload_root":"/upload/root",
+  "target_folders":{"pvt": "/target/pvt",
+            "pub": "/target/pub"},
+  "smtp_server":"smtp.tooltool.com",
+  "smtp_port":587,
+  "email_addresses": {"alice":"alice@some_email.com", "bob":"Bob <bob@some_email.com>"},
+  "smtp_user":"sync",
+  "smtp_from":"sync@tooltool.com",
+  "smtp_password":"pasword"
+}
