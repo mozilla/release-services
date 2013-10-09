@@ -28,6 +28,9 @@ import tooltool  # to read manifests
 
 import datetime
 
+import smtplib
+from email.mime.text import MIMEText
+
 STRFRTIME = "%Y_%m_%d-%H.%M.%S"
 TIMESTAMP_REGEX = re.sub(r"%\D", "\d+", STRFRTIME)
 
@@ -57,29 +60,79 @@ def validate_config(config):
 
     matching = {}
     root = ""
+    smtp_server = ""
+    smtp_port = None
+    smtp_from = ""
+    email_addresses = {}
+    smtp_user = ""
+    smtp_password = ""
 
     if 'upload_root' in config and config['upload_root'] and os.path.exists(config['upload_root']) and os.path.isdir(config['upload_root']):
         root = config['upload_root']
     else:
-        log.critical("The configuration file does not contain a valid upload_root value")
-        raise SystemExit
+        msg = "The configuration file does not contain a valid upload_root value"
+        log.critical()
+        raise SystemExit(msg)
 
     if 'target_folders' in config and config['target_folders'] and isinstance(config['target_folders'], dict):
         matching = config['target_folders']
     else:
-        log.critical("The configuration file does not specify the target folders for each distribution type (a dictionary named target_folders is needed)")
-        raise SystemExit
+        mag = "The configuration file does not specify the target folders for each distribution type (a dictionary named target_folders is needed)"
+        log.critical(msg)
+        raise SystemExit(msg)
 
-    pathsOK = True
+    if 'smtp_server' in config and config['smtp_server']:
+        smtp_server = config['smtp_server']
+    else:
+        msg = "The configuration file does not specify the smtp server to be used for email notifications"
+        log.critical(msg)
+        raise SystemExit(msg)
+
+    if 'smtp_port' in config and config['smtp_port']:
+        smtp_port = config['smtp_port']
+    else:
+        msg = "The configuration file does not specify the smtp port to be used for email notifications"
+        log.critical(msg)
+        raise SystemExit(msg)
+
+    if 'smtp_from' in config and config['smtp_from']:
+        smtp_from = config['smtp_from']
+    else:
+        msg = "The configuration file does not specify the 'from' email address to be used for email notifications"
+        log.critical(msg)
+        raise SystemExit(msg)
+
+    if 'email_addresses' in config and config['email_addresses'] and isinstance(config['email_addresses'], dict):
+        email_addresses = config['email_addresses']
+    else:
+        #This is not blocking since by default I wil use user@mozilla.com
+        log.warning("The configuration file does not specify any addresses to be used for email notifications")
+
+    if 'smtp_user' in config and config['smtp_user']:
+        smtp_user = config['smtp_user']
+    else:
+        msg = "The configuration file does not specify the smtp user to be used for email notifications"
+        log.critical(msg)
+        raise SystemExit(msg)
+
+    if 'smtp_password' in config and config['smtp_password']:
+        smtp_password = config['smtp_password']
+    else:
+        msg = "The configuration file does not specify the smtp password to be used for email notifications"
+        log.critical(msg)
+        raise SystemExit(msg)
+
+    messages = []
     for distribution_level in matching:
         destination = matching[distribution_level]
         if not (os.path.exists(destination) and os.path.isdir(destination)):
-            log.critical("The folder %s, mentioned in the configuration file,  does not exist" % destination)
-            pathsOK = False
-    if not pathsOK:
-        raise SystemExit
+            msg = "The folder %s, mentioned in the configuration file,  does not exist" % destination
+            log.critical(msg)
+            messages.append(msg)
+    if len(messages) > 0:
+        raise SystemExit(messages)
 
-    return root, matching
+    return root, matching, smtp_server, smtp_port, smtp_from, email_addresses, smtp_user, smtp_password
 
 
 def load_json(filename):
@@ -88,14 +141,17 @@ def load_json(filename):
         data = json.load(f)
         f.close()
     except IOError as e:
-        log.critical("Impossible to read file %s; I/O error(%s): %s" % (filename, e.errno, e.strerror))
-        raise SystemExit
+        msg = "Impossible to read file %s; I/O error(%s): %s" % (filename, e.errno, e.strerror)
+        log.critical(msg)
+        raise SystemExit(msg)
     except ValueError as e:
-        log.critical("Impossible to load file %s; Value error: %s" % (filename, e))
-        raise SystemExit
+        msg = "Impossible to load file %s; Value error: %s" % (filename, e)
+        log.critical(msg)
+        raise SystemExit(msg)
     except:
-        log.critical("Unexpected error: %s" % sys.exc_info()[0])
-        raise SystemExit
+        msg = "Unexpected error: %s" % sys.exc_info()[0]
+        log.critical(msg)
+        raise SystemExit(msg)
 
     return data
 
@@ -120,9 +176,57 @@ def begins_with_timestamp(filename):
     return p.match(filename)
 
 
-def main():
+def get_address(user, email_addresses):
+    if user in email_addresses:
+        return email_addresses[user]
+    else:
+        return "%s@mozilla.com" % user
 
-    root, matching = load_config()
+
+class Notifier:
+
+    def __init__(self, smtp_server, smtp_port, smtp_user, smtp_password, smtp_from, email_addresses):
+        self.smtp_server = smtp_server
+        self.smtp_port = smtp_port
+        self.smtp_user = smtp_user
+        self.smtp_password = smtp_password
+        self.smtp_from = smtp_from
+        self.email_addresses = email_addresses
+        print 'created object'
+
+    def get_address(self, user):
+        if user in self.email_addresses:
+            return self.email_addresses[user]
+        else:
+            return "%s@mozilla.com" % user
+
+    def sendmail(self, user_to_be_notified, subject, body):
+        print "creating smtp object"
+        s = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=5)
+        print "created smtlib object"
+        s.starttls()
+        s.login(self.smtp_user, self.smtp_password)
+        print 'logged in'
+        msg = MIMEText(body)
+        recipients = []
+        recipients.append(self.get_address(user_to_be_notified))
+        # all notifications are also sent to the sync maintainer
+        recipients.append(self.smtp_from)
+        msg['Subject'] = subject
+        msg['From'] = self.smtp_from
+        msg['To'] = ", ".join(recipients)
+        s.sendmail(self.smtp_from, recipients, msg.as_string())
+        s.quit()
+
+
+def main():
+    print "validating config"
+
+    root, matching, smtp_server, smtp_port, smtp_from, email_addresses, smtp_user, smtp_password = load_config()
+    print "Config validated!"
+
+    notifier = Notifier(smtp_server, smtp_port, smtp_user, smtp_password, smtp_from, email_addresses)
+
     users = []
     for (_dirpath, dirnames, _files) in os.walk(root):
         users.extend(dirnames)
@@ -150,15 +254,15 @@ def main():
                 comment_filepath = os.path.join(upload_folder, new_manifest.replace(".tt", ".txt"))
 
                 manifestOK = True
+                allFilesAreOK = True
                 content_folder_path = new_manifest_path.replace(".tt", tooltool.TOOLTOOL_PACKAGE_SUFFIX)
                 digests = ()
                 try:
                     digests = getDigests(new_manifest_path)
-                except InvalidManifest:
+                except tooltool.InvalidManifest:
                     manifestOK = False
 
                 if manifestOK:
-                    allFilesAreOK = True
                     # checking that ALL files mentioned in the manifest are in the upload folder, otherwise I cannot proceed copying
                     if not os.path.exists(content_folder_path) or not os.path.isdir(content_folder_path):
                         allFilesAreOK = False
@@ -235,11 +339,11 @@ def main():
                         if renamingOK:
                             # cleaning up source directory of copied files
                             shutil.rmtree(content_folder_path)
+                            notifier.sendmail(user, "TOOLTOOL UPLOAD COMPLETED! Tooltool package %s has been correctly processed by the tooltool sync script!" % new_manifest, "")
                         else:
-                            # TODO: notify internal error both to uploader and to sync maintainer
-                            pass
+                            notifier.sendmail("", "INTERNAL ERROR - sync script could not rename files in package %s" % new_manifest, "")
                     else:
-                        pass
+                        notifier.sendmail("", "INTERNAL ERROR - sync script could not copy files in package %s" % new_manifest, "")
                         # TODO: notify internal error both to uploader and to sync maintainer
                 else:
                     # general cleanup: the uploader will need to re-upload the package
@@ -248,7 +352,15 @@ def main():
                     os.remove(comment_filepath)
                     os.remove(new_manifest_path)
                     #TODO: notify error to user: a new upload needs to be made!
-                    log.error("Manifest %s has NOT been processed" % new_manifest)
+                    log.error("Manifest %s has NOT been processed and will need to be re-uploaded by the user" % new_manifest)
+                    msg = "Dear tooltool user,\n\nThe upload of the tooltool package %s was unsuccessful because of the following reason:\n\n" % new_manifest
+                    if not manifestOK:
+                        msg = msg + "- The uploaded manifest was invalid and could not be correctly parsed.\n"
+                    if not allFilesAreOK:
+                        msg = msg + "- Some of the files mentioned in the manifest were either missing or their content was corrupted.\n"
+                    msg = msg+"\nPlease try again with a new upload.\n\n"
+                    msg = msg + "Kind regards,\n\nThe Tooltool sync script"
+                    notifier.sendmail(user, "TOOLTOOL UPLOAD FAILURE! - the tooltool sync script could not process manifest %s" % new_manifest, msg)
 
 if __name__ == "__main__":
     main()
