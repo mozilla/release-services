@@ -176,13 +176,6 @@ def begins_with_timestamp(filename):
     return p.match(filename)
 
 
-def get_address(user, email_addresses):
-    if user in email_addresses:
-        return email_addresses[user]
-    else:
-        return "%s@mozilla.com" % user
-
-
 class Notifier:
 
     def __init__(self, smtp_server, smtp_port, smtp_user, smtp_password, smtp_from, email_addresses):
