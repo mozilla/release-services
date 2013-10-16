@@ -78,14 +78,14 @@ def validate_config(config):
             log.critical("Configuration item specified in %s does not exist or is not a directory" % item)
             config_is_valid = False
 
-    for item, typ in type_checks:
+    for item, typ in type_checks.items():
         # I am not checking item presence here
-        if config.get(item) and not (isinstance(item, typ)):
+        if config.get(item) and not (isinstance(config.get(item), typ)):
             log.critical("Configuration item specified in %s is not a %s" % (item, typ))
             config_is_valid = False
 
     messages = []
-    for distribution_level, destination in config.get("target_folders"):
+    for distribution_level, destination in config.get("target_folders").items():
         if not (os.path.exists(destination) and os.path.isdir(destination)):
             msg = "The folder %s, mentioned in the configuration file,  does not exist" % destination
             log.critical(msg)
