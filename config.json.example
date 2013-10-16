@@ -7,5 +7,5 @@
     "user_email_mapping": {"alice": "alice@example.com",
                            "bob": "Bob <bob@example.com>"},
     "default_domain": "mozilla.com",
-    "smtp_from": "sync@tooltool.com",
+    "smtp_from": "sync@tooltool.com"
 }

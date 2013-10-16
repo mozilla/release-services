@@ -21,6 +21,7 @@ import logging.handlers
 import json
 import os
 import shutil
+import sys
 
 import re
 
@@ -32,7 +33,7 @@ import smtplib
 from email.mime.text import MIMEText
 
 STRFRTIME = "%Y_%m_%d-%H.%M.%S"
-TIMESTAMP_REGEX = re.sub(r"%\D", "\d+", STRFRTIME)
+TIMESTAMP_REGEX = re.compile(r"\d{4}_\d{2}_\d{2}-\d{2}\.\d{2}\.\d{2}")
 
 LOG_FILENAME = 'tooltool_sync.log'
 DEFAULT_LOG_LEVEL = logging.DEBUG
@@ -84,14 +85,11 @@ def validate_config(config):
             log.critical("Configuration item specified in %s is not a %s" % (item, typ))
             config_is_valid = False
 
-    messages = []
-    for distribution_level, destination in config.get("target_folders").items():
+    for destination in config.get("target_folders").itervalues():
         if not (os.path.exists(destination) and os.path.isdir(destination)):
             msg = "The folder %s, mentioned in the configuration file,  does not exist" % destination
             log.critical(msg)
-            messages.append(msg)
-    if messages:
-        config_is_valid = False
+            config_is_valid = False
 
     if not config_is_valid:
         raise SystemExit("Invalid configuration file")
@@ -136,8 +134,7 @@ def getDigests(manifest):
 
 
 def begins_with_timestamp(filename):
-    p = re.compile(TIMESTAMP_REGEX)
-    return p.match(filename)
+    return TIMESTAMP_REGEX.match(filename)
 
 
 class Notifier:
@@ -156,7 +153,7 @@ class Notifier:
         if user in self.email_addresses:
             return self.email_addresses[user]
         else:
-            return "%s@%s" % (user, default_domain)
+            return "%s@%s" % (user, self.default_domain)
 
     def sendmail(self, user_to_be_notified, subject, body):
         s = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=30)
