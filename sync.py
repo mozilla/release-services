@@ -58,81 +58,45 @@ CONFIG_FILENAME = 'config.json'
 
 def validate_config(config):
 
-    matching = {}
-    root = ""
-    smtp_server = ""
-    smtp_port = None
-    smtp_from = ""
-    email_addresses = {}
-    smtp_user = ""
-    smtp_password = ""
+    required_config_items = ("upload_root", "target_folders",
+                             "smtp_server", "smtp_port",
+                             "smtp_from", "default_domain")
+    dir_checks = ("upload_root")
 
-    if 'upload_root' in config and config['upload_root'] and os.path.exists(config['upload_root']) and os.path.isdir(config['upload_root']):
-        root = config['upload_root']
-    else:
-        msg = "The configuration file does not contain a valid upload_root value"
-        log.critical()
-        raise SystemExit(msg)
+    type_checks = {"target_folders": dict,
+                   "user_email_mapping": dict}
 
-    if 'target_folders' in config and config['target_folders'] and isinstance(config['target_folders'], dict):
-        matching = config['target_folders']
-    else:
-        mag = "The configuration file does not specify the target folders for each distribution type (a dictionary named target_folders is needed)"
-        log.critical(msg)
-        raise SystemExit(msg)
+    config_is_valid = True
+    for item in required_config_items:
+        if not config.get(item):
+            log.critical("The configuration file does does not contain configuration item %s" % item)
+            config_is_valid = False
 
-    if 'smtp_server' in config and config['smtp_server']:
-        smtp_server = config['smtp_server']
-    else:
-        msg = "The configuration file does not specify the smtp server to be used for email notifications"
-        log.critical(msg)
-        raise SystemExit(msg)
+    for item in dir_checks:
+        # I am not checking item presence here
+        if config.get(item) and not (os.path.exists(config.get(item)) and os.path.isdir(config.get(item))):
+            log.critical("Configuration item specified in %s does not exist or is not a directory" % item)
+            config_is_valid = False
 
-    if 'smtp_port' in config and config['smtp_port']:
-        smtp_port = config['smtp_port']
-    else:
-        msg = "The configuration file does not specify the smtp port to be used for email notifications"
-        log.critical(msg)
-        raise SystemExit(msg)
-
-    if 'smtp_from' in config and config['smtp_from']:
-        smtp_from = config['smtp_from']
-    else:
-        msg = "The configuration file does not specify the 'from' email address to be used for email notifications"
-        log.critical(msg)
-        raise SystemExit(msg)
-
-    if 'email_addresses' in config and config['email_addresses'] and isinstance(config['email_addresses'], dict):
-        email_addresses = config['email_addresses']
-    else:
-        #This is not blocking since by default I wil use user@mozilla.com
-        log.warning("The configuration file does not specify any addresses to be used for email notifications")
-
-    if 'smtp_user' in config and config['smtp_user']:
-        smtp_user = config['smtp_user']
-    else:
-        msg = "The configuration file does not specify the smtp user to be used for email notifications"
-        log.critical(msg)
-        raise SystemExit(msg)
-
-    if 'smtp_password' in config and config['smtp_password']:
-        smtp_password = config['smtp_password']
-    else:
-        msg = "The configuration file does not specify the smtp password to be used for email notifications"
-        log.critical(msg)
-        raise SystemExit(msg)
+    for item, typ in type_checks:
+        # I am not checking item presence here
+        if config.get(item) and not (isinstance(item, typ)):
+            log.critical("Configuration item specified in %s is not a " % (item, typ))
+            config_is_valid = False
 
     messages = []
-    for distribution_level in matching:
-        destination = matching[distribution_level]
+    for distribution_level, destination in config.get("target_folders"):
         if not (os.path.exists(destination) and os.path.isdir(destination)):
             msg = "The folder %s, mentioned in the configuration file,  does not exist" % destination
             log.critical(msg)
             messages.append(msg)
-    if len(messages) > 0:
-        raise SystemExit(messages)
+    if messages:
+        config_is_valid = False
 
-    return root, matching, smtp_server, smtp_port, smtp_from, email_addresses, smtp_user, smtp_password
+    if not config_is_valid:
+        raise SystemExit("Invalid configuration file")
+
+    return config.get("upload_root"), config.get("target_folders"), config.get("smtp_server"), config.get("smtp_port"), config.get("smtp_from"), config.get("user_email_mapping"), config.get("default_domain")
 
 
 def load_json(filename):
@@ -178,24 +142,24 @@ def begins_with_timestamp(filename):
 
 class Notifier:
 
-    def __init__(self, smtp_server, smtp_port, smtp_user, smtp_password, smtp_from, email_addresses):
+    def __init__(self, smtp_server, smtp_port, smtp_from, email_addresses, default_domain):
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
-        self.smtp_user = smtp_user
-        self.smtp_password = smtp_password
         self.smtp_from = smtp_from
         self.email_addresses = email_addresses
+        self.default_domain = default_domain
 
     def get_address(self, user):
+        if user is None:
+            return ''
+
         if user in self.email_addresses:
             return self.email_addresses[user]
         else:
-            return "%s@mozilla.com" % user
+            return "%s@%s" % (user, default_domain)
 
     def sendmail(self, user_to_be_notified, subject, body):
-        s = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=5)
-        s.starttls()
-        s.login(self.smtp_user, self.smtp_password)
+        s = smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=30)
         msg = MIMEText(body)
         recipients = []
         recipients.append(self.get_address(user_to_be_notified))
@@ -209,9 +173,9 @@ class Notifier:
 
 
 def main():
-    root, matching, smtp_server, smtp_port, smtp_from, email_addresses, smtp_user, smtp_password = load_config()
+    root, matching, smtp_server, smtp_port, smtp_from, email_addresses, default_domain = load_config()
 
-    notifier = Notifier(smtp_server, smtp_port, smtp_user, smtp_password, smtp_from, email_addresses)
+    notifier = Notifier(smtp_server, smtp_port, smtp_from, email_addresses, default_domain)
 
     users = []
     for (_dirpath, dirnames, _files) in os.walk(root):
@@ -344,7 +308,7 @@ def main():
                         msg = msg + "- The uploaded manifest was invalid and could not be correctly parsed.\n"
                     if not allFilesAreOK:
                         msg = msg + "- Some of the files mentioned in the manifest were either missing or their content was corrupted.\n"
-                    msg = msg+"\nPlease try again with a new upload.\n\n"
+                    msg = msg + "\nPlease try again with a new upload.\n\n"
                     msg = msg + "Kind regards,\n\nThe Tooltool sync script"
                     notifier.sendmail(user, "TOOLTOOL UPLOAD FAILURE! - the tooltool sync script could not process manifest %s" % new_manifest, msg)
 
