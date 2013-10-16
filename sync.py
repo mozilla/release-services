@@ -81,7 +81,7 @@ def validate_config(config):
     for item, typ in type_checks:
         # I am not checking item presence here
         if config.get(item) and not (isinstance(item, typ)):
-            log.critical("Configuration item specified in %s is not a " % (item, typ))
+            log.critical("Configuration item specified in %s is not a %s" % (item, typ))
             config_is_valid = False
 
     messages = []

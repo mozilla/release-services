@@ -1,7 +1,7 @@
 {
     "upload_root": "/upload/root",
     "target_folders": {"pvt": "/target/pvt",
-    "pub": "/target/pub"},
+                       "pub": "/target/pub"},
     "smtp_server": "smtp.tooltool.com",
     "smtp_port": 587,
     "user_email_mapping": {"alice": "alice@example.com",
