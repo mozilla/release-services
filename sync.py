@@ -236,11 +236,6 @@ def main():
                         copyOK = True
                         for digest, _algorithm in digests:
                             digest_path = os.path.join(content_folder_path, digest)
-                            comment = None
-
-                            if os.path.exists(comment_filepath):
-                                with open(comment_filepath) as f:
-                                    comment = f.read()
 
                             try:
                                 shutil.copy(digest_path, os.path.join(destination, "temp%s" % digest))
