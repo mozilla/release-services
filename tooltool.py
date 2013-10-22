@@ -69,6 +69,9 @@ class FileRecord(object):
 
     def __init__(self, filename, size, digest, algorithm):
         object.__init__(self)
+        if filename != os.path.split(filename)[1]:
+            log.error("The filename provided contains path information and is, therefore, invalid.")
+            raise ExceptionWithFilename(filename=filename)
         self.filename = filename
         self.size = size
         self.digest = digest
