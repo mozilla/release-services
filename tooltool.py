@@ -29,6 +29,7 @@ import hashlib
 import urllib2
 import shutil
 import sys
+import tempfile
 
 DEFAULT_MANIFEST_NAME = 'manifest.tt'
 TOOLTOOL_PACKAGE_SUFFIX = '.TOOLTOOL-PACKAGE'
@@ -395,44 +396,12 @@ def touch(f):
 
 
 # TODO: write tests for this function
-def fetch_file(base_urls, file_record, overwrite=False, grabchunk=1024 * 4, cache_folder=None):
-    # A file which is requested to be fetched that exists locally will be hashed.
-    # If the hash matches the requested file's hash, nothing will be done and the
-    # function will return.  If the function is told to overwrite and there is a
-    # digest mismatch, the exiting file will be overwritten
+def fetch_file(base_urls, file_record, grabchunk=1024 * 4, dest=None):
+    # A file which is requested to be fetched that exists locally will be overwritten by this function
 
-    #case 1: file already in current working directory
-    if file_record.present():
-        if file_record.validate():
-            log.info("existing '%s' is valid, not fetching" % file_record.filename)
-            return True
-        if overwrite:
-            log.info("overwriting '%s' as requested" % file_record.filename)
-        else:
-            # All of the following is for a useful error message
-            with open(file_record.filename, 'rb') as f:
-                d = digest_file(f, file_record.algorithm)
-            log.error("digest mismatch between manifest(%s...) and local file(%s...)" %
-                      (file_record.digest[:8], d[:8]))
-            log.debug("full digests: manifest (%s) local file (%s)" % (file_record.digest, d))
-            # Let's bail!
-            return False
-
-    # case 2: check if file is already in cache
-    if cache_folder:
-        try:
-            shutil.copy(os.path.join(cache_folder, file_record.digest),
-                        os.path.join(os.getcwd(), file_record.filename))
-            log.info("File %s retrieved from local cache %s" %
-                     (file_record.filename, cache_folder))
-            touch(os.path.join(cache_folder, file_record.digest))
-            return True
-        except IOError:
-            log.info("File %s not present in local cache folder %s" %
-                     (file_record.filename, cache_folder))
-
-    #case 3: fetch the file; update the cache
-    fetched = False
+    fd, temp_path = tempfile.mkstemp(dir=dest if dest else os.getcwd())
+    os.close(fd)
+    fetched_path = None
     for base_url in base_urls:
         # Generate the URL for the file on the server side
         url = "%s/%s/%s" % (base_url, file_record.algorithm, file_record.digest)
@@ -444,7 +413,7 @@ def fetch_file(base_urls, file_record, overwrite=False, grabchunk=1024 * 4, cach
         try:
             f = urllib2.urlopen(url)
             log.debug("opened %s for reading" % url)
-            with open(file_record.filename, 'wb') as out:
+            with open(temp_path, 'wb') as out:
                 k = True
                 size = 0
                 while k:
@@ -455,63 +424,118 @@ def fetch_file(base_urls, file_record, overwrite=False, grabchunk=1024 * 4, cach
                     size += len(indata)
                     if indata == '':
                         k = False
-                log.info("File %s fetched from %s" % (file_record.filename, base_url))
-                fetched = True
+                log.info("File %s fetched from %s as %s" % (file_record.filename, base_url, temp_path))
+                fetched_path = temp_path
         except (urllib2.URLError, urllib2.HTTPError, ValueError) as e:
             log.info("...failed to fetch '%s' from %s" % (file_record.filename, base_url))
             log.debug("%s" % e)
         except IOError:
             log.info("failed to write to '%s'" % file_record.filename, exc_info=True)
 
-    # I am managing a cache and a new file has just been retrieved from a
-    # remote location
-    if cache_folder and fetched:
-        log.info("Updating local cache %s..." % cache_folder)
-        try:
-            if not os.path.exists(cache_folder):
-                log.info("Creating cache in %s..." % cache_folder)
-                os.makedirs(cache_folder, 0700)
-            shutil.copy(os.path.join(os.getcwd(), file_record.filename),
-                        os.path.join(cache_folder, file_record.digest))
-            log.info("Local cache %s updated with %s" % (cache_folder,
-                                                         file_record.filename))
-            touch(os.path.join(cache_folder, file_record.digest))
-        except (OSError, IOError):
-            log.warning('Impossible to add file %s to cache folder %s' %
-                        (file_record.filename, cache_folder), exc_info=True)
-    return fetched
+        # cleanup temp file in case of issues
+        if not fetched_path:
+            os.remove(temp_path)
+
+    return fetched_path
 
 
 # TODO: write tests for this function
-def fetch_files(manifest_file, base_urls, overwrite, filenames=[], cache_folder=None):
+def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
     # Lets load the manifest file
     try:
         manifest = open_manifest(manifest_file)
     except InvalidManifest:
         log.error("failed to load manifest file at '%s'" % manifest_file)
         return False
+
+    # we want to track files already in current working directory AND valid
+    # we will not need to fetch these
+    present_files = []
+
     # We want to track files that fail to be fetched as well as
     # files that are fetched
     failed_files = []
+    fetched_files = []
 
     # Lets go through the manifest and fetch the files that we want
-    fetched_files = []
     for f in manifest.file_records:
-        if f.filename in filenames or len(filenames) == 0:
+        # case 1: files are already present
+        if f.present():
+            if f.validate():
+                present_files.append(f.filename)
+            else:
+                # we have an invalid file here, better to cleanup!
+                # this invalid file needs to be replaced with a good one
+                # from the local cash or fetched from a tooltool server
+                log.info("File %s is present locally but it is invalid, so I will remove it and try to fetch it" % f.filename)
+                os.remove(os.path.join(os.getcwd(), f.filename))
+
+        # check if file is already in cache
+        if cache_folder and f.filename not in present_files:
+            try:
+                shutil.copy(os.path.join(cache_folder, f.digest),
+                            os.path.join(os.getcwd(), f.filename))
+                log.info("File %s retrieved from local cache %s" %
+                         (f.filename, cache_folder))
+                touch(os.path.join(cache_folder, f.digest))
+
+                filerecord_for_validation = FileRecord(os.path.join(os.getcwd(), f.filename), f.size, f.digest, f.algorithm)
+                if filerecord_for_validation.validate():
+                    present_files.append(f.filename)
+                else:
+                    #the file copied from the cache is invalid, better to clean up the cache version itself as well
+                    log.warn("File %s retrieved from cache is invalid! I am deleting it from the cache as well" % f.filename)
+                    os.remove(os.path.join(os.getcwd(), f.filename))
+                    os.remove(os.path.join(cache_folder, f.digest))
+            except IOError:
+                log.info("File %s not present in local cache folder %s" %
+                         (f.filename, cache_folder))
+
+        # now I will try to fetch all files which are not already present and valid, appending a suffix to avoid race conditions
+        temp_file_name = None
+        # 'filenames' is the list of filenames to be managed, if this variable is a non empty list it can be used to filter
+        # if filename is in present_files, it means that I have it already because it was already either in the working dir or in the cache
+        if (f.filename in filenames or len(filenames) == 0) and f.filename not in present_files:
             log.debug("fetching %s" % f.filename)
-            if fetch_file(base_urls, f, overwrite, cache_folder=cache_folder):
-                fetched_files.append(f)
+            temp_file_name = fetch_file(base_urls, f)
+            if temp_file_name:
+                fetched_files.append((f, temp_file_name))
             else:
                 failed_files.append(f.filename)
         else:
             log.debug("skipping %s" % f.filename)
 
-    # Even if we get the file, lets ensure that it matches what the
-    # manifest specified
-    for localfile in fetched_files:
-        if not localfile.validate():
+    # lets ensure that fetched files match what the manifest specified
+    for localfile, temp_file_name in fetched_files:
+        # since I downloaded to a temp file, I need to perform all validations on the temp file
+        # this is why filerecord_for_validation is created
+
+        filerecord_for_validation = FileRecord(temp_file_name, localfile.size, localfile.digest, localfile.algorithm)
+
+        if filerecord_for_validation.validate():
+            # great!
+            # I can rename the temp file
+            log.info("File integrity verified, renaming %s to %s" % (temp_file_name, f.filename))
+            os.rename(temp_file_name, os.path.join(os.getcwd(), localfile.filename))
+            # if I am using a cache and a new file has just been retrieved from a
+            # remote location, I need to update the cache as well
+            if cache_folder:
+                log.info("Updating local cache %s..." % cache_folder)
+                try:
+                    if not os.path.exists(cache_folder):
+                        log.info("Creating cache in %s..." % cache_folder)
+                        os.makedirs(cache_folder, 0700)
+                    shutil.copy(os.path.join(os.getcwd(), localfile.filename),
+                                os.path.join(cache_folder, localfile.digest))
+                    log.info("Local cache %s updated with %s" % (cache_folder,
+                                                                 localfile.filename))
+                    touch(os.path.join(cache_folder, localfile.digest))
+                except (OSError, IOError):
+                    log.warning('Impossible to add file %s to cache folder %s' %
+                                (localfile.filename, cache_folder), exc_info=True)
+        else:
             failed_files.append(localfile.filename)
-            log.error("'%s'" % localfile.describe())
+            log.error("'%s'" % filerecord_for_validation.describe())
 
     # If we failed to fetch or validate a file, we need to fail
     if len(failed_files) > 0:
@@ -685,8 +709,7 @@ def process_command(options, args):
             log.critical('fetch command requires at least one url provided using ' +
                          'the url option in the command line')
             return False
-        return fetch_files(options['manifest'], options['base_url'],
-                           options['overwrite'], cmd_args,
+        return fetch_files(options['manifest'], options['base_url'], cmd_args,
                            cache_folder=options['cache_folder'])
     elif cmd == 'package':
         if not options.get('folder') or not options.get('message'):
@@ -749,9 +772,6 @@ def main():
     parser.add_option('-d', '--algorithm', default='sha512',
                       dest='algorithm', action='store',
                       help='openssl hashing algorithm to use')
-    parser.add_option('-o', '--overwrite', default=False,
-                      dest='overwrite', action='store_true',
-                      help='if fetching, remote copy will overwrite a local copy that is different. ')
     parser.add_option('--url', dest='base_url', action='append',
                       help='base url for fetching files')
     parser.add_option('-c', '--cache-folder', dest='cache_folder',
