@@ -399,10 +399,9 @@ def touch(f):
 
 
 # TODO: write tests for this function
-def fetch_file(base_urls, file_record, grabchunk=1024 * 4, dest=None):
+def fetch_file(base_urls, file_record, grabchunk=1024 * 4):
     # A file which is requested to be fetched that exists locally will be overwritten by this function
-
-    fd, temp_path = tempfile.mkstemp(dir=dest if dest else os.getcwd())
+    fd, temp_path = tempfile.mkstemp(dir=os.getcwd())
     os.close(fd)
     fetched_path = None
     for base_url in base_urls:
@@ -429,18 +428,23 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, dest=None):
                         k = False
                 log.info("File %s fetched from %s as %s" % (file_record.filename, base_url, temp_path))
                 fetched_path = temp_path
+                break
         except (urllib2.URLError, urllib2.HTTPError, ValueError) as e:
             log.info("...failed to fetch '%s' from %s" % (file_record.filename, base_url))
             log.debug("%s" % e)
         except IOError:
             log.info("failed to write to '%s'" % file_record.filename, exc_info=True)
 
-        # cleanup temp file in case of issues
-        if not fetched_path:
+    # cleanup temp file in case of issues
+    if fetched_path:
+        return os.path.split(fetched_path)[1]
+    else: 
+        try:
             os.remove(temp_path)
-
-    return fetched_path
-
+        except OSError:
+            pass
+            return None
+            
 
 # TODO: write tests for this function
 def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
@@ -482,7 +486,7 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
                          (f.filename, cache_folder))
                 touch(os.path.join(cache_folder, f.digest))
 
-                filerecord_for_validation = FileRecord(os.path.join(os.getcwd(), f.filename), f.size, f.digest, f.algorithm)
+                filerecord_for_validation = FileRecord(f.filename, f.size, f.digest, f.algorithm)
                 if filerecord_for_validation.validate():
                     present_files.append(f.filename)
                 else:
@@ -518,8 +522,8 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
         if filerecord_for_validation.validate():
             # great!
             # I can rename the temp file
-            log.info("File integrity verified, renaming %s to %s" % (temp_file_name, f.filename))
-            os.rename(temp_file_name, os.path.join(os.getcwd(), localfile.filename))
+            log.info("File integrity verified, renaming %s to %s" % (temp_file_name, localfile.filename))
+            os.rename(os.path.join(os.getcwd(), temp_file_name), os.path.join(os.getcwd(), localfile.filename))
             # if I am using a cache and a new file has just been retrieved from a
             # remote location, I need to update the cache as well
             if cache_folder:
