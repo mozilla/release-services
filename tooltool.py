@@ -443,7 +443,7 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4):
             os.remove(temp_path)
         except OSError:
             pass
-            return None
+        return None
             
 
 # TODO: write tests for this function
