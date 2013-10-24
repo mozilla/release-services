@@ -438,13 +438,13 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4):
     # cleanup temp file in case of issues
     if fetched_path:
         return os.path.split(fetched_path)[1]
-    else: 
+    else:
         try:
             os.remove(temp_path)
         except OSError:
             pass
         return None
-            
+
 
 # TODO: write tests for this function
 def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
