@@ -213,7 +213,7 @@ def main():
                     # checking that ALL files mentioned in the manifest are in the upload folder, otherwise I cannot proceed copying
                     if not os.path.exists(content_folder_path) or not os.path.isdir(content_folder_path):
                         allFilesAreOK = False
-                        log.error("Impossible to process manifest %s because content has not been uploaded to folder" % content_folder_path)
+                        log.error("Impossible to process manifest %s because content has not been uploaded" % content_folder_path)
                     else:
                         for digest, algorithm in digests:
                             digest_path = os.path.join(content_folder_path, digest)
@@ -225,7 +225,7 @@ def main():
                                 with open(digest_path, 'rb') as f:
                                     d = tooltool.digest_file(f, algorithm)
                                     if d == digest:
-                                        log.debug("Great! File %s is what he declares to be!")
+                                        log.debug("Checksum is OK")
                                     else:
                                         allFilesAreOK = False
                                         log.error("Impossible to process manifest %s because the mentioned file %s has an incorrect content" % (new_manifest, digest))
