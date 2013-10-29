@@ -30,6 +30,7 @@ import urllib2
 import shutil
 import sys
 import tempfile
+import re
 
 DEFAULT_MANIFEST_NAME = 'manifest.tt'
 TOOLTOOL_PACKAGE_SUFFIX = '.TOOLTOOL-PACKAGE'
@@ -606,6 +607,10 @@ def purge(folder, gigs):
             break
 
 
+def remove_trailing_slashes(folder):
+    return re.sub("/*$", "", folder)
+
+
 def package(folder, algorithm, message):
     if not os.path.exists(folder) or not os.path.isdir(folder):
         msg = 'Folder %s does not exist!' % folder
@@ -665,6 +670,8 @@ def execute(cmd):
 
 def upload(package, user, host, path):
     #TODO s: validate package
+    package = remove_trailing_slashes(package)
+
     cmd1 = "rsync  -a %s %s@%s:%s --progress -f '- *.tt' -f '- *.txt'" % (package, user, host, path)
     cmd2 = "rsync  %s/*.txt %s@%s:%s --progress" % (package, user, host, path)
     cmd3 = "rsync  %s/*.tt %s@%s:%s --progress" % (package, user, host, path)
