@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS hashes (
    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
    hg_changeset VARCHAR(40) NOT NULL,
    git_changeset VARCHAR(40) NOT NULL,
-   date_added DATETIME NOT NULL,
 
    PRIMARY KEY (id),
    UNIQUE INDEX (hg_changeset),
@@ -19,6 +18,8 @@ CREATE TABLE IF NOT EXISTS hashes (
 CREATE TABLE IF NOT EXISTS projects_to_hashes (
     project_id INT UNSIGNED NOT NULL,
     hash_id INT UNSIGNED NOT NULL,
+    date_added DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY (project_id),
-    KEY (hash_id)
+    KEY (hash_id),
+    KEY (date_added)
 );
