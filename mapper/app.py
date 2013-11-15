@@ -51,6 +51,16 @@ def get_full_mapfile(project, db):
     return _build_mapfile(db, error_message)
 
 
+@route('/<project>/mapfile/since/<date>')
+def get_mapfile_since(project, date, db):
+    """Get a mapfile since date"""
+    query = 'SELECT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id and name="%s" AND date_added >= unix_timestamp("%s") ORDER BY git_changeset;' % (project, date)
+    db.execute(query)
+    error_message = "%s - not found" % query
+    bottle.response.content_type = "text/plain"
+    return _build_mapfile(db, error_message)
+
+
 def main():
     """main entry point"""
     logging.basicConfig(level=logging.INFO)
