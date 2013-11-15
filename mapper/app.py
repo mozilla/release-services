@@ -50,7 +50,7 @@ def get_rev(project, vcs, rev, db):
 
 @route('/<project>/mapfile/full')
 def get_full_mapfile(project, db):
-    """Get a full mapfile"""
+    """Get a full mapfile. <project> can be a comma-delimited set of projects"""
     query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id and %s ORDER BY git_changeset;' % _get_project_name_sql(project)
     db.execute(query)
     error_message = "%s - not found" % query
@@ -60,7 +60,7 @@ def get_full_mapfile(project, db):
 
 @route('/<project>/mapfile/since/<date>')
 def get_mapfile_since(project, date, db):
-    """Get a mapfile since date"""
+    """Get a mapfile since date.  <project> can be a comma-delimited set of projects"""
     query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id and %s AND date_added >= unix_timestamp("%s") ORDER BY git_changeset;' % (_get_project_name_sql(project), date)
     db.execute(query)
     error_message = "%s - not found" % query
