@@ -30,15 +30,21 @@ def get_full_mapfile(project, db):
     """Get a full mapfile"""
     query = 'SELECT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id and name="%s" ORDER BY git_changeset;' % project
     db.execute(query)
-    contents = ""
-    while True:
-        row = db.fetchone()
-        if not row:
-            break
-        contents += "%s %s\n" % (row['hg_changeset'], row['git_changeset'])
-    if contents:
-        return contents
-    abort(404, "%s - not found" % query)
+    error_message = "%s - not found" % query
+
+    def _build_full_mapfile(db, error_message):
+        """ Build the full mapfile from the query in get_full_mapfile()
+            """
+        success = False
+        while True:
+            row = db.fetchone()
+            if not row:
+                break
+            success = True
+            yield("%s %s\n" % (row['hg_changeset'], row['git_changeset']))
+        if not success:
+            abort(404, error_message)
+    return _build_full_mapfile(db, error_message)
 
 
 def main():
