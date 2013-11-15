@@ -8,23 +8,11 @@ import bottle_mysql
 log = logging.getLogger(__name__)
 
 
-@route('/<project>/rev/<vcs>/<rev>')
-def get_rev(project, vcs, rev, db):
-    """Translate git/hg revisions"""
-    assert vcs in ("git", "hg")
-    if vcs == 'git':
-        target_column = 'git_changeset'
-        source_column = 'hg_changeset'
-    elif vcs == 'hg':
-        target_column = 'hg_changeset'
-        source_column = 'git_changeset'
-    query = 'SELECT %s FROM hashes, projects WHERE %s LIKE "%s%%" AND projects.id=hashes.project_id and name="%s";' % (target_column, source_column, rev, project)
-    db.execute(query)
-    row = db.fetchone()
-    if row:
-        bottle.response.content_type = "application/json"
-        return row
-    abort(404, "%s - %s not found" % (query, target_column))
+def _get_project_name_sql(project_name):
+    if ',' in project_name:
+        return 'name in ("%s")' % '","'.join(project_name.split(','))
+    else:
+        return 'name="%s"' % project_name
 
 
 def _build_mapfile(db, error_message):
@@ -41,10 +29,29 @@ def _build_mapfile(db, error_message):
         abort(404, error_message)
 
 
+@route('/<project>/rev/<vcs>/<rev>')
+def get_rev(project, vcs, rev, db):
+    """Translate git/hg revisions"""
+    assert vcs in ("git", "hg")
+    if vcs == 'git':
+        target_column = 'git_changeset'
+        source_column = 'hg_changeset'
+    elif vcs == 'hg':
+        target_column = 'hg_changeset'
+        source_column = 'git_changeset'
+    query = 'SELECT %s FROM hashes, projects WHERE %s LIKE "%s%%" AND projects.id=hashes.project_id and %s;' % (target_column, source_column, rev, project, _get_project_name_sql(project))
+    db.execute(query)
+    row = db.fetchone()
+    if row:
+        bottle.response.content_type = "application/json"
+        return row
+    abort(404, "%s - %s not found" % (query, target_column))
+
+
 @route('/<project>/mapfile/full')
 def get_full_mapfile(project, db):
     """Get a full mapfile"""
-    query = 'SELECT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id and name="%s" ORDER BY git_changeset;' % project
+    query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id and %s ORDER BY git_changeset;' % _get_project_name_sql(project)
     db.execute(query)
     error_message = "%s - not found" % query
     bottle.response.content_type = "text/plain"
@@ -54,7 +61,7 @@ def get_full_mapfile(project, db):
 @route('/<project>/mapfile/since/<date>')
 def get_mapfile_since(project, date, db):
     """Get a mapfile since date"""
-    query = 'SELECT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id and name="%s" AND date_added >= unix_timestamp("%s") ORDER BY git_changeset;' % (project, date)
+    query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id and %s AND date_added >= unix_timestamp("%s") ORDER BY git_changeset;' % (_get_project_name_sql(project), date)
     db.execute(query)
     error_message = "%s - not found" % query
     bottle.response.content_type = "text/plain"
