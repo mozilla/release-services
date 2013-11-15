@@ -6,6 +6,7 @@ import time
 import mmap
 
 from bottle import route, run, abort, default_app
+import bottle_mysql
 
 from mapper.bsearch import mapfile_binary_search
 
