@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS hashes (
     INDEX (hg_changeset),
     INDEX (git_changeset),
     INDEX (project_id),
+    INDEX (project_id, date_added),
     UNIQUE INDEX (hg_changeset, project_id),
     UNIQUE INDEX (git_changeset, project_id)
 );
