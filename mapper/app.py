@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import logging
 
+import bottle
 from bottle import route, run, abort, default_app
 import bottle_mysql
 
@@ -21,8 +22,23 @@ def get_rev(project, vcs, rev, db):
     db.execute(query)
     row = db.fetchone()
     if row:
+        bottle.response.content_type = "application/json"
         return row
     abort(404, "%s - %s not found" % (query, target_column))
+
+
+def _build_mapfile(db, error_message):
+    """ Build the full mapfile from a query
+        """
+    success = False
+    while True:
+        row = db.fetchone()
+        if not row:
+            break
+        success = True
+        yield("%s %s\n" % (row['hg_changeset'], row['git_changeset']))
+    if not success:
+        abort(404, error_message)
 
 
 @route('/<project>/mapfile/full')
@@ -31,20 +47,8 @@ def get_full_mapfile(project, db):
     query = 'SELECT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id and name="%s" ORDER BY git_changeset;' % project
     db.execute(query)
     error_message = "%s - not found" % query
-
-    def _build_full_mapfile(db, error_message):
-        """ Build the full mapfile from the query in get_full_mapfile()
-            """
-        success = False
-        while True:
-            row = db.fetchone()
-            if not row:
-                break
-            success = True
-            yield("%s %s\n" % (row['hg_changeset'], row['git_changeset']))
-        if not success:
-            abort(404, error_message)
-    return _build_full_mapfile(db, error_message)
+    bottle.response.content_type = "text/plain"
+    return _build_mapfile(db, error_message)
 
 
 def main():
