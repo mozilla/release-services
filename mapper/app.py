@@ -27,7 +27,7 @@ def get_rev(project, vcs, rev, db):
 
 @route('/<project>/mapfile/full')
 def get_full_mapfile(project, db):
-    """Translate git/hg revisions"""
+    """Get a full mapfile"""
     query = 'SELECT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id and name="%s" ORDER BY git_changeset;' % project
     db.execute(query)
     contents = ""
