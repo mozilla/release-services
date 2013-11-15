@@ -25,6 +25,22 @@ def get_rev(project, vcs, rev, db):
     abort(404, "%s - %s not found" % (query, target_column))
 
 
+@route('/<project>/mapfile/full')
+def get_full_mapfile(project, db):
+    """Translate git/hg revisions"""
+    query = 'SELECT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id and name="%s" ORDER BY git_changeset;' % project
+    db.execute(query)
+    contents = ""
+    while True:
+        row = db.fetchone()
+        if not row:
+            break
+        contents += "%s %s\n" % (row['hg_changeset'], row['git_changeset'])
+    if contents:
+        return contents
+    abort(404, "%s - not found" % query)
+
+
 def main():
     """main entry point"""
     logging.basicConfig(level=logging.INFO)
