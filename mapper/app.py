@@ -39,7 +39,7 @@ def get_rev(project, vcs, rev, db):
     elif vcs == 'hg':
         target_column = 'hg_changeset'
         source_column = 'git_changeset'
-    query = 'SELECT %s FROM hashes, projects WHERE %s LIKE "%s%%" AND projects.id=hashes.project_id and %s;' % (target_column, source_column, rev, project, _get_project_name_sql(project))
+    query = 'SELECT %s FROM hashes, projects WHERE %s LIKE "%s%%" AND projects.id=hashes.project_id and %s;' % (target_column, source_column, rev, _get_project_name_sql(project))
     db.execute(query)
     row = db.fetchone()
     if row:
