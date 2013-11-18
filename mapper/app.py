@@ -33,21 +33,23 @@ def _build_mapfile(db, error_message):
 def _check_existing_sha(project, vcs_type, changeset, db):
     """ Helper method to check for an existing changeset
         """
-    query = 'SELECT * FROM hashes, projects WHERE projects.id=hashes.project_id AND %s AND %s_changeset=%s' % (_get_project_name_sql(project), vcs_type, changeset)
+    query = 'SELECT * FROM hashes, projects WHERE projects.id=hashes.project_id AND %s AND %s_changeset="%s"' % (_get_project_name_sql(project), vcs_type, changeset)
     db.execute(query)
     row = db.fetchone()
     if row:
         return row
 
 
-def _insert_one(project, hg_changeset, git_changeset, db, verbose=False):
+def _insert_one(project, hg_changeset, git_changeset, db, autocommit=True, verbose=False):
     """ Helper method to insert into db
         """
     for vcs_type, changeset in {'hg': hg_changeset, 'git': git_changeset}.items():
-        row = _check_existing_sha(project, vcs_type, changeset)
+        row = _check_existing_sha(project, vcs_type, changeset, db)
         if row:
-            abort(409, "Already exists: %s" % pprint.pformat(row))
-    # proceed!
+            return (409, row)
+    # TODO how to get project id?
+    query = "INSERT INTO hashes SELECT '%s', '%s', id, unix_timestamp() FROM projects WHERE name='%s';" % (hg_changeset, git_changeset, project)
+    return db.execute(query)
 
 
 @route('/<project>/rev/<vcs>/<rev>')
@@ -89,25 +91,37 @@ def get_mapfile_since(project, date, db):
     return _build_mapfile(db, error_message)
 
 
+# TODO auth
 @route('/<project>/insert', method='PUT')
 def insert_many(project, db):
     """Update the db, but allow for errors"""
+    unsuccessful = ""
     for line in request.body.readlines():
-        line = line.strip()
         (hg_changeset, git_changeset) = line.split(' ')
-        return '|%s| |%s|' % (hg_changeset, git_changeset)
-    return request.body.readlines()
+        # TODO autocommit=False?
+        resp = _insert_one(project, hg_changeset, git_changeset, db)
+        if isinstance(resp, tuple):
+            status, row = resp
+            if status == 409:
+                unsuccessful = "%s%s\n" % (unsuccessful, line)
+        if unsuccessful:
+            abort(206, "These were unsuccessful:\n\n%s" % unsuccessful)
 
 
+# TODO auth
 @route('/<project>/insert/:hg_changeset#[0-9a-f]+#/:git_changeset#[0-9a-f]+#')
 def insert_one(project, hg_changeset, git_changeset, db):
     """Insert a single row into the db"""
-    return "hg %s git %s" % (hg_changeset, git_changeset)
-#    query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id AND %s ORDER BY git_changeset;' % _get_project_name_sql(project)
-#    db.execute(query)
-#    error_message = "%s - not found" % query
-#    bottle.response.content_type = "text/plain"
-#    return _build_mapfile(db, error_message)
+    resp = _insert_one(project, hg_changeset, git_changeset, db)
+    if isinstance(resp, tuple):
+        status, row = resp
+        if status == 409:
+            abort(status, "Already exists: %s" % pprint.pformat(row))
+    row = _check_existing_sha(project, 'hg', hg_changeset, db)
+    if row:
+        return str(row)
+    else:
+        abort(500, "row doesn't exist!")
 
 
 def main():
