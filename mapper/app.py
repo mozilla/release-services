@@ -10,6 +10,8 @@ log = logging.getLogger(__name__)
 
 
 def _get_project_name_sql(project_name):
+    assert '"' not in project_name
+    assert "'" not in project_name
     if ',' in project_name:
         return 'name in ("%s")' % '","'.join(project_name.split(','))
     else:
@@ -33,8 +35,8 @@ def _build_mapfile(db, error_message):
 def _check_existing_sha(project, vcs_type, changeset, db):
     """ Helper method to check for an existing changeset
         """
-    query = 'SELECT * FROM hashes, projects WHERE projects.id=hashes.project_id AND %s AND %s_changeset="%s"' % (_get_project_name_sql(project), vcs_type, changeset)
-    db.execute(query)
+    query = 'SELECT * FROM hashes, projects WHERE projects.id=hashes.project_id AND %s AND %s_changeset=%%s' % (_get_project_name_sql(project), vcs_type)
+    db.execute(query, (changeset, ))
     row = db.fetchone()
     if row:
         return row
@@ -48,8 +50,8 @@ def _insert_one(project, hg_changeset, git_changeset, db, autocommit=True, verbo
         if row:
             return (409, row)
     # TODO how to get project id?
-    query = "INSERT INTO hashes SELECT '%s', '%s', id, unix_timestamp() FROM projects WHERE name='%s';" % (hg_changeset, git_changeset, project)
-    return db.execute(query)
+    query = "INSERT INTO hashes SELECT %s, %s, id, unix_timestamp() FROM projects WHERE name=%s;"
+    return db.execute(query, (hg_changeset, git_changeset, project))
 
 
 @route('/<project>/rev/<vcs>/<rev>')
@@ -62,8 +64,8 @@ def get_rev(project, vcs, rev, db):
     elif vcs == 'hg':
         target_column = 'hg_changeset'
         source_column = 'git_changeset'
-    query = 'SELECT %s FROM hashes, projects WHERE %s LIKE "%s%%" AND projects.id=hashes.project_id AND %s;' % (target_column, source_column, rev, _get_project_name_sql(project))
-    db.execute(query)
+    query = 'SELECT %%s FROM hashes, projects WHERE %%s LIKE %%s%% AND projects.id=hashes.project_id AND %s;' % _get_project_name_sql(project)
+    db.execute(query, (target_column, source_column, rev))
     row = db.fetchone()
     if row:
         bottle.response.content_type = "application/json"
@@ -84,8 +86,8 @@ def get_full_mapfile(project, db):
 @route('/<project>/mapfile/since/<date>')
 def get_mapfile_since(project, date, db):
     """Get a mapfile since date.  <project> can be a comma-delimited set of projects"""
-    query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id AND %s AND date_added >= unix_timestamp("%s") ORDER BY git_changeset;' % (_get_project_name_sql(project), date)
-    db.execute(query)
+    query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id AND %s AND date_added >= unix_timestamp(%%s) ORDER BY git_changeset;' % _get_project_name_sql(project)
+    db.execute(query, (date, ))
     error_message = "%s - not found" % query
     bottle.response.content_type = "text/plain"
     return _build_mapfile(db, error_message)
