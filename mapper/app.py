@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-import logging
 
 import bottle
-from bottle import route, run, abort, default_app
+from bottle import route, run, abort, default_app, request
 import bottle_mysql
+import logging
+import pprint
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +30,26 @@ def _build_mapfile(db, error_message):
         abort(404, error_message)
 
 
+def _check_existing_sha(project, vcs_type, changeset, db):
+    """ Helper method to check for an existing changeset
+        """
+    query = 'SELECT * FROM hashes, projects WHERE projects.id=hashes.project_id AND %s AND %s_changeset=%s' % (_get_project_name_sql(project), vcs_type, changeset)
+    db.execute(query)
+    row = db.fetchone()
+    if row:
+        return row
+
+
+def _insert_one(project, hg_changeset, git_changeset, db, verbose=False):
+    """ Helper method to insert into db
+        """
+    for vcs_type, changeset in {'hg': hg_changeset, 'git': git_changeset}.items():
+        row = _check_existing_sha(project, vcs_type, changeset)
+        if row:
+            abort(409, "Already exists: %s" % pprint.pformat(row))
+    # proceed!
+
+
 @route('/<project>/rev/<vcs>/<rev>')
 def get_rev(project, vcs, rev, db):
     """Translate git/hg revisions"""
@@ -39,7 +60,7 @@ def get_rev(project, vcs, rev, db):
     elif vcs == 'hg':
         target_column = 'hg_changeset'
         source_column = 'git_changeset'
-    query = 'SELECT %s FROM hashes, projects WHERE %s LIKE "%s%%" AND projects.id=hashes.project_id and %s;' % (target_column, source_column, rev, _get_project_name_sql(project))
+    query = 'SELECT %s FROM hashes, projects WHERE %s LIKE "%s%%" AND projects.id=hashes.project_id AND %s;' % (target_column, source_column, rev, _get_project_name_sql(project))
     db.execute(query)
     row = db.fetchone()
     if row:
@@ -51,7 +72,7 @@ def get_rev(project, vcs, rev, db):
 @route('/<project>/mapfile/full')
 def get_full_mapfile(project, db):
     """Get a full mapfile. <project> can be a comma-delimited set of projects"""
-    query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id and %s ORDER BY git_changeset;' % _get_project_name_sql(project)
+    query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id AND %s ORDER BY git_changeset;' % _get_project_name_sql(project)
     db.execute(query)
     error_message = "%s - not found" % query
     bottle.response.content_type = "text/plain"
@@ -61,11 +82,32 @@ def get_full_mapfile(project, db):
 @route('/<project>/mapfile/since/<date>')
 def get_mapfile_since(project, date, db):
     """Get a mapfile since date.  <project> can be a comma-delimited set of projects"""
-    query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id and %s AND date_added >= unix_timestamp("%s") ORDER BY git_changeset;' % (_get_project_name_sql(project), date)
+    query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id AND %s AND date_added >= unix_timestamp("%s") ORDER BY git_changeset;' % (_get_project_name_sql(project), date)
     db.execute(query)
     error_message = "%s - not found" % query
     bottle.response.content_type = "text/plain"
     return _build_mapfile(db, error_message)
+
+
+@route('/<project>/insert', method='PUT')
+def insert_many(project, db):
+    """Update the db, but allow for errors"""
+    for line in request.body.readlines():
+        line = line.strip()
+        (hg_changeset, git_changeset) = line.split(' ')
+        return '|%s| |%s|' % (hg_changeset, git_changeset)
+    return request.body.readlines()
+
+
+@route('/<project>/insert/:hg_changeset#[0-9a-f]+#/:git_changeset#[0-9a-f]+#')
+def insert_one(project, hg_changeset, git_changeset, db):
+    """Insert a single row into the db"""
+    return "hg %s git %s" % (hg_changeset, git_changeset)
+#    query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id AND %s ORDER BY git_changeset;' % _get_project_name_sql(project)
+#    db.execute(query)
+#    error_message = "%s - not found" % query
+#    bottle.response.content_type = "text/plain"
+#    return _build_mapfile(db, error_message)
 
 
 def main():
