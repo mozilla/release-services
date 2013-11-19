@@ -9,6 +9,6 @@ setup(name='mapper',
       author_email='chris@atlee.ca',
       url='https://github.com/catlee/mapper',
       packages=['mapper'],
-      install_requires=['bottle', 'bottle_mysql', 'MySQL-python'],
+      install_requires=['bottle', 'bottle_mysql', 'MySQL-python', 'IPy'],
       license='MPL2',
       )
