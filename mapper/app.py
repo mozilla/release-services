@@ -94,7 +94,7 @@ def get_mapfile_since(project, date, db):
 
 
 # TODO auth
-@route('/<project>/insert', method='PUT')
+@route('/<project>/insert', method='POST')
 def insert_many(project, db):
     """Update the db, but allow for errors"""
     unsuccessful = ""
