@@ -60,7 +60,6 @@ def _insert_one(project, hg_changeset, git_changeset, db, autocommit=True, verbo
 @route('/<project>/rev/<vcs>/<rev>')
 def get_rev(project, vcs, rev, db):
     """Translate git/hg revisions"""
-    # I'd love a better error message here
     if vcs not in ("git", "hg"):
         abort(500, "Unknown vcs %s" % vcs)
     if not rev_regex.match(rev):
