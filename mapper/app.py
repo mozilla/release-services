@@ -13,8 +13,8 @@ rev_regex = re.compile('''^[a-f0-9]{1,40}$''')
 
 
 def _get_project_name_sql(project_name):
-    assert '"' not in project_name
-    assert "'" not in project_name
+    if '"' in project_name or "'" in project_name:
+        abort(500, "Bad project name |%s|" % project_name)
     if ',' in project_name:
         return 'name in ("%s")' % '","'.join(project_name.split(','))
     else:
@@ -60,8 +60,11 @@ def _insert_one(project, hg_changeset, git_changeset, db, autocommit=True, verbo
 @route('/<project>/rev/<vcs>/<rev>')
 def get_rev(project, vcs, rev, db):
     """Translate git/hg revisions"""
-    assert vcs in ("git", "hg")
-    assert rev_regex.match(rev)
+    # I'd love a better error message here
+    if vcs not in ("git", "hg"):
+        abort(500, "Unknown vcs %s" % vcs)
+    if not rev_regex.match(rev):
+        abort(500, "Bad revision format |%s|" % rev)
     if vcs == 'git':
         target_column = 'git_changeset'
         source_column = 'hg_changeset'
