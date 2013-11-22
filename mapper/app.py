@@ -5,8 +5,11 @@ from bottle import route, run, abort, default_app, request
 import bottle_mysql
 import logging
 import pprint
+import re
 
 log = logging.getLogger(__name__)
+
+rev_regex = re.compile('''^[a-f0-9]{1,40}$''')
 
 
 def _get_project_name_sql(project_name):
@@ -58,14 +61,15 @@ def _insert_one(project, hg_changeset, git_changeset, db, autocommit=True, verbo
 def get_rev(project, vcs, rev, db):
     """Translate git/hg revisions"""
     assert vcs in ("git", "hg")
+    assert rev_regex.match(rev)
     if vcs == 'git':
         target_column = 'git_changeset'
         source_column = 'hg_changeset'
     elif vcs == 'hg':
         target_column = 'hg_changeset'
         source_column = 'git_changeset'
-    query = 'SELECT %%s FROM hashes, projects WHERE %%s LIKE %%s%% AND projects.id=hashes.project_id AND %s;' % _get_project_name_sql(project)
-    db.execute(query, (target_column, source_column, rev))
+    query = 'SELECT %s FROM hashes, projects WHERE %s LIKE "%s%%" AND projects.id=hashes.project_id AND %s;' % (target_column, source_column, rev, _get_project_name_sql(project))
+    db.execute(query)
     row = db.fetchone()
     if row:
         bottle.response.content_type = "application/json"
