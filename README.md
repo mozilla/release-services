@@ -11,8 +11,7 @@ Haha, not yet.
 Developers
 ----------
 
-Structure
-.........
+### Structure
 
 RelengAPI is a Flask application.  It is composed of several Python packages.
 
@@ -23,8 +22,7 @@ These act as plugins, adding extra endpoints to the API.
 
 The `relengapi-docs` package implements the documentation tree for the Releng API, and is a prototypical blueprint package.
 
-Running
-.......
+### Running
 
 To run the tool for development, pip install the base:
 
@@ -37,8 +35,7 @@ and any Blueprints you want:
 then run `relengapi` to run the server in the foreground.
 This tool has some command-line options that may be useful; see its `--help`.
 
-Writing a Blueprint
-...................
+### Writing a Blueprint
 
 If your blueprint will be meaty enough to deserve its own project, repo, and so forth, then start that now.
 Otherwise, add it to the relengapi project in a top-level directory.
