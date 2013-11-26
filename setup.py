@@ -17,6 +17,9 @@ setup(
     entry_points={
         "console_scripts": [
             'releng_api = releng_api.scripts.server:main',
-        ]
+        ],
+        "releng_api_blueprints": [
+            'docs = releng_api.blueprints.docs:bp',
+        ],
     },
 )
