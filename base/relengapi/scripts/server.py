@@ -14,4 +14,4 @@ def main():
         kwargs['host'] = '0.0.0.0'
     kwargs['debug'] = not args.no_debug
 
-    create_app().run(**kwargs)
+    create_app(cmdline=True).run(**kwargs)
