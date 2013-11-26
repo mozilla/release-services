@@ -1,6 +1,8 @@
 from flask import Flask
 from flask import redirect
 from flask import url_for
+from flask import current_app
+from flask import jsonify
 import pkg_resources
 
 def create_app(cmdline=False):
@@ -16,5 +18,13 @@ def create_app(cmdline=False):
     @app.route('/')
     def root():
         return redirect(url_for('docs.root'))
+
+    @app.route('/meta')
+    def meta():
+        "API: Metadata about this RelengAPI instance"
+        meta = {}
+        meta['blueprints'] = current_app.blueprints.keys()
+        print current_app.url_map.keys()
+        return jsonify(meta)
 
     return app
