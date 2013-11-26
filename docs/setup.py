@@ -1,25 +1,24 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='releng-api',
+    name='relengapi-docs',
     version='0.0',
-    description='The One True API',
+    description='Documentation blueprint for relengapi',
     author='Dustin J. Mitchell',
     author_email='dustin@mozilla.com',
     url='',
     install_requires=[
         "Flask",
+        "relengapi",
     ],
     tests_require=["nose", "mock"],
     packages=find_packages(),
     include_package_data=True,
     test_suite='nose.collector',
+    namespace_packages=['relengapi.blueprints'],
     entry_points={
-        "console_scripts": [
-            'releng_api = releng_api.scripts.server:main',
-        ],
-        "releng_api_blueprints": [
-            'docs = releng_api.blueprints.docs:bp',
+        "relengapi_blueprints": [
+            'docs = relengapi.blueprints.docs:bp',
         ],
     },
 )

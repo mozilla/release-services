@@ -1,8 +1,8 @@
 import argparse
-from releng_api import create_app
+from relengapi.app import create_app
 
 def main():
-    parser = argparse.ArgumentParser(description="run a dev instance of releng_api")
+    parser = argparse.ArgumentParser(description="Run a dev instance of relengapi")
     parser.add_argument("-a", "--all-interfaces", action='store_true',
                         help='Run on all interfaces, not just localhost')
     parser.add_argument("--no-debug", action='store_true',
