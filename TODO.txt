@@ -1,0 +1,3 @@
+- auth (oAuth2?)
+- simple proxying support
+- finish docs w/ decent UI
