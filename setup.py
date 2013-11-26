@@ -14,4 +14,9 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     test_suite='nose.collector',
+    entry_points={
+        "console_scripts": [
+            'releng_api = releng_api.scripts.server:main',
+        ]
+    },
 )
