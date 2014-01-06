@@ -3,3 +3,5 @@ build/
 dist/
 mapper.egg-info/
 test.py
+mapper/.config.py
+*.swp
