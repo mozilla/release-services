@@ -24,7 +24,6 @@ def create_app(cmdline=False):
         "API: Metadata about this RelengAPI instance"
         meta = {}
         meta['blueprints'] = current_app.blueprints.keys()
-        print current_app.url_map.keys()
         return jsonify(meta)
 
     return app
