@@ -1,5 +1,9 @@
+- implement the slaveapi API so we have something to play with
 - auth (oAuth2?)
 - simple proxying support
 - finish docs w/ decent UI
 - DB idiom
 - repeating tasks
+- config handling
+- docs should render rst
+  - include dynamic link to table structure?
