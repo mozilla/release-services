@@ -9,6 +9,7 @@ setup(
     url='https://api.pub.build.mozilla.org',
     install_requires=[
         "Flask",
+        "Flask-SQLAlchemy",
     ],
     tests_require=["nose", "mock"],
     packages=find_packages(),
@@ -17,7 +18,7 @@ setup(
     namespace_packages=['relengapi.blueprints'],
     entry_points={
         "console_scripts": [
-            'relengapi = relengapi.scripts.server:main',
+            'relengapi = relengapi.scripts.base:main',
         ],
     },
 )
