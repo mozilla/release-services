@@ -6,6 +6,7 @@ import bottle_mysql
 import logging
 import pprint
 import re
+from mapper.decorators import login_required, check_client_ip, attach_required
 
 log = logging.getLogger(__name__)
 
@@ -99,7 +100,9 @@ def get_mapfile_since(project, date, db):
     return _build_mapfile(db, error_message)
 
 
-# TODO auth
+@check_client_ip
+@login_required
+@attach_required
 @route('/<project>/insert', method='POST')
 def insert_many(project, db):
     """Update the db, but allow for errors"""
@@ -116,7 +119,9 @@ def insert_many(project, db):
             abort(206, "These were unsuccessful:\n\n%s" % unsuccessful)
 
 
-# TODO auth
+@check_client_ip
+@login_required
+@attach_required
 @route('/<project>/insert/:hg_changeset#[0-9a-f]+#/:git_changeset#[0-9a-f]+#')
 def insert_one(project, hg_changeset, git_changeset, db):
     """Insert a single row into the db"""
