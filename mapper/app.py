@@ -107,12 +107,8 @@ def get_mapfile_since(project, date, db):
     return _build_mapfile(db, error_message)
 
 
-@check_client_ip
-@login_required
-@attach_required
-@route('/<project>/insert', method='POST')
-def insert_many(project, db):
-    """Update the db, but allow for errors"""
+def _insert_many(project, db, dups=False):
+    """Update the db with many lines."""
     unsuccessful = ""
     for line in request.body.readlines():
         line = line.rstrip()
@@ -129,8 +125,26 @@ def insert_many(project, db):
             status, row = resp
             if status == 409:
                 unsuccessful = "%s%s\n" % (unsuccessful, str(line))
-        if unsuccessful:
+        if unsuccessful and not dups:
             abort(206, "These were unsuccessful:\n\n%s" % unsuccessful)
+    if unsuccessful:
+        return "Unsuccessful lines:\n\n%s" % unsuccessful
+
+
+@check_client_ip
+@login_required
+@attach_required
+@route('/<project>/insert', method='POST')
+def insert_many_no_dups(project, db):
+    return _insert_many(project, db, dups=False)
+
+
+@check_client_ip
+@login_required
+@attach_required
+@route('/<project>/insert/ignoredups', method='POST')
+def insert_many_allow_dups(project, db):
+    return _insert_many(project, db, dups=True)
 
 
 @check_client_ip
