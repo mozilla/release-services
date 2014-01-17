@@ -46,7 +46,7 @@ def _build_mapfile(db, error_message):
         40 characters of git changeset sha, and a newline.
 
     Exceptions:
-        HTTPError: No results found.
+        HTTPError: No results found, via bottle.abort().
     """
     success = False
     while True:
@@ -78,27 +78,46 @@ def _check_existing_sha(project, vcs_type, changeset, db):
 
 
 def _check_well_formed_sha(sha):
-    """Helper method to check for valid sha
-        """
+    """Helper method to check for a well-formed sha.
+    Args:
+        sha: string to check against the well-formed sha regex.
+
+    Returns:
+        None on success.
+
+    Exceptions:
+        HTTPError: on non-well-formed sha, via bottle.abort()
+    """
     if not rev_regex.match(sha):
         abort(400, "Bad sha %s!" % str(sha))
 
 
-def _insert_one(project, hg_changeset, git_changeset, db, autocommit=True, verbose=False):
-    """ Helper method to insert into db
-        """
+def _insert_one(project, hg_changeset, git_changeset, db):
+    """ Helper method to insert a single hg_changeset/git_changeset pair into the db.
+
+    Args:
+        project: single project name string (not comma-delimited list)
+        hg_changeset: hg changeset string
+        git_changeset: git changeset string
+        db: the bottle_mysql db connection
+
+    Returns:
+        The response from the db.execute() call.
+    """
+    _check_well_formed_sha(hg_changeset)
+    _check_well_formed_sha(git_changeset)
     for vcs_type, changeset in {'hg': hg_changeset, 'git': git_changeset}.items():
         row = _check_existing_sha(project, vcs_type, changeset, db)
         if row:
             return (409, row)
-    # TODO how to get project id?
     query = "INSERT INTO hashes SELECT %s, %s, id, unix_timestamp() FROM projects WHERE name=%s;"
     return db.execute(query, (hg_changeset, git_changeset, project))
 
 
 @route('/<project>/rev/<vcs>/<rev>')
 def get_rev(project, vcs, rev, db):
-    """Translate git/hg revisions"""
+    """Translate git/hg revisions.
+    """
     if vcs not in ("git", "hg"):
         abort(500, "Unknown vcs %s" % vcs)
     if not rev_regex.match(rev):
@@ -148,9 +167,6 @@ def _insert_many(project, db, dups=False):
         except ValueError:
             # header/footer won't match this format
             continue
-        _check_well_formed_sha(hg_changeset)
-        _check_well_formed_sha(git_changeset)
-        # TODO autocommit=False?
         resp = _insert_one(project, hg_changeset, git_changeset, db)
         if isinstance(resp, tuple):
             status, row = resp
