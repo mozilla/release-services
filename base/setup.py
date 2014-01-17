@@ -9,7 +9,6 @@ setup(
     url='https://api.pub.build.mozilla.org',
     install_requires=[
         "Flask",
-        "Flask-SQLAlchemy",
     ],
     tests_require=["nose", "mock"],
     packages=find_packages(),

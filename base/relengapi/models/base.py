@@ -1,4 +1,2 @@
-from relengapi import db
-
-# nothing here yet
-db = db
+def init_app(app):
+    pass
