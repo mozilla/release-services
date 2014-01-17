@@ -1,3 +1,4 @@
+-- This file is only for testing purposes.
 insert into hashes values ('88b702293859eb004fb3535f407d10026441cf73', '00003cb750ff78cd50f0f2be2632f7633bec4261', 3, unix_timestamp());
 insert into hashes values ('138b94438768a9deb44afc61bd516e330368e07c', '0000859b1e36481fbe77037fa2dffeabff838f61', 3, unix_timestamp());
 insert into hashes values ('c2d4e3781d2f9d0077837ce021afdb68dc036bd4', '0000b936e5c67d1fa428c263633bcb27325a195b', 3, unix_timestamp());
