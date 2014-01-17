@@ -14,6 +14,19 @@ rev_regex = re.compile('''^[a-f0-9]{1,40}$''')
 
 
 def _get_project_name_sql(project_name):
+    """ Helper method that returns the select sql clause for the project
+    name(s) specified for a project name field.  This can be comma-delimited,
+    which is the way we combine queries across multiple projects.
+
+    Args:
+        project_name: a string from a bottle route, which may be comma-delimited.
+
+    Returns:
+        A string to append to a SELECT sql call.
+
+    Raises:
+        HTTPError: The project name has a quote mark in it. (via bottle.abort())
+    """
     if '"' in project_name or "'" in project_name:
         abort(500, "Bad project name |%s|" % project_name)
     if ',' in project_name:
@@ -23,8 +36,18 @@ def _get_project_name_sql(project_name):
 
 
 def _build_mapfile(db, error_message):
-    """ Build the full mapfile from a query
-        """
+    """ Helper method to build the full mapfile from a query
+    Args:
+        db: a db connection sent from bottle_mysql
+        error_message: the message string to send back if there are no results found.
+
+    Yields:
+        Text output, which is 40 characters of hg changeset sha, a space,
+        40 characters of git changeset sha, and a newline.
+
+    Exceptions:
+        HTTPError: No results found.
+    """
     success = False
     while True:
         row = db.fetchone()
@@ -37,8 +60,16 @@ def _build_mapfile(db, error_message):
 
 
 def _check_existing_sha(project, vcs_type, changeset, db):
-    """ Helper method to check for an existing changeset
-        """
+    """ Helper method to check for an existing changeset.
+    Args:
+        project: the project name(s) string, comma-delimited
+        vcs_type: the vcs name string (hg or git)
+        changeset: the changeset string to look for
+        db: the bottle_mysql db connection
+
+    Returns:
+        The first db row if it exists; otherwise None.
+    """
     query = 'SELECT * FROM hashes, projects WHERE projects.id=hashes.project_id AND %s AND %s_changeset=%%s' % (_get_project_name_sql(project), vcs_type)
     db.execute(query, (changeset, ))
     row = db.fetchone()
