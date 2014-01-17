@@ -1,3 +1,5 @@
+- tokens for POSTs, check 
+
 - implement the slaveapi API so we have something to play with
 - auth (oAuth2?)
 - simple proxying support
