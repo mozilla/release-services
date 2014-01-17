@@ -46,6 +46,13 @@ def _check_existing_sha(project, vcs_type, changeset, db):
         return row
 
 
+def _check_well_formed_sha(sha):
+    """Helper method to check for valid sha
+        """
+    if not rev_regex.match(sha):
+        abort(400, "Bad sha %s!" % str(sha))
+
+
 def _insert_one(project, hg_changeset, git_changeset, db, autocommit=True, verbose=False):
     """ Helper method to insert into db
         """
@@ -108,13 +115,20 @@ def insert_many(project, db):
     """Update the db, but allow for errors"""
     unsuccessful = ""
     for line in request.body.readlines():
-        (hg_changeset, git_changeset) = line.split(' ')
+        line = line.rstrip()
+        try:
+            (hg_changeset, git_changeset) = line.split(' ')
+        except ValueError:
+            # header/footer won't match this format
+            continue
+        _check_well_formed_sha(hg_changeset)
+        _check_well_formed_sha(git_changeset)
         # TODO autocommit=False?
         resp = _insert_one(project, hg_changeset, git_changeset, db)
         if isinstance(resp, tuple):
             status, row = resp
             if status == 409:
-                unsuccessful = "%s%s\n" % (unsuccessful, line)
+                unsuccessful = "%s%s\n" % (unsuccessful, str(line))
         if unsuccessful:
             abort(206, "These were unsuccessful:\n\n%s" % unsuccessful)
 
