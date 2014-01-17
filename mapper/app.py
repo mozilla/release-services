@@ -77,7 +77,7 @@ def _check_existing_sha(project, vcs_type, changeset, db):
         return row
 
 
-def _check_well_formed_sha(sha):
+def _check_well_formed_sha(sha, exact_length=40):
     """Helper method to check for a well-formed sha.
     Args:
         sha: string to check against the well-formed sha regex.
@@ -89,6 +89,8 @@ def _check_well_formed_sha(sha):
         HTTPError: on non-well-formed sha, via bottle.abort()
     """
     if not rev_regex.match(sha):
+        abort(400, "Bad sha %s!" % str(sha))
+    if exact_length is not None and len(sha) != exact_length:
         abort(400, "Bad sha %s!" % str(sha))
 
 
@@ -117,11 +119,22 @@ def _insert_one(project, hg_changeset, git_changeset, db):
 @route('/<project>/rev/<vcs>/<rev>')
 def get_rev(project, vcs, rev, db):
     """Translate git/hg revisions.
+
+    Args:
+        project: comma-delimited project names(s) string
+        vcs: hg or git, string
+        rev: revision or partial revision string
+        db: the bottle_mysql db connection
+
+    Returns:
+        A db row if the query matches.
+
+    Exceptions:
+        HTTPError: if an unknown vcs or bad sha or row not found.
     """
     if vcs not in ("git", "hg"):
         abort(500, "Unknown vcs %s" % vcs)
-    if not rev_regex.match(rev):
-        abort(500, "Bad revision format |%s|" % rev)
+    _check_well_formed_sha(rev, exact_length=None)
     if vcs == 'git':
         target_column = 'git_changeset'
         source_column = 'hg_changeset'
@@ -139,7 +152,8 @@ def get_rev(project, vcs, rev, db):
 
 @route('/<project>/mapfile/full')
 def get_full_mapfile(project, db):
-    """Get a full mapfile. <project> can be a comma-delimited set of projects"""
+    """Get a full mapfile. <project> can be a comma-delimited set of projects
+    """
     query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id AND %s ORDER BY git_changeset;' % _get_project_name_sql(project)
     db.execute(query)
     error_message = "%s - not found" % query
@@ -149,7 +163,8 @@ def get_full_mapfile(project, db):
 
 @route('/<project>/mapfile/since/<date>')
 def get_mapfile_since(project, date, db):
-    """Get a mapfile since date.  <project> can be a comma-delimited set of projects"""
+    """Get a mapfile since date.  <project> can be a comma-delimited set of projects
+    """
     query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id AND %s AND date_added >= unix_timestamp(%%s) ORDER BY git_changeset;' % _get_project_name_sql(project)
     db.execute(query, (date, ))
     error_message = "%s - not found" % query
@@ -158,7 +173,8 @@ def get_mapfile_since(project, date, db):
 
 
 def _insert_many(project, db, dups=False):
-    """Update the db with many lines."""
+    """Update the db with many lines.
+    """
     unsuccessful = ""
     for line in request.body.readlines():
         line = line.rstrip()
@@ -183,6 +199,8 @@ def _insert_many(project, db, dups=False):
 @attach_required
 @route('/<project>/insert', method='POST')
 def insert_many_no_dups(project, db):
+    """
+    """
     return _insert_many(project, db, dups=False)
 
 
@@ -191,6 +209,8 @@ def insert_many_no_dups(project, db):
 @attach_required
 @route('/<project>/insert/ignoredups', method='POST')
 def insert_many_allow_dups(project, db):
+    """
+    """
     return _insert_many(project, db, dups=True)
 
 
@@ -199,7 +219,8 @@ def insert_many_allow_dups(project, db):
 @attach_required
 @route('/<project>/insert/:hg_changeset#[0-9a-f]+#/:git_changeset#[0-9a-f]+#')
 def insert_one(project, hg_changeset, git_changeset, db):
-    """Insert a single row into the db"""
+    """Insert a single row into the db
+    """
     resp = _insert_one(project, hg_changeset, git_changeset, db)
     if isinstance(resp, tuple):
         status, row = resp
@@ -213,7 +234,8 @@ def insert_one(project, hg_changeset, git_changeset, db):
 
 
 def main():
-    """main entry point"""
+    """Main entry point
+    """
     logging.basicConfig(level=logging.INFO)
     log.info("Starting up...")
     run(host='localhost', port=8888, debug=True, reloader=True)
