@@ -1,9 +1,10 @@
+from flask import current_app
 from flask import Flask
+from flask import g
+from flask import jsonify
 from flask import redirect
 from flask import url_for
-from flask import current_app
-from flask import jsonify
-from relengapi.db import AppDb
+from relengapi.db import Alchemies
 import pkg_resources
 import relengapi.models.base
 import relengapi.models.scheduler
@@ -11,7 +12,7 @@ import relengapi.models.scheduler
 def create_app(cmdline=False):
     app = Flask('relengapi')
     app.config.from_envvar('RELENG_API_SETTINGS')
-    app.db = AppDb(app)
+    app.db = Alchemies(app)
 
     # set up the base DB's
     relengapi.models.base.init_app(app)
@@ -22,6 +23,10 @@ def create_app(cmdline=False):
         if cmdline:
             print " * registering blueprint", ep.name
         app.register_blueprint(ep.load(), url_prefix='/%s' % ep.name)
+
+    @app.before_request
+    def add_db():
+        g.db = app.db
 
     @app.route('/')
     def root():

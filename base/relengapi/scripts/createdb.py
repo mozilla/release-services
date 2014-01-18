@@ -9,7 +9,8 @@ def run(args):
     app = create_app(cmdline=True)
     with app.app_context():
         for dbname in app.db.database_names:
-            print " * creating tables for database %s"
+            print " * creating tables for database %s" % (dbname,)
             meta = app.db.meta[dbname]
+            print meta.tables.keys()
             with closing(app.db.connect(dbname)) as conn:
                 meta.create_all(bind=conn)

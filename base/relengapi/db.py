@@ -1,10 +1,10 @@
 import collections
 import sqlalchemy as sa
 
-class AppDb(object):
+class Alchemies(object):
     """
-    A container object that sits at app.db and handles access to metadata and
-    connection pools.
+    A container that handles access to SQLALchemy metadata and connection
+    pools.  This is available in requests at g.db.
 
     @ivar meta: dictionary of metadata instances for all defined databases, keyed
     by database name.  New instances are created on first access.
@@ -29,3 +29,13 @@ class AppDb(object):
     @property
     def database_names(self):
         return self.meta.keys()
+
+def register_model(bp, dbname):
+    """Register the decorated method to be called when setting up the database
+    schema for the given database."""
+    def wrap(fn):
+        @bp.record
+        def register_tables(state):
+            meta = state.app.db.meta[dbname]
+            fn(meta)
+    return wrap

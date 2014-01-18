@@ -32,7 +32,7 @@ and any Blueprints you want:
 
     pip install -e docs
 
-then run `relengapi` to run the server in the foreground.
+then run `relengapi serve` to run the server in the foreground.
 This tool has some command-line options that may be useful; see its `--help`.
 
 ### Writing a Blueprint

@@ -14,4 +14,24 @@ Users configure the SQLAlchemy database URIs using the ``SQLALCHEMY_DATABASE_URI
 Adding Tables
 -------------
 
-TBD
+To add tables, write a method in the blueprint that creates the Table objects, and register it with ``releng.db``::
+
+    from relengapi import db
+    @db.register_model(bp, 'mydatabase')
+    def model(metadata):
+        sa.Table('widgets', metadata,
+            sa.Column('id', sa.Integer, primary_key=True),
+            sa.Column('model', sa.Integer),
+            sa.Column('manufacture_date', sa.Integer, nullable=False),
+            sa.Column('serial', sa.String(100), nullable=False),
+        )
+        sa.Table('models', metadata,
+            sa.Column('id', sa.Integer, primary_key=True),
+            sa.Column('name', sa.String(100)),
+        )
+
+The arguments to ``register_model`` are the blueprint object and the name of the database containing the tables.
+To add tables to several database, repeat this process for each database.
+
+Note that the Table objects will be instantiated once per app.
+Do *not* treat them as module-global variables.
