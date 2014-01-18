@@ -18,61 +18,35 @@ RelengAPI is a Flask application.  It is composed of several Python packages.
 The base is `relengapi`.
 It implements the root app, and lots of other common features.
 It also searches its python environment for other packages that can provide blueprints for the Releng API.
-These act as plugins, adding extra endpoints to the API.
+These act as plugins, adding extra endpoints and other functionality to the API.
 
 The `relengapi-docs` package implements the documentation tree for the Releng API, and is a prototypical blueprint package.
 
 ### Running
 
-To run the tool for development, pip install the base:
+To run the tool for development, pip install the base into your virtualenv:
 
     pip install -e base
 
-and any Blueprints you want:
+and any blueprints you want:
 
     pip install -e docs
 
-then run `relengapi serve` to run the server in the foreground.
-This tool has some command-line options that may be useful; see its `--help`.
+Set up your settings file:
 
-### Writing a Blueprint
+    cp settings_example.py settings.py
+    vim settings.py
+    export RELENGAPI_SETTINGS=$PWD/settings.py
 
-If your blueprint will be meaty enough to deserve its own project, repo, and so forth, then start that now.
-Otherwise, add it to the relengapi project in a top-level directory.
+Create the databases for the installed blueprints:
 
-Add a `setup.py` similar to that in `docs/`.
-Name the package with a `relengapi-` prefix, so it's easy to find.
-The `install_requires` parameter should name both `Flask` and `relengapi`, as well as any other dependencies.
-The `namespace_packages` line allows multiple packages to share the same Python path:
+    relengapi createdb
 
-    namespace_packages=['relengapi.blueprints'],
+And finally run the server:
 
-Finally, include an entry point so that the base can find the blueprint:
+    relengapi serve -p 8010
 
-    entry_points={
-        "relengapi_blueprints": [
-            'mypackage = relengapi.blueprints.mypackage:bp',
-        ],
-    },
-
-The `relengapi.blueprints.mypackage:bp` in the above is an import path leading to the Blueprint object.
-
-Finally, create the directory structure:
-
-    relengapi/__init__.py
-    relengapi/blueprints/__init__.py
-    relengapi/blueprints/mypackage/__init__.py
-
-The first two of the `__init__.py` files must have *only* the following contents:
-
-    __import__('pkg_resources').declare_namespace(__name__)
-
-In the third, create your Blueprint:
-
-    from flask import Blueprint, jsonify
-    bp = Blueprint('docs', __name__)
-    @bp.route('/some/path')
-    def root():
-        return jsonify("HELLO")
-
-This function would be available at `/mypackage/some/path`.
+The `relengapi` tool has many useful subcommands.
+See its help for more information.
+If you've installed the `docs` blueprint, then the API documents itself via HTTP -- just visit with a browser.
+See the Releng API documentation for more information on development and deployment of the releng API.
