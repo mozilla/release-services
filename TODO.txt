@@ -1,10 +1,9 @@
-- tokens for POSTs, check 
-
-- implement the slaveapi API so we have something to play with
+- CSRF tokens for POSTs, check 
+- implement the clobberer user API so we have something to play with
 - auth (oAuth2?)
 - simple proxying support
 - finish docs w/ decent UI
-- repeating tasks
-- config handling
-- docs should render rst
-  - include dynamic link to table structure?
+- scheduled tasks
+- config handling - subcommand to generate an example config file
+- docs should render rst?  Or just sphinx and rtd?
+  - include dynamic link to or generation of table structure?

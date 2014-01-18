@@ -16,6 +16,9 @@ setup(
     test_suite='nose.collector',
     namespace_packages=['relengapi.blueprints'],
     entry_points={
+        "relengapi_blueprints": [
+            'base = relengapi.blueprints.base:bp',
+        ],
         "console_scripts": [
             'relengapi = relengapi.scripts.base:main',
         ],

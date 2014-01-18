@@ -6,17 +6,11 @@ from flask import redirect
 from flask import url_for
 from relengapi.db import Alchemies
 import pkg_resources
-import relengapi.models.base
-import relengapi.models.scheduler
 
 def create_app(cmdline=False):
     app = Flask('relengapi')
     app.config.from_envvar('RELENG_API_SETTINGS')
     app.db = Alchemies(app)
-
-    # set up the base DB's
-    relengapi.models.base.init_app(app)
-    relengapi.models.scheduler.init_app(app)
 
     # get blueprints from pkg_resources
     for ep in pkg_resources.iter_entry_points('relengapi_blueprints'):
@@ -38,12 +32,5 @@ def create_app(cmdline=False):
         meta = {}
         meta['blueprints'] = current_app.blueprints.keys()
         return jsonify(meta)
-
-    @app.route('/testy')
-    def testy():
-        "Some DB test stuff"
-        conn = app.db.connect('scheduler')
-        res = conn.execute(app.db.meta['scheduler'].tables['builds'].select())
-        return jsonify(data=list(map(tuple, res.fetchall())))
 
     return app
