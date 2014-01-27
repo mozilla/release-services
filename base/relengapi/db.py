@@ -30,6 +30,9 @@ class Alchemies(object):
     def database_names(self):
         return self.meta.keys()
 
+def make_db(app):
+    return Alchemies(app)
+
 def register_model(bp, dbname):
     """Register the decorated method to be called when setting up the database
     schema for the given database."""
