@@ -6,8 +6,11 @@ Releng API Configuration should be stored in a file pointed to by the ``RELENG_A
 This is a typical Flask configuration file: a Python file from which any uppercase variables are extracted as configuration parameters.
 For example::
 
-    DEBUG = False
-    SQLALCHEMY_DATABASE_URI = 'sqlite:////var/lib/relengapi/relengapi.db'
+    SQLALCHEMY_DATABASE_URIS = {
+        'relengapi': 'sqlite:////var/lib/relengapi/relengapi.db',
+    }
+    CELERY_BROKER_URL='amqp://'
+    CELERY_BACKEND='amqp'
 
 Base Configuration
 ------------------
@@ -15,19 +18,18 @@ Base Configuration
 Databases
 .........
 
-Releng API uses Flask-SQLAlchemy to access databases, so all of the options described in `Flask-SQLAlchemy <http://pythonhosted.org/Flask-SQLAlchemy/config.html>`_ are available.
+Releng API, as a kind of glue, generally connects to a numnber of databases.
+Each database has a short name, and requires that a longer SQLAlchemy URL be configured for it.
 
-The required configuration items are:
+This is done in the ``SQLALCHEMY_DATABASE_URIS`` configuration, which is a dictionary mapping names to URLs.
 
-* ``SQLALCHEMY_DATABASE_URI`` - the SQLAlchemy database URI for the "main" Releng API database
+The databases for the base blueprint are
 
-* ``SQLALCHEMY_BINDS`` - a dictionary of SQLAlchemy URIs for other, external databases that the API may use.
-  The available dictionary keys are for the "common" databases:
-
+  * ``relengapi`` - the Releng API's own DB
   * ``scheduler`` - the Buildbot scheduler DB
   * ``status`` - the Buildbot status DB
 
-  Blueprints may require additional bind URIs.
+Other blueprints may require additional bind URIs.
 
 Library Configuration
 ---------------------
@@ -46,4 +48,3 @@ Each blueprint will have its own configuration variables, prefixed by the name o
 These are described in the blueprint's own documentation.
 
 Such configuration parameters are included in the same file.
-
