@@ -1,15 +1,34 @@
+import sqlalchemy as sa
 from contextlib import closing
 from relengapi import db
 from relengapi import subcommands
 from flask import Blueprint
 from flask import current_app
-from . import models
 
 bp = Blueprint('base', __name__)
 
-db.register_model(bp, 'relengapi')(models.relengapi_model)
-db.register_model(bp, 'scheduler')(models.scheduler_model)
+builds = db.Table('relengapi:builds',
+    sa.Column('id', sa.Integer, primary_key=True),
+    sa.Column('master', sa.String(100)),
+)
 
+fun = db.Table('relengapi:fun',
+    sa.Column('id', sa.Integer, primary_key=True),
+    sa.Column('master', sa.String(100)),
+)
+
+more_builds = db.Table('relengapi:more_builds',
+    sa.Column('id', sa.Integer, primary_key=True),
+    sa.Column('master', sa.String(100)),
+)
+
+sch_builds = db.Table('scheduler:builds',
+    sa.Column('id', sa.Integer, primary_key=True),
+    sa.Column('number', sa.Integer, nullable=False),
+    sa.Column('brid', sa.Integer, nullable=False),
+    sa.Column('start_time', sa.Integer, nullable=False),
+    sa.Column('finish_time', sa.Integer),
+)
 
 class ServeSubcommand(subcommands.Subcommand):
     
@@ -42,6 +61,5 @@ class CreateDBSubcommand(subcommands.Subcommand):
         for dbname in current_app.db.database_names:
             print " * creating tables for database %s" % (dbname,)
             meta = current_app.db.meta[dbname]
-            print meta.tables.keys()
             with closing(current_app.db.connect(dbname)) as conn:
                 meta.create_all(bind=conn)

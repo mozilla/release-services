@@ -1,5 +1,17 @@
 import collections
+from werkzeug.local import LocalProxy
+from flask import current_app
 import sqlalchemy as sa
+
+_registered_tables = {}
+def Table(dbname_tablename, *args, **kwargs):
+    """
+    Create a per-app proxy to a sqlalchemy.Table object.
+    """
+    assert dbname_tablename.count(':') == 1, "Table must be called with 'dbname:tablename'"
+    _registered_tables[dbname_tablename] = (args, kwargs)
+    return LocalProxy(lambda: current_app.db.tables[dbname_tablename])
+
 
 class Alchemies(object):
     """
@@ -10,12 +22,23 @@ class Alchemies(object):
     by database name.  New instances are created on first access.
 
     @ivar database_names: a list of all defined database names
+
+    @ivar tables: a dictionary of Table instances, keyed by 'dbname:tablename' strings
+    or at two levels e.g., ``g.db.tables['somedb']['sometable']``
     """
 
     def __init__(self, app):
         self.app = app
         self.meta = collections.defaultdict(lambda: sa.MetaData())
+        self.tables = {}
         self._engines = {}
+
+        # instantiate table instances for all registered tables
+        for dbname_tablename, (args, kwargs) in _registered_tables.iteritems():
+            dbname, tablename = dbname_tablename.split(':')
+            tbl = sa.Table(tablename, self.meta[dbname], *args, **kwargs)
+            self.tables[dbname_tablename] = tbl
+            self.tables.setdefault(dbname, {})[tablename] = tbl
 
     def connect(self, dbname):
         "Check out an SQLAlchemy connection to the given DB from the pool"
@@ -32,13 +55,3 @@ class Alchemies(object):
 
 def make_db(app):
     return Alchemies(app)
-
-def register_model(bp, dbname):
-    """Register the decorated method to be called when setting up the database
-    schema for the given database."""
-    def wrap(fn):
-        @bp.record
-        def register_tables(state):
-            meta = state.app.db.meta[dbname]
-            fn(meta)
-    return wrap

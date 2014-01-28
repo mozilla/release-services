@@ -14,24 +14,33 @@ Users configure the SQLAlchemy database URIs using the ``SQLALCHEMY_DATABASE_URI
 Adding Tables
 -------------
 
-To add tables, write a method in the blueprint that creates the Table objects, and register it with ``releng.db``::
+To add tables, define them just like you would an ``sqlalchemy.Table``, but use ``db.Table`` instead.
+As a tablename, pass a colon-separated string containing the database name and table name, e.g.,  ``relengapi:users``.
+Do not pass a metadata instance.
+For example:
 
     from relengapi import db
-    @db.register_model(bp, 'mydatabase')
-    def model(metadata):
-        sa.Table('widgets', metadata,
-            sa.Column('id', sa.Integer, primary_key=True),
-            sa.Column('model', sa.Integer),
-            sa.Column('manufacture_date', sa.Integer, nullable=False),
-            sa.Column('serial', sa.String(100), nullable=False),
-        )
-        sa.Table('models', metadata,
-            sa.Column('id', sa.Integer, primary_key=True),
-            sa.Column('name', sa.String(100)),
-        )
+    users = db.Table('relengapi:users',
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('username', sa.String(100)),
+        sa.Column('passowrd', sa.String(100)),  # cleartext, of course! ;)
+    )
 
-The arguments to ``register_model`` are the blueprint object and the name of the database containing the tables.
-To add tables to several database, repeat this process for each database.
+Using Tables
+------------
 
-Note that the Table objects will be instantiated once per app.
-Do *not* treat them as module-global variables.
+Now, in an application context (for example, in a request), you can either use a global variable defined as above:
+
+    @bp.route('/users')
+    def users():
+        conn = g.db.connection('relengapi')
+        r = conn.execute(users.select()).fetchall()
+        ...
+
+Or, if the table isn't in scope, fetch it from ``g.db.tables``, which is indexed both by colon-separated names and as a two-level dictionary::
+
+    tbl = g.db.tables['relengapi:users']
+    tbl = g.db.tables['relengapi']['users']
+
+In either case, you'll need a connection to the the selected database.
+You can get that from ``g.db.connect(dbname)``, as illustrated above.
