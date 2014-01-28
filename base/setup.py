@@ -20,7 +20,7 @@ setup(
             'base = relengapi.blueprints.base:bp',
         ],
         "console_scripts": [
-            'relengapi = relengapi.scripts.base:main',
+            'relengapi = relengapi.subcommands:main',
         ],
     },
 )
