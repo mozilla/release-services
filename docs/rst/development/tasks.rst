@@ -8,18 +8,18 @@ The implementation of tasks within Releng API is very close to that documented f
 Defining Tasks
 --------------
 
-Tasks are defined in blueprints with a *slightly* different decorator than that suggested by the Celery documentation:
+Tasks are defined in blueprints using a decorator from ``relengapi.celery``, rather than that suggested by the Celery documentation:
 
     from relengapi import celery
-    bp = Blueprint('myblueprint', __name__)
 
-    @celery.task(bp)
+    @celery.task
     def add(x, y, z):
         return x + y + z
 
+Other than using a different decorator, everything else remains the same.
 You can also pass options, just as for Celery's ``task`` decorator:
 
-    @celery.task(bp, serializer='json')
+    @celery.task(serializer='json')
     def add(x, y, z):
         return x + y + z
 

@@ -11,14 +11,16 @@ import pkg_resources
 def create_app(cmdline=False):
     app = Flask('relengapi')
     app.config.from_envvar('RELENG_API_SETTINGS')
-    app.db = db.make_db(app)
-    app.celery = celery.make_celery(app)
 
     # get blueprints from pkg_resources
     for ep in pkg_resources.iter_entry_points('relengapi_blueprints'):
         if cmdline:
             print " * registering blueprint", ep.name
         app.register_blueprint(ep.load(), url_prefix='/%s' % ep.name)
+
+    # add the necessary components to the app
+    app.db = db.make_db(app)
+    app.celery = celery.make_celery(app)
 
     @app.before_request
     def add_db():

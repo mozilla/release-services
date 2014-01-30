@@ -6,6 +6,8 @@ import types
 import sys
 from celery import Celery
 
+_defined_tasks = {}
+
 def make_celery(app):
     broker = app.config.get('CELERY_BROKER_URL', 'memory://')
     celery = Celery(app.import_name, broker=broker)
@@ -17,22 +19,30 @@ def make_celery(app):
             with app.app_context():
                 return TaskBase.__call__(self, *args, **kwargs)
     celery.Task = ContextTask
-    app.celery_tasks = {}
+    app.celery_tasks = dict((fn, celery.task(**kwargs)(fn))
+                             for (fn, kwargs) in _defined_tasks.iteritems())
     return celery
 
-def task(bp, *args, **kwargs):
+
+def task(*args, **kwargs):
     """Register the decorated method as a celery task; use this just like
     app.task, but always pass the blueprint.  Any arguments beyond the first
     will be treated as arguments to app.task"""
-    # This is a little tricky; the decorator returns a LocalProxy that will look
-    # up the appropriate Celery task object, using the app.celery_tasks dictionary.
-    def wrap(fn):
-        @bp.record
-        def register(state):
-            task = state.app.celery.task(*args, **kwargs)(fn)
-            state.app.celery_tasks[fn] = task
-        return LocalProxy(lambda: current_app.celery_tasks[fn])
-    return wrap
+    def inner(**kwargs):
+        def wrap(fn):
+            _defined_tasks[fn] = kwargs
+            return LocalProxy(lambda: current_app.celery_tasks[fn])
+        return wrap
+    # remainder of this function is adapted from celery/app/base.py (BSD-licensed)
+    if len(args) == 1:
+        if callable(args[0]):
+            return inner(**kwargs)(*args)
+        raise TypeError('argument 1 to @db.task() must be a callable')
+    if args:
+        raise TypeError(
+            '@db.task() takes exactly 1 argument ({0} given)'.format(
+                sum([len(args), len(kwargs)])))
+    return inner(**kwargs)
 
 
 # Replace this module with a subclass, so that we can add an 'celery' property
@@ -40,14 +50,17 @@ def task(bp, *args, **kwargs):
 # -A relengapi worker' work as expected.  This, too, is a bit tricky but the
 # result is elegant.
 
+import logging
+l = logging.getLogger("")
 class PropModule(types.ModuleType):
 
     @property
     def celery(self):
         import relengapi.app
-        app = relengapi.app.create_app()
+        app = relengapi.app.create_app(True)
         return app.celery
 
 old_module = sys.modules[__name__]
 new_module = PropModule(__name__)
 new_module.__dict__.update(old_module.__dict__)
+sys.modules[__name__] = new_module

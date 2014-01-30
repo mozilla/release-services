@@ -1,6 +1,7 @@
 import sqlalchemy as sa
 from contextlib import closing
 from relengapi import db
+from relengapi import celery
 from relengapi import subcommands
 from flask import Blueprint
 from flask import current_app
