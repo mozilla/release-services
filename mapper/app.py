@@ -153,6 +153,16 @@ def get_rev(project, vcs, rev, db):
 @route('/<project>/mapfile/full')
 def get_full_mapfile(project, db):
     """Get a full mapfile. <project> can be a comma-delimited set of projects
+
+    Args:
+        project: comma-delimited project names(s) string
+        db: the bottle_mysql db connection
+
+    Yields:
+        full mapfile from _build_mapfile
+
+    Exceptions:
+        HTTPError: No results found, via _build_mapfile
     """
     query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id AND %s ORDER BY git_changeset;' % _get_project_name_sql(project)
     db.execute(query)
@@ -164,6 +174,19 @@ def get_full_mapfile(project, db):
 @route('/<project>/mapfile/since/<date>')
 def get_mapfile_since(project, date, db):
     """Get a mapfile since date.  <project> can be a comma-delimited set of projects
+
+    Args:
+        project: comma-delimited project names(s) string
+        date: "a DATE string, a DATETIME string, a TIMESTAMP, or a number in the format YYMMDD or YYYYMMDD."
+          https://dev.mysql.com/doc/refman/5.5/en/date-and-time-functions.html#function_unix-timestamp
+          https://dev.mysql.com/doc/refman/5.5/en/datetime.html
+        db: the bottle_mysql db connection
+
+    Yields:
+        Partial mapfile since date, from _build_mapfile
+
+    Exceptions:
+        HTTPError: No results found, via _build_mapfile
     """
     query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id AND %s AND date_added >= unix_timestamp(%%s) ORDER BY git_changeset;' % _get_project_name_sql(project)
     db.execute(query, (date, ))
@@ -174,6 +197,17 @@ def get_mapfile_since(project, date, db):
 
 def _insert_many(project, db, dups=False):
     """Update the db with many lines.
+
+    Args:
+        project: single project name string (not comma-delimited list)
+        db: the bottle_mysql db connection
+        dups: boolean.  If False, abort on duplicate entries.
+
+    Returns:
+        A string of unsuccessful entries.
+
+    Exceptions:
+        HTTPError: if dups=False and there were duplicate entries.
     """
     unsuccessful = ""
     for line in request.body.readlines():
@@ -199,7 +233,18 @@ def _insert_many(project, db, dups=False):
 @attach_required
 @route('/<project>/insert', method='POST')
 def insert_many_no_dups(project, db):
-    """
+    """Insert many mapfile entries via POST, and error on duplicate SHAs.
+
+    Args:
+        project: single project name string (not comma-delimited list)
+        db: the bottle_mysql db connection
+        POST data: mapfile lines (hg_changeset git_changeset\n)
+
+    Returns:
+        A string of unsuccessful entries.
+
+    Exceptions:
+        HTTPError: if there were duplicate entries.
     """
     return _insert_many(project, db, dups=False)
 
@@ -209,7 +254,15 @@ def insert_many_no_dups(project, db):
 @attach_required
 @route('/<project>/insert/ignoredups', method='POST')
 def insert_many_allow_dups(project, db):
-    """
+    """Insert many mapfile entries via POST, and don't error on duplicate SHAs.
+
+    Args:
+        project: single project name string (not comma-delimited list)
+        db: the bottle_mysql db connection
+        POST data: mapfile lines (hg_changeset git_changeset\n)
+
+    Returns:
+        A string of unsuccessful entries.
     """
     return _insert_many(project, db, dups=True)
 
