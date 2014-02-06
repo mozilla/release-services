@@ -1,3 +1,4 @@
+import os
 from flask import current_app
 from flask import Flask
 from flask import g
@@ -17,6 +18,11 @@ def create_app(cmdline=False):
         if cmdline:
             print " * registering blueprint", ep.name
         app.register_blueprint(ep.load(), url_prefix='/%s' % ep.name)
+
+    # set up a random session key if none is specified
+    if not app.config.get('SECRET_KEY'):
+        print " * WARNING: setting per-process session key"
+        app.secret_key = os.urandom(24)
 
     # add the necessary components to the app
     app.db = db.make_db(app)
