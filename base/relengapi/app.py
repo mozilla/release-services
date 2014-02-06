@@ -5,9 +5,14 @@ from flask import g
 from flask import jsonify
 from flask import redirect
 from flask import url_for
+from flask_oauthlib.provider import OAuth2Provider
 from relengapi import celery
 from relengapi import db
 import pkg_resources
+import relengapi
+
+# set up the 'relengapi' namespace; it's a namespaced module, so no code is allowed in __init__.py
+relengapi.oauth = OAuth2Provider()
 
 def create_app(cmdline=False):
     app = Flask('relengapi')
@@ -27,6 +32,7 @@ def create_app(cmdline=False):
     # add the necessary components to the app
     app.db = db.make_db(app)
     app.celery = celery.make_celery(app)
+    relengapi.oauth.init_app(app)
 
     @app.before_request
     def add_db():
