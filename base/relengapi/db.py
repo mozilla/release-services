@@ -1,57 +1,47 @@
 import collections
-from werkzeug.local import LocalProxy
-from flask import current_app
 import sqlalchemy as sa
+from sqlalchemy import orm
+from sqlalchemy.orm import scoping
+from sqlalchemy.ext.declarative import declarative_base
 
-_registered_tables = {}
-def Table(dbname_tablename, *args, **kwargs):
-    """
-    Create a per-app proxy to a sqlalchemy.Table object.
-    """
-    assert dbname_tablename.count(':') == 1, "Table must be called with 'dbname:tablename'"
-    _registered_tables[dbname_tablename] = (args, kwargs)
-    return LocalProxy(lambda: current_app.db.tables[dbname_tablename])
+
+_declarative_bases = collections.defaultdict(declarative_base)
+def declarative_base(dbname):
+    return _declarative_bases[dbname]
 
 
 class Alchemies(object):
     """
     A container that handles access to SQLALchemy metadata and connection
-    pools.  This is available in requests at g.db.
-
-    @ivar meta: dictionary of metadata instances for all defined databases, keyed
-    by database name.  New instances are created on first access.
-
-    @ivar database_names: a list of all defined database names
-
-    @ivar tables: a dictionary of Table instances, keyed by 'dbname:tablename' strings
-    or at two levels e.g., ``g.db.tables['somedb']['sometable']``
+    pools.  This is available in requests at g.db, or as current_app.db.
     """
 
     def __init__(self, app):
         self.app = app
-        self.meta = collections.defaultdict(lambda: sa.MetaData())
-        self.tables = {}
         self._engines = {}
 
-        # instantiate table instances for all registered tables
-        for dbname_tablename, (args, kwargs) in _registered_tables.iteritems():
-            dbname, tablename = dbname_tablename.split(':')
-            tbl = sa.Table(tablename, self.meta[dbname], *args, **kwargs)
-            self.tables[dbname_tablename] = tbl
-            self.tables.setdefault(dbname, {})[tablename] = tbl
+        # set up a session for each db, using scoped_session (based on the
+        # thread ID)
+        self.session = {}
+        for dbname in self.database_names:
+            Session = orm.sessionmaker(bind=self.engine(dbname))
+            self.session[dbname] = scoping.scoped_session(Session)
 
-    def connect(self, dbname):
-        "Check out an SQLAlchemy connection to the given DB from the pool"
-        # TODO: attach to app context and close after
+    def engine(self, dbname):
+        # lazily set up engines
         if dbname not in self._engines:
             uri = self.app.config['SQLALCHEMY_DATABASE_URIS'][dbname]
             self._engines[dbname] = sa.create_engine(uri)
-        conn = self._engines[dbname].connect()
-        return conn
+        return self._engines[dbname]
 
     @property
     def database_names(self):
-        return self.meta.keys()
+        return _declarative_bases.keys()
+
+    @property
+    def metadata(self):
+        return dict((k, v.metadata) for k, v in _declarative_bases.iteritems())
+
 
 def make_db(app):
     return Alchemies(app)

@@ -1,35 +1,9 @@
-import sqlalchemy as sa
-from contextlib import closing
-from relengapi import db
-from relengapi import celery
 from relengapi import subcommands
 from flask import Blueprint
 from flask import current_app
 
+
 bp = Blueprint('base', __name__)
-
-builds = db.Table('relengapi:builds',
-    sa.Column('id', sa.Integer, primary_key=True),
-    sa.Column('master', sa.String(100)),
-)
-
-fun = db.Table('relengapi:fun',
-    sa.Column('id', sa.Integer, primary_key=True),
-    sa.Column('master', sa.String(100)),
-)
-
-more_builds = db.Table('relengapi:more_builds',
-    sa.Column('id', sa.Integer, primary_key=True),
-    sa.Column('master', sa.String(100)),
-)
-
-sch_builds = db.Table('scheduler:builds',
-    sa.Column('id', sa.Integer, primary_key=True),
-    sa.Column('number', sa.Integer, nullable=False),
-    sa.Column('brid', sa.Integer, nullable=False),
-    sa.Column('start_time', sa.Integer, nullable=False),
-    sa.Column('finish_time', sa.Integer),
-)
 
 class ServeSubcommand(subcommands.Subcommand):
     
@@ -61,6 +35,6 @@ class CreateDBSubcommand(subcommands.Subcommand):
     def run(self, parser, args):
         for dbname in current_app.db.database_names:
             print " * creating tables for database %s" % (dbname,)
-            meta = current_app.db.meta[dbname]
-            with closing(current_app.db.connect(dbname)) as conn:
-                meta.create_all(bind=conn)
+            meta = current_app.db.metadata[dbname]
+            engine = current_app.db.engine(dbname)
+            meta.create_all(bind=engine)
