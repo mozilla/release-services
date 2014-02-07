@@ -5,6 +5,7 @@ from flask import current_app
 
 bp = Blueprint('base', __name__)
 
+
 class ServeSubcommand(subcommands.Subcommand):
     
     def make_parser(self, subparsers):
@@ -38,3 +39,7 @@ class CreateDBSubcommand(subcommands.Subcommand):
             meta = current_app.db.metadata[dbname]
             engine = current_app.db.engine(dbname)
             meta.create_all(bind=engine)
+
+# XXX temporary
+import logging
+logging.basicConfig(level=logging.DEBUG)

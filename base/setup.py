@@ -9,6 +9,7 @@ setup(
     url='https://api.pub.build.mozilla.org',
     install_requires=[
         "Flask",
+        "Flask-OAuthlib",
     ],
     tests_require=["nose", "mock"],
     packages=find_packages(),
@@ -18,6 +19,7 @@ setup(
     entry_points={
         "relengapi_blueprints": [
             'base = relengapi.blueprints.base:bp',
+            'oauth = relengapi.blueprints.oauth:bp',
         ],
         "console_scripts": [
             'relengapi = relengapi.subcommands:main',
