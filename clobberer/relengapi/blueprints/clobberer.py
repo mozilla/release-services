@@ -4,13 +4,7 @@ from flask import Blueprint
 
 bp = Blueprint('clobberer', __name__)
 
-@db.register_model(bp, 'clobberer')
-def model(metadata):
-    sa.Table('builds', metadata,
-        sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('master', sa.String(100)),
-    )
-    sa.Table('more_builds', metadata,
-        sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('master', sa.String(100)),
-    )
+class Builds(db.declarative_base('clobberer')):
+    __tablename__ = 'builds'
+    id = sa.Column(sa.Integer, primary_key=True)
+    master = sa.Column(sa.String(100))
