@@ -9,25 +9,23 @@ from flask import jsonify
 from flask import current_app
 from relengapi import db
 from relengapi import login_manager
+from relengapi import browser_id
 from werkzeug.security import gen_salt
 import sqlalchemy as sa
 from flask.ext.login import UserMixin
-from flask.ext.login import login_user
-from flask.ext.login import logout_user
+from flask.ext.login import current_user
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from datetime import timedelta
 
 
-bp = Blueprint('browserid', __name__, template_folder='templates')
+bp = Blueprint('userauth', __name__, template_folder='templates')
 
 # configure the login manager
-login_manager.login_view = 'browserid.login'
-login_manager.logout_view = 'browserid.logout'
+login_manager.login_view = 'userauth.login_request'
 login_manager.login_message = 'Please authenticate to the Releng API before proceeding'
 login_manager.get_user = lambda user_id: login_manager.user_callback(user_id)
 
-@login_manager.user_loader
 class User(UserMixin):
 
     def __init__(self, authenticated_email):
@@ -36,18 +34,18 @@ class User(UserMixin):
     def get_id(self):
         return unicode(self.authenticated_email)
 
+@login_manager.user_loader
+def login_manager_user_loader(authenticated_email):
+    return User(authenticated_email)
 
-@bp.route('/login', methods=('GET', 'POST'))
-def login():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        login_user(User(email))
-        return redirect(request.args.get('next') or url_for('root'))
-    return render_template('login.html')
+@browser_id.user_loader
+def browser_id_user_loader(login_info):
+    if login_info['status'] != 'okay':
+        return None
+    return User(login_info['email'])
 
-
-@bp.route('/logout', methods=('GET', 'POST'))
-def logout():
-    logout_user()
-    return redirect(url_for('root'))
-
+@bp.route('/')
+def login_request():
+    if current_user.is_authenticated() and request.args.get('next'):
+        return redirect(request.args['next'])
+    return render_template('login_request.html')

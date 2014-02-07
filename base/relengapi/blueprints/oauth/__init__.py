@@ -184,6 +184,7 @@ def save_token(token, request, *args, **kwargs):
 @bp.route('/', methods=('GET',))
 @login_required
 def home():
+    print session
     return render_template('home.html')
 
 
