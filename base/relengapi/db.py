@@ -1,13 +1,27 @@
-import collections
 import sqlalchemy as sa
+from flask import current_app
 from sqlalchemy import orm
 from sqlalchemy.orm import scoping
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext import declarative
 
 
-_declarative_bases = collections.defaultdict(declarative_base)
+class _QueryProperty(object):
+
+    def __init__(self, dbname):
+        self.dbname = dbname
+    
+    def __get__(self, obj, cls):
+        return current_app.db.session[self.dbname].query(cls)
+
+
+_declarative_bases = {}
 def declarative_base(dbname):
-    return _declarative_bases[dbname]
+    try:
+        return _declarative_bases[dbname]
+    except KeyError:
+        _declarative_bases[dbname] = b = declarative.declarative_base()
+        b.query = _QueryProperty(dbname)
+        return b
 
 
 class Alchemies(object):

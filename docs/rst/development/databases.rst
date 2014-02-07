@@ -37,7 +37,7 @@ The session is available from ``g.db.sessions``, keyed by database name.
 For example::
 
     @bp.route('/add/foo')
-    def funsies():
+    def add_foo():
         session = g.db.session['relengapi']
 
         u = User()
@@ -49,6 +49,13 @@ For example::
         return 'ok'
 
 As you might expect, bad things will happen if you try to use tables from one database with a session for another database.
+
+As a shortcut, each table object has a ``query`` property which is automatically bound to the table and session; this is similar to the property provided by Flask-SQLAlchemy::
+
+    @bp.route('/get/foo')
+    def get_foo():
+        u = User.query.filter_by(name='Foo').get()
+        return jsonify(userid=u.id)
 
 Engines, MetaData, etc.
 -----------------------
