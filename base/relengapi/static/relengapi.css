@@ -1,0 +1,23 @@
+body {
+    /* Background image courtesy of flickr user Compound Eye,
+     * http://flickr.com/photos/paopix/199190129 */
+    background: #FFF url('background.jpg') no-repeat fixed top left;
+}
+
+div.header .auth {
+    float: right;
+    margin: 1em;
+    border: 3px solid #AAA;
+    background-color: #EEE;
+    padding: 6px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+div.header h1 {
+    border: 3px solid #AAA;
+    background-color: #EFF;
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
+}

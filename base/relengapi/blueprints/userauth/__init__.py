@@ -43,9 +43,3 @@ def browser_id_user_loader(login_info):
     if login_info['status'] != 'okay':
         return None
     return User(login_info['email'])
-
-@bp.route('/')
-def login_request():
-    if current_user.is_authenticated() and request.args.get('next'):
-        return redirect(request.args['next'])
-    return render_template('login_request.html')

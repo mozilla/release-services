@@ -1,10 +1,7 @@
 import os
-from flask import current_app
 from flask import Flask
 from flask import g
-from flask import jsonify
-from flask import redirect
-from flask import url_for
+from flask import render_template
 from flask_oauthlib.provider import OAuth2Provider
 from relengapi import celery
 from relengapi import db
@@ -19,7 +16,7 @@ relengapi.login_manager = LoginManager()
 relengapi.browser_id = BrowserID()
 
 def create_app(cmdline=False):
-    app = Flask('relengapi')
+    app = Flask(__name__)
     app.config.from_envvar('RELENG_API_SETTINGS')
 
     # get blueprints from pkg_resources
@@ -50,13 +47,6 @@ def create_app(cmdline=False):
 
     @app.route('/')
     def root():
-        return redirect(url_for('docs.root'))
-
-    @app.route('/meta')
-    def meta():
-        "API: Metadata about this RelengAPI instance"
-        meta = {}
-        meta['blueprints'] = current_app.blueprints.keys()
-        return jsonify(meta)
+        return render_template('root.html')
 
     return app
