@@ -6,7 +6,7 @@
 </head>
 <body>
   <p>Client: {{ client.client_id }}</p>
-  <p>User: {{ user.username }}</p>
+  <p>User: {{ current_user.authenticated_email }}</p>
   <form action="/oauth/authorize" method="post">
     <p>Allow access?</p>
     <input type="hidden" name="client_id" value="{{ client.client_id }}">

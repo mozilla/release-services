@@ -7,8 +7,11 @@ from flask import url_for
 from flask import request
 from flask import jsonify
 from flask import current_app
+from flask_login import current_user
+from flask_login import login_required
 from relengapi import db
 from relengapi import oauth
+from relengapi import login_manager
 from werkzeug.security import gen_salt
 import sqlalchemy as sa
 from sqlalchemy.orm import relationship
@@ -18,14 +21,9 @@ from datetime import timedelta
 
 bp = Blueprint('oauth', __name__, template_folder='templates')
 
-class User(db.declarative_base('relengapi')):
-    __tablename__ = 'users'
-    id = sa.Column(sa.Integer, primary_key=True)
-    username = sa.Column(sa.String(40), unique=True)
-
-
 class Client(db.declarative_base('relengapi')):
     __tablename__ = 'oauth2_clients'
+
     client_id = sa.Column(sa.String(40), primary_key=True)
     client_secret = sa.Column(sa.String(55), nullable=False)
 
@@ -55,12 +53,10 @@ class Client(db.declarative_base('relengapi')):
 
 class Grant(db.declarative_base('relengapi')):
     __tablename__ = 'oauth2_grants'
+
     id = sa.Column(sa.Integer, primary_key=True)
 
-    user_id = sa.Column(
-        sa.Integer, sa.ForeignKey('users.id', ondelete='CASCADE')
-    )
-    user = relationship('User')
+    user_email = sa.Column(sa.String(255), nullable=False)
 
     client_id = sa.Column(
         sa.String(40), sa.ForeignKey('oauth2_clients.client_id'),
@@ -86,9 +82,14 @@ class Grant(db.declarative_base('relengapi')):
             return self._scopes.split()
         return []
 
+    @property
+    def user(self):
+        return login_manager.get_user(self.user_email)
+
 
 class Token(db.declarative_base('relengapi')):
     __tablename__ = 'oauth2_tokens'
+
     id = sa.Column(sa.Integer, primary_key=True)
     client_id = sa.Column(
         sa.String(40), sa.ForeignKey('oauth2_clients.client_id'),
@@ -96,10 +97,7 @@ class Token(db.declarative_base('relengapi')):
     )
     client = relationship('Client')
 
-    user_id = sa.Column(
-        sa.Integer, sa.ForeignKey('users.id')
-    )
-    user = relationship('User')
+    user_email = sa.Column(sa.String(255), nullable=False)
 
     # currently only bearer is supported
     token_type = sa.Column(sa.String(40))
@@ -114,6 +112,10 @@ class Token(db.declarative_base('relengapi')):
         if self._scopes:
             return self._scopes.split()
         return []
+
+    @property
+    def user(self):
+        return login_manager.get_user(self.user_email)
 
 
 @oauth.clientgetter
@@ -135,7 +137,7 @@ def save_grant(client_id, code, request, *args, **kwargs):
         code=code['code'],
         redirect_uri=request.redirect_uri,
         _scopes=' '.join(request.scopes),
-        user=current_user(),
+        user_email=current_user.authenticated_email,
         expires=expires
     )
     g.db.session['relengapi'].add(grant)
@@ -155,7 +157,7 @@ def load_token(access_token=None, refresh_token=None):
 def save_token(token, request, *args, **kwargs):
     toks = Token.query.filter_by(
         client_id=request.client.client_id,
-        user_id=request.user.id
+        user_email=request.user.authenticated_email
     )
     # make sure that every client has only one token connected to a user
     for t in toks:
@@ -171,34 +173,19 @@ def save_token(token, request, *args, **kwargs):
         _scopes=token['scope'],
         expires=expires,
         client_id=request.client.client_id,
-        user_id=request.user.id,
+        user_email=request.user.authenticated_email,
     )
     g.db.session['relengapi'].add(tok)
     g.db.session['relengapi'].commit()
     return tok
 
 
-def current_user():
-    if 'id' in session:
-        uid = session['id']
-        return g.db.session['relengapi'].query(User).get(uid)
-    return None
-
-
-@bp.route('/', methods=('GET', 'POST'))
+# TODO: temporary
+@bp.route('/', methods=('GET',))
+@login_required
 def home():
-    dbsession = g.db.session['relengapi']
-    if request.method == 'POST':
-        username = request.form.get('username')
-        user = dbsession.query(User).filter_by(username=username).first()
-        if not user:
-            user = User(username=username)
-            dbsession.add(user)
-            dbsession.commit()
-        session['id'] = user.id
-        return redirect(url_for('oauth.home'))
-    user = current_user()
-    return render_template('home.html', user=user)
+    print session
+    return render_template('home.html')
 
 
 @bp.route('/client')
@@ -220,16 +207,12 @@ def client():
 
 
 @bp.route('/authorize', methods=['GET', 'POST'])
-#@require_login
+@login_required
 @oauth.authorize_handler
 def authorize(*args, **kwargs):
-    user = current_user()
-    if not user:
-        return redirect(url_for('oauth.home'))
     if request.method == 'GET':
         client_id = kwargs.get('client_id')
         kwargs['client'] = g.db.session['relengapi'].query(Client).filter_by(client_id=client_id).first()
-        kwargs['user'] = user
         return render_template('oauthorize.html', **kwargs)
 
     confirm = request.form.get('confirm', 'no')

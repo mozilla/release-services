@@ -10,6 +10,8 @@ setup(
     install_requires=[
         "Flask",
         "Flask-OAuthlib",
+        "Flask-Login",
+        "Flask-Browserid",
     ],
     tests_require=["nose", "mock"],
     packages=find_packages(),
@@ -20,6 +22,7 @@ setup(
         "relengapi_blueprints": [
             'base = relengapi.blueprints.base:bp',
             'oauth = relengapi.blueprints.oauth:bp',
+            'userauth = relengapi.blueprints.userauth:bp',
         ],
         "console_scripts": [
             'relengapi = relengapi.subcommands:main',

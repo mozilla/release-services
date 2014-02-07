@@ -1,4 +1,4 @@
-from flask import Flask, url_for, session, request, jsonify
+from flask import Flask, url_for, session, request, jsonify, redirect
 from flask_oauthlib.client import OAuth
 import requests
 
@@ -11,7 +11,7 @@ CLIENT_SECRET = j['client_secret']
 
 app = Flask(__name__)
 app.debug = True
-app.secret_key = 'secret'
+app.secret_key = 'secret3'
 oauth = OAuth(app)
 
 remote = oauth.remote_app(
@@ -30,7 +30,7 @@ remote = oauth.remote_app(
 def index():
     if 'remote_oauth' in session:
         resp = remote.get('secret')
-        return jsonify(resp.data)
+        return jsonify(data=resp.data)
     next_url = request.args.get('next') or request.referrer or None
     return remote.authorize(
         callback=url_for('authorized', next=next_url, _external=True)
@@ -48,7 +48,7 @@ def authorized(resp):
     if isinstance(resp, Exception):
         return 'Access denied: ' + resp.message
     session['remote_oauth'] = (resp['access_token'], '')
-    return jsonify(oauth_token=resp['access_token'])
+    return redirect('/')
 
 
 @remote.tokengetter
