@@ -15,7 +15,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     test_suite='nose.collector',
-    namespace_packages=['relengapi.blueprints'],
+    namespace_packages=['relengapi', 'relengapi.blueprints'],
     entry_points={
         "relengapi_blueprints": [
             'base = relengapi.blueprints.base:bp',
