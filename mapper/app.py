@@ -25,7 +25,7 @@ def _get_project_name_sql(project_name):
         A string to append to a SELECT sql call.
 
     Raises:
-        HTTPError: The project name has a quote mark in it. (via bottle.abort())
+        HTTPError 500: The project name has a quote mark in it. (via bottle.abort())
     """
     if '"' in project_name or "'" in project_name:
         abort(500, "Bad project name |%s|" % project_name)
@@ -46,7 +46,7 @@ def _build_mapfile(db, error_message):
         40 characters of git changeset sha, and a newline.
 
     Exceptions:
-        HTTPError: No results found, via bottle.abort().
+        HTTPError 404: No results found, via bottle.abort().
     """
     success = False
     while True:
@@ -86,7 +86,7 @@ def _check_well_formed_sha(sha, exact_length=40):
         None on success.
 
     Exceptions:
-        HTTPError: on non-well-formed sha, via bottle.abort()
+        HTTPError 400: on non-well-formed sha, via bottle.abort()
     """
     if not rev_regex.match(sha):
         abort(400, "Bad sha %s!" % str(sha))
@@ -105,6 +105,9 @@ def _insert_one(project, hg_changeset, git_changeset, db):
 
     Returns:
         The response from the db.execute() call.
+
+    Exceptions:
+        HTTPError 400: if a badly formed sha
     """
     _check_well_formed_sha(hg_changeset)
     _check_well_formed_sha(git_changeset)
@@ -130,7 +133,9 @@ def get_rev(project, vcs, rev, db):
         A db row if the query matches.
 
     Exceptions:
-        HTTPError: if an unknown vcs or bad sha or row not found.
+        HTTPError 500: if an unknown vcs
+        HTTPError 400: if a badly formed sha
+        HTTPError 404: if row not found.
     """
     if vcs not in ("git", "hg"):
         abort(500, "Unknown vcs %s" % vcs)
@@ -162,7 +167,7 @@ def get_full_mapfile(project, db):
         full mapfile from _build_mapfile
 
     Exceptions:
-        HTTPError: No results found, via _build_mapfile
+        HTTPError 404: No results found, via _build_mapfile
     """
     query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id AND %s ORDER BY git_changeset;' % _get_project_name_sql(project)
     db.execute(query)
@@ -186,7 +191,7 @@ def get_mapfile_since(project, date, db):
         Partial mapfile since date, from _build_mapfile
 
     Exceptions:
-        HTTPError: No results found, via _build_mapfile
+        HTTPError 404: No results found, via _build_mapfile
     """
     query = 'SELECT DISTINCT hg_changeset, git_changeset FROM hashes, projects WHERE projects.id=hashes.project_id AND %s AND date_added >= unix_timestamp(%%s) ORDER BY git_changeset;' % _get_project_name_sql(project)
     db.execute(query, (date, ))
@@ -207,7 +212,7 @@ def _insert_many(project, db, dups=False):
         A string of unsuccessful entries.
 
     Exceptions:
-        HTTPError: if dups=False and there were duplicate entries.
+        HTTPError 206: if dups=False and there were duplicate entries.
     """
     unsuccessful = ""
     for line in request.body.readlines():
@@ -244,7 +249,7 @@ def insert_many_no_dups(project, db):
         A string of unsuccessful entries.
 
     Exceptions:
-        HTTPError: if there were duplicate entries.
+        HTTPError 206: if there were duplicate entries.
     """
     return _insert_many(project, db, dups=False)
 
@@ -273,6 +278,20 @@ def insert_many_allow_dups(project, db):
 @route('/<project>/insert/:hg_changeset#[0-9a-f]+#/:git_changeset#[0-9a-f]+#')
 def insert_one(project, hg_changeset, git_changeset, db):
     """Insert a single row into the db
+
+    Args:
+        project: single project name string (not comma-delimited list)
+        hg_changeset: 40 char hexadecimal string.
+        git_changeset: 40 char hexadecimal string.
+        db: the bottle_mysql db connection
+        POST data: mapfile lines (hg_changeset git_changeset\n)
+
+    Returns:
+        A string row no success
+
+    Exceptions:
+        HTTPError 500: No results found, via bottle.abort().
+        HTTPError 400: Badly formed sha.
     """
     resp = _insert_one(project, hg_changeset, git_changeset, db)
     if isinstance(resp, tuple):
