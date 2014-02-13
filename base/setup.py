@@ -12,6 +12,7 @@ setup(
         "Flask-OAuthlib",
         "Flask-Login",
         "Flask-Browserid",
+        "SQLAlchemy",
         "Celery",
     ],
     tests_require=["nose", "mock"],
