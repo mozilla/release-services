@@ -12,6 +12,7 @@ setup(
         "Flask-OAuthlib",
         "Flask-Login",
         "Flask-Browserid",
+        "Celery",
     ],
     tests_require=["nose", "mock"],
     packages=find_packages(),
