@@ -14,6 +14,7 @@ setup(
         "Flask-Browserid",
         "SQLAlchemy",
         "Celery",
+        "argparse",
     ],
     tests_require=["nose", "mock"],
     packages=find_packages(),
