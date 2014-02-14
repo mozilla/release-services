@@ -1,7 +1,7 @@
 Application Configuration
 =========================
 
-Releng API Configuration should be stored in a file pointed to by the ``RELENG_API_SETTINGS`` variable.
+Releng API Configuration should be stored in a file pointed to by the ``RELENGAPI_SETTINGS`` variable.
 
 This is a typical Flask configuration file: a Python file from which any uppercase variables are extracted as configuration parameters.
 For example::

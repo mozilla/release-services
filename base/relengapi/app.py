@@ -17,7 +17,7 @@ relengapi.browser_id = BrowserID()
 
 def create_app(cmdline=False):
     app = Flask(__name__)
-    app.config.from_envvar('RELENG_API_SETTINGS')
+    app.config.from_envvar('RELENGAPI_SETTINGS')
 
     # get blueprints from pkg_resources
     for ep in pkg_resources.iter_entry_points('relengapi_blueprints'):

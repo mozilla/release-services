@@ -1,4 +1,4 @@
-releng_api.egg-info/
+relengapi.egg-info/
 *.pyc
 *.egg-info
 TODO.txt
