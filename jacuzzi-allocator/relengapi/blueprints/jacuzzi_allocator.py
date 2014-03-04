@@ -1,254 +1,64 @@
-import itertools
+from sqlalchemy import Column, Integer, String, Table, ForeignKey, Index
+from sqlalchemy.orm import relationship
 from flask import Blueprint
+from flask import g
 from flask import jsonify
-from flask import current_app
 from flask import abort
+from relengapi import db
 
 bp = Blueprint('jacuzzi-allocator', __name__)
 
-machines = {
-    'bld-linux64-ec2-001': {
-        'builders': [
-            'b2g_b2g-inbound_emulator_dep',
-            'Linux birch build',
-        ]},
-    'bld-linux64-ec2-002': {
-        'builders': [
-            'Linux b2g-inbound build',
-            'Linux b2g-inbound leak test build',
-        ]},
-    'bld-linux64-ec2-003': {
-        'builders': [
-            'b2g_b2g-inbound_hamachi_eng_dep',
-            'b2g_b2g-inbound_emulator-debug_dep',
-        ]},
-    'bld-linux64-ec2-004': {
-        'builders': [
-            'Linux b2g-inbound build',
-            'Linux b2g-inbound leak test build',
-        ]},
-    'bld-linux64-ec2-005': {
-        'builders': [
-            'b2g_b2g-inbound_hamachi_eng_dep',
-            'Linux birch build',
-        ]},
-    'bld-linux64-ec2-006': {
-        'builders': [
-            'Linux birch leak test build',
-            'Linux x86-64 birch build',
-        ]},
-    'bld-linux64-ec2-007': {
-        'builders': [
-            'Linux x86-64 birch leak test build',
-        ]},
-    'bld-linux64-ec2-008': {
-        'builders': [
-            'Linux x86-64 birch leak test build',
-        ]},
-    'bld-linux64-ec2-300': {
-        'builders': [
-            'b2g_b2g-inbound_emulator_dep',
-            'Linux birch build',
-        ]},
-    'bld-linux64-ec2-301': {
-        'builders': [
-            'Linux b2g-inbound build',
-            'Linux b2g-inbound leak test build',
-        ]},
-    'bld-linux64-ec2-303': {
-        'builders': [
-            'b2g_b2g-inbound_hamachi_eng_dep',
-            'b2g_b2g-inbound_emulator-debug_dep',
-        ]},
-    'bld-linux64-ec2-304': {
-        'builders': [
-            'b2g_b2g-inbound_emulator-debug_dep',
-            'b2g_b2g-inbound_emulator_dep',
-        ]},
-    'bld-linux64-ec2-305': {
-        'builders': [
-            'Linux birch leak test build',
-            'Linux x86-64 birch build',
-        ]},
-    'bld-linux64-ec2-306': {
-        'builders': [
-            'Linux birch leak test build',
-            'Linux x86-64 birch build',
-        ]},
-    'bld-linux64-ec2-307': {
-        'builders': [
-            'Linux x86-64 birch leak test build',
-        ]},
-    'bld-linux64-spot-001': {
-        'builders': [
-            'b2g_b2g-inbound_hamachi_eng_dep',
-            'b2g_b2g-inbound_emulator-debug_dep',
-        ]},
-    'bld-linux64-spot-002': {
-        'builders': [
-            'b2g_b2g-inbound_emulator_dep',
-            'Linux birch build',
-        ]},
-    'bld-linux64-spot-003': {
-        'builders': [
-            'b2g_b2g-inbound_emulator_dep',
-            'Linux birch build',
-        ]},
-    'bld-linux64-spot-004': {
-        'builders': [
-            'Linux b2g-inbound build',
-            'Linux b2g-inbound leak test build',
-        ]},
-    'bld-linux64-spot-005': {
-        'builders': [
-            'Linux b2g-inbound build',
-            'Linux b2g-inbound leak test build',
-        ]},
-    'bld-linux64-spot-006': {
-        'builders': [
-            'Linux b2g-inbound build',
-            'Linux b2g-inbound leak test build',
-        ]},
-    'bld-linux64-spot-007': {
-        'builders': [
-            'b2g_b2g-inbound_emulator-debug_dep',
-            'b2g_b2g-inbound_emulator_dep',
-        ]},
-    'bld-linux64-spot-008': {
-        'builders': [
-            'b2g_b2g-inbound_hamachi_eng_dep',
-            'Linux birch build',
-        ]},
-    'bld-linux64-spot-009': {
-        'builders': [
-            'Linux birch leak test build',
-            'Linux x86-64 birch build',
-        ]},
-    'bld-linux64-spot-010': {
-        'builders': [
-            'Linux birch leak test build',
-            'Linux x86-64 birch build',
-        ]},
-    'bld-linux64-spot-011': {
-        'builders': [
-            'Linux birch leak test build',
-            'Linux x86-64 birch build',
-        ]},
-    'bld-linux64-spot-012': {
-        'builders': [
-            'Linux x86-64 birch leak test build',
-        ]},
-    'bld-linux64-spot-013': {
-        'builders': [
-            'Linux x86-64 birch leak test build',
-        ]},
-    'bld-linux64-spot-014': {
-        'builders': [
-            'Linux x86-64 birch leak test build',
-        ]},
-    'bld-linux64-spot-016': {
-        'builders': [
-            'b2g_b2g-inbound_hamachi_eng_dep',
-            'b2g_b2g-inbound_emulator-debug_dep',
-        ]},
-    'bld-linux64-spot-300': {
-        'builders': [
-            'b2g_b2g-inbound_emulator_dep',
-            'Linux birch build',
-        ]},
-    'bld-linux64-spot-301': {
-        'builders': [
-            'Linux b2g-inbound build',
-            'Linux birch build',
-        ]},
-    'bld-linux64-spot-302': {
-        'builders': [
-            'Linux b2g-inbound build',
-            'Linux b2g-inbound leak test build',
-        ]},
-    'bld-linux64-spot-303': {
-        'builders': [
-            'b2g_b2g-inbound_hamachi_eng_dep',
-            'b2g_b2g-inbound_emulator-debug_dep',
-        ]},
-    'bld-linux64-spot-304': {
-        'builders': [
-            'Linux b2g-inbound build',
-            'Linux b2g-inbound leak test build',
-        ]},
-    'bld-linux64-spot-305': {
-        'builders': [
-            'Linux b2g-inbound leak test build',
-            'b2g_b2g-inbound_hamachi_eng_dep',
-        ]},
-    'bld-linux64-spot-306': {
-        'builders': [
-            'b2g_b2g-inbound_emulator-debug_dep',
-            'b2g_b2g-inbound_emulator_dep',
-        ]},
-    'bld-linux64-spot-307': {
-        'builders': [
-            'b2g_b2g-inbound_emulator-debug_dep',
-            'b2g_b2g-inbound_emulator_dep',
-        ]},
-    'bld-linux64-spot-308': {
-        'builders': [
-            'b2g_b2g-inbound_hamachi_eng_dep',
-            'Linux birch build',
-        ]},
-    'bld-linux64-spot-309': {
-        'builders': [
-            'Linux birch leak test build',
-            'Linux x86-64 birch build',
-        ]},
-    'bld-linux64-spot-310': {
-        'builders': [
-            'Linux birch leak test build',
-            'Linux x86-64 birch build',
-        ]},
-    'bld-linux64-spot-311': {
-        'builders': [
-            'Linux birch leak test build',
-            'Linux x86-64 birch build',
-        ]},
-    'bld-linux64-spot-312': {
-        'builders': [
-            'Linux x86-64 birch leak test build',
-        ]},
-    'bld-linux64-spot-313': {
-        'builders': [
-            'Linux x86-64 birch leak test build',
-        ]},
-    'bld-linux64-spot-314': {
-        'builders': [
-            'Linux x86-64 birch leak test build',
-        ]}
-}
+
+#### N.B. This is not in production yet!  This is just an example.
+
+allocations = Table(
+    'allocations', db.declarative_base('jacuzzi_allocator').metadata,
+    Column('machine_id', Integer, ForeignKey('machines.id')),
+    Column('builder_id', Integer, ForeignKey('builders.id')),
+    Index('unique_relationship', 'machine_id', 'builder_id', unique=True)
+)
+
+
+class Machine(db.declarative_base('jacuzzi_allocator')):
+    __tablename__ = 'machines'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(64), unique=True)
+    builders = relationship('Builder', secondary=allocations)
+
+
+class Builder(db.declarative_base('jacuzzi_allocator')):
+    __tablename__ = 'builders'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(128), unique=True)
+    machines = relationship('Machine', secondary=allocations)
+
 
 @bp.route('/v1/allocated/all')
 @bp.route('/v1/machines')
 def allocated_all():
-    return jsonify(machines=machines.keys())
+    machines = g.db.session['jacuzzi_allocator'].query(
+        Machine, Machine.name).all()
+    return jsonify(machines=[m.name for m in machines])
+
 
 @bp.route('/v1/builders')
 def builders():
-    all_builders = [m['builders'] for m in machines.values()]
-    # flatten
-    all_builders = itertools.chain.from_iterable(all_builders)
-    # uniquify
-    all_builders = list(set(all_builders))
-    return jsonify(builders=all_builders)
+    builders = g.db.session['jacuzzi_allocator'].query(
+        Builder, Builder.name).all()
+    return jsonify(builders=[b.name for b in builders])
+
 
 @bp.route('/v1/builders/<builder>')
 def builder(builder):
-    matching_machines = [m for m in machines if builder in machines[m]['builders']]
-    if not matching_machines:
+    builder = Builder.query.filter_by(name=builder).first()
+    if not builder:
         abort(404)
-    return jsonify(machines=matching_machines)
+    return jsonify(machines=[m.name for m in builder.machines])
+
 
 @bp.route('/v1/machines/<machine>')
 def machine(machine):
-    if machine not in machines:
+    machine = Machine.query.filter_by(name=machine).first()
+    if not machine:
         abort(404)
-    return jsonify(builders=machines[machine]['builders'])
-
+    return jsonify(builders=[b.name for b in machine.builders])
