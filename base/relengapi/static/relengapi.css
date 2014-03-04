@@ -6,6 +6,11 @@ body {
     /* Background image courtesy of flickr user Compound Eye,
      * http://flickr.com/photos/paopix/199190129 */
     background: #FFF url('background.jpg') no-repeat fixed top left;
+    margin: 8px;
+}
+
+div.header {
+    font-family: times;
 }
 
 div.header .auth {
@@ -16,6 +21,7 @@ div.header .auth {
     padding: 6px;
     border-radius: 6px;
     text-align: center;
+    font-size: 9pt;
 }
 
 div.header h1 {
