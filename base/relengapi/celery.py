@@ -12,19 +12,22 @@ from celery import Celery
 
 _defined_tasks = {}
 
+
 def make_celery(app):
     broker = app.config.get('CELERY_BROKER_URL', 'memory://')
     celery = Celery(app.import_name, broker=broker)
     celery.conf.update(app.config)
     TaskBase = celery.Task
+
     class ContextTask(TaskBase):
         abstract = True
+
         def __call__(self, *args, **kwargs):
             with app.app_context():
                 return TaskBase.__call__(self, *args, **kwargs)
     celery.Task = ContextTask
     app.celery_tasks = dict((fn, celery.task(**kwargs)(fn))
-                             for (fn, kwargs) in _defined_tasks.iteritems())
+                            for (fn, kwargs) in _defined_tasks.iteritems())
     return celery
 
 
@@ -37,7 +40,8 @@ def task(*args, **kwargs):
             _defined_tasks[fn] = kwargs
             return LocalProxy(lambda: current_app.celery_tasks[fn])
         return wrap
-    # remainder of this function is adapted from celery/app/base.py (BSD-licensed)
+    # remainder of this function is adapted from celery/app/base.py
+    # (BSD-licensed)
     if len(args) == 1:
         if callable(args[0]):
             return inner(**kwargs)(*args)
@@ -56,6 +60,8 @@ def task(*args, **kwargs):
 
 import logging
 l = logging.getLogger("")
+
+
 class PropModule(types.ModuleType):
 
     @property

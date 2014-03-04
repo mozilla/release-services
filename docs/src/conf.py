@@ -58,6 +58,7 @@ version = '0.0'
 # The full version, including alpha/beta/rc tags.
 release = '0.0'
 
+
 def _get_version_info():
     import pkg_resources
     ws = pkg_resources.WorkingSet()
@@ -194,22 +195,22 @@ htmlhelp_basename = 'RelengAPIdoc'
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    #'papersize': 'letterpaper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    #'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'RelengAPI.tex', u'Releng API Documentation',
-   u'Mozilla, Inc.', 'manual'),
+    ('index', 'RelengAPI.tex', u'Releng API Documentation',
+     u'Mozilla, Inc.', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -252,10 +253,10 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'RelengAPI', u'Releng API Documentation',
-   u'Mozilla, Inc.', 'RelengAPI',
-   u'Your Interface to Release Engineering Automation.',
-   'Miscellaneous'),
+    ('index', 'RelengAPI', u'Releng API Documentation',
+     u'Mozilla, Inc.', 'RelengAPI',
+     u'Your Interface to Release Engineering Automation.',
+     'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.

@@ -15,10 +15,12 @@ from flask.ext.browserid import BrowserID
 import pkg_resources
 import relengapi
 
-# set up the 'relengapi' namespace; it's a namespaced module, so no code is allowed in __init__.py
+# set up the 'relengapi' namespace; it's a namespaced module, so no code
+# is allowed in __init__.py
 relengapi.oauth = OAuth2Provider()
 relengapi.login_manager = LoginManager()
 relengapi.browser_id = BrowserID()
+
 
 def create_app(cmdline=False):
     app = Flask(__name__)

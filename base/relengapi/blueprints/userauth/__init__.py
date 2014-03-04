@@ -30,6 +30,7 @@ login_manager.login_view = 'userauth.login_request'
 login_manager.login_message = 'Please authenticate to the Releng API before proceeding'
 login_manager.get_user = lambda user_id: login_manager.user_callback(user_id)
 
+
 class User(UserMixin):
 
     def __init__(self, authenticated_email):
@@ -38,9 +39,11 @@ class User(UserMixin):
     def get_id(self):
         return unicode(self.authenticated_email)
 
+
 @login_manager.user_loader
 def login_manager_user_loader(authenticated_email):
     return User(authenticated_email)
+
 
 @browser_id.user_loader
 def browser_id_user_loader(login_info):

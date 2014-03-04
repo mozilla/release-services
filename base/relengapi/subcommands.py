@@ -6,6 +6,7 @@ import relengapi.app
 import pkg_resources
 import argparse
 
+
 class Subcommand(object):
 
     def make_parser(self, subparsers):
@@ -14,8 +15,10 @@ class Subcommand(object):
     def run(self, parser, args):
         pass
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Releng API Command Line Tool")
+    parser = argparse.ArgumentParser(
+        description="Releng API Command Line Tool")
     subparsers = parser.add_subparsers(help='sub-command help')
 
     # load each of the blueprints; this defines the subcommand classes.  Note that

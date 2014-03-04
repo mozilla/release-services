@@ -13,12 +13,14 @@ class _QueryProperty(object):
 
     def __init__(self, dbname):
         self.dbname = dbname
-    
+
     def __get__(self, obj, cls):
         return current_app.db.session[self.dbname].query(cls)
 
 
 _declarative_bases = {}
+
+
 def declarative_base(dbname):
     try:
         return _declarative_bases[dbname]
@@ -29,6 +31,7 @@ def declarative_base(dbname):
 
 
 class Alchemies(object):
+
     """
     A container that handles access to SQLALchemy metadata and connection
     pools.  This is available in requests at g.db, or as current_app.db.

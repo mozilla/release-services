@@ -11,7 +11,7 @@ bp = Blueprint('base', __name__)
 
 
 class ServeSubcommand(subcommands.Subcommand):
-    
+
     def make_parser(self, subparsers):
         parser = subparsers.add_parser('serve', help='run the server')
         parser.add_argument("-a", "--all-interfaces", action='store_true',
@@ -34,7 +34,8 @@ class ServeSubcommand(subcommands.Subcommand):
 class CreateDBSubcommand(subcommands.Subcommand):
 
     def make_parser(self, subparsers):
-        parser = subparsers.add_parser('createdb', help='create configured databases')
+        parser = subparsers.add_parser(
+            'createdb', help='create configured databases')
         return parser
 
     def run(self, parser, args):

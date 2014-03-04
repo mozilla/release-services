@@ -21,7 +21,10 @@ support = WebSupport(
     staticroot='/docs/static',
     docroot='/docs')
 
-bp = Blueprint('docs', __name__, template_folder='templates', static_folder=staticdir)
+bp = Blueprint('docs', __name__,
+               template_folder='templates',
+               static_folder=staticdir)
+
 
 @bp.route('/', defaults={'docname': 'index'})
 @bp.route('/<path:docname>')
@@ -32,11 +35,14 @@ def doc(docname):
         abort(404)
     return render_template('doc.html', document=doc)
 
+
 @bp.route('/websupport-custom.css')
 def websupport_custom():
     return send_from_directory(docsdir, 'websupport-custom.css')
 
 # TODO:
+
+
 def api_info(docname):
     rv = []
     vfs = current_app.view_functions

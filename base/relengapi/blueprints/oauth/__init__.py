@@ -25,6 +25,7 @@ from datetime import timedelta
 
 bp = Blueprint('oauth', __name__, template_folder='templates')
 
+
 class Client(db.declarative_base('relengapi')):
     __tablename__ = 'oauth2_clients'
 
@@ -216,7 +217,8 @@ def client():
 def authorize(*args, **kwargs):
     if request.method == 'GET':
         client_id = kwargs.get('client_id')
-        kwargs['client'] = g.db.session['relengapi'].query(Client).filter_by(client_id=client_id).first()
+        kwargs['client'] = g.db.session['relengapi'].query(
+            Client).filter_by(client_id=client_id).first()
         return render_template('oauthorize.html', **kwargs)
 
     confirm = request.form.get('confirm', 'no')
