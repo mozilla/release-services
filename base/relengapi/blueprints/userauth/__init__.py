@@ -3,24 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from flask import Blueprint
-from flask import session
-from flask import redirect
-from flask import render_template
-from flask import g
-from flask import url_for
-from flask import request
-from flask import jsonify
-from flask import current_app
-from relengapi import db
 from relengapi import login_manager
 from relengapi import browser_id
-from werkzeug.security import gen_salt
-import sqlalchemy as sa
 from flask.ext.login import UserMixin
-from flask.ext.login import current_user
-from sqlalchemy.orm import relationship
-from datetime import datetime
-from datetime import timedelta
 
 
 bp = Blueprint('userauth', __name__, template_folder='templates')
