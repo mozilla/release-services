@@ -2,6 +2,7 @@ import os
 from flask import Flask
 from flask import g
 from flask import render_template
+from flask import jsonify
 from flask_oauthlib.provider import OAuth2Provider
 from relengapi import celery
 from relengapi import db
@@ -48,5 +49,21 @@ def create_app(cmdline=False):
     @app.route('/')
     def root():
         return render_template('root.html')
+
+    @app.route('/versions')
+    def versions():
+        dists = {}
+        for dist in pkg_resources.WorkingSet():
+            dists[dist.key] = {
+                'project_name': dist.project_name,
+                'version': dist.version,
+            }
+        blueprints = {}
+        for ep in pkg_resources.iter_entry_points('relengapi_blueprints'):
+            blueprints[ep.name] = {
+                'distribution': ep.dist.key,
+                'version': ep.dist.version,
+            }
+        return jsonify(distributions=dists, blueprints=blueprints)
 
     return app
