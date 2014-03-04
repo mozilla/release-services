@@ -2,3 +2,5 @@ relengapi.egg-info/
 *.pyc
 *.egg-info
 TODO.txt
+*.db
+.*.swp
