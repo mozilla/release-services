@@ -10,7 +10,7 @@ Name the package with a ``relengapi-`` prefix, so it's easy to find.
 The ``install_requires`` parameter should name both ``Flask`` and ``relengapi``, as well as any other dependencies.
 The ``namespace_packages`` line allows multiple packages to share the same Python path::
 
-    namespace_packages=['relengapi.blueprints'],
+    namespace_packages=['relengapi', 'relengapi.blueprints'],
 
 Finally, include an entry point so that the base can find the blueprint::
 
