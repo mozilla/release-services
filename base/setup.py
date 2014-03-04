@@ -15,6 +15,7 @@ setup(
         "SQLAlchemy",
         "Celery",
         "argparse",
+        "requests",
     ],
     tests_require=["nose", "mock"],
     packages=find_packages(),
