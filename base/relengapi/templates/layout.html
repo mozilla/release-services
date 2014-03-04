@@ -18,7 +18,7 @@
   <div class="header">
     <div class="auth">
       {% if current_user.is_authenticated() %}
-        <span class="user_email">{{ current_user.authenticated_email }}</span>
+        <span class="user_email"><a href="/userauth/account">{{ current_user.authenticated_email }}</a></span>
         <button id="browserid-logout">Logout</button>
       {% else %}        
         <button id="browserid-login">Login</button>

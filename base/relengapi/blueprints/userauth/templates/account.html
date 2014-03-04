@@ -1,0 +1,9 @@
+{# This Source Code Form is subject to the terms of the Mozilla Public
+ # License, v. 2.0. If a copy of the MPL was not distributed with this
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/. #}
+{% extends "layout.html" %}
+{% block content %}
+  <h1>Account</h1>
+  <p>You are authenticated as <span class="user_email">{{ current_user.authenticated_email }}</span>.</p>
+  <h1>OAuth2 Tokens</h1>
+{% endblock %}

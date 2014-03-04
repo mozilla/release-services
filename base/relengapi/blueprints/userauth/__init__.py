@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from flask import Blueprint
+from flask import render_template
+from flask_login import login_required
 from relengapi import login_manager
 from relengapi import browser_id
 from flask.ext.login import UserMixin
@@ -35,3 +37,8 @@ def browser_id_user_loader(login_info):
     if login_info['status'] != 'okay':
         return None
     return User(login_info['email'])
+
+@bp.route("/account")
+@login_required
+def account():
+    return render_template("account.html")
