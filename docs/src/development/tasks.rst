@@ -8,7 +8,7 @@ The implementation of tasks within Releng API is very close to that documented f
 Defining Tasks
 --------------
 
-Tasks are defined in blueprints using a decorator from ``relengapi.celery``, rather than that suggested by the Celery documentation:
+Tasks are defined in blueprints using a decorator from ``relengapi.celery``, rather than that suggested by the Celery documentation::
 
     from relengapi import celery
 
@@ -17,7 +17,7 @@ Tasks are defined in blueprints using a decorator from ``relengapi.celery``, rat
         return x + y + z
 
 Other than using a different decorator, everything else remains the same.
-You can also pass options, just as for Celery's ``task`` decorator:
+You can also pass options, just as for Celery's ``task`` decorator::
 
     @celery.task(serializer='json')
     def add(x, y, z):
@@ -29,7 +29,7 @@ Invoking Tasks
 --------------
 
 Invoke a task using exactly the same syntax as suggested in the Celery documentation.
-This must be done from within a Flask application context (most commonly, in a request).
+This must be done from within a Flask application context (most commonly, in a request). ::
 
     def get_sum(x, y, z):
         add.delay(x, y, z).get()

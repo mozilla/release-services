@@ -1,0 +1,25 @@
+{%- extends "layout.html" %}
+
+{%- block title %}
+    {{ document.title }}
+{%- endblock %}
+
+{% block head %}
+    {{ document.css|safe }}
+    {{ document.js|safe }}
+    {{ super() }}
+    <link rel="stylesheet" href="/docs/websupport-custom.css" type="text/css">
+{%- endblock %}
+
+{%- block content %}
+{%- block relbar %}
+    {{ document.relbar|safe }}
+{%- endblock %}
+
+<div class="docbody">
+{%- block body %}
+    {{ document.body|safe }}
+{%- endblock %}
+</div>
+
+{%- endblock %}

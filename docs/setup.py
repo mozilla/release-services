@@ -10,6 +10,7 @@ setup(
     install_requires=[
         "Flask",
         "relengapi",
+        "Sphinx",
     ],
     tests_require=["nose", "mock"],
     packages=find_packages(),

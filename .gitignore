@@ -4,3 +4,4 @@ relengapi.egg-info/
 TODO.txt
 *.db
 .*.swp
+docs/build/
