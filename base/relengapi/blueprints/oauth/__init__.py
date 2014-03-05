@@ -233,8 +233,13 @@ def access_token():
 def secret(oareq):
     return jsonify(secret='42')
 
+
 @bp.route('/my/tokens')
 @login_required
 def my_tokens():
     tokens = Token.query.filter_by(user_email=current_user.authenticated_email).all()
-    return jsonify(tokens=[{'token_type': t.token_type} for t in tokens])
+    return jsonify(tokens=[{
+        'token_type': t.token_type,
+        'client_id': t.client.client_id,
+        'client_type': t.client.client_type,
+    } for t in tokens])

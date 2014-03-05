@@ -4,7 +4,10 @@
 
 from flask import Blueprint
 from flask import render_template
+from flask import request
+from flask import redirect
 from flask_login import login_required
+from flask_login import current_user
 from relengapi import login_manager
 from relengapi import browser_id
 from flask.ext.login import UserMixin
@@ -42,3 +45,9 @@ def browser_id_user_loader(login_info):
 @login_required
 def account():
     return render_template("account.html")
+
+@bp.route('/')
+def login_request():
+    if current_user.is_authenticated() and request.args.get('next'):
+        return redirect(request.args['next'])
+    return render_template('login_request.html')
