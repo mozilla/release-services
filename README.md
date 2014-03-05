@@ -15,12 +15,12 @@ Developers
 
 RelengAPI is a Flask application.  It is composed of several Python packages.
 
-The base is `relengapi`.
+The base is in `relengapi`, implemented in `base/`.
 It implements the root app, and lots of other common features.
 It also searches its python environment for other packages that can provide blueprints for the Releng API.
 These act as plugins, adding extra endpoints and other functionality to the API.
 
-The `relengapi-docs` package implements the documentation tree for the Releng API, and is a prototypical blueprint package.
+Other top-level directories of this one contain other packages.
 
 ### Running
 
@@ -48,5 +48,8 @@ And finally run the server:
 
 The `relengapi` tool has many useful subcommands.
 See its help for more information.
-If you've installed the `docs` blueprint, then the API documents itself via HTTP -- just visit with a browser.
+
+### More
+
 See the Releng API documentation for more information on development and deployment of the releng API.
+This is available at https://api.pub.build.mozilla.org/docs or, If you've installed the `docs` blueprint, at the same path on your own instance.

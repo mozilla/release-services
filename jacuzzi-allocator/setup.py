@@ -15,10 +15,8 @@ setup(
         "Flask",
         "relengapi",
     ],
-    tests_require=["nose", "mock"],
     packages=find_packages(),
     include_package_data=True,
-    test_suite='nose.collector',
     namespace_packages=['relengapi', 'relengapi.blueprints'],
     entry_points={
         "relengapi_blueprints": [

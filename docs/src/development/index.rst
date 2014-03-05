@@ -3,6 +3,7 @@ Development
 
 .. toctree::
     auth
+    testing
     blueprints
     databases
     proxies
