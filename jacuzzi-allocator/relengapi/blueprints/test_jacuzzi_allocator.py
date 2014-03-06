@@ -31,10 +31,6 @@ test_context = TestContext(databases=['jacuzzi_allocator'],
                            db_teardown=db_teardown,
                            reuse_app=True)
 
-def force_login(email='testuser@example.com'):
-    with test_context.test_client.session_transaction() as sess:
-        sess['user_id'] = email
-
 @test_context
 def test_all(client):
     rv = client.get('/jacuzzi-allocator/v1/allocated/all')
