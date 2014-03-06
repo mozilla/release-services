@@ -74,8 +74,8 @@ class Grant(db.declarative_base('relengapi')):
     _scopes = sa.Column(sa.Text)
 
     def delete(self):
-        current_app.db.session['relengapi'].delete(self)
-        current_app.db.session['relengapi'].commit()
+        current_app.db.session('relengapi').delete(self)
+        current_app.db.session('relengapi').commit()
         return self
 
     @property
@@ -142,8 +142,8 @@ def save_grant(client_id, code, request, *args, **kwargs):
         user_email=current_user.authenticated_email,
         expires=expires
     )
-    g.db.session['relengapi'].add(grant)
-    g.db.session['relengapi'].commit()
+    g.db.session('relengapi').add(grant)
+    g.db.session('relengapi').commit()
     return grant
 
 
@@ -163,7 +163,7 @@ def save_token(token, request, *args, **kwargs):
     )
     # make sure that every client has only one token connected to a user
     for t in toks:
-        g.db.session['relengapi'].delete(t)
+        g.db.session('relengapi').delete(t)
 
     expires_in = token.pop('expires_in')
     expires = datetime.utcnow() + timedelta(seconds=expires_in)
@@ -177,8 +177,8 @@ def save_token(token, request, *args, **kwargs):
         client_id=request.client.client_id,
         user_email=request.user.authenticated_email,
     )
-    g.db.session['relengapi'].add(tok)
-    g.db.session['relengapi'].commit()
+    g.db.session('relengapi').add(tok)
+    g.db.session('relengapi').commit()
     return tok
 
 
@@ -199,8 +199,8 @@ def client():
         _redirect_uris='http://euclid.r.igoro.us:8000/authorized',
         _default_scopes='email',
     )
-    g.db.session['relengapi'].add(item)
-    g.db.session['relengapi'].commit()
+    g.db.session('relengapi').add(item)
+    g.db.session('relengapi').commit()
     return jsonify(
         client_id=client_id,
         client_secret=client_secret,
@@ -213,7 +213,7 @@ def client():
 def authorize(*args, **kwargs):
     if request.method == 'GET':
         client_id = kwargs.get('client_id')
-        kwargs['client'] = g.db.session['relengapi'].query(
+        kwargs['client'] = g.db.session('relengapi').query(
             Client).filter_by(client_id=client_id).first()
         return render_template('oauthorize.html', **kwargs)
 

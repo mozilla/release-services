@@ -40,14 +40,14 @@ class Builder(db.declarative_base('jacuzzi_allocator')):
 @bp.route('/v1/allocated/all')
 @bp.route('/v1/machines')
 def allocated_all():
-    machines = g.db.session['jacuzzi_allocator'].query(
+    machines = g.db.session('jacuzzi_allocator').query(
         Machine, Machine.name).all()
     return jsonify(machines=[m.name for m in machines])
 
 
 @bp.route('/v1/builders')
 def builders():
-    builders = g.db.session['jacuzzi_allocator'].query(
+    builders = g.db.session('jacuzzi_allocator').query(
         Builder, Builder.name).all()
     return jsonify(builders=[b.name for b in builders])
 

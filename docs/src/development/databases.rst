@@ -33,12 +33,12 @@ Using Tables
 ------------
 
 Use of the ORM layer requires a session.
-The session is available from ``g.db.sessions``, keyed by database name.
+The session is available from ``g.db.session(dbname)``, given the database name.
 For example::
 
     @bp.route('/add/foo')
     def add_foo():
-        session = g.db.session['relengapi']
+        session = g.db.session('relengapi')
 
         u = User()
         u.name = 'Foo'
@@ -54,7 +54,7 @@ As a shortcut, each table object has a ``query`` property which is automatically
 
     @bp.route('/get/foo')
     def get_foo():
-        u = User.query.filter_by(name='Foo').get()
+        u = User.query.filter_by(name='Foo').first()
         return jsonify(userid=u.id)
 
 Engines, MetaData, etc.
@@ -62,7 +62,7 @@ Engines, MetaData, etc.
 
 Although most uses of the database should occur by the ORM methods described above, some operations require more data.
 
-The engine for a database is available from the ``current_app.db.engine`` method::
+The engine for a database is available from the ``current_app.db.engine(dbname)`` method::
 
     eng = current_app.db.engine('relengapi')
 
