@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from flask import Blueprint
-from flask import session
 from flask import render_template
 from flask import g
 from flask import request
