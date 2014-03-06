@@ -8,11 +8,8 @@ def synchronized(lock):
     def dec(func):
         @wraps(func)
         def wrap(*args, **kwargs):
-            lock.acquire()
-            try:
+            with lock:
                 return func(*args, **kwargs)
-            finally:
-                lock.release()
         return wrap
     return dec
 
