@@ -22,9 +22,12 @@ relengapi.login_manager = LoginManager()
 relengapi.browser_id = BrowserID()
 
 
-def create_app(cmdline=False):
+def create_app(cmdline=False, test_config=None):
     app = Flask(__name__)
-    app.config.from_envvar('RELENGAPI_SETTINGS')
+    if test_config:
+        app.config.update(**test_config)
+    else:
+        app.config.from_envvar('RELENGAPI_SETTINGS')
 
     # get blueprints from pkg_resources
     for ep in pkg_resources.iter_entry_points('relengapi_blueprints'):

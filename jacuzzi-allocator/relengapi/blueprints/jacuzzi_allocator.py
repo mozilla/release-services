@@ -42,7 +42,7 @@ class Builder(db.declarative_base('jacuzzi_allocator')):
 def allocated_all():
     machines = g.db.session('jacuzzi_allocator').query(
         Machine, Machine.name).all()
-    return jsonify(machines=[m.name for m in machines])
+    return jsonify(machines=sorted([m.name for m in machines]))
 
 
 @bp.route('/v1/builders')

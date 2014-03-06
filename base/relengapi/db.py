@@ -60,6 +60,10 @@ class Alchemies(object):
             self._sessions[dbname] = scoping.scoped_session(Session)
         return self._sessions[dbname]
 
+    def reset(self):
+        self._engines = {}
+        self._sessions = {}
+
     @property
     def database_names(self):
         return _declarative_bases.keys()
