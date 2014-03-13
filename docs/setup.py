@@ -24,4 +24,5 @@ setup(
             'docs = relengapi.blueprints.docs:bp',
         ],
     },
+    license='MPL2',
 )

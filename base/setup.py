@@ -34,4 +34,5 @@ setup(
             'relengapi = relengapi.subcommands:main',
         ],
     },
+    license='MPL2',
 )

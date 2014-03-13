@@ -23,4 +23,5 @@ setup(
             'jacuzzi-allocator = relengapi.blueprints.jacuzzi_allocator:bp',
         ],
     },
+    license='MPL2',
 )
