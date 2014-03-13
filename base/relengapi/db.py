@@ -43,6 +43,7 @@ class Alchemies(object):
         self.app = app
         self._engines = {}
         self._sessions = {}
+        app.teardown_request(self._teardown)
 
     @synchronized(threading.Lock())
     def engine(self, dbname):
@@ -59,6 +60,10 @@ class Alchemies(object):
             Session = orm.sessionmaker(bind=self.engine(dbname))
             self._sessions[dbname] = scoping.scoped_session(Session)
         return self._sessions[dbname]
+
+    def _teardown(self, response_or_exc):
+        for s in self._sessions.values():
+            s.remove()
 
     def reset(self):
         self._engines = {}
