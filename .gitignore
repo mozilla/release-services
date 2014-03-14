@@ -4,3 +4,4 @@ dist/
 mapper.egg-info/
 test.py
 *.swp
+*.pyc
