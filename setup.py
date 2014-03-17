@@ -20,6 +20,8 @@ setup(name='mapper',
           'relengapi',
           'IPy',
           'python-dateutil',
+          'nose',
+          'mock'
       ],
       license='MPL2',
       )
