@@ -20,8 +20,12 @@ setup(name='mapper',
           'relengapi',
           'IPy',
           'python-dateutil',
-          'nose',
-          'mock'
       ],
       license='MPL2',
-      )
+      extras_require = {
+          'test': [
+              'nose',
+              'mock'
+          ]
+      }
+)
