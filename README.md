@@ -26,11 +26,13 @@ Other top-level directories of this one contain other packages.
 
 To run the tool for development, pip install the base into your virtualenv:
 
-    pip install -e base
+    pip install -e base[test]
 
-and any blueprints you want:
+The `[test]` installs the requirements for testing as well.
+Omit this if you won't be running tests.
+Install any additional packages you want as well:
 
-    pip install -e docs
+    pip install -e docs[test]
 
 Set up your settings file:
 

@@ -16,6 +16,12 @@ setup(
         "relengapi",
         "Sphinx",
     ],
+    extras_require = {
+        'test': [
+            'nose',
+            'mock'
+        ]
+    },
     packages=find_packages(),
     include_package_data=True,
     namespace_packages=['relengapi', 'relengapi.blueprints'],
