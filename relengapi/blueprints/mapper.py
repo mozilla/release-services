@@ -101,7 +101,6 @@ def _check_existing_sha(project, vcs_type, changeset):
         project: the project name(s) string, comma-delimited
         vcs_type: the vcs name string (hg or git)
         changeset: the changeset string to look for
-        db: the bottle_mysql db connection
 
     Returns:
         The first db row if it exists; otherwise None.
@@ -120,7 +119,7 @@ def _check_well_formed_sha(sha, exact_length=40):
         None on success.
 
     Exceptions:
-        HTTPError 400: on non-well-formed sha, via bottle.abort()
+        HTTPError 400: on non-well-formed sha, via flask.abort()
     """
     if not rev_regex.match(sha):
         abort(400, "Bad sha %s!" % str(sha))
