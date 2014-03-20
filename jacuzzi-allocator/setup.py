@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='relengapi-jacuzzi-allocator',
-    version='0.0',
+    version='0.1',
     description='Jacuzzi Allocator API',
     author='Dustin J. Mitchell',
     author_email='dustin@mozilla.com',

@@ -5,3 +5,4 @@ TODO.txt
 *.db
 .*.swp
 docs/build/
+*/dist
