@@ -2,8 +2,8 @@
 
 from setuptools import setup, find_packages
 
-setup(name='mapper',
-      version='0.2',
+setup(name='relengapi-mapper',
+      version='0.1',
       description='hg to git mapper',
       author='Chris AtLee',
       author_email='chris@atlee.ca',
