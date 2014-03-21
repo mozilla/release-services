@@ -23,6 +23,14 @@ setup(
         ]
     },
     packages=find_packages(),
+    package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
+        'relengapi.blueprints.docs': [
+            'src/*/*.rst',
+            'src/conf.py',
+            'templates/*.html',
+        ],
+    },
+    zip_safe=False,
     include_package_data=True,
     namespace_packages=['relengapi', 'relengapi.blueprints'],
     entry_points={

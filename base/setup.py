@@ -30,6 +30,22 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     namespace_packages=['relengapi', 'relengapi.blueprints'],
+    package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
+        'relengapi': [
+            'templates/*.html',
+            'static/*.jpg',
+            'static/*.css',
+        ],
+        'relengapi.blueprints.base': [
+            'templates/*.html',
+        ],
+        'relengapi.blueprints.oauth': [
+            'templates/*.html',
+        ],
+        'relengapi.blueprints.userauth': [
+            'templates/*.html',
+        ],
+    },
     entry_points={
         "relengapi_blueprints": [
             'base = relengapi.blueprints.base:bp',

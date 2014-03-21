@@ -1,0 +1,3 @@
+# NOTE: these files must *also* be specified in setup.py
+recursive-include relengapi/blueprints/docs/src *.rst *.css *.py
+recursive-include relengapi/blueprints/docs/templates *.html
