@@ -2,11 +2,12 @@ Development
 ===========
 
 .. toctree::
-    auth
-    testing
     blueprints
+    api_methods
     databases
-    proxies
     subcommands
+    proxies
     tasks
+    auth
     utils
+    testing

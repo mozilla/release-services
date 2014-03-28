@@ -6,10 +6,10 @@ import os
 from flask import Flask
 from flask import g
 from flask import render_template
-from flask import jsonify
 from flask_oauthlib.provider import OAuth2Provider
 from relengapi import celery
 from relengapi import db
+from relengapi import api
 from flask.ext.login import LoginManager
 from flask.ext.browserid import BrowserID
 import pkg_resources
@@ -45,6 +45,7 @@ def create_app(cmdline=False, test_config=None):
     app.celery = celery.make_celery(app)
     relengapi.oauth.init_app(app)
     relengapi.login_manager.init_app(app)
+    api.init_app(app)
 
     # this is ugly..
     app.config['BROWSERID_LOGIN_URL'] = '/userauth/login'
@@ -60,6 +61,7 @@ def create_app(cmdline=False, test_config=None):
         return render_template('root.html')
 
     @app.route('/versions')
+    @api.apimethod()
     def versions():
         dists = {}
         for dist in pkg_resources.WorkingSet():
@@ -73,6 +75,6 @@ def create_app(cmdline=False, test_config=None):
                 'distribution': ep.dist.key,
                 'version': ep.dist.version,
             }
-        return jsonify(distributions=dists, blueprints=blueprints)
+        return dict(distributions=dists, blueprints=blueprints)
 
     return app

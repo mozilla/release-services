@@ -9,15 +9,20 @@ from nose.tools import make_decorator
 
 class TestContext(object):
 
-    def __init__(self, databases=[], db_setup=None,
-                 db_teardown=None, reuse_app=False):
+    def __init__(self, databases=[], app_setup=None,
+                 db_setup=None, db_teardown=None, reuse_app=False):
         self.databases = set(databases)
+        if app_setup:
+            self.app_setup = app_setup
         if db_setup:
             self.db_setup = db_setup
         if db_teardown:
             self.db_teardown = db_teardown
         self.reuse_app = reuse_app
         self._app = None
+
+    def app_setup(self, app):
+        pass
 
     def db_setup(self, app):
         pass
@@ -42,6 +47,7 @@ class TestContext(object):
             engine = app.db.engine(dbname)
             meta.create_all(bind=engine)
         self._app = app
+        self.app_setup(app)
         return app
 
     def __call__(self, func):
@@ -50,8 +56,7 @@ class TestContext(object):
                    (arginfo.keywords if arginfo.keywords else []))
 
         @make_decorator(func)
-        def wrap():
-            kwargs = {}
+        def wrap(**kwargs):
             app = self._make_app()
             if 'app' in args:
                 kwargs['app'] = app

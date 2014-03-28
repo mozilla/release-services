@@ -40,11 +40,17 @@ To support, this, use the :py:class:`relengapi.testing.TestContext` class.
     This class automatically creates the tables in the specified databases, equivalent to ``relengapi createdb``.
     This takes place in SQLite in-memory databases.
 
+    To perform setup on the app, such as adding routes, override or pass ``app_setup``, which will be called with the app as the first argument.
+
     Adding test data is up to the caller, using the ``db_setup`` and ``db_teardown`` methods.
     Both are each called with the Flask app as the first argument.
     The former should insert test data into the DB.
     The latter is only necessary if ``reuse_app`` is set, and should reset the data back to a known state.
     Both can also be given by subclassing :py:class:`TestContext`.
+
+    .. py:method:: app_setup(app)
+
+        :param app: Flask app
 
     .. py:method:: db_setup(app)
 
