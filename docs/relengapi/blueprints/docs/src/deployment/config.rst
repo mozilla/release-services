@@ -41,6 +41,11 @@ The only required option is ``type``, which specifies the authentication type.
 If ``type`` is ``browserid``, no further options are required, as browserid is a very simple protocol.
 Any user will be able to authenticate.
 
+If ``type`` is ``proxy``, then the API trusts a plaintext header from the HTTP client to specify the username.
+The header name is given in the ``header`` option, and defaults to ``"Remote-User"``.
+This mode is intended for deployments where the only access to the server is from a frontend proxy which is performing authentication.
+This is a common configuration with load balancers or with tools like Apache or Nginx configured using tools like ``mod_auth_ldap``.
+
 Library Configuration
 ---------------------
 

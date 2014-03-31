@@ -14,7 +14,7 @@ setup(
     install_requires=[
         "Flask",
         "Flask-OAuthlib",
-        "Flask-Login",
+        "Flask-Login>=0.2.10",
         "Flask-Browserid",
         "Flask-API",
         "SQLAlchemy",

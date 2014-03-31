@@ -24,6 +24,7 @@ class User(UserMixin):
     def get_id(self):
         return unicode(self.authenticated_email)
 
+# login manager
 
 def init_app_login_manager(app):
     @login_manager.user_loader
@@ -38,6 +39,7 @@ def init_app_login_manager(app):
         user_id)
     login_manager.init_app(app)
 
+# browserid
 
 def init_app_browserid(app):
     from flask.ext.browserid import BrowserID
@@ -54,6 +56,19 @@ def init_app_browserid(app):
     app.config['BROWSERID_LOGOUT_URL'] = '/userauth/logout'
     browser_id.init_app(app)
 
+# proxy auth
+
+def init_app_proxy(app):
+    header = app.config['RELENGAPI_AUTHENTICATION'].get('header', 'REMOTE_USER')
+
+    # request_loader is invoked on every request
+    @login_manager.request_loader
+    def request_loader(request):
+        username = request.headers.get(header)
+        if username:
+            return User(username)
+
+# views
 
 @bp.route("/account")
 @login_required
@@ -68,14 +83,20 @@ def login_request():
         return redirect(next)
     return render_template('login_request.html')
 
+# initialization
 
 @bp.record
 def init_blueprint(state):
     app = state.app
     init_app_login_manager(app)
+
     auth_type = app.config.get('RELENGAPI_AUTHENTICATION', {}).get('type', 'browserid')
+    # stash this for the template
+    app.config['RELENGAPI_AUTHENTICATION_TYPE'] = auth_type
+
     auth_init = {
         'browserid': init_app_browserid,
+        'proxy': init_app_proxy,
     }.get(auth_type, None)
     if not auth_init:
         raise RuntimeError("no such auth type '%s'" % (auth_type,))
