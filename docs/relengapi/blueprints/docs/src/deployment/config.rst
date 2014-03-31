@@ -31,6 +31,16 @@ The databases for the base blueprint are
 
 Other blueprints may require additional bind URIs.
 
+Authentication
+..............
+
+Releng API supports a number of authentication mechanisms.
+These are configured with the ``RELENGAPI_AUTHENTICATION`` key, which is a dictionary containing options.
+The only required option is ``type``, which specifies the authentication type.
+
+If ``type`` is ``browserid``, no further options are required, as browserid is a very simple protocol.
+Any user will be able to authenticate.
+
 Library Configuration
 ---------------------
 

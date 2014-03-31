@@ -7,6 +7,16 @@ SQLALCHEMY_DATABASE_URIS = {
     # .. add other database URIs here, as appropriate for the blueprints
 }
 
+##
+# Authentication
+
+RELENGAPI_AUTHENTICATION = {
+        # use the default, browserid:
+    'type': 'browserid',
+
+    # .. or LDAP:
+}
+
 ## Celery
 # Any Celery configuration option can be included here; see
 # http://docs.celeryproject.org/en/master/configuration.html#configuration
