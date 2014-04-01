@@ -11,6 +11,7 @@ from flask_login import login_required
 from flask_login import current_user
 from relengapi import login_manager
 from flask.ext.login import UserMixin
+from flask.ext.principal import identity_changed, identity_loaded, RoleNeed, Identity, Principal
 
 
 bp = Blueprint('userauth', __name__, template_folder='templates')
@@ -39,6 +40,16 @@ def init_app_login_manager(app):
         user_id)
     login_manager.init_app(app)
 
+# principal
+
+def init_app_principal(app):
+    Principal(app, use_sessions=True)
+
+    @identity_loaded.connect_via(app)
+    def on_identity_loaded(sender, identity):
+        # TODO: cache this somehow
+        identity.provides.add(RoleNeed('admin'))
+
 # browserid
 
 def init_app_browserid(app):
@@ -49,7 +60,10 @@ def init_app_browserid(app):
     def browser_id_user_loader(login_info):
         if login_info['status'] != 'okay':
             return None
+        identity_changed.send(app, identity=Identity(login_info['email']))
         return User(login_info['email'])
+
+    # TODO: call identity_changed on logout, too
 
     # this really shouldn't be app config, but whatever
     app.config['BROWSERID_LOGIN_URL'] = '/userauth/login'
@@ -64,6 +78,7 @@ def init_app_proxy(app):
     # request_loader is invoked on every request
     @login_manager.request_loader
     def request_loader(request):
+        # TODO: call identity_changed, if it has
         username = request.headers.get(header)
         if username:
             return User(username)
@@ -91,6 +106,7 @@ def login_request():
 def init_blueprint(state):
     app = state.app
     init_app_login_manager(app)
+    init_app_principal(app)
 
     auth_type = app.config.get('RELENGAPI_AUTHENTICATION', {}).get('type', 'browserid')
     # stash this for the template

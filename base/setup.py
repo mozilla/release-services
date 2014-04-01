@@ -16,6 +16,7 @@ setup(
         "Flask-OAuthlib",
         "Flask-Login>=0.2.10",
         "Flask-Browserid",
+        "Flask-Principal",
         "SQLAlchemy",
         "Celery",
         "argparse",
