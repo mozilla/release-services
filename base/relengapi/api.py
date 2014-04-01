@@ -9,12 +9,8 @@ from flask import jsonify
 from flask import render_template
 from flask import request
 from flask import current_app
-from flask_api import mediatypes
 from werkzeug.exceptions import HTTPException
 import functools
-
-# NOTE: this uses the useful 'mediatypes' module from flask_api, but not the
-# rest of the extension.
 
 class Handler(object):
 
@@ -35,7 +31,7 @@ class Handler(object):
 
 class JsonHandler(Handler):
     """Handler for requests accepting application/json."""
-    media_type = mediatypes.MediaType('application/json')
+    media_type = 'application/json'
 
     def render_response(self, result):
         result, code, headers = self._parse_result(result)
@@ -70,7 +66,7 @@ class JsonHandler(Handler):
 
 class HtmlHandler(Handler):
     """Handler for requests accepting text/html"""
-    media_type = mediatypes.MediaType('text/html')
+    media_type = 'text/html'
 
     def render_response(self, result):
         return render_template('api_json.html', json=json.dumps(dict(result=result), indent=4))
@@ -82,16 +78,11 @@ class HtmlHandler(Handler):
             raise exc_type, exc_value, exc_tb
 
 
-_handlers = [JsonHandler(), HtmlHandler()]
+_handlers = {c.media_type: c() for c in [JsonHandler, HtmlHandler]}
 def _get_handler():
     """Get an appropriate handler based on the request"""
-    header = request.headers.get('Accept', '*/*')
-    for accepted_set in mediatypes.parse_accept_header(header):
-        for handler in _handlers:
-            for accepted in accepted_set:
-                if accepted.satisfies(handler.media_type):
-                    return handler
-    return _handlers[0]
+    best = request.accept_mimetypes.best_match(_handlers.keys())
+    return _handlers.get(best, _handlers['application/json'])
 
 
 def init_app(app):
