@@ -73,11 +73,13 @@ def init_app_proxy(app):
 @bp.route("/account")
 @login_required
 def account():
+    """Show the user information about their account"""
     return render_template("account.html")
 
 
 @bp.route('/login_request')
 def login_request():
+    """Redirect here to ask the user to authenticate"""
     if current_user.is_authenticated():
         next = request.args.get('next') or url_for('root')
         return redirect(next)
