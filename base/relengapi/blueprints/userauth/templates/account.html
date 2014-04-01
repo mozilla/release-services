@@ -7,8 +7,10 @@
   <p>You are authenticated as <span class="user_email">{{ current_user.authenticated_email }}</span>.</p>
   <h1>OAuth2 Tokens</h1>
   ...
-  <h1>Needs Provided</h1>
+  <h1>Roles</h1>
+  <ul>
   {% for need in g.identity.provides %}
-    {{ need }}
+  <li>{% if need[0] == 'role' %}{{ need[1] }}{% else %}{{ '.'.join(need) }}{% endif %}</li>
   {% endfor %}
+  </ul>
 {% endblock %}

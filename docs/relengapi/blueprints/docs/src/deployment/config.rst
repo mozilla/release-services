@@ -39,12 +39,38 @@ These are configured with the ``RELENGAPI_AUTHENTICATION`` key, which is a dicti
 The only required option is ``type``, which specifies the authentication type.
 
 If ``type`` is ``browserid``, no further options are required, as browserid is a very simple protocol.
-Any user will be able to authenticate.
+Any user will be able to authenticate. ::
+
+    RELENGAPI_AUTHENTICATION = {
+        'type': 'browserid',
+    }
 
 If ``type`` is ``proxy``, then the API trusts a plaintext header from the HTTP client to specify the username.
 The header name is given in the ``header`` option, and defaults to ``"Remote-User"``.
 This mode is intended for deployments where the only access to the server is from a frontend proxy which is performing authentication.
 This is a common configuration with load balancers or with tools like Apache or Nginx configured using tools like ``mod_auth_ldap``.
+
+    RELENGAPI_AUTHENTICATION = {
+        'type': 'proxy',
+        'header': 'X-Authenticated-User',
+    }
+
+Roles
+.....
+
+Once a user is authenticated, their roles must be determined.
+Again, a number of mechanisms are provided, configured with the ``RELENGAPI_ROLES`` key, which is a dictionary containing options.
+
+The ``static`` type supports a simple static mapping from user ID to roles, given in the ``roles`` key.
+Roles are given as a list of strings.
+For example::
+
+    RELENGAPI_ROLES = {
+        'type': 'static',
+        'roles': {
+            'dustin@mozilla.com': ['superhero', 'mild-mannered-reporter'],
+        },
+    }
 
 Library Configuration
 ---------------------

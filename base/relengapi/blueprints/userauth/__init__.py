@@ -27,6 +27,7 @@ class User(UserMixin):
 
 # login manager
 
+
 def init_app_login_manager(app):
     @login_manager.user_loader
     def login_manager_user_loader(authenticated_email):
@@ -42,15 +43,12 @@ def init_app_login_manager(app):
 
 # principal
 
+
 def init_app_principal(app):
     Principal(app, use_sessions=True)
 
-    @identity_loaded.connect_via(app)
-    def on_identity_loaded(sender, identity):
-        # TODO: cache this somehow
-        identity.provides.add(RoleNeed('admin'))
+# browserid auth
 
-# browserid
 
 def init_app_browserid(app):
     from flask.ext.browserid import BrowserID
@@ -72,8 +70,10 @@ def init_app_browserid(app):
 
 # proxy auth
 
+
 def init_app_proxy(app):
-    header = app.config['RELENGAPI_AUTHENTICATION'].get('header', 'REMOTE_USER')
+    header = app.config['RELENGAPI_AUTHENTICATION'].get(
+        'header', 'REMOTE_USER')
 
     # request_loader is invoked on every request
     @login_manager.request_loader
@@ -83,7 +83,20 @@ def init_app_proxy(app):
         if username:
             return User(username)
 
+# static roles
+
+
+def init_app_static_roles(app):
+
+    roles_map = app.config.get('RELENGAPI_ROLES', {}).get('roles', {})
+
+    @identity_loaded.connect_via(app)
+    def on_identity_loaded(sender, identity):
+        for role in roles_map.get(identity.id, []):
+            identity.provides.add(RoleNeed(role))
+
 # views
+
 
 @bp.route("/account")
 @login_required
@@ -102,16 +115,15 @@ def login_request():
 
 # initialization
 
+
 @bp.record
 def init_blueprint(state):
     app = state.app
     init_app_login_manager(app)
     init_app_principal(app)
 
-    auth_type = app.config.get('RELENGAPI_AUTHENTICATION', {}).get('type', 'browserid')
-    # stash this for the template
-    app.config['RELENGAPI_AUTHENTICATION_TYPE'] = auth_type
-
+    auth_type = app.config.get(
+        'RELENGAPI_AUTHENTICATION', {}).get('type', 'browserid')
     auth_init = {
         'browserid': init_app_browserid,
         'proxy': init_app_proxy,
@@ -119,3 +131,15 @@ def init_blueprint(state):
     if not auth_init:
         raise RuntimeError("no such auth type '%s'" % (auth_type,))
     auth_init(app)
+
+    roles_type = app.config.get('RELENGAPI_ROLES', {}).get('type', 'static')
+    roles_init = {
+        'static': init_app_static_roles,
+    }.get(roles_type, None)
+    if not roles_init:
+        raise RuntimeError("no such permission type '%s'" % (roles_type,))
+    roles_init(app)
+
+    # stash these for easy access from the templates
+    app.config['RELENGAPI_AUTHENTICATION_TYPE'] = auth_type
+    app.config['RELENGAPI_ROLES_TYPE'] = roles_type

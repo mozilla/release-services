@@ -8,7 +8,7 @@ SQLALCHEMY_DATABASE_URIS = {
 }
 
 ##
-# Authentication
+# Authentication and Authorization
 
 RELENGAPI_AUTHENTICATION = {
     # use the default, browserid:
@@ -17,6 +17,13 @@ RELENGAPI_AUTHENTICATION = {
     # .. or based on a header from a proxy:
     # 'type': 'proxy',
     # 'header': 'Remote-User',
+}
+
+RELENGAPI_ROLES = {
+    'type': 'static',
+    'roles': {
+        'dustin@mozilla.com': ['superhero'],
+    },
 }
 
 ## Celery
