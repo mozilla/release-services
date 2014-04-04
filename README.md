@@ -3,26 +3,55 @@ RelengAPI
 
 Your Interface to Release Engineering Automation.
 
-Users
+This is the framework behind https://api.pub.build.mozilla.org/.
+It is a Flask-based framework for building and hosting releng-related APIs.
+
+Goals
 -----
 
-Haha, not yet.
+ * Simple self-service usage for consumers
+   * Industry-standard access mechanisms (REST, oAuth2, etc.) that require no client-side custom libraries
+   * One or very few endpoints (e.g., https://api.pub.build.mozilla.org)
+   * Self-documenting tools
+   * Semantic versioning 
 
-Developers
-----------
+ * Simple, rapid implementation of new apps
+   * Common requirements such as authentication, database access, scheduled tasks, configuration handling are already satisfied
+   * All apps use the same technologies (language, web framework, DB framework, etc.), so the learning curve from one app to the next is small
+   * Tailored for easy local development - minimal requirements, minimal installed components, etc. 
+
+ * Operations-friendly
+   * Horizontally scalable using normal webops techniques
+   * Easily deployed in multiple environments with normal devops processes
+   * Resilient to failure: no in-memory state 
+
+Documentation
+-------------
+
+RelengAPI documents itself.  
+See https://api.pub.build.mozilla.org/docs for the documentation of the currently-deployed version.
+
+Info for Developers
+-------------------
 
 ### Structure
 
-RelengAPI is a Flask application.  It is composed of several Python packages.
+RelengAPI is a [Flask](http://flask.pocoo.org/) application.  It is composed of several Python distributions (packages).
+Each distribution can contain several [Flask Blueprints](http://flask.pocoo.org/docs/blueprints/) -- web application components.
+Each Git repository can contain multiple distributions.
 
-The base is in `relengapi`, implemented in `base/`.
-It implements the root app, and lots of other common features.
-It also searches its python environment for other packages that can provide blueprints for the Releng API.
+The base is in the `relengapi` distribution, implemented in `base/`.
+It implements the root app, with lots of common support functionality, and a number of blueprints.
+It also searches its python environment for other distributions that can provide blueprints for the Releng API.
 These act as plugins, adding extra endpoints and other functionality to the API.
 
-Other top-level directories of this one contain other packages.
+Other top-level directories of this repository contain other related distributions with more blueprints.
+Other repositories contain even more distributions, with even more blueprints.
 
-### Running
+All of this is drawn together in production by installing the appropriate distributions on the releng web cluster.
+When developing, though, only the `relengapi` distribution and the distribution you're hacking on are required.
+
+### Running RelengAPI
 
 To run the tool for development, pip install the base into your virtualenv:
 
