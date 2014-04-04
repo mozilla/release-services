@@ -3,15 +3,5 @@
  # file, You can obtain one at http://mozilla.org/MPL/2.0/. #}
 {% extends "layout.html" %}
 {% block content %}
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul class=flashes>
-    {% for message in messages %}
-      <li>{{ message }}</li>
-    {% endfor %}
-    </ul>
-  {% else %}
-    <center>Please login above</center>
-  {% endif %}
-{% endwith %}
+<center>Please Login</center>
 {% endblock %}
