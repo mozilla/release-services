@@ -7,6 +7,9 @@ import threading
 from relengapi.util import synchronized
 from flask import current_app
 from sqlalchemy import orm
+from sqlalchemy import exc
+from sqlalchemy import event
+from sqlalchemy.pool import Pool
 from sqlalchemy.orm import scoping
 from sqlalchemy.ext import declarative
 
@@ -76,6 +79,26 @@ class Alchemies(object):
     @property
     def metadata(self):
         return dict((k, v.metadata) for k, v in _declarative_bases.iteritems())
+
+# Pessimistically try *all* connections on checkout, in case the server has
+# gone away.  This will apply to SQLite DBs too, where the server can't go
+# away, but that's OK - SQLite is only used in development
+#
+# from http://docs.sqlalchemy.org/en/rel_0_9/core/pooling.html#disconnect-handling-pessimistic
+@event.listens_for(Pool, "checkout")
+def ping_connection(dbapi_connection, connection_record, connection_proxy):
+    cursor = dbapi_connection.cursor()
+    try:
+        cursor.execute("SELECT 1")
+    except:
+        # optional - dispose the whole pool
+        # instead of invalidating one at a time
+        connection_proxy._pool.dispose()
+
+        # raise DisconnectionError - pool will try
+        # connecting again up to three times before raising.
+        raise exc.DisconnectionError()
+    cursor.close()
 
 
 def make_db(app):
