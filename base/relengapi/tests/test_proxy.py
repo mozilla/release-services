@@ -21,6 +21,9 @@ class ProxiedRequest(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write("proxied")
 
+    def log_request(self, code=None, size=None):
+        return
+
 
 class ProxyTarget(HTTPServer):
 
