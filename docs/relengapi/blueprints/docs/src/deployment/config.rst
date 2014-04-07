@@ -48,11 +48,20 @@ Any user will be able to authenticate. ::
 If ``type`` is ``proxy``, then the API trusts a plaintext header from the HTTP client to specify the username.
 The header name is given in the ``header`` option, and defaults to ``"Remote-User"``.
 This mode is intended for deployments where the only access to the server is from a frontend proxy which is performing authentication.
-This is a common configuration with load balancers or with tools like Apache or Nginx configured using tools like ``mod_auth_ldap``.
+This is a common configuration with load balancers or with tools like Apache or Nginx configured using tools like ``mod_authnz_ldap``. ::
 
     RELENGAPI_AUTHENTICATION = {
         'type': 'proxy',
         'header': 'X-Authenticated-User',
+    }
+
+If ``type`` is ``environ``, then the API trusts an environment variable named by the ``key`` key.
+This is most useful when running in ``mod_wsgi``, where other server plugins can set environment variables.
+For example, ``mod_authnz_ldap`` sets ``AUTHENTICATE_*`` environment variables that can be used for this purpose. ::
+
+    RELENGAPI_AUTHENTICATION = {
+        'type': 'environ',
+        'header': 'AUTHENTICATE_MAIL',
     }
 
 Roles

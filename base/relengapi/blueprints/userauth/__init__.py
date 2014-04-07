@@ -85,6 +85,21 @@ def init_app_proxy(app):
         if username:
             return User(username)
 
+# environ auth
+
+
+def init_app_environ(app):
+    environ_key = app.config['RELENGAPI_AUTHENTICATION'].get(
+        'key', 'REMOTE_USER')
+
+    # request_loader is invoked on every request
+    @login_manager.request_loader
+    def request_loader(request):
+        # TODO: call identity_changed, if it has
+        username = request.environ.get(environ_key)
+        if username:
+            return User(username)
+
 # static roles
 
 
@@ -126,18 +141,13 @@ def init_blueprint(state):
 
     auth_type = app.config.get(
         'RELENGAPI_AUTHENTICATION', {}).get('type', 'browserid')
-    auth_init = {
-        'browserid': init_app_browserid,
-        'proxy': init_app_proxy,
-    }.get(auth_type, None)
+    auth_init = globals().get('init_app_' + auth_type)
     if not auth_init:
         raise RuntimeError("no such auth type '%s'" % (auth_type,))
     auth_init(app)
 
     roles_type = app.config.get('RELENGAPI_ROLES', {}).get('type', 'static')
-    roles_init = {
-        'static': init_app_static_roles,
-    }.get(roles_type, None)
+    roles_init = globals().get('init_app_' + roles_type + '_roles')
     if not roles_init:
         raise RuntimeError("no such permission type '%s'" % (roles_type,))
     roles_init(app)
