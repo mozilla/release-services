@@ -15,7 +15,7 @@ RELENGAPI_AUTHENTICATION = {
     'type': 'browserid',
 
     # .. or based on a header from a proxy:
-    # 'type': 'proxy',
+    # 'type': 'external',
     # 'header': 'Remote-User',
 }
 

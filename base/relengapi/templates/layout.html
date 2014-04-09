@@ -9,12 +9,12 @@
   <link href="{{ url_for('static', filename='js/ext/alertify.core.css') }}" media="screen" rel="stylesheet" type="text/css" />
   <link href="{{ url_for('static', filename='js/ext/alertify.default.css') }}" media="screen" rel="stylesheet" type="text/css" />
   <script type="text/javascript" src="//code.jquery.com/jquery-1.7.2.min.js"></script>
-  <script src="https://login.persona.org/include.js" type="text/javascript"></script>
+  {# userauth_login_widget.html comes from the 'userauth' blueprint #}
+  {% include 'userauth_head.html' %}
   <script src="{{ url_for('static', filename='js/ext/alertify.min.js') }}" type="text/javascript"></script>
-  <script type="text/javascript">{{ auth_script|safe }}</script>
   {% with messages = get_flashed_messages() %}
     {% if messages %}
-      <script language="javascript">
+      <script type="text/javascript">
         $(function() {
             var messages = {{ messages|tojson }};
             $.each(messages, function (idx, msg) {
@@ -35,7 +35,7 @@
 <body>
   {% block header %}
   <div class="header">
-    {# login_widget.html comes from the 'userauth' blueprint #}
+    {# userauth_login_widget.html comes from the 'userauth' blueprint #}
     {% include 'userauth_login_widget.html' %}
     <h1>Releng API</h1>
   </div>

@@ -12,7 +12,6 @@ from flask_login import current_user
 from flask_login import login_required
 from relengapi import db
 from relengapi import oauth
-from relengapi import login_manager
 from werkzeug.security import gen_salt
 import sqlalchemy as sa
 from sqlalchemy.orm import relationship

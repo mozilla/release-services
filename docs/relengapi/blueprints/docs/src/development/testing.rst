@@ -30,12 +30,14 @@ Most tests take place in the context of an app, some databases, some data, and s
 
 To support, this, use the :py:class:`relengapi.testing.TestContext` class.
 
-.. py:class:: TestContext(databases, db_setup, db_teardown, reuse_app)
+.. py:class:: TestContext(databases, app_setup, db_setup, db_teardown, reuse_app, config)
 
     :param databases: list by name of databases to set up
+    :param app_setup: application setup function; see below
     :param db_setup: database setup function; see below
     :param db_teardown: database teardown function; see below
     :param reuse_app: if true, only create a single Flask app and re-use it for all test cases
+    :param config: application configuration
 
     This class automatically creates the tables in the specified databases, equivalent to ``relengapi createdb``.
     This takes place in SQLite in-memory databases.
@@ -46,7 +48,7 @@ To support, this, use the :py:class:`relengapi.testing.TestContext` class.
     Both are each called with the Flask app as the first argument.
     The former should insert test data into the DB.
     The latter is only necessary if ``reuse_app`` is set, and should reset the data back to a known state.
-    Both can also be given by subclassing :py:class:`TestContext`.
+    These functions can also be given by subclassing :py:class:`TestContext`.
 
     .. py:method:: app_setup(app)
 

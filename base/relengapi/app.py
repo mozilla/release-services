@@ -10,14 +10,12 @@ from flask_oauthlib.provider import OAuth2Provider
 from relengapi import celery
 from relengapi import db
 from relengapi import api
-from flask.ext.login import LoginManager
 import pkg_resources
 import relengapi
 
 # set up the 'relengapi' namespace; it's a namespaced module, so no code
 # is allowed in __init__.py
 relengapi.oauth = OAuth2Provider()
-relengapi.login_manager = LoginManager()
 
 
 def create_app(cmdline=False, test_config=None):

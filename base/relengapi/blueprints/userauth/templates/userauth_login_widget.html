@@ -1,16 +1,19 @@
 <div class="auth">
-  {% if config.RELENGAPI_AUTHENTICATION_TYPE == 'proxy' %}
-    {% if current_user.is_authenticated() %}
-      <span class="user_email"><a href="/userauth/account">{{ current_user.authenticated_email }}</a></span>
-    {% else %}        
-      Anonymous
-    {% endif %}
-  {% else %}
+  {% if config.RELENGAPI_AUTHENTICATION_TYPE == 'browserid' %}
     {% if current_user.is_authenticated() %}
       <span class="user_email"><a href="/userauth/account">{{ current_user.authenticated_email }}</a></span>
       <button id="browserid-logout">Logout</button>
     {% else %}        
+      Anonymous
       <button id="browserid-login">Login</button>
+    {% endif %}
+  {% else %}
+    {% if current_user.is_authenticated() %}
+      <span class="user_email"><a href="/userauth/account">{{ current_user.authenticated_email }}</a></span>
+      <button id="external-logout">Logout</button>
+    {% else %}        
+      Anonymous
+      <button id="external-login">Login</button>
     {% endif %}
   {% endif %}
 </div>

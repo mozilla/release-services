@@ -10,7 +10,8 @@ from nose.tools import make_decorator
 class TestContext(object):
 
     def __init__(self, databases=[], app_setup=None,
-                 db_setup=None, db_teardown=None, reuse_app=False):
+                 db_setup=None, db_teardown=None, reuse_app=False,
+                 config=None):
         self.databases = set(databases)
         if app_setup:
             self.app_setup = app_setup
@@ -18,6 +19,7 @@ class TestContext(object):
             self.db_setup = db_setup
         if db_teardown:
             self.db_teardown = db_teardown
+        self.config = config or {}
         self.reuse_app = reuse_app
         self._app = None
 
@@ -33,7 +35,7 @@ class TestContext(object):
     def _make_app(self):
         if self.reuse_app and self._app:
             return self._app
-        config = {}
+        config = self.config.copy()
         config['TESTING'] = True
         config['SECRET_KEY'] = 'test'
         config['SQLALCHEMY_DATABASE_URIS'] = uris = {}
