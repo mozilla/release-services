@@ -5,6 +5,7 @@
 import logging
 from flask import abort
 from flask import url_for
+from flask import flash
 from flask import redirect
 from flask import request
 from flask import current_app
@@ -41,6 +42,7 @@ class ExternalAuth(object):
         if username:
             login_user(User(username))
             identity_changed.send(current_app, identity=Identity(username))
+            flash("Authenticated as %s" % username, 'success')
             return self._finish_request()
         else:
             logger.warning("External authentication data for RELENGAPI_AUTHENTICATION not found")

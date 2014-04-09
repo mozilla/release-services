@@ -12,17 +12,15 @@
   {# userauth_login_widget.html comes from the 'userauth' blueprint #}
   {% include 'userauth_head.html' %}
   <script src="{{ url_for('static', filename='js/ext/alertify.min.js') }}" type="text/javascript"></script>
-  {% with messages = get_flashed_messages() %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <script type="text/javascript">
         $(function() {
             var messages = {{ messages|tojson }};
-            $.each(messages, function (idx, msg) {
-                if (msg.slice(0, 7) == 'error: ') {
-                    alertify.log(msg, 'error', 0);
-                } else {
-                    alertify.log(msg, '', 0);
-                }
+            $.each(messages, function (idx, msginfo) {
+                var category = msginfo[0];
+                var msg = msginfo[1];
+                alertify.log(msg, category, 0);
             });
         })
       </script>
