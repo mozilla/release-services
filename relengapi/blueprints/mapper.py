@@ -105,7 +105,7 @@ def _check_existing_sha(project, vcs_type, changeset):
     Returns:
         The first db row if it exists; otherwise None.
     """
-    q = Hash.query.filter(_project_filter(project))
+    q = Hash.query.join(Project).filter(_project_filter(project))
     q = q.filter("%s_changeset == :changeset" % (vcs_type,)).params(changeset=changeset)
     return q.first()
 
@@ -161,7 +161,7 @@ def get_rev(project, vcs_type, changeset):
     if vcs_type not in ("git", "hg"):
         abort(400, "Unknown vcs type %s" % vcs_type)
     _check_well_formed_sha(changeset, exact_length=None)
-    q = Hash.query.filter(_project_filter(project))
+    q = Hash.query.join(Project).filter(_project_filter(project))
     q = q.filter("%s_changeset like :cspatttern" % (vcs_type,)).params(cspatttern=changeset+"%")
     row = q.first()
     if row:
@@ -183,7 +183,7 @@ def get_full_mapfile(project):
     Exceptions:
         HTTPError 404: No results found
     """
-    q = Hash.query.filter(_project_filter(project))
+    q = Hash.query.join(Project).filter(_project_filter(project))
     q = q.order_by(Hash.git_changeset)
     mapfile = _build_mapfile(q)
     if not mapfile:
@@ -210,7 +210,7 @@ def get_mapfile_since(project, since):
     except Exception:
         abort(400, 'invalid date; see https://labix.org/python-dateutil')
     since_epoch = calendar.timegm(since_dt.utctimetuple())
-    q = Hash.query.filter(_project_filter(project))
+    q = Hash.query.join(Project).filter(_project_filter(project))
     q = q.order_by(Hash.git_changeset)
     q = q.filter(Hash.date_added > since_epoch)
     print q
