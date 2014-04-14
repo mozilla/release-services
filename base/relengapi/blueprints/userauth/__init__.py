@@ -13,6 +13,7 @@ from flask.ext.login import login_required
 from flask.ext.login import current_user
 from flask.ext.login import LoginManager
 from flask.ext.principal import Principal
+from relengapi.principal import roles
 from .user import User
 
 
@@ -50,7 +51,6 @@ def login_request():
         next = request.args.get('next') or url_for('root')
         return redirect(next)
     return current_app.auth.login_request()
-
 
 def make_support_class(app, mechanisms, config_key, default):
     mechanism = app.config.get(config_key, {}).get('type', default)

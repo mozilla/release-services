@@ -21,6 +21,8 @@ Aside from the required methods, the ``current_user`` object has the following a
 
  * ``authenticated_email`` - the email address of this user
 
+Note that in most API requests, ``current_user`` will not be set.
+
 BrowserID Authentication
 ........................
 
@@ -49,6 +51,57 @@ A logout is accomplished with a similar AJAX call to ``/userauth/logout``, which
 Authorization
 -------------
 
-TODO
+Users have different levels of access, of course.
+Within the Releng API, the `Flask-Principal <https://pythonhosted.org/Flask-Principal/>`_ extension distinguishes the permissions granted to different users
 
-Note that in most API requests, ``current_user`` will not be set.
+Authorization centers around "roles", which are a particular kind of what Flask-Principal calls "Needs".
+Each role is a tuple of identifiers, usually written separated by dots.
+Generally the first element corresponds to the name of the blueprint the role corresponds to.
+For example, a user might have the "tasks.observer" role to observe tasks in the tasks blueprint.
+
+Each HTTP request takes place in the context of zero or more roles.
+A view function can require a particular role using a simple decorator, or use more complicated Flask-Principal functionality to make more complex permissions checks.
+
+Accessing Roles
+...............
+
+A bit of syntactic sugar makes it very easy to access roles::
+
+    from relengapi.principal import roles
+    r = roles.tasks.observer
+
+The ``roles`` object generates roles through attribute access, so the example above creates the ``tasks.observer`` role.
+
+Adding Roles
+............
+
+To add a new role, simply access it and document it::
+
+    from relengapi.principal import roles
+    roles.tasks.observer.doc("Task observer")
+
+Roles that aren't documented can't be used.
+
+Requiring a Role
+................
+
+To protect a view function, use the role's ``require`` method as a decorator, *below* the route decorator::
+
+    @bp.route('/observate')
+    @roles.tasks.observer.require()
+    def observe():
+        ..
+
+The return value of ``require`` is the same as that from Flask-Principal's ``Permission.request`` method, so it can also be used as a context manager.
+
+For more complex needs, follow the Flask-Principal documentation.
+For example, to allow either of two roles::
+
+    observe_or_cancel = Permission(
+        roles.tasks.observer,
+        roles.tasks.cancel)
+
+    @route('/observe')
+    @observe_or_cancel.require()
+    def observe():
+        ..

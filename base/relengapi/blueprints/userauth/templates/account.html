@@ -10,7 +10,7 @@
   <h1>Roles</h1>
   <ul>
   {% for need in g.identity.provides %}
-  <li>{% if need[0] == 'role' %}{{ need[1] }}{% else %}{{ '.'.join(need) }}{% endif %}</li>
+  <li><span class="role">{{ '.'.join(need) }}</span> - <span class="role-docstring">{{ need.__doc__ }}</span></li>
   {% endfor %}
   </ul>
 {% endblock %}
