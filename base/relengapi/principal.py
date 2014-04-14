@@ -32,5 +32,11 @@ class RootRoleElt(RoleElt):
             index = tuple(index.split('.'))
         return self.all[index]
 
+    def get(self, index, default=None):
+        try:
+            return self[index]
+        except KeyError:
+            return default
+
 
 roles = RootRoleElt()
