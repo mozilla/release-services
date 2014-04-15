@@ -19,7 +19,7 @@ RELENGAPI_AUTHENTICATION = {
     # 'header': 'Remote-User',
 }
 
-RELENGAPI_PERMISSIONS = {
+RELENGAPI_ACTIONS = {
     'type': 'static',
     'actions': {
         # 'dustin@mozilla.com': ['some.permission'],

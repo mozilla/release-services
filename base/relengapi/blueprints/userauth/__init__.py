@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import importlib
+from relengapi.api import apimethod
+from flask import g
 from flask import Blueprint
 from flask import render_template
 from flask import request
@@ -14,6 +16,7 @@ from flask.ext.login import current_user
 from flask.ext.login import LoginManager
 from flask.ext.principal import Principal
 from .user import User
+from . import token
 
 
 bp = Blueprint('userauth', __name__, template_folder='templates')
@@ -33,7 +36,7 @@ def init_app_login_manager(app):
 
 
 def init_app_principal(app):
-    Principal(app, use_sessions=True)
+    app.principal = Principal(app, use_sessions=True)
 
 
 @bp.route("/account")
@@ -43,6 +46,13 @@ def account():
     return render_template("account.html")
 
 
+@bp.route("/permitted-actions")
+@apimethod()
+def permitted_actions():
+    """List the actions this identity is permitted to take."""
+    return sorted('.'.join(a) for a in g.identity.provides)
+
+
 @bp.route('/login_request')
 def login_request():
     """Redirect here to ask the user to authenticate"""
@@ -50,6 +60,7 @@ def login_request():
         next = request.args.get('next') or url_for('root')
         return redirect(next)
     return current_app.auth.login_request()
+
 
 def make_support_class(app, mechanisms, config_key, default):
     mechanism = app.config.get(config_key, {}).get('type', default)
@@ -71,6 +82,7 @@ def init_blueprint(state):
     app = state.app
     init_app_login_manager(app)
     init_app_principal(app)
+    token.init_app(app)
 
     auth_mechanisms = {
         'browserid': ('.browserid', 'BrowserIDAuth'),
@@ -83,5 +95,5 @@ def init_blueprint(state):
         'static': ('.static_actions', 'StaticActions'),
     }
     app.actions = make_support_class(app, action_mechanisms,
-                                   'RELENGAPI_ACTIONS',
-                                   'static')
+                                     'RELENGAPI_ACTIONS',
+                                     'static')

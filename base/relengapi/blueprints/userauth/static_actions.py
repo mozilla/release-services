@@ -21,6 +21,9 @@ class StaticActions(object):
 
         @identity_loaded.connect_via(app)
         def on_identity_loaded(sender, identity):
+            # only attach identities for actual user logins; others are handled separately
+            if identity.auth_type != 'user':
+                return
             for actionstr in actions_map.get(identity.id, []):
                 identity.provides.add(actions[actionstr])
 
