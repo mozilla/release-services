@@ -51,7 +51,6 @@ def login_request():
         return redirect(next)
     return current_app.auth.login_request()
 
-
 def make_support_class(app, mechanisms, config_key, default):
     mechanism = app.config.get(config_key, {}).get('type', default)
     try:
@@ -80,9 +79,9 @@ def init_blueprint(state):
     app.auth = make_support_class(app, auth_mechanisms,
                                   'RELENGAPI_AUTHENTICATION',
                                   'browserid')
-    role_mechanisms = {
-        'static': ('.static_roles', 'StaticRoles'),
+    action_mechanisms = {
+        'static': ('.static_actions', 'StaticActions'),
     }
-    app.roles = make_support_class(app, role_mechanisms,
-                                   'RELENGAPI_ROLES',
+    app.actions = make_support_class(app, action_mechanisms,
+                                   'RELENGAPI_ACTIONS',
                                    'static')
