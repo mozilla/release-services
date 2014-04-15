@@ -23,11 +23,18 @@ def test_ActionElt_undoc_not_in_all():
     ok_(actions.a.b.c not in actions.all)
     ok_(actions.a.b.never_mentioned not in actions.all)
 
+def test_ActionElt_get():
+    actions = principal.RootActionElt()
+    actions.a.b.c.d.doc("alphabetterjuice")
+    ok_(actions['a.b.c.d'] == actions.a.b.c.d)
+    ok_(actions.get('a.b.c.d') == actions.a.b.c.d)
+    ok_(actions.get('x.y') == None)
+    ok_(actions.get('x.y', 'missing') == 'missing')
+
 def test_ActionElt_undoc_KeyError():
     "Un-documented actions can't be looked up with []"
     actions = principal.RootActionElt()
     actions.a.b.c.d.doc("alphabetterjuice")
-    ok_(actions['a.b.c.d'] == actions.a.b.c.d)
     assert_raises(KeyError, lambda: actions['a.b.c'])
     assert_raises(KeyError, lambda: actions['a.b.never_mentioned'])
 
