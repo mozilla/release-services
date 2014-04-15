@@ -13,7 +13,6 @@ from flask.ext.login import login_required
 from flask.ext.login import current_user
 from flask.ext.login import LoginManager
 from flask.ext.principal import Principal
-from relengapi.principal import roles
 from .user import User
 
 
@@ -80,9 +79,9 @@ def init_blueprint(state):
     app.auth = make_support_class(app, auth_mechanisms,
                                   'RELENGAPI_AUTHENTICATION',
                                   'browserid')
-    role_mechanisms = {
-        'static': ('.static_roles', 'StaticRoles'),
+    action_mechanisms = {
+        'static': ('.static_actions', 'StaticActions'),
     }
-    app.roles = make_support_class(app, role_mechanisms,
-                                   'RELENGAPI_ROLES',
+    app.actions = make_support_class(app, action_mechanisms,
+                                   'RELENGAPI_ACTIONS',
                                    'static')

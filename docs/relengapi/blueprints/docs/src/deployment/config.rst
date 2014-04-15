@@ -79,20 +79,20 @@ For example, ``mod_authnz_ldap`` sets ``AUTHENTICATE_*`` environment variables t
         'environ': 'AUTHENTICATE_MAIL',
     }
 
-Roles
-.....
+Actions
+.......
 
-Once a user is authenticated, their roles must be determined.
-Again, a number of mechanisms are provided, configured with the ``RELENGAPI_ROLES`` key, which is a dictionary containing options.
+Once a user is authenticated, their permitted actions must be determined.
+Again, RelengAPI provides a number of mechanisms, configured with the ``RELENGAPI_ACTIONS`` key, which is a dictionary containing options.
 
-The ``static`` type supports a simple static mapping from user ID to roles, given in the ``roles`` key.
+The ``static`` type supports a simple static mapping from user ID to actions, given in the ``actions`` key.
 Roles are given as a list of strings.
 For example::
 
-    RELENGAPI_ROLES = {
+    RELENGAPI_ACTIONS = {
         'type': 'static',
-        'roles': {
-            'dustin@mozilla.com': ['superhero', 'mild-mannered-reporter'],
+        'actions': {
+            'dustin@mozilla.com': ['tasks.create', 'base.tokens.create'],
         },
     }
 

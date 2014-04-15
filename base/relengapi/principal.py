@@ -4,14 +4,14 @@
 
 from flask.ext.principal import Permission
 
-class RoleElt(tuple):
+class ActionElt(tuple):
 
     def doc(self, doc):
         self.__doc__ = doc
         self.all[self] = self
 
     def __getattr__(self, attr):
-        new = RoleElt(self + (attr,))
+        new = ActionElt(self + (attr,))
         new.all = self.all
         setattr(self, attr, new)
         return new
@@ -22,7 +22,7 @@ class RoleElt(tuple):
         return Permission(self).require()
 
 
-class RootRoleElt(RoleElt):
+class RootActionElt(ActionElt):
 
     def __init__(self):
         self.all = {}
@@ -39,4 +39,4 @@ class RootRoleElt(RoleElt):
             return default
 
 
-roles = RootRoleElt()
+actions = RootActionElt()
