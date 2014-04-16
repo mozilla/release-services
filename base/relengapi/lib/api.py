@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import traceback
-import json
 import sys
+from flask import json
 from flask import jsonify
 from flask import render_template
 from flask import request
