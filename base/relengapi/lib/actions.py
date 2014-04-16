@@ -4,6 +4,7 @@
 
 from flask.ext.principal import Permission
 
+
 class Action(tuple):
 
     def doc(self, doc):
@@ -21,8 +22,12 @@ class Action(tuple):
 
     def require(self):
         if not self.exists():
-            raise RuntimeError("Cannot require undocumented permission %r" % '.'.join(self))
+            raise RuntimeError(
+                "Cannot require undocumented permission %r" % '.'.join(self))
         return Permission(self).require(http_exception=403)
+
+    def __str__(self):
+        return '.'.join(self)
 
 
 class Actions(Action):

@@ -3,6 +3,7 @@ Releng API
 
 .. toctree::
     deployment/index
+    usage/index
     development/index
 
 License
