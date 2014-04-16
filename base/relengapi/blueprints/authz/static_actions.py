@@ -4,7 +4,7 @@
 
 import itertools
 from flask.ext.principal import identity_loaded
-from relengapi.principal import actions
+from relengapi import actions
 
 class StaticActions(object):
 

@@ -71,17 +71,17 @@ Accessing Roles
 A bit of syntactic sugar makes it very easy to access actions
 
     from relengapi.principal import actions
-    r = actions.tasks.observer
+    r = actions.tasks.view
 
-The ``actions`` object generates actions through attribute access, so the example above creates the ``tasks.observer`` action.
+The ``actions`` object generates actions through attribute access, so the example above creates the ``tasks.view`` action.
 
 Adding Roles
 ............
 
 To add a new action, simply access it and document it::
 
-    from relengapi.principal import actions
-    actions.tasks.observer.doc("Task observer")
+    from relengapi import actions
+    actions.tasks.view.doc("View tasks")
 
 Roles that aren't documented can't be used.
 
@@ -91,8 +91,8 @@ Requiring a Role
 To protect a view function, use the action's ``require`` method as a decorator, *below* the route decorator::
 
     @bp.route('/observate')
-    @actions.tasks.observer.require()
-    def observe():
+    @actions.tasks.view.require()
+    def view():
         ..
 
 The return value of ``require`` is the same as that from Flask-Principal's ``Permission.request`` method, so it can also be used as a context manager.
@@ -100,11 +100,11 @@ The return value of ``require`` is the same as that from Flask-Principal's ``Per
 For more complex needs, follow the Flask-Principal documentation.
 For example, to allow either of two actions::
 
-    observe_or_cancel = Permission(
-        actions.tasks.observer,
+    view_or_cancel = Permission(
+        actions.tasks.view,
         actions.tasks.cancel)
 
-    @route('/observe')
-    @observe_or_cancel.require()
-    def observe():
+    @route('/view')
+    @view_or_cancel.require()
+    def view():
         ..

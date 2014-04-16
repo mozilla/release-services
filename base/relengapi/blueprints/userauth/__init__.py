@@ -2,55 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import importlib
-from relengapi.api import apimethod
-from flask import g
+from relengapi.util import make_support_class
 from flask import Blueprint
-from flask import render_template
 from flask import request
 from flask import redirect
 from flask import url_for
 from flask import current_app
-from flask.ext.login import login_required
 from flask.ext.login import current_user
-from flask.ext.login import LoginManager
-from flask.ext.principal import Principal
 from .user import User
-from . import token
 
 
 bp = Blueprint('userauth', __name__, template_folder='templates')
-login_manager = LoginManager()
-
-
-def init_app_login_manager(app):
-    @login_manager.user_loader
-    def login_manager_user_loader(authenticated_email):
-        return User(authenticated_email)
-
-    # configure the login manager to redirect to a bare "please login" page when
-    # a login is required
-    login_manager.login_view = 'userauth.login_request'
-    login_manager.login_message = 'Please authenticate to the Releng API before proceeding'
-    login_manager.init_app(app)
-
-
-def init_app_principal(app):
-    app.principal = Principal(app, use_sessions=True)
-
-
-@bp.route("/account")
-@login_required
-def account():
-    """Show the user information about their account"""
-    return render_template("account.html")
-
-
-@bp.route("/permitted-actions")
-@apimethod()
-def permitted_actions():
-    """List the actions this identity is permitted to take."""
-    return sorted('.'.join(a) for a in g.identity.provides)
 
 
 @bp.route('/login_request')
@@ -62,38 +24,25 @@ def login_request():
     return current_app.auth.login_request()
 
 
-def make_support_class(app, mechanisms, config_key, default):
-    mechanism = app.config.get(config_key, {}).get('type', default)
-    try:
-        module_name, class_name = mechanisms[mechanism]
-    except KeyError:
-        raise RuntimeError("no such %s type '%s'" % (config_key, mechanism))
-
-    # stash this for easy access from the templates
-    app.config[config_key + '_TYPE'] = mechanism
-
-    mech_module = importlib.import_module(module_name, __name__)
-    mech_class = getattr(mech_module, class_name)
-    return mech_class(app)
-
-
 @bp.record
 def init_blueprint(state):
+    from relengapi import login_manager
     app = state.app
-    init_app_login_manager(app)
-    init_app_principal(app)
-    token.init_app(app)
+
+    @login_manager.user_loader
+    def login_manager_user_loader(authenticated_email):
+        return User(authenticated_email)
+
+    # configure the login manager to redirect to a bare "please login" page when
+    # a login is required
+    login_manager.login_view = 'userauth.login_request'
+    login_manager.login_message = 'Please authenticate to the Releng API before proceeding'
+    login_manager.init_app(app)
 
     auth_mechanisms = {
         'browserid': ('.browserid', 'BrowserIDAuth'),
         'external': ('.external', 'ExternalAuth'),
     }
-    app.auth = make_support_class(app, auth_mechanisms,
+    app.auth = make_support_class(app, __name__, auth_mechanisms,
                                   'RELENGAPI_AUTHENTICATION',
                                   'browserid')
-    action_mechanisms = {
-        'static': ('.static_actions', 'StaticActions'),
-    }
-    app.actions = make_support_class(app, action_mechanisms,
-                                     'RELENGAPI_ACTIONS',
-                                     'static')

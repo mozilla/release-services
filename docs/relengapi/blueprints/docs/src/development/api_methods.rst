@@ -11,9 +11,9 @@ For error responses, an ``error`` key contains information about the error.
 Decorator
 ---------
 
-First, all API view methods should be wrapped with :py:function:`relengapi.api.apimethod`::
+First, all API view methods should be wrapped with :py:function:`~relengapi.lib.api.apimethod`, which is available in the ``relengapi`` namespace::
 
-    from relengapi.api import apimethod
+    from relengapi import apimethod
     ...
     @bp.route('/widgets')
     @apimethod()
@@ -30,7 +30,7 @@ To return a success code other than 200 or include headers, simply return a tupl
     # or
     return new_widget, 201, {'X-Widget-Id': new_widget.id}
 
-..py:function:: relengapi.api.apimethod()
+..py:function:: relengapi.lib.api.apimethod()
 
     Returns a decorator for API methods as described above.
 

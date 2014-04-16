@@ -5,7 +5,7 @@
 import json
 from nose.tools import eq_
 from flask import Response
-from relengapi import api
+from relengapi.lib import api
 from relengapi import testing
 from werkzeug.exceptions import BadRequest
 

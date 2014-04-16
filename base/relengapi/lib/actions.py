@@ -22,7 +22,7 @@ class ActionElt(tuple):
         return Permission(self).require()
 
 
-class RootActionElt(ActionElt):
+class Actions(ActionElt):
 
     def __init__(self):
         self.all = {}
@@ -37,6 +37,3 @@ class RootActionElt(ActionElt):
             return self[index]
         except KeyError:
             return default
-
-
-actions = RootActionElt()

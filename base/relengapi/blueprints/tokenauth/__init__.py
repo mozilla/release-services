@@ -5,8 +5,12 @@
 from flask import request
 from relengapi import db
 import sqlalchemy as sa
+from flask import Blueprint
 from flask.ext.principal import Identity
-from relengapi.principal import actions
+from relengapi import actions
+from relengapi import principal
+
+bp = Blueprint('tokenauth', __name__, template_folder='templates')
 
 class Token(db.declarative_base('relengapi')):
     __tablename__ = 'tokens'
@@ -31,13 +35,12 @@ tokens = {
     'abcd': [actions.test1],
 }
 
-def init_app(app):
-    @app.principal.identity_loader
-    def token_loader():
-        token = request.headers.get('X-Relengapi-Token')
-        if not token:
-            return
-        if token in tokens:
-            identity = Identity(token, 'token')
-            identity.provides.update(set(tokens[token]))
-            return identity
+@principal.identity_loader
+def token_loader():
+    token = request.headers.get('X-Relengapi-Token')
+    if not token:
+        return
+    if token in tokens:
+        identity = Identity(token, 'token')
+        identity.provides.update(set(tokens[token]))
+        return identity

@@ -7,16 +7,22 @@ from flask import Flask
 from flask import g
 from flask import render_template
 from flask_oauthlib.provider import OAuth2Provider
+from flask.ext.principal import Principal
+from flask.ext.login import LoginManager
 from relengapi import celery
 from relengapi import db
-from relengapi import api
+from relengapi.lib import api
+from relengapi.lib.actions import Actions
 import pkg_resources
 import relengapi
 
 # set up the 'relengapi' namespace; it's a namespaced module, so no code
 # is allowed in __init__.py
 relengapi.oauth = OAuth2Provider()
-
+relengapi.login_manager = LoginManager()
+relengapi.principal = Principal(use_sessions=True)
+relengapi.actions = Actions()
+relengapi.apimethod = api.apimethod
 
 def create_app(cmdline=False, test_config=None):
     app = Flask(__name__)
@@ -24,6 +30,14 @@ def create_app(cmdline=False, test_config=None):
         app.config.update(**test_config)
     else:
         app.config.from_envvar('RELENGAPI_SETTINGS')
+
+    # add the necessary components to the app
+    app.db = db.make_db(app)
+    app.celery = celery.make_celery(app)
+    relengapi.oauth.init_app(app)
+    relengapi.principal.init_app(app)
+    relengapi.login_manager.init_app(app)
+    api.init_app(app)
 
     # get blueprints from pkg_resources
     for ep in pkg_resources.iter_entry_points('relengapi_blueprints'):
@@ -35,12 +49,6 @@ def create_app(cmdline=False, test_config=None):
     if not app.config.get('SECRET_KEY'):
         print " * WARNING: setting per-process session key"
         app.secret_key = os.urandom(24)
-
-    # add the necessary components to the app
-    app.db = db.make_db(app)
-    app.celery = celery.make_celery(app)
-    relengapi.oauth.init_app(app)
-    api.init_app(app)
 
     @app.before_request
     def add_db():
