@@ -4,25 +4,28 @@
 
 from flask.ext.principal import Permission
 
-class ActionElt(tuple):
+class Action(tuple):
 
     def doc(self, doc):
         self.__doc__ = doc
         self.all[self] = self
 
     def __getattr__(self, attr):
-        new = ActionElt(self + (attr,))
+        new = Action(self + (attr,))
         new.all = self.all
         setattr(self, attr, new)
         return new
 
+    def exists(self):
+        return self in self.all
+
     def require(self):
-        if self not in self.all:
+        if not self.exists():
             raise RuntimeError("Cannot require undocumented permission %r" % '.'.join(self))
-        return Permission(self).require()
+        return Permission(self).require(http_exception=403)
 
 
-class Actions(ActionElt):
+class Actions(Action):
 
     def __init__(self):
         self.all = {}

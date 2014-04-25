@@ -21,9 +21,7 @@ class TestContext(object):
     ])
 
     def __init__(self, **options):
-        unknown = set(options) - self._known_options
-        if unknown:
-            raise ValueError("unknown options %s" % (', '.join(unknown)))
+        self._validate(options)
         self.options = options
         self._app = None
 
@@ -31,6 +29,15 @@ class TestContext(object):
         new_options = self.options.copy()
         new_options.update(options)
         return TestContext(**new_options)
+
+    def _validate(self, options):
+        unknown = set(options) - self._known_options
+        if unknown:
+            raise ValueError("unknown options %s" % (', '.join(unknown)))
+        # verify that all actions exist
+        if options.get('actions'):
+            for action in options['actions']:
+                assert action.exists()
 
     def _make_app(self):
         if self.options.get('reuse_app') and self._app:
