@@ -1,7 +1,7 @@
 <div class="auth">
   {% if config.RELENGAPI_AUTHENTICATION_TYPE == 'browserid' %}
     {% if current_user.is_authenticated() %}
-      <span class="user_email"><a href="/userauth/account">{{ current_user.authenticated_email }}</a></span>
+      <span class="user_email"><a href="/auth/account">{{ current_user.authenticated_email }}</a></span>
       <button id="browserid-logout">Logout</button>
     {% else %}        
       Anonymous
@@ -9,7 +9,7 @@
     {% endif %}
   {% else %}
     {% if current_user.is_authenticated() %}
-      <span class="user_email"><a href="/userauth/account">{{ current_user.authenticated_email }}</a></span>
+      <span class="user_email"><a href="/auth/account">{{ current_user.authenticated_email }}</a></span>
       <button id="external-logout">Logout</button>
     {% else %}        
       Anonymous
