@@ -104,7 +104,6 @@ Library Configuration
 The configuration file can contain any configuration parameter specified for
 
  * Flask - http://flask.pocoo.org/docs/config/
- * Flask-OAuthlib - https://flask-oauthlib.readthedocs.org/en/latest/oauth2.html
  * Celery - http://docs.celeryproject.org/en/master/configuration.html#configuration
 
 In particular, in order to use Celery to run any tasks, you will need to set ``CELERY_BROKER_URL`` and ``CELERY_BACKEND``.

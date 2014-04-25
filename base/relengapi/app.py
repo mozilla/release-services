@@ -6,7 +6,6 @@ import os
 from flask import Flask
 from flask import g
 from flask import render_template
-from flask_oauthlib.provider import OAuth2Provider
 from flask.ext.principal import Principal
 from flask.ext.login import LoginManager
 from relengapi import celery
@@ -18,7 +17,6 @@ import relengapi
 
 # set up the 'relengapi' namespace; it's a namespaced module, so no code
 # is allowed in __init__.py
-relengapi.oauth = OAuth2Provider()
 relengapi.login_manager = LoginManager()
 relengapi.principal = Principal(use_sessions=True)
 relengapi.actions = Actions()
@@ -34,7 +32,6 @@ def create_app(cmdline=False, test_config=None):
     # add the necessary components to the app
     app.db = db.make_db(app)
     app.celery = celery.make_celery(app)
-    relengapi.oauth.init_app(app)
     relengapi.principal.init_app(app)
     relengapi.login_manager.init_app(app)
     api.init_app(app)

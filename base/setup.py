@@ -13,7 +13,6 @@ setup(
     url='https://api.pub.build.mozilla.org',
     install_requires=[
         "Flask",
-        "Flask-OAuthlib",
         "Flask-Login>=0.2.10",
         "Flask-Browserid",
         "Flask-Principal",
@@ -40,9 +39,6 @@ setup(
         'relengapi.blueprints.base': [
             'templates/*.html',
         ],
-        'relengapi.blueprints.oauth': [
-            'templates/*.html',
-        ],
         'relengapi.blueprints.auth': [
             'templates/*.html',
         ],
@@ -60,7 +56,6 @@ setup(
     entry_points={
         "relengapi_blueprints": [
             'base = relengapi.blueprints.base:bp',
-            'oauth = relengapi.blueprints.oauth:bp',
             'auth = relengapi.blueprints.auth:bp',
             'authz = relengapi.blueprints.authz:bp',
             'userauth = relengapi.blueprints.userauth:bp',
