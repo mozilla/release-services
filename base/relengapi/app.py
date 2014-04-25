@@ -11,6 +11,7 @@ from flask.ext.login import LoginManager
 from relengapi import celery
 from relengapi import db
 from relengapi.lib import api
+from relengapi.lib import monkeypatches
 from relengapi.lib.actions import Actions
 import pkg_resources
 import relengapi
@@ -21,6 +22,9 @@ relengapi.login_manager = LoginManager()
 relengapi.principal = Principal(use_sessions=True)
 relengapi.actions = Actions()
 relengapi.apimethod = api.apimethod
+
+# apply monkey patches
+monkeypatches.monkeypatch()
 
 def create_app(cmdline=False, test_config=None):
     app = Flask(__name__)
@@ -53,7 +57,13 @@ def create_app(cmdline=False, test_config=None):
 
     @app.route('/')
     def root():
-        return render_template('root.html')
+        # render all of the blueprints' templates first
+        bp_widgets = []
+        for bp in app.blueprints.itervalues():
+            bp_widgets.extend(bp.root_widget_templates or [])
+        bp_widgets.sort()
+        bp_widgets = [tpl for (p, tpl) in bp_widgets]
+        return render_template('root.html', bp_widgets=bp_widgets)
 
     @app.route('/versions')
     @api.apimethod()

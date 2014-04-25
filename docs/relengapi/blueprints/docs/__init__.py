@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 bp = Blueprint('docs', __name__,
                template_folder='templates')
-
+bp.root_widget_template('docs_root_widget.html', priority=100)
 
 def get_support():
     if not hasattr(current_app, 'docs_websupport'):
@@ -59,9 +59,6 @@ def static(path):
     # just implement static files directly
     support = get_support()
     return send_from_directory(support.staticdir, path)
-
-
-# TODO:
 
 
 def api_info(docname):

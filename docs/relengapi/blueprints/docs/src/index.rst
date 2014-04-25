@@ -1,13 +1,13 @@
 Releng API
 ==========
 
+..
+    NOTE: if you add a section here, add it to
+    docs/relengapi/blueprints/docs/templates/docs_root_widget.html
+    as well.
+
 .. toctree::
     deployment/index
     usage/index
     development/index
-
-License
--------
-
-This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
-If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    license

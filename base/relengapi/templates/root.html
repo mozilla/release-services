@@ -3,5 +3,7 @@
  # file, You can obtain one at http://mozilla.org/MPL/2.0/. #}
 {% extends "layout.html" %}
 {% block content %}
-Check out the <a href="docs/">docs</a>.
+{% for widget_tpl in bp_widgets %}
+  {% include widget_tpl %}
+{% endfor %}
 {% endblock %}
