@@ -31,6 +31,8 @@ The databases for the base blueprint are
 
 Other blueprints may require additional bind URIs.
 
+.. _Deployment-Authentication:
+
 Authentication
 ..............
 

@@ -11,7 +11,7 @@ For error responses, an ``error`` key contains information about the error.
 Decorator
 ---------
 
-First, all API view methods should be wrapped with :py:function:`~relengapi.lib.api.apimethod`, which is available in the ``relengapi`` namespace::
+First, all API view methods should be wrapped with :py:func:`~relengapi.lib.api.apimethod`, which is available in the ``relengapi`` namespace::
 
     from relengapi import apimethod
     ...

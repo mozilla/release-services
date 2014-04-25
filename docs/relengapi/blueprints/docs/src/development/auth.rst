@@ -7,7 +7,7 @@ User Authentication
 Releng API is an API, and as such most access is limited using OAuth2, described below.
 However, the setup for new OAuth2 tokens is controlled by normal, browser-based logins.
 
-You should be familiar with the :doc:`authentication configuration <../deployment/auth>` documentation.
+You should be familiar with the :ref:`authentication configuration <Deployment-Authentication>` documentation.
 
 Flask-Login
 ...........
