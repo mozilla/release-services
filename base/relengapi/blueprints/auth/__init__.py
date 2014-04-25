@@ -8,6 +8,7 @@ from flask.ext.login import login_required
 
 
 bp = Blueprint('auth', __name__, template_folder='templates')
+bp.root_widget_template('auth_root_widget.html', priority=-100)
 
 
 @bp.route("/account")

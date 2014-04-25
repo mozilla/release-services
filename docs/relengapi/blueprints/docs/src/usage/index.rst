@@ -1,5 +1,5 @@
-Development
-===========
+Usage
+=====
 
 .. toctree::
     actions

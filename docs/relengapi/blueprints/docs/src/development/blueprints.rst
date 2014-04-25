@@ -22,7 +22,9 @@ Finally, include an entry point so that the base can find the blueprint::
 
 The ``relengapi.blueprints.mypackage:bp`` in the above is an import path leading to the Blueprint object.
 
-Finally, create the directory structure::
+Finally, create the directory structure
+
+.. code-block:: none
 
     relengapi/__init__.py
     relengapi/blueprints/__init__.py
@@ -41,3 +43,73 @@ In the third, create your Blueprint::
         return jsonify("HELLO")
 
 The ``root`` function in this example would be available at ``/mypackage/some/path``.  
+
+Templates
+---------
+
+To use templates in your blueprint, include ``template_folder='templates'`` in the constructor arguments, and add a ``templates`` directory
+
+.. code-block:: none
+
+    relengapi/blueprints/mypackage/__init__.py
+    relengapi/blueprints/mypackage/templates/
+
+You must also add this to your ``setup.py``::
+
+    package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
+        'relengapi.blueprints.mypackage': [
+            'templates/*.html',
+        ],
+    },
+
+and to your ``MANIFEST.in``:
+
+.. code-block:: none
+
+    recursive-include relengapi/blueprints/mypackage/templates *.html
+
+.. warning::
+
+    Jinja2 treats template names as a flat namespace.
+    If multiple blueprints define templates with the same name, the results are undefined.
+    Name your templates uniquely -- prefixing with the blueprint name is an effective strategy.
+
+Static
+------
+
+To use static files in your blueprint, include ``static_folder='static'`` in the constructor arguments, and add a ``static`` directory
+
+.. code-block:: none
+
+    relengapi/blueprints/mypackage/__init__.py
+    relengapi/blueprints/mypackage/static
+
+Use ``url_for('mypackage.static', filename='somefile.js')`` to generate static URLs.
+Unlike templates, URLs are scoped to the blueprint, so there is no risk of filename collisions.
+
+You must also add the static files to your ``setup.py``::
+
+    package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
+        'relengapi.blueprints.mypackage': [
+            'static/*.js',
+            'static/*.css',
+        ],
+    },
+
+and to your ``MANIFEST.in``:
+
+.. code-block:: none
+
+    recursive-include relengapi/blueprints/mypackage/static *.js
+    recursive-include relengapi/blueprints/mypackage/static *.css
+
+
+Root Widgets
+------------
+
+The root page of the RelengAPI contains "widgets" that can be provided by installed blueprints.
+To add such a widget, define a template for the widget and add it to the blueprint with ``bp.root_widget_template``::
+
+    bp.root_widget_template('myproject_root_widget.html', priority=10)
+
+The priority defines the order of the widgets on the page, with smaller numbers appearing earlier.
