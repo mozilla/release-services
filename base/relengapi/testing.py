@@ -3,53 +3,61 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import inspect
+from flask import g
 import relengapi.app
 from nose.tools import make_decorator
 
 
 class TestContext(object):
 
-    def __init__(self, databases=[], app_setup=None,
-                 db_setup=None, db_teardown=None, reuse_app=False,
-                 config=None):
-        self.databases = set(databases)
-        if app_setup:
-            self.app_setup = app_setup
-        if db_setup:
-            self.db_setup = db_setup
-        if db_teardown:
-            self.db_teardown = db_teardown
-        self.config = config or {}
-        self.reuse_app = reuse_app
+    _known_options = set([
+        'databases',
+        'reuse_app',
+        'app_setup',
+        'db_setup',
+        'db_teardown',
+        'config',
+        'actions',
+    ])
+
+    def __init__(self, **options):
+        unknown = set(options) - self._known_options
+        if unknown:
+            raise ValueError("unknown options %s" % (', '.join(unknown)))
+        self.options = options
         self._app = None
 
-    def app_setup(self, app):
-        pass
-
-    def db_setup(self, app):
-        pass
-
-    def db_teardown(self, app):
-        pass
+    def specialize(self, **options):
+        new_options = self.options.copy()
+        new_options.update(options)
+        return TestContext(**new_options)
 
     def _make_app(self):
-        if self.reuse_app and self._app:
+        if self.options.get('reuse_app') and self._app:
             return self._app
-        config = self.config.copy()
+        config = self.options.get('config', {}).copy()
         config['TESTING'] = True
         config['SECRET_KEY'] = 'test'
         config['SQLALCHEMY_DATABASE_URIS'] = uris = {}
-        for dbname in self.databases:
+        dbnames = self.options.get('databases', [])
+        for dbname in dbnames:
             uris[dbname] = 'sqlite://'
         app = relengapi.app.create_app(test_config=config)
 
+        # set up actions
+        if self.options.get('actions') is not None:
+            @app.before_request
+            def set_actions():
+                g.identity.provides.update(set(self.options['actions']))
+
         # set up the requested DBs
-        for dbname in self.databases:
+        for dbname in dbnames:
             meta = app.db.metadata[dbname]
             engine = app.db.engine(dbname)
             meta.create_all(bind=engine)
         self._app = app
-        self.app_setup(app)
+        if 'app_setup' in self.options:
+            self.options['app_setup'](app)
         return app
 
     def __call__(self, func):
@@ -64,9 +72,11 @@ class TestContext(object):
                 kwargs['app'] = app
             if 'client' in args:
                 kwargs['client'] = app.test_client()
-            self.db_setup(app)
+            if 'db_setup' in self.options:
+                self.options['db_setup'](app)
             try:
                 func(**kwargs)
             finally:
-                self.db_teardown(app)
+                if 'db_teardown' in self.options:
+                    self.options['db_teardown'](app)
         return wrap

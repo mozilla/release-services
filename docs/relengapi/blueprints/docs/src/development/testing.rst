@@ -38,6 +38,11 @@ To support, this, use the :py:class:`relengapi.testing.TestContext` class.
     :param db_teardown: database teardown function; see below
     :param reuse_app: if true, only create a single Flask app and re-use it for all test cases
     :param config: application configuration
+    :param actions: a list of actions the test identity is permitted to perform
+
+    A test context acts as a decorator to perform API-specific setup and tear-down for tests.
+
+    This class must always be called with keyword arguments.
 
     This class automatically creates the tables in the specified databases, equivalent to ``relengapi createdb``.
     This takes place in SQLite in-memory databases.
@@ -48,19 +53,20 @@ To support, this, use the :py:class:`relengapi.testing.TestContext` class.
     Both are each called with the Flask app as the first argument.
     The former should insert test data into the DB.
     The latter is only necessary if ``reuse_app`` is set, and should reset the data back to a known state.
-    These functions can also be given by subclassing :py:class:`TestContext`.
 
-    .. py:method:: app_setup(app)
+    .. py:method:: specialize()
 
-        :param app: Flask app
+        :returns: specialized :py:class:`TestContext` instance
 
-    .. py:method:: db_setup(app)
+        This returns a specialized version of the object context.
+        Its arguments are identical to those for the constructor.
+        This is most useful in decorators where a single test requires a slightly different context from the others.
+        For example::
 
-        :param app: Flask app
+            @test_context.specialize(config={'SOME_OPTION': True})
+            def test_works_with_some_option(client):
+                ..
 
-    .. py:method:: db_teardown(app)
-
-        :param app: Flask app
 
 :py:class:`TestContext` instances act as decorators for test methods.
 The test method indicates the objects it needs from the context by its parameter names.
