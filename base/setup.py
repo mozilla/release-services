@@ -53,6 +53,7 @@ setup(
             'templates/*.html',
         ],
         'relengapi.blueprints.tokenauth': [
+            'static/*.js',
             'templates/*.html',
         ],
     },
