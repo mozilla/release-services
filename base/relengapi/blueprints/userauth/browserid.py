@@ -17,7 +17,7 @@ class BrowserIDAuth(object):
         def browser_id_user_loader(login_info):
             if login_info['status'] != 'okay':
                 return None
-            identity_changed.send(app, identity=Identity(login_info['email']))
+            identity_changed.send(app, identity=Identity(login_info['email'], 'user'))
             flash("Authenticated as %s" % login_info['email'], 'success')
             return User(login_info['email'])
 

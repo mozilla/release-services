@@ -65,46 +65,91 @@ Each action is represented internally as a tuple of identifiers, and is usually 
 Generally the first element corresponds to the name of the blueprint the action applies to.
 For example, an identity context might have the "tasks.create" action to create tasks, handled by the tasks blueprint.
 
-Accessing Roles
-...............
+Accessing Actions
+.................
 
 A bit of syntactic sugar makes it very easy to access actions
 
     from relengapi.principal import actions
-    r = actions.tasks.observer
+    r = actions.tasks.view
 
-The ``actions`` object generates actions through attribute access, so the example above creates the ``tasks.observer`` action.
+The ``actions`` object generates actions through attribute access, so the example above creates the ``tasks.view`` action.
 
-Adding Roles
-............
+Adding Actions
+..............
 
-To add a new action, simply access it and document it::
+To add a new action, simply access it and document it with the  :py:meth:`~relengapi.lib.actions.Action.doc` method::
 
-    from relengapi.principal import actions
-    actions.tasks.observer.doc("Task observer")
+    from relengapi import actions
+    actions.tasks.view.doc("View tasks")
 
-Roles that aren't documented can't be used.
+Verifying an Action
+...................
 
-Requiring a Role
-................
+Actions that aren't documented can't be used.
+The :py:meth:`~relengapi.lib.actions.Action.exists` method verifies that it can be used.
 
-To protect a view function, use the action's ``require`` method as a decorator, *below* the route decorator::
+Requiring a Action
+..................
+
+To protect a view function, use the action's  :py:meth:`~relengapi.lib.actions.Action.require` method as a decorator, *below* the route decorator::
 
     @bp.route('/observate')
-    @actions.tasks.observer.require()
-    def observe():
+    @actions.tasks.view.require()
+    def view():
         ..
-
-The return value of ``require`` is the same as that from Flask-Principal's ``Permission.request`` method, so it can also be used as a context manager.
 
 For more complex needs, follow the Flask-Principal documentation.
 For example, to allow either of two actions::
 
-    observe_or_cancel = Permission(
-        actions.tasks.observer,
+    view_or_cancel = Permission(
+        actions.tasks.view,
         actions.tasks.cancel)
 
-    @route('/observe')
-    @observe_or_cancel.require()
-    def observe():
+    @route('/view')
+    @view_or_cancel.require()
+    def view():
         ..
+
+The Action class
+................
+
+.. py:class:: relengapi.lib.actions.Action
+
+    .. py:method:: doc(doc)
+
+        :param doc: documentation for the action
+
+        Set the documentation string for an action
+
+    .. py:method:: exists()
+
+        Verify that this action exists (is documented)
+
+    .. py:method:: require()
+
+        Return a decorator for view functions that will require this permission, and fail with a 403 response if permission is not granted.
+        The return value is the same as that from Flask-Principal's ``Permission.request`` method, so it can also be used as a context manager.
+
+    .. py:method:: __str__()
+
+        Return the dot-separated string representation of this action.
+
+.. py:class:: relengapi.lib.actions.Actions
+
+    There is exactly one instance of this class, at ``relengapi.actions``.
+
+    .. py:method:: __getitem__(index):
+
+        :param index: string representation of an action
+        :returns: Action
+
+        Return the named action if, and only if, it already exists.
+
+    .. py:method:: get(index, default=None)
+
+        :param index: string representation of an action
+        :param default: default value if ``index`` is not found
+        :returns: Action or default
+
+        Return the named action if it already exists, otherwise return the default

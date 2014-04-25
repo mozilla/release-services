@@ -41,7 +41,7 @@ class ExternalAuth(object):
         username = self.user_getter(request)
         if username:
             login_user(User(username))
-            identity_changed.send(current_app, identity=Identity(username))
+            identity_changed.send(current_app, identity=Identity(username, 'user'))
             flash("Authenticated as %s" % username, 'success')
             return self._finish_request()
         else:

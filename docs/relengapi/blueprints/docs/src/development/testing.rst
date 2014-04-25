@@ -75,6 +75,8 @@ The options are:
     * ``app`` -- the Flask App
     * ``client`` -- a Flask test client (equivalent to ``app.test_client()``)
 
+    The client is monkey-patched to have a ``post_json`` method which makes a POST with an appropriate content type and a JSON dump of its second argument.
+
 For example ::
 
     test_context = TestContext(databases=['docs'], reuse_app=True)

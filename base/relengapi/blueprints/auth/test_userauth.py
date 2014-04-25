@@ -8,26 +8,22 @@ from relengapi.testing import TestContext
 
 
 browserid_test_context = TestContext(
-    config={'RELENGAPI_AUTHENTICATION': {'type': 'browserid'}})
-
-external_environ_test_context = TestContext(
-    config={'RELENGAPI_AUTHENTICATION': {'type': 'external', 'environ': 'TEST'}})
-
+        config={'RELENGAPI_AUTHENTICATION': {'type': 'browserid'}})
 
 @browserid_test_context
 def test_browserid_login(app, client):
     # all of the fun bits of browserid are in the extension, which has its own
-    # tests.  This just verifies that the auth type loads and can handle a
-    # request.
+    # tests.  This just verifies that the auth type loads and can handle a request.
     client.get('/userauth/login_request')
 
+external_environ_test_context = TestContext(
+        config={'RELENGAPI_AUTHENTICATION': {'type': 'external', 'environ': 'TEST'}})
 
 @external_environ_test_context
 def test_external_login_request_redirect(app, client):
     rv = client.get('/userauth/login_request?next=%2Fusername')
     eq_((rv.status_code, rv.headers['Location']),
         (302, "http://localhost/userauth/login?next=%2Fusername"))
-
 
 @external_environ_test_context
 def test_external_login_logout(app, client):
@@ -40,10 +36,8 @@ def test_external_login_logout(app, client):
 
     rv = client.get("/username")
     eq_((rv.status_code, rv.data), (200, "no user"))
-    rv = client.get(
-        "/userauth/login?next=%2Fusername", environ_overrides={'TEST': 'jimmy'})
-    eq_((rv.status_code, rv.headers['Location']), (
-        302, "http://localhost/username"))
+    rv = client.get("/userauth/login?next=%2Fusername", environ_overrides={'TEST': 'jimmy'})
+    eq_((rv.status_code, rv.headers['Location']), (302, "http://localhost/username"))
     rv = client.get("/username")
     eq_((rv.status_code, rv.data), (200, "jimmy"))
     rv = client.get("/userauth/logout")

@@ -43,7 +43,16 @@ setup(
         'relengapi.blueprints.oauth': [
             'templates/*.html',
         ],
+        'relengapi.blueprints.auth': [
+            'templates/*.html',
+        ],
+        'relengapi.blueprints.authz': [
+            'templates/*.html',
+        ],
         'relengapi.blueprints.userauth': [
+            'templates/*.html',
+        ],
+        'relengapi.blueprints.tokenauth': [
             'templates/*.html',
         ],
     },
@@ -51,7 +60,10 @@ setup(
         "relengapi_blueprints": [
             'base = relengapi.blueprints.base:bp',
             'oauth = relengapi.blueprints.oauth:bp',
+            'auth = relengapi.blueprints.auth:bp',
+            'authz = relengapi.blueprints.authz:bp',
             'userauth = relengapi.blueprints.userauth:bp',
+            'tokenauth = relengapi.blueprints.tokenauth:bp',
         ],
         "console_scripts": [
             'relengapi = relengapi.subcommands:main',

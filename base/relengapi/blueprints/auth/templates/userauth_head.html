@@ -1,0 +1,22 @@
+{% if config.RELENGAPI_AUTHENTICATION_TYPE == 'browserid' %}
+  <script src="https://login.persona.org/include.js" type="text/javascript"></script>
+  <script type="text/javascript">{{ auth_script|safe }}</script>
+{% else %}
+  <script type="text/javascript">
+  $(function() {
+    var authAjax = function(url, action) {
+        return $.ajax({
+            url: url + '?ajax=1',
+            success: function(res, status, xhr) {
+                return location.reload(true);
+            },
+            error: function(res, status, xhr) {
+                alertify.error(action + " failure: " + status);
+            }
+        });
+    }
+    $('button#external-login').click(function() { authAjax('/userauth/login', 'login'); });
+    $('button#external-logout').click(function() { authAjax('/userauth/logout', 'logout'); });
+  });
+  </script>
+{% endif %}
