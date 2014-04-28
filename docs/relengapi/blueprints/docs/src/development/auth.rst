@@ -68,7 +68,7 @@ For example, an identity context might have the "tasks.create" action to create 
 Accessing Actions
 .................
 
-A bit of syntactic sugar makes it very easy to access actions
+A bit of syntactic sugar makes it very easy to access actions ::
 
     from relengapi.principal import actions
     r = actions.tasks.view
