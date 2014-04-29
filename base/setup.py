@@ -14,7 +14,7 @@ data_patterns = [
 
 setup(
     name='relengapi',
-    version='0.1.5',
+    version='0.1.6',
     description='The code behind https://api.pub.build.mozilla.org',
     author='Dustin J. Mitchell',
     author_email='dustin@mozilla.com',
@@ -38,7 +38,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     namespace_packages=['relengapi', 'relengapi.blueprints'],
-    package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
+    package_data={
         'relengapi': data_patterns,
         'relengapi.blueprints.base': data_patterns,
         'relengapi.blueprints.auth': data_patterns,
