@@ -4,6 +4,14 @@
 
 from setuptools import setup, find_packages
 
+data_patterns = [
+    'templates/**.html',
+    'static/**.jpg',
+    'static/**.css',
+    'static/**.js',
+    'static/**.txt',
+]
+
 setup(
     name='relengapi',
     version='0.1.5',
@@ -31,29 +39,12 @@ setup(
     include_package_data=True,
     namespace_packages=['relengapi', 'relengapi.blueprints'],
     package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
-        'relengapi': [
-            'templates/*.html',
-            'static/*.jpg',
-            'static/*.css',
-            'static/js/ext/*.css',
-            'static/js/ext/*.js',
-        ],
-        'relengapi.blueprints.base': [
-            'templates/*.html',
-        ],
-        'relengapi.blueprints.auth': [
-            'templates/*.html',
-        ],
-        'relengapi.blueprints.authz': [
-            'templates/*.html',
-        ],
-        'relengapi.blueprints.userauth': [
-            'templates/*.html',
-        ],
-        'relengapi.blueprints.tokenauth': [
-            'static/*.js',
-            'templates/*.html',
-        ],
+        'relengapi': data_patterns,
+        'relengapi.blueprints.base': data_patterns,
+        'relengapi.blueprints.auth': data_patterns,
+        'relengapi.blueprints.authz': data_patterns,
+        'relengapi.blueprints.userauth': data_patterns,
+        'relengapi.blueprints.tokenauth': data_patterns,
     },
     entry_points={
         "relengapi_blueprints": [

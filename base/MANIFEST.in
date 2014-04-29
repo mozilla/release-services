@@ -1,8 +1,0 @@
-# NOTE: these files must *also* be specified in setup.py
-recursive-include relengapi/templates *.html
-recursive-include relengapi/static *.jpg *.css *.js
-recursive-include relengapi/blueprints/base/templates *.html
-recursive-include relengapi/blueprints/auth/templates *.html
-recursive-include relengapi/blueprints/userauth/templates *.html
-recursive-include relengapi/blueprints/tokenauth/templates *.html
-recursive-include relengapi/blueprints/tokenauth/static *.js
