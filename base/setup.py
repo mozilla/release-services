@@ -35,6 +35,8 @@ setup(
             'templates/*.html',
             'static/*.jpg',
             'static/*.css',
+            'static/js/ext/*.css',
+            'static/js/ext/*.js',
         ],
         'relengapi.blueprints.base': [
             'templates/*.html',
