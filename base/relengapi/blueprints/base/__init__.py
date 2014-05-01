@@ -5,10 +5,11 @@
 from relengapi import subcommands
 from flask import Blueprint
 from flask import current_app
+import logging
 
 
 bp = Blueprint('base', __name__)
-
+logger = logging.getLogger(__name__)
 
 class ServeSubcommand(subcommands.Subcommand):
 
@@ -40,7 +41,7 @@ class CreateDBSubcommand(subcommands.Subcommand):
 
     def run(self, parser, args):
         for dbname in current_app.db.database_names:
-            print " * creating tables for database %s" % (dbname,)
+            logger.info(" * creating tables for database %s", dbname)
             meta = current_app.db.metadata[dbname]
             engine = current_app.db.engine(dbname)
             meta.create_all(bind=engine)
