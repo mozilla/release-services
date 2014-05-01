@@ -29,6 +29,22 @@ For example::
         name = Column(String(100))
         password = Column(String(100))
 
+Many-to-Many Relationships
+--------------------------
+
+The `SQLAlchemy Documentation <http://docs.sqlalchemy.org/en/rel_0_9/orm/relationships.html#many-to-many>`_ describes most of the details of setting up many-to-many relationships.
+In RelengAPI, the metadata for the association table needs to be fetched from the declarative base:
+
+.. code-block:: none
+
+    allocations = Table(
+        'allocations', db.declarative_base('jacuzzi_allocator').metadata,
+        ...
+    )
+
+The linked tables are defined as described above.
+
+
 Using Tables
 ------------
 
