@@ -11,6 +11,7 @@ from flask import request
 from flask import current_app
 from werkzeug.exceptions import HTTPException
 import functools
+import wrapt
 
 class Handler(object):
 
@@ -99,11 +100,9 @@ def init_app(app):
     app.trap_http_exception = lambda e: True
 
 def apimethod():
-    def decorator(f):
-        @functools.wraps(f)
-        def wrap(*args, **kwargs):
-            h = _get_handler()
-            rv = f(*args, **kwargs)
-            return h.render_response(rv)
-        return wrap
-    return decorator
+    @wrapt.decorator
+    def wrap(wrapper, instance, *args, **kwargs):
+        h = _get_handler()
+        rv = wrapper(*args, **kwargs)
+        return h.render_response(rv)
+    return wrap

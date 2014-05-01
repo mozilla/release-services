@@ -28,6 +28,7 @@ setup(
         "Celery",
         "argparse",
         "requests",
+        "wrapt",
     ],
     extras_require = {
         'test': [
