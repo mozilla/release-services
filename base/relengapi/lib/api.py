@@ -101,7 +101,7 @@ def init_app(app):
 
 def apimethod():
     @wrapt.decorator
-    def wrap(wrapper, instance, *args, **kwargs):
+    def wrap(wrapper, instance, args, kwargs):
         h = _get_handler()
         rv = wrapper(*args, **kwargs)
         return h.render_response(rv)

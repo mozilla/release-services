@@ -7,7 +7,7 @@ import wrapt
 
 def synchronized(lock):
     @wrapt.decorator
-    def wrap(wrapper, instance, *args, **kwargs):
+    def wrap(wrapper, instance, args, kwargs):
         with lock:
             return wrapper(*args, **kwargs)
     return wrap
