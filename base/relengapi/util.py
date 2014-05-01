@@ -3,17 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import importlib
-from functools import wraps
+import wrapt
 
 def synchronized(lock):
-    def dec(func):
-        @wraps(func)
-        def wrap(*args, **kwargs):
-            with lock:
-                return func(*args, **kwargs)
-        return wrap
-    return dec
-
+    @wrapt.decorator
+    def wrap(wrapper, instance, *args, **kwargs):
+        with lock:
+            return wrapper(*args, **kwargs)
+    return wrap
 
 def make_support_class(app, module_path, mechanisms, config_key, default):
     mechanism = app.config.get(config_key, {}).get('type', default)
