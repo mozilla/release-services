@@ -5,6 +5,19 @@
 import relengapi.app
 import pkg_resources
 import argparse
+import sys
+import logging.handlers
+
+
+def setupConsoleLogging():
+    root = logging.getLogger('')
+    root.setLevel(logging.NOTSET)
+    formatter = logging.Formatter('%(asctime)s %(message)s')
+
+    stdout_log = logging.StreamHandler(sys.stdout)
+    stdout_log.setLevel(logging.DEBUG)
+    stdout_log.setFormatter(formatter)
+    root.addHandler(stdout_log)
 
 
 class Subcommand(object):
@@ -32,6 +45,8 @@ def main():
         subparser.set_defaults(_run=subcommand.run)
 
     args = parser.parse_args()
+
+    setupConsoleLogging()
 
     app = relengapi.app.create_app(cmdline=True)
     with app.app_context():
