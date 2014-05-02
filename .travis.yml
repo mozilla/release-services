@@ -2,7 +2,7 @@ language: python
 python:
   - "2.7"
 # command to install dependencies
-install: "pip install -e base -e docs"
+install: "pip install -e base[test] -e docs[test]"
 # command to run tests
 script:
   - nosetests
