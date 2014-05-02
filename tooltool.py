@@ -31,6 +31,7 @@ import shutil
 import sys
 import tempfile
 import re
+import tarfile
 
 DEFAULT_MANIFEST_NAME = 'manifest.tt'
 TOOLTOOL_PACKAGE_SUFFIX = '.TOOLTOOL-PACKAGE'
@@ -68,7 +69,7 @@ class MissingFileException(ExceptionWithFilename):
 
 class FileRecord(object):
 
-    def __init__(self, filename, size, digest, algorithm):
+    def __init__(self, filename, size, digest, algorithm, unpack=False):
         object.__init__(self)
         if filename != os.path.split(filename)[1]:
             log.error("The filename provided contains path information and is, therefore, invalid.")
@@ -77,6 +78,7 @@ class FileRecord(object):
         self.size = size
         self.digest = digest
         self.algorithm = algorithm
+        self.unpack = unpack
         log.debug("creating %s 0x%x" % (self.__class__.__name__, id(self)))
 
     def __eq__(self, other):
@@ -180,13 +182,23 @@ class FileRecordJSONDecoder(json.JSONDecoder):
                 if issubclass(type(record), FileRecord):
                     record_list.append(record)
             return record_list
-        if isinstance(obj, dict) and \
-           len(obj.keys()) == 4 and \
-           'filename' in obj and \
-           'size' in obj and \
-           'algorithm' in obj and \
-           'digest' in obj:
-            rv = FileRecord(obj['filename'], obj['size'], obj['digest'], obj['algorithm'])
+        required_fields = [
+            'filename',
+            'size',
+            'algorithm',
+            'digest',
+        ]
+        if isinstance(obj, dict):
+            missing = []
+            for req in required_fields:
+                if req not in obj:
+                    missing.append(req)
+
+            if missing:
+                raise InvalidManifest("The following required fields are not present in the file record: %s" % ', '.join(missing))
+
+            unpack = obj.get('unpack', False)
+            rv = FileRecord(obj['filename'], obj['size'], obj['digest'], obj['algorithm'], unpack)
             log.debug("materialized %s" % rv)
             return rv
         return obj
@@ -312,8 +324,11 @@ def list_manifest(manifest_file):
     """I know how print all the files in a location"""
     try:
         manifest = open_manifest(manifest_file)
-    except InvalidManifest:
-        log.error("failed to load manifest file at '%s'" % manifest_file)
+    except InvalidManifest as e:
+        log.error("failed to load manifest file at '%s': %s" % (
+            manifest_file,
+            str(e),
+        ))
         return False
     for f in manifest.file_records:
         print "%s\t%s\t%s" % ("P" if f.present() else "-",
@@ -327,8 +342,11 @@ def validate_manifest(manifest_file):
     don't fetch or delete them if they aren't"""
     try:
         manifest = open_manifest(manifest_file)
-    except InvalidManifest:
-        log.error("failed to load manifest file at '%s'" % manifest_file)
+    except InvalidManifest as e:
+        log.error("failed to load manifest file at '%s': %s" % (
+            manifest_file,
+            str(e),
+        ))
         return False
     invalid_files = []
     absent_files = []
@@ -446,14 +464,44 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4):
             pass
         return None
 
+def untar_file(filename):
+    if tarfile.is_tarfile(filename):
+        tar_file, zip_ext = os.path.splitext(filename)
+        base_file, tar_ext = os.path.splitext(tar_file)
+
+        if not base_file:
+            log.error("failed to get base_file from filename '%s'" % filename)
+            return False
+
+        if os.path.exists(base_file):
+            log.info('rm tree: %s' % base_file)
+            shutil.rmtree(base_file)
+        log.info('untarring "%s"' % filename)
+        tar = tarfile.open(filename)
+        tar.extractall()
+        tar.close()
+    elif filename.endswith('.tar.xz'):
+        log.info('untarring "%s"' % filename)
+        base_file = filename.replace('.tar.xz', '')
+        if os.path.exists(base_file):
+            log.info('rm tree: %s' % base_file)
+            shutil.rmtree(base_file)
+        execute('tar -Jxf %s' % filename)
+    else:
+        log.error("Unknown zip extension for filename '%s'" % filename)
+        return False
+    return True
 
 # TODO: write tests for this function
 def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
     # Lets load the manifest file
     try:
         manifest = open_manifest(manifest_file)
-    except InvalidManifest:
-        log.error("failed to load manifest file at '%s'" % manifest_file)
+    except InvalidManifest as e:
+        log.error("failed to load manifest file at '%s': %s" % (
+            manifest_file,
+            str(e),
+        ))
         return False
 
     # we want to track files already in current working directory AND valid
@@ -465,12 +513,17 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
     failed_files = []
     fetched_files = []
 
+    # Files that we want to unpack.
+    unpack_files = []
+
     # Lets go through the manifest and fetch the files that we want
     for f in manifest.file_records:
         # case 1: files are already present
         if f.present():
             if f.validate():
                 present_files.append(f.filename)
+                if f.unpack:
+                    unpack_files.append(f.filename)
             else:
                 # we have an invalid file here, better to cleanup!
                 # this invalid file needs to be replaced with a good one
@@ -490,6 +543,8 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
                 filerecord_for_validation = FileRecord(f.filename, f.size, f.digest, f.algorithm)
                 if filerecord_for_validation.validate():
                     present_files.append(f.filename)
+                    if f.unpack:
+                        unpack_files.append(f.filename)
                 else:
                     #the file copied from the cache is invalid, better to clean up the cache version itself as well
                     log.warn("File %s retrieved from cache is invalid! I am deleting it from the cache as well" % f.filename)
@@ -525,6 +580,10 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
             # I can rename the temp file
             log.info("File integrity verified, renaming %s to %s" % (temp_file_name, localfile.filename))
             os.rename(os.path.join(os.getcwd(), temp_file_name), os.path.join(os.getcwd(), localfile.filename))
+
+            if localfile.unpack:
+                unpack_files.append(localfile.filename)
+
             # if I am using a cache and a new file has just been retrieved from a
             # remote location, I need to update the cache as well
             if cache_folder:
@@ -544,6 +603,11 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
         else:
             failed_files.append(localfile.filename)
             log.error("'%s'" % filerecord_for_validation.describe())
+
+    # Unpack files that need to be unpacked.
+    for filename in unpack_files:
+        if not untar_file(filename):
+            failed_files.append(filename)
 
     # If we failed to fetch or validate a file, we need to fail
     if len(failed_files) > 0:
