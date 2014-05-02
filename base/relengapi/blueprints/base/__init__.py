@@ -55,9 +55,11 @@ class RunTestsSubcommand(subcommands.Subcommand):
     def make_parser(self, subparsers):
         parser = subparsers.add_parser(
             'run-tests', help='run RelengAPI tests')
+        parser.add_argument("nose_args", metavar='NOSE-ARGS', nargs='+',
+                            help="Arguments to nosetests")
         return parser
 
     def run(self, parser, args):
         import nose
-        sys.argv = [sys.argv[0]]
+        sys.argv = [sys.argv[0]] + args.nose_args
         nose.main()

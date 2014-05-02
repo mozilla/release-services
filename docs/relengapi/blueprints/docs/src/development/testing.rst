@@ -4,11 +4,27 @@ Testing
 Running Tests
 -------------
 
-To run the Releng API tests, you will need to install ``nose``::
+To run the Releng API tests, you will need to install ``nose``:
+
+.. code-block:: none
 
     pip install nose
 
-Then, simply run ``nosetests``.
+Then, simply run
+
+.. code-block:: none
+
+    relengapi run-tests
+
+passing any arguments you would ordinarily pass to ``nosetests``, using ``--`` to separate relengapi arguments from nose arguments:
+
+.. code-block:: none
+
+    relengapi run-tests -- --verbosity=2 relengapi.tests
+
+Note that RelengAPI uses monkeypatching and is thus sensitive to import orders.
+In some cases running ``nosetests`` directly may work, but this depends on luck to get the imports in the right order.
+Don't do it.
 
 Test Scripts
 ------------
