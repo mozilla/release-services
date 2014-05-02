@@ -5,7 +5,7 @@ python:
 env:
   # the 'relengapi' command wants a settings file, but the contents
   # aren't terribly important, so the example will do fine
-  - RELENGAPI_SETTINGS=settings_example.py
+  - RELENGAPI_SETTINGS=$PWD/settings_example.py
 
 # command to install dependencies
 install: "pip install -e base[test] -e docs[test]"
