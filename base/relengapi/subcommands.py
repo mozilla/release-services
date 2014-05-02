@@ -22,6 +22,8 @@ def setupConsoleLogging():
 
 class Subcommand(object):
 
+    want_logging = True
+
     def make_parser(self, subparsers):
         raise NotImplementedError
 
@@ -42,12 +44,13 @@ def main():
     subcommands = [cls() for cls in Subcommand.__subclasses__()]
     for subcommand in subcommands:
         subparser = subcommand.make_parser(subparsers)
-        subparser.set_defaults(_run=subcommand.run)
+        subparser.set_defaults(_subcommand=subcommand)
 
     args = parser.parse_args()
 
-    setupConsoleLogging()
+    if args._subcommand and args._subcommand.want_logging:
+        setupConsoleLogging()
 
     app = relengapi.app.create_app(cmdline=True)
     with app.app_context():
-        args._run(parser, args)
+        args._subcommand.run(parser, args)

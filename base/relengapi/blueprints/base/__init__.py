@@ -6,6 +6,7 @@ from relengapi import subcommands
 from flask import Blueprint
 from flask import current_app
 import logging
+import sys
 
 
 bp = Blueprint('base', __name__)
@@ -45,3 +46,18 @@ class CreateDBSubcommand(subcommands.Subcommand):
             meta = current_app.db.metadata[dbname]
             engine = current_app.db.engine(dbname)
             meta.create_all(bind=engine)
+
+
+class RunTestsSubcommand(subcommands.Subcommand):
+
+    want_logging = False
+
+    def make_parser(self, subparsers):
+        parser = subparsers.add_parser(
+            'run-tests', help='run RelengAPI tests')
+        return parser
+
+    def run(self, parser, args):
+        import nose
+        sys.argv = [sys.argv[0]]
+        nose.main()
