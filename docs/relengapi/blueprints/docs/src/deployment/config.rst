@@ -96,7 +96,7 @@ For example::
     RELENGAPI_ACTIONS = {
         'type': 'static',
         'actions': {
-            'dustin@mozilla.com': ['tasks.create', 'base.tokens.create'],
+            'dustin@mozilla.com': ['tasks.create', 'base.tokens.issue'],
         },
     }
 
