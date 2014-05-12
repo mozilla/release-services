@@ -16,8 +16,13 @@ from flask import request
 from flask import jsonify
 from flask_login import login_required
 
+from relengapi import actions
+
 bp = Blueprint('mapper', __name__)
 rev_regex = re.compile('''^[a-f0-9]{1,40}$''')
+
+actions.mapper.insert_mapping.doc("Allows new hg-git mappings to be inserted into mapper db (hashes table)")
+actions.mapper.insert_project.doc("Allows new projects to be inserted into mapper db (projects table)")
 
 # TODO: replace abort with a custom exception - http://flask.pocoo.org/docs/patterns/apierrors/
 
@@ -263,6 +268,7 @@ def _insert_many(project, dups=False):
 #@check_client_ip
 @bp.route('/<project>/insert', methods=('POST',))
 @login_required
+@actions.mapper.insert_mapping.require()
 def insert_many_no_dups(project):
     """Insert many mapfile entries via POST, and error on duplicate SHAs.
 
@@ -283,6 +289,7 @@ def insert_many_no_dups(project):
 #@check_client_ip
 @bp.route('/<project>/insert/ignoredups', methods=('POST',))
 @login_required
+@actions.mapper.insert_mapping.require()
 def insert_many_allow_dups(project):
     """Insert many mapfile entries via POST, and don't error on duplicate SHAs.
 
@@ -300,6 +307,7 @@ def insert_many_allow_dups(project):
 #@check_client_ip
 @bp.route('/<project>/insert/<hg_changeset>/<git_changeset>')
 @login_required
+@actions.mapper.insert_mapping.require()
 def insert_one(project, hg_changeset, git_changeset):
     """Insert a single mapping
 
@@ -331,6 +339,7 @@ def insert_one(project, hg_changeset, git_changeset):
 
 @bp.route('/<project>', methods=('POST',))
 @login_required
+@actions.mapper.insert_project.require()
 def add_project(project):
     """Insert a new project into the DB.
 
