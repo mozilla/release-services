@@ -16,6 +16,8 @@ from flask import request
 from flask import jsonify
 from flask_login import login_required
 
+from werkzeug.urls import url_unquote
+
 from relengapi import actions
 
 bp = Blueprint('mapper', __name__)
@@ -244,7 +246,8 @@ def _insert_many(project, dups=False):
         abort(400, "content-type must be text/plain")
     session = g.db.session('mapper')
     proj = _get_project(session, project)
-    for line in request.stream.readlines():
+    new_mappings=url_unquote(request.data)
+    for line in new_mappings.splitlines():
         line = line.rstrip()
         try:
             (hg_changeset, git_changeset) = line.split(' ')
@@ -267,7 +270,7 @@ def _insert_many(project, dups=False):
 
 #@check_client_ip
 @bp.route('/<project>/insert', methods=('POST',))
-@login_required
+# @login_required
 @actions.mapper.insert_mapping.require()
 def insert_many_no_dups(project):
     """Insert many mapfile entries via POST, and error on duplicate SHAs.
@@ -288,7 +291,7 @@ def insert_many_no_dups(project):
 
 #@check_client_ip
 @bp.route('/<project>/insert/ignoredups', methods=('POST',))
-@login_required
+# @login_required
 @actions.mapper.insert_mapping.require()
 def insert_many_allow_dups(project):
     """Insert many mapfile entries via POST, and don't error on duplicate SHAs.
