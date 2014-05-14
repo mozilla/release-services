@@ -16,8 +16,6 @@ from flask import request
 from flask import jsonify
 from flask_login import login_required
 
-from werkzeug.urls import url_unquote
-
 from relengapi import actions
 
 bp = Blueprint('mapper', __name__)
@@ -246,8 +244,7 @@ def _insert_many(project, dups=False):
         abort(400, "content-type must be text/plain")
     session = g.db.session('mapper')
     proj = _get_project(session, project)
-    new_mappings=url_unquote(request.data)
-    for line in new_mappings.splitlines():
+    for line in request.stream.readlines():
         line = line.rstrip()
         try:
             (hg_changeset, git_changeset) = line.split(' ')
