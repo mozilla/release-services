@@ -85,3 +85,35 @@ The engine for a database is available from the ``current_app.db.engine(dbname)`
 The list of database names is at ``current_app.db.database_names``.
 
 The known metadata for each database is in ``current_app.db.metadata``, keyed by database name.
+
+Alternative Column types
+------------------------
+
+Relengapi provides some custom Column types that can be used in SQL Models.
+
+These can be used like any other column in SQLAlchemy ORMs::
+
+    from relengapi.db.Columns import SomeColumn
+    class Widget(db.declarative_base('...')):
+        someField = sa.Column(SomeColumn, ...)
+
+UTCDateTime Column
+..................
+
+A DateTime column where values are always stored and retrieved in UTC. Specifically
+the datetime objects returned are always Timezone Aware (with pytz.UTC set). On
+inserts into the table it automatically converts the object to UTC when a timezone
+aware datetime object is passed in.
+
+example::
+
+    from relengapi.db import Columns
+    import sqlalchemy as sa
+    
+    class Log(db.declarative_base('...')):
+        __tablename__ = 'logs'
+        id = sa.Column(sa.Integer, primary_key=True)
+        dt = sa.Column(Columns.UTCDateTime,
+                       default=datetime.datetime.utcnow,
+                       nullable=False)
+        msg = sa.Column(sa.String(255), nullable=False)
