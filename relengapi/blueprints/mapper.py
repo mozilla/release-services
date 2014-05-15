@@ -15,6 +15,7 @@ from flask import abort
 from flask import request
 from flask import jsonify
 from flask_login import login_required
+from flask import Response
 
 from relengapi import actions
 
@@ -97,7 +98,7 @@ def _build_mapfile(q):
     """
     contents = '\n'.join('%s %s' % (r.hg_changeset, r.git_changeset) for r in q)
     if contents:
-        return contents + '\n'
+        return Response(contents + '\n', mimetype='text/plain')
 
 
 def _check_existing_sha(project, vcs_type, changeset):
@@ -246,11 +247,7 @@ def _insert_many(project, dups=False):
     proj = _get_project(session, project)
     for line in request.stream.readlines():
         line = line.rstrip()
-        try:
-            (hg_changeset, git_changeset) = line.split(' ')
-        except ValueError:
-            # header/footer won't match this format
-            continue
+        (hg_changeset, git_changeset) = line.split(' ')
         _add_hash(session, hg_changeset, git_changeset, proj)
         if dups:
             try:
