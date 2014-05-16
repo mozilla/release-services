@@ -8,6 +8,7 @@ from nose.tools import eq_
 from relengapi.testing import TestContext
 from mapper import Hash, Project
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
         
 SHA1 = '111111705d7c41c8f101b5b1e3438d95d0fcfa7a'
 SHA1R = ''.join(reversed(SHA1))
@@ -49,19 +50,25 @@ test_context = TestContext(databases=['mapper'],
 
 def insert_some_hashes(app):
     engine = app.db.engine("mapper")
-    Session = sessionmaker(bind=engine)
+    Session.configure(bind=engine)
     session = Session()
-    project = session.query(Project).filter(Project.name=='proj').first()
+    project = session.query(Project).filter(Project.name=='proj').one()
     session.add(Hash(hg_changeset=SHA1, git_commit=SHA1R, project=project, date_added=12345))
     session.add(Hash(hg_changeset=SHA2, git_commit=SHA2R, project=project, date_added=12346))
     session.add(Hash(hg_changeset=SHA3, git_commit=SHA3R, project=project, date_added=12347))
     session.commit()
 
 def hash_pair_exists(app, hg, git):
-    for row in app.db.engine('mapper').execute("select * from hashes").fetchall():
-        if row.hg_changeset == hg and row.git_commit == git:
-            return True
-    return False
+    engine = app.db.engine("mapper")
+    Session.configure(bind=engine)
+    session = Session()
+    try:
+        session.query(Hash).filter(Hash.hg_changeset==hg).filter(Hash.git_commit==git).one()
+        return True
+    except MultipleResultsFound:
+        return False
+    except NoResultFound:
+        return False
 
 @test_context
 def test_get_rev_git(app, client):
