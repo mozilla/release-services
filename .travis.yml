@@ -12,9 +12,6 @@ env:
 install:
   - ./install_relengapi.sh
   - "pip install -e ."
-  - sqlite3 --version
-  - python sqlite_version.py
-  - ./test_sql_insert.sh
 
 # command to run tests
 script:
