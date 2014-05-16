@@ -12,6 +12,7 @@ env:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y sqlite3
+  - sqlite3 --version
 
 install:
   - ./install_relengapi.sh
