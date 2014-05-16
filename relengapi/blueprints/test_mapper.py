@@ -14,7 +14,7 @@ SHA2R = ''.join(reversed(SHA2))
 SHA3 = '333333333d7c41c8f101b5b1e3438d95d0fcfa7a'
 SHA3R = ''.join(reversed(SHA3))
 
-SHAFILE = "some header stuff\n%s %s\n%s %s\n%s %s\n\nextra\n" % (
+SHAFILE = "%s %s\n%s %s\n%s %s\n" % (
     SHA1, SHA1R,
     SHA2, SHA2R,
     SHA3, SHA3R)
@@ -28,7 +28,13 @@ def db_teardown(app):
     engine.execute("delete from hashes")
     engine.execute("delete from projects")
 
+from relengapi import actions
+
 test_context = TestContext(databases=['mapper'],
+                           actions=[
+                                    actions.mapper.mapping.insert,
+                                    actions.mapper.project.insert
+                                   ],
                            db_setup=db_setup,
                            db_teardown=db_teardown,
                            reuse_app=True)
@@ -36,7 +42,7 @@ test_context = TestContext(databases=['mapper'],
 def insert_some_hashes(app):
     engine = app.db.engine("mapper")
     engine.execute("""
-        insert into hashes (project_id, hg_changeset, git_changeset, date_added) values
+        insert into hashes (project_id, hg_changeset, git_commit, date_added) values
           (1, '%(SHA1)s', '%(SHA1R)s', 12345.0),
           (1, '%(SHA2)s', '%(SHA2R)s', 12346.0),
           (1, '%(SHA3)s', '%(SHA3R)s', 12347.0)
@@ -44,7 +50,7 @@ def insert_some_hashes(app):
 
 def hash_pair_exists(app, hg, git):
     for row in app.db.engine('mapper').execute("select * from hashes").fetchall():
-        if row.hg_changeset == hg and row.git_changeset == git:
+        if row.hg_changeset == hg and row.git_commit == git:
             return True
     return False
 
@@ -129,7 +135,7 @@ def test_insert_one(client):
         'date_added': 1234.0,
         'project_name': 'proj',
         'hg_changeset': '111111705d7c41c8f101b5b1e3438d95d0fcfa7a',
-        'git_changeset': '222222705d7c41c8f101b5b1e3438d95d0fcfa7a',
+        'git_commit': '222222705d7c41c8f101b5b1e3438d95d0fcfa7a',
     })
 
 @test_context
@@ -198,13 +204,13 @@ def test_insert_multi_ignoredups_with_dups(app, client):
 
 @test_context
 def test_add_project(client):
-    rv = client.post('/mapper/proj2')
+    rv = client.get('/mapper/proj2')
     eq_(rv.status_code, 200)
     eq_(json.loads(rv.data), {})
 
 @test_context
 def test_add_project_existing(client):
-    rv = client.post('/mapper/proj')
+    rv = client.get('/mapper/proj')
     eq_(rv.status_code, 409)
     # TODO: check that return is JSON, once it is
 
