@@ -1,6 +1,8 @@
 RelengAPI
 =========
 
+Continuous Integration: https://travis-ci.org/mozilla/build-relengapi
+
 Your Interface to Release Engineering Automation.
 
 This is the framework behind https://api.pub.build.mozilla.org/.
