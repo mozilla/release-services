@@ -6,6 +6,8 @@ import mock
 import json
 from nose.tools import eq_
 from relengapi.testing import TestContext
+from mapper import Hash, Project
+from sqlalchemy.orm import sessionmaker
         
 SHA1 = '111111705d7c41c8f101b5b1e3438d95d0fcfa7a'
 SHA1R = ''.join(reversed(SHA1))
@@ -19,9 +21,15 @@ SHAFILE = "%s %s\n%s %s\n%s %s\n" % (
     SHA2, SHA2R,
     SHA3, SHA3R)
 
+Session = sessionmaker()
+
 def db_setup(app):
-    engine = app.db.engine('mapper')
-    engine.execute("insert into projects (id, name) values (1, 'proj')")
+    engine = app.db.engine("mapper")
+    Session.configure(bind=engine)
+    session = Session()
+    project = Project(name='proj')
+    session.add(project)
+    session.commit()
 
 def db_teardown(app):
     engine = app.db.engine("mapper")
@@ -41,12 +49,13 @@ test_context = TestContext(databases=['mapper'],
 
 def insert_some_hashes(app):
     engine = app.db.engine("mapper")
-    engine.execute("""
-        insert into hashes (project_id, hg_changeset, git_commit, date_added) values
-          (1, '%(SHA1)s', '%(SHA1R)s', 12345.0),
-          (1, '%(SHA2)s', '%(SHA2R)s', 12346.0),
-          (1, '%(SHA3)s', '%(SHA3R)s', 12347.0)
-    """ % globals())
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    project = session.query(Project).filter(Project.name=='proj').first()
+    session.add(Hash(hg_changeset=SHA1, git_commit=SHA1R, project=project, date_added=12345))
+    session.add(Hash(hg_changeset=SHA2, git_commit=SHA2R, project=project, date_added=12346))
+    session.add(Hash(hg_changeset=SHA3, git_commit=SHA3R, project=project, date_added=12347))
+    session.commit()
 
 def hash_pair_exists(app, hg, git):
     for row in app.db.engine('mapper').execute("select * from hashes").fetchall():
