@@ -9,14 +9,12 @@ env:
   # document that.
   - RELENGAPI_SETTINGS=../../settings_example.py
 
-before_install:
-  - sqlite3 --version
-  - python sqlite_version.py
-  - ./test_sql_insert.sh
-
 install:
   - ./install_relengapi.sh
   - "pip install -e ."
+  - sqlite3 --version
+  - python sqlite_version.py
+  - ./test_sql_insert.sh
 
 # command to run tests
 script:
