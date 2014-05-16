@@ -10,14 +10,13 @@ env:
   - RELENGAPI_SETTINGS=../../settings_example.py
 
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -y sqlite3
   - sqlite3 --version
+  - python sqlite_version.py
+  - ./test_sql_insert.sh
 
 install:
   - ./install_relengapi.sh
   - "pip install -e ."
-  - python sqlite_version.py
 
 # command to run tests
 script:
