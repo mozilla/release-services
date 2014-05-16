@@ -17,6 +17,7 @@ before_install:
 install:
   - ./install_relengapi.sh
   - "pip install -e ."
+  - python sqlite_version.py
 
 # command to run tests
 script:
