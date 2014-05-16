@@ -6,7 +6,6 @@ import mock
 import json
 from nose.tools import eq_
 from relengapi.testing import TestContext
-import sqlalchemy as sa
         
 SHA1 = '111111705d7c41c8f101b5b1e3438d95d0fcfa7a'
 SHA1R = ''.join(reversed(SHA1))
@@ -54,24 +53,6 @@ def hash_pair_exists(app, hg, git):
         if row.hg_changeset == hg and row.git_commit == git:
             return True
     return False
-
-@test_context
-def test_sqlite_version():
-    engine = sa.create_engine('sqlite://')
-    conn = engine.contextual_connect()
-    try:
-        r = conn.execute("SELECT sqlite_version()")
-        vers_row = r.fetchone()
-        r.close()
-    except:
-        print (0,)
-    if vers_row:
-        try:
-            print tuple(map(int, vers_row[0].split('.')))
-        except (TypeError, ValueError):
-            print (0,)
-    else:
-        print (0,)
 
 @test_context
 def test_get_rev_git(app, client):
