@@ -14,7 +14,7 @@ data_patterns = [
 
 setup(
     name='relengapi',
-    version='0.1.6',
+    version='0.1.7',
     description='The code behind https://api.pub.build.mozilla.org',
     author='Dustin J. Mitchell',
     author_email='dustin@mozilla.com',
