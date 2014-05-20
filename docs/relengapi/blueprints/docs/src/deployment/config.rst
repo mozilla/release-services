@@ -108,7 +108,24 @@ The configuration file can contain any configuration parameter specified for
  * Flask - http://flask.pocoo.org/docs/config/
  * Celery - http://docs.celeryproject.org/en/master/configuration.html#configuration
 
-In particular, in order to use Celery to run any tasks, you will need to set ``CELERY_BROKER_URL`` and ``CELERY_BACKEND``.
+Celery
+......
+
+In order to use Celery to run any tasks, you will need to set ``CELERY_BROKER_URL`` and ``CELERY_BACKEND``:
+
+.. code-block:: none
+
+    CELERY_BROKER_URL='amqp://'
+    CELERY_BACKEND='amqp'
+
+Celery currently defaults to using pickle to serialize messages, yet complains that this is deprecated.
+To avoid these warnings, use JSON instead:
+
+.. code-block:: none
+
+    CELERY_ACCEPT_CONTENT=['json']
+    CELERY_TASK_SERIALIZER='json'
+    CELERY_RESULT_SERIALIZER='json'
 
 Documentation Configuration
 ---------------------------
