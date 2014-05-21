@@ -27,7 +27,7 @@ def test_ActionElt_get():
     actions.a.b.c.d.doc("alphabetterjuice")
     ok_(actions['a.b.c.d'] == actions.a.b.c.d)
     ok_(actions.get('a.b.c.d') == actions.a.b.c.d)
-    ok_(actions.get('x.y') == None)
+    ok_(actions.get('x.y') is None)
     ok_(actions.get('x.y', 'missing') == 'missing')
 
 
