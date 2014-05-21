@@ -33,8 +33,8 @@ actions.base.tokens.revoke.doc('Revoke authentication tokens')
 class Token(db.declarative_base('relengapi')):
     __tablename__ = 'auth_tokens'
 
-    def __init__(self, actions=[], **kwargs):
-        kwargs['_actions'] = ','.join(map(str, actions))
+    def __init__(self, actions=None, **kwargs):
+        kwargs['_actions'] = ','.join((str(a) for a in actions or []))
         super(Token, self).__init__(**kwargs)
 
     id = sa.Column(sa.Integer, primary_key=True)
@@ -42,7 +42,8 @@ class Token(db.declarative_base('relengapi')):
     _actions = sa.Column(sa.Text, nullable=False)
 
     def to_json(self):
-        return dict(id=self.id, description=self.description, actions=map(str, self.actions))
+        return dict(id=self.id, description=self.description,
+                    actions=[str(a) for a in self.actions])
 
     @property
     def actions(self):
@@ -51,7 +52,7 @@ class Token(db.declarative_base('relengapi')):
         # silently ignore any nonexistent actions; this allows us to remove unused
         # actions without causing tokens permitting those actions to fail
         # completely
-        return filter(None, token_actions)
+        return [a for a in token_actions if a]
 
 
 @bp.route('/')
@@ -78,7 +79,7 @@ def list_tokens():
 def issue_token():
     """Issue a new authentication token.  The POST body must contain JSON with keys
     'actions', a list of allowed actions; and description, a description of the token."""
-    requested_actions = map(actions.get, request.json['actions'])
+    requested_actions = [actions.get(a) for a in request.json['actions']]
     # ensure the request is for a subset of the actions the user can perform
     if None in requested_actions or not set(requested_actions) <= g.identity.provides:
         raise BadRequest("bad actions")

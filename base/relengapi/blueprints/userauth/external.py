@@ -33,8 +33,8 @@ class ExternalAuth(object):
     def login_request(self):
         # users are redirected here to login; redirect to the login link to get
         # external auth, carrying along any next URL
-        next = request.args.get('next') or url_for('root')
-        return redirect(url_for('login', next=next))
+        next_url = request.args.get('next') or url_for('root')
+        return redirect(url_for('login', next=next_url))
 
     def login(self):
         """/userauth/login view; the frontend should apply its auth to this request
@@ -59,5 +59,5 @@ class ExternalAuth(object):
         if request.args.get('ajax'):
             return 'ok'
         # this was from the browser, so send them somewhere useful
-        next = request.args.get('next') or url_for('root')
-        return redirect(next)
+        next_url = request.args.get('next') or url_for('root')
+        return redirect(next_url)

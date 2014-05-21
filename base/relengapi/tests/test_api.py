@@ -71,11 +71,11 @@ def test_HtmlHandler_render_response(app):
 
 def test_apimethod():
     @test_context
-    def t(client, path, exp_status_code=200, exp_data={'result': ['ok']}, exp_headers={}):
+    def t(client, path, exp_status_code=200, exp_data=None, exp_headers=None):
         resp = client.get(path)
         eq_(resp.status_code, exp_status_code)
-        eq_(json.loads(resp.data), exp_data)
-        for k, v in exp_headers.iteritems():
+        eq_(json.loads(resp.data), exp_data or {'result': ['ok']})
+        for k, v in (exp_headers or {}).iteritems():
             assert resp.headers[k] == v
 
     yield lambda: t(path='/apimethod/ok')

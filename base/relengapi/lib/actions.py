@@ -33,6 +33,7 @@ class Action(tuple):
 class Actions(Action):
 
     def __init__(self):
+        super(Actions, self).__init__()
         self.all = {}
 
     def __getitem__(self, index):

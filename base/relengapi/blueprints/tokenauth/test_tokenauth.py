@@ -22,7 +22,7 @@ def app_setup(app):
         return json.dumps({
             'id': g.identity.id,
             'auth_type': g.identity.auth_type,
-            'provides': sorted(map(str, g.identity.provides)),
+            'provides': sorted(str(a) for a in g.identity.provides),
         })
     # fake out the serializer to make it easier to debug
     app.tokenauth_serializer = mock.Mock(spec=app.tokenauth_serializer)

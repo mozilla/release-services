@@ -82,7 +82,7 @@ def create_app(cmdline=False, test_config=None):
         for bp in app.blueprints.itervalues():
             bp_widgets.extend(bp.root_widget_templates or [])
         bp_widgets.sort()
-        bp_widgets = [tpl for (p, tpl) in bp_widgets]
+        bp_widgets = [tpl for (_, tpl) in bp_widgets]
         return render_template('root.html', bp_widgets=bp_widgets)
 
     @app.route('/versions')

@@ -35,6 +35,7 @@ setup(
             'nose',
             'mock',
             'pep8',
+            'pylint',
         ]
     },
     packages=find_packages(),

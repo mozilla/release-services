@@ -12,18 +12,18 @@ class TestSynchronized(object):
     lock = threading.Lock()
 
     @util.synchronized(lock)
-    def syncd(self, id, finish_event):
+    def syncd(self, ident, finish_event):
         with self.cond:
-            self.results.append("start %d" % id)
+            self.results.append("start %d" % ident)
             self.cond.notify()
         finish_event.wait()
         with self.cond:
-            self.results.append("finish %d" % id)
+            self.results.append("finish %d" % ident)
             self.cond.notify()
 
-    def run(self, id, start_event, finish_event):
+    def run(self, ident, start_event, finish_event):
         start_event.wait()
-        self.syncd(id, finish_event)
+        self.syncd(ident, finish_event)
 
     def test_synchronized(self):
         self.cond = threading.Condition()

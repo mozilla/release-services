@@ -10,7 +10,6 @@ from flask import render_template
 from flask import request
 from flask import current_app
 from werkzeug.exceptions import HTTPException
-import functools
 import wrapt
 
 

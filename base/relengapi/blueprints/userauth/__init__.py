@@ -19,8 +19,8 @@ bp = Blueprint('userauth', __name__, template_folder='templates')
 def login_request():
     """Redirect here to ask the user to authenticate"""
     if current_user.is_authenticated():
-        next = request.args.get('next') or url_for('root')
-        return redirect(next)
+        next_url = request.args.get('next') or url_for('root')
+        return redirect(next_url)
     return current_app.auth.login_request()
 
 
