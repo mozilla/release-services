@@ -26,4 +26,3 @@ class StaticActions(object):
                 return
             for actionstr in actions_map.get(identity.id, []):
                 identity.provides.add(actions[actionstr])
-
