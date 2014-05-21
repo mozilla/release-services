@@ -14,4 +14,4 @@ install: "pip install -e base[test] -e docs[test]"
 
 # run everything in a single script, so we get a nice summary at the end
 script:
-  - sh base/validate.sh
+  - bash base/validate.sh
