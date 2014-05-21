@@ -1,0 +1,2 @@
+# NOTE: these files must *also* be specified in setup.py
+recursive-include relengapi *.html *.jpg *.css *.js
