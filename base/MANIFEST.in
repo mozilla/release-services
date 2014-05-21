@@ -1,2 +1,3 @@
 # NOTE: these files must *also* be specified in setup.py
+include validate-*.sh
 recursive-include relengapi *.html *.jpg *.css *.js *.txt
