@@ -8,7 +8,7 @@ from relengapi.testing import TestContext
 
 
 browserid_test_context = TestContext(
-        config={'RELENGAPI_AUTHENTICATION': {'type': 'browserid'}})
+    config={'RELENGAPI_AUTHENTICATION': {'type': 'browserid'}})
 
 
 @browserid_test_context
@@ -18,7 +18,7 @@ def test_browserid_login(app, client):
     client.get('/userauth/login_request')
 
 external_environ_test_context = TestContext(
-        config={'RELENGAPI_AUTHENTICATION': {'type': 'external', 'environ': 'TEST'}})
+    config={'RELENGAPI_AUTHENTICATION': {'type': 'external', 'environ': 'TEST'}})
 
 
 @external_environ_test_context

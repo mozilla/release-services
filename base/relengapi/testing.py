@@ -77,8 +77,8 @@ class TestContext(object):
         def wrap(**kwargs):
             def post_json(path, data):
                 return kwargs['client'].post(
-                        path, data=json.dumps(data),
-                        headers=[('Content-Type', 'application/json')])
+                    path, data=json.dumps(data),
+                    headers=[('Content-Type', 'application/json')])
             app = self._make_app()
             if 'app' in args:
                 kwargs['app'] = app
