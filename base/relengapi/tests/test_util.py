@@ -44,7 +44,7 @@ class TestSynchronized(object):
             while self.results != ["start 1"]:
                 self.cond.wait()
             start2.set()
-            time.sleep(0.01) # favor the race condition
+            time.sleep(0.01)  # favor the race condition
             finish1.set()
             while self.results != ["start 1", "finish 1", "start 2"]:
                 self.cond.wait()
