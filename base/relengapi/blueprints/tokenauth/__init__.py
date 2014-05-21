@@ -169,6 +169,7 @@ def token_loader():
 def init_blueprint(state):
     app = state.app
     if not app.secret_key:
-        logger.warning("The `SECRET_KEY` setting is not set; tokens will be signed with an insecure, static key")
+        logger.warning("The `SECRET_KEY` setting is not set; tokens will be signed with "
+                       "an insecure, static key")
     secret_key = app.secret_key or 'NOT THAT SECRET'
     app.tokenauth_serializer = JSONWebSignatureSerializer(secret_key)

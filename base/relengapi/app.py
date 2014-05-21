@@ -67,7 +67,8 @@ def create_app(cmdline=False, test_config=None):
 
     # set up a random session key if none is specified
     if not app.config.get('SECRET_KEY'):
-        logger.warning(" * setting per-process session key - sessions will be reset on process restart")
+        logger.warning(" * setting per-process session key - sessions will be reset on "
+                       "process restart")
         app.secret_key = os.urandom(24)
 
     @app.before_request
