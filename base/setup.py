@@ -39,7 +39,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     namespace_packages=['relengapi', 'relengapi.blueprints'],
-    package_data={
+    package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
         'relengapi': data_patterns,
         'relengapi.blueprints.base': data_patterns,
         'relengapi.blueprints.auth': data_patterns,

@@ -22,7 +22,7 @@ Finally, include an entry point so that the base can find the blueprint::
 
 The ``relengapi.blueprints.mypackage:bp`` in the above is an import path leading to the Blueprint object.
 
-Finally, create the directory structure
+Now, create the directory structure
 
 .. code-block:: none
 
@@ -67,6 +67,11 @@ and to your ``MANIFEST.in``:
 .. code-block:: none
 
     recursive-include relengapi/blueprints/mypackage/templates *.html
+
+.. warning::
+
+    It's easy to add new files and forget to update one of ``setup.py`` or ``MANIFEST.in``.
+    The Python packaging tools provide no warning about this error, either.
 
 .. warning::
 
