@@ -52,7 +52,7 @@ class JsonHandler(Handler):
             resp.status_code = exc_value.code
         else:
             current_app.log_exception((exc_type, exc_value, exc_tb))
-            error={
+            error = {
                 'code': 500,
                 'name': 'Internal Server Error',
                 'description': 'Enable debug mode for more information',
