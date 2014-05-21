@@ -15,6 +15,7 @@ from .user import User
 
 logger = logging.getLogger(__name__)
 
+
 class ExternalAuth(object):
 
     def __init__(self, app):

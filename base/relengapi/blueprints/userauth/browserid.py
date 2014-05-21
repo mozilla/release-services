@@ -8,6 +8,7 @@ from flask.ext.principal import identity_changed, Identity
 from flask.ext.browserid import BrowserID
 from .user import User
 
+
 class BrowserIDAuth(object):
 
     def __init__(self, app):

@@ -30,6 +30,8 @@ monkeypatches.monkeypatch()
 logger = logging.getLogger(__name__)
 
 _blueprints = None
+
+
 def get_blueprints():
     # get blueprints from pkg_resources.  We're careful to load all of the
     # blueprints exactly once and before registering any of them, as this
@@ -40,6 +42,7 @@ def get_blueprints():
         entry_points = pkg_resources.iter_entry_points('relengapi_blueprints')
         _blueprints = [(ep.name, ep.load()) for ep in entry_points]
     return _blueprints
+
 
 def create_app(cmdline=False, test_config=None):
     blueprints = get_blueprints()

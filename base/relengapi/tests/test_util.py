@@ -6,6 +6,7 @@ import time
 import threading
 from relengapi import util
 
+
 class TestSynchronized(object):
 
     lock = threading.Lock()

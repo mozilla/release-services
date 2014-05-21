@@ -13,6 +13,7 @@ from werkzeug.exceptions import HTTPException
 import functools
 import wrapt
 
+
 class Handler(object):
 
     def _parse_result(self, result):
@@ -80,6 +81,8 @@ class HtmlHandler(Handler):
 
 
 _handlers = {c.media_type: c() for c in [JsonHandler, HtmlHandler]}
+
+
 def _get_handler():
     """Get an appropriate handler based on the request"""
     best = request.accept_mimetypes.best_match(_handlers.keys())
@@ -98,6 +101,7 @@ def init_app(app):
     # always trap http exceptions; the HTML handler will render them
     # as expected, but the JSON handler needs its chance, too
     app.trap_http_exception = lambda e: True
+
 
 def apimethod():
     @wrapt.decorator

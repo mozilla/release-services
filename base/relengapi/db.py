@@ -85,6 +85,8 @@ class Alchemies(object):
 # away, but that's OK - SQLite is only used in development
 #
 # from http://docs.sqlalchemy.org/en/rel_0_9/core/pooling.html#disconnect-handling-pessimistic
+
+
 @event.listens_for(Pool, "checkout")
 def ping_connection(dbapi_connection, connection_record, connection_proxy):
     cursor = dbapi_connection.cursor()

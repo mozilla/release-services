@@ -5,12 +5,14 @@
 import importlib
 import wrapt
 
+
 def synchronized(lock):
     @wrapt.decorator
     def wrap(wrapper, instance, args, kwargs):
         with lock:
             return wrapper(*args, **kwargs)
     return wrap
+
 
 def make_support_class(app, module_path, mechanisms, config_key, default):
     mechanism = app.config.get(config_key, {}).get('type', default)
@@ -25,5 +27,3 @@ def make_support_class(app, module_path, mechanisms, config_key, default):
     mech_module = importlib.import_module(module_name, module_path)
     mech_class = getattr(mech_module, class_name)
     return mech_class(app)
-
-

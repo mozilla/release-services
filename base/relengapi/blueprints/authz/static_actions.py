@@ -6,6 +6,7 @@ import itertools
 from flask.ext.principal import identity_loaded
 from relengapi import actions
 
+
 class StaticActions(object):
 
     def __init__(self, app):

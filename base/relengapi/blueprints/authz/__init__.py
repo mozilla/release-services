@@ -10,6 +10,7 @@ from relengapi import apimethod
 
 bp = Blueprint('authz', __name__, template_folder='templates')
 
+
 @bp.route("/permitted-actions")
 @apimethod()
 def permitted_actions():

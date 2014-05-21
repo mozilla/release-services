@@ -5,6 +5,7 @@
 from nose.tools import eq_
 from flask import Blueprint
 
+
 def test_Blueprint_root_widget():
     bp = Blueprint('test', __name__)
     eq_(bp.root_widget_templates or [], [])
