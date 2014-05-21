@@ -6,6 +6,18 @@ set -e
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 source ./validate-common.sh
 
+status "running pep8"
+pep8 --config=pep8rc relengapi || not_ok "pep8 failed"
+
+status "running pylint"
+pylint relengapi --rcfile=pylintrc || not_ok "pylint failed"
+
+status "building docs"
+relengapi build-docs || not_ok "build-docs failed"
+
+status "running tests"
+relengapi run-tests || not_ok "tests failed"
+
 tmpbase=$(mktemp -d)
 trap 'rm -f ${tmpbase}; exit 1' 1 2 3 15
 
@@ -18,7 +30,7 @@ rm -f "relengapi.egg-info/SOURCES.txt"
 
 # get the list of files git thinks should be present
 status "getting file list from git"
-git ls-files . | grep -vE '^(validate-.*\.sh|pep8rc)$' | sort > ${tmpbase}/git-files
+git ls-files . | grep -vE '^(validate.*\.sh|pep8rc|pylintrc)$' | sort > ${tmpbase}/git-files
 
 # get the list of files in an sdist tarball
 status "getting file list from sdist"
@@ -52,3 +64,4 @@ status "comparing git and install"
 diff -u git-expected-installed install-files || not_ok "installed files differ from files in git"
 
 show_results
+

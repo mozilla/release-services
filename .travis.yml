@@ -12,8 +12,6 @@ env:
 # command to install dependencies
 install: "pip install -e base[test] -e docs[test]"
 
-# command to run tests
+# run everything in a single script, so we get a nice summary at the end
 script:
-  - relengapi run-tests
-  - sh base/validate-sdist.sh
-  - sh base/validate-lint.sh
+  - sh base/validate.sh
