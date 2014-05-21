@@ -15,4 +15,5 @@ install: "pip install -e base[test] -e docs[test]"
 # command to run tests
 script:
   - relengapi run-tests
-  - relengapi build-docs
+  - sh base/validate-sdist.sh
+  - sh base/validate-lint.sh
