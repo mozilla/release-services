@@ -6,6 +6,7 @@
 def monkeypatch_Blueprint_root_widget():
     # add a root_widget decorator to Blueprint
     from flask import Blueprint
+
     def root_widget_template(self, template, priority=0):
         if not self.root_widget_templates:
             self.root_widget_templates = []
