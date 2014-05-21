@@ -33,7 +33,8 @@ setup(
     extras_require = {
         'test': [
             'nose',
-            'mock'
+            'mock',
+            'pep8',
         ]
     },
     packages=find_packages(),
