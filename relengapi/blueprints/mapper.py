@@ -42,6 +42,7 @@ class Hash(db.declarative_base('mapper')):
     git_commit = sa.Column(sa.String(40), nullable=False)
     project_id = sa.Column(sa.Integer, sa.ForeignKey('projects.id'), nullable=False)
     project = orm.relationship(Project, primaryjoin=(project_id == Project.id))
+    # project = orm.relationship(Project, backref=orm.backref('hashes', order_by=id))
     date_added = sa.Column(sa.Integer, nullable=False)
 
     project_name = property(lambda self: self.project.name)
