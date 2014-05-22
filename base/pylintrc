@@ -43,8 +43,7 @@ disable=
   global-statement,
   unused-variable,
   redefined-outer-name,
-  no-value-for-parameter,
-  bad-continuation
+  no-value-for-parameter
 
 [REPORTS]
 

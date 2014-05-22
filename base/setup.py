@@ -35,7 +35,8 @@ setup(
             'nose',
             'mock',
             'pep8',
-            'pylint',
+            # see https://bitbucket.org/logilab/pylint/issue/203/importing-namespace-packages-crashes
+            'pylint<1.2',
         ]
     },
     packages=find_packages(),
