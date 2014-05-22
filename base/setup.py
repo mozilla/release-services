@@ -18,7 +18,7 @@ docs_patterns = [
 
 setup(
     name='relengapi',
-    version='0.1.8',
+    version='0.1.9',
     description='The code behind https://api.pub.build.mozilla.org',
     author='Dustin J. Mitchell',
     author_email='dustin@mozilla.com',
