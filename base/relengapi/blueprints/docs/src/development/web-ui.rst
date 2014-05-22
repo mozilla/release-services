@@ -110,3 +110,6 @@ To add such a widget, define a template for the widget and add it to the bluepri
     bp.root_widget_template('myproject_root_widget.html', priority=10)
 
 The priority defines the order of the widgets on the page, with smaller numbers appearing earlier.
+
+The function also accepts a ``condition`` argument, which is a callable that will determine whether the widget should be displayed.
+This condition might, for example, look at whether the user has permission to use the blueprint.
