@@ -26,6 +26,9 @@ class Action(tuple):
                 "Cannot require undocumented permission %r" % '.'.join(self))
         return Permission(self).require(http_exception=403)
 
+    def can(self):
+        return Permission(self).can()
+
     def __str__(self):
         return '.'.join(self)
 

@@ -131,6 +131,11 @@ The Action class
         Return a decorator for view functions that will require this permission, and fail with a 403 response if permission is not granted.
         The return value is the same as that from Flask-Principal's ``Permission.request`` method, so it can also be used as a context manager.
 
+    .. py:method:: can()
+
+        Return True if the current user can perform this action.
+        This is a shortcut to Flask-Principal's ``Permission.can``.
+
     .. py:method:: __str__()
 
         Return the dot-separated string representation of this action.
