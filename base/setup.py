@@ -29,6 +29,7 @@ setup(
         "argparse",
         "requests",
         "wrapt",
+        "pytz",
     ],
     extras_require = {
         'test': [
