@@ -4,8 +4,10 @@
 
 import sqlalchemy as sa
 import threading
+import pytz
 from relengapi.util import synchronized
 from flask import current_app
+from sqlalchemy import types
 from sqlalchemy import orm
 from sqlalchemy import exc
 from sqlalchemy import event
@@ -105,3 +107,22 @@ def ping_connection(dbapi_connection, connection_record, connection_proxy):
 
 def make_db(app):
     return Alchemies(app)
+
+
+class UTCDateTime(types.TypeDecorator):
+    impl = types.DateTime
+
+    def process_bind_param(self, value, dialect):
+        if value.tzinfo is not None:
+            # Convert to UTC
+            value = pytz.UTC.normalize(value.astimezone(pytz.UTC))
+        # else assume UTC
+        return value
+
+    def process_result_value(self, value, dialect):
+        # We expect UTC dates back, so populate with tzinfo
+        if value.tzinfo:
+            # How did we get here, dialects we know about
+            # return naive datetime objects
+            pass
+        return value.replace(tzinfo=pytz.UTC)

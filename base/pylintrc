@@ -43,7 +43,9 @@ disable=
   global-statement,
   unused-variable,
   redefined-outer-name,
-  no-value-for-parameter
+  no-value-for-parameter,
+  too-many-public-methods,
+  abstract-method
 
 [REPORTS]
 
