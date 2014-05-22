@@ -30,6 +30,14 @@ actions.base.tokens.issue.doc('Issue new authentication tokens')
 actions.base.tokens.revoke.doc('Revoke authentication tokens')
 
 
+def permitted():
+    return actions.base.tokens.view.can() or \
+        actions.base.tokens.issue.can() or \
+        actions.base.tokens.revoke.can()
+bp.root_widget_template(
+    'tokenauth_root_widget.html', priority=100, condition=permitted)
+
+
 class Token(db.declarative_base('relengapi')):
     __tablename__ = 'auth_tokens'
 
