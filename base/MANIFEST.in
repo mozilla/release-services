@@ -1,2 +1,6 @@
 # NOTE: these files must *also* be specified in setup.py
 recursive-include relengapi *.html *.jpg *.css *.js *.txt
+recursive-include relengapi/blueprints/docs/src *.rst *.css *.py
+include LICENSE.txt
+include README.md
+prune relengapi/blueprints/docs/build

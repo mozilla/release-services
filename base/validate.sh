@@ -31,7 +31,23 @@ rm -f "relengapi.egg-info/SOURCES.txt"
 
 # get the list of files git thinks should be present
 status "getting file list from git"
-git ls-files . | grep -vE '^(validate.*\.sh|pep8rc|pylintrc)$' | sort > ${tmpbase}/git-files
+git_only='
+    .gitignore
+    .travis.yml
+    pep8rc
+    pylintrc
+    validate.sh
+    validate-common.sh
+    src
+    settings_example.py
+'
+git ls-files . | while read f; do
+                    ignore=false
+                    for go in $git_only; do
+                        [ "$go" = "$f" ] && ignore=true
+                    done
+                    $ignore || echo $f
+                 done | sort > ${tmpbase}/git-files
 
 # get the list of files in an sdist tarball
 status "getting file list from sdist"

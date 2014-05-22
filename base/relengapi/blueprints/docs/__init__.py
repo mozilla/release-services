@@ -21,6 +21,7 @@ bp = Blueprint('docs', __name__,
                template_folder='templates')
 bp.root_widget_template('docs_root_widget.html', priority=100)
 
+
 def get_support():
     if not hasattr(current_app, 'docs_websupport'):
         srcdir = resource_filename(__name__, 'src')
@@ -64,14 +65,14 @@ def static(path):
 def api_info(docname):
     rv = []
     vfs = current_app.view_functions
-    for map in current_app.url_map.iter_rules():
-        func = vfs[map.endpoint]
+    for map_elt in current_app.url_map.iter_rules():
+        func = vfs[map_elt.endpoint]
         if func.__doc__ and func.__doc__.startswith('API:'):
-            rv.append((map.rule, func.__doc__))
+            rv.append((map_elt.rule, func.__doc__))
     return jsonify(rv)
 
 
-class CreateDBSubcommand(subcommands.Subcommand):
+class BuildDocsSubcommand(subcommands.Subcommand):
 
     def make_parser(self, subparsers):
         parser = subparsers.add_parser('build-docs',

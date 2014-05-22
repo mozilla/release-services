@@ -11,6 +11,10 @@ data_patterns = [
     'static/**.js',
     'static/**.txt',
 ]
+docs_patterns = [
+    'src/*/*.rst',
+    'src/conf.py',
+]
 
 setup(
     name='relengapi',
@@ -24,6 +28,7 @@ setup(
         "Flask-Login>=0.2.10",
         "Flask-Browserid",
         "Flask-Principal",
+        "Sphinx",
         "SQLAlchemy",
         "Celery",
         "argparse",
@@ -41,6 +46,7 @@ setup(
     },
     packages=find_packages(),
     include_package_data=True,
+    zip_safe=False,
     namespace_packages=['relengapi', 'relengapi.blueprints'],
     package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
         'relengapi': data_patterns,
@@ -49,6 +55,7 @@ setup(
         'relengapi.blueprints.authz': data_patterns,
         'relengapi.blueprints.userauth': data_patterns,
         'relengapi.blueprints.tokenauth': data_patterns,
+        'relengapi.blueprints.docs': docs_patterns + data_patterns,
     },
     entry_points={
         "relengapi_blueprints": [
@@ -57,6 +64,7 @@ setup(
             'authz = relengapi.blueprints.authz:bp',
             'userauth = relengapi.blueprints.userauth:bp',
             'tokenauth = relengapi.blueprints.tokenauth:bp',
+            'docs = relengapi.blueprints.docs:bp',
         ],
         "console_scripts": [
             'relengapi = relengapi.subcommands:main',
