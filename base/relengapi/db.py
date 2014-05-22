@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import datetime
 import sqlalchemy as sa
 import threading
 import pytz
@@ -14,8 +13,8 @@ from sqlalchemy import exc
 from sqlalchemy import event
 from sqlalchemy.pool import Pool
 from sqlalchemy.orm import scoping
-from sqlalchemy.orm import relationship
 from sqlalchemy.ext import declarative
+
 
 class _QueryProperty(object):
 
@@ -109,20 +108,21 @@ def ping_connection(dbapi_connection, connection_record, connection_proxy):
 def make_db(app):
     return Alchemies(app)
 
-class Columns:
-    """ Defines custom column types for use in ORM Models."""
-    class UTCDateTime(types.TypeDecorator):
-        impl = types.DateTime
 
-        def process_bind_param(self, value, dialect):
-            if value.tzinfo is not None:
-                # Convert to UTC
-                value = pytz.UTC.normalize(value.astimezone(pytz.UTC))
-            # else assume UTC
-            return value
-        def process_result_value(self, value, dialect):
-            # We expect UTC dates back, so populate with tzinfo
-            if value.tzinfo:
-                pass # How did we get here, dialects we know about
-                     # return naive datetime objects
-            return value.replace(tzinfo=pytz.UTC)
+class UTCDateTime(types.TypeDecorator):
+    impl = types.DateTime
+
+    def process_bind_param(self, value, dialect):
+        if value.tzinfo is not None:
+            # Convert to UTC
+            value = pytz.UTC.normalize(value.astimezone(pytz.UTC))
+        # else assume UTC
+        return value
+
+    def process_result_value(self, value, dialect):
+        # We expect UTC dates back, so populate with tzinfo
+        if value.tzinfo:
+            # How did we get here, dialects we know about
+            # return naive datetime objects
+            pass
+        return value.replace(tzinfo=pytz.UTC)
