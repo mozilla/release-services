@@ -11,7 +11,7 @@ def utcfromtimestamp(timestamp):
 
 
 def dt_as_timezone(obj, dest_tzinfo):
-    if not issubclass(obj, datetime):
+    if not isinstance(obj, datetime.datetime):
         raise ValueError("Must pass a datetime object")
     if obj.tzinfo is None:
         raise ValueError("Must pass a timezone aware datetime object")
