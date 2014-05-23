@@ -65,9 +65,7 @@ def hash_pair_exists(app, hg, git):
     try:
         session.query(Hash).filter(Hash.hg_changeset==hg).filter(Hash.git_commit==git).one()
         return True
-    except MultipleResultsFound:
-        return False
-    except NoResultFound:
+    except (MultipleResultsFound, NoResultFound):
         return False
 
 @test_context

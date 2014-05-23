@@ -9,6 +9,7 @@ import calendar
 import sqlalchemy as sa
 import dateutil.parser
 from sqlalchemy import orm
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from relengapi import db
 from flask import Blueprint
 from flask import g
@@ -49,7 +50,7 @@ class Hash(db.declarative_base('mapper')):
 
     def as_json(self):
         return jsonify(**{n: getattr(self, n)
-                          for n in ('hg_changeset', 'git_commit', 'date_added', 'project_name')})
+                          for n in ('git_commit', 'hg_changeset', 'date_added', 'project_name')})
 
     __table_args__ = (
         # TODO: (needs verification) all queries specifying a hash are for (project, hash), so these aren't used
@@ -94,31 +95,10 @@ def _build_mapfile(q):
         Text output, which is 40 characters of hg changeset sha, a space,
         40 characters of git commit sha, and a newline; or None if the query
         yields no results.
-
-    Exceptions:
-        HTTPError 404: No results found
     """
-    contents = '\n'.join('%s %s' % (r.hg_changeset, r.git_commit) for r in q)
+    contents = '\n'.join('%s %s' % (r.git_commit, r.hg_changeset) for r in q)
     if contents:
         return Response(contents + '\n', mimetype='text/plain')
-
-
-def _check_existing_sha(project, vcs_type, commit):
-    """ Helper method to check for an existing commit.
-    Args:
-        project: the project name(s) string, comma-delimited
-        vcs_type: the vcs name string (hg or git)
-        commit: the commit string to look for
-
-    Returns:
-        The first db row if it exists; otherwise None.
-    """
-    q = Hash.query.join(Project).filter(_project_filter(project))
-    if vcs_type == "git":
-        q = q.filter("git_commit == :commit").params(commit=commit)
-    elif vcs_type == "hg":
-        q = q.filter("hg_changeset == :commit").params(commit=commit)
-    return q.first()
 
 
 def _check_well_formed_sha(vcs, sha, exact_length=40):
@@ -146,16 +126,16 @@ def _check_well_formed_sha(vcs, sha, exact_length=40):
 
 
 def _get_project(session, project):
-    p = Project.query.filter_by(name=project).first()
-    if not p:
+    try:
+        return Project.query.filter_by(name=project).one()
+    except (MultipleResultsFound, NoResultFound):
         abort(404)
-    return p
 
 
-def _add_hash(session, hg_changeset, git_commit, project):
-    _check_well_formed_sha('hg', hg_changeset)
+def _add_hash(session, git_commit, hg_changeset, project):
     _check_well_formed_sha('git', git_commit)
-    h = Hash(hg_changeset=hg_changeset, git_commit=git_commit, project=project, date_added=time.time())
+    _check_well_formed_sha('hg', hg_changeset)
+    h = Hash(git_commit=git_commit, hg_changeset=hg_changeset, project=project, date_added=time.time())
     session.add(h)
 
 
@@ -184,11 +164,13 @@ def get_rev(project, vcs_type, commit):
         q = q.filter("git_commit like :cspatttern").params(cspatttern=commit+"%")
     elif vcs_type == "hg":
         q = q.filter("hg_changeset like :cspatttern").params(cspatttern=commit+"%")
-    row = q.first()
-    if row:
-        return "%s %s" % (row.hg_changeset, row.git_commit)
-    else:
+    try:
+        row = q.one()
+        return "%s %s" % (row.git_commit, row.hg_changeset)
+    except NoResultFound:
         return "not found", 404
+    except MultipleResultsFound:
+        return "internal error - multiple results returned, should not be possible in database", 500
 
 
 @bp.route('/<project>/mapfile/full')
@@ -199,13 +181,13 @@ def get_full_mapfile(project):
         project: comma-delimited project names(s) string
 
     Yields:
-        full mapfile for the given project
+        full mapfile for the given project (git sha, hg sha) ordered by hg sha
 
     Exceptions:
         HTTPError 404: No results found
     """
     q = Hash.query.join(Project).filter(_project_filter(project))
-    q = q.order_by(Hash.git_commit)
+    q = q.order_by(Hash.hg_changeset)
     mapfile = _build_mapfile(q)
     if not mapfile:
         abort(404, 'not found')
@@ -219,9 +201,11 @@ def get_mapfile_since(project, since):
     Args:
         project: comma-delimited project names(s) string
         since: a timestamp, in a format parsed by [dateutil.parser.parse](https://labix.org/python-dateutil)
+            evaluated based on the time the record was inserted into mapper database, not the time of
+            commit and not the time of conversion.
 
     Yields:
-        Partial mapfile since date, from _build_mapfile
+        Partial mapfile since date, from _build_mapfile (git sha, hg sha) ordered by hg sha
 
     Exceptions:
         HTTPError 404: No results found, via _build_mapfile
@@ -232,7 +216,7 @@ def get_mapfile_since(project, since):
         abort(400, 'invalid date; see https://labix.org/python-dateutil')
     since_epoch = calendar.timegm(since_dt.utctimetuple())
     q = Hash.query.join(Project).filter(_project_filter(project))
-    q = q.order_by(Hash.git_commit)
+    q = q.order_by(Hash.hg_changeset)
     q = q.filter(Hash.date_added > since_epoch)
     print q
     mapfile = _build_mapfile(q)
@@ -263,15 +247,15 @@ def _insert_many(project, dups=False):
     for line in request.stream.readlines():
         line = line.rstrip()
         try:
-            (hg_changeset, git_commit) = line.split(' ')
+            (git_commit, hg_changeset) = line.split(' ')
         except ValueError:
             logger.error("Received input line: '%s' for project %s" % (line, project))
             logger.error("Was expecting an input line such as '686a558fad7954d8481cfd6714cdd56b491d2988 fef90029cb654ad9848337e262078e403baf0c7a'")
-            logger.error("i.e. where the first hash is a mercurial commit SHA and the second hash is a git commit SHA")
+            logger.error("i.e. where the first hash is a git commit SHA and the second hash is a mercurial changeset SHA")
             abort(400, "Input line received did not contain a space")
             # header/footer won't match this format
             continue
-        _add_hash(session, hg_changeset, git_commit, proj)
+        _add_hash(session, git_commit, hg_changeset, proj)
         if dups:
             try:
                 session.commit()
@@ -292,7 +276,7 @@ def insert_many_no_dups(project):
 
     Args:
         project: single project name string (not comma-delimited list)
-        POST data: mapfile lines (hg_changeset git_commit\n)
+        POST data: mapfile lines (git_commit hg_changeset\n)
         Content-Type: text/plain
 
     Returns:
@@ -311,7 +295,7 @@ def insert_many_allow_dups(project):
 
     Args:
         project: single project name string (not comma-delimited list)
-        POST data: mapfile lines (hg_changeset git_commit\n)
+        POST data: mapfile lines (git_commit hg_changeset\n)
         Content-Type: text/plain
 
     Returns:
@@ -320,15 +304,15 @@ def insert_many_allow_dups(project):
     return _insert_many(project, dups=True)
 
 
-@bp.route('/<project>/insert/<hg_changeset>/<git_commit>')
+@bp.route('/<project>/insert/<git_commit>/<hg_changeset>')
 @actions.mapper.mapping.insert.require()
-def insert_one(project, hg_changeset, git_commit):
+def insert_one(project, git_commit, hg_changeset):
     """Insert a single mapping
 
     Args:
         project: single project name string (not comma-delimited list)
-        hg_changeset: 40 char hexadecimal string.
         git_commit: 40 char hexadecimal string.
+        hg_changeset: 40 char hexadecimal string.
 
     Returns:
         A string row on success
@@ -340,16 +324,18 @@ def insert_one(project, hg_changeset, git_commit):
     """
     session = g.db.session('mapper')
     proj = _get_project(session, project)
-    _add_hash(session, hg_changeset, git_commit, proj)
+    _add_hash(session, git_commit, hg_changeset, proj)
     try:
         session.commit()
+        q = Hash.query.join(Project).filter(_project_filter(project))
+        q = q.filter("git_commit == :commit").params(commit=git_commit)
+        return q.one().as_json()
     except sa.exc.IntegrityError:
         abort(409, "mapping already exists")
-    row = _check_existing_sha(project, 'hg', hg_changeset)
-    if row:
-        return row.as_json()
-    else:
-        abort(500, "row doesn't exist!")
+    except NoResultFound:
+        abort(500, "row was not successfully entered in database!")
+    except MultipleResultsFound:
+        abort(500, "duplicate rows found in database!")
 
 @bp.route('/<project>')
 @actions.mapper.project.insert.require()
