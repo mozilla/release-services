@@ -21,28 +21,23 @@ Utilities
     This is a utility method for dynamically loading modules to implement mechanisms specified in the application configuration.
     It is used for configuration like ``RELENGAPI_ACTIONS``.
 
-.. py:class:: datetime
+.. py:module:: relengapi.util.tz
 
-  This class is meant to replace python ``datetime`` module, e.g.
+    This class is meant to help with timezone related things
 
-  .. code-block:: python
+.. py:function:: utcnow()
 
-    # Don't do the following
-    import datetime
-    # Instead do
-    from relengapi.util import datetime
-    utc_dt =  datetime.datetime.utcnow()
+    Returns the datetime.datetime.utcnow() value, with added pytz.UTC tzinfo
 
-  .. py:class:: datetime
+.. py:function:: utcfromtimestamp(timestamp)
 
-    subclass of python datetime.datetime, supporting timezone aware utc methods. by way of pytz
+    :param timestamp: POSIX timestamp
 
-    .. py:classmethod:: utcnow
+    returns the datetime.datetime.utcfromtimestamp(timestamp) value with added pytz.UTC tzinfo
 
-        Returns the datetime.datetime.utcnow() value, with added pytz.UTC tzinfo
+.. py:function:: dt_as_timezone(obj, dest_tzinfo)
 
-    .. py:classmethod:: utcfromtimestamp(timestamp)
-
-       :param timestamp: POSIX timestamp
-
-       returns the datetime.datetime.utcfromtimestamp(timestamp) value with added pytz.UTC tzinfo
+    :param obj: a datetime object, with valid tzinfo
+    :param dest_tzinfo: a timezone class as provided by pytz
+    
+    Converts the passed datetime into a new timezone.
