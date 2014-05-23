@@ -93,7 +93,7 @@ Relengapi provides some custom Column types that can be used in SQL Models.
 
 These can be used like any other column in SQLAlchemy ORMs::
 
-    from relengapi.db.Columns import SomeColumn
+    from relengapi.db import SomeColumn
     class Widget(db.declarative_base('...')):
         someField = sa.Column(SomeColumn, ...)
 
@@ -101,19 +101,19 @@ UTCDateTime Column
 ..................
 
 A DateTime column where values are always stored and retrieved in UTC. Specifically
-the datetime objects returned are always Timezone Aware (with pytz.UTC set). On
+the datetime objects returned are always timezone aware (with pytz.UTC set). On
 inserts into the table it automatically converts the object to UTC when a timezone
 aware datetime object is passed in.
 
 example::
 
-    from relengapi.db import Columns
+    from relengapi import db
     import sqlalchemy as sa
     
     class Log(db.declarative_base('...')):
         __tablename__ = 'logs'
         id = sa.Column(sa.Integer, primary_key=True)
-        dt = sa.Column(Columns.UTCDateTime,
+        dt = sa.Column(db.UTCDateTime,
                        default=datetime.datetime.utcnow,
                        nullable=False)
         msg = sa.Column(sa.String(255), nullable=False)
