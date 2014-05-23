@@ -58,7 +58,7 @@ def insert_some_hashes(app):
     session.add(Hash(git_commit=SHA3, hg_changeset=SHA3R, project=project, date_added=12347))
     session.commit()
 
-def hash_pair_exists(app, hg, git):
+def hash_pair_exists(app, git, hg):
     engine = app.db.engine("mapper")
     Session.configure(bind=engine)
     session = Session()
@@ -71,21 +71,21 @@ def hash_pair_exists(app, hg, git):
 @test_context
 def test_get_rev_git(app, client):
     insert_some_hashes(app)
-    rv = client.get('/mapper/proj/rev/git/%s' % SHA1R)
+    rv = client.get('/mapper/proj/rev/git/%s' % SHA1)
     eq_(rv.status_code, 200)
     eq_(rv.data, '%s %s' % (SHA1, SHA1R))
 
 @test_context
 def test_get_rev_hg(app, client):
     insert_some_hashes(app)
-    rv = client.get('/mapper/proj/rev/hg/%s' % SHA2)
+    rv = client.get('/mapper/proj/rev/hg/%s' % SHA2R)
     eq_(rv.status_code, 200)
     eq_(rv.data, '%s %s' % (SHA2, SHA2R))
 
 @test_context
 def test_get_rev_abbreviated(app, client):
     insert_some_hashes(app)
-    rv = client.get('/mapper/proj/rev/git/%s' % SHA1R[:8])
+    rv = client.get('/mapper/proj/rev/git/%s' % SHA1[:8])
     eq_(rv.status_code, 200)
     eq_(rv.data, '%s %s' % (SHA1, SHA1R))
 
@@ -148,8 +148,8 @@ def test_insert_one(client):
     eq_(json.loads(rv.data), {
         'date_added': 1234.0,
         'project_name': 'proj',
-        'hg_changeset': '111111705d7c41c8f101b5b1e3438d95d0fcfa7a',
-        'git_commit': '222222705d7c41c8f101b5b1e3438d95d0fcfa7a',
+        'git_commit': SHA1,
+        'hg_changeset': SHA2,
     })
 
 @test_context
