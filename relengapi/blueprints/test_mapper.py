@@ -53,9 +53,9 @@ def insert_some_hashes(app):
     Session.configure(bind=engine)
     session = Session()
     project = session.query(Project).filter(Project.name=='proj').one()
-    session.add(Hash(hg_changeset=SHA1, git_commit=SHA1R, project=project, date_added=12345))
-    session.add(Hash(hg_changeset=SHA2, git_commit=SHA2R, project=project, date_added=12346))
-    session.add(Hash(hg_changeset=SHA3, git_commit=SHA3R, project=project, date_added=12347))
+    session.add(Hash(git_commit=SHA1, hg_changeset=SHA1R, project=project, date_added=12345))
+    session.add(Hash(git_commit=SHA2, hg_changeset=SHA2R, project=project, date_added=12346))
+    session.add(Hash(git_commit=SHA3, hg_changeset=SHA3R, project=project, date_added=12347))
     session.commit()
 
 def hash_pair_exists(app, hg, git):
