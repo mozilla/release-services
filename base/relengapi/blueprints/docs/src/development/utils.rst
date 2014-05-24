@@ -48,15 +48,15 @@ Utilities
         from relengapi.util.tz import dt_as_timezone, utcnow
         dt = utcnow()
         print repr(dt)
-        // datetime.datetime(2014, 5, 23, 16, 39, 32, 125099, tzinfo=<UTC>)
+        # datetime.datetime(2014, 5, 23, 16, 39, 32, 125099, tzinfo=<UTC>)
         print dt
-        // 2014-05-23 16:39:32.125099+00:00
+        # 2014-05-23 16:39:32.125099+00:00
         repr(pytz.timezone("US/Pacific"))
-        // <DstTzInfo 'US/Pacific' PST-1 day, 16:00:00 STD>
+        # <DstTzInfo 'US/Pacific' PST-1 day, 16:00:00 STD>
         repr(dt_as_timezone(dt, pytz.timezone("US/Pacific")))
-        // datetime.datetime(2014, 5, 23, 9, 39, 32, 125099, tzinfo=<DstTzInfo 'US/Pacific' PDT-1 day, 17:00:00 DST>)
+        # datetime.datetime(2014, 5, 23, 9, 39, 32, 125099, tzinfo=<DstTzInfo 'US/Pacific' PDT-1 day, 17:00:00 DST>)
         print dt_as_timezone(dt, pytz.timezone("US/Pacific"))
-        // 2014-05-23 09:39:32.125099-07:00
+        # 2014-05-23 09:39:32.125099-07:00
     
     .. note::
     
@@ -65,8 +65,8 @@ Utilities
             import datetime
             dt2 = datetime.datetime.utcnow()
             dt_as_timezone(dt2, pytz.timezone("US/Pacific"))
-            // Traceback (most recent call last):
-            //   File "<stdin>", ....
-            //   File ".../base/relengapi/util/tz.py", line 17, in dt_as_timezone
-            //     raise ValueError("Must pass a timezone aware datetime object")
-            // ValueError: Must pass a timezone aware datetime object
+            # Traceback (most recent call last):
+            #   File "<stdin>", ....
+            #   File ".../base/relengapi/util/tz.py", line 17, in dt_as_timezone
+            #     raise ValueError("Must pass a timezone aware datetime object")
+            # ValueError: Must pass a timezone aware datetime object
