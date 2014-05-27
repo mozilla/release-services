@@ -89,6 +89,9 @@ Actions
 Once a user is authenticated, their permitted actions must be determined.
 Again, RelengAPI provides a number of mechanisms, configured with the ``RELENGAPI_ACTIONS`` key, which is a dictionary containing options.
 
+Static
+~~~~~~
+
 The ``static`` type supports a simple static mapping from user ID to actions, given in the ``actions`` key.
 Roles are given as a list of strings.
 For example::
@@ -99,6 +102,42 @@ For example::
             'dustin@mozilla.com': ['tasks.create', 'base.tokens.issue'],
         },
     }
+
+LDAP Groups
+~~~~~~~~~~~
+
+The ``ldap-groups`` type supports looking up the authenticated user in LDAP, then mapping that user's group membership to a set of allowed actions.
+The configuration looks like this::
+
+    RELENGAPI_ACTIONS = {
+        'type': 'ldap-groups',
+
+        # map from group CN to actions
+        'group-actions': {
+            'team_relops': ['tasks.create', 'base.tokens.view'],
+            'team_releng': ['base.tokens.issue', 'base.tokens.view'],
+        },
+
+        # Base LDAP URI
+        'uri': "ldap://your.ldap.server/",
+    
+        # This needs to be a user that has sufficient rights to read users and groups
+        'login_dn': "<dn for bind user>",
+        'login_password': "<password for bind user>",
+    
+        # The search bases for users and groups, respectively
+        'user_base': 'o=users,dc=example,dc=com',
+        'group_base': 'o=groups,dc=example,dc=com',
+    
+        # set this to True for extra logging
+        'debug': False,
+    }
+ 
+A user who is a member of multiple configured groups will have permission to perform an action listed in any of those groups.
+In the examle above, a user in both ``team_relops`` and ``team_releng`` would have permission to create tasks and to issue and view tokens.
+
+Users must be under the subtree named by ``user_base``, and similarly groups must be under ``group_base``.
+Users must have object class ``inetOrgPerson``, and groups must have object class ``groupOfNames``.
 
 Library Configuration
 ---------------------
