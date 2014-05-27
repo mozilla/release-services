@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import wrapt
 import inspect
 from flask import g
 from flask import json
 import relengapi.app
-from nose.tools import make_decorator
 
 
 class TestContext(object):
@@ -68,28 +68,26 @@ class TestContext(object):
             self.options['app_setup'](app)
         return app
 
-    def __call__(self, func):
-        arginfo = inspect.getargspec(func)
+    @wrapt.decorator
+    def __call__(self, wrapped, instance, _, kwargs):
+        arginfo = inspect.getargspec(wrapped)
         args = set((arginfo.args if arginfo.args else []) +
                    (arginfo.keywords if arginfo.keywords else []))
 
-        @make_decorator(func)
-        def wrap(**kwargs):
-            def post_json(path, data):
-                return kwargs['client'].post(
-                    path, data=json.dumps(data),
-                    headers=[('Content-Type', 'application/json')])
-            app = self._make_app()
-            if 'app' in args:
-                kwargs['app'] = app
-            if 'client' in args:
-                kwargs['client'] = app.test_client()
-                kwargs['client'].post_json = post_json
-            if 'db_setup' in self.options:
-                self.options['db_setup'](app)
-            try:
-                func(**kwargs)
-            finally:
-                if 'db_teardown' in self.options:
-                    self.options['db_teardown'](app)
-        return wrap
+        def post_json(path, data):
+            return kwargs['client'].post(
+                path, data=json.dumps(data),
+                headers=[('Content-Type', 'application/json')])
+        app = self._make_app()
+        if 'app' in args:
+            kwargs['app'] = app
+        if 'client' in args:
+            kwargs['client'] = app.test_client()
+            kwargs['client'].post_json = post_json
+        if 'db_setup' in self.options:
+            self.options['db_setup'](app)
+        try:
+            wrapped(**kwargs)
+        finally:
+            if 'db_teardown' in self.options:
+                self.options['db_teardown'](app)
