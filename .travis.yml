@@ -10,7 +10,9 @@ env:
   - RELENGAPI_SETTINGS=../../settings_example.py
 
 # command to install dependencies
-install: "pip install -e base[test]"
+install:
+  - "pip install -e base[test]"
+  - "pip freeze"
 
 # run everything in a single script, so we get a nice summary at the end
 script:
