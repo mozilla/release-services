@@ -46,7 +46,8 @@ disable=
   no-value-for-parameter,
   too-many-public-methods,
   too-many-instance-attributes,
-  abstract-method
+  abstract-method,
+  method-hidden
 
 [REPORTS]
 
