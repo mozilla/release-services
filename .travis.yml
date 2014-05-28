@@ -18,5 +18,5 @@ script:
   - relengapi build-docs
   - relengapi run-tests
   - pep8 --config=pep8rc .
-  # bizarrely, . doesn't work - you need to use $(pwd)
+  # pylint doesn't work in top folder; you need to run against relengapi subfolder (no idea why)
   - pylint --rcfile=pylintrc relengapi
