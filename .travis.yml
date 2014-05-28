@@ -19,4 +19,4 @@ script:
   - relengapi run-tests
   - pep8 --config=build-relengapi/base/pep8rc .
   # bizarrely, . doesn't work - you need to use $(pwd)
-  - pylint --rcfile=build-relengapi/base/pylintrc "$(pwd)"
+  - pylint --rcfile=build-relengapi/base/pylintrc relengapi
