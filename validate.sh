@@ -8,10 +8,10 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 source ./validate-common.sh
 
 status "running pep8 -- slaveloan"
-pep8 --config=pep8rc relengapi || not_ok "pep8 failed"
+pep8 --config=../base/pep8rc relengapi || not_ok "pep8 failed"
 
 status "running pylint"
-pylint relengapi --rcfile=pylintrc || not_ok "pylint failed"
+pylint relengapi --rcfile=../base/pylintrc || not_ok "pylint failed"
 
 show_results
 
