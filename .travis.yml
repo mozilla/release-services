@@ -17,5 +17,5 @@ install:
 script:
   - relengapi build-docs
   - relengapi run-tests
-  - pep8 --config=pep8rc .
-  - pylint --rcfile=pylintrc relengapi.blueprints.mapper
+  - pep8 --config=build-relengapi/base/pep8rc .
+  - pylint --rcfile=build-relengapi/base/pylintrc relengapi.blueprints.mapper
