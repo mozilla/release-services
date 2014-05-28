@@ -115,9 +115,9 @@ def _check_well_formed_sha(vcs, sha, exact_length=40):
     """
     rev_regex = re.compile('''^[a-f0-9]{1,40}$''')
     if sha is None:
-        abort (400, "%s SHA is <None>" % vcs)
+        abort(400, "%s SHA is <None>" % vcs)
     elif sha == "":
-        abort (400, "%s SHA is an empty string" % vcs)
+        abort(400, "%s SHA is an empty string" % vcs)
     elif not rev_regex.match(sha):
         abort(400, "%s SHA contains bad characters: '%s'" % (vcs, str(sha)))
     if exact_length is not None and len(sha) != exact_length:
@@ -212,8 +212,8 @@ def get_mapfile_since(project, since):
     """
     try:
         since_dt = dateutil.parser.parse(since)
-    except Exception:
-        abort(400, 'invalid date; see https://labix.org/python-dateutil')
+    except ValueError as e:
+        abort(400, 'invalid date; see https://labix.org/python-dateutil: %s' % e.message)
     since_epoch = calendar.timegm(since_dt.utctimetuple())
     q = Hash.query.join(Project).filter(_project_filter(project))
     q = q.order_by(Hash.hg_changeset)
@@ -249,7 +249,7 @@ def _insert_many(project, dups=False):
         try:
             (git_commit, hg_changeset) = line.split(' ')
         except ValueError:
-            logger.error("Received input line: '%s' for project %s" % (line, project))
+            logger.error("Received input line: '%s' for project %s", line, project)
             logger.error("Was expecting an input line such as '686a558fad7954d8481cfd6714cdd56b491d2988 fef90029cb654ad9848337e262078e403baf0c7a'")
             logger.error("i.e. where the first hash is a git commit SHA and the second hash is a mercurial changeset SHA")
             abort(400, "Input line received did not contain a space")

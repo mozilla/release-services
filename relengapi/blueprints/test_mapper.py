@@ -6,10 +6,10 @@ import mock
 import json
 from nose.tools import eq_
 from relengapi.testing import TestContext
-from mapper import Hash, Project
+from relengapi.blueprints.mapper import Hash, Project
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
-        
+
 SHA1 = '111111705d7c41c8f101b5b1e3438d95d0fcfa7a'
 SHA1R = ''.join(reversed(SHA1))
 SHA2 = '222222705d7c41c8f101b5b1e3438d95d0fcfa7a'
@@ -52,7 +52,7 @@ def insert_some_hashes(app):
     engine = app.db.engine("mapper")
     Session.configure(bind=engine)
     session = Session()
-    project = session.query(Project).filter(Project.name=='proj').one()
+    project = session.query(Project).filter(Project.name == 'proj').one()
     session.add(Hash(git_commit=SHA1, hg_changeset=SHA1R, project=project, date_added=12345))
     session.add(Hash(git_commit=SHA2, hg_changeset=SHA2R, project=project, date_added=12346))
     session.add(Hash(git_commit=SHA3, hg_changeset=SHA3R, project=project, date_added=12347))
@@ -63,7 +63,7 @@ def hash_pair_exists(app, git, hg):
     Session.configure(bind=engine)
     session = Session()
     try:
-        session.query(Hash).filter(Hash.hg_changeset==hg).filter(Hash.git_commit==git).one()
+        session.query(Hash).filter(Hash.hg_changeset == hg).filter(Hash.git_commit == git).one()
         return True
     except (MultipleResultsFound, NoResultFound):
         return False
