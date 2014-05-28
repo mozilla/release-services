@@ -24,6 +24,7 @@ SHAFILE = "%s %s\n%s %s\n%s %s\n" % (
 
 Session = sessionmaker()
 
+
 def db_setup(app):
     engine = app.db.engine("mapper")
     Session.configure(bind=engine)
@@ -31,6 +32,7 @@ def db_setup(app):
     project = Project(name='proj')
     session.add(project)
     session.commit()
+
 
 def db_teardown(app):
     engine = app.db.engine("mapper")
@@ -41,12 +43,12 @@ from relengapi import actions
 
 test_context = TestContext(databases=['mapper'],
                            actions=[
-                                    actions.mapper.mapping.insert,
-                                    actions.mapper.project.insert
-                                   ],
+                               actions.mapper.mapping.insert,
+                               actions.mapper.project.insert],
                            db_setup=db_setup,
                            db_teardown=db_teardown,
                            reuse_app=True)
+
 
 def insert_some_hashes(app):
     engine = app.db.engine("mapper")
@@ -58,6 +60,7 @@ def insert_some_hashes(app):
     session.add(Hash(git_commit=SHA3, hg_changeset=SHA3R, project=project, date_added=12347))
     session.commit()
 
+
 def hash_pair_exists(app, git, hg):
     engine = app.db.engine("mapper")
     Session.configure(bind=engine)
@@ -68,12 +71,14 @@ def hash_pair_exists(app, git, hg):
     except (MultipleResultsFound, NoResultFound):
         return False
 
+
 @test_context
 def test_get_rev_git(app, client):
     insert_some_hashes(app)
     rv = client.get('/mapper/proj/rev/git/%s' % SHA1)
     eq_(rv.status_code, 200)
     eq_(rv.data, '%s %s' % (SHA1, SHA1R))
+
 
 @test_context
 def test_get_rev_hg(app, client):
@@ -82,12 +87,14 @@ def test_get_rev_hg(app, client):
     eq_(rv.status_code, 200)
     eq_(rv.data, '%s %s' % (SHA2, SHA2R))
 
+
 @test_context
 def test_get_rev_abbreviated(app, client):
     insert_some_hashes(app)
     rv = client.get('/mapper/proj/rev/git/%s' % SHA1[:8])
     eq_(rv.status_code, 200)
     eq_(rv.data, '%s %s' % (SHA1, SHA1R))
+
 
 @test_context
 def test_get_rev_missing(app, client):
@@ -96,6 +103,7 @@ def test_get_rev_missing(app, client):
     eq_(rv.status_code, 404)
     # TODO: check that return is JSON, once it is
 
+
 @test_context
 def test_get_rev_malformed(app, client):
     insert_some_hashes(app)
@@ -103,12 +111,14 @@ def test_get_rev_malformed(app, client):
     eq_(rv.status_code, 400)
     # TODO: check that return is JSON, once it is
 
+
 @test_context
 def test_get_rev_weird_vcs(app, client):
     insert_some_hashes(app)
     rv = client.get('/mapper/proj/rev/darcs/123')
     eq_(rv.status_code, 400)
     # TODO: check that return is JSON, once it is
+
 
 @test_context
 def test_get_mapfile(app, client):
@@ -120,10 +130,12 @@ def test_get_mapfile(app, client):
         SHA3, SHA3R, SHA1, SHA1R, SHA2, SHA2R,
     ))
 
+
 @test_context
 def test_get_mapfile_no_rows(client):
     rv = client.get('/mapper/proj/mapfile/full')
     eq_(rv.status_code, 404)
+
 
 @test_context
 def test_get_mapfile_no_project(app, client):
@@ -131,12 +143,14 @@ def test_get_mapfile_no_project(app, client):
     rv = client.get('/mapper/notaproj/mapfile/full')
     eq_(rv.status_code, 404)
 
+
 @test_context
 def test_get_mapfile_since(app, client):
     insert_some_hashes(app)
     rv = client.get('/mapper/proj/mapfile/since/1970-01-01T03:25:46+00:00')
     eq_(rv.status_code, 200)
     eq_(rv.data, '%s %s\n' % (SHA3, SHA3R))
+
 
 @test_context
 def test_insert_one(client):
@@ -152,6 +166,7 @@ def test_insert_one(client):
         'hg_changeset': SHA2,
     })
 
+
 @test_context
 def test_insert_one_duplicate(client):
     rv = client.post('/mapper/proj/insert/%s/%s' % (SHA1, SHA2))
@@ -164,17 +179,20 @@ def test_insert_one_duplicate(client):
     eq_(rv.status_code, 409)
     # TODO: check response when it's JSON
 
+
 @test_context
 def test_insert_one_no_project(client):
     rv = client.post('/mapper/notaproj/insert/%s/%s' % (SHA1, SHA2))
     eq_(rv.status_code, 404)
     # TODO: check response when it's JSON
 
+
 @test_context
 def test_insert_multi_bad_content_type(app, client):
     rv = client.post('/mapper/proj/insert', content_type='text/chocolate', data=SHAFILE)
     eq_(rv.status_code, 400)
     # TODO: check response when it's JSON
+
 
 @test_context
 def test_insert_multi_no_dups(app, client):
@@ -184,6 +202,7 @@ def test_insert_multi_no_dups(app, client):
     assert hash_pair_exists(app, SHA1, SHA1R)
     assert hash_pair_exists(app, SHA2, SHA2R)
     assert hash_pair_exists(app, SHA3, SHA3R)
+
 
 @test_context
 def test_insert_multi_no_dups_but_dups(app, client):
@@ -196,6 +215,7 @@ def test_insert_multi_no_dups_but_dups(app, client):
     assert hash_pair_exists(app, SHA2, SHA2R)
     assert not hash_pair_exists(app, SHA3, SHA3R)
 
+
 @test_context
 def test_insert_multi_ignoredups(app, client):
     rv = client.post('/mapper/proj/insert/ignoredups', content_type='text/plain', data=SHAFILE)
@@ -204,6 +224,7 @@ def test_insert_multi_ignoredups(app, client):
     assert hash_pair_exists(app, SHA1, SHA1R)
     assert hash_pair_exists(app, SHA2, SHA2R)
     assert hash_pair_exists(app, SHA3, SHA3R)
+
 
 @test_context
 def test_insert_multi_ignoredups_with_dups(app, client):
@@ -216,11 +237,13 @@ def test_insert_multi_ignoredups_with_dups(app, client):
     assert hash_pair_exists(app, SHA2, SHA2R)
     assert hash_pair_exists(app, SHA3, SHA3R)
 
+
 @test_context
 def test_add_project(client):
     rv = client.post('/mapper/proj2')
     eq_(rv.status_code, 200)
     eq_(json.loads(rv.data), {})
+
 
 @test_context
 def test_add_project_existing(client):

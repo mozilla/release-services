@@ -12,7 +12,7 @@ setup(name='relengapi-mapper',
       namespace_packages=['relengapi', 'relengapi.blueprints'],
       entry_points={
           "relengapi_blueprints": [
-                'mapper = relengapi.blueprints.mapper:bp',
+              'mapper = relengapi.blueprints.mapper:bp',
           ],
       },
       install_requires=[
@@ -22,10 +22,9 @@ setup(name='relengapi-mapper',
           'python-dateutil',
       ],
       license='MPL2',
-      extras_require = {
+      extras_require={
           'test': [
               'nose',
               'mock'
           ]
-      }
-)
+      })

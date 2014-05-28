@@ -24,10 +24,13 @@ logger = logging.getLogger(__name__)
 # logging.basicConfig(level=logging.DEBUG)
 bp = Blueprint('mapper', __name__)
 
-actions.mapper.mapping.insert.doc("Allows new hg-git mappings to be inserted into mapper db (hashes table)")
-actions.mapper.project.insert.doc("Allows new projects to be inserted into mapper db (projects table)")
+actions.mapper.mapping.insert.doc("Allows new hg-git mappings to be inserted "
+                                  "into mapper db (hashes table)")
+actions.mapper.project.insert.doc("Allows new projects to be inserted into "
+                                  "mapper db (projects table)")
 
 # TODO: replace abort with a custom exception - http://flask.pocoo.org/docs/patterns/apierrors/
+
 
 class Project(db.declarative_base('mapper')):
     __tablename__ = 'projects'
@@ -53,7 +56,8 @@ class Hash(db.declarative_base('mapper')):
                           for n in ('git_commit', 'hg_changeset', 'date_added', 'project_name')})
 
     __table_args__ = (
-        # TODO: (needs verification) all queries specifying a hash are for (project, hash), so these aren't used
+        # TODO: (needs verification) all queries specifying a hash are for
+        # (project, hash), so these aren't used
         sa.Index('hg_changeset', 'hg_changeset'),
         sa.Index('git_commit', 'git_commit'),
         # TODO: this index is a prefix of others and will never be used
@@ -135,7 +139,8 @@ def _get_project(session, project):
 def _add_hash(session, git_commit, hg_changeset, project):
     _check_well_formed_sha('git', git_commit)
     _check_well_formed_sha('hg', hg_changeset)
-    h = Hash(git_commit=git_commit, hg_changeset=hg_changeset, project=project, date_added=time.time())
+    h = Hash(git_commit=git_commit, hg_changeset=hg_changeset, project=project,
+             date_added=time.time())
     session.add(h)
 
 
@@ -196,16 +201,18 @@ def get_full_mapfile(project):
 
 @bp.route('/<project>/mapfile/since/<since>')
 def get_mapfile_since(project, since):
-    """Get a mapfile since date.  <project> can be a comma-delimited set of projects
+    """Get a mapfile since date. <project> can be a comma-delimited set of projects
 
     Args:
         project: comma-delimited project names(s) string
-        since: a timestamp, in a format parsed by [dateutil.parser.parse](https://labix.org/python-dateutil)
-            evaluated based on the time the record was inserted into mapper database, not the time of
-            commit and not the time of conversion.
+        since: a timestamp, in a format parsed by [dateutil.parser.parse]
+            (https://labix.org/python-dateutil)
+            evaluated based on the time the record was inserted into mapper database,
+            not the time of commit and not the time of conversion.
 
     Yields:
-        Partial mapfile since date, from _build_mapfile (git sha, hg sha) ordered by hg sha
+        Partial mapfile since date, from _build_mapfile (git sha, hg sha) ordered by
+        hg sha
 
     Exceptions:
         HTTPError 404: No results found, via _build_mapfile
@@ -250,8 +257,11 @@ def _insert_many(project, dups=False):
             (git_commit, hg_changeset) = line.split(' ')
         except ValueError:
             logger.error("Received input line: '%s' for project %s", line, project)
-            logger.error("Was expecting an input line such as '686a558fad7954d8481cfd6714cdd56b491d2988 fef90029cb654ad9848337e262078e403baf0c7a'")
-            logger.error("i.e. where the first hash is a git commit SHA and the second hash is a mercurial changeset SHA")
+            logger.error("Was expecting an input line such as "
+                         "'686a558fad7954d8481cfd6714cdd56b491d2988 "
+                         "fef90029cb654ad9848337e262078e403baf0c7a'")
+            logger.error("i.e. where the first hash is a git commit SHA "
+                         "and the second hash is a mercurial changeset SHA")
             abort(400, "Input line received did not contain a space")
             # header/footer won't match this format
             continue
@@ -336,6 +346,7 @@ def insert_one(project, git_commit, hg_changeset):
         abort(500, "row was not successfully entered in database!")
     except MultipleResultsFound:
         abort(500, "duplicate rows found in database!")
+
 
 @bp.route('/<project>', methods=('POST',))
 @actions.mapper.project.insert.require()
