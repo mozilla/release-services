@@ -100,3 +100,35 @@ def test_UTCDateTime_converts_standard(app):
     eq_(1, len(instances))
     ok_(isinstance(instances[0].date, datetime.datetime))
     eq_(instances[0].date.strftime('%Y-%m-%d %H:%M:%S %Z%z'), '2011-06-27 10:00:00 UTC+0000')
+
+
+class Uniqueness_Table(db.declarative_base('test_db'), db.UniqueMixin):
+    __tablename__ = 'uniqueness_test'
+    id = sa.Column(sa.Integer, primary_key=True)
+    name = sa.Column(sa.String(18), nullable=False, unique=True)
+
+    @classmethod
+    def unique_hash(cls, name):
+        return name
+
+    @classmethod
+    def unique_filter(cls, query, name):
+        return query.filter(Uniqueness_Table.name == name)
+
+
+@TestContext(databases=['test_db'])
+def test_unique_mixin(app):
+    session = app.db.session('test_db')
+    row1 = Uniqueness_Table.as_unique(session, name='r1')
+    row2 = Uniqueness_Table.as_unique(session, name='r3')
+    row3 = Uniqueness_Table.as_unique(session, name='r2')
+    row1b = Uniqueness_Table.as_unique(session, name='r1')
+    eq_(row1, row1b)
+    ok_(row1 is row1b)  # stronger than ==, we check for "same object"
+    assert_not_equal(row1, row2)
+    assert_not_equal(row1, row3)
+    assert_not_equal(row2, row3)
+    session.commit()
+    instances = session.query(Uniqueness_Table).all()
+    eq_(3, len(instances))
+    ok_(instances[2].name, 'r2')
