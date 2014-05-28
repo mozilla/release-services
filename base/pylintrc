@@ -47,7 +47,8 @@ disable=
   too-many-public-methods,
   too-many-instance-attributes,
   abstract-method,
-  method-hidden
+  method-hidden,
+  maybe-no-member
 
 [REPORTS]
 
