@@ -1,0 +1,83 @@
+{# This Source Code Form is subject to the terms of the Mozilla Public
+ # License, v. 2.0. If a copy of the MPL was not distributed with this
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/. #}
+{% extends "layout.html" %}
+{% block content %}
+
+<h2> Active Loans</h2>
+<table border=1>
+<thead>
+    <tr>
+        <th>Status</th>
+        <th>User LDAP</th>
+        <th>User BMO</th>
+        <th>FQDN</th>
+        <th>IP Address</th>
+    </tr>
+<tbody>
+    {% for current_loan in g.current_loaners %}
+      <tr>
+        <td>{{ current_loan.status }}</td>
+        <td>{{ current_loan.human.ldap }}</td>
+        <td>{{ current_loan.human.bugzilla }}</td>
+        <td>{{ current_loan.machine.fqdn }}</td>
+        <td>{{ current_loan.machine.ipaddr }}</td>
+      </tr>
+      {% if current_loan.history %}
+      <tr>
+        <td colspan=5>
+            <table>
+                <thead>
+                    <th>Date/Time</th>
+                    <th>STATUS</th>
+                    <th>message</th>
+                </thead>
+                <tbody>
+                {% for history in current_loan.history %}
+                    <tr>
+                        <td>{{ history.timestamp.strftime('%Y-%m-%d %H:%M:%S %Z%z') }}</td>
+                        <td>{{ history.status }}</td>
+                        <td>{{ history.msg }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </td>
+      </tr>
+      {% endif %}
+    {% endfor %}
+</tbody>
+</table>
+
+<h2>New Loan</h2>
+<form method="POST">
+  <fieldset>
+    <legend>Loan Info</legend>
+    <label for="status">Status: </label>
+        <select name="status">
+          <option>READY</option>
+          <option>PENDING</option>
+        </select><br />
+    <label for="LDAP">Full LDAP Username: </label>
+        <input type="text" name="LDAP" /><br />
+    <label for="bugzilla">Full Bugzilla E-mail: </label>
+        <input type="text" name="bugzilla" /><br />
+    <label for="fqdn">Machines FQDN: </label>
+        <input type="text" name="fqdn" /><br />
+    <label for="ipaddr">Machines IP: </label>
+        <input type="text" name="ipaddr" /><br />
+  </fieldset>
+<!--<label for="Bugzilla">Your Bugzilla E-mail</label><input type="text" name="bugzilla" />
+</fieldset>
+<fieldset><legend>Slave Info</legend>
+What Slave do you need?<br />
+<ul style="list-style-type:none"><li><input type="radio" name="slave_style" value="selected"><select><option>bld-centos6-hp-*</option><option>bld-linux64-ec2</option><option>...</option></select></li>
+<li><input type="radio" name="slave_style" value="other">Other (Specify):<input type="text" name="other_slave" /></li>
+<li><input type="radio" name="slave_style" value="unknown">I don't know what I need, I'll ping in #releng</li>
+</fieldset>
+<fieldset>-->
+<legend>Complete</legend>
+<button type="submit">Submit Loan Info</button>
+</fieldset>
+</form>
+{% endblock %}
