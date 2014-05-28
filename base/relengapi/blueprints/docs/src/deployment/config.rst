@@ -119,7 +119,7 @@ The configuration looks like this::
         },
 
         # Base LDAP URI
-        'uri': "ldap://your.ldap.server/",
+        'uri': "ldaps://your.ldap.server/",
     
         # This needs to be a user that has sufficient rights to read users and groups
         'login_dn': "<dn for bind user>",
