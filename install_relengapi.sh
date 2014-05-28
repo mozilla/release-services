@@ -1,9 +1,9 @@
 #!/bin/bash -exv
 
 git clone http://github.com/mozilla/build-relengapi
-cd build-relengapi
-pip install base[test]
-cd ..
-mv build-relengapi/base/pep8rc .
-mv build-relengapi/base/pylintrc .
+cd build-relengapi/base
+python setup.py install
+mv pep8rc ../..
+mv pylintrc ../..
+cd ../..
 rm -rf build-relengapi
