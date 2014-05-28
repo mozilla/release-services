@@ -143,7 +143,7 @@ def test_insert_one(client):
     # TODO: this should really be POST
     with mock.patch('time.time') as time:
         time.return_value = 1234.0
-        rv = client.get('/mapper/proj/insert/%s/%s' % (SHA1, SHA2))
+        rv = client.post('/mapper/proj/insert/%s/%s' % (SHA1, SHA2))
     eq_(rv.status_code, 200)
     eq_(json.loads(rv.data), {
         'date_added': 1234.0,
@@ -154,19 +154,19 @@ def test_insert_one(client):
 
 @test_context
 def test_insert_one_duplicate(client):
-    rv = client.get('/mapper/proj/insert/%s/%s' % (SHA1, SHA2))
+    rv = client.post('/mapper/proj/insert/%s/%s' % (SHA1, SHA2))
     eq_(rv.status_code, 200)
     # duplicate hg changeset
-    rv = client.get('/mapper/proj/insert/%s/%s' % (SHA1, SHA3))
+    rv = client.post('/mapper/proj/insert/%s/%s' % (SHA1, SHA3))
     eq_(rv.status_code, 409)
     # duplicate git changeset
-    rv = client.get('/mapper/proj/insert/%s/%s' % (SHA3, SHA2))
+    rv = client.post('/mapper/proj/insert/%s/%s' % (SHA3, SHA2))
     eq_(rv.status_code, 409)
     # TODO: check response when it's JSON
 
 @test_context
 def test_insert_one_no_project(client):
-    rv = client.get('/mapper/notaproj/insert/%s/%s' % (SHA1, SHA2))
+    rv = client.post('/mapper/notaproj/insert/%s/%s' % (SHA1, SHA2))
     eq_(rv.status_code, 404)
     # TODO: check response when it's JSON
 
@@ -187,7 +187,7 @@ def test_insert_multi_no_dups(app, client):
 
 @test_context
 def test_insert_multi_no_dups_but_dups(app, client):
-    rv = client.get('/mapper/proj/insert/%s/%s' % (SHA2, SHA2R))
+    rv = client.post('/mapper/proj/insert/%s/%s' % (SHA2, SHA2R))
     eq_(rv.status_code, 200)
     rv = client.post('/mapper/proj/insert', content_type='text/plain', data=SHAFILE)
     eq_(rv.status_code, 409)
@@ -207,7 +207,7 @@ def test_insert_multi_ignoredups(app, client):
 
 @test_context
 def test_insert_multi_ignoredups_with_dups(app, client):
-    rv = client.get('/mapper/proj/insert/%s/%s' % (SHA2, SHA2R))
+    rv = client.post('/mapper/proj/insert/%s/%s' % (SHA2, SHA2R))
     eq_(rv.status_code, 200)
     rv = client.post('/mapper/proj/insert/ignoredups', content_type='text/plain', data=SHAFILE)
     eq_(rv.status_code, 200)
@@ -218,13 +218,13 @@ def test_insert_multi_ignoredups_with_dups(app, client):
 
 @test_context
 def test_add_project(client):
-    rv = client.get('/mapper/proj2')
+    rv = client.post('/mapper/proj2')
     eq_(rv.status_code, 200)
     eq_(json.loads(rv.data), {})
 
 @test_context
 def test_add_project_existing(client):
-    rv = client.get('/mapper/proj')
+    rv = client.post('/mapper/proj')
     eq_(rv.status_code, 409)
     # TODO: check that return is JSON, once it is
 

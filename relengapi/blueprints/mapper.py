@@ -304,7 +304,7 @@ def insert_many_allow_dups(project):
     return _insert_many(project, dups=True)
 
 
-@bp.route('/<project>/insert/<git_commit>/<hg_changeset>')
+@bp.route('/<project>/insert/<git_commit>/<hg_changeset>', methods=('POST',))
 @actions.mapper.mapping.insert.require()
 def insert_one(project, git_commit, hg_changeset):
     """Insert a single mapping
@@ -337,7 +337,7 @@ def insert_one(project, git_commit, hg_changeset):
     except MultipleResultsFound:
         abort(500, "duplicate rows found in database!")
 
-@bp.route('/<project>')
+@bp.route('/<project>', methods=('POST',))
 @actions.mapper.project.insert.require()
 def add_project(project):
     """Insert a new project into the DB.
