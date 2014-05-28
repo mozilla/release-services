@@ -11,6 +11,7 @@ from nose.tools import eq_, with_setup, assert_raises
 from relengapi import util
 from relengapi.util import tz
 
+
 class TestSynchronized(object):
 
     lock = threading.Lock()
