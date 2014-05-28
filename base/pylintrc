@@ -45,7 +45,9 @@ disable=
   redefined-outer-name,
   no-value-for-parameter,
   too-many-public-methods,
-  abstract-method
+  too-many-instance-attributes,
+  abstract-method,
+  method-hidden
 
 [REPORTS]
 

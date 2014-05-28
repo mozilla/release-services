@@ -24,6 +24,7 @@ def init_blueprint(state):
 
     action_mechanisms = {
         'static': ('.static_actions', 'StaticActions'),
+        'ldap-groups': ('.ldap_groups', 'LdapGroups'),
     }
     app.actions = make_support_class(app, __name__, action_mechanisms,
                                      'RELENGAPI_ACTIONS',
