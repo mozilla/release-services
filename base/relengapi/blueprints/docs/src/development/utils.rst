@@ -23,8 +23,6 @@ Utilities
 
 .. py:module:: relengapi.util.tz
 
-    This class is meant to help with timezone related things
-
 .. py:function:: utcnow()
 
     Returns the datetime.datetime.utcnow() value, with added pytz.UTC tzinfo
