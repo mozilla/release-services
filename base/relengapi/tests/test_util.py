@@ -7,7 +7,7 @@ import threading
 import datetime
 import pytz
 from mock import patch
-from nose.tools import eq_, with_setup, assert_raises
+from nose.tools import eq_, assert_raises
 from relengapi import util
 from relengapi.util import tz
 
@@ -60,41 +60,19 @@ class TestSynchronized(object):
         thd1.join()
         thd2.join()
 
-_cachedUTCNow = None
+
+NOW = datetime.datetime(2014, 6, 15, 7, 15, 29, 612709)
+
+# datetime.datetime is a built-in type, so its attributes can't be mocked
+# individually
 
 
-class _MockUtcnow(datetime.datetime):
-    _datetime = datetime.datetime
-
-    @classmethod
-    def utcnow(cls):
-        global _cachedUTCNow
-        if not _cachedUTCNow:
-            _cachedUTCNow = _MockUtcnow._datetime.utcnow()
-        return _cachedUTCNow
-
-
-def _clear_cachedUTCNow():
-    global _cachedUTCNow
-    _cachedUTCNow = None
-
-
-@patch('datetime.datetime', _MockUtcnow)
-@with_setup(teardown=_clear_cachedUTCNow)
-def test_mock_utcnow():
-    dt1 = datetime.datetime.utcnow()
-    time.sleep(1)
-    dt2 = datetime.datetime.utcnow()
-    eq_(dt1, dt2)
-
-
-@patch('datetime.datetime', _MockUtcnow)
-@with_setup(teardown=_clear_cachedUTCNow)
-def test_utcnow():
-    dt = datetime.datetime.utcnow()
+@patch('datetime.datetime', spec=datetime.datetime)
+def test_utcnow(datetime_mock):
+    datetime_mock.utcnow.return_value = NOW
     util_dt = tz.utcnow()
     eq_(util_dt.tzinfo, pytz.UTC)
-    eq_(util_dt.replace(tzinfo=None), dt)
+    eq_(util_dt.replace(tzinfo=None), NOW)
 
 
 def test_utcfromtimestamp():
@@ -121,4 +99,5 @@ def test_dt_as_timezone_conversions():
     dt = datetime.datetime(2014, 5, 23, 16, 39, 32, 125099, tzinfo=pytz.UTC)
     eq_(dt.strftime('%Y-%m-%d %H:%M:%S %Z%z'), '2014-05-23 16:39:32 UTC+0000')
     dt_converted = tz.dt_as_timezone(dt, pytz.timezone("US/Pacific"))
-    eq_(dt_converted.strftime('%Y-%m-%d %H:%M:%S %Z%z'), '2014-05-23 09:39:32 PDT-0700')
+    eq_(dt_converted.strftime('%Y-%m-%d %H:%M:%S %Z%z'),
+        '2014-05-23 09:39:32 PDT-0700')
