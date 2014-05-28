@@ -34,7 +34,9 @@ setup(
         "argparse",
         "requests",
         "wrapt",
-        "pytz",
+        #  Tests break with newer pytz,
+        #  see https://bugs.launchpad.net/pytz/+bug/1324158
+        "pytz==2014.1",
     ],
     extras_require = {
         'test': [
@@ -43,12 +45,7 @@ setup(
             'pep8',
             # see https://bitbucket.org/logilab/pylint/issue/203/importing-namespace-packages-crashes
             'pylint<1.2',
-            'mockldap',
-        ],
-        # extras required only for LDAP authorization support
-        'ldap': [
-            'python-ldap',
-        ],
+        ]
     },
     packages=find_packages(),
     include_package_data=True,
