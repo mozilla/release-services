@@ -19,19 +19,23 @@ bp = Blueprint('slaveloan', __name__,
 
 _tbl_prefix = 'slaveloan_'
 
+
 def get_current_loans(admin=True):
     session = g.db.session('relengapi')
     g.current_loaners = session.query(Loans)
     return
 
+
 @bp.route('/')
 def root():
     return render_template('slaveloan_root.html')
+
 
 @bp.route('/admin/')
 def admin():
     get_current_loans(True)
     return render_template('slaveloan_admin.html')
+
 
 @bp.route('/admin/', methods=['POST'])
 def admin_post():

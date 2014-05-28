@@ -9,6 +9,7 @@ from relengapi.util import tz
 
 _tbl_prefix = 'slaveloan_'
 
+
 class Machines(db.declarative_base('relengapi')):
     __tablename__ = _tbl_prefix + 'machines'
     id = sa.Column(sa.Integer, primary_key=True)
@@ -19,6 +20,7 @@ class Machines(db.declarative_base('relengapi')):
     def to_json(self):
         return dict(id=self.id, fqdn=self.fqdn, ipaddr=self.ipaddr)
 
+
 class Humans(db.declarative_base('relengapi')):
     __tablename__ = _tbl_prefix + 'humans'
     id = sa.Column(sa.Integer, primary_key=True)
@@ -28,6 +30,7 @@ class Humans(db.declarative_base('relengapi')):
 
     def to_json(self):
         return dict(id=self.id, ldap=self.ldap, bugzilla=self.bugzilla)
+
 
 class Loans(db.declarative_base('relengapi')):
     __tablename__ = _tbl_prefix + 'loans'
@@ -41,8 +44,9 @@ class Loans(db.declarative_base('relengapi')):
                            nullable=False)
     history = relationship("History", backref="for_loan")
     # Backrefs
-    ## human   (Humans)
-    ## machine (Machines)
+    # # human   (Humans)
+    # # machine (Machines)
+
 
 class History(db.declarative_base('relengapi')):
     __tablename__ = _tbl_prefix + 'history'
@@ -56,4 +60,4 @@ class History(db.declarative_base('relengapi')):
     status = sa.Column(sa.String(50), nullable=False)
     msg = sa.Column(sa.String(255), nullable=False)
     # Backrefs
-    ## for_loan  (Loans)
+    # # for_loan  (Loans)
