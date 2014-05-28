@@ -18,5 +18,4 @@ script:
   - relengapi build-docs
   - relengapi run-tests
   - pep8 --config=pep8rc .
-  # pylint doesn't work in top folder; you need to run against relengapi subfolder (no idea why)
-  - pylint --rcfile=pylintrc relengapi
+  - pylint --rcfile=pylintrc relengapi.blueprints.mapper
