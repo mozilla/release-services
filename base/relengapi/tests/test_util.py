@@ -4,7 +4,12 @@
 
 import time
 import threading
+import datetime
+import pytz
+from mock import patch
+from nose.tools import eq_, with_setup, assert_raises
 from relengapi import util
+from relengapi.util import tz
 
 
 class TestSynchronized(object):
@@ -54,3 +59,66 @@ class TestSynchronized(object):
 
         thd1.join()
         thd2.join()
+
+_cachedUTCNow = None
+
+
+class _MockUtcnow(datetime.datetime):
+    _datetime = datetime.datetime
+
+    @classmethod
+    def utcnow(cls):
+        global _cachedUTCNow
+        if not _cachedUTCNow:
+            _cachedUTCNow = _MockUtcnow._datetime.utcnow()
+        return _cachedUTCNow
+
+
+def _clear_cachedUTCNow():
+    global _cachedUTCNow
+    _cachedUTCNow = None
+
+
+@patch('datetime.datetime', _MockUtcnow)
+@with_setup(teardown=_clear_cachedUTCNow)
+def test_mock_utcnow():
+    dt1 = datetime.datetime.utcnow()
+    time.sleep(1)
+    dt2 = datetime.datetime.utcnow()
+    eq_(dt1, dt2)
+
+
+@patch('datetime.datetime', _MockUtcnow)
+@with_setup(teardown=_clear_cachedUTCNow)
+def test_utcnow():
+    dt = datetime.datetime.utcnow()
+    util_dt = tz.utcnow()
+    eq_(util_dt.tzinfo, pytz.UTC)
+    eq_(util_dt.replace(tzinfo=None), dt)
+
+
+def test_utcfromtimestamp():
+    timestamp = 1401240762.0  # UTC ver of datetime(2014, 5, 28, 1, 32, 42)
+    dt = datetime.datetime.utcfromtimestamp(timestamp)
+    util_dt = tz.utcfromtimestamp(timestamp)
+    eq_(util_dt.tzinfo, pytz.UTC)
+    eq_(util_dt.replace(tzinfo=None), dt)
+
+
+def test_dt_as_timezone_invalid_object():
+    tests = [list(), dict(), "20140728", '2014-05-28T01:32:42']
+    for obj in tests:
+        with assert_raises(ValueError):
+            dt = tz.dt_as_timezone(obj, pytz.timezone("US/Pacific"))
+
+
+def test_dt_as_timezone_aware():
+    with assert_raises(ValueError):
+        dt = tz.dt_as_timezone(datetime.datetime.utcnow(), pytz.timezone("US/Pacific"))
+
+
+def test_dt_as_timezone_conversions():
+    dt = datetime.datetime(2014, 5, 23, 16, 39, 32, 125099, tzinfo=pytz.UTC)
+    eq_(dt.strftime('%Y-%m-%d %H:%M:%S %Z%z'), '2014-05-23 16:39:32 UTC+0000')
+    dt_converted = tz.dt_as_timezone(dt, pytz.timezone("US/Pacific"))
+    eq_(dt_converted.strftime('%Y-%m-%d %H:%M:%S %Z%z'), '2014-05-23 09:39:32 PDT-0700')
