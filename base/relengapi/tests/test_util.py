@@ -87,12 +87,13 @@ def test_dt_as_timezone_invalid_object():
     tests = [list(), dict(), "20140728", '2014-05-28T01:32:42']
     for obj in tests:
         with assert_raises(ValueError):
-            dt = tz.dt_as_timezone(obj, pytz.timezone("US/Pacific"))
+            tz.dt_as_timezone(obj, pytz.timezone("US/Pacific"))
 
 
 def test_dt_as_timezone_aware():
     with assert_raises(ValueError):
-        dt = tz.dt_as_timezone(datetime.datetime.utcnow(), pytz.timezone("US/Pacific"))
+        tz.dt_as_timezone(
+            datetime.datetime.utcnow(), pytz.timezone("US/Pacific"))
 
 
 def test_dt_as_timezone_conversions():
