@@ -2,7 +2,7 @@
 
 git clone http://github.com/mozilla/build-relengapi
 cd build-relengapi
-pip install -e base[test]
+pip install base[test]
 cd ..
 mv build-relengapi/base/pep8rc .
 mv build-relengapi/base/pylintrc .
