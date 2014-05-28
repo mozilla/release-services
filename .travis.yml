@@ -17,6 +17,6 @@ install:
 script:
   - relengapi build-docs
   - relengapi run-tests
-  - pep8 --config=build-relengapi/base/pep8rc .
+  - pep8 --config=pep8rc .
   # bizarrely, . doesn't work - you need to use $(pwd)
-  - pylint --rcfile=build-relengapi/base/pylintrc relengapi
+  - pylint --rcfile=pylintrc relengapi
