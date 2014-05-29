@@ -94,6 +94,9 @@ For example, a job-management blueprint might have permissions like ``jobs.view`
 Each HTTP request takes place in an user which allows some (possibly empty!) set of permissions.
 A view function can require that particular permissions be in this set using a simple decorator (:py:meth:`~relengapi.lib.permissions.require`).
 
+Working with Permissions
+........................
+
 Accessing Permissions
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -105,15 +108,15 @@ A bit of syntactic sugar makes it very easy to access permissions ::
 The ``permissions`` object generates permissions through attribute access, so the example above creates the ``tasks.view`` permission.
 
 Adding Permissions
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 To add a new permission, simply access it and document it with the  :py:meth:`~relengapi.lib.permissions.Permission.doc` method::
 
     from relengapi import p
     p.tasks.view.doc("View tasks")
 
-Verifying an Permission
-~~~~~~~~~~~~~~~~~~~~~~~
+Verifying a Permission
+~~~~~~~~~~~~~~~~~~~~~~
 
 Permissions that aren't documented can't be used.
 The :py:meth:`~relengapi.lib.permissions.Permission.exists` method verifies that a permission can be used.
@@ -147,13 +150,17 @@ For example::
     elif permissions.can(p.tasks.revoke, p.tasks.view):
         ..
 
-Setting User Permissions
-........................
+Permissions Plugins
+...................
+
+Like authentication mechanisms, authorization mechanisms are implemented as setuptools plugins.
+Each mechanism's ``init_app`` method is listed in the ``relengapi.auth.mechanisms`` entry point group.
+During application initialization, the mechanism selected by the app configuration is loaded and initialized.
+This avoids the need to even import mechanisms that aren't being used.
 
 Human users' permissions are updated as needed (based on the ``RELENGAPI_PERMISSIONS.lifetime`` configuration), and otherwise cached in the session cookie.
-
 When permissions need to be updated, the :py:attr:`relengapi.lib.auth.permissions_stale` signal is sent with the user object and a set of :py:class:`~relengapi.lib.permissions.Permission` objects.
-Listeners to this signal can add additional Permissions objects to this set to grant those permissions to the given user.
+Permissions plugins should connect to this signal and add additional Permissions objects to this set to grant those permissions to the given user.
 
 The Permission class
 ~~~~~~~~~~~~~~~~~~~~

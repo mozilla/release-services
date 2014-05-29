@@ -11,7 +11,7 @@ from nose.tools import eq_
 from relengapi.testing import TestContext
 from relengapi import p
 from relengapi.lib import auth
-from relengapi.blueprints.authz import ldap_groups
+from relengapi.lib.auth import ldap_group_authz
 
 p.test_ldap_groups.foo.doc("Foo")
 p.test_ldap_groups.bar.doc("Bar")
@@ -95,7 +95,7 @@ class TestGetUserGroups(unittest.TestCase):
 
     @test_context
     def call(self, app, mail, exp_groups):
-        lg = ldap_groups.LdapGroups(app)
+        lg = ldap_group_authz.LdapGroups(app)
         eq_(sorted(lg.get_user_groups(mail)), sorted(exp_groups))
 
     def test_get_user_groups_single(self):
@@ -110,9 +110,9 @@ class TestGetUserGroups(unittest.TestCase):
     @test_context.specialize(config=BAD_CONFIG)
     def test_login_fail(self, app):
         hdlr = logging.handlers.BufferingHandler(100)
-        logging.getLogger(ldap_groups.__name__).addHandler(hdlr)
+        logging.getLogger(ldap_group_authz.__name__).addHandler(hdlr)
         try:
-            lg = ldap_groups.LdapGroups(app)
+            lg = ldap_group_authz.LdapGroups(app)
             eq_(sorted(lg.get_user_groups('x@y')), [])
             # make sure the error was logged
             for rec in hdlr.buffer:
@@ -121,14 +121,14 @@ class TestGetUserGroups(unittest.TestCase):
             else:
                 self.fail("login exception not logged")
         finally:
-            logging.getLogger(ldap_groups.__name__).removeHandler(hdlr)
+            logging.getLogger(ldap_group_authz.__name__).removeHandler(hdlr)
 
 
 @test_context
 def test_on_permissions_stale_not_user(app):
     user = auth.HumanUser('jimmy')
     permissions = set()
-    lg = ldap_groups.LdapGroups(app)
+    lg = ldap_group_authz.LdapGroups(app)
     lg.on_permissions_stale('sender', user, permissions)
     eq_(permissions, set())
 
@@ -137,7 +137,7 @@ def test_on_permissions_stale_not_user(app):
 def test_on_permissions_stale_groups_unique(app):
     user = auth.HumanUser('jimmy')
     permissions = set()
-    lg = ldap_groups.LdapGroups(app)
+    lg = ldap_group_authz.LdapGroups(app)
     lg.get_user_groups = lambda mail: ['group1', 'group2']
     lg.on_permissions_stale('sender', user, permissions)
     eq_(permissions, set(
@@ -148,7 +148,7 @@ def test_on_permissions_stale_groups_unique(app):
 def test_on_permissions_stale_groups_unknown_groups(app):
     user = auth.HumanUser('jimmy')
     permissions = set()
-    lg = ldap_groups.LdapGroups(app)
+    lg = ldap_group_authz.LdapGroups(app)
     lg.get_user_groups = lambda mail: ['group3', 'nosuch']
     lg.on_permissions_stale('sender', user, permissions)
     eq_(permissions, set([p.test_ldap_groups.bar]))

@@ -158,8 +158,8 @@ def init_app(app):
         'RELENGAPI_AUTHENTICATION', {}).get('type', 'browserid')
     app.config['RELENGAPI_AUTHENTICATION_TYPE'] = auth_type
 
-    # load and initialize the appropriate mechanism.  Using entry_points like this
-    # avoids even importing plugins this app isn't using
+    # load and initialize the appropriate auth mechanism.  Using entry_points
+    # like this avoids even importing plugins this app isn't using
     entry_points = list(
         pkg_resources.iter_entry_points('relengapi.auth.mechanisms', auth_type))
     if len(entry_points) == 0:
@@ -167,6 +167,22 @@ def init_app(app):
     elif len(entry_points) > 1:
         raise RuntimeError(
             "multiple authentication plugins defined for type %r" % (auth_type,))
+    ep = entry_points[0]
+    plugin_init_app = ep.load()
+    plugin_init_app(app)
+
+    perms_type = app.config.get(
+        'RELENGAPI_PERMISSIONS', {}).get('type', 'static')
+    app.config['RELENGAPI_PERMISSIONS_TYPE'] = perms_type
+
+    # now load and initialize the appropriate perms mechanism
+    entry_points = list(
+        pkg_resources.iter_entry_points('relengapi.perms.mechanisms', perms_type))
+    if len(entry_points) == 0:
+        raise RuntimeError("no such permissions type %r" % (perms_type,))
+    elif len(entry_points) > 1:
+        raise RuntimeError(
+            "multiple permissions plugins defined for type %r" % (perms_type,))
     ep = entry_points[0]
     plugin_init_app = ep.load()
     plugin_init_app(app)

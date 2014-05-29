@@ -21,7 +21,8 @@ class LdapGroups(object):
             try:
                 p[perm]
             except KeyError:
-                raise RuntimeError("invalid permission in settings: %r" % (perm,))
+                raise RuntimeError(
+                    "invalid permission in settings: %r" % (perm,))
 
         self.uri = permissions_cfg['uri']
         self.login_dn = permissions_cfg['login_dn']
@@ -68,3 +69,7 @@ class LdapGroups(object):
             self.logger.debug("Setting permissions %s for user %s",
                               ', '.join(allowed_permissions), user)
         permissions.update([p[a] for a in allowed_permissions])
+
+
+def init_app(app):
+    LdapGroups(app)
