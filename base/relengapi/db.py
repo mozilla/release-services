@@ -133,9 +133,9 @@ class UTCDateTime(types.TypeDecorator):
 
 
 def _unique(session, cls, hashfunc, queryfunc, constructor, arg, kw):
-    cache = getattr(session, '_unique_cache', None)
+    cache = session.info.get('_unique_cache', None)
     if cache is None:
-        session._unique_cache = cache = {}
+        session.info['_unique_cache'] = cache = {}
 
     key = (cls, hashfunc(*arg, **kw))
     if key in cache:
