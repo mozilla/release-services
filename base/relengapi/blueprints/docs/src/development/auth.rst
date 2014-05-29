@@ -1,52 +1,84 @@
 Authentication and Authorization
 ================================
 
-User Authentication
--------------------
+Releng API is an API, and as such most access is to API endpoints, often authenticated with something other than a session cookie.
+However, the API also has a normal, browser-based UI used to manage permissions, view documentation, and so on.
 
-Releng API is an API, and as such most access is limited using OAuth2, described below.
-However, the setup for new OAuth2 tokens is controlled by normal, browser-based logins.
+You should be familiar with the :ref:`authentication configuration <Deployment-Authentication>` documentation and with `Flask-Login <https://flask-login.readthedocs.org>`_.
 
-You should be familiar with the :ref:`authentication configuration <Deployment-Authentication>` documentation.
+User Objects
+------------
 
-Flask-Login
-...........
+A request to the Releng API may be authenticated in a variety of ways -- not just by the usual session cookie.
+Some of these are not associated with a real, human user.
 
-Releng API uses `Flask-Login <https://flask-login.readthedocs.org>`_ to manage user identity.
+The ``flask.ext.login.current_user`` object, then, may be one of several subclassses of :class:`relenapi.lib.auth.BaseUser` corresponding to the type of authentication performed.
+Each has a ``type`` attribute identifying the authentication type.
+This list is extensible, but the built-in options are:
 
-A method can be protected from access without a user login with the ``flask_login.login_required`` decorator, just as documented.
-Flask-Login is configured to automatically redirect requests to such views to ``/userauth/login_request``, which will request a user login and redirect the user back to the original page.
+ * ``"anonymous"`` - no authentication at all
+ * ``"human"`` - a human, session-based login, with additional attributes:
+    * ``authenticated_email`` - the email address of this human user
 
-Aside from the required methods, the ``current_user`` object has the following attributes:
+Casting a user object to a string will generate a string with the pattern ``type:identifier`` that can be used for logging, messaging, etc.
 
- * ``authenticated_email`` - the email address of this user
+Decorating Methods
+------------------
 
-Note that in most API requests, ``current_user`` will not be set.
+A method can be protected from anonymous access with the ``flask_login.login_required`` decorator, just as documented.
+Flask-Login is configured to automatically redirect requests to such views to ``/login_request``, which will request that the user login and redirect the user back to the original page.
+
+Human Authentication Mechanisms
+-------------------------------
+
+Authentication mechanisms are implemented as setuptools plugins.
+Each mechanism's ``init_app`` method is listed in the ``relengapi.auth.mechanisms`` entry point group.
+During application initialization, the mechanism selected by the app configuration is loaded and initialized.
+
+The built-in mechanisms are described here:
 
 BrowserID Authentication
-........................
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Support for BrowserID is straightforward.
-The user can initiate a login by clicking the "Login" button, or by visiting ``/userauth/login_request``.
+The user can initiate a login by clicking the "Login" button.
 Once the login is complete, the browser makes an AJAX call to ``/userauth/login`` with the identity assertion.
 The server-side code records the identity in the Flask session, and the browser reloads the page to display the login.
 
 Similarly, the logout process involves an AJAX call to ``/userauth/logout``, which destroys the session.
 
 External Authentication
-.......................
+~~~~~~~~~~~~~~~~~~~~~~~
 
 External authentication only requires that the ``/userauth/login`` path be authenticated by the frontend.
-All other paths are passed through, as they may use some other authentication mode.
+All other paths must be passed through, as they may use some other authentication mode.
 This also allows users to view parts of the API without being logged in.
 
-The login process works like this:
-the "Login" button triggers an AJAX call to ``/userauth/login``.
-A visit to ``/userauth/login_request`` simply redirects to ``/userauth/login``.
-In either case, the login view reads the authentication information from an envirnoment variable or header as configured and sets up the Flask session.
-In the case of a redirect, it then redirects the user back to the originating page.
+The login process works like this: the "Login" button triggers an AJAX call to ``/userauth/login``.
+The login view reads the authentication information from an envirnoment variable or header as configured and sets up the Flask session.
 
-A logout is accomplished with a similar AJAX call to ``/userauth/logout``, which desetroys the session.
+A logout is accomplished with a similar AJAX call to ``/userauth/logout``, which destroys the session.
+
+Request Authentication
+----------------------
+
+Non-human authentication is handled by processing requests directly.
+Functions to perform such processing should be registered using :func:`relengapi.lib.auth.request_loader`.
+The registered function will be called once for each request, and should return a user object if the request matches.
+In most cases, this object will be a purpose-specific subclass of :class:`relengapi.lib.auth.BaseUser`.
+
+A simple example::
+
+    class LocalhostUser(auth.baseUser):
+        type = "localhost"
+
+    @auth.request_loader
+    def allow_localhost(request):
+        address = request.remote_addr
+        if address == '127.0.0.1':
+        return LocalhostUser()
+
+In most cases, this form of authentication is handled in a blueprint which also provides the necessary UI for managing credentials.
 
 Authorization
 -------------
@@ -54,107 +86,125 @@ Authorization
 Users have different levels of access, of course.
 Within the Releng API, the `Flask-Principal <https://pythonhosted.org/Flask-Principal/>`_ extension distinguishes the permissions granted to different users
 
-Authorization centers around "actions", which are a particular kind of what Flask-Principal calls "Needs".
-These should be simple verbs, perhaps with an object.
-Actions are fine-grained.
+Authorization centers around "permissions".
+These are fine-grained simple verbs, qualified with a context perhaps an object.
+Generally the first element corresponds to the name of the blueprint the permission applies to.
+For example, a job-management blueprint might have permissions like ``jobs.view``, ``jobs.cancel.own``, ``jobs.cancel.any``, and ``jobs.submit``.
 
-Each HTTP request takes place in an identity context which allows zero or more actions.
-A view function can require that a particular action be permitted using a simple decorator, or use more complicated Flask-Principal functionality to make more complex permissions checks.
+Each HTTP request takes place in an user which allows some (possibly empty!) set of permissions.
+A view function can require that particular permissions be in this set using a simple decorator (:py:meth:`~relengapi.lib.permissions.require`).
 
-Each action is represented internally as a tuple of identifiers, and is usually written separated by dots.
-Generally the first element corresponds to the name of the blueprint the action applies to.
-For example, an identity context might have the "tasks.create" action to create tasks, handled by the tasks blueprint.
+Accessing Permissions
+~~~~~~~~~~~~~~~~~~~~~
 
-Accessing Actions
-.................
+A bit of syntactic sugar makes it very easy to access permissions ::
 
-A bit of syntactic sugar makes it very easy to access actions ::
+    from relengapi import p
+    r = p.tasks.view
 
-    from relengapi.principal import actions
-    r = actions.tasks.view
+The ``permissions`` object generates permissions through attribute access, so the example above creates the ``tasks.view`` permission.
 
-The ``actions`` object generates actions through attribute access, so the example above creates the ``tasks.view`` action.
+Adding Permissions
+~~~~~~~~~~~~~~~~~~~
 
-Adding Actions
-..............
+To add a new permission, simply access it and document it with the  :py:meth:`~relengapi.lib.permissions.Permission.doc` method::
 
-To add a new action, simply access it and document it with the  :py:meth:`~relengapi.lib.actions.Action.doc` method::
+    from relengapi import p
+    p.tasks.view.doc("View tasks")
 
-    from relengapi import actions
-    actions.tasks.view.doc("View tasks")
+Verifying an Permission
+~~~~~~~~~~~~~~~~~~~~~~~
 
-Verifying an Action
-...................
+Permissions that aren't documented can't be used.
+The :py:meth:`~relengapi.lib.permissions.Permission.exists` method verifies that a permission can be used.
 
-Actions that aren't documented can't be used.
-The :py:meth:`~relengapi.lib.actions.Action.exists` method verifies that it can be used.
+Requiring a Permission
+~~~~~~~~~~~~~~~~~~~~~~
 
-Requiring a Action
-..................
-
-To protect a view function, use the action's  :py:meth:`~relengapi.lib.actions.Action.require` method as a decorator, *below* the route decorator::
+To protect a view function, use the permission's  :py:meth:`~relengapi.lib.permissions.Permission.require` method as a decorator, *below* the route decorator::
 
     @bp.route('/observate')
-    @actions.tasks.view.require()
+    @p.tasks.view.require()
     def view():
         ..
 
-For more complex needs, follow the Flask-Principal documentation.
-For example, to allow either of two actions::
+For more complex needs, use the :py:func:`relengapi.lib.permissions.require` function, which takes an arbitrary number of permissions::
 
-    view_or_cancel = Permission(
-        actions.tasks.view,
-        actions.tasks.cancel)
-
+    from relengapi.lib import permissions
     @route('/view')
-    @view_or_cancel.require()
+    @permissions.require(permissions.tasks.view, permissions.tasks.revoke)
     def view():
         ..
 
-The Action class
-................
+Checking for Permission
+~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:class:: relengapi.lib.actions.Action
+Like the ``require`` method and function, :py:meth:`~relengapi.lib.permissions.Permission.can` and :py:func:`~relengapi.lib.permissions.can` allow checking whether the current user has a permission or a set of permissions.
+For example::
+
+    if p.tasks.view.can():
+        ..
+    elif permissions.can(p.tasks.revoke, p.tasks.view):
+        ..
+
+The Permission class
+~~~~~~~~~~~~~~~~~~~~
+
+.. py:module relengapi.lib.permissions
+
+.. py:class:: Permission
 
     .. py:method:: doc(doc)
 
-        :param doc: documentation for the action
+        :param doc: documentation for the permission
 
-        Set the documentation string for an action
+        Set the documentation string for an permission
 
     .. py:method:: exists()
 
-        Verify that this action exists (is documented)
+        Verify that this permission exists (is documented)
 
     .. py:method:: require()
 
         Return a decorator for view functions that will require this permission, and fail with a 403 response if permission is not granted.
-        The return value is the same as that from Flask-Principal's ``Permission.request`` method, so it can also be used as a context manager.
+
+        .. warning::
+
+            This decorator must appear *below* the ``route`` decorator for each view function!
 
     .. py:method:: can()
 
-        Return True if the current user can perform this action.
-        This is a shortcut to Flask-Principal's ``Permission.can``.
+        Return True if the current user can perform this permission.
 
     .. py:method:: __str__()
 
-        Return the dot-separated string representation of this action.
+        Return the dot-separated string representation of this permission.
 
-.. py:class:: relengapi.lib.actions.Actions
+.. py:class:: Permissions
 
-    There is exactly one instance of this class, at ``relengapi.actions``.
+    There is exactly one instance of this class, at ``relengapi.p``.
 
     .. py:method:: __getitem__(index):
 
-        :param index: string representation of an action
-        :returns: Action
+        :param index: string representation of an permission
+        :returns: Permission
 
-        Return the named action if, and only if, it already exists.
+        Return the named permission if, and only if, it already exists.
 
     .. py:method:: get(index, default=None)
 
-        :param index: string representation of an action
+        :param index: string representation of an permission
         :param default: default value if ``index`` is not found
-        :returns: Action or default
+        :returns: Permission or default
 
-        Return the named action if it already exists, otherwise return the default
+        Return the named permission if it already exists, otherwise return the default
+
+.. py:function:: require(*permissions)
+
+    Return a decorator for view functions that will require all of the given permissions;
+    See :py:meth:`Permission.require`.
+
+.. py:function:: can(*permissions)
+
+    Return True if the current user can perform all of the given permissions
+    See :py:meth:`Permission.can`.

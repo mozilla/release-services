@@ -4,26 +4,26 @@
 
 import itertools
 from flask.ext.principal import identity_loaded
-from relengapi import actions
+from relengapi import p
 
 
-class StaticActions(object):
+class StaticPermissions(object):
 
     def __init__(self, app):
 
-        actions_map = app.config.get('RELENGAPI_ACTIONS', {}).get('actions', {})
+        permissions_map = app.config.get('RELENGAPI_PERMISSIONS', {}).get('permissions', {})
 
-        # verify that each specified action exists
-        for actionstr in set(itertools.chain(*actions_map.values())):
+        # verify that each specified permission exists
+        for perm in set(itertools.chain(*permissions_map.values())):
             try:
-                actions[actionstr]
+                p[perm]
             except KeyError:
-                raise RuntimeError("invalid static action in settings: %r" % (actionstr,))
+                raise RuntimeError("invalid static permission in settings: %r" % (perm,))
 
         @identity_loaded.connect_via(app)
         def on_identity_loaded(sender, identity):
             # only attach identities for actual user logins; others are handled separately
             if identity.auth_type != 'user':
                 return
-            for actionstr in actions_map.get(identity.id, []):
-                identity.provides.add(actions[actionstr])
+            for perm in permissions_map.get(identity.id, []):
+                identity.provides.add(p[perm])

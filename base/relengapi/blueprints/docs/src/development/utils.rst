@@ -19,7 +19,7 @@ Utilities
     :param default: default mechanism
 
     This is a utility method for dynamically loading modules to implement mechanisms specified in the application configuration.
-    It is used for configuration like ``RELENGAPI_ACTIONS``.
+    It is used for configuration like ``RELENGAPI_PERMISSIONS``.
 
 .. py:module:: relengapi.util.tz
 

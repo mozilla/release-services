@@ -7,7 +7,7 @@
   <p>You are authenticated as <span class="user_email">{{ current_user.authenticated_email }}</span>.</p>
   <h1>Permitted Actions</h1>
   <ul>
-  {% for action in g.identity.provides %}
+  {% for action in current_user.permissions %}
   <li><span class="action">{{ '.'.join(action) }}</span> - <span class="action-docstring">{{ action.__doc__ }}</span></li>
   {% endfor %}
   </ul>

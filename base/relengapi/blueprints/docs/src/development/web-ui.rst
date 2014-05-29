@@ -27,6 +27,22 @@ In other words, the UI should provide a human interface to the API, but must not
 A good rule of thumb is to treat the administrative UI as a "rough draft".
 If issues with the UI bother users enough, they can implement their own, better UI on another origin with no loss in functionality.
 
+Layout
+------
+
+Templates should extend ``layout.html`` and add content to the appropriate blocks:
+
+ * ``head`` - the HTML head; extend, rather than overriding, this block
+ * ``title`` - the page title
+ * ``header`` - the in-page header
+ * ``content`` - the content of the page, empty by default
+ * ``footer`` - the in-page footer
+
+Extensions or blueprints which wish to add content to the layout can use functionality defined in :clsas:`relengapi.lib.layout.Layout`, accessible at ``app.layout``.
+In particular, :meth:`~relengapi.lib.layout.Layout.add_head_content`` will add the given content to the ``head`` block of every page.
+
+For the more common case of adding a script tag linking to an external file, :meth:`~relengapi.lib.layout.Layout.add_script`` will create the necessary tag, given the URL.
+
 Javascript Support
 ------------------
 

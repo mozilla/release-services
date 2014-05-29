@@ -11,10 +11,10 @@ from relengapi import apimethod
 bp = Blueprint('authz', __name__, template_folder='templates')
 
 
-@bp.route("/permitted-actions")
+@bp.route("/permitted")
 @apimethod()
-def permitted_actions():
-    """List the actions this identity is permitted to take."""
+def permitted():
+    """List the permissions the current user has."""
     return sorted('.'.join(a) for a in g.identity.provides)
 
 
@@ -22,10 +22,10 @@ def permitted_actions():
 def init_blueprint(state):
     app = state.app
 
-    action_mechanisms = {
-        'static': ('.static_actions', 'StaticActions'),
+    permission_mechanisms = {
+        'static': ('.static_permissions', 'StaticPermissions'),
         'ldap-groups': ('.ldap_groups', 'LdapGroups'),
     }
-    app.actions = make_support_class(app, __name__, action_mechanisms,
-                                     'RELENGAPI_ACTIONS',
-                                     'static')
+    app.permissions = make_support_class(app, __name__, permission_mechanisms,
+                                         'RELENGAPI_PERMISSIONS',
+                                         'static')

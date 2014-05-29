@@ -62,8 +62,6 @@ setup(
         'relengapi.blueprints.base': data_patterns,
         'relengapi.blueprints.auth': data_patterns,
         'relengapi.blueprints.authz': data_patterns,
-        'relengapi.blueprints.userauth': data_patterns,
-        'relengapi.blueprints.tokenauth': data_patterns,
         'relengapi.blueprints.docs': docs_patterns + data_patterns,
     },
     entry_points={
@@ -71,9 +69,11 @@ setup(
             'base = relengapi.blueprints.base:bp',
             'auth = relengapi.blueprints.auth:bp',
             'authz = relengapi.blueprints.authz:bp',
-            'userauth = relengapi.blueprints.userauth:bp',
-            'tokenauth = relengapi.blueprints.tokenauth:bp',
             'docs = relengapi.blueprints.docs:bp',
+        ],
+        "relengapi.auth.mechanisms": [
+            'browserid = relengapi.lib.auth.browserid:init_app',
+            'external = relengapi.lib.auth.external:init_app',
         ],
         "console_scripts": [
             'relengapi = relengapi.subcommands:main',

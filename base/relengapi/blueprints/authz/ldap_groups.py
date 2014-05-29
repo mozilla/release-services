@@ -6,29 +6,29 @@ import ldap
 import itertools
 import logging
 from flask.ext.principal import identity_loaded
-from relengapi import actions
+from relengapi import p
 
 
 class LdapGroups(object):
 
     def __init__(self, app):
 
-        actions_cfg = app.config.get('RELENGAPI_ACTIONS', {})
-        self.group_actions = actions_cfg.get('group-actions', {})
+        permissions_cfg = app.config.get('RELENGAPI_PERMISSIONS', {})
+        self.group_permissions = permissions_cfg.get('group-permissions', {})
 
-        # verify that each specified action exists
-        for actionstr in set(itertools.chain(*self.group_actions.values())):
+        # verify that each specified permission exists
+        for perm in set(itertools.chain(*self.group_permissions.values())):
             try:
-                actions[actionstr]
+                p[perm]
             except KeyError:
-                raise RuntimeError("invalid action in settings: %r" % (actionstr,))
+                raise RuntimeError("invalid permission in settings: %r" % (perm,))
 
-        self.uri = actions_cfg['uri']
-        self.login_dn = actions_cfg['login_dn']
-        self.login_password = actions_cfg['login_password']
-        self.user_base = actions_cfg['user_base']
-        self.group_base = actions_cfg['group_base']
-        self.debug = actions_cfg.get('debug')
+        self.uri = permissions_cfg['uri']
+        self.login_dn = permissions_cfg['login_dn']
+        self.login_password = permissions_cfg['login_password']
+        self.user_base = permissions_cfg['user_base']
+        self.group_base = permissions_cfg['group_base']
+        self.debug = permissions_cfg.get('debug')
 
         self.logger = logging.getLogger(__name__)
 
@@ -63,11 +63,11 @@ class LdapGroups(object):
         groups = self.get_user_groups(identity.id)
         if self.debug:
             self.logger.debug("Got groups %s for user %s", groups, identity.id)
-        allowed_actions = set()
+        allowed_permissions = set()
         for group in groups:
-            for actionstr in self.group_actions.get(group, []):
-                allowed_actions.add(actionstr)
+            for perm in self.group_permissions.get(group, []):
+                allowed_permissions.add(perm)
         if self.debug:
-            self.logger.debug("Allowing actions %s for user %s",
-                              ', '.join(allowed_actions), identity.id)
-        identity.provides.update([actions[a] for a in allowed_actions])
+            self.logger.debug("Setting permissions %s for user %s",
+                              ', '.join(allowed_permissions), identity.id)
+        identity.provides.update([p[a] for a in allowed_permissions])

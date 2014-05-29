@@ -9,22 +9,22 @@ import logging
 import logging.handlers
 from nose.tools import eq_
 from relengapi.testing import TestContext
-from relengapi import actions
+from relengapi import p
 from relengapi.blueprints.authz import ldap_groups
 
-actions.test_ldap_groups.foo.doc("Foo")
-actions.test_ldap_groups.bar.doc("Bar")
+p.test_ldap_groups.foo.doc("Foo")
+p.test_ldap_groups.bar.doc("Bar")
 
 URI = 'ldap://localhost/'
 CONFIG = {
-    'RELENGAPI_ACTIONS': {
+    'RELENGAPI_PERMISSIONS': {
         'uri': URI,
         'login_dn': 'cn=bind,o=users',
         'login_password': 'bindpw',
         'user_base': 'o=users',
         'group_base': 'o=groups',
         'debug': True,
-        'group-actions': {
+        'group-permissions': {
             'group1': ['test_ldap_groups.foo'],
             'group2': ['test_ldap_groups.foo', 'test_ldap_groups.bar'],
             'group3': ['test_ldap_groups.bar'],
@@ -32,7 +32,7 @@ CONFIG = {
     },
 }
 BAD_CONFIG = copy.deepcopy(CONFIG)
-BAD_CONFIG['RELENGAPI_ACTIONS']['login_password'] = 'invalid'
+BAD_CONFIG['RELENGAPI_PERMISSIONS']['login_password'] = 'invalid'
 test_context = TestContext(reuse_app=True, config=CONFIG)
 
 
@@ -146,7 +146,7 @@ def test_on_identity_loaded_groups_unique(app):
     lg.get_user_groups = lambda mail: ['group1', 'group2']
     lg.on_identity_loaded('sender', ident)
     eq_(ident.provides, set(
-        [actions.test_ldap_groups.foo, actions.test_ldap_groups.bar]))
+        [p.test_ldap_groups.foo, p.test_ldap_groups.bar]))
 
 
 @test_context
@@ -155,4 +155,4 @@ def test_on_identity_loaded_groups_unknown_groups(app):
     lg = ldap_groups.LdapGroups(app)
     lg.get_user_groups = lambda mail: ['group3', 'nosuch']
     lg.on_identity_loaded('sender', ident)
-    eq_(ident.provides, set([actions.test_ldap_groups.bar]))
+    eq_(ident.provides, set([p.test_ldap_groups.bar]))

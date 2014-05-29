@@ -2,5 +2,5 @@ Usage
 =====
 
 .. toctree::
-    actions
+    permissions
     tokenauth

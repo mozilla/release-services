@@ -81,24 +81,24 @@ For example, ``mod_authnz_ldap`` sets ``AUTHENTICATE_*`` environment variables t
         'environ': 'AUTHENTICATE_MAIL',
     }
 
-.. _Deployment-Actions:
+.. _Deployment-Permissions:
 
-Actions
+Permissions
 .......
 
-Once a user is authenticated, their permitted actions must be determined.
-Again, RelengAPI provides a number of mechanisms, configured with the ``RELENGAPI_ACTIONS`` key, which is a dictionary containing options.
+Once a user is authenticated, their permissions must be determined.
+Again, RelengAPI provides a number of mechanisms, configured with the ``RELENGAPI_PERMISSIONS`` key, which is a dictionary containing options.
 
 Static
 ~~~~~~
 
-The ``static`` type supports a simple static mapping from user ID to actions, given in the ``actions`` key.
-Roles are given as a list of strings.
+The ``static`` type supports a simple static mapping from user ID to permissions, given in the ``permissions`` key.
+Permissions are given as a list of strings.
 For example::
 
-    RELENGAPI_ACTIONS = {
+    RELENGAPI_PERMISSIONS = {
         'type': 'static',
-        'actions': {
+        'permissions': {
             'dustin@mozilla.com': ['tasks.create', 'base.tokens.issue'],
         },
     }
@@ -106,14 +106,14 @@ For example::
 LDAP Groups
 ~~~~~~~~~~~
 
-The ``ldap-groups`` type supports looking up the authenticated user in LDAP, then mapping that user's group membership to a set of allowed actions.
+The ``ldap-groups`` type supports looking up the authenticated user in LDAP, then mapping that user's group membership to a set of allowed permissions.
 The configuration looks like this::
 
-    RELENGAPI_ACTIONS = {
+    RELENGAPI_PERMISSIONS = {
         'type': 'ldap-groups',
 
-        # map from group CN to actions
-        'group-actions': {
+        # map from group CN to permissions
+        'group-permissions': {
             'team_relops': ['tasks.create', 'base.tokens.view'],
             'team_releng': ['base.tokens.issue', 'base.tokens.view'],
         },
@@ -133,8 +133,8 @@ The configuration looks like this::
         'debug': False,
     }
  
-A user who is a member of multiple configured groups will have permission to perform an action listed in any of those groups.
-In the examle above, a user in both ``team_relops`` and ``team_releng`` would have permission to create tasks and to issue and view tokens.
+Permissions are cumulative: a person has a permission if they are a member of any group configured with that permission.
+In the example above, a user in both ``team_relops`` and ``team_releng`` would have permission to create tasks and to issue and view tokens.
 
 Users must be under the subtree named by ``user_base``, and similarly groups must be under ``group_base``.
 Users must have object class ``inetOrgPerson``, and groups must have object class ``groupOfNames``.
