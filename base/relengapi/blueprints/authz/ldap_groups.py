@@ -5,8 +5,8 @@
 import ldap
 import itertools
 import logging
-from flask.ext.principal import identity_loaded
 from relengapi import p
+from relengapi.lib.auth import permissions_stale
 
 
 class LdapGroups(object):
@@ -32,7 +32,7 @@ class LdapGroups(object):
 
         self.logger = logging.getLogger(__name__)
 
-        identity_loaded.connect_via(app)(self.on_identity_loaded)
+        permissions_stale.connect_via(app)(self.on_permissions_stale)
 
     def get_user_groups(self, mail):
         if self.debug:
@@ -56,18 +56,15 @@ class LdapGroups(object):
             self.logger.exception("While connecting to the LDAP server")
             return []
 
-    def on_identity_loaded(self, sender, identity):
-        # only attach identities for actual user logins; others are handled separately
-        if identity.auth_type != 'user':
-            return
-        groups = self.get_user_groups(identity.id)
+    def on_permissions_stale(self, sender, user, permissions):
+        groups = self.get_user_groups(user.authenticated_email)
         if self.debug:
-            self.logger.debug("Got groups %s for user %s", groups, identity.id)
+            self.logger.debug("Got groups %s for user %s", groups, user)
         allowed_permissions = set()
         for group in groups:
             for perm in self.group_permissions.get(group, []):
                 allowed_permissions.add(perm)
         if self.debug:
             self.logger.debug("Setting permissions %s for user %s",
-                              ', '.join(allowed_permissions), identity.id)
-        identity.provides.update([p[a] for a in allowed_permissions])
+                              ', '.join(allowed_permissions), user)
+        permissions.update([p[a] for a in allowed_permissions])

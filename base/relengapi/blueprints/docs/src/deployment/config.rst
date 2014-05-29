@@ -84,10 +84,22 @@ For example, ``mod_authnz_ldap`` sets ``AUTHENTICATE_*`` environment variables t
 .. _Deployment-Permissions:
 
 Permissions
-.......
+...........
 
 Once a user is authenticated, their permissions must be determined.
 Again, RelengAPI provides a number of mechanisms, configured with the ``RELENGAPI_PERMISSIONS`` key, which is a dictionary containing options.
+
+Lifetime
+~~~~~~~~
+
+Permissions are not queried on every request, as that can be an expensive operation.
+Instead, permissions are cached for some time, and only queried when they become stale.
+That cache lifetime is determined by the ``lifetime`` key, which gives the time, in seconds, to cache permissions::
+
+    RELENGAPI_PERMISSIONS = {
+        ..
+        'lifetime': 3660,  # one hour (the default)
+    }
 
 Static
 ~~~~~~

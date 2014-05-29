@@ -1,5 +1,5 @@
 Permissions
-=======
+===========
 
 Every requeset to the Releng API takes place in an authentication context that permits some set of permissions.
 Permissions are represented in the API as dot-separated strings.

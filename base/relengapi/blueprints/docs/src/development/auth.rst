@@ -147,6 +147,14 @@ For example::
     elif permissions.can(p.tasks.revoke, p.tasks.view):
         ..
 
+Setting User Permissions
+........................
+
+Human users' permissions are updated as needed (based on the ``RELENGAPI_PERMISSIONS.lifetime`` configuration), and otherwise cached in the session cookie.
+
+When permissions need to be updated, the :py:attr:`relengapi.lib.auth.permissions_stale` signal is sent with the user object and a set of :py:class:`~relengapi.lib.permissions.Permission` objects.
+Listeners to this signal can add additional Permissions objects to this set to grant those permissions to the given user.
+
 The Permission class
 ~~~~~~~~~~~~~~~~~~~~
 

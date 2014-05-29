@@ -78,3 +78,7 @@ class Permissions(Permission):
 
 require = Permissions.require
 can = Permissions.can
+
+# this object is generally accessed at `relengapi.p`, but can be accessed here
+# for imports in relengapi itself, which occur before `relengapi.p` exists.
+p = Permissions()

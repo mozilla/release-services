@@ -2,12 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import time
 import pkg_resources
+from relengapi.lib.permissions import p
 from flask import flash
 from flask import request
+from flask import session
 from flask import redirect
 from flask import url_for
 from flask import render_template
+from flask import current_app
+from flask import signals
 from flask.ext.login import current_user
 from flask.ext.login import user_logged_in
 from flask.ext.login import user_logged_out
@@ -33,7 +38,7 @@ class BaseUser(object):
         return self.get_permissions()
 
     def get_permissions(self):
-        return []
+        return set()
 
     def get_id(self):
         raise NotImplementedError
@@ -57,9 +62,25 @@ class HumanUser(BaseUser):
 
     def __init__(self, authenticated_email):
         self.authenticated_email = authenticated_email
+        self._permissions = None
 
     def get_id(self):
         return 'human:%s' % self.authenticated_email
+
+    def get_permissions(self):
+        if self._permissions is not None:
+            return self._permissions
+        if 'perms' in session and session.get('perms_exp', 0) > time.time():
+            self._permissions = set(p[perm] for perm in session['perms'])
+        else:
+            self._permissions = perms = set()
+            permissions_stale.send(
+                current_app._get_current_object(), user=self, permissions=perms)
+            session['perms'] = [str(perm) for perm in perms]
+            lifetime = current_app.config.get(
+                'RELENGAPI_PERMISSIONS', {}).get('lifetime', 3600)
+            session['perms_exp'] = int(time.time() + lifetime)
+        return self._permissions
 
 
 _request_loaders = []
@@ -106,11 +127,19 @@ def login_request():
     return render_template("login_request.html")
 
 
+def _clear_perms_cache():
+    for k in 'perms', 'perms_exp':
+        if k in session:
+            del session[k]
+
+
 def logged_in(sender, user):
+    _clear_perms_cache()
     flash("Logged in as %s" % user.authenticated_email, 'success')
 
 
 def logged_out(sender, user):
+    _clear_perms_cache()
     flash("Logged out")
 
 
@@ -141,3 +170,5 @@ def init_app(app):
     ep = entry_points[0]
     plugin_init_app = ep.load()
     plugin_init_app(app)
+
+permissions_stale = signals.Namespace().signal('permissions_stale')

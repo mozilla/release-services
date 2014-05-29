@@ -12,14 +12,14 @@ from relengapi.lib import api
 from relengapi.lib import auth
 from relengapi.lib import layout
 from relengapi.lib import monkeypatches
-from relengapi.lib.permissions import Permissions
+from relengapi.lib import permissions
 import pkg_resources
 import relengapi
 import logging
 
 # set up the 'relengapi' namespace; it's a namespaced module, so no code
 # is allowed in __init__.py
-relengapi.p = Permissions()
+relengapi.p = permissions.p
 relengapi.apimethod = api.apimethod
 
 # apply monkey patches

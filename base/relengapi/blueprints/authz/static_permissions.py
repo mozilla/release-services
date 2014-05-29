@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import itertools
-from flask.ext.principal import identity_loaded
 from relengapi import p
 
 
@@ -20,7 +19,6 @@ class StaticPermissions(object):
             except KeyError:
                 raise RuntimeError("invalid static permission in settings: %r" % (perm,))
 
-        @identity_loaded.connect_via(app)
         def on_identity_loaded(sender, identity):
             # only attach identities for actual user logins; others are handled separately
             if identity.auth_type != 'user':
