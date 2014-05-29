@@ -5,7 +5,6 @@
 import sqlalchemy as sa
 import threading
 import pytz
-import redo
 from relengapi.util import synchronized
 from flask import current_app
 from sqlalchemy import types
@@ -129,7 +128,6 @@ class UTCDateTime(types.TypeDecorator):
         return value.replace(tzinfo=pytz.UTC)
 
 
-@redo.retriable(attempts=2, sleeptime=0, retry_exceptions=(exc.IntegrityError,))
 def _unique(session, cls, hashfunc, queryfunc, constructor, arg, kw, _test_hook=None):
     # Based on https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/UniqueObject
     cache = session.info.get('_unique_cache', None)
@@ -155,7 +153,7 @@ def _unique(session, cls, hashfunc, queryfunc, constructor, arg, kw, _test_hook=
             if not obj:
                 obj = constructor(*arg, **kw)
                 session.add(obj)
-                session.flush()  # flush after adding prevents race
+                session.flush()
         cache[key] = obj
         return obj
 
@@ -180,5 +178,3 @@ class UniqueMixin(object):
             cls,
             arg, kw
             )
-
-# }}

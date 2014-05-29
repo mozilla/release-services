@@ -189,8 +189,9 @@ def test_unique_session_rollback(app):
     session.commit()
 
 @TestContext(databases=['test_db'])
-def test_unique_race(app):
+def test_unique_races(app):
     session = app.db.session('test_db')
+    row2 = Uniqueness_Table.as_unique(session, name='r2', other='row2a')
     unique_args = (session, Uniqueness_Table, Uniqueness_Table.unique_hash,
                    Uniqueness_Table.unique_filter, Uniqueness_Table, (),
                    {'name': 'r1'})
@@ -200,5 +201,4 @@ def test_unique_race(app):
         results['inner'] = db._unique(*unique_args)
     def outer():
         return db._unique(*unique_args, _test_hook=inner)
-    results['outer'] = outer()
-    eq_(results['outer'], results['inner'])
+    assert_raises(sa.exc.IntegrityError, outer)

@@ -34,7 +34,6 @@ setup(
         "argparse",
         "requests",
         "wrapt",
-        "redo",
         #  Tests break with newer pytz,
         #  see https://bugs.launchpad.net/pytz/+bug/1324158
         "pytz==2014.1",
