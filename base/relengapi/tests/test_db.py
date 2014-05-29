@@ -187,3 +187,18 @@ def test_unique_session_rollback(app):
     assert_not_equal(row3, row3b)
     eq_(row3b.other, 'row3b')
     session.commit()
+
+@TestContext(databases=['test_db'])
+def test_unique_race(app):
+    session = app.db.session('test_db')
+    unique_args = (session, Uniqueness_Table, Uniqueness_Table.unique_hash,
+                   Uniqueness_Table.unique_filter, Uniqueness_Table, (),
+                   {'name': 'r1'})
+    results = {}
+    # one call to _unique nested in the middle of another..
+    def inner():
+        results['inner'] = db._unique(*unique_args)
+    def outer():
+        return db._unique(*unique_args, _test_hook=inner)
+    results['outer'] = outer()
+    eq_(results['outer'], results['inner'])
