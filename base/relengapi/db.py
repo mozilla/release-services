@@ -137,6 +137,12 @@ def _unique(session, cls, hashfunc, queryfunc, constructor, arg, kw):
     if cache is None:
         session.info['_unique_cache'] = cache = {}
 
+        # Setup to clear session cache on rollback
+        @event.listens_for(session, "after_rollback", once=True)
+        def _clear_session_cache(s):
+            if s.info.get('_unique_cache', None):
+                del s.info['_unique_cache']
+
     key = (cls, hashfunc(*arg, **kw))
     if key in cache:
         return cache[key]

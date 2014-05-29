@@ -124,19 +124,22 @@ def test_unique_mixin(app):
     row2 = Uniqueness_Table.as_unique(session, name='r2')
     row3 = Uniqueness_Table.as_unique(session, name='r3')
     row1b = Uniqueness_Table.as_unique(session, name='r1')
-    eq_(row1, row1b)
-    ok_(row1 is row1b)  # stronger than ==, we check for "same object"
+    row4 = Uniqueness_Table.as_unique(session, name='r4', other="row4a")
+    row4b = Uniqueness_Table.as_unique(session, name='r4', other="row4b")
+    ok_(row1 is row1b)
     assert_not_equal(row1, row2)
     assert_not_equal(row1, row3)
     assert_not_equal(row2, row3)
+    ok_(row4 is row4b)
+    eq_(row4b.other, "row4a")
     session.commit()
     instances = session.query(Uniqueness_Table).all()
-    eq_(3, len(instances))
+    eq_(4, len(instances))
     ok_(instances[2].name, 'r2')
 
 
 @TestContext(databases=['test_db'])
-def test_session_expires(app):
+def test_unique_request_expires_cache(app):
     with app.test_request_context():
         session = app.db.session('test_db')
         row1 = Uniqueness_Table.as_unique(session, name='r1')
@@ -159,3 +162,28 @@ def test_session_expires(app):
         session.commit()
         instances = session.query(Uniqueness_Table).all()
         eq_(3, len(instances))
+
+
+@TestContext(databases=['test_db'])
+def test_unique_session_rollback(app):
+    session = app.db.session('test_db')
+    row1 = Uniqueness_Table.as_unique(session, name='r1')
+    session.commit()
+    instances = session.query(Uniqueness_Table).all()
+    eq_(1, len(instances))
+    row2 = Uniqueness_Table.as_unique(session, name='r2')
+    row3 = Uniqueness_Table.as_unique(session, name='r3', other='row3a')
+    instances = session.query(Uniqueness_Table).all()
+    eq_(3, len(instances))
+    session.rollback()
+    instances = session.query(Uniqueness_Table).all()
+    session.rollback()
+    instances = session.query(Uniqueness_Table).all()
+    eq_(1, len(instances))
+    row2b = Uniqueness_Table.as_unique(session, name='r2')
+    row3b = Uniqueness_Table.as_unique(session, name='r3', other='row3b')
+    instances = session.query(Uniqueness_Table).all()
+    eq_(3, len(instances))
+    assert_not_equal(row3, row3b)
+    eq_(row3b.other, 'row3b')
+    session.commit()
