@@ -60,12 +60,14 @@ setup(
         'relengapi': data_patterns,
         'relengapi.blueprints.base': data_patterns,
         'relengapi.blueprints.auth': data_patterns,
+        'relengapi.blueprints.tokenauth': data_patterns,
         'relengapi.blueprints.docs': docs_patterns + data_patterns,
     },
     entry_points={
         "relengapi_blueprints": [
             'base = relengapi.blueprints.base:bp',
             'auth = relengapi.blueprints.auth:bp',
+            'tokenauth = relengapi.blueprints.tokenauth:bp',
             'docs = relengapi.blueprints.docs:bp',
         ],
         "relengapi.auth.mechanisms": [
