@@ -9,6 +9,7 @@ from flask import render_template
 from flask import request
 from flask import g
 from relengapi import actions
+from relengapi import apimethod
 from relengapi import db
 
 from .model import Machines, Humans, Loans, History
