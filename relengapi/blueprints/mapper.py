@@ -366,7 +366,7 @@ def insert_one(project, git_commit, hg_changeset):
         session.commit()
         q = Hash.query.join(Project).filter(_project_filter(project))
         q = q.filter("git_commit == :commit").params(commit=git_commit)
-        return q.one().inserted_hash.as_json()
+        return q.one().as_json()
     except sa.exc.IntegrityError:
         abort(409, "Provided mapping %s %s for project %s already exists and "
               "cannot be reinserted" % (git_commit, hg_changeset, project))
