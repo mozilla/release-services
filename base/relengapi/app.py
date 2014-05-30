@@ -62,12 +62,12 @@ def create_app(cmdline=False, test_config=None):
 
     for name, bp in blueprints:
         if cmdline:
-            logger.info(" * registering blueprint %s", name)
+            logger.info("registering blueprint %s", name)
         app.register_blueprint(bp, url_prefix='/%s' % name)
 
     # set up a random session key if none is specified
     if not app.config.get('SECRET_KEY'):
-        logger.warning(" * setting per-process session key - sessions will be reset on "
+        logger.warning("setting per-process session key - sessions will be reset on "
                        "process restart")
         app.secret_key = os.urandom(24)
 

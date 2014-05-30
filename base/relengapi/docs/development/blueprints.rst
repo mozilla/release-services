@@ -12,6 +12,19 @@ The ``namespace_packages`` line allows multiple packages to share the same Pytho
 
     namespace_packages=['relengapi', 'relengapi.blueprints'],
 
+Include a ``package_data`` section to capture any templates, static files, or documentation::
+
+    package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
+        'relengapi': ['docs/**.rst'],
+        'relengapi.blueprints.base': [
+                'templates/**.html',
+                'static/**.jpg',
+                'static/**.css',
+                'static/**.js',
+                'static/**.txt',
+            ],
+    },
+
 Finally, include an entry point so that the base can find the blueprint::
 
     entry_points={
@@ -37,10 +50,11 @@ The first two of the ``__init__.py`` files must have *only* the following conten
 In the third, create your Blueprint::
 
     from flask import Blueprint, jsonify
-    bp = Blueprint('docs', __name__)
+    bp = Blueprint('mypackage', __name__)
     @bp.route('/some/path')
     def root():
         return jsonify("HELLO")
 
-The ``root`` function in this example would be available at ``/mypackage/some/path``.  
+The ``root`` function in this example would be available at ``/mypackage/some/path``.
 
+The remaining sections in this chapter describe what you can do with your new blueprint.
