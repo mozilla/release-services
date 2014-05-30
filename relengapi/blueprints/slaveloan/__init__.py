@@ -30,6 +30,7 @@ def get_current_loans(admin=True):
 @bp.route('/loans/')
 @apimethod()
 def get_loans():
+    session = g.db.session('relengapi')
     loans = session.query(Loans)
     [l.to_json() for l in loans.all()]
 
