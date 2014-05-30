@@ -47,6 +47,11 @@ class Loans(db.declarative_base('relengapi')):
     # # human   (Humans)
     # # machine (Machines)
 
+    def to_json(self):
+        return dict(id=self.id, status=self.status,
+                    human=self.human.to_json(),
+                    machine=self.machine.to_json())
+
 
 class History(db.declarative_base('relengapi')):
     __tablename__ = _tbl_prefix + 'history'
@@ -61,3 +66,8 @@ class History(db.declarative_base('relengapi')):
     msg = sa.Column(sa.String(255), nullable=False)
     # Backrefs
     # # for_loan  (Loans)
+
+    def to_json(self):
+        return dict(id=self.id, loan_id=self.loan_id,
+                    timestamp=self.timestamp.isoformat(),
+                    status=self.status, msg=self.msg)

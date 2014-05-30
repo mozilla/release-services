@@ -8,6 +8,7 @@ from flask import Blueprint
 from flask import render_template
 from flask import request
 from flask import g
+from relengapi import actions
 from relengapi import db
 
 from .model import Machines, Humans, Loans, History
@@ -25,6 +26,11 @@ def get_current_loans(admin=True):
     g.current_loaners = session.query(Loans)
     return
 
+@bp.route('/loans/')
+@apimethod()
+def get_loans():
+    loans = session.query(Loans)
+    [l.to_json() for l in loans.all()]
 
 @bp.route('/')
 def root():
