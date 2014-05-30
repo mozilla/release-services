@@ -3,6 +3,7 @@ import os
 import sqlalchemy as sa
 
 from nose.tools import eq_, ok_, with_setup, assert_not_equal
+from nose.tools import assert_raises
 import pytz
 
 from relengapi.testing import TestContext
@@ -188,17 +189,19 @@ def test_unique_session_rollback(app):
     eq_(row3b.other, 'row3b')
     session.commit()
 
+
 @TestContext(databases=['test_db'])
 def test_unique_races(app):
     session = app.db.session('test_db')
-    row2 = Uniqueness_Table.as_unique(session, name='r2', other='row2a')
     unique_args = (session, Uniqueness_Table, Uniqueness_Table.unique_hash,
                    Uniqueness_Table.unique_filter, Uniqueness_Table, (),
                    {'name': 'r1'})
     results = {}
     # one call to _unique nested in the middle of another..
+
     def inner():
         results['inner'] = db._unique(*unique_args)
+
     def outer():
         return db._unique(*unique_args, _test_hook=inner)
     assert_raises(sa.exc.IntegrityError, outer)
