@@ -176,10 +176,16 @@ def get_rev(projects, vcs_type, commit):
         row = q.one()
         return "%s %s" % (row.git_commit, row.hg_changeset)
     except NoResultFound:
-        abort(404, "not found")
+        if vcs_type == "git":
+            abort(404, "No hg changeset found for git commit id %s in project(s) %s"
+                  % (commit, projects))
+        elif vcs_type == "hg":
+            abort(404, "No git commit found for hg changeset %s in project(s) %s"
+                  % (commit, projects))
     except MultipleResultsFound:
-        abort (500, "internal error - multiple results returned, should not be "
-               "possible in database")
+        abort(500, "Internal error - multiple results returned for %s commit %s"
+              "in project %s - this should not be possible in database"
+              % (vcs_type, commit, projects))
 
 
 @bp.route('/<projects>/mapfile/full')
