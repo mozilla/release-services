@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(name='relengapi-mapper',
-      version='0.5',
+      version='0.6',
       description='hg to git mapper',
       author='Chris AtLee',
       author_email='chris@atlee.ca',
