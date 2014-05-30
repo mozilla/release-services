@@ -76,15 +76,15 @@ As a shortcut, each table object has a ``query`` property which is automatically
 Unique Row Support (Get or Create)
 ----------------------------------
 
-RelengAPI also supports a way to get a unique row from a table, if doesn't exist it will create the row for you.
+RelengAPI also supports a way to get a unique row from a table, if the row doesn't exist it will create the row for you.
 
-.. warning:: This does not protect against race conditions in other webheads or sessions, from calling invoke up until you commit your DB session you can still get a SQLAlchemy integrity error if there is a failure
+.. warning:: This does not protect against race conditions in other webheads or sessions, which can occur from the moment you call invoke up until you commit your DB session. These will usually raise an SQLAlchemy ``IntegrityError`` if there is a failure.
 
 First you make your ORM Table inherit from ``UniqueMixin``::
 
     from relengapi import db
 
-    class MyTable(db.declarative_base(...), UniqueMixin):
+    class MyTable(db.declarative_base(...), db.UniqueMixin):
         __tablename__ = "mytable"
         id = Column(Integer, primary_key=True)
         name = Column(String(100), unique=True, nullable=False)
@@ -98,19 +98,19 @@ First you make your ORM Table inherit from ``UniqueMixin``::
         def unique_filter(cls, query, name, *args, **kwargs):
             return query.filter(Uniqueness_Table.name == name)
 
-There are a few things going on here, first you're defining your table, like you do any other ORM.
+There are a few things going on here, first you're defining your table, as you do with any other ORM.
 
-Then you define a classmethod hash (``unique_hash``) that takes args from your get_or_create. The key here is your hash can be a tuple or a scalar value, and must be guaranteed unique for the row.
+Then you define a classmethod hash (``unique_hash``) that accepts all the agrs you might want to use to also create. The return value here is your hash, which can be a tuple or a scalar value, and must be guaranteed unique for the row.
 
-Next you define a classmethod filter (``unique_filter``) that is used to, you guessed it, filter the table rows down to what matters. The first arg is always ```query``` which is the sqlalchemy query we're using. Following args are always up to you.
+Next you define a classmethod filter (``unique_filter``) which is used to filter the table rows down to what matters. The first argument is always ```query``` which is the sqlalchemy query we're using. Following args are always up to you.
 
 Usage is quite simple with one caveat, you need to pass the DB session through each time::
 
     foo = MyTable.as_unique(session, name='unique_name', other="foo")
 
-The above would return a row from ``MyTable`` with ``name='unique_name'`` if it exists, if it doesn't would create said row, putting in ``'foo'`` as the value for the ``other`` column.
+The above would return a row from ``MyTable`` with ``name='unique_name'`` if it exists, if not it would create said row, putting in ``'foo'`` as the value for the ``other`` column.
 
-.. note:: if the row existed, and the other column contained different data than foo (e.g. ``'bar'``) the value returned would have 'bar' as the ``other`` column, this code does not assume you'd want to update the existing row, merely get it.
+.. note:: If the row existed, and the other column contained different data than foo (e.g. ``'bar'``) the value returned would have 'bar' as the ``other`` column, this code does not assume you'd want to update the existing row, merely get it.
 
 
 Engines, MetaData, etc.
