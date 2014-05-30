@@ -332,7 +332,13 @@ def insert_one(project, git_commit, hg_changeset):
         hg_changeset: 40 char hexadecimal string
 
     Returns:
-        (git_commit hg_changeset\n)
+        a json representation of the inserted data:
+        {
+            'date_added': <date>,
+            'project_name': <project>,
+            'git_commit': <git sha>,
+            'hg_changeset': <hg sha>,
+        }
 
     Exceptions:
         HTTP 500: No results found
@@ -346,7 +352,7 @@ def insert_one(project, git_commit, hg_changeset):
         session.commit()
         q = Hash.query.join(Project).filter(_project_filter(project))
         inserted_hash = q.filter("git_commit == :commit").params(commit=git_commit).one()
-        return "%s %s" % (inserted_hash.git_commit, inserted_hash.hg_changeset)
+        return inserted_hash.as_json()
     except sa.exc.IntegrityError:
         abort(409, "Provided mapping %s %s for project %s already exists and cannot be reinserted" % (git_commit, hg_changeset, project))
     except NoResultFound:
