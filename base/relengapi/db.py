@@ -126,3 +126,55 @@ class UTCDateTime(types.TypeDecorator):
             # return naive datetime objects
             pass
         return value.replace(tzinfo=pytz.UTC)
+
+
+def _unique(session, cls, hashfunc, queryfunc, constructor, arg, kw, _test_hook=None):
+    # Based on https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/UniqueObject
+    cache = session.info.get('_unique_cache', None)
+    if cache is None:
+        session.info['_unique_cache'] = cache = {}
+
+        # Setup to clear session cache on rollback
+        @event.listens_for(session, "after_rollback", once=True)
+        def _clear_session_cache(s):
+            if s.info.get('_unique_cache', None):
+                del s.info['_unique_cache']
+
+    key = (cls, hashfunc(*arg, **kw))
+    if key in cache:
+        return cache[key]
+    else:
+        with session.no_autoflush:
+            q = session.query(cls)
+            q = queryfunc(q, *arg, **kw)
+            obj = q.first()
+            if _test_hook:
+                _test_hook()
+            if not obj:
+                obj = constructor(*arg, **kw)
+                session.add(obj)
+                session.flush()
+        cache[key] = obj
+        return obj
+
+
+class UniqueMixin(object):
+    # Based on https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/UniqueObject
+    @classmethod
+    def unique_filter(cls, query, *arg, **kw):
+        raise NotImplementedError()
+
+    @classmethod
+    def unique_hash(cls, *arg, **kw):
+        raise NotImplementedError()
+
+    @classmethod
+    def as_unique(cls, session, *arg, **kw):
+        return _unique(
+            session,
+            cls,
+            cls.unique_hash,
+            cls.unique_filter,
+            cls,
+            arg, kw
+            )

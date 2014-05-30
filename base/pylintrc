@@ -48,7 +48,10 @@ disable=
   too-many-instance-attributes,
   abstract-method,
   method-hidden,
-  maybe-no-member
+  maybe-no-member,
+  too-many-arguments,
+  arguments-differ,
+  abstract-class-little-used,
 
 [REPORTS]
 
