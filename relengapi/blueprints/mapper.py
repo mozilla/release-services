@@ -29,7 +29,9 @@ actions.mapper.mapping.insert.doc("Allows new hg-git mappings to be inserted "
 actions.mapper.project.insert.doc("Allows new projects to be inserted into "
                                   "mapper db (projects table)")
 
-# TODO: replace abort with a custom exception - http://flask.pocoo.org/docs/patterns/apierrors/
+# TODO: replace abort with a custom exception
+# - http://flask.pocoo.org/docs/patterns/apierrors/
+
 
 class Project(db.declarative_base('mapper')):
     __tablename__ = 'projects'
@@ -50,7 +52,8 @@ class Hash(db.declarative_base('mapper')):
 
     def as_json(self):
         return jsonify(**{n: getattr(self, n)
-                          for n in ('git_commit', 'hg_changeset', 'date_added', 'project_name')})
+                          for n in ('git_commit', 'hg_changeset',
+                                    'date_added', 'project_name')})
 
     __table_args__ = (
         # TODO: (needs verification) all queries specifying a hash are for
@@ -173,9 +176,10 @@ def get_rev(projects, vcs_type, commit):
         row = q.one()
         return "%s %s" % (row.git_commit, row.hg_changeset)
     except NoResultFound:
-        return "not found", 404
+        abort(404, "not found")
     except MultipleResultsFound:
-        return "internal error - multiple results returned, should not be possible in database", 500
+        abort (500, "internal error - multiple results returned, should not be "
+               "possible in database")
 
 
 @bp.route('/<projects>/mapfile/full')
@@ -223,7 +227,8 @@ def get_mapfile_since(projects, since):
     try:
         since_dt = dateutil.parser.parse(since)
     except ValueError as e:
-        abort(400, 'Invalid date %s specified; see https://labix.org/python-dateutil: %s' % (since, e.message))
+        abort(400, 'Invalid date %s specified; see https://labix.org/python-dateutil: %s'
+              % (since, e.message))
     since_epoch = calendar.timegm(since_dt.utctimetuple())
     q = Hash.query.join(Project).filter(_project_filter(projects))
     q = q.order_by(Hash.hg_changeset)
@@ -231,7 +236,8 @@ def get_mapfile_since(projects, since):
     print q
     mapfile = _build_mapfile(q)
     if not mapfile:
-        abort(404, 'No mappings inserted into database for project(s) %s since %s' % (projects, since))
+        abort(404, 'No mappings inserted into database for project(s) %s since %s'
+              % (projects, since))
     return mapfile
 
 
@@ -265,7 +271,8 @@ def _insert_many(project, ignore_dups=False):
                          "fef90029cb654ad9848337e262078e403baf0c7a'")
             logger.error("i.e. where the first hash is a git commit SHA "
                          "and the second hash is a mercurial changeset SHA")
-            abort(400, "Input line '%s' received for project %s did not contain a space" % (line, project))
+            abort(400, "Input line '%s' received for project %s did not contain a space"
+                  % (line, project))
             # header/footer won't match this format
             continue
         _add_hash(session, git_commit, hg_changeset, proj)
@@ -278,7 +285,8 @@ def _insert_many(project, ignore_dups=False):
         try:
             session.commit()
         except sa.exc.IntegrityError:
-            abort(409, "Some of the given mappings for project %s already exist" % project)
+            abort(409, "Some of the given mappings for project %s already exist"
+                  % project)
     return jsonify()
 
 
@@ -351,14 +359,17 @@ def insert_one(project, git_commit, hg_changeset):
     try:
         session.commit()
         q = Hash.query.join(Project).filter(_project_filter(project))
-        inserted_hash = q.filter("git_commit == :commit").params(commit=git_commit).one()
-        return inserted_hash.as_json()
+        q = q.filter("git_commit == :commit").params(commit=git_commit)
+        return q.one().inserted_hash.as_json()
     except sa.exc.IntegrityError:
-        abort(409, "Provided mapping %s %s for project %s already exists and cannot be reinserted" % (git_commit, hg_changeset, project))
+        abort(409, "Provided mapping %s %s for project %s already exists and "
+              "cannot be reinserted" % (git_commit, hg_changeset, project))
     except NoResultFound:
-        abort(500, "Provided mapping %s %s for project %s could not be inserted into the database" % (git_commit, hg_changeset, project))
+        abort(500, "Provided mapping %s %s for project %s could not be inserted "
+              "into the database" % (git_commit, hg_changeset, project))
     except MultipleResultsFound:
-        abort(500, "Provided mapping %s %s for project %s has been inserted into the database multiple times" % (git_commit, hg_changeset, project))
+        abort(500, "Provided mapping %s %s for project %s has been inserted into "
+              "the database multiple times" % (git_commit, hg_changeset, project))
 
 
 @bp.route('/<project>', methods=('POST',))
