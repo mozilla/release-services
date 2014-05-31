@@ -12,8 +12,9 @@ data_patterns = [
     'static/**.txt',
 ]
 docs_patterns = [
-    'src/*/*.rst',
-    'src/conf.py',
+    'base/**.rst',
+    'base/_static/**',
+    'base/conf.py',
 ]
 
 setup(
@@ -58,13 +59,17 @@ setup(
     zip_safe=False,
     namespace_packages=['relengapi', 'relengapi.blueprints'],
     package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
-        'relengapi': data_patterns,
+        'relengapi': ['docs/**.rst'],
         'relengapi.blueprints.base': data_patterns,
         'relengapi.blueprints.auth': data_patterns,
         'relengapi.blueprints.authz': data_patterns,
         'relengapi.blueprints.userauth': data_patterns,
         'relengapi.blueprints.tokenauth': data_patterns,
-        'relengapi.blueprints.docs': docs_patterns + data_patterns,
+        'relengapi.blueprints.docs': data_patterns + [
+            'base/**.rst',
+            'base/_static/**',
+            'base/conf.py',
+        ],
     },
     entry_points={
         "relengapi_blueprints": [

@@ -27,10 +27,11 @@ def get_basebuilddir():
     if 'DOCS_BUILD_DIR' in current_app.config:
         return current_app.config['DOCS_BUILD_DIR']
     relengapi_dist = pkg_resources.working_set.find(
-                            pkg_resources.Requirement.parse('relengapi'))
+        pkg_resources.Requirement.parse('relengapi'))
     return os.path.join(
-            pkg_resources.resource_filename(relengapi_dist.as_requirement()),
-            'docs_build_dir')
+        pkg_resources.resource_filename(relengapi_dist.as_requirement(), ''),
+        'docs_build_dir')
+
 
 def get_support():
     if not hasattr(current_app, 'docs_websupport'):
@@ -132,7 +133,8 @@ class BuildDocsSubcommand(subcommands.Subcommand):
         for f in pkg_resources.resource_listdir(req, 'relengapi/docs'):
             srcpath = 'relengapi/docs/{}'.format(f)
             if not pkg_resources.resource_isdir(req, srcpath):
-                logger.warning("%s:%r is not a directory; ignored", req, srcpath)
+                logger.warning(
+                    "%s:%r is not a directory; ignored", req, srcpath)
                 continue
             if not os.path.isdir(os.path.join(destdir, f)):
                 logger.warning("%s:%r does not corespond to a top-level directory "
