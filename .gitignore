@@ -6,3 +6,5 @@ TODO.txt
 .*.swp
 base/relengapi/blueprints/docs/build/
 */dist
+.coverage
+base/.coverage-html
