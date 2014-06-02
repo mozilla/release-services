@@ -45,6 +45,7 @@ git_only='
     .travis.yml
     pep8rc
     pylintrc
+    coveragerc
     validate.sh
     validate-common.sh
     src

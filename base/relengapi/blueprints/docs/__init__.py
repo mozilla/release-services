@@ -6,7 +6,6 @@ import os
 from relengapi import subcommands
 from pkg_resources import resource_filename
 from flask import Blueprint
-from flask import jsonify
 from flask import abort
 from flask import current_app
 from flask import render_template
@@ -22,8 +21,8 @@ bp = Blueprint('docs', __name__,
 bp.root_widget_template('docs_root_widget.html', priority=100)
 
 
-def get_support():
-    if not hasattr(current_app, 'docs_websupport'):
+def get_support(**kwargs):
+    if not hasattr(current_app._get_current_object(), 'docs_websupport'):
         srcdir = resource_filename(__name__, 'src')
         builddir = os.path.join(os.path.dirname(srcdir), 'build')
         builddir = current_app.config.get('DOCS_BUILD_DIR', builddir)
@@ -31,7 +30,8 @@ def get_support():
             srcdir=srcdir,
             builddir=builddir,
             staticroot='/docs/static',
-            docroot='/docs')
+            docroot='/docs',
+            **kwargs)
     return current_app.docs_websupport
 
 
@@ -40,7 +40,8 @@ def check_built(state):
     with state.app.app_context():
         support = get_support()
         if not os.path.exists(os.path.join(support.builddir, 'data', '.buildinfo')):
-            logger.warning("docs have not been built")
+            if not state.app.config.get('TESTING'):  # pragma: no cover
+                logger.warning("docs have not been built")
 
 
 @bp.route('/', defaults={'docname': 'index'})
@@ -60,16 +61,6 @@ def static(path):
     # just implement static files directly
     support = get_support()
     return send_from_directory(support.staticdir, path)
-
-
-def api_info(docname):
-    rv = []
-    vfs = current_app.view_functions
-    for map_elt in current_app.url_map.iter_rules():
-        func = vfs[map_elt.endpoint]
-        if func.__doc__ and func.__doc__.startswith('API:'):
-            rv.append((map_elt.rule, func.__doc__))
-    return jsonify(rv)
 
 
 class BuildDocsSubcommand(subcommands.Subcommand):
