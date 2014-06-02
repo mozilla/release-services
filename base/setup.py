@@ -11,11 +11,6 @@ data_patterns = [
     'static/**.js',
     'static/**.txt',
 ]
-docs_patterns = [
-    'base/**.rst',
-    'base/_static/**',
-    'base/conf.py',
-]
 
 setup(
     name='relengapi',
