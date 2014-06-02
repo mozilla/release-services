@@ -1,7 +1,7 @@
 function reload_loans() {
     $('#loans-table tbody').empty();
     $.ajax({
-        url: '{{ url_for("slaveloan.get_loans") }}',
+        url: _get_loans_url,
         dataType: 'json',
         success: function(data) {
             $.each(data.result,function(i,row){
