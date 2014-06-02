@@ -29,7 +29,7 @@ setup(
         "Flask-Browserid",
         "Flask-Principal",
         "Sphinx",
-        "SQLAlchemy",
+        "SQLAlchemy>=0.9.4",
         "Celery",
         "argparse",
         "requests",
