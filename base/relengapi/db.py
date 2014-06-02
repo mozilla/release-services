@@ -70,10 +70,6 @@ class Alchemies(object):
         for s in self._sessions.values():
             s.remove()
 
-    def reset(self):
-        self._engines = {}
-        self._sessions = {}
-
     @property
     def database_names(self):
         return _declarative_bases.keys()
@@ -94,7 +90,7 @@ def ping_connection(dbapi_connection, connection_record, connection_proxy):
     cursor = dbapi_connection.cursor()
     try:
         cursor.execute("SELECT 1")
-    except:
+    except Exception:  # pragma: no cover
         # optional - dispose the whole pool
         # instead of invalidating one at a time
         connection_proxy._pool.dispose()

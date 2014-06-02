@@ -60,7 +60,8 @@ def test_UTCDateTime_converts(app):
     session.add(DevTable(date=now))
     session.commit()
     instance = session.query(DevTable).all()[0]
-    assert_not_equal(instance.date.replace(tzinfo=None), now.replace(tzinfo=None))
+    assert_not_equal(
+        instance.date.replace(tzinfo=None), now.replace(tzinfo=None))
 
 
 @TestContext(databases=['test_db'])
@@ -81,26 +82,31 @@ def test_UTCDateTime_converts_daylight(app):
     session = app.db.session('test_db')
     daylight = datetime.datetime(2011, 6, 27, 2, 0, 0)
     daylight = pytz.timezone("US/Pacific").localize(daylight, is_dst=True)
-    eq_(daylight.strftime('%Y-%m-%d %H:%M:%S %Z%z'), '2011-06-27 02:00:00 PDT-0700')
+    eq_(daylight.strftime('%Y-%m-%d %H:%M:%S %Z%z'),
+        '2011-06-27 02:00:00 PDT-0700')
     session.add(DevTable(date=daylight))
     session.commit()
     instances = session.query(DevTable).all()
     eq_(1, len(instances))
     ok_(isinstance(instances[0].date, datetime.datetime))
-    eq_(instances[0].date.strftime('%Y-%m-%d %H:%M:%S %Z%z'), '2011-06-27 09:00:00 UTC+0000')
+    eq_(instances[0].date.strftime('%Y-%m-%d %H:%M:%S %Z%z'),
+        '2011-06-27 09:00:00 UTC+0000')
 
 
 @TestContext(databases=['test_db'])
 def test_UTCDateTime_converts_standard(app):
     session = app.db.session('test_db')
-    standard = datetime.datetime(2011, 6, 27, 2, 0, 0, tzinfo=pytz.timezone("US/Pacific"))
-    eq_(standard.strftime('%Y-%m-%d %H:%M:%S %Z%z'), '2011-06-27 02:00:00 PST-0800')
+    standard = datetime.datetime(
+        2011, 6, 27, 2, 0, 0, tzinfo=pytz.timezone("US/Pacific"))
+    eq_(standard.strftime('%Y-%m-%d %H:%M:%S %Z%z'),
+        '2011-06-27 02:00:00 PST-0800')
     session.add(DevTable(date=standard))
     session.commit()
     instances = session.query(DevTable).all()
     eq_(1, len(instances))
     ok_(isinstance(instances[0].date, datetime.datetime))
-    eq_(instances[0].date.strftime('%Y-%m-%d %H:%M:%S %Z%z'), '2011-06-27 10:00:00 UTC+0000')
+    eq_(instances[0].date.strftime('%Y-%m-%d %H:%M:%S %Z%z'),
+        '2011-06-27 10:00:00 UTC+0000')
 
 
 class Uniqueness_Table(db.declarative_base('test_db'), db.UniqueMixin):
@@ -205,3 +211,11 @@ def test_unique_races(app):
     def outer():
         return db._unique(*unique_args, _test_hook=inner)
     assert_raises(sa.exc.IntegrityError, outer)
+
+
+@TestContext(databases=['test_db'])
+def test_database_names(app):
+    with app.app_context():
+        # the full list of database names depends on the loaded
+        # blueprints, so just assert that test_db is in there.
+        assert 'test_db' in app.db.database_names
