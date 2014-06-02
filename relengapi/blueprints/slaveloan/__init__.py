@@ -17,7 +17,8 @@ from .model import Machines, Humans, Loans, History
 logger = logging.getLogger(__name__)
 
 bp = Blueprint('slaveloan', __name__,
-               template_folder='templates')
+               template_folder='templates',
+               static_folder='static')
 
 _tbl_prefix = 'slaveloan_'
 
