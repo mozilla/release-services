@@ -1,3 +1,3 @@
 .. toctree::
-    actions
+    permissions
     tokenauth

@@ -9,14 +9,14 @@
 {% block content %}
     <h1>Issue New Token</h1>
     <form action="{{ url_for('tokenauth.issue_token') }}" method="post" id="new-token">
-        <p>Select the actions that can be performed with the new token.
-           Note that a token you issue cannot permit an action you cannot perform.</p>
-        <h2>Actions to Allow</h2>
-        {% for act, doc in available_actions -%}
+        <p>Select the permissions for the new token.
+           Note that a token you issue cannot have permission you do not possess.</p>
+        <h2>Permissions to Allow</h2>
+        {% for act, doc in available_permissions -%}
         <div><label>
             <input type="checkbox" name="{{ act }}">
-            <span class="action">{{ act }}</span> -
-            <span class="action-docstring">{{doc}}</span>
+            <span class="permission">{{ act }}</span> -
+            <span class="permission-docstring">{{doc}}</span>
         </label></div>
         {% endfor %}
         <label>Description: <input name="description" size=100></label>

@@ -4,9 +4,9 @@
 
 import wrapt
 import inspect
-from flask import g
 from flask import json
 import relengapi.app
+from relengapi.lib import auth
 
 
 class TestContext(object):
@@ -18,7 +18,7 @@ class TestContext(object):
         'db_setup',
         'db_teardown',
         'config',
-        'actions',
+        'user',
     ])
 
     def __init__(self, **options):
@@ -35,10 +35,6 @@ class TestContext(object):
         unknown = set(options) - self._known_options
         if unknown:
             raise ValueError("unknown options %s" % (', '.join(unknown)))
-        # verify that all actions exist
-        if options.get('actions'):
-            for action in options['actions']:
-                assert action.exists()
 
     def _make_app(self):
         if self.options.get('reuse_app') and self._app:
@@ -52,11 +48,12 @@ class TestContext(object):
             uris[dbname] = 'sqlite://'
         app = relengapi.app.create_app(test_config=config)
 
-        # set up actions
-        if self.options.get('actions') is not None:
+        # set up logged-in user
+        u = self.options.get('user')
+        if u:
             @app.before_request
-            def set_actions():
-                g.identity.provides.update(set(self.options['actions']))
+            def set_user():
+                auth.login_manager.reload_user(u)
 
         # set up the requested DBs
         for dbname in dbnames:

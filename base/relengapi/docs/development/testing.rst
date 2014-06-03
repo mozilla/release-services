@@ -54,7 +54,7 @@ To support, this, use the :py:class:`relengapi.testing.TestContext` class.
     :param db_teardown: database teardown function; see below
     :param reuse_app: if true, only create a single Flask app and re-use it for all test cases
     :param config: application configuration
-    :param actions: a list of actions the test identity is permitted to perform
+    :param user: a user object, substituted into ``current_user`` during each request
 
     A test context acts as a decorator to perform API-specific setup and tear-down for tests.
 

@@ -6,22 +6,20 @@ import os
 from flask import Flask
 from flask import g
 from flask import render_template
-from flask.ext.principal import Principal
-from flask.ext.login import LoginManager
 from relengapi import celery
 from relengapi import db
 from relengapi.lib import api
+from relengapi.lib import auth
+from relengapi.lib import layout
 from relengapi.lib import monkeypatches
-from relengapi.lib.actions import Actions
+from relengapi.lib import permissions
 import pkg_resources
 import relengapi
 import logging
 
 # set up the 'relengapi' namespace; it's a namespaced module, so no code
 # is allowed in __init__.py
-relengapi.login_manager = LoginManager()
-relengapi.principal = Principal(use_sessions=True)
-relengapi.actions = Actions()
+relengapi.p = permissions.p
 relengapi.apimethod = api.apimethod
 
 # apply monkey patches
@@ -56,8 +54,8 @@ def create_app(cmdline=False, test_config=None):
     # add the necessary components to the app
     app.db = db.make_db(app)
     app.celery = celery.make_celery(app)
-    relengapi.principal.init_app(app)
-    relengapi.login_manager.init_app(app)
+    layout.init_app(app)
+    auth.init_app(app)
     api.init_app(app)
 
     for name, bp in blueprints:
