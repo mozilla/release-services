@@ -30,6 +30,7 @@ $(function() {
             reload_loans();
             token_output.find('.token').text(token);
             alertify.success("Loan entry created");
+            form[0].reset(); // Converts to native JS DOM first
         };
         var bad = function(errmsg) {
             /* re-enable the button so users can try again */
