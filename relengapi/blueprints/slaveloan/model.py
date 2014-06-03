@@ -10,23 +10,39 @@ from relengapi.util import tz
 _tbl_prefix = 'slaveloan_'
 
 
-class Machines(db.declarative_base('relengapi')):
+class Machines(db.declarative_base('relengapi'), db.UniqueMixin):
     __tablename__ = _tbl_prefix + 'machines'
     id = sa.Column(sa.Integer, primary_key=True)
     fqdn = sa.Column(sa.String(255), nullable=False, unique=True)
     ipaddr = sa.Column(sa.String(18), unique=True)
     loan = relationship("Loans", backref="machine")
 
+    @classmethod
+    def unique_hash(cls, fqdn, *args, **kwargs):
+        return fqdn
+
+    @classmethod
+    def unique_filter(cls, query, fqdn, *args, **kwargs):
+        return query.filter(Machines.fqdn == fqdn)
+
     def to_json(self):
         return dict(id=self.id, fqdn=self.fqdn, ipaddr=self.ipaddr)
 
 
-class Humans(db.declarative_base('relengapi')):
+class Humans(db.declarative_base('relengapi'), db.UniqueMixin):
     __tablename__ = _tbl_prefix + 'humans'
     id = sa.Column(sa.Integer, primary_key=True)
     ldap = sa.Column(sa.String(255), nullable=False, unique=True)
     bugzilla = sa.Column(sa.String(255), nullable=False)
     loans = relationship("Loans", backref="human")
+
+    @classmethod
+    def unique_hash(cls, ldap, *args, **kwargs):
+        return ldap
+
+    @classmethod
+    def unique_filter(cls, query, ldap, *args, **kwargs):
+        return query.filter(Humans.ldap == ldap)
 
     def to_json(self):
         return dict(id=self.id, ldap=self.ldap, bugzilla=self.bugzilla)

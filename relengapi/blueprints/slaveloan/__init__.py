@@ -72,10 +72,9 @@ def new_loan_from_admin():
     h = Humans.as_unique(session,
                          ldap=request.json['LDAP'],
                          bugzilla=request.json['bugzilla'])
-    l = Loans.as_unique(session,
-                        status=request.json['status'],
-                        human=h,
-                        machine=m)
+    l = Loans(status=request.json['status'],
+              human=h,
+              machine=m)
     history = History(for_loan=l,
                       timestamp=tz.utcnow(),
                       status=request.json['status'],
