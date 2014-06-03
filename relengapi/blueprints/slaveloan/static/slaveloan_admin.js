@@ -74,7 +74,7 @@ $(function() {
                                  ipaddr: form_ipaddr})
         }).done(function(data) {
             console.log(data);
-            if (data.result.token) {
+            if (data.result.loan) {
                 good(data.result.loan);
             } else {
                 bad("Loan request failed in unknown way");
