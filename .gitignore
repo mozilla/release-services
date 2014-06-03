@@ -4,7 +4,7 @@ relengapi.egg-info/
 TODO.txt
 *.db
 .*.swp
-base/relengapi/blueprints/docs/build/
+docs_build_dir
 */dist
 .coverage
 base/.coverage-html

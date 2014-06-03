@@ -23,7 +23,7 @@ $(function() {
         var checked = form.find(':checked').map(function() { return this.name }).get();
         var description = form.find('input[name=description]').val();
         if (checked.length == 0) {
-            bad('Check an action');
+            bad('Check at least one permission');
             return;
         }
         if (!description) {
@@ -35,7 +35,7 @@ $(function() {
             url: '/tokenauth/tokens',
             type: 'POST',
             contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify({actions: checked, description: description})
+            data: JSON.stringify({permissions: checked, description: description})
         }).done(function(data) {
             console.log(data);
             if (data.result.token) {

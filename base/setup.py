@@ -11,10 +11,6 @@ data_patterns = [
     'static/**.js',
     'static/**.txt',
 ]
-docs_patterns = [
-    'src/*/*.rst',
-    'src/conf.py',
-]
 
 setup(
     name='relengapi',
@@ -27,13 +23,13 @@ setup(
         "Flask",
         "Flask-Login>=0.2.10",
         "Flask-Browserid",
-        "Flask-Principal",
         "Sphinx",
         "SQLAlchemy>=0.9.4",
         "Celery",
         "argparse",
         "requests",
         "wrapt",
+        "blinker",  # required to use flask signals
         #  Tests break with newer pytz,
         #  see https://bugs.launchpad.net/pytz/+bug/1324158
         "pytz==2014.1",
@@ -59,22 +55,30 @@ setup(
     zip_safe=False,
     namespace_packages=['relengapi', 'relengapi.blueprints'],
     package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
-        'relengapi': data_patterns,
+        'relengapi': ['docs/**.rst'],
         'relengapi.blueprints.base': data_patterns,
         'relengapi.blueprints.auth': data_patterns,
-        'relengapi.blueprints.authz': data_patterns,
-        'relengapi.blueprints.userauth': data_patterns,
         'relengapi.blueprints.tokenauth': data_patterns,
-        'relengapi.blueprints.docs': docs_patterns + data_patterns,
+        'relengapi.blueprints.docs': data_patterns + [
+            'base/**.rst',
+            'base/_static/**',
+            'base/conf.py',
+        ],
     },
     entry_points={
         "relengapi_blueprints": [
             'base = relengapi.blueprints.base:bp',
             'auth = relengapi.blueprints.auth:bp',
-            'authz = relengapi.blueprints.authz:bp',
-            'userauth = relengapi.blueprints.userauth:bp',
             'tokenauth = relengapi.blueprints.tokenauth:bp',
             'docs = relengapi.blueprints.docs:bp',
+        ],
+        "relengapi.auth.mechanisms": [
+            'browserid = relengapi.lib.auth.browserid:init_app',
+            'external = relengapi.lib.auth.external:init_app',
+        ],
+        "relengapi.perms.mechanisms": [
+            'static = relengapi.lib.auth.static_authz:init_app',
+            'ldap-groups = relengapi.lib.auth.ldap_groups_authz:init_app',
         ],
         "console_scripts": [
             'relengapi = relengapi.subcommands:main',

@@ -1,6 +1,0 @@
-Usage
-=====
-
-.. toctree::
-    actions
-    tokenauth
