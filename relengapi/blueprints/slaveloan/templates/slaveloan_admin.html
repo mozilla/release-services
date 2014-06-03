@@ -27,7 +27,8 @@
 </table>
 
 <h2>New Loan</h2>
-<form method="POST">
+<form action="{{ url_for('slaveloan.new_loan_from_admin') }}"
+      method="POST" id="new-loan">
   <fieldset>
     <legend>Loan Info</legend>
     <label for="status">Status: </label>
@@ -54,7 +55,7 @@ What Slave do you need?<br />
 </fieldset>
 <fieldset>-->
 <legend>Complete</legend>
-<button type="submit">Submit Loan Info</button>
+<button type="button" name="submit_loan" value="now" id="submit_loan">Submit Loan Info</button>
 </fieldset>
 </form>
 {% endblock %}

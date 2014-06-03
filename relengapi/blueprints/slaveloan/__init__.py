@@ -8,9 +8,11 @@ from flask import Blueprint
 from flask import render_template
 from flask import request
 from flask import g
+from werkzeug.exceptions import BadRequest
 from relengapi import actions
 from relengapi import apimethod
 from relengapi import db
+from relengapi.util import tz
 
 from .model import Machines, Humans, Loans, History
 
@@ -49,20 +51,36 @@ def admin():
 
 
 @bp.route('/admin/', methods=['POST'])
-def admin_post():
+@apimethod()
+def new_loan_from_admin():
+    if 'status' not in request.json:
+        raise BadRequest("Missing Status Field")
+    if 'fqdn' not in request.json:
+        raise BadRequest("Missing Machine FQDN")
+    if 'ipaddr' not in request.json:
+        raise BadRequest("Missing Machine IP Address")
+    if 'LDAP' not in request.json:
+        raise BadRequest("Missing LDAP E-Mail")
+    if 'bugzilla' not in request.json:
+        raise BadRequest("Missing Bugzilla E-Mail")
+
     import datetime
-    logger.debug("Posting")
-    form = request.form
     session = g.db.session('relengapi')
-    m = Machines(fqdn=form.get('fqdn'), ipaddr=form.get('ipaddr'))
-    h = Humans(ldap=form.get('LDAP'), bugzilla=form.get('bugzilla'))
-    l = Loans(status=form.get('status'), human=h, machine=m)
+    m = Machines.as_unique(session,
+                           fqdn=request.json['fqdn'],
+                           ipaddr=request.json['ipaddr'])
+    h = Humans.as_unique(session,
+                         ldap=request.json['LDAP'],
+                         bugzilla=request.json['bugzilla'])
+    l = Loans.as_unique(session,
+                        status=request.json['status'],
+                        human=h,
+                        machine=m)
     history = History(for_loan=l,
-                      timestamp=datetime.datetime.utcnow(),
-                      status=form.get('status'),
-                      msg="adding to slave loan tool")
+                      timestamp=tz.utcnow(),
+                      status=request.json['status'],
+                      msg="Adding to slave loan tool via admin interface")
     session.add(l)
     session.add(h)
     session.commit()
-    get_current_loans(True)
-    return render_template('slaveloan_admin.html')
+    return {'loan': l.to_json()}
