@@ -43,7 +43,7 @@ class CreateDBSubcommand(subcommands.Subcommand):
 
     def run(self, parser, args):
         for dbname in current_app.db.database_names:
-            logger.info(" * creating tables for database %s", dbname)
+            logger.info("creating tables for database %s", dbname)
             meta = current_app.db.metadata[dbname]
             engine = current_app.db.engine(dbname)
             meta.create_all(bind=engine)

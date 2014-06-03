@@ -1,6 +1,3 @@
-Development
-===========
-
 .. toctree::
     blueprints
     api_methods
@@ -12,3 +9,4 @@ Development
     auth
     utils
     testing
+    docs
