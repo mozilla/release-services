@@ -6,6 +6,7 @@ import mock
 import json
 from nose.tools import eq_
 from relengapi.testing import TestContext
+from relengapi.lib import auth
 from relengapi.blueprints.mapper import Hash, Project
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -39,12 +40,22 @@ def db_teardown(app):
     engine.execute("delete from hashes")
     engine.execute("delete from projects")
 
-from relengapi import actions
+from relengapi import p
+
+
+class User(auth.BaseUser):
+
+    def get_id(self):
+        return 'test:'
+
+    def get_permissions(self):
+        return [
+            p.mapper.mapping.insert,
+            p.mapper.project.insert,
+        ]
 
 test_context = TestContext(databases=['mapper'],
-                           actions=[
-                               actions.mapper.mapping.insert,
-                               actions.mapper.project.insert],
+                           user=User(),
                            db_setup=db_setup,
                            db_teardown=db_teardown,
                            reuse_app=True)
@@ -55,9 +66,12 @@ def insert_some_hashes(app):
     Session.configure(bind=engine)
     session = Session()
     project = session.query(Project).filter(Project.name == 'proj').one()
-    session.add(Hash(git_commit=SHA1, hg_changeset=SHA1R, project=project, date_added=12345))
-    session.add(Hash(git_commit=SHA2, hg_changeset=SHA2R, project=project, date_added=12346))
-    session.add(Hash(git_commit=SHA3, hg_changeset=SHA3R, project=project, date_added=12347))
+    session.add(
+        Hash(git_commit=SHA1, hg_changeset=SHA1R, project=project, date_added=12345))
+    session.add(
+        Hash(git_commit=SHA2, hg_changeset=SHA2R, project=project, date_added=12346))
+    session.add(
+        Hash(git_commit=SHA3, hg_changeset=SHA3R, project=project, date_added=12347))
     session.commit()
 
 
@@ -66,7 +80,8 @@ def hash_pair_exists(app, git, hg):
     Session.configure(bind=engine)
     session = Session()
     try:
-        session.query(Hash).filter(Hash.hg_changeset == hg).filter(Hash.git_commit == git).one()
+        session.query(Hash).filter(Hash.hg_changeset == hg).filter(
+            Hash.git_commit == git).one()
         return True
     except (MultipleResultsFound, NoResultFound):
         return False
@@ -128,7 +143,7 @@ def test_get_mapfile(app, client):
     eq_(rv.data, '%s %s\n%s %s\n%s %s\n' % (
         # note that these are sorted by git sha1, not hg
         SHA3, SHA3R, SHA1, SHA1R, SHA2, SHA2R,
-    ))
+        ))
 
 
 @test_context
@@ -164,7 +179,7 @@ def test_insert_one(client):
         'project_name': 'proj',
         'git_commit': SHA1,
         'hg_changeset': SHA2,
-    })
+        })
 
 
 @test_context
@@ -189,14 +204,16 @@ def test_insert_one_no_project(client):
 
 @test_context
 def test_insert_multi_bad_content_type(app, client):
-    rv = client.post('/mapper/proj/insert', content_type='text/chocolate', data=SHAFILE)
+    rv = client.post('/mapper/proj/insert',
+                     content_type='text/chocolate', data=SHAFILE)
     eq_(rv.status_code, 400)
     # TODO: check response when it's JSON
 
 
 @test_context
 def test_insert_multi_no_dups(app, client):
-    rv = client.post('/mapper/proj/insert', content_type='text/plain', data=SHAFILE)
+    rv = client.post('/mapper/proj/insert',
+                     content_type='text/plain', data=SHAFILE)
     eq_(rv.status_code, 200)
     # TODO: check response when it's JSON
     assert hash_pair_exists(app, SHA1, SHA1R)
@@ -208,7 +225,8 @@ def test_insert_multi_no_dups(app, client):
 def test_insert_multi_no_dups_but_dups(app, client):
     rv = client.post('/mapper/proj/insert/%s/%s' % (SHA2, SHA2R))
     eq_(rv.status_code, 200)
-    rv = client.post('/mapper/proj/insert', content_type='text/plain', data=SHAFILE)
+    rv = client.post('/mapper/proj/insert',
+                     content_type='text/plain', data=SHAFILE)
     eq_(rv.status_code, 409)
     # TODO: check response when it's JSON
     assert not hash_pair_exists(app, SHA1, SHA1R)
@@ -218,7 +236,8 @@ def test_insert_multi_no_dups_but_dups(app, client):
 
 @test_context
 def test_insert_multi_ignoredups(app, client):
-    rv = client.post('/mapper/proj/insert/ignoredups', content_type='text/plain', data=SHAFILE)
+    rv = client.post('/mapper/proj/insert/ignoredups',
+                     content_type='text/plain', data=SHAFILE)
     eq_(rv.status_code, 200)
     # TODO: check response when it's JSON
     assert hash_pair_exists(app, SHA1, SHA1R)
@@ -230,7 +249,8 @@ def test_insert_multi_ignoredups(app, client):
 def test_insert_multi_ignoredups_with_dups(app, client):
     rv = client.post('/mapper/proj/insert/%s/%s' % (SHA2, SHA2R))
     eq_(rv.status_code, 200)
-    rv = client.post('/mapper/proj/insert/ignoredups', content_type='text/plain', data=SHAFILE)
+    rv = client.post('/mapper/proj/insert/ignoredups',
+                     content_type='text/plain', data=SHAFILE)
     eq_(rv.status_code, 200)
     # TODO: check response when it's JSON
     assert hash_pair_exists(app, SHA1, SHA1R)
