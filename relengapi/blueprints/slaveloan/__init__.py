@@ -9,7 +9,6 @@ from flask import render_template
 from flask import request
 from flask import g
 from werkzeug.exceptions import BadRequest
-from relengapi import actions
 from relengapi import apimethod
 from relengapi import db
 from relengapi.util import tz
