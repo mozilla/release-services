@@ -28,9 +28,10 @@ $(function() {
 
         var good = function(loan) {
             reload_loans();
-            token_output.find('.token').text(token);
             alertify.success("Loan entry created");
             form[0].reset(); // Converts to native JS DOM first
+            /* re-enable the button so we can submit a loan again */
+            button.prop('disabled', false);
         };
         var bad = function(errmsg) {
             /* re-enable the button so users can try again */

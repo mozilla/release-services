@@ -13,8 +13,9 @@ from relengapi import actions
 from relengapi import apimethod
 from relengapi import db
 from relengapi.util import tz
+from .slave_mappings import slave_patterns
 
-from .model import Machines, Humans, Loans, History
+from .model import Machines, Humans, Loans, History, Requests
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,12 @@ def get_current_loans(admin=True):
     session = g.db.session('relengapi')
     g.current_loaners = session.query(Loans)
     return
+
+
+@bp.route('/machine/classes')
+@apimethod()
+def get_machine_classes():
+    return slave_patterns()
 
 
 @bp.route('/loans/')
@@ -64,7 +71,6 @@ def new_loan_from_admin():
     if 'bugzilla' not in request.json:
         raise BadRequest("Missing Bugzilla E-Mail")
 
-    import datetime
     session = g.db.session('relengapi')
     m = Machines.as_unique(session,
                            fqdn=request.json['fqdn'],
