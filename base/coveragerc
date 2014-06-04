@@ -18,3 +18,7 @@ exclude_lines =
 
     # 'pass' generally means 'this won't be called'
     ^ *pass *$
+
+omit =
+    */test_*
+    relengapi/blueprints/docs/temp/build/src/conf.py

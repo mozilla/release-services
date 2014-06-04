@@ -4,7 +4,6 @@
 
 import os
 import shutil
-from StringIO import StringIO
 from nose.tools import eq_
 from relengapi.testing import TestContext
 from relengapi.blueprints import docs
@@ -25,9 +24,7 @@ def app_setup(app):
     if hasattr(app, 'docs_websupport'):
         del app.docs_websupport
     with app.app_context():
-        # status= here quiets the status output that would otherwise
-        # go to stderr
-        docs.get_support(status=StringIO()).build()
+        docs.build(quiet=True)
 
 test_context = TestContext(app_setup=app_setup, reuse_app=True)
 
