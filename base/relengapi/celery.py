@@ -45,7 +45,7 @@ def task(*args, **kwargs):
     if len(args) == 1:
         if callable(args[0]):
             return inner(**kwargs)(*args)
-        raise TypeError('argument 1 to @db.task() must be a callable')
+        raise TypeError('argument 1 to @task() must be a callable')
     if args:
         raise TypeError(
             '@db.task() takes exactly 1 argument ({0} given)'.format(
@@ -65,7 +65,7 @@ l = logging.getLogger("")
 class PropModule(types.ModuleType):
 
     @property
-    def celery(self):
+    def celery(self):  # pragma: no cover
         import relengapi.app
         app = relengapi.app.create_app(True)
         return app.celery
