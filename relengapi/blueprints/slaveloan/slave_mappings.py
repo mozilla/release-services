@@ -64,6 +64,7 @@ _gpo_needed = [
     "b-2008-ix", "t-w732-ix", "t-w864-ix", "t-xp32-ix"
     ]
 
+
 def slave_patterns():
     ret = []
     for key, values in _slave_type.items():
@@ -71,19 +72,21 @@ def slave_patterns():
             ret += [regex.pattern[1:-2] + "*"]
     return ret
 
+
 def slave_to_slavetype(slave):
     for key, values in _slave_type.items():
         for regex in values:
             if regex.match(slave):
                 return key
-    else:
-        return None
+    return None
+
 
 def is_aws_serviceable(slave):
     slaveclass = slave_to_slavetype(slave)
     if 'ec2' in slaveclass:
         return True
     return False
+
 
 def needs_gpo(slave):
     slaveclass = slave_to_slavetype(slave)

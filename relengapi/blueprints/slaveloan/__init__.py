@@ -15,7 +15,7 @@ from relengapi import db
 from relengapi.util import tz
 from .slave_mappings import slave_patterns
 
-from .model import Machines, Humans, Loans, History, Requests
+from .model import Machines, Humans, Loans, History
 
 logger = logging.getLogger(__name__)
 
