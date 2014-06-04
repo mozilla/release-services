@@ -1,0 +1,27 @@
+~/tmp/alemprog/NOTES.txt on rama:
+
+Plan
+* each blueprint can have its own alembic environment for its own DB (tools
+  provided), with config at relengapi/blueprints/foo/alembic.ini; should use
+  a version table named after the blueprint
+* the relengapi DB is managed by the relengapi project, but other blueprints
+  can define other revisions with their own base (e.g., to add minor tables)
+  and can depend on specific revisions of the core DB (assuming proper
+  notation in setup.py)
+* relengapi createdb will create all DB tables from the model, then stamp
+  every alembic config it can find with 'head'
+* other migrations are performed with the 'alembic' command directly
+
+To Do
+* use MetaData(naming_convention=..)
+* set up env.py to make an app context (mostly done?)
+* set up autogen?
+* use `with op.batch_alter_table("some_table") as batch_op`
+* validate.sh should make sure there's only one head
+* validate.sh should do a complete upgrade, compare(?) to model, and downgrade
+
+Look Into
+* symbolic names for relengapi revisions, tagged to dist versions?
+* alembic init --template multidb?
+* Need to figure out how to do a full upgrade in tests and compare that to the
+  model from createdb
