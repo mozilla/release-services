@@ -8,9 +8,11 @@ from flask import Blueprint
 from flask import render_template
 from flask import request
 from flask import g
+import flask_login
 from werkzeug.exceptions import BadRequest
 from relengapi import apimethod
 from relengapi import db
+from relengapi import p
 from relengapi.util import tz
 from .slave_mappings import slave_patterns
 
@@ -23,13 +25,7 @@ bp = Blueprint('slaveloan', __name__,
                static_folder='static')
 
 _tbl_prefix = 'slaveloan_'
-
-
-def get_current_loans(admin=True):
-    session = g.db.session('relengapi')
-    g.current_loaners = session.query(Loans)
-    return
-
+p.slaveloan.admin.doc("Administer Slaveloans for all users")
 
 @bp.route('/machine/classes')
 @apimethod()
@@ -46,17 +42,19 @@ def get_loans():
 
 
 @bp.route('/')
+@flask_login.login_required
 def root():
     return render_template('slaveloan_root.html')
 
 
 @bp.route('/admin/')
+@p.slaveloan.admin.require()
 def admin():
-    get_current_loans(True)
     return render_template('slaveloan_admin.html')
 
 
 @bp.route('/admin/', methods=['POST'])
+@p.slaveloan.admin.require()
 @apimethod()
 def new_loan_from_admin():
     if 'status' not in request.json:
