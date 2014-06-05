@@ -66,10 +66,14 @@ _gpo_needed = [
 
 
 def slave_patterns():
-    ret = []
+    vals = []
+    ret = {}
     for key, values in _slave_type.items():
         for regex in values:
-            ret += [regex.pattern[1:-2] + "*"]
+            vals += [regex.pattern[1:] + "*"]
+        vals.sort()
+        ret[key] = vals
+        vals = []
     return ret
 
 

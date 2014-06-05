@@ -57,16 +57,21 @@ class Loans(db.declarative_base('relengapi')):
                          nullable=False)
     machine_id = sa.Column(sa.Integer,
                            sa.ForeignKey(_tbl_prefix + 'machines.id'),
-                           nullable=False)
+                           nullable=True)
     history = relationship("History", backref="for_loan")
     # Backrefs
     # # human   (Humans)
     # # machine (Machines)
 
     def to_json(self):
-        return dict(id=self.id, status=self.status,
-                    human=self.human.to_json(),
-                    machine=self.machine.to_json())
+        if self.machine:
+            return dict(id=self.id, status=self.status,
+                        human=self.human.to_json(),
+                        machine=self.machine.to_json())
+        else:
+            return dict(id=self.id, status=self.status,
+                        human=self.human.to_json(),
+                        machine=None)
 
 
 class History(db.declarative_base('relengapi')):

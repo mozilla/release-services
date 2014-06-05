@@ -41,7 +41,7 @@ def get_machine_classes():
 @apimethod()
 def get_loans():
     session = g.db.session('relengapi')
-    loans = session.query(Loans)
+    loans = session.query(Loans).filter(Loans.machine != None)
     return [l.to_json() for l in loans.all()]
 
 
