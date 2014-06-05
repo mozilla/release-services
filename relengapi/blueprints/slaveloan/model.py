@@ -83,7 +83,6 @@ class History(db.declarative_base('relengapi')):
     timestamp = sa.Column(db.UTCDateTime(timezone=True),
                           default=tz.utcnow,
                           nullable=False)
-    status = sa.Column(sa.String(50), nullable=False)
     msg = sa.Column(sa.String(255), nullable=False)
     # Backrefs
     # # for_loan  (Loans)
@@ -91,4 +90,4 @@ class History(db.declarative_base('relengapi')):
     def to_json(self):
         return dict(id=self.id, loan_id=self.loan_id,
                     timestamp=self.timestamp.isoformat(),
-                    status=self.status, msg=self.msg)
+                    msg=self.msg)

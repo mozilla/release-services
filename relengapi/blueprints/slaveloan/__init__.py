@@ -27,6 +27,7 @@ bp = Blueprint('slaveloan', __name__,
 _tbl_prefix = 'slaveloan_'
 p.slaveloan.admin.doc("Administer Slaveloans for all users")
 
+
 @bp.route('/machine/classes')
 @apimethod()
 def get_machine_classes():
@@ -37,7 +38,7 @@ def get_machine_classes():
 @apimethod()
 def get_loans():
     session = g.db.session('relengapi')
-    loans = session.query(Loans).filter(Loans.machine != None)
+    loans = session.query(Loans).filter(Loans.machine is not None)
     return [l.to_json() for l in loans.all()]
 
 
@@ -48,6 +49,7 @@ def root():
 
 
 @bp.route('/admin/')
+@flask_login.login_required
 @p.slaveloan.admin.require()
 def admin():
     return render_template('slaveloan_admin.html')
@@ -59,25 +61,36 @@ def admin():
 def new_loan_from_admin():
     if 'status' not in request.json:
         raise BadRequest("Missing Status Field")
-    if 'fqdn' not in request.json:
-        raise BadRequest("Missing Machine FQDN")
-    if 'ipaddr' not in request.json:
-        raise BadRequest("Missing Machine IP Address")
     if 'LDAP' not in request.json:
         raise BadRequest("Missing LDAP E-Mail")
     if 'bugzilla' not in request.json:
         raise BadRequest("Missing Bugzilla E-Mail")
+    if request.json['status'] is not 'PENDING':
+        if 'fqdn' not in request.json:
+            raise BadRequest("Missing Machine FQDN")
+        if 'ipaddr' not in request.json:
+            raise BadRequest("Missing Machine IP Address")
 
     session = g.db.session('relengapi')
-    m = Machines.as_unique(session,
-                           fqdn=request.json['fqdn'],
-                           ipaddr=request.json['ipaddr'])
-    h = Humans.as_unique(session,
-                         ldap=request.json['LDAP'],
-                         bugzilla=request.json['bugzilla'])
-    l = Loans(status=request.json['status'],
-              human=h,
-              machine=m)
+    try:
+        if request.json['status'] is not 'PENDING':
+            m = Machines.as_unique(session,
+                                   fqdn=request.json['fqdn'],
+                                   ipaddr=request.json['ipaddr'])
+        h = Humans.as_unique(session,
+                             ldap=request.json['LDAP'],
+                             bugzilla=request.json['bugzilla'])
+    except sa.exc.IntegrityError:
+        raise BadRequest("Integrity Error from Database, please retry.")
+
+    if request.json['status'] is not 'PENDING':
+        l = Loans(status=request.json['status'],
+                  human=h,
+                  machine=m)
+    else:
+        l = Loans(status=request.json['status'],
+                  human=h,
+                  machine=m)
     history = History(for_loan=l,
                       timestamp=tz.utcnow(),
                       status=request.json['status'],
