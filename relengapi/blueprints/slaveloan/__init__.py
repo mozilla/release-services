@@ -17,7 +17,7 @@ from relengapi.util import tz
 from relengapi.blueprints.slaveloan.slave_mappings import slave_patterns
 from relengapi.blueprints.slaveloan import tasks
 
-from .model import Machines, Humans, Loans, History
+from relengapi.blueprints.slaveloan.model import Machines, Humans, Loans, History
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,15 @@ def get_machine_classes():
 @apimethod()
 def get_loans():
     session = g.db.session('relengapi')
-    loans = session.query(Loans).filter(Loans.machine is not None)
+    loans = session.query(Loans).filter(Loans.machine_id.isnot(None))
+    return [l.to_json() for l in loans.all()]
+
+
+@bp.route('/loans/all')
+@apimethod()
+def get_all_loans():
+    session = g.db.session('relengapi')
+    loans = session.query(Loans)
     return [l.to_json() for l in loans.all()]
 
 
@@ -66,7 +74,7 @@ def new_loan_from_admin():
         raise BadRequest("Missing LDAP E-Mail")
     if 'bugzilla' not in request.json:
         raise BadRequest("Missing Bugzilla E-Mail")
-    if request.json['status'] is not 'PENDING':
+    if request.json['status'] != 'PENDING':
         if 'fqdn' not in request.json:
             raise BadRequest("Missing Machine FQDN")
         if 'ipaddr' not in request.json:
@@ -74,7 +82,7 @@ def new_loan_from_admin():
 
     session = g.db.session('relengapi')
     try:
-        if request.json['status'] is not 'PENDING':
+        if request.json['status'] != 'PENDING':
             m = Machines.as_unique(session,
                                    fqdn=request.json['fqdn'],
                                    ipaddr=request.json['ipaddr'])
@@ -84,26 +92,25 @@ def new_loan_from_admin():
     except sa.exc.IntegrityError:
         raise BadRequest("Integrity Error from Database, please retry.")
 
-    if request.json['status'] is not 'PENDING':
+    if request.json['status'] != 'PENDING':
         l = Loans(status=request.json['status'],
                   human=h,
                   machine=m)
     else:
         l = Loans(status=request.json['status'],
-                  human=h,
-                  machine=m)
+                  human=h)
     history = History(for_loan=l,
                       timestamp=tz.utcnow(),
-                      status=request.json['status'],
-                      msg="Adding to slave loan tool via admin interface")
+                      msg="Adding to slave loan tool via admin interface "
+                          "with status: %s" % request.json['status'])
     session.add(l)
     session.add(h)
     session.commit()
-    tasks.init_loan.delay("bld-lion-r5")
+#    tasks.init_loan.delay(l.id, "bld-lion-r5")
     return {'loan': l.to_json()}
 
 
 @bp.route('/tmp/')
 def init_loan():
-    tasks.init_loan.delay("t-snow-r4")
+    tasks.init_loan.delay(18, "t-snow-r4")
     return render_template('slaveloan_admin.html')

@@ -56,13 +56,15 @@ $(function() {
             bad('Provide a Bugzilla username');
             return;
         }
-        if (!form_fqdn) {
-            bad('Provide a FQDN');
-            return;
-        }
-        if (!form_ipaddr) {
-            bad('Provide an IP Address');
-            return;
+        if (form_status != "PENDING"){
+            if (!form_fqdn) {
+                bad('Provide a FQDN');
+                return;
+            }
+            if (!form_ipaddr) {
+                bad('Provide an IP Address');
+                return;
+            }
         }
 
         var result = $.ajax({

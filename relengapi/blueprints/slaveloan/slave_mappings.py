@@ -101,10 +101,10 @@ def needs_gpo(slave):
     return False
 
 
-def filter_slaves(slave_class):
-    def _inner_filter_slaves(item):
+def slave_filter(slave_class):
+    def _inner_slave_filter(item):
         for i in _slave_type[slave_class]:
-            if i.match(item):
+            if i.match(item["name"]):
                 return True
         return False  # If we got here, no match
-    return _inner_filter_slaves
+    return _inner_slave_filter

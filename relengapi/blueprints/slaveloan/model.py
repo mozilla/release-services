@@ -64,7 +64,7 @@ class Loans(db.declarative_base('relengapi')):
     # # machine (Machines)
 
     def to_json(self):
-        if self.machine:
+        if self.machine_id:
             return dict(id=self.id, status=self.status,
                         human=self.human.to_json(),
                         machine=self.machine.to_json())
