@@ -18,16 +18,16 @@ from flask import request
 from flask import jsonify
 from flask import Response
 
-from relengapi import actions
+from relengapi import p
 
 logger = logging.getLogger(__name__)
 # logging.basicConfig(level=logging.DEBUG)
 bp = Blueprint('mapper', __name__)
 
-actions.mapper.mapping.insert.doc("Allows new hg-git mappings to be inserted "
-                                  "into mapper db (hashes table)")
-actions.mapper.project.insert.doc("Allows new projects to be inserted into "
-                                  "mapper db (projects table)")
+p.mapper.mapping.insert.doc("Allows new hg-git mappings to be inserted "
+                            "into mapper db (hashes table)")
+p.mapper.project.insert.doc("Allows new projects to be inserted into "
+                            "mapper db (projects table)")
 
 # TODO: replace abort with a custom exception
 # - http://flask.pocoo.org/docs/patterns/apierrors/
@@ -43,7 +43,8 @@ class Hash(db.declarative_base('mapper')):
     __tablename__ = 'hashes'
     hg_changeset = sa.Column(sa.String(40), nullable=False)
     git_commit = sa.Column(sa.String(40), nullable=False)
-    project_id = sa.Column(sa.Integer, sa.ForeignKey('projects.id'), nullable=False)
+    project_id = sa.Column(
+        sa.Integer, sa.ForeignKey('projects.id'), nullable=False)
     project = orm.relationship(Project, primaryjoin=(project_id == Project.id))
     # project = orm.relationship(Project, backref=orm.backref('hashes', order_by=id))
     date_added = sa.Column(sa.Integer, nullable=False)
@@ -63,12 +64,15 @@ class Hash(db.declarative_base('mapper')):
         # TODO: this index is a prefix of others and will never be used
         sa.Index('project_id', 'project_id'),
         sa.Index('project_id__date_added', 'project_id', 'date_added'),
-        sa.Index('project_id__hg_changeset', 'project_id', 'hg_changeset', unique=True),
-        sa.Index('project_id__git_commit', 'project_id', 'git_commit', unique=True),
+        sa.Index('project_id__hg_changeset', 'project_id',
+                 'hg_changeset', unique=True),
+        sa.Index(
+            'project_id__git_commit', 'project_id', 'git_commit', unique=True),
     )
 
     __mapper_args__ = {
-        # tell the SQLAlchemy ORM about one of the unique indexes; it doesn't matter which
+        # tell the SQLAlchemy ORM about one of the unique indexes; it doesn't
+        # matter which
         'primary_key': [project_id, hg_changeset],
     }
 
@@ -100,7 +104,8 @@ def _build_mapfile(query):
           40 characters hg changeset sha, a newline; or
         * None if the query returns no results
     """
-    contents = '\n'.join('%s %s' % (r.git_commit, r.hg_changeset) for r in query)
+    contents = '\n'.join('%s %s' % (r.git_commit, r.hg_changeset)
+                         for r in query)
     if contents:
         return Response(contents + '\n', mimetype='text/plain')
 
@@ -135,7 +140,8 @@ def _get_project(session, project):
     try:
         return Project.query.filter_by(name=project).one()
     except MultipleResultsFound:
-        abort(404, "Multiple projects with name %s found in database" % project)
+        abort(404, "Multiple projects with name %s found in database" %
+              project)
     except NoResultFound:
         abort(404, "Could not find project %s in database" % project)
 
@@ -169,9 +175,11 @@ def get_rev(projects, vcs_type, commit):
     _check_well_formed_sha(vcs_type, commit, exact_length=None)
     q = Hash.query.join(Project).filter(_project_filter(projects))
     if vcs_type == "git":
-        q = q.filter("git_commit like :cspatttern").params(cspatttern=commit+"%")
+        q = q.filter("git_commit like :cspatttern").params(
+            cspatttern=commit + "%")
     elif vcs_type == "hg":
-        q = q.filter("hg_changeset like :cspatttern").params(cspatttern=commit+"%")
+        q = q.filter("hg_changeset like :cspatttern").params(
+            cspatttern=commit + "%")
     try:
         row = q.one()
         return "%s %s" % (row.git_commit, row.hg_changeset)
@@ -263,7 +271,8 @@ def _insert_many(project, ignore_dups=False):
         HTTP 409: if ignore_dups=False and there were duplicate entries
     """
     if request.content_type != 'text/plain':
-        abort(400, "HTTP request header 'Content-Type' must be set to 'text/plain'")
+        abort(
+            400, "HTTP request header 'Content-Type' must be set to 'text/plain'")
     session = g.db.session('mapper')
     proj = _get_project(session, project)
     for line in request.stream.readlines():
@@ -271,7 +280,8 @@ def _insert_many(project, ignore_dups=False):
         try:
             (git_commit, hg_changeset) = line.split(' ')
         except ValueError:
-            logger.error("Received input line: '%s' for project %s", line, project)
+            logger.error(
+                "Received input line: '%s' for project %s", line, project)
             logger.error("Was expecting an input line such as "
                          "'686a558fad7954d8481cfd6714cdd56b491d2988 "
                          "fef90029cb654ad9848337e262078e403baf0c7a'")
@@ -297,7 +307,7 @@ def _insert_many(project, ignore_dups=False):
 
 
 @bp.route('/<project>/insert', methods=('POST',))
-@actions.mapper.mapping.insert.require()
+@p.mapper.mapping.insert.require()
 def insert_many_no_dups(project):
     """Insert many git-hg mapping entries via POST, and error on duplicate SHAs.
 
@@ -317,7 +327,7 @@ def insert_many_no_dups(project):
 
 
 @bp.route('/<project>/insert/ignoredups', methods=('POST',))
-@actions.mapper.mapping.insert.require()
+@p.mapper.mapping.insert.require()
 def insert_many_ignore_dups(project):
     """Insert many git-hg mapping entries via POST, allowing duplicate SHAs.
 
@@ -336,7 +346,7 @@ def insert_many_ignore_dups(project):
 
 
 @bp.route('/<project>/insert/<git_commit>/<hg_changeset>', methods=('POST',))
-@actions.mapper.mapping.insert.require()
+@p.mapper.mapping.insert.require()
 def insert_one(project, git_commit, hg_changeset):
     """Insert a single git-hg mapping.
 
@@ -379,7 +389,7 @@ def insert_one(project, git_commit, hg_changeset):
 
 
 @bp.route('/<project>', methods=('POST',))
-@actions.mapper.project.insert.require()
+@p.mapper.project.insert.require()
 def add_project(project):
     """Insert a new project into the database.
 
@@ -399,5 +409,6 @@ def add_project(project):
     try:
         session.commit()
     except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-        abort(409, "Project %s could not be inserted into the database" % project)
+        abort(409, "Project %s could not be inserted into the database" %
+              project)
     return jsonify()
