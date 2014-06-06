@@ -13,6 +13,7 @@ setup(
     url='',
     install_requires=[
         "Flask",
+        "furl",
         "relengapi",
     ],
     extras_require = {

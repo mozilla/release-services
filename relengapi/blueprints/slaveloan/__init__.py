@@ -14,7 +14,8 @@ from relengapi import apimethod
 from relengapi import db
 from relengapi import p
 from relengapi.util import tz
-from .slave_mappings import slave_patterns
+from relengapi.blueprints.slaveloan.slave_mappings import slave_patterns
+from relengapi.blueprints.slaveloan import tasks
 
 from .model import Machines, Humans, Loans, History
 
@@ -98,4 +99,11 @@ def new_loan_from_admin():
     session.add(l)
     session.add(h)
     session.commit()
+    tasks.init_loan.delay("bld-lion-r5")
     return {'loan': l.to_json()}
+
+
+@bp.route('/tmp/')
+def init_loan():
+    tasks.init_loan.delay("t-snow-r4")
+    return render_template('slaveloan_admin.html')

@@ -78,6 +78,8 @@ def slave_patterns():
 
 
 def slave_to_slavetype(slave):
+    if slave in _slave_type.keys():
+        return slave
     for key, values in _slave_type.items():
         for regex in values:
             if regex.match(slave):
@@ -97,3 +99,12 @@ def needs_gpo(slave):
     if slaveclass in _gpo_needed:
         return True
     return False
+
+
+def filter_slaves(slave_class):
+    def _inner_filter_slaves(item):
+        for i in _slave_type[slave_class]:
+            if i.match(item):
+                return True
+        return False  # If we got here, no match
+    return _inner_filter_slaves
