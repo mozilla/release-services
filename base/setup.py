@@ -77,7 +77,7 @@ setup(
         ],
         "relengapi.perms.mechanisms": [
             'static = relengapi.lib.auth.static_authz:init_app',
-            'ldap-groups = relengapi.lib.auth.ldap_groups_authz:init_app',
+            'ldap-groups = relengapi.lib.auth.ldap_group_authz:init_app',
         ],
         "console_scripts": [
             'relengapi = relengapi.subcommands:main',

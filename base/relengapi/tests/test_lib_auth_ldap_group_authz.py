@@ -13,8 +13,8 @@ from relengapi import p
 from relengapi.lib import auth
 from relengapi.lib.auth import ldap_group_authz
 
-p.test_ldap_groups.foo.doc("Foo")
-p.test_ldap_groups.bar.doc("Bar")
+p.test_lga.foo.doc("Foo")
+p.test_lga.bar.doc("Bar")
 
 URI = 'ldap://localhost/'
 CONFIG = {
@@ -26,9 +26,9 @@ CONFIG = {
         'group_base': 'o=groups',
         'debug': True,
         'group-permissions': {
-            'group1': ['test_ldap_groups.foo'],
-            'group2': ['test_ldap_groups.foo', 'test_ldap_groups.bar'],
-            'group3': ['test_ldap_groups.bar'],
+            'group1': ['test_lga.foo'],
+            'group2': ['test_lga.foo', 'test_lga.bar'],
+            'group3': ['test_lga.bar'],
         },
     },
 }
@@ -141,7 +141,7 @@ def test_on_permissions_stale_groups_unique(app):
     lg.get_user_groups = lambda mail: ['group1', 'group2']
     lg.on_permissions_stale('sender', user, permissions)
     eq_(permissions, set(
-        [p.test_ldap_groups.foo, p.test_ldap_groups.bar]))
+        [p.test_lga.foo, p.test_lga.bar]))
 
 
 @test_context
@@ -151,4 +151,4 @@ def test_on_permissions_stale_groups_unknown_groups(app):
     lg = ldap_group_authz.LdapGroups(app)
     lg.get_user_groups = lambda mail: ['group3', 'nosuch']
     lg.on_permissions_stale('sender', user, permissions)
-    eq_(permissions, set([p.test_ldap_groups.bar]))
+    eq_(permissions, set([p.test_lga.bar]))
