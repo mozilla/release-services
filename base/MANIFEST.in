@@ -1,9 +1,8 @@
 # NOTE: these files must *also* be specified in setup.py
-recursive-include relengapi/docs *.rst
+include docs/conf.py
+recursive-include docs *.rst
+recursive-include docs/_static *
 recursive-include relengapi *.html *.jpg *.css *.js *.txt
-recursive-include relengapi/blueprints/docs/base *.rst
-recursive-include relengapi/blueprints/docs/base/_static *
-include relengapi/blueprints/docs/base/conf.py
 include LICENSE.txt
 include README.md
 prune docs_build_dir
