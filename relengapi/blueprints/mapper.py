@@ -179,8 +179,8 @@ def _add_hash(session, git_commit, hg_changeset, project):
     Exceptions:
         HTTP 400: Malformed SHA
     """
-    _check_well_formed_sha('git', git_commit)  # can return http 400
-    _check_well_formed_sha('hg', hg_changeset)  # can return http 400
+    _check_well_formed_sha('git', git_commit)  # can raise http 400
+    _check_well_formed_sha('hg', hg_changeset)  # can raise http 400
     h = Hash(git_commit=git_commit, hg_changeset=hg_changeset, project=project,
              date_added=time.time())
     session.add(h)
@@ -204,7 +204,7 @@ def get_rev(projects, vcs_type, commit):
         HTTP 404: No corresponding SHA found
         HTTP 500: Multiple corresponding SHAs found
     """
-    _check_well_formed_sha(vcs_type, commit, exact_length=None)  # can return http 400
+    _check_well_formed_sha(vcs_type, commit, exact_length=None)  # can raise http 400
     q = Hash.query.join(Project).filter(_project_filter(projects))
     if vcs_type == "git":
         q = q.filter("git_commit like :cspatttern").params(
@@ -310,7 +310,7 @@ def _insert_many(project, ignore_dups=False):
         abort(
             400, "HTTP request header 'Content-Type' must be set to 'text/plain'")
     session = g.db.session('mapper')
-    proj = _get_project(session, project)  # can return HTTP 404 or HTTP 500
+    proj = _get_project(session, project)  # can raise HTTP 404 or HTTP 500
     for line in request.stream.readlines():
         line = line.rstrip()
         try:
@@ -327,7 +327,7 @@ def _insert_many(project, ignore_dups=False):
                   % (line, project))
             # header/footer won't match this format
             continue
-        _add_hash(session, git_commit, hg_changeset, proj)  # can return HTTP 400
+        _add_hash(session, git_commit, hg_changeset, proj)  # can raise HTTP 400
         if ignore_dups:
             try:
                 session.commit()
@@ -363,7 +363,7 @@ def insert_many_no_dups(project):
         HTTP 409: Duplicate mappings found
         HTTP 500: Multiple matching projects found with same name
     """
-    return _insert_many(project, ignore_dups=False)  # can return HTTP 400, 404, 409, 500
+    return _insert_many(project, ignore_dups=False)  # can raise HTTP 400, 404, 409, 500
 
 
 @bp.route('/<project>/insert/ignoredups', methods=('POST',))
@@ -385,7 +385,7 @@ def insert_many_ignore_dups(project):
         HTTP 404: Project not found
         HTTP 500: Multiple matching projects found with same name
     """
-    return _insert_many(project, ignore_dups=True)  # can return HTTP 400, 404, 500
+    return _insert_many(project, ignore_dups=True)  # can raise HTTP 400, 404, 500
 
 
 @bp.route('/<project>/insert/<git_commit>/<hg_changeset>', methods=('POST',))
@@ -415,8 +415,8 @@ def insert_one(project, git_commit, hg_changeset):
         HTTP 500: Multiple matching projects found with same name
     """
     session = g.db.session('mapper')
-    proj = _get_project(session, project)  # can return HTTP 404 or HTTP 500
-    _add_hash(session, git_commit, hg_changeset, proj)  # can return HTTP 400
+    proj = _get_project(session, project)  # can raise HTTP 404 or HTTP 500
+    _add_hash(session, git_commit, hg_changeset, proj)  # can raise HTTP 400
     try:
         session.commit()
         q = Hash.query.join(Project).filter(_project_filter(project))
