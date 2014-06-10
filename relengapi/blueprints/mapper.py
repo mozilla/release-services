@@ -6,10 +6,10 @@ import logging
 import re
 import time
 import calendar
-import sqlalchemy as sa
+import SQLAlchemy as sa
 import dateutil.parser
-from sqlalchemy import orm
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from SQLAlchemy import orm
+from SQLAlchemy.orm.exc import NoResultFound, MultipleResultsFound
 from relengapi import db
 from flask import Blueprint
 from flask import g
@@ -84,12 +84,12 @@ class Hash(db.declarative_base('mapper')):
 
 
 def _project_filter(projects_arg):
-    """Helper method that returns the sqlalchemy filter expression for the
+    """Helper method that returns the SQLAlchemy filter expression for the
     project name(s) specified. This can be a comma-separated list, which is
     the way we combine queries across multiple projects.
 
     Args:
-        projects_arg: a comma-separated list of project names
+        projects_arg: Comma-separated list of project names
 
     Returns:
         A SQLAlchemy filter expression
@@ -101,14 +101,14 @@ def _project_filter(projects_arg):
 
 
 def _build_mapfile(query):
-    """Helper method to build a map file from a sqlalchemy query.
+    """Helper method to build a map file from a SQLAlchemy query.
     Args:
-        query: the sqlalchemy query
+        query: SQLAlchemy query
 
     Returns:
         * Text output: 40 characters git commit SHA, a space,
           40 characters hg changeset SHA, a newline; or
-        * None if the query returns no results
+        * None: if the query returns no results
     """
     contents = '\n'.join('%s %s' % (r.git_commit, r.hg_changeset)
                          for r in query)
@@ -119,16 +119,16 @@ def _build_mapfile(query):
 def _check_well_formed_sha(vcs, sha, exact_length=40):
     """Helper method to check for a well-formed SHA.
     Args:
-        vcs: the name of the vcs system ('hg' or 'git')
-        sha: string to check against the well-formed SHA regex
-        exact_length: number of characters SHA should be, or
+        vcs: Name of the vcs system ('hg' or 'git')
+        sha: String to check against the well-formed SHA regex
+        exact_length: Number of characters SHA should be, or
                       None if exact length is not required
 
     Returns:
         None
 
     Exceptions:
-        HTTP 400: on malformed SHA or unknown vcs
+        HTTP 400: Malformed SHA or unknown vcs
     """
     if vcs not in ("git", "hg"):
         abort(400, "Unknown vcs type %s" % vcs)
@@ -148,8 +148,8 @@ def _get_project(session, project):
     """Helper method to return Project class for a project with the given name.
 
     Args:
-        session: the SQLAlchemy ORM Session object
-        project: the name of the project (e.g. 'build-tools')
+        session: SQLAlchemy ORM Session object
+        project: Name of the project (e.g. 'build-tools')
 
     Returns:
         the corresponding python Project object
@@ -171,13 +171,13 @@ def _add_hash(session, git_commit, hg_changeset, project):
     """Helper method to add a git-hg mapping into the current SQLAlchemy ORM session.
 
     Args:
-        session: the SQLAlchemy ORM Session object
-        git_commit: a string of the 40 character SHA of the git commit
-        hg_changeset: a string of the 40 character SHA of the hg changeset
-        project: a string of the name of the project (e.g. 'build-tools')
+        session: SQLAlchemy ORM Session object
+        git_commit: String of the 40 character SHA of the git commit
+        hg_changeset: String of the 40 character SHA of the hg changeset
+        project: String of the name of the project (e.g. 'build-tools')
 
     Exceptions:
-        HTTP 400: on malformed SHA
+        HTTP 400: Malformed SHA
     """
     _check_well_formed_sha('git', git_commit)  # can return http 400
     _check_well_formed_sha('hg', hg_changeset)  # can return http 400
@@ -191,18 +191,18 @@ def get_rev(projects, vcs_type, commit):
     """Return the hg changeset SHA for a git commit id, or vice versa.
 
     Args:
-        projects: comma-delimited project names(s) string
-        vcs: the string 'hg' or 'git' to categorize the commit you are passing
+        projects: Comma-delimited project names(s) string
+        vcs: String 'hg' or 'git' to categorize the commit you are passing
               (not the type you wish to receive back)
-        commit: revision or partial revision string of SHA to be converted
+        commit: Revision or partial revision string of SHA to be converted
 
     Returns:
         (git_commit hg_changeset\n)
 
     Exceptions:
-        HTTP 400: if an unknown vcs or a badly formed SHA
-        HTTP 404: if no corresponding SHA found
-        HTTP 500: if multiple corresponding SHAs found
+        HTTP 400: Unknown vcs or malformed SHA
+        HTTP 404: No corresponding SHA found
+        HTTP 500: Multiple corresponding SHAs found
     """
     _check_well_formed_sha(vcs_type, commit, exact_length=None)  # can return http 400
     q = Hash.query.join(Project).filter(_project_filter(projects))
@@ -233,7 +233,7 @@ def get_full_mapfile(projects):
     """Get a map file containing mappings for one or more projects.
 
     Args:
-        projects: comma-delimited project names(s) string
+        projects: Comma-delimited project names(s) string
 
     Returns:
         A map file containing all SHA mappings for the specified project(s) as
@@ -256,8 +256,8 @@ def get_mapfile_since(projects, since):
     """Get a map file since date.
 
     Args:
-        projects: comma-delimited project names(s) string
-        since: a timestamp, in a format parsed by [dateutil.parser.parse]
+        projects: Comma-delimited project names(s) string
+        since: Timestamp, in a format parsed by [dateutil.parser.parse]
             (https://labix.org/python-dateutil)
             evaluated based on the time the record was inserted into mapper
             database, not the time of commit and not the time of conversion.
@@ -292,19 +292,19 @@ def _insert_many(project, ignore_dups=False):
     """Update the database with many git-hg mappings.
 
     Args:
-        project: single project name string
-        ignore_dups: boolean.  If False, abort on duplicate entries without inserting
+        project: Single project name string
+        ignore_dups: Boolean; if False, abort on duplicate entries without inserting
         anything
 
     Returns:
         An empty json response body
 
     Exceptions:
-        HTTP 400: if the request content-type is not 'text/plain'
-        HTTP 400: if a SHA is malformed
-        HTTP 404: project not found
-        HTTP 409: if ignore_dups=False and there were duplicate entries
-        HTTP 500: multiple matching projects found with same name
+        HTTP 400: Request content-type is not 'text/plain'
+        HTTP 400: Malformed SHA
+        HTTP 404: Project not found
+        HTTP 409: ignore_dups=False and there are duplicate entries
+        HTTP 500: Multiple projects found with matching project name
     """
     if request.content_type != 'text/plain':
         abort(
@@ -349,19 +349,19 @@ def insert_many_no_dups(project):
     """Insert many git-hg mapping entries via POST, and error on duplicate SHAs.
 
     Args:
-        project: single project name string
-        POST data: map file lines (git_commit hg_changeset\n)
+        project: Single project name string
+        POST data: Map file lines (git_commit hg_changeset\n)
         Content-Type: text/plain
 
     Returns:
         An empty json response body
 
     Exceptions:
-        HTTP 400: if the request content-type is not 'text/plain'
-        HTTP 400: if a SHA is malformed
-        HTTP 404: project not found
-        HTTP 409: if there were duplicate entries
-        HTTP 500: multiple matching projects found with same name
+        HTTP 400: Request content-type is not 'text/plain'
+        HTTP 400: Malformed SHA
+        HTTP 404: Project not found
+        HTTP 409: Duplicate mappings found
+        HTTP 500: Multiple matching projects found with same name
     """
     return _insert_many(project, ignore_dups=False)  # can return HTTP 400, 404, 409, 500
 
@@ -372,18 +372,18 @@ def insert_many_ignore_dups(project):
     """Insert many git-hg mapping entries via POST, allowing duplicate SHAs.
 
     Args:
-        project: single project name string
-        POST data: map file lines (git_commit hg_changeset\n)
+        project: Single project name string
+        POST data: Map file lines (git_commit hg_changeset\n)
         Content-Type: text/plain
 
     Returns:
         An empty json response body
 
     Exceptions:
-        HTTP 400: if the request content-type is not 'text/plain'
-        HTTP 400: if a SHA is malformed
-        HTTP 404: project not found
-        HTTP 500: multiple matching projects found with same name
+        HTTP 400: Request content-type is not 'text/plain'
+        HTTP 400: Malformed SHA
+        HTTP 404: Project not found
+        HTTP 500: Multiple matching projects found with same name
     """
     return _insert_many(project, ignore_dups=True)  # can return HTTP 400, 404, 500
 
@@ -394,7 +394,7 @@ def insert_one(project, git_commit, hg_changeset):
     """Insert a single git-hg mapping.
 
     Args:
-        project: single project name string
+        project: Single project name string
         git_commit: 40 char hexadecimal string
         hg_changeset: 40 char hexadecimal string
 
@@ -408,10 +408,9 @@ def insert_one(project, git_commit, hg_changeset):
         }
 
     Exceptions:
-        HTTP 400: if a SHA is malformed
+        HTTP 400: Malformed SHA
         HTTP 404: Project not found in database
         HTTP 409: Mapping already exists for this project
-        HTTP 400: Badly formed SHA
         HTTP 500: Problem inserting new mapping into database
         HTTP 500: Multiple matching projects found with same name
     """
@@ -440,13 +439,13 @@ def add_project(project):
     """Insert a new project into the database.
 
     Args:
-        project: single project name string
+        project: Single project name string
 
     Returns:
         An empty json response body
 
     Exceptions:
-        HTTP 409 if the project already exists
+        HTTP 409: Project already exists
     """
 
     session = g.db.session('mapper')
