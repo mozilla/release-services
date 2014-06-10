@@ -6,10 +6,10 @@ import logging
 import re
 import time
 import calendar
-import SQLAlchemy as sa
+import sqlalchemy as sa
 import dateutil.parser
-from SQLAlchemy import orm
-from SQLAlchemy.orm.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy import orm
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from relengapi import db
 from flask import Blueprint
 from flask import g
