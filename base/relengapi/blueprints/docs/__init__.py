@@ -90,22 +90,47 @@ class BuildDocsSubcommand(subcommands.Subcommand):
         parser = subparsers.add_parser('build-docs',
                                        help='make a built version of the '
                                             'sphinx documentation')
-        parser.add_argument("--debug", action='store_true',
-                            help="Show debug logging")
+        parser.add_argument("--development", '-d', action='store_true',
+                            help="""Build docs in development mode.  Use this if the
+                                 relengapi packages are installed with `setup.py
+                                 develop` or `pip install -e`""")
         return parser
 
-    def run(self, parser, args):
-        if not args.debug:
-            logger.setLevel(logging.INFO)
+    def copy_docs(self, src_root, dst_root):
+        logger.info("Copying documentation from {!r} to {!r}".format(src_root, dst_root))
+        for src, dirs, files in os.walk(src_root):
+            dst = src.replace(src_root, dst_root)
+            if not os.path.isdir(dst):
+                os.makedirs(dst)
+            for f in files:
+                shutil.copyfile(os.path.join(src, f), os.path.join(dst, f))
 
+    def run(self, parser, args):
         # always start with a fresh build dir
         builddir = get_builddir()
         if os.path.exists(builddir):
             shutil.rmtree(builddir)
         os.makedirs(builddir)
 
-        # now that the source is accumulated, build it; force get_support
-        # to create a fresh WebSupport object since it creates some directories
-        # in its constructor, which may have been called before the builddir
-        # was erased.
-        get_support(force=True).build()
+        # force get_support to create a fresh WebSupport object since it
+        # creates some directories in its constructor, which may have been
+        # called before the builddir was erased.
+        support = get_support(force=True)
+
+        # if we're in development mode, go find and merge all of the `docs`
+        # directories from any distribution with a relengapi blueprint into the
+        # srcdir.  This is the same operation that 'setup.py install' would do,
+        # but that doesn't happen automatically on 'setup.py develop'.
+        if args.development:
+            entry_points = pkg_resources.iter_entry_points('relengapi_blueprints')
+            dists = sorted(set(ep.dist for ep in entry_points))
+            for dist in dists:
+                if not os.path.isdir(dist.location):
+                    continue
+                docs_dir = os.path.join(dist.location, 'docs')
+                if not os.path.isdir(docs_dir):
+                    continue
+                self.copy_docs(docs_dir, support.srcdir)
+
+        # actually build the docs
+        support.build()
