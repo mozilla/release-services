@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from relengapi import subcommands
-from relengapi import celery
 from flask import Blueprint
 from flask import current_app
 import logging
@@ -64,20 +63,3 @@ class RunTestsSubcommand(subcommands.Subcommand):
         import nose
         sys.argv = [sys.argv[0]] + args.nose_args
         nose.main()
-
-# testing stuff
-
-# these are temporary routes used to test functionality that's not yet used for
-# "real" work
-
-
-@celery.task
-def add(x, y, z):
-    return x + y + z
-
-
-@bp.route('/temp/test-celery')
-def test_celery():
-    """Test out a celery task"""
-    answer = add.delay(1, 2, 3).get()
-    return "1 + 2 + 3, according to the remote celery node, is %d" % answer

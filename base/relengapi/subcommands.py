@@ -31,7 +31,7 @@ class Subcommand(object):
         pass
 
 
-def main():
+def main(args=None):
     parser = argparse.ArgumentParser(
         description="Releng API Command Line Tool")
     subparsers = parser.add_subparsers(help='sub-command help')
@@ -46,7 +46,7 @@ def main():
         subparser = subcommand.make_parser(subparsers)
         subparser.set_defaults(_subcommand=subcommand)
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     if args._subcommand and args._subcommand.want_logging:
         setupConsoleLogging()

@@ -12,6 +12,7 @@ env:
 # command to install dependencies
 install:
   - "pip install -e base[test]"
+  - "pip install coverage"
   - "pip freeze"
 
 # run everything in a single script, so we get a nice summary at the end

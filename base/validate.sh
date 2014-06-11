@@ -3,9 +3,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+COVERAGE_MIN=90
+
 set -e
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 source ./validate-common.sh
+
+tmpbase=$(mktemp -d)
+trap 'rm -f ${tmpbase}; exit 1' 1 2 3 15
 
 status "running pep8"
 pep8 --config=pep8rc relengapi || not_ok "pep8 failed"
@@ -16,11 +21,15 @@ pylint relengapi --rcfile=pylintrc || not_ok "pylint failed"
 status "building docs"
 relengapi build-docs || not_ok "build-docs failed"
 
-status "running tests"
-relengapi run-tests || not_ok "tests failed"
+status "running tests (under coverage)"
+coverage erase || not_ok "coverage failed"
+coverage run --rcfile=coveragerc --source=relengapi $(which relengapi) run-tests || not_ok "tests failed"
 
-tmpbase=$(mktemp -d)
-trap 'rm -f ${tmpbase}; exit 1' 1 2 3 15
+status "checking coverage"
+coverage report --rcfile=coveragerc --fail-under=${COVERAGE_MIN} >${tmpbase}/covreport || not_ok "less than ${COVERAGE_MIN}% coverage"
+coverage html --rcfile=coveragerc -d .coverage-html
+head -n2 ${tmpbase}/covreport
+tail -n1 ${tmpbase}/covreport
 
 # get the version
 version=`python -c 'import pkg_resources; print pkg_resources.require("'relengapi'")[0].version'`
@@ -36,6 +45,7 @@ git_only='
     .travis.yml
     pep8rc
     pylintrc
+    coveragerc
     validate.sh
     validate-common.sh
     src
@@ -74,11 +84,13 @@ status "getting file list from install"
 grep / ${tmpbase}/git-files | grep -Ev '^relengapi/(blueprints/|)__init__\.py$' > ${tmpbase}/git-expected-installed
 
 # start comparing!
-cd ${tmpbase}
-status "comparing git and sdist"
-diff -u git-files sdist-files || not_ok "sdist files differ from files in git"
-status "comparing git and install"
-diff -u git-expected-installed install-files || not_ok "installed files differ from files in git"
+(
+    cd ${tmpbase}
+    status "comparing git and sdist"
+    diff -u git-files sdist-files || not_ok "sdist files differ from files in git"
+    status "comparing git and install"
+    diff -u git-expected-installed install-files || not_ok "installed files differ from files in git"
+)
 
 show_results
 

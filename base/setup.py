@@ -38,6 +38,7 @@ setup(
         'test': [
             'nose',
             'mock',
+            'coverage',
             'pep8',
             # see
             # https://bitbucket.org/logilab/pylint/issue/203/importing-namespace-packages-crashes
