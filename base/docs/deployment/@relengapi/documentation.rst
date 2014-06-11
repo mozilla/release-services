@@ -1,7 +1,7 @@
 Documentation
 =============
 
-The Releng API documentation is contained in the relengapi-docs package.
+The Releng API documentation is built in!
 
 Narrative Documentation
 -----------------------
