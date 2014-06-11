@@ -14,7 +14,7 @@ status "running pylint"
 pylint relengapi --rcfile=pylintrc || not_ok "pylint failed"
 
 status "building docs"
-relengapi build-docs || not_ok "build-docs failed"
+relengapi build-docs --development || not_ok "build-docs failed"
 
 status "running tests"
 relengapi run-tests || not_ok "tests failed"
