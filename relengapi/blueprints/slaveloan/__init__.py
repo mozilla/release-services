@@ -101,8 +101,7 @@ def new_loan_from_admin():
                   human=h)
     history = History(for_loan=l,
                       timestamp=tz.utcnow(),
-                      msg="Adding to slave loan tool via admin interface "
-                          "with status: %s" % request.json['status'])
+                      msg="Adding to slave loan tool via admin interface")
     session.add(l)
     session.add(h)
     session.commit()
