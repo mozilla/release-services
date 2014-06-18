@@ -4,7 +4,7 @@
 
 import wrapt
 from flask import abort
-from flask.ext.login import current_user
+from flask.ext.login import current_user, login_required
 
 
 class Permission(tuple):
@@ -70,6 +70,7 @@ class Permissions(Permission):
                     "Cannot require undocumented permission %s" % perm)
 
         @wrapt.decorator
+        @login_required
         def req(wrapped, instance, args, kwargs):
             if not can(*permissions):
                 abort(403)
