@@ -52,6 +52,9 @@ disable=
   too-many-arguments,
   arguments-differ,
   abstract-class-little-used,
+  no-member,
+  too-many-branches,
+  too-many-locals,
 
 [REPORTS]
 

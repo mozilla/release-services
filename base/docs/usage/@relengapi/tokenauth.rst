@@ -24,3 +24,10 @@ The selected permissions for the token must be a subset of those permissions the
 
 Tokens can be issued, revoked, looked up by string, and so on using API calls.
 See the API documentation for details.
+
+API
+---
+
+.. api:autoendpoint:: tokenauth.*
+
+    These API calls can be used to manipulate tokens, given sufficient permissions.

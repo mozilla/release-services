@@ -8,20 +8,48 @@ This support includes a fixed JSON format for API responses.
 The response is always an object, and for a success (2xx) response, has a ``result`` key containing the result.
 For error responses, an ``error`` key contains information about the error.
 
+Types
+-----
+
+A REST API implements *Representative State Transfer*, meaning that it involves transferring representations of entities back and forth.
+Those entities have a type which describes their contents.
+
+Releng API makes use of WSME_'s type model.
+Simple, atomic types like ``unicode`` and ``int`` are described with their Python types.
+Compound types are defined by subclassing ``wsme.types.Base``::
+
+    class Widget(wsme.types.Base):
+
+        id = integer
+        price = integer
+        stock_code = unicode
+
+See the WSME_ documentation for more detail.
+
 Decorator
 ---------
 
-First, all API view methods should be wrapped with :py:func:`~relengapi.lib.api.apimethod`, which is available in the ``relengapi`` namespace::
+All API view methods should be wrapped with :py:func:`~relengapi.lib.api.apimethod`, which is available in the ``relengapi`` namespace::
 
     from relengapi import apimethod
     ...
-    @bp.route('/widgets')
-    @apimethod()
-    def get_widgets():
-        widgets = ...
-        return widgets
+    @bp.route('/widget/<int:widget_id>')
+    @apimethod(Widget, int)
+    def get_widget(widget_id):
+        "Get a widget, identified by id"
+        widget = ...
+        return widget
 
-The view function simply returns its results (or None, if there are no interesting results).
+The ``@apimethod`` decorator takes the same arguments as WSME's @\ signature_ decorator.
+In short, this means the return type of the method followed by the argument types.
+Arguments may be included in the URL, if specified in the route.
+Otherwise, they are assumed to be query arguments (after ``?`` in the URL).
+
+The view function docstring is copied into the generated endpoint documentation.
+Any paragraph-level reStructured Text is valid.
+
+The view function should return its results (or None, if there are no interesting results) as a Python object of the appropriate type.
+In the example above, ``widget`` should be an instance of the ``Widget`` class defined above.
 The decorator will take care of converting this to JSON, including HTML framing for display in a browser.
 
 To return a success code other than 200 or include headers, simply return a tuple like from a regular View Function. ::
@@ -30,9 +58,10 @@ To return a success code other than 200 or include headers, simply return a tupl
     # or
     return new_widget, 201, {'X-Widget-Id': new_widget.id}
 
-..py:function:: relengapi.lib.api.apimethod()
+.. py:function:: relengapi.lib.api.apimethod(*args, **kwargs)
 
     Returns a decorator for API methods as described above.
+    The arguments are those for WSME's @\ signature_ decorator.
 
 Exceptions
 ----------
@@ -45,3 +74,34 @@ However, when the request does not specify ``text/html``, the exception is encod
 HTTP Errors again have the appropriate status code, while other exceptions are treated as 500 ISE's.
 The ``error`` key of the returned JSON contains keys ``code``, ``name``, and ``description``.
 When debugging is enabled, the exception information also contains a ``traceback`` key.
+
+Documentation
+-------------
+
+Documentation for API endpoints is generated based on the information in the source code.
+Insert the generated documentation at the appropriate place using the ``api:autoendpoint`` directive, which takes a list of patterns matching Flask enpoint names.
+
+For example, if the ``get_widget`` view function, above, is part of the ``widgets`` blueprint, then its documentation file would reference it as
+
+.. code-block:: none
+
+    .. api:autoendpoint:: widgets.get_widget
+
+The directive takes a list of glob patterns, so documenting all endpoints in a blueprint is as easy as
+
+.. code-block:: none
+
+    .. api:autoendpoint:: widgets.*
+
+Or, if you prefer to control the order:
+
+.. code-block:: none
+
+    .. api:autoendpoint::
+        widgets.list_widgets
+        widgets.new_widget
+        widgets.update_widget
+        widgets.delete_widget
+
+.. _WSME: http://wsme.readthedocs.org/
+.. _signature: http://wsme.readthedocs.org/en/latest/api.html#wsme.signature
