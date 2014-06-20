@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import mock
 import os
 import shutil
 from nose.tools import eq_
@@ -24,7 +25,10 @@ def app_setup(app):
     if hasattr(app, 'docs_websupport'):
         del app.docs_websupport
     with app.app_context():
-        docs.build(quiet=True)
+        args = mock.Mock()
+        args.quiet = True
+        args.development = True
+        docs.BuildDocsSubcommand().run(mock.Mock, args)
 
 test_context = TestContext(app_setup=app_setup, reuse_app=True)
 

@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import sys
 import shutil
 import StringIO
 from relengapi import subcommands
@@ -23,7 +24,7 @@ bp = Blueprint('docs', __name__,
 bp.root_widget_template('docs_root_widget.html', priority=100)
 
 
-def get_basebuilddir():
+def get_builddir():
     if 'DOCS_BUILD_DIR' in current_app.config:
         return current_app.config['DOCS_BUILD_DIR']
     relengapi_dist = pkg_resources.working_set.find(
@@ -33,11 +34,11 @@ def get_basebuilddir():
         'docs_build_dir')
 
 
-def get_support(quiet=False):
-    if not hasattr(current_app, 'docs_websupport'):
-        basebuilddir = get_basebuilddir()
-        srcdir = os.path.join(basebuilddir, 'src')
-        builddir = os.path.join(basebuilddir, 'result')
+def get_support(force=False, quiet=False):
+    if not hasattr(current_app, 'docs_websupport') or force:
+        builddir = get_builddir()
+        # this is where files installed by setup.py's data_files go..
+        srcdir = os.path.join(sys.prefix, 'relengapi-docs')
         kwargs = {}
         if quiet:
             kwargs['status'] = StringIO.StringIO()
@@ -78,96 +79,55 @@ def static(path):
     return send_from_directory(support.staticdir, path)
 
 
-def copy_resources(req, src, dest):
-    """
-    Copy resources recursively from ``src``, relative to the setuptools
-    Requirement ``req``, to the actual filesystem directory ``dest``.
-    This uses the resource-access API, and as such is compatible with zip
-    distributions.
-    """
-    src = src.rstrip('/')
-    if not pkg_resources.resource_exists(req, src):
-        return
-    if pkg_resources.resource_isdir(req, src):
-        if not os.path.exists(dest):
-            os.makedirs(dest)
-        for f in pkg_resources.resource_listdir(req, src):
-            copy_resources(req, '{0}/{1}'.format(src, f),
-                                os.path.join(dest, f))
-    else:
-        logger.debug("copying %s::%s to %r", req, src, dest)
-        shutil.copyfileobj(pkg_resources.resource_stream(req, src),
-                           open(dest, "wb"))
-
-
-def copy_base_doc_tree(destdir):
-    req = pkg_resources.Requirement.parse('relengapi')
-    req = pkg_resources.working_set.find(req).as_requirement()
-    logger.info("Copying base doc tree from %s", req)
-    copy_resources(req, 'relengapi/blueprints/docs/base', destdir)
-
-
-def merge_doc_tree(req, destdir):
-    dist = pkg_resources.working_set.find(req)
-    if not pkg_resources.resource_isdir(req, 'relengapi/docs'):
-        return
-    logger.info("Merging doc tree from %s", req)
-
-    # merging works like this:
-    #  $dist/relengapi/docs/$tld/ -> $destdir/$tld/$distname/
-    # where $tld is a top-level directory (e.g., 'deployment').
-
-    for f in pkg_resources.resource_listdir(req, 'relengapi/docs'):
-        srcpath = 'relengapi/docs/{}'.format(f)
-        if not pkg_resources.resource_isdir(req, srcpath):
-            logger.warning(
-                "%s:%r is not a directory; ignored", req, srcpath)
-            continue
-        if not os.path.isdir(os.path.join(destdir, f)):
-            logger.warning("%s:%r does not corespond to a top-level directory "
-                           "in the base doc tree; ignored", req, srcpath)
-            continue
-        # sort relengapi's docs above other projects
-        dist_name = dist.key if dist.key != 'relengapi' else '@relengapi'
-        destpath = os.path.join(destdir, f, dist_name)
-        copy_resources(req, srcpath, destpath)
-
-
-def build(quiet=False):
-    # the build process is two-part: first, copy all of the build trees
-    # from all installed blueprints into a single tree under basebuilddir/src,
-    # then point the WebSupport instance at that directory and build it.
-    basebuilddir = get_basebuilddir()
-    srcdir = os.path.join(basebuilddir, 'src')
-    if os.path.exists(srcdir):
-        shutil.rmtree(srcdir)
-
-    # build the framework
-    copy_base_doc_tree(srcdir)
-
-    # now enumerate the other distributions providing relengapi blueprints
-    entry_points = pkg_resources.iter_entry_points('relengapi_blueprints')
-    dists = sorted(set(ep.dist for ep in entry_points))
-    for dist in dists:
-        merge_doc_tree(dist.as_requirement(), srcdir)
-
-    # now that the source is accumulated, build it
-    get_support(quiet=quiet).build()
-
-
 class BuildDocsSubcommand(subcommands.Subcommand):
 
     def make_parser(self, subparsers):
         parser = subparsers.add_parser('build-docs',
                                        help='make a built version of the '
                                             'sphinx documentation')
-        parser.add_argument("--debug", action='store_true',
-                            help="Show debug logging")
         parser.add_argument("--quiet", action='store_true',
                             help="Quiet output")
+        parser.add_argument("--development", '-d', action='store_true',
+                            help="""Build docs in development mode.  Use this if the
+                                 relengapi packages are installed with `setup.py
+                                 develop` or `pip install -e`""")
         return parser
 
+    def copy_docs(self, src_root, dst_root):
+        logger.info("Copying documentation from {!r} to {!r}".format(src_root, dst_root))
+        for src, dirs, files in os.walk(src_root):
+            dst = src.replace(src_root, dst_root)
+            if not os.path.isdir(dst):
+                os.makedirs(dst)
+            for f in files:
+                shutil.copyfile(os.path.join(src, f), os.path.join(dst, f))
+
     def run(self, parser, args):
-        if not args.debug:
-            logger.setLevel(logging.INFO)
-        build(quiet=args.quiet)
+        # always start with a fresh build dir
+        builddir = get_builddir()
+        if os.path.exists(builddir):
+            shutil.rmtree(builddir)
+        os.makedirs(builddir)
+
+        # force get_support to create a fresh WebSupport object since it
+        # creates some directories in its constructor, which may have been
+        # called before the builddir was erased.
+        support = get_support(force=True, quiet=args.quiet)
+
+        # if we're in development mode, go find and merge all of the `docs`
+        # directories from any distribution with a relengapi blueprint into the
+        # srcdir.  This is the same operation that 'setup.py install' would do,
+        # but that doesn't happen automatically on 'setup.py develop'.
+        if args.development:
+            entry_points = pkg_resources.iter_entry_points('relengapi_blueprints')
+            dists = sorted(set(ep.dist for ep in entry_points))
+            for dist in dists:
+                if not os.path.isdir(dist.location):
+                    continue
+                docs_dir = os.path.join(dist.location, 'docs')
+                if not os.path.isdir(docs_dir):
+                    continue
+                self.copy_docs(docs_dir, support.srcdir)
+
+        # actually build the docs
+        support.build()

@@ -19,7 +19,7 @@ status "running pylint"
 pylint relengapi --rcfile=pylintrc || not_ok "pylint failed"
 
 status "building docs"
-relengapi build-docs || not_ok "build-docs failed"
+relengapi build-docs --development || not_ok "build-docs failed"
 
 status "running tests (under coverage)"
 coverage erase || not_ok "coverage failed"
@@ -74,9 +74,13 @@ status "getting file list from install"
     tar -zxf ${tarball}
     cd `basename ${tarball%.tar.gz}`
     python setup.py -q install --root $tmpbase/root --record=installed.txt
-    # get everything installed under site-packages, and trim up to and including site-packages/ on each line,
-    # excluding .pyc files, and including the two namespaced packages
-    grep 'site-packages/relengapi/' installed.txt | grep -v '\.pyc$' | sed -e 's!.*/site-packages/!!' | sort > ${tmpbase}/install-files
+    (
+        # get everything installed under site-packages, and trim up to and including site-packages/ on each line,
+        # excluding .pyc files, and including the two namespaced packages
+        grep 'site-packages/relengapi/' installed.txt | grep -v '\.pyc$' | sed -e 's!.*/site-packages/!!'
+        # get all installed $prefix/relengapi-docs
+        grep '/relengapi-docs/' installed.txt | sed -e 's!.*/relengapi-docs/!docs/!'
+    ) | sort > ${tmpbase}/install-files
 )
 
 # and calculate the list of git files that we expect to see installed:
