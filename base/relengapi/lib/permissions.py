@@ -4,7 +4,9 @@
 
 import wrapt
 from flask import abort
-from flask.ext.login import current_user, login_required
+from flask import current_app
+from flask.ext.login import current_user
+from relengapi import util
 
 
 class Permission(tuple):
@@ -70,10 +72,13 @@ class Permissions(Permission):
                     "Cannot require undocumented permission %s" % perm)
 
         @wrapt.decorator
-        @login_required
         def req(wrapped, instance, args, kwargs):
             if not can(*permissions):
-                abort(403)
+                # redirect browsers, but just return 403 to REST clients
+                if util.is_browser():
+                    return current_app.login_manager.unauthorized()
+                else:
+                    abort(403)
             return wrapped(*args, **kwargs)
         return req
 

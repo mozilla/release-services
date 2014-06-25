@@ -4,8 +4,12 @@
 
 import mock
 import werkzeug.exceptions
+from flask.ext.login import current_user
+from flask.ext.login import login_user
 from nose.tools import eq_, ok_, assert_raises
 from relengapi.lib import permissions
+from relengapi.testing import TestContext
+from relengapi.lib import auth
 
 
 def test_Permission_tuple_equivalence():
@@ -40,36 +44,67 @@ def test_Permission_undoc_KeyError():
     assert_raises(KeyError, lambda: perms['a.b.never_mentioned'])
 
 
-@mock.patch('relengapi.lib.permissions.current_user')
-def test_require_can(current_user):
+class TestUser(auth.BaseUser):
+
+    anonymous = False
+    name = 'test'
+    permissions = set()
+    authenticated_email = 'test'
+
+    def get_id(self):
+        return 'test'
+
+
+@TestContext()
+def test_require_can(app):
     "Test the `.require` method and function"
     perms = permissions.Permissions()
     perms.test.writer.doc("Test writer")
     perms.test.reader.doc("Test reader")
     perms.test.deleter.doc("Test deleter")
 
-    current_user.permissions = set([perms.test.writer, perms.test.reader])
+    with app.test_request_context():
+        login_user(TestUser())
+        current_user.permissions = set([perms.test.writer, perms.test.reader])
 
-    @permissions.require(perms.test.writer, perms.test.reader)
-    def func():
-        return "ok"
-    eq_(func(), "ok")
+        @permissions.require(perms.test.writer, perms.test.reader)
+        def func():
+            return "ok"
+        eq_(func(), "ok")
 
-    @perms.test.writer.require()
-    def meth():
-        return "ok"
-    eq_(meth(), "ok")
+        @perms.test.writer.require()
+        def meth():
+            return "ok"
+        eq_(meth(), "ok")
 
-    @permissions.require(perms.test.writer, perms.test.deleter)
-    def bad_func():
-        return "ok"
-    assert_raises(werkzeug.exceptions.Forbidden, bad_func)
+        with mock.patch('relengapi.util.is_browser') as is_browser:
+            # without a browser, failing requirements means 403
+            is_browser.return_value = False
 
-    @perms.test.deleter.require()
-    def bad_meth():
-        return "ok"
-    assert_raises(werkzeug.exceptions.Forbidden, bad_meth)
+            @permissions.require(perms.test.writer, perms.test.deleter)
+            def bad_func_rest():
+                return "ok"
+            assert_raises(werkzeug.exceptions.Forbidden, bad_func_rest)
 
-    # empty are invalid
-    assert_raises(AssertionError, permissions.require)
-    assert_raises(AssertionError, permissions.can)
+            @perms.test.deleter.require()
+            def bad_meth_rest():
+                return "ok"
+            assert_raises(werkzeug.exceptions.Forbidden, bad_meth_rest)
+
+            # with a browser, they return 302's
+            is_browser.return_value = True
+
+            # pylint: disable=no-member
+            @permissions.require(perms.test.writer, perms.test.deleter)
+            def bad_func_browser():
+                return "ok"
+            eq_(bad_func_browser().status_code, 302)
+
+            @perms.test.deleter.require()
+            def bad_meth_browser():
+                return "ok"
+            eq_(bad_meth_browser().status_code, 302)
+
+        # empty are invalid
+        assert_raises(AssertionError, permissions.require)
+        assert_raises(AssertionError, permissions.can)

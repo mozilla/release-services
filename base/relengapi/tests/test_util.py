@@ -10,6 +10,7 @@ from mock import patch
 from nose.tools import eq_, assert_raises
 from relengapi import util
 from relengapi.util import tz
+from relengapi.testing import TestContext
 
 
 class TestSynchronized(object):
@@ -59,6 +60,22 @@ class TestSynchronized(object):
 
         thd1.join()
         thd2.join()
+
+
+@TestContext()
+def test_is_browser(app):
+    for is_browser, headers in [
+        (True, [('Accept', 'text/html')]),
+        (False, [('Accept', 'application/json')]),
+        (False, []),
+        (True, [('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8')]),
+        # It'd be simpler if these were True, but it doesn't really matter -- they're static
+        (False, [('Accept', 'text/css,*/*;q=0.1')]),
+        (False, [('Accept', 'image/png,image/*;q=0.8,*/*;q=0.5')]),
+    ]:
+        with app.test_request_context(headers=headers):
+            eq_(util.is_browser(), is_browser,
+                "%s should %sbe a browser" % (headers, '' if is_browser else 'not '))
 
 
 NOW = datetime.datetime(2014, 6, 15, 7, 15, 29, 612709)
