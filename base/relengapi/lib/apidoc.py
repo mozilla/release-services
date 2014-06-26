@@ -6,6 +6,8 @@ from docutils.statemachine import ViewList
 from flask import current_app
 from sphinx.domains import Domain
 from sphinx import addnodes
+from sphinx.domains.python import PyClasslike, PyClassmember
+from sphinx.pycode import ModuleAnalyzer
 from sphinx.util.compat import Directive
 from sphinx.util.docfields import Field
 import docutils.nodes
@@ -17,6 +19,75 @@ import wsme.api
 import wsme.rest.args
 import wsme.rest.json
 import wsme.types
+
+
+# modified, from
+# https://github.com/stackforge/wsme/blob/master/wsmeext/sphinxext.py
+def datatypename(datatype):
+    if isinstance(datatype, wsme.types.UserType):
+        return datatype.name
+    if isinstance(datatype, wsme.types.DictType):
+        return 'dict(%s: %s)' % (datatypename(datatype.key_type),
+                                 datatypename(datatype.value_type))
+    if isinstance(datatype, wsme.types.ArrayType):
+        return 'list(%s)' % datatypename(datatype.item_type)
+    if hasattr(datatype, '_name'):
+        return datatype._name
+    return datatype.__name__
+
+
+# from PEP-0257
+def trim_docstring(docstring):
+    if not docstring:
+        return ''
+    # Convert tabs to spaces (following the normal Python rules)
+    # and split into a list of lines:
+    lines = docstring.expandtabs().splitlines()
+    # Determine minimum indentation (first line doesn't count):
+    indent = sys.maxint
+    for line in lines[1:]:
+        stripped = line.lstrip()
+        if stripped:
+            indent = min(indent, len(line) - len(stripped))
+    # Remove indentation (first line is special):
+    trimmed = [lines[0].strip()]
+    if indent < sys.maxint:
+        for line in lines[1:]:
+            trimmed.append(line[indent:].rstrip())
+    # Strip off trailing and leading blank lines:
+    while trimmed and not trimmed[-1]:
+        trimmed.pop()
+    while trimmed and not trimmed[0]:
+        trimmed.pop(0)
+    # Return a single string:
+    return '\n'.join(trimmed)
+
+
+# adapted from wsme
+class TypeDirective(PyClasslike):
+
+    def get_index_text(self, modname, name_cls):
+        return '%s (REST API type)' % name_cls[0]
+
+    def add_target_and_index(self, name_cls, sig, signode):
+        ret = super(TypeDirective, self).add_target_and_index(
+            name_cls, sig, signode
+        )
+        name = name_cls[0]
+        types = self.env.domaindata['api']['types']
+        if name in types:
+            self.state_machine.reporter.warning(
+                'duplicate type description of %s ' % name)
+        types[name] = self.env.docname
+        return ret
+
+
+# adapted from wsme
+class AttributeDirective(PyClassmember):
+    doc_field_types = [
+        Field('datatype', label='Type', has_arg=False,
+              names=('type', 'datatype'))
+    ]
 
 
 class EndpointDirective(Directive):
@@ -59,48 +130,6 @@ class EndpointDirective(Directive):
         self.state.nested_parse(self.content, self.content_offset, contentnode)
         node.append(contentnode)
         return [node]
-
-
-# from PEP-0257
-def trim_docstring(docstring):
-    if not docstring:
-        return ''
-    # Convert tabs to spaces (following the normal Python rules)
-    # and split into a list of lines:
-    lines = docstring.expandtabs().splitlines()
-    # Determine minimum indentation (first line doesn't count):
-    indent = sys.maxint
-    for line in lines[1:]:
-        stripped = line.lstrip()
-        if stripped:
-            indent = min(indent, len(line) - len(stripped))
-    # Remove indentation (first line is special):
-    trimmed = [lines[0].strip()]
-    if indent < sys.maxint:
-        for line in lines[1:]:
-            trimmed.append(line[indent:].rstrip())
-    # Strip off trailing and leading blank lines:
-    while trimmed and not trimmed[-1]:
-        trimmed.pop()
-    while trimmed and not trimmed[0]:
-        trimmed.pop(0)
-    # Return a single string:
-    return '\n'.join(trimmed)
-
-
-# modified, from
-# https://github.com/stackforge/wsme/blob/master/wsmeext/sphinxext.py
-def datatypename(datatype):
-    if isinstance(datatype, wsme.types.UserType):
-        return datatype.name
-    if isinstance(datatype, wsme.types.DictType):
-        return 'dict(%s: %s)' % (datatypename(datatype.key_type),
-                                 datatypename(datatype.value_type))
-    if isinstance(datatype, wsme.types.ArrayType):
-        return 'list(%s)' % datatypename(datatype.item_type)
-    if hasattr(datatype, '_name'):
-        return datatype._name
-    return datatype.__name__
 
 
 class AutoEndpointDirective(Directive):
@@ -183,10 +212,68 @@ class AutoEndpointDirective(Directive):
         self.state.nested_parse(content, 0, node)
         return node.children
 
+
+class AutoTypeDirective(Directive):
+
+    has_content = True
+    required_arguments = 1
+    optional_arguments = sys.maxint
+    final_argument_whitespace = False
+    option_spec = {}
+
+    def get_type_by_name(self, name):
+        for ct in wsme.types.registry.complex_types:
+            if datatypename(ct) == name:
+                return ct
+        raise self.error("no type named %r" % (name,))
+
+    def get_attr_docs(self, ty):
+        analyzer = ModuleAnalyzer.for_module(ty.__module__)
+        module_attrs = analyzer.find_attr_docs(scope=ty.__name__)
+        return {k[1]: v[0] for k, v in module_attrs.iteritems()}
+
+    def run(self):
+        src = '<autotype>'
+
+        node = docutils.nodes.paragraph()
+        node.document = self.state.document
+        if self.content:
+            self.state.nested_parse(self.content, 0, node)
+
+        content = ViewList()
+
+        for arg in self.arguments:
+            ty = self.get_type_by_name(arg)
+
+            content.append(u'.. api:type:: %s' % arg, src)
+            content.append(u'', src)
+
+            if ty.__doc__:
+                for l in trim_docstring(ty.__doc__).split('\n'):
+                    content.append(u'    ' + l, src)
+                content.append(u'    ', src)
+
+            attr_docs = self.get_attr_docs(ty)
+            attrs = wsme.types.list_attributes(ty)
+            wsme.types.sort_attributes(ty, attrs)
+            for attr in attrs:
+                content.append(u'    .. api:attribute:: %s' %
+                               (attr.name,), src)
+                content.append(u'', src)
+                content.append(u'        :type: %s' %
+                               datatypename(attr.datatype), src)
+                content.append(u'', src)
+                if attr.name in attr_docs:
+                    for l in attr_docs[attr.name].split('\n'):
+                        content.append(u'        ' + l, src)
+
+        self.state.nested_parse(content, 0, node)
+        return node.children
+
 # TODO: document permissions
 # TODO: document types
 # TODO: xrefs
-# TODO: catch undocumented apimethods in tests
+# TODO: catch undocumented apimethods, types in tests
 
 
 class ApiDomain(Domain):
@@ -194,14 +281,18 @@ class ApiDomain(Domain):
     label = 'API'
 
     directives = {
+        'type': TypeDirective,
+        'attribute': AttributeDirective,
         'endpoint': EndpointDirective,
         'autoendpoint': AutoEndpointDirective,
+        'autotype': AutoTypeDirective,
     }
 
     roles = {
     }
 
     initial_data = {
+        'types': {},
     }
 
 

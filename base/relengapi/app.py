@@ -44,20 +44,32 @@ def get_blueprints():
 
 
 class BlueprintInfo(wsme.types.Base):
+    "Information about an installed Blueprint"
 
+    #: Python distribution containing this blueprint
     distribution = unicode
+
+    #: Version of the blueprint (really, of its distribution)
     version = unicode
 
 
 class DistributionInfo(wsme.types.Base):
+    "Information about an installed Python distribution"
 
+    #: Name of the distribution
     project_name = unicode
+
+    #: Version of the distribution
     version = unicode
 
 
 class VersionInfo(wsme.types.Base):
+    "Information about installed software versions"
 
+    #: All installed Python distributions
     distributions = {unicode: DistributionInfo}
+
+    #: All installed blueprints
     blueprints = {unicode: BlueprintInfo}
 
 

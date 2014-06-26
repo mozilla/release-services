@@ -28,6 +28,14 @@ See the API documentation for details.
 API
 ---
 
+Types
+.....
+
+.. api:autotype:: Token
+
+Endpoints
+.........
+
 .. api:autoendpoint:: tokenauth.*
 
     These API calls can be used to manipulate tokens, given sufficient permissions.

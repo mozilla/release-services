@@ -78,6 +78,9 @@ When debugging is enabled, the exception information also contains a ``traceback
 Documentation
 -------------
 
+Endpoints
+.........
+
 Documentation for API endpoints is generated based on the information in the source code.
 Insert the generated documentation at the appropriate place using the ``api:autoendpoint`` directive, which takes a list of patterns matching Flask enpoint names.
 
@@ -102,6 +105,19 @@ Or, if you prefer to control the order:
         widgets.new_widget
         widgets.update_widget
         widgets.delete_widget
+
+Types
+.....
+
+REST API Types are similar: the content of the documentation comes from the source code, but the positioning is controlled by the ``.rst`` file.
+
+To document a type or types, use ``api:autotype::``, like this:
+
+.. code-block:: none
+
+    .. api:autotype:: VersionInfo BlueprintInfo
+
+This will document the types in the order they are given.
 
 .. _WSME: http://wsme.readthedocs.org/
 .. _signature: http://wsme.readthedocs.org/en/latest/api.html#wsme.signature
