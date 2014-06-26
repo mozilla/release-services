@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import importlib
 import wrapt
+from flask import request
 
 
 def synchronized(lock):
@@ -12,3 +12,12 @@ def synchronized(lock):
         with lock:
             return wrapper(*args, **kwargs)
     return wrap
+
+
+_mime_types = ('application/json', 'text/html')
+
+
+def is_browser():
+    """Is the current request from a browser?"""
+    best_match = request.accept_mimetypes.best_match(_mime_types)
+    return best_match == 'text/html'

@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
+import mock
 from nose.tools import eq_
 from flask import Response
 from relengapi.lib import api
@@ -41,15 +42,13 @@ test_context = testing.TestContext(app_setup=app_setup, reuse_app=True)
 
 
 def test_get_handler():
-    @test_context
-    def t(app, accept, expected):
-        with app.test_request_context(headers=[('Accept', accept)]):
-            eq_(str(api._get_handler().media_type), expected)
+    @mock.patch('relengapi.util.is_browser')
+    def t(util_is_browser, is_browser, expected):
+        util_is_browser.return_value = is_browser
+        eq_(str(api._get_handler().media_type), expected)
 
-    yield lambda: t(accept='text/plain', expected='application/json')
-    yield lambda: t(accept='*/*', expected='application/json')
-    yield lambda: t(accept='text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    expected='text/html')
+    yield lambda: t(is_browser=True, expected='text/html')
+    yield lambda: t(is_browser=False, expected='application/json')
 
 
 @test_context

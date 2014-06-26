@@ -9,6 +9,7 @@ from flask import jsonify
 from flask import render_template
 from flask import request
 from flask import current_app
+from relengapi import util
 from werkzeug.exceptions import HTTPException
 import wrapt
 
@@ -79,13 +80,9 @@ class HtmlHandler(Handler):
             raise exc_type, exc_value, exc_tb
 
 
-_handlers = {c.media_type: c() for c in [JsonHandler, HtmlHandler]}
-
-
 def _get_handler():
     """Get an appropriate handler based on the request"""
-    best = request.accept_mimetypes.best_match(_handlers.keys())
-    return _handlers.get(best, _handlers['application/json'])
+    return HtmlHandler() if util.is_browser() else JsonHandler()
 
 
 def init_app(app):

@@ -19,6 +19,7 @@ class TestContext(object):
         'db_teardown',
         'config',
         'user',
+        'accept',
     ])
 
     def __init__(self, **options):
