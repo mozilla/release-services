@@ -14,6 +14,7 @@ from sphinx.util.docfields import Field
 from sphinx.util.docfields import TypedField
 from sphinx.util.docfields import GroupedField
 from sphinx.util.nodes import make_refnode
+from sphinx.util import console
 import docutils.nodes
 import fnmatch
 import re
@@ -25,8 +26,14 @@ import wsme.rest.json
 import wsme.types
 
 
+def typename(datatype):
+    if hasattr(datatype, '_name'):
+        return datatype._name
+    else:
+        return datatype.__name__
+
+
 def typereference(datatype):
-    reference = None
     if isinstance(datatype, wsme.types.UserType):
         return datatype.name
     elif isinstance(datatype, wsme.types.DictType):
@@ -37,11 +44,7 @@ def typereference(datatype):
     elif isinstance(datatype, wsme.types.ArrayType):
         return '[%s]' % typereference(datatype.item_type)
     elif wsme.types.iscomplex(datatype):
-        if hasattr(datatype, '_name'):
-            reference = datatype._name
-        else:
-            reference = datatype.__name__
-        return ':api:type:`%s`' % (reference,)
+        return ':api:type:`%s`' % (typename(datatype),)
     else:
         return datatype.__name__
 
@@ -100,6 +103,10 @@ class TypeDirective(ObjectDescription):
         # record the target for later cross-referencing
         targets = self.env.domaindata['api']['targets'].setdefault('type', {})
         targets[self.type_name] = self.env.docname, targetname
+
+        # record that we've documented the type
+        self.env.domaindata['api']['types'].add(self.type_name)
+
         # add a target node at the beginning of the result
         signode.insert(0, docutils.nodes.target('', '', ids=[targetname]))
 
@@ -144,6 +151,9 @@ class EndpointDirective(ObjectDescription):
         domaindata = self.state.document.settings.env.domaindata
         targets = domaindata['api']['targets'].setdefault('endpoint', {})
         targets[self.endpoint_name] = self.state.document.settings.env.docname, targetname
+
+        # record that we've documented the type
+        self.env.domaindata['api']['endpoints'].add(self.endpoint_name)
 
         # add a target node at the beginning of the result
         target_node = docutils.nodes.target('', '', ids=[targetname])
@@ -290,7 +300,6 @@ class AutoTypeDirective(Directive):
         return node.children
 
 # TODO: document permissions
-# TODO: catch undocumented apimethods, types in tests
 
 
 class ApiDomain(Domain):
@@ -310,7 +319,8 @@ class ApiDomain(Domain):
     }
 
     initial_data = {
-        'types': {},
+        'types': set(),
+        'endpoints': set(),
         'targets': {},
     }
 
@@ -326,6 +336,33 @@ class ApiDomain(Domain):
                             contnode, target)
 
 
-# initialize the Sphinx app
+def verify_everything_documented(app, exception):
+    if exception:
+        return
+
+    bad = False
+    app.info(console.white("checking that all REST API types are included in the documentation"))
+    documented_types = app.env.domaindata['api']['types']
+    for ty in wsme.types.Base.__subclasses__():
+        if not ty.__module__.startswith('relengapi.'):
+            continue
+        tyname = typename(ty)
+        if tyname not in documented_types:
+            app.warn(console.red("Type '%s' is not documented" % (tyname,)))
+            bad = True
+
+    app.info(console.white("checking that all API endpoints are included in the documentation"))
+    all_endpoints = set(ep for ep, func in current_app.view_functions.items()
+                        if hasattr(func, '__apidoc__'))
+    documented_endpoints = app.env.domaindata['api']['endpoints']
+    for undoc in all_endpoints - documented_endpoints:
+        app.warn(console.red("Endpoint '%s' is not documented" % (undoc,)))
+        bad = True
+
+    if bad:
+        raise RuntimeError("missing API documentation")
+
+
 def setup(app):
     app.add_domain(ApiDomain)
+    app.connect('build-finished', verify_everything_documented)
