@@ -299,8 +299,6 @@ class AutoTypeDirective(Directive):
         self.state.nested_parse(content, 0, node)
         return node.children
 
-# TODO: document permissions
-
 
 class ApiDomain(Domain):
     name = 'api'
