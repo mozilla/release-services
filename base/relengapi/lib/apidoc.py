@@ -5,13 +5,14 @@
 from docutils.statemachine import ViewList
 from flask import current_app
 from sphinx.domains import Domain
-from sphinx.domains.python import PyClasslike, PyClassmember
 from sphinx import addnodes
 from sphinx.pycode import ModuleAnalyzer
 from sphinx.roles import XRefRole
 from sphinx.directives import ObjectDescription
 from sphinx.util.compat import Directive
 from sphinx.util.docfields import Field
+from sphinx.util.docfields import TypedField
+from sphinx.util.docfields import GroupedField
 from sphinx.util.nodes import make_refnode
 import docutils.nodes
 import fnmatch
@@ -24,19 +25,25 @@ import wsme.rest.json
 import wsme.types
 
 
-# modified, from
-# https://github.com/stackforge/wsme/blob/master/wsmeext/sphinxext.py
-def datatypename(datatype):
+def typereference(datatype):
+    reference = None
     if isinstance(datatype, wsme.types.UserType):
         return datatype.name
-    if isinstance(datatype, wsme.types.DictType):
-        return 'dict(%s: %s)' % (datatypename(datatype.key_type),
-                                 datatypename(datatype.value_type))
-    if isinstance(datatype, wsme.types.ArrayType):
-        return 'list(%s)' % datatypename(datatype.item_type)
-    if hasattr(datatype, '_name'):
-        return datatype._name
-    return datatype.__name__
+    elif isinstance(datatype, wsme.types.DictType):
+        if datatype.key_type is unicode:
+            return '{"...": %s}' % (typereference(datatype.value_type),)
+        return '{%s: %s}' % (typereference(datatype.key_type),
+                             typereference(datatype.value_type))
+    elif isinstance(datatype, wsme.types.ArrayType):
+        return '[%s]' % typereference(datatype.item_type)
+    elif wsme.types.iscomplex(datatype):
+        if hasattr(datatype, '_name'):
+            reference = datatype._name
+        else:
+            reference = datatype.__name__
+        return ':api:type:`%s`' % (reference,)
+    else:
+        return datatype.__name__
 
 
 # from PEP-0257
@@ -66,60 +73,52 @@ def trim_docstring(docstring):
     return '\n'.join(trimmed)
 
 
-# adapted from wsme
-class TypeDirective(PyClasslike):
+class TypeDirective(ObjectDescription):
 
-    def get_index_text(self, modname, name_cls):
-        return '%s (REST API type)' % name_cls[0]
+    required_arguments = 1
+    optional_arguments = 0
+    final_argument_whitespace = False
+    has_content = True
+    option_spec = {}
 
-    def run(self):
-        name = self.arguments[0]
-        targetname = 'type-' + name
-        result = super(TypeDirective, self).run()
+    doc_field_types = [
+        TypedField('key', label='Keys',
+                   names=('key',), typenames=('keytype',))
+    ]
+
+    def get_signatures(self):
+        self.type_name = self.arguments[0]
+        return [self.type_name]
+
+    def handle_signature(self, sig, signode):
+        signode += addnodes.desc_annotation('REST type ', 'REST type ')
+        signode += addnodes.desc_name(sig, sig)
+
+    def add_target_and_index(self, name, sig, signode):
+        targetname = 'type-' + self.type_name
+
         # record the target for later cross-referencing
         targets = self.env.domaindata['api']['targets'].setdefault('type', {})
-        targets[name] = self.env.docname, targetname
+        targets[self.type_name] = self.env.docname, targetname
         # add a target node at the beginning of the result
-        result.insert(0, docutils.nodes.target('', '', ids=[targetname]))
-        return result
-
-    def add_target_and_index(self, name_cls, sig, signode):
-        ret = super(TypeDirective, self).add_target_and_index(
-            name_cls, sig, signode
-        )
-        name = name_cls[0]
-        types = self.env.domaindata['api']['types']
-        if name in types:
-            self.state_machine.reporter.warning(
-                'duplicate type description of %s ' % name)
-        types[name] = self.env.docname
-        return ret
-
-
-# adapted from wsme
-class AttributeDirective(PyClassmember):
-    doc_field_types = [
-        Field('datatype', label='Type', has_arg=False,
-              names=('type', 'datatype'))
-    ]
+        signode.insert(0, docutils.nodes.target('', '', ids=[targetname]))
 
 
 class EndpointDirective(ObjectDescription):
 
     required_arguments = 3
-    has_content = True
     optional_arguments = sys.maxint
     final_argument_whitespace = False
+    has_content = True
     option_spec = {}
 
     doc_field_types = [
-        Field('parameter', label='Parameters',
-              names=('param', 'parameter', 'arg', 'argument',
-                     'keyword', 'kwarg', 'kwparam')),
-        Field('returnvalue', label='Returns', has_arg=False,
-              names=('returns', 'return')),
-        Field('body', label='Body', has_arg=False,
-              names=('returns', 'return')),
+        GroupedField('param', label='Parameters',
+                     names=('param',)),
+        Field('response', label='Response Body', has_arg=False,
+              names=('response',)),
+        Field('body', label='Request Body', has_arg=False,
+              names=('body',)),
     ]
 
     def get_signatures(self):
@@ -211,18 +210,18 @@ class AutoEndpointDirective(Directive):
             for arg in funcdef.arguments:
                 argdesc = u'    '
                 if arg.name != 'body':
-                    argdesc += u':parameter %s: ' % (arg.name,)
+                    argdesc += u':param %s: ' % (arg.name,)
                 else:
                     argdesc += u':body: '
-                argdesc += datatypename(arg.datatype)
+                argdesc += typereference(arg.datatype)
                 if not arg.mandatory:
                     argdesc += u' - *optional*'
                 if arg.default:
                     argdesc += u' - *default*: %r' % (arg.default,)
                 content.append(argdesc, src)
             if funcdef.return_type:
-                content.append(u'    :returns: %s' %
-                               datatypename(funcdef.return_type), src)
+                content.append(u'    :response: %s' %
+                               typereference(funcdef.return_type), src)
             content.append(u'    ', src)
             if func.__apidoc__:
                 for l in trim_docstring(func.__apidoc__).split('\n'):
@@ -242,7 +241,7 @@ class AutoTypeDirective(Directive):
 
     def get_type_by_name(self, name):
         for ct in wsme.types.registry.complex_types:
-            if datatypename(ct) == name:
+            if ct.__name__ == name or (hasattr(ct, '_name') and ct._name == name):
                 return ct
         raise self.error("no type named %r" % (name,))
 
@@ -250,7 +249,7 @@ class AutoTypeDirective(Directive):
         # this reaches into some undocumented stuff in sphinx to
         # extract the attribute documentation.
         analyzer = ModuleAnalyzer.for_module(ty.__module__)
-        module_attrs = analyzer.find_attr_docs(scope=ty.__name__)
+        module_attrs = analyzer.find_attr_docs()  # (scope is broken!)
         return {k[1]: v[0] for k, v in module_attrs.iteritems()}
 
     def run(self):
@@ -278,21 +277,19 @@ class AutoTypeDirective(Directive):
             attrs = wsme.types.list_attributes(ty)
             wsme.types.sort_attributes(ty, attrs)
             for attr in attrs:
-                content.append(u'    .. api:attribute:: %s' %
-                               (attr.name,), src)
-                content.append(u'', src)
-                content.append(u'        :type: %s' %
-                               datatypename(attr.datatype), src)
-                content.append(u'', src)
+                content.append(u'    :key %s:' % (attr.name,), src)
                 if attr.name in attr_docs:
                     for l in attr_docs[attr.name].split('\n'):
                         content.append(u'        ' + l, src)
+                content.append(u'    :keytype %s: %s' % (attr.name,
+                                                         typereference(attr.datatype)),
+                               src)
+            content.append(u'', src)
 
         self.state.nested_parse(content, 0, node)
         return node.children
 
 # TODO: document permissions
-# TODO: xrefs
 # TODO: catch undocumented apimethods, types in tests
 
 
@@ -302,7 +299,6 @@ class ApiDomain(Domain):
 
     directives = {
         'type': TypeDirective,
-        'attribute': AttributeDirective,
         'endpoint': EndpointDirective,
         'autoendpoint': AutoEndpointDirective,
         'autotype': AutoTypeDirective,

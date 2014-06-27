@@ -66,10 +66,10 @@ class DistributionInfo(wsme.types.Base):
 class VersionInfo(wsme.types.Base):
     "Information about installed software versions"
 
-    #: All installed Python distributions
+    #: All installed Python distributions, by ``project_name``
     distributions = {unicode: DistributionInfo}
 
-    #: All installed blueprints
+    #: All installed blueprints, by name
     blueprints = {unicode: BlueprintInfo}
 
 
