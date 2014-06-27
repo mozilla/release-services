@@ -119,5 +119,20 @@ To document a type or types, use ``api:autotype::``, like this:
 
 This will document the types in the order they are given.
 
+References
+..........
+
+Types can be referenced using the prefix ``:api:type``, e.g.,
+
+.. code-block:: none
+
+    Each :api:type:`Mapping` will be processed in order.
+
+Similarly, endpoints are referenced using their Flask endpoint name, e.g.,
+
+.. code-block:: none
+
+    Use :api:endpoint:`tokenauth.issue_token` to issue tokens.
+
 .. _WSME: http://wsme.readthedocs.org/
 .. _signature: http://wsme.readthedocs.org/en/latest/api.html#wsme.signature

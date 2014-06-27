@@ -5,11 +5,14 @@
 from docutils.statemachine import ViewList
 from flask import current_app
 from sphinx.domains import Domain
-from sphinx import addnodes
 from sphinx.domains.python import PyClasslike, PyClassmember
+from sphinx import addnodes
 from sphinx.pycode import ModuleAnalyzer
+from sphinx.roles import XRefRole
+from sphinx.directives import ObjectDescription
 from sphinx.util.compat import Directive
 from sphinx.util.docfields import Field
+from sphinx.util.nodes import make_refnode
 import docutils.nodes
 import fnmatch
 import re
@@ -69,6 +72,17 @@ class TypeDirective(PyClasslike):
     def get_index_text(self, modname, name_cls):
         return '%s (REST API type)' % name_cls[0]
 
+    def run(self):
+        name = self.arguments[0]
+        targetname = 'type-' + name
+        result = super(TypeDirective, self).run()
+        # record the target for later cross-referencing
+        targets = self.env.domaindata['api']['targets'].setdefault('type', {})
+        targets[name] = self.env.docname, targetname
+        # add a target node at the beginning of the result
+        result.insert(0, docutils.nodes.target('', '', ids=[targetname]))
+        return result
+
     def add_target_and_index(self, name_cls, sig, signode):
         ret = super(TypeDirective, self).add_target_and_index(
             name_cls, sig, signode
@@ -90,9 +104,9 @@ class AttributeDirective(PyClassmember):
     ]
 
 
-class EndpointDirective(Directive):
+class EndpointDirective(ObjectDescription):
 
-    required_arguments = 2
+    required_arguments = 3
     has_content = True
     optional_arguments = sys.maxint
     final_argument_whitespace = False
@@ -108,28 +122,33 @@ class EndpointDirective(Directive):
               names=('returns', 'return')),
     ]
 
-    def make_sig(self, methods, path):
-        signode = addnodes.desc_signature(path, '')
-        signode += addnodes.desc_annotation('endpoint ', 'endpoint ')
-        signode += addnodes.desc_addname(methods + ' ', methods + ' ')
-        signode += addnodes.desc_name(path, path)
-        return signode
-
-    def run(self):
+    def get_signatures(self):
+        self.endpoint_name = self.arguments.pop(0)
         if len(self.arguments) % 2 != 0:
-            raise self.error("api:endpoint expects an even number of arguments "
-                             "(method path method path ..)")
-        node = addnodes.desc()
-        node.document = self.state.document
-        node['objtype'] = node['desctype'] = 'endpoint'
+            raise self.error("api:endpoint expects an odd number of arguments "
+                             "(endpoint method path method path ..)")
+        rv = []
         while self.arguments:
             methods, path = self.arguments[:2]
             self.arguments = self.arguments[2:]
-            node.append(self.make_sig(methods, path))
-        contentnode = addnodes.desc_content()
-        self.state.nested_parse(self.content, self.content_offset, contentnode)
-        node.append(contentnode)
-        return [node]
+            rv.append((methods, path))
+        return rv
+
+    def handle_signature(self, sig, signode):
+        methods, path = sig
+        signode += addnodes.desc_annotation('endpoint ', 'endpoint ')
+        signode += addnodes.desc_addname(methods + ' ', methods + ' ')
+        signode += addnodes.desc_name(path, path)
+
+    def add_target_and_index(self, name, sig, signode):
+        targetname = 'endpoint-' + self.endpoint_name
+        domaindata = self.state.document.settings.env.domaindata
+        targets = domaindata['api']['targets'].setdefault('endpoint', {})
+        targets[self.endpoint_name] = self.state.document.settings.env.docname, targetname
+
+        # add a target node at the beginning of the result
+        target_node = docutils.nodes.target('', '', ids=[targetname])
+        signode.insert(0, target_node)
 
 
 class AutoEndpointDirective(Directive):
@@ -180,7 +199,7 @@ class AutoEndpointDirective(Directive):
             to_document, key=lambda t: (t[2][0].rule, t[2][0].methods))
 
         for endpoint, func, rules in to_document:
-            content.append(u'.. api:endpoint::', src)
+            content.append(u'.. api:endpoint:: %s' % endpoint, src)
             for rule in sorted(rules, key=lambda r: r.rule):
                 methods = [
                     m for m in rule.methods if m not in ('HEAD', 'OPTIONS')]
@@ -228,6 +247,8 @@ class AutoTypeDirective(Directive):
         raise self.error("no type named %r" % (name,))
 
     def get_attr_docs(self, ty):
+        # this reaches into some undocumented stuff in sphinx to
+        # extract the attribute documentation.
         analyzer = ModuleAnalyzer.for_module(ty.__module__)
         module_attrs = analyzer.find_attr_docs(scope=ty.__name__)
         return {k[1]: v[0] for k, v in module_attrs.iteritems()}
@@ -271,7 +292,6 @@ class AutoTypeDirective(Directive):
         return node.children
 
 # TODO: document permissions
-# TODO: document types
 # TODO: xrefs
 # TODO: catch undocumented apimethods, types in tests
 
@@ -289,11 +309,25 @@ class ApiDomain(Domain):
     }
 
     roles = {
+        'type': XRefRole(),
+        'endpoint': XRefRole(),
     }
 
     initial_data = {
         'types': {},
+        'targets': {},
     }
+
+    def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
+        targets = self.data['targets'].get(typ, {})
+        try:
+            todocname, targetname = targets[target]
+        except KeyError:
+            raise self.error("MISSING REFERENCE: api:%s:%s" % (typ, target))
+
+        return make_refnode(builder, fromdocname,
+                            todocname, targetname,
+                            contnode, target)
 
 
 # initialize the Sphinx app
