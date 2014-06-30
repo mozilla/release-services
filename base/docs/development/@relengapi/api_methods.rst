@@ -19,9 +19,15 @@ Simple, atomic types like ``unicode`` and ``int`` are described with their Pytho
 Compound types are defined by subclassing ``wsme.types.Base``::
 
     class Widget(wsme.types.Base):
+        """A model of widget available from our Widget supplier."""
 
+        #: unique ID
         id = integer
+
+        #: latest unit price, in USD
         price = integer
+
+        #: supplier's stock code
         stock_code = unicode
 
 See the WSME_ documentation for more detail.
@@ -84,6 +90,8 @@ Endpoints
 Documentation for API endpoints is generated based on the information in the source code.
 Insert the generated documentation at the appropriate place using the ``api:autoendpoint`` directive, which takes a list of patterns matching Flask enpoint names.
 
+The generated documentation is based on the docstring for the view function, along with the types specified with the ``apimethod`` decorator and the routes specified with the ``route`` decorator.
+
 For example, if the ``get_widget`` view function, above, is part of the ``widgets`` blueprint, then its documentation file would reference it as
 
 .. code-block:: none
@@ -110,6 +118,10 @@ Types
 .....
 
 REST API Types are similar: the content of the documentation comes from the source code, but the positioning is controlled by the ``.rst`` file.
+
+Type information is drawn from the docstring for the type class as well as the Sphinx-style comments for each attribute.
+These comments have the special prefix ``#:``.
+See the ``Widget`` class above for an example.
 
 To document a type or types, use ``api:autotype::``, like this:
 
