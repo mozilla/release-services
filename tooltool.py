@@ -189,18 +189,17 @@ class FileRecordJSONDecoder(json.JSONDecoder):
             'digest',
         ]
         if isinstance(obj, dict):
-            missing = []
+            missing = False
             for req in required_fields:
                 if req not in obj:
-                    missing.append(req)
+                    missing = True
+                    break
 
-            if missing:
-                raise InvalidManifest("The following required fields are not present in the file record: %s" % ', '.join(missing))
-
-            unpack = obj.get('unpack', False)
-            rv = FileRecord(obj['filename'], obj['size'], obj['digest'], obj['algorithm'], unpack)
-            log.debug("materialized %s" % rv)
-            return rv
+            if not missing:
+                unpack = obj.get('unpack', False)
+                rv = FileRecord(obj['filename'], obj['size'], obj['digest'], obj['algorithm'], unpack)
+                log.debug("materialized %s" % rv)
+                return rv
         return obj
 
     def decode(self, s):
