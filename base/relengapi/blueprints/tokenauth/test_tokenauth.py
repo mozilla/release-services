@@ -97,7 +97,13 @@ def test_issue_token_success(client):
     request = {
         'permissions': ['test_tokenauth.zig'], 'description': 'More Zig'}
     res = client.post_json('/tokenauth/tokens', request)
-    eq_(json.loads(res.data), {'result': {'token': 'TOK/1/v1'}})
+    eq_(json.loads(res.data), {
+        'result': {
+            'token': 'TOK/1/v1',
+            'id': 1,
+            'description': 'More Zig',
+            'permissions': ['test_tokenauth.zig'],
+        }})
 
 
 @test_context.specialize(user=userperms([p.base.tokens.issue,
@@ -142,14 +148,14 @@ def test_get_token_missing(client):
 @test_context.specialize(user=userperms([]), db_setup=insert_token)
 def test_get_token_by_token_forbidden(client):
     """Getting a single token by token requires base.tokens.view"""
-    res = client.post_json('/tokenauth/tokens/query', {'token': 'TOK/1/v1'})
+    res = client.post_json('/tokenauth/tokens/query', 'TOK/1/v1')
     eq_(res.status_code, 403)
 
 
 @test_context.specialize(user=userperms([p.base.tokens.view]), db_setup=insert_token)
 def test_get_token_by_token_exists(client):
     """Getting a single token returns that token."""
-    res = client.post_json('/tokenauth/tokens/query', {'token': 'TOK/1/v1'})
+    res = client.post_json('/tokenauth/tokens/query', 'TOK/1/v1')
     eq_(res.status_code, 200)
     eq_(json.loads(res.data),
         {'result': {'id': 1, 'description': 'Zig only',
@@ -159,21 +165,14 @@ def test_get_token_by_token_exists(client):
 @test_context.specialize(user=userperms([p.base.tokens.view]))
 def test_get_token_by_token_missing(client):
     """Getting a single token that does not exist returns status 404"""
-    res = client.post_json('/tokenauth/tokens/query', {'token': 'TOK/99/v1'})
+    res = client.post_json('/tokenauth/tokens/query', 'TOK/99/v1')
     eq_(res.status_code, 404)
 
 
 @test_context.specialize(user=userperms([p.base.tokens.view]))
 def test_get_token_by_token_invalid(client):
     """Passing an invalid string to get a token returns 404"""
-    res = client.post_json('/tokenauth/tokens/query', {'token': 'XXX'})
-    eq_(res.status_code, 404)
-
-
-@test_context.specialize(user=userperms([p.base.tokens.view]))
-def test_get_token_by_token_no_query(client):
-    """Passing no string to get a token returns 404"""
-    res = client.post_json('/tokenauth/tokens/query', {})
+    res = client.post_json('/tokenauth/tokens/query', 'XXX')
     eq_(res.status_code, 404)
 
 

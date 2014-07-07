@@ -94,7 +94,6 @@ def test_require_can(app):
             # with a browser, they return 302's
             is_browser.return_value = True
 
-            # pylint: disable=no-member
             @permissions.require(perms.test.writer, perms.test.deleter)
             def bad_func_browser():
                 return "ok"

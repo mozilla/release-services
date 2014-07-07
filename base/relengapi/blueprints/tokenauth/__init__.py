@@ -3,13 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from relengapi import db
+import wsme.types
 import logging
 import sqlalchemy as sa
 from flask import g
 from flask import Blueprint
 from flask import current_app
 from flask import render_template
-from flask import request
 from flask.ext.login import login_required
 from flask.ext.login import current_user
 from relengapi import p
@@ -50,9 +50,9 @@ class Token(db.declarative_base('relengapi')):
     description = sa.Column(sa.Text, nullable=False)
     _permissions = sa.Column(sa.Text, nullable=False)
 
-    def to_json(self):
-        return dict(id=self.id, description=self.description,
-                    permissions=[str(a) for a in self.permissions])
+    def to_jsontoken(self):
+        return JsonToken(id=self.id, description=self.description,
+                         permissions=[str(a) for a in self.permissions])
 
     @property
     def permissions(self):
@@ -79,6 +79,29 @@ class TokenUser(auth.BaseUser):
         return self._permissions
 
 
+class JsonToken(wsme.types.Base):
+    """A token granting the bearer a limited set of permissions.
+
+    In all cases except creating a new token, the ``token`` attribute is empty.
+    There is no way to recover a lost token string except for revoking and
+    re-issuing the token.
+    """
+
+    _name = 'Token'
+
+    #: token ID
+    id = wsme.types.wsattr(int, mandatory=False)
+
+    #: the opaque token string (only set on new tokens)
+    token = wsme.types.wsattr(unicode, mandatory=False)
+
+    #: the user-supplied token description
+    description = wsme.types.wsattr(unicode, mandatory=True)
+
+    #: list of permissions this token grants
+    permissions = wsme.types.wsattr([unicode], mandatory=True)
+
+
 @bp.route('/')
 @login_required
 def root():
@@ -89,61 +112,60 @@ def root():
 
 
 @bp.route('/tokens')
-@apimethod()
 @p.base.tokens.view.require()
+@apimethod([JsonToken])
 def list_tokens():
-    """Get the list of all tokens.  Note that the response does not include the
-    actual token strings."""
-    return [t.to_json() for t in Token.query.all()]
+    """Get a list of all existing tokens.
+
+    Note that the response does not include the actual token strings.
+    Such strings are only revealed when creating a new token."""
+    return [t.to_jsontoken() for t in Token.query.all()]
 
 
 @bp.route('/tokens', methods=['POST'])
-@apimethod()
+@apimethod(JsonToken, body=JsonToken)
 @p.base.tokens.issue.require()
-def issue_token():
-    """Issue a new authentication token.  The POST body must contain JSON with keys
-    'permissions', a list of allowed permissions; and description, a description of the token."""
-    requested_permissions = [p.get(a) for a in request.json['permissions']]
+def issue_token(body):
+    """Issue a new token.  The body should not include a ``token`` or ``id``.
+    The response will contain both."""
+    requested_permissions = [p.get(a) for a in body.permissions]
     # ensure the request is for a subset of the permissions the user can
     # perform
     if None in requested_permissions or not set(requested_permissions) <= current_user.permissions:
         raise BadRequest("bad permissions")
-    if 'description' not in request.json:
-        raise BadRequest("no description")
 
     session = g.db.session('relengapi')
     token_row = Token(
-        description=request.json['description'],
+        description=body.description,
         permissions=requested_permissions)
     session.add(token_row)
     session.commit()
 
     token = current_app.tokenauth_serializer.dumps(
         {'v': TOKENAUTH_VERSION, 'id': token_row.id})
-    return {'token': token}
+    rv = token_row.to_jsontoken()
+    rv.token = token
+    return rv
 
 
 @bp.route('/tokens/<int:token_id>')
-@apimethod()
+@apimethod(JsonToken, int)
 @p.base.tokens.view.require()
 def get_token(token_id):
-    """Get a token, identified by its ID."""
+    """Get a token, identified by its ``id``."""
     token_data = Token.query.filter_by(id=token_id).first()
     if not token_data:
         raise NotFound
-    return token_data.to_json()
+    return token_data.to_jsontoken()
 
 
 @bp.route('/tokens/query', methods=['POST'])
-@apimethod()
 @p.base.tokens.view.require()
-def get_token_by_token():
-    """Get a token, specified by the 'token' key in the request body.
-    This is done to avoid embedding a token in a URL, where it might be
-    logged."""
-    if 'token' not in request.json:
-        raise NotFound
-    token_str = request.json['token']
+@apimethod(JsonToken, body=unicode)
+def get_token_by_token(body):
+    """Get a token, specified by the token key given in the request body
+    (this avoids embedding a token in a URL, where it might be logged)."""
+    token_str = body
     try:
         token_info = current_app.tokenauth_serializer.loads(token_str)
     except BadData:
@@ -153,11 +175,11 @@ def get_token_by_token():
     token_data = Token.query.filter_by(id=token_info['id']).first()
     if not token_data:
         raise NotFound
-    return token_data.to_json()
+    return token_data.to_jsontoken()
 
 
 @bp.route('/tokens/<int:token_id>', methods=['DELETE'])
-@apimethod()
+@apimethod(None, int)
 @p.base.tokens.revoke.require()
 def revoke_token(token_id):
     """Revoke an authentication token, identified by its ID."""

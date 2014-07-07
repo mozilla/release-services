@@ -23,4 +23,19 @@ Tokens can be issued via the form available from ``/tokenauth`` by those who hav
 The selected permissions for the token must be a subset of those permissions the issuer can perform.
 
 Tokens can be issued, revoked, looked up by string, and so on using API calls.
-See the API documentation for details.
+See the API documentation below for details.
+
+API
+---
+
+Types
+.....
+
+.. api:autotype:: Token
+
+Endpoints
+.........
+
+.. api:autoendpoint:: tokenauth.*
+
+    These API calls can be used to manipulate tokens, given sufficient permissions.

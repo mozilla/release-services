@@ -5,7 +5,6 @@
 import json
 import mock
 from nose.tools import eq_
-from flask import Response
 from relengapi.lib import api
 from relengapi import testing
 from werkzeug.exceptions import BadRequest
@@ -13,27 +12,27 @@ from werkzeug.exceptions import BadRequest
 
 def app_setup(app):
     @app.route('/apimethod/ok')
-    @api.apimethod()
+    @api.apimethod([unicode])
     def ok():
         return ['ok']
 
     @app.route('/apimethod/fail')
-    @api.apimethod()
+    @api.apimethod(unicode)
     def fail():
         raise BadRequest
 
     @app.route('/apimethod/201')
-    @api.apimethod()
+    @api.apimethod([unicode])
     def ok_201():
         return ['ok'], 201
 
     @app.route('/apimethod/201/header')
-    @api.apimethod()
+    @api.apimethod([unicode])
     def ok_201_header():
         return ['ok'], 201, {'X-Header': 'Header'}
 
     @app.route('/apimethod/header')
-    @api.apimethod()
+    @api.apimethod([unicode])
     def ok_header():
         return ['ok'], {'X-Header': 'Header'}
 
@@ -55,7 +54,7 @@ def test_get_handler():
 def test_JsonHandler_render_response(app):
     h = api.JsonHandler()
     with app.test_request_context():
-        eq_(json.loads(h.render_response([1, 2, 3]).data),
+        eq_(json.loads(h.render_response([1, 2, 3], 200, {}).data),
             {'result': [1, 2, 3]})
 
 
@@ -63,7 +62,7 @@ def test_JsonHandler_render_response(app):
 def test_HtmlHandler_render_response(app):
     h = api.HtmlHandler()
     with app.test_request_context():
-        resp = Response(h.render_response([1, 2, 3]))
+        resp = h.render_response([1, 2, 3], 200, {})
         assert '<html' in resp.data, resp.data
         assert "1," in resp.data, resp.data
 

@@ -16,6 +16,7 @@ from relengapi.lib import permissions
 import pkg_resources
 import relengapi
 import logging
+import wsme.types
 
 # set up the 'relengapi' namespace; it's a namespaced module, so no code
 # is allowed in __init__.py
@@ -40,6 +41,36 @@ def get_blueprints():
         entry_points = pkg_resources.iter_entry_points('relengapi_blueprints')
         _blueprints = [(ep.name, ep.load()) for ep in entry_points]
     return _blueprints
+
+
+class BlueprintInfo(wsme.types.Base):
+    "Information about an installed Blueprint"
+
+    #: Python distribution containing this blueprint
+    distribution = unicode
+
+    #: Version of the blueprint (really, of its distribution)
+    version = unicode
+
+
+class DistributionInfo(wsme.types.Base):
+    "Information about an installed Python distribution"
+
+    #: Name of the distribution
+    project_name = unicode
+
+    #: Version of the distribution
+    version = unicode
+
+
+class VersionInfo(wsme.types.Base):
+    "Information about installed software versions"
+
+    #: All installed Python distributions, by ``project_name``
+    distributions = {unicode: DistributionInfo}
+
+    #: All installed blueprints, by name
+    blueprints = {unicode: BlueprintInfo}
 
 
 def create_app(cmdline=False, test_config=None):
@@ -84,20 +115,16 @@ def create_app(cmdline=False, test_config=None):
         return render_template('root.html', bp_widgets=bp_widgets)
 
     @app.route('/versions')
-    @api.apimethod()
+    @api.apimethod(VersionInfo)
     def versions():
         dists = {}
         for dist in pkg_resources.WorkingSet():
-            dists[dist.key] = {
-                'project_name': dist.project_name,
-                'version': dist.version,
-            }
+            dists[dist.key] = DistributionInfo(project_name=dist.project_name,
+                                               version=dist.version)
         blueprints = {}
         for ep in pkg_resources.iter_entry_points('relengapi_blueprints'):
-            blueprints[ep.name] = {
-                'distribution': ep.dist.key,
-                'version': ep.dist.version,
-            }
-        return dict(distributions=dists, blueprints=blueprints)
+            blueprints[ep.name] = BlueprintInfo(distribution=ep.dist.key,
+                                                version=ep.dist.version)
+        return VersionInfo(distributions=dists, blueprints=blueprints)
 
     return app
