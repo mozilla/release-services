@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 #tooltool is a lookaside cache implemented in Python
 #Copyright (C) 2013 Mozilla Foundation
 #
@@ -238,7 +237,10 @@ def main():
                             digest_path = os.path.join(content_folder_path, digest)
 
                             try:
-                                shutil.copy(digest_path, os.path.join(destination, "temp%s" % digest))
+                                target_filename = os.path.join(destination, "temp%s" % digest)
+                                shutil.copy(digest_path, target_filename)
+                                #  sets permission to -rw-r--r-- to make sure the file is readable
+                                os.chmod(target_filename, 0644)
                             except IOError as e:
                                 log.error("Impossible to copy file %s to %s; I/O error(%s): %s" % (digest_path, destination, e.errno, e.strerror))
                                 copyOK = False
