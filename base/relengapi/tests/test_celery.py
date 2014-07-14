@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import signal
 import contextlib
 import multiprocessing
 import shutil
@@ -33,6 +34,10 @@ def _run(app, event):
     sys.__stdout__ = sys.stdout
     sys.__stderr__ = sys.stdout
 
+    # make the kombu transport poll more frequently..
+    from kombu.transport.virtual import Transport
+    Transport.polling_interval = 0.01
+
     # let the parent process know the worker is ready
     @worker_ready.connect
     def rdy(sender, **kwargs):
@@ -54,7 +59,10 @@ def running_worker(app):
     try:
         yield
     finally:
-        proc.terminate()
+        # send SIGKILL since celery traps SIGTERM and turns it into an exception
+        # which SQLAlchemy catches and ignores
+        # (see https://github.com/mozilla/build-relengapi/issues/90)
+        os.kill(proc.pid, signal.SIGKILL)
         proc.join()
 
 
