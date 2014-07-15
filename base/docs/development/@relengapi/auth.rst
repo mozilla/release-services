@@ -131,7 +131,7 @@ To protect a view function, use the permission's  :py:meth:`~relengapi.lib.permi
     def view():
         ..
 
-For more complex needs, use the :py:func:`relengapi.lib.permissions.require` function, which takes an arbitrary number of permissions::
+For more complex needs, use the :py:func:`relengapi.lib.permissions.require` function, which takes an arbitrary number of permissions and requires *all* of them::
 
     from relengapi.lib import permissions
     @route('/view')
