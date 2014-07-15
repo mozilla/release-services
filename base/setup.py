@@ -79,6 +79,7 @@ setup(
             'auth = relengapi.blueprints.auth:bp',
             'tokenauth = relengapi.blueprints.tokenauth:bp',
             'docs = relengapi.blueprints.docs:bp',
+            'badpenny = relengapi.blueprints.badpenny:bp',
         ],
         "relengapi.auth.mechanisms": [
             'browserid = relengapi.lib.auth.browserid:init_app',
