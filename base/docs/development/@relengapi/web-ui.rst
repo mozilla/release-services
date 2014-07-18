@@ -39,9 +39,9 @@ Templates should extend ``layout.html`` and add content to the appropriate block
  * ``footer`` - the in-page footer
 
 Extensions or blueprints which wish to add content to the layout can use functionality defined in :class:`relengapi.lib.layout.Layout`, accessible at ``app.layout``.
-In particular, :meth:`~relengapi.lib.layout.Layout.add_head_content`` will add the given content to the ``head`` block of every page.
+In particular, :meth:`~relengapi.lib.layout.Layout.add_head_content` will add the given content to the ``head`` block of every page.
 
-For the more common case of adding a script tag linking to an external file, :meth:`~relengapi.lib.layout.Layout.add_script`` will create the necessary tag, given the URL.
+For the more common case of adding a script tag linking to an external file, :meth:`~relengapi.lib.layout.Layout.add_script` will create the necessary tag, given the URL.
 
 Javascript Support
 ------------------
