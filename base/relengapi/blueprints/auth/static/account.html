@@ -1,0 +1,22 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     License, v. 2.0. If a copy of the MPL was not distributed with this
+     file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<div ng-app='auth' ng-controller='AuthController'>
+  <h1>Account</h1>
+  <p ng-show="initial_data.authenticated_email">
+    You are authenticated as <span class="user_email">{{ initial_data.authenticated_email }}</span>.
+  </p>
+  <p ng-hide="initial_data.authenticated_email">
+    You are not authenticated.
+  </p>
+  <h1>Permissions</h1>
+  <div ng-show="initial_data.permissions">
+    <ul>
+    <li ng-repeat="perm in initial_data.permissions">
+      <span class="permission">{{perm.name}}</span> - <span class="action-docstring">{{perm.doc}}</span></li>
+    </ul>
+  </div>
+  <div ng-hide="initial_data.permissions">
+    <p>You don't have permission to do anything.  Sorry about that.</p>
+  </div>
+</div>

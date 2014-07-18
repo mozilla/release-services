@@ -2,12 +2,12 @@
  # License, v. 2.0. If a copy of the MPL was not distributed with this
  # file, You can obtain one at http://mozilla.org/MPL/2.0/. #}
 {%- extends "root_widget.html" %}
-{% block widget_title %}<a href="/auth/account">Account</a>{% endblock %}
+{% block widget_title %}<a href="/auth">Account</a>{% endblock %}
 {% block widget_content %}
 {% if current_user.is_authenticated() %}
   <p>You are authenticated as <span class="user_email">{{ current_user.authenticated_email }}</span>.</p>
 {% else %}        
-<p>You are not logged in.</a>
+  <p>You are not logged in.</a>
 {% endif %}
 {% endblock %}
 

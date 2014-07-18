@@ -1,18 +1,19 @@
 {# This Source Code Form is subject to the terms of the Mozilla Public
  # License, v. 2.0. If a copy of the MPL was not distributed with this
- # file, You can obtain one at http://mozilla.org/MPL/2.0/. #}
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/. -#}
+{% import 'head_macros.html' as head %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   {% block head %}
-  <link href="{{ url_for('static', filename='relengapi.css') }}" media="screen" rel="stylesheet" type="text/css" />
-  <link href="{{ url_for('static', filename='js/ext/alertify.core.css') }}" media="screen" rel="stylesheet" type="text/css" />
-  <link href="{{ url_for('static', filename='js/ext/alertify.default.css') }}" media="screen" rel="stylesheet" type="text/css" />
-  <script type="text/javascript" src="//code.jquery.com/jquery-1.7.2.min.js"></script>
+  {{ head.stylesheet(url_for('static', filename='relengapi.css')) }}
+  {{ head.stylesheet(url_for('static', filename='js/alertify/alertify.core.css')) }}
+  {{ head.stylesheet(url_for('static', filename='js/alertify/alertify.default.css')) }}
+  {{ head.script(url_for('static', filename='js/alertify/alertify.min.js')) }}
+  {{ head.script(url_for('static', filename='js/jquery/jquery-1.7.2.min.js')) }}
   {%- for content in layout_extra_head_content %}
   {{ content|safe }}
   {%- endfor %}
-  <script src="{{ url_for('static', filename='js/ext/alertify.min.js') }}" type="text/javascript"></script>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       <script type="text/javascript">

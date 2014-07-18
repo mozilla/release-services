@@ -7,6 +7,7 @@ from flask import abort
 from flask import current_app
 from flask.ext.login import current_user
 from relengapi import util
+import wsme.types
 
 
 class Permission(tuple):
@@ -88,3 +89,14 @@ can = Permissions.can
 # this object is generally accessed at `relengapi.p`, but can be accessed here
 # for imports in relengapi itself, which occur before `relengapi.p` exists.
 p = Permissions()
+
+
+class JsonPermission(wsme.types.Base):
+
+    _name = "Permission"
+
+    #: Dotted name of the permission
+    name = unicode
+
+    #: Documentation for the permission
+    doc = unicode

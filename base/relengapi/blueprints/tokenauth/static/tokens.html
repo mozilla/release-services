@@ -1,0 +1,73 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     License, v. 2.0. If a copy of the MPL was not distributed with this
+     file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<div ng-app='tokens' ng-controller="TokenController" ng-switch="view">
+  <div style="float: right;">
+      <label ng-show="can_issue">
+          <input type="radio" name="view" value="newtoken" ng-model="view" />Issue New Token
+      </label>
+      <label ng-show="can_view">
+          <input type="radio" name="view" value="tokenlist" ng-model="view" />Current Tokens
+      </label>
+  </div>
+  <div ng-switch-when="tokenlist" ng-controller="TokenListController" style="width: 100%">
+      <h1>Current Tokens</h1>
+      <table border="1" width="100%"> <!-- yep, that's ugly -->
+          <thead>
+              <tr>
+                  <td>Description</td>
+                  <td>Permissions</td>
+                  <td>Revoke<br />
+                      <label ng-show="can_revoke" style="font-size: 70%;">
+                          <input type="checkbox" ng-model="revoke_enabled"> I'm sure
+                      </label>
+                  </td>
+              </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="token in tokens|orderBy:'id'">
+                <td>{{token.description}}</td>
+                <td>
+                    <span ng-repeat="perm in token.permissions">
+                        <span class="permission">{{perm}}</span>
+                </td>
+                <td>
+                    <button ng-click="revokeToken(token.id)" ng-disabled="!revoke_enabled || !can_revoke">Revoke</button>
+                </td>
+            </tr>
+          </tbody>
+      </table>
+      <button ng-click="refreshTokens()">Refresh</button>
+  </div>
+  <div ng-switch-when="newtoken" ng-controller="NewTokenController">
+    <h1>Issue New Token</h1>
+    <form name="form" novalidate>
+        <p>Select the permissions for the new token.
+           Note that a token you issue cannot have permission you do not possess.</p>
+        <p>Permissions:
+        <ul>
+        <li ng-repeat="perm in available_permissions|orderBy:'name'"><label>
+            <input type="checkbox"
+                   ng-model="newtoken.permissions[perm.name]"
+                   ng-disabled="issuing",
+                   ng-required="checkedPermissions().length == 0">
+            <span class="permission">{{perm.name}}</span> -
+            <span class="permission-docstring">{{perm.doc}}</span>
+        </label></li>
+        </ul></p>
+        <p>
+        <label>Description: <input ng-model="newtoken.description" 
+                                   ng-required="true"
+                                   ng-disabled="issuing"></label>
+        <button ng-click="issueToken()" ng-disabled="issuing || form.$invalid">Issue</button>
+        </p>
+        <div class="token" ng-show="issuing && token">
+            Token string:
+            <div class="token">{{token}} <button ng-click="reset()">OK</button></div>
+            <p>Note: This string will not be shown again!</p>
+        </div>
+        <div ng-show="error">{{error}}
+                <button ng-click="issuing=false; error=null;">Reset</button></div>
+    </form>
+  </div>
+</div>

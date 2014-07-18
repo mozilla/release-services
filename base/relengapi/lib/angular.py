@@ -1,0 +1,32 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+import os
+from flask import current_app
+from flask import render_template
+from flask import request
+
+
+def template(template_name, *dependency_urls, **initial_data):
+    # find and load the template, based on the current request
+    if request.blueprint:
+        parent = current_app.blueprints[request.blueprint]
+    else:
+        parent = current_app
+    if not parent.has_static_folder:
+        raise RuntimeError("No static folder for angular template")
+    template_path = os.path.join(parent.static_folder, template_name)
+    template = open(template_path).read().decode('utf-8')
+
+    # calculate the stylesheet and script links, based on suffix
+    stylesheets = [u for u in dependency_urls if u.endswith('.css')]
+    scripts = [u for u in dependency_urls if u.endswith('.js')]
+    if set(dependency_urls) - set(stylesheets) - set(scripts):
+        raise RuntimeError("dependency_urls must all be .css and .js files")
+
+    return render_template('angular.html',
+                           template=template,
+                           stylesheets=stylesheets,
+                           scripts=scripts,
+                           initial_data=initial_data)
