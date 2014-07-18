@@ -342,7 +342,7 @@ def verify_everything_documented(app, exception):
     app.info(console.white("checking that all REST API types are included in the documentation"))
     documented_types = app.env.domaindata['api']['types']
     for ty in wsme.types.Base.__subclasses__():
-        if not ty.__module__.startswith('relengapi.'):
+        if not ty.__module__.startswith('relengapi.') or '.test_' in ty.__module__:
             continue
         tyname = typename(ty)
         if tyname not in documented_types:
