@@ -129,7 +129,8 @@ def apimethod(return_type, *arg_types, **options):
                     result, code, headers = result
                 assert 200 <= code < 299
 
-            # convert the objects into jsonable simple types
+            # convert the objects into jsonable simple types, also checking
+            # the type at the same time
             result = wsme.rest.json.tojson(funcdef.return_type, result)
 
             # and hand to render_response, which will actually
@@ -153,3 +154,18 @@ def init_app(app):
     # always trap http exceptions; the HTML handler will render them
     # as expected, but the JSON handler needs its chance, too
     app.trap_http_exception = lambda e: True
+
+    # create a new subclass of the current json_encoder, that can handle
+    # encoding WSME types
+    old_json_encoder = app.json_encoder
+
+    class WSMEEncoder(old_json_encoder):
+
+        """A mixin for JSONEncoder which can handle WSME types"""
+
+        def default(self, o):
+            if isinstance(o, wsme.types.Base):
+                return wsme.rest.json.tojson(type(o), o)
+            return old_json_encoder.default(self, o)
+
+    app.json_encoder = WSMEEncoder

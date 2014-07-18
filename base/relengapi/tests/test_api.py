@@ -4,9 +4,11 @@
 
 import json
 import mock
+from flask import json
 from nose.tools import eq_
 from relengapi.lib import api
 from relengapi import testing
+import wsme.types
 from werkzeug.exceptions import BadRequest
 
 
@@ -88,3 +90,23 @@ def test_apimethod():
     yield lambda: t(path='/apimethod/201/header', exp_status_code=201,
                     exp_headers={'X-Header': 'Header'})
     yield lambda: t(path='/apimethod/header', exp_headers={'X-Header': 'Header'})
+
+
+class TestType(wsme.types.Base):
+    name = unicode
+    value = int
+
+
+@test_context
+def test_encoder(app):
+    with app.test_request_context():
+        eq_(json.loads(json.dumps({'x': 10})), {'x': 10})
+
+        # check that a WSME type is properly handled
+        o = TestType(name='test', value=5)
+        eq_(json.loads(json.dumps(o)), {'name': 'test', 'value': 5})
+
+        # and that such types are handled within other structures
+        eq_(json.loads(json.dumps([o])), [{'name': 'test', 'value': 5}])
+        eq_(json.loads(json.dumps(dict(x=o))),
+            {'x': {'name': 'test', 'value': 5}})
