@@ -3,20 +3,20 @@
      file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <div ng-app='auth' ng-controller='AuthController'>
   <h1>Account</h1>
-  <p ng-show="initial_data.authenticated_email">
-    You are authenticated as <span class="user_email">{{ initial_data.authenticated_email }}</span>.
+  <p ng-show="initial_data.user.authenticated_email">
+    You are authenticated as <span class="user_email">{{ initial_data.user.authenticated_email }}</span>.
   </p>
-  <p ng-hide="initial_data.authenticated_email">
+  <p ng-hide="initial_data.user.authenticated_email">
     You are not authenticated.
   </p>
   <h1>Permissions</h1>
-  <div ng-show="initial_data.permissions">
+  <div ng-show="initial_data.user.permissions">
     <ul>
-    <li ng-repeat="perm in initial_data.permissions">
+    <li ng-repeat="perm in initial_data.user.permissions">
       <span class="permission">{{perm.name}}</span> - <span class="action-docstring">{{perm.doc}}</span></li>
     </ul>
   </div>
-  <div ng-hide="initial_data.permissions">
+  <div ng-hide="initial_data.user.permissions">
     <p>You don't have permission to do anything.  Sorry about that.</p>
   </div>
 </div>

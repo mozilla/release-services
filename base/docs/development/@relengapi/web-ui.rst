@@ -98,6 +98,8 @@ Extensions which wish to add content to the layout can use functionality defined
 In particular, :meth:`~relengapi.lib.layout.Layout.add_head_content` will add the given content to the ``head`` block of every page.
 For the more common case of adding a script tag linking to an external file, :meth:`~relengapi.lib.layout.Layout.add_script` will create the necessary tag, given the URL.
 
+.. _angular-templates:
+
 Angular Templates
 -----------------
 
@@ -163,8 +165,6 @@ The Python code to render an Angular template faintly resembles normal Flask cod
     :param dependency_urls: URLs (generated with ``url_for`` for any CSS or JS dependencies)
     :param initial_data: JSON-able data to be provided to the template as the ``initial_data`` constant in the ``initial_data`` module.
 
-    TODO: initial_data needs to specify endpoints instead
-
     Render an HTML page containing the named template in its ``content`` block.
     All of the dependency URLs are loaded in the ``<head>`` element.
     Any keyword arguments are JSONified and passed to the Angular app in the ``initial_data`` module.
@@ -177,6 +177,25 @@ The module should be defined in a ``.js`` file specified as one of the dependenc
 Javascript best practices suggest supplying initial data for a page along with the page content, instead of making a separate AJAX request.
 The ``initial_data`` arguments, Angular module, and Angular constant make this easy.
 However, it's important that this data also be available via an API call.
+The most common way to accomplish this is to invoke the actual API call using :py:func:`~relengapi.lib.api.get_data`.
+
+Putting all of this together::
+
+    @bp.route('/')
+    def root():
+        return angular.template('widgets.html',
+                                url_for('.static', filename='widgets.js'),
+                                widgets=api.get_data(list_widgets))
+
+    @bp.route('/widgets')
+    @p.base.widgets.view.require()
+    @apimethod([JsonWidget])
+    def list_widgets():
+        return [JsonWidget(w.id, w.name) for w in Widgets.query.all()]
+
+Here, the blueprint's ``/`` path is the Angular UI, based on ``widgets.html`` and ``widgets.js``, both in the blueprint's ``static`` directory.
+The ``initial_data`` includes a full list of widgets, from ``list_widgets``.
+If the user doesn't have the ``base.widgets.view`` permission, the ``get_data`` call will raise an exception and the view will not be rendered.
 
 Alertify
 ........

@@ -16,6 +16,7 @@ from relengapi import p
 from relengapi import apimethod
 from relengapi.lib import permissions
 from relengapi.lib import auth
+from relengapi.lib import api
 from relengapi.lib import angular
 from itsdangerous import JSONWebSignatureSerializer, BadData
 from werkzeug.exceptions import BadRequest
@@ -106,16 +107,9 @@ class JsonToken(wsme.types.Base):
 @bp.route('/')
 @login_required
 def root():
-    user_perms = [permissions.JsonPermission(name='.'.join(p), doc=p.__doc__)
-                  for p in current_user.permissions]
-    available_perms = [permissions.JsonPermission(name='.'.join(p), doc=p.__doc__)
-                       for p in current_user.permissions]
-    tokens = [t.to_jsontoken() for t in Token.query.all()]
     return angular.template('tokens.html',
                             url_for('.static', filename='tokens.js'),
-                            user_permissions=user_perms,
-                            available_permissions=available_perms,
-                            tokens=tokens)
+                            tokens=api.get_data(list_tokens))
 
 
 @bp.route('/tokens')

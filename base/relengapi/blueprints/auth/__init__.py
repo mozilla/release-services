@@ -19,18 +19,13 @@ bp.root_widget_template('auth_root_widget.html', priority=-100)
 @bp.route("/")
 def account():
     """Show the user information about their account"""
-    perms = [permissions.JsonPermission(name='.'.join(p), doc=p.__doc__)
-             for p in current_user.permissions]
-    authenticated_email = current_user.authenticated_email if current_user.type == 'human' else None
     return angular.template("account.html",
-                            url_for('.static', filename='account.js'),
-                            authenticated_email=authenticated_email,
-                            permissions=perms)
+                            url_for('.static', filename='account.js'))
 
 
 @bp.route("/permissions")
 @login_required
 @apimethod([permissions.JsonPermission])
-def perms():
+def user_permissions():
     return [permissions.JsonPermission(name='.'.join(p), doc=p.__doc__)
             for p in current_user.permissions]

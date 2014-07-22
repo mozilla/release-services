@@ -6,6 +6,8 @@ import os
 from flask import current_app
 from flask import render_template
 from flask import request
+from flask.ext.login import current_user
+from relengapi.lib import permissions
 
 
 def template(template_name, *dependency_urls, **initial_data):
@@ -24,6 +26,15 @@ def template(template_name, *dependency_urls, **initial_data):
     scripts = [u for u in dependency_urls if u.endswith('.js')]
     if set(dependency_urls) - set(stylesheets) - set(scripts):
         raise RuntimeError("dependency_urls must all be .css and .js files")
+
+    # include info on the current user
+    user = {}
+    user['permissions'] = [permissions.JsonPermission(name='.'.join(p), doc=p.__doc__)
+                           for p in current_user.permissions]
+    user['type'] = current_user.type
+    if current_user.type == 'human':
+        user['authenticated_email'] = current_user.authenticated_email
+    initial_data['user'] = user
 
     return render_template('angular.html',
                            template=template,

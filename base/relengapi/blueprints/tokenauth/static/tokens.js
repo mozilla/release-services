@@ -6,14 +6,14 @@ angular.module('tokens', ['initial_data']);
 
 angular.module('tokens').controller('TokenController',
                                     function($scope, $http, initial_data) {
-    $scope.available_permissions = initial_data.available_permissions;
+    $scope.available_permissions = initial_data.user.permissions;
     $scope.tokens = initial_data.tokens;
 
     // calculate permissions
     $scope.can_view = false;
     $scope.can_issue = false;
     $scope.can_revoke = false;
-    angular.forEach(initial_data.user_permissions, function (perm) {
+    angular.forEach(initial_data.user.permissions, function (perm) {
         angular.forEach(['view', 'issue', 'revoke'], function (action) {
             if (perm.name == "base.tokens." + action) {
                 $scope['can_' + action] = true;

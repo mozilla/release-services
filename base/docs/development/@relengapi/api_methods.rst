@@ -182,5 +182,14 @@ The remaining arguments alternate between method names and paths.
 
 The docfields are ``param`` for request parameters, ``body`` for the request body, and ``response`` for the response body.
 
+Getting Data
+------------
+
+If you need the data from an API method (e.g., to pass it to an :ref:`Angular template <angular-templates>`), pass the view function to :py:func:`relengapi.lib.api.get_data`, passing additional arguments as necessary. ::
+
+    widget_info = api.get_data(get_widgets, widget_id)
+
+This function will raise an exception if the current request does not have proper permission.
+
 .. _WSME: http://wsme.readthedocs.org/
 .. _signature: http://wsme.readthedocs.org/en/latest/api.html#wsme.signature

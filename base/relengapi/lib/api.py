@@ -11,6 +11,7 @@ import wsme.rest.args
 import wsme.rest.json
 import wsme.types
 import werkzeug
+from flask import abort
 from flask import json
 from flask import jsonify
 from flask import render_template
@@ -104,6 +105,10 @@ def apimethod(return_type, *arg_types, **options):
 
         @functools.wraps(wrapped)
         def replacement(*args, **kwargs):
+            data_only = kwargs.pop('_data_only_', False)
+            if data_only:
+                return wrapped(*args, **kwargs)
+
             try:
                 args, kwargs = wsme.rest.args.get_args(
                     funcdef, args, kwargs,
@@ -140,6 +145,17 @@ def apimethod(return_type, *arg_types, **options):
         replacement.__apidoc__ = wrapped.__doc__
         return replacement
     return wrap
+
+
+def get_data(view_func, *args, **kwargs):
+    kwargs['_data_only_'] = True
+    rv = view_func(*args, **kwargs)
+    if isinstance(rv, werkzeug.Response):
+        # TODO: this turns to a 302 instead..
+        if rv.status_code == 401:
+            abort(401, "required data not available")
+        raise ValueError("cannot access data required for page")
+    return rv
 
 
 def init_app(app):
