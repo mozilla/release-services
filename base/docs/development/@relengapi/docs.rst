@@ -26,6 +26,8 @@ The ``index.rst`` file can contain a ``toctree`` pointing to other files, or jus
 
 For example, usage documentation for a "bumper" project would be in ``docs/usage/relengapi-bumper/index.rst``.
 
+See :ref:`api-documentation` for information on documenting REST API endpoints and types.
+
 Building Documentation
 ----------------------
 
