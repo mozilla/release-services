@@ -195,7 +195,7 @@ def main():
                 destination = matching[distribution_type]
                 timestamp = datetime.datetime.now().strftime(STRFRTIME)
                 timestamped_manifest_name = "%s.%s" % (timestamp, new_manifest)
-
+                new_manifest_path_after_processing = os.path.join(upload_folder, timestamped_manifest_name)
                 comment_filename = new_manifest.replace(".tt", ".txt")
                 comment_filepath = os.path.join(upload_folder, new_manifest.replace(".tt", ".txt"))
 
@@ -273,7 +273,7 @@ def main():
                                 os.rename(comment_filepath, os.path.join(upload_folder, "%s.%s" % (timestamp, comment_filename)))
 
                                 # rename original manifest name
-                                os.rename(new_manifest_path, os.path.join(upload_folder, timestamped_manifest_name))
+                                os.rename(new_manifest_path, new_manifest_path_after_processing)
                         else:
                             #TODO: cleanup removing copied files beginning with "temp"
                             pass
@@ -283,7 +283,10 @@ def main():
                         if renamingOK:
                             # cleaning up source directory of copied files
                             shutil.rmtree(content_folder_path)
-                            notifier.sendmail(user, "TOOLTOOL UPLOAD COMPLETED! Tooltool package %s has been correctly processed by the tooltool sync script!" % new_manifest, "")
+                            inputFile = open(new_manifest_path_after_processing, 'r')
+                            body = inputFile.read()
+                            inputFile.close()
+                            notifier.sendmail(user, "TOOLTOOL UPLOAD COMPLETED! Tooltool package %s has been correctly processed by the tooltool sync script!" % new_manifest, body)
                         else:
                             notifier.sendmail("", "INTERNAL ERROR - sync script could not rename files in package %s" % new_manifest, "")
                     else:
