@@ -48,7 +48,7 @@ angular.module('tokens').controller('TokenListController', function($scope, $htt
     };
 });
 
-angular.module('tokens').controller('NewTokenController', function($scope) {
+angular.module('tokens').controller('NewTokenController', function($scope, $http) {
     $scope.issuing = false;
     $scope.error = null;
     $scope.newtoken = {
@@ -75,29 +75,22 @@ angular.module('tokens').controller('NewTokenController', function($scope) {
         var permissions = $scope.checkedPermissions();
         var description = $scope.newtoken.description;
 
-        // TODO: use $http
-        var result = $.ajax({
+        $http({
             url: '/tokenauth/tokens',
-            type: 'POST',
-            contentType: 'application/json; charset=utf-8',
+            method: 'POST',
+            headers: {'Content-Type': 'application/json; charset=utf-8'},
             data: JSON.stringify({permissions: permissions,
                                   description: description})
-        }).done(function(data) {
-            if (data.result.token) {
-                $scope.$apply(function() {
-                    $scope.token = data.result.token;
-                    $scope.tokens.push(data.result);
-                    alertify.success("token issued");
-                });
+        }).then(function(response) {
+            if (response.data.result.token) {
+                $scope.token = response.data.result.token;
+                $scope.tokens.push(response.data.result);
+                alertify.success("token issued");
             } else {
-                $scope.$apply(function() {
-                    $scope.error = "No token received";
-                });
+                $scope.error = "No token received";
             }
-        }).fail(function(jqhxr, err) {
-            $scope.$apply(function() {
-                $scope.error = "error from server: " + jqhxr.statusText;
-            });
+        }, function(error) {
+            $scope.error = "error from server: " + jqhxr.statusText;
         });
     };
 
