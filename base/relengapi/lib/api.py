@@ -11,7 +11,6 @@ import wsme.rest.args
 import wsme.rest.json
 import wsme.types
 import werkzeug
-from flask import abort
 from flask import json
 from flask import jsonify
 from flask import render_template
@@ -149,11 +148,15 @@ def apimethod(return_type, *arg_types, **options):
 
 def get_data(view_func, *args, **kwargs):
     kwargs['_data_only_'] = True
-    rv = view_func(*args, **kwargs)
+    # flag this as a subrequest, so that is_browser returns False
+    request.is_subrequest = True
+    try:
+        rv = view_func(*args, **kwargs)
+    finally:
+        del request.is_subrequest
     if isinstance(rv, werkzeug.Response):
-        # TODO: this turns to a 302 instead..
-        if rv.status_code == 401:
-            abort(401, "required data not available")
+        # this generally indicates that some other decorator decided to handle
+        # making the response itself -- at any rate, not what we want!
         raise ValueError("cannot access data required for page")
     return rv
 

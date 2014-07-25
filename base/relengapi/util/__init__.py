@@ -19,5 +19,8 @@ _mime_types = ('application/json', 'text/html')
 
 def is_browser():
     """Is the current request from a browser?"""
+    # all subrequests are not from browsers
+    if hasattr(request._get_current_object(), 'is_subrequest') and request.is_subrequest:
+        return False
     best_match = request.accept_mimetypes.best_match(_mime_types)
     return best_match == 'text/html'
