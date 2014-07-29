@@ -21,24 +21,7 @@ from relengapi import util
 from werkzeug.exceptions import HTTPException, BadRequest
 
 
-class Handler(object):
-
-    def _parse_result(self, result):
-        code = 200
-        headers = {}
-        if isinstance(result, tuple):
-            if len(result) == 2:
-                if isinstance(result[1], dict):
-                    result, headers = result
-                else:
-                    result, code = result
-            else:
-                result, code, headers = result
-            assert 200 <= code < 299
-        return result, code, headers
-
-
-class JsonHandler(Handler):
+class JsonHandler(object):
 
     """Handler for requests accepting application/json."""
     media_type = 'application/json'
@@ -73,7 +56,7 @@ class JsonHandler(Handler):
         return resp
 
 
-class HtmlHandler(Handler):
+class HtmlHandler(object):
 
     """Handler for requests accepting text/html"""
     media_type = 'text/html'
