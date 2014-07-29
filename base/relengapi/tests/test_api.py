@@ -2,14 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import json
 import mock
 from flask import json
 from nose.tools import eq_
 from relengapi.lib import api
+from relengapi.lib.permissions import p
 from relengapi import testing
 import wsme.types
 from werkzeug.exceptions import BadRequest
+
+
+p.test_api.doc('test permission')
 
 
 def app_setup(app):
@@ -37,6 +40,21 @@ def app_setup(app):
     @api.apimethod([unicode])
     def ok_header():
         return ['ok'], {'X-Header': 'Header'}
+
+    @app.route('/get_data')
+    @api.apimethod(unicode)
+    def get_some_data():
+        return repr(api.get_data(ok))
+
+    @app.route('/apimethod/notallowed')
+    @p.test_api.require()
+    def notallowed():
+        pass
+
+    @app.route('/get_data/notallowed')
+    @api.apimethod(unicode)
+    def get_some_data_notallowed():
+        return repr(api.get_data(notallowed))
 
 
 test_context = testing.TestContext(app_setup=app_setup, reuse_app=True)
@@ -110,3 +128,15 @@ def test_encoder(app):
         eq_(json.loads(json.dumps([o])), [{'name': 'test', 'value': 5}])
         eq_(json.loads(json.dumps(dict(x=o))),
             {'x': {'name': 'test', 'value': 5}})
+
+
+@test_context
+def test_get_data(client):
+    resp = client.get('/get_data')
+    eq_(json.loads(resp.data)['result'], "['ok']")
+
+
+@test_context
+def test_get_data_notallowed(client):
+    resp = client.get('/get_data/notallowed')
+    eq_(resp.status_code, 403)
