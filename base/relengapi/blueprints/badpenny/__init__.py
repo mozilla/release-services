@@ -69,12 +69,26 @@ class JsonJob(wsme.types.Base):
 
     #: unique job id
     id = wsme.types.wsattr(int, mandatory=True)
+
+    #: name of the task that created this job
     task_name = wsme.types.wsattr(unicode, mandatory=True)
+
+    #: time at which this job was created
     created_at = wsme.types.wsattr(datetime.datetime, mandatory=True)
+
+    #: time at which this job started executing
     started_at = wsme.types.wsattr(datetime.datetime, mandatory=False)
+
+    #: time at which this job finished executing
     completed_at = wsme.types.wsattr(datetime.datetime, mandatory=False)
+
+    #: true if the job was successful
     successful = wsme.types.wsattr(bool, mandatory=False)
+
+    #: arbitrary JSON-formatted string containing output from the job
     result = wsme.types.wsattr(unicode, mandatory=False)
+
+    #: text log from the job
     logs = wsme.types.wsattr(unicode, mandatory=False)
 
 
@@ -178,7 +192,7 @@ def list_jobs():
 @apimethod(JsonJob, int)
 @p.base.badpenny.view.require()
 def get_job(job_id):
-    """Get information on a badpenny task by name"""
+    """Get information on a badpenny job by its ID.  Use this to poll for job completion."""
     j = BadpennyJob.query.filter(BadpennyJob.id == job_id).first()
     if not j:
         raise NotFound

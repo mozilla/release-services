@@ -2,3 +2,4 @@
     permissions
     tokenauth
     versions
+    badpenny
