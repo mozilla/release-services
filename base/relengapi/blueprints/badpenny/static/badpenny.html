@@ -1,0 +1,48 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     License, v. 2.0. If a copy of the MPL was not distributed with this
+     file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<div ng-app='badpenny' ng-controller="TasksController">
+    <style>
+    </style>
+    <h1>Active Tasks <button ng-click="refresh()">Refresh</button></h1>
+    <div class="tasklist">
+        <div ng-repeat="task in tasks | orderBy:'name'">
+            <!-- TODO: use an icon rather than colored text -->
+            <span ng-class="{'last-never': task.last_success == -1,
+                              'last-fail': task.last_success == 0,
+                              'last-success': task.last_success == 1}">
+                              {{task.name}}</span>
+            <!-- TODO: some nice twirldown here -->
+            (<a href="#" ng-click="expandTask(task.name)">expand</a>)
+            <!-- TODO: maybe transplant this DOM element, rather than showing/hiding? -->
+            <div class="task-detail" ng-show="expandedTask == task.name">
+                <table class="joblist">
+                    <thead>
+                        <tr>
+                            <th>Created</th><th>Started</th><th>Completed</th>
+                            <th>Links</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="job in task.jobs | orderBy:'created_at'",
+                            ng-class="{'job-success': job.successful, 'job-fail': !job.successful}">
+                            <td>{{job.created_at}}</td>
+                            <td>{{job.started_at}}</td>
+                            <td>{{job.completed_at}}</td>
+                            <td>
+                                [<a ng-click="expandJob(job)" href="#">logs</a>]
+                                [<a href="/badpenny/jobs/{{job.id}}">details</a>]
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="logs" ng-show="expandedLogs != null">
+        <div class="logs-content">
+            <a class="close" href="#" ng-click="closeJob()">X</a>
+            <pre>{{expandedLogs}}</pre>
+        </div>
+    </div>
+</div>

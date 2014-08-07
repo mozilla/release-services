@@ -29,7 +29,6 @@ angular.module('tokens').controller('TokenController',
 
     $scope.refreshTokens = function() {
         return $http.get('/tokenauth/tokens').then(function (data, status, headers, config) {
-            console.log(data.data.result);
             $scope.tokens = data.data.result;
         }, function (data, status, header, config) {
             alertify.error("Failed getting token list: " + data);

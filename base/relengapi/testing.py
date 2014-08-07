@@ -18,6 +18,7 @@ class TestContext(object):
         'db_setup',
         'db_teardown',
         'config',
+        'perms',  # TODO: doc
         'user',
         'accept',
     ])
@@ -49,12 +50,20 @@ class TestContext(object):
             uris[dbname] = 'sqlite://'
         app = relengapi.app.create_app(test_config=config)
 
-        # set up logged-in user
-        u = self.options.get('user')
-        if u:
+        # translate 'perms' into a logged-in, human user
+        user = None
+        if 'perms' in self.options:
+            perms = self.options.get('perms')
+            user = auth.HumanUser('test@test.test')
+            user._permissions = perms
+        # otherwise, set up logged-in user
+        elif 'user' in self.options:
+            user = self.options.get('user')
+
+        if user:
             @app.before_request
             def set_user():
-                auth.login_manager.reload_user(u)
+                auth.login_manager.reload_user(user)
 
         # set up the requested DBs
         for dbname in dbnames:
@@ -67,7 +76,7 @@ class TestContext(object):
         return app
 
     @wrapt.decorator
-    def __call__(self, wrapped, instance, _, kwargs):
+    def __call__(self, wrapped, instance, given_args, kwargs):
         arginfo = inspect.getargspec(wrapped)
         args = set((arginfo.args if arginfo.args else []) +
                    (arginfo.keywords if arginfo.keywords else []))
@@ -85,7 +94,7 @@ class TestContext(object):
         if 'db_setup' in self.options:
             self.options['db_setup'](app)
         try:
-            wrapped(**kwargs)
+            wrapped(*given_args, **kwargs)
         finally:
             if 'db_teardown' in self.options:
                 self.options['db_teardown'](app)
