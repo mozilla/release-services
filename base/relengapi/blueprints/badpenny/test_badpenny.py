@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import mock
+import contextlib
 import datetime
 from flask import json
 from nose.tools import eq_
@@ -34,7 +36,7 @@ def insert_task(app, name):
     session.commit()
     return t
 
-cleanup_task = JsonTask(name="cleanup", last_success=0)
+cleanup_task = JsonTask(active=False, name="cleanup", last_success=0)
 cleanup_job_1 = JsonJob(
     id=1,
     result=json.dumps({"deleted": 6}),
@@ -54,7 +56,7 @@ cleanup_job_2 = JsonJob(
     started_at=dt(1978, 6, 16, 12),
     completed_at=dt(1978, 6, 16, 13))
 
-report_task = JsonTask(name="report", last_success=1)
+report_task = JsonTask(active=False, name="report", last_success=1)
 report_job_1 = JsonJob(
     id=3,
     result=json.dumps({}),
@@ -65,7 +67,7 @@ report_job_1 = JsonJob(
     started_at=dt(1978, 6, 2, 12),
     completed_at=dt(1978, 6, 2, 13))
 
-check_task = JsonTask(name="check", last_success=-1)
+check_task = JsonTask(active=False, name="check", last_success=-1)
 
 
 def add_data(app):
@@ -101,6 +103,17 @@ def add_data(app):
 
     insert_task(app, 'check')
 
+
+@contextlib.contextmanager
+def active_tasks(*tasks):
+    with mock.patch('relengapi.lib.badpenny.Task.get') as get:
+        # make some fake tasks
+        tasks = dict((task, mock.Mock(name=task,
+                                      schedule='schedule for {}'.format(task)))
+                     for task in tasks)
+        get.side_effect = tasks.get
+        yield
+
 # tests
 
 
@@ -112,7 +125,8 @@ def test_to_jsontask(app):
         eq_(json.dumps(t.to_jsontask()), json.dumps(cleanup_task))
         t = BadpennyTask.query.filter(BadpennyTask.name == 'report').first()
         eq_(json.dumps(t.to_jsontask(with_jobs=True)),
-            json.dumps(JsonTask(name="report", last_success=1, jobs=[report_job_1])))
+            json.dumps(JsonTask(active=False, name="report", last_success=1,
+                                jobs=[report_job_1])))
 
 
 @test_context.specialize(app_setup=add_data)
@@ -177,22 +191,53 @@ def test_perms_required():
 
 @test_context.specialize(app_setup=add_data, perms=[p.base.badpenny.view])
 def test_get_tasks(app, client):
-    """Getting /tasks gets a list of all tasks, in unspecified order"""
+    """Getting /tasks gets a list of all active tasks, in unspecified order"""
     with app.test_request_context():
         resp = client.get('/badpenny/tasks')
+        # nothing's active by default
+        eq_(json.loads(resp.data)['result'], [])
+        with active_tasks('check', 'cleanup'):
+            resp = client.get('/badpenny/tasks')
+            eq_(sorted([t['name'] for t in json.loads(resp.data)['result']]),
+                sorted(['check', 'cleanup']))
+
+
+@test_context.specialize(app_setup=add_data, perms=[p.base.badpenny.view])
+def test_get_all_tasks(app, client):
+    """Getting /tasks?all gets a list of all tasks, including inactive, in
+    unspecified order"""
+    with app.test_request_context():
+        resp = client.get('/badpenny/tasks?all=1')
         eq_(sorted([t['name'] for t in json.loads(resp.data)['result']]),
             sorted(['check', 'report', 'cleanup']))
 
 
 @test_context.specialize(app_setup=add_data, perms=[p.base.badpenny.view])
 def test_get_task(app, client):
-    """Getting /tasks/$task returns the appropriate task, or a 404"""
+    """Getting /tasks/$task returns the appropriate task"""
     with app.test_request_context():
         resp = client.get('/badpenny/tasks/check')
-        eq_(json.loads(resp.data)['result'], {
-            'name': 'check', 'last_success': -1, 'jobs': []})
+        eq_(json.loads(resp.data)['result'],
+            {'active': False, 'name': 'check', 'last_success': -1, 'jobs': []})
+
+
+@test_context.specialize(app_setup=add_data, perms=[p.base.badpenny.view])
+def test_get_task_nosuch(app, client):
+    """Getting /tasks/$task returns 404 if no such task exists"""
+    with app.test_request_context():
         resp = client.get('/badpenny/tasks/nosuch')
         eq_(resp.status_code, 404)
+
+
+@test_context.specialize(app_setup=add_data, perms=[p.base.badpenny.view])
+def test_get_active_task(app, client):
+    """Getting /tasks/$task returns active and a schedule for an active task"""
+    with app.test_request_context():
+        with active_tasks('check'):
+            resp = client.get('/badpenny/tasks/check')
+            eq_(json.loads(resp.data)['result'],
+                {'active': True, 'schedule': 'schedule for check',
+                 'name': 'check', 'last_success': -1, 'jobs': []})
 
 
 @test_context.specialize(app_setup=add_data, perms=[p.base.badpenny.view])

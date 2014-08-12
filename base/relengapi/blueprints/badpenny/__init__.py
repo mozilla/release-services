@@ -7,16 +7,18 @@ import wsme.types
 import logging
 import datetime
 import sqlalchemy as sa
-from flask import json
 from flask import url_for
 from flask import Blueprint
-from flask import render_template
 from relengapi import p
 from relengapi import apimethod
 from relengapi.lib import permissions
 from relengapi.lib import angular
 from relengapi.lib import api
+from relengapi.lib import badpenny
 from werkzeug.exceptions import NotFound
+
+# 'all' is a function argument, but also a builtin
+# pylint: disable=redefined-builtin
 
 logger = logging.getLogger(__name__)
 bp = Blueprint('badpenny', __name__,
@@ -127,10 +129,14 @@ class BadpennyTask(db.declarative_base('relengapi'), db.UniqueMixin):
         return name
 
     def to_jsontask(self, with_jobs=False):
-        t = JsonTask(name=self.name, last_success=self.last_success)
+        runtime_task = badpenny.Task.get(self.name)
+        task = JsonTask(name=self.name, last_success=self.last_success,
+                        active=bool(runtime_task))
+        if runtime_task:
+            task.schedule = runtime_task.schedule
         if with_jobs:
-            t.jobs = [j.to_jsonjob() for j in self.jobs]
-        return t
+            task.jobs = [j.to_jsonjob() for j in self.jobs]
+        return task
 
 
 class JsonTask(wsme.types.Base):
@@ -149,7 +155,11 @@ class JsonTask(wsme.types.Base):
     # is requested.
     jobs = wsme.types.wsattr([JsonJob], mandatory=False)
 
-    # TODO: schedule, active, etc. -- taken from runtime config
+    #: true if the task is active (that is, if it is defined in the code).
+    active = wsme.types.wsattr(bool, mandatory=True)
+
+    #: a pretty description of the task's schedule, if active
+    schedule = wsme.types.wsattr(unicode, mandatory=False)
 
 
 @bp.route('/')
@@ -162,18 +172,21 @@ def root():
 
 
 @bp.route('/tasks')
-@apimethod([JsonTask])
+@apimethod([JsonTask], bool)
 @p.base.badpenny.view.require()
-def list_tasks():
-    """List all badpenny tasks."""
-    return [t.to_jsontask() for t in BadpennyTask.query.all()]
+def list_tasks(all=False):
+    """List all badpenny tasks.  With "?all=1", include inactive tasks."""
+    rv = [t.to_jsontask() for t in BadpennyTask.query.all()]
+    if not all:
+        rv = [t for t in rv if t.active]
+    return rv
 
 
 @bp.route('/tasks/<task_name>')
 @apimethod(JsonTask, unicode)
 @p.base.badpenny.view.require()
 def get_task(task_name):
-    """Get information on a badpenny task by name"""
+    """Get information on a badpenny task by name."""
     t = BadpennyTask.query.filter(BadpennyTask.name == task_name).first()
     if not t:
         raise NotFound
@@ -192,8 +205,17 @@ def list_jobs():
 @apimethod(JsonJob, int)
 @p.base.badpenny.view.require()
 def get_job(job_id):
-    """Get information on a badpenny job by its ID.  Use this to poll for job completion."""
+    """Get information on a badpenny job by its ID.  Use this to poll for job
+    completion."""
     j = BadpennyJob.query.filter(BadpennyJob.id == job_id).first()
     if not j:
         raise NotFound
     return j.to_jsonjob()
+
+
+def sync_tasks(state):  # not used yet
+    """Synchronize tasks defined in code into the DB"""
+    with state.app.app_context():
+        for task in badpenny.Task.list():
+            BadpennyTask.as_unique(
+                state.app.db.session('relengapi'), name=task.name)

@@ -19,6 +19,9 @@ Tasks and Jobs
     A badpenny *task* is a named action that occurs on a schedule.
     That schedule is determined by the code implementing the action.
 
+    Tasks are defined in code, so they cannot be modified via the API.
+    Tasks that were once defined in the code, but are no longer, are considered "inactive".
+
 .. api:autotype:: BadpennyJob
 
     A *job* is a single execution of a task's action.

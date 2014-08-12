@@ -10,3 +10,4 @@
     utils
     testing
     docs
+    badpenny
