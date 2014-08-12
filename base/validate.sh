@@ -15,8 +15,8 @@ trap 'rm -f ${tmpbase}; exit 1' 1 2 3 15
 status "running pep8"
 pep8 --config=pep8rc relengapi || not_ok "pep8 failed"
 
-status "running pylint"
-pylint relengapi --rcfile=pylintrc || not_ok "pylint failed"
+status "running pyflakes"
+pyflakes relengapi || not_ok "pyflakes failed"
 
 status "building docs"
 relengapi build-docs --development || not_ok "build-docs failed"
@@ -44,7 +44,6 @@ git_only='
     .gitignore
     .travis.yml
     pep8rc
-    pylintrc
     coveragerc
     validate.sh
     validate-common.sh

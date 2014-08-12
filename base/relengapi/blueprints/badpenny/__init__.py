@@ -7,10 +7,8 @@ import wsme.types
 import logging
 import datetime
 import sqlalchemy as sa
-from flask import json
 from flask import url_for
 from flask import Blueprint
-from flask import render_template
 from relengapi import p
 from relengapi import apimethod
 from relengapi.lib import permissions
