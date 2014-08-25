@@ -17,9 +17,6 @@ from relengapi.lib import api
 from relengapi.lib import badpenny
 from werkzeug.exceptions import NotFound
 
-# 'all' is a function argument, but also a builtin
-# pylint: disable=redefined-builtin
-
 logger = logging.getLogger(__name__)
 bp = Blueprint('badpenny', __name__,
                static_folder='static',
