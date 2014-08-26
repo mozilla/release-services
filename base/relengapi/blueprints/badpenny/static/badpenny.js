@@ -37,7 +37,7 @@ angular.module('badpenny').controller('TasksController',
     };
 
     $scope.refresh = function() {
-        $http.get('/badpenny/tasks')
+        $http.get('/badpenny/tasks?active=1')
         .then(function (data, status, headers, config) {
             // copy over the job from the expanded task
             var newTasks = tasksByName(data.data.result);
