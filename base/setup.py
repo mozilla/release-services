@@ -44,10 +44,8 @@ setup(
             'mock',
             'coverage',
             'pep8',
-            # see
-            # https://bitbucket.org/logilab/pylint/issue/203/importing-namespace-packages-crashes
-            'pylint<1.2',
             'mockldap',
+            'pyflakes',
         ],
         # extras required only for LDAP authorization support
         'ldap': [

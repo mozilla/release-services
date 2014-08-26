@@ -149,7 +149,7 @@ def test_unique_mixin(app):
 def test_unique_request_expires_cache(app):
     with app.test_request_context():
         session = app.db.session('test_db')
-        row1 = Uniqueness_Table.as_unique(session, name='r1')
+        Uniqueness_Table.as_unique(session, name='r1')
         session.commit()
         instances = session.query(Uniqueness_Table).all()
         eq_(1, len(instances))
@@ -174,11 +174,11 @@ def test_unique_request_expires_cache(app):
 @TestContext(databases=['test_db'])
 def test_unique_session_rollback(app):
     session = app.db.session('test_db')
-    row1 = Uniqueness_Table.as_unique(session, name='r1')
+    Uniqueness_Table.as_unique(session, name='r1')
     session.commit()
     instances = session.query(Uniqueness_Table).all()
     eq_(1, len(instances))
-    row2 = Uniqueness_Table.as_unique(session, name='r2')
+    Uniqueness_Table.as_unique(session, name='r2')
     row3 = Uniqueness_Table.as_unique(session, name='r3', other='row3a')
     instances = session.query(Uniqueness_Table).all()
     eq_(3, len(instances))
@@ -187,7 +187,7 @@ def test_unique_session_rollback(app):
     session.rollback()
     instances = session.query(Uniqueness_Table).all()
     eq_(1, len(instances))
-    row2b = Uniqueness_Table.as_unique(session, name='r2')
+    Uniqueness_Table.as_unique(session, name='r2')
     row3b = Uniqueness_Table.as_unique(session, name='r3', other='row3b')
     instances = session.query(Uniqueness_Table).all()
     eq_(3, len(instances))
