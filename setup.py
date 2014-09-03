@@ -15,6 +15,7 @@ setup(
         "Flask",
         "furl",
         "relengapi",
+        "redo",
     ],
     extras_require = {
         'test': [
