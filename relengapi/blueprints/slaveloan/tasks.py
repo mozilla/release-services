@@ -23,7 +23,7 @@ def init_loan(loanid, loan_class):
     print "Loan Class = %s" % loan_class
     if slave_mappings.is_aws_serviceable(loan_class):
         print "aws host"
-        pass  # do_aws_loan.delay()
+        # do_aws_loan.delay()
     else:
         print "physical host: %s" % loan_class
         choose_inhouse_machine.delay(loanid, loan_class)
@@ -40,11 +40,15 @@ def choose_inhouse_machine(self, loanid, loan_class):
         print "Exception"
         self.retry(exc=exc)
     print "Got all slaves"
-    available_slaves = filter(slave_mappings.slave_filter(loan_class), all_slaves)
+    # pylint silence
+    # available_slaves = filter(slave_mappings.slave_filter(loan_class), all_slaves)
+    available_slaves = [slave for slave in all_slaves
+                        if slave_mappings.slave_filter(loan_class)(slave)]
     chosen = random.choice(available_slaves)
     print "Chosen Slave = %s" % chosen
     fixup_machine.delay(loanid, chosen['name'])
     start_disable_slave.delay(loanid, chosen['name'])
+
 
 @task(bind=True, max_retries=None)
 def fixup_machine(self, loanid, machine):
@@ -58,17 +62,18 @@ def fixup_machine(self, loanid, machine):
         m = Machines.as_unique(session,
                                fqdn=fqdn,
                                ipaddr=ipaddr)
-        print "FIXUP MACHINE = machine.to_json(): %s" %m.to_json()
+        print "FIXUP MACHINE = machine.to_json(): %s" % m.to_json()
         l = session.query(Loans).get(loanid)
         print "FIXUP MACHINE = loan.to_json(): %s" % l.to_json()
         l.machine = m
         session.commit()
         l = session.query(Loans).get(loanid)
         print "FIXUP MACHINE = loan.to_json(): %s" % l.to_json()
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=W0703
         print "FIXUP MACHINE (FAILED)"
         print exc
         self.retry(exc=exc)
+
 
 @task(bind=True, max_retries=None)
 def start_disable_slave(self, loanid, machine):
@@ -82,5 +87,9 @@ def start_disable_slave(self, loanid, machine):
         r = retry(requests.post, args=(str(url),), kwargs=dict(data=postdata)).json()
         print "START DISABLE SLAVE = r: %s" % str(r)
         raise
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=W0703
         self.retry(exc=exc)
+
+if __name__ == "__main__":
+    temporary_silence_pylint = History
+    temporary_silence_pylint = Humans
