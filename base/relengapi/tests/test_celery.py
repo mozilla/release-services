@@ -11,7 +11,7 @@ from celery.signals import worker_ready
 from relengapi.testing import TestContext
 from nose.tools import eq_
 from nose.tools import assert_raises
-from relengapi import celery
+from relengapi.lib import celery
 
 test_temp_dir = os.path.join(os.path.dirname(__file__), 'test_temp')
 
