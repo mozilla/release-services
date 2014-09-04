@@ -15,9 +15,9 @@ class BadpennyJob(db.declarative_base('relengapi')):
     task_id = sa.Column(sa.Integer, sa.ForeignKey('badpenny_tasks.id'))
     task = sa.orm.relationship('BadpennyTask')
 
-    created_at = sa.Column(sa.DateTime(), nullable=False)
-    started_at = sa.Column(sa.DateTime(), nullable=True)
-    completed_at = sa.Column(sa.DateTime(), nullable=True)
+    created_at = sa.Column(db.UTCDateTime(timezone=True), nullable=False)
+    started_at = sa.Column(db.UTCDateTime(timezone=True), nullable=True)
+    completed_at = sa.Column(db.UTCDateTime(timezone=True), nullable=True)
     successful = sa.Column(sa.Boolean())
 
     # 'result' is JSON data

@@ -5,15 +5,18 @@
 import mock
 import contextlib
 import datetime
+import pytz
 from flask import json
 from nose.tools import eq_
 from relengapi.testing import TestContext
+from relengapi.lib import badpenny
 from relengapi.lib.permissions import p
 from relengapi.blueprints.badpenny import tables
 from relengapi.blueprints.badpenny import rest
+from relengapi.blueprints.badpenny import cron
 
 
-dt = datetime.datetime
+dt = lambda *args: datetime.datetime(*args, tzinfo=pytz.UTC)
 
 test_context = TestContext(databases=['relengapi'],
                            reuse_app=True)
@@ -262,3 +265,110 @@ def test_get_job(app, client):
             json.loads(json.dumps(report_job_1)))
         resp = client.get('/badpenny/jobs/9999999')
         eq_(resp.status_code, 404)
+
+# badpenny_cron
+
+
+@contextlib.contextmanager
+def empty_registry():
+    old_registry = badpenny.Task._registry
+    badpenny.Task._registry = {}
+    try:
+        yield
+    finally:
+        badpenny.Task._registry = old_registry
+
+
+def fake_task_func(name):
+    func = lambda j: None
+    func.__module__ = 'test'
+    func.__name__ = name
+    return func
+
+
+@test_context
+def test_cron_sync_tasks(app):
+    """The `sync_tasks` method inserts new rows into the DB for any new
+    registered tasks, and sets task.task_id"""
+    cmd = cron.BadpennyCron()
+    with app.app_context():
+        with empty_registry():
+            badpenny.periodic_task(seconds=10)(fake_task_func('foo'))
+            badpenny.periodic_task(seconds=10)(fake_task_func('bar'))
+            cmd.sync_tasks()
+
+            dbtasks = tables.BadpennyTask.query.all()
+            eq_(sorted([t.name for t in dbtasks]),
+                sorted(['test.foo', 'test.bar']))
+
+            badpenny.periodic_task(seconds=30)(fake_task_func('bing'))
+            cmd.sync_tasks()
+
+            dbtasks = tables.BadpennyTask.query.all()
+            eq_(sorted([t.name for t in dbtasks]),
+                sorted(['test.foo', 'test.bar', 'test.bing']))
+
+            eq_(sorted([t.task_id for t in badpenny.Task.list()]), [1, 2, 3])
+
+
+@test_context
+def test_cron_runnable_tasks(app):
+    """The `runnable_tasks` method yields Task instances for runnable tasks"""
+
+    def runnable_yes(bpt, now):
+        assert isinstance(bpt, tables.BadpennyTask)
+        eq_(now, 'now')
+        return True
+
+    def runnable_no(bpt, now):
+        assert isinstance(bpt, tables.BadpennyTask)
+        eq_(now, 'now')
+        return False
+
+    cmd = cron.BadpennyCron()
+    with app.app_context():
+        with empty_registry():
+            badpenny._task_decorator(runnable_yes, 'y')(fake_task_func('yes'))
+            badpenny._task_decorator(runnable_no, 'n')(fake_task_func('no'))
+            cmd.sync_tasks()
+
+            tasks = list(cmd.runnable_tasks('now'))
+            eq_([t.name for t in tasks], ['test.yes'])
+
+
+@test_context
+def test_cron_run_task(app):
+    """The `run_task` method inserts a new BadpennyJob row"""
+    cmd = cron.BadpennyCron()
+    with app.app_context():
+        badpenny.periodic_task(seconds=10)(fake_task_func('ten'))
+        cmd.sync_tasks()
+        task = badpenny.Task.get('test.ten')
+
+        today = dt(2014, 9, 6, 16, 10, 45)
+        with mock.patch('relengapi.lib.time.now') as now:
+            now.return_value = today
+            cmd.run_task(task)
+
+        job = tables.BadpennyJob.query.first()
+        eq_(job.task_id, task.task_id)
+        eq_(job.created_at, today)
+        eq_(job.started_at, None)
+        eq_(job.completed_at, None)
+
+
+def test_cron_run():
+    """The `relengapi badpenny-cron` script syncs tasks, gets the list of runnable tasks,
+    and then runs them."""
+    cmd = cron.BadpennyCron()
+    with mock.patch.multiple('relengapi.blueprints.badpenny.cron.BadpennyCron',
+                             sync_tasks=mock.DEFAULT,
+                             runnable_tasks=mock.DEFAULT,
+                             run_task=mock.DEFAULT) as mocks:
+        tasks = [tables.BadpennyTask(name=n) for n in '01']
+        mocks['runnable_tasks'].return_value = tasks
+        cmd.run(None, None)
+        mocks['sync_tasks'].assert_called_with()
+        mocks['runnable_tasks'].assert_called_with(mock.ANY)
+        eq_(mocks['run_task'].mock_calls, [
+            mock.call(tasks[0]), mock.call(tasks[1])])

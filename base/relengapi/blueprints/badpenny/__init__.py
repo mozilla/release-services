@@ -10,9 +10,9 @@ from relengapi import apimethod
 from relengapi.lib import permissions
 from relengapi.lib import angular
 from relengapi.lib import api
-from relengapi.lib import badpenny
 from relengapi.blueprints.badpenny import tables
 from relengapi.blueprints.badpenny import rest
+from relengapi.blueprints.badpenny import cron
 from werkzeug.exceptions import NotFound
 
 logger = logging.getLogger(__name__)
@@ -81,10 +81,4 @@ def get_job(job_id):
         raise NotFound
     return j.to_jsonjob()
 
-
-def sync_tasks(state):  # not used yet
-    """Synchronize tasks defined in code into the DB"""
-    with state.app.app_context():
-        for task in badpenny.Task.list():
-            tables.BadpennyTask.as_unique(
-                state.app.db.session('relengapi'), name=task.name)
+_hush_pyflakes = [cron]
