@@ -109,7 +109,7 @@ class UTCDateTime(types.TypeDecorator):
     impl = types.DateTime
 
     def process_bind_param(self, value, dialect):
-        if value.tzinfo is not None:
+        if value is not None and value.tzinfo is not None:
             # Convert to UTC
             value = pytz.UTC.normalize(value.astimezone(pytz.UTC))
         # else assume UTC
@@ -117,11 +117,8 @@ class UTCDateTime(types.TypeDecorator):
 
     def process_result_value(self, value, dialect):
         # We expect UTC dates back, so populate with tzinfo
-        if value.tzinfo:
-            # How did we get here, dialects we know about
-            # return naive datetime objects
-            pass
-        return value.replace(tzinfo=pytz.UTC)
+        if value is not None:
+            return value.replace(tzinfo=pytz.UTC)
 
 
 def _unique(session, cls, hashfunc, queryfunc, constructor, arg, kw, _test_hook=None):
