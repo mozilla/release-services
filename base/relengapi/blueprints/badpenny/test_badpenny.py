@@ -14,6 +14,7 @@ from relengapi.lib.permissions import p
 from relengapi.blueprints.badpenny import tables
 from relengapi.blueprints.badpenny import rest
 from relengapi.blueprints.badpenny import cron
+from relengapi.blueprints.badpenny import execution
 
 
 dt = lambda *args: datetime.datetime(*args, tzinfo=pytz.UTC)
@@ -372,3 +373,86 @@ def test_cron_run():
         mocks['runnable_tasks'].assert_called_with(mock.ANY)
         eq_(mocks['run_task'].mock_calls, [
             mock.call(tasks[0]), mock.call(tasks[1])])
+
+# task execution
+
+
+def test_submit_job():
+    """`execution.submit_job` just invokes _run_job via Celery"""
+    with mock.patch('relengapi.blueprints.badpenny.execution._run_job') as _run_job:
+        execution.submit_job('foo', 10)
+        _run_job.delay.assert_called_with('foo', 10)
+
+
+@contextlib.contextmanager
+def run_job_setup():
+    task_ran = []
+    with empty_registry():
+        @badpenny.periodic_task(seconds=1)
+        def my_task(js):
+            assert isinstance(js, execution.JobStatus)
+            task_ran.append(1)
+            js.log_message('HELLO')
+            return 'RES'
+
+        @badpenny.periodic_task(seconds=1)
+        def failz(js):
+            task_ran.append(1)
+            raise RuntimeError('oh noes')
+
+        yield task_ran
+
+
+@test_context
+def test_run_job_no_such_task(app):
+    """`execution._run_job` ignores runs with no matching task"""
+    with run_job_setup() as task_ran:
+        # no such task..
+        with app.app_context():
+            execution._run_job.apply((__name__ + '.nosuch', 10))
+        assert not task_ran
+
+
+@test_context
+def test_run_job_no_job(app):
+    """`execution._run_job` ignores runs with no existing job row"""
+    with run_job_setup() as task_ran:
+        with app.app_context():
+            execution._run_job.apply((__name__ + '.my_task', 10))
+        assert not task_ran
+
+
+@test_context
+def test_run_job_success(app):
+    """`execution._run_job` runs a job and updates the job row."""
+    with run_job_setup() as task_ran:
+        with app.app_context():
+            job = tables.BadpennyJob(task_id=10, created_at=dt(2014, 9, 16))
+            app.db.session('relengapi').add(job)
+            app.db.session('relengapi').commit()
+            execution._run_job.apply((__name__ + '.my_task', job.id))
+        assert task_ran
+
+        assert 'HELLO' in job.logs
+        assert job.started_at is not None
+        assert job.completed_at is not None
+        eq_(json.loads(job.result), 'RES')
+        eq_(job.successful, True)
+
+
+@test_context
+def test_run_job(app):
+    """When a job fails, `execution._run_job` logs the exception."""
+    with run_job_setup() as task_ran:
+        with app.app_context():
+            job = tables.BadpennyJob(task_id=10, created_at=dt(2014, 9, 16))
+            app.db.session('relengapi').add(job)
+            app.db.session('relengapi').commit()
+            execution._run_job.apply((__name__ + '.failz', job.id))
+        assert task_ran
+
+        assert 'oh noes' in job.logs
+        assert job.started_at is not None
+        assert job.completed_at is not None
+        eq_(json.loads(job.result), None)
+        eq_(job.successful, False)

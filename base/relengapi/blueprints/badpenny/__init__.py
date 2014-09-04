@@ -81,4 +81,6 @@ def get_job(job_id):
         raise NotFound
     return j.to_jsonjob()
 
+# Flask is fond of module-level code, which means imports have side-effects,
+# which upsets pyflakes.
 _hush_pyflakes = [cron]

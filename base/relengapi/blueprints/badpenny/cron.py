@@ -8,6 +8,7 @@ from flask import current_app
 from relengapi.lib import badpenny
 from relengapi.lib import time
 from relengapi.blueprints.badpenny import tables
+from relengapi.blueprints.badpenny import execution
 import logging
 
 bp = Blueprint('base', __name__)
@@ -46,7 +47,8 @@ class BadpennyCron(subcommands.Subcommand):
             created_at=time.now())
         current_app.db.session('relengapi').add(job)
         current_app.db.session('relengapi').commit()
-        # TODO: actually set off the celery task
+
+        execution.submit_job(task_name=task.name, job_id=job.id)
 
     def run(self, parser, args):
         logger.info("Synchronizing tasks into the DB")
