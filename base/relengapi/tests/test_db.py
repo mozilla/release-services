@@ -57,6 +57,16 @@ def test_UTCDateTime_datetime_object(app):
 
 
 @TestContext(databases=['test_db'])
+def test_UTCDateTime_null(app):
+    session = app.db.session('test_db')
+    session.add(DevTable(date=None))
+    session.commit()
+    instances = session.query(DevTable).all()
+    eq_(1, len(instances))
+    eq_(instances[0].date, None)
+
+
+@TestContext(databases=['test_db'])
 @with_setup(setup=set_system_timezone_no_utc, teardown=restore_system_timezone)
 def test_UTCDateTime_converts(app):
     session = app.db.session('test_db')
