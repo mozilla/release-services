@@ -1,5 +1,5 @@
-Using Tasks
-===========
+Using Celery Tasks
+==================
 
 Releng API uses `Celery <http://www.celeryproject.org/>`_ to distribute tasks to workers.
 
@@ -8,9 +8,9 @@ The implementation of tasks within Releng API is very close to that documented f
 Defining Tasks
 --------------
 
-Tasks are defined in blueprints using a decorator from ``relengapi.celery``, rather than that suggested by the Celery documentation::
+Tasks are defined in blueprints using a decorator from ``relengapi.lib.celery``, rather than that suggested by the Celery documentation::
 
-    from relengapi import celery
+    from relengapi.lib import celery
 
     @celery.task
     def add(x, y, z):

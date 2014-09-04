@@ -6,10 +6,10 @@ import os
 from flask import Flask
 from flask import g
 from flask import render_template
-from relengapi import celery
 from relengapi import db
 from relengapi.lib import api
 from relengapi.lib import auth
+from relengapi.lib import celery
 from relengapi.lib import layout
 from relengapi.lib import monkeypatches
 from relengapi.lib import permissions
