@@ -112,6 +112,12 @@ class UTCDateTime(types.TypeDecorator):
         if value is not None and value.tzinfo is not None:
             # Convert to UTC
             value = pytz.UTC.normalize(value.astimezone(pytz.UTC))
+            # MySQL stores datetimes without any timezone information, similar
+            # to a naive Python datetime.  Passing it a tz-aware datetime
+            # causes a warning ("Out of range value for column .."), so we make
+            # it naive.
+            if dialect == 'mysql':
+                value = value.replace(tzinfo=None)
         # else assume UTC
         return value
 
