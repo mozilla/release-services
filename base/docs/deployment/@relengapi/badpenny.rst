@@ -23,3 +23,10 @@ A single-host crontask might look like this:
     * * * * * * RELENGAPI_SETTINGS=/path/to/settings.py /path/to/relengapi --quiet badpenny-cron
 
 The ``--quiet`` silences "normal" output, leaving only warning-level and higher logging to stdout.
+
+Cleanup
+-------
+
+Every job is logged in the database, and for a busy production environment this can become a lot of data!
+
+The ``BADPENNY_OLD_JOB_DAYS`` configuration gives a number of days after which jobs will be purged from the database, defaulting to 7.

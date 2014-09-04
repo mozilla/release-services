@@ -13,6 +13,7 @@ from relengapi.lib import api
 from relengapi.blueprints.badpenny import tables
 from relengapi.blueprints.badpenny import rest
 from relengapi.blueprints.badpenny import cron
+from relengapi.blueprints.badpenny import cleanup
 from werkzeug.exceptions import NotFound
 
 logger = logging.getLogger(__name__)
@@ -83,4 +84,4 @@ def get_job(job_id):
 
 # Flask is fond of module-level code, which means imports have side-effects,
 # which upsets pyflakes.
-_hush_pyflakes = [cron]
+_hush_pyflakes = [cron, cleanup]

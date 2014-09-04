@@ -15,6 +15,7 @@ from relengapi.blueprints.badpenny import tables
 from relengapi.blueprints.badpenny import rest
 from relengapi.blueprints.badpenny import cron
 from relengapi.blueprints.badpenny import execution
+from relengapi.blueprints.badpenny import cleanup
 
 
 dt = lambda *args: datetime.datetime(*args, tzinfo=pytz.UTC)
@@ -456,3 +457,29 @@ def test_run_job(app):
         assert job.completed_at is not None
         eq_(json.loads(job.result), None)
         eq_(job.successful, False)
+
+# cleanup
+
+
+@test_context.specialize(reuse_app=False)
+def test_cleanup(app):
+    """The cleanup task deletes jobs older than 7 days"""
+    job_status = mock.Mock(spec=execution.JobStatus)
+    with app.app_context():
+        session = app.db.session('relengapi')
+        task = tables.BadpennyTask(name='foo')
+        session.add(task)
+        newjob = lambda id, created_at: task.jobs.append(
+            tables.BadpennyJob(id=id, task_id=task.id,
+                               created_at=created_at))
+        newjob(1, dt(2014, 9, 20))
+        newjob(2, dt(2014, 9, 15))
+        newjob(3, dt(2014, 9, 10))
+        newjob(4, dt(2014, 9, 5))
+        session.commit()
+        with mock.patch('relengapi.blueprints.badpenny.cleanup.time.now') as now:
+            now.return_value = dt(2014, 9, 16)
+            cleanup.cleanup_old_jobs(job_status)
+
+        eq_(sorted([j.id for j in tables.BadpennyJob.query.all()]),
+            sorted([1, 2, 3]))  # 4 is gone
