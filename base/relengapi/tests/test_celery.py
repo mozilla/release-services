@@ -99,3 +99,10 @@ def test_mult(app):
 
 def test_bad_decorator_use():
     assert_raises(TypeError, lambda: celery.task(None))
+
+
+def test_relengapi_celery_module():
+    """The module path `relengapi.celery.celery` exists and is a Celery object,
+    as `celery -A relengapi` expects"""
+    import relengapi.celery
+    eq_(type(relengapi.celery.celery).__name__, 'Celery')

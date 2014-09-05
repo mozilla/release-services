@@ -51,7 +51,7 @@ class JsonHandler(object):
                 error['traceback'] = traceback.format_exc().split('\n')
                 error['name'] = exc_type.__name__
                 error['description'] = str(exc_value)
-            resp = jsonify(error)
+            resp = jsonify(error=error)
             resp.status_code = 500
         return resp
 

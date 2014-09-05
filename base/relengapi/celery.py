@@ -14,7 +14,7 @@ import sys
 class PropModule(types.ModuleType):
 
     @property
-    def celery(self):  # pragma: no cover
+    def celery(self):
         import relengapi.app
         app = relengapi.app.create_app(True)
         return app.celery

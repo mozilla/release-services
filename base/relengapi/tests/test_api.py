@@ -2,9 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import sys
 import mock
 from flask import json
+from flask import redirect
 from nose.tools import eq_
+from nose.tools import assert_raises
 from relengapi.lib import api
 from relengapi.lib.permissions import p
 from relengapi import testing
@@ -56,6 +59,11 @@ def app_setup(app):
     def get_some_data_notallowed():
         return repr(api.get_data(notallowed))
 
+    @app.route('/redirect')
+    @api.apimethod(unicode)
+    def return_response():
+        return redirect('/foo')
+
 
 test_context = testing.TestContext(app_setup=app_setup, reuse_app=True)
 
@@ -79,12 +87,73 @@ def test_JsonHandler_render_response(app):
 
 
 @test_context
+def test_JsonHandler_handle_exception_httpexception(app):
+    """JsonHandler handles HTTP exceptions with an error response containing
+    information about the status code"""
+    h = api.JsonHandler()
+    with app.test_request_context():
+        try:
+            raise BadRequest()
+        except Exception:
+            resp = h.handle_exception(*sys.exc_info())
+            eq_(resp.status_code, 400)
+            eq_(json.loads(resp.data)['error']['code'], 400)
+            # the message comes from Werkzeug and might change, so
+            # it's not tested
+
+
+@test_context
+def test_JsonHandler_handle_exception(app):
+    """JsonHandler handles regular exceptions with an error response"""
+    h = api.JsonHandler()
+    with app.test_request_context():
+        app.debug = True
+        # mock out log_exception, since it prints to stdout
+        with mock.patch("flask.current_app.log_exception"):
+            try:
+                raise RuntimeError('oh noes')
+            except Exception:
+                resp = h.handle_exception(*sys.exc_info())
+                eq_(resp.status_code, 500)
+                data = json.loads(resp.data)
+                eq_(data['error']['code'], 500)
+                assert 'oh noes' in data['error']['description']
+
+
+@test_context
 def test_HtmlHandler_render_response(app):
     h = api.HtmlHandler()
     with app.test_request_context():
         resp = h.render_response([1, 2, 3], 200, {})
         assert '<html' in resp.data, resp.data
         assert "1," in resp.data, resp.data
+
+
+@test_context
+def test_HtmlHandler_handle_exception_httpexception(app):
+    """HTMLHandler passes HTTP exceptions to app.handle_http_exception"""
+    h = api.HtmlHandler()
+    with app.test_request_context():
+        with mock.patch("flask.current_app.handle_http_exception") as hhe:
+            br = BadRequest()
+            try:
+                raise br
+            except Exception:
+                h.handle_exception(*sys.exc_info())
+            hhe.assert_called_with(br)
+
+
+@test_context
+def test_HtmlHandler_handle_exception(app):
+    """HTMLHandler passes regular exceptions through to the caller"""
+    h = api.HtmlHandler()
+    with app.test_request_context():
+        try:
+            raise RuntimeError("oh noes")
+        except Exception:
+            # just passes through regular exceptions
+            assert_raises(RuntimeError, lambda:
+                          h.handle_exception(*sys.exc_info()))
 
 
 def test_apimethod():
@@ -108,6 +177,12 @@ def test_apimethod():
     yield lambda: t(path='/apimethod/201/header', exp_status_code=201,
                     exp_headers={'X-Header': 'Header'})
     yield lambda: t(path='/apimethod/header', exp_headers={'X-Header': 'Header'})
+
+
+@test_context
+def test_apimethod_redirect(client):
+    resp = client.get('/redirect')
+    eq_(resp.status_code, 302)
 
 
 class TestType(wsme.types.Base):
