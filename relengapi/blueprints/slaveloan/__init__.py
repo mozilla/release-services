@@ -11,7 +11,6 @@ from flask import g
 import flask_login
 from werkzeug.exceptions import BadRequest
 from relengapi import apimethod
-from relengapi import db
 from relengapi import p
 from relengapi.util import tz
 from relengapi.blueprints.slaveloan.slave_mappings import slave_patterns
@@ -114,7 +113,7 @@ def new_loan_from_admin():
                       timestamp=tz.utcnow(),
                       msg="Adding to slave loan tool via admin interface")
     session.add(l)
-    session.add(h)
+    session.add(history)
     session.commit()
 #    tasks.init_loan.delay(l.id, "bld-lion-r5")
     return WSME_New_Loan({'loan': l.to_wsme()})

@@ -10,8 +10,8 @@ source ./validate-common.sh
 status "running pep8 -- slaveloan"
 pep8 --config=../base/pep8rc relengapi || not_ok "pep8 failed"
 
-status "running pylint"
-pylint relengapi --rcfile=../base/pylintrc || not_ok "pylint failed"
+status "running pyflakes"
+pyflakes relengapi || not_ok "pyflakes failed"
 
 show_results
 
