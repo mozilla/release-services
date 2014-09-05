@@ -6,6 +6,9 @@ import sys
 from nose.tools import eq_
 from cStringIO import StringIO
 from relengapi import subcommands
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class MySubcommand(subcommands.Subcommand):
@@ -16,7 +19,9 @@ class MySubcommand(subcommands.Subcommand):
         return parser
 
     def run(self, parser, args):
-        print "subcommand running"
+        print "print"
+        logger.info("info")
+        logger.warning("warning")
         MySubcommand.run_result = args.result
 
 
@@ -38,5 +43,16 @@ def test_subcommand_help():
 
 
 def test_subcommand_runs():
-    assert "subcommand running" in run_main(['my-subcommand', '--result=foo'])
+    output = run_main(['my-subcommand', '--result=foo'])
+    assert "print" in output
+    assert "info" in output
+    assert "warning" in output
+    eq_(MySubcommand.run_result, 'foo')
+
+
+def test_subcommand_quiet():
+    output = run_main(['--quiet', 'my-subcommand', '--result=foo'])
+    assert "print" in output
+    assert "info" not in output
+    assert "warning" in output
     eq_(MySubcommand.run_result, 'foo')
