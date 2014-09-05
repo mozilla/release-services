@@ -10,7 +10,7 @@ import requests
 from requests import RequestException
 
 from flask import current_app
-from relengapi.celery import task
+from relengapi.lib.celery import task
 from relengapi.blueprints.slaveloan import slave_mappings
 from relengapi.blueprints.slaveloan.model import Machines, Humans, Loans, History
 from redo import retry
