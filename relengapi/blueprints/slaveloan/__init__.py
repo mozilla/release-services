@@ -77,7 +77,7 @@ def admin():
 
 @bp.route('/admin/', methods=['POST'])
 @p.slaveloan.admin.require()
-@apimethod()
+@apimethod(WSME_New_Loan)
 def new_loan_from_admin():
     if 'status' not in request.json:
         raise BadRequest("Missing Status Field")
