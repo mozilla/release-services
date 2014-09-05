@@ -16,8 +16,10 @@ from relengapi import p
 from relengapi.util import tz
 from relengapi.blueprints.slaveloan.slave_mappings import slave_patterns
 from relengapi.blueprints.slaveloan import tasks
+import wsme.types
 
 from relengapi.blueprints.slaveloan.model import Machines, Humans, Loans, History
+from relengapi.blueprints.slaveloan.model import WSME_Loan_Loans_Table
 
 logger = logging.getLogger(__name__)
 
@@ -29,26 +31,35 @@ _tbl_prefix = 'slaveloan_'
 p.slaveloan.admin.doc("Administer Slaveloans for all users")
 
 
+WSME_Machine_Class = wsme.types.DictType(key_type=unicode,
+                                         value_type=wsme.types.ArrayType(unicode))
+
+
+class WSME_New_Loan(wsme.types.Base):
+    """The loan object that was created"""
+    loan = WSME_Loan_Loans_Table
+
+
 @bp.route('/machine/classes')
-@apimethod()
+@apimethod(WSME_Machine_Class)
 def get_machine_classes():
     return slave_patterns()
 
 
 @bp.route('/loans/')
-@apimethod()
+@apimethod([WSME_Loan_Loans_Table])
 def get_loans():
     session = g.db.session('relengapi')
     loans = session.query(Loans).filter(Loans.machine_id.isnot(None))
-    return [l.to_json() for l in loans.all()]
+    return [l.to_wsme() for l in loans.all()]
 
 
 @bp.route('/loans/all')
-@apimethod()
+@apimethod([WSME_Loan_Loans_Table])
 def get_all_loans():
     session = g.db.session('relengapi')
     loans = session.query(Loans)
-    return [l.to_json() for l in loans.all()]
+    return [l.to_wsme() for l in loans.all()]
 
 
 @bp.route('/')
@@ -106,7 +117,7 @@ def new_loan_from_admin():
     session.add(h)
     session.commit()
 #    tasks.init_loan.delay(l.id, "bld-lion-r5")
-    return {'loan': l.to_json()}
+    return WSME_New_Loan({'loan': l.to_wsme()})
 
 
 @bp.route('/tmp/')

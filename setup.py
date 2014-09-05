@@ -4,6 +4,14 @@
 
 from setuptools import setup, find_packages
 
+data_patterns = [
+    'templates/**.html',
+    'static/**.jpg',
+    'static/**.css',
+    'static/**.js',
+    'static/**.txt',
+]
+
 setup(
     name='relengapi-slaveloan',
     version='0.1',
@@ -25,10 +33,8 @@ setup(
     },
     packages=find_packages(),
     package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
-        'relengapi.blueprints.slaveloan': [
-            'src/*/*.rst',
-            'src/conf.py',
-            'templates/*.html',
+        'relengapi.blueprints.slaveloan': data_patterns + [
+            'docs/**.rst'
         ],
     },
     include_package_data=True,

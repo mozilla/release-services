@@ -6,8 +6,16 @@ import sqlalchemy as sa
 from sqlalchemy.orm import relationship
 from relengapi import db
 from relengapi.util import tz
+import wsme.types
 
 _tbl_prefix = 'slaveloan_'
+
+
+class WSME_Loan_Machine_Table(wsme.types.Base):
+    "Represents a Machine Table Row"
+    id = int
+    fqdn = unicode
+    ipaddr = unicode
 
 
 class Machines(db.declarative_base('relengapi'), db.UniqueMixin):
@@ -28,6 +36,16 @@ class Machines(db.declarative_base('relengapi'), db.UniqueMixin):
     def to_json(self):
         return dict(id=self.id, fqdn=self.fqdn, ipaddr=self.ipaddr)
 
+    def to_wsme(self):
+        return WSME_Loan_Machine_Table(**self.to_json())
+
+
+class WSME_Loan_Human_Table(wsme.types.Base):
+    "Represents a Human requesting a loan"
+    id = int
+    ldap = unicode
+    bugzilla = unicode
+
 
 class Humans(db.declarative_base('relengapi'), db.UniqueMixin):
     __tablename__ = _tbl_prefix + 'humans'
@@ -47,6 +65,17 @@ class Humans(db.declarative_base('relengapi'), db.UniqueMixin):
     def to_json(self):
         return dict(id=self.id, ldap=self.ldap, bugzilla=self.bugzilla)
 
+    def to_wsme(self):
+        return WSME_Loan_Human_Table(**self.to_json())
+
+
+class WSME_Loan_Loans_Table(wsme.types.Base):
+    "Represents a singe Loan Entry"
+    id = int
+    status = unicode
+    human = WSME_Loan_Human_Table
+    machine = WSME_Loan_Machine_Table
+
 
 class Loans(db.declarative_base('relengapi')):
     __tablename__ = _tbl_prefix + 'loans'
@@ -63,15 +92,18 @@ class Loans(db.declarative_base('relengapi')):
     # # human   (Humans)
     # # machine (Machines)
 
-    def to_json(self):
+    def to_json(self, sub_meth="to_json"):
         if self.machine_id:
             return dict(id=self.id, status=self.status,
-                        human=self.human.to_json(),
-                        machine=self.machine.to_json())
+                        human=getattr(self.human, sub_meth)(),
+                        machine=getattr(self.machine, sub_meth)())
         else:
             return dict(id=self.id, status=self.status,
-                        human=self.human.to_json(),
+                        human=getattr(self.human, sub_meth)(),
                         machine=None)
+
+    def to_wsme(self):
+        return WSME_Loan_Loans_Table(**self.to_json(sub_meth="to_wsme"))
 
 
 class History(db.declarative_base('relengapi')):
