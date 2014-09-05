@@ -50,7 +50,7 @@ def typereference(datatype):
 
 
 # from PEP-0257
-def trim_docstring(docstring):
+def trim_docstring(docstring):  # pragma: no cover
     if not docstring:
         return ''
     # Convert tabs to spaces (following the normal Python rules)
@@ -334,7 +334,7 @@ class ApiDomain(Domain):
                             contnode, target)
 
 
-def verify_everything_documented(app, exception):
+def verify_everything_documented(app, exception):  # pragma: no cover
     if exception:
         return
 
