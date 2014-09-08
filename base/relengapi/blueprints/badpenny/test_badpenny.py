@@ -7,7 +7,7 @@ import contextlib
 import datetime
 from flask import json
 from nose.tools import eq_
-from relengapi.testing import TestContext
+from relengapi.tests.context import TestContext
 from relengapi.lib.permissions import p
 from relengapi.blueprints.badpenny import BadpennyTask
 from relengapi.blueprints.badpenny import JsonTask

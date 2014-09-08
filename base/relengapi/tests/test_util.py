@@ -10,7 +10,7 @@ from mock import patch
 from nose.tools import eq_, assert_raises
 from relengapi import util
 from relengapi.util import tz
-from relengapi.testing import TestContext
+from relengapi.tests.context import TestContext
 
 
 class TestSynchronized(object):

@@ -5,7 +5,7 @@
 import threading
 from nose.tools import eq_, with_setup
 from relengapi.proxy import proxy
-from relengapi.testing import TestContext
+from relengapi.tests.context import TestContext
 
 try:
     from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler

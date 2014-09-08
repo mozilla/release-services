@@ -8,7 +8,7 @@ import unittest
 import logging
 import logging.handlers
 from nose.tools import eq_
-from relengapi.testing import TestContext
+from relengapi.tests.context import TestContext
 from relengapi import p
 from relengapi.lib import auth
 from relengapi.lib.auth import ldap_group_authz

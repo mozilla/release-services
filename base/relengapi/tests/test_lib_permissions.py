@@ -8,7 +8,7 @@ from flask.ext.login import current_user
 from flask.ext.login import login_user
 from nose.tools import eq_, ok_, assert_raises
 from relengapi.lib import permissions
-from relengapi.testing import TestContext
+from relengapi.tests.context import TestContext
 from relengapi.lib import auth
 
 

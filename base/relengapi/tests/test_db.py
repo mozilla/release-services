@@ -10,7 +10,7 @@ from nose.tools import eq_, ok_, with_setup, assert_not_equal
 from nose.tools import assert_raises
 import pytz
 
-from relengapi.testing import TestContext
+from relengapi.tests.context import TestContext
 from relengapi import db
 from relengapi.util import tz
 

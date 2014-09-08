@@ -8,7 +8,7 @@ import contextlib
 import multiprocessing
 import shutil
 from celery.signals import worker_ready
-from relengapi.testing import TestContext
+from relengapi.tests.context import TestContext
 from nose.tools import eq_
 from nose.tools import assert_raises
 from relengapi.lib import celery
