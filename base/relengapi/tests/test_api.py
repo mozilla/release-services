@@ -10,7 +10,7 @@ from nose.tools import eq_
 from nose.tools import assert_raises
 from relengapi.lib import api
 from relengapi.lib.permissions import p
-from relengapi.tests.context import TestContext
+from relengapi.lib.testing.context import TestContext
 import wsme.types
 from werkzeug.exceptions import BadRequest
 

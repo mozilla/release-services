@@ -40,11 +40,11 @@ See the Nose documentation for more information.
 Test Context
 ------------
 
-.. py:module:: relengapi.testing
+.. py:module:: relengapi.lib.testing.context
 
 Most tests take place in the context of an app, some databases, some data, and so on.
 
-To support, this, use the :py:class:`relengapi.testing.TestContext` class.
+To support, this, use the :py:class:`relengapi.lib.testing.context.TestContext` class.
 
 .. py:class:: TestContext(databases, app_setup, db_setup, db_teardown, reuse_app, config)
 

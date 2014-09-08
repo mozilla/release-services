@@ -6,7 +6,7 @@ import mock
 import os
 import shutil
 from nose.tools import eq_
-from relengapi.tests.context import TestContext
+from relengapi.lib.testing.context import TestContext
 from relengapi.blueprints import docs
 from sphinx import websupport
 

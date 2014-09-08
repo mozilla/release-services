@@ -5,7 +5,7 @@ import time
 from nose.tools import eq_, with_setup
 from flask import session
 from flask.ext.login import current_user
-from relengapi.tests.context import TestContext
+from relengapi.lib.testing.context import TestContext
 from relengapi.lib import auth
 from relengapi import p
 
