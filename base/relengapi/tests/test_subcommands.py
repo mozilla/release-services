@@ -6,7 +6,7 @@ import sys
 
 from cStringIO import StringIO
 from nose.tools import eq_
-from relengapi import subcommands
+from relengapi.lib import subcommands
 
 
 class MySubcommand(subcommands.Subcommand):

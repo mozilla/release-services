@@ -8,7 +8,7 @@ import sys
 from flask import Blueprint
 from flask import Flask
 from flask import current_app
-from relengapi import subcommands
+from relengapi.lib import subcommands
 
 bp = Blueprint('base', __name__)
 logger = logging.getLogger(__name__)
