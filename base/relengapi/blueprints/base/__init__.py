@@ -7,6 +7,7 @@ from flask import Blueprint
 from flask import current_app
 import logging
 import sys
+import os
 
 bp = Blueprint('base', __name__)
 logger = logging.getLogger(__name__)
@@ -62,4 +63,6 @@ class RunTestsSubcommand(subcommands.Subcommand):
     def run(self, parser, args):
         import nose
         sys.argv = [sys.argv[0]] + args.nose_args
+        if 'RELENGAPI_SETTINGS' in os.environ:
+            del os.environ['RELENGAPI_SETTINGS']
         nose.main()

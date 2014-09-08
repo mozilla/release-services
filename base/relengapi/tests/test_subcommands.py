@@ -2,10 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys
 from nose.tools import eq_
-from cStringIO import StringIO
 from relengapi import subcommands
+from relengapi.tests.subcommands import run_main
 
 
 class MySubcommand(subcommands.Subcommand):
@@ -18,19 +17,6 @@ class MySubcommand(subcommands.Subcommand):
     def run(self, parser, args):
         print "subcommand running"
         MySubcommand.run_result = args.result
-
-
-def run_main(args):
-    old_out = sys.stdout
-    sys.stdout = fake_stdout = StringIO()
-    try:
-        subcommands.main(args)
-    except SystemExit:
-        pass
-    finally:
-        old_out.write(sys.stdout.getvalue())
-        sys.stdout = old_out
-    return fake_stdout.getvalue()
 
 
 def test_subcommand_help():

@@ -105,4 +105,9 @@ def test_relengapi_celery_module():
     """The module path `relengapi.celery.celery` exists and is a Celery object,
     as `celery -A relengapi` expects"""
     import relengapi.celery
-    eq_(type(relengapi.celery.celery).__name__, 'Celery')
+    # this has to point somewhere, so point it at this directory's __init__.py
+    os.environ['RELENGAPI_SETTINGS'] = os.path.join(os.path.dirname(__file__), '__init__.py')
+    try:
+        eq_(type(relengapi.celery.celery).__name__, 'Celery')
+    finally:
+        del os.environ['RELENGAPI_SETTINGS']
