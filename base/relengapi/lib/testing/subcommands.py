@@ -13,17 +13,12 @@ _settings = {}
 
 
 def run_main(args, settings={'SQLALCHEMY_DATABASE_URIS': {}}):
-    """
-    Run the 'relengapi' command with the given args, returning its stdout.
-    SETTINGS are the settings available to the new app (as pointed to by the
-    RELENGAPI_SETTINGS env var)
-    """
     global _settings
     _settings = settings
 
     fd, filename = tempfile.mkstemp()
     with os.fdopen(fd, "wt") as f:
-        f.write("from relengapi.tests.subcommands import _settings\n")
+        f.write("from relengapi.lib.testing.subcommands import _settings\n")
         f.write("globals().update(_settings)\n")
     os.environ['RELENGAPI_SETTINGS'] = filename
 

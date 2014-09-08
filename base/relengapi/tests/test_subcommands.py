@@ -4,7 +4,7 @@
 
 from nose.tools import eq_
 from relengapi import subcommands
-from relengapi.tests.subcommands import run_main
+from relengapi.lib.testing.subcommands import run_main
 
 
 class MySubcommand(subcommands.Subcommand):

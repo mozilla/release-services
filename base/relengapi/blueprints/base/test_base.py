@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mock
-from relengapi.tests.subcommands import run_main
+from relengapi.lib.testing.subcommands import run_main
 from relengapi import db
 
 
