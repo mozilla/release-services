@@ -74,7 +74,7 @@ setup(
         ],
     },
     entry_points={
-        "relengapi_blueprints": [
+        "relengapi.blueprints": [
             'base = relengapi.blueprints.base:bp',
             'auth = relengapi.blueprints.auth:bp',
             'tokenauth = relengapi.blueprints.tokenauth:bp',

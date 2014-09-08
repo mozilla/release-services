@@ -38,7 +38,8 @@ def main(args=None):
 
     # load each of the blueprints; this defines the subcommand classes.  Note that
     # create_app does this again.
-    for ep in pkg_resources.iter_entry_points('relengapi_blueprints'):
+    for ep in (list(pkg_resources.iter_entry_points('relengapi_blueprints'))
+               + list(pkg_resources.iter_entry_points('relengapi.blueprints'))):
         ep.load()
 
     subcommands = [cls() for cls in Subcommand.__subclasses__()]

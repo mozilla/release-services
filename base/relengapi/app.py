@@ -39,12 +39,14 @@ def get_blueprints():
     # methods are called
     global _blueprints
     if not _blueprints:
-        entry_points = pkg_resources.iter_entry_points('relengapi_blueprints')
+        entry_points = (list(pkg_resources.iter_entry_points('relengapi_blueprints'))
+                        + list(pkg_resources.iter_entry_points('relengapi.blueprints')))
         _blueprints = [(ep.name, ep.load()) for ep in entry_points]
     return _blueprints
 
 
 class BlueprintInfo(wsme.types.Base):
+
     "Information about an installed Blueprint"
 
     #: Python distribution containing this blueprint
@@ -55,6 +57,7 @@ class BlueprintInfo(wsme.types.Base):
 
 
 class DistributionInfo(wsme.types.Base):
+
     "Information about an installed Python distribution"
 
     #: Name of the distribution
@@ -65,6 +68,7 @@ class DistributionInfo(wsme.types.Base):
 
 
 class VersionInfo(wsme.types.Base):
+
     "Information about installed software versions"
 
     #: All installed Python distributions, by ``project_name``
@@ -112,7 +116,8 @@ def create_app(cmdline=False, test_config=None):
         for bp in app.blueprints.itervalues():
             bp_widgets.extend(bp.root_widget_templates or [])
         bp_widgets.sort()
-        bp_widgets = [tpl for (_, tpl, condition) in bp_widgets if not condition or condition()]
+        bp_widgets = [
+            tpl for (_, tpl, condition) in bp_widgets if not condition or condition()]
         return render_template('root.html', bp_widgets=bp_widgets)
 
     @app.route('/versions')
@@ -123,7 +128,8 @@ def create_app(cmdline=False, test_config=None):
             dists[dist.key] = DistributionInfo(project_name=dist.project_name,
                                                version=dist.version)
         blueprints = {}
-        for ep in pkg_resources.iter_entry_points('relengapi_blueprints'):
+        for ep in (list(pkg_resources.iter_entry_points('relengapi_blueprints'))
+                   + list(pkg_resources.iter_entry_points('relengapi.blueprints'))):
             blueprints[ep.name] = BlueprintInfo(distribution=ep.dist.key,
                                                 version=ep.dist.version)
         return VersionInfo(distributions=dists, blueprints=blueprints)

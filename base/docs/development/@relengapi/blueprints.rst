@@ -28,7 +28,7 @@ Include a ``package_data`` section to capture any templates, static files, or do
 Finally, include an entry point so that the base can find the blueprint::
 
     entry_points={
-        "relengapi_blueprints": [
+        "relengapi.blueprints": [
             'mypackage = relengapi.blueprints.mypackage:bp',
         ],
     },
