@@ -58,7 +58,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 [ -z "$VIRTUAL_ENV" ] && fail "Need an activated virtualenv with relengapi installed"
 
-tmpbase=$(mktemp -d)
+tmpbase=$(mktemp -d -t tmpbase.XXXXXX)
 trap 'rm -f ${tmpbase}; exit 1' 1 2 3 15
 
 status "running pep8"
@@ -66,6 +66,16 @@ pep8 --config=pep8rc relengapi || not_ok "pep8 failed"
 
 status "running pyflakes"
 pyflakes relengapi || not_ok "pyflakes failed"
+
+status "checking import module convention in modified files"
+RES=true
+for filename in `find relengapi -type f -name "*.py" -print` ; do
+  if ! python fiximports.py "$filename"; then
+    echo "cannot fix imports of $filename"
+    RES=false
+  fi
+done
+$RES || warning "some import fixes failed -- not enforcing for now"
 
 status "building docs"
 relengapi build-docs --development || not_ok "build-docs failed"

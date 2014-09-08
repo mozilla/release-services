@@ -3,15 +3,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import copy
-import mockldap
-import unittest
 import logging
 import logging.handlers
+import mockldap
+import unittest
+
 from nose.tools import eq_
-from relengapi.testing import TestContext
 from relengapi import p
 from relengapi.lib import auth
 from relengapi.lib.auth import ldap_group_authz
+from relengapi.testing import TestContext
 
 p.test_lga.foo.doc("Foo")
 p.test_lga.bar.doc("Bar")

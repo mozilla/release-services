@@ -2,20 +2,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
-import sys
-import shutil
 import StringIO
-from relengapi import subcommands
+import logging
+import os
 import pkg_resources
+import shutil
+import sys
+
 from flask import Blueprint
 from flask import abort
 from flask import current_app
 from flask import render_template
 from flask import send_from_directory
+from relengapi import subcommands
 from sphinx.websupport import WebSupport
 from sphinx.websupport.errors import DocumentNotFoundError
-import logging
 
 logger = logging.getLogger(__name__)
 

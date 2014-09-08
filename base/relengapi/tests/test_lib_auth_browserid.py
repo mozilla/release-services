@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from nose.tools import eq_
-from relengapi.testing import TestContext
 from relengapi.lib.auth import browserid
+from relengapi.testing import TestContext
 
 
 test_context = TestContext(

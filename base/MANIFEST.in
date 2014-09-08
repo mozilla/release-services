@@ -5,4 +5,5 @@ recursive-include docs/_static *
 recursive-include relengapi *.html *.jpg *.css *.js *.txt
 include LICENSE.txt
 include README.md
+include fiximports.py
 prune docs_build_dir

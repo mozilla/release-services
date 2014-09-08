@@ -2,23 +2,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import traceback
 import functools
 import sys
+import traceback
+import werkzeug
 import wsme
 import wsme.api
 import wsme.rest.args
 import wsme.rest.json
 import wsme.types
-import werkzeug
+
+from flask import Response
+from flask import current_app
 from flask import json
 from flask import jsonify
 from flask import render_template
 from flask import request
-from flask import Response
-from flask import current_app
 from relengapi import util
-from werkzeug.exceptions import HTTPException, BadRequest
+from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import HTTPException
 
 
 class JsonHandler(object):

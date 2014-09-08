@@ -3,9 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import requests
+
 from flask import Response
-from flask import stream_with_context
 from flask import current_app
+from flask import stream_with_context
 
 
 def _get_requests_session():

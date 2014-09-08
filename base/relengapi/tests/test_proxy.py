@@ -3,7 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import threading
-from nose.tools import eq_, with_setup
+
+from nose.tools import eq_
+from nose.tools import with_setup
 from relengapi.proxy import proxy
 from relengapi.testing import TestContext
 

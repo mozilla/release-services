@@ -2,12 +2,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import time
-from nose.tools import eq_, with_setup
+
 from flask import session
 from flask.ext.login import current_user
-from relengapi.testing import TestContext
-from relengapi.lib import auth
+from nose.tools import eq_
+from nose.tools import with_setup
 from relengapi import p
+from relengapi.lib import auth
+from relengapi.testing import TestContext
 
 
 test_context = TestContext()

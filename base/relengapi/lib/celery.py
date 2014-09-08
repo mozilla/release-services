@@ -4,9 +4,9 @@
 
 from __future__ import absolute_import
 
+from celery import Celery
 from flask import current_app
 from werkzeug.local import LocalProxy
-from celery import Celery
 
 _defined_tasks = {}
 

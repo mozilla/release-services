@@ -3,9 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import itertools
+
 from functools import partial
-from relengapi.lib.auth import permissions_stale
 from relengapi import p
+from relengapi.lib.auth import permissions_stale
 
 
 def init_app(app):

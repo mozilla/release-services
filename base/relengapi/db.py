@@ -2,18 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import pytz
 import sqlalchemy as sa
 import threading
-import pytz
-from relengapi.util import synchronized
+
 from flask import current_app
-from sqlalchemy import types
-from sqlalchemy import orm
-from sqlalchemy import exc
+from relengapi.util import synchronized
 from sqlalchemy import event
-from sqlalchemy.pool import Pool
-from sqlalchemy.orm import scoping
+from sqlalchemy import exc
+from sqlalchemy import orm
+from sqlalchemy import types
 from sqlalchemy.ext import declarative
+from sqlalchemy.orm import scoping
+from sqlalchemy.pool import Pool
 
 
 class _QueryProperty(object):

@@ -2,16 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
-import signal
 import contextlib
 import multiprocessing
+import os
 import shutil
+import signal
+
 from celery.signals import worker_ready
-from relengapi.testing import TestContext
-from nose.tools import eq_
 from nose.tools import assert_raises
+from nose.tools import eq_
 from relengapi.lib import celery
+from relengapi.testing import TestContext
 
 test_temp_dir = os.path.join(os.path.dirname(__file__), 'test_temp')
 

@@ -2,19 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from docutils.statemachine import ViewList
-from flask import current_app
-from sphinx.domains import Domain
-from sphinx import addnodes
-from sphinx.pycode import ModuleAnalyzer
-from sphinx.roles import XRefRole
-from sphinx.directives import ObjectDescription
-from sphinx.util.compat import Directive
-from sphinx.util.docfields import Field
-from sphinx.util.docfields import TypedField
-from sphinx.util.docfields import GroupedField
-from sphinx.util.nodes import make_refnode
-from sphinx.util import console
 import docutils.nodes
 import fnmatch
 import re
@@ -24,6 +11,20 @@ import wsme.api
 import wsme.rest.args
 import wsme.rest.json
 import wsme.types
+
+from docutils.statemachine import ViewList
+from flask import current_app
+from sphinx import addnodes
+from sphinx.directives import ObjectDescription
+from sphinx.domains import Domain
+from sphinx.pycode import ModuleAnalyzer
+from sphinx.roles import XRefRole
+from sphinx.util import console
+from sphinx.util.compat import Directive
+from sphinx.util.docfields import Field
+from sphinx.util.docfields import GroupedField
+from sphinx.util.docfields import TypedField
+from sphinx.util.nodes import make_refnode
 
 
 def typename(datatype):
