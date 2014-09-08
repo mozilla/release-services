@@ -24,6 +24,9 @@ class BaseUser(object):
     anonymous = False
     type = None
 
+    def __eq__(self, other):
+        return isinstance(other, BaseUser) and self.get_id() == other.get_id()
+
     def is_authenticated(self):
         return not self.anonymous
 
