@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os.path
 import shutil
 import tempfile
-import os.path
+
 from flask import url_for
-from relengapi.lib import angular
 from relengapi import testing
+from relengapi.lib import angular
 
 
 tempdir = None

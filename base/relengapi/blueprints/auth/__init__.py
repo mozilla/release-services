@@ -4,8 +4,8 @@
 
 from flask import Blueprint
 from flask import url_for
-from flask.ext.login import login_required
 from flask.ext.login import current_user
+from flask.ext.login import login_required
 from relengapi.lib import angular
 from relengapi.lib import permissions
 from relengapi.lib.api import apimethod

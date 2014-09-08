@@ -2,7 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import logging
 import os
+import pkg_resources
+import relengapi
+import wsme.types
+
 from flask import Flask
 from flask import g
 from flask import render_template
@@ -13,10 +18,6 @@ from relengapi.lib import celery
 from relengapi.lib import layout
 from relengapi.lib import monkeypatches
 from relengapi.lib import permissions
-import pkg_resources
-import relengapi
-import logging
-import wsme.types
 
 # set up the 'relengapi' namespace; it's a namespaced module, so no code
 # is allowed in __init__.py

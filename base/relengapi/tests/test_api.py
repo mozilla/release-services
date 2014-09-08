@@ -2,16 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys
 import mock
+import sys
+import wsme.types
+
 from flask import json
 from flask import redirect
-from nose.tools import eq_
 from nose.tools import assert_raises
+from nose.tools import eq_
+from relengapi import testing
 from relengapi.lib import api
 from relengapi.lib.permissions import p
-from relengapi import testing
-import wsme.types
 from werkzeug.exceptions import BadRequest
 
 

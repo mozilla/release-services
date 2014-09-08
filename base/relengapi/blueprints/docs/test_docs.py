@@ -5,9 +5,10 @@
 import mock
 import os
 import shutil
+
 from nose.tools import eq_
-from relengapi.testing import TestContext
 from relengapi.blueprints import docs
+from relengapi.testing import TestContext
 from sphinx import websupport
 
 

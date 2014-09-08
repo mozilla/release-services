@@ -4,12 +4,15 @@
 
 import mock
 import werkzeug.exceptions
+
 from flask.ext.login import current_user
 from flask.ext.login import login_user
-from nose.tools import eq_, ok_, assert_raises
+from nose.tools import assert_raises
+from nose.tools import eq_
+from nose.tools import ok_
+from relengapi.lib import auth
 from relengapi.lib import permissions
 from relengapi.testing import TestContext
-from relengapi.lib import auth
 
 
 def test_Permission_tuple_equivalence():

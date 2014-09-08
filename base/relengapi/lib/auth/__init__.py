@@ -2,21 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import time
 import pkg_resources
-from relengapi.lib.permissions import p
+import time
+
+from flask import current_app
 from flask import flash
+from flask import redirect
+from flask import render_template
 from flask import request
 from flask import session
-from flask import redirect
-from flask import url_for
-from flask import render_template
-from flask import current_app
 from flask import signals
+from flask import url_for
+from flask.ext.login import LoginManager
 from flask.ext.login import current_user
 from flask.ext.login import user_logged_in
 from flask.ext.login import user_logged_out
-from flask.ext.login import LoginManager
+from relengapi.lib.permissions import p
 
 
 class BaseUser(object):

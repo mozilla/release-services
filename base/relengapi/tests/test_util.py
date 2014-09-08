@@ -2,15 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import time
-import threading
 import datetime
 import pytz
+import threading
+import time
+
 from mock import patch
-from nose.tools import eq_, assert_raises
+from nose.tools import assert_raises
+from nose.tools import eq_
 from relengapi import util
-from relengapi.util import tz
 from relengapi.testing import TestContext
+from relengapi.util import tz
 
 
 class TestSynchronized(object):

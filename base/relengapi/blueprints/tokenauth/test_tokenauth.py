@@ -4,13 +4,14 @@
 
 import itsdangerous
 import mock
+
 from flask import json
 from flask.ext.login import current_user
 from nose.tools import eq_
-from relengapi.testing import TestContext
 from relengapi import p
-from relengapi.lib import auth
 from relengapi.blueprints.tokenauth import Token
+from relengapi.lib import auth
+from relengapi.testing import TestContext
 
 p.test_tokenauth.zig.doc("Zig")
 p.test_tokenauth.zag.doc("Zag")

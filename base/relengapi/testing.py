@@ -2,10 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import wrapt
 import inspect
-from flask import json
 import relengapi.app
+import wrapt
+
+from flask import json
 from relengapi.lib import auth
 
 

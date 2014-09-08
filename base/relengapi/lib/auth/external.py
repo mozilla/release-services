@@ -3,12 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
-from relengapi.lib import auth
+
 from flask import abort
-from flask import url_for
 from flask import redirect
 from flask import request
-from flask.ext.login import login_user, logout_user
+from flask import url_for
+from flask.ext.login import login_user
+from flask.ext.login import logout_user
+from relengapi.lib import auth
 
 logger = logging.getLogger(__name__)
 

@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import types
 import sys
+import types
 
 # Replace the `relengapi.celery` module with a 'celery' property that will
 # create a new Flask app and Celery app on demand.  This lets 'celery -A

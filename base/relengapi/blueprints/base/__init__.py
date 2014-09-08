@@ -2,11 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from relengapi import subcommands
-from flask import Blueprint
-from flask import current_app
 import logging
 import sys
+
+from flask import Blueprint
+from flask import current_app
+from relengapi import subcommands
 
 bp = Blueprint('base', __name__)
 logger = logging.getLogger(__name__)

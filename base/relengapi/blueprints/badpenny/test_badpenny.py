@@ -2,17 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import mock
 import contextlib
 import datetime
+import mock
+
 from flask import json
 from nose.tools import eq_
-from relengapi.testing import TestContext
-from relengapi.lib.permissions import p
-from relengapi.blueprints.badpenny import BadpennyTask
-from relengapi.blueprints.badpenny import JsonTask
 from relengapi.blueprints.badpenny import BadpennyJob
+from relengapi.blueprints.badpenny import BadpennyTask
 from relengapi.blueprints.badpenny import JsonJob
+from relengapi.blueprints.badpenny import JsonTask
+from relengapi.lib.permissions import p
+from relengapi.testing import TestContext
 
 
 dt = datetime.datetime

@@ -6,12 +6,16 @@ import datetime
 import os
 import sqlalchemy as sa
 
-from nose.tools import eq_, ok_, with_setup, assert_not_equal
-from nose.tools import assert_raises
 import pytz
 
-from relengapi.testing import TestContext
+from nose.tools import assert_not_equal
+from nose.tools import assert_raises
+from nose.tools import eq_
+from nose.tools import ok_
+from nose.tools import with_setup
+
 from relengapi import db
+from relengapi.testing import TestContext
 from relengapi.util import tz
 
 _old_system_timezone = None

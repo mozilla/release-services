@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+
 from flask import current_app
 from flask import render_template
 from flask import request

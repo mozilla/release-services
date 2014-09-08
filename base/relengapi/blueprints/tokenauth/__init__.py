@@ -2,23 +2,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from relengapi import db
-import wsme.types
 import logging
 import sqlalchemy as sa
-from flask import g
+import wsme.types
+
 from flask import Blueprint
-from flask import url_for
 from flask import current_app
-from flask.ext.login import login_required
+from flask import g
+from flask import url_for
 from flask.ext.login import current_user
-from relengapi import p
+from flask.ext.login import login_required
+from itsdangerous import BadData
+from itsdangerous import JSONWebSignatureSerializer
 from relengapi import apimethod
-from relengapi.lib import permissions
-from relengapi.lib import auth
-from relengapi.lib import api
+from relengapi import db
+from relengapi import p
 from relengapi.lib import angular
-from itsdangerous import JSONWebSignatureSerializer, BadData
+from relengapi.lib import api
+from relengapi.lib import auth
+from relengapi.lib import permissions
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import NotFound
 
