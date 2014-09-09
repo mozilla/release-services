@@ -19,9 +19,9 @@ class MySubcommand(subcommands.Subcommand):
         return parser
 
     def run(self, parser, args):
-        print "print"
-        logger.info("info")
-        logger.warning("warning")
+        print "subcommand tests - print output"
+        logger.info("subcommand tests - info logging output")
+        logger.warning("subcommand tests - warning logging output")
         MySubcommand.run_result = args.result
 
 
