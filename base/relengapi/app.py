@@ -83,14 +83,24 @@ class VersionInfo(wsme.types.Base):
     blueprints = {unicode: BlueprintInfo}
 
 
+def apply_default_config(app):
+    logger.warning("using default settings")
+    logger.warning("using an in-memory database; data will be lost on restart")
+    app.config['SQLALCHEMY_DATABASE_URIS'] = dict(relengapi='sqlite:///')
+
+
 def create_app(cmdline=False, test_config=None):
     blueprints = get_blueprints()
 
     app = Flask(__name__)
+    env_var = 'RELENGAPI_SETTINGS'
     if test_config:
         app.config.update(**test_config)
     else:
-        app.config.from_envvar('RELENGAPI_SETTINGS')
+        if env_var in os.environ and os.environ[env_var]:
+            app.config.from_envvar(env_var)
+        else:
+            apply_default_config(app)
 
     # add the necessary components to the app
     app.db = db.make_db(app)
