@@ -68,14 +68,17 @@ status "running pyflakes"
 pyflakes relengapi || not_ok "pyflakes failed"
 
 status "checking import module convention in modified files"
-RES=true
+modified=false
 for filename in `find relengapi -type f -name "*.py" -print` ; do
-  if ! python fiximports.py "$filename"; then
-    echo "cannot fix imports of $filename"
-    RES=false
-  fi
+    rv=0
+    python fiximports.py "$filename" || rv=$?
+    case $rv in
+        0) ;;
+        1) not_ok "cannot fix imports of $filename" ;;
+        2) modified=true ;;
+    esac
 done
-$RES || warning "some import fixes failed -- not enforcing for now"
+$modified && not_ok "some imports were re-ordered and changes will need to be committed"
 
 status "building docs"
 relengapi build-docs --development || not_ok "build-docs failed"

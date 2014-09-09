@@ -157,7 +157,8 @@ class FixImports(object):
 
 
 def main():
-    '''I am the main method'''
+    '''I am the main method.  Exit status 1 means failure; exit status 2 means
+    changes were made, and exit status 0 means no changes.'''
     if len(sys.argv) != 2:
         print "usage: %s <python file>" % (sys.argv[0])
         sys.exit(1)
@@ -173,7 +174,7 @@ def main():
     with open(filename, 'w') as filedesc:
         filedesc.write(content)
     if data != content:
-        print "import successfully reordered for file: %s" % (filename)
+        sys.exit(2)
     sys.exit(0)
 
 if __name__ == "__main__":
