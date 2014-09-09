@@ -95,7 +95,8 @@ class BuildDocsSubcommand(subcommands.Subcommand):
         return parser
 
     def copy_docs(self, src_root, dst_root):
-        logger.info("Copying documentation from {!r} to {!r}".format(src_root, dst_root))
+        logger.info(
+            "Copying documentation from {!r} to {!r}".format(src_root, dst_root))
         for src, dirs, files in os.walk(src_root):
             dst = src.replace(src_root, dst_root)
             if not os.path.isdir(dst):
@@ -120,8 +121,7 @@ class BuildDocsSubcommand(subcommands.Subcommand):
         # srcdir.  This is the same operation that 'setup.py install' would do,
         # but that doesn't happen automatically on 'setup.py develop'.
         if args.development:
-            entry_points = pkg_resources.iter_entry_points('relengapi_blueprints')
-            dists = sorted(set(ep.dist for ep in entry_points))
+            dists = sorted(set(bp.dist for bp in current_app.relengapi_blueprints.itervalues()))
             for dist in dists:
                 if not os.path.isdir(dist.location):
                     continue

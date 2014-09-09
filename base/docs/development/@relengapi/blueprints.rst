@@ -28,7 +28,7 @@ Include a ``package_data`` section to capture any templates, static files, or do
 Finally, include an entry point so that the base can find the blueprint::
 
     entry_points={
-        "relengapi_blueprints": [
+        "relengapi.blueprints": [
             'mypackage = relengapi.blueprints.mypackage:bp',
         ],
     },
@@ -56,5 +56,8 @@ In the third, create your Blueprint::
         return jsonify("HELLO")
 
 The ``root`` function in this example would be available at ``/mypackage/some/path``.
+
+Note that all RelengAPI blueprints are available in dictionary ``current_app.relengapi_blueprints``.
+Each has a ``dist`` attribute giving the SetupTools distribution from which the blueprint came.
 
 The remaining sections in this chapter describe what you can do with your new blueprint.
