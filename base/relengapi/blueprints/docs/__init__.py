@@ -121,9 +121,7 @@ class BuildDocsSubcommand(subcommands.Subcommand):
         # srcdir.  This is the same operation that 'setup.py install' would do,
         # but that doesn't happen automatically on 'setup.py develop'.
         if args.development:
-            entry_points = (list(pkg_resources.iter_entry_points('relengapi_blueprints'))
-                            + list(pkg_resources.iter_entry_points('relengapi.blueprints')))
-            dists = sorted(set(ep.dist for ep in entry_points))
+            dists = sorted(set(bp.dist for bp in current_app.relengapi_blueprints.itervalues()))
             for dist in dists:
                 if not os.path.isdir(dist.location):
                     continue
