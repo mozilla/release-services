@@ -9,9 +9,12 @@ import relengapi.app
 import sys
 
 
-def setupConsoleLogging():
+def setupConsoleLogging(quiet):
     root = logging.getLogger('')
-    root.setLevel(logging.NOTSET)
+    if quiet:
+        root.setLevel(logging.WARNING)
+    else:
+        root.setLevel(logging.NOTSET)
     formatter = logging.Formatter('%(asctime)s %(message)s')
 
     stdout_log = logging.StreamHandler(sys.stdout)
@@ -34,6 +37,8 @@ class Subcommand(object):
 def main(args=None):
     parser = argparse.ArgumentParser(
         description="Releng API Command Line Tool")
+    parser.add_argument("--quiet", '-q', action='store_true',
+                        help="Silence all logging below WARNING level")
     subparsers = parser.add_subparsers(help='sub-command help')
 
     # load each of the blueprints; this defines the subcommand classes.  Note that
@@ -49,7 +54,7 @@ def main(args=None):
     args = parser.parse_args(args)
 
     if args._subcommand and args._subcommand.want_logging:
-        setupConsoleLogging()
+        setupConsoleLogging(args.quiet)
 
     app = relengapi.app.create_app(cmdline=True)
     with app.app_context():
