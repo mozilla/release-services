@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 '''Check and sort import statement from a python file '''
-# code from buildbot source code https://github.com/buildbot/buildbot/blob/master/common/fiximports.py
+
+# code from buildbot source code
+# https://github.com/buildbot/buildbot/blob/master/common/fiximports.py
+# permission granted by authors @tardyp and @Stibbons in
+# https://github.com/mozilla/build-relengapi/pull/116
 
 import re
 import sys
