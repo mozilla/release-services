@@ -59,7 +59,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 [ -z "$VIRTUAL_ENV" ] && fail "Need an activated virtualenv with relengapi installed"
 
 tmpbase=$(mktemp -d -t tmpbase.XXXXXX)
-trap 'rm -f ${tmpbase}; exit 1' 1 2 3 15
+trap 'rm -rf ${tmpbase}; exit 1' 1 2 3 15
 
 status "running pep8"
 pep8 --config=pep8rc relengapi || not_ok "pep8 failed"
