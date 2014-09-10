@@ -84,7 +84,6 @@ class VersionInfo(wsme.types.Base):
 
 
 def apply_default_config(app):
-    logger.warning("using default settings")
     logger.warning("using an in-memory database; data will be lost on restart")
     app.config['SQLALCHEMY_DATABASE_URIS'] = dict(relengapi='sqlite:///')
 
@@ -100,6 +99,8 @@ def create_app(cmdline=False, test_config=None):
         if env_var in os.environ and os.environ[env_var]:
             app.config.from_envvar(env_var)
         else:
+            logger.warning("using default settings; to configure relengapi, set "
+                           "%s to point to your settings file" % env_var)
             apply_default_config(app)
 
     # add the necessary components to the app
