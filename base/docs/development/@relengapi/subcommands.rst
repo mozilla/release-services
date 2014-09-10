@@ -5,7 +5,7 @@ The ``relengapi`` command-line tool can be extended with additional subcommands.
 
 In your blueprint, define a subclass of ``Subcommand``:
 
-    from relengapi import subcommands
+    from relengapi.lib import subcommands
     class MySubcommand(subcommands.Subcommand):
 
         def make_parser(self, subparsers):

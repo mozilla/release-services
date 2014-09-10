@@ -21,7 +21,7 @@ instead of calling ``sqlalchemy.ext.declarative.declarative_base()`` to get a ba
 
 For example::
 
-    from relengapi import db
+    from relengapi.lib import db
 
     class User(db.declarative_base('relengapi')):
         __tablename__ = 'users'
@@ -82,7 +82,7 @@ RelengAPI also supports a way to get a unique row from a table, if the row doesn
 
 First you make your ORM Table inherit from ``UniqueMixin``::
 
-    from relengapi import db
+    from relengapi.lib import db
 
     class MyTable(db.declarative_base(...), db.UniqueMixin):
         __tablename__ = "mytable"
@@ -147,7 +147,7 @@ aware datetime object is passed in.
 
 example::
 
-    from relengapi import db
+    from relengapi.lib import db
     import sqlalchemy as sa
     
     class Log(db.declarative_base('...')):

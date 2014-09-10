@@ -14,7 +14,7 @@ from nose.tools import eq_
 from nose.tools import ok_
 from nose.tools import with_setup
 
-from relengapi import db
+from relengapi.lib import db
 from relengapi.testing import TestContext
 from relengapi.util import tz
 

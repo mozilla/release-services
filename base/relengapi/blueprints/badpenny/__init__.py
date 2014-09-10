@@ -10,11 +10,11 @@ import wsme.types
 from flask import Blueprint
 from flask import url_for
 from relengapi import apimethod
-from relengapi import db
 from relengapi import p
 from relengapi.lib import angular
 from relengapi.lib import api
 from relengapi.lib import badpenny
+from relengapi.lib import db
 from relengapi.lib import permissions
 from werkzeug.exceptions import NotFound
 

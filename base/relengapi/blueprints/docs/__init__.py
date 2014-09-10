@@ -14,7 +14,7 @@ from flask import abort
 from flask import current_app
 from flask import render_template
 from flask import send_from_directory
-from relengapi import subcommands
+from relengapi.lib import subcommands
 from sphinx.websupport import WebSupport
 from sphinx.websupport.errors import DocumentNotFoundError
 
