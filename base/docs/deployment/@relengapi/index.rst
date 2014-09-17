@@ -4,4 +4,5 @@
     config
     documentation
     workers
+    badpenny
 

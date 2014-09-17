@@ -11,11 +11,11 @@ Tasks are simple Python functions, decorated with :py:func:`relengapi.lib.badpen
     from relengapi.lib import badpenny
 
     @badpenny.periodic_task(seconds=300)
-    def do_this_often(job):
+    def do_this_often(job_status):
         ...
 
     @badpenny.cron_task('5 * * * *')
-    def do_this_hourly(job):
+    def do_this_hourly(job_status):
         ...
 
 .. py:module:: relengapi.lib.badpenny
@@ -41,3 +41,20 @@ Task Execution
 --------------
 
 Tasks are executed in :doc:`Celery Tasks <tasks>` on the celery cluster.
+Like all celery tasks, they execute in a regular Flask application context, so access to the DB is just the same as it would be from a view function.
+
+Each task function gets a :py:class:`JobStatus` instance as an argument, which can be used to report status and progress of the task.
+
+If the task function raises an exception, the traceback is added to the job's logs and it is marked as failed.
+Otherwise, the job is considered successful and the return value of the task function is JSON-ified and recorded as the job's result.
+
+JobStatus Objects
+.................
+
+.. py:class:: JobStatus
+
+    .. py:method:: log_message(message)
+
+        Add the given message to the logs of the job exeuction.
+        Logs are stored as a string in the database, so tasks should be careful to limit the amount of logging they perform.
+        A good target is less than 4KB per job.

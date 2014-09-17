@@ -7,6 +7,8 @@ import datetime
 
 from nose.tools import eq_
 from nose.tools import raises
+
+from relengapi.blueprints.badpenny import tables
 from relengapi.lib import badpenny
 
 
@@ -24,26 +26,36 @@ def test_periodic_task():
     """The periodic_task decorator takes a `seconds` argument and creates a task"""
     with empty_registry():
         @badpenny.periodic_task(seconds=10)
-        def run_me(job):
-            return job
+        def run_me(js):
+            pass
         t = badpenny.Task.get('{}.run_me'.format(__name__))
         eq_(t.schedule, 'every 10 seconds')
-        base = datetime.datetime(2014, 8, 12, 15, 59, 17)
-        eq_(t.get_next_time(base),
-            datetime.datetime(2014, 8, 12, 15, 59, 27))
+
+        when = datetime.datetime(2014, 8, 12, 15, 59, 17)
+        delta = lambda s: datetime.timedelta(seconds=s)
+        bpt = tables.BadpennyTask(jobs=[
+            tables.BadpennyJob(created_at=when),
+        ])
+        assert not t.runnable_now(bpt, when)
+        assert not t.runnable_now(bpt, when + delta(5))
+        assert t.runnable_now(bpt, when + delta(10))
 
 
 def test_cron_task():
     """The cron_task decorator takes a cron spec argument and creates a task"""
     with empty_registry():
         @badpenny.cron_task('13 * * * *')
-        def run_me(job):
-            return job
+        def run_me(js):
+            pass
         t = badpenny.Task.get('{}.run_me'.format(__name__))
         eq_(t.schedule, 'cron: 13 * * * *')
-        base = datetime.datetime(2014, 8, 12, 15, 59, 17)
-        eq_(t.get_next_time(base),
-            datetime.datetime(2014, 8, 12, 16, 13, 00))
+
+        when = datetime.datetime(2014, 8, 12, 15, 59, 17)
+        bpt = tables.BadpennyTask(jobs=[
+            tables.BadpennyJob(created_at=when),
+        ])
+        assert not t.runnable_now(bpt, datetime.datetime(2014, 8, 12, 15, 59, 17))
+        assert t.runnable_now(bpt, datetime.datetime(2014, 8, 12, 16, 13, 0))
 
 
 @raises(Exception)
