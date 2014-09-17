@@ -7,8 +7,8 @@ import shutil
 import tempfile
 
 from flask import url_for
-from relengapi import testing
 from relengapi.lib import angular
+from relengapi.lib.testing.context import TestContext
 
 
 tempdir = None
@@ -35,7 +35,7 @@ def app_setup(app):
                                 url_for('static', filename='test_angular.css'),
                                 data=['some', 'data'])
 
-test_context = testing.TestContext(app_setup=app_setup, reuse_app=True)
+test_context = TestContext(app_setup=app_setup, reuse_app=True)
 
 
 @test_context

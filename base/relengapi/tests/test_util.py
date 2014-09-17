@@ -11,7 +11,7 @@ from mock import patch
 from nose.tools import assert_raises
 from nose.tools import eq_
 from relengapi import util
-from relengapi.testing import TestContext
+from relengapi.lib.testing.context import TestContext
 from relengapi.util import tz
 
 

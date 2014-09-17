@@ -12,7 +12,7 @@ from nose.tools import eq_
 from relengapi import p
 from relengapi.lib import auth
 from relengapi.lib.auth import ldap_group_authz
-from relengapi.testing import TestContext
+from relengapi.lib.testing.context import TestContext
 
 p.test_lga.foo.doc("Foo")
 p.test_lga.bar.doc("Bar")

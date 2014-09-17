@@ -13,7 +13,7 @@ from relengapi.blueprints.badpenny import BadpennyTask
 from relengapi.blueprints.badpenny import JsonJob
 from relengapi.blueprints.badpenny import JsonTask
 from relengapi.lib.permissions import p
-from relengapi.testing import TestContext
+from relengapi.lib.testing.context import TestContext
 
 
 dt = datetime.datetime

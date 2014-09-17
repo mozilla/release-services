@@ -10,9 +10,9 @@ from flask import json
 from flask import redirect
 from nose.tools import assert_raises
 from nose.tools import eq_
-from relengapi import testing
 from relengapi.lib import api
 from relengapi.lib.permissions import p
+from relengapi.lib.testing.context import TestContext
 from werkzeug.exceptions import BadRequest
 
 
@@ -66,7 +66,7 @@ def app_setup(app):
         return redirect('/foo')
 
 
-test_context = testing.TestContext(app_setup=app_setup, reuse_app=True)
+test_context = TestContext(app_setup=app_setup, reuse_app=True)
 
 
 def test_get_handler():

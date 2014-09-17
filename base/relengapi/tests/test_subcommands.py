@@ -3,11 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
-import sys
 
-from cStringIO import StringIO
 from nose.tools import eq_
 from relengapi.lib import subcommands
+from relengapi.lib.testing.subcommands import run_main
 
 logger = logging.getLogger(__name__)
 
@@ -24,19 +23,6 @@ class MySubcommand(subcommands.Subcommand):
         logger.info("subcommand tests - info logging output")
         logger.warning("subcommand tests - warning logging output")
         MySubcommand.run_result = args.result
-
-
-def run_main(args):
-    old_out = sys.stdout
-    sys.stdout = fake_stdout = StringIO()
-    try:
-        subcommands.main(args)
-    except SystemExit:
-        pass
-    finally:
-        old_out.write(sys.stdout.getvalue())
-        sys.stdout = old_out
-    return fake_stdout.getvalue()
 
 
 def test_subcommand_help():

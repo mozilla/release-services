@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
+import os
 import sys
 
 from flask import Blueprint
@@ -64,6 +65,8 @@ class RunTestsSubcommand(subcommands.Subcommand):
     def run(self, parser, args):
         import nose
         sys.argv = [sys.argv[0]] + args.nose_args
+        if 'RELENGAPI_SETTINGS' in os.environ:
+            del os.environ['RELENGAPI_SETTINGS']
         # push a fake app context to avoid tests accidentally using the
         # runtime app context (for example, the development DB)
         with Flask(__name__).app_context():

@@ -40,11 +40,11 @@ See the Nose documentation for more information.
 Test Context
 ------------
 
-.. py:module:: relengapi.testing
+.. py:module:: relengapi.lib.testing.context
 
 Most tests take place in the context of an app, some databases, some data, and so on.
 
-To support, this, use the :py:class:`relengapi.testing.TestContext` class.
+To support, this, use the :py:class:`relengapi.lib.testing.context.TestContext` class.
 
 .. py:class:: TestContext(databases, app_setup, db_setup, db_teardown, reuse_app, config)
 
@@ -100,3 +100,18 @@ For example ::
     @test_context
     def test_doc_testdata(client):
         eq_(json.loads(client.get('/docs/testdata')), {'a': 10})
+
+Testing Subcommands
+-------------------
+
+If your blueprint defines a subcommand, the :py:mod:`relengapi.lib.testing.subcommands` module may be useful.
+
+.. py:module:: relengapi.lib.testing.subcommands
+
+.. py:function:: run_main(args, settings)
+
+    This function will run the 'relengapi' command with the given args,
+    returning its stdout.  `settings` are the settings available to the new app
+    (as pointed to by the RELENGAPI_SETTINGS env var).
+
+    This is best used by mocking out the part of the subcommand that actually *does* something, then providing a full range of command-line arguments and verifying that they result in the right values passed to the mock.

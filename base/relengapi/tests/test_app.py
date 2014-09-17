@@ -5,7 +5,7 @@
 import json
 
 from nose.tools import eq_
-from relengapi.testing import TestContext
+from relengapi.lib.testing.context import TestContext
 
 
 test_context = TestContext(reuse_app=True)

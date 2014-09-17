@@ -12,7 +12,7 @@ from nose.tools import eq_
 from nose.tools import ok_
 from relengapi.lib import auth
 from relengapi.lib import permissions
-from relengapi.testing import TestContext
+from relengapi.lib.testing.context import TestContext
 
 
 def test_Permission_tuple_equivalence():
