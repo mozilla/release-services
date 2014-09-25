@@ -23,7 +23,6 @@ from relengapi.blueprints.slaveloan.model import Humans
 from relengapi.blueprints.slaveloan.model import Loans
 from relengapi.blueprints.slaveloan.model import Machines
 from relengapi.blueprints.slaveloan.model import WSME_Loan_Loans_Table
-from relengapi.blueprints.slaveloan.model import WSME_Loan_Loans_Table
 
 logger = logging.getLogger(__name__)
 

@@ -24,6 +24,9 @@ from relengapi.blueprints.slaveloan.model import Machines
 from relengapi.lib.celery import task
 from relengapi.util import tz
 
+import celery
+
+
 def add_task_to_history(loanid, msg):
     session = current_app.db.session('relengapi')
     l = session.query(Loans).get(loanid)
