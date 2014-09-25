@@ -18,7 +18,6 @@ import datetime
 from functools import wraps
 from relengapi.util import tz
 
-from celery import signals
 import celery
 
 
