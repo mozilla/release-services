@@ -3,10 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import sqlalchemy as sa
-from sqlalchemy.orm import relationship
+import wsme.types
+
 from relengapi import db
 from relengapi.util import tz
-import wsme.types
+from sqlalchemy.orm import relationship
 
 _tbl_prefix = 'slaveloan_'
 

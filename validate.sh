@@ -62,5 +62,15 @@ pep8 --config=../base/pep8rc relengapi || not_ok "pep8 failed"
 status "running pyflakes"
 pyflakes relengapi || not_ok "pyflakes failed"
 
+status "checking import module convention in modified files"
+RES=true
+for filename in `find relengapi -type f -name "*.py" -print` ; do
+  if ! python fiximports.py "$filename"; then
+    echo "cannot fix imports of $filename"
+    RES=false
+  fi
+done
+$RES || warning "some import fixes failed -- not enforcing for now"
+
 show_results
 

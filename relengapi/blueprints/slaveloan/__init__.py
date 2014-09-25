@@ -2,22 +2,27 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sqlalchemy as sa
-import logging
-from flask import Blueprint
-from flask import render_template
-from flask import request
-from flask import g
 import flask_login
-from werkzeug.exceptions import BadRequest
-from relengapi import apimethod
-from relengapi import p
-from relengapi.util import tz
-from relengapi.blueprints.slaveloan.slave_mappings import slave_patterns
-from relengapi.blueprints.slaveloan import tasks
+import logging
+import sqlalchemy as sa
 import wsme.types
 
-from relengapi.blueprints.slaveloan.model import Machines, Humans, Loans, History
+from flask import Blueprint
+from flask import g
+from flask import render_template
+from flask import request
+from relengapi import apimethod
+from relengapi import p
+from relengapi.blueprints.slaveloan import tasks
+from relengapi.blueprints.slaveloan.slave_mappings import slave_patterns
+from relengapi.util import tz
+from werkzeug.exceptions import BadRequest
+
+from relengapi.blueprints.slaveloan.model import History
+from relengapi.blueprints.slaveloan.model import Humans
+from relengapi.blueprints.slaveloan.model import Loans
+from relengapi.blueprints.slaveloan.model import Machines
+from relengapi.blueprints.slaveloan.model import WSME_Loan_Loans_Table
 from relengapi.blueprints.slaveloan.model import WSME_Loan_Loans_Table
 
 logger = logging.getLogger(__name__)

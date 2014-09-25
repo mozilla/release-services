@@ -4,22 +4,25 @@
 
 import random
 import socket
+
 from furl import furl
 
 import requests
+
 from requests import RequestException
 
-from flask import current_app
-from relengapi.lib.celery import task
-from relengapi.blueprints.slaveloan import slave_mappings
-from relengapi.blueprints.slaveloan.model import Machines, Humans, Loans, History
-from redo import retry
 import datetime
+
+from flask import current_app
 from functools import wraps
+from redo import retry
+from relengapi.blueprints.slaveloan import slave_mappings
+from relengapi.blueprints.slaveloan.model import History
+from relengapi.blueprints.slaveloan.model import Humans
+from relengapi.blueprints.slaveloan.model import Loans
+from relengapi.blueprints.slaveloan.model import Machines
+from relengapi.lib.celery import task
 from relengapi.util import tz
-
-import celery
-
 
 def add_task_to_history(loanid, msg):
     session = current_app.db.session('relengapi')
