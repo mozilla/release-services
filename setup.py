@@ -40,7 +40,7 @@ setup(
     include_package_data=True,
     namespace_packages=['relengapi', 'relengapi.blueprints'],
     entry_points={
-        "relengapi_blueprints": [
+        "relengapi.blueprints": [
             'slaveloan = relengapi.blueprints.slaveloan:bp',
         ],
     },

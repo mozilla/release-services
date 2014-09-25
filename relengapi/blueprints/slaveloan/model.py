@@ -5,7 +5,7 @@
 import sqlalchemy as sa
 import wsme.types
 
-from relengapi import db
+from relengapi.lib import db
 from relengapi.util import tz
 from sqlalchemy.orm import relationship
 
