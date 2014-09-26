@@ -880,11 +880,11 @@ def main():
     # Use some of the option parser to figure out application
     # log level
     if options.get('verbose'):
-        ch.setLevel(logging.DEBUG)
+        log.setLevel(logging.DEBUG)
     elif options.get('quiet'):
-        ch.setLevel(logging.ERROR)
+        log.setLevel(logging.ERROR)
     else:
-        ch.setLevel(logging.INFO)
+        log.setLevel(logging.INFO)
     log.addHandler(ch)
 
     if not 'manifest' in options:
