@@ -126,7 +126,7 @@ python setup.py -q sdist --dist-dir=${tmpbase}
 tarball="${tmpbase}/relengapi-${version}.tar.gz"
 [ -f ${tarball} ] || fail "No tarball at ${tarball}"
 # exclude directories and a few auto-generated files from the tarball contents
-tar -ztf $tarball | grep -v  '/$' | cut -d/ -f 2- | grep -vE '(egg-info|PKG-INFO|setup.cfg)' | sort > ${tmpbase}/sdist-files
+tar -ztf $tarball | grep -v  '/$' | cut -d/ -f 2- | grep -vE '(egg-info|PKG-INFO)' | sort > ${tmpbase}/sdist-files
 
 # get the list of files *installed* from that tarball
 status "getting file list from install"
