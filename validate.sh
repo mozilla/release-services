@@ -149,13 +149,12 @@ status "getting file list from install"
 grep / ${tmpbase}/git-files | grep -Ev '^relengapi/(blueprints/|)__init__\.py$' > ${tmpbase}/git-expected-installed
 
 # start comparing!
-(
-    cd ${tmpbase}
-    status "comparing git and sdist"
-    diff -u git-files sdist-files || not_ok "sdist files differ from files in git"
-    status "comparing git and install"
-    diff -u git-expected-installed install-files || not_ok "installed files differ from files in git"
-)
+pushd ${tmpbase}
+status "comparing git and sdist"
+diff -u git-files sdist-files || not_ok "sdist files differ from files in git"
+status "comparing git and install"
+diff -u git-expected-installed install-files || not_ok "installed files differ from files in git"
+popd
 
 show_results
 
