@@ -15,7 +15,8 @@ install:
 
 # command to run tests
 script:
-  - relengapi build-docs
+  - relengapi build-docs --development
   - relengapi run-tests
-  - pep8 --config=build-relengapi/base/pep8rc .
-  - pylint --rcfile=build-relengapi/base/pylintrc relengapi.blueprints.mapper
+  - pep8 --config=build-relengapi/pep8rc .
+  - pyflakes .
+
