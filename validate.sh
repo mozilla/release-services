@@ -56,8 +56,8 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 [ -z "$VIRTUAL_ENV" ] && fail "Need an activated virtualenv with relengapi installed"
 
-status "running pep8 -- slaveloan"
-pep8 --config=../base/pep8rc relengapi || not_ok "pep8 failed"
+status "running pep8"
+pep8 --config=./pep8rc relengapi || not_ok "pep8 failed"
 
 status "running pyflakes"
 pyflakes relengapi || not_ok "pyflakes failed"
