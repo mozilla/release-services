@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(name='relengapi-mapper',
-      version='0.2.1',
+      version='0.2.2',
       description='hg to git mapper',
       author='Chris AtLee',
       author_email='chris@atlee.ca',
@@ -11,13 +11,13 @@ setup(name='relengapi-mapper',
       packages=find_packages(),
       namespace_packages=['relengapi', 'relengapi.blueprints'],
       entry_points={
-          "relengapi_blueprints": [
+          "relengapi.blueprints": [
               'mapper = relengapi.blueprints.mapper:bp',
           ],
       },
       install_requires=[
           'Flask',
-          'relengapi',
+          'relengapi>=0.3',
           'IPy',
           'python-dateutil',
       ],

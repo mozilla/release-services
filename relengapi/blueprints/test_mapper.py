@@ -5,8 +5,8 @@
 import mock
 import json
 from nose.tools import eq_
-from relengapi.testing import TestContext
 from relengapi.lib import auth
+from relengapi.lib.testing.context import TestContext
 from relengapi.blueprints.mapper import Hash, Project
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
