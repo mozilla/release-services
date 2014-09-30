@@ -42,7 +42,7 @@ RelengAPI is a [Flask](http://flask.pocoo.org/) application.  It is composed of 
 Each distribution can contain several [Flask Blueprints](http://flask.pocoo.org/docs/blueprints/) -- web application components.
 Each Git repository can contain multiple distributions.
 
-The base is in the `relengapi` distribution, implemented in `base/`.
+The base is in the `relengapi` distribution, implemented in this package.
 It implements the root app, with lots of common support functionality, and a number of blueprints.
 It also searches its python environment for other distributions that can provide blueprints for the Releng API.
 These act as plugins, adding extra endpoints and other functionality to the API.
