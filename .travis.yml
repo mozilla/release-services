@@ -7,7 +7,7 @@ env:
   # aren't terribly important, so the example will do fine.  This is
   # relative to the directory containing app.py, although Flask does not
   # document that.
-  - RELENGAPI_SETTINGS=../../settings_example.py
+  - RELENGAPI_SETTINGS=../settings_example.py
 
 install:
   - ./install_relengapi.sh
