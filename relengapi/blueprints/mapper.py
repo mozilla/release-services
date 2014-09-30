@@ -10,7 +10,7 @@ import sqlalchemy as sa
 import dateutil.parser
 from sqlalchemy import orm
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
-from relengapi import db
+from relengapi.lib import db
 from flask import Blueprint
 from flask import g
 from flask import abort
