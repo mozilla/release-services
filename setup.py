@@ -17,7 +17,7 @@ DOCS_DIRS = ['usage', 'developent', 'deployment']
 
 setup(
     name='relengapi',
-    version='0.2.1',
+    version='0.3',
     description='The code behind https://api.pub.build.mozilla.org',
     author='Dustin J. Mitchell',
     author_email='dustin@mozilla.com',
