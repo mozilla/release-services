@@ -2,8 +2,7 @@ Writing a Blueprint
 ===================
 
 If your blueprint will be meaty enough to deserve its own project, repo, and so forth, then start that now.
-Otherwise, if it's just a small thing, add it to the relengapi project in a top-level directory.
-Note that Releng Best Practices call for many well-delineated projects, so err on the former side.
+If it's implementing core functionality, it can be in the ``relengapi`` project, but otherwise should be its own, well-delineated project per Releng Best Practices.
 
 Add a ``setup.py`` similar to that in ``docs/``.
 Name the package with a ``relengapi-`` prefix, so it's easy to find.
