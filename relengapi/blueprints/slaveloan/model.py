@@ -74,6 +74,7 @@ class WSME_Loan_Loans_Table(wsme.types.Base):
     "Represents a singe Loan Entry"
     id = int
     status = unicode
+    bug_id = int
     human = WSME_Loan_Human_Table
     machine = WSME_Loan_Machine_Table
 
@@ -82,6 +83,7 @@ class Loans(db.declarative_base('relengapi')):
     __tablename__ = _tbl_prefix + 'loans'
     id = sa.Column(sa.Integer, primary_key=True)
     status = sa.Column(sa.String(50), nullable=False)
+    bug_id = sa.Column(sa.Integer, nullable=True)
     human_id = sa.Column(sa.Integer,
                          sa.ForeignKey(_tbl_prefix + 'humans.id'),
                          nullable=False)
@@ -95,11 +97,11 @@ class Loans(db.declarative_base('relengapi')):
 
     def to_json(self, sub_meth="to_json"):
         if self.machine_id:
-            return dict(id=self.id, status=self.status,
+            return dict(id=self.id, status=self.status, bug_id=self.bug_id,
                         human=getattr(self.human, sub_meth)(),
                         machine=getattr(self.machine, sub_meth)())
         else:
-            return dict(id=self.id, status=self.status,
+            return dict(id=self.id, status=self.status, bug_id=self.bug_id,
                         human=getattr(self.human, sub_meth)(),
                         machine=None)
 

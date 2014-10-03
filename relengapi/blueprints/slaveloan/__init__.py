@@ -12,13 +12,13 @@ from sqlalchemy import asc
 from flask import Blueprint
 from flask import g
 from flask import render_template
-from flask import request
 from relengapi import apimethod
 from relengapi import p
 from relengapi.blueprints.slaveloan import tasks
 from relengapi.blueprints.slaveloan.slave_mappings import slave_patterns
 from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import InternalServerError
 
 from relengapi.blueprints.slaveloan.model import History
 from relengapi.blueprints.slaveloan.model import Humans
@@ -119,37 +119,32 @@ def admin():
 @p.slaveloan.admin.require()
 @apimethod(None, body=WSME_Submit_New_Loan)
 def new_loan_from_admin(body):
-    if 'status' not in request.json:
+    if not body.status:
         raise BadRequest("Missing Status Field")
-    if 'LDAP' not in request.json:
+    if not body.LDAP:
         raise BadRequest("Missing LDAP E-Mail")
-    if 'bugzilla' not in request.json:
+    if not body.bugzilla:
         raise BadRequest("Missing Bugzilla E-Mail")
-    if request.json['status'] != 'PENDING':
-        if 'fqdn' not in request.json:
+    if body.status != 'PENDING':
+        if not body.fqdn:
             raise BadRequest("Missing Machine FQDN")
-        if 'ipaddr' not in request.json:
+        if not body.ipaddr:
             raise BadRequest("Missing Machine IP Address")
 
     session = g.db.session('relengapi')
     try:
-        if request.json['status'] != 'PENDING':
-            m = Machines.as_unique(session,
-                                   fqdn=request.json['fqdn'],
-                                   ipaddr=request.json['ipaddr'])
-        h = Humans.as_unique(session,
-                             ldap=request.json['LDAP'],
-                             bugzilla=request.json['bugzilla'])
+        if body.status != 'PENDING':
+            m = Machines.as_unique(session, fqdn=body.fqdn,
+                                   ipaddr=body.ipaddr)
+        h = Humans.as_unique(session, ldap=body.LDAP,
+                             bugzilla=body.bugzilla)
     except sa.exc.IntegrityError:
-        raise BadRequest("Integrity Error from Database, please retry.")
+        raise InternalServerError("Integrity Error from Database, please retry.")
 
-    if request.json['status'] != 'PENDING':
-        l = Loans(status=request.json['status'],
-                  human=h,
-                  machine=m)
+    if body.status != 'PENDING':
+        l = Loans(status=body.status, human=h, machine=m)
     else:
-        l = Loans(status=request.json['status'],
-                  human=h)
+        l = Loans(status=body.status, human=h)
     history = History(for_loan=l,
                       timestamp=tz.utcnow(),
                       msg="Adding to slave loan tool via admin interface")
