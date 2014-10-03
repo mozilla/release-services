@@ -157,7 +157,7 @@ def new_loan_from_admin(body):
     session.add(history)
     session.commit()
 #    tasks.init_loan.delay(l.id, "bld-lion-r5")
-    return None  #WSME_New_Loan({'loan': l.to_wsme()})
+    return None  # WSME_New_Loan({'loan': l.to_wsme()})
 
 
 @bp.route('/tmp/')
