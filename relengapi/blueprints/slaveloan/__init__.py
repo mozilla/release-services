@@ -46,6 +46,14 @@ class WSME_New_Loan(wsme.types.Base):
     loan = WSME_Loan_Loans_Table
 
 
+class WSME_Submit_New_Loan(wsme.types.Base):
+    status = unicode
+    LDAP = unicode
+    bugzilla = unicode
+    fqdn = unicode
+    ipaddress = unicode
+
+
 @bp.route('/machine/classes')
 @apimethod(WSME_Machine_Class)
 def get_machine_classes():
@@ -149,7 +157,7 @@ def new_loan_from_admin(body):
     session.add(history)
     session.commit()
 #    tasks.init_loan.delay(l.id, "bld-lion-r5")
-    return None #WSME_New_Loan({'loan': l.to_wsme()})
+    return None  #WSME_New_Loan({'loan': l.to_wsme()})
 
 
 @bp.route('/tmp/')
