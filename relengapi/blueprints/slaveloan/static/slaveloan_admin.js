@@ -5,7 +5,10 @@ function reload_loans() {
         dataType: 'json',
         success: function(data) {
             $.each(data.result,function(i,row){
-                var $tr = $('<tr>').append(
+                $('<tr>').append(
+                    $('<td>').append(
+                        $('<a>').attr("href", _details_url_prefix.replace('/0', '/'+row.id)).text(row.id)
+                    ),
                     $('<td>').text(row.status),
                     $('<td>').text(row.human.ldap),
                     $('<td>').text(row.human.bugzilla),

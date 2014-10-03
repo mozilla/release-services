@@ -107,6 +107,14 @@ class Loans(db.declarative_base('relengapi')):
         return WSME_Loan_Loans_Table(**self.to_json(sub_meth="to_wsme"))
 
 
+class WSME_Loan_History_Table(wsme.types.Base):
+    "Represents a singe Loan Entry"
+    id = int
+    loan_id = int
+    timestamp = unicode
+    msg = unicode
+
+
 class History(db.declarative_base('relengapi')):
     __tablename__ = _tbl_prefix + 'history'
     id = sa.Column(sa.Integer, primary_key=True)
@@ -124,3 +132,6 @@ class History(db.declarative_base('relengapi')):
         return dict(id=self.id, loan_id=self.loan_id,
                     timestamp=self.timestamp.isoformat(),
                     msg=self.msg)
+
+    def to_wsme(self):
+        return WSME_Loan_History_Table(**self.to_json())

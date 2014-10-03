@@ -7,6 +7,8 @@ import logging
 import sqlalchemy as sa
 import wsme.types
 
+from sqlalchemy import asc
+
 from flask import Blueprint
 from flask import g
 from flask import render_template
@@ -22,6 +24,7 @@ from relengapi.blueprints.slaveloan.model import History
 from relengapi.blueprints.slaveloan.model import Humans
 from relengapi.blueprints.slaveloan.model import Loans
 from relengapi.blueprints.slaveloan.model import Machines
+from relengapi.blueprints.slaveloan.model import WSME_Loan_History_Table
 from relengapi.blueprints.slaveloan.model import WSME_Loan_Loans_Table
 
 logger = logging.getLogger(__name__)
@@ -57,6 +60,24 @@ def get_loans():
     return [l.to_wsme() for l in loans.all()]
 
 
+@bp.route('/loans/<int:loanid>')
+@apimethod(WSME_Loan_Loans_Table, int)
+def get_loan(loanid):
+    session = g.db.session('relengapi')
+    l = session.query(Loans).get(loanid)
+    return l.to_wsme()
+
+
+@bp.route('/loans/<int:loanid>/history')
+@apimethod([WSME_Loan_History_Table], int)
+def get_loan_history(loanid):
+    session = g.db.session('relengapi')
+    histories = session.query(History) \
+                       .filter(History.loan_id == loanid) \
+                       .order_by(asc(History.timestamp))
+    return [h.to_wsme() for h in histories.all()]
+
+
 @bp.route('/loans/all')
 @apimethod([WSME_Loan_Loans_Table])
 def get_all_loans():
@@ -71,6 +92,14 @@ def root():
     return render_template('slaveloan_root.html')
 
 
+@bp.route('/details/<int:id>')
+@flask_login.login_required
+@p.slaveloan.admin.require()
+def loan_details(id):
+    g.loanid = id
+    return render_template('slaveloan_details.html')
+
+
 @bp.route('/admin/')
 @flask_login.login_required
 @p.slaveloan.admin.require()
@@ -80,8 +109,8 @@ def admin():
 
 @bp.route('/admin/', methods=['POST'])
 @p.slaveloan.admin.require()
-@apimethod(WSME_New_Loan)
-def new_loan_from_admin():
+@apimethod(None, body=WSME_Submit_New_Loan)
+def new_loan_from_admin(body):
     if 'status' not in request.json:
         raise BadRequest("Missing Status Field")
     if 'LDAP' not in request.json:
@@ -120,7 +149,7 @@ def new_loan_from_admin():
     session.add(history)
     session.commit()
 #    tasks.init_loan.delay(l.id, "bld-lion-r5")
-    return WSME_New_Loan({'loan': l.to_wsme()})
+    return None #WSME_New_Loan({'loan': l.to_wsme()})
 
 
 @bp.route('/tmp/')
