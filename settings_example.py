@@ -2,8 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
+
 SQLALCHEMY_DATABASE_URIS = {
-    'relengapi': 'sqlite:////path/to/my.db',
+    # Edit the next line to specify a proper path/db name
+    'relengapi': 'sqlite:///{}'.format(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'relengapi.db')
+    ),
     # .. add other database URIs here, as appropriate for the blueprints
 }
 

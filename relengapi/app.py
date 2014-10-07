@@ -84,8 +84,11 @@ class VersionInfo(wsme.types.Base):
 
 
 def apply_default_config(app):
-    logger.warning("using an in-memory database; data will be lost on restart")
-    app.config['SQLALCHEMY_DATABASE_URIS'] = dict(relengapi='sqlite:///')
+    db_file = 'sqlite:///{}'.format(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), '../relengapi.db')
+    )
+    logger.warning("Creating a sqlite database: {}".format(db_file))
+    app.config['SQLALCHEMY_DATABASE_URIS'] = dict(relengapi=db_file)
 
 
 def create_app(cmdline=False, test_config=None):
