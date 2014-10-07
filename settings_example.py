@@ -5,8 +5,9 @@
 import os
 
 SQLALCHEMY_DATABASE_URIS = {
+    # Edit the next line to specify a proper path/db name
     'relengapi': 'sqlite:///{}'.format(
-        os.path.join(os.path.abspath(os.curdir), 'my.db')
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'relengapi.db')
     ),
     # .. add other database URIs here, as appropriate for the blueprints
 }
