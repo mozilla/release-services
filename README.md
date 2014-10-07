@@ -62,10 +62,6 @@ To run the tool for development, pip install the requirements into your virtuale
 The `[test]` installs the requirements for testing as well.
 Omit this if you won't be running tests.
 
-Install relengapi via setup.py using the develop command:
-
-    python setup.py develop
-
 Optionally, build the docs:
 
     relengapi build-docs --development
