@@ -66,11 +66,11 @@ Install relengapi via setup.py using the develop command:
 
     python setup.py develop
 
-Optionally, build the docs:
+[optional] Build the docs:
 
     relengapi build-docs --development
 
-Set up your settings file:
+[optional] Set up your settings file:
 
     cp settings_example.py settings.py
     vim settings.py
