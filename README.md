@@ -62,11 +62,11 @@ To run the tool for development, pip install the requirements into your virtuale
 The `[test]` installs the requirements for testing as well.
 Omit this if you won't be running tests.
 
-Optionally, build the docs:
+[optional] Build the docs:
 
     relengapi build-docs --development
 
-Set up your settings file:
+[optional] Set up your settings file:
 
     cp settings_example.py settings.py
     vim settings.py
