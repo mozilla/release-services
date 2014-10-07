@@ -55,15 +55,20 @@ When developing, though, only the `relengapi` distribution and the distribution 
 
 ### Running RelengAPI
 
-To run the tool for development, pip install the base into your virtualenv:
+To run the tool for development, pip install the requirements into your virtualenv:
 
-    pip install -e base[test]
+    pip install -e .[test]
 
 The `[test]` installs the requirements for testing as well.
 Omit this if you won't be running tests.
-Install any additional packages you want as well:
 
-    pip install -e docs[test]
+Install relengapi via setup.py using the develop command:
+
+    python setup.py develop
+
+Optionally, build the docs:
+
+    relengapi build-docs --development
 
 Set up your settings file:
 
