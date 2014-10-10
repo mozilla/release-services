@@ -29,7 +29,17 @@ angular.module('badpenny').controller('TasksController',
     };
 
     $scope.expandJob = function(job) {
-        $scope.expandedLogs = job.logs;
+        $scope.expandedLogs = 'loading';
+        $http.get('/badpenny/jobs/' + job.id + '/logs')
+        .then(function (data, status, headers, config) {
+            $scope.expandedLogs = data.data.result.content;
+        }, function (data, status, header, config) {
+            if (data.status == 404) {
+                $scope.expandedLogs = '(no logs)';
+            } else {
+                alertify.error("Failed getting job logs: " + data.data.error.name);
+            }
+        });
     };
 
     $scope.closeJob = function() {
