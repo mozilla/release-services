@@ -14,16 +14,14 @@ data_patterns = [
 
 setup(
     name='relengapi-clobberer',
-    version='0.1',
+    version='0.0',
     description='Clobberer blueprint for relengapi',
     author='Morgan Phillips',
     author_email='mphillips@mozilla.com',
     url='',
     install_requires=[
         "Flask",
-        "furl",
         "relengapi",
-        "redo",
     ],
     extras_require={
         'test': [
