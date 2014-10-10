@@ -23,14 +23,22 @@ from rest import ClobberRequest
 from relengapi import apimethod
 from relengapi.util import tz
 
+from settings import SQLALCHEMY_DATABASE_URIS
+
 logger = logging.getLogger(__name__)
 
 bp = Blueprint(
     'clobberer',
     __name__,
     template_folder='templates',
-    static_folder='static'
+    static_folder='static',
 )
+
+
+@bp.record_once
+def apply_settings(state):
+    "Apply blueprint specific settings to the parent app."
+    state.app.config['SQLALCHEMY_DATABASE_URIS'].update(SQLALCHEMY_DATABASE_URIS)
 
 
 @bp.route('/')

@@ -8,7 +8,7 @@ import sqlalchemy as sa
 from relengapi.lib import db
 from relengapi.util import tz
 
-DB_DECLARATIVE_BASE = 'relengapi'
+DB_DECLARATIVE_BASE = 'clobberer'
 
 
 class ClobbererBase(db.declarative_base(DB_DECLARATIVE_BASE)):
