@@ -237,3 +237,20 @@ def test_database_names(app):
         # the full list of database names depends on the loaded
         # blueprints, so just assert that test_db is in there.
         assert 'test_db' in app.db.database_names
+
+
+@TestContext(databases=['test_db'])
+def test_flush_sessions(app):
+    with app.app_context():
+        sess = app.db.session('test_db')
+        obj1 = DevTable()
+        sess.add(obj1)
+        sess.commit()
+        obj_id = obj1.id
+
+        app.db.flush_sessions()
+        obj2 = DevTable.query.first()
+
+        # same id, but different Python objects
+        eq_(obj2.id, obj_id)
+        assert obj1 is not obj2

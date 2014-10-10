@@ -67,9 +67,13 @@ class Alchemies(object):
             self._sessions[dbname] = scoping.scoped_session(Session)
         return self._sessions[dbname]
 
+    def flush_sessions(self):
+        self._teardown(None)
+
     def _teardown(self, response_or_exc):
         for s in self._sessions.values():
             s.remove()
+        self._sessions = {}
 
     @property
     def database_names(self):

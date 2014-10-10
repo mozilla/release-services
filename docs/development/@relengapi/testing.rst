@@ -101,6 +101,13 @@ For example ::
     def test_doc_testdata(client):
         eq_(json.loads(client.get('/docs/testdata')), {'a': 10})
 
+Flushing Database Sessions
+--------------------------
+
+An application keeps a cache of session objects, which is only flushed after a request.
+Sessions cache objects aggressively, so if you need to verify that a database row has been updated, you'll want a fresh session.
+You can reset all sessions with ``app.db.flush_sessions()``.
+
 Testing Subcommands
 -------------------
 
