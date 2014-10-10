@@ -29,7 +29,12 @@ Tasks and Jobs
     The job *starts* when it is actually executed on a machine in the celery cluster.
     The job *completes* when that execution is finished -- successfully or not.
 
-    Each job has a success flag, as well as a JSON-formatted result with arbitrary contents and some log output to help with debugging.
+    Each job has a success flag, as well as a JSON-formatted result with arbitrary contents and some log output (:api:type:`BadpennyJobLog`) to help with debugging.
+
+
+.. api:autotype:: BadpennyJobLog
+
+    This type represents a job log.
 
 
 Endpoints

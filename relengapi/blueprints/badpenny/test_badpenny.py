@@ -33,6 +33,14 @@ def insert_job(app, task_id, created_at, **kwargs):
     return j
 
 
+def insert_log(app, job_id, content):
+    session = app.db.session('relengapi')
+    l = tables.BadpennyJobLog(id=job_id, content=content)
+    session.add(l)
+    session.commit()
+    return l
+
+
 def insert_task(app, name):
     session = app.db.session('relengapi')
     t = tables.BadpennyTask(name=name)
@@ -45,7 +53,6 @@ cleanup_job_1 = rest.BadpennyJob(
     id=1,
     result=json.dumps({"deleted": 6}),
     successful=True,
-    logs=None,
     task_name='cleanup',
     created_at=dt(1978, 6, 15),
     started_at=dt(1978, 6, 15, 12),
@@ -54,7 +61,6 @@ cleanup_job_2 = rest.BadpennyJob(
     id=2,
     result=json.dumps({"error": "ETIMEOUT"}),
     successful=False,
-    logs="Trying..\nTrying..\nTimed out :(\n",
     task_name='cleanup',
     created_at=dt(1978, 6, 16),
     started_at=dt(1978, 6, 16, 12),
@@ -65,7 +71,6 @@ report_job_1 = rest.BadpennyJob(
     id=3,
     result=json.dumps({}),
     successful=True,
-    logs=None,
     task_name='report',
     created_at=dt(1978, 6, 2),
     started_at=dt(1978, 6, 2, 12),
@@ -93,7 +98,7 @@ def add_data(app):
         completed_at=dt(1978, 6, 16, 13),
         successful=False,
         result=json.dumps({'error': 'ETIMEOUT'}),
-        logs="Trying..\nTrying..\nTimed out :(\n").id == cleanup_job_2.id
+    ).id == cleanup_job_2.id
 
     task_id = insert_task(app, 'report').id
 
@@ -106,6 +111,28 @@ def add_data(app):
                       result=json.dumps({})).id == report_job_1.id
 
     insert_task(app, 'check')
+
+
+def create_job(app):
+    with app.app_context():
+        job = tables.BadpennyJob(task_id=10, created_at=dt(2014, 9, 16))
+        app.db.session('relengapi').add(job)
+        app.db.session('relengapi').commit()
+        return job.id
+
+
+def get_job(app, job_id):
+    # flush sessions to be sure we're not getting the same object we created
+    app.db.flush_sessions()
+    with app.app_context():
+        return tables.BadpennyJob.query.filter(tables.BadpennyJob.id == job_id).first()
+
+
+def get_log(app, job_id):
+    # flush sessions to be sure we're not getting the same object we created
+    app.db.flush_sessions()
+    with app.app_context():
+        return tables.BadpennyJobLog.query.filter(tables.BadpennyJobLog.id == job_id).first()
 
 
 @contextlib.contextmanager
@@ -269,6 +296,34 @@ def test_get_job(app, client):
         resp = client.get('/badpenny/jobs/9999999')
         eq_(resp.status_code, 404)
 
+
+@test_context.specialize(app_setup=add_data, perms=[p.base.badpenny.view])
+def test_get_log(app, client):
+    """Getting /jobs/$jobid/logs returns the jobs's logs"""
+    with app.test_request_context():
+        # add a log entry
+        content = "1:00 started\n1:01 oh noes\n"
+        insert_log(app, 3, content)
+        resp = client.get('/badpenny/jobs/3/logs')
+        eq_(json.loads(resp.data)['result'], {'content': content})
+
+
+@test_context.specialize(app_setup=add_data, perms=[p.base.badpenny.view])
+def test_get_log_no_such_task(app, client):
+    """Getting /jobs/$jobid/logs returns 404 if no such job exists"""
+    with app.test_request_context():
+        resp = client.get('/badpenny/jobs/999')
+        eq_(resp.status_code, 404)
+
+
+@test_context.specialize(app_setup=add_data, perms=[p.base.badpenny.view])
+def test_get_log_no_such_log(app, client):
+    """Getting /jobs/$jobid/logs returns 404 if no such log exists"""
+    with app.test_request_context():
+        resp = client.get('/badpenny/jobs/2/logs')
+        eq_(resp.status_code, 404)
+
+
 # badpenny_cron
 
 
@@ -428,14 +483,14 @@ def test_run_job_no_job(app):
 def test_run_job_success(app):
     """`execution._run_job` runs a job and updates the job row."""
     with run_job_setup() as task_ran:
+        job_id = create_job(app)
         with app.app_context():
-            job = tables.BadpennyJob(task_id=10, created_at=dt(2014, 9, 16))
-            app.db.session('relengapi').add(job)
-            app.db.session('relengapi').commit()
-            execution._run_job.apply((__name__ + '.my_task', job.id))
+            execution._run_job.apply((__name__ + '.my_task', job_id))
         assert task_ran
 
-        assert 'HELLO' in job.logs
+        job = get_job(app, job_id)
+        logs = get_log(app, job_id)
+        assert 'HELLO' in logs.content
         assert job.started_at is not None
         assert job.completed_at is not None
         eq_(json.loads(job.result), 'RES')
@@ -446,14 +501,14 @@ def test_run_job_success(app):
 def test_run_job(app):
     """When a job fails, `execution._run_job` logs the exception."""
     with run_job_setup() as task_ran:
+        job_id = create_job(app)
         with app.app_context():
-            job = tables.BadpennyJob(task_id=10, created_at=dt(2014, 9, 16))
-            app.db.session('relengapi').add(job)
-            app.db.session('relengapi').commit()
-            execution._run_job.apply((__name__ + '.failz', job.id))
+            execution._run_job.apply((__name__ + '.failz', job_id))
         assert task_ran
 
-        assert 'oh noes' in job.logs
+        job = get_job(app, job_id)
+        logs = get_log(app, job_id)
+        assert 'oh noes' in logs.content
         assert job.started_at is not None
         assert job.completed_at is not None
         eq_(json.loads(job.result), None)
