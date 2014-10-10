@@ -38,7 +38,7 @@ bp = Blueprint(
 def apply_settings(state):
     "Apply blueprint specific settings to the parent app."
     if state.app.config['SQLALCHEMY_DATABASE_URIS'].get(DB_DECLARATIVE_BASE) is None:
-        state.app.config['SQLALCHEMY_DATABASE_URIS'] = os.environ.get(
+        state.app.config['SQLALCHEMY_DATABASE_URIS'][DB_DECLARATIVE_BASE] = os.environ.get(
             'CLOBBERER_DB_URI',
             'sqlite:////tmp/clobberer.db'
         )
