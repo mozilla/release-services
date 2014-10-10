@@ -31,8 +31,11 @@ class BadpennyJob(wsme.types.Base):
     #: arbitrary JSON-formatted string containing output from the job
     result = wsme.types.wsattr(unicode, mandatory=False)
 
+
+class BadpennyJobLog(wsme.types.Base):
+
     #: text log from the job
-    logs = wsme.types.wsattr(unicode, mandatory=False)
+    content = wsme.types.wsattr(unicode, mandatory=False)
 
 
 class BadpennyTask(wsme.types.Base):
