@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import time
 import sqlalchemy as sa
 
 from relengapi.lib import db
@@ -15,7 +16,7 @@ class ClobbererBase(db.declarative_base(DB_DECLARATIVE_BASE)):
 
     id = sa.Column(sa.Integer, primary_key=True)
     branch = sa.Column(sa.String(50))
-    master = sa.Column(sa.String(50))
+    master = sa.Column(sa.String(50))  # TODO: Remove this field
     slave = sa.Column(sa.String(50))
     builddir = sa.Column(sa.String(100))
 
@@ -27,9 +28,9 @@ class Build(ClobbererBase, db.UniqueMixin):
 
     buildername = sa.Column(sa.String(100))
     last_build_time = sa.Column(
-        db.UTCDateTime,
+        sa.Integer,
         nullable=False,
-        default=tz.utcnow
+        default=int(time.mktime(tz.utcnow().timetuple()))
     )
 
     @classmethod
@@ -52,8 +53,8 @@ class ClobberTime(ClobbererBase):
     __tablename__ = 'clobber_times'
 
     lastclobber = sa.Column(
-        db.UTCDateTime,
+        sa.Integer,
         nullable=False,
-        default=tz.utcnow
+        default=int(time.mktime(tz.utcnow().timetuple()))
     )
     who = sa.Column(sa.String(50))

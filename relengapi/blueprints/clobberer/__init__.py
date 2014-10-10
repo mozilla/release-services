@@ -48,7 +48,7 @@ def clobber_request(body):
         branch=body.branch,
         slave=body.slave,
         builddir=body.builddir,
-        lastclobber=tz.utcnow(),
+        lastclobber=int(time.mktime(tz.utcnow().timetuple())),
         who=unicode(current_user)
     )
     session.add(clobber_time)
@@ -61,15 +61,17 @@ def clobbertimes():
     "Get the max/last clobber time for a particular builddir and branch."
 
     session = g.db.session(DB_DECLARATIVE_BASE)
-    now = tz.utcnow()
+    now = int(time.mktime(tz.utcnow().timetuple()))
     branch = request.args.get('branch')
     slave = request.args.get('slave')
     builddir = request.args.get('builddir')
     buildername = request.args.get('buildername')
+    master = request.args.get('master')
     # TODO: Move the builds update to a separate endpoint (requires client changes)
     build = Build.as_unique(
         session,
         branch=branch,
+        master=master,
         slave=slave,
         builddir=builddir,
         buildername=buildername,
@@ -83,6 +85,5 @@ def clobbertimes():
     ).order_by(desc(ClobberTime.lastclobber)).first()
 
     if max_ct:
-        max_lastclobber = int(time.mktime(max_ct.lastclobber.timetuple()))
-        return "{}:{}:{}\n".format(max_ct.builddir, max_lastclobber, max_ct.who)
+        return "{}:{}:{}\n".format(max_ct.builddir, max_ct.lastclobber, max_ct.who)
     return ""
