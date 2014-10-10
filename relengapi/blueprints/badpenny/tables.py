@@ -9,6 +9,16 @@ from relengapi.lib import badpenny
 from relengapi.lib import db
 
 
+class BadpennyJobLog(db.declarative_base('relengapi')):
+    __tablename__ = 'badpenny_job_logs'
+
+    id = sa.Column(sa.Integer, sa.ForeignKey('badpenny_jobs.id'),
+                   primary_key=True)
+
+    # 'logs' is free-form, hopefully brief, log text
+    content = sa.Column(sa.Text())
+
+
 class BadpennyJob(db.declarative_base('relengapi')):
     __tablename__ = 'badpenny_jobs'
 
