@@ -27,16 +27,18 @@ logger = logging.getLogger(__name__)
 
 bp = Blueprint(
     'clobberer',
-     __name__,
+    __name__,
     template_folder='templates',
     static_folder='static'
 )
+
 
 @bp.route('/')
 @flask_login.login_required
 def root():
     context = {'who': current_user}
     return render_template('clobberer.html', **context)
+
 
 @bp.route('/clobber', methods=['POST'])
 @apimethod(None, body=ClobberRequest)
@@ -53,8 +55,11 @@ def clobber_request(body):
     session.commit()
     return None
 
+
 @bp.route('/lastclobber', methods=['GET'])
 def clobbertimes():
+    "Get the max/last clobber time for a particular builddir and branch."
+
     session = g.db.session(DB_DECLARATIVE_BASE)
     now = tz.utcnow()
     branch = request.args.get('branch')
@@ -74,10 +79,10 @@ def clobbertimes():
     session.commit()
 
     max_ct = session.query(ClobberTime).filter(
-        ClobberTime.builddir==builddir, ClobberTime.branch==branch
+        ClobberTime.builddir == builddir, ClobberTime.branch == branch
     ).order_by(desc(ClobberTime.lastclobber)).first()
 
     if max_ct:
         max_lastclobber = int(time.mktime(max_ct.lastclobber.timetuple()))
-        return "{}:{}:{}\n".format(max_ct.builddir,  max_lastclobber, max_ct.who)
+        return "{}:{}:{}\n".format(max_ct.builddir, max_lastclobber, max_ct.who)
     return ""

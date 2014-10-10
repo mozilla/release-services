@@ -9,6 +9,7 @@ from relengapi.util import tz
 
 DB_DECLARATIVE_BASE = 'relengapi'
 
+
 class ClobbererBase(db.declarative_base(DB_DECLARATIVE_BASE)):
     __abstract__ = True
 
@@ -20,7 +21,6 @@ class ClobbererBase(db.declarative_base(DB_DECLARATIVE_BASE)):
 
 
 class Build(ClobbererBase, db.UniqueMixin):
-
     "A clobberable build."
 
     __tablename__ = 'builds'
@@ -39,15 +39,14 @@ class Build(ClobbererBase, db.UniqueMixin):
     @classmethod
     def unique_filter(cls, query, branch, slave, builddir, buildername, *args, **kwargs):
         return query.filter(
-            cls.branch==branch,
-            cls.slave==slave,
-            cls.builddir==builddir,
-            cls.buildername==buildername
+            cls.branch == branch,
+            cls.slave == slave,
+            cls.builddir == builddir,
+            cls.buildername == buildername
         )
 
 
 class ClobberTime(ClobbererBase):
-
     "A clobber request."
 
     __tablename__ = 'clobber_times'

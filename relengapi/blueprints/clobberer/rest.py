@@ -6,8 +6,7 @@ import wsme.types
 
 
 class ClobberRequest(wsme.types.Base):
-
-    "Represents a clobber request for some list of builders"
+    "Represents a clobber request"
 
     id = int
     branch = unicode
