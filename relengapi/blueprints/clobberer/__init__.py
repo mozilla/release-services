@@ -5,6 +5,7 @@
 import flask_login
 import logging
 import time
+import os
 
 from sqlalchemy import desc
 
@@ -23,22 +24,24 @@ from rest import ClobberRequest
 from relengapi import apimethod
 from relengapi.util import tz
 
-from settings import SQLALCHEMY_DATABASE_URIS
-
 logger = logging.getLogger(__name__)
 
 bp = Blueprint(
     'clobberer',
     __name__,
     template_folder='templates',
-    static_folder='static',
+    static_folder='static'
 )
 
 
 @bp.record_once
 def apply_settings(state):
     "Apply blueprint specific settings to the parent app."
-    state.app.config['SQLALCHEMY_DATABASE_URIS'].update(SQLALCHEMY_DATABASE_URIS)
+    if state.app.config['SQLALCHEMY_DATABASE_URIS'].get(DB_DECLARATIVE_BASE) is None:
+        state.app.config['SQLALCHEMY_DATABASE_URIS'] = os.environ.get(
+            'CLOBBERER_DB_URI',
+            'sqlite:////tmp/clobberer.db'
+        )
 
 
 @bp.route('/')
