@@ -31,7 +31,7 @@ setup(
     },
     packages=find_packages(),
     package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
-        'relengapi.blueprints.slaveloan': data_patterns + [
+        'relengapi.blueprints.clobberer': data_patterns + [
             'docs/**.rst'
         ],
     },
