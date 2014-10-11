@@ -22,7 +22,6 @@ from models import DB_DECLARATIVE_BASE
 from rest import ClobberRequest
 
 from relengapi import apimethod
-from relengapi.util import tz
 
 logger = logging.getLogger(__name__)
 
@@ -54,12 +53,14 @@ def root():
 @bp.route('/clobber', methods=['POST'])
 @apimethod(None, body=ClobberRequest)
 def clobber(body):
+    "Request a clobber."
+
     session = g.db.session(DB_DECLARATIVE_BASE)
     clobber_time = ClobberTime(
         branch=body.branch,
         slave=body.slave,
         builddir=body.builddir,
-        lastclobber=int(time.mktime(tz.utcnow().timetuple())),
+        lastclobber=int(time.time()),
         who=unicode(current_user)
     )
     session.add(clobber_time)
@@ -72,7 +73,7 @@ def clobbertimes():
     "Get the max/last clobber time for a particular builddir and branch."
 
     session = g.db.session(DB_DECLARATIVE_BASE)
-    now = int(time.mktime(tz.utcnow().timetuple()))
+    now = int(time.time())
     branch = request.args.get('branch')
     slave = request.args.get('slave')
     builddir = request.args.get('builddir')

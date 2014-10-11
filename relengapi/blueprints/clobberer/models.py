@@ -6,7 +6,6 @@ import time
 import sqlalchemy as sa
 
 from relengapi.lib import db
-from relengapi.util import tz
 
 DB_DECLARATIVE_BASE = 'clobberer'
 
@@ -30,7 +29,7 @@ class Build(ClobbererBase, db.UniqueMixin):
     last_build_time = sa.Column(
         sa.Integer,
         nullable=False,
-        default=int(time.mktime(tz.utcnow().timetuple()))
+        default=int(time.time())
     )
 
     @classmethod
@@ -55,6 +54,6 @@ class ClobberTime(ClobbererBase):
     lastclobber = sa.Column(
         sa.Integer,
         nullable=False,
-        default=int(time.mktime(tz.utcnow().timetuple()))
+        default=int(time.time())
     )
     who = sa.Column(sa.String(50))
