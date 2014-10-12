@@ -61,7 +61,8 @@ def clobber(body):
         slave=body.slave,
         builddir=body.builddir,
         lastclobber=int(time.time()),
-        who=unicode(current_user)
+        # Colons break the client's logic
+        who=unicode(current_user).strip(':')
     )
     session.add(clobber_time)
     session.commit()
