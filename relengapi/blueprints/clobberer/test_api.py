@@ -3,21 +3,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from nose.tools import eq_
-from relengapi.lib.testing.context import TestContext
-
 from copy import deepcopy
+
+from relengapi.lib.testing.context import TestContext
 
 from models import Build
 from models import ClobberTime
 from models import DB_DECLARATIVE_BASE
 
-test_context = TestContext()
 _clobber_args = {
     'master': None,
     'branch': 'branch',
     'slave': 'slave',
     'builddir': 'builddir',
 }
+
+test_context = TestContext(databases=[DB_DECLARATIVE_BASE], reuse_app=True)
 
 _last_clobber_args = deepcopy(_clobber_args)
 _last_clobber_args['buildername'] = 'buildername'
@@ -26,7 +27,6 @@ _last_clobber_args['buildername'] = 'buildername'
 @test_context
 def test_clobber_request(client):
     session = test_context._app.db.session(DB_DECLARATIVE_BASE)
-
     clobber_count_initial = session.query(ClobberTime).count()
     rv = client.post_json('/clobberer/clobber', data=_clobber_args)
     eq_(rv.status_code, 200)
