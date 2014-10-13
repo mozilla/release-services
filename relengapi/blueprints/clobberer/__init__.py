@@ -35,8 +35,7 @@ bp = Blueprint(
 @bp.route('/')
 @flask_login.login_required
 def root():
-    context = {'who': current_user}
-    return render_template('clobberer.html', **context)
+    return render_template('clobberer.html')
 
 
 @bp.route('/clobber', methods=['POST'])
