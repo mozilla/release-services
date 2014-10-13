@@ -83,6 +83,18 @@ def get_job(job_id):
         raise NotFound
     return j.to_jsonjob()
 
+
+@bp.route('/jobs/<job_id>/logs')
+@apimethod(rest.BadpennyJobLog, int)
+@p.base.badpenny.view.require()
+def get_job_logs(job_id):
+    """Get logs for a badpenny job by its ID."""
+    j = tables.BadpennyJobLog.query.filter(
+        tables.BadpennyJobLog.id == job_id).first()
+    if not j:
+        raise NotFound
+    return rest.BadpennyJobLog(content=j.content)
+
 # Flask is fond of module-level code, which means imports have side-effects,
 # which upsets pyflakes.
 _hush_pyflakes = [cron, cleanup]

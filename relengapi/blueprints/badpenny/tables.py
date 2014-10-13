@@ -9,6 +9,16 @@ from relengapi.lib import badpenny
 from relengapi.lib import db
 
 
+class BadpennyJobLog(db.declarative_base('relengapi')):
+    __tablename__ = 'badpenny_job_logs'
+
+    id = sa.Column(sa.Integer, sa.ForeignKey('badpenny_jobs.id'),
+                   primary_key=True)
+
+    # 'logs' is free-form, hopefully brief, log text
+    content = sa.Column(sa.Text())
+
+
 class BadpennyJob(db.declarative_base('relengapi')):
     __tablename__ = 'badpenny_jobs'
 
@@ -24,9 +34,6 @@ class BadpennyJob(db.declarative_base('relengapi')):
     # 'result' is JSON data
     result = sa.Column(sa.Text())
 
-    # 'logs' is free-form, hopefully brief, log text
-    logs = sa.Column(sa.Text())
-
     def to_jsonjob(self):
         return rest.BadpennyJob(id=self.id,
                                 task_name=self.task.name,
@@ -34,8 +41,7 @@ class BadpennyJob(db.declarative_base('relengapi')):
                                 started_at=self.started_at,
                                 completed_at=self.completed_at,
                                 successful=self.successful,
-                                result=self.result,
-                                logs=self.logs)
+                                result=self.result)
 
 
 class BadpennyTask(db.declarative_base('relengapi'), db.UniqueMixin):

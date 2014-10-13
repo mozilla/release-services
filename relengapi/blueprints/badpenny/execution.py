@@ -36,12 +36,16 @@ class JobStatus(object):
         current_app.db.session('relengapi').commit()
 
     def _finish(self, successful, result):
+        session = current_app.db.session('relengapi')
+
         self.job.completed_at = time.now()
         self.job.successful = successful
         self.job.result = json.dumps(result)
         if self._log_output:
-            self.job.logs = u'\n'.join(self._log_output)
-        current_app.db.session('relengapi').commit()
+            content = u'\n'.join(self._log_output)
+            l = tables.BadpennyJobLog(id=self.job.id, content=content)
+            session.add(l)
+        session.commit()
 
 
 @celery.task()
