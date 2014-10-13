@@ -87,5 +87,9 @@ def clobbertimes():
     ).order_by(desc(ClobberTime.lastclobber)).first()
 
     if max_ct:
+        # The client parses this result by colon as:
+        # builddir, lastclobber, who = urlib2.open.split(':')
+        # as such it's important for this to be plain text and have
+        # no extra colons within the field values themselves
         return "{}:{}:{}\n".format(max_ct.builddir, max_ct.lastclobber, max_ct.who)
     return ""
