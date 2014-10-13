@@ -5,7 +5,6 @@
 import flask_login
 import logging
 import time
-import os
 
 from sqlalchemy import desc
 
@@ -31,16 +30,6 @@ bp = Blueprint(
     template_folder='templates',
     static_folder='static'
 )
-
-
-@bp.record_once
-def apply_settings(state):
-    "Apply blueprint specific settings to the parent app."
-    if state.app.config['SQLALCHEMY_DATABASE_URIS'].get(DB_DECLARATIVE_BASE) is None:
-        state.app.config['SQLALCHEMY_DATABASE_URIS'][DB_DECLARATIVE_BASE] = os.environ.get(
-            'CLOBBERER_DB_URI',
-            'sqlite:////tmp/clobberer.db'
-        )
 
 
 @bp.route('/')
