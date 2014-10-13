@@ -33,7 +33,7 @@ setup(name='relengapi-skeleton',
     },
     install_requires=[
         'Flask',
-        'relengapi',
+        'relengapi>=0.3',
     ],
     license='MPL2',
     extras_require={
