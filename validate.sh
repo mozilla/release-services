@@ -3,7 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+## tweakable parameters
+
+# minimum acceptable coverage percentage
 COVERAGE_MIN=96
+
+# project name
+PROJECT=relengapi-skeleton
 
 set -e
 
@@ -94,11 +100,11 @@ head -n2 ${tmpbase}/covreport
 tail -n1 ${tmpbase}/covreport
 
 # get the version
-version=`python -c 'import pkg_resources; print pkg_resources.require("'relengapi'")[0].version'`
+version=`python -c 'import pkg_resources; print pkg_resources.require("'${PROJECT}'")[0].version'`
 
 # remove SOURCES.txt, as it caches the expected contents of the package,
 # over and above those specified in setup.py, MANIFEST, and MANIFEST.in
-rm -f "relengapi.egg-info/SOURCES.txt"
+rm -f "*.egg-info/SOURCES.txt"
 
 # get the list of files git thinks should be present
 status "getting file list from git"
@@ -108,9 +114,7 @@ git_only='
     pep8rc
     coveragerc
     validate.sh
-    validate-common.sh
-    src
-    settings_example.py
+    misc/fiximports.py
 '
 git ls-files . | while read f; do
                     ignore=false
@@ -123,10 +127,10 @@ git ls-files . | while read f; do
 # get the list of files in an sdist tarball
 status "getting file list from sdist"
 python setup.py -q sdist --dist-dir=${tmpbase}
-tarball="${tmpbase}/relengapi-${version}.tar.gz"
+tarball="${tmpbase}/${PROJECT}-${version}.tar.gz"
 [ -f ${tarball} ] || fail "No tarball at ${tarball}"
 # exclude directories and a few auto-generated files from the tarball contents
-tar -ztf $tarball | grep -v  '/$' | cut -d/ -f 2- | grep -vE '(egg-info|PKG-INFO)' | sort > ${tmpbase}/sdist-files
+tar -ztf $tarball | grep -v  '/$' | cut -d/ -f 2- | grep -vE '(egg-info|PKG-INFO|setup.cfg)' | sort > ${tmpbase}/sdist-files
 
 # get the list of files *installed* from that tarball
 status "getting file list from install"
@@ -135,10 +139,17 @@ status "getting file list from install"
     tar -zxf ${tarball}
     cd `basename ${tarball%.tar.gz}`
     python setup.py -q install --root $tmpbase/root --record=installed.txt
+
+    # sometimes setuptools includes directories here, so filter those out
+    cat installed.txt | while read f; do
+        [ -f "$tmpbase/root/$f" ] && echo $f
+    done > installed.txt~
+    mv installed.txt~ installed.txt
+
     (
         # get everything installed under site-packages, and trim up to and including site-packages/ on each line,
-        # excluding .pyc files, and including the two namespaced packages
-        grep 'site-packages/relengapi/' installed.txt | grep -v '\.pyc$' | sed -e 's!.*/site-packages/!!'
+        # excluding .pyc files
+        grep "site-packages/relengapi/" installed.txt | grep -v '\.pyc$' | sed -e 's!.*/site-packages/!!'
         # get all installed $prefix/relengapi-docs
         grep '/relengapi-docs/' installed.txt | sed -e 's!.*/relengapi-docs/!docs/!'
     ) | sort > ${tmpbase}/install-files
@@ -154,7 +165,7 @@ status "comparing git and sdist"
 diff -u git-files sdist-files || not_ok "sdist files differ from files in git"
 status "comparing git and install"
 diff -u git-expected-installed install-files || not_ok "installed files differ from files in git"
-popd
+popd >/dev/null
 
 show_results
 
