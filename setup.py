@@ -3,19 +3,19 @@
 import os
 from setuptools import setup, find_packages
 
-setup(name='relengapi-skel',
-    version='0.2.0.1',
+setup(name='relengapi-skeleton',
+    version='0.1.0',
     description='Skeleton of a RelengAPI project',
-    author='Dustin J. Mitchell',
-    author_email='dustin@mozilla.com',
-    url='https://github.com/djmitche/relengapi-skel',
-    packages=find_packages(),
-    namespace_packages=['relengapi', 'relengapi.blueprints'],
+    author='Skeleton Crew',
+    author_email='skeleton@mozilla.com',
+    url='https://github.com/buildbot/build-relengapi-skeleton',
     entry_points={
         "relengapi_blueprints": [
-            'mapper = relengapi.blueprints.skel:bp',
+            'mapper = relengapi.blueprints.skeleton:bp',
         ],
     },
+    packages=find_packages(),
+    namespace_packages=['relengapi', 'relengapi.blueprints'],
     data_files=[
         ('relengapi-' + dirpath, [os.path.join(dirpath, f) for f in files])
         for dirpath, _, files in os.walk('docs')

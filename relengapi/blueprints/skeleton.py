@@ -5,7 +5,7 @@
 from relengapi.lib import api
 from flask import Blueprint
 
-bp = Blueprint('skel', __name__)
+bp = Blueprint('skeleton', __name__)
 
 @bp.route('/')
 @api.apimethod()
