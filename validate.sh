@@ -167,6 +167,21 @@ status "comparing git and install"
 diff -u git-expected-installed install-files || not_ok "installed files differ from files in git"
 popd >/dev/null
 
+# This part only applies for `relengapi-skeleton` -- it attempts to follow the
+# instructions for creating a new blueprint.  Other blueprints should just leave it
+# here, unused.
+if [ "${PROJECT}" = "relengapi-skeleton" ]; then
+    status "testing creation of a new blueprint"
+    (
+        cp -r . ${tmpbase}/bubbler
+        cd ${tmpbase}/bubbler
+        find * -name '*skeleton*' | while read s; do d=$(echo $s | sed s/skeleton/bubbler/g); mv $s $d; done
+        git grep skeleton | cut -d: -f 1 | sort -u | while read s; do sed s/skeleton/bubbler/ < $s > $s~; mv $s~ $s; done
+        virtualenv skeltest --no-site-packages
+        skeltest/bin/pip install -e .[test]
+        skeltest/bin/relengapi run-tests
+        skeltest/bin/relengapi build-docs --development
+    ) || not_ok "creation of a new blueprint from skeleton failed"
+fi
+
 show_results
-
-
