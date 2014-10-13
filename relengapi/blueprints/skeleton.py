@@ -8,6 +8,6 @@ from flask import Blueprint
 bp = Blueprint('skeleton', __name__)
 
 @bp.route('/')
-@api.apimethod()
+@api.apimethod({unicode:unicode})
 def hello():
     return {'message': 'hello world'}
