@@ -25,6 +25,7 @@ and enter that directory.  Now it's time to rename everything.  First, rename th
 Now edit the files referring to skeletons:
 
     git grep skeleton | while read s; do sed s/skeleton/bubbler/ < $s > $s~; mv $s~ $s; done
+    echo '# Bubbler' > README.md
 
 Have a look at ``setup.py`` to fix the author name, and so on.
 Once that's ready, try installing your blueprint:
@@ -57,3 +58,10 @@ This will get your project the latest support scripts and other paraphernalia.
 Any conflicts may identify fixes required for continued compatibility with the core, although the lack of conflicts does not guarantee compatibility!
 
     git pull skeleton master
+
+Other Useful Stuff
+------------------
+
+You'll probably want to create a new Mozilla repository on Github, named something like ``build-relengapi-bubbler``, and fork your own copy of that repository.
+
+If you enable Travis for your repository, or for the upstream repository, the included ``.travis.yml`` will, more or less, run ``validate.sh`` for you.
