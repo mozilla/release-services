@@ -2,15 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
-
-SQLALCHEMY_DATABASE_URIS = {
-    # Edit the next line to specify a proper path/db name
-    'relengapi': 'sqlite:///{}'.format(
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'relengapi.db')
-    ),
-    # .. add other database URIs here, as appropriate for the blueprints
-}
+# RelengAPI can use multiple databases when several blueprints are installed.  Each is
+# configured with a key in this dictionary.  For example:
+#
+# SQLALCHEMY_DATABASE_URIS = {
+#    'relengapi': 'sqlite:////tmp/relengapi.db',
+#    'clobberer': 'sqlite:////tmp/clobberer.db',
+#    # .. add other database URIs here, as appropriate for the blueprints
+# }
+#
+# You can use any SQLAlchemy-style database URI.  The default, if no URI
+# configuration is present, is to use '*.db' files in the directory containing
+# the RelengAPI source code.
 
 # ===== Authentication and Authorization =====
 

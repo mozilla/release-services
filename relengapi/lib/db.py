@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import logging
+import os
 import pytz
 import sqlalchemy as sa
 import threading
@@ -15,6 +17,8 @@ from sqlalchemy import types
 from sqlalchemy.ext import declarative
 from sqlalchemy.orm import scoping
 from sqlalchemy.pool import Pool
+
+logger = logging.getLogger(__name__)
 
 
 class _QueryProperty(object):
@@ -51,10 +55,28 @@ class Alchemies(object):
         self._sessions = {}
         app.teardown_request(self._teardown)
 
+    def _get_db_config(self, dbname):
+        uris = self.app.config.get('SQLALCHEMY_DATABASE_URIS')
+        if uris is not None:
+            if dbname not in uris:
+                raise KeyError(
+                    "No configuration for database '{}'".format(dbname))
+            return uris[dbname]
+        else:
+            # apply a universal default for all databases; this isn't the
+            # optimal location, but works well for the developer who just
+            # cloned the app and is running it for the first time.
+            dir = os.path.join(os.path.dirname(__file__), '../..')
+            dir = os.path.abspath(dir)
+            uri = 'sqlite:///{}'.format(
+                os.path.join(dir, '{}.db'.format(dbname)))
+            logger.warning("Using URI {} for database {}".format(uri, dbname))
+            return uri
+
     @synchronized(threading.Lock())
     def engine(self, dbname):
         if dbname not in self._engines:
-            uri = self.app.config['SQLALCHEMY_DATABASE_URIS'][dbname]
+            uri = self._get_db_config(dbname)
             self._engines[dbname] = sa.create_engine(uri)
         return self._engines[dbname]
 
@@ -87,7 +109,8 @@ class Alchemies(object):
 # gone away.  This will apply to SQLite DBs too, where the server can't go
 # away, but that's OK - SQLite is only used in development
 #
-# from http://docs.sqlalchemy.org/en/rel_0_9/core/pooling.html#disconnect-handling-pessimistic
+# from
+# http://docs.sqlalchemy.org/en/rel_0_9/core/pooling.html#disconnect-handling-pessimistic
 
 
 @event.listens_for(Pool, "checkout")
@@ -133,7 +156,8 @@ class UTCDateTime(types.TypeDecorator):
 
 
 def _unique(session, cls, hashfunc, queryfunc, constructor, arg, kw, _test_hook=None):
-    # Based on https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/UniqueObject
+    # Based on
+    # https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/UniqueObject
     cache = session.info.get('_unique_cache', None)
     if cache is None:
         session.info['_unique_cache'] = cache = {}
@@ -163,7 +187,9 @@ def _unique(session, cls, hashfunc, queryfunc, constructor, arg, kw, _test_hook=
 
 
 class UniqueMixin(object):
-    # Based on https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/UniqueObject
+    # Based on
+    # https://bitbucket.org/zzzeek/sqlalchemy/wiki/UsageRecipes/UniqueObject
+
     @classmethod
     def unique_filter(cls, query, *arg, **kw):
         raise NotImplementedError()
@@ -181,4 +207,4 @@ class UniqueMixin(object):
             cls.unique_filter,
             cls,
             arg, kw
-            )
+        )
