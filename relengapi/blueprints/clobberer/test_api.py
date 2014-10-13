@@ -37,9 +37,7 @@ def test_clobber_request(client):
 
 
 @test_context
-def test_lastclobber_no_clobbers(client):
-    " Test which assumes that no clobbers have yet be requested."
-
+def test_lastclobber(client):
     session = test_context._app.db.session(DB_DECLARATIVE_BASE)
     rv = client.get(
         '/clobberer/lastclobber?branch={branch}&slave={slave}&builddir'
