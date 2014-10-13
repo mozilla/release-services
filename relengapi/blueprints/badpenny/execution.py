@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import json
 import logging
 import traceback
 
@@ -35,12 +34,11 @@ class JobStatus(object):
         self.job.started_at = time.now()
         current_app.db.session('relengapi').commit()
 
-    def _finish(self, successful, result):
+    def _finish(self, successful):
         session = current_app.db.session('relengapi')
 
         self.job.completed_at = time.now()
         self.job.successful = successful
-        self.job.result = json.dumps(result)
         if self._log_output:
             content = u'\n'.join(self._log_output)
             l = tables.BadpennyJobLog(id=self.job.id, content=content)
@@ -66,11 +64,11 @@ def _run_job(task_name, job_id):
     job_status._start()
 
     try:
-        result = task.task_func(job_status)
+        task.task_func(job_status)
     except Exception:
         logger.exception("Job %r failed", job_id)
         job_status.log_message(traceback.format_exc())
-        job_status._finish(successful=False, result=None)
+        job_status._finish(successful=False)
         return
 
-    job_status._finish(successful=True, result=result)
+    job_status._finish(successful=True)
