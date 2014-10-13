@@ -10,8 +10,8 @@ from sqlalchemy import desc
 
 from flask import Blueprint
 from flask import g
-from flask import request
 from flask import render_template
+from flask import request
 from flask.ext.login import current_user
 
 from models import Build
