@@ -21,15 +21,12 @@ Databases
 Releng API, as a kind of glue, generally connects to a numnber of databases.
 Each database has a short name, and requires that a longer SQLAlchemy URL be configured for it.
 
-This is done in the ``SQLALCHEMY_DATABASE_URIS`` configuration, which is a dictionary mapping names to URLs.
+This is done in the ``SQLALCHEMY_DATABASE_URIS`` configuration, which is a dictionary mapping names to URIs.
+If this configuration key is not present, then RelengAPI will create SQLite databases in the root of the source directory.
+This is effective for development, but certainly not for production.
 
-The databases for the base blueprint are
-
-  * ``relengapi`` - the Releng API's own DB
-  * ``scheduler`` - the Buildbot scheduler DB
-  * ``status`` - the Buildbot status DB
-
-Other blueprints may require additional bind URIs.
+The database for the relengapi core is named ``relengapi``.
+Other blueprints may require additional URIs.
 
 .. _Deployment-Authentication:
 

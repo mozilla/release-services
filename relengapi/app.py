@@ -83,14 +83,6 @@ class VersionInfo(wsme.types.Base):
     blueprints = {unicode: BlueprintInfo}
 
 
-def apply_default_config(app):
-    db_file = 'sqlite:///{}'.format(
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), '../relengapi.db')
-    )
-    logger.warning("Creating a sqlite database: {}".format(db_file))
-    app.config['SQLALCHEMY_DATABASE_URIS'] = dict(relengapi=db_file)
-
-
 def create_app(cmdline=False, test_config=None):
     blueprints = get_blueprints()
 
@@ -102,9 +94,8 @@ def create_app(cmdline=False, test_config=None):
         if env_var in os.environ and os.environ[env_var]:
             app.config.from_envvar(env_var)
         else:
-            logger.warning("using default settings; to configure relengapi, set "
+            logger.warning("Using default settings; to configure relengapi, set "
                            "%s to point to your settings file" % env_var)
-            apply_default_config(app)
 
     # add the necessary components to the app
     app.db = db.make_db(app)

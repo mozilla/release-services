@@ -40,6 +40,29 @@ class DevTable(db.declarative_base('test_db')):
     date = sa.Column(db.UTCDateTime(timezone=True))
 
 
+@TestContext()
+def test_get_db_config_default(app):
+    app.config.pop('SQLALCHEMY_DATABASE_URIS')
+    dir = os.path.join(os.path.dirname(db.__file__), '../..')
+    dir = os.path.abspath(dir)
+    abc_uri = app.db._get_db_config('abc')
+    eq_(abc_uri, 'sqlite:///' + os.path.join(dir, 'abc.db'))
+
+
+@TestContext()
+def test_get_db_config_configured(app):
+    app.config['SQLALCHEMY_DATABASE_URIS'] = {'abc': 'foo:///bar'}
+    abc_uri = app.db._get_db_config('abc')
+    eq_(abc_uri, 'foo:///bar')
+
+
+@TestContext()
+def test_get_db_config_configured_not_this_db(app):
+    app.config['SQLALCHEMY_DATABASE_URIS'] = {'abc': 'foo:///bar'}
+    assert_raises(KeyError, lambda:
+                  app.db._get_db_config('xyz'))
+
+
 @TestContext(databases=['test_db'])
 def test_ensure_empty(app):
     session = app.db.session('test_db')
