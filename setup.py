@@ -3,6 +3,14 @@
 import os
 from setuptools import setup, find_packages
 
+data_patterns = [
+    'templates/**.html',
+    'static/**.jpg',
+    'static/**.css',
+    'static/**.js',
+    'static/**.txt',
+]
+
 setup(name='relengapi-skeleton',
     version='0.1.0',
     description='Skeleton of a RelengAPI project',
@@ -20,8 +28,8 @@ setup(name='relengapi-skeleton',
         ('relengapi-' + dirpath, [os.path.join(dirpath, f) for f in files])
         for dirpath, _, files in os.walk('docs')
     ],
-    package_data={
-        'relengapi': ['docs/**.rst'],
+    package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
+        'relengapi.blueprints.skeleton': data_patterns,
     },
     install_requires=[
         'Flask',
