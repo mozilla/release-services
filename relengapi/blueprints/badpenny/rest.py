@@ -28,9 +28,6 @@ class BadpennyJob(wsme.types.Base):
     #: true if the job was successful
     successful = wsme.types.wsattr(bool, mandatory=False)
 
-    #: arbitrary JSON-formatted string containing output from the job
-    result = wsme.types.wsattr(unicode, mandatory=False)
-
 
 class BadpennyJobLog(wsme.types.Base):
 

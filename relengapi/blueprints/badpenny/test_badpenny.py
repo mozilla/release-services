@@ -51,7 +51,6 @@ def insert_task(app, name):
 cleanup_task = rest.BadpennyTask(active=False, name="cleanup", last_success=0)
 cleanup_job_1 = rest.BadpennyJob(
     id=1,
-    result=json.dumps({"deleted": 6}),
     successful=True,
     task_name='cleanup',
     created_at=dt(1978, 6, 15),
@@ -59,7 +58,6 @@ cleanup_job_1 = rest.BadpennyJob(
     completed_at=dt(1978, 6, 15, 13))
 cleanup_job_2 = rest.BadpennyJob(
     id=2,
-    result=json.dumps({"error": "ETIMEOUT"}),
     successful=False,
     task_name='cleanup',
     created_at=dt(1978, 6, 16),
@@ -69,7 +67,6 @@ cleanup_job_2 = rest.BadpennyJob(
 report_task = rest.BadpennyTask(active=False, name="report", last_success=1)
 report_job_1 = rest.BadpennyJob(
     id=3,
-    result=json.dumps({}),
     successful=True,
     task_name='report',
     created_at=dt(1978, 6, 2),
@@ -88,7 +85,7 @@ def add_data(app):
         started_at=dt(1978, 6, 15, 12),
         completed_at=dt(1978, 6, 15, 13),
         successful=True,
-        result=json.dumps({'deleted': 6})).id == cleanup_job_1.id
+    ).id == cleanup_job_1.id
 
     assert insert_job(
         app,
@@ -97,18 +94,18 @@ def add_data(app):
         started_at=dt(1978, 6, 16, 12),
         completed_at=dt(1978, 6, 16, 13),
         successful=False,
-        result=json.dumps({'error': 'ETIMEOUT'}),
     ).id == cleanup_job_2.id
 
     task_id = insert_task(app, 'report').id
 
-    assert insert_job(app,
-                      task_id=task_id,
-                      created_at=dt(1978, 6, 2),
-                      started_at=dt(1978, 6, 2, 12),
-                      completed_at=dt(1978, 6, 2, 13),
-                      successful=True,
-                      result=json.dumps({})).id == report_job_1.id
+    assert insert_job(
+        app,
+        task_id=task_id,
+        created_at=dt(1978, 6, 2),
+        started_at=dt(1978, 6, 2, 12),
+        completed_at=dt(1978, 6, 2, 13),
+        successful=True,
+    ).id == report_job_1.id
 
     insert_task(app, 'check')
 
@@ -493,7 +490,6 @@ def test_run_job_success(app):
         assert 'HELLO' in logs.content
         assert job.started_at is not None
         assert job.completed_at is not None
-        eq_(json.loads(job.result), 'RES')
         eq_(job.successful, True)
 
 
@@ -511,7 +507,6 @@ def test_run_job(app):
         assert 'oh noes' in logs.content
         assert job.started_at is not None
         assert job.completed_at is not None
-        eq_(json.loads(job.result), None)
         eq_(job.successful, False)
 
 # cleanup

@@ -31,17 +31,13 @@ class BadpennyJob(db.declarative_base('relengapi')):
     completed_at = sa.Column(db.UTCDateTime(timezone=True), nullable=True)
     successful = sa.Column(sa.Boolean())
 
-    # 'result' is JSON data
-    result = sa.Column(sa.Text())
-
     def to_jsonjob(self):
         return rest.BadpennyJob(id=self.id,
                                 task_name=self.task.name,
                                 created_at=self.created_at,
                                 started_at=self.started_at,
                                 completed_at=self.completed_at,
-                                successful=self.successful,
-                                result=self.result)
+                                successful=self.successful)
 
 
 class BadpennyTask(db.declarative_base('relengapi'), db.UniqueMixin):
