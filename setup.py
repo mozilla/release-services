@@ -1,7 +1,6 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#!/usr/bin/env python
 
+import os
 from setuptools import setup, find_packages
 
 data_patterns = [
@@ -12,35 +11,37 @@ data_patterns = [
     'static/**.txt',
 ]
 
-setup(
-    name='relengapi-clobberer',
-    version='0.0',
-    description='Clobberer blueprint for relengapi',
+setup(name='relengapi-clobberer',
+    version='0.1.0',
+    description='The RelengAPI clobberer service.',
     author='Morgan Phillips',
     author_email='mphillips@mozilla.com',
-    url='',
-    install_requires=[
-        "Flask",
-        "relengapi",
+    url='https://github.com/buildbot/build-relengapi-clobberer',
+    entry_points={
+        "relengapi_blueprints": [
+            'mapper = relengapi.blueprints.clobberer:bp',
+        ],
+    },
+    packages=find_packages(),
+    namespace_packages=['relengapi', 'relengapi.blueprints'],
+    data_files=[
+        ('relengapi-' + dirpath, [os.path.join(dirpath, f) for f in files])
+        for dirpath, _, files in os.walk('docs')
     ],
+    package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
+        'relengapi.blueprints.clobberer': data_patterns,
+    },
+    install_requires=[
+        'Flask',
+        'relengapi>=0.3',
+    ],
+    license='MPL2',
     extras_require={
         'test': [
             'nose',
-            'mock'
+            'mock',
+            'pep8',
+            'pyflakes',
+            'coverage',
         ]
-    },
-    packages=find_packages(),
-    package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
-        'relengapi.blueprints.clobberer': data_patterns + [
-            'docs/**.rst'
-        ],
-    },
-    include_package_data=True,
-    namespace_packages=['relengapi', 'relengapi.blueprints'],
-    entry_points={
-        "relengapi.blueprints": [
-            'clobberer = relengapi.blueprints.clobberer:bp',
-        ],
-    },
-    license='MPL2',
-)
+    })
