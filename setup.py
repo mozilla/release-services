@@ -31,6 +31,9 @@ setup(name='relengapi-skeleton',
     extras_require={
         'test': [
             'nose',
-            'mock'
+            'mock',
+            'pep8',
+            'pyflakes',
+            'coverage',
         ]
     })
