@@ -20,7 +20,7 @@ Then clone https://github.com/mozilla/build-relengapi-skeleton.git:
 
 and enter that directory.  Now it's time to rename everything.  First, rename the files:
 
-    find * -name '*skeleton*' | while read s; do d$(echo $s | sed s/skeleton/bubbler/g); git mv $s $d; done
+    find * -name '*skeleton*' | while read s; do d=$(echo $s | sed s/skeleton/bubbler/g); git mv $s $d; done
 
 Now edit the files referring to skeletons:
 
@@ -42,6 +42,10 @@ You should see a short JSON greeting.
 You can run the unit tests with
 
     relengapi run-tests
+
+And you can perform the same validation that Travis will with
+
+    bash validate.sh
 
 Get hacking!
 
