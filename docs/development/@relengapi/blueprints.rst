@@ -18,7 +18,9 @@ Then clone https://github.com/mozilla/build-relengapi-skeleton.git:
 
     git clone --origin skeleton https://github.com/mozilla/build-relengapi-skeleton.git build-bubbler
 
-and enter that directory.  Now it's time to rename everything.  First, rename the files:
+and enter that directory.
+
+Now it's time to rename everything.  First, rename the files:
 
     find * -name '*skeleton*' | while read s; do d=$(echo $s | sed s/skeleton/bubbler/g); git mv $s $d; done
 
@@ -63,5 +65,10 @@ Other Useful Stuff
 ------------------
 
 You'll probably want to create a new Mozilla repository on Github, named something like ``build-relengapi-bubbler``, and fork your own copy of that repository.
+
+.. note::
+
+    Do not fork the ``mozilla/build-relengapi-skeleton`` repository on Github (unless you want to hack on the skeleton itself, of course).
+    Doing so will forever associate your project with the skeleton in Github's memory, which is not what you want.
 
 If you enable Travis for your repository, or for the upstream repository, the included ``.travis.yml`` will, more or less, run ``validate.sh`` for you.
