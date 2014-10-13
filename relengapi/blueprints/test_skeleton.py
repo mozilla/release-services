@@ -14,4 +14,4 @@ test_context = TestContext()
 def test_hello(client):
     rv = client.get('/skeleton/')
     eq_(rv.status_code, 200)
-    eq_(json.loads(rv.data), {'message': 'hello world'})
+    eq_(json.loads(rv.data)['result'], {'message': 'hello world'})
