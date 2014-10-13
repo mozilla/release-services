@@ -2,20 +2,11 @@ language: python
 python:
   - "2.7"
 
-env:
-  # the 'relengapi' command wants a settings file, but the contents
-  # aren't terribly important, so the example will do fine.  This is
-  # relative to the directory containing app.py, although Flask does not
-  # document that.
-  - RELENGAPI_SETTINGS=../../settings_example.py
-
+# command to install dependencies
 install:
-  - (git clone --depth=1 http://github.com/mozilla/build-relengapi && cd build-relengapi && pip install -e base[test])
-  - pip install -e .
+  - "pip install -e .[test]"
+  - "pip freeze"
 
-# command to run tests
+# run everything in a single script, so we get a nice summary at the end
 script:
-  - relengapi build-docs
-  - relengapi run-tests
-  - pep8 --config=build-relengapi/base/pep8rc .
-  - pylint --rcfile=build-relengapi/base/pylintrc relengapi.blueprints.mapper
+  - bash ./validate.sh
