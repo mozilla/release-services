@@ -31,7 +31,8 @@ For example::
 
 The set of databases that a Releng API instance knows about is based on the tables it knows about in all installed blueprints.
 So adding a new database is as simple as creating some tables with ``db.declarative_base('my_new_db_name')``.
-With this in place, ``relengapi createdb`` will create the tables automatically.
+
+With this in place, and with an entry for ``my_new_db_name`` in the user's ``settings.py`` file, ``relengapi createdb`` will create the tables automatically.
 
 Many-to-Many Relationships
 --------------------------
