@@ -9,6 +9,6 @@ from relengapi.lib.testing.context import TestContext
 test_context = TestContext()
 @test_context
 def test_hello(client):
-    rv = client.get('/skel')
+    rv = client.get('/skeleton/')
     eq_(rv.status_code, 200)
     eq_(json.loads(rv.data), {'message': 'hello world'})
