@@ -89,6 +89,7 @@ def clobbertimes():
         builddir=builddir,
         buildername=buildername,
     )
+    # Always force the time to update
     build.last_build_time = now
     session.add(build)
     session.commit()
