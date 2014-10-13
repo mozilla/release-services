@@ -9,7 +9,7 @@ class ClobberRequest(wsme.types.Base):
     "Represents a clobber request"
 
     id = int
-    branch = unicode
-    master = unicode
-    slave = unicode
-    builddir = unicode
+    branch = unicode  #: The branch for this clobber request
+    master = unicode  #: (deprecated) The buildbot master
+    slave = unicode  #: The buildbot slave for this clobber request
+    builddir = unicode  #: The build directory to be clobbered
