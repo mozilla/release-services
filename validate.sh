@@ -71,7 +71,7 @@ status "checking import module convention in modified files"
 modified=false
 for filename in `find relengapi -type f -name "*.py" -print` ; do
     rv=0
-    python fiximports.py "$filename" || rv=$?
+    python misc/fiximports.py "$filename" || rv=$?
     case $rv in
         0) ;;
         1) not_ok "cannot fix imports of $filename" ;;
@@ -108,9 +108,9 @@ git_only='
     pep8rc
     coveragerc
     validate.sh
-    validate-common.sh
     src
     settings_example.py
+    misc/fiximports.py
 '
 git ls-files . | while read f; do
                     ignore=false
