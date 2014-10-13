@@ -53,7 +53,7 @@ def root():
 @bp.route('/clobber', methods=['POST'])
 @apimethod(None, body=ClobberRequest)
 def clobber(body):
-    "Request a clobber."
+    "Request a clobber for a particular slave and branch."
 
     session = g.db.session(DB_DECLARATIVE_BASE)
     clobber_time = ClobberTime(
