@@ -39,6 +39,7 @@ def test_clobber_request(client):
 @test_context
 def test_lastclobber(client):
     session = test_context._app.db.session(DB_DECLARATIVE_BASE)
+
     rv = client.get(
         '/clobberer/lastclobber?branch={branch}&slave={slave}&builddir'
         '={builddir}&buildername={buildername}'.format(**_last_clobber_args)
@@ -56,3 +57,8 @@ def test_lastclobber(client):
     for k, v in _last_clobber_args.items():
         build = session.query(Build).first()
         eq_(getattr(build, k), v)
+
+    # Ensure that a request for non-existant data returns nothing gracefully
+    rv = client.get('/clobberer/lastclobber?branch=fake&builddir=bogus')
+    eq_(rv.status_code, 200)
+    eq_(rv.data, "")
