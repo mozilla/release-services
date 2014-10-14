@@ -65,7 +65,7 @@ def add_to_history(before=None, after=None):
 @task()
 @add_to_history(
     before="Initialising Loan for slaveclass {kwargs[loan_class]!s}",
-    after="Initialising Loan Process Complete for slaveclass {kwargs[loan_class]!s}, using flow {retval!s}")
+    after="Initialising Complete for slaveclass {kwargs[loan_class]!s}, using flow {retval!s}")
 def init_loan(loanid, loan_class):
     print "Init Loan2", datetime.datetime.utcnow().isoformat(sep=" ")
     print "Loan Class = %s" % loan_class

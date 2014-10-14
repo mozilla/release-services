@@ -6,6 +6,7 @@ import flask_login
 import logging
 import sqlalchemy as sa
 import wsme.types
+
 from celery import chain
 from celery import group
 

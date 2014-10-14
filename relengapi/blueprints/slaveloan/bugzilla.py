@@ -9,7 +9,6 @@ from bzrest.client import BugzillaClient
 from flask import current_app
 from flask import url_for
 
-from relengapi.blueprints.slaveloan.model import History
 from relengapi.blueprints.slaveloan.model import Loans
 
 MAX_ALIAS = 15
