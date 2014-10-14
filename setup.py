@@ -37,6 +37,7 @@ setup(
         "wsme",
         "croniter",
         "python-dateutil",
+        "simplejson",
     ],
     extras_require={
         'test': [
