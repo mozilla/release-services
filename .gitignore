@@ -7,5 +7,7 @@ TODO.txt
 docs_build_dir
 */dist
 .coverage
-base/.coverage-html
+base/
+.coverage-html
 .ropeproject/
+build-relengapi/
