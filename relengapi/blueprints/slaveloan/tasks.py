@@ -45,12 +45,9 @@ def add_to_history(before=None, after=None):
         @wraps(f)
         def wrapper(*args, **kwargs):
             bound_task = None
-            loanid = None
-            if isinstance(args[0], celery.Task):
-                bound_task = args[0]
-                loanid = args[1]
-            else:
-                loanid = args[0]
+            loanid = kwargs.get("loanid", None)
+            if args and isinstance(args[0], celery.Task):
+                    bound_task = args[0]
             if before:
                 print "DEBUG: Locals: %s" % repr(locals())
                 print "DEBUG: Log_line: %s" % before.format(**locals())
@@ -67,8 +64,8 @@ def add_to_history(before=None, after=None):
 
 @task()
 @add_to_history(
-    before="Initialising Loan for slaveclass {args[1]!s}",
-    after="Initialising Loan Process Complete for slaveclass {args[1]!s}, using flow {retval!s}")
+    before="Initialising Loan for slaveclass {kwargs[loan_class]!s}",
+    after="Initialising Loan Process Complete for slaveclass {kwargs[loan_class]!s}, using flow {retval!s}")
 def init_loan(loanid, loan_class):
     print "Init Loan2", datetime.datetime.utcnow().isoformat(sep=" ")
     print "Loan Class = %s" % loan_class
@@ -78,7 +75,6 @@ def init_loan(loanid, loan_class):
         return "AWS"
     else:
         print "physical host: %s" % loan_class
-        choose_inhouse_machine.delay(loanid, loan_class)
         return "inhouse"
 
 
@@ -102,16 +98,14 @@ def choose_inhouse_machine(self, loanid, loan_class):
                         if slave_mappings.slave_filter(loan_class)(slave)]
     chosen = random.choice(available_slaves)
     print "Chosen Slave = %s" % chosen
-    fixup_machine.delay(loanid, chosen['name'])
-    start_disable_slave.delay(loanid, chosen['name'])
     return chosen['name']
 
 
 @task(bind=True, max_retries=None)
 @add_to_history(
-    before="Identifying FQDN and IP of {args[2]}",
+    before="Identifying FQDN and IP of {args[1]}",
     after="Aquired FQDN and IP")
-def fixup_machine(self, loanid, machine):
+def fixup_machine(self, machine, loanid):
     try:
         print "FIXUP MACHINE"
         fqdn = socket.getfqdn("%s.build.mozilla.org" % machine)
@@ -139,7 +133,7 @@ def fixup_machine(self, loanid, machine):
 @add_to_history(
     before="Calling slaveapi's disable method",
     after="Disable request sent")
-def start_disable_slave(self, loanid, machine):
+def start_disable_slave(self, machine, loanid):
     try:
         print "START DISABLE SLAVE"
         slaveapi = "http://slaveapi-dev1.build.mozilla.org:8080/slaves/"
@@ -149,7 +143,6 @@ def start_disable_slave(self, loanid, machine):
         postdata = dict(reason="Being loaned on slaveloan %s" % loanid)
         r = retry(requests.post, args=(str(url),), kwargs=dict(data=postdata)).json()
         print "START DISABLE SLAVE = r: %s" % str(r)
-        raise
     except Exception as exc:  # pylint: disable=W0703
         self.retry(exc=exc)
 

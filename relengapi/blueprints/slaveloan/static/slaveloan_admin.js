@@ -9,6 +9,11 @@ function reload_loans() {
                     $('<td>').append(
                         $('<a>').attr("href", _details_url_prefix.replace('/0', '/'+row.id)).text(row.id)
                     ),
+                    $('<td>').append(
+                        row.bug_id ?
+                        $('<a>').attr("href", 'https://bugzil.la/' + row.bug_id).text(row.bug_id)
+                        : "&lt;none&gt;"
+                    ),
                     $('<td>').text(row.status),
                     $('<td>').text(row.human.ldap),
                     $('<td>').text(row.human.bugzilla),

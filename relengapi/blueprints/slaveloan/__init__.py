@@ -6,6 +6,8 @@ import flask_login
 import logging
 import sqlalchemy as sa
 import wsme.types
+from celery import chain
+from celery import group
 
 from sqlalchemy import asc
 
@@ -157,5 +159,13 @@ def new_loan_from_admin(body):
 
 @bp.route('/tmp/')
 def init_loan():
-    tasks.init_loan.delay(18, "t-snow-r4")
+    chain_of_stuff = chain(
+        tasks.init_loan.si(loanid=18, loan_class="t-snow-r4"),
+        tasks.choose_inhouse_machine.si(loanid=18, loan_class="t-snow-r4"),
+        group(
+            tasks.fixup_machine.s(loanid=18),
+            tasks.start_disable_slave.s(loanid=18)
+        )
+    )
+    chain_of_stuff.delay()
     return render_template('slaveloan_admin.html')
