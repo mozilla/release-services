@@ -1,62 +1,74 @@
 Writing a Blueprint
 ===================
 
-If your blueprint will be meaty enough to deserve its own project, repo, and so forth, then start that now.
-If it's implementing core functionality, it can be in the ``relengapi`` project, but otherwise should be its own, well-delineated project per Releng Best Practices.
+All non-core functionality in RelengAPI is implemented in separate projects that "plug in" to the core.
+These separate projects are referred to as "blueprints" since they are implemented as Flask blueprints.
 
-Add a ``setup.py`` similar to that in ``docs/``.
-Name the package with a ``relengapi-`` prefix, so it's easy to find.
-The ``install_requires`` parameter should name both ``Flask`` and ``relengapi``, as well as any other dependencies.
-The ``namespace_packages`` line allows multiple packages to share the same Python path::
+This arrangement allows developers to focus on the task at hand by installing only the relevant blueprint and the core.
+It also nicely isolates purpose-specific code in its own repository, allowing it to evolve independewntly of the core and other blueprints, as suggested by the [Releng Best Practices](https://wiki.mozilla.org/ReleaseEngineering/Development_Best_Practices).
 
-    namespace_packages=['relengapi', 'relengapi.blueprints'],
+Getting Started
+---------------
 
-Include a ``package_data`` section to capture any templates, static files, or documentation::
+Pick a name for your blueprint.
+This guide will use "bubbler", so it's easy to spot.
 
-    package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
-        'relengapi': ['docs/**.rst'],
-        'relengapi.blueprints.base': [
-                'templates/**.html',
-                'static/**.jpg',
-                'static/**.css',
-                'static/**.js',
-                'static/**.txt',
-            ],
-    },
+Begin by setting up a virtualenv or other dedicated Python environment, in whatever way you're comfortable with.
+Then clone https://github.com/mozilla/build-relengapi-skeleton.git:
 
-Finally, include an entry point so that the base can find the blueprint::
+    git clone --origin skeleton https://github.com/mozilla/build-relengapi-skeleton.git build-bubbler
 
-    entry_points={
-        "relengapi.blueprints": [
-            'mypackage = relengapi.blueprints.mypackage:bp',
-        ],
-    },
+and enter that directory.
 
-The ``relengapi.blueprints.mypackage:bp`` in the above is an import path leading to the Blueprint object.
+Now it's time to rename everything.  First, rename the files:
 
-Now, create the directory structure
+    find * -name '*skeleton*' | while read s; do d=$(echo $s | sed s/skeleton/bubbler/g); git mv $s $d; done
 
-.. code-block:: none
+Now edit the files referring to skeletons:
 
-    relengapi/__init__.py
-    relengapi/blueprints/__init__.py
-    relengapi/blueprints/mypackage/__init__.py
+    git grep skeleton | while read s; do sed s/skeleton/bubbler/ < $s > $s~; mv $s~ $s; done
+    echo '# Bubbler' > README.md
 
-The first two of the ``__init__.py`` files must have *only* the following contents::
+Have a look at ``setup.py`` to fix the author name, and so on.
+Once that's ready, try installing your blueprint:
 
-    __import__('pkg_resources').declare_namespace(__name__)
+    pip install -e .[test]
 
-In the third, create your Blueprint::
+With a little luck, this will install relengapi and its dependencies successfully.
+Time to run it!
 
-    from flask import Blueprint, jsonify
-    bp = Blueprint('mypackage', __name__)
-    @bp.route('/some/path')
-    def root():
-        return jsonify("HELLO")
+    relengapi serve -a -p 8010
 
-The ``root`` function in this example would be available at ``/mypackage/some/path``.
+Then visit http://localhost:8010/bubbler/ (subsituting the appropriate host and port if necessary).
+You should see a short JSON greeting.
 
-Note that all RelengAPI blueprints are available in dictionary ``current_app.relengapi_blueprints``.
-Each has a ``dist`` attribute giving the SetupTools distribution from which the blueprint came.
+You can run the unit tests with
 
-The remaining sections in this chapter describe what you can do with your new blueprint.
+    relengapi run-tests
+
+And you can perform the same validation that Travis will with
+
+    bash validate.sh
+
+Get hacking!
+
+Updating
+--------
+
+From time to time, pull updates from the upstream skeleton project.
+This will get your project the latest support scripts and other paraphernalia.
+Any conflicts may identify fixes required for continued compatibility with the core, although the lack of conflicts does not guarantee compatibility!
+
+    git pull skeleton master
+
+Other Useful Stuff
+------------------
+
+You'll probably want to create a new Mozilla repository on Github, named something like ``build-relengapi-bubbler``, and fork your own copy of that repository.
+
+.. note::
+
+    Do not fork the ``mozilla/build-relengapi-skeleton`` repository on Github (unless you want to hack on the skeleton itself, of course).
+    Doing so will forever associate your project with the skeleton in Github's memory, which is not what you want.
+
+If you enable Travis for your repository, or for the upstream repository, the included ``.travis.yml`` will, more or less, run ``validate.sh`` for you.

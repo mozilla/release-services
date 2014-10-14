@@ -8,6 +8,7 @@
     tasks
     auth
     utils
+    app
     testing
     docs
     badpenny

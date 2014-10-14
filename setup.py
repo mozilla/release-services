@@ -13,8 +13,6 @@ data_patterns = [
     'static/**.txt',
 ]
 
-DOCS_DIRS = ['usage', 'developent', 'deployment']
-
 setup(
     name='relengapi',
     version='0.3',
