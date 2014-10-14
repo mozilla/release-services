@@ -39,7 +39,7 @@ class JsonHandler(object):
             resp = jsonify(error={
                 'code': exc_value.code,
                 'name': exc_value.name,
-                'description': exc_value.get_description(request),
+                'description': exc_value.description,
             })
             resp.status_code = exc_value.code
         else:
