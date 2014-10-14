@@ -1,10 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-angular.module('badpenny', ['initial_data']);
+angular.module('badpenny', ['relengapi', 'initial_data']);
 
 angular.module('badpenny').controller('TasksController',
-                                    function($scope, $http, initial_data) {
+                                    function($scope, restapi, initial_data) {
     var tasksByName = function(taskArray) {
         var byName = {};
         angular.forEach(taskArray, function(task) {
@@ -20,24 +20,21 @@ angular.module('badpenny').controller('TasksController',
     $scope.expandTask = function(name) {
         $scope.expandedTask = name;
 
-        $http.get('/badpenny/tasks/' + name)
+        restapi.get('/badpenny/tasks/' + name, {while: 'fetching task'})
         .then(function (data, status, headers, config) {
             $scope.tasks[name] = data.data.result;
-        }, function (data, status, header, config) {
-            alertify.error("Failed getting task details: " + data);
         });
     };
 
     $scope.expandJob = function(job) {
         $scope.expandedLogs = 'loading';
-        $http.get('/badpenny/jobs/' + job.id + '/logs')
+        restapi.get('/badpenny/jobs/' + job.id + '/logs',
+                    {while: 'fetching logs', expected_status: 404})
         .then(function (data, status, headers, config) {
             $scope.expandedLogs = data.data.result.content;
         }, function (data, status, header, config) {
             if (data.status == 404) {
                 $scope.expandedLogs = '(no logs)';
-            } else {
-                alertify.error("Failed getting job logs: " + data.data.error.name);
             }
         });
     };
@@ -47,7 +44,7 @@ angular.module('badpenny').controller('TasksController',
     };
 
     $scope.refresh = function() {
-        $http.get('/badpenny/tasks')
+        restapi.get('/badpenny/tasks', {while: 'refreshing tasks'})
         .then(function (data, status, headers, config) {
             // copy over the job from the expanded task
             var newTasks = tasksByName(data.data.result);
@@ -56,8 +53,6 @@ angular.module('badpenny').controller('TasksController',
                 newTasks[expandedTask.name].jobs = expandedTask.jobs;
             }
             $scope.tasks = newTasks;
-        }, function (data, status, header, config) {
-            alertify.error("Failed getting task list: " + data);
         });
 
         // reload the currently expanded task simultaneously

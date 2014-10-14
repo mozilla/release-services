@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-angular.module('tokens', ['initial_data']);
+angular.module('tokens', ['relengapi', 'initial_data']);
 
 angular.module('tokens').controller('TokenController',
-                                    function($scope, $http, initial_data) {
+                                    function($scope, restapi, initial_data) {
     $scope.available_permissions = initial_data.user.permissions;
     $scope.tokens = initial_data.tokens;
 
@@ -28,26 +28,24 @@ angular.module('tokens').controller('TokenController',
     }
 
     $scope.refreshTokens = function() {
-        return $http.get('/tokenauth/tokens').then(function (data, status, headers, config) {
-            $scope.tokens = data.data.result;
-        }, function (data, status, header, config) {
-            alertify.error("Failed getting token list: " + data);
+        return restapi.get('/tokenauth/tokens', {while: 'refreshing tokens'})
+        .then(function (response) {
+            $scope.tokens = response.data.result;
         });
     };
 });
 
-angular.module('tokens').controller('TokenListController', function($scope, $http) {
+angular.module('tokens').controller('TokenListController', function($scope, restapi) {
     $scope.revokeToken = function(id) {
-        $http.delete('/tokenauth/tokens/' + id).then(function() {
+        restapi.delete('/tokenauth/tokens/' + id, {while: 'revoking token'})
+        .then(function() {
             alertify.success("token revoked");
             $scope.refreshTokens();
-        }, function (error) {
-            alertify.error("token revocation failed");
         });
     };
 });
 
-angular.module('tokens').controller('NewTokenController', function($scope, $http) {
+angular.module('tokens').controller('NewTokenController', function($scope, restapi) {
     $scope.issuing = false;
     $scope.error = null;
     $scope.newtoken = {
@@ -74,12 +72,13 @@ angular.module('tokens').controller('NewTokenController', function($scope, $http
         var permissions = $scope.checkedPermissions();
         var description = $scope.newtoken.description;
 
-        $http({
+        restapi({
             url: '/tokenauth/tokens',
             method: 'POST',
             headers: {'Content-Type': 'application/json; charset=utf-8'},
             data: JSON.stringify({permissions: permissions,
-                                  description: description})
+                                  description: description}),
+            while: 'issuing token',
         }).then(function(response) {
             if (response.data.result.token) {
                 $scope.token = response.data.result.token;
@@ -88,8 +87,6 @@ angular.module('tokens').controller('NewTokenController', function($scope, $http
             } else {
                 $scope.error = "No token received";
             }
-        }, function(error) {
-            $scope.error = "error from server: " + jqhxr.statusText;
         });
     };
 

@@ -7,6 +7,7 @@ import os
 from flask import current_app
 from flask import render_template
 from flask import request
+from flask import url_for
 from flask.ext.login import current_user
 from relengapi.lib import permissions
 
@@ -25,6 +26,7 @@ def template(template_name, *dependency_urls, **initial_data):
     # calculate the stylesheet and script links, based on suffix
     stylesheets = [u for u in dependency_urls if u.endswith('.css')]
     scripts = [u for u in dependency_urls if u.endswith('.js')]
+    scripts.append(url_for('static', filename='js/relengapi.js'))
     if set(dependency_urls) - set(stylesheets) - set(scripts):
         raise RuntimeError("dependency_urls must all be .css and .js files")
 
