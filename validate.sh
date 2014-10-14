@@ -167,16 +167,16 @@ status "comparing git and install"
 diff -u git-expected-installed install-files || not_ok "installed files differ from files in git"
 popd >/dev/null
 
-# This part only applies for `relengapi-clobberer` -- it attempts to follow the
+# This part only applies for `relengapi-skeleton` -- it attempts to follow the
 # instructions for creating a new blueprint.  Other blueprints should just leave it
 # here, unused.
-if [ "${PROJECT}" = "relengapi-clobberer" ]; then
+if [ "${PROJECT}" = "relengapi-skeleton" ]; then
     status "testing creation of a new blueprint"
     (
         cp -r . ${tmpbase}/bubbler
         cd ${tmpbase}/bubbler
-        find * -name '*clobberer*' | while read s; do d=$(echo $s | sed s/clobberer/bubbler/g); mv $s $d; done
-        git grep clobberer | cut -d: -f 1 | sort -u | while read s; do sed s/clobberer/bubbler/ < $s > $s~; mv $s~ $s; done
+        find * -name '*skeleton*' | while read s; do d=$(echo $s | sed s/skeleton/bubbler/g); mv $s $d; done
+        git grep skeleton | cut -d: -f 1 | sort -u | while read s; do sed s/skeleton/bubbler/ < $s > $s~; mv $s~ $s; done
         virtualenv skeltest --no-site-packages
         skeltest/bin/pip install -e .[test]
         skeltest/bin/relengapi run-tests
