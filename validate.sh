@@ -167,10 +167,12 @@ status "comparing git and install"
 diff -u git-expected-installed install-files || not_ok "installed files differ from files in git"
 popd >/dev/null
 
-# This part only applies for `relengapi-skeleton` -- it attempts to follow the
-# instructions for creating a new blueprint.  Other blueprints should just leave it
-# here, unused.
-if [ "${PROJECT}" = "relengapi-skeleton" ]; then
+# This part only applies for the skel.eton project itself -- it
+# attempts to follow the instructions for creating a new blueprint.  Other
+# blueprints should just leave it here, unused, to reduce merge conflicts.  The
+# use of [s] here prevents the global sed operation from modifying the word in
+# this conditional.
+if [[ "${PROJECT}" =~ relengapi-[s]keleton ]]; then
     status "testing creation of a new blueprint"
     (
         cp -r . ${tmpbase}/bubbler
