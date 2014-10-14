@@ -132,8 +132,8 @@ class EndpointDirective(ObjectDescription):
     def get_signatures(self):
         self.endpoint_name = self.arguments.pop(0)
         if len(self.arguments) % 2 != 0:
-            raise self.error("api:endpoint expects an odd number of arguments "
-                             "(endpoint method path method path ..)")
+            raise RuntimeError("api:endpoint expects an odd number of arguments "
+                               "(endpoint method path method path ..)")
         rv = []
         while self.arguments:
             methods, path = self.arguments[:2]
@@ -202,7 +202,7 @@ class AutoEndpointDirective(Directive):
                 to_document.add((endpoint, func, tuple(rules)))
                 found = True
             if not found:
-                raise self.error('no endpoints found matching %s' % (arg,))
+                raise RuntimeError('no endpoints found matching %s' % (arg,))
 
         # sort by the first rule of each endpoint
         to_document = sorted(
@@ -254,7 +254,7 @@ class AutoTypeDirective(Directive):
         for ct in wsme.types.registry.complex_types:
             if ct.__name__ == name or (hasattr(ct, '_name') and ct._name == name):
                 return ct
-        raise self.error("no type named %r" % (name,))
+        raise RuntimeError("no type named %r" % (name,))
 
     def get_attr_docs(self, ty):
         # this reaches into some undocumented stuff in sphinx to
@@ -328,7 +328,7 @@ class ApiDomain(Domain):
         try:
             todocname, targetname = targets[target]
         except KeyError:
-            raise self.error("MISSING REFERENCE: api:%s:%s" % (typ, target))
+            raise RuntimeError("MISSING REFERENCE: api:%s:%s" % (typ, target))
 
         return make_refnode(builder, fromdocname,
                             todocname, targetname,
