@@ -8,6 +8,8 @@ import os
 import shutil
 import signal
 
+from celery import chain
+from celery import group
 from celery.signals import worker_ready
 from nose.tools import assert_raises
 from nose.tools import eq_
@@ -80,6 +82,11 @@ def test_task(a, b):
 
 
 @celery.task(serializer='json')
+def test_task_json(a, b):
+    return a + b
+
+
+@celery.task(serializer='json')
 def test_task_with_args(x, y):
     return x * y
 
@@ -96,6 +103,47 @@ def test_mult(app):
     with running_worker(app):
         with app.app_context():
             eq_(test_task_with_args.delay(2, 3).get(interval=0.01), 6)
+
+
+@test_context
+def test_chain(app):
+    with running_worker(app):
+        with app.app_context():
+            eq_(chain(test_task.s(1, 2), test_task.s(3)).delay().get(interval=0.01), 6)
+
+
+@test_context
+def test_chain_immutable(app):
+    with running_worker(app):
+        with app.app_context():
+            res = (test_task.si(2, 2) | test_task.si(4, 4) | test_task.si(8, 8)).delay()
+            eq_(res.get(interval=0.01), 16)
+            eq_(res.parent.get(interval=0.01), 8)
+            eq_(res.parent.parent.get(interval=0.01), 4)
+
+
+@test_context
+def test_group(app):
+    with running_worker(app):
+        with app.app_context():
+            task_group = group(test_task.s(i, i) for i in xrange(10))
+            eq_(task_group.delay().get(interval=0.01),
+                [0, 2, 4, 6, 8, 10, 12, 14, 16, 18])
+
+
+@test_context
+def test_group_in_chain_json(app):
+    """ This test protects against an issue with nested chains and groups when encoding with json.
+        the error appears as 'EncodeError: keys must be a string' as described
+        in https://github.com/celery/celery/issues/2033.
+        Fixed by installing simplejson.
+    """
+    with running_worker(app):
+        with app.app_context():
+            task_group = group(test_task_json.s(i) for i in xrange(10))
+            task_chain = chain(test_task_json.s(1, 2), test_task_json.s(4), task_group)
+            eq_(task_chain.delay().get(interval=0.01),
+                [7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
 
 
 def test_bad_decorator_use():
