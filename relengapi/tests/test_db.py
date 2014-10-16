@@ -97,7 +97,7 @@ def test_UTCDateTime_null(app):
 @with_setup(setup=set_system_timezone_no_utc, teardown=restore_system_timezone)
 def test_UTCDateTime_converts(app):
     session = app.db.session('test_db')
-    now = datetime.datetime.now().replace(tzinfo=pytz.timezone("US/Pacific"))
+    now = pytz.timezone("US/Pacific").localize(datetime.datetime.now())
     session.add(DevTable(date=now))
     session.commit()
     instance = session.query(DevTable).all()[0]
@@ -137,17 +137,17 @@ def test_UTCDateTime_converts_daylight(app):
 @TestContext(databases=['test_db'])
 def test_UTCDateTime_converts_standard(app):
     session = app.db.session('test_db')
-    standard = datetime.datetime(
-        2011, 6, 27, 2, 0, 0, tzinfo=pytz.timezone("US/Pacific"))
+    standard = pytz.timezone("US/Pacific").localize(
+        datetime.datetime(2011, 11, 27, 2, 0, 0))
     eq_(standard.strftime('%Y-%m-%d %H:%M:%S %Z%z'),
-        '2011-06-27 02:00:00 PST-0800')
+        '2011-11-27 02:00:00 PST-0800')
     session.add(DevTable(date=standard))
     session.commit()
     instances = session.query(DevTable).all()
     eq_(1, len(instances))
     ok_(isinstance(instances[0].date, datetime.datetime))
     eq_(instances[0].date.strftime('%Y-%m-%d %H:%M:%S %Z%z'),
-        '2011-06-27 10:00:00 UTC+0000')
+        '2011-11-27 10:00:00 UTC+0000')
 
 
 class Uniqueness_Table(db.declarative_base('test_db'), db.UniqueMixin):
