@@ -26,7 +26,7 @@ setup(
         "Flask-Browserid",
         "Sphinx",
         "SQLAlchemy>=0.9.4",
-        "Celery",
+        "Celery>=3.1.16",  # see https://github.com/mozilla/build-relengapi/issues/145
         "argparse",
         "requests",
         "wrapt",
