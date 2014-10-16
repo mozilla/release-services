@@ -93,3 +93,15 @@ def clobbertimes():
         # no extra colons within the field values themselves
         return "{}:{}:{}\n".format(max_ct.builddir, max_ct.lastclobber, max_ct.who)
     return ""
+
+
+@bp.route('/forceclobber', methods=['GET'])
+def forceclobber():
+    """
+    Coerce the client to clobber by always returning a future clobber time.
+    This works because the client decides to clobber based on a timestamp
+    comparrison.
+    """
+    future_time = int(time.time()) + 3600
+    builddir = request.args.get('builddir')
+    return "{}:{}:forceclobber".format(builddir, future_time)

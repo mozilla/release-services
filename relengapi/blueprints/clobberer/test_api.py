@@ -2,7 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import time
+
 from copy import deepcopy
+from nose.tools import assert_greater
 from nose.tools import eq_
 
 from relengapi.lib.testing.context import TestContext
@@ -62,3 +65,12 @@ def test_lastclobber(client):
     rv = client.get('/clobberer/lastclobber?branch=fake&builddir=bogus')
     eq_(rv.status_code, 200)
     eq_(rv.data, "")
+
+
+@test_context
+def test_forceclobber(client):
+    rv = client.get('/clobberer/forceclobber?builddir=lamesauce')
+    eq_(rv.status_code, 200)
+    builddir, future_time, who = rv.data.split('\n')[0].split(':')
+    eq_(builddir, 'lamesauce')
+    assert_greater(int(future_time), int(time.time()))
