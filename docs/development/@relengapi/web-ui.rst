@@ -207,6 +207,33 @@ To alert the user, use something as simple as
 
     alertify.success("token issued");
 
+Angular Services
+................
+
+The ``relengapi`` module provides a number of useful services, and is loaded automatically.
+Include it as a dependency of your angular module, then use dependency injection to access the services.
+
+restapi
+:::::::
+
+The ``restapi`` service is a wrapper around the standard ``$http`` service, specifically designed to make calls to the RelengAPI REST API.
+It automatically catches and invokes Alertify for any errors from the API before passing the failure along unchanged.
+Thus most API calls can omit any failure handling.
+
+To make the message a bit more clear to the user, include a value for ``while`` in the ``config`` parameter, giving a clause describing the action.
+For example:
+
+.. code-block:: javascript
+
+    restapi.get('/some/interesting/details', {while: 'getting interesting details'}).then(..);
+
+If some response statuses are expected and should not trigger an error, list them with ``expectedStatus`` or ``expectedStatuses``:
+
+.. code-block:: javascript
+
+    restapi.get('/some/interesting/details', {expectedStatus: 404}).then(..);
+    restapi.get('/some/interesting/details', {expectedStatuses: [404, 409]}).then(..);
+
 Root Widgets
 ------------
 

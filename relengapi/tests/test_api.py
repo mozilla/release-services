@@ -170,8 +170,8 @@ def test_apimethod():
     yield lambda: t(path='/apimethod/fail', exp_status_code=400,
                     exp_data={'error': {
                         'code': 400,
-                        'description': '<p>The browser (or proxy) sent a request that this '
-                        'server could not understand.</p>',
+                        'description': 'The browser (or proxy) sent a request that this '
+                        'server could not understand.',
                         'name': 'Bad Request',
                     }})
     yield lambda: t(path='/apimethod/201', exp_status_code=201)
@@ -210,6 +210,16 @@ def test_encoder(app):
 def test_get_data(client):
     resp = client.get('/get_data')
     eq_(json.loads(resp.data)['result'], "['ok']")
+
+
+@test_context
+def test_incorrect_params(client):
+    resp = client.get('/get_data?invalid=10')
+    eq_(json.loads(resp.data)['error'], {
+        'code': 400,
+        'description': u'Unknown argument: "invalid"',
+        'name': u'Bad Request',
+    })
 
 
 @test_context
