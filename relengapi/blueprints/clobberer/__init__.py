@@ -32,6 +32,7 @@ bp = Blueprint(
 )
 
 
+
 @bp.route('/')
 @flask_login.login_required
 def root():
@@ -57,18 +58,17 @@ def clobberer_branch(branch):
 @bp.route('/clobber', methods=['POST'])
 @apimethod(None, body=ClobberRequest)
 def clobber(body):
-    "Request a clobber for a particular slave and branch."
+    "Request clobbers for particular builddirs of a branch."
 
-    session = g.db.session(DB_DECLARATIVE_BASE)
-    clobber_time = ClobberTime(
-        branch=body.branch,
-        slave=body.slave,
-        builddir=body.builddir,
-        lastclobber=int(time.time()),
-        # Colons break the client's logic
-        who=unicode(current_user).strip(':')
-    )
-    session.add(clobber_time)
+    for builddir in body.builddirs:
+        clobber_time = ClobberTime(
+            branch=body.branch,
+            builddir=builddir,
+            lastclobber=int(time.time()),
+            # Colons break the client's logic
+            who=unicode(current_user).strip(':')
+        )
+        session.add(clobber_time)
     session.commit()
     return None
 
