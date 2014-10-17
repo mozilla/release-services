@@ -3,5 +3,7 @@
  # file, You can obtain one at http://mozilla.org/MPL/2.0/. #}
 {% extends "layout.html" %}
 {% block content %}
-    The relengapi-clobberer ui is still underway, in the meantime you can still submit clobbers via: https://secure.pub.build.mozilla.org/clobberer/ 
+    {% for b in branches %}
+        <a href="{{ b.branch }}">{{ b.branch }}</a> <br/>
+     {% endfor %}
 {% endblock %}
