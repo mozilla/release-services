@@ -35,7 +35,23 @@ bp = Blueprint(
 @bp.route('/')
 @flask_login.login_required
 def root():
-    return render_template('clobberer.html')
+    session = g.db.session(DB_DECLARATIVE_BASE)
+    context = {'branches': session.query(Build.branch).distinct()}
+    return render_template('clobberer.html', **context)
+
+
+@bp.route('/<string:branch>')
+@flask_login.login_required
+def clobberer_branch(branch):
+    "Page where users select particular builds to clobber (within a branch)."
+
+    session = g.db.session(DB_DECLARATIVE_BASE)
+    builds = session.query(
+        Build.builddir, Build.buildername
+    ).filter(Build.branch == branch).distinct()
+    context = {'builds': builds}
+
+    return render_template('clobberer_branch.html', **context)
 
 
 @bp.route('/clobber', methods=['POST'])
