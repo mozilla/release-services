@@ -3,7 +3,20 @@
  # file, You can obtain one at http://mozilla.org/MPL/2.0/. #}
 {% extends "layout.html" %}
 {% block content %}
-    {% for b in builds %}
-        {{ b.buildername }} {{ b.builddir }} <br/>
-     {% endfor %}
+    <h3>Branch: {{ branch }}</h3>
+    <table>
+        <tr>
+            <th><input type="button" id="select-all-btn" value="Select All"/></th>
+            <th>Builder</th>
+            <th>Last Clobber</th>
+        </tr>
+        <tr>
+        {% for b in builds %}
+            <td><input type="checkbox"></input>
+            <td>{{ b }}<td/>
+            <td>{{ builds[b].lastclobber }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <input type="button" id="submit-clobbers-btn" value="Submit Clobbers"/>
 {% endblock %}
