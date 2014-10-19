@@ -31,7 +31,7 @@ _last_clobber_args['buildername'] = 'buildername'
 def test_clobber_request(client):
     session = test_context._app.db.session(DB_DECLARATIVE_BASE)
     clobber_count_initial = session.query(ClobberTime).count()
-    rv = client.post_json('/clobberer/clobber', data=_clobber_args)
+    rv = client.post_json('/clobberer/clobber', data=[_clobber_args])
     eq_(rv.status_code, 200)
     clobber_count_final = session.query(ClobberTime).count()
 
