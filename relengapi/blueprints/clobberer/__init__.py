@@ -40,9 +40,9 @@ bp = Blueprint(
 @flask_login.login_required
 def root():
     return angular.template('clobberer.html',
-        url_for('.static', filename='clobberer.js'),
-        url_for('.static', filename='clobberer.css'),
-        branches=api.get_data(branches))
+                            url_for('.static', filename='clobberer.js'),
+                            url_for('.static', filename='clobberer.css'),
+                            branches=api.get_data(branches))
 
 
 @bp.route('/clobber', methods=['POST'])
@@ -73,7 +73,7 @@ def branches():
     return [branch[0] for branch in branches]
 
 
-@bp.route('/lastclobber/by-builder/<string:branch>', methods=['GET'])
+@bp.route('/lastclobber/branch/by-builder/<string:branch>', methods=['GET'])
 @apimethod({unicode: [rest.ClobberTime]}, unicode)
 def lastclobber_by_builder(branch):
     "Return a dictionary of most recent ClobberTimes grouped by buildername."
