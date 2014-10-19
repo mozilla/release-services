@@ -72,7 +72,7 @@ def branches():
 
 @bp.route('/lastclobber/by-builder/<string:branch>', methods=['GET'])
 @apimethod({unicode: [rest.ClobberTime]}, unicode)
-def branch_clobbertimes(branch):
+def lastclobber_by_builder(branch):
     "Return a dictionary of most recent ClobberTimes grouped by buildername."
 
     session = g.db.session(DB_DECLARATIVE_BASE)
@@ -111,8 +111,15 @@ def branch_clobbertimes(branch):
     return summary
 
 
+####
+## Clobberer compatability endpoints. These are drop in replacements for the
+## deprecated clobberer service. As such, these endpoints should be deprecated
+## as well.
+####
+
+
 @bp.route('/lastclobber', methods=['GET'])
-def clobbertime():
+def lastclobber():
     "Get the max/last clobber time for a particular builddir and branch."
 
     session = g.db.session(DB_DECLARATIVE_BASE)
