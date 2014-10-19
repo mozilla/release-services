@@ -2,14 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import collections
 import flask_login
 import logging
 import time
 
-from datetime import datetime
+import rest
+
 from sqlalchemy import desc
 from sqlalchemy import func
-from collections import OrderedDict
 
 from flask import Blueprint
 from flask import g
@@ -20,8 +21,6 @@ from flask.ext.login import current_user
 from models import Build
 from models import ClobberTime
 from models import DB_DECLARATIVE_BASE
-
-from rest import ClobberRequest
 
 from relengapi import apimethod
 
@@ -43,10 +42,38 @@ def root():
     return render_template('clobberer.html', **context)
 
 
-@bp.route('/<string:branch>')
-@flask_login.login_required
-def clobberer_branch(branch):
-    "Page where users select particular builds to clobber (within a branch)."
+@bp.route('/clobber', methods=['POST'])
+@apimethod(None, body=[rest.ClobberRequest])
+def clobber(body):
+    "Request clobbers for particular branches and builddirs."
+
+    session = g.db.session(DB_DECLARATIVE_BASE)
+    for clobber in body:
+        clobber_time = ClobberTime(
+            branch=clobber.branch,
+            builddir=clobber.builddir,
+            lastclobber=int(time.time()),
+            # Colons break the client's logic
+            who=unicode(current_user).strip(':')
+        )
+        session.add(clobber_time)
+    session.commit()
+    return None
+
+
+@bp.route('/branches')
+@apimethod([unicode])
+def branches():
+    "Return a list of all the branches clobberer knows about."
+    session = g.db.session(DB_DECLARATIVE_BASE)
+    branches = session.query(Build.branch).distinct()
+    return [branch[0] for branch in branches]
+
+
+@bp.route('/lastclobber/by-builder/<string:branch>', methods=['GET'])
+@apimethod({unicode: [rest.ClobberTime]}, unicode)
+def branch_clobbertimes(branch):
+    "Return a dictionary of most recent ClobberTimes grouped by buildername."
 
     session = g.db.session(DB_DECLARATIVE_BASE)
 
@@ -60,61 +87,32 @@ def clobberer_branch(branch):
         ClobberTime.branch
     ).filter(ClobberTime.branch == branch).subquery()
     # Attaches builddirs, along with their max lastclobber to a buildername
-    builds_query = session.query(
+    full_query = session.query(
         Build.buildername,
         Build.builddir,
         sub_query.c.lastclobber,
         sub_query.c.who
     ).outerjoin(
-        sub_query, Build.builddir == sub_query.c.builddir
-    ).filter(Build.branch == branch).order_by(Build.buildername)
+        sub_query,
+        Build.builddir == sub_query.c.builddir,
+    ).filter(Build.branch == branch).distinct().order_by(Build.buildername)
 
-    builds = OrderedDict()
-    # The idea is to compress builddirs under their matching buildername
-    # doing these operations here, rather than in template logic, is preferred
-    for result in builds_query:
+    summary = collections.defaultdict(list)
+    for result in full_query:
         buildername, builddir, lastclobber, who = result
-        lastclobber_processed = ''
-        if lastclobber is not None:
-            lastclobber_processed = '{} by {}'.format(
-                datetime.fromtimestamp(lastclobber).strftime('%m-%d-%Y %H:%M:%S'),
-                who,
+        summary[buildername].append(
+            rest.ClobberTime(
+                branch=branch,
+                builddir=builddir,
+                lastclobber=lastclobber,
+                who=who
             )
-        if builds.get(buildername) is None:
-            builds[buildername] = {
-                'builddir': builddir,
-                'lastclobber': lastclobber_processed,
-            }
-        else:
-            # Just split apart duplicate directories by :
-            builds[buildername]['builddir'] += ':{}'.format(builddir)
-
-    context = {'branch': branch, 'builds': builds}
-
-    return render_template('clobberer_branch.html', **context)
-
-
-@bp.route('/clobber', methods=['POST'])
-@apimethod(None, body=ClobberRequest)
-def clobber(body):
-    "Request clobbers for particular builddirs of a branch."
-
-    session = g.db.session(DB_DECLARATIVE_BASE)
-    for builddir in body.builddirs:
-        clobber_time = ClobberTime(
-            branch=body.branch,
-            builddir=builddir,
-            lastclobber=int(time.time()),
-            # Colons break the client's logic
-            who=unicode(current_user).strip(':')
         )
-        session.add(clobber_time)
-    session.commit()
-    return None
+    return summary
 
 
 @bp.route('/lastclobber', methods=['GET'])
-def clobbertimes():
+def clobbertime():
     "Get the max/last clobber time for a particular builddir and branch."
 
     session = g.db.session(DB_DECLARATIVE_BASE)
