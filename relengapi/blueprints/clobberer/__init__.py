@@ -13,8 +13,8 @@ from sqlalchemy import desc
 from sqlalchemy import func
 
 from flask import Blueprint
+from flask import url_for
 from flask import g
-from flask import render_template
 from flask import request
 from flask.ext.login import current_user
 
@@ -22,6 +22,8 @@ from models import Build
 from models import ClobberTime
 from models import DB_DECLARATIVE_BASE
 
+from relengapi.lib import angular
+from relengapi.lib import api
 from relengapi import apimethod
 
 logger = logging.getLogger(__name__)
@@ -37,9 +39,10 @@ bp = Blueprint(
 @bp.route('/')
 @flask_login.login_required
 def root():
-    session = g.db.session(DB_DECLARATIVE_BASE)
-    context = {'branches': session.query(Build.branch).distinct()}
-    return render_template('clobberer.html', **context)
+    return angular.template('clobberer.html',
+        url_for('.static', filename='clobberer.js'),
+        url_for('.static', filename='clobberer.css'),
+        branches=api.get_data(branches))
 
 
 @bp.route('/clobber', methods=['POST'])
