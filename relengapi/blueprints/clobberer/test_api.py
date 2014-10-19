@@ -64,10 +64,7 @@ def test_lastclobber(client):
             eq_(getattr(build, k), v)
 
         # Ensure that a request for non-existant data returns nothing gracefully
-        rv = client.get('{}?branch=fake&builddir=bogus'.format(
-                url_for('clobberer.lastclobber')
-            )
-        )
+        rv = client.get('{}?branch=fake&builddir=bogus'.format(url_for('clobberer.lastclobber')))
         eq_(rv.status_code, 200)
         eq_(rv.data, "")
 
@@ -92,6 +89,7 @@ def test_lastclobber_by_builder(client):
     # Make sure all of our clobber fields were retrieved
     for key, value in _clobber_args.items():
         eq_(clobbertimes.get(buildername)[0].get(key), value)
+
 
 @test_context
 def test_forceclobber(client):

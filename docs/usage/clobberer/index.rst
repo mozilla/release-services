@@ -7,6 +7,7 @@ Types
 -----
 
 .. api:autotype:: ClobberRequest 
+.. api:autotype:: ClobberTime
 
 Endpoints
 ---------
