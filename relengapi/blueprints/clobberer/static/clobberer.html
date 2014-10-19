@@ -2,9 +2,30 @@
      License, v. 2.0. If a copy of the MPL was not distributed with this
      file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <div ng-app='clobberer' ng-controller="ClobberController">
-    <style>
-    </style>
-    <select name="SelectedBranch" ng-model="selectedBranch"  
-    ng-options="branch for branch in branches"></select>
-    </div>
+    <select name="SelectedBranch" 
+            ng-model="selectedBranch"  
+            ng-options="branch for branch in branches" 
+            ng-change="expandBranch(selectedBranch)"></select>
+    
+    <button ng-click="submitClobbers()">Submit Clobbers</button>
+    
+    <table ng-show="branchData">
+        <tr>
+            <th>
+                <input type="checkbox" 
+                       ng-model="selectAllBuilders"
+                       ng-click="toggleSelectedBuilders()"/>
+                Select All
+            </th>
+            <th>Builder</th>
+            <th>Last Clobber</th>
+        <tr ng-repeat="(builderName, clobberTime) in branchData">
+            <td><input class="blder-checkbox" 
+                        type="checkbox"
+                        ng-model="selectedBuilders[builderName]"/>
+            </td>
+            <td>{{ builderName }}</td>
+            <td>{{ clobberTime[0].lastclobber }} by {{ clobberTime[0].who }}</td>
+        </tr>
+    </table>
 </div>
