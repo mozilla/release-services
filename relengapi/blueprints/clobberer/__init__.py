@@ -56,15 +56,16 @@ def root(branch=None):
 @apimethod(None, body=[rest.ClobberRequest])
 def clobber(body):
     "Request clobbers for particular branches and builddirs."
-
     session = g.db.session(DB_DECLARATIVE_BASE)
+    who = 'anonymous'
+    if current_user.anonymous is False:
+        who = current_user.authenticated_email
     for clobber in body:
         clobber_time = ClobberTime(
             branch=clobber.branch,
             builddir=clobber.builddir,
             lastclobber=int(time.time()),
-            # Colons break the client's logic
-            who=unicode(current_user).strip(':')
+            who=who
         )
         session.add(clobber_time)
     session.commit()
