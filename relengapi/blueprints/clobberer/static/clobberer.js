@@ -44,7 +44,7 @@ angular.module('clobberer').controller('ClobberController',
                 "builddir": clobberTimes[index].builddir
             })
         }
-        restapi.post('/clobberer/clobber', clobberData).
+        restapi.post(initial_data.clobber_url, clobberData).
         then(function(response) {
             $scope.expandBranch($scope.selectedBranch);
         });
