@@ -8,7 +8,8 @@ angular.module('clobberer').controller('ClobberController',
 
     $scope.branches = initial_data.branches;
     $scope.selectedBranch = initial_data.selected_branch || $scope.branches[0];
- 
+
+    /* Tracks all checkbox models */ 
     $scope.selectedBuilders = undefined;
   
     /* When a user selects a new branch. */ 
@@ -32,6 +33,7 @@ angular.module('clobberer').controller('ClobberController',
     $scope.submitClobbers = function() {
         var clobberData = [];
         var clobberTimes = [];
+        /* Break transformation of branchData into steps to avoid deep loops */
         for (builderName in  $scope.selectedBuilders) {
             if ($scope.selectedBuilders[builderName] == true) {
                 clobberTimes = clobberTimes.concat($scope.branchData[builderName]);
