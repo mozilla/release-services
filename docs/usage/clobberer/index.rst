@@ -6,7 +6,8 @@ The ``/clobber`` API endpoint. For more information about "clobbering" see: http
 Types
 -----
 
-.. api:autotype:: ClobberRequest 
+.. api:autotype:: ClobberRequest
+.. api:autotype:: ClobberTime
 
 Endpoints
 ---------
