@@ -10,14 +10,14 @@ angular.module('clobberer').controller('ClobberController',
     $scope.selectedBranch = initial_data.selected_branch || $scope.branches[0];
 
     /* Tracks all checkbox models */ 
-    $scope.selectedBuilders = undefined;
+    $scope.selectedBuilders = null;
   
     /* When a user selects a new branch. */ 
     $scope.expandBranch = function(branch) {
         $scope.selectedBuilders = {};
         $scope.selectAllBuilders = false; 
-        $scope.branchData = 'loading';
-        
+        $scope.branchData = null;
+         
         restapi.get('/clobberer/lastclobber/branch/by-builder/' + branch,
                 {while: 'fetching data', expected_status: 404})
         .then(function (data, status, headers, config) {
@@ -25,7 +25,7 @@ angular.module('clobberer').controller('ClobberController',
             $scope.branchData = data.data.result;
         }, function (data, status, headers, config) {
             if (data.status == 404) {
-                $scope.branchData = '(no data)'
+                $scope.branchData = false;
             }
         });
     };
@@ -57,6 +57,16 @@ angular.module('clobberer').controller('ClobberController',
         for (builderName in $scope.branchData) {
             $scope.selectedBuilders[builderName] = !$scope.selectAllBuilders;
         }
+    };
+    
+    /*To determine if any ng-checkbox models in an object are checked*/
+    $scope.objHasSelectedCheckboxes = function(obj) {
+        for (key in obj) {
+            if (obj[key] == true) {
+                return true;
+            }
+        }
+        return false;
     };
     
     if ($scope.selectedBranch != null) {
