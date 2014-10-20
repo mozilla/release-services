@@ -14,18 +14,18 @@ from sqlalchemy import desc
 from sqlalchemy import func
 
 from flask import Blueprint
-from flask import url_for
 from flask import g
 from flask import request
+from flask import url_for
 from flask.ext.login import current_user
 
 from models import Build
 from models import ClobberTime
 from models import DB_DECLARATIVE_BASE
 
+from relengapi import apimethod
 from relengapi.lib import angular
 from relengapi.lib import api
-from relengapi import apimethod
 
 logger = logging.getLogger(__name__)
 

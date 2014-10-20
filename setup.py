@@ -5,6 +5,7 @@ from setuptools import setup, find_packages
 
 data_patterns = [
     'templates/**.html',
+    'templates/**.html',
     'static/**.jpg',
     'static/**.css',
     'static/**.js',
