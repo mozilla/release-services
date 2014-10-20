@@ -58,6 +58,9 @@ def test_lastclobber(client):
         build = session.query(Build).first()
         eq_(getattr(build, k), v)
 
+
+@test_context
+def test_empty_lastclobber(client):
     # Ensure that a request for non-existant data returns nothing gracefully
     rv = client.get('/clobberer/lastclobber?branch=fake&builddir=bogus')
     eq_(rv.status_code, 200)
