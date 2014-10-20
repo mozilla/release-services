@@ -9,6 +9,7 @@ import time
 
 import rest
 
+from sqlalchemy import and_
 from sqlalchemy import desc
 from sqlalchemy import func
 
@@ -87,14 +88,22 @@ def lastclobber_by_builder(branch):
     session = g.db.session(DB_DECLARATIVE_BASE)
 
     # Isolates the maximum lastclobber for each builddir on a branch
-    sub_query = session.query(
+    max_ct_sub_query = session.query(
         func.max(ClobberTime.lastclobber).label('lastclobber'),
         ClobberTime.builddir,
-        ClobberTime.who
+        ClobberTime.branch
     ).group_by(
         ClobberTime.builddir,
         ClobberTime.branch
     ).filter(ClobberTime.branch == branch).subquery()
+
+    # Finds the "greatest n per group" by joining with the max_ct_sub_query
+    # This is necessary to get the correct "who" values
+    sub_query = session.query(ClobberTime).join(max_ct_sub_query, and_(
+        ClobberTime.builddir == max_ct_sub_query.c.builddir,
+        ClobberTime.lastclobber == max_ct_sub_query.c.lastclobber,
+        ClobberTime.branch == max_ct_sub_query.c.branch)).subquery()
+
     # Attaches builddirs, along with their max lastclobber to a buildername
     full_query = session.query(
         Build.buildername,
