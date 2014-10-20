@@ -14,6 +14,7 @@ class ClobberRequest(wsme.types.Base):
 
 class ClobberTime(wsme.types.Base):
     "Represents the most recent data pertaining to a particular clobber."
+
     branch = unicode  #: The branch associated with this clobber.
     builddir = unicode  #: The clobbered directory.
     lastclobber = int  #: Timestamp associated with the last clobber request.
