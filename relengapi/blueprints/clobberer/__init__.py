@@ -45,8 +45,6 @@ def root(branch=None):
         'clobberer.html',
         url_for('.static', filename='clobberer.js'),
         url_for('.static', filename='clobberer.css'),
-        lastclobber_by_builder_url=url_for('clobberer.lastclobber_by_builder', branch=''),
-        clobber_url=url_for('clobberer.clobber'),
         branches=api.get_data(branches),
         selected_branch=branch
     )

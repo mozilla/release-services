@@ -18,7 +18,7 @@ angular.module('clobberer').controller('ClobberController',
         $scope.selectAllBuilders = false; 
         $scope.branchData = 'loading';
         
-        restapi.get(initial_data.lastclobber_by_builder_url + branch,
+        restapi.get('/clobberer/lastclobber/branch/by-builder/' + branch,
                 {while: 'fetching data', expected_status: 404})
         .then(function (data, status, headers, config) {
             console.log(data);
@@ -46,7 +46,7 @@ angular.module('clobberer').controller('ClobberController',
                 "builddir": clobberTimes[index].builddir
             })
         }
-        restapi.post(initial_data.clobber_url, clobberData).
+        restapi.post('/clobberer/clobber', clobberData).
         then(function(response) {
             $scope.expandBranch($scope.selectedBranch);
         });
