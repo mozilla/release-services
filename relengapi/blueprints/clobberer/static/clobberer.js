@@ -18,16 +18,11 @@ angular.module('clobberer').controller('ClobberController',
         $scope.selectAllBuilders = false; 
         $scope.branchData = null;
          
-        restapi.get('/clobberer/lastclobber/branch/by-builder/' + branch,
-                {while: 'fetching data', expected_status: 404})
-        .then(function (data, status, headers, config) {
-            console.log(data);
-            $scope.branchData = data.data.result;
-        }, function (data, status, headers, config) {
-            if (data.status == 404) {
-                $scope.branchData = false;
-            }
-        });
+        restapi.get('/clobberer/lastclobber/branch/by-builder/' + branch).
+            then(function (data, status, headers, config) {
+                console.log(data);
+                $scope.branchData = data.data.result;
+            });
     };
 
     $scope.submitClobbers = function() {
