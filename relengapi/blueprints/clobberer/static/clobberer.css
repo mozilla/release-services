@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 table {
     color:#666;
-    font-size:12px;
+    font-size:14px;
     text-shadow: 1px 1px 0px #fff;
     background:#eaebec;
-    margin:20px;
+    margin:22px;
     border:#ccc 1px solid;
 
     -moz-border-radius:3px;
@@ -18,7 +18,7 @@ table {
     box-shadow: 0 1px 2px #d1d1d1;
 }
 table th {
-    padding:21px 25px 22px 25px;
+    padding:23px 25px 22px 25px;
     border-top:1px solid #fafafa;
     border-bottom:1px solid #e0e0e0;
 
@@ -28,7 +28,7 @@ table th {
 }
 table th:first-child {
     text-align: left;
-    padding-left:20px;
+    padding-left:22px;
 }
 table tr:first-child th:first-child {
     -moz-border-radius-topleft:3px;
@@ -42,11 +42,11 @@ table tr:first-child th:last-child {
 }
 table tr {
     text-align: center;
-    padding-left:20px;
+    padding-left:22px;
 }
 table td:first-child {
     text-align: left;
-    padding-left:20px;
+    padding-left:22px;
     border-left: 0;
 }
 table td {
