@@ -34,7 +34,7 @@ setup(name='relengapi-clobberer',
     },
     install_requires=[
         'Flask',
-        'relengapi>=0.3',
+        'relengapi>=1.0.0',
     ],
     license='MPL2',
     extras_require={
