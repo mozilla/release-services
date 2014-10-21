@@ -20,21 +20,30 @@ _clobber_args = {
     'builddir': 'builddir',
 }
 
+_clobber_args_with_slave = {
+    'branch': 'other_branch',
+    'builddir': 'other_builddir',
+    'slave': 'specific_slave',
+}
+
 test_context = TestContext(databases=[DB_DECLARATIVE_BASE], reuse_app=True)
 
 _last_clobber_args = deepcopy(_clobber_args)
 _last_clobber_args['buildername'] = 'buildername'
+
+_last_clobber_args_with_slave = deepcopy(_clobber_args_with_slave)
+_last_clobber_args_with_slave['buildername'] = 'other_buildername'
 
 
 @test_context
 def test_clobber_request(client):
     session = test_context._app.db.session(DB_DECLARATIVE_BASE)
     clobber_count_initial = session.query(ClobberTime).count()
-    rv = client.post_json('/clobberer/clobber', data=[_clobber_args])
+    rv = client.post_json('/clobberer/clobber', data=[_clobber_args, _clobber_args_with_slave])
     eq_(rv.status_code, 200)
     clobber_count_final = session.query(ClobberTime).count()
 
-    eq_(clobber_count_final, clobber_count_initial + 1,
+    eq_(clobber_count_final, clobber_count_initial + 2,
         'No new clobbers were detected, clobber request failed.')
 
 
@@ -60,6 +69,58 @@ def test_lastclobber(client):
 
 
 @test_context
+def test_lastclobber_with_slave(client):
+    rv = client.get(
+        '/clobberer/lastclobber?branch={branch}&builddir={builddir}&'
+        'buildername={buildername}&slave={slave}'.format(**_last_clobber_args_with_slave)
+    )
+    builddir, lastclobber, who = rv.data.strip().split(':')
+    eq_(builddir, _last_clobber_args_with_slave['builddir'])
+    eq_(lastclobber.isdigit(), True)
+
+    rv = client.get(
+        '/clobberer/lastclobber?branch={branch}&builddir={builddir}&'
+        'buildername={buildername}&slave=does-not-exist'.format(**_last_clobber_args_with_slave)
+    )
+    # because a specific slave was clobbered this should return nothing
+    eq_(rv.status_code, 200)
+    eq_(rv.data, "")
+
+
+@test_context
+def test_lastclobber_existing_clobber_with_slave(client):
+    """
+    Here we make sure that clobberer can handle a mix of NULL(i.e. ALL) and
+    specific slave clobbers.
+    """
+    _existing_clobber_with_slave = deepcopy(_clobber_args)
+    _existing_clobber_with_slave['slave'] = 'sparticus'
+    time.sleep(1)  # make sure our clobber times come out different
+    rv = client.post_json('/clobberer/clobber', data=[_existing_clobber_with_slave])
+    eq_(rv.status_code, 200)
+    # The specific slave clobber's "lastclobber" should be higher than the
+    # wildcard clobber that's already happened
+    rv_with_slave = client.get(
+        '/clobberer/lastclobber?branch={branch}&builddir={builddir}&'
+        'buildername={buildername}&slave={slave}'.format(
+            slave=_existing_clobber_with_slave['slave'], **_last_clobber_args
+        )
+    )
+    last_clobber_with_slave = rv_with_slave.data.strip().split(':')[1]
+    rv_no_slave = client.get(
+        '/clobberer/lastclobber?branch={branch}&builddir={builddir}&'
+        'buildername={buildername}'.format(**_last_clobber_args)
+    )
+    last_clobber_no_slave = rv_no_slave.data.strip().split(':')[1]
+
+    eq_(last_clobber_with_slave.isdigit(), True)
+    eq_(last_clobber_no_slave.isdigit(), True)
+    assert_greater(int(last_clobber_with_slave), 0)
+    assert_greater(int(last_clobber_no_slave), 0)
+    assert_greater(int(last_clobber_with_slave), int(last_clobber_no_slave))
+
+
+@test_context
 def test_empty_lastclobber(client):
     # Ensure that a request for non-existant data returns nothing gracefully
     rv = client.get('/clobberer/lastclobber?branch=fake&builddir=bogus')
@@ -71,7 +132,8 @@ def test_empty_lastclobber(client):
 def test_branches(client):
     rv = client.get('/clobberer/branches')
     eq_(rv.status_code, 200)
-    eq_(json.loads(rv.data)["result"], ['branch', 'fake'])
+    eq_(json.loads(rv.data)["result"],
+        [_clobber_args['branch'], 'fake', _clobber_args_with_slave['branch']])
 
 
 @test_context

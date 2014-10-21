@@ -12,6 +12,7 @@ import rest
 from sqlalchemy import and_
 from sqlalchemy import desc
 from sqlalchemy import func
+from sqlalchemy import or_
 
 from flask import Blueprint
 from flask import g
@@ -62,6 +63,7 @@ def clobber(body):
         clobber_time = ClobberTime(
             branch=clobber.branch,
             builddir=clobber.builddir,
+            slave=clobber.slave,
             lastclobber=int(time.time()),
             who=who
         )
@@ -159,7 +161,10 @@ def lastclobber():
     session.commit()
 
     max_ct = session.query(ClobberTime).filter(
-        ClobberTime.builddir == builddir, ClobberTime.branch == branch
+        ClobberTime.builddir == builddir,
+        ClobberTime.branch == branch,
+        # a NULL slave value to signies all slaves
+        or_(ClobberTime.slave == slave, ClobberTime.slave == None)  #noqa
     ).order_by(desc(ClobberTime.lastclobber)).first()
 
     if max_ct:
