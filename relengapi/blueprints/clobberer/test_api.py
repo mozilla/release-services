@@ -95,11 +95,11 @@ def test_lastclobber_existing_clobber_with_slave(client):
     """
     _existing_clobber_with_slave = deepcopy(_clobber_args)
     _existing_clobber_with_slave['slave'] = 'sparticus'
+
     time.sleep(1)  # make sure our clobber times come out different
     rv = client.post_json('/clobberer/clobber', data=[_existing_clobber_with_slave])
     eq_(rv.status_code, 200)
-    # The specific slave clobber's "lastclobber" should be higher than the
-    # wildcard clobber that's already happened
+
     rv_with_slave = client.get(
         '/clobberer/lastclobber?branch={branch}&builddir={builddir}&'
         'buildername={buildername}&slave={slave}'.format(
@@ -107,6 +107,7 @@ def test_lastclobber_existing_clobber_with_slave(client):
         )
     )
     last_clobber_with_slave = rv_with_slave.data.strip().split(':')[1]
+
     rv_no_slave = client.get(
         '/clobberer/lastclobber?branch={branch}&builddir={builddir}&'
         'buildername={buildername}'.format(**_last_clobber_args)
@@ -115,8 +116,12 @@ def test_lastclobber_existing_clobber_with_slave(client):
 
     eq_(last_clobber_with_slave.isdigit(), True)
     eq_(last_clobber_no_slave.isdigit(), True)
+
     assert_greater(int(last_clobber_with_slave), 0)
     assert_greater(int(last_clobber_no_slave), 0)
+
+    # The specific slave clobber's "lastclobber" should be higher than the
+    # wildcard clobber that's already happened
     assert_greater(int(last_clobber_with_slave), int(last_clobber_no_slave))
 
 

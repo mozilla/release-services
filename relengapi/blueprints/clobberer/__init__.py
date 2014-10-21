@@ -163,7 +163,7 @@ def lastclobber():
     max_ct = session.query(ClobberTime).filter(
         ClobberTime.builddir == builddir,
         ClobberTime.branch == branch,
-        # a NULL slave value to signies all slaves
+        # a NULL slave value signifies all slaves
         or_(ClobberTime.slave == slave, ClobberTime.slave == None)  # noqa
     ).order_by(desc(ClobberTime.lastclobber)).first()
 
