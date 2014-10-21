@@ -93,13 +93,16 @@ def test_lastclobber_existing_clobber_with_slave(client):
     Here we make sure that clobberer can handle a mix of NULL(i.e. ALL) and
     specific slave clobbers.
     """
+    session = test_context._app.db.session(DB_DECLARATIVE_BASE)
+
     _existing_clobber_with_slave = deepcopy(_clobber_args)
     _existing_clobber_with_slave['slave'] = 'sparticus'
 
-    time.sleep(1)  # make sure our clobber times come out different
-    rv = client.post_json('/clobberer/clobber', data=[_existing_clobber_with_slave])
-    eq_(rv.status_code, 200)
+    session.add(ClobberTime(lastclobber=int(time.time()) + 3600,
+                            who='anonymous', **_existing_clobber_with_slave))
+    session.commit()
 
+    session = test_context._app.db.session(DB_DECLARATIVE_BASE)
     rv_with_slave = client.get(
         '/clobberer/lastclobber?branch={branch}&builddir={builddir}&'
         'buildername={buildername}&slave={slave}'.format(
