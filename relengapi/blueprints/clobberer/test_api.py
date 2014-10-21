@@ -82,8 +82,10 @@ def test_lastclobber_with_slave(client):
         '/clobberer/lastclobber?branch={branch}&builddir={builddir}&'
         'buildername={buildername}&slave=does-not-exist'.format(**_last_clobber_args_with_slave)
     )
-    # because a specific slave was clobbered this should return nothing
+    # even though we don't expect data, the return status should be OK
     eq_(rv.status_code, 200)
+    # because a specific slave, not named does-not-exist,  was clobbered
+    # this should return nothing
     eq_(rv.data, "")
 
 
