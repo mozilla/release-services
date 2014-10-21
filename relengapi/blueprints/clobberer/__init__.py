@@ -164,7 +164,7 @@ def lastclobber():
         ClobberTime.builddir == builddir,
         ClobberTime.branch == branch,
         # a NULL slave value to signies all slaves
-        or_(ClobberTime.slave == slave, ClobberTime.slave == None)  #noqa
+        or_(ClobberTime.slave == slave, ClobberTime.slave == None)  # noqa
     ).order_by(desc(ClobberTime.lastclobber)).first()
 
     if max_ct:
