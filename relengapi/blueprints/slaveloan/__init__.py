@@ -5,7 +5,6 @@
 import flask_login
 import logging
 import sqlalchemy as sa
-import wsme.types
 
 from celery import chain
 from celery import group
@@ -23,12 +22,11 @@ from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import InternalServerError
 
+from relengapi.blueprints.slaveloan import rest
 from relengapi.blueprints.slaveloan.model import History
 from relengapi.blueprints.slaveloan.model import Humans
 from relengapi.blueprints.slaveloan.model import Loans
 from relengapi.blueprints.slaveloan.model import Machines
-from relengapi.blueprints.slaveloan.model import WSME_Loan_History_Table
-from relengapi.blueprints.slaveloan.model import WSME_Loan_Loans_Table
 
 logger = logging.getLogger(__name__)
 
@@ -36,35 +34,17 @@ bp = Blueprint('slaveloan', __name__,
                template_folder='templates',
                static_folder='static')
 
-_tbl_prefix = 'slaveloan_'
 p.slaveloan.admin.doc("Administer Slaveloans for all users")
 
 
-WSME_Machine_Class = wsme.types.DictType(key_type=unicode,
-                                         value_type=wsme.types.ArrayType(unicode))
-
-
-class WSME_New_Loan(wsme.types.Base):
-    """The loan object that was created"""
-    loan = WSME_Loan_Loans_Table
-
-
-class WSME_Submit_New_Loan(wsme.types.Base):
-    status = unicode
-    LDAP = unicode
-    bugzilla = unicode
-    fqdn = unicode
-    ipaddress = unicode
-
-
 @bp.route('/machine/classes')
-@apimethod(WSME_Machine_Class)
+@apimethod(rest.MachineClassMapping)
 def get_machine_classes():
     return slave_patterns()
 
 
 @bp.route('/loans/')
-@apimethod([WSME_Loan_Loans_Table])
+@apimethod([rest.Loan])
 def get_loans():
     session = g.db.session('relengapi')
     loans = session.query(Loans).filter(Loans.machine_id.isnot(None))
@@ -72,7 +52,7 @@ def get_loans():
 
 
 @bp.route('/loans/<int:loanid>')
-@apimethod(WSME_Loan_Loans_Table, int)
+@apimethod(rest.Loan, int)
 def get_loan(loanid):
     session = g.db.session('relengapi')
     l = session.query(Loans).get(loanid)
@@ -80,7 +60,7 @@ def get_loan(loanid):
 
 
 @bp.route('/loans/<int:loanid>/history')
-@apimethod([WSME_Loan_History_Table], int)
+@apimethod([rest.HistoryEntry], int)
 def get_loan_history(loanid):
     session = g.db.session('relengapi')
     histories = session.query(History) \
@@ -90,7 +70,7 @@ def get_loan_history(loanid):
 
 
 @bp.route('/loans/all')
-@apimethod([WSME_Loan_Loans_Table])
+@apimethod([rest.Loan])
 def get_all_loans():
     session = g.db.session('relengapi')
     loans = session.query(Loans)
@@ -120,7 +100,7 @@ def admin():
 
 @bp.route('/admin/', methods=['POST'])
 @p.slaveloan.admin.require()
-@apimethod(None, body=WSME_Submit_New_Loan)
+@apimethod(None, body=rest.LoanRequest)
 def new_loan_from_admin(body):
     if not body.status:
         raise BadRequest("Missing Status Field")
@@ -155,7 +135,7 @@ def new_loan_from_admin(body):
     session.add(history)
     session.commit()
 #    tasks.init_loan.delay(l.id, "bld-lion-r5")
-    return None  # WSME_New_Loan({'loan': l.to_wsme()})
+    return None  # ?rest.WSME_New_Loan({'loan': l.to_wsme()})
 
 
 @bp.route('/tmp/')

@@ -3,20 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import sqlalchemy as sa
-import wsme.types
 
 from relengapi.lib import db
 from relengapi.util import tz
 from sqlalchemy.orm import relationship
 
+from relengapi.blueprints.slaveloan import rest
+
 _tbl_prefix = 'slaveloan_'
-
-
-class WSME_Loan_Machine_Table(wsme.types.Base):
-    "Represents a Machine Table Row"
-    id = int
-    fqdn = unicode
-    ipaddr = unicode
 
 
 class Machines(db.declarative_base('relengapi'), db.UniqueMixin):
@@ -38,14 +32,7 @@ class Machines(db.declarative_base('relengapi'), db.UniqueMixin):
         return dict(id=self.id, fqdn=self.fqdn, ipaddr=self.ipaddr)
 
     def to_wsme(self):
-        return WSME_Loan_Machine_Table(**self.to_json())
-
-
-class WSME_Loan_Human_Table(wsme.types.Base):
-    "Represents a Human requesting a loan"
-    id = int
-    ldap = unicode
-    bugzilla = unicode
+        return rest.Machine(**self.to_json())
 
 
 class Humans(db.declarative_base('relengapi'), db.UniqueMixin):
@@ -67,16 +54,7 @@ class Humans(db.declarative_base('relengapi'), db.UniqueMixin):
         return dict(id=self.id, ldap=self.ldap, bugzilla=self.bugzilla)
 
     def to_wsme(self):
-        return WSME_Loan_Human_Table(**self.to_json())
-
-
-class WSME_Loan_Loans_Table(wsme.types.Base):
-    "Represents a singe Loan Entry"
-    id = int
-    status = unicode
-    bug_id = int
-    human = WSME_Loan_Human_Table
-    machine = WSME_Loan_Machine_Table
+        return rest.Human(**self.to_json())
 
 
 class Loans(db.declarative_base('relengapi')):
@@ -106,15 +84,7 @@ class Loans(db.declarative_base('relengapi')):
                         machine=None)
 
     def to_wsme(self):
-        return WSME_Loan_Loans_Table(**self.to_json(sub_meth="to_wsme"))
-
-
-class WSME_Loan_History_Table(wsme.types.Base):
-    "Represents a singe Loan Entry"
-    id = int
-    loan_id = int
-    timestamp = unicode
-    msg = unicode
+        return rest.Loan(**self.to_json(sub_meth="to_wsme"))
 
 
 class History(db.declarative_base('relengapi')):
@@ -136,4 +106,4 @@ class History(db.declarative_base('relengapi')):
                     msg=self.msg)
 
     def to_wsme(self):
-        return WSME_Loan_History_Table(**self.to_json())
+        return rest.HistoryEntry(**self.to_json())
