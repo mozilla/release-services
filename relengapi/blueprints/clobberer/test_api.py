@@ -9,8 +9,6 @@ from copy import deepcopy
 from nose.tools import assert_greater
 from nose.tools import eq_
 
-from relengapi import p
-from relengapi.lib import auth
 from relengapi.lib.testing.context import TestContext
 
 from . import RELEASE_PREFIX
@@ -173,34 +171,17 @@ def test_branches(client):
 
 
 @test_context
-def test_branches_permissions(client, app):
+def test_release_branch_hiding(client):
     session = test_context._app.db.session(DB_DECLARATIVE_BASE)
     # clear all the old branches
     session.query(Build).delete()
     session.commit()
 
-    # regular users should not see this branch
-    release_branch = '{}branch'.format(RELEASE_PREFIX)
-    session.add(Build(branch=release_branch))
+    # users should not see this branch because it's associated with a release
+    # builddir
+    release_builddir = '{}builddir'.format(RELEASE_PREFIX)
+    session.add(Build(branch='see-no-evil', builddir=release_builddir))
     session.commit()
 
     rv = client.get('/clobberer/branches')
     eq_(json.loads(rv.data)['result'], [])
-
-    @auth.permissions_stale.connect_via(app)
-    def set_perms(app, user, permissions):
-        permissions.add(p.clobberer.release.view)
-
-    @auth.request_loader
-    def rl(req):
-        # Coercing any request with a 'user' header to appear associated
-        # with whatever user is assigned to the variable 'req_user'
-        if 'user' in req.headers:
-            return req_user
-
-    req_user = auth.HumanUser('Morgan')
-    with app.test_request_context('/branches'):
-        eq_(req_user.permissions, set([p.clobberer.release.view]))
-        # Now that we've verified our permissions, we should see the branch
-        rv = client.get('/clobberer/branches', headers=[('user', 'Morgan')])
-        eq_(json.loads(rv.data)['result'], [release_branch])

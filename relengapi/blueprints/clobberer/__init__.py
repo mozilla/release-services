@@ -87,8 +87,8 @@ def branches():
     "Return a list of all the branches clobberer knows about."
     session = g.db.session(DB_DECLARATIVE_BASE)
     branches = session.query(Build.branch).distinct()
-    if not p.clobberer.release.view.can():
-        branches = branches.filter(not_(Build.builddir.startswith(RELEASE_PREFIX)))
+    # Users shouldn't see any branch associated with a release builddir
+    branches = branches.filter(not_(Build.builddir.startswith(RELEASE_PREFIX)))
     return [branch[0] for branch in branches]
 
 
@@ -126,10 +126,6 @@ def lastclobber_by_builder(branch):
         sub_query,
         Build.builddir == sub_query.c.builddir,
     ).filter(Build.branch == branch).distinct().order_by(Build.buildername)
-
-    if not p.clobberer.release.view.can():
-        full_query = full_query.filter(
-            not_(Build.builddir.startswith(RELEASE_PREFIX)))
 
     summary = collections.defaultdict(list)
     for result in full_query:
