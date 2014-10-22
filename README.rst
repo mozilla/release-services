@@ -1,7 +1,7 @@
 RelengAPI-Clobberer
 ===================
 
-Keeping intermediate files around after a build helps make subsequent runs faster since it acts as form of local caching.
+Keeping intermediate files around after a build job helps make subsequent jobs faster since it acts as a form of local caching.
 Unfortunately this can lead to corruption in some circumstances. If a developer notices that their CI/try jobs are failing due 
 to corrupted build directories they should have the option to reset the build directory to a clean state - i.e. clobber it.
 
