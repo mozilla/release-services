@@ -40,3 +40,7 @@ And finally run the server:
 
 The `relengapi` tool has many useful subcommands.
 See its help for more information.
+
+Deployment
+----------
+See: https://wiki.mozilla.org/ReleaseEngineering/How_To/Update_RelengAPI
