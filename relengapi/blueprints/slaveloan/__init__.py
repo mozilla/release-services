@@ -36,16 +36,16 @@ bp = Blueprint('slaveloan', __name__,
 
 p.slaveloan.admin.doc("Administer Slaveloans for all users")
 
-
-@bp.route('/machine/classes')
-@apimethod(rest.MachineClassMapping)
-def get_machine_classes():
-    return slave_patterns()
+##################
+#  RESTful APIs  #
+##################
 
 
 @bp.route('/loans/')
 @apimethod([rest.Loan])
 def get_loans():
+    "Get the list of all `active` loans you can see"
+    # XXX: Use permissions to filter if not an admin
     session = g.db.session('relengapi')
     loans = session.query(Loans).filter(Loans.machine_id.isnot(None))
     return [l.to_wsme() for l in loans.all()]
@@ -54,6 +54,8 @@ def get_loans():
 @bp.route('/loans/<int:loanid>')
 @apimethod(rest.Loan, int)
 def get_loan(loanid):
+    "Get the details of a loan, by id"
+    # XXX: Use permissions to ensure admin | loanee
     session = g.db.session('relengapi')
     l = session.query(Loans).get(loanid)
     return l.to_wsme()
@@ -62,6 +64,8 @@ def get_loan(loanid):
 @bp.route('/loans/<int:loanid>/history')
 @apimethod([rest.HistoryEntry], int)
 def get_loan_history(loanid):
+    "Get the history associated with this loan"
+    # XXX: Use permissions to ensure admin | loanee
     session = g.db.session('relengapi')
     histories = session.query(History) \
                        .filter(History.loan_id == loanid) \
@@ -72,36 +76,18 @@ def get_loan_history(loanid):
 @bp.route('/loans/all')
 @apimethod([rest.Loan])
 def get_all_loans():
+    "Get the list of all loans you can see"
+    # XXX: Use permissions to filter if not an admin
     session = g.db.session('relengapi')
     loans = session.query(Loans)
     return [l.to_wsme() for l in loans.all()]
 
 
-@bp.route('/')
-@flask_login.login_required
-def root():
-    return render_template('slaveloan_root.html')
-
-
-@bp.route('/details/<int:id>')
-@flask_login.login_required
-@p.slaveloan.admin.require()
-def loan_details(id):
-    g.loanid = id
-    return render_template('slaveloan_details.html')
-
-
-@bp.route('/admin/')
-@flask_login.login_required
-@p.slaveloan.admin.require()
-def admin():
-    return render_template('slaveloan_admin.html')
-
-
-@bp.route('/admin/', methods=['POST'])
+@bp.route('/loans/new', methods=['POST'])
 @p.slaveloan.admin.require()
 @apimethod(None, body=rest.LoanRequest)
 def new_loan_from_admin(body):
+    "Creates a new loan entry"
     if not body.status:
         raise BadRequest("Missing Status Field")
     if not body.LDAP:
@@ -138,8 +124,53 @@ def new_loan_from_admin(body):
     return None  # ?rest.WSME_New_Loan({'loan': l.to_wsme()})
 
 
+@bp.route('/loans/request', methods=['POST'])
+@apimethod(None, body=rest.LoanRequest)
+def new_loan_request(body):
+    "[ToDo] Implement User Loan Requesting"
+    raise BadRequest("NotImplemented: User Requests are not implemented at this time")
+
+
+@bp.route('/machine/classes')
+@apimethod(rest.MachineClassMapping)
+def get_machine_classes():
+    "Returns a mapping keyed on type of loan against slave-name globs that it corresponds to"
+    return slave_patterns()
+
+##################
+# User Interface #
+##################
+
+
+@bp.route('/')
+@flask_login.login_required
+def root():
+    return render_template('slaveloan_root.html')
+
+
+@bp.route('/details/<int:id>')
+@flask_login.login_required
+@p.slaveloan.admin.require()
+def loan_details(id):
+    g.loanid = id
+    return render_template('slaveloan_details.html')
+
+
+@bp.route('/admin/')
+@flask_login.login_required
+@p.slaveloan.admin.require()
+def admin():
+    return render_template('slaveloan_admin.html')
+
+##################
+# Temporary      #
+##################
+
+
 @bp.route('/tmp/')
+@p.slaveloan.admin.require()
 def init_loan():
+    "Temporary, Manual testing only, DO NOT USE"
     chain_of_stuff = chain(
         tasks.init_loan.si(loanid=18, loan_class="t-snow-r4"),
         tasks.choose_inhouse_machine.si(loanid=18, loan_class="t-snow-r4"),
