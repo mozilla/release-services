@@ -18,7 +18,9 @@ Development
 Layout
 ~~~~~~
 
-Clobberer is a [Flask Blueprint](http://flask.pocoo.org/docs/blueprints/) which plugs into RelengAPI. 
+Clobberer is a `Flask Blueprint`_ which plugs into RelengAPI.
+
+.. _Flask Blueprint:  http://flask.pocoo.org/docs/blueprints/
 
 Running Clobberer
 ~~~~~~~~~~~~~~~~~
