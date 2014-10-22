@@ -42,7 +42,7 @@ bp = Blueprint(
 bp.root_widget_template('clobberer_root_widget.html', priority=100)
 
 # prefix which denotes release builddirs
-RELEASE_PREFIX = 'rel'
+RELEASE_PREFIX = 'rel-'
 
 p.clobberer.release.view.doc("Can View Release Branches")
 
@@ -88,7 +88,7 @@ def branches():
     session = g.db.session(DB_DECLARATIVE_BASE)
     branches = session.query(Build.branch).distinct()
     if not p.clobberer.release.view.can():
-        branches = branches.filter(not_(Build.branch.startswith(RELEASE_PREFIX)))
+        branches = branches.filter(not_(Build.builddir.startswith(RELEASE_PREFIX)))
     return [branch[0] for branch in branches]
 
 
@@ -129,7 +129,7 @@ def lastclobber_by_builder(branch):
 
     if not p.clobberer.release.view.can():
         full_query = full_query.filter(
-            not_(Build.builddir.startswith(RELEASE_PREFIX + '-')))
+            not_(Build.builddir.startswith(RELEASE_PREFIX)))
 
     summary = collections.defaultdict(list)
     for result in full_query:
