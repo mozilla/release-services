@@ -37,6 +37,8 @@ bp = Blueprint(
     static_folder='static'
 )
 
+bp.root_widget_template('clobberer_root_widget.html', priority=100)
+
 
 @bp.route('/')
 @bp.route('/<string:branch>')
