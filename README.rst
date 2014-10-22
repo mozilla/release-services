@@ -15,10 +15,14 @@ For documentation about clobberer and its various endpoints see https://api.pub.
 Development
 -----------
 
-### Layout
+Layout
+~~~~~~
+
 Clobberer is a [Flask Blueprint](http://flask.pocoo.org/docs/blueprints/) which plugs into RelengAPI. 
 
-### Running Clobberer
+Running Clobberer
+~~~~~~~~~~~~~~~~~
+
 To run the tool for development, pip install the requirements into your virtualenv:
 
     pip install -e .[test]
