@@ -16,13 +16,25 @@ angular.module('clobberer').controller('ClobberController',
     $scope.expandBranch = function(branch) {
         $scope.selectedBuilders = {};
         $scope.selectAllBuilders = false; 
-        $scope.branchData = null;
+        $scope.branchData = undefined;
+        $scope.builderFilter = undefined;
          
         restapi.get('/clobberer/lastclobber/branch/by-builder/' + branch).
             then(function (data, status, headers, config) {
                 console.log(data);
                 $scope.branchData = data.data.result;
             });
+    };
+
+    /* Returns builder names from branchData filtered by builderFilter. */
+    $scope.availableBuilders = function() {
+        var builders = [];
+        for (builder in $scope.branchData) {
+                if (builder.match($scope.builderFilter) != null) {
+                    builders.push(builder);
+                }
+        }
+        return builders; 
     };
 
     $scope.submitClobbers = function() {
@@ -49,8 +61,9 @@ angular.module('clobberer').controller('ClobberController',
   
     $scope.selectAllBuilders = false; 
     $scope.toggleSelectedBuilders = function() {
-        for (builderName in $scope.branchData) {
-            $scope.selectedBuilders[builderName] = !$scope.selectAllBuilders;
+        var builders = $scope.availableBuilders();
+        for (index in builders) {
+            $scope.selectedBuilders[builders[index]] = !$scope.selectAllBuilders;
         }
     };
     
