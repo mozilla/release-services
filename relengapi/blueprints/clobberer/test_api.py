@@ -67,6 +67,22 @@ def test_clobber_request_of_release(client):
 
 
 @test_context
+def test_clobber_request_of_non_release(client):
+    "This looks like a release clobber, but actually isn't."
+    session = test_context._app.db.session(DB_DECLARATIVE_BASE)
+    clobber_count_initial = session.query(ClobberTime).count()
+    not_evil_clobber_args = {
+        'branch': 'none',
+        'builddir': 'directory-' + RELEASE_PREFIX + 'tricky',
+    }
+    rv = client.post_json('/clobberer/clobber', data=[not_evil_clobber_args])
+    eq_(rv.status_code, 200)
+    clobber_count_final = session.query(ClobberTime).count()
+
+    eq_(clobber_count_final, clobber_count_initial + 1)
+
+
+@test_context
 def test_lastclobber(client):
     session = test_context._app.db.session(DB_DECLARATIVE_BASE)
     rv = client.get(
