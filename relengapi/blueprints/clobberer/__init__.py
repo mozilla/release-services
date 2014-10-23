@@ -27,7 +27,6 @@ from models import ClobberTime
 from models import DB_DECLARATIVE_BASE
 
 from relengapi import apimethod
-from relengapi import p
 from relengapi.lib import angular
 from relengapi.lib import api
 
@@ -44,8 +43,6 @@ bp.root_widget_template('clobberer_root_widget.html', priority=100)
 
 # prefix which denotes release builddirs
 RELEASE_PREFIX = 'rel-'
-
-p.clobberer.release.view.doc("Can View Release Branches")
 
 
 @bp.route('/')
