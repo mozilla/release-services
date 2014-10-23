@@ -7,6 +7,7 @@ import flask_login
 import logging
 import time
 
+import re
 import rest
 
 from sqlalchemy import and_
@@ -69,14 +70,18 @@ def clobber(body):
     if current_user.anonymous is False:
         who = current_user.authenticated_email
     for clobber in body:
-        clobber_time = ClobberTime(
-            branch=clobber.branch,
-            builddir=clobber.builddir,
-            slave=clobber.slave,
-            lastclobber=int(time.time()),
-            who=who
-        )
-        session.add(clobber_time)
+        if re.search(RELEASE_PREFIX + '.*', clobber.builddir) is None:
+            clobber_time = ClobberTime(
+                branch=clobber.branch,
+                builddir=clobber.builddir,
+                slave=clobber.slave,
+                lastclobber=int(time.time()),
+                who=who
+            )
+            session.add(clobber_time)
+        else:
+            logger.debug('Rejected clobber of release builddir: {}'.format(
+                clobber.builddir))
     session.commit()
     return None
 

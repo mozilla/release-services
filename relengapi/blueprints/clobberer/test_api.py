@@ -50,6 +50,23 @@ def test_clobber_request(client):
 
 
 @test_context
+def test_clobber_request_of_release(client):
+    "Ensures that attempting to clobber a release build will fail."
+    session = test_context._app.db.session(DB_DECLARATIVE_BASE)
+    clobber_count_initial = session.query(ClobberTime).count()
+    evil_clobber_args = {
+        'branch': 'none',
+        'builddir': RELEASE_PREFIX + 'directory',
+    }
+    rv = client.post_json('/clobberer/clobber', data=[evil_clobber_args])
+    eq_(rv.status_code, 200)
+    clobber_count_final = session.query(ClobberTime).count()
+
+    eq_(clobber_count_final, clobber_count_initial,
+        'A release was clobbered, no bueno!')
+
+
+@test_context
 def test_lastclobber(client):
     session = test_context._app.db.session(DB_DECLARATIVE_BASE)
     rv = client.get(
