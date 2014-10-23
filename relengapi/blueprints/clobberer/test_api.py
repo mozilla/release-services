@@ -11,6 +11,8 @@ from nose.tools import eq_
 
 from relengapi.lib.testing.context import TestContext
 
+from . import RELEASE_PREFIX
+
 from models import Build
 from models import ClobberTime
 from models import DB_DECLARATIVE_BASE
@@ -45,6 +47,23 @@ def test_clobber_request(client):
 
     eq_(clobber_count_final, clobber_count_initial + 2,
         'No new clobbers were detected, clobber request failed.')
+
+
+@test_context
+def test_clobber_request_of_release(client):
+    "Ensures that attempting to clobber a release build will fail."
+    session = test_context._app.db.session(DB_DECLARATIVE_BASE)
+    clobber_count_initial = session.query(ClobberTime).count()
+    evil_clobber_args = {
+        'branch': 'none',
+        'builddir': RELEASE_PREFIX + 'directory',
+    }
+    rv = client.post_json('/clobberer/clobber', data=[evil_clobber_args])
+    eq_(rv.status_code, 200)
+    clobber_count_final = session.query(ClobberTime).count()
+
+    eq_(clobber_count_final, clobber_count_initial,
+        'A release was clobbered, no bueno!')
 
 
 @test_context
@@ -139,14 +158,6 @@ def test_empty_lastclobber(client):
 
 
 @test_context
-def test_branches(client):
-    rv = client.get('/clobberer/branches')
-    eq_(rv.status_code, 200)
-    eq_(json.loads(rv.data)["result"],
-        [_clobber_args['branch'], 'fake', _clobber_args_with_slave['branch']])
-
-
-@test_context
 def test_lastclobber_by_builder(client):
     rv = client.get('/clobberer/lastclobber/branch/by-builder/branch')
     eq_(rv.status_code, 200)
@@ -166,3 +177,28 @@ def test_forceclobber(client):
     builddir, future_time, who = rv.data.split('\n')[0].split(':')
     eq_(builddir, 'lamesauce')
     assert_greater(int(future_time), int(time.time()))
+
+
+@test_context
+def test_branches(client):
+    rv = client.get('/clobberer/branches')
+    eq_(rv.status_code, 200)
+    eq_(json.loads(rv.data)['result'],
+        [_clobber_args['branch'], 'fake', _clobber_args_with_slave['branch']])
+
+
+@test_context
+def test_release_branch_hiding(client):
+    session = test_context._app.db.session(DB_DECLARATIVE_BASE)
+    # clear all the old branches
+    session.query(Build).delete()
+    session.commit()
+
+    # users should not see this branch because it's associated with a release
+    # builddir
+    release_builddir = '{}builddir'.format(RELEASE_PREFIX)
+    session.add(Build(branch='see-no-evil', builddir=release_builddir))
+    session.commit()
+
+    rv = client.get('/clobberer/branches')
+    eq_(json.loads(rv.data)['result'], [])

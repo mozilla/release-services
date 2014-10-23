@@ -7,11 +7,13 @@ import flask_login
 import logging
 import time
 
+import re
 import rest
 
 from sqlalchemy import and_
 from sqlalchemy import desc
 from sqlalchemy import func
+from sqlalchemy import not_
 from sqlalchemy import or_
 
 from flask import Blueprint
@@ -39,6 +41,9 @@ bp = Blueprint(
 
 bp.root_widget_template('clobberer_root_widget.html', priority=100)
 
+# prefix which denotes release builddirs
+RELEASE_PREFIX = 'rel-'
+
 
 @bp.route('/')
 @bp.route('/<string:branch>')
@@ -62,14 +67,18 @@ def clobber(body):
     if current_user.anonymous is False:
         who = current_user.authenticated_email
     for clobber in body:
-        clobber_time = ClobberTime(
-            branch=clobber.branch,
-            builddir=clobber.builddir,
-            slave=clobber.slave,
-            lastclobber=int(time.time()),
-            who=who
-        )
-        session.add(clobber_time)
+        if re.search(RELEASE_PREFIX + '.*', clobber.builddir) is None:
+            clobber_time = ClobberTime(
+                branch=clobber.branch,
+                builddir=clobber.builddir,
+                slave=clobber.slave,
+                lastclobber=int(time.time()),
+                who=who
+            )
+            session.add(clobber_time)
+        else:
+            logger.debug('Rejecting clobber of builddir with release prefix: {}'.format(
+                clobber.builddir))
     session.commit()
     return None
 
@@ -80,6 +89,8 @@ def branches():
     "Return a list of all the branches clobberer knows about."
     session = g.db.session(DB_DECLARATIVE_BASE)
     branches = session.query(Build.branch).distinct()
+    # Users shouldn't see any branch associated with a release builddir
+    branches = branches.filter(not_(Build.builddir.startswith(RELEASE_PREFIX)))
     return [branch[0] for branch in branches]
 
 
