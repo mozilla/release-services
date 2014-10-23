@@ -67,7 +67,7 @@ def clobber(body):
     if current_user.anonymous is False:
         who = current_user.authenticated_email
     for clobber in body:
-        if re.search(RELEASE_PREFIX + '.*', clobber.builddir) is not None:
+        if re.search('^' + RELEASE_PREFIX + '.*', clobber.builddir) is not None:
             logger.debug('Rejecting clobber of builddir with release prefix: {}'.format(
                 clobber.builddir))
             continue
