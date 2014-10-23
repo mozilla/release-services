@@ -77,7 +77,7 @@ def clobber(body):
             )
             session.add(clobber_time)
         else:
-            logger.debug('Rejected clobber of release builddir: {}'.format(
+            logger.debug('Rejecting clobber of builddir with release prefix: {}'.format(
                 clobber.builddir))
     session.commit()
     return None
