@@ -9,7 +9,11 @@ from copy import deepcopy
 from nose.tools import assert_greater
 from nose.tools import eq_
 
+from relengapi import p
+from relengapi.lib import auth
 from relengapi.lib.testing.context import TestContext
+
+from . import RELEASE_PREFIX
 
 from models import Build
 from models import ClobberTime
@@ -139,14 +143,6 @@ def test_empty_lastclobber(client):
 
 
 @test_context
-def test_branches(client):
-    rv = client.get('/clobberer/branches')
-    eq_(rv.status_code, 200)
-    eq_(json.loads(rv.data)["result"],
-        [_clobber_args['branch'], 'fake', _clobber_args_with_slave['branch']])
-
-
-@test_context
 def test_lastclobber_by_builder(client):
     rv = client.get('/clobberer/lastclobber/branch/by-builder/branch')
     eq_(rv.status_code, 200)
@@ -166,3 +162,45 @@ def test_forceclobber(client):
     builddir, future_time, who = rv.data.split('\n')[0].split(':')
     eq_(builddir, 'lamesauce')
     assert_greater(int(future_time), int(time.time()))
+
+
+@test_context
+def test_branches(client):
+    rv = client.get('/clobberer/branches')
+    eq_(rv.status_code, 200)
+    eq_(json.loads(rv.data)['result'],
+        [_clobber_args['branch'], 'fake', _clobber_args_with_slave['branch']])
+
+
+@test_context
+def test_branches_permissions(client, app):
+    session = test_context._app.db.session(DB_DECLARATIVE_BASE)
+    # clear all the old branches
+    session.query(Build).delete()
+    session.commit()
+
+    # regular users should not see this branch
+    release_branch = '{}branch'.format(RELEASE_PREFIX)
+    session.add(Build(branch=release_branch))
+    session.commit()
+
+    rv = client.get('/clobberer/branches')
+    eq_(json.loads(rv.data)['result'], [])
+
+    @auth.permissions_stale.connect_via(app)
+    def set_perms(app, user, permissions):
+        permissions.add(p.clobberer.release.view)
+
+    @auth.request_loader
+    def rl(req):
+        # Coercing any request with a 'user' header to appear associated
+        # with whatever user is assigned to the variable 'req_user'
+        if 'user' in req.headers:
+            return req_user
+
+    req_user = auth.HumanUser('Morgan')
+    with app.test_request_context('/branches'):
+        eq_(req_user.permissions, set([p.clobberer.release.view]))
+        # Now that we've verified our permissions, we should see the branch
+        rv = client.get('/clobberer/branches', headers=[('user', 'Morgan')])
+        eq_(json.loads(rv.data)['result'], [release_branch])
