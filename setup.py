@@ -13,14 +13,14 @@ data_patterns = [
 ]
 
 setup(name='relengapi-clobberer',
-    version='0.3.2',
+    version='0.3.4',
     description='The RelengAPI clobberer service.',
     author='Morgan Phillips',
     author_email='mphillips@mozilla.com',
     url='https://github.com/buildbot/build-relengapi-clobberer',
     entry_points={
         "relengapi_blueprints": [
-            'mapper = relengapi.blueprints.clobberer:bp',
+            'clobberer = relengapi.blueprints.clobberer:bp',
         ],
     },
     packages=find_packages(),
