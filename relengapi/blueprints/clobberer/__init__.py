@@ -42,7 +42,8 @@ bp = Blueprint(
 bp.root_widget_template('clobberer_root_widget.html', priority=100)
 
 # prefix which denotes release builddirs
-RELEASE_PREFIX = 'rel-'
+BUILDDIR_REL_PREFIX = 'rel-'
+BUILDER_REL_PREFIX = 'release-'
 
 
 @bp.route('/')
@@ -67,7 +68,7 @@ def clobber(body):
     if current_user.anonymous is False:
         who = current_user.authenticated_email
     for clobber in body:
-        if re.search('^' + RELEASE_PREFIX + '.*', clobber.builddir) is not None:
+        if re.search('^' + BUILDDIR_REL_PREFIX + '.*', clobber.builddir) is not None:
             logger.debug('Rejecting clobber of builddir with release prefix: {}'.format(
                 clobber.builddir))
             continue
@@ -98,7 +99,7 @@ def branches():
     session = g.db.session(DB_DECLARATIVE_BASE)
     branches = session.query(Build.branch).distinct()
     # Users shouldn't see any branch associated with a release builddir
-    branches = branches.filter(not_(Build.builddir.startswith(RELEASE_PREFIX)))
+    branches = branches.filter(not_(Build.builddir.startswith(BUILDDIR_REL_PREFIX)))
     branches = branches.order_by(Build.branch)
     return [branch[0] for branch in branches]
 
@@ -136,7 +137,10 @@ def lastclobber_by_builder(branch):
     ).outerjoin(
         sub_query,
         Build.builddir == sub_query.c.builddir,
-    ).filter(Build.branch == branch).distinct().order_by(Build.buildername)
+    ).filter(
+        Build.branch == branch,
+        not_(Build.buildername.startswith(BUILDER_REL_PREFIX))
+        ).distinct().order_by(Build.buildername)
 
     summary = collections.defaultdict(list)
     for result in full_query:

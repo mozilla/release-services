@@ -11,7 +11,8 @@ from nose.tools import eq_
 
 from relengapi.lib.testing.context import TestContext
 
-from . import RELEASE_PREFIX
+from . import BUILDDIR_REL_PREFIX
+from . import BUILDER_REL_PREFIX
 
 from models import Build
 from models import ClobberTime
@@ -56,7 +57,7 @@ def test_clobber_request_of_release(client):
     clobber_count_initial = session.query(ClobberTime).count()
     evil_clobber_args = {
         'branch': 'none',
-        'builddir': RELEASE_PREFIX + 'directory',
+        'builddir': BUILDDIR_REL_PREFIX + 'directory',
     }
     rv = client.post_json('/clobberer/clobber', data=[evil_clobber_args])
     eq_(rv.status_code, 200)
@@ -73,7 +74,7 @@ def test_clobber_request_of_non_release(client):
     clobber_count_initial = session.query(ClobberTime).count()
     not_evil_clobber_args = {
         'branch': 'none',
-        'builddir': 'directory-' + RELEASE_PREFIX + 'tricky',
+        'builddir': 'directory-' + BUILDDIR_REL_PREFIX + 'tricky',
     }
     rv = client.post_json('/clobberer/clobber', data=[not_evil_clobber_args])
     eq_(rv.status_code, 200)
@@ -212,9 +213,26 @@ def test_release_branch_hiding(client):
 
     # users should not see this branch because it's associated with a release
     # builddir
-    release_builddir = '{}builddir'.format(RELEASE_PREFIX)
+    release_builddir = '{}builddir'.format(BUILDDIR_REL_PREFIX)
     session.add(Build(branch='see-no-evil', builddir=release_builddir))
     session.commit()
 
     rv = client.get('/clobberer/branches')
     eq_(json.loads(rv.data)['result'], [])
+
+
+@test_context
+def test_release_builder_hiding(client):
+    session = test_context._app.db.session(DB_DECLARATIVE_BASE)
+    buildername = BUILDER_REL_PREFIX + 'test'
+    release_build = Build(
+        branch='branch',
+        builddir='test',
+        buildername=buildername
+    )
+    session.add(release_build)
+    session.commit()
+    rv = client.get('/clobberer/lastclobber/branch/by-builder/branch')
+    eq_(rv.status_code, 200)
+    clobbertimes = json.loads(rv.data)["result"]
+    eq_(clobbertimes.get(buildername), None)
