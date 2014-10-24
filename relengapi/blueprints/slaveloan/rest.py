@@ -10,9 +10,9 @@ class Machine(wsme.types.Base):
 
     #: Unique ID for this entry
     id = int
-    #: The machines Fully Qualified Domain Name
+    #: The machine's Fully Qualified Domain Name
     fqdn = unicode
-    #: The machines IP Address
+    #: The machine's IP Address
     ipaddr = unicode
 
 
@@ -21,10 +21,10 @@ class Human(wsme.types.Base):
 
     #: Unique ID for this entry
     id = int
-    #: The humans full LDAP name
-    ldap = unicode
-    #: The humans full bugzilla e-mail address
-    bugzilla = unicode
+    #: The human's full LDAP e-mail
+    ldap_email = unicode
+    #: The human's full bugzilla e-mail address
+    bugzilla_email = unicode
 
 
 class Loan(wsme.types.Base):
@@ -60,15 +60,11 @@ class LoanRequest(wsme.types.Base):
 
     #: Initial Status
     status = unicode
-    #: Users LDAP username
-    LDAP = unicode
+    #: Users full LDAP e-mail
+    ldap_email = unicode
     #: Users Bugzilla e-mail
-    bugzilla = unicode
+    bugzilla_mail = unicode
     #: If known in advance, fqdn of the machine to loan
     fqdn = unicode
     #: If known in advance, ip address of the machine to loan
     ipaddress = unicode
-
-
-MachineClassMapping = wsme.types.DictType(key_type=unicode,
-                                          value_type=wsme.types.ArrayType(unicode))

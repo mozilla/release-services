@@ -51,7 +51,7 @@ class Humans(db.declarative_base('relengapi'), db.UniqueMixin):
         return query.filter(Humans.ldap == ldap)
 
     def to_json(self):
-        return dict(id=self.id, ldap=self.ldap, bugzilla=self.bugzilla)
+        return dict(id=self.id, ldap_email=self.ldap, bugzilla_email=self.bugzilla)
 
     def to_wsme(self):
         return rest.Human(**self.to_json())

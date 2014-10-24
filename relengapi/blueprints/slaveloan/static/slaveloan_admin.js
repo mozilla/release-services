@@ -15,8 +15,8 @@ function reload_loans() {
                         : "&lt;none&gt;"
                     ),
                     $('<td>').text(row.status),
-                    $('<td>').text(row.human.ldap),
-                    $('<td>').text(row.human.bugzilla),
+                    $('<td>').text(row.human.ldap_email),
+                    $('<td>').text(row.human.bugzilla_email),
                     $('<td>').text(row.machine.fqdn),
                     $('<td>').text(row.machine.ipaddr)
                 ).appendTo('#loans-table tbody');
@@ -48,8 +48,8 @@ $(function() {
         };
 
         var form_status = form.find('select[name=status]').val();
-        var form_ldap = form.find('input[name=LDAP]').val();
-        var form_bmo = form.find('input[name=bugzilla]').val();
+        var form_ldap = form.find('input[name=ldap_email]').val();
+        var form_bmo = form.find('input[name=bugzilla_email]').val();
         var form_fqdn = form.find('input[name=fqdn]').val();
         var form_ipaddr = form.find('input[name=ipaddr]').val();
         if (!form_status) {
@@ -80,8 +80,8 @@ $(function() {
             type: 'POST',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify({status: form_status,
-                                 LDAP: form_ldap,
-                                 bugzilla: form_bmo,
+                                 ldap_email: form_ldap,
+                                 bugzilla_email: form_bmo,
                                  fqdn: form_fqdn,
                                  ipaddr: form_ipaddr})
         }).done(function(data) {

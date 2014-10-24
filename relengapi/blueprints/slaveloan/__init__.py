@@ -42,6 +42,7 @@ p.slaveloan.admin.doc("Administer Slaveloans for all users")
 
 
 @bp.route('/loans/')
+@p.slaveloan.admin.require()
 @apimethod([rest.Loan])
 def get_loans():
     "Get the list of all `active` loans you can see"
@@ -52,6 +53,7 @@ def get_loans():
 
 
 @bp.route('/loans/<int:loanid>')
+@p.slaveloan.admin.require()
 @apimethod(rest.Loan, int)
 def get_loan(loanid):
     "Get the details of a loan, by id"
@@ -62,6 +64,7 @@ def get_loan(loanid):
 
 
 @bp.route('/loans/<int:loanid>/history')
+@p.slaveloan.admin.require()
 @apimethod([rest.HistoryEntry], int)
 def get_loan_history(loanid):
     "Get the history associated with this loan"
@@ -74,6 +77,7 @@ def get_loan_history(loanid):
 
 
 @bp.route('/loans/all')
+@p.slaveloan.admin.require()
 @apimethod([rest.Loan])
 def get_all_loans():
     "Get the list of all loans you can see"
@@ -90,9 +94,9 @@ def new_loan_from_admin(body):
     "Creates a new loan entry"
     if not body.status:
         raise BadRequest("Missing Status Field")
-    if not body.LDAP:
+    if not body.ldap_email:
         raise BadRequest("Missing LDAP E-Mail")
-    if not body.bugzilla:
+    if not body.bugzilla_email:
         raise BadRequest("Missing Bugzilla E-Mail")
     if body.status != 'PENDING':
         if not body.fqdn:
@@ -132,9 +136,29 @@ def new_loan_request(body):
 
 
 @bp.route('/machine/classes')
-@apimethod(rest.MachineClassMapping)
+@apimethod(
+    wsme.types.DictType(
+        key_type=unicode,
+        value_type=wsme.types.ArrayType(unicode)
+    )
+)
 def get_machine_classes():
-    "Returns a mapping keyed on type of loan against slave-name globs that it corresponds to"
+    """
+    A mapping of what you'll get with a given loan, and globs of the slave types associated.
+
+    Returns a mapping keyed on type of loan against slave-name globs that it corresponds to
+    e.g.:::
+
+        {
+            "b-2008-ix": [
+                "b-2008-ix-*",
+                "b-2008-sm-*",
+                "w64-ix-*"
+            ],
+        }
+
+    Where the above would tell you we are loaning a 'b-2008-ix' machine for slaves
+    which match any of the globs in the array."""
     return slave_patterns()
 
 ##################
