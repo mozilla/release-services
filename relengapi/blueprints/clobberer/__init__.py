@@ -99,6 +99,7 @@ def branches():
     branches = session.query(Build.branch).distinct()
     # Users shouldn't see any branch associated with a release builddir
     branches = branches.filter(not_(Build.builddir.startswith(RELEASE_PREFIX)))
+    branches = branches.order_by(Build.branch)
     return [branch[0] for branch in branches]
 
 
