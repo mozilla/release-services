@@ -47,7 +47,7 @@ def add_to_history(before=None, after=None):
             bound_task = None
             loanid = kwargs.get("loanid", None)
             if args and isinstance(args[0], celery.Task):
-                    bound_task = args[0]
+                bound_task = args[0]
             if before:
                 print "DEBUG: Locals: %s" % repr(locals())
                 print "DEBUG: Log_line: %s" % before.format(**locals())
@@ -84,7 +84,9 @@ def init_loan(loanid, loan_class):
     after="Chose inhouse machine {retval!s}")
 def choose_inhouse_machine(self, loanid, loan_class):
     print "Choosing inhouse machine"
-    url = furl("http://slavealloc.pvt.build.mozilla.org/api/slaves")
+    url = furl(current_app.config.get("SLAVEALLOC_URL", None))
+    # XXX: ToDo raise fatal if no slavealloc
+    url.path.add("slaves")
     url.args["enabled"] = 1
     try:
         all_slaves = requests.get(str(url)).json()
@@ -136,8 +138,8 @@ def fixup_machine(self, machine, loanid):
 def start_disable_slave(self, machine, loanid):
     try:
         print "START DISABLE SLAVE"
-        slaveapi = "http://slaveapi-dev1.build.mozilla.org:8080/slaves/"
-        url = furl(slaveapi)
+        url = furl(current_app.config.get("SLAVEAPI_URL", None))
+        # XXX: ToDo raise fatal if no slavealloc
         url.path.add(machine).add("actions").add("disable")
         print "START DISABLE SLAVE = url: %s" % str(url)
         postdata = dict(reason="Being loaned on slaveloan %s" % loanid)
@@ -145,7 +147,3 @@ def start_disable_slave(self, machine, loanid):
         print "START DISABLE SLAVE = r: %s" % str(r)
     except Exception as exc:  # pylint: disable=W0703
         self.retry(exc=exc)
-
-if __name__ == "__main__":
-    temporary_silence_pylint = History
-    temporary_silence_pylint = Humans

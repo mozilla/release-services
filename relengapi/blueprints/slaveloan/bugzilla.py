@@ -12,15 +12,17 @@ from flask import url_for
 from relengapi.blueprints.slaveloan.model import Loans
 
 MAX_ALIAS = 15
+DEFAULT_BUGZILLA_URL = "https://bugzilla-dev.allizom.org/rest/"
 
 
 def _bzclient():
     if current_app.get('bzclient', None):
         return current_app.bzclient
+    # XXX: Todo log warning if user or pass is "None"
     bzclient = BugzillaClient()
-    bzclient.configure(bzurl=current_app.config['BUGZILLA_URL'],
-                       username=current_app.config['BUGZILLA_USER'],
-                       password=current_app.config['BUGZILLA_PASS'])
+    bzclient.configure(bzurl=current_app.config.get('BUGZILLA_URL', DEFAULT_BUGZILLA_URL),
+                       username=current_app.config.get('BUGZILLA_USER', None),
+                       password=current_app.config.get('BUGZILLA_PASS', None))
     current_app.bzclient = bzclient
     return current_app.bzclient
 
