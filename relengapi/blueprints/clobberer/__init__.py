@@ -72,24 +72,16 @@ def clobber(body):
             logger.debug('Rejecting clobber of builddir with release prefix: {}'.format(
                 clobber.builddir))
             continue
-        # The enumerated slaves should still contain a None value since
-        # /lastclobber can make use of it.
-        slaves = [clobber.slave]
-        if clobber.slave is None:
-            # TODO: remove slave enumeration after old clobberer is deprecated
-            slaves_query = session.query(Build.slave).filter(
-                Build.builddir == clobber.builddir).distinct()
-            slaves += [slave[0] for slave in slaves_query]
-        for slave in slaves:
-            clobber_time = ClobberTime(
-                branch=clobber.branch,
-                builddir=clobber.builddir,
-                slave=slave,
-                lastclobber=int(time.time()),
-                who=who
-            )
-            session.add(clobber_time)
+        clobber_time = ClobberTime(
+            branch=clobber.branch,
+            builddir=clobber.builddir,
+            slave=clobber.slave,
+            lastclobber=int(time.time()),
+            who=who
+        )
+        session.add(clobber_time)
     session.commit()
+    return None
 
 
 @bp.route('/branches')
