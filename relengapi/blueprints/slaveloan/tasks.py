@@ -18,7 +18,6 @@ from functools import wraps
 from redo import retry
 from relengapi.blueprints.slaveloan import slave_mappings
 from relengapi.blueprints.slaveloan.model import History
-from relengapi.blueprints.slaveloan.model import Humans
 from relengapi.blueprints.slaveloan.model import Loans
 from relengapi.blueprints.slaveloan.model import Machines
 from relengapi.lib.celery import task

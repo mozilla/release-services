@@ -4,7 +4,7 @@ Slaveloan
 Application Configuration
 -------------------------
 
-Slaveloan configuration should be stored in the ``RELENGAPI_SETTINGS``file.
+Slaveloan configuration should be stored in the ``RELENGAPI_SETTINGS`` file.
 (see :doc:`/deployment/@relengapi/config`)
 
 Bugzilla
