@@ -2,7 +2,7 @@
 include docs/conf.py
 recursive-include docs *.rst
 recursive-include docs/_static *
-recursive-include relengapi *.html *.jpg *.css *.js *.txt
+recursive-include relengapi *.html *.jpg *.css *.js *.txt *.map
 include LICENSE.txt
 include README.md
 include fiximports.py
