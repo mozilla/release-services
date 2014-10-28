@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 {% block head %}
   {{ super() }}
-  {{ head.script(url_for('static', filename='js/angular/angular.js')) }}
+  {{ head.script(url_for('static', filename='js/angular/angular.min.js')) }}
   {%- for stylesheet in stylesheets %}
   {{ head.stylesheet(stylesheet) }}
   {%- endfor %}
