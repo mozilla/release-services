@@ -15,7 +15,6 @@ class ClobbererBase(db.declarative_base(DB_DECLARATIVE_BASE)):
 
     id = sa.Column(sa.Integer, primary_key=True)
     branch = sa.Column(sa.String(50), index=True)
-    master = sa.Column(sa.String(50), index=True)  # TODO: Remove this field
     slave = sa.Column(sa.String(30), index=True)
     builddir = sa.Column(sa.String(100), index=True)
 
@@ -46,7 +45,7 @@ class Build(ClobbererBase, db.UniqueMixin):
         )
 
 
-class ClobberTime(ClobbererBase):
+class ClobberTime(ClobbererBase, db.UniqueMixin):
     "A clobber request."
 
     __tablename__ = 'clobber_times'
@@ -62,3 +61,15 @@ class ClobberTime(ClobbererBase):
         index=True
     )
     who = sa.Column(sa.String(50))
+
+    @classmethod
+    def unique_hash(cls, branch, slave, builddir, *args, **kwargs):
+        return "{}:{}:{}".format(branch, slave, builddir)
+
+    @classmethod
+    def unique_filter(cls, query, branch, slave, builddir, *args, **kwargs):
+        return query.filter(
+            cls.branch == branch,
+            cls.slave == slave,
+            cls.builddir == builddir,
+        )
