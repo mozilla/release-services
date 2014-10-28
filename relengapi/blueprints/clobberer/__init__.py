@@ -159,12 +159,10 @@ def lastclobber():
     slave = request.args.get('slave')
     builddir = request.args.get('builddir')
     buildername = request.args.get('buildername')
-    master = request.args.get('master')
     # TODO: Move the builds update to a separate endpoint (requires client changes)
     build = Build.as_unique(
         session,
         branch=branch,
-        master=master,
         slave=slave,
         builddir=builddir,
         buildername=buildername,

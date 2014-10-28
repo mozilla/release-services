@@ -15,7 +15,6 @@ class ClobbererBase(db.declarative_base(DB_DECLARATIVE_BASE)):
 
     id = sa.Column(sa.Integer, primary_key=True)
     branch = sa.Column(sa.String(50), index=True)
-    master = sa.Column(sa.String(50), index=True)  # TODO: Remove this field
     slave = sa.Column(sa.String(30), index=True)
     builddir = sa.Column(sa.String(100), index=True)
 
