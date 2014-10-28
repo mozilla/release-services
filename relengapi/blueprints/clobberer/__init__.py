@@ -72,13 +72,14 @@ def clobber(body):
             logger.debug('Rejecting clobber of builddir with release prefix: {}'.format(
                 clobber.builddir))
             continue
-        clobber_time = ClobberTime(
+        clobber_time = ClobberTime.as_unique(
+            session,
             branch=clobber.branch,
             builddir=clobber.builddir,
             slave=clobber.slave,
-            lastclobber=int(time.time()),
-            who=who
         )
+        clobber_time.lastclobber = int(time.time())
+        clobber_time.who = who
         session.add(clobber_time)
     session.commit()
     return None
@@ -146,11 +147,6 @@ def lastclobber_by_builder(branch):
             )
         )
     return summary
-
-
-# Clobberer compatability endpoints. These are drop in replacements for the
-# deprecated clobberer service. As such, these endpoints should be deprecated
-# as well.
 
 
 @bp.route('/lastclobber', methods=['GET'])
