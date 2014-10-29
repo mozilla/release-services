@@ -14,4 +14,5 @@ installed in the same Python environment.
     usage/index
     deployment/index
     development/index
+    relnotes/index
     license
