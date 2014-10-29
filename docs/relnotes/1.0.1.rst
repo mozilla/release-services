@@ -1,0 +1,9 @@
+relengapi-1.0.1
+===============
+
+* Use the minified AngularJS, with a source map to help debugging
+
+* Log all SQL statements during test execution
+
+* Add a release script
+
