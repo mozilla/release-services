@@ -111,6 +111,7 @@ git_only='
     src
     settings_example.py
     misc/fiximports.py
+    misc/release.sh
 '
 git ls-files . | while read f; do
                     ignore=false
