@@ -10,6 +10,7 @@ data_patterns = [
     'static/**.jpg',
     'static/**.css',
     'static/**.js',
+    'static/**.map',
     'static/**.txt',
 ]
 
