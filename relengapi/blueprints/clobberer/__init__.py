@@ -163,7 +163,6 @@ def lastclobber():
     build = Build.as_unique(
         session,
         branch=branch,
-        slave=slave,
         builddir=builddir,
         buildername=buildername,
     )
