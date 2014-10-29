@@ -13,7 +13,7 @@ data_patterns = [
 ]
 
 setup(name='relengapi-clobberer',
-    version='0.3.4',
+    version='0.4.0',
     description='The RelengAPI clobberer service.',
     author='Morgan Phillips',
     author_email='mphillips@mozilla.com',
