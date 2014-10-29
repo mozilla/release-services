@@ -31,15 +31,15 @@ def test_subcommand_help():
 
 def test_subcommand_runs():
     output = run_main(['my-subcommand', '--result=foo'])
-    assert "print" in output
-    assert "info" in output
-    assert "warning" in output
+    assert "print output" in output
+    assert "info logging output" in output
+    assert "warning logging output" in output
     eq_(MySubcommand.run_result, 'foo')
 
 
 def test_subcommand_quiet():
     output = run_main(['--quiet', 'my-subcommand', '--result=foo'])
-    assert "print" in output
-    assert "info" not in output
-    assert "warning" in output
+    assert "print output" in output
+    assert "info logging output" not in output
+    assert "warning logging output" in output
     eq_(MySubcommand.run_result, 'foo')

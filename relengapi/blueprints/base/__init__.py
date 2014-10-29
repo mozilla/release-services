@@ -68,6 +68,8 @@ class RunTestsSubcommand(subcommands.Subcommand):
         sys.argv = [sys.argv[0]] + args.nose_args
         if 'RELENGAPI_SETTINGS' in os.environ:
             del os.environ['RELENGAPI_SETTINGS']
+        # enable sqlalchemy logging
+        logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
         # push a fake app context to avoid tests accidentally using the
         # runtime app context (for example, the development DB)
         with Flask(__name__).app_context():
