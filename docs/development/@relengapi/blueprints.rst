@@ -5,7 +5,7 @@ All non-core functionality in RelengAPI is implemented in separate projects that
 These separate projects are referred to as "blueprints" since they are implemented as Flask blueprints.
 
 This arrangement allows developers to focus on the task at hand by installing only the relevant blueprint and the core.
-It also nicely isolates purpose-specific code in its own repository, allowing it to evolve independewntly of the core and other blueprints, as suggested by the [Releng Best Practices](https://wiki.mozilla.org/ReleaseEngineering/Development_Best_Practices).
+It also nicely isolates purpose-specific code in its own repository, allowing it to evolve independently of the core and other blueprints, as suggested by the `Releng Best Practices <https://wiki.mozilla.org/ReleaseEngineering/Development_Best_Practices>`_ document.
 
 Getting Started
 ---------------
