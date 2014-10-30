@@ -30,7 +30,8 @@ angular.module('clobberer').controller('ClobberController',
     $scope.availableBuilders = function() {
         var builders = [];
         for (builder in $scope.branchData) {
-                if (builder.match($scope.builderFilter) != null) {
+                if ($scope.builderFilter == undefined ||
+                    builder.toLowerCase().match($scope.builderFilter.toLowerCase()) != null) {
                     builders.push(builder);
                 }
         }
