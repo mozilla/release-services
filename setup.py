@@ -17,7 +17,7 @@ setup(name='relengapi-clobberer',
     description='The RelengAPI clobberer service.',
     author='Morgan Phillips',
     author_email='mphillips@mozilla.com',
-    url='https://github.com/buildbot/build-relengapi-clobberer',
+    url='https://github.com/mozilla/build-relengapi-clobberer',
     entry_points={
         "relengapi_blueprints": [
             'clobberer = relengapi.blueprints.clobberer:bp',
