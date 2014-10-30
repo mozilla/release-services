@@ -11,3 +11,5 @@ base/
 .coverage-html
 .ropeproject/
 build-relengapi/
+build/
+dist/
