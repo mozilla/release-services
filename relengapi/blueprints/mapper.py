@@ -192,6 +192,7 @@ def _add_hash(session, git_commit, hg_changeset, project):
 
 
 @bp.route('/<projects>/rev/<vcs_type>/<commit>')
+@apimethod(None)
 def get_rev(projects, vcs_type, commit):
     """Return the hg changeset SHA for a git commit id, or vice versa.
 
@@ -234,6 +235,7 @@ def get_rev(projects, vcs_type, commit):
 
 
 @bp.route('/<projects>/mapfile/full')
+@apimethod(None)
 def get_full_mapfile(projects):
     """Get a map file containing mappings for one or more projects.
 
@@ -257,6 +259,7 @@ def get_full_mapfile(projects):
 
 
 @bp.route('/<projects>/mapfile/since/<since>')
+@apimethod(None)
 def get_mapfile_since(projects, since):
     """Get a map file since date.
 
