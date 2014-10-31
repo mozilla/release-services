@@ -17,7 +17,7 @@ setup(name='relengapi-mapper',
       },
       install_requires=[
           'Flask',
-          'relengapi>=1.0.0',
+          'relengapi>=0.3',
           'IPy',
           'python-dateutil',
       ],
