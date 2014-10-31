@@ -16,7 +16,6 @@ install:
 # command to run tests
 script:
   - relengapi build-docs --development
-  - cat /home/travis/virtualenv/python2.7.8/relengapi-docs/usage/mapper/index.rst
   - relengapi run-tests
   - pep8 --config=build-relengapi/pep8rc .
   - pyflakes .
