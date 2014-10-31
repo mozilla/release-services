@@ -191,6 +191,7 @@ def _add_hash(session, git_commit, hg_changeset, project):
 
 
 @bp.route('/<projects>/rev/<vcs_type>/<commit>')
+@apimethod(None)
 def get_rev(projects, vcs_type, commit):
     """Return the hg changeset SHA for a git commit id, or vice versa.
 
@@ -233,6 +234,7 @@ def get_rev(projects, vcs_type, commit):
 
 
 @bp.route('/<projects>/mapfile/full')
+@apimethod(None)
 def get_full_mapfile(projects):
     """Get a map file containing mappings for one or more projects.
 
@@ -256,6 +258,7 @@ def get_full_mapfile(projects):
 
 
 @bp.route('/<projects>/mapfile/since/<since>')
+@apimethod(None)
 def get_mapfile_since(projects, since):
     """Get a map file since date.
 
@@ -349,7 +352,7 @@ def _insert_many(project, ignore_dups=False):
 
 @bp.route('/<project>/insert', methods=('POST',))
 @p.mapper.mapping.insert.require()
-@apimethod(None, body=[rest.MapFile])
+@apimethod(None, body=[MapFile])
 def insert_many_no_dups(project):
     """Insert many git-hg mapping entries via POST, and error on duplicate SHAs.
 
@@ -373,7 +376,7 @@ def insert_many_no_dups(project):
 
 @bp.route('/<project>/insert/ignoredups', methods=('POST',))
 @p.mapper.mapping.insert.require()
-@apimethod(None, body=[rest.MapFile])
+@apimethod(None, body=[MapFile])
 def insert_many_ignore_dups(project):
     """Insert many git-hg mapping entries via POST, allowing duplicate SHAs.
 
@@ -396,6 +399,7 @@ def insert_many_ignore_dups(project):
 
 @bp.route('/<project>/insert/<git_commit>/<hg_changeset>', methods=('POST',))
 @p.mapper.mapping.insert.require()
+@apimethod(None)
 def insert_one(project, git_commit, hg_changeset):
     """Insert a single git-hg mapping.
 
@@ -441,6 +445,7 @@ def insert_one(project, git_commit, hg_changeset):
 
 @bp.route('/<project>', methods=('POST',))
 @p.mapper.project.insert.require()
+@apimethod(None)
 def add_project(project):
     """Insert a new project into the database.
 
