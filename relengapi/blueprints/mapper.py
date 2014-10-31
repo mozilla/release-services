@@ -2,18 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import calendar
-import dateutil.parser
 import logging
 import re
-import rest
-import sqlalchemy as sa
 import time
-
+import calendar
+import sqlalchemy as sa
+import dateutil.parser
+import wsme.types
 from sqlalchemy import orm
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from relengapi.lib import db
-
 from flask import Blueprint
 from flask import g
 from flask import abort
@@ -86,6 +84,8 @@ class Hash(db.declarative_base('mapper')):
         'primary_key': [project_id, hg_changeset],
     }
 
+class MapFile(wsme.types.Base):
+    "Plain text containing git to hg sha mappings, one per line (git_commit hg_changeset\\n)"
 
 def _project_filter(projects_arg):
     """Helper method that returns the SQLAlchemy filter expression for the
