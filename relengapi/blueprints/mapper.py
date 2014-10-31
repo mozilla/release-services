@@ -18,7 +18,6 @@ from flask import request
 from flask import jsonify
 from flask import Response
 
-from relengapi import apimethod
 from relengapi import p
 
 logger = logging.getLogger(__name__)
@@ -83,10 +82,6 @@ class Hash(db.declarative_base('mapper')):
         'primary_key': [project_id, hg_changeset],
     }
 
-import wsme.types
-
-class MapFile(wsme.types.Base):
-    "Plain text containing git to hg sha mappings, one per line (git_commit hg_changeset\n)"
 
 def _project_filter(projects_arg):
     """Helper method that returns the SQLAlchemy filter expression for the
@@ -350,7 +345,6 @@ def _insert_many(project, ignore_dups=False):
 
 @bp.route('/<project>/insert', methods=('POST',))
 @p.mapper.mapping.insert.require()
-@apimethod(None, body=[MapFile])
 def insert_many_no_dups(project):
     """Insert many git-hg mapping entries via POST, and error on duplicate SHAs.
 
@@ -374,7 +368,6 @@ def insert_many_no_dups(project):
 
 @bp.route('/<project>/insert/ignoredups', methods=('POST',))
 @p.mapper.mapping.insert.require()
-@apimethod(None, body=[MapFile])
 def insert_many_ignore_dups(project):
     """Insert many git-hg mapping entries via POST, allowing duplicate SHAs.
 
@@ -397,7 +390,6 @@ def insert_many_ignore_dups(project):
 
 @bp.route('/<project>/insert/<git_commit>/<hg_changeset>', methods=('POST',))
 @p.mapper.mapping.insert.require()
-@apimethod(None)
 def insert_one(project, git_commit, hg_changeset):
     """Insert a single git-hg mapping.
 
@@ -443,7 +435,6 @@ def insert_one(project, git_commit, hg_changeset):
 
 @bp.route('/<project>', methods=('POST',))
 @p.mapper.project.insert.require()
-@apimethod(None)
 def add_project(project):
     """Insert a new project into the database.
 
