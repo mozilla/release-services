@@ -62,7 +62,7 @@ class LdapGroups(object):
         groups = self.get_user_groups(user.authenticated_email)
         if self.debug:
             self.logger.debug("Got groups %s for user %s", groups, user)
-        allowed_permissions = set()
+        allowed_permissions = set(self.group_permissions.get('<everyone>', []))
         for group in groups:
             for perm in self.group_permissions.get(group, []):
                 allowed_permissions.add(perm)

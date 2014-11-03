@@ -153,3 +153,17 @@ def test_on_permissions_stale_groups_unknown_groups(app):
     lg.get_user_groups = lambda mail: ['group3', 'nosuch']
     lg.on_permissions_stale('sender', user, permissions)
     eq_(permissions, set([p.test_lga.bar]))
+
+EVERYONE_CONFIG = copy.deepcopy(CONFIG)
+EVERYONE_CONFIG['RELENGAPI_PERMISSIONS'][
+    'group-permissions']['<everyone>'] = ['test_lga.bar']
+
+
+@test_context.specialize(config=EVERYONE_CONFIG)
+def test_on_permissions_everyone(app):
+    user = auth.HumanUser('jimmy')
+    permissions = set()
+    lg = ldap_group_authz.LdapGroups(app)
+    lg.get_user_groups = lambda mail: []
+    lg.on_permissions_stale('sender', user, permissions)
+    eq_(permissions, set([p.test_lga.bar]))

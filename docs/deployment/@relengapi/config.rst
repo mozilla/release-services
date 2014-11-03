@@ -125,6 +125,7 @@ The configuration looks like this::
         'group-permissions': {
             'team_relops': ['tasks.create', 'base.tokens.view'],
             'team_releng': ['base.tokens.issue', 'base.tokens.view'],
+            '<everyone>': ['branches.view'],
         },
 
         # Base LDAP URI
@@ -144,6 +145,7 @@ The configuration looks like this::
  
 Permissions are cumulative: a person has a permission if they are a member of any group configured with that permission.
 In the example above, a user in both ``team_relops`` and ``team_releng`` would have permission to create tasks and to issue and view tokens.
+The group name ``<everyone>`` is treated specially: it grants permission to all authenticated users, regardless of authentication mechanism.
 
 Users must be under the subtree named by ``user_base``, and similarly groups must be under ``group_base``.
 Users must have object class ``inetOrgPerson``, and groups must have object class ``groupOfNames``.
