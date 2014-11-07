@@ -59,28 +59,67 @@ def root(branch=None):
     )
 
 
+def _add_clobber(session, branch, builddir, slave=None, commit=False):
+    """
+    A common method for adding clobber times to a session. The session passed
+    in is returned; but is only committed if the commit option is True.
+    """
+    if re.search('^' + BUILDDIR_REL_PREFIX + '.*', builddir) is None:
+        who = 'anonymous'
+        if current_user.anonymous is False:
+            who = current_user.authenticated_email
+        clobber_time = ClobberTime.as_unique(
+            session,
+            branch=branch,
+            builddir=builddir,
+            slave=slave,
+        )
+        clobber_time.lastclobber = int(time.time())
+        clobber_time.who = who
+        session.add(clobber_time)
+        if commit is True:
+            session.commit()
+        return session
+    logger.debug('Rejecting clobber of builddir with release prefix: {}'.format(
+        builddir))
+    return session
+
+
 @bp.route('/clobber', methods=['POST'])
 @apimethod(None, body=[rest.ClobberRequest])
 def clobber(body):
     "Request clobbers for particular branches and builddirs."
     session = g.db.session(DB_DECLARATIVE_BASE)
-    who = 'anonymous'
-    if current_user.anonymous is False:
-        who = current_user.authenticated_email
     for clobber in body:
-        if re.search('^' + BUILDDIR_REL_PREFIX + '.*', clobber.builddir) is not None:
-            logger.debug('Rejecting clobber of builddir with release prefix: {}'.format(
-                clobber.builddir))
-            continue
-        clobber_time = ClobberTime.as_unique(
+        _add_clobber(
             session,
             branch=clobber.branch,
             builddir=clobber.builddir,
-            slave=clobber.slave,
+            slave=clobber.slave
         )
-        clobber_time.lastclobber = int(time.time())
-        clobber_time.who = who
-        session.add(clobber_time)
+    session.commit()
+    return None
+
+
+@bp.route('/clobber/by-builder', methods=['POST'])
+@apimethod(None, body=[rest.ClobberRequestByBuilder])
+def clobber_by_builder(body):
+    """
+    Request clobbers for app builddirs associated with a particular builder
+    and branch.
+    """
+    session = g.db.session(DB_DECLARATIVE_BASE)
+    for clobber in body:
+        builddirs = session.query(Build.builddir).filter(
+            Build.buildername == clobber.buildername
+        ).distinct()
+        for builddir in builddirs:
+            _add_clobber(
+                session,
+                branch=clobber.branch,
+                builddir=builddir[0],
+                slave=clobber.slave
+            )
     session.commit()
     return None
 
