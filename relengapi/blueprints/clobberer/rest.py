@@ -9,7 +9,7 @@ class ClobberRequest(wsme.types.Base):
     "Represents a clobber request for a branch and build directory."
 
     #: The branch for this clobber request.
-    branch = wsme.types.wsattr(unicode, mandatory=True, default=None)
+    branch = wsme.types.wsattr(unicode, mandatory=False, default=None)
     #: The build directory to be clobbered.
     builddir = wsme.types.wsattr(unicode, mandatory=True, default=None)
     #: A specific slave to clobber (defaults to all slaves).
@@ -19,8 +19,8 @@ class ClobberRequest(wsme.types.Base):
 class ClobberRequestByBuilder(wsme.types.Base):
     "Represents a clobber request for a branch and buildername."
 
-    #: The branch for this clobber request.
-    branch = wsme.types.wsattr(unicode, mandatory=True, default=None)
+    #: The branch for this clobber request (defaults to all branches).
+    branch = wsme.types.wsattr(unicode, mandatory=False, default=None)
     #: A buildername whose associated builddirs will be clobbered.
     buildername = wsme.types.wsattr(unicode, mandatory=True, default=None)
     #: A specific slave to clobber (defaults to all slaves).
