@@ -59,7 +59,7 @@ def root(branch=None):
     )
 
 
-def _add_clobber(session, branch, builddir, slave=None, commit=False):
+def _add_clobber(session, branch, builddir, slave=None):
     """
     A common method for adding clobber times to a session. The session passed
     in is returned; but is only committed if the commit option is True.
@@ -77,12 +77,10 @@ def _add_clobber(session, branch, builddir, slave=None, commit=False):
         clobber_time.lastclobber = int(time.time())
         clobber_time.who = who
         session.add(clobber_time)
-        if commit is True:
-            session.commit()
-        return session
+        return None
     logger.debug('Rejecting clobber of builddir with release prefix: {}'.format(
         builddir))
-    return session
+    return None
 
 
 @bp.route('/clobber', methods=['POST'])
