@@ -218,6 +218,38 @@ def test_clobber_by_builder(client):
 
 
 @test_context
+def test_clobber_by_builder_non_existant_branch(client):
+    session = test_context._app.db.session(DB_DECLARATIVE_BASE)
+    clobber_count_initial = session.query(ClobberTime).count()
+    _by_builder_args = deepcopy(_last_clobber_args)
+    # The unique slave name will force a new clobber time to be created
+    _by_builder_args['slave'] = 'znork1'
+    # No builder should have a branch named IDONOTEXIST so no clobber should be
+    # added
+    _by_builder_args['branch'] = 'IDONTEXIST'
+    rv = client.post_json('/clobberer/clobber/by-builder', data=[_by_builder_args])
+    eq_(rv.status_code, 200)
+    clobber_count_final = session.query(ClobberTime).count()
+    eq_(clobber_count_final, clobber_count_initial)
+
+
+@test_context
+def test_clobber_by_builder_none_branch(client):
+    session = test_context._app.db.session(DB_DECLARATIVE_BASE)
+    clobber_count_initial = session.query(ClobberTime).count()
+    _by_builder_args = deepcopy(_last_clobber_args)
+    # The unique slave name will force a new clobber time to be created
+    _by_builder_args['slave'] = 'znork2'
+    # A None branch value should force clobbers to be made for all relevant
+    # branches
+    _by_builder_args['branch'] = None
+    rv = client.post_json('/clobberer/clobber/by-builder', data=[_by_builder_args])
+    eq_(rv.status_code, 200)
+    clobber_count_final = session.query(ClobberTime).count()
+    eq_(clobber_count_final, clobber_count_initial + 1)
+
+
+@test_context
 def test_release_branch_hiding(client):
     session = test_context._app.db.session(DB_DECLARATIVE_BASE)
     # clear all the old branches

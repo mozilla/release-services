@@ -103,19 +103,21 @@ def clobber(body):
 @apimethod(None, body=[rest.ClobberRequestByBuilder])
 def clobber_by_builder(body):
     """
-    Request clobbers for app builddirs associated with a particular builder
-    and branch.
+    Request clobbers for app builddirs associated with a particular buildername.
     """
     session = g.db.session(DB_DECLARATIVE_BASE)
     for clobber in body:
-        builddirs = session.query(Build.builddir).filter(
+        builddirs_query = session.query(Build.builddir, Build.branch).filter(
             Build.buildername == clobber.buildername
-        ).distinct()
-        for builddir in builddirs:
+        )
+        if clobber.branch is not None:
+            builddirs_query = builddirs_query.filter(Build.branch == clobber.branch)
+
+        for result in builddirs_query.distinct():
             _add_clobber(
                 session,
-                branch=clobber.branch,
-                builddir=builddir[0],
+                builddir=result[0],
+                branch=result[1],
                 slave=clobber.slave
             )
     session.commit()
