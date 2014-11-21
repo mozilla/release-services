@@ -16,26 +16,36 @@ This guide will use "bubbler", so it's easy to spot.
 Begin by setting up a virtualenv or other dedicated Python environment, in whatever way you're comfortable with.
 Then clone https://github.com/mozilla/build-relengapi-skeleton.git:
 
+.. code-block:: none
+
     git clone --origin skeleton https://github.com/mozilla/build-relengapi-skeleton.git build-bubbler
 
 and enter that directory.
 
-Now it's time to rename everything.  First, rename the files:
+Now it's time to rename everything.  First, rename the files (these commands are for a Bourne shell; adapt to your shell if you use something else):
+
+.. code-block:: none
 
     find * -name '*skeleton*' | while read s; do d=$(echo $s | sed s/skeleton/bubbler/g); git mv $s $d; done
 
 Now edit the files referring to skeletons:
 
-    git grep skeleton | while read s; do sed s/skeleton/bubbler/ < $s > $s~; mv $s~ $s; done
+.. code-block:: none
+
+    git grep skeleton | cut -d: -f 1 | while read s; do sed s/skeleton/bubbler/ < $s > $s~; mv $s~ $s; done
     echo '# Bubbler' > README.md
 
 Have a look at ``setup.py`` to fix the author name, and so on.
 Once that's ready, try installing your blueprint:
 
+.. code-block:: none
+
     pip install -e .[test]
 
 With a little luck, this will install relengapi and its dependencies successfully.
 Time to run it!
+
+.. code-block:: none
 
     relengapi serve -a -p 8010
 
@@ -44,9 +54,13 @@ You should see a short JSON greeting.
 
 You can run the unit tests with
 
+.. code-block:: none
+
     relengapi run-tests
 
 And you can perform the same validation that Travis will with
+
+.. code-block:: none
 
     bash validate.sh
 
@@ -58,6 +72,8 @@ Updating
 From time to time, pull updates from the upstream skeleton project.
 This will get your project the latest support scripts and other paraphernalia.
 Any conflicts may identify fixes required for continued compatibility with the core, although the lack of conflicts does not guarantee compatibility!
+
+.. code-block:: none
 
     git pull skeleton master
 
