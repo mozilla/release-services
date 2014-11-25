@@ -165,7 +165,7 @@ Permissions plugins should connect to this signal and add additional Permissions
 The Permission class
 ~~~~~~~~~~~~~~~~~~~~
 
-.. py:module relengapi.lib.permissions
+.. py:module:: relengapi.lib.permissions
 
 .. py:class:: Permission
 
