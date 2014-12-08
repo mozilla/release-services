@@ -4,8 +4,37 @@
 angular.module('relengapi', []);
 
 angular.module('relengapi').config(function($httpProvider) {
+    var summarize_config = function(config) {
+        var meth = config.method;
+        var url = config.url;
+        return meth + " " + url;
+    };
     $httpProvider.interceptors.push(function($q) {
         return {
+            'request': function(config) {
+                if (config.is_restapi_request) {
+                    if (config.data) {
+                        // Firefox will helpfully produce a clickable rendition of the data
+                        console.log("RelengAPI request:", summarize_config(config),
+                                    'body', JSON.parse(config.data));
+                    } else {
+                        console.log("RelengAPI request:", summarize_config(config));
+                    }
+                }
+                return config;
+            },
+            'response': function(response) {
+                if (response.config.is_restapi_request) {
+                    if (response.data) {
+                        console.log("RelengAPI response:", summarize_config(response.config),
+                                    'HTTP', response.status, 'body', response.data);
+                    } else {
+                        console.log("RelengAPI response:", summarize_config(response.config),
+                                    'HTTP', response.status);
+                    }
+                }
+                return response;
+            },
             'responseError': function(response) {
                 if (response.config.is_restapi_request) {
                     var message;
