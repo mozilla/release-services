@@ -38,7 +38,7 @@
     <div class="auth">
       {% if current_user.is_authenticated() %}
         {% if current_user.type == "human" %}
-          <span class="user_email"><a href="/auth/account">{{ current_user.authenticated_email }}</a></span>
+          <span class="user_email"><a href="/auth/">{{ current_user.authenticated_email }}</a></span>
           <button id="logout">Logout</button>
         {% else %}
           {{ current_user.type }}
