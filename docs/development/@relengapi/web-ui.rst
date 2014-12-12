@@ -151,6 +151,7 @@ You may assume these are present in an Angular template.
  * `jQuery 1.7.2 <http://jquery.com/>`_
  * `Angular-1.2.9 <https://angularjs.org/>`_
  * `Alertify <http://fabien-d.github.io/alertify.js/>`_
+ * `Bootstrap 3.3.1 <http://getbootstrap.com/getting-started/#download>`_
 
 Rendering an Angular Template
 .............................
