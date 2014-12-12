@@ -3,7 +3,9 @@
  # file, You can obtain one at http://mozilla.org/MPL/2.0/. #}
 {% extends "layout.html" %}
 {% block content %}
+<div class="row">
 {% for widget_tpl in bp_widgets %}
   {% include widget_tpl %}
 {% endfor %}
+</div>
 {% endblock %}

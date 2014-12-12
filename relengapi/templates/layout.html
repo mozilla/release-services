@@ -9,8 +9,11 @@
   {{ head.stylesheet(url_for('static', filename='relengapi.css')) }}
   {{ head.stylesheet(url_for('static', filename='js/alertify/alertify.core.css')) }}
   {{ head.stylesheet(url_for('static', filename='js/alertify/alertify.default.css')) }}
-  {{ head.script(url_for('static', filename='js/alertify/alertify.min.js')) }}
+  {{ head.stylesheet(url_for('static', filename='js/bootstrap/css/bootstrap.min.css')) }}
+  {{ head.stylesheet(url_for('static', filename='js/bootstrap/css/bootstrap-theme.min.css')) }}
   {{ head.script(url_for('static', filename='js/jquery/jquery-1.11.1.min.js')) }}
+  {{ head.script(url_for('static', filename='js/bootstrap/js/bootstrap.min.js')) }}
+  {{ head.script(url_for('static', filename='js/alertify/alertify.min.js')) }}
   {%- for content in layout_extra_head_content %}
   {{ content|safe }}
   {%- endfor %}
@@ -33,28 +36,46 @@
   {% endblock %}
 </head>
 <body>
+  <div class="container-fluid">
   {% block header %}
-  <div class="header">
-    <div class="auth">
-      {% if current_user.is_authenticated() %}
-        {% if current_user.type == "human" %}
-          <span class="user_email"><a href="/auth/">{{ current_user.authenticated_email }}</a></span>
-          <button id="logout">Logout</button>
-        {% else %}
-          {{ current_user.type }}
-        {% endif %}
-      {% else %}        
-        Anonymous
-        <button id="login">Login</button>
-      {% endif %}
+  <nav class="navbar navbar-default" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand hidden-xs" href="/">RelengAPI</a>
+      </div>
+      <div id="navbar">
+        <ul class="nav navbar-nav navbar-right">
+          <li>
+            <p class="navbar-text">
+              {% if current_user.is_authenticated() %}
+                Logged in as
+                {% if current_user.type == "human" %}
+                  <span class="user_email"><a class="navbar-link" href="/auth/">{{ current_user.authenticated_email }}</a></span>
+                {% else %}
+                  {{ current_user.type }}
+                {% endif %}
+              {% else %}        
+                Not logged in
+              {% endif %}
+            </p>
+            {% if current_user.is_authenticated() %}
+              {% if current_user.type == "human" %}
+                <button class="btn btn-default navbar-btn" id="logout">Logout</button>
+              {% endif %}
+            {% else %}        
+              <button class="btn btn-default navbar-btn" id="login">Login</button>
+            {% endif %}
+          </li>
+        </ul>
+      </div>
     </div>
-    <h1>Releng API</h1>
-  </div>
+  </nav>
   {% endblock %}
   {% block content %}
   {% endblock %}
   {% block footer %}
   {% endblock %}
+  </div>
 </body>
 </html>
 
