@@ -1,1 +1,1 @@
-jQuery-1.7.2 from http://code.jquery.com/jquery-1.7.2.min.js
+jQuery-1.22.r from http://code.jquery.com/jquery-1.11.1.min.js
