@@ -14,16 +14,23 @@ angular.module('badpenny').controller('TasksController',
     };
 
     $scope.tasks = tasksByName(initial_data.tasks);
-    $scope.expandedTask = null;
 
-    $scope.expandTask = function(task) {
+    var loadJobs = function(task) {
         restapi.get('/badpenny/tasks/' + task.name, {while: 'fetching task'})
         .then(function (data, status, headers, config) {
             $scope.tasks[task.name] = data.data.result;
         });
     };
 
-    $scope.expandJob = function(job) {
+    $scope.toggleTask = function(task) {
+        if (task.jobs) {
+            task.jobs = null;
+        } else {
+            loadJobs(task);
+        }
+    };
+
+    var loadLogs = function(job) {
         job.logs = 'loading';
         restapi.get('/badpenny/jobs/' + job.id + '/logs',
                     {while: 'fetching logs', expected_status: 404})
@@ -34,6 +41,14 @@ angular.module('badpenny').controller('TasksController',
                 job.logs = '(no logs)';
             }
         });
+    };
+
+    $scope.toggleJob = function(job) {
+        if (job.logs) {
+            job.logs = null;
+        } else {
+            loadLogs(job);
+        }
     };
 
     $scope.humanJobDuration = function(job) {
@@ -53,18 +68,13 @@ angular.module('badpenny').controller('TasksController',
         .then(function (data, status, headers, config) {
             // re-request any existing job data, and start refreshing it
             angular.forEach(data.data.result, function(task) {
-                if ($scope.tasks[task.name].jobs) {
+                if ($scope.tasks[task.name] && $scope.tasks[task.name].jobs) {
                     task.jobs = $scope.tasks[task.name].jobs;
-                    $scope.expandTask(task);
+                    loadTask(task);
                 }
             });
             $scope.tasks = tasksByName(data.data.result);
         });
-
-        // reload the currently expanded task simultaneously
-        if ($scope.expandedTask) {
-            $scope.expandTask($scope.expandedTask);
-        }
     };
 });
 

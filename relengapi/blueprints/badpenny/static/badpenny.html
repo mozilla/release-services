@@ -6,23 +6,21 @@
     <div class="tasklist">
         <ul class="list-group">
             <li ng-repeat="task in tasks | orderBy:'name'" class="list-group-item">
-            <status-icon
-                bad-when="task.last_success == 0"
-                good-when="task.last_success == 1"
-                gray-when="task.last_success == -1"></status-icon>
-            {{task.name}} <small class="text-muted">{{task.schedule}}</small>
-            <!-- TODO: some nice twirldown here -->
-            (<a href="#" ng-click="expandTask(task)">expand</a>)
-            <ul class="list-group" ng-if="task.jobs != null">
-                <li ng-repeat="job in task.jobs | orderBy:'created_at'" class="list-group-item">
-                <!-- TODO: use a twirldown and a button -->
-                <div class="pull-right">
-                    <span ng-hide="job.logs">
-                        [<a ng-click="expandJob(job)" href="#">logs</a>]
-                    </span>
-                    [<a href="/badpenny/jobs/{{job.id}}">details</a>]
-                </div>
-                <status-icon good-when="job.successful" bad-when="!job.successful"></status-icon>
+            <div ng-click="toggleTask(task)">
+                <status-icon
+                    bad-when="task.last_success == 0"
+                    good-when="task.last_success == 1"
+                    gray-when="task.last_success == -1"></status-icon>
+                {{task.name}} <small class="text-muted">{{task.schedule}}</small>
+                <span class="caret"></span>
+            </div>
+            <ul class="list-group" ng-if="task.jobs != null" style="margin-bottom: 0px;">
+                <li ng-repeat="job in task.jobs | orderBy:'created_at'"
+                    class="list-group-item"
+                    ng-click="toggleJob(job)">
+                    <small>
+                        <status-icon good-when="job.successful" bad-when="!job.successful"></status-icon>
+                    </small>
                 <small ng-if="!job.started_at">
                     Job created {{job.created_at | amDateFormat:'l LTS'}}, not started
                 </small>
@@ -33,6 +31,7 @@
                     Job started {{job.started_at | amDateFormat:'l LTS'}},
                     finished {{humanJobDuration(job)}}
                 </small>
+                (<a href="/badpenny/jobs/{{job.id}}">details</a>) <span class="caret"></span>
                 <div ng-if="job.logs != null">
                     <pre>{{job.logs}}</pre>
                 </div>
