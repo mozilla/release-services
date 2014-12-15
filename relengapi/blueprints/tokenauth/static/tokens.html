@@ -39,29 +39,9 @@
                     <form name="form" novalidate>
                         <p>Select the permissions for the new token.
                         Note that you can only issue tokens with permissions that you possess.</p>
-                        <table class="table table-condensed table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Permission</th>
-                                    <th>Meaning</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            <tr ng-repeat="perm in available_permissions|orderBy:'name'"
-                                ng-class="{'success': newtoken.permissions[perm.name]}"
-                                ng-click="togglePermission(perm)">
-                                </td><td>
-                                    <perm>{{perm.name}}</perm>
-                                </td><td>
-                                    <small>{{perm.doc}}</small>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                        <!-- hidden control to validate that a permission is selected -->
-                        <!-- TODO: make the permissions selector a directive instead - this is ugly -->
-                        <input ng-hide="true" ng-model="hidden_thing" class="form-control" ng-required="checkedPermissions().length == 0"></input>
-                        <!-- TODO: don't issue with zero permissions -->
+                        <permission-selector
+                            ng-model="newtoken.permissions"
+                            permissions="available_permissions"></permission-selector>
                         <div class="pull-right">
                             <button ng-click="issueToken()" ng-hide="form.$invalid">Issue</button>
                         </div>

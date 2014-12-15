@@ -67,11 +67,6 @@ angular.module('tokens').controller('NewTokenController', function($scope, resta
         return rv;
     };
 
-    $scope.togglePermission = function(perm) {
-        var perms = $scope.newtoken.permissions;
-        perms[perm.name] = !perms[perm.name];
-    };
-
     $scope.issueToken = function() {
         var permissions = $scope.checkedPermissions();
         var description = $scope.newtoken.description;
@@ -94,5 +89,33 @@ angular.module('tokens').controller('NewTokenController', function($scope, resta
                 alertify.error("No token received");
             }
         });
+    };
+});
+
+angular.module('tokens').directive('permissionSelector', function() {
+    /* select permissions in a table, and require at least one to be selected */
+    return {
+        restrict: 'E',
+        replace: true,
+        require: 'ngModel',
+        templateUrl: 'static/permissionSelector.html',
+        scope: {
+            available_permissions: '=permissions',
+            permissions: '=ngModel',
+        },
+        link: function(scope, element, attrs, ctrl) {
+            scope.togglePermission = function(perm) {
+                var perms = scope.permissions;
+                perms[perm.name] = !perms[perm.name];
+                var valid = false;
+                angular.forEach(perms, function(perm) {
+                    valid = valid || perm;
+                });
+                ctrl.$setValidity('permissionsSelector', valid);
+            };
+
+            // start out invalid
+            ctrl.$setValidity('permissionsSelector', false);
+        },
     };
 });
