@@ -6,33 +6,23 @@
     <div class="tasklist">
         <ul class="list-group">
             <li ng-repeat="task in tasks | orderBy:'name'" class="list-group-item">
-            <span ng-class="{'text-muted': task.last_success == -1,
-                'text-danger': task.last_success == 0,
-                'text-success': task.last_success == 1}">
-                <span class="glyphicon"
-                    ng-class="{'glyphicon-question-sign': task.last_success == -1,
-                    'glyphicon-minus-sign': task.last_success == 0,
-                    'glyphicon-ok-sign': task.last_success == 1}"></span>
-            </span>
+            <status-icon
+                bad-when="task.last_success == 0"
+                good-when="task.last_success == 1"
+                gray-when="task.last_success == -1"></status-icon>
             {{task.name}} <small class="text-muted">{{task.schedule}}</small>
             <!-- TODO: some nice twirldown here -->
             (<a href="#" ng-click="expandTask(task)">expand</a>)
-            <!-- TODO: maybe transplant this DOM element, rather than showing/hiding? -->
             <ul class="list-group" ng-if="task.jobs != null">
                 <li ng-repeat="job in task.jobs | orderBy:'created_at'" class="list-group-item">
+                <!-- TODO: use a twirldown and a button -->
                 <div class="pull-right">
                     <span ng-hide="job.logs">
                         [<a ng-click="expandJob(job)" href="#">logs</a>]
                     </span>
                     [<a href="/badpenny/jobs/{{job.id}}">details</a>]
                 </div>
-                <!-- TODO: use a directive for this -->
-                <span ng-class="{'text-danger': !job.successful,
-                    'text-success': job.successful}">
-                    <span class="glyphicon"
-                        ng-class="{'glyphicon-minus-sign': !job.successful,
-                        'glyphicon-ok-sign': job.successful}"></span>
-                </span>
+                <status-icon good-when="job.successful" bad-when="!job.successful"></status-icon>
                 <small ng-if="!job.started_at">
                     Job created {{job.created_at | amDateFormat:'l LTS'}}, not started
                 </small>

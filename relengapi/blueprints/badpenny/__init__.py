@@ -36,7 +36,6 @@ bp.root_widget_template(
 def root():
     return angular.template('badpenny.html',
                             url_for('.static', filename='badpenny.js'),
-                            url_for('.static', filename='badpenny.css'),
                             tasks=api.get_data(list_tasks))
 
 

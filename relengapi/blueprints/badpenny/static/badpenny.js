@@ -67,3 +67,33 @@ angular.module('badpenny').controller('TasksController',
         }
     };
 });
+
+angular.module('badpenny').directive('statusIcon', function() {
+    var refresh = function(scope) {
+        if (scope.good) {
+            scope.status = 'good';
+        } else if (scope.bad) {
+            scope.status = 'bad';
+        } else if (scope.gray) {
+            scope.status = 'gray';
+        } else {
+            scope.status = '';
+        }
+    };
+
+    return {
+        restrict: 'E',
+        replace: true,
+        templateUrl: 'static/statusIcon.html',
+        scope: {
+            bad: '=badWhen',
+            good: '=goodWhen',
+            gray: '=grayWhen',
+        },
+        link: function(scope, element, attrs) {
+            scope.$watch('bad', function() { refresh(scope); });
+            scope.$watch('good', function() { refresh(scope); });
+            scope.$watch('gray', function() { refresh(scope); });
+        },
+    };
+});
