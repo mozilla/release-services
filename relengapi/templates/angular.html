@@ -2,6 +2,8 @@
 {% block head %}
   {{ super() }}
   {{ head.script(url_for('static', filename='js/angular/angular.min.js')) }}
+  {{ head.script(url_for('static', filename='js/moment/moment.min.js')) }}
+  {{ head.script(url_for('static', filename='js/angular-moment/angular-moment.min.js')) }}
   {%- for stylesheet in stylesheets %}
   {{ head.stylesheet(stylesheet) }}
   {%- endfor %}

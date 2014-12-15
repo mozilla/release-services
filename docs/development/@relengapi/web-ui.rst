@@ -152,6 +152,7 @@ You may assume these are present in an Angular template.
  * `Angular-1.2.9 <https://angularjs.org/>`_
  * `Alertify <http://fabien-d.github.io/alertify.js/>`_
  * `Bootstrap 3.3.1 <http://getbootstrap.com/getting-started/#download>`_
+ * `Moment.js 2.8.4 <http://momentjs.com/>`_ and `Angular-Moment <https://github.com/urish/angular-moment>`_ (note that your module must depend on `'angularMoment'` to get this functionality)
 
 Rendering an Angular Template
 .............................
