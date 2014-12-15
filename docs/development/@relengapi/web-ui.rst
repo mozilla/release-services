@@ -209,6 +209,13 @@ To alert the user, use something as simple as
 
     alertify.success("token issued");
 
+Angular Directives
+..................
+
+The following directives are available in any Angular template that requires the ``relengapi`` module:
+
+ * ``<perm>foo.bar</perm>`` -- renders a permission name
+
 Angular Services
 ................
 
