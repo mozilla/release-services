@@ -21,12 +21,6 @@ angular.module('tokens').controller('TokenController',
         });
     });
 
-    if ($scope.can_issue) {
-        $scope.view = "newtoken";
-    } else {
-        $scope.view = "tokenlist";
-    }
-
     $scope.refreshTokens = function() {
         return restapi.get('/tokenauth/tokens', {while: 'refreshing tokens'})
         .then(function (response) {

@@ -3,7 +3,9 @@
      file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <div ng-app='tokens' ng-controller="TokenController" ng-switch="view">
     <div class="row">
-        <div ng-controller="TokenListController" class="col-xs-12 col-lg-7">
+        <div ng-controller="TokenListController"
+            class="col-xs-12 col-lg-7"
+            ng-show="can_view">
             <div class="pull-right">
                 <button
                     ng-show="can_revoke && !revoke_enabled"
@@ -30,7 +32,8 @@
             </ul>
         </div>
         <div ng-controller="NewTokenController"
-            class="col-xs-12 col-lg-5">
+            class="col-xs-12 col-lg-5"
+            ng-show="can_issue">
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     <h3 class="panel-title">Issue New Token</h3>
