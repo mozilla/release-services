@@ -12,6 +12,10 @@ data_patterns = [
     'static/**.js',
     'static/**.map',
     'static/**.txt',
+    'static/**.eot',
+    'static/**.svg',
+    'static/**.ttf',
+    'static/**.woff',
 ]
 
 setup(
