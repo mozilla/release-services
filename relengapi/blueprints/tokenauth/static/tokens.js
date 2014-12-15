@@ -36,6 +36,9 @@ angular.module('tokens').controller('TokenController',
 });
 
 angular.module('tokens').controller('TokenListController', function($scope, restapi) {
+    $scope.enableRevoke = function() {
+        $scope.revoke_enabled = true;
+    };
     $scope.revokeToken = function(id) {
         restapi.delete('/tokenauth/tokens/' + id, {while: 'revoking token'})
         .then(function() {
@@ -46,8 +49,6 @@ angular.module('tokens').controller('TokenListController', function($scope, rest
 });
 
 angular.module('tokens').controller('NewTokenController', function($scope, restapi) {
-    $scope.issuing = false;
-    $scope.error = null;
     $scope.newtoken = {
         permissions: {}, // {permission: boolean}
         description: '',
@@ -66,9 +67,12 @@ angular.module('tokens').controller('NewTokenController', function($scope, resta
         return rv;
     };
 
-    $scope.issueToken = function() {
-        $scope.issuing = true;
+    $scope.togglePermission = function(perm) {
+        var perms = $scope.newtoken.permissions;
+        perms[perm.name] = !perms[perm.name];
+    };
 
+    $scope.issueToken = function() {
         var permissions = $scope.checkedPermissions();
         var description = $scope.newtoken.description;
 
@@ -83,18 +87,12 @@ angular.module('tokens').controller('NewTokenController', function($scope, resta
             if (response.data.result.token) {
                 $scope.token = response.data.result.token;
                 $scope.tokens.push(response.data.result);
-                alertify.success("token issued");
+                $scope.newtoken.permissions = {};
+                $scope.newtoken.description = '';
+                $('#tokenIssuedModal').modal();
             } else {
-                $scope.error = "No token received";
+                alertify.error("No token received");
             }
         });
     };
-
-    $scope.reset = function() {
-        $scope.newtoken.permissions = {};
-        $scope.newtoken.description = '';
-        $scope.token = null;
-        $scope.error = null;
-        $scope.issuing = false;
-    }
 });
