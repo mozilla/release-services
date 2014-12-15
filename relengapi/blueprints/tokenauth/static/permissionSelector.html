@@ -7,7 +7,7 @@
     </thead>
     <tbody>
     <tr ng-repeat="perm in available_permissions|orderBy:'name'"
-        ng-class="{'success': permissions[perm.name]}"
+        ng-class="{'success': permissions.indexOf(perm.name) != -1}"
         ng-click="togglePermission(perm)">
         </td><td>
             <perm>{{perm.name}}</perm>

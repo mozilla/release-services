@@ -44,25 +44,14 @@ angular.module('tokens').controller('TokenListController', function($scope, rest
 
 angular.module('tokens').controller('NewTokenController', function($scope, restapi) {
     $scope.newtoken = {
-        permissions: {}, // {permission: boolean}
+        permissions: [],
         description: '',
     };
     // resulting token
     $scope.token = null;
 
-    $scope.checkedPermissions = function() {
-        var perms = $scope.newtoken.permissions;
-        var rv = [];
-        for (n in perms) {
-            if (perms.hasOwnProperty(n) && perms[n]) {
-                rv.push(n);
-            }
-        }
-        return rv;
-    };
-
     $scope.issueToken = function() {
-        var permissions = $scope.checkedPermissions();
+        var permissions = $scope.newtoken.permissions;
         var description = $scope.newtoken.description;
 
         restapi({
@@ -76,7 +65,7 @@ angular.module('tokens').controller('NewTokenController', function($scope, resta
             if (response.data.result.token) {
                 $scope.token = response.data.result.token;
                 $scope.tokens.push(response.data.result);
-                $scope.newtoken.permissions = {};
+                $scope.newtoken.permissions = []
                 $scope.newtoken.description = '';
                 $('#tokenIssuedModal').modal();
             } else {
@@ -100,12 +89,14 @@ angular.module('tokens').directive('permissionSelector', function() {
         link: function(scope, element, attrs, ctrl) {
             scope.togglePermission = function(perm) {
                 var perms = scope.permissions;
-                perms[perm.name] = !perms[perm.name];
-                var valid = false;
-                angular.forEach(perms, function(perm) {
-                    valid = valid || perm;
-                });
-                ctrl.$setValidity('permissionsSelector', valid);
+                console.log(perms);
+                var i = perms.indexOf(perm.name)
+                if (i == -1) {
+                    perms.push(perm.name);
+                } else {
+                    perms.splice(i, 1);
+                }
+                ctrl.$setValidity('permissionsSelector', perms.length != 0);
             };
 
             // start out invalid
