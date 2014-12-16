@@ -1,4 +1,5 @@
 .. toctree::
+    using
     permissions
     tokenauth
     versions
