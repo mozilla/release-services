@@ -148,9 +148,11 @@ Javascript Support
 RelengAPI includes the following Javascript libraries.
 You may assume these are present in an Angular template.
 
- * `jQuery 1.7.2 <http://jquery.com/>`_
+ * `jQuery 1.11.1 <http://jquery.com/>`_
  * `Angular-1.2.9 <https://angularjs.org/>`_
  * `Alertify <http://fabien-d.github.io/alertify.js/>`_
+ * `Bootstrap 3.3.1 <http://getbootstrap.com/getting-started/#download>`_
+ * `Moment.js 2.8.4 <http://momentjs.com/>`_ and `Angular-Moment <https://github.com/urish/angular-moment>`_ (note that your module must depend on `'angularMoment'` to get this functionality)
 
 Rendering an Angular Template
 .............................
@@ -206,6 +208,13 @@ To alert the user, use something as simple as
 .. code-block:: javascript
 
     alertify.success("token issued");
+
+Angular Directives
+..................
+
+The following directives are available in any Angular template that requires the ``relengapi`` module:
+
+ * ``<perm>foo.bar</perm>`` -- renders a permission name
 
 Angular Services
 ................

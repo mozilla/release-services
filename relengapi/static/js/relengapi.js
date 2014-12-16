@@ -96,4 +96,14 @@ angular.module('relengapi').provider('restapi', function() {
         return relengapi;
     };
 });
-/* Add an injector?  Or implement get/post/delete/etc. in a provider? */
+
+angular.module('relengapi').directive('perm', function() {
+    return {
+        restrict: 'E',
+        transclude: true,
+        template: function(elem, attr) {
+            // note the trailing space!
+            return '<span class="label label-info" ng-transclude></span> ';
+        }
+    };
+});

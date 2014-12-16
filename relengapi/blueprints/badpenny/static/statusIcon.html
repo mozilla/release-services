@@ -1,0 +1,11 @@
+<span ng-class="{
+    'text-success': status == 'good',
+    'text-danger': status == 'bad',
+    'text-muted': status == 'gray'
+    }">
+    <span class="glyphicon" ng-class="{
+        'glyphicon-minus-sign': status == 'bad',
+        'glyphicon-ok-sign': status == 'good',
+        'glyphicon-question-sign': status == 'gray'
+        }"></span>
+</span>

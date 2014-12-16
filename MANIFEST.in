@@ -2,7 +2,7 @@
 include docs/conf.py
 recursive-include docs *.rst
 recursive-include docs/_static *
-recursive-include relengapi *.html *.jpg *.css *.js *.txt *.map
+recursive-include relengapi *.html *.jpg *.css *.js *.txt *.map *.eot *.svg *.ttf *.woff
 include LICENSE.txt
 include README.md
 prune docs_build_dir
