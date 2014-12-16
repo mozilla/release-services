@@ -21,6 +21,7 @@ def app_setup(app):
     # utility endpoint
     @app.route('/test_tokenauth')
     def test_route():
+        assert isinstance(current_user.permissions, set)
         return json.dumps({
             'id': current_user.get_id(),
             'permissions': sorted(str(a) for a in current_user.permissions),
