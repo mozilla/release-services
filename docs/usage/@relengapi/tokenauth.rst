@@ -1,6 +1,9 @@
 Token Authentication
 ====================
 
+Authenticating with Tokens
+--------------------------
+
 When systems outside of the Releng API need to perform restriction operations, they can do so using a *token*.
 Tokens are opaque strings (currently implemented as JSON Web Tokens) which are provided in the Authentication header:
 
