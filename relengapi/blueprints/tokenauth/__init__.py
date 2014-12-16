@@ -74,7 +74,7 @@ class TokenUser(auth.BaseUser):
 
     def __init__(self, token_id, permissions):
         self.token_id = token_id
-        self._permissions = permissions
+        self._permissions = set(permissions)
 
     def get_id(self):
         return 'token:#%s' % self.token_id
@@ -84,6 +84,7 @@ class TokenUser(auth.BaseUser):
 
 
 class JsonToken(wsme.types.Base):
+
     """A token granting the bearer a limited set of permissions.
 
     In all cases except creating a new token, the ``token`` attribute is empty.

@@ -120,6 +120,8 @@ def _request_loader(request):
     for loader in _request_loaders:
         u = loader(request)
         if u:
+            if not isinstance(u.permissions, set):
+                raise TypeError("user permissions must be a set")
             return u
 
 
