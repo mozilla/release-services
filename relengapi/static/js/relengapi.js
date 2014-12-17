@@ -51,6 +51,9 @@ angular.module('relengapi').config(function($httpProvider) {
                     if (expectedStatuses.indexOf(response.status) == -1) {
                         console.log("RelengAPI call error response:", response.data);
                         alertify.error("Failure while " + action + ": " + message);
+                    } else {
+                        console.log("RelengAPI response:", summarize_config(response.config),
+                                    'HTTP', response.status);
                     }
                 }
 

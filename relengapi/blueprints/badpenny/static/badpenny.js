@@ -33,7 +33,7 @@ angular.module('badpenny').controller('TasksController',
     var loadLogs = function(job) {
         job.logs = 'loading';
         restapi.get('/badpenny/jobs/' + job.id + '/logs',
-                    {while: 'fetching logs', expected_status: 404})
+                    {while: 'fetching logs', expectedStatus: 404})
         .then(function (data, status, headers, config) {
             job.logs = data.data.result.content;
         }, function (data, status, header, config) {
