@@ -110,4 +110,4 @@ Token Authentication
 ....................
 
 As shown in the POST example above, a request containing a bearer token in the ``Authentication`` header is carried out in the context of the permissions associated with the token.
-See :doc:`token` for more information on token authentication.
+See :doc:`tokenauth` for more information on token authentication.
