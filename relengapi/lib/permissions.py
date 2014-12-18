@@ -76,8 +76,9 @@ class Permissions(Permission):
         @wrapt.decorator
         def req(wrapped, instance, args, kwargs):
             if not can(*permissions):
-                # redirect browsers, but just return 403 to REST clients
-                if util.is_browser():
+                # redirect browsers when the user is not logged in, but
+                # just return 403 to REST clients
+                if util.is_browser() and current_user.is_anonymous():
                     return current_app.login_manager.unauthorized()
                 else:
                     abort(403)
