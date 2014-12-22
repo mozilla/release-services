@@ -416,8 +416,24 @@ def touch(f):
         log.warn('impossible to update utime of file %s' % f)
 
 
+def _urlopen(url, auth_file=None):
+    if auth_file:
+        with open(auth_file, 'r') as fHandle:
+            data = fHandle.read()
+        data = data.split('\n')
+        handler = urllib2.HTTPBasicAuthHandler()
+        handler.add_password(
+                realm='Mozilla Contributors - LDAP Authentication',
+                uri="https://secure.pub.build.mozilla.org",
+                user=data[0].strip(),
+                passwd=data[1].strip())
+        opener = urllib2.build_opener(handler)
+        urllib2.install_opener(opener)
+
+    return urllib2.urlopen(url)
+
 # TODO: write tests for this function
-def fetch_file(base_urls, file_record, grabchunk=1024 * 4):
+def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None):
     # A file which is requested to be fetched that exists locally will be overwritten by this function
     fd, temp_path = tempfile.mkstemp(dir=os.getcwd())
     os.close(fd)
@@ -431,7 +447,7 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4):
         # TODO: This should be abstracted to make generic retrival protocol handling easy
         # Well, the file doesn't exist locally.  Let's fetch it.
         try:
-            f = urllib2.urlopen(url)
+            f = _urlopen(url, auth_file)
             log.debug("opened %s for reading" % url)
             with open(temp_path, 'wb') as out:
                 k = True
@@ -492,7 +508,7 @@ def untar_file(filename):
     return True
 
 # TODO: write tests for this function
-def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
+def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None, auth_file=None):
     # Lets load the manifest file
     try:
         manifest = open_manifest(manifest_file)
@@ -559,7 +575,7 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None):
         # if filename is in present_files, it means that I have it already because it was already either in the working dir or in the cache
         if (f.filename in filenames or len(filenames) == 0) and f.filename not in present_files:
             log.debug("fetching %s" % f.filename)
-            temp_file_name = fetch_file(base_urls, f)
+            temp_file_name = fetch_file(base_urls, f, auth_file=auth_file)
             if temp_file_name:
                 fetched_files.append((f, temp_file_name))
             else:
@@ -787,7 +803,7 @@ def process_command(options, args):
                          'the url option in the command line')
             return False
         return fetch_files(options['manifest'], options['base_url'], cmd_args,
-                           cache_folder=options['cache_folder'])
+                           cache_folder=options['cache_folder'], auth_file=options.get("auth_file"))
     elif cmd == 'package':
         if not options.get('folder') or not options.get('message'):
             log.critical('package command requires a folder to be specified, containing the files to be added to the tooltool package, and a message providing info about the package')
@@ -873,6 +889,8 @@ def main():
                       help='host where to upload a tooltool package', dest='host')
     parser.add_option('--path',
                       help='Path on the tooltool upload server where to upload', dest='path')
+    parser.add_option('--authentication-file',
+                      help='Use http authentication to download a file.', dest='auth_file')
 
     (options_obj, args) = parser.parse_args()
     # Dictionaries are easier to work with
