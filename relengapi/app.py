@@ -13,6 +13,7 @@ from flask import g
 from flask import render_template
 from relengapi.lib import api
 from relengapi.lib import auth
+from relengapi.lib import aws
 from relengapi.lib import celery
 from relengapi.lib import db
 from relengapi.lib import layout
@@ -103,6 +104,7 @@ def create_app(cmdline=False, test_config=None):
     layout.init_app(app)
     auth.init_app(app)
     api.init_app(app)
+    aws.init_app(app)
 
     app.relengapi_blueprints = {}
     for bp in blueprints:
