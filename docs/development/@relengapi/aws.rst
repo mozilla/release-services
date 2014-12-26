@@ -18,18 +18,20 @@ The wrapper is accessible at ``current_app.aws``, which is an instance of :py:cl
 
     SQS-related methods:
 
-    .. py:method:: get_sqs_queue(relengapi_name)
+    .. py:method:: get_sqs_queue(region_name, queue_name)
 
-        :param string relengapi_name: internal name of the queue
+        :param string region_name: name of the region in which to connect (e.g., `us-west-2`)
+        :param string queue_name: name of the queue
         :returns: Boto Queue instance
 
         Fetches the configuration for the named queue, then gets the corresponding boto Queue instance.
         Subsequent operations on the queue should use the Boto interface directly.
         In most cases, you'll want :py:meth:`sqs_write` instead
 
-    .. py:method:: sqs_write(relengapi_name, body)
+    .. py:method:: sqs_write(region_name, queue_name, body)
 
-        :param string relengapi_name: internal name of the queue
+        :param string region_name: name of the region in which to connect (e.g., `us-west-2`)
+        :param string queue_name: name of the queue
         :param body: JSON-able data to be placed in the message body
 
         Writes ``body`` to the given queue.

@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import boto
 import json
 import mock
 
@@ -17,9 +16,6 @@ aws_cfg = {
     'AWS': {
         'access_key_id': 'aa',
         'secret_access_key': 'ss',
-        'sqs': {
-            'myq': ('us-east-1', 'my-sqs-queue'),
-        },
     },
 }
 
@@ -57,37 +53,30 @@ def test_connect_to_invalid_region(app):
 
 
 @mock_sqs
-@test_context
-def test_get_sqs_queue_no_config(app):
-    assert_raises(RuntimeError, lambda:
-                  app.aws.get_sqs_queue('foo'))
-
-
-@mock_sqs
 @test_context.specialize(config=aws_cfg)
 def test_get_sqs_queue_no_queue(app):
     assert_raises(RuntimeError, lambda:
-                  app.aws.get_sqs_queue('myq'))
+                  app.aws.get_sqs_queue('us-east-1', 'missing'))
 
 
 @mock_sqs
 @test_context.specialize(config=aws_cfg)
 def test_get_sqs_queue(app):
-    conn = boto.connect_sqs()
+    conn = app.aws.connect_to('sqs', 'us-east-1')
     conn.create_queue('my-sqs-queue')
-    queue = app.aws.get_sqs_queue('myq')
+    queue = app.aws.get_sqs_queue('us-east-1', 'my-sqs-queue')
     # check it's a queue
     assert hasattr(queue, 'get_messages')
     # check caching
-    assert app.aws.get_sqs_queue('myq') is queue
+    assert app.aws.get_sqs_queue('us-east-1', 'my-sqs-queue') is queue
 
 
 @mock_sqs
 @test_context.specialize(config=aws_cfg)
 def test_sqs_write(app):
-    conn = boto.connect_sqs()
+    conn = app.aws.connect_to('sqs', 'us-east-1')
     queue = conn.create_queue('my-sqs-queue')
-    app.aws.sqs_write('myq', {'a': 'b'})
+    app.aws.sqs_write('us-east-1', 'my-sqs-queue', {'a': 'b'})
     msgs = queue.get_messages()
     assert len(msgs) == 1
     eq_(json.loads(msgs[0].get_body()), {'a': 'b'})

@@ -40,25 +40,21 @@ class AWS(object):
         self._connections[key] = conn
         return conn
 
-    def get_sqs_queue(self, relengapi_name):
-        if relengapi_name in self._queues:
-            return self._queues[relengapi_name]
+    def get_sqs_queue(self, region_name, queue_name):
+        key = (region_name, queue_name)
+        if key in self._queues:
+            return self._queues[key]
 
-        info = self.config.get('sqs', {}).get(relengapi_name)
-        if not info:
-            raise RuntimeError(
-                "no configuration for queue %r" % (relengapi_name,))
-        region, queue_name = info
-        sqs = self.connect_to('sqs', region)
+        sqs = self.connect_to('sqs', region_name)
         queue = sqs.get_queue(queue_name)
         if not queue:
-            raise RuntimeError("no such queue %r in %s" % (queue_name, region))
-        self._queues[relengapi_name] = queue
+            raise RuntimeError("no such queue %r in %s" % (queue_name, region_name))
+        self._queues[key] = queue
         return queue
 
-    def sqs_write(self, relengapi_name, body):
+    def sqs_write(self, region_name, queue_name, body):
         body = wsme.rest.json.tojson(type(body), body)
-        queue = self.get_sqs_queue(relengapi_name)
+        queue = self.get_sqs_queue(region_name, queue_name)
         m = sqs_message.Message(body=json.dumps(body))
         queue.write(m)
 
