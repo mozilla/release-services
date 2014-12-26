@@ -37,3 +37,5 @@ The wrapper is accessible at ``current_app.aws``, which is an instance of :py:cl
         Writes ``body`` to the given queue.
         This uses WSME to JSON-ify the body, after which Boto base64-encodes the JSON content as AWS recommends.
         If possible, blueprints should use the same WSME types as the HTTP responses for SQS messages.
+
+        To send messages with some other format (for example, without base64 encoding, or as simple strings), use :py:meth:`get_sqs_queue` to get a Queue instance, then construct and send the Message directly.
