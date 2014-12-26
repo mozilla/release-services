@@ -14,3 +14,7 @@ The RelengAPI Flask App is mostly a normal Flask App, but has a few additional a
     .. py:attribute:: db
 
         See :doc:`databases`
+
+    .. py:attribute:: aws
+
+        See :doc:`aws`
