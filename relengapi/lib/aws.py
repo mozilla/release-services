@@ -116,7 +116,7 @@ class AWS(object):
             thd.start()
             threads.append(thd)
 
-        # sleep forever, or until we get a SIGINT, at which point the remainding
+        # sleep forever, or until we get a SIGINT, at which point the remaining
         # threads will be killed during process shutdown
         if not _testing:  # pragma: no cover
             while True:
