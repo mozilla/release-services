@@ -4,8 +4,10 @@
 
 import Queue
 import json
+import logging
 import mock
 
+from logging import handlers
 from moto import mock_sqs
 from nose.tools import assert_raises
 from nose.tools import eq_
@@ -86,25 +88,53 @@ def test_sqs_write(app):
 
 @mock_sqs
 @test_context
+def test_sqs_listen_no_such_queue(app):
+    log_buffer = handlers.BufferingHandler(100)
+    logging.getLogger().addHandler(log_buffer)
+    try:
+        app.aws._listen_thd('us-east-1', 'no-such-queue', {}, lambda msg: None)
+        assert any(
+            'listening cancelled' in record.message for record in log_buffer.buffer)
+    finally:
+        logging.getLogger().removeHandler(log_buffer)
+
+
+@mock_sqs
+@test_context
 def test_sqs_listen(app):
-    conn = app.aws.connect_to('sqs', 'us-east-1')
-    conn.create_queue('my-sqs-queue', visibility_timeout=0)
+    log_buffer = handlers.BufferingHandler(100)
 
-    got_msgs = Queue.Queue()
+    logging.getLogger().addHandler(log_buffer)
+    try:
+        conn = app.aws.connect_to('sqs', 'us-east-1')
+        conn.create_queue('my-sqs-queue')
 
-    @app.aws.sqs_listen('us-east-1', 'my-sqs-queue')
-    def listener(msg):
-        body = json.loads(msg.get_body())
-        got_msgs.put(body)
-        if body == 'BODY2':
-            raise aws._StopListening
+        got_msgs = Queue.Queue()
 
-    app.aws._spawn_sqs_listeners(_testing=True)
-    app.aws.sqs_write('us-east-1', 'my-sqs-queue', 'BODY1')
-    app.aws.sqs_write('us-east-1', 'my-sqs-queue', 'BODY2')
+        @app.aws.sqs_listen('us-east-1', 'my-sqs-queue')
+        def listener(msg):
+            body = json.loads(msg.get_body())
+            if body == 'EXC':
+                # this message won't loop back immediately because
+                # its visibility timeout has not expired
+                raise RuntimeError
+            got_msgs.put(body)
+            if body == 'BODY2':
+                raise aws._StopListening
 
-    eq_(got_msgs.get(), 'BODY1')
-    eq_(got_msgs.get(), 'BODY2')
+        app.aws._spawn_sqs_listeners(_testing=True)
+        app.aws.sqs_write('us-east-1', 'my-sqs-queue', 'BODY1')
+        app.aws.sqs_write('us-east-1', 'my-sqs-queue', 'EXC')
+        app.aws.sqs_write('us-east-1', 'my-sqs-queue', 'BODY2')
 
-    # NOTE: moto does not support changing message visibility, so there's no
-    # good way to programmatically verify that messages are being deleted
+        eq_(got_msgs.get(), 'BODY1')
+        eq_(got_msgs.get(), 'BODY2')
+
+        # check that the exception was logged
+        assert any(
+            'while invoking' in record.message for record in log_buffer.buffer)
+
+        # NOTE: moto does not support changing message visibility, so there's no
+        # good way to programmatically verify that messages are being deleted
+    finally:
+        logging.getLogger().removeHandler(log_buffer)
