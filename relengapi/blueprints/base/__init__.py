@@ -74,3 +74,14 @@ class RunTestsSubcommand(subcommands.Subcommand):
         # runtime app context (for example, the development DB)
         with Flask(__name__).app_context():
             nose.main()
+
+
+class SQSListenSubcommand(subcommands.Subcommand):
+
+    def make_parser(self, subparsers):
+        parser = subparsers.add_parser(
+            'sqs-listen', help='Listen to SQS queues registered with @app.sqs_listen')
+        return parser
+
+    def run(self, parser, args):
+        current_app.aws._spawn_sqs_listeners()

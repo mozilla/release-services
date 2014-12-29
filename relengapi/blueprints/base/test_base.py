@@ -39,4 +39,12 @@ def test_createdb():
     output = run_main(["createdb"], settings=settings)
     assert 'creating tables for database relengapi' in output
 
+
+def test_sqs_listen():
+    # this doesn't do much more than see that the AWS method is called;
+    # that method is tested elsewhere
+    with mock.patch("relengapi.lib.aws.AWS._spawn_sqs_listeners") as p:
+        run_main(["sqs-listen"], settings={})
+        p.assert_called_with()
+
 # the run-tests command is in use to run these tests, so there's nothing additional to test.

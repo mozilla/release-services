@@ -5,4 +5,5 @@
     documentation
     workers
     badpenny
+    sqs
 

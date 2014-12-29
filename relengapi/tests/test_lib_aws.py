@@ -2,12 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import Queue
 import json
 import mock
 
 from moto import mock_sqs
 from nose.tools import assert_raises
 from nose.tools import eq_
+from relengapi.lib import aws
 from relengapi.lib.testing.context import TestContext
 
 test_context = TestContext(reuse_app=False)
@@ -80,3 +82,29 @@ def test_sqs_write(app):
     msgs = queue.get_messages()
     assert len(msgs) == 1
     eq_(json.loads(msgs[0].get_body()), {'a': 'b'})
+
+
+@mock_sqs
+@test_context
+def test_sqs_listen(app):
+    conn = app.aws.connect_to('sqs', 'us-east-1')
+    conn.create_queue('my-sqs-queue', visibility_timeout=0)
+
+    got_msgs = Queue.Queue()
+
+    @app.aws.sqs_listen('us-east-1', 'my-sqs-queue')
+    def listener(msg):
+        body = json.loads(msg.get_body())
+        got_msgs.put(body)
+        if body == 'BODY2':
+            raise aws._StopListening
+
+    app.aws._spawn_sqs_listeners(_testing=True)
+    app.aws.sqs_write('us-east-1', 'my-sqs-queue', 'BODY1')
+    app.aws.sqs_write('us-east-1', 'my-sqs-queue', 'BODY2')
+
+    eq_(got_msgs.get(), 'BODY1')
+    eq_(got_msgs.get(), 'BODY2')
+
+    # NOTE: moto does not support changing message visibility, so there's no
+    # good way to programmatically verify that messages are being deleted

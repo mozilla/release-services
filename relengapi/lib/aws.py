@@ -2,13 +2,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import boto
 import importlib
 import json
 import logging
+import threading
+import time
 import wsme.rest.json
 
 from boto.sqs import message as sqs_message
+
+logger = logging.getLogger(__name__)
+
+
+class _StopListening(Exception):
+
+    pass
 
 
 class AWS(object):
@@ -17,6 +28,7 @@ class AWS(object):
         self.config = config
         self._connections = {}
         self._queues = {}
+        self._listeners = []
 
     def connect_to(self, service_name, region_name):
         key = service_name, region_name
@@ -48,7 +60,8 @@ class AWS(object):
         sqs = self.connect_to('sqs', region_name)
         queue = sqs.get_queue(queue_name)
         if not queue:
-            raise RuntimeError("no such queue %r in %s" % (queue_name, region_name))
+            raise RuntimeError("no such queue %r in %s" %
+                               (queue_name, region_name))
         self._queues[key] = queue
         return queue
 
@@ -57,6 +70,57 @@ class AWS(object):
         queue = self.get_sqs_queue(region_name, queue_name)
         m = sqs_message.Message(body=json.dumps(body))
         queue.write(m)
+
+    def sqs_listen(self, region_name, queue_name, read_args=None):
+        def decorate(func):
+            self._listeners.append(
+                (region_name, queue_name, read_args or {}, func))
+            return func
+        return decorate
+
+    def _listen_thd(self, region_name, queue_name, read_args, listener):
+        logger.info(
+            "Listening to SQS queue %r in region %s", queue_name, region_name)
+        try:
+            queue = self.get_sqs_queue(region_name, queue_name)
+        except Exception:
+            logger.exception("While getting queue %r in region %s; listening cancelled",
+                             queue_name, region_name)
+            return
+
+        while True:
+            msg = queue.read(wait_time_seconds=20, **read_args)
+            if msg:
+                try:
+                    listener(msg)
+                except _StopListening:  # for tests
+                    break
+                except Exception:
+                    logger.exception("while invoking %r", listener)
+                    # note that we do nothing with the message; it will
+                    # remain invisible for a while, then reappear and maybe
+                    # cause another exception
+                    continue
+                msg.delete()
+
+    def _spawn_sqs_listeners(self, _testing=False):
+        # launch a listening thread for each SQS queue
+        threads = []
+        for region_name, queue_name, read_args, listener in self._listeners:
+            thd = threading.Thread(
+                name="%s/%r -> %r" % (region_name, queue_name, listener),
+                target=self._listen_thd,
+                args=(region_name, queue_name, read_args, listener))
+            # set the thread to daemon so that SIGINT will kill the process
+            thd.daemon = True
+            thd.start()
+            threads.append(thd)
+
+        # sleep forever, or until we get a SIGINT, at which point the remainding
+        # threads will be killed during process shutdown
+        if not _testing:  # pragma: no cover
+            while True:
+                time.sleep(2 ** 31)
 
 
 def init_app(app):
