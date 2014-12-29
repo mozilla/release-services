@@ -12,3 +12,4 @@
     testing
     docs
     badpenny
+    aws

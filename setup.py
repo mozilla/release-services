@@ -41,6 +41,7 @@ setup(
         "croniter",
         "python-dateutil",
         "simplejson",
+        "boto",
     ],
     extras_require={
         'test': [
@@ -50,6 +51,7 @@ setup(
             'pep8',
             'mockldap',
             'pyflakes',
+            'moto',
         ],
         # extras required only for LDAP authorization support
         'ldap': [
