@@ -42,6 +42,8 @@ setup(
         "python-dateutil",
         "simplejson",
         "boto",
+        "python-memcached",
+        "elasticache-auto-discovery",
     ],
     extras_require={
         'test': [
@@ -52,6 +54,7 @@ setup(
             'mockldap',
             'pyflakes',
             'moto',
+            'mockcache',
         ],
         # extras required only for LDAP authorization support
         'ldap': [
