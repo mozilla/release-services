@@ -5,6 +5,7 @@ import time
 
 from flask import session
 from flask.ext.login import current_user
+from nose.tools import assert_raises
 from nose.tools import eq_
 from nose.tools import with_setup
 from relengapi import p
@@ -88,6 +89,15 @@ def test_request_loader(app, client):
         'human:f@n.com')
 
 
+@with_setup(clear_loaders, clear_loaders)
+def test_request_loader_not_set():
+    bad_user = auth.HumanUser('me@me.com')
+    bad_user._permissions = 'not-a-set'
+    auth._request_loaders = [lambda req: bad_user]
+    assert_raises(TypeError, lambda:
+                  auth._request_loader(None))
+
+
 @test_context
 def test_login_request(client):
     assert 'A valid login is required' in client.get('/login_request').data
@@ -105,3 +115,27 @@ def test_login_request_logged_in_next(client):
     resp = client.get('/login_request?next=/foo')
     eq_((resp.status_code, resp.headers[
         'location']), (302, 'http://localhost/foo'))
+
+
+@test_context
+def test_clear_perms_cache(app):
+    with app.test_request_context('/'):
+        session['perms'] = ['test_lib_auth.a']
+        session['perms_exp'] = time.time() + 10000
+        auth._clear_perms_cache()
+        assert 'perms' not in session
+        assert 'perms_exp' not in session
+
+
+@test_context
+def test_config_invalid_auth_type(app):
+    app.config['RELENGAPI_AUTHENTICATION'] = {'type': 'no-such'}
+    assert_raises(RuntimeError, lambda:
+                  auth.init_app(app))
+
+
+@test_context
+def test_config_invalid_perm_type(app):
+    app.config['RELENGAPI_PERMISSIONS'] = {'type': 'no-such'}
+    assert_raises(RuntimeError, lambda:
+                  auth.init_app(app))

@@ -26,6 +26,11 @@ from sphinx.util.docfields import GroupedField
 from sphinx.util.docfields import TypedField
 from sphinx.util.nodes import make_refnode
 
+# Most of this file is covered by 'pragma: no cover' because it is part of the
+# documentation-generation process, and not directly tested, aside from being
+# run while generating documentation.  In normal circumstances, that does not
+# exercise all of the code here, especially error-handling code.
+
 
 def typename(datatype):
     if hasattr(datatype, '_name'):
@@ -77,7 +82,7 @@ def trim_docstring(docstring):  # pragma: no cover
     return '\n'.join(trimmed)
 
 
-class TypeDirective(ObjectDescription):
+class TypeDirective(ObjectDescription):  # pragma: no cover
 
     required_arguments = 1
     optional_arguments = 0
@@ -112,7 +117,7 @@ class TypeDirective(ObjectDescription):
         signode.insert(0, docutils.nodes.target('', '', ids=[targetname]))
 
 
-class EndpointDirective(ObjectDescription):
+class EndpointDirective(ObjectDescription):  # pragma: no cover
 
     required_arguments = 3
     optional_arguments = sys.maxint
@@ -151,7 +156,8 @@ class EndpointDirective(ObjectDescription):
         targetname = 'endpoint-' + self.endpoint_name
         domaindata = self.state.document.settings.env.domaindata
         targets = domaindata['api']['targets'].setdefault('endpoint', {})
-        targets[self.endpoint_name] = self.state.document.settings.env.docname, targetname
+        targets[
+            self.endpoint_name] = self.state.document.settings.env.docname, targetname
 
         # record that we've documented the type
         self.env.domaindata['api']['endpoints'].add(self.endpoint_name)
@@ -161,7 +167,7 @@ class EndpointDirective(ObjectDescription):
         signode.insert(0, target_node)
 
 
-class AutoEndpointDirective(Directive):
+class AutoEndpointDirective(Directive):  # pragma: no cover
 
     has_content = True
     required_arguments = 0
@@ -242,7 +248,7 @@ class AutoEndpointDirective(Directive):
         return node.children
 
 
-class AutoTypeDirective(Directive):
+class AutoTypeDirective(Directive):  # pragma: no cover
 
     has_content = True
     required_arguments = 1
@@ -301,7 +307,7 @@ class AutoTypeDirective(Directive):
         return node.children
 
 
-class ApiDomain(Domain):
+class ApiDomain(Domain):  # pragma: no cover
     name = 'api'
     label = 'API'
 
@@ -340,7 +346,8 @@ def verify_everything_documented(app, exception):  # pragma: no cover
         return
 
     bad = False
-    app.info(console.white("checking that all REST API types are included in the documentation"))
+    app.info(console.white(
+        "checking that all REST API types are included in the documentation"))
     documented_types = app.env.domaindata['api']['types']
     for ty in wsme.types.Base.__subclasses__():
         if not ty.__module__.startswith('relengapi.') or '.test_' in ty.__module__:
@@ -350,7 +357,8 @@ def verify_everything_documented(app, exception):  # pragma: no cover
             app.warn(console.red("Type '%s' is not documented" % (tyname,)))
             bad = True
 
-    app.info(console.white("checking that all API endpoints are included in the documentation"))
+    app.info(console.white(
+        "checking that all API endpoints are included in the documentation"))
     all_endpoints = set(ep for ep, func in current_app.view_functions.items()
                         if hasattr(func, '__apidoc__'))
     documented_endpoints = app.env.domaindata['api']['endpoints']

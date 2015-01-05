@@ -97,8 +97,6 @@ def request_loader(func):
     """
     _request_loaders.append(func)
 
-# DOC: call flask.ext.login.log{in,out}_user
-
 login_manager = LoginManager()
 login_manager.login_view = 'login_request'
 login_manager.login_message = 'Please authenticate to the Releng API before proceeding'
@@ -170,7 +168,7 @@ def init_app(app):
         pkg_resources.iter_entry_points('relengapi.auth.mechanisms', auth_type))
     if len(entry_points) == 0:
         raise RuntimeError("no such authentication type %r" % (auth_type,))
-    elif len(entry_points) > 1:
+    elif len(entry_points) > 1:  # pragma: no cover
         raise RuntimeError(
             "multiple authentication plugins defined for type %r" % (auth_type,))
     ep = entry_points[0]
@@ -186,7 +184,7 @@ def init_app(app):
         pkg_resources.iter_entry_points('relengapi.perms.mechanisms', perms_type))
     if len(entry_points) == 0:
         raise RuntimeError("no such permissions type %r" % (perms_type,))
-    elif len(entry_points) > 1:
+    elif len(entry_points) > 1:  # pragma: no cover
         raise RuntimeError(
             "multiple permissions plugins defined for type %r" % (perms_type,))
     ep = entry_points[0]
