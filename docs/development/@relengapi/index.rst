@@ -13,3 +13,4 @@
     docs
     badpenny
     aws
+    memcached
