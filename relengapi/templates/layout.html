@@ -41,30 +41,86 @@
   <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
       <div class="navbar-header">
+        <!-- the "hamburger" menu for when the viewport is too narrow --!>
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
         <a class="navbar-brand hidden-xs" href="/">RelengAPI</a>
       </div>
       <div id="navbar">
         <ul class="nav navbar-nav navbar-right">
-          <li>
-            <p class="navbar-text">
-              {% if current_user.is_authenticated() %}
-                Logged in as
-                {% if current_user.type == "human" %}
-                  <span class="user_email"><a class="navbar-link" href="/auth/">{{ current_user.authenticated_email }}</a></span>
-                {% else %}
-                  {{ current_user.type }}
+          <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" role="button"
+               aria-expanded="false" href="#">About
+              <span class="caret"></span></a>
+            <ul class="dropdown-menu dropdown-menu-right navbar-about" role="menu">
+              <li role="presentation" class="dropdown-header">
+                RelengAPI
+                <li>
+                    <a href="/docs/">Documentation</a>
+                </li>
+                {% if blueprint.dist.project_name == 'relengapi' %}
+                  <li>
+                      <a href="{{ relengapi_metadata['repository_of_record'] }}">Contribute!</a>
+                  </li>
+                  <li>
+                      <a href="{{ relengapi_metadata['bug_report_url'] }}">Report a Bug!</a>
+                  </li>
                 {% endif %}
-              {% else %}        
-                Not logged in
+              </li>
+              {% if blueprint.dist.project_name != 'relengapi' %}
+                <li role="presentation" class="divider">
+                <li role="presentation" class="dropdown-header">
+                      {{ blueprint.dist.project_name }} project /
+                      {{ blueprint.name }} blueprint
+                </li>
+                {% if relengapi_metadata['repository_of_record'] %}
+                  <li>
+                      <a href="{{ relengapi_metadata['repository_of_record'] }}">Contribute!</a>
+                  </li>
+                {% endif %}
+                {% if relengapi_metadata['bug_report_url'] %}
+                {% endif %}
+                {% if relengapi_metadata['bug_report_url'] %}
+                  <li>
+                      <a href="{{ relengapi_metadata['bug_report_url'] }}">Report a Bug!</a>
+                  </li>
+                {% endif %}
               {% endif %}
-            </p>
-            {% if current_user.is_authenticated() %}
-              {% if current_user.type == "human" %}
-                <button class="btn btn-default navbar-btn" id="logout">Logout</button>
-              {% endif %}
-            {% else %}        
-              <button class="btn btn-default navbar-btn" id="login">Login</button>
-            {% endif %}
+            </ul>
+          </li>
+          <li>
+            <a class="dropdown-toggle" data-toggle="dropdown" role="button"
+               aria-expanded="false" href="#">
+              <span class="glyphicon glyphicon-user"></span>
+              <span class="caret"></span></a>
+            <ul class="dropdown-menu dropdown-menu-right navbar-user-info">
+              {% if current_user.is_authenticated() %}
+                <li class="text-center">Logged in as
+                    {% if current_user.type == "human" %}
+                      <span class="user_email">{{ current_user.authenticated_email }}</a></span>
+                    {% else %}
+                      {{ current_user.type }}
+                    {% endif %}
+                </li>
+                <li class="text-center">
+                  <a class="navbar-link" href="/auth/">Account details..</a>
+                </li>
+                {% if current_user.type == "human" %}
+                  <li class="text-center">
+                    <button class="btn btn-danger" id="logout">Logout</button>
+                  </li>
+                {% endif %}
+              {% else %}
+                <li class="text-center">Not logged in</li>
+                <li class="text-center">
+                  <button class="btn btn-primary" id="login">Login</button>
+                </li>
+                {% endif %}
+            </ul>
           </li>
         </ul>
       </div>

@@ -77,6 +77,20 @@ Any conflicts may identify fixes required for continued compatibility with the c
 
     git pull skeleton master
 
+Project Metadata
+----------------
+
+You can include metadata about your project in a file named ``setup.cfg`` in the same directory as ``setup.py``.
+Include them in a ``[relengapi]`` section.
+The currently supported keys are self explanatory, and shown below.
+
+.. code-block:: none
+
+    [relengapi]
+    repository_of_record = https://git.mozilla.org/?p=build/relengapi.git
+    bug_report_url = https://github.com/mozilla/build-relengapi/issues
+
+
 Other Useful Stuff
 ------------------
 
