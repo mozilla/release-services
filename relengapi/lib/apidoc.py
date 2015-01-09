@@ -26,6 +26,11 @@ from sphinx.util.docfields import GroupedField
 from sphinx.util.docfields import TypedField
 from sphinx.util.nodes import make_refnode
 
+# Note that this file is not subject to coverage.  This code is only used in
+# the documentation-generation process, and not directly tested, aside from
+# being run while generating documentation.  In normal circumstances, that does
+# not exercise all of the code here, especially error-handling code.
+
 
 def typename(datatype):
     if hasattr(datatype, '_name'):
@@ -51,7 +56,7 @@ def typereference(datatype):
 
 
 # from PEP-0257
-def trim_docstring(docstring):  # pragma: no cover
+def trim_docstring(docstring):
     if not docstring:
         return ''
     # Convert tabs to spaces (following the normal Python rules)
@@ -151,7 +156,8 @@ class EndpointDirective(ObjectDescription):
         targetname = 'endpoint-' + self.endpoint_name
         domaindata = self.state.document.settings.env.domaindata
         targets = domaindata['api']['targets'].setdefault('endpoint', {})
-        targets[self.endpoint_name] = self.state.document.settings.env.docname, targetname
+        targets[
+            self.endpoint_name] = self.state.document.settings.env.docname, targetname
 
         # record that we've documented the type
         self.env.domaindata['api']['endpoints'].add(self.endpoint_name)
@@ -335,12 +341,13 @@ class ApiDomain(Domain):
                             contnode, target)
 
 
-def verify_everything_documented(app, exception):  # pragma: no cover
+def verify_everything_documented(app, exception):
     if exception:
         return
 
     bad = False
-    app.info(console.white("checking that all REST API types are included in the documentation"))
+    app.info(console.white(
+        "checking that all REST API types are included in the documentation"))
     documented_types = app.env.domaindata['api']['types']
     for ty in wsme.types.Base.__subclasses__():
         if not ty.__module__.startswith('relengapi.') or '.test_' in ty.__module__:
@@ -350,7 +357,8 @@ def verify_everything_documented(app, exception):  # pragma: no cover
             app.warn(console.red("Type '%s' is not documented" % (tyname,)))
             bad = True
 
-    app.info(console.white("checking that all API endpoints are included in the documentation"))
+    app.info(console.white(
+        "checking that all API endpoints are included in the documentation"))
     all_endpoints = set(ep for ep, func in current_app.view_functions.items()
                         if hasattr(func, '__apidoc__'))
     documented_endpoints = app.env.domaindata['api']['endpoints']
