@@ -26,10 +26,10 @@ from sphinx.util.docfields import GroupedField
 from sphinx.util.docfields import TypedField
 from sphinx.util.nodes import make_refnode
 
-# Most of this file is covered by 'pragma: no cover' because it is part of the
-# documentation-generation process, and not directly tested, aside from being
-# run while generating documentation.  In normal circumstances, that does not
-# exercise all of the code here, especially error-handling code.
+# Note that this file is not subject to coverage.  This code is only used in
+# the documentation-generation process, and not directly tested, aside from
+# being run while generating documentation.  In normal circumstances, that does
+# not exercise all of the code here, especially error-handling code.
 
 
 def typename(datatype):
@@ -56,7 +56,7 @@ def typereference(datatype):
 
 
 # from PEP-0257
-def trim_docstring(docstring):  # pragma: no cover
+def trim_docstring(docstring):
     if not docstring:
         return ''
     # Convert tabs to spaces (following the normal Python rules)
@@ -82,7 +82,7 @@ def trim_docstring(docstring):  # pragma: no cover
     return '\n'.join(trimmed)
 
 
-class TypeDirective(ObjectDescription):  # pragma: no cover
+class TypeDirective(ObjectDescription):
 
     required_arguments = 1
     optional_arguments = 0
@@ -117,7 +117,7 @@ class TypeDirective(ObjectDescription):  # pragma: no cover
         signode.insert(0, docutils.nodes.target('', '', ids=[targetname]))
 
 
-class EndpointDirective(ObjectDescription):  # pragma: no cover
+class EndpointDirective(ObjectDescription):
 
     required_arguments = 3
     optional_arguments = sys.maxint
@@ -167,7 +167,7 @@ class EndpointDirective(ObjectDescription):  # pragma: no cover
         signode.insert(0, target_node)
 
 
-class AutoEndpointDirective(Directive):  # pragma: no cover
+class AutoEndpointDirective(Directive):
 
     has_content = True
     required_arguments = 0
@@ -248,7 +248,7 @@ class AutoEndpointDirective(Directive):  # pragma: no cover
         return node.children
 
 
-class AutoTypeDirective(Directive):  # pragma: no cover
+class AutoTypeDirective(Directive):
 
     has_content = True
     required_arguments = 1
@@ -307,7 +307,7 @@ class AutoTypeDirective(Directive):  # pragma: no cover
         return node.children
 
 
-class ApiDomain(Domain):  # pragma: no cover
+class ApiDomain(Domain):
     name = 'api'
     label = 'API'
 
@@ -341,7 +341,7 @@ class ApiDomain(Domain):  # pragma: no cover
                             contnode, target)
 
 
-def verify_everything_documented(app, exception):  # pragma: no cover
+def verify_everything_documented(app, exception):
     if exception:
         return
 
