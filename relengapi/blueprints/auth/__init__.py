@@ -13,7 +13,6 @@ from relengapi.lib.api import apimethod
 bp = Blueprint('auth', __name__,
                template_folder='templates',
                static_folder='static')
-bp.root_widget_template('auth_root_widget.html', priority=-100)
 
 
 @bp.route("/")

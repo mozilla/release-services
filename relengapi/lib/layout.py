@@ -2,6 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from flask import current_app
+from flask import request
+
 
 class Layout(object):
 
@@ -10,7 +13,20 @@ class Layout(object):
 
         @app.context_processor
         def _context_processor():
-            return dict(layout_extra_head_content=self.extra_head_content)
+            if request.blueprint:
+                blueprint = current_app.blueprints[request.blueprint]
+            else:
+                blueprint = current_app.blueprints['base']
+            try:
+                relengapi_metadata = blueprint.dist.relengapi_metadata
+            except AttributeError:
+                base_dist = current_app.blueprints['base'].dist
+                relengapi_metadata = base_dist.relengapi_metadata
+            return {
+                'blueprint': blueprint,
+                'relengapi_metadata': relengapi_metadata,
+                'layout_extra_head_content': self.extra_head_content,
+            }
 
     def add_head_content(self, content):
         """

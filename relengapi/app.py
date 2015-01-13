@@ -4,7 +4,6 @@
 
 import logging
 import os
-import pkg_resources
 import relengapi
 import wsme.types
 
@@ -16,6 +15,7 @@ from relengapi.lib import auth
 from relengapi.lib import aws
 from relengapi.lib import celery
 from relengapi.lib import db
+from relengapi.lib import introspection
 from relengapi.lib import layout
 from relengapi.lib import memcached
 from relengapi.lib import monkeypatches
@@ -30,26 +30,6 @@ relengapi.apimethod = api.apimethod
 monkeypatches.monkeypatch()
 
 logger = logging.getLogger(__name__)
-
-_blueprints = None
-
-
-def get_blueprints():
-    # get blueprints from pkg_resources.  We're careful to load all of the
-    # blueprints exactly once and before registering any of them, as this
-    # ensures everything is imported before any of the @bp.register-decorated
-    # methods are called
-    global _blueprints
-    if not _blueprints:
-        # TODO: warn if relengapi_blueprints is used
-        entry_points = (list(pkg_resources.iter_entry_points('relengapi_blueprints'))
-                        + list(pkg_resources.iter_entry_points('relengapi.blueprints')))
-        _blueprints = []
-        for ep in entry_points:
-            bp = ep.load()
-            bp.dist = ep.dist
-            _blueprints.append(bp)
-    return _blueprints
 
 
 class BlueprintInfo(wsme.types.Base):
@@ -73,6 +53,10 @@ class DistributionInfo(wsme.types.Base):
     #: Version of the distribution
     version = unicode
 
+    # TODO: ref docs
+    #: Additional RelengAPI-specific metadata
+    relengapi_metadata = {unicode: unicode}
+
 
 class VersionInfo(wsme.types.Base):
 
@@ -86,7 +70,7 @@ class VersionInfo(wsme.types.Base):
 
 
 def create_app(cmdline=False, test_config=None):
-    blueprints = get_blueprints()
+    blueprints = introspection.get_blueprints()
 
     app = Flask(__name__)
     env_var = 'RELENGAPI_SETTINGS'
@@ -140,9 +124,15 @@ def create_app(cmdline=False, test_config=None):
     @api.apimethod(VersionInfo)
     def versions():
         dists = {}
-        for dist in pkg_resources.WorkingSet():
-            dists[dist.key] = DistributionInfo(project_name=dist.project_name,
-                                               version=dist.version)
+        for dist in introspection.get_distributions().itervalues():
+            try:
+                relengapi_metadata = dist.relengapi_metadata
+            except AttributeError:
+                relengapi_metadata = {}
+            dists[dist.key] = DistributionInfo(
+                project_name=dist.project_name,
+                version=dist.version,
+                relengapi_metadata=relengapi_metadata)
         blueprints = {}
         for bp in app.relengapi_blueprints.itervalues():
             blueprints[bp.name] = BlueprintInfo(distribution=bp.dist.key,
