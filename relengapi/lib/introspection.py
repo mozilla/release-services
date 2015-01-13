@@ -21,9 +21,7 @@ def _fetch():
     if not _distributions:
         _distributions = {}
         for dist in pkg_resources.WorkingSet():
-            relengapi_metadata = _get_relengapi_metadata(dist)
-            if relengapi_metadata:
-                dist.relengapi_metadata = relengapi_metadata
+            dist.relengapi_metadata = {}
             _distributions[dist.key] = dist
 
     if not _blueprints:
@@ -34,6 +32,10 @@ def _fetch():
             bp = ep.load()
             # make sure we have only one copy of each Distribution
             bp.dist = _distributions[ep.dist.key]
+            if not bp.dist.relengapi_metadata:
+                relengapi_metadata = _get_relengapi_metadata(bp.dist)
+                if relengapi_metadata:
+                    bp.dist.relengapi_metadata = relengapi_metadata
             _blueprints.append(bp)
 
 
