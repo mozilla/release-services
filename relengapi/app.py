@@ -140,3 +140,8 @@ def create_app(cmdline=False, test_config=None):
         return VersionInfo(distributions=dists, blueprints=blueprints)
 
     return app
+
+metadata = {
+    'repository_of_record': 'https://git.mozilla.org/?p=build/relengapi.git',
+    'bug_report_url': 'https://github.com/mozilla/build-relengapi/issues',
+}

@@ -80,16 +80,24 @@ Any conflicts may identify fixes required for continued compatibility with the c
 Project Metadata
 ----------------
 
-You can include metadata about your project in a file named ``setup.cfg`` in the same directory as ``setup.py``.
-Include them in a ``[relengapi]`` section.
-The currently supported keys are self explanatory, and shown below.
+You can include metadata about your project that will be displayed to the user.
+Create a dictionary with zero or more of:
 
-.. code-block:: none
+ * ``repository_of_record`` -- where contributors should look to see the source code
+ * ``bug_report_url`` -- where contributors should report bugs, in the unlikely event there are any
 
-    [relengapi]
-    repository_of_record = https://git.mozilla.org/?p=build/relengapi.git
-    bug_report_url = https://github.com/mozilla/build-relengapi/issues
+This dictionary can be at any Python path you would like.
+For simple, one-blueprint projects, this is often in the blueprint module itself, e.g., ``relengapi.blueprints.skeleton``.
+Wherever you choose, add a reference to it in your ``setup.py``::
 
+    setup(..,
+        entry_points={
+            "relengapi.metadata": [
+                'relengapi-bubbler = relengapi.blueprints.bubbler:metadata',
+            ],
+    )
+
+The "key" for the entry point must match the lower-cased name of your Python project (the distribution ``key``).
 
 Other Useful Stuff
 ------------------
