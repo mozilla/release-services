@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import ConfigParser
 import pkg_resources
 
 _blueprints = None
@@ -32,25 +31,15 @@ def _fetch():
             bp = ep.load()
             # make sure we have only one copy of each Distribution
             bp.dist = _distributions[ep.dist.key]
-            if not bp.dist.relengapi_metadata:
-                relengapi_metadata = _get_relengapi_metadata(bp.dist)
-                if relengapi_metadata:
-                    bp.dist.relengapi_metadata = relengapi_metadata
             _blueprints.append(bp)
 
-
-def _get_relengapi_metadata(dist):
-    req = dist.as_requirement()
-    try:
-        setup_cfg = pkg_resources.resource_stream(req, 'setup.cfg')
-    except Exception:
-        return {}
-    cfg = ConfigParser.RawConfigParser()
-    cfg.readfp(setup_cfg)
-    if not cfg.has_section('relengapi'):
-        return {}
-
-    return {o: cfg.get('relengapi', o) for o in cfg.options('relengapi')}
+    # look for relengapi metadata for every dist containing a blueprint
+    blueprint_dists = {bp.dist.key: bp.dist for bp in _blueprints}.values()
+    for dist in blueprint_dists:
+        ep = pkg_resources.get_entry_info(dist, 'relengapi.metadata', dist.key)
+        if not ep:
+            continue
+        dist.relengapi_metadata = ep.load()
 
 
 def get_blueprints():

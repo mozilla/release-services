@@ -17,13 +17,7 @@ def test_get_distributions():
     eq_(distributions['relengapi'].project_name, 'relengapi')
 
 
-def test_get_relengapi_metadata_this_dist():
+def test_metadata():
     distributions = introspection.get_distributions()
-    meta = introspection._get_relengapi_metadata(distributions['relengapi'])
+    meta = distributions['relengapi'].relengapi_metadata
     assert 'repository_of_record' in meta
-
-
-def test_get_relengapi_metadata_no_data():
-    distributions = introspection.get_distributions()
-    meta = introspection._get_relengapi_metadata(distributions['flask'])
-    eq_(meta, {})

@@ -81,6 +81,9 @@ setup(
         ],
     },
     entry_points={
+        "relengapi.metadata": [
+            'relengapi = relengapi.app:metadata',
+        ],
         "relengapi.blueprints": [
             'base = relengapi.blueprints.base:bp',
             'auth = relengapi.blueprints.auth:bp',
