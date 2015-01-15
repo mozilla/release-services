@@ -1,0 +1,17 @@
+relengapi-1.1.0
+===============
+
+* Support granting permissions to all authenticated users, regardless of group membership.
+
+* Log API requests and responses in the browser console.
+
+* `Upgrade from hand-rolled CSS to Bootstrap <https://github.com/mozilla/build-relengapi/pull/162>`_, with substantial improvements to blueprint UIs.
+
+* Add AWS support, specifically including SQS.
+
+* Add support for memcached, including auto-discovery of AWS ElastiCache endpoints.
+
+* Add metadata about dists, and use that to create a `dynamic "About" menu <https://github.com/mozilla/build-relengapi/pull/169>`_.
+
+* Fix minor authentication issues (`#159 <https://github.com/mozilla/build-relengapi/pull/159>`_, `#167 <https://github.com/mozilla/build-relengapi/pull/167>`_, and `#168 <https://github.com/mozilla/build-relengapi/pull/162>`_)
+
