@@ -4,4 +4,4 @@ statistics = yes
 count = yes
 max-line-length = 100
 # exclude the Sphinx config file
-exclude = base/relengapi/blueprints/docs/src/conf.py
+exclude = relengapi/blueprints/docs/src/conf.py

@@ -1,11 +1,6 @@
-relengapi.egg-info/
+build/
+dist/
+*.swp
 *.pyc
-*.egg-info
-TODO.txt
-*.db
-.*.swp
-docs_build_dir
-*/dist
-.coverage
-base/.coverage-html
-slaveloan/.coverage-html
+*.egg-info/
+.coverage*
