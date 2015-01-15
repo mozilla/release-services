@@ -6,7 +6,7 @@
 ## tweakable parameters
 
 # minimum acceptable coverage percentage
-COVERAGE_MIN=96
+COVERAGE_MIN=1
 
 # project name
 PROJECT=relengapi-slaveloan
