@@ -11,8 +11,9 @@ data_patterns = [
     'static/**.txt',
 ]
 
-setup(name='relengapi-slaveloan',
-    version='0.1.0',
+setup(
+    name='relengapi-slaveloan',
+    version='0.0.0',
     description='slaveloan of a RelengAPI project',
     author='slaveloan Crew',
     author_email='slaveloan@mozilla.com',
