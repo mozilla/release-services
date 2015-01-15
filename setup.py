@@ -11,15 +11,15 @@ data_patterns = [
     'static/**.txt',
 ]
 
-setup(name='relengapi-skeleton',
+setup(name='relengapi-slaveloan',
     version='0.1.0',
-    description='Skeleton of a RelengAPI project',
-    author='Skeleton Crew',
-    author_email='skeleton@mozilla.com',
-    url='https://github.com/buildbot/build-relengapi-skeleton',
+    description='slaveloan of a RelengAPI project',
+    author='slaveloan Crew',
+    author_email='slaveloan@mozilla.com',
+    url='https://github.com/buildbot/build-relengapi-slaveloan',
     entry_points={
         "relengapi_blueprints": [
-            'mapper = relengapi.blueprints.skeleton:bp',
+            'mapper = relengapi.blueprints.slaveloan:bp',
         ],
     },
     packages=find_packages(),
@@ -33,7 +33,7 @@ setup(name='relengapi-skeleton',
         if files
     ],
     package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
-        'relengapi.blueprints.skeleton': data_patterns,
+        'relengapi.blueprints.slaveloan': data_patterns,
     },
     install_requires=[
         'Flask',

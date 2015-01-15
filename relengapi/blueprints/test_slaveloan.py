@@ -12,6 +12,6 @@ test_context = TestContext()
 
 @test_context
 def test_hello(client):
-    rv = client.get('/skeleton/')
+    rv = client.get('/slaveloan/')
     eq_(rv.status_code, 200)
     eq_(json.loads(rv.data)['result'], {'message': 'hello world'})

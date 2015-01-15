@@ -1,10 +1,10 @@
-Using Skeletons
+Using slaveloans
 ===============
 
 Storage
 -------
 
-Skeletons should be stored in locked closets at all times.
+slaveloans should be stored in locked closets at all times.
 
 API
 ---
@@ -12,4 +12,4 @@ API
 It's the Internet of Things!
 Even the framework of our bodies has an API!
 
-.. api:autoendpoint:: skeleton.*
+.. api:autoendpoint:: slaveloan.*
