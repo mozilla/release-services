@@ -15,6 +15,10 @@
 # configuration is present, is to use '*.db' files in the directory containing
 # the RelengAPI source code.
 
+# set the flag True for logging SQLAlchemy engine activities
+# default it is set to True
+SQLALCHEMY_DB_LOG = True
+
 # ===== Authentication and Authorization =====
 
 RELENGAPI_AUTHENTICATION = {

@@ -28,6 +28,8 @@ This is effective for development, but certainly not for production.
 The database for the relengapi core is named ``relengapi``.
 Other blueprints may require additional URIs.
 
+If you ever need to see what SQLAlchemy is doing with the connection pool, it is useful to enable the logging. To do that make sure you have the ``SQLALCHEMY_DB_LOG`` is flag to set to True.
+
 .. _Deployment-Authentication:
 
 Authentication
@@ -130,19 +132,19 @@ The configuration looks like this::
 
         # Base LDAP URI
         'uri': "ldaps://your.ldap.server/",
-    
+
         # This needs to be a user that has sufficient rights to read users and groups
         'login_dn': "<dn for bind user>",
         'login_password': "<password for bind user>",
-    
+
         # The search bases for users and groups, respectively
         'user_base': 'o=users,dc=example,dc=com',
         'group_base': 'o=groups,dc=example,dc=com',
-    
+
         # set this to True for extra logging
         'debug': False,
     }
- 
+
 Permissions are cumulative: a person has a permission if they are a member of any group configured with that permission.
 In the example above, a user in both ``team_relops`` and ``team_releng`` would have permission to create tasks and to issue and view tokens.
 The group name ``<everyone>`` is treated specially: it grants permission to all authenticated users, regardless of authentication mechanism.
