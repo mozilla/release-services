@@ -50,6 +50,35 @@ def test_clobber_request(client):
         'No new clobbers were detected, clobber request failed.')
 
 
+@ test_context
+def test_lastclobber_all(client):
+    rv = client.get('/clobberer/lastclobber/all')
+    eq_(rv.status_code, 200)
+    clobbertimes = json.loads(rv.data)["result"]
+    eq_(len(clobbertimes), len(_clobber_args))
+
+
+@ test_context
+def test_lastclobber_greater_than(client):
+    session = test_context._app.db.session(DB_DECLARATIVE_BASE)
+    min_ct = session.query(ClobberTime.lastclobber).order_by(
+        ClobberTime.lastclobber
+    ).first()[0]
+
+    # since this is less than the min, we should see all the results
+    lt_min_ct = min_ct - 1
+    rv = client.get('/clobberer/lastclobber/greater-than/%i' % lt_min_ct)
+    eq_(rv.status_code, 200)
+    lt_min_ct_result = json.loads(rv.data)["result"]
+    eq_(len(lt_min_ct_result), len(_clobber_args))
+
+    # now we should see less than last time
+    rv = client.get('/clobberer/lastclobber/greater-than/%i' % min_ct)
+    eq_(rv.status_code, 200)
+    min_ct_result = json.loads(rv.data)["result"]
+    assert len(lt_min_ct_result) > len(min_ct_result)
+
+
 @test_context
 def test_clobber_request_of_release(client):
     "Ensures that attempting to clobber a release build will fail."
