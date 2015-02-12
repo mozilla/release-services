@@ -144,16 +144,6 @@ def lastclobber_all():
     return session.query(ClobberTime).order_by(ClobberTime.lastclobber)
 
 
-@bp.route('/lastclobber/greater-than/<int:mintime>', methods=['GET'])
-@apimethod([rest.ClobberTime], int)
-def lastclobber_greater_than(mintime):
-    "Return a sorted list of all clobbers greater than the time passed in"
-    session = g.db.session(DB_DECLARATIVE_BASE)
-    return session.query(ClobberTime).filter(
-        ClobberTime.lastclobber > mintime
-    ).order_by(ClobberTime.lastclobber)
-
-
 @bp.route('/lastclobber/branch/by-builder/<string:branch>', methods=['GET'])
 @apimethod({unicode: [rest.ClobberTime]}, unicode)
 def lastclobber_by_builder(branch):
