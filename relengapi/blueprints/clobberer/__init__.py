@@ -148,9 +148,6 @@ def lastclobber_all():
 @apimethod({unicode: [rest.ClobberTime]}, unicode)
 def lastclobber_by_builder(branch):
     "Return a dictionary of most recent ClobberTimes grouped by buildername."
-    # TODO: simplify this query, new clobberer _only_ tracks max clobber times
-    #  - old clobberer did not - so this query may be simplified under that
-    # assuption
     session = g.db.session(DB_DECLARATIVE_BASE)
 
     # Isolates the maximum lastclobber for each builddir on a branch
