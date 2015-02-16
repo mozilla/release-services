@@ -3,7 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
+import time
 
+from relengapi import p
 from relengapi.blueprints.tokenauth import tables
 from relengapi.blueprints.tokenauth import tokenstr
 from relengapi.lib import auth
@@ -15,15 +17,26 @@ class TokenUser(auth.BaseUser):
 
     type = 'token'
 
-    def __init__(self, token_id, permissions):
-        self.token_id = token_id
+    def __init__(self, claims, permissions=[], token_data={}):
+        # TODO: doc these attributes
+        self.claims = claims
         self._permissions = set(permissions)
+        self.token_data = token_data
 
     def get_id(self):
-        return 'token:#%s' % self.token_id
+        jti = (':' + self.claims['jti']) if 'jti' in self.claims else ''
+        return 'token:%s%s' % (self.claims['typ'], jti)
 
     def get_permissions(self):
         return self._permissions
+
+
+def permlist_to_permissions(permlist):
+    token_permissions = [p.get(s) for s in permlist]
+    # silently ignore any nonexistent permissions; this allows us to remove unused
+    # permissions without causing tokens permitting those permissions to fail
+    # completely
+    return [perm for perm in token_permissions if perm]
 
 
 class TokenLoader(object):
@@ -70,5 +83,17 @@ def prm_loader(claims):
     token_id = tokenstr.jti2id(claims['jti'])
     token_data = tables.Token.query.filter_by(id=token_id).first()
     if token_data:
-        user = TokenUser(token_data.id, token_data.permissions)
-        return user
+        return TokenUser(claims,
+                         permissions=token_data.permissions,
+                         token_data=token_data)
+
+
+@token_loader.type_function('tmp')
+def tmp_loader(claims):
+    # check validity range; note that these claims *must* exist
+    now = time.time()
+    if now < claims['nbf'] or now > claims['exp']:
+        return
+
+    permissions = permlist_to_permissions(claims['prm'])
+    return TokenUser(claims, permissions=permissions)

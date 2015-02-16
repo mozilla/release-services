@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import mock
+
 from flask import json
 from nose.tools import eq_
 from relengapi import p
@@ -69,3 +71,28 @@ def test_prm_loader(app):
     with app.app_context():
         eq_(loader.prm_loader({'typ': 'prm', 'jti': 't1'}).permissions,
             set([p.test_tokenauth.zig]))
+
+
+@test_context
+def test_tmp_loader(app):
+    claims = {
+        'typ': 'tmp',
+        'exp': 1000020,
+        'nbf': 1000000,
+        'prm': ['test_tokenauth.zig'],
+        'mta': {'quote': "that's so meta"},
+    }
+    with app.app_context():
+        with mock.patch('relengapi.blueprints.tokenauth.loader.time') as time:
+            time.time.return_value = 999990  # before `nbf`
+            user = loader.tmp_loader(claims)
+            eq_(user, None)
+
+            time.time.return_value = 2222222  # after 'exp'
+            user = loader.tmp_loader(claims)
+            eq_(user, None)
+
+            time.time.return_value = 1000010  # valid time
+            user = loader.tmp_loader(claims)
+            eq_(user.permissions, set([p.test_tokenauth.zig]))
+            eq_(user.claims['mta'], {'quote': "that's so meta"})
