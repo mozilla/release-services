@@ -7,6 +7,7 @@
     proxies
     tasks
     auth
+    tokenauth
     utils
     app
     testing

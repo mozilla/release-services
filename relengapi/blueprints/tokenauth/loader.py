@@ -18,7 +18,6 @@ class TokenUser(auth.BaseUser):
     type = 'token'
 
     def __init__(self, claims, permissions=[], token_data={}):
-        # TODO: doc these attributes
         self.claims = claims
         self._permissions = set(permissions)
         self.token_data = token_data
