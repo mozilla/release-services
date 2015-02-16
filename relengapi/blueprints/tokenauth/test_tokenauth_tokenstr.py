@@ -15,6 +15,17 @@ def test_str_to_claims_valid_v1(app):
         input_claims = {'id': 25, 'v': 1}
         token_str = app.tokenauth_serializer.dumps(input_claims)
         got_claims = tokenstr.str_to_claims(token_str)
+        # v1 token is rewritten to ra2 format
+        exp_claims = {'iss': 'ra2', 'typ': 'prm', 'jti': 't25'}
+        eq_(got_claims, exp_claims)
+
+
+@TestContext()
+def test_str_to_claims_valid_v2(app):
+    with app.app_context():
+        input_claims = {'iss': 'ra2', 'typ': 'prm', 'jti': 't20'}
+        token_str = app.tokenauth_serializer.dumps(input_claims)
+        got_claims = tokenstr.str_to_claims(token_str)
         eq_(got_claims, input_claims)
 
 
@@ -37,7 +48,7 @@ def test_str_to_claims_invalid_str(app):
 @TestContext()
 def test_claims_to_str_to_claims(app):
     with app.app_context():
-        input_claims = {'id': 10}
+        input_claims = {'iss': 'ra2', 'typ': 'prm', 'jti': 't10'}
         token_str = tokenstr.claims_to_str(input_claims)
         got_claims = tokenstr.str_to_claims(token_str)
-        eq_(got_claims['id'], input_claims['id'])
+        eq_(got_claims, input_claims)

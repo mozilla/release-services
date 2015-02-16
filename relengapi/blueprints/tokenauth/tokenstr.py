@@ -8,7 +8,7 @@ from flask import current_app
 from itsdangerous import BadData
 from itsdangerous import JSONWebSignatureSerializer
 
-TOKENAUTH_VERSION = 1
+TOKENAUTH_ISSUER = 'ra2'
 logger = logging.getLogger(__name__)
 
 
@@ -21,7 +21,7 @@ def init_app(app):
 
 
 def claims_to_str(claims):
-    claims['v'] = TOKENAUTH_VERSION
+    assert claims['iss'] == TOKENAUTH_ISSUER
     return current_app.tokenauth_serializer.dumps(claims)
 
 
@@ -32,7 +32,11 @@ def str_to_claims(token_str):
         logger.warning("Got invalid signature in token %r", token_str)
         return None
 
-    if claims.get('v') != TOKENAUTH_VERSION:
-        return None
+    # convert v1 to ra2
+    if claims.get('v') == 1:
+        return {'iss': 'ra2', 'typ': 'prm', 'jti': 't%d' % claims['id']}
+
+    if claims.get('iss') != TOKENAUTH_ISSUER:
+        return
 
     return claims

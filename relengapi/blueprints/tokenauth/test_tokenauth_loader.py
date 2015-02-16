@@ -1,4 +1,3 @@
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -7,6 +6,7 @@ from flask import json
 from nose.tools import eq_
 from relengapi import p
 from relengapi.blueprints.tokenauth import tables
+from relengapi.blueprints.tokenauth import test_util
 from relengapi.blueprints.tokenauth.test_tokenauth import test_context
 
 
@@ -38,9 +38,10 @@ def test_loader_not_bearer(app, client):
 @test_context.specialize(db_setup=insert_token)
 def test_loader_good_header(app, client):
     """With a good Authentication header, the permissions in the DB are allowed"""
+    tok = test_util.FakeSerializer.prm(1)
     auth = json.loads(
         client.get('/test_tokenauth',
-                   headers=[('Authentication', 'Bearer TOK/1/v1')]).data)
+                   headers=[('Authentication', 'Bearer ' + tok)]).data)
     eq_(auth['permissions'], ['test_tokenauth.zig'], auth)
 
 

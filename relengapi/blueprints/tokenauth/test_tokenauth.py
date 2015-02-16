@@ -2,13 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import itsdangerous
-import mock
-
 from flask import json
 from flask.ext.login import current_user
 from nose.tools import eq_
 from relengapi import p
+from relengapi.blueprints.tokenauth import test_util
 from relengapi.blueprints.tokenauth.tables import Token
 from relengapi.lib import auth
 from relengapi.lib.testing.context import TestContext
@@ -27,19 +25,7 @@ def app_setup(app):
             'permissions': sorted(str(a) for a in current_user.permissions),
         })
     # fake out the serializer to make it easier to debug
-    app.tokenauth_serializer = mock.Mock(spec=app.tokenauth_serializer)
-
-    def dumps(data):
-        assert sorted(data.keys()) == ['id', 'v']
-        return 'TOK/%d/v%d' % (data['id'], data['v'])
-    app.tokenauth_serializer.dumps = dumps
-
-    def loads(data):
-        data = data.split('/')
-        if data[0] != 'TOK':
-            raise itsdangerous.BadData(data)
-        return {'id': int(data[1]), 'v': int(data[2][1:])}
-    app.tokenauth_serializer.loads = loads
+    app.tokenauth_serializer = test_util.FakeSerializer()
 
 
 def userperms(perms):
@@ -101,7 +87,7 @@ def test_issue_token_success(client):
     res = client.post_json('/tokenauth/tokens', request)
     eq_(json.loads(res.data), {
         'result': {
-            'token': 'TOK/1/v1',
+            'token': test_util.FakeSerializer.prm(1),
             'id': 1,
             'description': 'More Zig',
             'permissions': ['test_tokenauth.zig'],
@@ -157,7 +143,8 @@ def test_get_token_by_token_forbidden(client):
 @test_context.specialize(user=userperms([p.base.tokens.view]), db_setup=insert_token)
 def test_get_token_by_token_exists(client):
     """Getting a single token returns that token."""
-    res = client.post_json('/tokenauth/tokens/query', 'TOK/1/v1')
+    res = client.post_json('/tokenauth/tokens/query',
+                           test_util.FakeSerializer.prm(1))
     eq_(res.status_code, 200)
     eq_(json.loads(res.data),
         {'result': {'id': 1, 'description': 'Zig only',

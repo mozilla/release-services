@@ -80,7 +80,7 @@ def issue_token(body):
 
     rv = token_row.to_jsontoken()
     rv.token = tokenstr.claims_to_str(
-        {'id': token_row.id})
+        {'iss': 'ra2', 'typ': 'prm', 'jti': 't%d' % token_row.id})
     return rv
 
 
@@ -106,7 +106,8 @@ def get_token_by_token(body):
     if not claims:
         raise NotFound
 
-    token_data = tables.Token.query.filter_by(id=claims['id']).first()
+    token_id = int(claims['jti'][1:])
+    token_data = tables.Token.query.filter_by(id=token_id).first()
     if not token_data:
         raise NotFound
     return token_data.to_jsontoken()

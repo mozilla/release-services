@@ -39,7 +39,8 @@ def token_loader(request):
     if not claims:
         return
 
-    token_data = tables.Token.query.filter_by(id=claims['id']).first()
+    token_id = int(claims['jti'][1:])
+    token_data = tables.Token.query.filter_by(id=token_id).first()
     if token_data:
         user = TokenUser(token_data.id, token_data.permissions)
         logger.debug("Token access by %s", user)
