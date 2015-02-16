@@ -48,6 +48,31 @@ def test_loader_good_header(app, client):
     eq_(auth['permissions'], ['test_tokenauth.zig'], auth)
 
 
+@test_context.specialize(db_setup=insert_token)
+def test_from_str(app):
+    """from_str returns a TokenUser object for a good token"""
+    tok = test_util.FakeSerializer.prm(1)
+    with app.app_context():
+        eq_(loader.token_loader.from_str(tok).permissions,
+            set([p.test_tokenauth.zig]))
+
+
+@test_context
+def test_from_str_no_type(app):
+    """from_str does not return a user for a token with no 'typ'"""
+    tok = test_util.FakeSerializer.dumps({})
+    with app.app_context():
+        eq_(loader.token_loader.from_str(tok), None)
+
+
+@test_context
+def test_from_str_bad_type(app):
+    """from_str does not return a user for a token with a bogus typ"""
+    tok = test_util.FakeSerializer.dumps({'iss': 'ra2', 'typ': 'booogus'})
+    with app.app_context():
+        eq_(loader.token_loader.from_str(tok), None)
+
+
 @test_context
 def test_loader_bad_header(app, client):
     """With a bad Authentication header, no permissions are allowed"""

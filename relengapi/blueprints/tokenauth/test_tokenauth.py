@@ -88,6 +88,12 @@ def assert_tmp_token(data, **attrs):
 # tests
 
 
+@test_context.specialize(user=userperms([p.base.tokens.view]))
+def test_root(client):
+    """The Angular UI is served at the root path, but requires view permission"""
+    eq_(client.get('/tokenauth/').status_code, 200)
+
+
 @test_context.specialize(user=userperms([]))
 def test_list_tokens_forbidden(client):
     """Listing tokens requires base.tokens.view"""
@@ -166,6 +172,14 @@ def test_issue_token_not_subset(client):
 
 
 @issuer_test_context
+def test_issue_token_not_valid_perms(client):
+    """Requesting a token with nonexistent permissions fails"""
+    request = {'permissions': ['bogus.permission'],
+               'description': 'bogus', 'typ': 'prm'}
+    eq_(client.post_json('/tokenauth/tokens', request).status_code, 400)
+
+
+@issuer_test_context
 def test_issue_tmp_token_no_metadata(client):
     """Requesting a temporary token without metadata fails."""
     request = {'permissions': ['test_tokenauth.zig'],
@@ -179,6 +193,13 @@ def test_issue_tmp_token_no_metadata(client):
 def test_issue_token_no_description(client):
     """Permanent tokens reqiure a description to issue."""
     request = {'permissions': ['test_tokenauth.zig'], 'typ': 'prm'}
+    eq_(client.post_json('/tokenauth/tokens', request).status_code, 400)
+
+
+@issuer_test_context
+def test_issue_token_bad_typ(client):
+    """Trying to issue a token with a bogus type fails."""
+    request = {'typ': 'BOGUS'}
     eq_(client.post_json('/tokenauth/tokens', request).status_code, 400)
 
 

@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from nose.tools import assert_raises
 from nose.tools import eq_
 from relengapi.blueprints.tokenauth import tokenstr
 from relengapi.lib.testing.context import TestContext
@@ -52,3 +53,11 @@ def test_claims_to_str_to_claims(app):
         token_str = tokenstr.claims_to_str(input_claims)
         got_claims = tokenstr.str_to_claims(token_str)
         eq_(got_claims, input_claims)
+
+
+def test_jti2id():
+    eq_(tokenstr.jti2id('t12'), 12)
+    assert_raises(TypeError, lambda:
+                  tokenstr.jti2id('xx'))
+    assert_raises(TypeError, lambda:
+                  tokenstr.jti2id(None))

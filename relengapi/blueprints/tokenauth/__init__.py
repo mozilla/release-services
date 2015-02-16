@@ -119,8 +119,6 @@ def issue_token(body):
     response will contain both ``token`` and ``id``."""
     # verify required parameters; any extras will be ignored
     typ = body.typ
-    if typ not in required_token_attributes:
-        raise BadRequest("bad typ")
     for attr in required_token_attributes[typ]:
         if getattr(body, attr) is wsme.Unset:
             raise BadRequest("missing %s" % attr)
