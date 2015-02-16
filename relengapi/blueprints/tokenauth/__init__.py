@@ -170,13 +170,11 @@ def get_token_by_token(body):
     """Get a token, specified by the token key given in the request body
     (this avoids embedding a token in a URL, where it might be logged)."""
     token_str = body
-    try:
-        token_info = current_app.tokenauth_serializer.loads(token_str)
-    except BadData:
+    claims = str_to_claims(token_str)
+    if not claims:
         raise NotFound
-    if token_info['v'] != TOKENAUTH_VERSION:
-        raise NotFound
-    token_data = Token.query.filter_by(id=token_info['id']).first()
+
+    token_data = Token.query.filter_by(id=claims['id']).first()
     if not token_data:
         raise NotFound
     return token_data.to_jsontoken()
@@ -195,25 +193,36 @@ def revoke_token(token_id):
 
 @auth.request_loader
 def token_loader(request):
+    # extract the token from the headers, returning None if anything's
+    # wrong
     header = request.headers.get('Authentication')
     if not header:
         return
     header = header.split()
     if len(header) != 2 or header[0].lower() != 'bearer':
         return
-    token_str = header[1]
-    try:
-        token_info = current_app.tokenauth_serializer.loads(token_str)
-    except BadData:
-        logger.warning("Got invalid signature in token %r", token_str)
-        return None
-    if token_info['v'] != TOKENAUTH_VERSION:
-        return None
-    token_data = Token.query.filter_by(id=token_info['id']).first()
+    claims = str_to_claims(header[1])
+    if not claims:
+        return
+
+    token_data = Token.query.filter_by(id=claims['id']).first()
     if token_data:
         user = TokenUser(token_data.id, token_data.permissions)
         logger.debug("Token access by %s", user)
         return user
+
+
+def str_to_claims(token_str):
+    try:
+        claims = current_app.tokenauth_serializer.loads(token_str)
+    except BadData:
+        logger.warning("Got invalid signature in token %r", token_str)
+        return None
+
+    if claims['v'] != TOKENAUTH_VERSION:
+        return None
+
+    return claims
 
 
 @bp.record
