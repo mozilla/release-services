@@ -32,6 +32,13 @@ Compound types are defined by subclassing ``wsme.types.Base``::
 
 See the WSME_ documentation for more detail.
 
+As a utility, an arbitrary JSON Object can be described with this class:
+
+.. class:: relengapi.lib.api.JsonObject
+
+    A WSME custom type describing an arbitrary JSON object.
+    This validates that the value is an object (equivalent to a ``dict`` in Python) and that it can be JSON-encoded.
+
 Decorator
 ---------
 

@@ -4,6 +4,7 @@
 
 import mock
 import sys
+import wsme.exc
 import wsme.types
 
 from flask import json
@@ -14,6 +15,7 @@ from relengapi.lib import api
 from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
 from werkzeug.exceptions import BadRequest
+from wsme.rest.json import fromjson
 
 
 p.test_api.doc('test permission')
@@ -226,3 +228,27 @@ def test_incorrect_params(client):
 def test_get_data_notallowed(client):
     resp = client.get('/get_data/notallowed')
     eq_(resp.status_code, 403)
+
+
+class AType(object):
+    data = api.JsonObject()
+wsme.types.register_type(AType)
+
+
+def test_JsonObject():
+    # dictionaries work fine
+    obj = AType()
+    obj.data = {'a': 1}
+    eq_(obj.data, {'a': 1})
+    # other types don't
+    assert_raises(wsme.exc.InvalidInput, lambda:
+                  setattr(obj, 'data', ['a']))
+    # and un-JSONable Python data doesn't
+    assert_raises(wsme.exc.InvalidInput, lambda:
+                  setattr(obj, 'data', {'a': lambda: 1}))
+
+    # valid JSON objects work fine
+    obj = fromjson(AType, {'data': {'b': 2}})
+    # other types don't
+    assert_raises(wsme.exc.InvalidInput, lambda:
+                  fromjson(AType, {'data': ['b', 2]}))
