@@ -106,7 +106,7 @@ def get_token_by_token(body):
     if not claims:
         raise NotFound
 
-    token_id = int(claims['jti'][1:])
+    token_id = tokenstr.jti2id(claims['jti'])
     token_data = tables.Token.query.filter_by(id=token_id).first()
     if not token_data:
         raise NotFound

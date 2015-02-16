@@ -5,6 +5,7 @@
 from flask import json
 from nose.tools import eq_
 from relengapi import p
+from relengapi.blueprints.tokenauth import loader
 from relengapi.blueprints.tokenauth import tables
 from relengapi.blueprints.tokenauth import test_util
 from relengapi.blueprints.tokenauth.test_tokenauth import test_context
@@ -61,3 +62,10 @@ def test_loader_good_header_not_in_db(app, client):
         client.get('/test_tokenauth',
                    headers=[('Authentication', 'Bearer TOK/2/v1')]).data)
     eq_(auth['permissions'], [])
+
+
+@test_context.specialize(db_setup=insert_token)
+def test_prm_loader(app):
+    with app.app_context():
+        eq_(loader.prm_loader({'typ': 'prm', 'jti': 't1'}).permissions,
+            set([p.test_tokenauth.zig]))

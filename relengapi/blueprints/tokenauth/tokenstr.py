@@ -40,3 +40,9 @@ def str_to_claims(token_str):
         return
 
     return claims
+
+
+def jti2id(jti):
+    if jti[0] != 't':
+        raise TypeError('jti not in the format `t$token_id`')
+    return int(jti[1:])
