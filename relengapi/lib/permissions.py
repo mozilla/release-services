@@ -71,7 +71,7 @@ class Permissions(Permission):
         for perm in permissions:
             if not perm.exists():
                 raise RuntimeError(
-                    "Cannot require undocumented permission %s" % perm)
+                    "Cannot require undocumented permission %s" % (perm,))
 
         @wrapt.decorator
         def req(wrapped, instance, args, kwargs):
