@@ -145,10 +145,9 @@ def issue_token(body):
     session.add(token_row)
     session.commit()
 
-    token = current_app.tokenauth_serializer.dumps(
-        {'v': TOKENAUTH_VERSION, 'id': token_row.id})
     rv = token_row.to_jsontoken()
-    rv.token = token
+    rv.token = claims_to_str(
+        {'id': token_row.id})
     return rv
 
 
@@ -212,6 +211,11 @@ def token_loader(request):
         return user
 
 
+def claims_to_str(claims):
+    claims['v'] = TOKENAUTH_VERSION
+    return current_app.tokenauth_serializer.dumps(claims)
+
+
 def str_to_claims(token_str):
     try:
         claims = current_app.tokenauth_serializer.loads(token_str)
@@ -219,7 +223,7 @@ def str_to_claims(token_str):
         logger.warning("Got invalid signature in token %r", token_str)
         return None
 
-    if claims['v'] != TOKENAUTH_VERSION:
+    if claims.get('v') != TOKENAUTH_VERSION:
         return None
 
     return claims
