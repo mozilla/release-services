@@ -2,7 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import calendar
 import logging
+import wsme
 
 from flask import Blueprint
 from flask import g
@@ -65,21 +67,7 @@ def list_tokens():
     return [t.to_jsontoken() for t in tables.Token.query.all()]
 
 
-@bp.route('/tokens', methods=['POST'])
-@apimethod(types.JsonToken, body=types.JsonToken)
-@p.base.tokens.issue.require()
-def issue_token(body):
-    """Issue a new token.  The body should not include a ``token`` or ``id``.
-    The response will contain both."""
-    requested_permissions = [p.get(a) for a in body.permissions]
-    # ensure the request is for a subset of the permissions the user can
-    # perform
-    if None in requested_permissions or not set(requested_permissions) <= current_user.permissions:
-        raise BadRequest("bad permissions")
-
-    if not body.description:
-        raise BadRequest("no description")
-
+def issue_prm(body, requested_permissions):
     session = g.db.session('relengapi')
     token_row = tables.Token(
         description=body.description,
@@ -91,6 +79,62 @@ def issue_token(body):
     rv.token = tokenstr.claims_to_str(
         {'iss': 'ra2', 'typ': 'prm', 'jti': 't%d' % token_row.id})
     return rv
+
+
+def issue_tmp(body, requested_permissions):
+    nbf = calendar.timegm(body.not_before.utctimetuple())
+    exp = calendar.timegm(body.expires.utctimetuple())
+    perm_strs = [str(prm) for prm in requested_permissions]
+    token = tokenstr.claims_to_str({
+        'iss': 'ra2',
+        'typ': 'tmp',
+        'nbf': nbf,
+        'exp': exp,
+        'prm': perm_strs,
+        'mta': body.metadata,
+    })
+    return types.JsonToken(typ='tmp', token=token,
+                           not_before=body.not_before,
+                           expires=body.expires,
+                           permissions=perm_strs,
+                           metadata=body.metadata)
+
+token_issuers = {
+    'prm': issue_prm,
+    'tmp': issue_tmp,
+}
+
+required_token_attributes = {
+    'prm': ['permissions', 'description'],
+    'tmp': ['permissions', 'not_before', 'expires', 'metadata'],
+}
+
+
+@bp.route('/tokens', methods=['POST'])
+@apimethod(types.JsonToken, body=types.JsonToken)
+@p.base.tokens.issue.require()
+def issue_token(body):
+    """Issue a new token.  The body should not include a ``token`` or ``id``,
+    but should include a ``typ`` and the necessary fields for that type.  The
+    response will contain both ``token`` and ``id``."""
+    # verify required parameters; any extras will be ignored
+    typ = body.typ
+    if typ not in required_token_attributes:
+        raise BadRequest("bad typ")
+    for attr in required_token_attributes[typ]:
+        if getattr(body, attr) is wsme.Unset:
+            raise BadRequest("missing %s" % attr)
+
+    # All types have permissions, so handle those here -- ensure the request is
+    # for a subset of the permissions the user can perform
+    requested_permissions = [p.get(a) for a in body.permissions]
+    if None in requested_permissions:
+        raise BadRequest("bad permissions")
+    if not set(requested_permissions) <= current_user.permissions:
+        raise BadRequest("bad permissions")
+
+    # Dispatch the rest to the per-type function
+    return token_issuers[typ](body, requested_permissions)
 
 
 @bp.route('/tokens/<int:token_id>')

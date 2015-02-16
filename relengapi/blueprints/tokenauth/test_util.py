@@ -15,6 +15,12 @@ class FakeSerializer(object):
             {"iss": "ra2", "jti": "t%d" % id, "typ": "prm"})
 
     @staticmethod
+    def tmp(nbf, exp, prm, mta):
+        return FakeSerializer.dumps(
+            {"iss": "ra2", "typ": "tmp", 'nbf': nbf,
+             "exp": exp, "prm": prm, "mta": mta})
+
+    @staticmethod
     def dumps(data):
         return 'FK:' + json.dumps(data,
                                   separators=(',', ':'),

@@ -2,14 +2,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import calendar
+import pytz
+
+from datetime import datetime
 from flask import json
 from flask.ext.login import current_user
 from nose.tools import eq_
 from relengapi import p
 from relengapi.blueprints.tokenauth import test_util
+from relengapi.blueprints.tokenauth import types
 from relengapi.blueprints.tokenauth.tables import Token
 from relengapi.lib import auth
 from relengapi.lib.testing.context import TestContext
+from wsme.rest.json import fromjson
+from wsme.rest.json import tojson
 
 p.test_tokenauth.zig.doc("Zig")
 p.test_tokenauth.zag.doc("Zag")
@@ -36,6 +43,8 @@ def userperms(perms):
 test_context = TestContext(databases=['relengapi'],
                            reuse_app=True,
                            app_setup=app_setup)
+issuer_test_context = test_context.specialize(
+    user=userperms([p.base.tokens.issue, p.test_tokenauth.zig]))
 
 
 def insert_token(app):
@@ -46,7 +55,38 @@ def insert_token(app):
     session.commit()
 
 
+def _get_token(data):
+    resp = json.loads(data)
+    if 'result' not in resp:
+        raise AssertionError(str(resp))
+    return fromjson(types.JsonToken, resp['result'])
+
+
+def _eq_token(token, attrs):
+    eq_(tojson(types.JsonToken, token),
+        tojson(types.JsonToken, types.JsonToken(**attrs)))
+
+
+def assert_prm_token(data, **attrs):
+    token = _get_token(data)
+    attrs['typ'] = 'prm'
+    attrs['id'] = id = token.id
+    attrs['token'] = test_util.FakeSerializer.prm(id)
+    _eq_token(token, attrs)
+
+
+def assert_tmp_token(data, **attrs):
+    token = _get_token(data)
+    attrs['typ'] = 'tmp'
+    nbf = calendar.timegm(token.not_before.utctimetuple())
+    exp = calendar.timegm(token.expires.utctimetuple())
+    attrs['token'] = test_util.FakeSerializer.tmp(
+        nbf=nbf, exp=exp, prm=token.permissions,
+        mta=token.metadata)
+    _eq_token(token, attrs)
+
 # tests
+
 
 @test_context.specialize(user=userperms([]))
 def test_list_tokens_forbidden(client):
@@ -78,38 +118,67 @@ def test_issue_token_forbidden(client):
     eq_(client.get('/tokenauth/tokens').status_code, 403)
 
 
-@test_context.specialize(user=userperms([p.base.tokens.issue,
-                                         p.test_tokenauth.zig]))
-def test_issue_token_success(client):
-    """Successful token issuance returns a token"""
+@issuer_test_context
+def test_issue_token_prm_success_no_typ(client):
+    """Specifying no typ returns a prm token (for backward compatibility)"""
     request = {
         'permissions': ['test_tokenauth.zig'], 'description': 'More Zig'}
     res = client.post_json('/tokenauth/tokens', request)
-    eq_(json.loads(res.data), {
-        'result': {
-            'token': test_util.FakeSerializer.prm(1),
-            'id': 1,
-            'typ': 'prm',
-            'description': 'More Zig',
-            'permissions': ['test_tokenauth.zig'],
-        }})
+    assert_prm_token(res.data,
+                     description='More Zig',
+                     permissions=['test_tokenauth.zig'])
 
 
-@test_context.specialize(user=userperms([p.base.tokens.issue,
-                                         p.test_tokenauth.zig]))
+@issuer_test_context
+def test_issue_token_prm_success(client):
+    """A legitimate request for a prm token returns one"""
+    request = {'permissions': ['test_tokenauth.zig'],
+               'description': 'More Zig', 'typ': 'prm'}
+    res = client.post_json('/tokenauth/tokens', request)
+    assert_prm_token(res.data,
+                     description='More Zig',
+                     permissions=['test_tokenauth.zig'])
+
+
+@issuer_test_context
+def test_issue_token_tmp_success(client):
+    """A legitimate request for a tmp token returns one"""
+    request = {'permissions': ['test_tokenauth.zig'],
+               'not_before': datetime(2014, 1, 1, tzinfo=pytz.UTC),
+               'expires': datetime(2015, 1, 1, tzinfo=pytz.UTC),
+               'typ': 'tmp',
+               'metadata': {}}
+    res = client.post_json('/tokenauth/tokens', request)
+    assert_tmp_token(res.data,
+                     not_before=datetime(2014, 1, 1, tzinfo=pytz.UTC),
+                     expires=datetime(2015, 1, 1, tzinfo=pytz.UTC),
+                     permissions=['test_tokenauth.zig'],
+                     metadata={})
+
+
+@issuer_test_context
 def test_issue_token_not_subset(client):
     """Tokens can only allow permissions the issuer can perform, failing with
     'bad request' otherwise."""
     request = {'permissions': ['test_tokenauth.zig', 'test_tokenauth.zag'],
-               'description': 'More Zig'}
+               'description': 'More Zig', 'typ': 'prm'}
     eq_(client.post_json('/tokenauth/tokens', request).status_code, 400)
 
 
-@test_context.specialize(user=userperms([p.base.tokens.issue,
-                                         p.test_tokenauth.zig]))
+@issuer_test_context
+def test_issue_tmp_token_no_metadata(client):
+    """Requesting a temporary token without metadata fails."""
+    request = {'permissions': ['test_tokenauth.zig'],
+               'not_before': datetime(2014, 1, 1, tzinfo=pytz.UTC),
+               'expires': datetime(2015, 1, 1, tzinfo=pytz.UTC),
+               'typ': 'tmp'}
+    eq_(client.post_json('/tokenauth/tokens', request).status_code, 400)
+
+
+@issuer_test_context
 def test_issue_token_no_description(client):
-    """Tokens reqiure a description to issue."""
-    request = {'permissions': ['test_tokenauth.zig']}
+    """Permanent tokens reqiure a description to issue."""
+    request = {'permissions': ['test_tokenauth.zig'], 'typ': 'prm'}
     eq_(client.post_json('/tokenauth/tokens', request).status_code, 400)
 
 

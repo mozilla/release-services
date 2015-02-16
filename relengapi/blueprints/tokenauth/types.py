@@ -5,6 +5,7 @@
 import wsme.types
 
 from datetime import datetime
+from relengapi.lib.api import JsonObject
 
 
 class JsonToken(wsme.types.Base):
@@ -33,6 +34,9 @@ class JsonToken(wsme.types.Base):
 
     #: expiration time for limited-duration tokens
     expires = wsme.types.wsattr(datetime, mandatory=False)
+
+    #: metadata fro limited-duration tokens (arbitrary JSON object)
+    metadata = wsme.types.wsattr(JsonObject(), mandatory=False)
 
     #: list of permissions this token grants
     permissions = wsme.types.wsattr([unicode], mandatory=True)
