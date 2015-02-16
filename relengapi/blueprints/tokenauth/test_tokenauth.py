@@ -9,7 +9,7 @@ from flask import json
 from flask.ext.login import current_user
 from nose.tools import eq_
 from relengapi import p
-from relengapi.blueprints.tokenauth import Token
+from relengapi.blueprints.tokenauth.tables import Token
 from relengapi.lib import auth
 from relengapi.lib.testing.context import TestContext
 
@@ -199,47 +199,3 @@ def test_revoke_token_exists(app, client):
 def test_revoke_token_missing(app, client):
     """Revoking a token returns a 204 status even if no such token existed."""
     eq_(client.delete('/tokenauth/tokens/99').status_code, 204)
-
-
-@test_context.specialize(db_setup=insert_token)
-def test_loader_no_header(app, client):
-    """With no Authentication header, no permissions are allowed"""
-    auth = json.loads(client.get('/test_tokenauth').data)
-    eq_(auth['permissions'], [])
-
-
-@test_context.specialize(db_setup=insert_token)
-def test_loader_not_bearer(app, client):
-    """With an Authentication header that does not start with 'Bearer', no
-    permissions are allowed"""
-    auth = json.loads(
-        client.get('/test_tokenauth',
-                   headers=[('Authentication', 'Penguiner TOK/1/v1')]).data)
-    eq_(auth['permissions'], [])
-
-
-@test_context.specialize(db_setup=insert_token)
-def test_loader_good_header(app, client):
-    """With a good Authentication header, the permissions in the DB are allowed"""
-    auth = json.loads(
-        client.get('/test_tokenauth',
-                   headers=[('Authentication', 'Bearer TOK/1/v1')]).data)
-    eq_(auth['permissions'], ['test_tokenauth.zig'], auth)
-
-
-@test_context.specialize(db_setup=insert_token)
-def test_loader_bad_header(app, client):
-    """With a bad Authentication header, no permissions are allowed"""
-    auth = json.loads(
-        client.get('/test_tokenauth',
-                   headers=[('Authentication', 'Bearer xxxxx')]).data)
-    eq_(auth['permissions'], [])
-
-
-@test_context.specialize(db_setup=insert_token)
-def test_loader_good_header_not_in_db(app, client):
-    """With a good Authentication header but no row in the DB, no permissions are allowed"""
-    auth = json.loads(
-        client.get('/test_tokenauth',
-                   headers=[('Authentication', 'Bearer TOK/2/v1')]).data)
-    eq_(auth['permissions'], [])
