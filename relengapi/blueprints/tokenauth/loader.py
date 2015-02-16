@@ -60,11 +60,12 @@ class TokenLoader(object):
         header = header.split()
         if len(header) != 2 or header[0].lower() != 'bearer':
             return
-        claims = tokenstr.str_to_claims(header[1])
+        return self.from_str(header[1])
+
+    def from_str(self, token_str):
+        claims = tokenstr.str_to_claims(token_str)
         if not claims:
             return
-
-        # hand it off to the type function
         try:
             typ_fn = self.type_functions[claims['typ']]
         except KeyError:

@@ -40,6 +40,12 @@ bp.root_widget_template(
     'tokenauth_root_widget.html', priority=100, condition=permitted)
 
 
+def user_to_jsontoken(user):
+    # temporarily fake the existing JSON type
+    assert user.claims['typ'] == 'prm'
+    return user.token_data.to_jsontoken()
+
+
 @bp.route('/')
 @login_required
 def root():
@@ -101,16 +107,10 @@ def get_token(token_id):
 def get_token_by_token(body):
     """Get a token, specified by the token key given in the request body
     (this avoids embedding a token in a URL, where it might be logged)."""
-    token_str = body
-    claims = tokenstr.str_to_claims(token_str)
-    if not claims:
+    user = loader.token_loader.from_str(body)
+    if not user:
         raise NotFound
-
-    token_id = tokenstr.jti2id(claims['jti'])
-    token_data = tables.Token.query.filter_by(id=token_id).first()
-    if not token_data:
-        raise NotFound
-    return token_data.to_jsontoken()
+    return user_to_jsontoken(user)
 
 
 @bp.route('/tokens/<int:token_id>', methods=['DELETE'])
