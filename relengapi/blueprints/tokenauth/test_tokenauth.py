@@ -67,7 +67,7 @@ def test_list_tokens_full(client):
     """Listing tokens returns the tokens in the DB"""
     eq_(json.loads(client.get('/tokenauth/tokens').data),
         {'result': [
-            {'description': 'Zig only', 'id': 1,
+            {'description': 'Zig only', 'id': 1, 'typ': 'prm',
                 'permissions': ['test_tokenauth.zig']}
         ]})
 
@@ -89,6 +89,7 @@ def test_issue_token_success(client):
         'result': {
             'token': test_util.FakeSerializer.prm(1),
             'id': 1,
+            'typ': 'prm',
             'description': 'More Zig',
             'permissions': ['test_tokenauth.zig'],
         }})
@@ -123,7 +124,7 @@ def test_get_token_forbidden(client):
 def test_get_token_exists(client):
     """Getting an existing token returns its id, permissions, and description."""
     eq_(json.loads(client.get('/tokenauth/tokens/1').data),
-        {'result': {'id': 1, 'description': 'Zig only',
+        {'result': {'id': 1, 'description': 'Zig only', 'typ': 'prm',
                     'permissions': ['test_tokenauth.zig']}})
 
 
@@ -147,7 +148,7 @@ def test_get_token_by_token_exists(client):
                            test_util.FakeSerializer.prm(1))
     eq_(res.status_code, 200)
     eq_(json.loads(res.data),
-        {'result': {'id': 1, 'description': 'Zig only',
+        {'result': {'id': 1, 'description': 'Zig only', 'typ': 'prm',
                     'permissions': ['test_tokenauth.zig']}})
 
 

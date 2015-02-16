@@ -4,6 +4,8 @@
 
 import wsme.types
 
+from datetime import datetime
+
 
 class JsonToken(wsme.types.Base):
 
@@ -16,14 +18,33 @@ class JsonToken(wsme.types.Base):
 
     _name = 'Token'
 
-    #: token ID
+    #: token type (short string).  This defaults to ``prm`` for backward
+    #: compatibility, but should always be specified.
+    typ = wsme.types.wsattr(
+        wsme.types.Enum(unicode, 'prm', 'tmp'),
+        mandatory=False,
+        default='prm')
+
+    #: token ID for revokable tokens
     id = wsme.types.wsattr(int, mandatory=False)
 
-    #: the opaque token string (only set on new tokens)
-    token = wsme.types.wsattr(unicode, mandatory=False)
+    #: not-before time for limited-duration tokens
+    not_before = wsme.types.wsattr(datetime, mandatory=False)
 
-    #: the user-supplied token description
-    description = wsme.types.wsattr(unicode, mandatory=True)
+    #: expiration time for limited-duration tokens
+    expires = wsme.types.wsattr(datetime, mandatory=False)
 
     #: list of permissions this token grants
     permissions = wsme.types.wsattr([unicode], mandatory=True)
+
+    #: the user-supplied token description for revokable tokens
+    description = wsme.types.wsattr(unicode, mandatory=False)
+
+    #: user email for user-associated tokens
+    user = wsme.types.wsattr(unicode, mandatory=False)
+
+    #: client id for client-associated tokens
+    client_id = wsme.types.wsattr(int, mandatory=False)
+
+    #: the opaque token string (only set on new tokens)
+    token = wsme.types.wsattr(unicode, mandatory=False)

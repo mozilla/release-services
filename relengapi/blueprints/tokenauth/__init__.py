@@ -77,6 +77,9 @@ def issue_token(body):
     if None in requested_permissions or not set(requested_permissions) <= current_user.permissions:
         raise BadRequest("bad permissions")
 
+    if not body.description:
+        raise BadRequest("no description")
+
     session = g.db.session('relengapi')
     token_row = tables.Token(
         description=body.description,
