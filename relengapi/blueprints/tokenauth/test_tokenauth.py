@@ -10,8 +10,6 @@ from flask.ext.login import current_user
 from nose.tools import eq_
 from relengapi import p
 from relengapi.blueprints.tokenauth import Token
-from relengapi.blueprints.tokenauth import claims_to_str
-from relengapi.blueprints.tokenauth import str_to_claims
 from relengapi.lib import auth
 from relengapi.lib.testing.context import TestContext
 
@@ -245,37 +243,3 @@ def test_loader_good_header_not_in_db(app, client):
         client.get('/test_tokenauth',
                    headers=[('Authentication', 'Bearer TOK/2/v1')]).data)
     eq_(auth['permissions'], [])
-
-
-@TestContext()
-def test_str_to_claims_valid_v1(app):
-    with app.app_context():
-        input_claims = {'id': 25, 'v': 1}
-        token_str = app.tokenauth_serializer.dumps(input_claims)
-        got_claims = str_to_claims(token_str)
-        eq_(got_claims, input_claims)
-
-
-@TestContext()
-def test_str_to_claims_invalid_claims(app):
-    with app.app_context():
-        input_claims = {'in': 'valid'}
-        token_str = app.tokenauth_serializer.dumps(input_claims)
-        got_claims = str_to_claims(token_str)
-        eq_(got_claims, None)
-
-
-@TestContext()
-def test_str_to_claims_invalid_str(app):
-    with app.app_context():
-        got_claims = str_to_claims('abcd')
-        eq_(got_claims, None)
-
-
-@TestContext()
-def test_claims_to_str_to_claims(app):
-    with app.app_context():
-        input_claims = {'id': 10}
-        token_str = claims_to_str(input_claims)
-        got_claims = str_to_claims(token_str)
-        eq_(got_claims['id'], input_claims['id'])

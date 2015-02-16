@@ -7,15 +7,13 @@ import sqlalchemy as sa
 import wsme.types
 
 from flask import Blueprint
-from flask import current_app
 from flask import g
 from flask import url_for
 from flask.ext.login import current_user
 from flask.ext.login import login_required
-from itsdangerous import BadData
-from itsdangerous import JSONWebSignatureSerializer
 from relengapi import apimethod
 from relengapi import p
+from relengapi.blueprints.tokenauth import tokenstr
 from relengapi.lib import angular
 from relengapi.lib import api
 from relengapi.lib import auth
@@ -24,7 +22,6 @@ from relengapi.lib import permissions
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import NotFound
 
-TOKENAUTH_VERSION = 1
 logger = logging.getLogger(__name__)
 bp = Blueprint('tokenauth', __name__,
                template_folder='templates',
@@ -146,7 +143,7 @@ def issue_token(body):
     session.commit()
 
     rv = token_row.to_jsontoken()
-    rv.token = claims_to_str(
+    rv.token = tokenstr.claims_to_str(
         {'id': token_row.id})
     return rv
 
@@ -169,7 +166,7 @@ def get_token_by_token(body):
     """Get a token, specified by the token key given in the request body
     (this avoids embedding a token in a URL, where it might be logged)."""
     token_str = body
-    claims = str_to_claims(token_str)
+    claims = tokenstr.str_to_claims(token_str)
     if not claims:
         raise NotFound
 
@@ -200,7 +197,7 @@ def token_loader(request):
     header = header.split()
     if len(header) != 2 or header[0].lower() != 'bearer':
         return
-    claims = str_to_claims(header[1])
+    claims = tokenstr.str_to_claims(header[1])
     if not claims:
         return
 
@@ -211,29 +208,6 @@ def token_loader(request):
         return user
 
 
-def claims_to_str(claims):
-    claims['v'] = TOKENAUTH_VERSION
-    return current_app.tokenauth_serializer.dumps(claims)
-
-
-def str_to_claims(token_str):
-    try:
-        claims = current_app.tokenauth_serializer.loads(token_str)
-    except BadData:
-        logger.warning("Got invalid signature in token %r", token_str)
-        return None
-
-    if claims.get('v') != TOKENAUTH_VERSION:
-        return None
-
-    return claims
-
-
 @bp.record
 def init_blueprint(state):
-    app = state.app
-    if not app.secret_key:
-        logger.warning("The `SECRET_KEY` setting is not set; tokens will be signed with "
-                       "an insecure, static key")
-    secret_key = app.secret_key or 'NOT THAT SECRET'
-    app.tokenauth_serializer = JSONWebSignatureSerializer(secret_key)
+    tokenstr.init_app(state.app)
