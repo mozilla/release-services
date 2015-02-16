@@ -21,7 +21,9 @@ from relengapi.lib import angular
 from relengapi.lib import api
 from relengapi.lib import auth
 from relengapi.lib import permissions
+from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import Forbidden
 from werkzeug.exceptions import NotFound
 
 logger = logging.getLogger(__name__)
@@ -29,23 +31,44 @@ bp = Blueprint('tokenauth', __name__,
                template_folder='templates',
                static_folder='static')
 
-p.base.tokens.view.doc('See authentication token metadata')
-p.base.tokens.issue.doc('Issue new authentication tokens')
-p.base.tokens.revoke.doc('Revoke authentication tokens')
+p.base.tokens.prm.issue.doc('Issue new permanent authentication tokens')
+p.base.tokens.prm.view.doc('See permanent token metadata')
+p.base.tokens.prm.revoke.doc('Revoke permanent authentication tokens')
+
+p.base.tokens.tmp.issue.doc('Issue new temporary authentication tokens')
 
 
 def permitted():
-    return permissions.can(p.base.tokens.view,
-                           p.base.tokens.issue,
-                           p.base.tokens.revoke)
+    return permissions.can(
+        p.base.tokens.prm.view,
+        p.base.tokens.prm.issue,
+        p.base.tokens.prm.revoke,
+        p.base.tokens.tmp.issue)
 bp.root_widget_template(
     'tokenauth_root_widget.html', priority=100, condition=permitted)
 
 
 def user_to_jsontoken(user):
-    # temporarily fake the existing JSON type
-    assert user.claims['typ'] == 'prm'
-    return user.token_data.to_jsontoken()
+    attrs = {}
+    cl = user.claims
+    attrs['typ'] = user.claims['typ']
+    if 'nbf' in cl:
+        attrs['not_before'] = tz.utcfromtimestamp(cl['nbf'])
+    if 'exp' in cl:
+        attrs['expires'] = tz.utcfromtimestamp(cl['exp'])
+    if 'mta' in cl:
+        attrs['metadata'] = cl['mta']
+    if 'prm' in cl:
+        attrs['permissions'] = cl['prm']
+    # TODO: user, client_id
+
+    if user.token_data:
+        td = user.token_data
+        attrs['id'] = td.id
+        attrs['description'] = td.description
+        attrs['permissions'] = [str(p) for p in td.permissions]
+
+    return types.JsonToken(**attrs)
 
 
 @bp.route('/')
@@ -57,14 +80,15 @@ def root():
 
 
 @bp.route('/tokens')
-@p.base.tokens.view.require()
 @apimethod([types.JsonToken])
 def list_tokens():
-    """Get a list of all existing tokens.
+    """Get a list of all existing tokens the user has permisison to see.
 
     Note that the response does not include the actual token strings.
     Such strings are only revealed when creating a new token."""
-    return [t.to_jsontoken() for t in tables.Token.query.all()]
+    if p.base.tokens.prm.view.can():
+        return [t.to_jsontoken() for t in tables.Token.query.all()]
+    return []
 
 
 def issue_prm(body, requested_permissions):
@@ -112,11 +136,12 @@ required_token_attributes = {
 
 @bp.route('/tokens', methods=['POST'])
 @apimethod(types.JsonToken, body=types.JsonToken)
-@p.base.tokens.issue.require()
+@p.base.tokens.prm.issue.require()
 def issue_token(body):
     """Issue a new token.  The body should not include a ``token`` or ``id``,
     but should include a ``typ`` and the necessary fields for that type.  The
-    response will contain both ``token`` and ``id``."""
+    response will contain both ``token`` and ``id``.  You must have permission
+    to issue the given token type."""
     # verify required parameters; any extras will be ignored
     typ = body.typ
     for attr in required_token_attributes[typ]:
@@ -137,7 +162,7 @@ def issue_token(body):
 
 @bp.route('/tokens/<int:token_id>')
 @apimethod(types.JsonToken, int)
-@p.base.tokens.view.require()
+@p.base.tokens.prm.view.require()
 def get_token(token_id):
     """Get a token, identified by its ``id``."""
     token_data = tables.Token.query.filter_by(id=token_id).first()
@@ -147,20 +172,28 @@ def get_token(token_id):
 
 
 @bp.route('/tokens/query', methods=['POST'])
-@p.base.tokens.view.require()
 @apimethod(types.JsonToken, body=unicode)
 def get_token_by_token(body):
     """Get a token, specified by the token key given in the request body
-    (this avoids embedding a token in a URL, where it might be logged)."""
+    (this avoids embedding a token in a URL, where it might be logged).
+
+    The caller must have permission to view this type of token, unless
+    the token is limited-duration (in which case the API is simply
+    decoding the JSON web token anyway)."""
     user = loader.token_loader.from_str(body)
     if not user:
         raise NotFound
-    return user_to_jsontoken(user)
+    typ = user.claims['typ']
+    # verify this user can view this token type
+    any_can_view = typ in ('tmp',)
+    if any_can_view or p.get('base.tokens.{}.view'.format(typ)).can():
+        return user_to_jsontoken(user)
+    raise Forbidden
 
 
 @bp.route('/tokens/<int:token_id>', methods=['DELETE'])
 @apimethod(None, int)
-@p.base.tokens.revoke.require()
+@p.base.tokens.prm.revoke.require()
 def revoke_token(token_id):
     """Revoke an authentication token, identified by its ID."""
     session = g.db.session('relengapi')

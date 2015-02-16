@@ -44,7 +44,7 @@ test_context = TestContext(databases=['relengapi'],
                            reuse_app=True,
                            app_setup=app_setup)
 issuer_test_context = test_context.specialize(
-    user=userperms([p.base.tokens.issue, p.test_tokenauth.zig]))
+    user=userperms([p.base.tokens.prm.issue, p.test_tokenauth.zig]))
 
 
 def insert_token(app):
@@ -88,19 +88,22 @@ def assert_tmp_token(data, **attrs):
 # tests
 
 
-@test_context.specialize(user=userperms([p.base.tokens.view]))
+@test_context.specialize(user=userperms([p.base.tokens.prm.view]))
 def test_root(client):
     """The Angular UI is served at the root path, but requires view permission"""
     eq_(client.get('/tokenauth/').status_code, 200)
 
 
-@test_context.specialize(user=userperms([]))
+@test_context.specialize(db_setup=insert_token,
+                         user=userperms([]))
 def test_list_tokens_forbidden(client):
-    """Listing tokens requires base.tokens.view"""
-    eq_(client.get('/tokenauth/tokens').status_code, 403)
+    """Anyone can list tokens, but the list is empty without
+    base.tokens.prm.view"""
+    eq_(json.loads(client.get('/tokenauth/tokens').data),
+        {'result': []})
 
 
-@test_context.specialize(user=userperms([p.base.tokens.view]))
+@test_context.specialize(user=userperms([p.base.tokens.prm.view]))
 def test_list_tokens_empty(client):
     """Listing tokens with an empty DB returns an empty list"""
     eq_(json.loads(client.get('/tokenauth/tokens').data),
@@ -108,7 +111,7 @@ def test_list_tokens_empty(client):
 
 
 @test_context.specialize(db_setup=insert_token,
-                         user=userperms([p.base.tokens.view]))
+                         user=userperms([p.base.tokens.prm.view]))
 def test_list_tokens_full(client):
     """Listing tokens returns the tokens in the DB"""
     eq_(json.loads(client.get('/tokenauth/tokens').data),
@@ -120,8 +123,10 @@ def test_list_tokens_full(client):
 
 @test_context.specialize(user=userperms([]))
 def test_issue_token_forbidden(client):
-    """Token issuance requires base.tokens.issue"""
-    eq_(client.get('/tokenauth/tokens').status_code, 403)
+    """Issuing a permanent token requires base.tokens.prm.issue"""
+    request = {
+        'permissions': ['test_tokenauth.zig'], 'description': 'More Zig'}
+    eq_(client.post_json('/tokenauth/tokens', request).status_code, 403)
 
 
 @issuer_test_context
@@ -205,11 +210,11 @@ def test_issue_token_bad_typ(client):
 
 @test_context.specialize(user=userperms([]), db_setup=insert_token)
 def test_get_token_forbidden(client):
-    """Getting a single token requires base.tokens.view"""
+    """Getting a single permanent token requires base.tokens.prm.view"""
     eq_(client.get('/tokenauth/tokens/1').status_code, 403)
 
 
-@test_context.specialize(user=userperms([p.base.tokens.view]),
+@test_context.specialize(user=userperms([p.base.tokens.prm.view]),
                          db_setup=insert_token)
 def test_get_token_exists(client):
     """Getting an existing token returns its id, permissions, and description."""
@@ -218,7 +223,7 @@ def test_get_token_exists(client):
                     'permissions': ['test_tokenauth.zig']}})
 
 
-@test_context.specialize(user=userperms([p.base.tokens.view]))
+@test_context.specialize(user=userperms([p.base.tokens.prm.view]))
 def test_get_token_missing(client):
     """Getting a token which doesn't exist returns 404"""
     eq_(client.get('/tokenauth/tokens/99').status_code, 404)
@@ -226,14 +231,15 @@ def test_get_token_missing(client):
 
 @test_context.specialize(user=userperms([]), db_setup=insert_token)
 def test_get_token_by_token_forbidden(client):
-    """Getting a single token by token requires base.tokens.view"""
-    res = client.post_json('/tokenauth/tokens/query', 'TOK/1/v1')
+    """Getting a single permanent token by token requires base.tokens.prm.view"""
+    res = client.post_json('/tokenauth/tokens/query',
+                           test_util.FakeSerializer.prm(1))
     eq_(res.status_code, 403)
 
 
-@test_context.specialize(user=userperms([p.base.tokens.view]), db_setup=insert_token)
-def test_get_token_by_token_exists(client):
-    """Getting a single token returns that token."""
+@test_context.specialize(user=userperms([p.base.tokens.prm.view]), db_setup=insert_token)
+def test_get_prm_token_by_token_exists(client):
+    """Querying a permanent token returns that token."""
     res = client.post_json('/tokenauth/tokens/query',
                            test_util.FakeSerializer.prm(1))
     eq_(res.status_code, 200)
@@ -242,37 +248,59 @@ def test_get_token_by_token_exists(client):
                     'permissions': ['test_tokenauth.zig']}})
 
 
-@test_context.specialize(user=userperms([p.base.tokens.view]))
-def test_get_token_by_token_missing(client):
-    """Getting a single token that does not exist returns status 404"""
-    res = client.post_json('/tokenauth/tokens/query', 'TOK/99/v1')
+@test_context.specialize(user=userperms([p.base.tokens.prm.view]))
+def test_get_prm_token_by_token_missing(client):
+    """Querying a permanent token that does not exist returns status 404"""
+    res = client.post_json('/tokenauth/tokens/query',
+                           test_util.FakeSerializer.prm(99))
     eq_(res.status_code, 404)
 
 
-@test_context.specialize(user=userperms([p.base.tokens.view]))
+@test_context.specialize(user=userperms([]), db_setup=insert_token)
+def test_get_tmp_token_by_token(client):
+    """Querying a temporary token returns that token's info,
+    without requiring any special permissions"""
+    tok = test_util.FakeSerializer.tmp(
+        nbf=946684800,  # Jan 1, 2000
+        exp=32503680000,  # Jan 1, 3000
+        prm=['test_tokenauth.zag'],
+        mta={})
+    res = client.post_json('/tokenauth/tokens/query', tok)
+    eq_(res.status_code, 200)
+    eq_(json.loads(res.data),
+        {'result': {
+            'typ': 'tmp',
+            'not_before': '2000-01-01T00:00:00+00:00',
+            'expires': '3000-01-01T00:00:00+00:00',
+            'metadata': {},
+            'permissions': ['test_tokenauth.zag'],
+        }})
+
+
+@test_context.specialize(user=userperms([p.base.tokens.prm.view]))
 def test_get_token_by_token_invalid(client):
-    """Passing an invalid string to get a token returns 404"""
+    """Passing an invalid string to query a token returns 404"""
     res = client.post_json('/tokenauth/tokens/query', 'XXX')
     eq_(res.status_code, 404)
 
 
 @test_context.specialize(user=userperms([]), db_setup=insert_token)
-def test_revoke_token_forbidden(client):
-    """Token revocation requires base.tokens.revoke"""
+def test_revoke_prm_token_forbidden(client):
+    """Permanent token revocation requires base.tokens.prm.revoke"""
     eq_(client.delete('/tokenauth/tokens/1').status_code, 403)
 
 
-@test_context.specialize(user=userperms([p.base.tokens.revoke]),
+@test_context.specialize(user=userperms([p.base.tokens.prm.revoke]),
                          db_setup=insert_token)
-def test_revoke_token_exists(app, client):
-    """Revoking a token returns a 204 status and deletes the row."""
+def test_revoke_prm_token_exists(app, client):
+    """Revoking a permanent token returns a 204 status and deletes the row."""
     eq_(client.delete('/tokenauth/tokens/1').status_code, 204)
     with app.app_context():
         token_data = Token.query.filter_by(id=1).first()
         eq_(token_data, None)
 
 
-@test_context.specialize(user=userperms([p.base.tokens.revoke]),
+@test_context.specialize(user=userperms([p.base.tokens.prm.revoke]),
                          db_setup=insert_token)
 def test_revoke_token_missing(app, client):
     """Revoking a token returns a 204 status even if no such token existed."""
