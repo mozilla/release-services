@@ -23,8 +23,11 @@ class Token(db.declarative_base('relengapi')):
     _permissions = sa.Column(sa.Text, nullable=False)
 
     def to_jsontoken(self):
-        return types.JsonToken(id=self.id, description=self.description,
-                               permissions=[str(a) for a in self.permissions])
+        tok = types.JsonToken(id=self.id, typ=self.typ, description=self.description,
+                              permissions=[str(a) for a in self.permissions])
+        if self.user:
+            tok.user = self.user
+        return tok
 
     @property
     def permissions(self):

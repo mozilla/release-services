@@ -22,7 +22,7 @@ class JsonToken(wsme.types.Base):
     #: token type (short string).  This defaults to ``prm`` for backward
     #: compatibility, but should always be specified.
     typ = wsme.types.wsattr(
-        wsme.types.Enum(unicode, 'prm', 'tmp'),
+        wsme.types.Enum(unicode, 'prm', 'tmp', 'usr'),
         mandatory=False,
         default='prm')
 

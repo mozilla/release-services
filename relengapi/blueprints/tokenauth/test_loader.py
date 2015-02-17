@@ -8,20 +8,10 @@ from flask import json
 from nose.tools import eq_
 from relengapi import p
 from relengapi.blueprints.tokenauth import loader
-from relengapi.blueprints.tokenauth import tables
-from relengapi.blueprints.tokenauth import test_util
 from relengapi.blueprints.tokenauth.test_tokenauth import test_context
-
-
-def insert_token(app):
-    session = app.db.session('relengapi')
-    t = tables.Token(
-        id=1,
-        typ='prm',
-        permissions=[p.test_tokenauth.zig],
-        description="Zig only")
-    session.add(t)
-    session.commit()
+from relengapi.blueprints.tokenauth.test_util import FakeSerializer
+from relengapi.blueprints.tokenauth.test_util import insert_prm
+from relengapi.blueprints.tokenauth.test_util import insert_usr
 
 
 @test_context
@@ -41,20 +31,20 @@ def test_loader_not_bearer(app, client):
     eq_(auth['permissions'], [])
 
 
-@test_context.specialize(db_setup=insert_token)
+@test_context.specialize(db_setup=insert_prm)
 def test_loader_good_header(app, client):
     """With a good Authentication header, the permissions in the DB are allowed"""
-    tok = test_util.FakeSerializer.prm(1)
+    tok = FakeSerializer.prm(1)
     auth = json.loads(
         client.get('/test_tokenauth',
                    headers=[('Authentication', 'Bearer ' + tok)]).data)
     eq_(auth['permissions'], ['test_tokenauth.zig'], auth)
 
 
-@test_context.specialize(db_setup=insert_token)
+@test_context.specialize(db_setup=insert_prm)
 def test_from_str(app):
     """from_str returns a TokenUser object for a good token"""
-    tok = test_util.FakeSerializer.prm(1)
+    tok = FakeSerializer.prm(1)
     with app.app_context():
         eq_(loader.token_loader.from_str(tok).permissions,
             set([p.test_tokenauth.zig]))
@@ -63,7 +53,7 @@ def test_from_str(app):
 @test_context
 def test_from_str_no_type(app):
     """from_str does not return a user for a token with no 'typ'"""
-    tok = test_util.FakeSerializer.dumps({})
+    tok = FakeSerializer.dumps({})
     with app.app_context():
         eq_(loader.token_loader.from_str(tok), None)
 
@@ -71,7 +61,7 @@ def test_from_str_no_type(app):
 @test_context
 def test_from_str_bad_type(app):
     """from_str does not return a user for a token with a bogus typ"""
-    tok = test_util.FakeSerializer.dumps({'iss': 'ra2', 'typ': 'booogus'})
+    tok = FakeSerializer.dumps({'iss': 'ra2', 'typ': 'booogus'})
     with app.app_context():
         eq_(loader.token_loader.from_str(tok), None)
 
@@ -85,7 +75,7 @@ def test_loader_bad_header(app, client):
     eq_(auth['permissions'], [])
 
 
-@test_context.specialize(db_setup=insert_token)
+@test_context.specialize(db_setup=insert_prm)
 def test_loader_good_header_not_in_db(app, client):
     """With a good Authentication header but no row in the DB, no permissions are allowed"""
     auth = json.loads(
@@ -94,7 +84,7 @@ def test_loader_good_header_not_in_db(app, client):
     eq_(auth['permissions'], [])
 
 
-@test_context.specialize(db_setup=insert_token)
+@test_context.specialize(db_setup=insert_prm)
 def test_prm_loader(app):
     with app.app_context():
         eq_(loader.prm_loader({'typ': 'prm', 'jti': 't1'}).permissions,
@@ -124,3 +114,10 @@ def test_tmp_loader(app):
             user = loader.tmp_loader(claims)
             eq_(user.permissions, set([p.test_tokenauth.zig]))
             eq_(user.claims['mta'], {'quote': "that's so meta"})
+
+
+@test_context.specialize(db_setup=insert_usr)
+def test_usr_loader(app):
+    with app.app_context():
+        eq_(loader.usr_loader({'typ': 'usr', 'jti': 't2'}).permissions,
+            set([p.test_tokenauth.zig]))

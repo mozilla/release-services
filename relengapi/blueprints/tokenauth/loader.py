@@ -17,10 +17,13 @@ class TokenUser(auth.BaseUser):
 
     type = 'token'
 
-    def __init__(self, claims, permissions=[], token_data={}):
+    def __init__(self, claims, authenticated_email=None,
+                 permissions=[], token_data={}):
         self.claims = claims
         self._permissions = set(permissions)
         self.token_data = token_data
+        if authenticated_email:
+            self.authenticated_email = authenticated_email
 
     def get_id(self):
         jti = (':' + self.claims['jti']) if 'jti' in self.claims else ''
@@ -98,3 +101,15 @@ def tmp_loader(claims):
 
     permissions = permlist_to_permissions(claims['prm'])
     return TokenUser(claims, permissions=permissions)
+
+
+@token_loader.type_function('usr')
+def usr_loader(claims):
+    token_id = tokenstr.jti2id(claims['jti'])
+    token_data = tables.Token.query.filter_by(id=token_id).first()
+    if token_data:
+        assert token_data.typ == 'usr'
+        return TokenUser(claims,
+                         permissions=token_data.permissions,
+                         token_data=token_data,
+                         authenticated_email=token_data.user)
