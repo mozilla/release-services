@@ -32,6 +32,8 @@ permanent app   ``pcli`` request app/refresh tokens  unlimited yes       require
 
 When a token is used to authenticate a request, the Flask ``current_user`` is a ``TokenUser`` instance with a ``claims`` attribute containing the token's JWT claims.
 After verifying that ``current_user.type`` is ``token``, it is safe to rely on any of the values in ``current_user.claim``.
+If the token type is linked to a user, then ``current_user.authenticated_email`` will be set to that user's email address.
+If the token type is not linked to a user, then this attribute does not exist (it is not just set to ``None``).
 
 Every token has these claims:
 

@@ -40,6 +40,16 @@ Permannent tokens are used for authentication of other, internal systems to Rele
 
 A permanent token has attributes ``id``, ``permissions``, and ``description``.
 
+User Token (``usr``)
+....................
+
+A user token is issued by a non-administrative user, and lasts as long as that user's account is still active.
+User tokens are very similar to GitHub's "personal access tokens" -- they entitle the bearer to act as the user, with some subset of the user's permissions.
+
+A user token has attributes ``id``, ``permissions``, ``user``, and ``description``.
+The ``user`` attribute is filled in automatically when the token is issued.
+A request to issue a user token must use an authentication mechanism associated with a user (a browser session or another user token).
+
 Temporary Token (``tmp``)
 .........................
 
@@ -58,6 +68,13 @@ For permanent tokens:
  * ``base.tokens.prm.view`` -- view all permanent tokens
  * ``base.tokens.prm.issue`` -- issue a permanent token
  * ``base.tokens.prm.revoke`` -- revoke a permanent token
+
+For user tokens:
+ * ``base.tokens.usr.view.all`` -- view all user tokens
+ * ``base.tokens.usr.view.my`` -- view my user tokens
+ * ``base.tokens.usr.issue`` -- issue a user token
+ * ``base.tokens.usr.revoke.all`` -- revoke any user token
+ * ``base.tokens.usr.revoke.my`` -- revoke a user token issued by me
 
 For temporary tokens:
  * ``base.tokens.tmp.issue`` -- issue a temporary token.
