@@ -25,8 +25,8 @@ def _fetch():
 
     if not _blueprints:
         _blueprints = []
-        entry_points = (list(pkg_resources.iter_entry_points('relengapi_blueprints'))
-                        + list(pkg_resources.iter_entry_points('relengapi.blueprints')))
+        entry_points = (list(pkg_resources.iter_entry_points('relengapi_blueprints')) +
+                        list(pkg_resources.iter_entry_points('relengapi.blueprints')))
         for ep in entry_points:
             bp = ep.load()
             # make sure we have only one copy of each Distribution

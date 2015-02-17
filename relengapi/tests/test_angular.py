@@ -49,7 +49,7 @@ def test_render_template(client):
     assert '<script src="/static/test_angular.js" type="text/javascript"></script>' \
         in rendered, rendered
     # css dependencies
-    assert '<link href="/static/test_angular.css" media="screen" rel="stylesheet" type="text/css" />' \
+    assert '<link href="/static/test_angular.css" media="screen"' \
         in rendered, rendered
     # user type
     assert '"type": "anonymous"' in rendered, rendered
