@@ -50,7 +50,10 @@ issuer_test_context = test_context.specialize(
 def insert_token(app):
     session = app.db.session('relengapi')
     t = Token(
-        id=1, permissions=[p.test_tokenauth.zig], description="Zig only")
+        id=1,
+        typ='prm',
+        permissions=[p.test_tokenauth.zig],
+        description="Zig only")
     session.add(t)
     session.commit()
 

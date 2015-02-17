@@ -17,7 +17,9 @@ class Token(db.declarative_base('relengapi')):
         super(Token, self).__init__(**kwargs)
 
     id = sa.Column(sa.Integer, primary_key=True)
+    typ = sa.Column(sa.String(4), nullable=False)
     description = sa.Column(sa.Text, nullable=False)
+    user = sa.Column(sa.Text, nullable=True)
     _permissions = sa.Column(sa.Text, nullable=False)
 
     def to_jsontoken(self):

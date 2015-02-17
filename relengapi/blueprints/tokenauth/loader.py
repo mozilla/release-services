@@ -83,6 +83,7 @@ def prm_loader(claims):
     token_id = tokenstr.jti2id(claims['jti'])
     token_data = tables.Token.query.filter_by(id=token_id).first()
     if token_data:
+        assert token_data.typ == 'prm'
         return TokenUser(claims,
                          permissions=token_data.permissions,
                          token_data=token_data)

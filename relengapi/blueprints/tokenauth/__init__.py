@@ -60,13 +60,15 @@ def user_to_jsontoken(user):
         attrs['metadata'] = cl['mta']
     if 'prm' in cl:
         attrs['permissions'] = cl['prm']
-    # TODO: user, client_id
+    # TODO: client_id
 
     if user.token_data:
         td = user.token_data
         attrs['id'] = td.id
         attrs['description'] = td.description
         attrs['permissions'] = [str(p) for p in td.permissions]
+        if td.user:
+            attrs['user'] = td.user
 
     return types.JsonToken(**attrs)
 
@@ -94,6 +96,7 @@ def list_tokens():
 def issue_prm(body, requested_permissions):
     session = g.db.session('relengapi')
     token_row = tables.Token(
+        typ='prm',
         description=body.description,
         permissions=requested_permissions)
     session.add(token_row)
