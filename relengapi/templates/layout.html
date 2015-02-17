@@ -59,18 +59,18 @@
             <ul class="dropdown-menu dropdown-menu-right navbar-about" role="menu">
               <li role="presentation" class="dropdown-header">
                 RelengAPI
-                <li>
-                    <a href="/docs/">Documentation</a>
-                </li>
-                {% if blueprint.dist.project_name == 'relengapi' %}
-                  <li>
-                      <a href="{{ relengapi_metadata['repository_of_record'] }}">Contribute!</a>
-                  </li>
-                  <li>
-                      <a href="{{ relengapi_metadata['bug_report_url'] }}">Report a Bug!</a>
-                  </li>
-                {% endif %}
               </li>
+              <li>
+                  <a href="/docs/">Documentation</a>
+              </li>
+              {% if blueprint.dist.project_name == 'relengapi' %}
+                <li>
+                    <a href="{{ relengapi_metadata['repository_of_record'] }}">Contribute!</a>
+                </li>
+                <li>
+                    <a href="{{ relengapi_metadata['bug_report_url'] }}">Report a Bug!</a>
+                </li>
+              {% endif %}
               {% if blueprint.dist.project_name != 'relengapi' %}
                 <li role="presentation" class="divider">
                 <li role="presentation" class="dropdown-header">
@@ -101,7 +101,7 @@
               {% if current_user.is_authenticated() %}
                 <li class="text-center">Logged in as
                     {% if current_user.type == "human" %}
-                      <span class="user_email">{{ current_user.authenticated_email }}</a></span>
+                      <span class="user_email">{{ current_user.authenticated_email }}</span>
                     {% else %}
                       {{ current_user.type }}
                     {% endif %}
