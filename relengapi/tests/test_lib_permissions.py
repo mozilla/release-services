@@ -21,13 +21,13 @@ def test_Permission_tuple_equivalence():
     eq_(perms.foo.bar.bing, ('foo', 'bar', 'bing'))
 
 
-def test_Permission_undoc_not_in_all():
-    "Un-documented permissions aren't in `perms.all`"
+def test_Permission_undoc_not_exist():
+    "Un-documented permissions don't `exist()`"
     perms = permissions.Permissions()
     perms.a.b.c.d.doc("alphabetterjuice")
-    ok_(perms.a.b.c.d in perms.all)
-    ok_(perms.a.b.c not in perms.all)
-    ok_(perms.a.b.never_mentioned not in perms.all)
+    ok_(perms.a.b.c.d.exists())
+    ok_(not perms.a.b.c.exists())
+    ok_(not perms.a.b.never_mentioned.exists())
 
 
 def test_Permission_get():
