@@ -32,17 +32,17 @@ bp = Blueprint('tokenauth', __name__,
                template_folder='templates',
                static_folder='static')
 
-p.base.tokens.prm.view.doc('See permanent token metadata')
-p.base.tokens.prm.issue.doc('Issue new permanent tokens')
+p.base.tokens.prm.view.doc('See permanent tokens')
+p.base.tokens.prm.issue.doc('Issue permanent tokens')
 p.base.tokens.prm.revoke.doc('Revoke permanent tokens')
 
-p.base.tokens.usr.view.all.doc('See all user token metadata')
-p.base.tokens.usr.view.my.doc('See user token metadata for my tokens')
-p.base.tokens.usr.issue.doc('Issue new user tokens')
+p.base.tokens.usr.view.all.doc('See all user tokens')
+p.base.tokens.usr.view.my.doc('See my user tokens')
+p.base.tokens.usr.issue.doc('Issue user tokens')
 p.base.tokens.usr.revoke.all.doc('Revoke any user token')
-p.base.tokens.usr.revoke.my.doc('Revoke user tokens issued by me')
+p.base.tokens.usr.revoke.my.doc('Revoke my user tokens')
 
-p.base.tokens.tmp.issue.doc('Issue new temporary authentication tokens')
+p.base.tokens.tmp.issue.doc('Issue temporary tokens')
 
 
 def permitted():

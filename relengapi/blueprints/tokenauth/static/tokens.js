@@ -9,17 +9,25 @@ angular.module('tokens').controller('TokenController',
     $scope.available_permissions = initial_data.user.permissions;
     $scope.tokens = initial_data.tokens;
 
-    // calculate permissions
+    // calculate permissions; it's up to the server to actually *enforce* the
+    // permissions -- this is just used to decide which pages to show.
     $scope.can_view = false;
     $scope.can_issue = false;
     $scope.can_revoke = false;
-    angular.forEach(initial_data.user.permissions, function (perm) {
-        angular.forEach(['view', 'issue', 'revoke'], function (action) {
-            if (perm.name == "base.tokens." + action) {
+    angular.forEach(['view', 'issue', 'revoke'], function (action) {
+        var re = new RegExp("^base\.tokens\.[^.]*\." + action + "(?:\.my|\.all)?");
+        angular.forEach(initial_data.user.permissions, function (perm) {
+            if (perm.name.match(re)) {
                 $scope['can_' + action] = true;
             }
         });
     });
+
+    $scope.can = function(query_perm) {
+        return initial_data.user.permissions.find(function(perm) {
+            return perm.name == query_perm;
+        });
+    };
 
     $scope.refreshTokens = function() {
         return restapi.get('/tokenauth/tokens', {while: 'refreshing tokens'})
@@ -44,13 +52,20 @@ angular.module('tokens').controller('TokenListController', function($scope, rest
 
 angular.module('tokens').controller('NewTokenController', function($scope, restapi) {
     $scope.newtoken = {
+        typ: '',
         permissions: [],
         description: '',
     };
     // resulting token
     $scope.token = null;
 
+    $scope.can_issue_usr = $scope.can('base.tokens.usr.issue');
+    $scope.can_issue_prm = $scope.can('base.tokens.prm.issue');
+    $scope.default_typ = $scope.can_issue_usr ? 'usr' : 'prm';
+    $scope.newtoken.typ = $scope.default_typ;
+
     $scope.issueToken = function() {
+        var typ = $scope.newtoken.typ
         var permissions = $scope.newtoken.permissions;
         var description = $scope.newtoken.description;
 
@@ -58,8 +73,11 @@ angular.module('tokens').controller('NewTokenController', function($scope, resta
             url: '/tokenauth/tokens',
             method: 'POST',
             headers: {'Content-Type': 'application/json; charset=utf-8'},
-            data: JSON.stringify({permissions: permissions,
-                                  description: description}),
+            data: JSON.stringify({
+                typ: typ,
+                permissions: permissions,
+                description: description,
+            }),
             while: 'issuing token',
         }).then(function(response) {
             if (response.data.result.token) {

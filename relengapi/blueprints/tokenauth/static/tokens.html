@@ -48,6 +48,14 @@
                         <div class="pull-right">
                             <button ng-click="issueToken()" ng-hide="form.$invalid">Issue</button>
                         </div>
+                        <div class="radio" ng-if="can_issue_prm && can_issue_usr">
+                          <label><input ng-model="newtoken.typ" type="radio" name="typ" value="usr" /> User Token</label>
+                          <span class="text-muted">- <small>tied to your account</small></span>
+                        </div>
+                        <div class="radio" ng-if="can_issue_prm"><!-- always show this radio -->
+                          <label><input ng-model="newtoken.typ" type="radio" name="typ" value="prm" /> Permanent</label>
+                          <span class="text-muted">- <small>not tied to your account (use for permanent infrastructure)</small></span>
+                        </div>
                         <p>Describe this token so that others can identify its use later:</p>
                         <input ng-model="newtoken.description" ng-required="true" class="form-control"></input>
                     </form>
