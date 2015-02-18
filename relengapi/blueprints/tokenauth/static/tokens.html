@@ -18,16 +18,30 @@
             <h3>Active Tokens</h3>
             <ul class="list-group">
                 <li ng-repeat="token in tokens|orderBy:'id'" class="list-group-item">
-                <span ng-repeat="perm in token.permissions">
-                    <perm>{{perm}}</perm>
-                </span>
-                <button class="btn btn-xs btn-danger pull-right"
-                    ng-click="revokeToken(token.id)"
-                    ng-hide="!revoke_enabled || !can_revoke"
-                    ng-disabled="!revoke_enabled || !can_revoke"
-                    >Revoke</button>
-                <br/>
-                <small>{{token.description}}</small>
+                <div class="row">
+                    <div class="col-sm-10">
+                        <small>
+                            <span ng-if="token.typ == 'prm'" class="text-warning">
+                                (permanent)
+                            </span>
+                            <span ng-if="token.typ == 'usr'" class="text-info">
+                                {{token.user}}
+                            </span> - {{token.description}}
+                            <span class="text-muted">({{ token.typ }})</span>
+                        </small>
+                        <br />
+                        <span ng-repeat="perm in token.permissions">
+                            <perm>{{perm}}</perm>
+                        </span>
+                    </div>
+                    <div class="col-sm-2">
+                        <button class="btn btn-xs btn-danger pull-right"
+                            ng-click="revokeToken(token.id)"
+                            ng-hide="!revoke_enabled || !canRevokeToken(token)"
+                            >Revoke</button>
+                    </div>
+                <div>
+                </div>
                 </li>
             </ul>
         </div>

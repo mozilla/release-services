@@ -29,6 +29,21 @@ angular.module('tokens').controller('TokenController',
         });
     };
 
+    $scope.canRevokeToken = function(token) {
+        if (token.typ == 'usr') {
+            if ($scope.can('base.tokens.usr.revoke.all')) {
+                return true;
+            }
+            if ($scope.can('base.tokens.usr.revoke.my')) {
+                if (token.user == initial_data.user.authenticated_email) {
+                    return true;
+                }
+            }
+        } else {
+            return $scope.can('base.tokens.' + token.typ + '.revoke');
+        }
+    };
+
     $scope.refreshTokens = function() {
         return restapi.get('/tokenauth/tokens', {while: 'refreshing tokens'})
         .then(function (response) {
