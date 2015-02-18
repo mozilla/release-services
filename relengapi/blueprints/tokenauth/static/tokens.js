@@ -107,7 +107,6 @@ angular.module('tokens').directive('permissionSelector', function() {
         link: function(scope, element, attrs, ctrl) {
             scope.togglePermission = function(perm) {
                 var perms = scope.permissions;
-                console.log(perms);
                 var i = perms.indexOf(perm.name)
                 if (i == -1) {
                     perms.push(perm.name);
