@@ -136,11 +136,18 @@ def branches():
     return [branch[0] for branch in branches]
 
 
+@bp.route('/lastclobber/all', methods=['GET'])
+@apimethod([rest.ClobberTime])
+def lastclobber_all():
+    "Return a sorted list of all clobbers"
+    session = g.db.session(DB_DECLARATIVE_BASE)
+    return session.query(ClobberTime).order_by(ClobberTime.lastclobber)
+
+
 @bp.route('/lastclobber/branch/by-builder/<string:branch>', methods=['GET'])
 @apimethod({unicode: [rest.ClobberTime]}, unicode)
 def lastclobber_by_builder(branch):
     "Return a dictionary of most recent ClobberTimes grouped by buildername."
-
     session = g.db.session(DB_DECLARATIVE_BASE)
 
     # Isolates the maximum lastclobber for each builddir on a branch

@@ -50,6 +50,14 @@ def test_clobber_request(client):
         'No new clobbers were detected, clobber request failed.')
 
 
+@ test_context
+def test_lastclobber_all(client):
+    rv = client.get('/clobberer/lastclobber/all')
+    eq_(rv.status_code, 200)
+    clobbertimes = json.loads(rv.data)["result"]
+    eq_(len(clobbertimes), len(_clobber_args))
+
+
 @test_context
 def test_clobber_request_of_release(client):
     "Ensures that attempting to clobber a release build will fail."
