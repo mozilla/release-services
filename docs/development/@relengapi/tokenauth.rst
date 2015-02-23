@@ -16,18 +16,6 @@ temporary token ``tmp``  perms granted to token      limited   no
 --------------- -------- --------------------------- --------- --------- ----------------------
 user token      ``usr``  intersection of user's      unlimited yes       user must be valid
                          authz perms and token perms
---------------- -------- --------------------------- --------- --------- ----------------------
-app access      ``acc``  token perms                 limited   no
-  token
---------------- -------- --------------------------- --------- --------- ----------------------
-app refresh     ``ref``  request app access token    unlimited yes       user must be valid and
-  token                                                                  have required perms
---------------- -------- --------------------------- --------- --------- ----------------------
-user app client ``ucli`` request app/refresh tokens  unlimited yes       requires a grant, too;
-  token                                                                  user must be valid
---------------- -------- --------------------------- --------- --------- ----------------------
-permanent app   ``pcli`` request app/refresh tokens  unlimited yes       requires a grant, too;
-  client token                                                           not tied to a user
 =============== ======== =========================== ========= ========= ======================
 
 When a token is used to authenticate a request, the Flask ``current_user`` is a ``TokenUser`` instance with a ``claims`` attribute containing the token's JWT claims.
