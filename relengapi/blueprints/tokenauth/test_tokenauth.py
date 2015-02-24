@@ -192,7 +192,6 @@ def test_issue_prm_token_forbidden(client):
     """Issuing a permanent token requires base.tokens.prm.issue"""
     request = {
         'permissions': ['test_tokenauth.zig'], 'description': 'More Zig'}
-    print client.post_json('/tokenauth/tokens', request).data
     eq_(client.post_json('/tokenauth/tokens', request).status_code, 403)
 
 
