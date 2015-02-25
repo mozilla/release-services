@@ -123,11 +123,10 @@ class BuildDocsSubcommand(subcommands.Subcommand):
         if args.development:
             dists = sorted(set(bp.dist for bp in current_app.relengapi_blueprints.itervalues()))
             for dist in dists:
-                if not os.path.isdir(dist.location):
-                    continue
                 docs_dir = os.path.join(dist.location, 'docs')
                 if not os.path.isdir(docs_dir):
-                    continue
+                    # not covered because we may not have such a dist installed
+                    continue  # pragma: no cover
                 self.copy_docs(docs_dir, support.srcdir)
 
         # actually build the docs

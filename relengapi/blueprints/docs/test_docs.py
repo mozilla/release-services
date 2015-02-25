@@ -5,6 +5,7 @@
 import mock
 import os
 import shutil
+import sys
 
 from nose.tools import eq_
 from relengapi.blueprints import docs
@@ -25,6 +26,11 @@ def app_setup(app):
     app.config['DOCS_BUILD_DIR'] = builddir
     if hasattr(app, 'docs_websupport'):
         del app.docs_websupport
+
+    # delete the srcdir, since we're running in development mode
+    srcdir = os.path.join(sys.prefix, 'relengapi-docs')
+    shutil.rmtree(srcdir)
+
     with app.app_context():
         args = mock.Mock()
         args.quiet = True
