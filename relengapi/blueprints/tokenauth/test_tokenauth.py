@@ -113,9 +113,9 @@ def assert_usr_token(data, **attrs):
 # tests
 
 
-@test_context.specialize(user=userperms([p.base.tokens.prm.view]))
+@test_context.specialize(user=userperms([]))
 def test_root(client):
-    """The Angular UI is served at the root path, but requires view permission"""
+    """The Angular UI is served at the root path, regardless of permissions"""
     eq_(client.get('/tokenauth/').status_code, 200)
 
 
