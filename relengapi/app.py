@@ -125,10 +125,7 @@ def create_app(cmdline=False, test_config=None):
     def versions():
         dists = {}
         for dist in introspection.get_distributions().itervalues():
-            try:
-                relengapi_metadata = dist.relengapi_metadata
-            except AttributeError:
-                relengapi_metadata = {}
+            relengapi_metadata = dist.relengapi_metadata
             dists[dist.key] = DistributionInfo(
                 project_name=dist.project_name,
                 version=dist.version,
