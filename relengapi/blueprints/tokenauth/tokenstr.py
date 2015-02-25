@@ -37,7 +37,7 @@ def str_to_claims(token_str):
         return {'iss': 'ra2', 'typ': 'prm', 'jti': 't%d' % claims['id']}
 
     if claims.get('iss') != TOKENAUTH_ISSUER:
-        return
+        return None
 
     return claims
 
