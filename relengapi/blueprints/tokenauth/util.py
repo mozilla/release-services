@@ -8,8 +8,13 @@ from itsdangerous import BadData
 from relengapi import p
 from relengapi.blueprints.tokenauth.tables import Token
 
+# test utilities
+
 
 class FakeSerializer(object):
+
+    """A token serializer that produces a readable serialization, for use in
+    tests."""
 
     @staticmethod
     def prm(id):
@@ -40,23 +45,8 @@ class FakeSerializer(object):
         else:
             return json.loads(data[3:])
 
-# sample tokens
-
-
-prm_json = {
-    'id': 1,
-    'typ': 'prm',
-    'description': 'Zig only',
-    'permissions': ['test_tokenauth.zig'],
-}
-
-usr_json = {
-    'id': 2,
-    'typ': 'usr',
-    'user': 'me@me.com',
-    'description': 'User Zig',
-    'permissions': ['test_tokenauth.zig'],
-}
+# sample tokens, both a function to insert, and a JSON representation of the
+# corresponding result.
 
 
 def insert_prm(app):
@@ -70,6 +60,14 @@ def insert_prm(app):
     session.commit()
 
 
+prm_json = {
+    'id': 1,
+    'typ': 'prm',
+    'description': 'Zig only',
+    'permissions': ['test_tokenauth.zig'],
+}
+
+
 def insert_usr(app):
     session = app.db.session('relengapi')
     t = Token(
@@ -80,6 +78,15 @@ def insert_usr(app):
         description="User Zig")
     session.add(t)
     session.commit()
+
+
+usr_json = {
+    'id': 2,
+    'typ': 'usr',
+    'user': 'me@me.com',
+    'description': 'User Zig',
+    'permissions': ['test_tokenauth.zig'],
+}
 
 
 def insert_all(app):

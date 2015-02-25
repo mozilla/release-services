@@ -9,9 +9,9 @@ from nose.tools import eq_
 from relengapi import p
 from relengapi.blueprints.tokenauth import loader
 from relengapi.blueprints.tokenauth.test_tokenauth import test_context
-from relengapi.blueprints.tokenauth.test_util import FakeSerializer
-from relengapi.blueprints.tokenauth.test_util import insert_prm
-from relengapi.blueprints.tokenauth.test_util import insert_usr
+from relengapi.blueprints.tokenauth.util import FakeSerializer
+from relengapi.blueprints.tokenauth.util import insert_prm
+from relengapi.blueprints.tokenauth.util import insert_usr
 
 
 @test_context
