@@ -17,11 +17,7 @@ class Layout(object):
                 blueprint = current_app.blueprints[request.blueprint]
             else:
                 blueprint = current_app.blueprints['base']
-            try:
-                relengapi_metadata = blueprint.dist.relengapi_metadata
-            except AttributeError:
-                base_dist = current_app.blueprints['base'].dist
-                relengapi_metadata = base_dist.relengapi_metadata
+            relengapi_metadata = blueprint.dist.relengapi_metadata
             return {
                 'blueprint': blueprint,
                 'relengapi_metadata': relengapi_metadata,
