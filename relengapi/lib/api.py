@@ -164,6 +164,9 @@ class JsonObject(wsme.types.UserType):
 
         return value
 
+# provide a single instance for use in WSME types
+jsonObject = JsonObject()
+
 
 def init_app(app):
     # install a universal error handler that will render errors based on the

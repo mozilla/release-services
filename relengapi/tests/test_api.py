@@ -231,11 +231,11 @@ def test_get_data_notallowed(client):
 
 
 class AType(object):
-    data = api.JsonObject()
+    data = api.jsonObject
 wsme.types.register_type(AType)
 
 
-def test_JsonObject():
+def test_jsonObject():
     # dictionaries work fine
     obj = AType()
     obj.data = {'a': 1}
