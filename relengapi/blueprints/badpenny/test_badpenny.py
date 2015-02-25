@@ -19,7 +19,8 @@ from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
 
 
-dt = lambda *args: datetime.datetime(*args, tzinfo=pytz.UTC)
+def dt(*args):
+    return datetime.datetime(*args, tzinfo=pytz.UTC)
 
 test_context = TestContext(databases=['relengapi'],
                            reuse_app=True)
@@ -162,8 +163,9 @@ def test_to_jsontask(app):
 @test_context.specialize(app_setup=add_data)
 def test_last_success(app):
     """The last_success property returns -1 for never, 0 for failure, and 1 for success"""
-    q = lambda name: tables.BadpennyTask.query.filter(
-        tables.BadpennyTask.name == name).first()
+    def q(name):
+        return tables.BadpennyTask.query.filter(
+            tables.BadpennyTask.name == name).first()
     with app.test_request_context():
         eq_(q('cleanup').last_success, 0)
         eq_(q('report').last_success, 1)
@@ -335,7 +337,8 @@ def empty_registry():
 
 
 def fake_task_func(name):
-    func = lambda j: None
+    def func(j):
+        pass
     func.__module__ = 'test'
     func.__name__ = name
     return func
@@ -520,9 +523,10 @@ def test_cleanup(app):
         session = app.db.session('relengapi')
         task = tables.BadpennyTask(name='foo')
         session.add(task)
-        newjob = lambda id, created_at: task.jobs.append(
-            tables.BadpennyJob(id=id, task_id=task.id,
-                               created_at=created_at))
+
+        def newjob(id, created_at):
+            task.jobs.append(tables.BadpennyJob(
+                id=id, task_id=task.id, created_at=created_at))
         newjob(1, dt(2014, 9, 20))
         newjob(2, dt(2014, 9, 15))
         newjob(3, dt(2014, 9, 10))

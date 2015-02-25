@@ -1,8 +1,6 @@
 [pep8]
 show-source = yes
 statistics = yes
-# E731: assigning a lambda (good for tests)
-ignore = E731
 count = yes
 max-line-length = 100
 # exclude the Sphinx config file

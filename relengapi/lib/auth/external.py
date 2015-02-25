@@ -17,12 +17,6 @@ logger = logging.getLogger(__name__)
 
 def init_app(app):
     config = app.config['RELENGAPI_AUTHENTICATION']
-    if 'environ' in config:
-        environ_key = config['environ']
-        user_getter = lambda request: request.environ.get(environ_key)
-    else:
-        header = config.get('header', 'REMOTE_USER')
-        user_getter = lambda request: request.headers.get(header)
 
     app.layout.add_script("/static/js/auth_external.js")
 
@@ -30,7 +24,12 @@ def init_app(app):
     def login():
         """/userauth/login view; the frontend should apply its auth to this request
         and identify the user for us"""
-        email = user_getter(request)
+        if 'environ' in config:
+            environ_key = config['environ']
+            email = request.environ.get(environ_key)
+        else:
+            header = config.get('header', 'REMOTE_USER')
+            email = request.headers.get(header)
         if email:
             login_user(auth.HumanUser(email))
             return _finish_request()

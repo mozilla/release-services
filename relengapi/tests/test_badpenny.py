@@ -22,6 +22,10 @@ def empty_registry():
         badpenny.Task._registry = old_registry
 
 
+def delta(s):
+    return datetime.timedelta(seconds=s)
+
+
 def test_periodic_task():
     """The periodic_task decorator takes a `seconds` argument and creates a task"""
     with empty_registry():
@@ -32,7 +36,7 @@ def test_periodic_task():
         eq_(t.schedule, 'every 10 seconds')
 
         when = datetime.datetime(2014, 8, 12, 15, 59, 17)
-        delta = lambda s: datetime.timedelta(seconds=s)
+
         bpt = tables.BadpennyTask(jobs=[
             tables.BadpennyJob(created_at=when),
         ])
@@ -54,7 +58,8 @@ def test_cron_task():
         bpt = tables.BadpennyTask(jobs=[
             tables.BadpennyJob(created_at=when),
         ])
-        assert not t.runnable_now(bpt, datetime.datetime(2014, 8, 12, 15, 59, 17))
+        assert not t.runnable_now(
+            bpt, datetime.datetime(2014, 8, 12, 15, 59, 17))
         assert t.runnable_now(bpt, datetime.datetime(2014, 8, 12, 16, 13, 0))
 
 
