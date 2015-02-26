@@ -255,7 +255,8 @@ def issue_token(body):
     if not set(requested_permissions) <= current_user.permissions:
         raise BadRequest("bad permissions")
 
-    # Dispatch the rest to the per-type function
+    # Dispatch the rest to the per-type function.  Note that WSME has already
+    # ensured `typ` is one of the recognized types.
     return token_issuers[typ](body, requested_permissions)
 
 
