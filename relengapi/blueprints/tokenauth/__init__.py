@@ -21,7 +21,6 @@ from relengapi.blueprints.tokenauth import types
 from relengapi.lib import angular
 from relengapi.lib import api
 from relengapi.lib import auth
-from relengapi.lib import permissions
 from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import Forbidden
@@ -45,14 +44,23 @@ p.base.tokens.usr.revoke.my.doc('Revoke my user tokens')
 p.base.tokens.tmp.issue.doc('Issue temporary tokens')
 
 
-def permitted():
-    return permissions.can(
+def any_token_perm():
+    for prm in [
         p.base.tokens.prm.view,
         p.base.tokens.prm.issue,
         p.base.tokens.prm.revoke,
-        p.base.tokens.tmp.issue)
+        p.base.tokens.tmp.issue,
+        p.base.tokens.usr.view.all,
+        p.base.tokens.usr.view.my,
+        p.base.tokens.usr.issue,
+        p.base.tokens.usr.revoke.all,
+        p.base.tokens.usr.revoke.my,
+    ]:
+        if prm.can():
+            return True
+
 bp.root_widget_template(
-    'tokenauth_root_widget.html', priority=100, condition=permitted)
+    'tokenauth_root_widget.html', priority=100, condition=any_token_perm)
 
 
 def user_to_jsontoken(user):
