@@ -29,7 +29,8 @@ class JsonToken(wsme.types.Base):
     #: token ID for revokable tokens
     id = wsme.types.wsattr(int, mandatory=False)
 
-    #: not-before time for limited-duration tokens
+    #: not-before time for limited-duration tokens (see
+    #: :ref:`Datetime-Format` for format information)
     not_before = wsme.types.wsattr(datetime, mandatory=False)
 
     #: expiration time for limited-duration tokens
