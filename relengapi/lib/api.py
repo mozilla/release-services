@@ -146,6 +146,28 @@ def get_data(view_func, *args, **kwargs):
     return rv
 
 
+class JsonObject(wsme.types.UserType):
+
+    basetype = dict
+    name = 'JsonObject'
+
+    def validate(self, value):
+        if not isinstance(value, dict):
+            raise ValueError("Wrong type. Expected JSON object, got '%s'"
+                             % (type(value),))
+
+        # try dumping it to make sure it's JSON-able
+        try:
+            json.dumps(value)
+        except Exception:
+            raise ValueError("Cannot be converted to JSON")
+
+        return value
+
+# provide a single instance for use in WSME types
+jsonObject = JsonObject()
+
+
 def init_app(app):
     # install a universal error handler that will render errors based on the
     # Accept header in the request

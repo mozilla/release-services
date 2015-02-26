@@ -15,16 +15,16 @@ class Permission(tuple):
 
     def doc(self, doc):
         self.__doc__ = doc
-        self.all[self] = self
+        self._all[self] = self
 
     def __getattr__(self, attr):
         new = Permission(self + (attr,))
-        new.all = self.all
+        new._all = self._all
         setattr(self, attr, new)
         return new
 
     def exists(self):
-        return self in self.all
+        return self in self._all
 
     def require(self):
         return require(self)
@@ -40,12 +40,12 @@ class Permissions(Permission):
 
     def __init__(self):
         super(Permissions, self).__init__()
-        self.all = {}
+        self._all = {}
 
     def __getitem__(self, index):
         if not isinstance(index, tuple):
             index = tuple(index.split('.'))
-        return self.all[index]
+        return self._all[index]
 
     def get(self, index, default=None):
         try:
@@ -71,7 +71,7 @@ class Permissions(Permission):
         for perm in permissions:
             if not perm.exists():
                 raise RuntimeError(
-                    "Cannot require undocumented permission %s" % perm)
+                    "Cannot require undocumented permission %s" % (perm,))
 
         @wrapt.decorator
         def req(wrapped, instance, args, kwargs):

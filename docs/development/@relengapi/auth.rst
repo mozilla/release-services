@@ -78,7 +78,18 @@ A simple example::
         if address == '127.0.0.1':
         return LocalhostUser()
 
-In most cases, this form of authentication is handled in a blueprint which also provides the necessary UI for managing credentials.
+This is a very low-level interface.
+In most cases, you will take advantage of token authentication to handle non-browser authentication.
+
+Token Authentication
+--------------------
+
+The ``tokenauth`` blueprint implements a request loader which looks for bearer tokens containing JSON Web Tokens.
+When this authentication succeeds, the curent user is a ``TokenUser`` object, with type ``"token"``.
+It has a ``claims`` attribute which contains the JWT claims in the original token.
+This can be used, for example, for access to the metadata in temporary tokens.
+
+See :doc:`tokenauth` for more detail on the implementation of token authentication.
 
 Authorization
 -------------

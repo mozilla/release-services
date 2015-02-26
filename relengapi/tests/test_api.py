@@ -4,16 +4,21 @@
 
 import mock
 import sys
+import wsme.exc
 import wsme.types
 
+from datetime import datetime
 from flask import json
 from flask import redirect
 from nose.tools import assert_raises
 from nose.tools import eq_
+from pytz import UTC
 from relengapi.lib import api
 from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
 from werkzeug.exceptions import BadRequest
+from wsme.rest.json import fromjson
+from wsme.rest.json import tojson
 
 
 p.test_api.doc('test permission')
@@ -226,3 +231,42 @@ def test_incorrect_params(client):
 def test_get_data_notallowed(client):
     resp = client.get('/get_data/notallowed')
     eq_(resp.status_code, 403)
+
+
+class AType(object):
+    data = api.jsonObject
+wsme.types.register_type(AType)
+
+
+def test_jsonObject():
+    # dictionaries work fine
+    obj = AType()
+    obj.data = {'a': 1}
+    eq_(obj.data, {'a': 1})
+    # other types don't
+    assert_raises(wsme.exc.InvalidInput, lambda:
+                  setattr(obj, 'data', ['a']))
+    # and un-JSONable Python data doesn't
+    assert_raises(wsme.exc.InvalidInput, lambda:
+                  setattr(obj, 'data', {'a': lambda: 1}))
+
+    # valid JSON objects work fine
+    obj = fromjson(AType, {'data': {'b': 2}})
+    # other types don't
+    assert_raises(wsme.exc.InvalidInput, lambda:
+                  fromjson(AType, {'data': ['b', 2]}))
+
+
+class TypeWithDate(object):
+    when = datetime
+wsme.types.register_type(TypeWithDate)
+
+
+def test_date_formatting():
+    """ISO 8601 formatted dates with timezones are correctly translated to
+    datetime instances and back"""
+    d = TypeWithDate()
+    d.when = datetime(2015, 2, 28, 1, 2, 3, tzinfo=UTC)
+    j = {'when': '2015-02-28T01:02:03+00:00'}
+    eq_(tojson(TypeWithDate, d), j)
+    eq_(fromjson(TypeWithDate, j).when, d.when)
