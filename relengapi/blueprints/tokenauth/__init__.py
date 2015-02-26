@@ -75,7 +75,6 @@ def user_to_jsontoken(user):
         attrs['metadata'] = cl['mta']
     if 'prm' in cl:
         attrs['permissions'] = cl['prm']
-    # TODO: client_id
 
     if user.token_data:
         td = user.token_data
