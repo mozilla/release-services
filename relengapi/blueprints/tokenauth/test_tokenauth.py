@@ -543,3 +543,27 @@ def test_revoke_usr_token_success_all(client):
 def test_revoke_token_missing(app, client):
     """Revoking a token returns a 204 status even if no such token existed."""
     eq_(client.delete('/tokenauth/tokens/99').status_code, 403)
+
+
+@test_context
+def test_token_row_undefined_permissions(app):
+    """If a token row contains an undefined permission, that permission
+    is ignored when the token is loaded."""
+    t = Token(
+        id=20,
+        typ='prm',
+        _permissions='test_tokenauth.zig,not.a.real.permission',
+        description="permtest")
+    eq_(t.permissions, [p.test_tokenauth.zig])
+
+
+@test_context
+def test_token_row_empty_permissions(app):
+    """If a token row contains no permissions, that remains the case
+    after the permissions are serialized and deserialized."""
+    t = Token(
+        id=20,
+        typ='prm',
+        permissions=[],
+        description="permtest")
+    eq_(t.permissions, [])

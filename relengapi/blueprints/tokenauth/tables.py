@@ -13,7 +13,8 @@ class Token(db.declarative_base('relengapi')):
     __tablename__ = 'auth_tokens'
 
     def __init__(self, permissions=None, **kwargs):
-        kwargs['_permissions'] = ','.join((str(a) for a in permissions or []))
+        if permissions is not None:
+            kwargs['_permissions'] = ','.join((str(a) for a in permissions))
         super(Token, self).__init__(**kwargs)
 
     id = sa.Column(sa.Integer, primary_key=True)
