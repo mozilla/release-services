@@ -8,6 +8,7 @@ import logging.handlers
 import mockldap
 import unittest
 
+from nose.tools import assert_raises
 from nose.tools import eq_
 from relengapi import p
 from relengapi.lib import auth
@@ -167,3 +168,14 @@ def test_on_permissions_everyone(app):
     lg.get_user_groups = lambda mail: []
     lg.on_permissions_stale('sender', user, permissions)
     eq_(permissions, set([p.test_lga.bar]))
+
+
+BOGUS_CONFIG = copy.deepcopy(CONFIG)
+BOGUS_CONFIG['RELENGAPI_PERMISSIONS'][
+    'group-permissions']['group1'] = ['not.a.real.perm']
+
+
+@test_context.specialize(config=BOGUS_CONFIG)
+def test_init_app_with_bogus_perms(app):
+    assert_raises(RuntimeError, lambda:
+                  ldap_group_authz.init_app(app))
