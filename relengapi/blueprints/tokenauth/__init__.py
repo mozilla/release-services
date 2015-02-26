@@ -156,7 +156,12 @@ def list_tokens(typ=None):
 
 
 token_issuers = {}
-token_issuer = lambda typ: lambda fn: token_issuers.__setitem__(typ, fn)
+
+
+def token_issuer(typ):
+    def wrapper(fn):
+        token_issuers.__setitem__(typ, fn)
+    return wrapper
 
 
 @token_issuer('prm')
