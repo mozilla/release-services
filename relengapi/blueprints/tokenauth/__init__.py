@@ -135,21 +135,23 @@ def list_tokens(typ=None):
     tbl = tables.Token
     email = get_user_email()
 
-    cond = []
+    conds = []
     if p.base.tokens.prm.view.can():
-        cond.append(tbl.typ == 'prm')
+        conds.append(tbl.typ == 'prm')
     if p.base.tokens.usr.view.all.can():
-        cond.append(tbl.typ == 'usr')
+        conds.append(tbl.typ == 'usr')
     elif email and p.base.tokens.usr.view.my.can():
-        cond.append(sa.and_(tbl.typ == 'usr',
-                            tbl.user == email))
-    if not cond:
+        conds.append(sa.and_(tbl.typ == 'usr',
+                             tbl.user == email))
+    if not conds:
         return []
-    cond = sa.or_(*cond)
+    disjunction = sa.or_(*conds)
     if typ:
-        cond = sa.and_(cond, tbl.typ == typ)
+        filter_cond = sa.and_(disjunction, tbl.typ == typ)
+    else:
+        filter_cond = disjunction
 
-    q = tables.Token.query.filter(cond)
+    q = tables.Token.query.filter(filter_cond)
     return [t.to_jsontoken() for t in q.all()]
 
 
