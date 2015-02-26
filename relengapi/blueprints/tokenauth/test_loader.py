@@ -75,6 +75,15 @@ def test_loader_bad_header(app, client):
     eq_(auth['permissions'], [])
 
 
+@test_context
+def test_loader_malformed_header(app, client):
+    """With a malformed Authentication header, no permissions are allowed"""
+    auth = json.loads(
+        client.get('/test_tokenauth',
+                   headers=[('Authentication', 'no-space-ma')]).data)
+    eq_(auth['permissions'], [])
+
+
 @test_context.specialize(db_setup=insert_prm)
 def test_loader_good_header_not_in_db(app, client):
     """With a good Authentication header but no row in the DB, no permissions are allowed"""
