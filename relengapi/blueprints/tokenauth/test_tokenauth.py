@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import calendar
-import pytz
-import mock
 import contextlib
+import mock
+import pytz
 
 from datetime import datetime
 from flask import json
