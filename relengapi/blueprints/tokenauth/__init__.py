@@ -185,14 +185,14 @@ def issue_prm(body, requested_permissions):
 @token_issuer('tmp')
 def issue_tmp(body, requested_permissions):
     if body.not_before:
-        raise BadRequest("do not specify not_before to issue a token")
+        raise BadRequest("do not specify not_before when creating a tmp token")
     nbf = int(time.time())
     exp = calendar.timegm(body.expires.utctimetuple())
     if exp <= nbf:
         raise BadRequest("expiration time must be in the future")
     max_lifetime = current_app.config.get(
         "RELENGAPI_TMP_TOKEN_MAX_LIFETIME", 86400)
-    if exp > time.time() + max_lifetime:
+    if exp > nbf + max_lifetime:
         raise BadRequest("expiration time is more than %d seconds in the future" %
                          max_lifetime)
     perm_strs = [str(prm) for prm in requested_permissions]

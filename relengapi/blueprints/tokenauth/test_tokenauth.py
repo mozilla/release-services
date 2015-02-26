@@ -318,7 +318,7 @@ def test_issue_tmp_token_exp_in_past(client):
 def test_issue_tmp_token_exp_in_future(client):
     """Requesting a temporary token with an expiration time too far in the future fails."""
     request = {'permissions': ['test_tokenauth.zig'],
-               # more than 1 day after JAN_2014
+               # more than 1 day (RELENGAPI_TMP_TOKEN_MAX_LIFETIME) after JAN_2014
                'expires': datetime(2014, 1, 2, 1, 15, 0, tzinfo=pytz.UTC),
                'metadata': {},
                'typ': 'tmp'}
