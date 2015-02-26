@@ -4,6 +4,8 @@
 
 import calendar
 import pytz
+import mock
+import contextlib
 
 from datetime import datetime
 from flask import json
@@ -68,6 +70,16 @@ test_context = TestContext(databases=['relengapi'],
                            reuse_app=True,
                            app_setup=app_setup)
 
+JAN_2014 = calendar.timegm(
+    datetime(2014, 1, 1, tzinfo=pytz.UTC).utctimetuple())
+
+
+@contextlib.contextmanager
+def time_set_to(when):
+    with mock.patch('relengapi.blueprints.tokenauth.time.time') as time:
+        time.return_value = when
+        yield time
+
 # assertions
 
 
@@ -94,7 +106,7 @@ def assert_prm_token(data, **attrs):
 def assert_tmp_token(data, **attrs):
     token = _get_token(data)
     attrs['typ'] = 'tmp'
-    nbf = calendar.timegm(token.not_before.utctimetuple())
+    nbf = JAN_2014
     exp = calendar.timegm(token.expires.utctimetuple())
     attrs['token'] = FakeSerializer.tmp(
         nbf=nbf, exp=exp, prm=token.permissions,
@@ -243,40 +255,75 @@ def test_issue_not_valid_perms(client):
 
 @test_context.specialize(user=userperms([]))
 def test_issue_tmp_token_forbidden(client):
-    """Issuing a temporary token requires base.tokens.tmp.issue"""
+    """Issuing a temporary token fails without base.tokens.tmp.issue"""
     request = {'permissions': ['test_tokenauth.zig'],
-               'not_before': datetime(2014, 1, 1, tzinfo=pytz.UTC),
-               'expires': datetime(2015, 1, 1, tzinfo=pytz.UTC),
+               'expires': datetime(2014, 1, 1, 1, 15, 0, tzinfo=pytz.UTC),
                'typ': 'tmp',
                'metadata': {}}
-    eq_(client.post_json('/tokenauth/tokens', request).status_code, 403)
+    with time_set_to(JAN_2014):
+        eq_(client.post_json('/tokenauth/tokens', request).status_code, 403)
 
 
 @test_context.specialize(user=userperms([p.base.tokens.prm.issue, p.test_tokenauth.zig]))
 def test_issue_tmp_token_forbidden_wrong_typ(client):
     """Issuing a temporary token requires base.tokens.tmp.issue; base.tokens.prm.issue won't do"""
     request = {'permissions': ['test_tokenauth.zig'],
-               'not_before': datetime(2014, 1, 1, tzinfo=pytz.UTC),
-               'expires': datetime(2015, 1, 1, tzinfo=pytz.UTC),
+               'expires': datetime(2014, 1, 1, 1, 15, 0, tzinfo=pytz.UTC),
                'typ': 'tmp',
                'metadata': {}}
-    eq_(client.post_json('/tokenauth/tokens', request).status_code, 403)
+    with time_set_to(JAN_2014):
+        eq_(client.post_json('/tokenauth/tokens', request).status_code, 403)
 
 
 @test_context.specialize(user=userperms([p.base.tokens.tmp.issue, p.test_tokenauth.zig]))
 def test_issue_tmp_success(client):
-    """A legitimate request for a tmp token returns one"""
+    """A legitimate request for a tmp token returns one, with not_before set to the current time"""
     request = {'permissions': ['test_tokenauth.zig'],
-               'not_before': datetime(2014, 1, 1, tzinfo=pytz.UTC),
-               'expires': datetime(2015, 1, 1, tzinfo=pytz.UTC),
+               'expires': datetime(2014, 1, 1, 1, 15, 0, tzinfo=pytz.UTC),
                'typ': 'tmp',
                'metadata': {}}
-    res = client.post_json('/tokenauth/tokens', request)
+    with time_set_to(JAN_2014):
+        res = client.post_json('/tokenauth/tokens', request)
     assert_tmp_token(res.data,
                      not_before=datetime(2014, 1, 1, tzinfo=pytz.UTC),
-                     expires=datetime(2015, 1, 1, tzinfo=pytz.UTC),
+                     expires=datetime(2014, 1, 1, 1, 15, 0, tzinfo=pytz.UTC),
                      permissions=['test_tokenauth.zig'],
                      metadata={})
+
+
+@test_context.specialize(user=userperms([p.base.tokens.tmp.issue, p.test_tokenauth.zig]))
+def test_issue_tmp_token_includes_nbf(client):
+    """Requesting a temporary token with not_before specified fails."""
+    request = {'permissions': ['test_tokenauth.zig'],
+               'not_before': datetime(2014, 1, 1, tzinfo=pytz.UTC),
+               'expires': datetime(2014, 1, 1, 1, 15, 0, tzinfo=pytz.UTC),
+               'metadata': {},
+               'typ': 'tmp'}
+    with time_set_to(JAN_2014):
+        eq_(client.post_json('/tokenauth/tokens', request).status_code, 400)
+
+
+@test_context.specialize(user=userperms([p.base.tokens.tmp.issue, p.test_tokenauth.zig]))
+def test_issue_tmp_token_exp_in_past(client):
+    """Requesting a temporary token with an expiration time in the past fails."""
+    request = {'permissions': ['test_tokenauth.zig'],
+               'expires': datetime(2013, 12, 31, 23, 15, 0, tzinfo=pytz.UTC),
+               'metadata': {},
+               'typ': 'tmp'}
+    with time_set_to(JAN_2014):
+        eq_(client.post_json('/tokenauth/tokens', request).status_code, 400)
+
+
+@test_context.specialize(user=userperms([p.base.tokens.tmp.issue, p.test_tokenauth.zig]))
+def test_issue_tmp_token_exp_in_future(client):
+    """Requesting a temporary token with an expiration time too far in the future fails."""
+    request = {'permissions': ['test_tokenauth.zig'],
+               # more than 1 day after JAN_2014
+               'expires': datetime(2014, 1, 2, 1, 15, 0, tzinfo=pytz.UTC),
+               'metadata': {},
+               'typ': 'tmp'}
+    with time_set_to(JAN_2014):
+        eq_(client.post_json('/tokenauth/tokens', request).status_code, 400)
 
 
 @test_context.specialize(user=userperms([p.base.tokens.tmp.issue, p.test_tokenauth.zig]))
@@ -284,7 +331,7 @@ def test_issue_tmp_token_no_metadata(client):
     """Requesting a temporary token without metadata fails."""
     request = {'permissions': ['test_tokenauth.zig'],
                'not_before': datetime(2014, 1, 1, tzinfo=pytz.UTC),
-               'expires': datetime(2015, 1, 1, tzinfo=pytz.UTC),
+               'expires': datetime(2014, 1, 1, 1, 15, 0, tzinfo=pytz.UTC),
                'typ': 'tmp'}
     eq_(client.post_json('/tokenauth/tokens', request).status_code, 400)
 

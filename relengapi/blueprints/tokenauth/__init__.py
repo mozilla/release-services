@@ -6,9 +6,11 @@ import calendar
 import logging
 import sqlalchemy as sa
 import wsme
+import time
 
 from flask import Blueprint
 from flask import g
+from flask import current_app
 from flask import url_for
 from flask.ext.login import current_user
 from flask.ext.login import login_required
@@ -182,8 +184,16 @@ def issue_prm(body, requested_permissions):
 
 @token_issuer('tmp')
 def issue_tmp(body, requested_permissions):
-    nbf = calendar.timegm(body.not_before.utctimetuple())
+    if body.not_before:
+        raise BadRequest("do not specify not_before to issue a token")
+    nbf = int(time.time())
     exp = calendar.timegm(body.expires.utctimetuple())
+    if exp <= nbf:
+        raise BadRequest("expiration time must be in the future")
+    max_lifetime = current_app.config.get("RELENGAPI_TMP_TOKEN_MAX_LIFETIME", 86400)
+    if exp > time.time() + max_lifetime:
+        raise BadRequest("expiration time is more than %d seconds in the future" %
+                        max_lifetime)
     perm_strs = [str(prm) for prm in requested_permissions]
     token = tokenstr.claims_to_str({
         'iss': 'ra2',
@@ -194,7 +204,7 @@ def issue_tmp(body, requested_permissions):
         'mta': body.metadata,
     })
     return types.JsonToken(typ='tmp', token=token,
-                           not_before=body.not_before,
+                           not_before=tz.utcfromtimestamp(nbf),
                            expires=body.expires,
                            permissions=perm_strs,
                            metadata=body.metadata)
@@ -223,7 +233,7 @@ def issue_usr(body, requested_permissions):
 
 required_token_attributes = {
     'prm': ['permissions', 'description'],
-    'tmp': ['permissions', 'not_before', 'expires', 'metadata'],
+    'tmp': ['permissions', 'expires', 'metadata'],
     'usr': ['permissions', 'description'],
 }
 

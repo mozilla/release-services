@@ -1,3 +1,5 @@
+.. _Token-Usage:
+
 Token Authentication
 ====================
 
@@ -58,6 +60,9 @@ Temporary tokens are used to give short-term, narrowly-focused permissions to ot
 For example, a build job might use a temporary token to record its results, with the permissions of the token limited to writing results for its build ID.
 
 A temporary token has attributes ``not_before``, ``expires``, ``permissions``, and ``metadata``.
+The ``not_before`` attribute should be omitted when requesting a new token; the API will set it to the current time.
+
+A temporary token cannot be valid beyond ``RELENGAPI_TMP_TOKEN_MAX_LIFETIME`` seconds in the future; see :ref:`Auth-Token-Config`.
 
 Token Permissions
 -----------------
