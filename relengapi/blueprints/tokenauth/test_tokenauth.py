@@ -424,6 +424,13 @@ def test_get_usr_token_view_my_matching(client):
         {'result': usr_json})
 
 
+@test_context.specialize(user=userperms([], email='me@me.com'),
+                         db_setup=insert_usr)
+def test_get_usr_token_view_my_nonmatching(client):
+    """Getting my own user token without base.tokens.usr.view.my fails"""
+    eq_(client.get('/tokenauth/tokens/2').status_code, 404)
+
+
 @test_context.specialize(user=userperms([p.base.tokens.usr.view.my], email='OTHER'),
                          db_setup=insert_usr)
 def test_get_usr_token_view_my_not_matching(client):
