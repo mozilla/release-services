@@ -278,7 +278,7 @@ def get_token(token_id):
 @apimethod(types.JsonToken, body=unicode)
 def query_token(body):
     """Get a token, specified by the token key given in the request body
-    (this avoids embedding a token in a URL, where it might be logged)return .
+    (this avoids embedding a token in a URL, where it might be logged).
 
     The caller must have permission to view this type of token, unless
     the token is limited-duration (in which case the API is simply
