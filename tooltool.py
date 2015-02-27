@@ -32,6 +32,7 @@ import sys
 import tempfile
 import re
 import tarfile
+import textwrap
 
 DEFAULT_MANIFEST_NAME = 'manifest.tt'
 TOOLTOOL_PACKAGE_SUFFIX = '.TOOLTOOL-PACKAGE'
@@ -755,6 +756,24 @@ def upload(package, user, host, path):
     cmd2 = "rsync  %s/*.txt %s@%s:%s --progress" % (package, user, host, path)
     cmd3 = "rsync  %s/*.tt %s@%s:%s --progress" % (package, user, host, path)
 
+    print textwrap.dedent("""\
+        **SECURITY WARNING**
+
+        Uploading files to tooltool is a risky operation.  Please consider:
+
+          * Is this data PUBLIC or INTERNAL?  If not don't upload it!
+            INTERNAL data is non-public data that is not secret, e.g., non-redistributable binaries.
+            See https://mana.mozilla.org/wiki/display/ITSECURITY/IT+Data+security+guidelines
+            INTERNAL data should not be uploaded to the `pub` directory.
+
+          * Is this data from a trustworthy source, downloaded via a secure protocol like HTTPS?
+
+          * Do you agree to disclose your email address in association with this upload?
+
+        If you answered any of these questions with "no", please stop the upload now.  Otherwise, hit
+        enter to continue.
+        """)
+    raw_input()
     log.info("The following three rsync commands will be executed to transfer the tooltool package:")
     log.info("1) %s" % cmd1)
     log.info("2) %s" % cmd2)
