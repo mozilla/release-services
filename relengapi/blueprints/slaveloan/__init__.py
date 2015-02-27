@@ -7,9 +7,6 @@ import logging
 import sqlalchemy as sa
 import wsme
 
-from celery import chain
-from celery import group
-
 from sqlalchemy import asc
 
 from flask import Blueprint
@@ -17,7 +14,7 @@ from flask import g
 from flask import render_template
 from relengapi import apimethod
 from relengapi import p
-from relengapi.blueprints.slaveloan import tasks
+from relengapi.blueprints.slaveloan import task_groups
 from relengapi.blueprints.slaveloan.slave_mappings import slave_patterns
 from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
@@ -196,13 +193,7 @@ def admin():
 @p.slaveloan.admin.require()
 def init_loan():
     "Temporary, Manual testing only, DO NOT USE"
-    chain_of_stuff = chain(
-        tasks.init_loan.si(loanid=18, loan_class="t-snow-r4"),
-        tasks.choose_inhouse_machine.si(loanid=18, loan_class="t-snow-r4"),
-        group(
-            tasks.fixup_machine.s(loanid=18),
-            tasks.start_disable_slave.s(loanid=18)
-        )
-    )
+    chain_of_stuff = task_groups.generate_loan(loanid=18, slavetype="t-snow-r4")
+    print "DEBUG", chain_of_stuff
     chain_of_stuff.delay()
     return render_template('slaveloan_admin.html')
