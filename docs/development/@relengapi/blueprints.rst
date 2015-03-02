@@ -83,8 +83,8 @@ Project Metadata
 You can include metadata about your project that will be displayed to the user.
 Create a dictionary with zero or more of:
 
- * ``repository_of_record`` -- where contributors should look to see the source code
- * ``bug_report_url`` -- where contributors should report bugs, in the unlikely event there are any
+* ``repository_of_record`` -- where contributors should look to see the source code
+* ``bug_report_url`` -- where contributors should report bugs, in the unlikely event there are any
 
 This dictionary can be at any Python path you would like.
 For simple, one-blueprint projects, this is often in the blueprint module itself, e.g., ``relengapi.blueprints.skeleton``.
