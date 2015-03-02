@@ -10,3 +10,6 @@ install:
 # run everything in a single script, so we get a nice summary at the end
 script:
   - bash ./validate.sh
+  # run the old client tests
+  - bash test.sh
+  - python test_tooltool.py

@@ -403,6 +403,11 @@ def add_files(manifest_file, algorithm, filenames, create_package=False):
             log.debug("added '%s' to manifest" % filename)
         else:
             all_files_added = False
+    # copy any files in the old manifest that aren't in the new one
+    new_filenames = set(fr.filename for fr in new_manifest.file_records)
+    for old_fr in old_manifest.file_records:
+        if old_fr.filename not in new_filenames:
+            new_manifest.file_records.append(old_fr)
     with open(manifest_file, 'wb') as output:
         new_manifest.dump(output, fmt='json')
     return all_files_added
@@ -886,7 +891,7 @@ def main():
                       help='openssl hashing algorithm to use')
     parser.add_option('-o', '--overwrite', default=False,
                       dest='overwrite', action='store_true',
-                      help='if fetching, remote copy will overwrite a local copy that is different. ')
+                      help='UNUSED; present for backward compatibility')
     parser.add_option('--url', dest='base_url', action='append',
                       help='base url for fetching files')
     parser.add_option('-c', '--cache-folder', dest='cache_folder',
