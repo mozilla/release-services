@@ -87,7 +87,7 @@ done
 $modified && not_ok "some imports were re-ordered and changes will need to be committed"
 
 status "running shell tests"
-sh test.sh >/dev/null 2>&1 || not_ok "shell tests failed"
+bash test.sh 2>&1 >/dev/null || not_ok "shell tests failed"
 
 status "running client tests"
 python test_tooltool.py >/dev/null 2>&1 || not_ok "client tests failed"
