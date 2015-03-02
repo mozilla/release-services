@@ -403,6 +403,11 @@ def add_files(manifest_file, algorithm, filenames, create_package=False):
             log.debug("added '%s' to manifest" % filename)
         else:
             all_files_added = False
+    # copy any files in the old manifest that aren't in the new one
+    new_filenames = set(fr.filename for fr in new_manifest.file_records)
+    for old_fr in old_manifest.file_records:
+        if old_fr.filename not in new_filenames:
+            new_manifest.file_records.append(old_fr)
     with open(manifest_file, 'wb') as output:
         new_manifest.dump(output, fmt='json')
     return all_files_added
