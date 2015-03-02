@@ -9,7 +9,7 @@
 COVERAGE_MIN=96
 
 # project name
-PROJECT=relengapi-skeleton
+PROJECT=relengapi-tooltool
 
 set -e
 
@@ -177,26 +177,26 @@ if [[ "${PROJECT}" =~ relengapi-[s]keleton ]]; then
     status "testing creation of a new blueprint"
     cp -r . ${tmpbase}/bubbler
     cd ${tmpbase}/bubbler
-    find * -name '*skeleton*' | while read s; do d=$(echo $s | sed s/skeleton/bubbler/g); mv $s $d; done
-    git grep skeleton | cut -d: -f 1 | sort -u | while read s; do sed s/skeleton/bubbler/ < $s > $s~; mv $s~ $s; done
+    find * -name '*tooltool*' | while read s; do d=$(echo $s | sed s/tooltool/bubbler/g); mv $s $d; done
+    git grep tooltool | cut -d: -f 1 | sort -u | while read s; do sed s/tooltool/bubbler/ < $s > $s~; mv $s~ $s; done
     {
         virtualenv skeltest --no-site-packages &&
         skeltest/bin/pip install -e .[test] &&
         skeltest/bin/relengapi run-tests &&
         skeltest/bin/relengapi build-docs --development
-    } || not_ok "creation of a new blueprint from skeleton failed"
+    } || not_ok "creation of a new blueprint from tooltool failed"
     cd ${srcdir}
     rm -rf ${tmpbase}/bubbler
 
     status "testing installs and uninstalls"
-    # this is a regression test for https://github.com/mozilla/build-relengapi-skeleton/pull/3
+    # this is a regression test for https://github.com/mozilla/build-relengapi-tooltool/pull/3
     mkdir ${tmpbase}/skeltest
     cd ${tmpbase}/skeltest
     {
         virtualenv ${tmpbase}/skeltest --no-site-packages &&
         ${tmpbase}/skeltest/bin/pip install relengapi[test] &&
         ${tmpbase}/skeltest/bin/pip install ${srcdir} &&
-        ${tmpbase}/skeltest/bin/pip uninstall -y relengapi-skeleton &&
+        ${tmpbase}/skeltest/bin/pip uninstall -y relengapi-tooltool &&
         ${tmpbase}/skeltest/bin/relengapi run-tests &&
         ${tmpbase}/skeltest/bin/relengapi build-docs
     } || not_ok "install/uninstall test failed"

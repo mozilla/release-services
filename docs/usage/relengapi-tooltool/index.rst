@@ -12,4 +12,4 @@ API
 It's the Internet of Things!
 Even the framework of our bodies has an API!
 
-.. api:autoendpoint:: skeleton.*
+.. api:autoendpoint:: tooltool.*

@@ -11,15 +11,18 @@ data_patterns = [
     'static/**.txt',
 ]
 
-setup(name='relengapi-skeleton',
-    version='0.1.0',
-    description='Skeleton of a RelengAPI project',
-    author='Skeleton Crew',
-    author_email='skeleton@mozilla.com',
-    url='https://github.com/buildbot/build-relengapi-skeleton',
+setup(name='relengapi-tooltool',
+    version='0.2.0',
+    description='Secure, cache-friendly access to large binary blobs for builds and tests',
+    author='John Ford',
+    author_email='jhford@mozilla.com',
+    url='https://git.mozilla.org/?p=build/tooltool.git',
     entry_points={
         "relengapi_blueprints": [
-            'mapper = relengapi.blueprints.skeleton:bp',
+            'mapper = relengapi.blueprints.tooltool:bp',
+        ],
+        "relengapi.metadata": [
+            'relengapi-tooltool = relengapi.blueprints.tooltool:metadata',
         ],
     },
     packages=find_packages(),
@@ -33,7 +36,7 @@ setup(name='relengapi-skeleton',
         if files
     ],
     package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
-        'relengapi.blueprints.skeleton': data_patterns,
+        'relengapi.blueprints.tooltool': data_patterns,
     },
     install_requires=[
         'Flask',

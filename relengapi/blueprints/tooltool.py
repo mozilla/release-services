@@ -5,7 +5,12 @@
 from flask import Blueprint
 from relengapi.lib import api
 
-bp = Blueprint('skeleton', __name__)
+metadata = {
+    'repository_of_record': 'https://git.mozilla.org/?p=build/tooltool.git;a=summary',
+    'bug_report_url': 'http://goo.gl/XZpyie',  # bugzilla saved new-bug form
+}
+
+bp = Blueprint('tooltool', __name__)
 
 
 @bp.route('/')
