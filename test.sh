@@ -136,11 +136,7 @@ assert_zero $? "b fetched"
 ##############
 echo OMGWTFBBQ > a
 $tt fetch a
-assert_nonzero $? "without overwriting, shouldn't overwrite"
-test `cat a` = "OMGWTFBBQ\n" # hmm, feels flakey
-assert_nonzero $? "contents should be per local changes"
-$tt fetch a --overwrite
-assert_zero $? "with overwriting, should overwrite"
+assert_zero $? "should overwrite bad files"
 test `cat a` -eq 1
 assert_zero $? "contents should be per manifest"
 #############

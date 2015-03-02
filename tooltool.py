@@ -891,7 +891,7 @@ def main():
                       help='openssl hashing algorithm to use')
     parser.add_option('-o', '--overwrite', default=False,
                       dest='overwrite', action='store_true',
-                      help='if fetching, remote copy will overwrite a local copy that is different. ')
+                      help='UNUSED; present for backward compatibility')
     parser.add_option('--url', dest='base_url', action='append',
                       help='base url for fetching files')
     parser.add_option('-c', '--cache-folder', dest='cache_folder',
