@@ -4,3 +4,10 @@ recursive-include relengapi *.html *.jpg *.css *.js *.txt
 include LICENSE.txt
 include README.md
 prune docs_build_dir
+include config.json.example
+include Makefile
+include sync.py
+include test_file.ogg
+include test.sh
+include test_tooltool.py
+include tooltool.py
