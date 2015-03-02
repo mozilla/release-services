@@ -4,3 +4,15 @@ dist/
 *.pyc
 *.egg-info/
 .coverage*
+*.sw?
+*.hg
+*.diff
+*.dmg
+*.bz2
+*.zip
+*.gz
+*.xz
+*.exe
+*.pkg
+*.mpkg
+testdir
