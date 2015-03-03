@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from flask import Blueprint
-from relengapi.lib import api
+from flask import redirect
 
 metadata = {
     'repository_of_record': 'https://git.mozilla.org/?p=build/tooltool.git;a=summary',
@@ -13,7 +13,7 @@ metadata = {
 bp = Blueprint('tooltool', __name__)
 
 
-@bp.route('/')
-@api.apimethod({unicode: unicode})
-def hello():
-    return {'message': 'hello world'}
+@bp.route('/sha512/<hash>')
+def get(hash):
+    """Fetch a link to the file with the given hash"""
+    return redirect("http://tooltool.pvt.build.mozilla.org/build/sha512/" + hash)
