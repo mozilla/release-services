@@ -36,6 +36,8 @@ See https://api.pub.build.mozilla.org/docs for the documentation of the currentl
 Info for Developers
 -------------------
 
+See the "Installation" page of the deployment documentation for information on required operating system packages.
+
 ### Structure
 
 RelengAPI is a [Flask](http://flask.pocoo.org/) application.  It is composed of several Python distributions (packages).

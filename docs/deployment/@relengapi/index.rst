@@ -1,4 +1,5 @@
 .. toctree::
+    installation
     environment
     logging
     config
