@@ -1,7 +1,12 @@
+build/
+dist/
+*.swp
+*.pyc
+*.egg-info/
+.coverage*
 *.sw?
 *.hg
 *.diff
-*.pyc
 *.dmg
 *.bz2
 *.zip

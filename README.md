@@ -1,3 +1,5 @@
+# Tooltool
+
 This is tooltool.  Tooltool is a program that helps make downloading large
 binaries easier in a CI environment.  The program creates a json based manifest
 that is small compared to the binaries.  That manifest is transmitted to the
@@ -19,9 +21,22 @@ overwrite by default.  In this case, tooltool will exit with a non-0 exit value.
 If overwrite mode is enabled, tooltool will overwrite the local file with the
 file specified in the manifest.
 
-Developing tooltool should be easy.  It is written as a single Python file.  
-There is no 'build system' and there is not yet setuptools integration.  There
-are, however, tests that should be run prior to merging or opening a pull request.
-These tests require setting up a local http server.
+## Structure
 
-On my machine, all of the tests can be run with "make check"
+This repository contains both the tooltool client -- `tooltool.py` -- and the
+tooltool server component, which is a
+[RelengAPI](https://github.com/mozilla/build-relengapi) blueprint.
+
+If you want to use the client, just copy out `tooltool.py` -- it has no
+dependencies.
+
+## Development
+
+Hack on tooltool as you would any RelengAPI blueprint.  That means, roughly,
+creating a virtualenv and running `pip install -e .[test]` to install the
+blueprint and all of its dependences, including those for running tests.
+
+Send pull requests through GitHub.
+
+Both the client and the server components are covered by Travis, via the
+`validate.sh` script which you can run yourself.
