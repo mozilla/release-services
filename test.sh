@@ -115,7 +115,7 @@ $tt add b
 assert_zero $? "adding a second file"
 ###############
 $tt add b
- assert_nonzero $? "adding a duplicate file shouldn't work"
+assert_nonzero $? "adding a duplicate file shouldn't work"
 ###############
 rm -f a b
 $tt fetch a
