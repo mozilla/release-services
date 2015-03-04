@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from flask import Blueprint
+from flask import current_app
 from flask import redirect
 
 metadata = {
@@ -16,4 +17,13 @@ bp = Blueprint('tooltool', __name__)
 @bp.route('/sha512/<hash>')
 def get(hash):
     """Fetch a link to the file with the given hash"""
-    return redirect("http://tooltool.pvt.build.mozilla.org/build/sha512/" + hash)
+    expires_in = 60
+    region = 'us-east-1'
+    bucket = 'mozilla-releng-use1-tooltool'
+    key = '/sha512/{}'.format(hash)
+
+    s3 = current_app.aws.connect_to('s3', region)
+    signed_url = s3.generate_url(
+        method='GET', expires_in=expires_in, bucket=bucket, key=key)
+
+    return redirect(signed_url)

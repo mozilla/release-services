@@ -16,5 +16,5 @@ def test_get_by_hash(client):
     """The /sha512/<hash> returns a 302 redirect to tooltool.pvt (temporarily)"""
     rv = client.get('/tooltool/sha512/{}'.format(TEST_HASH))
     eq_(rv.status_code, 302)
-    eq_(rv.headers['Location'],
-        'http://tooltool.pvt.build.mozilla.org/build/sha512/{}'.format(TEST_HASH))
+    assert rv.headers['Location'].startswith(
+        'https://mozilla-releng-use1-tooltool.s3.amazonaws.com/sha512/{}'.format(TEST_HASH))
