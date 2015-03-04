@@ -7,17 +7,14 @@ from __future__ import absolute_import
 import logging
 
 from celery import Celery
-from celery.signals import after_setup_logger
+from celery.signals import celeryd_after_setup
 from flask import current_app
 from werkzeug.local import LocalProxy
 
 _defined_tasks = {}
-_relengapi_log_lvl = None  # Used for celery log level
 
 
 def make_celery(app):
-    global _relengapi_log_lvl
-    _relengapi_log_lvl = app.config.get("RELENGAPI_CELERY_LOG_LEVEL", None)
     broker = app.config.get('CELERY_BROKER_URL', 'memory://')
     celery = Celery(app.import_name, broker=broker)
     celery.conf.update(app.config)
@@ -61,12 +58,10 @@ def task(*args, **kwargs):
     return inner(**kwargs)
 
 
-def after_setup_logger_handler(sender=None, logger=None, loglevel=None,
-                               logfile=None, format=None,
-                               colorize=None, **kwds):
+@celeryd_after_setup.connect
+def setup_relengapi_logging(sender, instance, conf, **kwargs):
+    _relengapi_log_lvl = conf.get("RELENGAPI_CELERY_LOG_LEVEL", None)
     if _relengapi_log_lvl:
         n = logging.getLogger('relengapi')
         n.setLevel(_relengapi_log_lvl)
         n.debug("Setting relengapi logger to %s", _relengapi_log_lvl)
-
-after_setup_logger.connect(after_setup_logger_handler)
