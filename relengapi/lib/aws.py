@@ -35,6 +35,16 @@ class AWS(object):
         if key in self._connections:
             return self._connections[key]
 
+        # handle special cases
+        try:
+            fn = getattr(self, 'connect_to_' + service_name)
+        except AttributeError:
+            fn = self.connect_to_default
+        conn = fn(service_name, region_name)
+        self._connections[key] = conn
+        return conn
+
+    def connect_to_default(self, service_name, region_name):
         # for the service, import 'boto.$service'
         service = importlib.import_module('boto.' + service_name)
 
@@ -45,12 +55,18 @@ class AWS(object):
             raise RuntimeError("invalid region %r" % (region_name,))
 
         connect_fn = getattr(boto, 'connect_' + service_name)
-        conn = connect_fn(
+        return connect_fn(
             aws_access_key_id=self.config.get('access_key_id'),
             aws_secret_access_key=self.config.get('secret_access_key'),
             region=region)
-        self._connections[key] = conn
-        return conn
+
+    def connect_to_s3(self, service_name, region_name):
+        # special case for S3, which boto does differently than
+        # the other services
+        import boto.s3
+        return boto.s3.connect_to_region(region_name=region_name,
+                                         aws_access_key_id=self.config.get('access_key_id'),
+                                         aws_secret_access_key=self.config.get('secret_access_key'))
 
     def get_sqs_queue(self, region_name, queue_name):
         key = (region_name, queue_name)
