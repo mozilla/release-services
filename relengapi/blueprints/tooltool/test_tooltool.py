@@ -11,6 +11,7 @@ import urlparse
 
 from contextlib import contextmanager
 from nose.tools import eq_
+from relengapi.blueprints import tooltool
 from relengapi.blueprints.tooltool import tables
 from relengapi.lib.testing.context import TestContext
 
@@ -19,8 +20,10 @@ cfg = {
         'access_key_id': 'aa',
         'secret_access_key': 'ss',
     },
-    'TOOLTOOL_REGION': 'us-east-1',
-    'TOOLTOOL_BUCKET': 'tt-bucket',
+    'TOOLTOOL_REGIONS': {
+        'us-east-1': 'tt-use1',
+        'us-west-2': 'tt-usw2',
+    }
 }
 test_context = TestContext(config=cfg, databases=['tooltool'])
 
@@ -55,7 +58,8 @@ def add_file_to_db(app, content, regions=['us-east-1']):
         app.db.session('tooltool').commit()
         # TODO: when the file has no instances, we should get a put_url
         for region in regions:
-            instance_row = tables.FileInstance(file_id=file_row.id, region=region)
+            instance_row = tables.FileInstance(
+                file_id=file_row.id, region=region)
             app.db.session('tooltool').add(instance_row)
         app.db.session('tooltool').commit()
 
@@ -69,6 +73,13 @@ def set_time(now=NOW):
         yield
 
 
+@contextmanager
+def not_so_random_choice():
+    with mock.patch('random.choice') as choice:
+        choice.side_effect = lambda seq: sorted(seq)[0]
+        yield
+
+
 def assert_signed_302(resp, digest, method='GET', region=None,
                       expires_in=60, bucket=None):
     eq_(resp.status_code, 302)
@@ -79,8 +90,8 @@ def assert_signed_302(resp, digest, method='GET', region=None,
 
 def assert_signed_url(url, digest, method='GET', region=None,
                       expires_in=60, bucket=None):
-    region = region or cfg['TOOLTOOL_REGION']
-    bucket = bucket or cfg['TOOLTOOL_BUCKET']
+    region = region or 'us-east-1'
+    bucket = bucket or cfg['TOOLTOOL_REGIONS'][region]
     if region == 'us-east-1':
         host = '{}.s3.amazonaws.com'.format(bucket)
     else:
@@ -94,6 +105,18 @@ def assert_signed_url(url, digest, method='GET', region=None,
     # sadly, headers are not represented in the URL
     eq_(query['AWSAccessKeyId'][0], 'aa')
     eq_(int(query['Expires'][0]), time.time() + expires_in)
+
+# tests
+
+
+def test_is_valid_sha512():
+    """is_valid_sha512 recgnizes valid digests and rejects others"""
+    assert tooltool.is_valid_sha512(ONE_HASH)
+    assert tooltool.is_valid_sha512(TWO_HASH)
+    assert not tooltool.is_valid_sha512(ONE_HASH[-1])
+    assert not tooltool.is_valid_sha512(ONE_HASH + 'a')
+    assert not tooltool.is_valid_sha512('a' + ONE_HASH)
+    assert not tooltool.is_valid_sha512('j' * 128)
 
 
 @moto.mock_s3
@@ -128,8 +151,18 @@ def test_upload_batch_bad_algo(client):
 
 @moto.mock_s3
 @test_context
+def test_upload_batch_bad_digest(client):
+    """A PUT to /batch with a bad sha512 digest is rejected."""
+    batch = mkbatch()
+    batch['files']['one']['digest'] = 'x' * 128
+    resp = upload_batch(client, batch)
+    eq_(resp.status_code, 400)
+
+
+@moto.mock_s3
+@test_context
 def test_upload_batch_bad_size(app, client):
-    """A PUT to /batch with a file with the same hash and a different length
+    """A PUT to /batch with a file with the same digest and a different length
     is rejected"""
     batch = mkbatch()
     batch['files']['one']['size'] *= 2  # that ain't right!
@@ -147,7 +180,8 @@ def test_upload_batch_success_fresh(client, app):
     with links to files, but no instances."""
     batch = mkbatch()
     with set_time():
-        resp = upload_batch(client, batch)
+        with not_so_random_choice():
+            resp = upload_batch(client, batch)
         eq_(resp.status_code, 200)
         result = json.loads(resp.data)['result']
         eq_(result['author'], batch['author'])
@@ -182,7 +216,8 @@ def test_upload_batch_success_some_existing_files(client, app):
     inserted_id = add_file_to_db(app, ONE)
 
     with set_time():
-        resp = upload_batch(client, batch)
+        with not_so_random_choice():
+            resp = upload_batch(client, batch)
         eq_(resp.status_code, 200)
         result = json.loads(resp.data)['result']
         eq_(result['files']['one']['algorithm'], 'sha512')
@@ -214,6 +249,14 @@ def test_get_file_no_such(app, client):
     """Getting /sha512/<digest> for a file that does not exist returns 404"""
     resp = client.get('/tooltool/sha512/{}'.format(ONE_HASH))
     eq_(resp.status_code, 404)
+
+
+@moto.mock_s3
+@test_context
+def test_get_file_bash_ash(app, client):
+    """Getting /sha512/<digest> for an invalid digest returns 400"""
+    resp = client.get('/tooltool/sha512/abcd')
+    eq_(resp.status_code, 400)
 
 
 @moto.mock_s3
