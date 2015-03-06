@@ -210,8 +210,28 @@ def test_upload_batch_success_some_existing_files(client, app):
 
 @moto.mock_s3
 @test_context
-def test_legacy_get(client):
-    """Getting /sha512/<digest> returns a 302 redirect to a signed URL"""
+def test_get_file_no_such(app, client):
+    """Getting /sha512/<digest> for a file that does not exist returns 404"""
+    resp = client.get('/tooltool/sha512/{}'.format(ONE_HASH))
+    eq_(resp.status_code, 404)
+
+
+@moto.mock_s3
+@test_context
+def test_get_file_no_instances(app, client):
+    """Getting /sha512/<digest> for a file that exists but has no instances
+    returns 404"""
+    add_file_to_db(app, ONE, regions=[])
+    resp = client.get('/tooltool/sha512/{}'.format(ONE_HASH))
+    eq_(resp.status_code, 404)
+
+
+@moto.mock_s3
+@test_context
+def test_get_file_exists(app, client):
+    """Getting /sha512/<digest> for an exisitng file returns a 302 redirect to
+    a signed URL in the region where it exists."""
+    add_file_to_db(app, ONE, regions=['us-west-2'])
     with set_time():
         resp = client.get('/tooltool/sha512/{}'.format(ONE_HASH))
-        assert_signed_302(resp, ONE_HASH)
+        assert_signed_302(resp, ONE_HASH, region='us-west-2')

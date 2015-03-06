@@ -11,6 +11,7 @@ from relengapi.blueprints.tooltool import types
 from relengapi.lib import api
 from relengapi.lib import time
 from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import NotFound
 
 metadata = {
     'repository_of_record': 'https://git.mozilla.org/?p=build/tooltool.git;a=summary',
@@ -75,16 +76,22 @@ def upload_batch(body):
 
 
 @bp.route('/sha512/<digest>')
-def legacy_get(digest):
-    """Fetch a link to the file with the given digest; this is the legacy API and
-    will only allow access to public files.  It chooses a download location
-    randomly."""
-    expires_in = 60
+def get_file(digest):
+    """Fetch a link to the file with the given sha512 digest.  The response
+    is a 302 redirect to a signed download URL."""
     # TODO: verify digest format
-    # TODO: verify the file exists, is public
+    # TODO: verify the file is public
     # TODO: eventually choose a location randomly
-    region = current_app.config['TOOLTOOL_REGION']
+    expires_in = 60
     bucket = current_app.config['TOOLTOOL_BUCKET']
+
+    # see where the file is..
+    tbl = tables.File
+    file_row = tbl.query.filter(tbl.sha512 == digest).first()
+    if not file_row or not file_row.instances:
+        raise NotFound
+    region = file_row.instances[0].region
+
     key = '/sha512/{}'.format(digest)
 
     s3 = current_app.aws.connect_to('s3', region)
