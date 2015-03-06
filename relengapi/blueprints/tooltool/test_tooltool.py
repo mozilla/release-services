@@ -45,8 +45,9 @@ def mkbatch():
     }
 
 
-def upload_batch(client, batch):
-    return client.put('/tooltool/batch', data=json.dumps(batch),
+def upload_batch(client, batch, region=None):
+    region_arg = '?region={}'.format(region) if region else ''
+    return client.put('/tooltool/batch' + region_arg, data=json.dumps(batch),
                       headers={'Content-Type': 'application/json'})
 
 
@@ -182,7 +183,7 @@ def test_upload_batch_success_fresh(client, app):
     with set_time():
         with not_so_random_choice():
             resp = upload_batch(client, batch)
-        eq_(resp.status_code, 200)
+        eq_(resp.status_code, 200, resp.data)
         result = json.loads(resp.data)['result']
         eq_(result['author'], batch['author'])
         eq_(result['message'], batch['message'])
@@ -207,7 +208,8 @@ def test_upload_batch_success_fresh(client, app):
 def test_upload_batch_success_some_existing_files(client, app):
     """A PUT to /batch with a good batch containing some files already present
     succeeds, returns signed URLs expiring in one hour, and inserts the new
-    batch into the DB with links to files, but no instances."""
+    batch into the DB with links to files, but no instances.  Also, the
+    ``region`` query parameter selects a preferred region."""
     batch = mkbatch()
     batch['files']['two'] = {
         'algorithm': 'sha512', 'size': len(TWO), 'digest': TWO_HASH}
@@ -216,9 +218,8 @@ def test_upload_batch_success_some_existing_files(client, app):
     inserted_id = add_file_to_db(app, ONE)
 
     with set_time():
-        with not_so_random_choice():
-            resp = upload_batch(client, batch)
-        eq_(resp.status_code, 200)
+        resp = upload_batch(client, batch, region='us-west-2')
+        eq_(resp.status_code, 200, resp.data)
         result = json.loads(resp.data)['result']
         eq_(result['files']['one']['algorithm'], 'sha512')
         eq_(result['files']['one']['size'], len(ONE))
@@ -228,7 +229,7 @@ def test_upload_batch_success_some_existing_files(client, app):
         eq_(result['files']['two']['size'], len(TWO))
         eq_(result['files']['two']['digest'], TWO_HASH)
         assert_signed_url(result['files']['two']['put_url'], TWO_HASH,
-                          method='PUT', expires_in=3600)
+                          method='PUT', expires_in=3600, region='us-west-2')
 
     with app.app_context():
         tbl = tables.Batch
@@ -273,8 +274,32 @@ def test_get_file_no_instances(app, client):
 @test_context
 def test_get_file_exists(app, client):
     """Getting /sha512/<digest> for an exisitng file returns a 302 redirect to
-    a signed URL in the region where it exists."""
+    a signed URL in a region where it exists."""
+    add_file_to_db(app, ONE, regions=['us-west-2', 'us-east-1'])
+    with set_time():
+        with not_so_random_choice():
+            resp = client.get('/tooltool/sha512/{}'.format(ONE_HASH))
+        assert_signed_302(resp, ONE_HASH, region='us-east-1')
+
+
+@moto.mock_s3
+@test_context
+def test_get_file_exists_not_in_preferred_region(app, client):
+    """Getting /sha512/<digest>?region=.. for an exisitng file that does not
+    exist in the requested region returns a signed URL for a region where the
+    file does exist."""
     add_file_to_db(app, ONE, regions=['us-west-2'])
     with set_time():
-        resp = client.get('/tooltool/sha512/{}'.format(ONE_HASH))
+        resp = client.get('/tooltool/sha512/{}?region=us-east-1'.format(ONE_HASH))
+        assert_signed_302(resp, ONE_HASH, region='us-west-2')
+
+
+@moto.mock_s3
+@test_context
+def test_get_file_exists_region_choice(app, client):
+    """Getting /sha512/<digest> for an exisitng file returns a 302 redirect to
+    a signed URL in the region where it exists."""
+    add_file_to_db(app, ONE, regions=['us-west-2', 'us-east-1'])
+    with set_time():
+        resp = client.get('/tooltool/sha512/{}?region=us-west-2'.format(ONE_HASH))
         assert_signed_302(resp, ONE_HASH, region='us-west-2')
