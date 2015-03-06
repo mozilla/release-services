@@ -34,7 +34,11 @@ def get_region_and_bucket(region_arg):
     return random.choice(cfg.items())
 
 
-# TODO: ensure signed upload URLs specify storage class, ACLs
+# TODO: ensure signed upload URLs specify storage class, ACLs, size?
+# TODO: file protection levels + permissions
+# TODO: file browser
+# TODO: grooming tasks
+# TODO: upload completion endpoint
 
 @bp.route('/batch', methods=['PUT'])
 @api.apimethod(types.UploadBatch, unicode, body=types.UploadBatch)
@@ -78,7 +82,6 @@ def upload_batch(region=None, body=None):
                 raise BadRequest("Size mismatch for {}".format(filename))
         else:
             file_row = tables.File(sha512=digest, size=info.size)
-            # TODO: sign size?
             info.put_url = s3.generate_url(
                 method='PUT', expires_in=3600, bucket=bucket,
                 key='/sha512/{}'.format(info.digest),
@@ -102,8 +105,7 @@ def get_file(digest, region=None):
     from another region may be returned."""
     if not is_valid_sha512(digest):
         raise BadRequest("Invalid sha512 digest")
-    # TODO: verify the file is public
-    # TODO: eventually choose a location randomly
+    # TODO: verify permissions
     expires_in = 60
 
     # see where the file is..
