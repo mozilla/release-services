@@ -8,17 +8,29 @@ import logging
 from flask import current_app
 from relengapi.blueprints.tooltool import tables
 from relengapi.lib import badpenny
+from relengapi.lib import celery
 from relengapi.lib import time
 
 log = logging.getLogger(__name__)
 
 
-@badpenny.periodic_task(seconds=120)
+@badpenny.periodic_task(seconds=3600)
 def check_pending_uploads(job_status):
     """Check for any pending uploads and verify them if found."""
     session = current_app.db.session('tooltool')
     for pu in tables.PendingUpload.query.all():
         check_pending_upload(session, pu)
+    session.commit()
+
+
+@celery.task
+def check_file_pending_uploads(sha512):
+    """Check for pending uploads for a single file"""
+    session = current_app.db.session('tooltool')
+    file = tables.File.query.filter(tables.File.sha512 == sha512).first()
+    if file:
+        for pu in file.pending_uploads:
+            check_pending_upload(session, pu)
     session.commit()
 
 

@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import datetime
 import hashlib
 import json
 import mock
@@ -13,6 +14,7 @@ from contextlib import contextmanager
 from nose.tools import eq_
 from relengapi.blueprints import tooltool
 from relengapi.blueprints.tooltool import tables
+from relengapi.lib import time as relengapi_time
 from relengapi.lib.testing.context import TestContext
 
 cfg = {
@@ -47,21 +49,25 @@ def mkbatch():
 
 def upload_batch(client, batch, region=None):
     region_arg = '?region={}'.format(region) if region else ''
-    return client.put('/tooltool/batch' + region_arg, data=json.dumps(batch),
+    return client.put('/tooltool/upload' + region_arg, data=json.dumps(batch),
                       headers={'Content-Type': 'application/json'})
 
 
-def add_file_to_db(app, content, regions=['us-east-1']):
+def add_file_to_db(app, content, regions=['us-east-1'], pending_regions=[]):
     with app.app_context():
+        session = app.db.session('tooltool')
         file_row = tables.File(size=len(content),
                                sha512=hashlib.sha512(content).hexdigest())
-        app.db.session('tooltool').add(file_row)
-        app.db.session('tooltool').commit()
+        session.add(file_row)
+        session.commit()
         for region in regions:
-            instance_row = tables.FileInstance(
-                file_id=file_row.id, region=region)
-            app.db.session('tooltool').add(instance_row)
-        app.db.session('tooltool').commit()
+            session.add(tables.FileInstance(
+                file_id=file_row.id, region=region))
+        for region in pending_regions:
+            session.add(tables.PendingUpload(
+                file=file_row, region=region,
+                expires=relengapi_time.now() + datetime.timedelta(days=1)))
+        session.commit()
 
         return file_row.id
 
@@ -156,7 +162,7 @@ def test_is_valid_sha512():
 @moto.mock_s3
 @test_context
 def test_upload_batch_empty_message(client):
-    """A PUT to /batch with an empty message is rejected."""
+    """A PUT to /upload with an empty message is rejected."""
     batch = mkbatch()
     batch['message'] = ''
     resp = upload_batch(client, batch)
@@ -166,7 +172,7 @@ def test_upload_batch_empty_message(client):
 @moto.mock_s3
 @test_context
 def test_upload_batch_empty_files(client):
-    """A PUT to /batch with no files is rejected."""
+    """A PUT to /upload with no files is rejected."""
     batch = mkbatch()
     batch['files'] = {}
     resp = upload_batch(client, batch)
@@ -176,7 +182,7 @@ def test_upload_batch_empty_files(client):
 @moto.mock_s3
 @test_context
 def test_upload_batch_bad_algo(client):
-    """A PUT to /batch with an algorithm that is not sha512 is rejected."""
+    """A PUT to /upload with an algorithm that is not sha512 is rejected."""
     batch = mkbatch()
     batch['files']['one']['algorithm'] = 'md4'
     resp = upload_batch(client, batch)
@@ -186,7 +192,7 @@ def test_upload_batch_bad_algo(client):
 @moto.mock_s3
 @test_context
 def test_upload_batch_bad_digest(client):
-    """A PUT to /batch with a bad sha512 digest is rejected."""
+    """A PUT to /upload with a bad sha512 digest is rejected."""
     batch = mkbatch()
     batch['files']['one']['digest'] = 'x' * 128
     resp = upload_batch(client, batch)
@@ -196,7 +202,7 @@ def test_upload_batch_bad_digest(client):
 @moto.mock_s3
 @test_context
 def test_upload_batch_bad_size(app, client):
-    """A PUT to /batch with a file with the same digest and a different length
+    """A PUT to /upload with a file with the same digest and a different length
     is rejected"""
     batch = mkbatch()
     batch['files']['one']['size'] *= 2  # that ain't right!
@@ -209,7 +215,7 @@ def test_upload_batch_bad_size(app, client):
 @moto.mock_s3
 @test_context
 def test_upload_batch_success_fresh(client, app):
-    """A PUT to /batch with a good batch succeeds, returns signed URLs expiring
+    """A PUT to /upload with a good batch succeeds, returns signed URLs expiring
     in one hour, and inserts the new batch into the DB with links to files, but
     no instances, and inserts a pending upload row."""
     batch = mkbatch()
@@ -230,7 +236,7 @@ def test_upload_batch_success_fresh(client, app):
 @moto.mock_s3
 @test_context
 def test_upload_batch_success_no_instances(client, app):
-    """A PUT to /batch with a batch containing a file that already exists, but
+    """A PUT to /upload with a batch containing a file that already exists, but
     has no instances, succeeds, returns signed URLs expiring in one hour,
     inserts the new batch into the DB with links to files, but no instances,
     and inserts a pending upload row.  This could occur when, for example,
@@ -254,7 +260,7 @@ def test_upload_batch_success_no_instances(client, app):
 @moto.mock_s3
 @test_context
 def test_upload_batch_success_some_existing_files(client, app):
-    """A PUT to /batch with a good batch containing some files already present
+    """A PUT to /upload with a good batch containing some files already present
     succeeds, returns signed URLs expiring in one hour, and inserts the new
     batch into the DB with links to files, but no instances.  Also, the
     ``region`` query parameter selects a preferred region."""
@@ -286,6 +292,25 @@ def test_upload_batch_success_some_existing_files(client, app):
                          (len(TWO), TWO_DIGEST, []),
     ])
     assert_pending_upload(app, TWO_DIGEST, 'us-west-2')
+
+
+@test_context
+def test_upload_complete(client, app):
+    """GET /upload/complete/<digest> causes a delayed call to check_file_pending_uploads"""
+    add_file_to_db(app, ONE, regions=[], pending_regions=['us-east-1'])
+    with mock.patch('relengapi.blueprints.tooltool.grooming.check_file_pending_uploads') as cfpu:
+        resp = client.get('/tooltool/upload/complete/{}'.format(ONE_DIGEST))
+        eq_(resp.status_code, 202, resp.data)
+        cfpu.delay.assert_called_with(ONE_DIGEST)
+
+
+@test_context
+def test_upload_complete_bad_digest(client, app):
+    """GET /upload/complete/<digest> with a bad digest returns 400"""
+    with mock.patch('relengapi.blueprints.tooltool.grooming.check_file_pending_uploads') as cfpu:
+        resp = client.get('/tooltool/upload/complete/xyz')
+        eq_(resp.status_code, 400, resp.data)
+        cfpu.delay.assert_has_calls([])
 
 
 @moto.mock_s3
@@ -334,7 +359,8 @@ def test_get_file_exists_not_in_preferred_region(app, client):
     file does exist."""
     add_file_to_db(app, ONE, regions=['us-west-2'])
     with set_time():
-        resp = client.get('/tooltool/sha512/{}?region=us-east-1'.format(ONE_DIGEST))
+        resp = client.get(
+            '/tooltool/sha512/{}?region=us-east-1'.format(ONE_DIGEST))
         assert_signed_302(resp, ONE_DIGEST, region='us-west-2')
 
 
@@ -345,5 +371,6 @@ def test_get_file_exists_region_choice(app, client):
     a signed URL in the region where it exists."""
     add_file_to_db(app, ONE, regions=['us-west-2', 'us-east-1'])
     with set_time():
-        resp = client.get('/tooltool/sha512/{}?region=us-west-2'.format(ONE_DIGEST))
+        resp = client.get(
+            '/tooltool/sha512/{}?region=us-west-2'.format(ONE_DIGEST))
         assert_signed_302(resp, ONE_DIGEST, region='us-west-2')

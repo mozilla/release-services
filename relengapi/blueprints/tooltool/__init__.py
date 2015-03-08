@@ -39,11 +39,9 @@ def get_region_and_bucket(region_arg):
 # TODO: ensure signed upload URLs specify storage class, ACLs, size?
 # TODO: file protection levels + permissions
 # TODO: file browser
-# TODO: grooming tasks
-assert grooming  # TODO: upload completion endpoint will ref this
 
 
-@bp.route('/batch', methods=['PUT'])
+@bp.route('/upload', methods=['PUT'])
 @api.apimethod(types.UploadBatch, unicode, body=types.UploadBatch)
 def upload_batch(region=None, body=None):
     """Create a new upload batch.  The response object will contain a
@@ -103,6 +101,20 @@ def upload_batch(region=None, body=None):
 
     body.id = batch.id
     return body
+
+
+@bp.route('/upload/complete/<digest>')
+@api.apimethod(unicode, unicode, status_code=202)
+def upload_complete(digest):
+    """Signal that a file has been uploaded and the server should begin
+    validating it.  This is merely an optimization: the server also polls
+    occasionally for uploads and validates them when they appear.  The
+    response is an HTTP 202 indicating the signal has been accepted."""
+    if not is_valid_sha512(digest):
+        raise BadRequest("Invalid sha512 digest")
+    # start a celery task in the background and return immediately
+    grooming.check_file_pending_uploads.delay(digest)
+    return '{}', 202
 
 
 @bp.route('/sha512/<digest>')

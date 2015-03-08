@@ -184,3 +184,17 @@ def test_check_pending_uploads(app):
             cpu.side_effect = lambda sess, pu: pending_uploads.append(pu)
             grooming.check_pending_uploads(None)  # job_status is unsed
             assert len(pending_uploads) == 1
+
+
+@test_context
+def test_check_file_pending_uploads(app):
+    """check_file_pending_uploads calls check_pending_upload for each PU for the file"""
+    with app.app_context():
+        expires = time.now() + timedelta(days=1)
+        pu_row, file_row = add_pending_upload_and_file_row(
+            len(DATA), DATA_DIGEST, expires, 'us-west-2')
+        with mock.patch('relengapi.blueprints.tooltool.grooming.check_pending_upload') as cpu:
+            pending_uploads = []
+            cpu.side_effect = lambda sess, pu: pending_uploads.append(pu)
+            grooming.check_file_pending_uploads(DATA_DIGEST)
+            assert len(pending_uploads) == 1
