@@ -1,23 +1,19 @@
-import sys
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+import copy
+import json
 import os
-import unittest
-import logging
 import shutil
 import tempfile
-import copy
-try: import simplejson as json
-except ImportError: import json
+import unittest
 
-# We want access to the module we are testing
-sys.path.append('.')
 import tooltool
-try:
-    import cStringIO as StringIO
-except ImportError:
-    import StringIO
 
 
 class DigestTests(unittest.TestCase):
+
     def setUp(self):
         self.sample_data = open('test_file.ogg')
         self.sample_algo = 'sha1'
@@ -29,10 +25,12 @@ class DigestTests(unittest.TestCase):
         # of Linus Torvalds explaining how he pronounces 'Linux'
         self.assertEqual(test_digest, self.sample_digest)
 
-#Ugh, I've managed to have a few different test naming schemes already :(
-#TODO: clean this up!
+# Ugh, I've managed to have a few different test naming schemes already :(
+# TODO: clean this up!
+
 
 class BaseFileRecordTest(unittest.TestCase):
+
     def setUp(self):
         self.sample_file = 'test_file.ogg'
         self.sample_algo = 'sha512'
@@ -40,10 +38,10 @@ class BaseFileRecordTest(unittest.TestCase):
         with open(self.sample_file) as f:
             self.sample_hash = tooltool.digest_file(f, self.sample_algo)
         self.test_record = tooltool.FileRecord(
-                filename=self.sample_file,
-                size=self.sample_size,
-                digest=self.sample_hash,
-                algorithm=self.sample_algo
+            filename=self.sample_file,
+            size=self.sample_size,
+            digest=self.sample_hash,
+            algorithm=self.sample_algo
         )
         # using mkstemp to ensure that the filename generated
         # isn't actually on the system.
@@ -54,17 +52,20 @@ class BaseFileRecordTest(unittest.TestCase):
             self.fail('did not remove %s' % filename)
         self.absent_file = filename
 
+
 class BaseFileRecordListTest(BaseFileRecordTest):
+
     def setUp(self):
         BaseFileRecordTest.setUp(self)
         self.record_list = []
-        for i in range(0,4):
+        for i in range(0, 4):
             record = copy.deepcopy(self.test_record)
             record.algorithm = i
             self.record_list.append(record)
 
 
 class TestFileRecord(BaseFileRecordTest):
+
     def test_present(self):
         # this test feels silly, but things are built on this
         # method, so probably best to test it
@@ -83,7 +84,8 @@ class TestFileRecord(BaseFileRecordTest):
 
     def test_size_of_missing_file(self):
         self.test_record.filename = self.absent_file
-        self.assertRaises(tooltool.MissingFileException,self.test_record.validate_size)
+        self.assertRaises(
+            tooltool.MissingFileException, self.test_record.validate_size)
 
     def test_valid_digest(self):
         self.assertTrue(self.test_record.validate_digest())
@@ -94,7 +96,8 @@ class TestFileRecord(BaseFileRecordTest):
 
     def test_digest_of_missing_file(self):
         self.test_record.filename = self.absent_file
-        self.assertRaises(tooltool.MissingFileException,self.test_record.validate_digest)
+        self.assertRaises(
+            tooltool.MissingFileException, self.test_record.validate_digest)
 
     def test_overall_valid(self):
         self.assertTrue(self.test_record.validate())
@@ -109,7 +112,8 @@ class TestFileRecord(BaseFileRecordTest):
 
     def test_overall_invalid_missing_file(self):
         self.test_record.filename = self.absent_file
-        self.assertRaises(tooltool.MissingFileException,self.test_record.validate)
+        self.assertRaises(
+            tooltool.MissingFileException, self.test_record.validate)
 
     def test_equality(self):
         test_record2 = copy.deepcopy(self.test_record)
@@ -125,7 +129,7 @@ class TestFileRecord(BaseFileRecordTest):
     def test_repr(self):
         a = eval(repr(self.test_record))
         self.assertEqual(str(a), str(self.test_record))
-        #TODO: Figure out why things aren't working here
+        # TODO: Figure out why things aren't working here
         #self.assertEqual(a, self.test_record)
 
     def test_create_file_record(self):
@@ -134,7 +138,8 @@ class TestFileRecord(BaseFileRecordTest):
 
     def test_describe_absent(self):
         self.test_record.filename = self.absent_file
-        self.assertEqual("'%s' is absent" % self.absent_file, self.test_record.describe())
+        self.assertEqual("'%s' is absent" %
+                         self.absent_file, self.test_record.describe())
 
     def test_describe_present_valid(self):
         self.assertEqual("'%s' is present and valid" % self.test_record.filename,
@@ -148,60 +153,69 @@ class TestFileRecord(BaseFileRecordTest):
 
 
 class TestFileRecordJSONCodecs(BaseFileRecordListTest):
+
     def test_default(self):
         encoder = tooltool.FileRecordJSONEncoder()
         dict_from_encoder = encoder.default(self.test_record)
         for i in ['filename', 'size', 'algorithm', 'digest']:
-            self.assertEqual(dict_from_encoder[i], self.test_record.__dict__[i])
+            self.assertEqual(
+                dict_from_encoder[i], self.test_record.__dict__[i])
 
     def test_default_list(self):
         encoder = tooltool.FileRecordJSONEncoder()
         new_list = encoder.default(self.record_list)
-        for record in range(0,len(self.record_list)):
+        for record in range(0, len(self.record_list)):
             self.assertEqual(new_list[record],
                              encoder.default(self.record_list[record]))
 
     def test_unrelated_class(self):
         encoder = tooltool.FileRecordJSONEncoder()
-        class Junk: pass
+
+        class Junk:
+            pass
         self.assertRaises(
-                tooltool.FileRecordJSONEncoderException,
-                encoder.default,
-                Junk()
+            tooltool.FileRecordJSONEncoderException,
+            encoder.default,
+            Junk()
         )
 
     def test_list_with_unrelated_class(self):
         encoder = tooltool.FileRecordJSONEncoder()
-        class Junk: pass
+
+        class Junk:
+            pass
         self.assertRaises(
-                tooltool.FileRecordJSONEncoderException,
-                encoder.default,
-                [self.test_record, Junk(), self.test_record],
+            tooltool.FileRecordJSONEncoderException,
+            encoder.default,
+            [self.test_record, Junk(), self.test_record],
         )
 
     def test_decode(self):
-        json_string = json.dumps(self.test_record, cls=tooltool.FileRecordJSONEncoder)
+        json_string = json.dumps(
+            self.test_record, cls=tooltool.FileRecordJSONEncoder)
         decoder = tooltool.FileRecordJSONDecoder()
-        f=decoder.decode(json_string)
+        f = decoder.decode(json_string)
         for i in ['filename', 'size', 'algorithm', 'digest']:
-            self.assertEqual(getattr(f,i), self.test_record.__dict__[i])
+            self.assertEqual(getattr(f, i), self.test_record.__dict__[i])
 
     def test_json_dumps(self):
-        json_string = json.dumps(self.test_record, cls=tooltool.FileRecordJSONEncoder)
+        json_string = json.dumps(
+            self.test_record, cls=tooltool.FileRecordJSONEncoder)
         dict_from_json = json.loads(json_string)
         for i in ['filename', 'size', 'algorithm', 'digest']:
             self.assertEqual(dict_from_json[i], self.test_record.__dict__[i])
 
     def test_decode_list(self):
-        json_string = json.dumps(self.record_list, cls=tooltool.FileRecordJSONEncoder)
+        json_string = json.dumps(
+            self.record_list, cls=tooltool.FileRecordJSONEncoder)
         new_list = json.loads(json_string, cls=tooltool.FileRecordJSONDecoder)
         self.assertEquals(len(new_list), len(self.record_list))
-        for record in range(0,len(self.record_list)):
+        for record in range(0, len(self.record_list)):
             self.assertEqual(new_list[record], self.record_list[record])
 
 
-
 class TestManifest(BaseFileRecordTest):
+
     def setUp(self):
         BaseFileRecordTest.setUp(self)
         self.other_sample_file = 'other-%s' % self.sample_file
@@ -210,7 +224,8 @@ class TestManifest(BaseFileRecordTest):
         shutil.copyfile(self.sample_file, self.other_sample_file)
         self.other_test_record = copy.deepcopy(self.test_record)
         self.other_test_record.filename = self.other_sample_file
-        self.test_manifest = tooltool.Manifest([self.test_record, self.other_test_record])
+        self.test_manifest = tooltool.Manifest(
+            [self.test_record, self.other_test_record])
 
     def tearDown(self):
         try:
@@ -244,16 +259,16 @@ class TestManifest(BaseFileRecordTest):
 
     def test_equality_deepcopy(self):
         a_deepcopy = copy.deepcopy(self.test_manifest)
-        self.assertEqual(self.test_manifest,a_deepcopy)
+        self.assertEqual(self.test_manifest, a_deepcopy)
 
     def test_equality_copy_method(self):
         a_copy = self.test_manifest.copy()
-        self.assertEqual(self.test_manifest,a_copy)
+        self.assertEqual(self.test_manifest, a_copy)
 
     def test_equality_unrelated(self):
         one = tooltool.Manifest([self.test_record, self.other_test_record])
         two = tooltool.Manifest([self.test_record, self.other_test_record])
-        self.assertEqual(one,two)
+        self.assertEqual(one, two)
 
     def test_json_dump(self):
         tmp_manifest = tempfile.TemporaryFile()
@@ -273,16 +288,17 @@ class TestManifest(BaseFileRecordTest):
         empty = tempfile.TemporaryFile()
         manifest = tooltool.Manifest()
         self.assertRaises(tooltool.InvalidManifest,
-                manifest.load, empty, fmt='json')
+                          manifest.load, empty, fmt='json')
 
     def test_load_empty_json_string(self):
         empty = ''
         manifest = tooltool.Manifest()
         self.assertRaises(tooltool.InvalidManifest,
-                manifest.loads, empty, fmt='json')
+                          manifest.loads, empty, fmt='json')
 
 
 class TestManifestOperations(BaseFileRecordTest):
+
     def setUp(self):
         BaseFileRecordTest.setUp(self)
         self.sample_manifest = tooltool.Manifest([self.test_record])
@@ -298,11 +314,3 @@ class TestManifestOperations(BaseFileRecordTest):
     def tearDown(self):
         os.chdir(self.startingwd)
         shutil.rmtree(self.test_dir)
-
-
-
-log = logging.getLogger(tooltool.__name__)
-log.setLevel(logging.ERROR)
-log.addHandler(logging.StreamHandler())
-
-unittest.main()
