@@ -10,3 +10,6 @@ install:
 # run everything in a single script, so we get a nice summary at the end
 script:
   - bash ./validate.sh
+
+after_success:
+  - coveralls --rcfile coveragerc
