@@ -7,7 +7,8 @@ Just give it the right URL and you should be on your way.
 Endpoints
 ---------
 
-.. api::endpoint:: GET /tooltool/sha512/<hash>
+.. api:endpoint:: tooltool.get
+        GET /tooltool/sha512/<hash>
 
     :param hash: SHA512 hash of the desired file
 
