@@ -82,11 +82,12 @@ def upload_batch(region=None, body=None):
             raise BadRequest("Invalid sha512 digest")
         digest = info.digest
         file_row = tables.File.query.filter(tables.File.sha512 == digest).first()
-        if file_row:
+        if file_row and file_row.instances != []:
             if file_row.size != info.size:
                 raise BadRequest("Size mismatch for {}".format(filename))
         else:
-            file_row = tables.File(sha512=digest, size=info.size)
+            if not file_row:
+                file_row = tables.File(sha512=digest, size=info.size)
             info.put_url = s3.generate_url(
                 method='PUT', expires_in=3600, bucket=bucket,
                 key='/sha512/{}'.format(info.digest),

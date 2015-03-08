@@ -57,7 +57,6 @@ def add_file_to_db(app, content, regions=['us-east-1']):
                                sha512=hashlib.sha512(content).hexdigest())
         app.db.session('tooltool').add(file_row)
         app.db.session('tooltool').commit()
-        # TODO: when the file has no instances, we should get a put_url
         for region in regions:
             instance_row = tables.FileInstance(
                 file_id=file_row.id, region=region)
@@ -106,6 +105,40 @@ def assert_signed_url(url, digest, method='GET', region=None,
     # sadly, headers are not represented in the URL
     eq_(query['AWSAccessKeyId'][0], 'aa')
     eq_(int(query['Expires'][0]), time.time() + expires_in)
+
+
+def assert_batch_response(resp, author='me', message='a batch',
+                          files={}):
+    eq_(resp.status_code, 200, resp.data)
+    result = json.loads(resp.data)['result']
+    eq_(result['author'], author)
+    eq_(result['message'], message)
+    eq_(set(result['files']), set(files))
+    for name, file in files.iteritems():
+        for k, v in file.iteritems():
+            eq_(result['files'][name][k], v,
+                "result['files'][{}][{}] {} != {}".format(
+                    name, k, result['files'][name][k], v))
+    return result
+
+
+def assert_batch_row(app, id, author='me', message='a batch', files=[]):
+    with app.app_context():
+        tbl = tables.Batch
+        batch_row = tbl.query.filter(tbl.id == id).first()
+    eq_(batch_row.author, author)
+    eq_(batch_row.message, message)
+    got_files = [(f.size, f.sha512, sorted(i.region for i in f.instances))
+                 for f in batch_row.files]
+    eq_(sorted(got_files), sorted(files))
+
+
+def assert_pending_upload(app, digest, region):
+    with app.app_context():
+        tbl = tables.File
+        file = tbl.query.filter(tbl.sha512 == digest).first()
+        regions = [pu.region for pu in file.pending_uploads]
+        assert region in regions, regions
 
 # tests
 
@@ -176,31 +209,46 @@ def test_upload_batch_bad_size(app, client):
 @moto.mock_s3
 @test_context
 def test_upload_batch_success_fresh(client, app):
-    """A PUT to /batch with a good batch succeeds, returns signed
-    URLs expiring in one hour, and inserts the new batch into the DB
-    with links to files, but no instances."""
+    """A PUT to /batch with a good batch succeeds, returns signed URLs expiring
+    in one hour, and inserts the new batch into the DB with links to files, but
+    no instances, and inserts a pending upload row."""
     batch = mkbatch()
     with set_time():
         with not_so_random_choice():
             resp = upload_batch(client, batch)
-        eq_(resp.status_code, 200, resp.data)
-        result = json.loads(resp.data)['result']
-        eq_(result['author'], batch['author'])
-        eq_(result['message'], batch['message'])
-        eq_(result['files']['one']['algorithm'], 'sha512')
-        eq_(result['files']['one']['size'], len(ONE))
-        eq_(result['files']['one']['digest'], ONE_DIGEST)
+        result = assert_batch_response(resp, files={
+            'one': {'algorithm': 'sha512',
+                    'size': len(ONE),
+                    'digest': ONE_DIGEST}})
         assert_signed_url(result['files']['one']['put_url'], ONE_DIGEST,
                           method='PUT', expires_in=3600)
 
-    with app.app_context():
-        tbl = tables.Batch
-        batch_row = tbl.query.filter(tbl.id == result['id']).first()
-    eq_(batch_row.author, batch['author'])
-    eq_(batch_row.message, batch['message'])
-    eq_(batch_row.files[0].size, len(ONE))
-    eq_(batch_row.files[0].sha512, ONE_DIGEST)
-    eq_(batch_row.files[0].instances, [])
+    assert_batch_row(app, result['id'], files=[(len(ONE), ONE_DIGEST, [])])
+    assert_pending_upload(app, ONE_DIGEST, 'us-east-1')
+
+
+@moto.mock_s3
+@test_context
+def test_upload_batch_success_no_instances(client, app):
+    """A PUT to /batch with a batch containing a file that already exists, but
+    has no instances, succeeds, returns signed URLs expiring in one hour,
+    inserts the new batch into the DB with links to files, but no instances,
+    and inserts a pending upload row.  This could occur when, for example,
+    re-trying a failed upload."""
+    batch = mkbatch()
+    add_file_to_db(app, ONE, regions=[])
+    with set_time():
+        with not_so_random_choice():
+            resp = upload_batch(client, batch)
+        result = assert_batch_response(resp, files={
+            'one': {'algorithm': 'sha512',
+                    'size': len(ONE),
+                    'digest': ONE_DIGEST}})
+        assert_signed_url(result['files']['one']['put_url'], ONE_DIGEST,
+                          method='PUT', expires_in=3600)
+
+    assert_batch_row(app, result['id'], files=[(len(ONE), ONE_DIGEST, [])])
+    assert_pending_upload(app, ONE_DIGEST, 'us-east-1')
 
 
 @moto.mock_s3
@@ -215,33 +263,29 @@ def test_upload_batch_success_some_existing_files(client, app):
         'algorithm': 'sha512', 'size': len(TWO), 'digest': TWO_DIGEST}
 
     # make sure ONE is already in the DB with at least once instance
-    inserted_id = add_file_to_db(app, ONE)
+    add_file_to_db(app, ONE, regions=['us-east-1'])
 
     with set_time():
         resp = upload_batch(client, batch, region='us-west-2')
-        eq_(resp.status_code, 200, resp.data)
-        result = json.loads(resp.data)['result']
-        eq_(result['files']['one']['algorithm'], 'sha512')
-        eq_(result['files']['one']['size'], len(ONE))
-        eq_(result['files']['one']['digest'], ONE_DIGEST)
+        result = assert_batch_response(resp, files={
+            'one': {'algorithm': 'sha512',
+                    'size': len(ONE),
+                    'digest': ONE_DIGEST},
+            'two': {'algorithm': 'sha512',
+                    'size': len(TWO),
+                    'digest': TWO_DIGEST},
+        })
+        # no put_url for the existing file
         assert 'put_url' not in result['files']['one']
-        eq_(result['files']['two']['algorithm'], 'sha512')
-        eq_(result['files']['two']['size'], len(TWO))
-        eq_(result['files']['two']['digest'], TWO_DIGEST)
         assert_signed_url(result['files']['two']['put_url'], TWO_DIGEST,
                           method='PUT', expires_in=3600, region='us-west-2')
 
-    with app.app_context():
-        tbl = tables.Batch
-        batch_row = tbl.query.filter(tbl.id == result['id']).first()
-    eq_(batch_row.author, batch['author'])
-    eq_(batch_row.message, batch['message'])
-    eq_(len(batch_row.files), 2)
-    batch_row.files.sort(key=lambda f: f.size)
-    eq_(batch_row.files[0].id, inserted_id)
-    eq_(batch_row.files[1].size, len(TWO))
-    eq_(batch_row.files[1].sha512, TWO_DIGEST)
-    eq_(batch_row.files[1].instances, [])
+    assert_batch_row(app, result['id'],
+                     files=[
+                         (len(ONE), ONE_DIGEST, ['us-east-1']),
+                         (len(TWO), TWO_DIGEST, []),
+    ])
+    assert_pending_upload(app, TWO_DIGEST, 'us-west-2')
 
 
 @moto.mock_s3
