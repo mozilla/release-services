@@ -28,9 +28,9 @@ cfg = {
 test_context = TestContext(config=cfg, databases=['tooltool'])
 
 ONE = '1\n'
-ONE_HASH = hashlib.sha512(ONE).hexdigest()
+ONE_DIGEST = hashlib.sha512(ONE).hexdigest()
 TWO = '22\n'
-TWO_HASH = hashlib.sha512(TWO).hexdigest()
+TWO_DIGEST = hashlib.sha512(TWO).hexdigest()
 
 NOW = 1425592922
 
@@ -40,7 +40,7 @@ def mkbatch():
         'author': 'me',
         'message': 'a batch',
         'files': {
-            'one': {'algorithm': 'sha512', 'size': len(ONE), 'digest': ONE_HASH},
+            'one': {'algorithm': 'sha512', 'size': len(ONE), 'digest': ONE_DIGEST},
         },
     }
 
@@ -112,11 +112,11 @@ def assert_signed_url(url, digest, method='GET', region=None,
 
 def test_is_valid_sha512():
     """is_valid_sha512 recgnizes valid digests and rejects others"""
-    assert tooltool.is_valid_sha512(ONE_HASH)
-    assert tooltool.is_valid_sha512(TWO_HASH)
-    assert not tooltool.is_valid_sha512(ONE_HASH[-1])
-    assert not tooltool.is_valid_sha512(ONE_HASH + 'a')
-    assert not tooltool.is_valid_sha512('a' + ONE_HASH)
+    assert tooltool.is_valid_sha512(ONE_DIGEST)
+    assert tooltool.is_valid_sha512(TWO_DIGEST)
+    assert not tooltool.is_valid_sha512(ONE_DIGEST[-1])
+    assert not tooltool.is_valid_sha512(ONE_DIGEST + 'a')
+    assert not tooltool.is_valid_sha512('a' + ONE_DIGEST)
     assert not tooltool.is_valid_sha512('j' * 128)
 
 
@@ -189,8 +189,8 @@ def test_upload_batch_success_fresh(client, app):
         eq_(result['message'], batch['message'])
         eq_(result['files']['one']['algorithm'], 'sha512')
         eq_(result['files']['one']['size'], len(ONE))
-        eq_(result['files']['one']['digest'], ONE_HASH)
-        assert_signed_url(result['files']['one']['put_url'], ONE_HASH,
+        eq_(result['files']['one']['digest'], ONE_DIGEST)
+        assert_signed_url(result['files']['one']['put_url'], ONE_DIGEST,
                           method='PUT', expires_in=3600)
 
     with app.app_context():
@@ -199,7 +199,7 @@ def test_upload_batch_success_fresh(client, app):
     eq_(batch_row.author, batch['author'])
     eq_(batch_row.message, batch['message'])
     eq_(batch_row.files[0].size, len(ONE))
-    eq_(batch_row.files[0].sha512, ONE_HASH)
+    eq_(batch_row.files[0].sha512, ONE_DIGEST)
     eq_(batch_row.files[0].instances, [])
 
 
@@ -212,7 +212,7 @@ def test_upload_batch_success_some_existing_files(client, app):
     ``region`` query parameter selects a preferred region."""
     batch = mkbatch()
     batch['files']['two'] = {
-        'algorithm': 'sha512', 'size': len(TWO), 'digest': TWO_HASH}
+        'algorithm': 'sha512', 'size': len(TWO), 'digest': TWO_DIGEST}
 
     # make sure ONE is already in the DB with at least once instance
     inserted_id = add_file_to_db(app, ONE)
@@ -223,12 +223,12 @@ def test_upload_batch_success_some_existing_files(client, app):
         result = json.loads(resp.data)['result']
         eq_(result['files']['one']['algorithm'], 'sha512')
         eq_(result['files']['one']['size'], len(ONE))
-        eq_(result['files']['one']['digest'], ONE_HASH)
+        eq_(result['files']['one']['digest'], ONE_DIGEST)
         assert 'put_url' not in result['files']['one']
         eq_(result['files']['two']['algorithm'], 'sha512')
         eq_(result['files']['two']['size'], len(TWO))
-        eq_(result['files']['two']['digest'], TWO_HASH)
-        assert_signed_url(result['files']['two']['put_url'], TWO_HASH,
+        eq_(result['files']['two']['digest'], TWO_DIGEST)
+        assert_signed_url(result['files']['two']['put_url'], TWO_DIGEST,
                           method='PUT', expires_in=3600, region='us-west-2')
 
     with app.app_context():
@@ -240,7 +240,7 @@ def test_upload_batch_success_some_existing_files(client, app):
     batch_row.files.sort(key=lambda f: f.size)
     eq_(batch_row.files[0].id, inserted_id)
     eq_(batch_row.files[1].size, len(TWO))
-    eq_(batch_row.files[1].sha512, TWO_HASH)
+    eq_(batch_row.files[1].sha512, TWO_DIGEST)
     eq_(batch_row.files[1].instances, [])
 
 
@@ -248,7 +248,7 @@ def test_upload_batch_success_some_existing_files(client, app):
 @test_context
 def test_get_file_no_such(app, client):
     """Getting /sha512/<digest> for a file that does not exist returns 404"""
-    resp = client.get('/tooltool/sha512/{}'.format(ONE_HASH))
+    resp = client.get('/tooltool/sha512/{}'.format(ONE_DIGEST))
     eq_(resp.status_code, 404)
 
 
@@ -266,7 +266,7 @@ def test_get_file_no_instances(app, client):
     """Getting /sha512/<digest> for a file that exists but has no instances
     returns 404"""
     add_file_to_db(app, ONE, regions=[])
-    resp = client.get('/tooltool/sha512/{}'.format(ONE_HASH))
+    resp = client.get('/tooltool/sha512/{}'.format(ONE_DIGEST))
     eq_(resp.status_code, 404)
 
 
@@ -278,8 +278,8 @@ def test_get_file_exists(app, client):
     add_file_to_db(app, ONE, regions=['us-west-2', 'us-east-1'])
     with set_time():
         with not_so_random_choice():
-            resp = client.get('/tooltool/sha512/{}'.format(ONE_HASH))
-        assert_signed_302(resp, ONE_HASH, region='us-east-1')
+            resp = client.get('/tooltool/sha512/{}'.format(ONE_DIGEST))
+        assert_signed_302(resp, ONE_DIGEST, region='us-east-1')
 
 
 @moto.mock_s3
@@ -290,8 +290,8 @@ def test_get_file_exists_not_in_preferred_region(app, client):
     file does exist."""
     add_file_to_db(app, ONE, regions=['us-west-2'])
     with set_time():
-        resp = client.get('/tooltool/sha512/{}?region=us-east-1'.format(ONE_HASH))
-        assert_signed_302(resp, ONE_HASH, region='us-west-2')
+        resp = client.get('/tooltool/sha512/{}?region=us-east-1'.format(ONE_DIGEST))
+        assert_signed_302(resp, ONE_DIGEST, region='us-west-2')
 
 
 @moto.mock_s3
@@ -301,5 +301,5 @@ def test_get_file_exists_region_choice(app, client):
     a signed URL in the region where it exists."""
     add_file_to_db(app, ONE, regions=['us-west-2', 'us-east-1'])
     with set_time():
-        resp = client.get('/tooltool/sha512/{}?region=us-west-2'.format(ONE_HASH))
-        assert_signed_302(resp, ONE_HASH, region='us-west-2')
+        resp = client.get('/tooltool/sha512/{}?region=us-west-2'.format(ONE_DIGEST))
+        assert_signed_302(resp, ONE_DIGEST, region='us-west-2')

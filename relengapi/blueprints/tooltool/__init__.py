@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import datetime
 import random
 import re
 
@@ -9,6 +10,7 @@ from flask import Blueprint
 from flask import current_app
 from flask import g
 from flask import redirect
+from relengapi.blueprints.tooltool import grooming
 from relengapi.blueprints.tooltool import tables
 from relengapi.blueprints.tooltool import types
 from relengapi.lib import api
@@ -38,7 +40,8 @@ def get_region_and_bucket(region_arg):
 # TODO: file protection levels + permissions
 # TODO: file browser
 # TODO: grooming tasks
-# TODO: upload completion endpoint
+assert grooming  # TODO: upload completion endpoint will ref this
+
 
 @bp.route('/batch', methods=['PUT'])
 @api.apimethod(types.UploadBatch, unicode, body=types.UploadBatch)
@@ -47,7 +50,9 @@ def upload_batch(region=None, body=None):
     ``put_url`` for each file which needs to be uploaded -- which may not be
     all!  The caller is then responsible for uploading to those URLs.  The
     resulting signed URLs are valid for one hour, so uploads should begin
-    within that timeframe.
+    within that timeframe.  Consider using Amazon's MD5-verification
+    capabilities to ensure that the uploaded files are transferred correctly,
+    although the tooltool server will verify the integrity anyway.
 
     The query argument ``region=us-west-1`` indicates a preference for URLs
     in that region, although if the region is not available then URLs in
@@ -86,6 +91,11 @@ def upload_batch(region=None, body=None):
                 method='PUT', expires_in=3600, bucket=bucket,
                 key='/sha512/{}'.format(info.digest),
                 headers={'Content-Type': 'application/octet-stream'})
+            pu = tables.PendingUpload(
+                file=file_row,
+                region=region,
+                expires=time.now() + datetime.timedelta(days=1))
+            session.add(pu)
         batch.files.append(file_row)
     session.add(batch)
     session.commit()

@@ -6,8 +6,14 @@ import sqlalchemy as sa
 
 from relengapi.lib import db
 
+allowed_regions = ('us-east-1', 'us-west-1', 'us-west-2')
+
 
 class File(db.declarative_base('tooltool')):
+
+    """An file, identified by size and digest.  The server may have zero
+    or many copies of a file."""
+
     __tablename__ = 'tooltool_files'
 
     id = sa.Column(sa.Integer, primary_key=True)
@@ -18,12 +24,15 @@ class File(db.declarative_base('tooltool')):
 
 
 class FileInstance(db.declarative_base('tooltool')):
+
+    """A verified instance of a file in a single region."""
+
     __tablename__ = 'tooltool_file_instances'
 
     file_id = sa.Column(
         sa.Integer, sa.ForeignKey('tooltool_files.id'), primary_key=True)
     region = sa.Column(
-        sa.Enum('us-east-1', 'us-west-1', 'us-west-2'), primary_key=True)
+        sa.Enum(*allowed_regions), primary_key=True)
 
 
 batch_files = sa.Table(
@@ -37,6 +46,9 @@ batch_files = sa.Table(
 
 
 class Batch(db.declarative_base('tooltool')):
+
+    """Upload batches, with batch metadata, linked to the uploaded files"""
+
     __tablename__ = 'tooltool_batches'
 
     id = sa.Column(sa.Integer, primary_key=True)
@@ -48,5 +60,19 @@ class Batch(db.declarative_base('tooltool')):
                                 secondary=batch_files,
                                 backref='batches')
 
-# TODO: Keep a list of authorized uploads (urls to check for new files)
-#       (with URL expiration time; discard uploads >12h older than that)
+
+class PendingUpload(db.declarative_base('tooltool')):
+
+    """Files for which upload URLs have been generated, but which haven't yet
+    been uploaded.  This table is used to poll for completed uploads."""
+
+    __tablename__ = 'tooltool_pending_upload'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    expires = sa.Column(db.UTCDateTime, index=True, nullable=False)
+    file_id = sa.Column(
+        sa.Integer, sa.ForeignKey('tooltool_files.id'), nullable=False)
+    region = sa.Column(
+        sa.Enum(*allowed_regions), nullable=False)
+
+    file = sa.orm.relationship('File', backref='pending_uploads')
