@@ -10,12 +10,15 @@ from flask import Blueprint
 from flask import current_app
 from flask import g
 from flask import redirect
+from flask.ext.login import current_user
 from relengapi.blueprints.tooltool import grooming
 from relengapi.blueprints.tooltool import tables
 from relengapi.blueprints.tooltool import types
 from relengapi.lib import api
 from relengapi.lib import time
+from relengapi.lib.permissions import p
 from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import Forbidden
 from werkzeug.exceptions import NotFound
 
 metadata = {
@@ -27,6 +30,15 @@ bp = Blueprint('tooltool', __name__)
 
 is_valid_sha512 = re.compile(r'^[0-9a-f]{128}$').match
 
+p.tooltool.download.public.doc("Download PUBLIC files from tooltool")
+p.tooltool.upload.public.doc("Upload PUBLIC files to tooltool")
+# note that internal does not imply public; that's up to the user.
+p.tooltool.download.internal.doc("Download INTERNAL files from tooltool")
+p.tooltool.upload.internal.doc("Upload INTERNAL files to tooltool")
+
+GET_EXPIRES_IN = 60
+UPLOAD_EXPIRES_IN = 3600
+
 
 def get_region_and_bucket(region_arg):
     cfg = current_app.config['TOOLTOOL_REGIONS']
@@ -36,8 +48,6 @@ def get_region_and_bucket(region_arg):
     return random.choice(cfg.items())
 
 
-# TODO: ensure signed upload URLs specify storage class, ACLs, size?
-# TODO: file protection levels + permissions
 # TODO: file browser
 
 
@@ -55,8 +65,6 @@ def upload_batch(region=None, body=None):
     The query argument ``region=us-west-1`` indicates a preference for URLs
     in that region, although if the region is not available then URLs in
     other regions may be returned."""
-    # TODO: verify permission
-    # TODO: verify author
     region, bucket = get_region_and_bucket(region)
 
     if not body.message:
@@ -64,6 +72,19 @@ def upload_batch(region=None, body=None):
 
     if not body.files:
         raise BadRequest("a batch must include at least one file")
+
+    try:
+        user = current_user.authenticated_email
+    except AttributeError:
+        user = None
+    if body.author != user:
+        raise BadRequest("Author must match your logged-in username")
+
+    # validate permission first
+    visibilities = set(f.visibility for f in body.files.itervalues())
+    for v in visibilities:
+        if not p.get('tooltool.upload.{}'.format(v)).can():
+            raise Forbidden("no permission to upload {} files".format(v))
 
     session = g.db.session('tooltool')
     batch = tables.Batch(
@@ -94,7 +115,7 @@ def upload_batch(region=None, body=None):
                     visibility=info.visibility,
                     size=info.size)
             info.put_url = s3.generate_url(
-                method='PUT', expires_in=3600, bucket=bucket,
+                method='PUT', expires_in=UPLOAD_EXPIRES_IN, bucket=bucket,
                 key='/sha512/{}'.format(info.digest),
                 headers={'Content-Type': 'application/octet-stream'})
             pu = tables.PendingUpload(
@@ -135,13 +156,16 @@ def get_file(digest, region=None):
     from another region may be returned."""
     if not is_valid_sha512(digest):
         raise BadRequest("Invalid sha512 digest")
-    # TODO: verify permissions
-    expires_in = 60
 
     # see where the file is..
     tbl = tables.File
     file_row = tbl.query.filter(tbl.sha512 == digest).first()
     if not file_row or not file_row.instances:
+        raise NotFound
+
+    # check visibility
+    if not p.get('tooltool.download.{}'.format(file_row.visibility)).can():
+        # return 404 to avoid leaking information on what exists too easily
         raise NotFound
 
     # figure out which region to use, and from there which bucket
@@ -160,6 +184,6 @@ def get_file(digest, region=None):
 
     s3 = current_app.aws.connect_to('s3', selected_region)
     signed_url = s3.generate_url(
-        method='GET', expires_in=expires_in, bucket=bucket, key=key)
+        method='GET', expires_in=GET_EXPIRES_IN, bucket=bucket, key=key)
 
     return redirect(signed_url)

@@ -14,8 +14,16 @@ from contextlib import contextmanager
 from nose.tools import eq_
 from relengapi.blueprints import tooltool
 from relengapi.blueprints.tooltool import tables
+from relengapi.lib import auth
 from relengapi.lib import time as relengapi_time
+from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
+
+
+def userperms(perms, email='me'):
+    u = auth.HumanUser(email)
+    u._permissions = set(perms)
+    return u
 
 cfg = {
     'AWS': {
@@ -27,7 +35,9 @@ cfg = {
         'us-west-2': 'tt-usw2',
     }
 }
-test_context = TestContext(config=cfg, databases=['tooltool'])
+test_context = TestContext(config=cfg, databases=['tooltool'],
+                           user=userperms([p.tooltool.download.public,
+                                           p.tooltool.upload.public]))
 
 ONE = '1\n'
 ONE_DIGEST = hashlib.sha512(ONE).hexdigest()
@@ -185,6 +195,28 @@ def test_upload_batch_empty_message(app, client):
 
 @moto.mock_s3
 @test_context
+def test_upload_batch_mismatched_author(app, client):
+    """A PUT to /upload with an author that does not correspond to the
+    logged-in user is rejected."""
+    batch = mkbatch()
+    batch['author'] = 'that-other-guy'
+    resp = upload_batch(client, batch)
+    eq_(resp.status_code, 400)
+    assert_no_upload_rows(app)
+
+
+@moto.mock_s3
+@test_context.specialize(user=auth.AnonymousUser())
+def test_upload_batch_no_user(app, client):
+    """A PUT to /upload with non-user-associated authentication fails"""
+    batch = mkbatch()
+    resp = upload_batch(client, batch)
+    eq_(resp.status_code, 400)
+    assert_no_upload_rows(app)
+
+
+@moto.mock_s3
+@test_context
 def test_upload_batch_empty_files(app, client):
     """A PUT to /upload with no files is rejected."""
     batch = mkbatch()
@@ -227,6 +259,36 @@ def test_upload_batch_bad_size(app, client):
     add_file_to_db(app, ONE)
     resp = upload_batch(client, batch)
     eq_(resp.status_code, 400)
+    assert_no_upload_rows(app)
+
+
+@moto.mock_s3
+@test_context.specialize(user=userperms([]))
+def test_upload_batch_no_permissions(app, client):
+    """A PUT to /upload of a public file without permission to upload fails
+    with 403."""
+    batch = mkbatch()
+    add_file_to_db(app, ONE)
+    resp = upload_batch(client, batch)
+    eq_(resp.status_code, 403, resp.data)
+    assert_no_upload_rows(app)
+
+
+@moto.mock_s3
+@test_context
+def test_upload_batch_mixed_visibility_no_permissions(app, client):
+    """A PUT to /upload of public and internal files fails with 403 if the
+    user only has permission to upload public files."""
+    batch = mkbatch()
+    batch['files']['two'] = {
+        'algorithm': 'sha512',
+        'size': len(TWO),
+        'digest': TWO_DIGEST,
+        'visibility': 'internal',
+    }
+    add_file_to_db(app, ONE)
+    resp = upload_batch(client, batch)
+    eq_(resp.status_code, 403, resp.data)
     assert_no_upload_rows(app)
 
 
@@ -359,7 +421,7 @@ def test_get_file_no_such(app, client):
 
 @moto.mock_s3
 @test_context
-def test_get_file_bash_ash(app, client):
+def test_get_file_invalid_digest(app, client):
     """Getting /sha512/<digest> for an invalid digest returns 400"""
     resp = client.get('/tooltool/sha512/abcd')
     eq_(resp.status_code, 400)
@@ -371,6 +433,16 @@ def test_get_file_no_instances(app, client):
     """Getting /sha512/<digest> for a file that exists but has no instances
     returns 404"""
     add_file_to_db(app, ONE, regions=[])
+    resp = client.get('/tooltool/sha512/{}'.format(ONE_DIGEST))
+    eq_(resp.status_code, 404)
+
+
+@moto.mock_s3
+@test_context
+def test_get_file_no_permission(app, client):
+    """Getting /sha512/<digest> for a file with a visibility the user doesn't
+    have permission for returns 404."""
+    add_file_to_db(app, ONE, visibility='internal')
     resp = client.get('/tooltool/sha512/{}'.format(ONE_DIGEST))
     eq_(resp.status_code, 404)
 
