@@ -40,7 +40,7 @@ setup(name='relengapi-tooltool',
     },
     install_requires=[
         'Flask',
-        'relengapi>=0.3',
+        'relengapi>=1.1.1',
     ],
     license='MPL2',
     extras_require={
