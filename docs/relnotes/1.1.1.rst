@@ -1,0 +1,9 @@
+relengapi-1.1.1
+===============
+
+* Add special case for connecting to S3
+
+  The typical boto.connect_s3 method doesn't take a 'region' argument like most
+  of the others, so we use boto.s3.connect_to_region instead.
+
+* Minor HTML and Python style updates.
