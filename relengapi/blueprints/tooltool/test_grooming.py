@@ -35,7 +35,7 @@ test_context = TestContext(config=cfg, databases=['tooltool'])
 
 def add_file_row(size, sha512):
     session = current_app.db.session('tooltool')
-    file_row = tables.File(size=size, sha512=sha512)
+    file_row = tables.File(size=size, visibility='public', sha512=sha512)
     session.add(file_row)
     session.commit()
     return file_row
@@ -43,7 +43,7 @@ def add_file_row(size, sha512):
 
 def add_pending_upload_and_file_row(size, sha512, expires, region):
     session = current_app.db.session('tooltool')
-    file_row = tables.File(size=size, sha512=sha512)
+    file_row = tables.File(size=size, visibility='public', sha512=sha512)
     pu_row = tables.PendingUpload(
         file=file_row, expires=expires, region=region)
     session.add(file_row)

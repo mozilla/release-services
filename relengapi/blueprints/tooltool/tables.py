@@ -19,6 +19,7 @@ class File(db.declarative_base('tooltool')):
     id = sa.Column(sa.Integer, primary_key=True)
     size = sa.Column(sa.Integer, nullable=False)
     sha512 = sa.Column(sa.String(128), unique=True, nullable=False)
+    visibility = sa.Column(sa.Enum('public', 'internal'), nullable=False)
 
     instances = sa.orm.relationship('FileInstance', backref='file')
 

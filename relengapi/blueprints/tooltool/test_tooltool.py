@@ -42,7 +42,12 @@ def mkbatch():
         'author': 'me',
         'message': 'a batch',
         'files': {
-            'one': {'algorithm': 'sha512', 'size': len(ONE), 'digest': ONE_DIGEST},
+            'one': {
+                'algorithm': 'sha512',
+                'size': len(ONE),
+                'digest': ONE_DIGEST,
+                'visibility': 'public',
+            },
         },
     }
 
@@ -53,10 +58,12 @@ def upload_batch(client, batch, region=None):
                       headers={'Content-Type': 'application/json'})
 
 
-def add_file_to_db(app, content, regions=['us-east-1'], pending_regions=[]):
+def add_file_to_db(app, content, regions=['us-east-1'],
+                   pending_regions=[], visibility='public'):
     with app.app_context():
         session = app.db.session('tooltool')
         file_row = tables.File(size=len(content),
+                               visibility=visibility,
                                sha512=hashlib.sha512(content).hexdigest())
         session.add(file_row)
         session.commit()
@@ -146,6 +153,12 @@ def assert_pending_upload(app, digest, region):
         regions = [pu.region for pu in file.pending_uploads]
         assert region in regions, regions
 
+
+def assert_no_upload_rows(app):
+    with app.app_context():
+        eq_(tables.Batch.query.all(), [])
+        eq_(tables.PendingUpload.query.all(), [])
+
 # tests
 
 
@@ -161,42 +174,46 @@ def test_is_valid_sha512():
 
 @moto.mock_s3
 @test_context
-def test_upload_batch_empty_message(client):
+def test_upload_batch_empty_message(app, client):
     """A PUT to /upload with an empty message is rejected."""
     batch = mkbatch()
     batch['message'] = ''
     resp = upload_batch(client, batch)
     eq_(resp.status_code, 400)
+    assert_no_upload_rows(app)
 
 
 @moto.mock_s3
 @test_context
-def test_upload_batch_empty_files(client):
+def test_upload_batch_empty_files(app, client):
     """A PUT to /upload with no files is rejected."""
     batch = mkbatch()
     batch['files'] = {}
     resp = upload_batch(client, batch)
     eq_(resp.status_code, 400)
+    assert_no_upload_rows(app)
 
 
 @moto.mock_s3
 @test_context
-def test_upload_batch_bad_algo(client):
+def test_upload_batch_bad_algo(app, client):
     """A PUT to /upload with an algorithm that is not sha512 is rejected."""
     batch = mkbatch()
     batch['files']['one']['algorithm'] = 'md4'
     resp = upload_batch(client, batch)
     eq_(resp.status_code, 400)
+    assert_no_upload_rows(app)
 
 
 @moto.mock_s3
 @test_context
-def test_upload_batch_bad_digest(client):
+def test_upload_batch_bad_digest(app, client):
     """A PUT to /upload with a bad sha512 digest is rejected."""
     batch = mkbatch()
     batch['files']['one']['digest'] = 'x' * 128
     resp = upload_batch(client, batch)
     eq_(resp.status_code, 400)
+    assert_no_upload_rows(app)
 
 
 @moto.mock_s3
@@ -210,6 +227,7 @@ def test_upload_batch_bad_size(app, client):
     add_file_to_db(app, ONE)
     resp = upload_batch(client, batch)
     eq_(resp.status_code, 400)
+    assert_no_upload_rows(app)
 
 
 @moto.mock_s3
@@ -266,7 +284,11 @@ def test_upload_batch_success_some_existing_files(client, app):
     ``region`` query parameter selects a preferred region."""
     batch = mkbatch()
     batch['files']['two'] = {
-        'algorithm': 'sha512', 'size': len(TWO), 'digest': TWO_DIGEST}
+        'algorithm': 'sha512',
+        'size': len(TWO),
+        'digest': TWO_DIGEST,
+        'visibility': 'public',
+    }
 
     # make sure ONE is already in the DB with at least once instance
     add_file_to_db(app, ONE, regions=['us-east-1'])
@@ -292,6 +314,20 @@ def test_upload_batch_success_some_existing_files(client, app):
                          (len(TWO), TWO_DIGEST, []),
     ])
     assert_pending_upload(app, TWO_DIGEST, 'us-west-2')
+
+
+@test_context
+def test_upload_change_visibility(client, app):
+    """Uploading a file that already exists with a different visibility level
+    fails with 400, even if there are no instances."""
+    batch = mkbatch()
+    batch['files']['one']['visibility'] = 'public'
+    add_file_to_db(app, ONE, regions=[], visibility='internal')
+
+    with set_time():
+        resp = upload_batch(client, batch, region='us-west-2')
+        eq_(resp.status_code, 400, resp.data)
+    assert_no_upload_rows(app)
 
 
 @test_context

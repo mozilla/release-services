@@ -21,6 +21,12 @@ class File(wsme.types.Base):
     #: must always be 'sha512')
     algorithm = unicode
 
+    #: The visibility level of this file.  When making an upload, the uploader
+    #: is (legally!) responsible for selecting the correct visibility level.
+    visibility = wsme.types.wsattr(
+        wsme.types.Enum(unicode, 'public', 'internal'),
+        mandatory=True)
+
     #: The URL from which this file can be downlaoded via HTTP GET
     get_url = wsme.types.wsattr(unicode, mandatory=False)
 

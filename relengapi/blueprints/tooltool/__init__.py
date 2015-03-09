@@ -55,7 +55,6 @@ def upload_batch(region=None, body=None):
     The query argument ``region=us-west-1`` indicates a preference for URLs
     in that region, although if the region is not available then URLs in
     other regions may be returned."""
-    # TODO: track pending uploads somehow - 'valid' attr on FileInstance?
     # TODO: verify permission
     # TODO: verify author
     region, bucket = get_region_and_bucket(region)
@@ -80,12 +79,20 @@ def upload_batch(region=None, body=None):
             raise BadRequest("Invalid sha512 digest")
         digest = info.digest
         file_row = tables.File.query.filter(tables.File.sha512 == digest).first()
+        if file_row and file_row.visibility != info.visibility:
+            # this incidentally reveals that a file with this digest is
+            # in the database.  Since this is only INTERNAL data, this
+            # is an acceptable risk.
+            raise BadRequest("Cannot change a file's visibility level")
         if file_row and file_row.instances != []:
             if file_row.size != info.size:
                 raise BadRequest("Size mismatch for {}".format(filename))
         else:
             if not file_row:
-                file_row = tables.File(sha512=digest, size=info.size)
+                file_row = tables.File(
+                    sha512=digest,
+                    visibility=info.visibility,
+                    size=info.size)
             info.put_url = s3.generate_url(
                 method='PUT', expires_in=3600, bucket=bucket,
                 key='/sha512/{}'.format(info.digest),
