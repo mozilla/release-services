@@ -24,7 +24,20 @@ aws_cfg = {
 }
 
 
-@mock_sqs
+@test_context.specialize(config=aws_cfg)
+def test_connect_to_s3(app):
+    # for S3, boto doesn't support a 'region' argument to connect_s3, so we use
+    # boto.s3.connect_to_region instead
+    with mock.patch('boto.s3.connect_to_region', return_value='s3_conn') as ctr:
+        eq_(app.aws.connect_to('s3', 'us-west-2'), 's3_conn')
+        ctr.assert_called_with(
+            aws_access_key_id='aa',
+            aws_secret_access_key='ss',
+            region_name='us-west-2')
+    # connection is cached
+    eq_(app.aws.connect_to('s3', 'us-west-2'), 's3_conn')
+
+
 @test_context.specialize(config=aws_cfg)
 def test_connect_to(app):
     with mock.patch('boto.connect_sqs', return_value='sqs_conn') as connect_sqs:
