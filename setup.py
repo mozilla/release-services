@@ -25,6 +25,9 @@ setup(
         "relengapi.blueprints": [
             'slaveloan = relengapi.blueprints.slaveloan:bp',
         ],
+        "relengapi.metadata": [
+            'relengapi-slaveloan = relengapi.blueprints.slaveloan.metadata:data',
+        ],
     },
     packages=find_packages(),
     namespace_packages=['relengapi', 'relengapi.blueprints'],
