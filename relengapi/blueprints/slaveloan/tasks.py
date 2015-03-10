@@ -24,6 +24,9 @@ from relengapi.lib.celery import task
 from relengapi.util import tz
 
 import celery
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def add_task_to_history(loanid, msg):
@@ -34,10 +37,9 @@ def add_task_to_history(loanid, msg):
                       msg=msg)
     session.add(history)
     session.commit()
-    print "DEBUG:", repr(l.to_json())
-    print "DEBUG:", repr(history.to_json())
-    print "DEBUG: Log_line: %s" % msg
-
+    logger.debug(repr(l.to_json()))
+    logger.debug(repr(history.to_json()))
+    logger.debug("Log_line: %s" % msg)
 
 def add_to_history(before=None, after=None):
     def decorator(f):
@@ -48,13 +50,13 @@ def add_to_history(before=None, after=None):
             if args and isinstance(args[0], celery.Task):
                 bound_task = args[0]
             if before:
-                print "DEBUG: Locals: %s" % repr(locals())
-                print "DEBUG: Log_line: %s" % before.format(**locals())
+                logger.debug("Locals: %s" % repr(locals()))
+                logger.debug("Log_line: %s" % before.format(**locals()))
                 add_task_to_history(loanid, before.format(**locals()))
             retval = f(*args, **kwargs)
             if after:
-                print "DEBUG: Locals: %s" % repr(locals())
-                print "DEBUG: AFTER: Log_line: %s" % after.format(**locals())
+                logger.debug("Locals: %s" % repr(locals()))
+                logger.debug("AFTER: Log_line: %s" % after.format(**locals()))
                 add_task_to_history(loanid, after.format(**locals()))
             return retval
         return wrapper
@@ -66,14 +68,14 @@ def add_to_history(before=None, after=None):
     before="Initialising Loan for slaveclass {kwargs[loan_class]!s}",
     after="Initialising Complete for slaveclass {kwargs[loan_class]!s}, using flow {retval!s}")
 def init_loan(loanid, loan_class):
-    print "Init Loan2", datetime.datetime.utcnow().isoformat(sep=" ")
-    print "Loan Class = %s" % loan_class
+    logger.debug("Init Loan2 %s", datetime.datetime.utcnow().isoformat(sep=" "))
+    logger.debug("Loan Class = %s" % loan_class)
     if slave_mappings.is_aws_serviceable(loan_class):
-        print "aws host"
+        logger.debug("aws host")
         # do_aws_loan.delay()
         return "AWS"
     else:
-        print "physical host: %s" % loan_class
+        logger.debug("physical host: %s" % loan_class)
         return "inhouse"
 
 
@@ -82,7 +84,7 @@ def init_loan(loanid, loan_class):
     before="Choosing an inhouse machine based on slavealloc",
     after="Chose inhouse machine {retval!s}")
 def choose_inhouse_machine(self, loanid, loan_class):
-    print "Choosing inhouse machine"
+    logger.debug("Choosing inhouse machine")
     url = furl(current_app.config.get("SLAVEALLOC_URL", None))
     # XXX: ToDo raise fatal if no slavealloc
     url.path.add("slaves")
@@ -90,15 +92,15 @@ def choose_inhouse_machine(self, loanid, loan_class):
     try:
         all_slaves = requests.get(str(url)).json()
     except RequestException as exc:
-        print "Exception"
+        logger.debug("Exception")
         self.retry(exc=exc)
-    print "Got all slaves"
+    logger.debug("Got all slaves")
     # pylint silence
     # available_slaves = filter(slave_mappings.slave_filter(loan_class), all_slaves)
     available_slaves = [slave for slave in all_slaves
                         if slave_mappings.slave_filter(loan_class)(slave)]
     chosen = random.choice(available_slaves)
-    print "Chosen Slave = %s" % chosen
+    logger.debug("Chosen Slave = %s" % chosen)
     return chosen['name']
 
 
@@ -108,25 +110,25 @@ def choose_inhouse_machine(self, loanid, loan_class):
     after="Aquired FQDN and IP")
 def fixup_machine(self, machine, loanid):
     try:
-        print "FIXUP MACHINE"
+        logger.debug("FIXUP MACHINE")
         fqdn = socket.getfqdn("%s.build.mozilla.org" % machine)
-        print "FIXUP MACHINE = hostname: %s" % fqdn
+        logger.debug("FIXUP MACHINE = hostname: %s" % fqdn)
         ipaddr = socket.gethostbyname("%s.build.mozilla.org" % machine)
-        print "FIXUP MACHINE = ipaddr: %s" % ipaddr
+        logger.debug("FIXUP MACHINE = ipaddr: %s" % ipaddr)
         session = current_app.db.session('relengapi')
         m = Machines.as_unique(session,
                                fqdn=fqdn,
                                ipaddr=ipaddr)
-        print "FIXUP MACHINE = machine.to_json(): %s" % m.to_json()
+        logger.debug("FIXUP MACHINE = machine.to_json(): %s" % m.to_json())
         l = session.query(Loans).get(loanid)
-        print "FIXUP MACHINE = loan.to_json(): %s" % l.to_json()
+        logger.debug("FIXUP MACHINE = loan.to_json(): %s" % l.to_json())
         l.machine = m
         session.commit()
         l = session.query(Loans).get(loanid)
-        print "FIXUP MACHINE = loan.to_json(): %s" % l.to_json()
+        logger.debug("FIXUP MACHINE = loan.to_json(): %s" % l.to_json())
     except Exception as exc:  # pylint: disable=W0703
-        print "FIXUP MACHINE (FAILED)"
-        print exc
+        logger.debug("FIXUP MACHINE (FAILED)")
+        logger.debug(exc)
         self.retry(exc=exc)
 
 
@@ -136,14 +138,14 @@ def fixup_machine(self, machine, loanid):
     after="Disable request sent")
 def start_disable_slave(self, machine, loanid):
     try:
-        print "START DISABLE SLAVE"
+        logger.debug("START DISABLE SLAVE")
         url = furl(current_app.config.get("SLAVEAPI_URL", None))
         # XXX: ToDo raise fatal if no slavealloc
         url.path.add(machine).add("actions").add("disable")
-        print "START DISABLE SLAVE = url: %s" % str(url)
+        logger.debug("START DISABLE SLAVE = url: %s" % str(url))
         postdata = dict(reason="Being loaned on slaveloan %s" % loanid)
         r = retry(requests.post, args=(str(url),), kwargs=dict(data=postdata)).json()
-        print "START DISABLE SLAVE = r: %s" % str(r)
+        logger.debug("START DISABLE SLAVE = r: %s" % str(r))
     except Exception as exc:  # pylint: disable=W0703
         self.retry(exc=exc)
 
