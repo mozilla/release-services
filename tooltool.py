@@ -739,7 +739,7 @@ def remove_trailing_slashes(folder):
     return re.sub("/*$", "", folder)
 
 
-def package(folder, algorithm, message):
+def package(folder, algorithm, message):  # pragma: no cover
     if not os.path.exists(folder) or not os.path.isdir(folder):
         msg = 'Folder %s does not exist!' % folder
         log.error(msg)
@@ -789,7 +789,7 @@ def package(folder, algorithm, message):
     return os.path.join(os.path.join(dirname, package_name))
 
 
-def execute(cmd):
+def execute(cmd):  # pragma: no cover
     process = Popen(cmd, shell=True, stdout=PIPE)
     while True:
         line = process.stdout.readline()
@@ -798,7 +798,7 @@ def execute(cmd):
         log.info(line.replace('\n', ''))
 
 
-def upload(package, user, host, path):
+def upload(package, user, host, path):  # pragma: no cover
     # TODO s: validate package
     package = remove_trailing_slashes(package)
 
@@ -846,7 +846,7 @@ def upload(package, user, host, path):
     return True
 
 
-def distribute(folder, message, user, host, path, algorithm):
+def distribute(folder, message, user, host, path, algorithm):  # pragma: no cover
     return upload(package(folder, algorithm, message), user, host, path)
 
 
@@ -883,14 +883,14 @@ def process_command(options, args):
             cmd_args,
             cache_folder=options['cache_folder'],
             auth_file=options.get("auth_file"))
-    elif cmd == 'package':
+    elif cmd == 'package':  # pragma: no cover
         if not options.get('folder') or not options.get('message'):
             log.critical('package command requires a folder to be specified, containing the '
                          'files to be added to the tooltool package, and a message providing info '
                          'about the package')
             return False
         return package(options['folder'], options['algorithm'], options['message'])
-    elif cmd == 'upload':
+    elif cmd == 'upload':  # pragma: no cover
         if not options.get('package') or not options.get('user') or \
            not options.get('host') or not options.get('path'):
             log.critical('upload command requires the package folder to be uploaded, and the '
@@ -901,7 +901,7 @@ def process_command(options, args):
             options.get('user'),
             options.get('host'),
             options.get('path'))
-    elif cmd == 'distribute':
+    elif cmd == 'distribute':  # pragma: no cover
         if not options.get('folder') or not options.get('message') or not options.get('user') or \
            not options.get('host') or not options.get('path'):
             log.critical('distribute command requires the following parameters: --folder, '
