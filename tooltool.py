@@ -919,43 +919,13 @@ def process_command(options, args):
         return False
 
 
-# fetching api:
-#   http://hostname/algorithm/hash
-#   example: http://people.mozilla.org/sha1/1234567890abcedf
-# This will make it possible to have the server allow clients to
-# use different algorithms than what was uploaded to the server
-
-# TODO: Implement the following features:
-#   -optimization: do small files first, justification is that they are faster
-#    and cause a faster failure if they are invalid
-#   -store permissions
-#   -local renames i.e. call the file one thing on the server and
-#    something different locally
-#   -deal with the cases:
-#     -local data matches file requested with different filename
-#     -two different files with same name, different hash
-#   -?only ever locally to digest as filename, symlink to real name
-#   -?maybe deal with files as a dir of the filename with all files in that dir
-#    as the versions of that file - e.g. ./python-2.6.7.dmg/0123456789abcdef and
-#    ./python-2.6.7.dmg/abcdef0123456789
-
-
-def main():
-    # Set up logging, for now just to the console
-    ch = logging.StreamHandler()
-    cf = logging.Formatter("%(levelname)s - %(message)s")
-    ch.setFormatter(cf)
-
+def main(argv, _skip_logging=False):
     # Set up option parsing
     parser = optparse.OptionParser()
-    # I wish there was a way to say "only allow args to be
-    # sequential and at the end of the argv.
-    # OH! i could step through sys.argv and check for things starting without
-    # -/-- before things starting with them
-    parser.add_option('-q', '--quiet', default=False,
-                      dest='quiet', action='store_true')
-    parser.add_option('-v', '--verbose', default=False,
-                      dest='verbose', action='store_true')
+    parser.add_option('-q', '--quiet', default=logging.INFO,
+                      dest='loglevel', action='store_const', const=logging.ERROR)
+    parser.add_option('-v', '--verbose',
+                      dest='loglevel', action='store_const', const=logging.DEBUG)
     parser.add_option('-m', '--manifest', default=DEFAULT_MANIFEST_NAME,
                       dest='manifest', action='store',
                       help='specify the manifest file to be operated on')
@@ -997,28 +967,22 @@ def main():
     parser.add_option('--authentication-file',
                       help='Use http authentication to download a file.', dest='auth_file')
 
-    (options_obj, args) = parser.parse_args()
+    (options_obj, args) = parser.parse_args(argv)
     # Dictionaries are easier to work with
     options = vars(options_obj)
-    # Use some of the option parser to figure out application
-    # log level
-    if options.get('verbose'):
-        log.setLevel(logging.DEBUG)
-    elif options.get('quiet'):
-        log.setLevel(logging.ERROR)
-    else:
-        log.setLevel(logging.INFO)
-    log.addHandler(ch)
 
-    if 'manifest' not in options:
-        parser.error("no manifest file specified")
+    log.setLevel(options['loglevel'])
+
+    # Set up logging, for now just to the console
+    if not _skip_logging:  # pragma: no cover
+        ch = logging.StreamHandler()
+        cf = logging.Formatter("%(levelname)s - %(message)s")
+        ch.setFormatter(cf)
+        log.addHandler(ch)
 
     if len(args) < 1:
         parser.error('You must specify a command')
-    exit(0 if process_command(options, args) else 1)
+    return 0 if process_command(options, args) else 1
 
-if __name__ == "__main__":
-    main()
-else:
-    log.addHandler(logging.NullHandler())
-    # log.addHandler(logging.StreamHandler())
+if __name__ == "__main__":  # pragma: no cover
+    sys.exit(main(sys.argv[1:]))

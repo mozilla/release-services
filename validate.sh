@@ -100,8 +100,7 @@ relengapi build-docs --development || not_ok "build-docs failed"
 
 status "running tests (under coverage)"
 coverage erase || not_ok "coverage failed"
-# NOTE: to add coverage of the client (currently terrible!), use --source=relengapi,tooltool
-coverage run --rcfile=coveragerc --source=relengapi $(which relengapi) run-tests || not_ok "tests failed"
+coverage run --rcfile=coveragerc --source=relengapi,tooltool $(which relengapi) run-tests || not_ok "tests failed"
 
 status "checking coverage"
 coverage report --rcfile=coveragerc --fail-under=${COVERAGE_MIN} >${tmpbase}/covreport || not_ok "less than ${COVERAGE_MIN}% coverage"

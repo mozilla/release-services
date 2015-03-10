@@ -4,12 +4,12 @@
 
 import copy
 import json
+import mock
 import os
 import shutil
 import tempfile
-import unittest
-
 import tooltool
+import unittest
 
 
 class DigestTests(unittest.TestCase):
@@ -310,3 +310,12 @@ class TestManifestOperations(BaseFileRecordTest):
     def tearDown(self):
         os.chdir(self.startingwd)
         shutil.rmtree(self.test_dir)
+
+
+def test_main_help():
+    try:
+        tooltool.main(['tooltool', '--help'], _skip_logging=True)
+    except SystemExit:
+        pass
+    else:
+        assert 0, "didn't exit"
