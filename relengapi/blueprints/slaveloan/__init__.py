@@ -163,7 +163,7 @@ def new_loan_request(body):
     session.add(l)
     session.add(history)
     session.commit()
-    chain_of_stuff = task_groups.generate_loan(loanid=l.id, slavetype=slavetype)
+    task_groups.generate_loan(loanid=l.id, slavetype=slavetype)
     # chain_of_stuff.delay()
     return None  # ?rest.WSME_New_Loan({'loan': l.to_wsme()})
 
