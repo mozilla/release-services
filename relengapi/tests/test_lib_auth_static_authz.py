@@ -46,3 +46,30 @@ def test_on_permissions_stale():
     static_authz.on_permissions_stale(perm_map, 'sender', user, permissions)
     eq_(permissions, set(
         [p.test_static.foo, p.test_static.bar]))
+
+
+def test_get_user_permissions_no_such_user():
+    sa = static_authz.StaticAuthz({'foo@foo.com': ['test_static.foo']})
+    eq_(sa.get_user_permissions('bar@bar.com'), None)
+
+
+def test_get_user_permissions_no_perms():
+    sa = static_authz.StaticAuthz({'foo@foo.com': []})
+    eq_(sa.get_user_permissions('foo@foo.com'), set([]))
+
+
+def test_get_user_permissions_some_perms():
+    sa = static_authz.StaticAuthz({'foo@foo.com': ['test_static.foo']})
+    eq_(sa.get_user_permissions('foo@foo.com'), set([p.test_static.foo]))
+
+
+def test_init_app_success():
+    app = relengapi.app.create_app(test_config={
+        'RELENGAPI_PERMISSIONS': {
+            'type': 'static',
+            'permissions': {
+                'foo@co.com': ['test_static.foo'],
+            },
+        },
+    })
+    assert isinstance(app.authz, static_authz.StaticAuthz)

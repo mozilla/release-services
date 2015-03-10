@@ -7,10 +7,11 @@ import ldap
 import logging
 
 from relengapi import p
+from relengapi.lib.auth import base
 from relengapi.lib.auth import permissions_stale
 
 
-class LdapGroups(object):
+class LdapGroupsAuthz(base.BaseAuthz):
 
     def __init__(self, app):
 
@@ -36,6 +37,20 @@ class LdapGroups(object):
 
         permissions_stale.connect_via(app)(self.on_permissions_stale)
 
+    def _groups_to_perms(self, groups):
+        allowed_permissions = set(self.group_permissions.get('<everyone>', []))
+        for group in groups:
+            for perm in self.group_permissions.get(group, []):
+                allowed_permissions.add(perm)
+        return set([p[perm] for perm in allowed_permissions])
+
+    def get_user_permissions(self, email):
+        groups = self.get_user_groups(email)
+        if groups is not None:
+            return self._groups_to_perms(groups)
+        else:
+            return None
+
     def get_user_groups(self, mail):
         if self.debug:
             self.logger.debug('Making LDAP query for %s', mail)
@@ -46,7 +61,7 @@ class LdapGroups(object):
             people = l.search_s(self.user_base, ldap.SCOPE_SUBTREE,
                                 '(&(objectClass=inetOrgPerson)(mail=%s))' % (mail,), [])
             if not people or len(people) != 1:
-                return []
+                return None
             user_dn = people[0][0]
             result = l.search_s(self.group_base, ldap.SCOPE_SUBTREE,
                                 '(&(objectClass=groupOfNames)(member=%s))' % user_dn, ['cn'])
@@ -56,21 +71,22 @@ class LdapGroups(object):
             return list(set(groups))
         except ldap.LDAPError:
             self.logger.exception("While connecting to the LDAP server")
-            return []
+            return None
 
     def on_permissions_stale(self, sender, user, permissions):
         groups = self.get_user_groups(user.authenticated_email)
         if self.debug:
             self.logger.debug("Got groups %s for user %s", groups, user)
-        allowed_permissions = set(self.group_permissions.get('<everyone>', []))
-        for group in groups:
-            for perm in self.group_permissions.get(group, []):
-                allowed_permissions.add(perm)
+
+        # when the user doesn't exist, no perms (not even <everyone>)
+        if groups is None:
+            return []
+        allowed_permissions = self._groups_to_perms(groups)
         if self.debug:
             self.logger.debug("Setting permissions %s for user %s",
-                              ', '.join(allowed_permissions), user)
-        permissions.update([p[a] for a in allowed_permissions])
+                              ', '.join(str(prm) for prm in allowed_permissions), user)
+        permissions.update(allowed_permissions)
 
 
 def init_app(app):
-    LdapGroups(app)
+    app.authz = LdapGroupsAuthz(app)
