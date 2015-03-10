@@ -103,7 +103,7 @@ class FileRecord(object):
         return repr(self)
 
     def __repr__(self):
-        return "%s.%s(filename='%s', size='%s', digest='%s', algorithm='%s')" % (
+        return "%s.%s(filename='%s', size=%s, digest='%s', algorithm='%s')" % (
             __name__,
             self.__class__.__name__,
             self.filename,

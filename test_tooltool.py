@@ -25,9 +25,6 @@ class DigestTests(unittest.TestCase):
         # of Linus Torvalds explaining how he pronounces 'Linux'
         self.assertEqual(test_digest, self.sample_digest)
 
-# Ugh, I've managed to have a few different test naming schemes already :(
-# TODO: clean this up!
-
 
 class BaseFileRecordTest(unittest.TestCase):
 
@@ -129,8 +126,7 @@ class TestFileRecord(BaseFileRecordTest):
     def test_repr(self):
         a = eval(repr(self.test_record))
         self.assertEqual(str(a), str(self.test_record))
-        # TODO: Figure out why things aren't working here
-        #self.assertEqual(a, self.test_record)
+        self.assertEqual(a, self.test_record)
 
     def test_create_file_record(self):
         fr = tooltool.create_file_record(self.sample_file, self.sample_algo)
