@@ -68,10 +68,10 @@ tmpbase=$(mktemp -d -t tmpbase.XXXXXX)
 trap 'rm -rf ${tmpbase}; exit 1' 1 2 3 15
 
 status "running pep8"
-pep8 --config=pep8rc relengapi || not_ok "pep8 failed"
+pep8 --config=pep8rc relengapi tooltool.py || not_ok "pep8 failed"
 
 status "running pyflakes"
-pyflakes relengapi || not_ok "pyflakes failed"
+pyflakes relengapi tooltool.py || not_ok "pyflakes failed"
 
 status "checking import module convention in modified files"
 modified=false
@@ -97,6 +97,7 @@ relengapi build-docs --development || not_ok "build-docs failed"
 
 status "running tests (under coverage)"
 coverage erase || not_ok "coverage failed"
+# NOTE: to add coverage of the client (currently terrible!), use --source=relengapi,tooltool
 coverage run --rcfile=coveragerc --source=relengapi $(which relengapi) run-tests || not_ok "tests failed"
 
 status "checking coverage"
