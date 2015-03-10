@@ -13,13 +13,12 @@ from relengapi.blueprints.slaveloan import tasks
 def generate_loan(slavetype, loanid):
     return chain(
         # Could add user to VPN earlier, here if automated.
-        tasks.init_loan.si(loanid=18, loan_class="t-snow-r4"),
         tasks.bmo_file_loan_bug.si(loanid=loanid, slavetype=slavetype),
-        tasks.choose_inhouse_machine.si(loanid=18, loan_class="t-snow-r4"),
+        tasks.choose_inhouse_machine.si(loanid=loanid, loan_class=slavetype),
         group(
-            tasks.fixup_machine.s(loanid=18),
+            tasks.fixup_machine.s(loanid=loanid),
             # disable_machine_from_buildbot(slavetype, loanid)
-            tasks.dummy_task.si(loanid=18)
+            tasks.dummy_task.si(loanid=loanid)
         ),
         group(
             manual_action(loanid=loanid, action_name="add_to_vpn"),

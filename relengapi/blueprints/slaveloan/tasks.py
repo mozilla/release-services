@@ -41,6 +41,7 @@ def add_task_to_history(loanid, msg):
     logger.debug(repr(history.to_json()))
     logger.debug("Log_line: %s" % msg)
 
+
 def add_to_history(before=None, after=None):
     def decorator(f):
         @wraps(f)
@@ -61,22 +62,6 @@ def add_to_history(before=None, after=None):
             return retval
         return wrapper
     return decorator
-
-
-@task()
-@add_to_history(
-    before="Initialising Loan for slaveclass {kwargs[loan_class]!s}",
-    after="Initialising Complete for slaveclass {kwargs[loan_class]!s}, using flow {retval!s}")
-def init_loan(loanid, loan_class):
-    logger.debug("Init Loan2 %s", datetime.datetime.utcnow().isoformat(sep=" "))
-    logger.debug("Loan Class = %s" % loan_class)
-    if slave_mappings.is_aws_serviceable(loan_class):
-        logger.debug("aws host")
-        # do_aws_loan.delay()
-        return "AWS"
-    else:
-        logger.debug("physical host: %s" % loan_class)
-        return "inhouse"
 
 
 @task(bind=True)

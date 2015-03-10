@@ -123,7 +123,6 @@ def new_loan_from_admin(body):
     session.add(l)
     session.add(history)
     session.commit()
-#    tasks.init_loan.delay(l.id, "bld-lion-r5")
     return None  # ?rest.WSME_New_Loan({'loan': l.to_wsme()})
 
 
