@@ -339,6 +339,10 @@ def test_main_bad_command():
     eq_(call_main('tooltool', 'foo'), 1)
 
 
+def test_main_bad_algorithm():
+    eq_(call_main('tooltool', '--algorithm', 'sha13', 'fetch'), 'exit 2')
+
+
 def test_command_list():
     with mock.patch('tooltool.list_manifest') as list_manifest:
         eq_(call_main('tooltool', 'list', '--manifest', 'foo.tt'), 0)

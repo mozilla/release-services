@@ -980,6 +980,9 @@ def main(argv, _skip_logging=False):
         ch.setFormatter(cf)
         log.addHandler(ch)
 
+    if options['algorithm'] != 'sha512':
+        parser.error('only --algorithm sha512 is supported')
+
     if len(args) < 1:
         parser.error('You must specify a command')
 
