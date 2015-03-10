@@ -7,9 +7,12 @@ import json
 import mock
 import os
 import shutil
+import sys
 import tempfile
 import tooltool
 import unittest
+
+from nose.tools import eq_
 
 
 class DigestTests(unittest.TestCase):
@@ -312,10 +315,81 @@ class TestManifestOperations(BaseFileRecordTest):
         shutil.rmtree(self.test_dir)
 
 
-def test_main_help():
+def call_main(*args):
     try:
-        tooltool.main(['tooltool', '--help'], _skip_logging=True)
-    except SystemExit:
-        pass
-    else:
-        assert 0, "didn't exit"
+        old_stderr = sys.stderr
+        sys.stderr = sys.stdout
+        try:
+            return tooltool.main(list(args), _skip_logging=True)
+        except SystemExit, e:
+            return "exit {}".format(e.code)
+    finally:
+        sys.stderr = old_stderr
+
+
+def test_main_help():
+    eq_(call_main('tooltool', '--help'), "exit 0")
+
+
+def test_main_no_command():
+    eq_(call_main('tooltool'), "exit 2")
+
+
+def test_main_bad_command():
+    eq_(call_main('tooltool', 'foo'), 1)
+
+
+def test_command_list():
+    with mock.patch('tooltool.list_manifest') as list_manifest:
+        eq_(call_main('tooltool', 'list', '--manifest', 'foo.tt'), 0)
+        list_manifest.assert_called_with('foo.tt')
+
+
+def test_command_validate():
+    with mock.patch('tooltool.validate_manifest') as validate_manifest:
+        eq_(call_main('tooltool', 'validate'), 0)
+        validate_manifest.assert_called_with('manifest.tt')
+
+
+def test_command_add():
+    with mock.patch('tooltool.add_files') as add_files:
+        eq_(call_main('tooltool', 'add', 'a', 'b'), 0)
+        add_files.assert_called_with('manifest.tt', 'sha512', ['a', 'b'])
+
+
+def test_command_purge_no_folder():
+    with mock.patch('tooltool.purge') as purge:
+        eq_(call_main('tooltool', 'purge'), 1)
+        assert not purge.called
+
+
+def test_command_purge():
+    with mock.patch('tooltool.purge') as purge:
+        eq_(call_main('tooltool', 'purge', '--cache', 'foo'), 1)
+        purge.assert_called_with(folder='foo', gigs=0)
+
+
+def test_command_purge_size():
+    with mock.patch('tooltool.purge') as purge:
+        eq_(call_main('tooltool', 'purge', '--size', '10', '--cache', 'foo'), 1)
+        purge.assert_called_with(folder='foo', gigs=10)
+
+
+def test_command_fetch_no_url():
+    with mock.patch('tooltool.fetch_files') as fetch_files:
+        eq_(call_main('tooltool', 'fetch'), 1)
+        assert not fetch_files.called
+
+
+def test_command_fetch():
+    with mock.patch('tooltool.fetch_files') as fetch_files:
+        eq_(call_main('tooltool', 'fetch', 'a', 'b', '--url', 'http://foo'), 0)
+        fetch_files.assert_called_with('manifest.tt', ['http://foo'], ['a', 'b'],
+                                       cache_folder=None, auth_file=None)
+
+
+def test_command_package():
+    with mock.patch('tooltool.fetch_files') as fetch_files:
+        eq_(call_main('tooltool', 'fetch', 'a', 'b', '--url', 'http://foo'), 0)
+        fetch_files.assert_called_with('manifest.tt', ['http://foo'], ['a', 'b'],
+                                       cache_folder=None, auth_file=None)

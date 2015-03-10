@@ -931,7 +931,7 @@ def main(argv, _skip_logging=False):
                       help='specify the manifest file to be operated on')
     parser.add_option('-d', '--algorithm', default='sha512',
                       dest='algorithm', action='store',
-                      help='openssl hashing algorithm to use')
+                      help='hashing algorithm to use (only sha512 is allowed)')
     parser.add_option('-o', '--overwrite', default=False,
                       dest='overwrite', action='store_true',
                       help='UNUSED; present for backward compatibility')
@@ -967,7 +967,7 @@ def main(argv, _skip_logging=False):
     parser.add_option('--authentication-file',
                       help='Use http authentication to download a file.', dest='auth_file')
 
-    (options_obj, args) = parser.parse_args(argv)
+    (options_obj, args) = parser.parse_args(argv[1:])
     # Dictionaries are easier to work with
     options = vars(options_obj)
 
@@ -982,6 +982,7 @@ def main(argv, _skip_logging=False):
 
     if len(args) < 1:
         parser.error('You must specify a command')
+
     return 0 if process_command(options, args) else 1
 
 if __name__ == "__main__":  # pragma: no cover
