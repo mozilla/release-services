@@ -55,8 +55,8 @@ class HistoryEntry(wsme.types.Base):
     msg = unicode
 
 
-class LoanRequest(wsme.types.Base):
-    "Represents a new loan request"
+class LoanAdminRequest(wsme.types.Base):
+    "Represents a new loan request with admin details"
 
     #: Initial Status
     status = unicode
@@ -68,3 +68,16 @@ class LoanRequest(wsme.types.Base):
     fqdn = unicode
     #: If known in advance, ip address of the machine to loan
     ipaddress = unicode
+
+
+class LoanRequest(wsme.types.Base):
+    "Represents a new loan request"
+
+    #: (optional) Loan Bug Id, if not passed in we create one for you
+    loan_bug_id = wsme.types.wsattr(int, mandatory=False)
+    #: Users full LDAP e-mail
+    ldap_email = unicode
+    #: (optional) Users Bugzilla e-mail, defaults to <ldap_email> if not supplied
+    bugzilla_email = wsme.types.wsattr(unicode, mandatory=False)
+    #: Slave type to loan
+    requested_slavetype = unicode

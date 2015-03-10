@@ -11,6 +11,7 @@ Types
 .. api:autotype:: Loan
 .. api:autotype:: HistoryEntry
 .. api:autotype:: LoanRequest
+.. api:autotype:: LoanAdminRequest
 
 Endpoints
 ---------

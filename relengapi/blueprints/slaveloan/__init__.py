@@ -16,6 +16,7 @@ from relengapi import apimethod
 from relengapi import p
 from relengapi.blueprints.slaveloan import task_groups
 from relengapi.blueprints.slaveloan.slave_mappings import slave_patterns
+from relengapi.blueprints.slaveloan.slave_mappings import slave_to_slavetype
 from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import InternalServerError
@@ -87,7 +88,7 @@ def get_all_loans():
 
 @bp.route('/loans/new', methods=['POST'])
 @p.slaveloan.admin.require()
-@apimethod(None, body=rest.LoanRequest)
+@apimethod(None, body=rest.LoanAdminRequest)
 def new_loan_from_admin(body):
     "Creates a new loan entry"
     if not body.status:
@@ -129,8 +130,42 @@ def new_loan_from_admin(body):
 @bp.route('/loans/request', methods=['POST'])
 @apimethod(None, body=rest.LoanRequest)
 def new_loan_request(body):
-    "[ToDo] Implement User Loan Requesting"
-    raise BadRequest("NotImplemented: User Requests are not implemented at this time")
+    "User Loan Requesting, returns the id of the loan"
+    if not body.ldap_email:
+        raise BadRequest("Missing LDAP E-Mail")
+    if not body.requested_slavetype:
+        raise BadRequest("Missing slavetype")
+
+    slavetype = slave_to_slavetype(body.requested_slavetype)
+    if not slavetype:
+        raise BadRequest("Unsupported slavetype")
+
+    if not body.bugzilla_email:
+        # Set bugzilla e-mail to ldap e-mail by default
+        body.bugzilla_email = body.ldap_email
+
+    session = g.db.session('relengapi')
+    try:
+        h = Humans.as_unique(session, ldap=body.ldap_email,
+                             bugzilla=body.bugzilla_email)
+    except sa.exc.IntegrityError:
+        raise InternalServerError("Integrity Error from Database, please retry.")
+
+    if body.loan_bug_id:
+        l = Loans(status="PENDING", human=h, bug_id=body.loan_bug_id)
+    else:
+        l = Loans(status="PENDING", human=h)
+
+    history = History(for_loan=l,
+                      timestamp=tz.utcnow(),
+                      msg="Requesting loan for slavetype %s (original: '%s')" %
+                          (slavetype, body.requested_slavetype))
+    session.add(l)
+    session.add(history)
+    session.commit()
+    chain_of_stuff = task_groups.generate_loan(loanid=l.id, slavetype=slavetype)
+    # chain_of_stuff.delay()
+    return None  # ?rest.WSME_New_Loan({'loan': l.to_wsme()})
 
 
 @bp.route('/machine/classes')
