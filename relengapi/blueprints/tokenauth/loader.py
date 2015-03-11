@@ -107,7 +107,7 @@ def tmp_loader(claims):
 def usr_loader(claims):
     token_id = tokenstr.jti2id(claims['jti'])
     token_data = tables.Token.query.filter_by(id=token_id).first()
-    if token_data:
+    if token_data and not token_data.disabled:
         assert token_data.typ == 'usr'
         return TokenUser(claims,
                          permissions=token_data.permissions,
