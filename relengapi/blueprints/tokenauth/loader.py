@@ -79,6 +79,7 @@ class TokenLoader(object):
 
 
 token_loader = TokenLoader()
+auth.request_loader(token_loader)
 
 
 @token_loader.type_function('prm')
@@ -113,3 +114,7 @@ def usr_loader(claims):
                          permissions=token_data.permissions,
                          token_data=token_data,
                          authenticated_email=token_data.user)
+
+
+def init_app(app):
+    pass

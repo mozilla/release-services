@@ -22,7 +22,6 @@ from relengapi.blueprints.tokenauth import tokenstr
 from relengapi.blueprints.tokenauth import types
 from relengapi.lib import angular
 from relengapi.lib import api
-from relengapi.lib import auth
 from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import Forbidden
@@ -342,10 +341,8 @@ def revoke_token(token_id):
     return None, 204
 
 
-# enable the loader to get a look at each incoming request
-auth.request_loader(loader.token_loader)
-
 
 @bp.record
 def init_blueprint(state):
     tokenstr.init_app(state.app)
+    loader.init_app(state.app)
