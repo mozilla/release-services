@@ -339,6 +339,15 @@ def test_issue_tmp_token_no_metadata(client):
     eq_(client.post_json('/tokenauth/tokens', request).status_code, 400)
 
 
+@test_context.specialize(user=userperms([p.base.tokens.usr.issue, p.test_tokenauth.zig]))
+def test_issue_usr_disabled(client):
+    """An issue request for a disabled token is rejected."""
+    request = {'permissions': ['test_tokenauth.zig'],
+               'disabled': True,
+               'description': 'More Zig', 'typ': 'usr'}
+    eq_(client.post_json('/tokenauth/tokens', request).status_code, 400)
+
+
 @test_context.specialize(user=userperms([]))
 def test_issue_usr_token_forbidden(client):
     """Issuing a temporary token requires base.tokens.prm.issue"""

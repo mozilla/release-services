@@ -264,6 +264,10 @@ def issue_token(body):
         if getattr(body, attr) is wsme.Unset:
             raise BadRequest("missing %s" % attr)
 
+    # prohibit silly requests
+    if body.disabled:
+        raise BadRequest("can't issue disabled tokens")
+
     # All types have permissions, so handle those here -- ensure the request is
     # for a subset of the permissions the user can perform
     requested_permissions = [p.get(a) for a in body.permissions]
