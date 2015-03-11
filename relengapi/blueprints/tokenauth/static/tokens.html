@@ -21,6 +21,9 @@
                 <div class="row">
                     <div class="col-sm-10">
                         <small>
+                            <span ng-if="token.disabled" class="text-danger">
+                                (DISABLED)
+                            </span>
                             <span ng-if="token.typ == 'prm'" class="text-warning">
                                 (permanent)
                             </span>
