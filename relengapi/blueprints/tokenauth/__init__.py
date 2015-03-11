@@ -78,6 +78,9 @@ def user_to_jsontoken(user):
     if 'prm' in cl:
         attrs['permissions'] = cl['prm']
 
+    # we never load disabled users, so this one isn't disabled
+    attrs['disabled'] = False
+
     if user.token_data:
         td = user.token_data
         attrs['id'] = td.id
@@ -172,7 +175,8 @@ def issue_prm(body, requested_permissions):
     token_row = tables.Token(
         typ='prm',
         description=body.description,
-        permissions=requested_permissions)
+        permissions=requested_permissions,
+        disabled=False)
     session.add(token_row)
     session.commit()
 
@@ -208,7 +212,8 @@ def issue_tmp(body, requested_permissions):
                            not_before=tz.utcfromtimestamp(nbf),
                            expires=body.expires,
                            permissions=perm_strs,
-                           metadata=body.metadata)
+                           metadata=body.metadata,
+                           disabled=False)
 
 
 @token_issuer('usr')
@@ -223,7 +228,8 @@ def issue_usr(body, requested_permissions):
         typ='usr',
         user=email,
         description=body.description,
-        permissions=requested_permissions)
+        permissions=requested_permissions,
+        disabled=False)
     session.add(token_row)
     session.commit()
 

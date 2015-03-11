@@ -54,6 +54,7 @@ def insert_prm(app):
     t = Token(
         id=1,
         typ='prm',
+        disabled=False,
         permissions=[p.test_tokenauth.zig],
         description="Zig only")
     session.add(t)
@@ -65,6 +66,7 @@ prm_json = {
     'typ': 'prm',
     'description': 'Zig only',
     'permissions': ['test_tokenauth.zig'],
+    'disabled': False,
 }
 
 
@@ -75,6 +77,7 @@ def insert_usr(app):
         typ='usr',
         user='me@me.com',
         permissions=[p.test_tokenauth.zig],
+        disabled=False,
         description="User Zig")
     session.add(t)
     session.commit()
@@ -86,6 +89,7 @@ usr_json = {
     'user': 'me@me.com',
     'description': 'User Zig',
     'permissions': ['test_tokenauth.zig'],
+    'disabled': False,
 }
 
 
