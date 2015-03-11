@@ -16,6 +16,20 @@ Tokens are opaque strings (actually JSON Web Tokens) which are provided in the A
 
 Each token permits a limited set of permissions, specified when the token is issued.
 
+Issuing Tokens Via UI
+---------------------
+
+If you have adequate permissions, the API home page will display a link to manage tokens.
+On this page, you can issue, examine, and revoke user and permanent tokens, depending on your permissions.
+
+User Tokens and User Permissions
+--------------------------------
+
+User tokens which grant permissions that the user no longer posesses are automatically disabled.
+In the UI, they are indicated with a "(DISABLED)" tag.
+Such tokens are not usable for authentication
+If the user's permissions change back (for example, if the user was misconfigured temporarily), the token will be re-enabled.
+
 Managing Tokens
 ---------------
 
