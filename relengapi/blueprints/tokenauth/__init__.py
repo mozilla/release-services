@@ -20,6 +20,7 @@ from relengapi.blueprints.tokenauth import loader
 from relengapi.blueprints.tokenauth import tables
 from relengapi.blueprints.tokenauth import tokenstr
 from relengapi.blueprints.tokenauth import types
+from relengapi.blueprints.tokenauth import usermonitor
 from relengapi.lib import angular
 from relengapi.lib import api
 from relengapi.util import tz
@@ -341,8 +342,8 @@ def revoke_token(token_id):
     return None, 204
 
 
-
 @bp.record
 def init_blueprint(state):
     tokenstr.init_app(state.app)
     loader.init_app(state.app)
+    usermonitor.init_app(state.app)

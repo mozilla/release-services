@@ -70,14 +70,14 @@ prm_json = {
 }
 
 
-def insert_usr(app):
+def insert_usr(app, permissions=[p.test_tokenauth.zig], disabled=False):
     session = app.db.session('relengapi')
     t = Token(
         id=2,
         typ='usr',
         user='me@me.com',
-        permissions=[p.test_tokenauth.zig],
-        disabled=False,
+        permissions=permissions,
+        disabled=disabled,
         description="User Zig")
     session.add(t)
     session.commit()
