@@ -248,7 +248,7 @@ _ROR = "https://github.com/mozilla/build-relengapi-clobberer"
 _ISSUE_URL = "%s/issues" % _ROR
 
 # See <relengapi>/docs/development/@relengapi/blueprints/#project-metadata
-data = {
+metadata = {
     "repository_of_record": _ROR,
     "bug_report_url": _ISSUE_URL,
 }
