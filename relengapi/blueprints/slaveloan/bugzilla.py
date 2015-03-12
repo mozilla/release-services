@@ -5,11 +5,12 @@
 # XXX Much of this functionality should probably be its own
 #     Separate relengapi blueprint
 
+import logging
 from bzrest.client import BugzillaClient
 from flask import current_app
 from flask import url_for
 
-from relengapi.blueprints.slaveloan.model import Loans
+log = logging.getLogger(__name__)
 
 MAX_ALIAS = 15
 DEFAULT_BUGZILLA_URL = "https://bugzilla-dev.allizom.org/rest/"
@@ -101,21 +102,22 @@ class LoanerBug(Bug):
         return self
 
 
-LOAN_SUMMARY = u"Loan a slave of {slave_class} to {human}"
-COMMENT_ZERO = u"""{human} is in need of a slaveloan from slave class {slave_class}
+LOAN_SUMMARY = u"Loan a slave of {slavetype} to {human}"
+COMMENT_ZERO = u"""{human} is in need of a slaveloan from slavetype {slavetype}
 
 (this bug was auto-created from the slaveloan tool)
 {loan_url}"""
 
 
-def create_loan_bug(loan_id=None, slave_class=None):
-    session = current_app.db.session('relengapi')
-    l = session.query(Loans).get(loan_id)
-    summary = LOAN_SUMMARY.format(slave_class=slave_class,
-                                  human=l.human.bugzilla)
+def create_loan_bug(loan_id=None, slavetype=None, bugzilla_username=None):
+    if None in (loan_id, slavetype, bugzilla_username):
+        raise ValueError("Missing arguments")
+
+    summary = LOAN_SUMMARY.format(slavetype=slavetype,
+                                  human=bugzilla_username)
     c_zero = COMMENT_ZERO.format(
-        slave_class=slave_class,
-        human=l.human.bugzilla,
+        slavetype=slavetype,
+        human=bugzilla_username,
         loan_url=url_for("slaveloan.loan_details", id=loan_id))
     loan_bug = LoanerBug(loadInfo=False)
     bug_id = loan_bug.create(comment=c_zero, summary=summary)

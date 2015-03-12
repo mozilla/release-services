@@ -11,11 +11,10 @@ import requests
 
 from requests import RequestException
 
-import datetime
-
 from flask import current_app
 from functools import wraps
 from redo import retry
+from relengapi.blueprints.slaveloan import bugzilla
 from relengapi.blueprints.slaveloan import slave_mappings
 from relengapi.blueprints.slaveloan.model import History
 from relengapi.blueprints.slaveloan.model import Loans
@@ -37,8 +36,6 @@ def add_task_to_history(loanid, msg):
                       msg=msg)
     session.add(history)
     session.commit()
-    logger.debug(repr(l.to_json()))
-    logger.debug(repr(history.to_json()))
     logger.debug("Log_line: %s" % msg)
 
 
@@ -51,13 +48,9 @@ def add_to_history(before=None, after=None):
             if args and isinstance(args[0], celery.Task):
                 bound_task = args[0]
             if before:
-                logger.debug("Locals: %s" % repr(locals()))
-                logger.debug("Log_line: %s" % before.format(**locals()))
                 add_task_to_history(loanid, before.format(**locals()))
             retval = f(*args, **kwargs)
             if after:
-                logger.debug("Locals: %s" % repr(locals()))
-                logger.debug("AFTER: Log_line: %s" % after.format(**locals()))
                 add_task_to_history(loanid, after.format(**locals()))
             return retval
         return wrapper
@@ -135,11 +128,35 @@ def start_disable_slave(self, machine, loanid):
         self.retry(exc=exc)
 
 
+@task(bind=True)
+@add_to_history(
+    before="Filing the loan bug if needed",
+    after="Loan is tracked in bug {retval!s}")
+def bmo_file_loan_bug(self, loanid, slavetype, *args, **kwargs):
+    try:
+        session = current_app.db.session('relengapi')
+        l = session.query(Loans).get(loanid)
+        if l.bug_id:
+            # Nothing to do, bug ID passed in
+            return l.bug_id
+
+        bmo_id = l.human.bugzilla
+        bug_id = bugzilla.create_loan_bug(loan_id=loanid,
+                                          slavetype=slavetype,
+                                          bugzilla_username=bmo_id)
+        if not bug_id:
+            raise ValueError("Unexpected result from bmo, retry")
+        l.bug_id = bug_id
+        session.commit()
+        return bug_id
+    except Exception as exc:
+        self.retry(exc=exc)
+
+
 @task()
 def dummy_task(*args, **kwargs):
     pass
 
-bmo_file_loan_bug = dummy_task
 waitfor_disable_slave = dummy_task
 slavealloc_disable = dummy_task
 bmo_file_gpo_bug = dummy_task
