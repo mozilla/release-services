@@ -20,7 +20,7 @@ Tooltool defines two visibility levels:
  * ``public`` -- distribution is not limited
  * ``internal`` -- for Mozilla employees only
 
-These correspond to the eponymous data security levels.
+These correspond to the eponymous Mozilla data security levels.
 
 The following permissions control whether users can upload or download files at each visibility level:
 
