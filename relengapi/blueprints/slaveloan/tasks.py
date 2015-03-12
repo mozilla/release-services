@@ -112,7 +112,7 @@ def start_disable_slave(self, machine, loanid):
         # XXX: ToDo raise fatal if no slavealloc
         url.path.add(machine).add("actions").add("disable")
         postdata = dict(reason="Being loaned on slaveloan %s" % loanid)
-        r = retry(requests.post, args=(str(url),), kwargs=dict(data=postdata)).json()
+        retry(requests.post, args=(str(url),), kwargs=dict(data=postdata)).json()
     except Exception as exc:  # pylint: disable=W0703
         logger.exception(exc)
         self.retry(exc=exc)
