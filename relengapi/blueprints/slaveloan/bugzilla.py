@@ -18,7 +18,7 @@ DEFAULT_BUGZILLA_URL = "https://bugzilla-dev.allizom.org/rest/"
 
 
 def _bzclient():
-    if current_app.getattr('bzclient', None):
+    if getattr(current_app, 'bzclient', None):
         return current_app.bzclient
     # XXX: Todo log warning if user or pass is "None"
     bzclient = BugzillaClient()
