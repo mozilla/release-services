@@ -51,6 +51,7 @@ setup(
         "furl",
         "relengapi>=0.3",
         "redo",
+        "bzrest",
     ],
     extras_require={
         'test': [

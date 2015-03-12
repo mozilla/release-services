@@ -6,6 +6,7 @@
 #     Separate relengapi blueprint
 
 import logging
+
 from bzrest.client import BugzillaClient
 from flask import current_app
 from flask import url_for
@@ -120,8 +121,8 @@ def create_loan_bug(loan_id=None, slavetype=None, bugzilla_username=None):
         human=bugzilla_username,
         loan_url=url_for("slaveloan.loan_details", id=loan_id))
     loan_bug = LoanerBug(loadInfo=False)
-    bug_id = loan_bug.create(comment=c_zero, summary=summary)
-    return bug_id
+    bug = loan_bug.create(comment=c_zero, summary=summary)
+    return bug.id
 
 foo = """    l.bug_id = bug_id
     history = History(for_loan=l,

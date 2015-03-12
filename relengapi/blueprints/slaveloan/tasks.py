@@ -70,9 +70,8 @@ def choose_inhouse_machine(self, loanid, loan_class):
     try:
         all_slaves = requests.get(str(url)).json()
     except RequestException as exc:
-        logger.debug("Exception")
+        logger.exception("Exception: %s" % exc)
         self.retry(exc=exc)
-    logger.debug("Got all slaves")
     # pylint silence
     # available_slaves = filter(slave_mappings.slave_filter(loan_class), all_slaves)
     available_slaves = [slave for slave in all_slaves
@@ -88,25 +87,18 @@ def choose_inhouse_machine(self, loanid, loan_class):
     after="Aquired FQDN and IP")
 def fixup_machine(self, machine, loanid):
     try:
-        logger.debug("FIXUP MACHINE")
         fqdn = socket.getfqdn("%s.build.mozilla.org" % machine)
-        logger.debug("FIXUP MACHINE = hostname: %s" % fqdn)
         ipaddr = socket.gethostbyname("%s.build.mozilla.org" % machine)
-        logger.debug("FIXUP MACHINE = ipaddr: %s" % ipaddr)
         session = current_app.db.session('relengapi')
         m = Machines.as_unique(session,
                                fqdn=fqdn,
                                ipaddr=ipaddr)
-        logger.debug("FIXUP MACHINE = machine.to_json(): %s" % m.to_json())
         l = session.query(Loans).get(loanid)
-        logger.debug("FIXUP MACHINE = loan.to_json(): %s" % l.to_json())
         l.machine = m
         session.commit()
         l = session.query(Loans).get(loanid)
-        logger.debug("FIXUP MACHINE = loan.to_json(): %s" % l.to_json())
     except Exception as exc:  # pylint: disable=W0703
-        logger.debug("FIXUP MACHINE (FAILED)")
-        logger.debug(exc)
+        logger.exception(exc)
         self.retry(exc=exc)
 
 
@@ -116,15 +108,13 @@ def fixup_machine(self, machine, loanid):
     after="Disable request sent")
 def start_disable_slave(self, machine, loanid):
     try:
-        logger.debug("START DISABLE SLAVE")
         url = furl(current_app.config.get("SLAVEAPI_URL", None))
         # XXX: ToDo raise fatal if no slavealloc
         url.path.add(machine).add("actions").add("disable")
-        logger.debug("START DISABLE SLAVE = url: %s" % str(url))
         postdata = dict(reason="Being loaned on slaveloan %s" % loanid)
         r = retry(requests.post, args=(str(url),), kwargs=dict(data=postdata)).json()
-        logger.debug("START DISABLE SLAVE = r: %s" % str(r))
     except Exception as exc:  # pylint: disable=W0703
+        logger.exception(exc)
         self.retry(exc=exc)
 
 
@@ -150,6 +140,7 @@ def bmo_file_loan_bug(self, loanid, slavetype, *args, **kwargs):
         session.commit()
         return bug_id
     except Exception as exc:
+        logger.exception(exc)
         self.retry(exc=exc)
 
 
