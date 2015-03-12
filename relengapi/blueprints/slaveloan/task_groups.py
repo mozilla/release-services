@@ -17,6 +17,7 @@ def generate_loan(slavetype, loanid):
         tasks.choose_inhouse_machine.si(loanid=loanid, loan_class=slavetype),
         group(
             tasks.fixup_machine.s(loanid=loanid),
+            tasks.bmo_set_tracking_bug(loanid=loanid),
             # disable_machine_from_buildbot(slavetype, loanid)
             tasks.dummy_task.si(loanid=loanid)
         ),

@@ -7,6 +7,7 @@ import socket
 
 from furl import furl
 
+import bzrest
 import requests
 
 from requests import RequestException
@@ -98,6 +99,42 @@ def fixup_machine(self, machine, loanid):
         session.commit()
         l = session.query(Loans).get(loanid)
     except Exception as exc:  # pylint: disable=W0703
+        logger.exception(exc)
+        self.retry(exc=exc)
+
+
+@task(bind=True)
+@add_to_history(
+    before="Setup tracking bug for {args[1]}",
+    after="Tracking bug {retval!s} linked with loan")
+def bmo_set_tracking_bug(self, machine, loanid):
+    try:
+        session = current_app.db.session('relengapi')
+        l = session.query(Loans).get(loanid)
+        assert l.bug_id
+
+        bug_comment = "Being loaned to %s in Bug %s" % (l.human.ldap, l.bug_id)
+
+        tracking_bug = bugzilla.ProblemTrackingBug(machine, loadInfo=False)
+        try:
+            tracking_bug.refresh()
+        except bzrest.errors.BugNotFound:
+            log.info("Couldn't find bug, creating it...")
+            tracking_bug.create(comment=bug_comment, depends_on=l.bug_id)
+
+        if tracking_bug.data:
+            data = {
+                "depends_on": {
+                    "add": [l.bug_id],
+                },
+            }
+            if not tracking_bug.data["is_open"]:
+                data["status"] = "REOPENED"
+            tracking_bug.add_comment(bug_comment, data=data)
+        if not tracking_bug.id:
+            raise ValueError("Unexpected result from bmo, retry")
+        return tracking_bug.id
+    except Exception as exc:
         logger.exception(exc)
         self.retry(exc=exc)
 

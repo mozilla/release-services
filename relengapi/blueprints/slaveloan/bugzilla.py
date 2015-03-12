@@ -42,10 +42,17 @@ class Bug(object):
         if id_ and loadInfo:
             self.refresh()
 
+    @property
+    def id_(self):
+        return self.id or self.alias
+
     def refresh(self):
-        self.data = _bzclient().get_bug(self.id)
+        self.data = _bzclient().get_bug(self.id_)
         self.id = self.data["id"]
         self.alias = self.data["alias"]
+
+    def add_comment(self, comment, data={}):
+        return _bzclient().add_comment(self.id_, comment, data)
 
 
 class ProblemTrackingBug(Bug):
@@ -56,7 +63,7 @@ class ProblemTrackingBug(Bug):
         self.slave_name = slave_name
         Bug.__init__(self, id_=slave_name, *args, **kwargs)
 
-    def create(self, comment=None):
+    def create(self, comment=None, depends_on=None):
         if len(self.slave_name) > MAX_ALIAS:
             alias = None
         else:
@@ -73,6 +80,8 @@ class ProblemTrackingBug(Bug):
         }
         if comment:
             data['comment'] = comment
+        if depends_on:
+            data['depends_on'] = depends_on
         resp = _bzclient().create_bug(data)
         self.id = resp["id"]
 
