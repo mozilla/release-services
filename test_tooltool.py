@@ -397,3 +397,74 @@ def test_command_package():
         eq_(call_main('tooltool', 'fetch', 'a', 'b', '--url', 'http://foo'), 0)
         fetch_files.assert_called_with('manifest.tt', ['http://foo'], ['a', 'b'],
                                        cache_folder=None, auth_file=None)
+
+
+class PurgeTests(unittest.TestCase):
+
+    def setUp(self):
+        self.test_dir = 'test-dir'
+        self.startingwd = os.getcwd()
+        if os.path.exists(self.test_dir):
+            shutil.rmtree(self.test_dir)
+        os.mkdir(self.test_dir)
+
+    def tearDown(self):
+        os.chdir(self.startingwd)
+        shutil.rmtree(self.test_dir)
+
+    def fake_freespace(self, p):
+        # A fake 10G drive, with each file = 1G
+        eq_(p, self.test_dir)
+        return 1024 ** 3 * (10 - len(os.listdir(self.test_dir)))
+
+    def add_files(self, *files):
+        now = 1426127031
+        # add files, with ordered mtime
+        for f in files:
+            path = os.path.join(self.test_dir, f)
+            open(path, "w")
+            os.utime(path, (now, now))
+            now += 10
+
+    def test_purge_fails(self):
+        path = os.path.join(self.test_dir, 'sticky')
+        open(path, 'w')
+        os.chmod(self.test_dir, 0o500)  # prevent delete
+        try:
+            tooltool.purge(self.test_dir, 0)
+            eq_(os.listdir(self.test_dir), ['sticky'])
+        finally:
+            os.chmod(self.test_dir, 0o700)
+
+    def test_purge_nonfile_not_deleted(self):
+        path = os.path.join(self.test_dir, 'somedir')
+        os.mkdir(path)
+        tooltool.purge(self.test_dir, 0)
+        eq_(os.listdir(self.test_dir), ['somedir'])
+
+    def test_purge_nonzero(self):
+        # six files means six gigs consumed, so we'll delete two
+        self.add_files("one", "two", "three", "four", "five", "six")
+        with mock.patch('tooltool.freespace') as freespace:
+            freespace.side_effect = self.fake_freespace
+            tooltool.purge(self.test_dir, 6)
+        eq_(sorted(os.listdir(self.test_dir)),
+            sorted(['three', 'four', 'five', 'six']))
+
+    def test_purge_no_need(self):
+        self.add_files("one", "two")
+        with mock.patch('tooltool.freespace') as freespace:
+            freespace.side_effect = self.fake_freespace
+            tooltool.purge(self.test_dir, 4)
+        eq_(sorted(os.listdir(self.test_dir)),
+            sorted(['one', 'two']))
+
+    def test_purge_zero(self):
+        self.add_files("one", "two", "three")
+        tooltool.purge(self.test_dir, 0)
+        eq_(os.listdir(self.test_dir), [])
+
+    def test_freespace(self):
+        # we can't set up a dedicated partition for this test, so just assume
+        # the disk isn't full (other tests assume this too, really)
+        assert tooltool.freespace(self.test_dir) > 0

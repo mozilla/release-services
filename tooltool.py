@@ -681,7 +681,7 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None, auth_
 
 def freespace(p):
     "Returns the number of bytes free under directory `p`"
-    if sys.platform == 'win32':
+    if sys.platform == 'win32':  # pragma: no cover
         # os.statvfs doesn't work on Windows
         import win32file
 
@@ -691,13 +691,6 @@ def freespace(p):
     else:
         r = os.statvfs(p)
         return r.f_frsize * r.f_bavail
-
-
-def remove(absolute_file_path):
-    try:
-        os.remove(absolute_file_path)
-    except OSError:
-        log.info("Impossible to remove %s" % absolute_file_path, exc_info=True)
 
 
 def purge(folder, gigs):
@@ -713,30 +706,24 @@ def purge(folder, gigs):
         return
 
     files = []
-    try:
-        for f in os.listdir(folder):
-            p = os.path.join(folder, f)
-            # it deletes files in folder without going into subfolders,
-            # assuming the cache has a flat structure
-            if not os.path.isfile(p):
-                continue
-            mtime = os.path.getmtime(p)
-            files.append((mtime, p))
-    except OSError:
-        log.info('Impossible to list content of folder %s' % folder,
-                 exc_info=True)
-        return
+    for f in os.listdir(folder):
+        p = os.path.join(folder, f)
+        # it deletes files in folder without going into subfolders,
+        # assuming the cache has a flat structure
+        if not os.path.isfile(p):
+            continue
+        mtime = os.path.getmtime(p)
+        files.append((mtime, p))
 
     # iterate files sorted by mtime
     for _, f in sorted(files):
         log.info("removing %s to free up space" % f)
-        remove(f)
+        try:
+            os.remove(f)
+        except OSError:
+            log.info("Impossible to remove %s" % f, exc_info=True)
         if not full_purge and freespace(folder) >= gigs:
             break
-
-
-def remove_trailing_slashes(folder):
-    return re.sub("/*$", "", folder)
 
 
 def package(folder, algorithm, message):  # pragma: no cover
@@ -799,8 +786,7 @@ def execute(cmd):  # pragma: no cover
 
 
 def upload(package, user, host, path):  # pragma: no cover
-    # TODO s: validate package
-    package = remove_trailing_slashes(package)
+    package = re.sub("/*$", "", package)
 
     cmd1 = "rsync  -a %s %s@%s:%s --progress -f '- *.tt' -f '- *.txt'" % (
         package, user, host, path)
