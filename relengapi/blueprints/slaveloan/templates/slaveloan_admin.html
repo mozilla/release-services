@@ -61,4 +61,23 @@ What Slave do you need?<br />
 <button type="button" name="submit_loan" value="now" id="submit_loan">Submit Loan Info</button>
 </fieldset>
 </form>
+
+<h2>Request Loan</h2>
+<form action="{{ url_for('slaveloan.new_loan_request') }}"
+      method="POST" id="new-loan-request">
+  <fieldset>
+    <legend>Loan Info</legend>
+    <label for="bug_id">Bugzilla ID: </label>
+        <input type="text" name="bug_id" placeholder="<create new bug>" /><br />
+    <label for="ldap_email">Full LDAP Username: </label>
+        <input type="text" name="ldap_email" /><br />
+    <label for="bugzilla">Full Bugzilla E-mail: </label>
+        <input type="text" name="bugzilla_email" placeholder="foo@example.org" /><br />
+    <label for="slavetype">Slavetype: </label>
+        <input type="text" name="slavetype" /><br />
+  </fieldset>
+<legend>Complete</legend>
+<button type="button" name="submit_loan_request" value="now" id="submit_loan_request">Submit Loan Request</button>
+</fieldset>
+</form>
 {% endblock %}

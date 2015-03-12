@@ -96,3 +96,72 @@ $(function() {
         });
     });
 });
+
+$(function() {
+    var form = $('form#new-loan-request');
+    var button = form.find('#submit_loan_request');
+    button.click(function() {
+        /* disable the button to prevent double issues */
+        button.prop('disabled', true);
+
+        var good = function(loan) {
+            //reload_loans();
+            alertify.success("Loan entry created");
+            //form[0].reset(); // Converts to native JS DOM first
+            /* re-enable the button so we can submit a loan again */
+            button.prop('disabled', false);
+        };
+        var bad = function(errmsg) {
+            /* re-enable the button so users can try again */
+            button.prop('disabled', false);
+            alertify.error(errmsg);
+        };
+
+        var form_bug_id = form.find('input[name=bug_id]').val();
+        var form_ldap = form.find('input[name=ldap_email]').val();
+        var form_bmo = form.find('input[name=bugzilla_email]').val();
+        var form_slavetype = form.find('input[name=slavetype]').val();
+
+        //if (!form_status) {
+        //    bad('Status is empty, how did that happen?');
+        //    return;
+       // }
+       // if (!form_ldap) {
+       //     bad('Provide an LDAP username');
+        //    return;
+        //}
+        /*if (!form_bmo) {
+            bad('Provide a Bugzilla username');
+            return;
+        }
+        if (form_status != "PENDING"){
+            if (!form_fqdn) {
+                bad('Provide a FQDN');
+                return;
+            }
+            if (!form_ipaddr) {
+                bad('Provide an IP Address');
+                return;
+            }
+        }
+      */
+        var result = $.ajax({
+            url: form.attr( 'action' ),
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify({loan_bug_id: parseInt(form_bug_id),
+                                 ldap_email: form_ldap,
+                                 bugzilla_email: form_bmo,
+                                 requested_slavetype: form_slavetype})
+        }).done(function(data) {
+            console.log(data);
+            if (data.result && data.result.loan) {
+                good(data.result.loan);
+            } else {
+                bad("Loan request failed in unknown way");
+            }
+        }).fail(function(jqhxr, err) {
+            bad("error from server: " + jqhxr.responseText );
+        });
+    });
+});
