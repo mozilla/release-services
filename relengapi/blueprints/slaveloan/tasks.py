@@ -119,7 +119,7 @@ def bmo_set_tracking_bug(self, machine, loanid):
         try:
             tracking_bug.refresh()
         except bzrest.errors.BugNotFound:
-            log.info("Couldn't find bug, creating it...")
+            logger.info("Couldn't find bug, creating it...")
             tracking_bug.create(comment=bug_comment, depends_on=l.bug_id)
 
         if tracking_bug.data:
