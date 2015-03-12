@@ -850,7 +850,6 @@ def distribute(folder, message, user, host, path, algorithm):  # pragma: no cove
     return upload(package(folder, algorithm, message), user, host, path)
 
 
-# TODO: write tests for this function
 def process_command(options, args):
     """ I know how to take a list of program arguments and
     start doing the right thing with them"""
