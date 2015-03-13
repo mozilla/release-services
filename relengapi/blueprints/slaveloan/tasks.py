@@ -189,7 +189,6 @@ waitfor_disable_slave = dummy_task
 slavealloc_disable = dummy_task
 bmo_file_gpo_bug = dummy_task
 bmo_wait_for_bug = dummy_task
-bmo_file_tracking_bug = dummy_task
 clean_secrets = dummy_task
 update_loan_bug_with_details = dummy_task
 email_loan_details = dummy_task
