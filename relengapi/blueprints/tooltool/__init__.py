@@ -99,18 +99,18 @@ def upload_batch(region=None, body=None):
         if not is_valid_sha512(info.digest):
             raise BadRequest("Invalid sha512 digest")
         digest = info.digest
-        file_row = tables.File.query.filter(tables.File.sha512 == digest).first()
-        if file_row and file_row.visibility != info.visibility:
+        file = tables.File.query.filter(tables.File.sha512 == digest).first()
+        if file and file.visibility != info.visibility:
             # this incidentally reveals that a file with this digest is
             # in the database.  Since this is only INTERNAL data, this
             # is an acceptable risk.
             raise BadRequest("Cannot change a file's visibility level")
-        if file_row and file_row.instances != []:
-            if file_row.size != info.size:
+        if file and file.instances != []:
+            if file.size != info.size:
                 raise BadRequest("Size mismatch for {}".format(filename))
         else:
-            if not file_row:
-                file_row = tables.File(
+            if not file:
+                file = tables.File(
                     sha512=digest,
                     visibility=info.visibility,
                     size=info.size)
@@ -119,11 +119,11 @@ def upload_batch(region=None, body=None):
                 key='/sha512/{}'.format(info.digest),
                 headers={'Content-Type': 'application/octet-stream'})
             pu = tables.PendingUpload(
-                file=file_row,
+                file=file,
                 region=region,
                 expires=time.now() + datetime.timedelta(days=1))
             session.add(pu)
-        batch.files.append(file_row)
+        session.add(tables.BatchFile(filename=filename, file=file, batch=batch))
     session.add(batch)
     session.commit()
 

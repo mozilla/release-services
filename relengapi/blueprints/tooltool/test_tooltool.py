@@ -151,8 +151,8 @@ def assert_batch_row(app, id, author='me', message='a batch', files=[]):
         batch_row = tbl.query.filter(tbl.id == id).first()
     eq_(batch_row.author, author)
     eq_(batch_row.message, message)
-    got_files = [(f.size, f.sha512, sorted(i.region for i in f.instances))
-                 for f in batch_row.files]
+    got_files = [(n, f.size, f.sha512, sorted(i.region for i in f.instances))
+                 for n, f in batch_row.files.iteritems()]
     eq_(sorted(got_files), sorted(files))
 
 
@@ -309,7 +309,7 @@ def test_upload_batch_success_fresh(client, app):
         assert_signed_url(result['files']['one']['put_url'], ONE_DIGEST,
                           method='PUT', expires_in=3600)
 
-    assert_batch_row(app, result['id'], files=[(len(ONE), ONE_DIGEST, [])])
+    assert_batch_row(app, result['id'], files=[('one', len(ONE), ONE_DIGEST, [])])
     assert_pending_upload(app, ONE_DIGEST, 'us-east-1')
 
 
@@ -333,7 +333,7 @@ def test_upload_batch_success_no_instances(client, app):
         assert_signed_url(result['files']['one']['put_url'], ONE_DIGEST,
                           method='PUT', expires_in=3600)
 
-    assert_batch_row(app, result['id'], files=[(len(ONE), ONE_DIGEST, [])])
+    assert_batch_row(app, result['id'], files=[('one', len(ONE), ONE_DIGEST, [])])
     assert_pending_upload(app, ONE_DIGEST, 'us-east-1')
 
 
@@ -372,8 +372,8 @@ def test_upload_batch_success_some_existing_files(client, app):
 
     assert_batch_row(app, result['id'],
                      files=[
-                         (len(ONE), ONE_DIGEST, ['us-east-1']),
-                         (len(TWO), TWO_DIGEST, []),
+                         ('one', len(ONE), ONE_DIGEST, ['us-east-1']),
+                         ('two', len(TWO), TWO_DIGEST, []),
     ])
     assert_pending_upload(app, TWO_DIGEST, 'us-west-2')
 

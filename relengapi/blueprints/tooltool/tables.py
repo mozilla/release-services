@@ -23,6 +23,12 @@ class File(db.declarative_base('tooltool')):
 
     instances = sa.orm.relationship('FileInstance', backref='file')
 
+    # note that changes to this dictionary will not be reflected to the DB;
+    # add or delete BatchFile instances directly instead.
+    @property
+    def batches(self):
+        return {bf.filename: bf.batch for bf in self._batches}
+
 
 class FileInstance(db.declarative_base('tooltool')):
 
@@ -36,14 +42,18 @@ class FileInstance(db.declarative_base('tooltool')):
         sa.Enum(*allowed_regions), primary_key=True)
 
 
-batch_files = sa.Table(
-    'tooltool_batch_files', db.declarative_base('tooltool').metadata,
+class BatchFile(db.declarative_base('tooltool')):
 
-    sa.Column('file_id',
-              sa.Integer, sa.ForeignKey('tooltool_files.id'), primary_key=True),
-    sa.Column('batch_id',
-              sa.Integer, sa.ForeignKey('tooltool_batches.id'), primary_key=True),
-)
+    """An association of upload batches to files, with filenames"""
+
+    __tablename__ = 'tooltool_batch_files'
+
+    file_id = sa.Column(sa.Integer, sa.ForeignKey('tooltool_files.id'), primary_key=True)
+    file = sa.orm.relationship("File", backref="_batches")
+    batch_id = sa.Column(sa.Integer, sa.ForeignKey('tooltool_batches.id'), primary_key=True)
+    batch = sa.orm.relationship("Batch", backref="_files")
+
+    filename = sa.Column(sa.Text, nullable=False)
 
 
 class Batch(db.declarative_base('tooltool')):
@@ -57,9 +67,11 @@ class Batch(db.declarative_base('tooltool')):
     author = sa.Column(sa.Text, nullable=False)
     message = sa.Column(sa.Text, nullable=False)
 
-    files = sa.orm.relationship('File',
-                                secondary=batch_files,
-                                backref='batches')
+    # note that changes to this dictionary will not be reflected to the DB;
+    # add or delete BatchFile instances directly instead.
+    @property
+    def files(self):
+        return {bf.filename: bf.file for bf in self._files}
 
 
 class PendingUpload(db.declarative_base('tooltool')):
