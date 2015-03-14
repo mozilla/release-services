@@ -47,10 +47,10 @@ TWO_DIGEST = hashlib.sha512(TWO).hexdigest()
 NOW = 1425592922
 
 
-def mkbatch():
+def mkbatch(message="a batch"):
     return {
         'author': 'me',
-        'message': 'a batch',
+        'message': message,
         'files': {
             'one': {
                 'algorithm': 'sha512',
@@ -413,7 +413,7 @@ def test_upload_complete_bad_digest(client, app):
 
 @moto.mock_s3
 @test_context
-def test_get_file_no_such(app, client):
+def test_download_file_no_such(app, client):
     """Getting /sha512/<digest> for a file that does not exist returns 404"""
     resp = client.get('/tooltool/sha512/{}'.format(ONE_DIGEST))
     eq_(resp.status_code, 404)
@@ -421,7 +421,7 @@ def test_get_file_no_such(app, client):
 
 @moto.mock_s3
 @test_context
-def test_get_file_invalid_digest(app, client):
+def test_download_file_invalid_digest(app, client):
     """Getting /sha512/<digest> for an invalid digest returns 400"""
     resp = client.get('/tooltool/sha512/abcd')
     eq_(resp.status_code, 400)
@@ -429,7 +429,7 @@ def test_get_file_invalid_digest(app, client):
 
 @moto.mock_s3
 @test_context
-def test_get_file_no_instances(app, client):
+def test_download_file_no_instances(app, client):
     """Getting /sha512/<digest> for a file that exists but has no instances
     returns 404"""
     add_file_to_db(app, ONE, regions=[])
@@ -439,7 +439,7 @@ def test_get_file_no_instances(app, client):
 
 @moto.mock_s3
 @test_context
-def test_get_file_no_permission(app, client):
+def test_download_file_no_permission(app, client):
     """Getting /sha512/<digest> for a file with a visibility the user doesn't
     have permission for returns 404."""
     add_file_to_db(app, ONE, visibility='internal')
@@ -449,7 +449,7 @@ def test_get_file_no_permission(app, client):
 
 @moto.mock_s3
 @test_context
-def test_get_file_exists(app, client):
+def test_download_file_exists(app, client):
     """Getting /sha512/<digest> for an exisitng file returns a 302 redirect to
     a signed URL in a region where it exists."""
     add_file_to_db(app, ONE, regions=['us-west-2', 'us-east-1'])
@@ -461,7 +461,7 @@ def test_get_file_exists(app, client):
 
 @moto.mock_s3
 @test_context
-def test_get_file_exists_not_in_preferred_region(app, client):
+def test_download_file_exists_not_in_preferred_region(app, client):
     """Getting /sha512/<digest>?region=.. for an exisitng file that does not
     exist in the requested region returns a signed URL for a region where the
     file does exist."""
@@ -474,7 +474,7 @@ def test_get_file_exists_not_in_preferred_region(app, client):
 
 @moto.mock_s3
 @test_context
-def test_get_file_exists_region_choice(app, client):
+def test_download_file_exists_region_choice(app, client):
     """Getting /sha512/<digest> for an exisitng file returns a 302 redirect to
     a signed URL in the region where it exists."""
     add_file_to_db(app, ONE, regions=['us-west-2', 'us-east-1'])
@@ -482,3 +482,126 @@ def test_get_file_exists_region_choice(app, client):
         resp = client.get(
             '/tooltool/sha512/{}?region=us-west-2'.format(ONE_DIGEST))
         assert_signed_302(resp, ONE_DIGEST, region='us-west-2')
+
+
+@moto.mock_s3
+@test_context
+def test_list_batches(client):
+    upload_batch(client, mkbatch('batch 1'))
+    upload_batch(client, mkbatch('batch 2'))
+    resp = client.get('/tooltool/upload')
+    eq_(resp.status_code, 200, resp.data)
+    eq_(sorted(json.loads(resp.data)['result']), sorted([{
+        "author": "me",
+        "files": {
+            "one": {
+                "algorithm": "sha512",
+                "digest": ONE_DIGEST,
+                "size": len(ONE),
+                "visibility": "public"
+            }
+        },
+        "id": 1,
+        "message": "batch 1"
+    }, {
+        "author": "me",
+        "files": {
+            "one": {
+                "algorithm": "sha512",
+                "digest": ONE_DIGEST,
+                "size": len(ONE),
+                "visibility": "public"
+            }
+        },
+        "id": 2,
+        "message": "batch 2"
+    }
+    ]), resp.data)
+
+
+@moto.mock_s3
+@test_context
+def test_get_batch_not_found(client):
+    resp = client.get('/tooltool/upload/99')
+    eq_(resp.status_code, 404, resp.data)
+
+
+@moto.mock_s3
+@test_context
+def test_get_batch_found(client):
+    batch = mkbatch()
+    batch['files']['two'] = {
+        'algorithm': 'sha512',
+        'size': len(TWO),
+        'digest': TWO_DIGEST,
+        'visibility': 'public',
+    }
+    resp = upload_batch(client, batch)
+    eq_(resp.status_code, 200, resp.data)
+    resp = client.get('/tooltool/upload/1')
+    eq_(resp.status_code, 200, resp.data)
+    eq_(json.loads(resp.data)['result'], {
+        "author": "me",
+        "files": {
+            "one": {
+                "algorithm": "sha512",
+                "digest": ONE_DIGEST,
+                "size": len(ONE),
+                "visibility": "public"
+            },
+            "two": {
+                "algorithm": "sha512",
+                "digest": TWO_DIGEST,
+                "size": len(TWO),
+                "visibility": "public"
+            }
+        },
+        "id": 1,
+        "message": "a batch"
+    }, resp.data)
+
+
+@test_context
+def test_get_files(app, client):
+    """A GET to /file returns all files"""
+    add_file_to_db(app, ONE)
+    add_file_to_db(app, TWO)
+    resp = client.get('/tooltool/file')
+    eq_(resp.status_code, 200)
+    eq_(sorted(json.loads(resp.data)['result']), sorted([{
+        "algorithm": "sha512",
+        "digest": ONE_DIGEST,
+        "size": len(ONE),
+        "visibility": "public"
+    }, {
+        "algorithm": "sha512",
+        "digest": TWO_DIGEST,
+        "size": len(TWO),
+        "visibility": "public"
+    }]))
+
+
+@test_context
+def test_get_file_bad_algo(client):
+    """A GET to /file/<algo>/<digest> with an unknown algorithm fails with 404"""
+    eq_(client.get('/tooltool/file/md4/abcd').status_code, 404)
+
+
+@test_context
+def test_get_file_not_found(client):
+    """A GET to /file/sha512/<digest> with an unknown digest fails with 404"""
+    eq_(client.get('/tooltool/file/sha512/{}'.format(ONE_DIGEST)).status_code, 404)
+
+
+@test_context
+def test_get_file_success(app, client):
+    """A GET to /file/sha512/<digest> with an known digest returns the file"""
+    add_file_to_db(app, ONE)
+    resp = client.get('/tooltool/file/sha512/{}'.format(ONE_DIGEST))
+    eq_(resp.status_code, 200)
+    eq_(json.loads(resp.data)['result'], {
+        "algorithm": "sha512",
+        "digest": ONE_DIGEST,
+        "size": len(ONE),
+        "visibility": "public"
+    })

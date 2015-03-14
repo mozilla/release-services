@@ -35,6 +35,7 @@ p.tooltool.upload.public.doc("Upload PUBLIC files to tooltool")
 # note that internal does not imply public; that's up to the user.
 p.tooltool.download.internal.doc("Download INTERNAL files from tooltool")
 p.tooltool.upload.internal.doc("Upload INTERNAL files to tooltool")
+p.tooltool.manage.doc("Manage tooltool files, including deleting and changing visibility levels")
 
 GET_EXPIRES_IN = 60
 UPLOAD_EXPIRES_IN = 3600
@@ -48,7 +49,26 @@ def get_region_and_bucket(region_arg):
     return random.choice(cfg.items())
 
 
-# TODO: file browser
+@bp.route('/upload')
+@api.apimethod([types.UploadBatch])
+def list_batches():
+    """Get a list of all upload batches."""
+    # TODO: eager load the files for these batches
+    # TODO: ?digest=.. to filter batches containing a digest
+    # TODO: ?filename=.. to filter batches containing a digest
+    # TODO: ?author=.. to filter batches to a particular author
+    # TODO: ?search=.. to search author, message, digest, and filenames
+    return [row.to_json() for row in tables.Batch.query.all()]
+
+
+@bp.route('/upload/<int:id>')
+@api.apimethod(types.UploadBatch, int)
+def get_batch(id):
+    """Get a specific upload batch by id."""
+    row = tables.Batch.query.filter(tables.Batch.id == id).first()
+    if not row:
+        raise NotFound
+    return row.to_json()
 
 
 @bp.route('/upload', methods=['PUT'])
@@ -142,9 +162,29 @@ def upload_complete(digest):
     return '{}', 202
 
 
+@bp.route('/file')
+@api.apimethod([types.File])
+def get_files():
+    """Get a list of all files."""
+    return [row.to_json() for row in tables.File.query.all()]
+
+
+@bp.route('/file/<algorithm>/<digest>')
+@api.apimethod(types.File, unicode, unicode)
+def get_file(algorithm, digest):
+    """Get a single file, by its digest.  Filenames are associated with upload batches,
+    not directly with files, so use ``GET /uploads`` to find files by filename."""
+    if algorithm != 'sha512':
+        raise NotFound("Unknown algorithm")
+    row = tables.File.query.filter(tables.File.sha512 == digest).first()
+    if not row:
+        raise NotFound
+    return row.to_json()
+
+
 @bp.route('/sha512/<digest>')
 @api.apimethod(None, unicode, unicode, status_code=302)
-def get_file(digest, region=None):
+def download_file(digest, region=None):
     """Fetch a link to the file with the given sha512 digest.  The response
     is a 302 redirect to a signed download URL.
 

@@ -4,6 +4,7 @@
 
 import sqlalchemy as sa
 
+from relengapi.blueprints.tooltool import types
 from relengapi.lib import db
 
 allowed_regions = ('us-east-1', 'us-west-1', 'us-west-2')
@@ -28,6 +29,13 @@ class File(db.declarative_base('tooltool')):
     @property
     def batches(self):
         return {bf.filename: bf.batch for bf in self._batches}
+
+    def to_json(self):
+        return types.File(
+            size=self.size,
+            digest=self.sha512,
+            algorithm='sha512',
+            visibility=self.visibility)
 
 
 class FileInstance(db.declarative_base('tooltool')):
@@ -72,6 +80,13 @@ class Batch(db.declarative_base('tooltool')):
     @property
     def files(self):
         return {bf.filename: bf.file for bf in self._files}
+
+    def to_json(self):
+        return types.UploadBatch(
+            id=self.id,
+            author=self.author,
+            message=self.message,
+            files={n: f.to_json() for n, f in self.files.iteritems()})
 
 
 class PendingUpload(db.declarative_base('tooltool')):
