@@ -444,7 +444,7 @@ def test_get_file_no_permission(app, client):
     have permission for returns 404."""
     add_file_to_db(app, ONE, visibility='internal')
     resp = client.get('/tooltool/sha512/{}'.format(ONE_DIGEST))
-    eq_(resp.status_code, 404)
+    eq_(resp.status_code, 403)
 
 
 @moto.mock_s3

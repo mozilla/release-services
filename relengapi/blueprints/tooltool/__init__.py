@@ -101,9 +101,6 @@ def upload_batch(region=None, body=None):
         digest = info.digest
         file = tables.File.query.filter(tables.File.sha512 == digest).first()
         if file and file.visibility != info.visibility:
-            # this incidentally reveals that a file with this digest is
-            # in the database.  Since this is only INTERNAL data, this
-            # is an acceptable risk.
             raise BadRequest("Cannot change a file's visibility level")
         if file and file.instances != []:
             if file.size != info.size:
@@ -165,8 +162,7 @@ def get_file(digest, region=None):
 
     # check visibility
     if not p.get('tooltool.download.{}'.format(file_row.visibility)).can():
-        # return 404 to avoid leaking information on what exists too easily
-        raise NotFound
+        raise Forbidden
 
     # figure out which region to use, and from there which bucket
     cfg = current_app.config['TOOLTOOL_REGIONS']
