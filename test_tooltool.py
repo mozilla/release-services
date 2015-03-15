@@ -67,6 +67,14 @@ class BaseFileRecordListTest(BaseFileRecordTest):
 
 class TestFileRecord(BaseFileRecordTest):
 
+    def test_create_with_posix_path_info(self):
+        self.assertRaises(tooltool.ExceptionWithFilename, lambda:
+                          tooltool.FileRecord('abc/def', 10, 'abcd', 'alpha'))
+
+    def test_create_with_windows_path_info(self):
+        self.assertRaises(tooltool.ExceptionWithFilename, lambda:
+                          tooltool.FileRecord(r'abc\def', 10, 'abcd', 'alpha'))
+
     def test_present(self):
         # this test feels silly, but things are built on this
         # method, so probably best to test it
@@ -198,6 +206,10 @@ class TestFileRecordJSONCodecs(BaseFileRecordListTest):
         for i in ['filename', 'size', 'algorithm', 'digest']:
             self.assertEqual(getattr(f, i), self.test_record.__dict__[i])
 
+    def test_decode_dict_not_filerecord(self):
+        decoder = tooltool.FileRecordJSONDecoder()
+        eq_(decoder.decode('{"filename": "foo.txt"}'), {'filename': 'foo.txt'})
+
     def test_json_dumps(self):
         json_string = json.dumps(
             self.test_record, cls=tooltool.FileRecordJSONEncoder)
@@ -250,12 +262,19 @@ class TestManifest(BaseFileRecordTest):
     def test_validate_digest(self):
         self.assertTrue(self.test_manifest.validate_digests())
 
+    def test_validate(self):
+        self.assertTrue(self.test_manifest.validate())
+
     def test_incorrect_digest(self):
         self.test_manifest.file_records[1].digest = 'wrong'
         self.assertFalse(self.test_manifest.validate_digests())
 
     def test_equality_same_object(self):
         self.assertEqual(self.test_manifest, self.test_manifest)
+
+    def test_equality_copy(self):
+        a_copy = copy.copy(self.test_manifest)
+        self.assertEqual(self.test_manifest, a_copy)
 
     def test_equality_deepcopy(self):
         a_deepcopy = copy.deepcopy(self.test_manifest)
@@ -269,6 +288,21 @@ class TestManifest(BaseFileRecordTest):
         one = tooltool.Manifest([self.test_record, self.other_test_record])
         two = tooltool.Manifest([self.test_record, self.other_test_record])
         self.assertEqual(one, two)
+
+    def test_equality_different_order(self):
+        one = tooltool.Manifest([self.test_record, self.other_test_record])
+        two = tooltool.Manifest([self.other_test_record, self.test_record])
+        self.assertEqual(one, two)
+
+    def test_inequality_different_count(self):
+        one = tooltool.Manifest([self.other_test_record])
+        two = tooltool.Manifest([self.test_record, self.other_test_record])
+        self.assertNotEqual(one, two)
+
+    def test_inequality_different_records(self):
+        one = tooltool.Manifest([self.test_record])
+        two = tooltool.Manifest([self.other_test_record])
+        self.assertNotEqual(one, two)
 
     def test_json_dump(self):
         tmp_manifest = tempfile.TemporaryFile()
@@ -310,10 +344,19 @@ class TestManifestOperations(BaseFileRecordTest):
         os.mkdir(self.test_dir)
         with open(os.path.join(self.test_dir, self.sample_manifest_file), 'w') as tmpfile:
             self.sample_manifest.dump(tmpfile, fmt='json')
+        os.chdir(self.test_dir)
 
     def tearDown(self):
         os.chdir(self.startingwd)
         shutil.rmtree(self.test_dir)
+
+    def test_open_manifest(self):
+        manifest = tooltool.open_manifest(self.sample_manifest_file)
+        eq_(manifest.file_records[0].filename, 'test_file.ogg')
+
+    def test_open_manifest_missing(self):
+        self.assertRaises(tooltool.InvalidManifest, lambda:
+                          tooltool.open_manifest('no-such-file'))
 
 
 def call_main(*args):
@@ -398,77 +441,6 @@ def test_command_package():
         eq_(call_main('tooltool', 'fetch', 'a', 'b', '--url', 'http://foo'), 0)
         fetch_files.assert_called_with('manifest.tt', ['http://foo'], ['a', 'b'],
                                        cache_folder=None, auth_file=None)
-
-
-class PurgeTests(unittest.TestCase):
-
-    def setUp(self):
-        self.test_dir = 'test-dir'
-        self.startingwd = os.getcwd()
-        if os.path.exists(self.test_dir):
-            shutil.rmtree(self.test_dir)
-        os.mkdir(self.test_dir)
-
-    def tearDown(self):
-        os.chdir(self.startingwd)
-        shutil.rmtree(self.test_dir)
-
-    def fake_freespace(self, p):
-        # A fake 10G drive, with each file = 1G
-        eq_(p, self.test_dir)
-        return 1024 ** 3 * (10 - len(os.listdir(self.test_dir)))
-
-    def add_files(self, *files):
-        now = 1426127031
-        # add files, with ordered mtime
-        for f in files:
-            path = os.path.join(self.test_dir, f)
-            open(path, "w")
-            os.utime(path, (now, now))
-            now += 10
-
-    def test_purge_fails(self):
-        path = os.path.join(self.test_dir, 'sticky')
-        open(path, 'w')
-        os.chmod(self.test_dir, 0o500)  # prevent delete
-        try:
-            tooltool.purge(self.test_dir, 0)
-            eq_(os.listdir(self.test_dir), ['sticky'])
-        finally:
-            os.chmod(self.test_dir, 0o700)
-
-    def test_purge_nonfile_not_deleted(self):
-        path = os.path.join(self.test_dir, 'somedir')
-        os.mkdir(path)
-        tooltool.purge(self.test_dir, 0)
-        eq_(os.listdir(self.test_dir), ['somedir'])
-
-    def test_purge_nonzero(self):
-        # six files means six gigs consumed, so we'll delete two
-        self.add_files("one", "two", "three", "four", "five", "six")
-        with mock.patch('tooltool.freespace') as freespace:
-            freespace.side_effect = self.fake_freespace
-            tooltool.purge(self.test_dir, 6)
-        eq_(sorted(os.listdir(self.test_dir)),
-            sorted(['three', 'four', 'five', 'six']))
-
-    def test_purge_no_need(self):
-        self.add_files("one", "two")
-        with mock.patch('tooltool.freespace') as freespace:
-            freespace.side_effect = self.fake_freespace
-            tooltool.purge(self.test_dir, 4)
-        eq_(sorted(os.listdir(self.test_dir)),
-            sorted(['one', 'two']))
-
-    def test_purge_zero(self):
-        self.add_files("one", "two", "three")
-        tooltool.purge(self.test_dir, 0)
-        eq_(os.listdir(self.test_dir), [])
-
-    def test_freespace(self):
-        # we can't set up a dedicated partition for this test, so just assume
-        # the disk isn't full (other tests assume this too, really)
-        assert tooltool.freespace(self.test_dir) > 0
 
 
 class FetchTests(unittest.TestCase):
@@ -704,3 +676,108 @@ class FetchTests(unittest.TestCase):
                     False)
                 untar_file.assert_called_with('file-one')
         self.assert_files('one')
+
+    def try_untar_file(self, filename):
+        os.mkdir('basename')
+        open("basename/LEFTOVER.txt", "w").write("rm me")
+        self.failUnless(tooltool.untar_file(filename))
+        self.failUnless(os.path.exists('basename'))
+        self.failUnless(os.path.exists('basename/README.txt'))
+        self.failIf(os.path.exists('basename/LEFTOVER.txt'))
+
+    def setup_tarball(self, tar_cmd):
+        os.mkdir('basename')
+        open("basename/README.txt", "w").write("in tarball")
+        os.system(tar_cmd)
+        shutil.rmtree('basename')
+
+    def test_untar_file_uncompressed(self):
+        self.setup_tarball('tar -cf basename.tar basename')
+        self.try_untar_file('basename.tar')
+
+    def test_untar_file_gz(self):
+        self.setup_tarball('tar -czf basename.tar.gz basename')
+        self.try_untar_file('basename.tar.gz')
+
+    def test_untar_file_xz(self):
+        self.setup_tarball('tar -cJf basename.tar.xz basename')
+        self.try_untar_file('basename.tar.xz')
+
+    def test_untar_file_bz2(self):
+        self.setup_tarball('tar -cjf basename.tar.bz2 basename')
+        self.try_untar_file('basename.tar.bz2')
+
+    def test_untar_file_not_tarfile(self):
+        open('basename.tar.shrink', 'w').write('not a tarfile')
+        self.assertFalse(tooltool.untar_file('basename.tar.shrink'))
+
+
+class PurgeTests(unittest.TestCase):
+
+    def setUp(self):
+        self.test_dir = 'test-dir'
+        self.startingwd = os.getcwd()
+        if os.path.exists(self.test_dir):
+            shutil.rmtree(self.test_dir)
+        os.mkdir(self.test_dir)
+
+    def tearDown(self):
+        os.chdir(self.startingwd)
+        shutil.rmtree(self.test_dir)
+
+    def fake_freespace(self, p):
+        # A fake 10G drive, with each file = 1G
+        eq_(p, self.test_dir)
+        return 1024 ** 3 * (10 - len(os.listdir(self.test_dir)))
+
+    def add_files(self, *files):
+        now = 1426127031
+        # add files, with ordered mtime
+        for f in files:
+            path = os.path.join(self.test_dir, f)
+            open(path, "w")
+            os.utime(path, (now, now))
+            now += 10
+
+    def test_purge_fails(self):
+        path = os.path.join(self.test_dir, 'sticky')
+        open(path, 'w')
+        os.chmod(self.test_dir, 0o500)  # prevent delete
+        try:
+            tooltool.purge(self.test_dir, 0)
+            eq_(os.listdir(self.test_dir), ['sticky'])
+        finally:
+            os.chmod(self.test_dir, 0o700)
+
+    def test_purge_nonfile_not_deleted(self):
+        path = os.path.join(self.test_dir, 'somedir')
+        os.mkdir(path)
+        tooltool.purge(self.test_dir, 0)
+        eq_(os.listdir(self.test_dir), ['somedir'])
+
+    def test_purge_nonzero(self):
+        # six files means six gigs consumed, so we'll delete two
+        self.add_files("one", "two", "three", "four", "five", "six")
+        with mock.patch('tooltool.freespace') as freespace:
+            freespace.side_effect = self.fake_freespace
+            tooltool.purge(self.test_dir, 6)
+        eq_(sorted(os.listdir(self.test_dir)),
+            sorted(['three', 'four', 'five', 'six']))
+
+    def test_purge_no_need(self):
+        self.add_files("one", "two")
+        with mock.patch('tooltool.freespace') as freespace:
+            freespace.side_effect = self.fake_freespace
+            tooltool.purge(self.test_dir, 4)
+        eq_(sorted(os.listdir(self.test_dir)),
+            sorted(['one', 'two']))
+
+    def test_purge_zero(self):
+        self.add_files("one", "two", "three")
+        tooltool.purge(self.test_dir, 0)
+        eq_(os.listdir(self.test_dir), [])
+
+    def test_freespace(self):
+        # we can't set up a dedicated partition for this test, so just assume
+        # the disk isn't full (other tests assume this too, really)
+        assert tooltool.freespace(self.test_dir) > 0

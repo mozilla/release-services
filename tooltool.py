@@ -62,6 +62,10 @@ class ExceptionWithFilename(Exception):
         self.filename = filename
 
 
+class BadFilenameException(ExceptionWithFilename):
+    pass
+
+
 class DigestMismatchException(ExceptionWithFilename):
     pass
 
@@ -74,16 +78,15 @@ class FileRecord(object):
 
     def __init__(self, filename, size, digest, algorithm, unpack=False):
         object.__init__(self)
-        if filename != os.path.split(filename)[1]:
+        if '/' in filename or '\\' in filename:
             log.error(
                 "The filename provided contains path information and is, therefore, invalid.")
-            raise ExceptionWithFilename(filename=filename)
+            raise BadFilenameException(filename=filename)
         self.filename = filename
         self.size = size
         self.digest = digest
         self.algorithm = algorithm
         self.unpack = unpack
-        log.debug("creating %s 0x%x" % (self.__class__.__name__, id(self)))
 
     def __eq__(self, other):
         if self is other:
@@ -237,13 +240,15 @@ class Manifest(object):
         if len(self.file_records) != len(other.file_records):
             log.debug('Manifests differ in number of files')
             return False
-        # TODO: Lists in a different order should be equal
-        for record in range(0, len(self.file_records)):
-            if self.file_records[record] != other.file_records[record]:
-                log.debug('FileRecords differ, %s vs %s' % (self.file_records[record],
-                                                            other.file_records[record]))
-                return False
+        # sort the file records by filename before comparing
+        mine = sorted((fr.filename, fr) for fr in self.file_records)
+        theirs = sorted((fr.filename, fr) for fr in other.file_records)
+        if mine != theirs:
+            return False
         return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __deepcopy__(self, memo):
         # This is required for a deep copy
@@ -267,17 +272,12 @@ class Manifest(object):
     def validate(self):
         return all(i.validate() for i in self.file_records)
 
-    def sort(self):
-        # TODO: WRITE TESTS
-        self.file_records.sort(key=lambda x: x.size)
-
     def load(self, data_file, fmt='json'):
         assert fmt in self.valid_formats
         if fmt == 'json':
             try:
                 self.file_records.extend(
                     json.load(data_file, cls=FileRecordJSONDecoder))
-                self.sort()
             except ValueError:
                 raise InvalidManifest("trying to read invalid manifest file")
 
@@ -287,13 +287,11 @@ class Manifest(object):
             try:
                 self.file_records.extend(
                     json.loads(data_string, cls=FileRecordJSONDecoder))
-                self.sort()
             except ValueError:
                 raise InvalidManifest("trying to read invalid manifest file")
 
     def dump(self, output_file, fmt='json'):
         assert fmt in self.valid_formats
-        self.sort()
         if fmt == 'json':
             rv = json.dump(
                 self.file_records, output_file, indent=0, cls=FileRecordJSONEncoder)
@@ -302,7 +300,6 @@ class Manifest(object):
 
     def dumps(self, fmt='json'):
         assert fmt in self.valid_formats
-        self.sort()
         if fmt == 'json':
             return json.dumps(self.file_records, cls=FileRecordJSONEncoder)
 
@@ -316,14 +313,11 @@ def digest_file(f, a):
     while data:
         h.update(data)
         data = f.read(chunk_size)
-    if hasattr(f, 'name'):
-        log.debug('hashed %s with %s to be %s', f.name, a, h.hexdigest())
-    else:
-        log.debug('hashed a file with %s to be %s', a, h.hexdigest())
+    name = repr(f.name) if hasattr(f, 'name') else 'a file'
+    log.debug('hashed %s with %s to be %s', name, a, h.hexdigest())
     return h.hexdigest()
 
 
-# TODO: write tests for this function
 def open_manifest(manifest_file):
     """I know how to take a filename and load it into a Manifest object"""
     if os.path.exists(manifest_file):
@@ -515,13 +509,13 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None):
 
 
 def untar_file(filename):
+    """Untar `filename`, assuming it is uncompressed or compressed with bzip2,
+    xz, or gzip.  The tarball is assumed to contain a single directory with
+    a name matching the base of the given filename.  Xz support is handled by
+    shelling out to 'tar'."""
     if tarfile.is_tarfile(filename):
         tar_file, zip_ext = os.path.splitext(filename)
         base_file, tar_ext = os.path.splitext(tar_file)
-
-        if not base_file:
-            log.error("failed to get base_file from filename '%s'" % filename)
-            return False
 
         if os.path.exists(base_file):
             log.info('rm tree: %s' % base_file)
@@ -775,7 +769,8 @@ def package(folder, algorithm, message):  # pragma: no cover
     return os.path.join(os.path.join(dirname, package_name))
 
 
-def execute(cmd):  # pragma: no cover
+# TODO: test
+def execute(cmd):
     process = Popen(cmd, shell=True, stdout=PIPE)
     while True:
         line = process.stdout.readline()
