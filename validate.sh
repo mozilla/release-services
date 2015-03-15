@@ -92,9 +92,6 @@ $modified && not_ok "some imports were re-ordered and changes will need to be co
 status "running shell tests"
 bash test.sh >/dev/null 2>&1 || not_ok "shell tests failed"
 
-status "running client tests"
-python test_tooltool.py >/dev/null 2>&1 || not_ok "client tests failed"
-
 status "building docs"
 relengapi build-docs --development || not_ok "build-docs failed"
 
