@@ -318,6 +318,17 @@ def digest_file(f, a):
     return h.hexdigest()
 
 
+def execute(cmd):
+    """Execute CMD, logging its stdout at the info level"""
+    process = Popen(cmd, shell=True, stdout=PIPE)
+    while True:
+        line = process.stdout.readline()
+        if not line:
+            break
+        log.info(line.replace('\n', ''))
+    return process.wait() == 0
+
+
 def open_manifest(manifest_file):
     """I know how to take a filename and load it into a Manifest object"""
     if os.path.exists(manifest_file):
@@ -530,7 +541,8 @@ def untar_file(filename):
         if os.path.exists(base_file):
             log.info('rm tree: %s' % base_file)
             shutil.rmtree(base_file)
-        execute('tar -Jxf %s' % filename)
+        if not execute('tar -Jxf %s' % filename):
+            return False
     else:
         log.error("Unknown zip extension for filename '%s'" % filename)
         return False
@@ -767,16 +779,6 @@ def package(folder, algorithm, message):  # pragma: no cover
              (os.path.join(os.path.join(dirname, package_name)), folder))
 
     return os.path.join(os.path.join(dirname, package_name))
-
-
-# TODO: test
-def execute(cmd):
-    process = Popen(cmd, shell=True, stdout=PIPE)
-    while True:
-        line = process.stdout.readline()
-        if not line:
-            break
-        log.info(line.replace('\n', ''))
 
 
 def upload(package, user, host, path):  # pragma: no cover

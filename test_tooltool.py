@@ -359,6 +359,14 @@ class TestManifestOperations(BaseFileRecordTest):
                           tooltool.open_manifest('no-such-file'))
 
 
+def test_execute():
+    assert tooltool.execute('echo foo; echo bar')
+
+
+def test_execute_fails():
+    assert not tooltool.execute('false')
+
+
 def call_main(*args):
     try:
         old_stderr = sys.stderr
