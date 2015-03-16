@@ -30,12 +30,15 @@ class File(db.declarative_base('tooltool')):
     def batches(self):
         return {bf.filename: bf.batch for bf in self._batches}
 
-    def to_json(self):
-        return types.File(
+    def to_json(self, include_instances=False):
+        rv = types.File(
             size=self.size,
             digest=self.sha512,
             algorithm='sha512',
             visibility=self.visibility)
+        if include_instances:
+            rv.instances = [i.region for i in self.instances]
+        return rv
 
 
 class FileInstance(db.declarative_base('tooltool')):

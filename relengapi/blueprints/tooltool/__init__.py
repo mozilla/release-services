@@ -172,15 +172,18 @@ def get_files():
 @bp.route('/file/<algorithm>/<digest>')
 @api.apimethod(types.File, unicode, unicode)
 def get_file(algorithm, digest):
-    """Get a single file, by its digest.  Filenames are associated with upload batches,
-    not directly with files, so use ``GET /uploads`` to find files by filename."""
+    """Get a single file, by its digest.  Filenames are associated with upload
+    batches, not directly with files, so use ``GET /uploads`` to find files by
+    filename.
+
+    The returned File instance contains an ``instances`` attribute showing the
+    regions in which the file exists."""
     if algorithm != 'sha512':
         raise NotFound("Unknown algorithm")
     row = tables.File.query.filter(tables.File.sha512 == digest).first()
     if not row:
         raise NotFound
-    # TODO: include instances here
-    return row.to_json()
+    return row.to_json(include_instances=True)
 
 
 @bp.route('/file/<algorithm>/<digest>', methods=['PATCH'])
@@ -193,7 +196,16 @@ def patch_file(algorithm, digest, body):
     The object ``{"op": "delete_instances"}`` will cause all instances of the
     file to be deleted.  The file record itself will not be deleted, as it is
     still a part of one or more upload batches, but until and unless someone
-    uploads a new copy, the content will not be available for download."""
+    uploads a new copy, the content will not be available for download.
+
+    If the change has op ``"set_visibility"``, then the file's visibility will
+    be set to the value given by the change's ``visibility`` attribute.  For
+    example, ``{"op": "set_visibility", "visibility": "internal"}`` will mark a
+    file as "internal" after someone has accidentally uploaded it with public
+    visibility.
+
+    The returned File instance contains an ``instances`` attribute showing any
+    changes."""
     session = current_app.db.session('tooltool')
     if algorithm != 'sha512':
         raise NotFound("Unknown algorithm")
@@ -219,8 +231,7 @@ def patch_file(algorithm, digest, body):
         else:
             raise BadRequest("unknown op")
     session.commit()
-    # TODO: include instances here
-    return file.to_json()
+    return file.to_json(include_instances=True)
 
 
 @bp.route('/sha512/<digest>')

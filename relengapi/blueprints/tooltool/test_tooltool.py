@@ -184,6 +184,26 @@ def assert_no_upload_rows(app):
         eq_(tables.Batch.query.all(), [])
         eq_(tables.PendingUpload.query.all(), [])
 
+
+def assert_file_response(resp, content, visibility='public', instances=['us-east-1']):
+    eq_(resp.status_code, 200)
+    exp = {
+        "algorithm": "sha512",
+        "digest": hashlib.sha512(content).hexdigest(),
+        "size": len(content),
+        "visibility": visibility,
+        'instances': instances,
+    }
+    eq_(json.loads(resp.data)['result'], exp, resp.data)
+
+
+def do_patch(client, algo, digest, ops):
+    return client.open(method='PATCH',
+                       path='/tooltool/file/sha512/{}'.format(digest),
+                       headers=[('Content-Type', 'application/json')],
+                       data=json.dumps(ops))
+
+
 # tests
 
 
@@ -324,7 +344,8 @@ def test_upload_batch_success_fresh(client, app):
         assert_signed_url(result['files']['one']['put_url'], ONE_DIGEST,
                           method='PUT', expires_in=3600)
 
-    assert_batch_row(app, result['id'], files=[('one', len(ONE), ONE_DIGEST, [])])
+    assert_batch_row(
+        app, result['id'], files=[('one', len(ONE), ONE_DIGEST, [])])
     assert_pending_upload(app, ONE_DIGEST, 'us-east-1')
 
 
@@ -348,7 +369,8 @@ def test_upload_batch_success_no_instances(client, app):
         assert_signed_url(result['files']['one']['put_url'], ONE_DIGEST,
                           method='PUT', expires_in=3600)
 
-    assert_batch_row(app, result['id'], files=[('one', len(ONE), ONE_DIGEST, [])])
+    assert_batch_row(
+        app, result['id'], files=[('one', len(ONE), ONE_DIGEST, [])])
     assert_pending_upload(app, ONE_DIGEST, 'us-east-1')
 
 
@@ -605,7 +627,8 @@ def test_get_file_bad_algo(client):
 @test_context
 def test_get_file_not_found(client):
     """A GET to /file/sha512/<digest> with an unknown digest fails with 404"""
-    eq_(client.get('/tooltool/file/sha512/{}'.format(ONE_DIGEST)).status_code, 404)
+    eq_(client.get(
+        '/tooltool/file/sha512/{}'.format(ONE_DIGEST)).status_code, 404)
 
 
 @test_context
@@ -613,20 +636,7 @@ def test_get_file_success(app, client):
     """A GET to /file/sha512/<digest> with an known digest returns the file"""
     add_file_to_db(app, ONE)
     resp = client.get('/tooltool/file/sha512/{}'.format(ONE_DIGEST))
-    eq_(resp.status_code, 200)
-    eq_(json.loads(resp.data)['result'], {
-        "algorithm": "sha512",
-        "digest": ONE_DIGEST,
-        "size": len(ONE),
-        "visibility": "public"
-    })
-
-
-def do_patch(client, algo, digest, ops):
-    return client.open(method='PATCH',
-                       path='/tooltool/file/sha512/{}'.format(digest),
-                       headers=[('Content-Type', 'application/json')],
-                       data=json.dumps(ops))
+    assert_file_response(resp, ONE)
 
 
 @moto.mock_s3
@@ -678,13 +688,7 @@ def test_delete_instances_success_no_instances(app, client):
     """A PATCH with op=delete_instances succeeds when there are no instances."""
     add_file_to_db(app, ONE, regions=[])
     resp = do_patch(client, 'sha512', ONE_DIGEST, [{'op': 'delete_instances'}])
-    eq_(resp.status_code, 200)
-    eq_(json.loads(resp.data)['result'], {
-        "algorithm": "sha512",
-        "digest": ONE_DIGEST,
-        "size": len(ONE),
-        "visibility": "public"
-    })
+    assert_file_response(resp, ONE, instances=[])
 
 
 @moto.mock_s3
@@ -694,13 +698,7 @@ def test_delete_instances_success(app, client):
     add_file_to_db(app, ONE, regions=['us-east-1'])
     add_file_to_s3(app, ONE, region='us-east-1')
     resp = do_patch(client, 'sha512', ONE_DIGEST, [{'op': 'delete_instances'}])
-    eq_(resp.status_code, 200)
-    eq_(json.loads(resp.data)['result'], {
-        "algorithm": "sha512",
-        "digest": ONE_DIGEST,
-        "size": len(ONE),
-        "visibility": "public"
-    })
+    assert_file_response(resp, ONE, instances=[])
     with app.app_context():
         # ensure instances are gone from the DB
         f = tables.File.query.first()
@@ -708,7 +706,8 @@ def test_delete_instances_success(app, client):
 
         # and from S3
         conn = app.aws.connect_to('s3', 'us-east-1')
-        key = conn.get_bucket('tt-use1').get_key('/sha512/{}'.format(ONE_DIGEST))
+        key = conn.get_bucket(
+            'tt-use1').get_key('/sha512/{}'.format(ONE_DIGEST))
         assert not key, "key still exists"
 
 
@@ -729,13 +728,7 @@ def test_set_visibility_success(app, client):
     add_file_to_db(app, ONE, visibility='public')
     resp = do_patch(client, 'sha512', ONE_DIGEST,
                     [{'op': 'set_visibility', 'visibility': 'internal'}])
-    eq_(resp.status_code, 200)
-    eq_(json.loads(resp.data)['result'], {
-        "algorithm": "sha512",
-        "digest": ONE_DIGEST,
-        "size": len(ONE),
-        "visibility": "internal"  # changed!
-    })
+    assert_file_response(resp, ONE, visibility='internal')
     with app.app_context():
         f = tables.File.query.first()
         eq_(f.visibility, 'internal')
@@ -748,13 +741,26 @@ def test_set_visibility_success_no_change(app, client):
     add_file_to_db(app, ONE, visibility='internal')
     resp = do_patch(client, 'sha512', ONE_DIGEST,
                     [{'op': 'set_visibility', 'visibility': 'internal'}])
-    eq_(resp.status_code, 200)
-    eq_(json.loads(resp.data)['result'], {
-        "algorithm": "sha512",
-        "digest": ONE_DIGEST,
-        "size": len(ONE),
-        "visibility": "internal"  # not changed!
-    })
+    assert_file_response(resp, ONE, visibility='internal')
     with app.app_context():
         f = tables.File.query.first()
         eq_(f.visibility, 'internal')
+
+
+@moto.mock_s3
+@test_context.specialize(user=userperms([p.tooltool.manage]))
+def test_multi_op_patch(app, client):
+    """A PATCH with multiple ops performs all of them."""
+    add_file_to_db(
+        app, ONE, visibility='internal', regions=['us-east-1', 'us-west-2'])
+    add_file_to_s3(app, ONE, region='us-east-1')
+    add_file_to_s3(app, ONE, region='us-west-2')
+    resp = do_patch(client, 'sha512', ONE_DIGEST, [
+        {'op': 'set_visibility', 'visibility': 'public'},
+        {'op': 'delete_instances'},
+    ])
+    assert_file_response(resp, ONE, visibility='public', instances=[])
+    with app.app_context():
+        f = tables.File.query.first()
+        eq_(f.visibility, 'public')
+        eq_(f.instances, [])
