@@ -622,37 +622,62 @@ def test_get_file_success(app, client):
     })
 
 
+def do_patch(client, algo, digest, ops):
+    return client.open(method='PATCH',
+                       path='/tooltool/file/sha512/{}'.format(digest),
+                       headers=[('Content-Type', 'application/json')],
+                       data=json.dumps(ops))
+
+
 @moto.mock_s3
 @test_context.specialize(user=userperms([p.tooltool.manage]))
-def test_clear_file_no_such(app, client):
-    """A CLEAR to /file/<a>/<d> that doesn't exist returns 404."""
-    resp = client.open(method='CLEAR', path='/tooltool/file/sha512/{}'.format(ONE_DIGEST))
+def test_patch_no_such(app, client):
+    """A PATCH to /file/<a>/<d> that doesn't exist returns 404."""
+    resp = do_patch(client, 'sha512', ONE_DIGEST, [{'op': 'delete_instances'}])
     eq_(resp.status_code, 404)
 
 
 @moto.mock_s3
 @test_context.specialize(user=userperms([p.tooltool.manage]))
-def test_clear_file_bad_algo(app, client):
-    """A CLEAR to /file/<a>/<d> with a bad algorithm returns 404."""
-    resp = client.open(method='CLEAR', path='/tooltool/file/md3/abc')
+def test_patch_bad_algo(app, client):
+    """A PATCH to /file/<a>/<d> with a bad algorithm returns 404."""
+    resp = do_patch(client, 'md3', ONE_DIGEST, [{'op': 'delete_instances'}])
     eq_(resp.status_code, 404)
+
+
+@moto.mock_s3
+@test_context.specialize(user=userperms([p.tooltool.manage]))
+def test_patch_no_op(app, client):
+    """A PATCH to /file/<a>/<d> with change containing no 'op' returns 400."""
+    add_file_to_db(app, ONE)
+    resp = do_patch(client, 'sha512', ONE_DIGEST, [{'pop': 'snap'}])
+    eq_(resp.status_code, 400)
+
+
+@moto.mock_s3
+@test_context.specialize(user=userperms([p.tooltool.manage]))
+def test_patch_bad_op(app, client):
+    """A PATCH to /file/<a>/<d> with change containing a bad 'op' returns 400."""
+    add_file_to_db(app, ONE)
+    resp = do_patch(client, 'sha512', ONE_DIGEST, [{'op': 'hop'}])
+    eq_(resp.status_code, 400)
 
 
 @moto.mock_s3
 @test_context
-def test_clear_file_no_perms(app, client):
-    """A CLEAR to /file/<a>/<d> without tooltool.manage fails with 403"""
+def test_patch_no_perms(app, client):
+    """A PATCH to /file/<a>/<d> without tooltool.manage fails with 403"""
     add_file_to_db(app, ONE, regions=['us-east-1'])
-    resp = client.open(method='CLEAR', path='/tooltool/file/sha512/{}'.format(ONE_DIGEST))
+    resp = do_patch(client, 'sha512', ONE_DIGEST, [{'op': 'delete_instances'}])
     eq_(resp.status_code, 403)
 
 
 @moto.mock_s3
 @test_context.specialize(user=userperms([p.tooltool.manage]))
-def test_clear_file_success_no_instances(app, client):
-    """A CLEAR to /file/<a>/<d> when there are no instances sill succeeds."""
+def test_delete_instances_success_no_instances(app, client):
+    """A PATCH to /file/<a>/<d> when there are no instances sill succeeds."""
     add_file_to_db(app, ONE, regions=[])
-    resp = client.open(method='CLEAR', path='/tooltool/file/sha512/{}'.format(ONE_DIGEST))
+    resp = do_patch(client, 'sha512', ONE_DIGEST, [{'op': 'delete_instances'}])
     eq_(resp.status_code, 200)
     eq_(json.loads(resp.data)['result'], {
         "algorithm": "sha512",
@@ -664,11 +689,11 @@ def test_clear_file_success_no_instances(app, client):
 
 @moto.mock_s3
 @test_context.specialize(user=userperms([p.tooltool.manage]))
-def test_clear_file_success(app, client):
-    """A CLEAR to /file/<a>/<d> deletes its instances."""
+def test_delete_instances_success(app, client):
+    """A PATCH to /file/<a>/<d> deletes its instances."""
     add_file_to_db(app, ONE, regions=['us-east-1'])
     add_file_to_s3(app, ONE, region='us-east-1')
-    resp = client.open(method='CLEAR', path='/tooltool/file/sha512/{}'.format(ONE_DIGEST))
+    resp = do_patch(client, 'sha512', ONE_DIGEST, [{'op': 'delete_instances'}])
     eq_(resp.status_code, 200)
     eq_(json.loads(resp.data)['result'], {
         "algorithm": "sha512",
