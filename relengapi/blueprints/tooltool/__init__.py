@@ -197,8 +197,8 @@ def patch_file(algorithm, digest, body):
     session = current_app.db.session('tooltool')
     if algorithm != 'sha512':
         raise NotFound("Unknown algorithm")
-    row = session.query(tables.File).filter(tables.File.sha512 == digest).first()
-    if not row:
+    file = session.query(tables.File).filter(tables.File.sha512 == digest).first()
+    if not file:
         raise NotFound
 
     for change in body:
@@ -207,16 +207,20 @@ def patch_file(algorithm, digest, body):
         if change['op'] == 'delete_instances':
             key_name = '/{}/{}'.format(algorithm, digest)
             cfg = current_app.config.get('TOOLTOOL_REGIONS')
-            for i in row.instances:
+            for i in file.instances:
                 conn = current_app.aws.connect_to('s3', i.region)
                 bucket = conn.get_bucket(cfg[i.region])
                 bucket.delete_key(key_name)
                 session.delete(i)
+        elif change['op'] == 'set_visibility':
+            if change['visibility'] not in ('internal', 'public'):
+                raise BadRequest("bad visibility level")
+            file.visibility = change['visibility']
         else:
             raise BadRequest("unknown op")
     session.commit()
     # TODO: include instances here
-    return row.to_json()
+    return file.to_json()
 
 
 @bp.route('/sha512/<digest>')

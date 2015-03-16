@@ -675,7 +675,7 @@ def test_patch_no_perms(app, client):
 @moto.mock_s3
 @test_context.specialize(user=userperms([p.tooltool.manage]))
 def test_delete_instances_success_no_instances(app, client):
-    """A PATCH to /file/<a>/<d> when there are no instances sill succeeds."""
+    """A PATCH with op=delete_instances succeeds when there are no instances."""
     add_file_to_db(app, ONE, regions=[])
     resp = do_patch(client, 'sha512', ONE_DIGEST, [{'op': 'delete_instances'}])
     eq_(resp.status_code, 200)
@@ -690,7 +690,7 @@ def test_delete_instances_success_no_instances(app, client):
 @moto.mock_s3
 @test_context.specialize(user=userperms([p.tooltool.manage]))
 def test_delete_instances_success(app, client):
-    """A PATCH to /file/<a>/<d> deletes its instances."""
+    """A PATCH with op=delete_instances deletes its instances."""
     add_file_to_db(app, ONE, regions=['us-east-1'])
     add_file_to_s3(app, ONE, region='us-east-1')
     resp = do_patch(client, 'sha512', ONE_DIGEST, [{'op': 'delete_instances'}])
@@ -710,3 +710,51 @@ def test_delete_instances_success(app, client):
         conn = app.aws.connect_to('s3', 'us-east-1')
         key = conn.get_bucket('tt-use1').get_key('/sha512/{}'.format(ONE_DIGEST))
         assert not key, "key still exists"
+
+
+@moto.mock_s3
+@test_context.specialize(user=userperms([p.tooltool.manage]))
+def test_set_visibility_invalid_vis(app, client):
+    """A PATCH with op=set_visibility and an invalid visibility fails."""
+    add_file_to_db(app, ONE, regions=[])
+    resp = do_patch(client, 'sha512', ONE_DIGEST,
+                    [{'op': 'set_visibility', 'visibility': '5-eyes'}])
+    eq_(resp.status_code, 400)
+
+
+@moto.mock_s3
+@test_context.specialize(user=userperms([p.tooltool.manage]))
+def test_set_visibility_success(app, client):
+    """A PATCH with op=set_visibility updates the file's visibility."""
+    add_file_to_db(app, ONE, visibility='public')
+    resp = do_patch(client, 'sha512', ONE_DIGEST,
+                    [{'op': 'set_visibility', 'visibility': 'internal'}])
+    eq_(resp.status_code, 200)
+    eq_(json.loads(resp.data)['result'], {
+        "algorithm": "sha512",
+        "digest": ONE_DIGEST,
+        "size": len(ONE),
+        "visibility": "internal"  # changed!
+    })
+    with app.app_context():
+        f = tables.File.query.first()
+        eq_(f.visibility, 'internal')
+
+
+@moto.mock_s3
+@test_context.specialize(user=userperms([p.tooltool.manage]))
+def test_set_visibility_success_no_change(app, client):
+    """A PATCH with op=set_visibility with the existing visibility succeeds."""
+    add_file_to_db(app, ONE, visibility='internal')
+    resp = do_patch(client, 'sha512', ONE_DIGEST,
+                    [{'op': 'set_visibility', 'visibility': 'internal'}])
+    eq_(resp.status_code, 200)
+    eq_(json.loads(resp.data)['result'], {
+        "algorithm": "sha512",
+        "digest": ONE_DIGEST,
+        "size": len(ONE),
+        "visibility": "internal"  # not changed!
+    })
+    with app.app_context():
+        f = tables.File.query.first()
+        eq_(f.visibility, 'internal')
