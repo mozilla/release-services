@@ -11,6 +11,9 @@ COVERAGE_MIN=96
 # project name
 PROJECT=relengapi-tooltool
 
+# unset RELENGAPI_SETTINGS, if it's set
+RELENGAPI_SETTINGS=
+
 set -e
 
 # some colors
