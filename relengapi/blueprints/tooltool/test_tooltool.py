@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import boto.exception
 import datetime
 import hashlib
 import json
@@ -87,6 +88,20 @@ def add_file_to_db(app, content, regions=['us-east-1'],
         session.commit()
 
         return file_row.id
+
+
+def add_file_to_s3(app, content, region='us-east-1'):
+    with app.app_context():
+        conn = app.aws.connect_to('s3', region)
+        bucket_name = cfg['TOOLTOOL_REGIONS'][region]
+        try:
+            conn.head_bucket(bucket_name)
+        except boto.exception.S3ResponseError:
+            conn.create_bucket(bucket_name)
+        bucket = conn.get_bucket(bucket_name)
+        key_name = '/sha512/{}'.format(hashlib.sha512(content).hexdigest())
+        key = bucket.new_key(key_name)
+        key.set_contents_from_string(content)
 
 
 @contextmanager
@@ -605,3 +620,68 @@ def test_get_file_success(app, client):
         "size": len(ONE),
         "visibility": "public"
     })
+
+
+@moto.mock_s3
+@test_context.specialize(user=userperms([p.tooltool.manage]))
+def test_clear_file_no_such(app, client):
+    """A CLEAR to /file/<a>/<d> that doesn't exist returns 404."""
+    resp = client.open(method='CLEAR', path='/tooltool/file/sha512/{}'.format(ONE_DIGEST))
+    eq_(resp.status_code, 404)
+
+
+@moto.mock_s3
+@test_context.specialize(user=userperms([p.tooltool.manage]))
+def test_clear_file_bad_algo(app, client):
+    """A CLEAR to /file/<a>/<d> with a bad algorithm returns 404."""
+    resp = client.open(method='CLEAR', path='/tooltool/file/md3/abc')
+    eq_(resp.status_code, 404)
+
+
+@moto.mock_s3
+@test_context
+def test_clear_file_no_perms(app, client):
+    """A CLEAR to /file/<a>/<d> without tooltool.manage fails with 403"""
+    add_file_to_db(app, ONE, regions=['us-east-1'])
+    resp = client.open(method='CLEAR', path='/tooltool/file/sha512/{}'.format(ONE_DIGEST))
+    eq_(resp.status_code, 403)
+
+
+@moto.mock_s3
+@test_context.specialize(user=userperms([p.tooltool.manage]))
+def test_clear_file_success_no_instances(app, client):
+    """A CLEAR to /file/<a>/<d> when there are no instances sill succeeds."""
+    add_file_to_db(app, ONE, regions=[])
+    resp = client.open(method='CLEAR', path='/tooltool/file/sha512/{}'.format(ONE_DIGEST))
+    eq_(resp.status_code, 200)
+    eq_(json.loads(resp.data)['result'], {
+        "algorithm": "sha512",
+        "digest": ONE_DIGEST,
+        "size": len(ONE),
+        "visibility": "public"
+    })
+
+
+@moto.mock_s3
+@test_context.specialize(user=userperms([p.tooltool.manage]))
+def test_clear_file_success(app, client):
+    """A CLEAR to /file/<a>/<d> deletes its instances."""
+    add_file_to_db(app, ONE, regions=['us-east-1'])
+    add_file_to_s3(app, ONE, region='us-east-1')
+    resp = client.open(method='CLEAR', path='/tooltool/file/sha512/{}'.format(ONE_DIGEST))
+    eq_(resp.status_code, 200)
+    eq_(json.loads(resp.data)['result'], {
+        "algorithm": "sha512",
+        "digest": ONE_DIGEST,
+        "size": len(ONE),
+        "visibility": "public"
+    })
+    with app.app_context():
+        # ensure instances are gone from the DB
+        f = tables.File.query.first()
+        eq_(f.instances, [])
+
+        # and from S3
+        conn = app.aws.connect_to('s3', 'us-east-1')
+        key = conn.get_bucket('tt-use1').get_key('/sha512/{}'.format(ONE_DIGEST))
+        assert not key, "key still exists"

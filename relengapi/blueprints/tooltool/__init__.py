@@ -179,6 +179,32 @@ def get_file(algorithm, digest):
     row = tables.File.query.filter(tables.File.sha512 == digest).first()
     if not row:
         raise NotFound
+    # TODO: include instances here
+    return row.to_json()
+
+
+@bp.route('/file/<algorithm>/<digest>', methods=['CLEAR'])
+@p.tooltool.manage.require()
+@api.apimethod(types.File, unicode, unicode)
+def clear_file(algorithm, digest):
+    """Clear all instances of the given file.  The file itself remains, but
+    until and unless someone uploads a new copy, it will not be available for
+    download."""
+    session = current_app.db.session('tooltool')
+    if algorithm != 'sha512':
+        raise NotFound("Unknown algorithm")
+    row = session.query(tables.File).filter(tables.File.sha512 == digest).first()
+    if not row:
+        raise NotFound
+    key_name = '/{}/{}'.format(algorithm, digest)
+    cfg = current_app.config.get('TOOLTOOL_REGIONS')
+    for i in row.instances:
+        conn = current_app.aws.connect_to('s3', i.region)
+        bucket = conn.get_bucket(cfg[i.region])
+        bucket.delete_key(key_name)
+        session.delete(i)
+    session.commit()
+    # TODO: include instances here
     return row.to_json()
 
 
