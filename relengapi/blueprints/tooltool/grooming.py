@@ -35,11 +35,6 @@ def check_file_pending_uploads(sha512):
     session.commit()
 
 
-def configure_key(key):
-    """Configure the given S3 key as necessary for use with tooltool."""
-    # TODO
-
-
 def verify_file_instance(file, key):
     """Verify that the given File table row and the given S3 Key match
     in size and digest."""
@@ -55,6 +50,18 @@ def verify_file_instance(file, key):
     if m.hexdigest() != file.sha512:
         log.warning("Digest of file {} does not match".format(file.sha512))
         return False
+
+    # verify some settings on the key, in case the uploader configured
+    # it differently
+    if key.storage_class != 'STANDARD':
+        return False
+
+    if key.get_redirect():  # pragma: no cover
+        # (moto doesn't support redirects)
+        return False
+
+    # verifying the ACL is a bit tricky, so just set it correctly
+    key.set_acl('private')
 
     return True
 
@@ -95,9 +102,6 @@ def check_pending_upload(session, pu):
         key.delete()
         session.delete(pu)
         return
-
-    # the file is good, so just set up its its configuration in S3
-    configure_key(key)
 
     fi = tables.FileInstance(file=pu.file, region=pu.region)
     session.add(fi)

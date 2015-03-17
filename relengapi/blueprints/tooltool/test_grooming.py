@@ -54,10 +54,11 @@ def add_pending_upload_and_file_row(size, sha512, expires, region):
     return pu_row, file_row
 
 
-def make_key(app, region, bucket, key, content):
+def make_key(app, region, bucket, key, content, storage_class='STANDARD'):
     s3 = app.aws.connect_to('s3', region)
     bucket = s3.create_bucket(bucket)
     key = bucket.new_key(key)
+    key.storage_class = storage_class
     key.set_contents_from_string(content)
     return key
 
@@ -94,6 +95,28 @@ def test_verify_file_instance_bad_digest(app):
         content = os.urandom(len(DATA))
         key = make_key(app, 'us-east-1', 'tt-use1', DATA_KEY, content)
         assert not grooming.verify_file_instance(file_row, key)
+
+
+@moto.mock_s3
+@test_context
+def test_verify_file_instance_bad_storage_class(app):
+    """verify_file_instance returns False if the key's storage class is not STANDARD."""
+    with app.app_context():
+        file_row = add_file_row(len(DATA), DATA_DIGEST)
+        key = make_key(app, 'us-east-1', 'tt-use1', DATA_KEY, DATA, storage_class='RRS')
+        assert not grooming.verify_file_instance(file_row, key)
+
+
+@moto.mock_s3
+@test_context
+def test_verify_file_instance_bad_acl(app):
+    """verify_file_instance returns True if the key has a bad URL, but fixes it."""
+    with app.app_context():
+        file_row = add_file_row(len(DATA), DATA_DIGEST)
+        key = make_key(app, 'us-east-1', 'tt-use1', DATA_KEY, DATA)
+        key.set_acl('public-read')
+        assert grooming.verify_file_instance(file_row, key)
+        # moto doesn't support acls yet, so that's the best we can do
 
 
 @moto.mock_s3
