@@ -148,7 +148,7 @@ def upload_batch(region=None, body=None):
     return body
 
 
-@bp.route('/upload/complete/<digest>')
+@bp.route('/upload/complete/sha512/<digest>')
 @api.apimethod(unicode, unicode, status_code=202)
 def upload_complete(digest):
     """Signal that a file has been uploaded and the server should begin
@@ -169,27 +169,25 @@ def get_files():
     return [row.to_json() for row in tables.File.query.all()]
 
 
-@bp.route('/file/<algorithm>/<digest>')
+@bp.route('/file/sha512/<digest>')
 @api.apimethod(types.File, unicode, unicode)
-def get_file(algorithm, digest):
+def get_file(digest):
     """Get a single file, by its digest.  Filenames are associated with upload
     batches, not directly with files, so use ``GET /uploads`` to find files by
     filename.
 
     The returned File instance contains an ``instances`` attribute showing the
     regions in which the file exists."""
-    if algorithm != 'sha512':
-        raise NotFound("Unknown algorithm")
     row = tables.File.query.filter(tables.File.sha512 == digest).first()
     if not row:
         raise NotFound
     return row.to_json(include_instances=True)
 
 
-@bp.route('/file/<algorithm>/<digest>', methods=['PATCH'])
+@bp.route('/file/sha512/<digest>', methods=['PATCH'])
 @p.tooltool.manage.require()
-@api.apimethod(types.File, unicode, unicode, body=[{unicode: unicode}])
-def patch_file(algorithm, digest, body):
+@api.apimethod(types.File, unicode, body=[{unicode: unicode}])
+def patch_file(digest, body):
     """Make administrative changes to an existing file.  The body is a list of
     changes to apply, each represented by a JSON object.
 
@@ -207,8 +205,6 @@ def patch_file(algorithm, digest, body):
     The returned File instance contains an ``instances`` attribute showing any
     changes."""
     session = current_app.db.session('tooltool')
-    if algorithm != 'sha512':
-        raise NotFound("Unknown algorithm")
     file = session.query(tables.File).filter(tables.File.sha512 == digest).first()
     if not file:
         raise NotFound
@@ -217,7 +213,7 @@ def patch_file(algorithm, digest, body):
         if 'op' not in change:
             raise BadRequest("no op")
         if change['op'] == 'delete_instances':
-            key_name = '/{}/{}'.format(algorithm, digest)
+            key_name = '/sha512/{}'.format(digest)
             cfg = current_app.config.get('TOOLTOOL_REGIONS')
             for i in file.instances:
                 conn = current_app.aws.connect_to('s3', i.region)

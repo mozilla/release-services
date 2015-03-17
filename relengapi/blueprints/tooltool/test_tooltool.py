@@ -434,7 +434,7 @@ def test_upload_complete(client, app):
     """GET /upload/complete/<digest> causes a delayed call to check_file_pending_uploads"""
     add_file_to_db(app, ONE, regions=[], pending_regions=['us-east-1'])
     with mock.patch('relengapi.blueprints.tooltool.grooming.check_file_pending_uploads') as cfpu:
-        resp = client.get('/tooltool/upload/complete/{}'.format(ONE_DIGEST))
+        resp = client.get('/tooltool/upload/complete/sha512/{}'.format(ONE_DIGEST))
         eq_(resp.status_code, 202, resp.data)
         cfpu.delay.assert_called_with(ONE_DIGEST)
 
@@ -443,7 +443,7 @@ def test_upload_complete(client, app):
 def test_upload_complete_bad_digest(client, app):
     """GET /upload/complete/<digest> with a bad digest returns 400"""
     with mock.patch('relengapi.blueprints.tooltool.grooming.check_file_pending_uploads') as cfpu:
-        resp = client.get('/tooltool/upload/complete/xyz')
+        resp = client.get('/tooltool/upload/complete/sha512/xyz')
         eq_(resp.status_code, 400, resp.data)
         cfpu.delay.assert_has_calls([])
 
