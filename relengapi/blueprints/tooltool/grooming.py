@@ -5,6 +5,7 @@
 import hashlib
 import logging
 
+from datetime import timedelta
 from flask import current_app
 from relengapi.blueprints.tooltool import tables
 from relengapi.lib import badpenny
@@ -14,7 +15,7 @@ from relengapi.lib import time
 log = logging.getLogger(__name__)
 
 
-@badpenny.periodic_task(seconds=3600)
+@badpenny.periodic_task(seconds=600)
 def check_pending_uploads(job_status):
     """Check for any pending uploads and verify them if found."""
     session = current_app.db.session('tooltool')
@@ -59,10 +60,17 @@ def verify_file_instance(file, key):
 
 
 def check_pending_upload(session, pu):
-    # upload never arrived..
-    if pu.expires < time.now():
+    # we can check the upload any time between the expiration of the URL
+    # (after which the user can't make any more changes, but the upload
+    # may yet be incomplete) and 1 day afterward (ample time for the upload
+    # to complete)
+    if time.now() < pu.expires:
+        # URL is not expired yet
+        return
+    elif time.now() > pu.expires + timedelta(days=1):
+        # Upload will probably never complete
         log.info(
-            "Deleting expired pending upload for {}".format(pu.file.sha512))
+            "Deleting abandoned pending upload for {}".format(pu.file.sha512))
         session.delete(pu)
         return
 

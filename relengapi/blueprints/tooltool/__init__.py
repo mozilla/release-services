@@ -149,7 +149,7 @@ def upload_batch(region=None, body=None):
             pu = tables.PendingUpload(
                 file=file,
                 region=region,
-                expires=time.now() + datetime.timedelta(days=1))
+                expires=time.now() + datetime.timedelta(seconds=UPLOAD_EXPIRES_IN))
             session.add(pu)
         session.add(tables.BatchFile(filename=filename, file=file, batch=batch))
     session.add(batch)

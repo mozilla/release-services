@@ -7,6 +7,7 @@ import mock
 import moto
 import os
 
+from contextlib import contextmanager
 from datetime import datetime
 from datetime import timedelta
 from flask import current_app
@@ -19,6 +20,8 @@ from relengapi.lib.testing.context import TestContext
 DATA = os.urandom(10240)
 DATA_DIGEST = hashlib.sha512(DATA).hexdigest()
 DATA_KEY = '/sha512/{}'.format(DATA_DIGEST)
+
+NOW = 1425592922
 
 cfg = {
     'AWS': {
@@ -65,6 +68,13 @@ def key_exists(app, region, bucket, key):
     return bucket.get_key(key)
 
 
+@contextmanager
+def set_time(now=NOW):
+    with mock.patch('time.time') as fake:
+        fake.return_value = now
+        yield
+
+
 @moto.mock_s3
 @test_context
 def test_verify_file_instance_bad_size(app):
@@ -97,8 +107,21 @@ def test_verify_file_instance(app):
 
 
 @test_context
-def test_check_pending_upload_expired(app):
-    """check_pending_upload deletes an expired pending upload"""
+def test_check_pending_upload_not_expired(app):
+    """check_pending_upload doesn't check anything if the URL isn't expired yet"""
+    with app.app_context(), set_time():
+        expires = time.now() + timedelta(seconds=10)  # 10s shy
+        pu_row, file_row = add_pending_upload_and_file_row(
+            len(DATA), DATA_DIGEST, expires, 'us-west-2')
+        session = app.db.session('tooltool')
+        grooming.check_pending_upload(session, pu_row)
+        session.commit()
+        eq_(len(tables.PendingUpload.query.all()), 1)  # PU still exists
+
+
+@test_context
+def test_check_pending_upload_abandoned(app):
+    """check_pending_upload deletes an abandoned pending upload when it's very old"""
     with app.app_context():
         pu_row, file_row = add_pending_upload_and_file_row(
             len(DATA), DATA_DIGEST, datetime(1999, 1, 1), 'us-west-2')
@@ -112,8 +135,8 @@ def test_check_pending_upload_expired(app):
 @test_context
 def test_check_pending_upload_bad_region(app):
     """check_pending_upload deletes a pending upload with a bad region"""
-    with app.app_context():
-        expires = time.now() + timedelta(days=1)
+    with app.app_context(), set_time():
+        expires = time.now() - timedelta(seconds=90)
         pu_row, file_row = add_pending_upload_and_file_row(
             len(DATA), DATA_DIGEST, expires, 'us-west-1')
         session = app.db.session('tooltool')
@@ -127,8 +150,8 @@ def test_check_pending_upload_bad_region(app):
 def test_check_pending_upload_no_upload(app):
     """check_pending_upload leaves the PU in place if the upload is
     not complete"""
-    with app.app_context():
-        expires = time.now() + timedelta(days=1)
+    with app.app_context(), set_time():
+        expires = time.now() - timedelta(seconds=90)
         pu_row, file_row = add_pending_upload_and_file_row(
             len(DATA), DATA_DIGEST, expires, 'us-west-2')
         session = app.db.session('tooltool')
@@ -143,8 +166,8 @@ def test_check_pending_upload_no_upload(app):
 def test_check_pending_upload_not_valid(app):
     """check_pending_upload deletes the PU and the key if the upload is
     invalid."""
-    with app.app_context():
-        expires = time.now() + timedelta(days=1)
+    with app.app_context(), set_time():
+        expires = time.now() - timedelta(seconds=90)
         pu_row, file_row = add_pending_upload_and_file_row(
             len(DATA), DATA_DIGEST, expires, 'us-west-2')
         make_key(app, 'us-west-2', 'tt-usw2', DATA_KEY, 'xxx')
@@ -159,8 +182,8 @@ def test_check_pending_upload_not_valid(app):
 @test_context
 def test_check_pending_upload_success(app):
     """check_pending_upload deletes the PU and adds a FileInstance if valid"""
-    with app.app_context():
-        expires = time.now() + timedelta(days=1)
+    with app.app_context(), set_time():
+        expires = time.now() - timedelta(seconds=90)
         pu_row, file_row = add_pending_upload_and_file_row(
             len(DATA), DATA_DIGEST, expires, 'us-west-2')
         make_key(app, 'us-west-2', 'tt-usw2', DATA_KEY, DATA)
@@ -175,8 +198,8 @@ def test_check_pending_upload_success(app):
 @test_context
 def test_check_pending_uploads(app):
     """check_pending_uploads calls check_pending_upload for each PU"""
-    with app.app_context():
-        expires = time.now() + timedelta(days=1)
+    with app.app_context(), set_time():
+        expires = time.now() - timedelta(seconds=90)
         pu_row, file_row = add_pending_upload_and_file_row(
             len(DATA), DATA_DIGEST, expires, 'us-west-2')
         with mock.patch('relengapi.blueprints.tooltool.grooming.check_pending_upload') as cpu:
@@ -189,8 +212,8 @@ def test_check_pending_uploads(app):
 @test_context
 def test_check_file_pending_uploads(app):
     """check_file_pending_uploads calls check_pending_upload for each PU for the file"""
-    with app.app_context():
-        expires = time.now() + timedelta(days=1)
+    with app.app_context(), set_time():
+        expires = time.now() - timedelta(seconds=90)
         pu_row, file_row = add_pending_upload_and_file_row(
             len(DATA), DATA_DIGEST, expires, 'us-west-2')
         with mock.patch('relengapi.blueprints.tooltool.grooming.check_pending_upload') as cpu:

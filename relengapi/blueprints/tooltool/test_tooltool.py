@@ -342,7 +342,7 @@ def test_upload_batch_success_fresh(client, app):
                     'size': len(ONE),
                     'digest': ONE_DIGEST}})
         assert_signed_url(result['files']['one']['put_url'], ONE_DIGEST,
-                          method='PUT', expires_in=3600)
+                          method='PUT', expires_in=60)
 
     assert_batch_row(
         app, result['id'], files=[('one', len(ONE), ONE_DIGEST, [])])
@@ -367,7 +367,7 @@ def test_upload_batch_success_no_instances(client, app):
                     'size': len(ONE),
                     'digest': ONE_DIGEST}})
         assert_signed_url(result['files']['one']['put_url'], ONE_DIGEST,
-                          method='PUT', expires_in=3600)
+                          method='PUT', expires_in=60)
 
     assert_batch_row(
         app, result['id'], files=[('one', len(ONE), ONE_DIGEST, [])])
@@ -405,7 +405,7 @@ def test_upload_batch_success_some_existing_files(client, app):
         # no put_url for the existing file
         assert 'put_url' not in result['files']['one']
         assert_signed_url(result['files']['two']['put_url'], TWO_DIGEST,
-                          method='PUT', expires_in=3600, region='us-west-2')
+                          method='PUT', expires_in=60, region='us-west-2')
 
     assert_batch_row(app, result['id'],
                      files=[
@@ -764,3 +764,5 @@ def test_multi_op_patch(app, client):
         f = tables.File.query.first()
         eq_(f.visibility, 'public')
         eq_(f.instances, [])
+
+# TODO: test new upload while existing PU still exists
