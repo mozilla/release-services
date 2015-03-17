@@ -37,8 +37,12 @@ p.tooltool.download.internal.doc("Download INTERNAL files from tooltool")
 p.tooltool.upload.internal.doc("Upload INTERNAL files to tooltool")
 p.tooltool.manage.doc("Manage tooltool files, including deleting and changing visibility levels")
 
+# This value should be fairly short (and its value is included in the
+# `upload_batch` docstring).  Uploads cannot be validated until this
+# time has elapsed, otherwise a malicious uploader could alter a file
+# after it had been verified.
+UPLOAD_EXPIRES_IN = 60
 GET_EXPIRES_IN = 60
-UPLOAD_EXPIRES_IN = 3600
 
 
 def get_region_and_bucket(region_arg):
@@ -80,11 +84,18 @@ def upload_batch(region=None, body=None):
     resulting signed URLs are valid for one hour, so uploads should begin
     within that timeframe.  Consider using Amazon's MD5-verification
     capabilities to ensure that the uploaded files are transferred correctly,
-    although the tooltool server will verify the integrity anyway.
+    although the tooltool server will verify the integrity anyway.  The
+    upload must have the header ``Content-Type: application/octet-stream```.
 
     The query argument ``region=us-west-1`` indicates a preference for URLs
     in that region, although if the region is not available then URLs in
-    other regions may be returned."""
+    other regions may be returned.
+
+    The returned URLs are only valid for 60 seconds, so all upload requests
+    must begin within that timeframe.  Clients should therefore perform all
+    uploads in parallel, rather than sequentially.  This limitation is in
+    place to prevent malicious modification of files after they have been
+    verified."""
     region, bucket = get_region_and_bucket(region)
 
     if not body.message:
