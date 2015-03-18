@@ -104,8 +104,8 @@ def check_pending_upload(session, pu):
         session.delete(pu)
         return
 
-    fi = tables.FileInstance(file=pu.file, region=pu.region)
-    session.add(fi)
+    log.info("Upload of {} considered valid".format(pu.file.sha512))
+    tables.FileInstance(file=pu.file, region=pu.region)
     session.delete(pu)
 
     # note that we don't try to copy the file out just yet; that can wait for
