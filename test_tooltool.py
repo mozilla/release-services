@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import cStringIO
 import copy
 import hashlib
 import json
@@ -920,7 +921,7 @@ class AddFiles(BaseManifestTest):
         """Adding a file to a manifest that is already in that manifest fails"""
         assert not tooltool.add_files('manifest.tt', 'sha512',
                                       [os.path.join(os.path.dirname(__file__),
-                                                    'test_file.ogg')])
+                                                    self.sample_file)])
         self.assert_manifest([self.test_record_json])
 
     def test_filename_already_exists(self):
@@ -930,3 +931,48 @@ class AddFiles(BaseManifestTest):
         assert not tooltool.add_files('manifest.tt', 'sha512',
                                       [self.sample_file])
         self.assert_manifest([self.test_record_json])
+
+
+class ValidateManifest(BaseManifestTest):
+
+    def test_validate_exists(self):
+        sample_file_src = os.path.join(os.path.dirname(__file__), self.sample_file)
+        shutil.copyfile(sample_file_src, self.sample_file)
+        assert tooltool.validate_manifest('manifest.tt')
+
+    def test_validate_missing_files(self):
+        assert not tooltool.validate_manifest('manifest.tt')
+
+    def test_validate_invalid_files(self):
+        open(self.sample_file, "w").write("BOGUS")
+        assert not tooltool.validate_manifest('manifest.tt')
+
+    def test_validate_invalid_manifest(self):
+        open('manifest.tt', "w").write("BOGUS")
+        assert not tooltool.validate_manifest('manifest.tt')
+
+
+class ListManifest(BaseManifestTest):
+
+    def test_list(self):
+        # add two files
+        open("foo.txt", "w").write("FOO!")
+        open("bar.txt", "w").write("BAR!")
+        tooltool.add_files('manifest.tt', 'sha512', ['foo.txt', 'bar.txt'])
+        open("bar.txt", "w").write("bar is invalid")
+        old_stdout = sys.stdout
+        sys.stdout = cStringIO.StringIO()
+        try:
+            assert tooltool.list_manifest('manifest.tt')
+        finally:
+            output = sys.stdout.getvalue()
+            sys.stdout = old_stdout
+        eq_(sorted(output.strip().split('\n')), sorted([
+            '-\t-\ttest_file.ogg',
+            'P\t-\tbar.txt',
+            'P\tV\tfoo.txt',
+        ]))
+
+    def test_list_invalid_manifest(self):
+        open("manifest.tt", "w").write("BOGUS")
+        assert not tooltool.list_manifest("manifest.tt")

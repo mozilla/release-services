@@ -344,7 +344,6 @@ def open_manifest(manifest_file):
             "manifest file '%s' does not exist" % manifest_file)
 
 
-# TODO: write tests for this function
 def list_manifest(manifest_file):
     """I know how print all the files in a location"""
     try:
