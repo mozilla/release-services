@@ -45,6 +45,12 @@ class BaseFileRecordTest(unittest.TestCase):
             digest=self.sample_hash,
             algorithm=self.sample_algo
         )
+        self.test_record_json = {
+            'filename': self.sample_file,
+            'algorithm': self.sample_algo,
+            'digest': self.sample_hash,
+            'size': self.sample_size,
+        }
         # using mkstemp to ensure that the filename generated
         # isn't actually on the system.
         (tmpfd, filename) = tempfile.mkstemp()
@@ -64,6 +70,26 @@ class BaseFileRecordListTest(BaseFileRecordTest):
             record = copy.deepcopy(self.test_record)
             record.algorithm = i
             self.record_list.append(record)
+
+
+class BaseManifestTest(BaseFileRecordTest):
+
+    def setUp(self):
+        BaseFileRecordTest.setUp(self)
+        self.sample_manifest = tooltool.Manifest([self.test_record])
+        self.sample_manifest_file = 'manifest.tt'
+        self.test_dir = 'test-dir'
+        self.startingwd = os.getcwd()
+        if os.path.exists(self.test_dir):
+            shutil.rmtree(self.test_dir)
+        os.mkdir(self.test_dir)
+        with open(os.path.join(self.test_dir, self.sample_manifest_file), 'w') as tmpfile:
+            self.sample_manifest.dump(tmpfile, fmt='json')
+        os.chdir(self.test_dir)
+
+    def tearDown(self):
+        os.chdir(self.startingwd)
+        shutil.rmtree(self.test_dir)
 
 
 class TestFileRecord(BaseFileRecordTest):
@@ -332,24 +358,7 @@ class TestManifest(BaseFileRecordTest):
                           manifest.loads, empty, fmt='json')
 
 
-class TestManifestOperations(BaseFileRecordTest):
-
-    def setUp(self):
-        BaseFileRecordTest.setUp(self)
-        self.sample_manifest = tooltool.Manifest([self.test_record])
-        self.sample_manifest_file = '.testmanifest'
-        self.test_dir = 'test-dir'
-        self.startingwd = os.getcwd()
-        if os.path.exists(self.test_dir):
-            shutil.rmtree(self.test_dir)
-        os.mkdir(self.test_dir)
-        with open(os.path.join(self.test_dir, self.sample_manifest_file), 'w') as tmpfile:
-            self.sample_manifest.dump(tmpfile, fmt='json')
-        os.chdir(self.test_dir)
-
-    def tearDown(self):
-        os.chdir(self.startingwd)
-        shutil.rmtree(self.test_dir)
+class TestManifestOperations(BaseManifestTest):
 
     def test_open_manifest(self):
         manifest = tooltool.open_manifest(self.sample_manifest_file)
@@ -873,3 +882,51 @@ class PurgeTests(unittest.TestCase):
         # we can't set up a dedicated partition for this test, so just assume
         # the disk isn't full (other tests assume this too, really)
         assert tooltool.freespace(self.test_dir) > 0
+
+
+class AddFiles(BaseManifestTest):
+
+    def assert_manifest(self, exp_manifest, manifest=None):
+        got_manifest = json.load(open(manifest or self.sample_manifest_file))
+        got_manifest.sort(key=lambda f: f['digest'])
+        exp_manifest.sort(key=lambda f: f['digest'])
+        eq_(got_manifest, exp_manifest)
+
+    def make_file(self, filename="a_file"):
+        data = os.urandom(100)
+        open(filename, "w").write(data)
+        return {
+            'filename': filename,
+            'algorithm': 'sha512',
+            'digest': hashlib.sha512(data).hexdigest(),
+            'size': len(data)
+        }
+
+    def test_append(self):
+        """Adding a new file to an existing manifest results in a manifest with
+        two files"""
+        file_json = self.make_file()
+        assert tooltool.add_files('manifest.tt', 'sha512', [file_json['filename']])
+        self.assert_manifest([self.test_record_json, file_json])
+
+    def test_new_manifest(self):
+        """Adding a new file to a new manifest results in a manifest with one
+        file"""
+        file_json = self.make_file()
+        assert tooltool.add_files('new_manifest.tt', 'sha512', [file_json['filename']])
+        self.assert_manifest([file_json], manifest='new_manifest.tt')
+
+    def test_file_already_exists(self):
+        """Adding a file to a manifest that is already in that manifest fails"""
+        assert not tooltool.add_files('manifest.tt', 'sha512',
+                                      [os.path.join(os.path.dirname(__file__),
+                                                    'test_file.ogg')])
+        self.assert_manifest([self.test_record_json])
+
+    def test_filename_already_exists(self):
+        """Adding a file to a manifest that has the same name as an existing
+        file fails"""
+        self.make_file(self.sample_file)
+        assert not tooltool.add_files('manifest.tt', 'sha512',
+                                      [self.sample_file])
+        self.assert_manifest([self.test_record_json])

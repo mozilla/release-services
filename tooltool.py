@@ -387,7 +387,6 @@ def validate_manifest(manifest_file):
         return False
 
 
-# TODO: write tests for this function
 def add_files(manifest_file, algorithm, filenames, create_package=False):
     # returns True if all files successfully added, False if not
     # and doesn't catch library Exceptions.  If any files are already
@@ -405,7 +404,8 @@ def add_files(manifest_file, algorithm, filenames, create_package=False):
         log.debug("adding %s" % filename)
         path, name = os.path.split(filename)
         new_fr = create_file_record(filename, algorithm)
-        if create_package:
+        if create_package:  # pragma: no cover
+            # this is going to go away with the `package` action
             shutil.copy(filename,
                         os.path.join(os.path.split(manifest_file)[0], new_fr.digest))
             log.debug("Added file %s to tooltool package %s with hash %s" % (
@@ -415,15 +415,11 @@ def add_files(manifest_file, algorithm, filenames, create_package=False):
         for fr in old_manifest.file_records:
             log.debug("manifest file has '%s'" % "', ".join(
                 [x.filename for x in old_manifest.file_records]))
-            if new_fr == fr and new_fr.validate():
-                # TODO: Decide if this case should really cause a False return
-                log.info("file already in old_manifest file and matches")
+            if new_fr == fr:
+                log.info("file already in old_manifest")
                 add = False
-            elif new_fr == fr and not new_fr.validate():
-                log.error("file already in old_manifest file but is invalid")
-                add = False
-            if filename == fr.filename:
-                log.error("manifest already contains file named %s" % filename)
+            elif filename == fr.filename:
+                log.error("manifest already contains a different file named %s" % filename)
                 add = False
         if add:
             new_manifest.file_records.append(new_fr)
