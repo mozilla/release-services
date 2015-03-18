@@ -320,6 +320,7 @@ def digest_file(f, a):
 
 def execute(cmd):
     """Execute CMD, logging its stdout at the info level"""
+    # TODO: capture stderr, too
     process = Popen(cmd, shell=True, stdout=PIPE)
     while True:
         line = process.stdout.readline()

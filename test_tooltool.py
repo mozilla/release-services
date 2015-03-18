@@ -715,6 +715,10 @@ class FetchTests(unittest.TestCase):
         self.setup_tarball('tar -cjf basename.tar.bz2 basename')
         self.try_untar_file('basename.tar.bz2')
 
+    def test_untar_file_invalid_xz(self):
+        self.setup_tarball('echo BOGUS > basename.tar.xz')
+        self.assertFalse(tooltool.untar_file('basename.tar.xz'))
+
     def test_untar_file_not_tarfile(self):
         open('basename.tar.shrink', 'w').write('not a tarfile')
         self.assertFalse(tooltool.untar_file('basename.tar.shrink'))
