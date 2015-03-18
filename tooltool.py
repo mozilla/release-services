@@ -542,8 +542,6 @@ def untar_file(filename):
         return False
     return True
 
-# TODO: write tests for this function
-
 
 def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None, auth_file=None):
     # Lets load the manifest file
@@ -665,6 +663,7 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None, auth_
         else:
             failed_files.append(localfile.filename)
             log.error("'%s'" % filerecord_for_validation.describe())
+            os.remove(temp_file_name)
 
     # Unpack files that need to be unpacked.
     for filename in unpack_files:

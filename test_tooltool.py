@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import copy
+import hashlib
 import json
 import mock
 import os
@@ -468,3 +469,238 @@ class PurgeTests(unittest.TestCase):
         # we can't set up a dedicated partition for this test, so just assume
         # the disk isn't full (other tests assume this too, really)
         assert tooltool.freespace(self.test_dir) > 0
+
+
+class FetchTests(unittest.TestCase):
+
+    _server_files = ['one', 'two', 'three']
+    server_files_by_hash = {hashlib.sha512(v).hexdigest(): v
+                            for v in _server_files}
+    server_corrupt = False
+    urls = ['http://a', 'http://2']
+
+    def setUp(self):
+        self.test_dir = os.path.abspath('test-dir')
+        self.startingwd = os.getcwd()
+        if os.path.exists(self.test_dir):
+            shutil.rmtree(self.test_dir)
+        os.mkdir(self.test_dir)
+        self.cache_dir = os.path.join(self.test_dir, 'cache')
+        # fetch expects to work in the cwd
+        os.chdir(self.test_dir)
+
+    def tearDown(self):
+        os.chdir(self.startingwd)
+        shutil.rmtree(self.test_dir)
+
+    def fake_fetch_file(self, urls, file_record, auth_file=None):
+        eq_(urls, self.urls)
+        if file_record.digest in self.server_files_by_hash:
+            if self.server_corrupt:
+                content = 'XXX'
+            else:
+                content = self.server_files_by_hash[file_record.digest]
+            fd, temp_path = tempfile.mkstemp(dir=self.test_dir)
+            os.write(fd, content)
+            os.close(fd)
+            return os.path.split(temp_path)[1]
+        else:
+            return None
+
+    def add_file_to_dir(self, file, corrupt=False):
+        content = 'X' * len(file) if corrupt else file
+        open(os.path.join(self.test_dir, "file-{}".format(file)), "w").write(content)
+
+    def add_file_to_cache(self, file, corrupt=False):
+        if not os.path.exists(self.cache_dir):
+            os.mkdir(self.cache_dir)
+        digest = hashlib.sha512(file).hexdigest()
+        content = 'X' * len(file) if corrupt else file
+        open(os.path.join(self.cache_dir, digest), "w").write(content)
+
+    def make_manifest(self, filename, *files, **kwargs):
+        unpack = kwargs.pop('unpack', False)
+        manifest = []
+        for file in files:
+            manifest.append({
+                'filename': 'file-{}'.format(file),
+                'size': len(file),
+                'algorithm': 'sha512',
+                'digest': hashlib.sha512(file).hexdigest(),
+                'unpack': unpack,
+            })
+        json.dump(manifest, open(filename, "w"))
+
+    def assert_files(self, *files):
+        eq_(sorted([f for f in os.listdir(self.test_dir)
+                    if f != 'cache' and not f.endswith('.tt')]),
+            sorted(['file-' + f for f in files]))
+        for f in files:
+            eq_(open('file-' + f).read(), f)
+
+    def assert_cached_files(self, *files):
+        if not files and not os.path.exists(self.cache_dir):
+            return
+        hashes = [hashlib.sha512(f).hexdigest() for f in files]
+        eq_(sorted(os.listdir(self.cache_dir)), sorted(hashes))
+        for f, h in zip(files, hashes):
+            eq_(open(os.path.join(self.cache_dir, h)).read(), f)
+
+    # tests
+
+    def test_no_manifest(self):
+        """If the given manifest isn't present, fetch_files fails"""
+        eq_(tooltool.fetch_files('not-present.tt', self.urls), False)
+
+    def test_all_present(self):
+        """When all expected files are present, fetch_files does not fetch anything"""
+        self.add_file_to_dir('one')
+        self.add_file_to_dir('two')
+        self.make_manifest('manifest.tt', 'one', 'two')
+        with mock.patch('tooltool.fetch_file') as fetch_file:
+            fetch_file.side_effect = RuntimeError
+            eq_(tooltool.fetch_files('manifest.tt', self.urls, cache_folder='cache'),
+                True)
+        self.assert_files('one', 'two')
+        self.assert_cached_files()
+
+    def test_all_cached(self):
+        """When all expected files are in the cache, fetch_files copies but
+        does not fetch"""
+        self.add_file_to_cache('one')
+        self.add_file_to_cache('two')
+        self.make_manifest('manifest.tt', 'one', 'two')
+        with mock.patch('tooltool.fetch_file') as fetch_file:
+            fetch_file.side_effect = RuntimeError
+            eq_(tooltool.fetch_files('manifest.tt', self.urls, cache_folder='cache'),
+                True)
+        self.assert_files('one', 'two')
+        self.assert_cached_files('one', 'two')
+
+    def test_all_missing(self):
+        """When all expected files are not found, they are fetched."""
+        self.make_manifest('manifest.tt', 'one', 'two')
+        with mock.patch('tooltool.fetch_file') as fetch_file:
+            fetch_file.side_effect = self.fake_fetch_file
+            eq_(tooltool.fetch_files('manifest.tt', self.urls, cache_folder='cache'),
+                True)
+        self.assert_files('one', 'two')
+        self.assert_cached_files('one', 'two')
+
+    def test_missing_not_on_server(self):
+        """When the file is missing everywhere including the server, fetch fails"""
+        self.make_manifest('manifest.tt', 'ninetynine')
+        with mock.patch('tooltool.fetch_file') as fetch_file:
+            fetch_file.side_effect = self.fake_fetch_file
+            eq_(tooltool.fetch_files('manifest.tt', self.urls, cache_folder='cache'),
+                False)
+        self.assert_files()
+        self.assert_cached_files()
+
+    def test_missing_corrupt_on_server(self):
+        """When the file is missing everywhere and coorrupt the server, fetch fails"""
+        self.make_manifest('manifest.tt', 'one')
+        with mock.patch('tooltool.fetch_file') as fetch_file:
+            self.server_corrupt = True
+            fetch_file.side_effect = self.fake_fetch_file
+            eq_(tooltool.fetch_files('manifest.tt', self.urls, cache_folder='cache'),
+                False)
+        self.assert_files()
+        self.assert_cached_files()
+
+    def test_local_corrupt_but_cached(self):
+        """When the local files are corrupt but the cache is OK, the cache is used"""
+        self.add_file_to_dir('one', corrupt=True)
+        self.add_file_to_cache('one')
+        self.make_manifest('manifest.tt', 'one')
+        with mock.patch('tooltool.fetch_file') as fetch_file:
+            fetch_file.side_effect = RuntimeError
+            eq_(tooltool.fetch_files('manifest.tt', self.urls, cache_folder='cache'),
+                True)
+        self.assert_files('one')
+        self.assert_cached_files('one')
+
+    def test_local_missing_cache_corrupt(self):
+        """When the local files are missing  and the cache is corrupt, fetch"""
+        self.add_file_to_cache('one', corrupt=True)
+        self.make_manifest('manifest.tt', 'one')
+        with mock.patch('tooltool.fetch_file') as fetch_file:
+            fetch_file.side_effect = self.fake_fetch_file
+            eq_(tooltool.fetch_files('manifest.tt', self.urls, cache_folder='cache'),
+                True)
+        self.assert_files('one')
+        self.assert_cached_files('one')
+
+    def test_missing_unwritable_cache(self):
+        """If fetch downloads files but can't write to the cache, it still succeeds"""
+        self.make_manifest('manifest.tt', 'one')
+        os.mkdir(self.cache_dir, 0o500)
+        try:
+            with mock.patch('tooltool.fetch_file') as fetch_file:
+                fetch_file.side_effect = self.fake_fetch_file
+                eq_(tooltool.fetch_files('manifest.tt', self.urls, cache_folder='cache'),
+                    True)
+            self.assert_files('one')
+            self.assert_cached_files()
+        finally:
+            os.chmod(self.cache_dir, 0o700)
+
+    def test_mixed(self):
+        """fetch creates a dir containing the right files given a mix of file states"""
+        self.add_file_to_dir('one', corrupt=True)
+        self.add_file_to_cache('two', corrupt=True)
+        self.add_file_to_dir('four')
+        self.add_file_to_cache('five')
+        self.make_manifest('manifest.tt', 'one', 'two', 'three', 'four', 'five')
+        with mock.patch('tooltool.fetch_file') as fetch_file:
+            fetch_file.side_effect = self.fake_fetch_file
+            eq_(tooltool.fetch_files('manifest.tt', self.urls, cache_folder='cache'),
+                True)
+        self.assert_files('one', 'two', 'three', 'four', 'five')
+        self.assert_cached_files('one', 'two', 'three', 'five')
+
+    def test_file_list(self):
+        """fetch only fetches the files requested in the file list"""
+        self.add_file_to_dir('one')
+        self.add_file_to_cache('five')
+        self.make_manifest('manifest.tt', 'one', 'five', 'nine')
+        with mock.patch('tooltool.fetch_file') as fetch_file:
+            fetch_file.side_effect = self.fake_fetch_file
+            eq_(tooltool.fetch_files('manifest.tt', self.urls,
+                                     cache_folder='cache',
+                                     filenames=['five']),
+                True)
+        self.assert_files('one', 'five')
+        self.assert_cached_files('five')
+
+    def test_unpack(self):
+        """When asked to unpack files, fetch calls untar_file."""
+        self.add_file_to_dir('four')
+        self.add_file_to_cache('five')
+        self.make_manifest('manifest.tt', 'three', 'four', 'five', unpack=True)
+        with mock.patch('tooltool.fetch_file') as fetch_file:
+            fetch_file.side_effect = self.fake_fetch_file
+            with mock.patch('tooltool.untar_file') as untar_file:
+                eq_(tooltool.fetch_files('manifest.tt', self.urls,
+                                         cache_folder='cache'),
+                    True)
+                untar_file.assert_has_calls([
+                    mock.call('file-three'),
+                    mock.call('file-four'),
+                    mock.call('file-five'),
+                ], any_order=True)
+        self.assert_files('three', 'four', 'five')
+        self.assert_cached_files('three', 'five')
+
+    def test_unpack_fails(self):
+        """When asked to unpack files, and the unpack fails, fetch fails."""
+        self.make_manifest('manifest.tt', 'one', unpack=True)
+        with mock.patch('tooltool.fetch_file') as fetch_file:
+            fetch_file.side_effect = self.fake_fetch_file
+            with mock.patch('tooltool.untar_file') as untar_file:
+                untar_file.side_effect = lambda f: False
+                eq_(tooltool.fetch_files('manifest.tt', self.urls,
+                                         cache_folder='cache'),
+                    False)
+                untar_file.assert_called_with('file-one')
+        self.assert_files('one')
