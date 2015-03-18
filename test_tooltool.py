@@ -784,6 +784,26 @@ class FetchFileTests(BaseFileRecordTest):
             assert filename is None
 
 
+def test_urlopen_no_auth_file():
+    with mock.patch("urllib2.urlopen") as urlopen:
+        tooltool._urlopen("url")
+        urlopen.assert_called_with("url")
+
+
+def test_touch():
+    open("testfile", "w")
+    os.utime("testfile", (0, 0))
+    tooltool.touch("testfile")
+    assert os.stat("testfile").st_mtime > 0
+    os.unlink("testfile")
+
+
+def test_touch_doesnt_exit():
+    assert not os.path.exists("testfile")
+    tooltool.touch("testfile")
+    assert not os.path.exists("testfile")
+
+
 class PurgeTests(unittest.TestCase):
 
     def setUp(self):

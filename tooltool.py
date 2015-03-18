@@ -450,7 +450,9 @@ def touch(f):
 
 
 def _urlopen(url, auth_file=None):
-    if auth_file:
+    if auth_file:  # pragma: no cover
+        # this is particularly hard to mock, and will change completely with
+        # the new tooltool anyway.
         with open(auth_file, 'r') as fHandle:
             data = fHandle.read()
         data = data.split('\n')
