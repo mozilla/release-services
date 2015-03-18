@@ -86,8 +86,8 @@ def check_pending_upload(session, pu):
     s3 = current_app.aws.connect_to('s3', pu.region)
     cfg = current_app.config.get('TOOLTOOL_REGIONS')
     if not cfg or pu.region not in cfg:
-        log.info("Pending upload for {} was to an un-configured "
-                 "region".format(pu.file.sha512))
+        log.warning("Pending upload for {} was to an un-configured "
+                    "region".format(pu.file.sha512))
         session.delete(pu)
         return
 
