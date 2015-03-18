@@ -465,8 +465,6 @@ def _urlopen(url, auth_file=None):
 
     return urllib2.urlopen(url)
 
-# TODO: write tests for this function
-
 
 def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None):
     # A file which is requested to be fetched that exists locally will be
@@ -505,8 +503,8 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None):
             log.info("...failed to fetch '%s' from %s" %
                      (file_record.filename, base_url))
             log.debug("%s" % e)
-        except IOError:
-            log.info("failed to write to '%s'" %
+        except IOError:  # pragma: no cover
+            log.info("failed to write to temporary file for '%s'" %
                      file_record.filename, exc_info=True)
 
     # cleanup temp file in case of issues
@@ -515,7 +513,7 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None):
     else:
         try:
             os.remove(temp_path)
-        except OSError:
+        except OSError:  # pragma: no cover
             pass
         return None
 

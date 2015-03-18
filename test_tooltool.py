@@ -12,6 +12,7 @@ import sys
 import tempfile
 import tooltool
 import unittest
+import urllib2
 
 from nose.tools import eq_
 
@@ -722,6 +723,65 @@ class FetchTests(unittest.TestCase):
     def test_untar_file_not_tarfile(self):
         open('basename.tar.shrink', 'w').write('not a tarfile')
         self.assertFalse(tooltool.untar_file('basename.tar.shrink'))
+
+
+class FetchFileTests(BaseFileRecordTest):
+
+    def fake_urlopen(self, mock, data, exp_size=4096, exp_auth_file=None):
+        self.url_data = data
+
+        def fake_read(url, size):
+            eq_(size, exp_size)
+            remaining = data[url]
+            rv, remaining = remaining[:size], remaining[size:]
+            data[url] = remaining
+            return rv
+
+        def urlopen(url, auth_file):
+            eq_(auth_file, exp_auth_file)
+            if url not in data:
+                raise urllib2.URLError("bogus url")
+            m = mock.Mock()
+            m.read = lambda size: fake_read(url, size)
+            return m
+        mock.side_effect = urlopen
+
+    def test_fetch_file(self):
+        with mock.patch('tooltool._urlopen') as _urlopen:
+            # the first URL doesn't match, so this loops twice
+            self.fake_urlopen(_urlopen, {'http://b/sha512/{}'.format(self.sample_hash): 'abcd'})
+            filename = tooltool.fetch_file(['http://a', 'http://b'], self.test_record)
+            assert filename
+            eq_(open(filename).read(), 'abcd')
+            os.unlink(filename)
+
+    def test_fetch_file_size(self):
+        with mock.patch('tooltool._urlopen') as _urlopen:
+            # the first URL doesn't match, so this loops twice
+            self.fake_urlopen(
+                _urlopen, {'http://b/sha512/{}'.format(self.sample_hash): 'abcd'}, exp_size=1024)
+            filename = tooltool.fetch_file(
+                ['http://a', 'http://b'], self.test_record, grabchunk=1024)
+            assert filename
+            eq_(open(filename).read(), 'abcd')
+            os.unlink(filename)
+
+    def test_fetch_file_auth_file(self):
+        with mock.patch('tooltool._urlopen') as _urlopen:
+            # the first URL doesn't match, so this loops twice
+            self.fake_urlopen(_urlopen, {'http://b/sha512/{}'.format(self.sample_hash): 'abcd'},
+                              exp_auth_file='auth')
+            filename = tooltool.fetch_file(
+                ['http://a', 'http://b'], self.test_record, auth_file='auth')
+            assert filename
+            eq_(open(filename).read(), 'abcd')
+            os.unlink(filename)
+
+    def test_fetch_file_fails(self):
+        with mock.patch('tooltool._urlopen') as _urlopen:
+            self.fake_urlopen(_urlopen, {})
+            filename = tooltool.fetch_file(['http://a'], self.test_record)
+            assert filename is None
 
 
 class PurgeTests(unittest.TestCase):
