@@ -14,6 +14,7 @@ from flask.ext.login import current_user
 from relengapi.blueprints.tooltool import grooming
 from relengapi.blueprints.tooltool import tables
 from relengapi.blueprints.tooltool import types
+from relengapi.blueprints.tooltool import util
 from relengapi.lib import api
 from relengapi.lib import time
 from relengapi.lib.permissions import p
@@ -144,7 +145,7 @@ def upload_batch(region=None, body=None):
                     size=info.size)
             info.put_url = s3.generate_url(
                 method='PUT', expires_in=UPLOAD_EXPIRES_IN, bucket=bucket,
-                key='/sha512/{}'.format(info.digest),
+                key=util.keyname(info.digest),
                 headers={'Content-Type': 'application/octet-stream'})
             pu = tables.PendingUpload(
                 file=file,
@@ -224,7 +225,7 @@ def patch_file(digest, body):
         if 'op' not in change:
             raise BadRequest("no op")
         if change['op'] == 'delete_instances':
-            key_name = '/sha512/{}'.format(digest)
+            key_name = util.keyname(digest)
             cfg = current_app.config.get('TOOLTOOL_REGIONS')
             for i in file.instances:
                 conn = current_app.aws.connect_to('s3', i.region)
@@ -275,7 +276,7 @@ def download_file(digest, region=None):
         selected_region = random.choice([inst.region for inst in file_row.instances])
     bucket = cfg[selected_region]
 
-    key = '/sha512/{}'.format(digest)
+    key = util.keyname(digest)
 
     s3 = current_app.aws.connect_to('s3', selected_region)
     signed_url = s3.generate_url(

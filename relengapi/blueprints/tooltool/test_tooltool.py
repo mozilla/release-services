@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from nose.tools import eq_
 from relengapi.blueprints import tooltool
 from relengapi.blueprints.tooltool import tables
+from relengapi.blueprints.tooltool import util
 from relengapi.lib import auth
 from relengapi.lib import time as relengapi_time
 from relengapi.lib.permissions import p
@@ -99,7 +100,7 @@ def add_file_to_s3(app, content, region='us-east-1'):
         except boto.exception.S3ResponseError:
             conn.create_bucket(bucket_name)
         bucket = conn.get_bucket(bucket_name)
-        key_name = '/sha512/{}'.format(hashlib.sha512(content).hexdigest())
+        key_name = util.keyname(hashlib.sha512(content).hexdigest())
         key = bucket.new_key(key_name)
         key.set_contents_from_string(content)
 
@@ -137,7 +138,7 @@ def assert_signed_url(url, digest, method='GET', region=None,
     url = urlparse.urlparse(url)
     eq_(url.scheme, 'https')
     eq_(url.netloc, host)
-    eq_(url.path, '/sha512/{}'.format(digest))
+    eq_(url.path, '/' + util.keyname(digest))
     query = urlparse.parse_qs(url.query)
     assert 'Signature' in query
     # sadly, headers are not represented in the URL
@@ -707,7 +708,7 @@ def test_delete_instances_success(app, client):
         # and from S3
         conn = app.aws.connect_to('s3', 'us-east-1')
         key = conn.get_bucket(
-            'tt-use1').get_key('/sha512/{}'.format(ONE_DIGEST))
+            'tt-use1').get_key(util.keyname(ONE_DIGEST))
         assert not key, "key still exists"
 
 

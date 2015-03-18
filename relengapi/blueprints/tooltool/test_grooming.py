@@ -14,12 +14,13 @@ from flask import current_app
 from nose.tools import eq_
 from relengapi.blueprints.tooltool import grooming
 from relengapi.blueprints.tooltool import tables
+from relengapi.blueprints.tooltool import util
 from relengapi.lib import time
 from relengapi.lib.testing.context import TestContext
 
 DATA = os.urandom(10240)
 DATA_DIGEST = hashlib.sha512(DATA).hexdigest()
-DATA_KEY = '/sha512/{}'.format(DATA_DIGEST)
+DATA_KEY = util.keyname(DATA_DIGEST)
 
 NOW = 1425592922
 

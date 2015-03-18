@@ -8,6 +8,7 @@ import logging
 from datetime import timedelta
 from flask import current_app
 from relengapi.blueprints.tooltool import tables
+from relengapi.blueprints.tooltool import util
 from relengapi.lib import badpenny
 from relengapi.lib import celery
 from relengapi.lib import time
@@ -91,7 +92,7 @@ def check_pending_upload(session, pu):
         return
 
     bucket = s3.get_bucket(cfg[pu.region], validate=False)
-    key = bucket.get_key('/sha512/{}'.format(pu.file.sha512))
+    key = bucket.get_key(util.keyname(pu.file.sha512))
     if not key:
         # not uploaded yet
         return
