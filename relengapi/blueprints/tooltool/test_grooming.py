@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import boto
 import hashlib
 import mock
 import moto
@@ -37,10 +38,20 @@ cfg = {
 test_context = TestContext(config=cfg, databases=['tooltool'])
 
 
-def add_file_row(size, sha512):
+def assert_file_instances(app, digest, exp_regions):
+    with app.app_context():
+        tbl = tables.File
+        file = tbl.query.filter(tbl.sha512 == digest).first()
+        regions = [i.region for i in file.instances]
+        eq_(set(regions), set(exp_regions))
+
+
+def add_file_row(size, sha512, instances=[]):
     session = current_app.db.session('tooltool')
     file_row = tables.File(size=size, visibility='public', sha512=sha512)
     session.add(file_row)
+    for region in instances:
+        session.add(tables.FileInstance(file=file_row, region=region))
     session.commit()
     return file_row
 
@@ -55,9 +66,16 @@ def add_pending_upload_and_file_row(size, sha512, expires, region):
     return pu_row, file_row
 
 
-def make_key(app, region, bucket, key, content, storage_class='STANDARD'):
+def make_bucket(app, region, bucket):
     s3 = app.aws.connect_to('s3', region)
-    bucket = s3.create_bucket(bucket)
+    try:
+        return s3.create_bucket(bucket)
+    except boto.exception.S3ResponseError:
+        return s3.get_bucket(bucket)
+
+
+def make_key(app, region, bucket, key, content, storage_class='STANDARD'):
+    bucket = make_bucket(app, region, bucket)
     key = bucket.new_key(key)
     key.storage_class = storage_class
     key.set_contents_from_string(content)
@@ -75,6 +93,8 @@ def set_time(now=NOW):
     with mock.patch('time.time') as fake:
         fake.return_value = now
         yield
+
+# tests
 
 
 @moto.mock_s3
@@ -104,7 +124,8 @@ def test_verify_file_instance_bad_storage_class(app):
     """verify_file_instance returns False if the key's storage class is not STANDARD."""
     with app.app_context():
         file_row = add_file_row(len(DATA), DATA_DIGEST)
-        key = make_key(app, 'us-east-1', 'tt-use1', DATA_KEY, DATA, storage_class='RRS')
+        key = make_key(
+            app, 'us-east-1', 'tt-use1', DATA_KEY, DATA, storage_class='RRS')
         assert not grooming.verify_file_instance(file_row, key)
 
 
@@ -245,3 +266,67 @@ def test_check_file_pending_uploads(app):
             cpu.side_effect = lambda sess, pu: pending_uploads.append(pu)
             grooming.check_file_pending_uploads(DATA_DIGEST)
             assert len(pending_uploads) == 1
+
+
+@test_context
+def test_replicate(app):
+    """The periodic replication only tries to replicate files with at least one
+    but not a full set of instances."""
+    with app.app_context():
+        regions = sorted(cfg['TOOLTOOL_REGIONS'])
+        files = []
+        for i in range(0, len(regions) + 1):
+            data = os.urandom((i + 1) * 1024)
+            data_digest = hashlib.sha512(data).hexdigest()
+            files.append((add_file_row(len(data),
+                                       data_digest,
+                                       instances=regions[:i]),
+                          0 < i < len(regions)))
+        with mock.patch('relengapi.blueprints.tooltool.grooming.replicate_file') as rep_file:
+            grooming.replicate(None)
+        replicated_files = [call[1][1] for call in rep_file.mock_calls]
+        exp_replicated_files = [
+            file for file, should_replicate in files if should_replicate]
+        eq_(replicated_files, exp_replicated_files)
+
+
+@test_context
+def test_replicate_file_no_instances(app):
+    """When a file has no instances matching the config, replicate_file does
+    nothing."""
+    with app.app_context():
+        # us-west-1 isn't in cfg['TOOLTOOL_REGIONS']
+        file = add_file_row(len(DATA), DATA_DIGEST, instances=['us-west-1'])
+        grooming.replicate_file(app.db.session('tooltool'), file)
+    assert_file_instances(app, DATA_DIGEST, ['us-west-1'])
+
+
+@moto.mock_s3
+@test_context
+def test_replicate_file_already_exists(app):
+    """If a target object already exists in S3 during replication, it is
+    deleted rather than being trusted to be correct."""
+    with app.app_context():
+        file = add_file_row(len(DATA), DATA_DIGEST, instances=['us-east-1'])
+        make_key(app, 'us-east-1', 'tt-use1', util.keyname(DATA_DIGEST), DATA)
+        make_key(app, 'us-west-2', 'tt-usw2', util.keyname(DATA_DIGEST), "BAD")
+        grooming.replicate_file(app.db.session('tooltool'), file)
+    assert_file_instances(app, DATA_DIGEST, ['us-east-1', 'us-west-2'])
+    assert key_exists(app, 'us-east-1', 'tt-use1', util.keyname(DATA_DIGEST))
+    k = key_exists(app, 'us-west-2', 'tt-usw2', util.keyname(DATA_DIGEST))
+    eq_(k.get_contents_as_string(), DATA)  # not "BAD"
+
+
+@moto.mock_s3
+@test_context
+def test_replicate_file(app):
+    """Replicating a file initiates copy operations from regions where the file
+    exists to regions where it does not."""
+    with app.app_context():
+        file = add_file_row(len(DATA), DATA_DIGEST, instances=['us-east-1'])
+        make_key(app, 'us-east-1', 'tt-use1', util.keyname(DATA_DIGEST), DATA)
+        make_bucket(app, 'us-west-2', 'tt-usw2')
+        grooming.replicate_file(app.db.session('tooltool'), file)
+    assert_file_instances(app, DATA_DIGEST, ['us-east-1', 'us-west-2'])
+    assert key_exists(app, 'us-east-1', 'tt-use1', util.keyname(DATA_DIGEST))
+    assert key_exists(app, 'us-west-2', 'tt-usw2', util.keyname(DATA_DIGEST))

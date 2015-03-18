@@ -4,6 +4,7 @@
 
 import hashlib
 import logging
+import sqlalchemy as sa
 
 from datetime import timedelta
 from flask import current_app
@@ -23,6 +24,58 @@ def check_pending_uploads(job_status):
     for pu in tables.PendingUpload.query.all():
         check_pending_upload(session, pu)
     session.commit()
+
+
+@badpenny.periodic_task(seconds=3600)
+def replicate(job_status):
+    """Replicate objects between regions as necessary"""
+    # fetch all files with at least one instance, but not a full complement
+    # of instances
+    num_regions = len(current_app.config['TOOLTOOL_REGIONS'])
+    fi_tbl = tables.FileInstance
+    f_tbl = tables.File
+    session = current_app.db.session('tooltool')
+    subq = session.query(
+        fi_tbl.file_id,
+        sa.func.count('*').label('instance_count'))
+    subq = subq.group_by(fi_tbl.file_id)
+    subq = subq.subquery()
+    q = session.query(f_tbl)
+    q = q.join(subq, f_tbl.id == subq.c.file_id)
+    q = q.filter(subq.c.instance_count < num_regions)
+    q = q.all()
+    for file in q:
+        replicate_file(session, file)
+
+
+def replicate_file(session, file):
+    config = current_app.config['TOOLTOOL_REGIONS']
+    regions = set(config)
+    file_regions = set([i.region for i in file.instances])
+    # only use configured source regions; if a region is removed
+    # from the configuration, we can't copy from it.
+    source_regions = file_regions & regions
+    if not source_regions:
+        # this should only happen when the only region containing a
+        # file is removed from the configuration
+        log.warning("no source regions for {}".format(file.sha512))
+        return
+    source_region = source_regions.pop()
+    source_bucket = config[source_region]
+
+    key_name = util.keyname(file.sha512)
+
+    target_regions = regions - file_regions
+    for target_region in target_regions:
+        target_bucket = config[target_region]
+        conn = current_app.aws.connect_to('s3', target_region)
+        bucket = conn.get_bucket(target_bucket)
+        bucket.copy_key(new_key_name=key_name,
+                        src_key_name=key_name,
+                        src_bucket_name=source_bucket,
+                        storage_class='STANDARD',
+                        preserve_acl=False)
+        session.add(tables.FileInstance(file=file, region=target_region))
 
 
 @celery.task
