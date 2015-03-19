@@ -76,7 +76,7 @@ def get_batch(id):
     return row.to_json()
 
 
-@bp.route('/upload', methods=['PUT'])
+@bp.route('/upload', methods=['POST'])
 @api.apimethod(types.UploadBatch, unicode, body=types.UploadBatch)
 def upload_batch(region=None, body=None):
     """Create a new upload batch.  The response object will contain a

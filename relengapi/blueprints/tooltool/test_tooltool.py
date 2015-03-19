@@ -66,8 +66,7 @@ def mkbatch(message="a batch"):
 
 def upload_batch(client, batch, region=None):
     region_arg = '?region={}'.format(region) if region else ''
-    return client.put('/tooltool/upload' + region_arg, data=json.dumps(batch),
-                      headers={'Content-Type': 'application/json'})
+    return client.post_json('/tooltool/upload' + region_arg, data=batch)
 
 
 def add_file_to_db(app, content, regions=['us-east-1'],
@@ -225,7 +224,7 @@ def test_is_valid_sha512():
 @moto.mock_s3
 @test_context
 def test_upload_batch_empty_message(app, client):
-    """A PUT to /upload with an empty message is rejected."""
+    """A POST to /upload with an empty message is rejected."""
     batch = mkbatch()
     batch['message'] = ''
     resp = upload_batch(client, batch)
@@ -236,7 +235,7 @@ def test_upload_batch_empty_message(app, client):
 @moto.mock_s3
 @test_context
 def test_upload_batch_author(app, client):
-    """A PUT to /upload with an author is rejected."""
+    """A POST to /upload with an author is rejected."""
     batch = mkbatch()
     batch['author'] = 'me'  # matches authentication
     resp = upload_batch(client, batch)
@@ -247,7 +246,7 @@ def test_upload_batch_author(app, client):
 @moto.mock_s3
 @test_context.specialize(user=auth.AnonymousUser())
 def test_upload_batch_no_user(app, client):
-    """A PUT to /upload with non-user-associated authentication fails"""
+    """A POST to /upload with non-user-associated authentication fails"""
     batch = mkbatch()
     resp = upload_batch(client, batch)
     eq_(resp.status_code, 400)
@@ -257,7 +256,7 @@ def test_upload_batch_no_user(app, client):
 @moto.mock_s3
 @test_context
 def test_upload_batch_empty_files(app, client):
-    """A PUT to /upload with no files is rejected."""
+    """A POST to /upload with no files is rejected."""
     batch = mkbatch()
     batch['files'] = {}
     resp = upload_batch(client, batch)
@@ -268,7 +267,7 @@ def test_upload_batch_empty_files(app, client):
 @moto.mock_s3
 @test_context
 def test_upload_batch_bad_algo(app, client):
-    """A PUT to /upload with an algorithm that is not sha512 is rejected."""
+    """A POST to /upload with an algorithm that is not sha512 is rejected."""
     batch = mkbatch()
     batch['files']['one']['algorithm'] = 'md4'
     resp = upload_batch(client, batch)
@@ -279,7 +278,7 @@ def test_upload_batch_bad_algo(app, client):
 @moto.mock_s3
 @test_context
 def test_upload_batch_bad_digest(app, client):
-    """A PUT to /upload with a bad sha512 digest is rejected."""
+    """A POST to /upload with a bad sha512 digest is rejected."""
     batch = mkbatch()
     batch['files']['one']['digest'] = 'x' * 128
     resp = upload_batch(client, batch)
@@ -290,7 +289,7 @@ def test_upload_batch_bad_digest(app, client):
 @moto.mock_s3
 @test_context
 def test_upload_batch_bad_size(app, client):
-    """A PUT to /upload with a file with the same digest and a different length
+    """A POST to /upload with a file with the same digest and a different length
     is rejected"""
     batch = mkbatch()
     batch['files']['one']['size'] *= 2  # that ain't right!
@@ -304,7 +303,7 @@ def test_upload_batch_bad_size(app, client):
 @moto.mock_s3
 @test_context.specialize(user=userperms([]))
 def test_upload_batch_no_permissions(app, client):
-    """A PUT to /upload of a public file without permission to upload fails
+    """A POST to /upload of a public file without permission to upload fails
     with 403."""
     batch = mkbatch()
     add_file_to_db(app, ONE)
@@ -316,7 +315,7 @@ def test_upload_batch_no_permissions(app, client):
 @moto.mock_s3
 @test_context
 def test_upload_batch_mixed_visibility_no_permissions(app, client):
-    """A PUT to /upload of public and internal files fails with 403 if the
+    """A POST to /upload of public and internal files fails with 403 if the
     user only has permission to upload public files."""
     batch = mkbatch()
     batch['files']['two'] = {
@@ -334,7 +333,7 @@ def test_upload_batch_mixed_visibility_no_permissions(app, client):
 @moto.mock_s3
 @test_context
 def test_upload_batch_success_fresh(client, app):
-    """A PUT to /upload with a good batch succeeds, returns signed URLs expiring
+    """A POST to /upload with a good batch succeeds, returns signed URLs expiring
     in one hour, and inserts the new batch into the DB with links to files, but
     no instances, and inserts a pending upload row."""
     batch = mkbatch()
@@ -356,7 +355,7 @@ def test_upload_batch_success_fresh(client, app):
 @moto.mock_s3
 @test_context
 def test_upload_batch_success_existing_pending_upload(client, app):
-    """A successful PUT to /upload updates the 'expires' column of any relevant
+    """A successful POST to /upload updates the 'expires' column of any relevant
     pending uploads."""
     with set_time(NOW - 30):
         add_file_to_db(app, ONE, regions=[], pending_regions=['us-east-1'])
@@ -380,7 +379,7 @@ def test_upload_batch_success_existing_pending_upload(client, app):
 @moto.mock_s3
 @test_context
 def test_upload_batch_success_no_instances(client, app):
-    """A PUT to /upload with a batch containing a file that already exists, but
+    """A POST to /upload with a batch containing a file that already exists, but
     has no instances, succeeds, returns signed URLs expiring in one hour,
     inserts the new batch into the DB with links to files, but no instances,
     and inserts a pending upload row.  This could occur when, for example,
@@ -405,7 +404,7 @@ def test_upload_batch_success_no_instances(client, app):
 @moto.mock_s3
 @test_context
 def test_upload_batch_success_some_existing_files(client, app):
-    """A PUT to /upload with a good batch containing some files already present
+    """A POST to /upload with a good batch containing some files already present
     succeeds, returns signed URLs expiring in one hour, and inserts the new
     batch into the DB with links to files, but no instances.  Also, the
     ``region`` query parameter selects a preferred region."""
