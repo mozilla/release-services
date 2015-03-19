@@ -105,12 +105,12 @@ def upload_batch(region=None, body=None):
     if not body.files:
         raise BadRequest("a batch must include at least one file")
 
+    if body.author:
+        raise BadRequest("Author must not be specified for upload")
     try:
-        user = current_user.authenticated_email
+        body.author = current_user.authenticated_email
     except AttributeError:
-        user = None
-    if body.author != user:
-        raise BadRequest("Author must match your logged-in username")
+        raise BadRequest("Could not determine authenticated username")
 
     # validate permission first
     visibilities = set(f.visibility for f in body.files.itervalues())

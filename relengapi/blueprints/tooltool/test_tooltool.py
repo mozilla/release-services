@@ -52,7 +52,6 @@ NOW = 1425592922
 
 def mkbatch(message="a batch"):
     return {
-        'author': 'me',
         'message': message,
         'files': {
             'one': {
@@ -236,11 +235,10 @@ def test_upload_batch_empty_message(app, client):
 
 @moto.mock_s3
 @test_context
-def test_upload_batch_mismatched_author(app, client):
-    """A PUT to /upload with an author that does not correspond to the
-    logged-in user is rejected."""
+def test_upload_batch_author(app, client):
+    """A PUT to /upload with an author is rejected."""
     batch = mkbatch()
-    batch['author'] = 'that-other-guy'
+    batch['author'] = 'me'  # matches authentication
     resp = upload_batch(client, batch)
     eq_(resp.status_code, 400)
     assert_no_upload_rows(app)

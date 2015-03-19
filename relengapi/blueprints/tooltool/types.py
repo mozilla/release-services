@@ -48,9 +48,10 @@ class UploadBatch(wsme.types.Base):
     #: Identifier for this batch
     id = wsme.types.wsattr(int, mandatory=False)
 
-    #: The author (uploader) of the batch.  On submitting a new batch,
-    #: this must be the email of the authenticated user.
-    author = wsme.types.wsattr(unicode, mandatory=True)
+    #: The author (uploader) of the batch.  Do not include this when submitting
+    #: a batch for upload; it will be filled in based on the request
+    #: authentication.
+    author = wsme.types.wsattr(unicode, mandatory=False)
 
     #: The message for the batch.  Format this like a version-control message.
     message = wsme.types.wsattr(unicode, mandatory=True)
