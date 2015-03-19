@@ -8,6 +8,7 @@ import hashlib
 import json
 import mock
 import moto
+import pytz
 import time
 import urlparse
 
@@ -85,7 +86,7 @@ def add_file_to_db(app, content, regions=['us-east-1'],
         for region in pending_regions:
             session.add(tables.PendingUpload(
                 file=file_row, region=region,
-                expires=relengapi_time.now() + datetime.timedelta(days=1)))
+                expires=relengapi_time.now() + datetime.timedelta(seconds=60)))
         session.commit()
 
         return file_row.id
@@ -107,8 +108,10 @@ def add_file_to_s3(app, content, region='us-east-1'):
 
 @contextmanager
 def set_time(now=NOW):
-    with mock.patch('time.time') as fake:
-        fake.return_value = now
+    with mock.patch('time.time') as fake_time, \
+            mock.patch('relengapi.lib.time.now') as fake_now:
+        fake_time.return_value = now
+        fake_now.return_value = datetime.datetime.fromtimestamp(now, pytz.UTC)
         yield
 
 
@@ -172,12 +175,14 @@ def assert_batch_row(app, id, author='me', message='a batch', files=[]):
     eq_(sorted(got_files), sorted(files))
 
 
-def assert_pending_upload(app, digest, region):
+def assert_pending_upload(app, digest, region, expires=None):
     with app.app_context():
         tbl = tables.File
         file = tbl.query.filter(tbl.sha512 == digest).first()
         regions = [pu.region for pu in file.pending_uploads]
         assert region in regions, regions
+        if expires:
+            eq_(pu.expires, expires)
 
 
 def assert_no_upload_rows(app):
@@ -348,6 +353,30 @@ def test_upload_batch_success_fresh(client, app):
     assert_batch_row(
         app, result['id'], files=[('one', len(ONE), ONE_DIGEST, [])])
     assert_pending_upload(app, ONE_DIGEST, 'us-east-1')
+
+
+@moto.mock_s3
+@test_context
+def test_upload_batch_success_existing_pending_upload(client, app):
+    """A successful PUT to /upload updates the 'expires' column of any relevant
+    pending uploads."""
+    with set_time(NOW - 30):
+        add_file_to_db(app, ONE, regions=[], pending_regions=['us-east-1'])
+    batch = mkbatch()
+    with set_time():
+        with not_so_random_choice():
+            resp = upload_batch(client, batch)
+        result = assert_batch_response(resp, files={
+            'one': {'algorithm': 'sha512',
+                    'size': len(ONE),
+                    'digest': ONE_DIGEST}})
+        assert_signed_url(result['files']['one']['put_url'], ONE_DIGEST,
+                          method='PUT', expires_in=60)
+        assert_pending_upload(
+            app, ONE_DIGEST, 'us-east-1',
+            expires=relengapi_time.now() + datetime.timedelta(seconds=60))
+        assert_batch_row(
+            app, result['id'], files=[('one', len(ONE), ONE_DIGEST, [])])
 
 
 @moto.mock_s3
@@ -525,8 +554,8 @@ def test_download_file_exists_region_choice(app, client):
 @moto.mock_s3
 @test_context
 def test_list_batches(client):
-    upload_batch(client, mkbatch('batch 1'))
-    upload_batch(client, mkbatch('batch 2'))
+    eq_(upload_batch(client, mkbatch('batch 1')).status_code, 200)
+    eq_(upload_batch(client, mkbatch('batch 2')).status_code, 200)
     resp = client.get('/tooltool/upload')
     eq_(resp.status_code, 200, resp.data)
     eq_(sorted(json.loads(resp.data)['result']), sorted([{
@@ -765,5 +794,3 @@ def test_multi_op_patch(app, client):
         f = tables.File.query.first()
         eq_(f.visibility, 'public')
         eq_(f.instances, [])
-
-# TODO: test new upload while existing PU still exists

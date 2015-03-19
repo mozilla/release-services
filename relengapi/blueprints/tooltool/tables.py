@@ -95,14 +95,15 @@ class Batch(db.declarative_base('tooltool')):
 class PendingUpload(db.declarative_base('tooltool')):
 
     """Files for which upload URLs have been generated, but which haven't yet
-    been uploaded.  This table is used to poll for completed uploads."""
+    been uploaded.  This table is used to poll for completed uploads, and to
+    prevent trusting files for which there is an outstanding signed upload URL."""
 
     __tablename__ = 'tooltool_pending_upload'
 
-    id = sa.Column(sa.Integer, primary_key=True)
-    expires = sa.Column(db.UTCDateTime, index=True, nullable=False)
     file_id = sa.Column(
-        sa.Integer, sa.ForeignKey('tooltool_files.id'), nullable=False)
+        sa.Integer, sa.ForeignKey('tooltool_files.id'),
+        nullable=False, primary_key=True)
+    expires = sa.Column(db.UTCDateTime, index=True, nullable=False)
     region = sa.Column(
         sa.Enum(*allowed_regions), nullable=False)
 

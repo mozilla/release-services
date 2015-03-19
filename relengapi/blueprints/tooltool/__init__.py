@@ -143,15 +143,23 @@ def upload_batch(region=None, body=None):
                     sha512=digest,
                     visibility=info.visibility,
                     size=info.size)
+                session.add(file)
             info.put_url = s3.generate_url(
                 method='PUT', expires_in=UPLOAD_EXPIRES_IN, bucket=bucket,
                 key=util.keyname(info.digest),
                 headers={'Content-Type': 'application/octet-stream'})
+            # The PendingUpload row needs to reflect the updated expiration
+            # time, even if there's an existing pending upload that expires
+            # earlier.  The `merge` method does a SELECT and then either UPDATEs
+            # or INSERTs the row.  However, merge needs the file_id, rather than
+            # just a reference to the file object; and for that, we need to flush
+            # the inserted file.
+            session.flush()
             pu = tables.PendingUpload(
-                file=file,
+                file_id=file.id,
                 region=region,
                 expires=time.now() + datetime.timedelta(seconds=UPLOAD_EXPIRES_IN))
-            session.add(pu)
+            session.merge(pu)
         session.add(tables.BatchFile(filename=filename, file=file, batch=batch))
     session.add(batch)
     session.commit()
