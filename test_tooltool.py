@@ -472,11 +472,23 @@ def test_command_fetch():
                                        cache_folder=None, auth_file=None)
 
 
-def test_command_package():
-    with mock.patch('tooltool.fetch_files') as fetch_files:
-        eq_(call_main('tooltool', 'fetch', 'a', 'b', '--url', 'http://foo'), 0)
-        fetch_files.assert_called_with('manifest.tt', ['http://foo'], ['a', 'b'],
-                                       cache_folder=None, auth_file=None)
+def test_command_upload():
+    with mock.patch('tooltool.upload') as upload:
+        eq_(call_main('tooltool', 'upload', '--url', 'http://foo',
+                      '--message', 'msg'), 0)
+        upload.assert_called_with('manifest.tt', 'msg', ['http://foo'], None)
+
+
+def test_command_upload_no_message():
+    with mock.patch('tooltool.upload') as upload:
+        eq_(call_main('tooltool', 'upload', '--url', 'http://foo'), 1)
+        assert not upload.called
+
+
+def test_command_upload_no_url():
+    with mock.patch('tooltool.upload') as upload:
+        eq_(call_main('tooltool', 'upload', '--message', 'msg'), 1)
+        assert not upload.called
 
 
 class FetchTests(TestDirMixin, unittest.TestCase):

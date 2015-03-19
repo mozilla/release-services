@@ -27,12 +27,10 @@ import json
 import logging
 import optparse
 import os
-import re
 import shutil
 import sys
 import tarfile
 import tempfile
-import textwrap
 import urllib2
 
 from subprocess import PIPE
@@ -727,105 +725,8 @@ def purge(folder, gigs):
             break
 
 
-def package(folder, algorithm, message):  # pragma: no cover
-    if not os.path.exists(folder) or not os.path.isdir(folder):
-        msg = 'Folder %s does not exist!' % folder
-        log.error(msg)
-        raise Exception(msg)
-
-    from os import walk
-
-    dirname, basename = os.path.split(folder)
-
-    filenames = []
-    for (_dirpath, _dirnames, files) in walk(folder):
-        filenames.extend(files)
-        break  # not to navigate subfolders
-
-    package_name = basename + TOOLTOOL_PACKAGE_SUFFIX
-    manifest_name = basename + '.tt'
-    notes_name = basename + '.txt'
-
-    suffix = 1
-    while os.path.exists(os.path.join(dirname, package_name)):
-        package_name = basename + str(suffix) + TOOLTOOL_PACKAGE_SUFFIX
-        manifest_name = basename + str(suffix) + '.tt'
-        notes_name = basename + str(suffix) + '.txt'
-        suffix = suffix + 1
-
-    os.makedirs(os.path.join(dirname, package_name))
-
-    log.info("Creating package %s from folder %s..." %
-             (os.path.join(os.path.join(dirname, package_name)), folder))
-
-    add_files(os.path.join(os.path.join(dirname, package_name), manifest_name), algorithm, [
-              os.path.join(folder, x) for x in filenames], create_package=True)
-
-    try:
-        f = open(
-            os.path.join(os.path.join(dirname, package_name), notes_name), 'wb')
-        try:
-            f.write(message)  # Write a string to a file
-        finally:
-            f.close()
-    except IOError:
-        pass
-
-    log.info("Package %s has been created from folder %s" %
-             (os.path.join(os.path.join(dirname, package_name)), folder))
-
-    return os.path.join(os.path.join(dirname, package_name))
-
-
 def upload(package, user, host, path):  # pragma: no cover
-    package = re.sub("/*$", "", package)
-
-    cmd1 = "rsync  -a %s %s@%s:%s --progress -f '- *.tt' -f '- *.txt'" % (
-        package, user, host, path)
-    cmd2 = "rsync  %s/*.txt %s@%s:%s --progress" % (package, user, host, path)
-    cmd3 = "rsync  %s/*.tt %s@%s:%s --progress" % (package, user, host, path)
-
-    print textwrap.dedent("""\
-        **SECURITY WARNING**
-
-        Uploading files to tooltool is a risky operation.  Please consider:
-
-          * Is this data PUBLIC or INTERNAL?  If not don't upload it!  INTERNAL
-            data is non-public data that is not secret, for example,
-            non-redistributable binaries.  See
-            https://mana.mozilla.org/wiki/display/ITSECURITY/IT+Data+security+guidelines
-
-            INTERNAL data should not be uploaded to the `pub` directory.
-
-          * Is this data from a trustworthy source, downloaded via a secure protocol like HTTPS?
-
-          * Do you agree to disclose your email address in association with this upload?
-
-        If you answered any of these questions with "no", please stop the
-        upload now.  Otherwise, hit enter to continue.
-        """)
-    raw_input()
-    log.info(
-        "The following three rsync commands will be executed to transfer the tooltool package:")
-    log.info("1) %s" % cmd1)
-    log.info("2) %s" % cmd2)
-    log.info("3) %s" % cmd3)
-    log.info("Please note that the order of execution IS relevant!")
-    log.info("Uploading hashed files with command: %s" % cmd1)
-    execute(cmd1)
-    log.info("Uploading metadata files (notes)    with command: %s" % cmd2)
-    execute(cmd2)
-    log.info("Uploading metadata files (manifest) with command: %s" % cmd3)
-    execute(cmd3)
-
-    log.info("Package %s has been correctly uploaded to %s:%s" %
-             (package, host, path))
-
-    return True
-
-
-def distribute(folder, message, user, host, path, algorithm):  # pragma: no cover
-    return upload(package(folder, algorithm, message), user, host, path)
+    pass
 
 
 def process_command(options, args):
@@ -860,37 +761,18 @@ def process_command(options, args):
             cmd_args,
             cache_folder=options['cache_folder'],
             auth_file=options.get("auth_file"))
-    elif cmd == 'package':  # pragma: no cover
-        if not options.get('folder') or not options.get('message'):
-            log.critical('package command requires a folder to be specified, containing the '
-                         'files to be added to the tooltool package, and a message providing info '
-                         'about the package')
+    elif cmd == 'upload':
+        if not options.get('message'):
+            log.critical('upload command requires a message')
             return False
-        return package(options['folder'], options['algorithm'], options['message'])
-    elif cmd == 'upload':  # pragma: no cover
-        if not options.get('package') or not options.get('user') or \
-           not options.get('host') or not options.get('path'):
-            log.critical('upload command requires the package folder to be uploaded, and the '
-                         'user, host and path to be used to upload the tooltool upload server')
+        if not options.get('base_url'):
+            log.critical('upload command requires at least one URL')
             return False
         return upload(
-            options.get('package'),
-            options.get('user'),
-            options.get('host'),
-            options.get('path'))
-    elif cmd == 'distribute':  # pragma: no cover
-        if not options.get('folder') or not options.get('message') or not options.get('user') or \
-           not options.get('host') or not options.get('path'):
-            log.critical('distribute command requires the following parameters: --folder, '
-                         '--message, --user, --host, --path')
-            return False
-        return distribute(
-            options.get('folder'),
+            options.get('manifest'),
             options.get('message'),
-            options.get('user'),
-            options.get('host'),
-            options.get('path'),
-            options.get('algorithm'))
+            options.get('base_url'),
+            options.get('auth_file'))
     else:
         log.critical('command "%s" is not implemented' % cmd)
         return False
@@ -919,28 +801,10 @@ def main(argv, _skip_logging=False):
     parser.add_option('-s', '--size',
                       help='free space required (in GB)', dest='size',
                       type='float', default=0.)
-
-    parser.add_option('--folder',
-                      help='the folder containing files to be added to a tooltool package ready '
-                           'to be uploaded to tooltool servers',
-                      dest='folder')
     parser.add_option('--message',
-                      help='Any additional information about the tooltool package being generated '
-                           'and the files it includes',
+                      help='The "commit message" for an upload; format with a bug number '
+                           'and brief comment',
                       dest='message')
-
-    parser.add_option('--package',
-                      help='the folder containing files to be added to a tooltool package ready '
-                           'to be uploaded to tooltool servers',
-                      dest='package')
-    parser.add_option('--user',
-                      help='user to be used when uploading a tooltool package to a tooltool '
-                           'upload folder',
-                      dest='user')
-    parser.add_option('--host',
-                      help='host where to upload a tooltool package', dest='host')
-    parser.add_option('--path',
-                      help='Path on the tooltool upload server where to upload', dest='path')
     parser.add_option('--authentication-file',
                       help='Use http authentication to download a file.', dest='auth_file')
 
