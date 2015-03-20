@@ -209,17 +209,3 @@ def loan_details(id):
 @p.slaveloan.admin.require()
 def admin():
     return render_template('slaveloan_admin.html')
-
-##################
-# Temporary      #
-##################
-
-
-@bp.route('/tmp/')
-@p.slaveloan.admin.require()
-def init_loan():
-    "Temporary, Manual testing only, DO NOT USE"
-    chain_of_stuff = task_groups.generate_loan(loanid=18, slavetype="t-snow-r4")
-    print "DEBUG", chain_of_stuff
-    chain_of_stuff.delay()
-    return render_template('slaveloan_admin.html')
