@@ -23,6 +23,7 @@
 # 'manifest.manifest'
 
 import hashlib
+import httplib
 import json
 import logging
 import optparse
@@ -742,17 +743,22 @@ def _send_batch(base_url, auth_file, batch):
 
 
 def _s3_upload(filename, file):
-    # TODO: use httplib here, because urllib2 does not support
-    # streaming uploads.
-    # using a unicode URL (from json.load) causes the entire request to
-    # be treated as a unicode string, rather than a bytestring, which is not
-    # what we want, so convert to a bytestring now
-    url = file['put_url'].encode('ascii')
-    req = urllib2.Request(url, data=open(filename).read())
-    req.add_header('Content-type', 'application/octet-stream')
-    req.get_method = lambda: 'PUT'
+    # urllib2 does not support streaming, so we fall back to good old httplib
+    url = urlparse.urlparse(file['put_url'])
+    cls = httplib.HTTPSConnection if url.scheme == 'https' else httplib.HTTPConnection
+    host, port = url.netloc.split(':') if ':' in url.netloc else (url.netloc, 443)
+    port = int(port)
+    conn = cls(host, port)
     try:
-        urllib2.urlopen(req)
+        req_path = "%s?%s" % (url.path, url.query) if url.query else url.path
+        conn.request('PUT', req_path, open(filename),
+                     {'Content-type': 'application/octet-stream'})
+        resp = conn.getresponse()
+        resp_body = resp.read()
+        conn.close()
+        if resp.status != 200:
+            raise RuntimeError("Non-200 return from AWS: %s %s\n%s" %
+                               (resp.status, resp.reason, resp_body))
     except Exception:
         file['upload_exception'] = sys.exc_info()
         file['upload_ok'] = False
