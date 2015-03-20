@@ -147,7 +147,8 @@ def start_disable_slave(self, machine, loanid):
         url = furl(current_app.config.get("SLAVEAPI_URL", None))
         # XXX: ToDo raise fatal if no slavealloc
         url.path.add(machine).add("actions").add("disable")
-        postdata = dict(reason="Being loaned on slaveloan %s" % loanid)
+        loan_bug = Loans.query.get(loanid).bug_id
+        postdata = dict(reason="Being loaned on slaveloan bug %s" % loan_bug)
         retry(requests.post, args=(str(url),), kwargs=dict(data=postdata)).json()
     except Exception as exc:  # pylint: disable=W0703
         logger.exception(exc)
