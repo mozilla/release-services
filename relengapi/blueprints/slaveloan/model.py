@@ -96,7 +96,7 @@ class History(db.declarative_base('relengapi')):
     timestamp = sa.Column(db.UTCDateTime(timezone=True),
                           default=tz.utcnow,
                           nullable=False)
-    msg = sa.Column(sa.String(255), nullable=False)
+    msg = sa.Column(sa.Text, nullable=False)
     # Backrefs
     # # for_loan  (Loans)
 
