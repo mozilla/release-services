@@ -13,7 +13,7 @@ class Machine(wsme.types.Base):
     #: The machine's Fully Qualified Domain Name
     fqdn = unicode
     #: The machine's IP Address
-    ipaddr = unicode
+    ipaddress = unicode
 
 
 class Human(wsme.types.Base):

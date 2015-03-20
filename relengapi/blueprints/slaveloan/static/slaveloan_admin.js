@@ -18,7 +18,7 @@ function reload_loans() {
                     $('<td>').text(row.human.ldap_email),
                     $('<td>').text(row.human.bugzilla_email),
                     $('<td>').text(row.machine.fqdn),
-                    $('<td>').text(row.machine.ipaddr)
+                    $('<td>').text(row.machine.ipaddress)
                 ).appendTo('#loans-table tbody');
             });
         }
@@ -51,7 +51,7 @@ $(function() {
         var form_ldap = form.find('input[name=ldap_email]').val();
         var form_bmo = form.find('input[name=bugzilla_email]').val();
         var form_fqdn = form.find('input[name=fqdn]').val();
-        var form_ipaddr = form.find('input[name=ipaddr]').val();
+        var form_ipaddress = form.find('input[name=ipaddress]').val();
         if (!form_status) {
             bad('Status is empty, how did that happen?');
             return;
@@ -69,7 +69,7 @@ $(function() {
                 bad('Provide a FQDN');
                 return;
             }
-            if (!form_ipaddr) {
+            if (!form_ipaddress) {
                 bad('Provide an IP Address');
                 return;
             }
@@ -83,7 +83,7 @@ $(function() {
                                  ldap_email: form_ldap,
                                  bugzilla_email: form_bmo,
                                  fqdn: form_fqdn,
-                                 ipaddr: form_ipaddr})
+                                 ipaddress: form_ipaddress})
         }).done(function(data) {
             console.log(data);
             if (data.result.loan) {
@@ -122,29 +122,6 @@ $(function() {
         var form_bmo = form.find('input[name=bugzilla_email]').val();
         var form_slavetype = form.find('input[name=slavetype]').val();
 
-        //if (!form_status) {
-        //    bad('Status is empty, how did that happen?');
-        //    return;
-       // }
-       // if (!form_ldap) {
-       //     bad('Provide an LDAP username');
-        //    return;
-        //}
-        /*if (!form_bmo) {
-            bad('Provide a Bugzilla username');
-            return;
-        }
-        if (form_status != "PENDING"){
-            if (!form_fqdn) {
-                bad('Provide a FQDN');
-                return;
-            }
-            if (!form_ipaddr) {
-                bad('Provide an IP Address');
-                return;
-            }
-        }
-      */
         var result = $.ajax({
             url: form.attr( 'action' ),
             type: 'POST',

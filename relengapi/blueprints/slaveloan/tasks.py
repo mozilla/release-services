@@ -89,11 +89,11 @@ def choose_inhouse_machine(self, loanid, loan_class):
 def fixup_machine(self, machine, loanid):
     try:
         fqdn = socket.getfqdn("%s.build.mozilla.org" % machine)
-        ipaddr = socket.gethostbyname("%s.build.mozilla.org" % machine)
+        ipaddress = socket.gethostbyname("%s.build.mozilla.org" % machine)
         session = current_app.db.session('relengapi')
         m = Machines.as_unique(session,
                                fqdn=fqdn,
-                               ipaddr=ipaddr)
+                               ipaddress=ipaddress)
         l = session.query(Loans).get(loanid)
         l.machine = m
         session.commit()

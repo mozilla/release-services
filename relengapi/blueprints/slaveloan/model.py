@@ -17,7 +17,7 @@ class Machines(db.declarative_base('relengapi'), db.UniqueMixin):
     __tablename__ = _tbl_prefix + 'machines'
     id = sa.Column(sa.Integer, primary_key=True)
     fqdn = sa.Column(sa.String(255), nullable=False, unique=True)
-    ipaddr = sa.Column(sa.String(18), unique=True)
+    ipaddress = sa.Column(sa.String(18), unique=True)
     loan = relationship("Loans", backref="machine")
 
     @classmethod
@@ -29,7 +29,7 @@ class Machines(db.declarative_base('relengapi'), db.UniqueMixin):
         return query.filter(Machines.fqdn == fqdn)
 
     def to_json(self):
-        return dict(id=self.id, fqdn=self.fqdn, ipaddr=self.ipaddr)
+        return dict(id=self.id, fqdn=self.fqdn, ipaddress=self.ipaddress)
 
     def to_wsme(self):
         return rest.Machine(**self.to_json())

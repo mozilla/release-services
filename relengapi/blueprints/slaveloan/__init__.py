@@ -95,14 +95,14 @@ def new_loan_from_admin(body):
     if body.status != 'PENDING':
         if not body.fqdn:
             raise BadRequest("Missing Machine FQDN")
-        if not body.ipaddr:
+        if not body.ipaddress:
             raise BadRequest("Missing Machine IP Address")
 
     session = g.db.session('relengapi')
     try:
         if body.status != 'PENDING':
             m = Machines.as_unique(session, fqdn=body.fqdn,
-                                   ipaddr=body.ipaddr)
+                                   ipaddress=body.ipaddress)
         h = Humans.as_unique(session, ldap=body.LDAP,
                              bugzilla=body.bugzilla)
     except sa.exc.IntegrityError:
