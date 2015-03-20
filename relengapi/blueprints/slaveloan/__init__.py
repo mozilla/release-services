@@ -165,12 +165,7 @@ def new_loan_request(body):
 
 
 @bp.route('/machine/classes')
-@apimethod(
-    wsme.types.DictType(
-        key_type=unicode,
-        value_type=wsme.types.ArrayType(unicode)
-    )
-)
+@apimethod({unicode: [unicode]})
 def get_machine_classes():
     """
     A mapping of what you'll get with a given loan, and globs of the slave types associated.
