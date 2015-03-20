@@ -16,28 +16,28 @@ from relengapi.blueprints.tokenauth.util import insert_usr
 
 @test_context
 def test_loader_no_header(app, client):
-    """With no Authentication header, no permissions are allowed"""
+    """With no Authorization header, no permissions are allowed"""
     auth = json.loads(client.get('/test_tokenauth').data)
     eq_(auth['permissions'], [])
 
 
 @test_context
 def test_loader_not_bearer(app, client):
-    """With an Authentication header that does not start with 'Bearer', no
+    """With an Authorization header that does not start with 'Bearer', no
     permissions are allowed"""
     auth = json.loads(
         client.get('/test_tokenauth',
-                   headers=[('Authentication', 'Penguiner TOK/1/v1')]).data)
+                   headers=[('Authorization', 'Penguiner TOK/1/v1')]).data)
     eq_(auth['permissions'], [])
 
 
 @test_context.specialize(db_setup=insert_prm)
 def test_loader_good_header(app, client):
-    """With a good Authentication header, the permissions in the DB are allowed"""
+    """With a good Authorization header, the permissions in the DB are allowed"""
     tok = FakeSerializer.prm(1)
     auth = json.loads(
         client.get('/test_tokenauth',
-                   headers=[('Authentication', 'Bearer ' + tok)]).data)
+                   headers=[('Authorization', 'Bearer ' + tok)]).data)
     eq_(auth['permissions'], ['test_tokenauth.zig'], auth)
 
 
@@ -68,28 +68,28 @@ def test_from_str_bad_type(app):
 
 @test_context
 def test_loader_bad_header(app, client):
-    """With a bad Authentication header, no permissions are allowed"""
+    """With a bad Authorization header, no permissions are allowed"""
     auth = json.loads(
         client.get('/test_tokenauth',
-                   headers=[('Authentication', 'Bearer xxxxx')]).data)
+                   headers=[('Authorization', 'Bearer xxxxx')]).data)
     eq_(auth['permissions'], [])
 
 
 @test_context
 def test_loader_malformed_header(app, client):
-    """With a malformed Authentication header, no permissions are allowed"""
+    """With a malformed Authorization header, no permissions are allowed"""
     auth = json.loads(
         client.get('/test_tokenauth',
-                   headers=[('Authentication', 'no-space-ma')]).data)
+                   headers=[('Authorization', 'no-space-ma')]).data)
     eq_(auth['permissions'], [])
 
 
 @test_context.specialize(db_setup=insert_prm)
 def test_loader_good_header_not_in_db(app, client):
-    """With a good Authentication header but no row in the DB, no permissions are allowed"""
+    """With a good Authorization header but no row in the DB, no permissions are allowed"""
     auth = json.loads(
         client.get('/test_tokenauth',
-                   headers=[('Authentication', 'Bearer TOK/2/v1')]).data)
+                   headers=[('Authorization', 'Bearer TOK/2/v1')]).data)
     eq_(auth['permissions'], [])
 
 

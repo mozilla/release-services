@@ -22,7 +22,7 @@ For example:
 
     $ curl --data-ascii '{"description": "new token", "permissions": ["base.tokens.issue"]}' \
         -H 'Content-Type: application/json'
-        -H 'Authentication: Bearer your.token.here'
+        -H 'Authorization Bearer your.token.here'
         http://api.pub.build.mozilla.org/tokenauth/tokens
 
 Responses
@@ -120,5 +120,5 @@ Automated users of RelengAPI should not use cookies.
 Token Authentication
 ....................
 
-As shown in the POST example above, a request containing a bearer token in the ``Authentication`` header is carried out in the context of the permissions associated with the token.
+As shown in the POST example above, a request containing a bearer token in the ``Authorization`` header is carried out in the context of the permissions associated with the token.
 See :doc:`tokenauth` for more information on token authentication.

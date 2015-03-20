@@ -56,7 +56,7 @@ class TokenLoader(object):
     def __call__(self, request):
         # extract the token from the headers, returning None if anything's
         # wrong
-        header = request.headers.get('Authentication')
+        header = request.headers.get('Authorization')
         if not header:
             return
         header = header.split()
