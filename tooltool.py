@@ -320,7 +320,6 @@ def digest_file(f, a):
 
 def execute(cmd):
     """Execute CMD, logging its stdout at the info level"""
-    # TODO: capture stderr, too
     process = Popen(cmd, shell=True, stdout=PIPE)
     while True:
         line = process.stdout.readline()
@@ -537,7 +536,7 @@ def untar_file(filename):
         if os.path.exists(base_file):
             log.info('rm tree: %s' % base_file)
             shutil.rmtree(base_file)
-        if not execute('tar -Jxf %s' % filename):
+        if not execute('tar -Jxf %s 2>&1' % filename):
             return False
     else:
         log.error("Unknown zip extension for filename '%s'" % filename)
