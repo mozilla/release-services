@@ -119,10 +119,11 @@ def new_loan_from_admin(body):
     session.add(l)
     session.add(history)
     session.commit()
-    return None  # ?rest.WSME_New_Loan({'loan': l.to_wsme()})
+    return l.to_wsme()
 
 
 @bp.route('/loans/request', methods=['POST'])
+@p.slaveloan.admin.require()
 @apimethod(rest.Loan, body=rest.LoanRequest)
 def new_loan_request(body):
     "User Loan Requesting, returns the id of the loan"
@@ -160,7 +161,7 @@ def new_loan_request(body):
     session.commit()
     chain_of_stuff = task_groups.generate_loan(loanid=l.id, slavetype=slavetype)
     chain_of_stuff.delay()
-    return l.to_wsme  # ?rest.WSME_New_Loan({'loan': l.to_wsme()})
+    return l.to_wsme()
 
 
 @bp.route('/machine/classes')
