@@ -132,11 +132,3 @@ def create_loan_bug(loan_id=None, slavetype=None, bugzilla_username=None):
     loan_bug = LoanerBug(loadInfo=False)
     bug = loan_bug.create(comment=c_zero, summary=summary)
     return bug.id
-
-foo = """    l.bug_id = bug_id
-    history = History(for_loan=l,
-                      timestamp=tz.utcnow(),
-                      msg="Created bug {id} for loan".format(id=bug_id))
-    session.add(l)
-    session.add(h)
-    session.commit()"""
