@@ -46,8 +46,7 @@ p.slaveloan.admin.doc("Administer Slaveloans for all users")
 def get_loans():
     "Get the list of all `active` loans you can see"
     # XXX: Use permissions to filter if not an admin
-    session = g.db.session('relengapi')
-    loans = session.query(Loans).filter(Loans.machine_id.isnot(None))
+    loans = Loans.query.filter(Loans.machine_id.isnot(None))
     return [l.to_wsme() for l in loans.all()]
 
 
@@ -57,8 +56,7 @@ def get_loans():
 def get_loan(loanid):
     "Get the details of a loan, by id"
     # XXX: Use permissions to ensure admin | loanee
-    session = g.db.session('relengapi')
-    l = session.query(Loans).get(loanid)
+    l = Loans.query.get(loanid)
     return l.to_wsme()
 
 
@@ -68,8 +66,7 @@ def get_loan(loanid):
 def get_loan_history(loanid):
     "Get the history associated with this loan"
     # XXX: Use permissions to ensure admin | loanee
-    session = g.db.session('relengapi')
-    histories = session.query(History) \
+    histories = History.query \
                        .filter(History.loan_id == loanid) \
                        .order_by(asc(History.timestamp))
     return [h.to_wsme() for h in histories.all()]
@@ -81,8 +78,7 @@ def get_loan_history(loanid):
 def get_all_loans():
     "Get the list of all loans you can see"
     # XXX: Use permissions to filter if not an admin
-    session = g.db.session('relengapi')
-    loans = session.query(Loans)
+    loans = Loans.query
     return [l.to_wsme() for l in loans.all()]
 
 

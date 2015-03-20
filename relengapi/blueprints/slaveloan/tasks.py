@@ -109,8 +109,7 @@ def fixup_machine(self, machine, loanid):
     after="Tracking bug {retval!s} linked with loan")
 def bmo_set_tracking_bug(self, machine, loanid):
     try:
-        session = current_app.db.session('relengapi')
-        l = session.query(Loans).get(loanid)
+        l = Loans.query.get(loanid)
         assert l.bug_id
 
         bug_comment = "Being loaned to %s in Bug %s" % (l.human.ldap, l.bug_id)
