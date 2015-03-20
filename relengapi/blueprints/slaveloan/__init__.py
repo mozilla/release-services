@@ -5,7 +5,6 @@
 import flask_login
 import logging
 import sqlalchemy as sa
-import wsme
 
 from sqlalchemy import asc
 
