@@ -2,15 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import BaseHTTPServer
 import cStringIO
+import contextlib
 import copy
 import hashlib
 import json
+import logging
 import mock
 import os
 import shutil
 import sys
 import tempfile
+import threading
 import tooltool
 import unittest
 import urllib2
@@ -31,6 +35,29 @@ class TestDirMixin(object):
     def tearDownTestDir(self):
         os.chdir(self.__old_cwd)
         shutil.rmtree(self.test_dir)
+
+
+class BufferHandler(logging.Handler):
+
+    def __init__(self, buffer):
+        self.buffer = buffer
+        logging.Handler.__init__(self)
+
+    def emit(self, record):
+        self.buffer.append((record.levelno, record.getMessage()))
+
+    @classmethod
+    @contextlib.contextmanager
+    def capture(cls, logger_name):
+        logger = logging.getLogger(logger_name)
+        buffer = []
+        handler = cls(buffer)
+        logger.addHandler(handler)
+        try:
+            yield buffer
+        finally:
+            logger.removeHandler(handler)
+
 
 class DigestTests(unittest.TestCase):
 
@@ -489,6 +516,251 @@ def test_command_upload_no_url():
     with mock.patch('tooltool.upload') as upload:
         eq_(call_main('tooltool', 'upload', '--message', 'msg'), 1)
         assert not upload.called
+
+
+class UploadTests(TestDirMixin, unittest.TestCase):
+
+    class StopServing(Exception):
+        pass
+
+    class Handler(BaseHTTPServer.BaseHTTPRequestHandler):
+
+        test_case = None
+
+        def log_request(self, code=None, size=None):
+            logging.getLogger('fake_web').info("%s %s" % (self.path, code))
+
+        def do_POST(self):
+            cfg = self.test_case.server_config
+            eq_(self.path, '/tooltool/upload')
+            eq_(self.headers['content-type'], 'application/json')
+            body = json.loads(self.rfile.read(int(self.headers['content-length'])))
+            self.test_case.server_requests.setdefault('POST', []).append(copy.deepcopy(body))
+            eq_(body['message'], 'hi mom')
+
+            files_on_server = cfg.get('files_on_server', [])
+            for filename, file in body['files'].items():
+                if filename not in files_on_server:
+                    file['put_url'] = self.test_case.mkurl('/sha512/' + file['digest'])
+
+            if cfg.get('post_fails'):
+                self.send_response(409, 'Exploded')
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                json.dump({'error': {'name': 'uhoh', 'description': 'failed'}}, self.wfile)
+            else:
+                self.send_response(200, 'OK')
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                json.dump({'result': body}, self.wfile)
+            self.wfile.close()
+
+        def do_PUT(self):  # S3 upload
+            cfg = self.test_case.server_config
+            assert self.path.startswith('/sha512/')
+            eq_(self.headers['content-type'], 'application/octet-stream')
+            data = self.rfile.read(int(self.headers['content-length']))
+            digest = hashlib.sha512(data).hexdigest()
+            self.test_case.server_requests.setdefault('PUT', []).append(digest)
+            assert self.path.endswith(digest)
+            if digest in cfg.get('upload_failures', []):
+                self.send_response(500, 'NOPE')
+            else:
+                self.send_response(200, 'OK')
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
+            self.wfile.close()
+
+        def do_GET(self):  # notify
+            cfg = self.test_case.server_config
+            assert self.path.startswith('/tooltool/upload/complete/sha512/')
+            digest = self.path[-128:]
+            self.test_case.server_requests.setdefault('GET', []).append(digest)
+            if cfg.get('get_fails'):
+                self.send_response(500, 'NOPE')
+            else:
+                self.send_response(200, 'OK')
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
+            self.wfile.close()
+
+    def setUp(self):
+        self.setUpTestDir()
+
+    def start_server(self):
+        self.server_config = {}
+        self.server_requests = {}
+        UploadTests.Handler.test_case = self
+        self.httpd = BaseHTTPServer.HTTPServer(("127.0.0.1", 0), UploadTests.Handler)
+        self.http_port = self.httpd.server_port
+        self.server_thread = threading.Thread(target=self.httpd.serve_forever)
+        self.server_thread.daemon = 1
+        self.server_thread.start()
+
+        open("testfile.txt", 'w').write("FILE DATA")
+        self.digest = hashlib.sha512('FILE DATA').hexdigest()
+
+    def tearDown(self):
+        if hasattr(self, 'httpd'):
+            self.httpd.shutdown()
+            self.server_thread.join()
+        self.tearDownTestDir()
+
+    def add_file(self, filename, on_server=False, upload_fails=False):
+        data = `os.urandom(1024)`[:1024]  # TODO: keep it ASCII for now; need encoding support
+        open(filename, "w").write(data)
+        digest = hashlib.sha512(data).hexdigest()
+        tooltool.add_files('manifest.tt', 'sha512', [filename])
+        if on_server:
+            self.server_config.setdefault('files_on_server', []).append(filename)
+        if upload_fails:
+            self.server_config.setdefault('upload_failures', []).append(digest)
+        return digest
+
+    def mkurl(self, path):
+        return 'http://127.0.0.1:%d%s' % (self.http_port, path)
+
+    def test_success(self):
+        """An upload with two files, one of which is on the server already,
+        succeeds"""
+        self.start_server()
+        foo_digest = self.add_file("foo.txt", on_server=True)
+        bar_digest = self.add_file("bar.txt", on_server=False)
+        assert tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], None)
+        self.server_requests['POST'].sort()
+        eq_(self.server_requests, {
+            'POST': [{
+                'files': {
+                    'foo.txt': {
+                        'digest': foo_digest,
+                        'algorithm': 'sha512',
+                        'visibility': 'internal',
+                        'size': 1024,
+                    },
+                    'bar.txt': {
+                        'digest': bar_digest,
+                        'algorithm': 'sha512',
+                        'visibility': 'internal',
+                        'size': 1024,
+                    },
+                },
+                'message': 'hi mom',
+            }],
+            'PUT': [bar_digest],
+            'GET': [bar_digest],
+        })
+
+    def test_upload_s3_fails(self):
+        """When an S3 upload fails, the upload fails and no notification takes
+        place."""
+        self.start_server()
+        foo_digest = self.add_file("foo.txt", upload_fails=True)
+        assert not tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], None)
+        eq_(self.server_requests, {
+            'POST': [{
+                'files': {
+                    'foo.txt': {
+                        'digest': foo_digest,
+                        'algorithm': 'sha512',
+                        'visibility': 'internal',
+                        'size': 1024,
+                    },
+                },
+                'message': 'hi mom',
+            }],
+            'PUT': [foo_digest],
+        })
+
+    def test_upload_send_batch_fails(self):
+        """When the upload request to RelengAPI fails, upload fails."""
+        self.start_server()
+        self.server_config['post_fails'] = True
+        foo_digest = self.add_file("foo.txt", upload_fails=True)
+        assert not tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], None)
+        eq_(self.server_requests, {
+            'POST': [{
+                'files': {
+                    'foo.txt': {
+                        'digest': foo_digest,
+                        'algorithm': 'sha512',
+                        'visibility': 'internal',
+                        'size': 1024,
+                    },
+                },
+                'message': 'hi mom',
+            }],
+        })
+
+    def test_no_manifest(self):
+        """When given a manifest that doesn't exist, upload fails."""
+        assert not tooltool.upload('nosuch.tt', 'hi mom', ['http://'], None)
+
+    def test_invalid_manifest(self):
+        """When given a manifest that doesn't validate, upload fails"""
+        self.add_file("foo.txt")
+        open("foo.txt", "w").write('bogus')
+        assert not tooltool.upload('manifest.tt', 'hi mom', ['http://'], None)
+
+    def test_send_batch_success(self):
+        self.start_server()
+        batch = {'message': 'hi mom', 'files': {}}
+        eq_(tooltool._send_batch(self.mkurl(''), None, batch), batch)
+        eq_(self.server_requests, {'POST': [batch]})
+
+    def test_send_batch_failure(self):
+        self.start_server()
+        self.server_config['post_fails'] = True
+        batch = {'message': 'hi mom', 'files': {}}
+        eq_(tooltool._send_batch(self.mkurl(''), None, batch), None)
+        eq_(self.server_requests, {'POST': [batch]})
+
+    def test_s3_upload(self):
+        self.start_server()
+        file = {'put_url': self.mkurl('/sha512/' + self.digest)}
+        tooltool._s3_upload('testfile.txt', file)
+        eq_(self.server_requests, {'PUT': [self.digest]})
+        assert file['upload_ok']
+
+    def test_s3_upload_fails(self):
+        self.start_server()
+        self.server_config['upload_failures'] = [self.digest]
+        file = {'put_url': self.mkurl('/sha512/' + self.digest)}
+        tooltool._s3_upload('testfile.txt', file)
+        eq_(self.server_requests, {'PUT': [self.digest]})
+        assert not file['upload_ok'], file
+        assert 'upload_exception' in file, file
+
+    def test_notify_upload(self):
+        self.start_server()
+        file = {'algorithm': 'sha512', 'digest': self.digest}
+        tooltool._notify_upload_complete(self.mkurl(''), None, file)
+        eq_(self.server_requests, {'GET': [self.digest]})
+
+    def test_notify_upload_fails(self):
+        self.start_server()
+        self.server_config['get_fails'] = True
+        file = {'algorithm': 'sha512', 'digest': self.digest}
+        with BufferHandler.capture('tooltool') as logged:
+            tooltool._notify_upload_complete(self.mkurl(''), None, file)
+        eq_(self.server_requests, {'GET': [self.digest]})
+        eq_(logged, [(logging.ERROR, 'Error making RelengAPI request:')])
+
+
+def test_log_api_error_generic():
+    with BufferHandler.capture('tooltool') as logged:
+        tooltool._log_api_error(RuntimeError('uhoh'))
+    eq_(logged, [(logging.ERROR, 'Error making RelengAPI request:')])
+
+
+def test_log_api_error_api_error():
+    with BufferHandler.capture('tooltool') as logged:
+        fp = cStringIO.StringIO(json.dumps(
+            {'error': {'name': 'Bad Request', 'description': 'Nice try'}}))
+        exc = urllib2.HTTPError("http://a", 400, "Bad Request",
+                                {'content-type': 'application/json'},
+                                fp)
+        tooltool._log_api_error(exc)
+    eq_(logged, [(logging.ERROR, 'Bad Request: Nice try')])
 
 
 class FetchTests(TestDirMixin, unittest.TestCase):

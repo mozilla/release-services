@@ -31,7 +31,9 @@ import shutil
 import sys
 import tarfile
 import tempfile
+import threading
 import urllib2
+import urlparse
 
 from subprocess import PIPE
 from subprocess import Popen
@@ -384,7 +386,7 @@ def validate_manifest(manifest_file):
         return False
 
 
-def add_files(manifest_file, algorithm, filenames, create_package=False):
+def add_files(manifest_file, algorithm, filenames):
     # returns True if all files successfully added, False if not
     # and doesn't catch library Exceptions.  If any files are already
     # tracked in the manifest, return will be False because they weren't
@@ -401,12 +403,6 @@ def add_files(manifest_file, algorithm, filenames, create_package=False):
         log.debug("adding %s" % filename)
         path, name = os.path.split(filename)
         new_fr = create_file_record(filename, algorithm)
-        if create_package:  # pragma: no cover
-            # this is going to go away with the `package` action
-            shutil.copy(filename,
-                        os.path.join(os.path.split(manifest_file)[0], new_fr.digest))
-            log.debug("Added file %s to tooltool package %s with hash %s" % (
-                filename, os.path.split(manifest_file)[0], new_fr.digest))
         log.debug("appending a new file record to manifest file")
         add = True
         for fr in old_manifest.file_records:
@@ -725,8 +721,121 @@ def purge(folder, gigs):
             break
 
 
-def upload(package, user, host, path):  # pragma: no cover
-    pass
+def _log_api_error(e):
+    if hasattr(e, 'hdrs') and e.hdrs['content-type'] == 'application/json':
+        json_resp = json.load(e.fp)
+        log.error("%s: %s" % (json_resp['error']['name'],
+                              json_resp['error']['description']))
+    else:
+        log.exception("Error making RelengAPI request:")
+
+
+def _send_batch(base_url, auth_file, batch):
+    url = urlparse.urljoin(base_url, '/tooltool/upload')
+    req = urllib2.Request(url, json.dumps(batch), {'Content-Type': 'application/json'})
+    try:
+        resp = urllib2.urlopen(req)
+    except (urllib2.URLError, urllib2.HTTPError) as e:
+        _log_api_error(e)
+        return None
+    return json.load(resp)['result']
+
+
+def _s3_upload(filename, file):
+    # TODO: use httplib here, because urllib2 does not support
+    # streaming uploads.  Also, encoding.
+    req = urllib2.Request(file['put_url'], data=open(filename).read())
+    req.add_header('Content-type', 'application/octet-stream')
+    req.get_method = lambda: 'PUT'
+    try:
+        urllib2.urlopen(req)
+    except Exception:
+        file['upload_exception'] = sys.exc_info()
+        file['upload_ok'] = False
+    else:
+        file['upload_ok'] = True
+
+
+def _notify_upload_complete(base_url, auth_file, file):
+    url = urlparse.urljoin(
+        base_url,
+        '/tooltool/upload/complete/%(algorithm)s/%(digest)s' % file)
+    try:
+        urllib2.urlopen(url)
+    except (urllib2.URLError, urllib2.HTTPError) as e:
+        _log_api_error(e)
+
+
+def upload(manifest, message, base_urls, auth_file):
+    try:
+        manifest = open_manifest(manifest)
+    except InvalidManifest:
+        log.exception("failed to load manifest file at '%s'")
+        return False
+
+    # verify the manifest, since we'll need the files present to upload
+    if not manifest.validate():
+        log.error('manifest is invalid')
+        return False
+
+    # convert the manifest to an upload batch
+    batch = {
+        'message': message,
+        'files': {},
+    }
+    for fr in manifest.file_records:
+        batch['files'][fr.filename] = {
+            'size': fr.size,
+            'digest': fr.digest,
+            'algorithm': fr.algorithm,
+            'visibility': 'internal',  # TODO: allow this to be specified in the manifest
+        }
+
+    # make the upload request
+    resp = _send_batch(base_urls[0], auth_file, batch)
+    if not resp:
+        return None
+    files = resp['files']
+
+    # Upload the files, each in a thread.  This allows us to start all of the
+    # uploads before any of the URLs expire.
+    threads = {}
+    for filename, file in files.iteritems():
+        if 'put_url' in file:
+            log.info("%s: starting upload" % (filename,))
+            thd = threading.Thread(target=_s3_upload,
+                                   args=(filename, file))
+            thd.daemon = 1
+            thd.start()
+            threads[filename] = thd
+        else:
+            log.info("%s: already exists on server" % (filename,))
+
+    # re-join all of those threads as they exit
+    success = True
+    while threads:
+        for filename, thread in threads.items():
+            if not thread.is_alive():
+                # _s3_upload has annotated file with result information
+                file = files[filename]
+                thread.join()
+                if file['upload_ok']:
+                    log.info("%s: uploaded" % filename)
+                else:
+                    log.error("%s: failed" % filename,
+                              exc_info=file['upload_exception'])
+                    success = False
+                del threads[filename]
+
+    # notify the server that the uploads are completed.  If the notification
+    # fails, we don't consider that an error (the server will notice
+    # eventually)
+    log.info("notifying server of upload completion")
+    for filename, file in files.iteritems():
+        if 'put_url' in file and file['upload_ok']:
+            _notify_upload_complete(base_urls[0], auth_file, file)
+
+    return success
 
 
 def process_command(options, args):
