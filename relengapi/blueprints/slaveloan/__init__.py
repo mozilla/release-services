@@ -84,7 +84,7 @@ def get_all_loans():
 
 @bp.route('/loans/new', methods=['POST'])
 @p.slaveloan.admin.require()
-@apimethod(None, body=rest.LoanAdminRequest)
+@apimethod(rest.Loan, body=rest.LoanAdminRequest)
 def new_loan_from_admin(body):
     "Creates a new loan entry"
     if not body.status:
@@ -123,7 +123,7 @@ def new_loan_from_admin(body):
 
 
 @bp.route('/loans/request', methods=['POST'])
-@apimethod(None, body=rest.LoanRequest)
+@apimethod(rest.Loan, body=rest.LoanRequest)
 def new_loan_request(body):
     "User Loan Requesting, returns the id of the loan"
     if not body.ldap_email:
@@ -160,7 +160,7 @@ def new_loan_request(body):
     session.commit()
     chain_of_stuff = task_groups.generate_loan(loanid=l.id, slavetype=slavetype)
     chain_of_stuff.delay()
-    return None  # ?rest.WSME_New_Loan({'loan': l.to_wsme()})
+    return l.to_wsme  # ?rest.WSME_New_Loan({'loan': l.to_wsme()})
 
 
 @bp.route('/machine/classes')
