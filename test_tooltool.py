@@ -607,7 +607,7 @@ class UploadTests(TestDirMixin, unittest.TestCase):
         self.tearDownTestDir()
 
     def add_file(self, filename, on_server=False, upload_fails=False):
-        data = `os.urandom(1024)`[:1024]  # TODO: keep it ASCII for now; need encoding support
+        data = os.urandom(1024)
         open(filename, "w").write(data)
         digest = hashlib.sha512(data).hexdigest()
         tooltool.add_files('manifest.tt', 'sha512', [filename])

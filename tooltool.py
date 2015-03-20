@@ -743,8 +743,12 @@ def _send_batch(base_url, auth_file, batch):
 
 def _s3_upload(filename, file):
     # TODO: use httplib here, because urllib2 does not support
-    # streaming uploads.  Also, encoding.
-    req = urllib2.Request(file['put_url'], data=open(filename).read())
+    # streaming uploads.
+    # using a unicode URL (from json.load) causes the entire request to
+    # be treated as a unicode string, rather than a bytestring, which is not
+    # what we want, so convert to a bytestring now
+    url = file['put_url'].encode('ascii')
+    req = urllib2.Request(url, data=open(filename).read())
     req.add_header('Content-type', 'application/octet-stream')
     req.get_method = lambda: 'PUT'
     try:
