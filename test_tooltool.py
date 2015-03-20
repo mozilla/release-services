@@ -520,20 +520,34 @@ def test_command_upload_no_url():
 
 class UploadTests(TestDirMixin, unittest.TestCase):
 
-    class StopServing(Exception):
-        pass
-
     class Handler(BaseHTTPServer.BaseHTTPRequestHandler):
+
+        """A mini webserver for uploading.  This implements both the RelengAPI
+        bits (POST and GET) and the S3 bits (PUT)."""
 
         test_case = None
 
         def log_request(self, code=None, size=None):
             logging.getLogger('fake_web').info("%s %s" % (self.path, code))
 
+        def verify_auth(self):
+            token = self.test_case.server_config.get('exp_auth_token')
+            if token:
+                if self.headers.get('Authorization') != 'Bearer %s' % token:
+                    self.send_response(403, "Forbidden")
+                    self.send_header('content-type', 'text/plain')
+                    self.end_headers()
+                    self.wfile.write("go away")
+                    self.wfile.close()
+                    return False
+            return True
+
         def do_POST(self):
             cfg = self.test_case.server_config
             eq_(self.path, '/tooltool/upload')
             eq_(self.headers['content-type'], 'application/json')
+            if not self.verify_auth():
+                return
             body = json.loads(self.rfile.read(int(self.headers['content-length'])))
             self.test_case.server_requests.setdefault('POST', []).append(copy.deepcopy(body))
             eq_(body['message'], 'hi mom')
@@ -574,6 +588,8 @@ class UploadTests(TestDirMixin, unittest.TestCase):
         def do_GET(self):  # notify
             cfg = self.test_case.server_config
             assert self.path.startswith('/tooltool/upload/complete/sha512/')
+            if not self.verify_auth():
+                return
             digest = self.path[-128:]
             self.test_case.server_requests.setdefault('GET', []).append(digest)
             if cfg.get('get_fails'):
@@ -620,7 +636,7 @@ class UploadTests(TestDirMixin, unittest.TestCase):
     def mkurl(self, path):
         return 'http://127.0.0.1:%d%s' % (self.http_port, path)
 
-    def test_success(self):
+    def test_upload_success(self):
         """An upload with two files, one of which is on the server already,
         succeeds"""
         self.start_server()
@@ -649,6 +665,36 @@ class UploadTests(TestDirMixin, unittest.TestCase):
             'PUT': [bar_digest],
             'GET': [bar_digest],
         })
+
+    def test_upload_success_auth(self):
+        """An upload with authentication information succeeds when the server expects
+        authentication."""
+        self.start_server()
+        foo_digest = self.add_file("foo.txt", on_server=True)
+        self.server_config['exp_auth_token'] = token = 'abcABC'
+        open("auth", "w").write(token)
+        assert tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], 'auth')
+        eq_(self.server_requests, {
+            'POST': [{
+                'files': {
+                    'foo.txt': {
+                        'digest': foo_digest,
+                        'algorithm': 'sha512',
+                        'visibility': 'internal',
+                        'size': 1024,
+                    },
+                },
+                'message': 'hi mom',
+            }],
+        })
+
+    def test_upload_failure_auth(self):
+        """An upload with incorrect authentication information fails"""
+        self.start_server()
+        self.add_file("foo.txt", on_server=True)
+        self.server_config['exp_auth_token'] = 'abcABC'
+        open("auth", "w").write('not-the-token')
+        assert not tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], 'auth')
 
     def test_upload_s3_fails(self):
         """When an S3 upload fails, the upload fails and no notification takes

@@ -731,9 +731,15 @@ def _log_api_error(e):
         log.exception("Error making RelengAPI request:")
 
 
+def _authorize(req, auth_file):
+    if auth_file:
+        req.add_header('Authorization', 'Bearer %s' % (open(auth_file).read().strip()))
+
+
 def _send_batch(base_url, auth_file, batch):
     url = urlparse.urljoin(base_url, '/tooltool/upload')
     req = urllib2.Request(url, json.dumps(batch), {'Content-Type': 'application/json'})
+    _authorize(req, auth_file)
     try:
         resp = urllib2.urlopen(req)
     except (urllib2.URLError, urllib2.HTTPError) as e:
@@ -767,11 +773,13 @@ def _s3_upload(filename, file):
 
 
 def _notify_upload_complete(base_url, auth_file, file):
-    url = urlparse.urljoin(
-        base_url,
-        '/tooltool/upload/complete/%(algorithm)s/%(digest)s' % file)
+    req = urllib2.Request(
+        urlparse.urljoin(
+            base_url,
+            '/tooltool/upload/complete/%(algorithm)s/%(digest)s' % file))
+    _authorize(req, auth_file)
     try:
-        urllib2.urlopen(url)
+        urllib2.urlopen(req)
     except (urllib2.URLError, urllib2.HTTPError) as e:
         _log_api_error(e)
 
@@ -840,9 +848,9 @@ def upload(manifest, message, base_urls, auth_file):
     # notify the server that the uploads are completed.  If the notification
     # fails, we don't consider that an error (the server will notice
     # eventually)
-    log.info("notifying server of upload completion")
     for filename, file in files.iteritems():
         if 'put_url' in file and file['upload_ok']:
+            log.info("notifying server of upload completion for %s" % (filename,))
             _notify_upload_complete(base_urls[0], auth_file, file)
 
     return success
@@ -925,7 +933,9 @@ def main(argv, _skip_logging=False):
                            'and brief comment',
                       dest='message')
     parser.add_option('--authentication-file',
-                      help='Use http authentication to download a file.', dest='auth_file')
+                      help='Use the RelengAPI token found in the given file to '
+                           'authenticate to the RelengAPI server.',
+                      dest='auth_file')
 
     (options_obj, args) = parser.parse_args(argv[1:])
     # Dictionaries are easier to work with
