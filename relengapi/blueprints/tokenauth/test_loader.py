@@ -42,6 +42,17 @@ def test_loader_good_header(app, client):
 
 
 @test_context.specialize(db_setup=insert_prm)
+def test_loader_good_header_Authentication(app, client):
+    """The old 'Authentication' header can be used instead of 'Authorization'"""
+    # see https://github.com/mozilla/build-relengapi/pull/192/files
+    tok = FakeSerializer.prm(1)
+    auth = json.loads(
+        client.get('/test_tokenauth',
+                   headers=[('Authentication', 'Bearer ' + tok)]).data)
+    eq_(auth['permissions'], ['test_tokenauth.zig'], auth)
+
+
+@test_context.specialize(db_setup=insert_prm)
 def test_from_str(app):
     """from_str returns a TokenUser object for a good token"""
     tok = FakeSerializer.prm(1)

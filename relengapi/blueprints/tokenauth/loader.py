@@ -58,7 +58,13 @@ class TokenLoader(object):
         # wrong
         header = request.headers.get('Authorization')
         if not header:
-            return
+            # keep backward compatibility with the old header
+            header = request.headers.get('Authentication')
+            if not header:
+                return
+            # see https://github.com/mozilla/build-relengapi/pull/192/files
+            logger.warning("client is using 'Authentication' header instead of "
+                           "'Authorization'")
         header = header.split()
         if len(header) != 2 or header[0].lower() != 'bearer':
             return
