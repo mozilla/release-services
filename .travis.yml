@@ -5,8 +5,28 @@ python:
 # command to install dependencies
 install:
   - "pip install -e .[test]"
+  - "pip install coverage"
+  - "pip install coveralls"
   - "pip freeze"
 
 # run everything in a single script, so we get a nice summary at the end
 script:
   - bash ./validate.sh
+
+after_success:
+  - coveralls --rcfile coveragerc
+
+# currently cannot customise per user fork, see:
+# https://github.com/travis-ci/travis-ci/issues/1094
+# please comment out this section in your personal fork!
+notifications:
+  irc:
+    channels:
+      - "irc.mozilla.org#callek"
+    on_success: always
+    on_failure: always
+    template:
+      - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
+      - "Change view : %{compare_url}"
+      - "Build details : %{build_url}"
+      - "Commit message : %{commit_message}"

@@ -21,4 +21,3 @@ exclude_lines =
 
 omit =
     */test_*
-    relengapi/blueprints/docs/temp/build/src/conf.py

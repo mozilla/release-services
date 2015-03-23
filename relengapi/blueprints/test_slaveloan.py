@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import json
-
 from nose.tools import eq_
 from relengapi.lib.testing.context import TestContext
 
@@ -14,4 +12,3 @@ test_context = TestContext()
 def test_hello(client):
     rv = client.get('/slaveloan/')
     eq_(rv.status_code, 200)
-    eq_(json.loads(rv.data)['result'], {'message': 'hello world'})

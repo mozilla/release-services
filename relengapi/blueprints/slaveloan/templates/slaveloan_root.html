@@ -1,0 +1,23 @@
+{# This Source Code Form is subject to the terms of the Mozilla Public
+ # License, v. 2.0. If a copy of the MPL was not distributed with this
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/. #}
+{% extends "layout.html" %}
+{% block content %}
+
+<h2>New Loan</h2>
+<form><fieldset><legend>Who You Are</legend><label for="LDAP">Full LDAP Username: </label><input type="text" name="LDAP" /><br />
+<label for="Bugzilla">Your Bugzilla E-mail</label><input type="text" name="bugzilla" />
+</fieldset>
+<fieldset><legend>Slave Info</legend>
+What Slave do you need?<br />
+<ul style="list-style-type:none"><li><input type="radio" name="slave_style" value="selected"><select><option>bld-centos6-hp-*</option><option>bld-linux64-ec2</option><option>...</option></select></li>
+<li><input type="radio" name="slave_style" value="other">Other (Specify):<input type="text" name="other_slave" /></li>
+<li><input type="radio" name="slave_style" value="unknown">I don't know what I need, I'll ping in #releng</li>
+</fieldset>
+<fieldset>
+<legend>Complete</legend>
+<span style="color:dark-green;">Submitting Request...</span>
+<button type="submit">Submit Loan Request</button>
+</fieldset>
+</form>
+{% endblock %}

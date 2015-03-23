@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
 from setuptools import setup, find_packages
@@ -13,14 +16,17 @@ data_patterns = [
 
 setup(
     name='relengapi-slaveloan',
-    version='0.0.0',
-    description='slaveloan of a RelengAPI project',
-    author='slaveloan Crew',
-    author_email='slaveloan@mozilla.com',
-    url='https://github.com/buildbot/build-relengapi-slaveloan',
+    version='0.1',
+    description='Slave Loan blueprint for RelengAPI',
+    author='Justin Wood',
+    author_email='callek@mozilla.com',
+    url='https://github.com/mozilla/build-relengapi-slaveloan',
     entry_points={
-        "relengapi_blueprints": [
-            'mapper = relengapi.blueprints.slaveloan:bp',
+        "relengapi.blueprints": [
+            'slaveloan = relengapi.blueprints.slaveloan:bp',
+        ],
+        "relengapi.metadata": [
+            'relengapi-slaveloan = relengapi.blueprints.slaveloan.metadata:data',
         ],
     },
     packages=find_packages(),
@@ -34,13 +40,19 @@ setup(
         if files
     ],
     package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
-        'relengapi.blueprints.slaveloan': data_patterns,
+        'relengapi.blueprints.slaveloan': data_patterns + [
+            'docs/**.rst'
+        ],
     },
-    install_requires=[
-        'Flask',
-        'relengapi>=0.3',
-    ],
+    include_package_data=True,
     license='MPL2',
+    install_requires=[
+        "Flask",
+        "furl",
+        "relengapi>=0.3",
+        "redo",
+        "bzrest",
+    ],
     extras_require={
         'test': [
             'nose',
@@ -49,4 +61,5 @@ setup(
             'pyflakes',
             'coverage',
         ]
-    })
+    },
+)
