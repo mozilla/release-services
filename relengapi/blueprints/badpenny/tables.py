@@ -23,13 +23,18 @@ class BadpennyJob(db.declarative_base('relengapi')):
     __tablename__ = 'badpenny_jobs'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    task_id = sa.Column(sa.Integer, sa.ForeignKey('badpenny_tasks.id'))
+    task_id = sa.Column(sa.Integer, sa.ForeignKey('badpenny_tasks.id'),
+                        nullable=False)
     task = sa.orm.relationship('BadpennyTask')
 
     created_at = sa.Column(db.UTCDateTime(timezone=True), nullable=False)
     started_at = sa.Column(db.UTCDateTime(timezone=True), nullable=True)
     completed_at = sa.Column(db.UTCDateTime(timezone=True), nullable=True)
     successful = sa.Column(sa.Boolean())
+
+    # note that there's never more than one log due to the unique id, but
+    # SQLAlchemy still models it as a list
+    logs = sa.orm.relationship('BadpennyJobLog')
 
     def to_jsonjob(self):
         return rest.BadpennyJob(id=self.id,
