@@ -8,6 +8,7 @@ from setuptools import setup
 data_patterns = [
     'templates/**.html',
     'static/**.jpg',
+    'static/**.html',
     'static/**.css',
     'static/**.js',
     'static/**.txt',

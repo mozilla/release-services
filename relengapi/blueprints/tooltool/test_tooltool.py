@@ -221,6 +221,12 @@ def test_is_valid_sha512():
     assert not tooltool.is_valid_sha512('j' * 128)
 
 
+@test_context
+def test_ui(client):
+    """The root of the blueprint renders an angular HTML page"""
+    assert 'angular' in client.get('/tooltool/').data
+
+
 @moto.mock_s3
 @test_context
 def test_upload_batch_empty_message(app, client):

@@ -10,11 +10,14 @@ from flask import Blueprint
 from flask import current_app
 from flask import g
 from flask import redirect
+from flask import url_for
 from flask.ext.login import current_user
+from flask.ext.login import login_required
 from relengapi.blueprints.tooltool import grooming
 from relengapi.blueprints.tooltool import tables
 from relengapi.blueprints.tooltool import types
 from relengapi.blueprints.tooltool import util
+from relengapi.lib import angular
 from relengapi.lib import api
 from relengapi.lib import time
 from relengapi.lib.permissions import p
@@ -27,7 +30,8 @@ metadata = {
     'bug_report_url': 'http://goo.gl/XZpyie',  # bugzilla saved new-bug form
 }
 
-bp = Blueprint('tooltool', __name__)
+bp = Blueprint('tooltool', __name__,
+               static_folder='static')
 
 is_valid_sha512 = re.compile(r'^[0-9a-f]{128}$').match
 
@@ -52,6 +56,14 @@ def get_region_and_bucket(region_arg):
         return region_arg, cfg[region_arg]
     # no region specified, so return one at random
     return random.choice(cfg.items())
+
+
+@bp.route('/')
+@login_required
+def root():
+    return angular.template('tooltool.html',
+                            url_for('.static', filename='tooltool.js'),
+                            url_for('.static', filename='tooltool.css'))
 
 
 @bp.route('/upload')
