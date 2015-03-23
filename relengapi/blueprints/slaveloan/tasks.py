@@ -85,7 +85,7 @@ def choose_inhouse_machine(self, loanid, loan_class):
 @task(bind=True, max_retries=None)
 @add_to_history(
     before="Identifying FQDN and IP of {args[1]}",
-    after="Aquired FQDN and IP")
+    after="Acquired FQDN and IP")
 def fixup_machine(self, machine, loanid):
     try:
         fqdn = socket.getfqdn("%s.build.mozilla.org" % machine)
