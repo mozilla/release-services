@@ -21,6 +21,7 @@ from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import InternalServerError
 
 from relengapi.blueprints.slaveloan import rest
+from relengapi.blueprints.slaveloan import bugzilla
 from relengapi.blueprints.slaveloan.model import History
 from relengapi.blueprints.slaveloan.model import Humans
 from relengapi.blueprints.slaveloan.model import Loans
@@ -33,6 +34,11 @@ bp = Blueprint('slaveloan', __name__,
                static_folder='static')
 
 p.slaveloan.admin.doc("Administer Slaveloans for all users")
+
+
+@bp.record
+def init_blueprint(state):
+    bugzilla.init_app(state.app)
 
 ##################
 #  RESTful APIs  #

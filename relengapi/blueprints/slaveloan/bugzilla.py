@@ -17,16 +17,17 @@ MAX_ALIAS = 15
 DEFAULT_BUGZILLA_URL = "https://bugzilla-dev.allizom.org/rest/"
 
 
-def _bzclient():
-    if getattr(current_app, 'bzclient', None):
-        return current_app.bzclient
-    # XXX: Todo log warning if user or pass is "None"
+def init_app(app):
+    bzurl = app.config.get('BUGZILLA_URL', DEFAULT_BUGZILLA_URL)
+    if not app.config.get('BUGZILLA_USER', None):
+        log.warning("No bugzilla user specified. (Set BUGZILLA_USER in config to fix)")
+    if not app.config.get('BUGZILLA_PASS', None):
+        log.warning("No bugzilla password specified. (Set BUGZILLA_PASS in config to fix)")
     bzclient = BugzillaClient()
-    bzclient.configure(bzurl=current_app.config.get('BUGZILLA_URL', DEFAULT_BUGZILLA_URL),
-                       username=current_app.config.get('BUGZILLA_USER', None),
-                       password=current_app.config.get('BUGZILLA_PASS', None))
-    current_app.bzclient = bzclient
-    return current_app.bzclient
+    bzclient.configure(bzurl=bzurl,
+                       username=app.config.get('BUGZILLA_USER', None),
+                       password=app.config.get('BUGZILLA_PASS', None))
+    app.bzclient = bzclient
 
 
 class Bug(object):
@@ -47,12 +48,12 @@ class Bug(object):
         return self.id or self.alias
 
     def refresh(self):
-        self.data = _bzclient().get_bug(self.id_)
+        self.data = current_app.bzclient.get_bug(self.id_)
         self.id = self.data["id"]
         self.alias = self.data["alias"]
 
     def add_comment(self, comment, data={}):
-        return _bzclient().add_comment(self.id_, comment, data)
+        return current_app.bzclient.add_comment(self.id_, comment, data)
 
 
 class ProblemTrackingBug(Bug):
@@ -82,7 +83,7 @@ class ProblemTrackingBug(Bug):
             data['comment'] = comment
         if depends_on:
             data['depends_on'] = depends_on
-        resp = _bzclient().create_bug(data)
+        resp = current_app.bzclient.create_bug(data)
         self.id = resp["id"]
 
 
@@ -107,7 +108,7 @@ class LoanerBug(Bug):
             data['comment'] = comment
         if blocks:
             data['blocks'] = blocks
-        resp = _bzclient().create_bug(data)
+        resp = current_app.bzclient.create_bug(data)
         self.id = resp["id"]
         return self
 
