@@ -18,6 +18,9 @@ setup(name='relengapi-skeleton',
     author_email='skeleton@mozilla.com',
     url='https://github.com/buildbot/build-relengapi-skeleton',
     entry_points={
+        "relengapi.metadata": [
+            'relengapi-skeleton = relengapi.blueprints.skeleton:metadata',
+        ],
         "relengapi_blueprints": [
             'mapper = relengapi.blueprints.skeleton:bp',
         ],

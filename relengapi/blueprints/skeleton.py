@@ -12,3 +12,8 @@ bp = Blueprint('skeleton', __name__)
 @api.apimethod({unicode: unicode})
 def hello():
     return {'message': 'hello world'}
+
+metadata = {
+    # 'repository_of_record': '..'
+    # 'bug_report_url': '..',
+}
