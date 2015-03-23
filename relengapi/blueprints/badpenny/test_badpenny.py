@@ -22,8 +22,7 @@ from relengapi.lib.testing.context import TestContext
 def dt(*args):
     return datetime.datetime(*args, tzinfo=pytz.UTC)
 
-test_context = TestContext(databases=['relengapi'],
-                           reuse_app=True)
+test_context = TestContext(databases=['relengapi'])
 
 
 def insert_job(app, task_id, created_at, **kwargs):
@@ -113,9 +112,12 @@ def add_data(app):
 
 def create_job(app):
     with app.app_context():
+        session = app.db.session('relengapi')
+        task = tables.BadpennyTask(id=10, name='test.task')
+        session.add(task)
         job = tables.BadpennyJob(task_id=10, created_at=dt(2014, 9, 16))
-        app.db.session('relengapi').add(job)
-        app.db.session('relengapi').commit()
+        session.add(job)
+        session.commit()
         return job.id
 
 
