@@ -196,10 +196,16 @@ def upload_complete(digest):
 
 
 @bp.route('/file')
-@api.apimethod([types.File])
-def get_files():
-    """Get a list of all files."""
-    return [row.to_json() for row in tables.File.query.all()]
+@api.apimethod([types.File], unicode)
+def search_files(q):
+    """Search for files matching the query ``q``.  The query matches against
+    prefixes of hashes (at least 8 characters) or against filenames."""
+    session = g.db.session('tooltool')
+    query = session.query(tables.File).join(tables.BatchFile)
+    query = query.filter(sa.or_(
+        tables.BatchFile.filename.contains(q),
+        tables.File.sha512.startswith(q)))
+    return [row.to_json() for row in query.all()]
 
 
 @bp.route('/file/sha512/<digest>')

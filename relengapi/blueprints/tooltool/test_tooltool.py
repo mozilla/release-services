@@ -665,22 +665,38 @@ def test_get_batch_found(client):
 
 @test_context
 def test_get_files(app, client):
-    """A GET to /file returns all files"""
-    add_file_to_db(app, ONE)
-    add_file_to_db(app, TWO)
-    resp = client.get('/tooltool/file')
-    eq_(resp.status_code, 200)
-    eq_(sorted(json.loads(resp.data)['result']), sorted([{
+    """GETs to /file?q=.. return appropriately filtered files."""
+    f1 = add_file_to_db(app, ONE)
+    f1j = {
         "algorithm": "sha512",
         "digest": ONE_DIGEST,
         "size": len(ONE),
         "visibility": "public"
-    }, {
+    }
+    f2 = add_file_to_db(app, TWO)
+    f2j = {
         "algorithm": "sha512",
         "digest": TWO_DIGEST,
         "size": len(TWO),
         "visibility": "public"
-    }]))
+    }
+    add_batch_to_db(
+        app, 'me@me.com', 'first batch', {'one': f1})
+    add_batch_to_db(
+        app, 'me@me.com', 'second batch', {'two': f2})
+    add_batch_to_db(
+        app, 'you@you.com', 'third batch', {'1': f1, '2': f2})
+
+    for q, exp_files in [
+        ('one', [f1j]),
+        ('2', [f2j]),
+        (ONE_DIGEST[:8], [f1j]),
+        (ONE_DIGEST[10:20], []),  # digests are prefix-only
+        ('', [f1j, f2j]),
+    ]:
+        resp = client.get('/tooltool/file?q=' + q)
+        eq_(resp.status_code, 200)
+        eq_(sorted(json.loads(resp.data)['result']), sorted(exp_files))
 
 
 @test_context
