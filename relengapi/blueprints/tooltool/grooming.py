@@ -46,6 +46,7 @@ def replicate(job_status):
     q = q.all()
     for file in q:
         replicate_file(session, file)
+    session.commit()
 
 
 def replicate_file(session, file):
@@ -62,10 +63,11 @@ def replicate_file(session, file):
         return
     source_region = source_regions.pop()
     source_bucket = config[source_region]
+    target_regions = regions - file_regions
+    log.info("replicating {} from {} to {}".format(
+        file.sha512, source_region, ', '.join(target_regions)))
 
     key_name = util.keyname(file.sha512)
-
-    target_regions = regions - file_regions
     for target_region in target_regions:
         target_bucket = config[target_region]
         conn = current_app.aws.connect_to('s3', target_region)
