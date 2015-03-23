@@ -20,8 +20,8 @@ from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import InternalServerError
 
-from relengapi.blueprints.slaveloan import rest
 from relengapi.blueprints.slaveloan import bugzilla
+from relengapi.blueprints.slaveloan import rest
 from relengapi.blueprints.slaveloan.model import History
 from relengapi.blueprints.slaveloan.model import Humans
 from relengapi.blueprints.slaveloan.model import Loans
