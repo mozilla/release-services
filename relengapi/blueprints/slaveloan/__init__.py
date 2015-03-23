@@ -170,7 +170,7 @@ def get_machine_classes():
     A mapping of what you'll get with a given loan, and globs of the slave types associated.
 
     Returns a mapping keyed on type of loan against slave-name globs that it corresponds to
-    e.g.:::
+    e.g.::
 
         {
             "b-2008-ix": [
