@@ -64,7 +64,7 @@ def gpo_switch(loanid, slavetype):
     if slave_mappings.needs_gpo(slavetype):
         return chain(
             tasks.bmo_file_gpo_bug.si(loanid=loanid),
-            tasks.bmo_wait_for_bug.si(loanid=loanid)
+            tasks.bmo_waitfor_bug.si(loanid=loanid)
         )
     else:
         return tasks.dummy_task.si()
