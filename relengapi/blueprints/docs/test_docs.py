@@ -29,7 +29,8 @@ def app_setup(app):
 
     # delete the srcdir, since we're running in development mode
     srcdir = os.path.join(sys.prefix, 'relengapi-docs')
-    shutil.rmtree(srcdir)
+    if os.path.exists(srcdir):
+        shutil.rmtree(srcdir)
 
     with app.app_context():
         args = mock.Mock()
