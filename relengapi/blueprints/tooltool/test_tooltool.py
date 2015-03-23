@@ -87,7 +87,19 @@ def add_file_to_db(app, content, regions=['us-east-1'],
                 expires=relengapi_time.now() + datetime.timedelta(seconds=60)))
         session.commit()
 
-        return file_row.id
+        return file_row
+
+
+def add_batch_to_db(app, author, message, files):
+    with app.app_context():
+        session = app.db.session('tooltool')
+        batch = tables.Batch(author=author, message=message,
+                             uploaded=relengapi_time.now())
+        session.add(batch)
+        for filename, file in files.iteritems():
+            session.add(tables.BatchFile(filename=filename, batch=batch, file=file))
+        session.commit()
+        return batch
 
 
 def add_file_to_s3(app, content, region='us-east-1'):
@@ -556,37 +568,57 @@ def test_download_file_exists_region_choice(app, client):
 
 @moto.mock_s3
 @test_context
-def test_list_batches(client):
-    eq_(upload_batch(client, mkbatch('batch 1')).status_code, 200)
-    eq_(upload_batch(client, mkbatch('batch 2')).status_code, 200)
-    resp = client.get('/tooltool/upload')
-    eq_(resp.status_code, 200, resp.data)
-    eq_(sorted(json.loads(resp.data)['result']), sorted([{
-        "author": "me",
-        "files": {
-            "one": {
-                "algorithm": "sha512",
-                "digest": ONE_DIGEST,
-                "size": len(ONE),
-                "visibility": "public"
-            }
-        },
-        "id": 1,
-        "message": "batch 1"
-    }, {
-        "author": "me",
-        "files": {
-            "one": {
-                "algorithm": "sha512",
-                "digest": ONE_DIGEST,
-                "size": len(ONE),
-                "visibility": "public"
-            }
-        },
-        "id": 2,
-        "message": "batch 2"
-    }
-    ]), resp.data)
+def test_search_batches(app, client):
+    with set_time():
+        f1 = add_file_to_db(app, ONE)
+        f1j = {
+            "algorithm": "sha512",
+            "digest": ONE_DIGEST,
+            "size": len(ONE),
+            "visibility": "public"
+        }
+        f2 = add_file_to_db(app, TWO)
+        f2j = {
+            "algorithm": "sha512",
+            "digest": TWO_DIGEST,
+            "size": len(TWO),
+            "visibility": "public"
+        }
+        add_batch_to_db(
+            app, 'me@me.com', 'first batch', {'one': f1})
+        b1j = {
+            "author": "me@me.com",
+            "files": {"one": f1j},
+            "id": 1,
+            "message": "first batch"
+        }
+        add_batch_to_db(
+            app, 'me@me.com', 'second batch', {'two': f2})
+        b2j = {
+            "author": "me@me.com",
+            "files": {"two": f2j},
+            "id": 2,
+            "message": "second batch"
+        }
+        add_batch_to_db(
+            app, 'you@you.com', 'third batch', {'1': f1, '2': f2})
+        b3j = {
+            "author": "you@you.com",
+            "files": {"1": f1j, "2": f2j},
+            "id": 3,
+            "message": "third batch"
+        }
+
+    for q, exp_batches in [
+        ('me', [b1j, b2j]),
+        ('ou@y', [b3j]),
+        ('econd batc', [b2j]),
+        ('', [b1j, b2j, b3j]),
+    ]:
+        resp = client.get('/tooltool/upload?q=' + q)
+        eq_(resp.status_code, 200, resp.data)
+        eq_(sorted(json.loads(resp.data)['result']), sorted(exp_batches),
+            "got: {}\nexp: {}".format(resp.data, exp_batches))
 
 
 @moto.mock_s3

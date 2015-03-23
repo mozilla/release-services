@@ -5,6 +5,7 @@
 import datetime
 import random
 import re
+import sqlalchemy as sa
 
 from flask import Blueprint
 from flask import current_app
@@ -67,15 +68,15 @@ def root():
 
 
 @bp.route('/upload')
-@api.apimethod([types.UploadBatch])
-def list_batches():
-    """Get a list of all upload batches."""
-    # TODO: eager load the files for these batches
-    # TODO: ?digest=.. to filter batches containing a digest
-    # TODO: ?filename=.. to filter batches containing a digest
-    # TODO: ?author=.. to filter batches to a particular author
-    # TODO: ?search=.. to search author, message, digest, and filenames
-    return [row.to_json() for row in tables.Batch.query.all()]
+@api.apimethod([types.UploadBatch], unicode)
+def search_batches(q):
+    """Search upload batches.  The required query parameter ``q`` can match a
+    substring of an author's email or a batch message."""
+    tbl = tables.Batch
+    q = tbl.query.filter(sa.or_(
+        tbl.author.contains(q),
+        tbl.message.contains(q)))
+    return [row.to_json() for row in q.all()]
 
 
 @bp.route('/upload/<int:id>')
