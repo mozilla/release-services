@@ -18,8 +18,7 @@ def generate_loan(slavetype, loanid):
         group(
             tasks.fixup_machine.s(loanid=loanid),
             tasks.bmo_set_tracking_bug.s(loanid=loanid),
-            # disable_machine_from_buildbot(slavetype, loanid)
-            tasks.dummy_task.si(loanid=loanid)
+            disable_machine_from_buildbot(slavetype, loanid),
         ),
         group(
             manual_action(loanid=loanid, action_name="add_to_vpn"),
