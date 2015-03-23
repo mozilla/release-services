@@ -188,12 +188,10 @@ def dummy_task(*args, **kwargs):
 waitfor_disable_slave = dummy_task
 slavealloc_disable = dummy_task
 bmo_file_gpo_bug = dummy_task
-bmo_wait_for_bug = dummy_task
+bmo_waitfor_bug = dummy_task
 clean_secrets = dummy_task
 update_loan_bug_with_details = dummy_task
 email_loan_details = dummy_task
 reboot_machine = dummy_task
 register_action_needed = dummy_task
 waitfor_action = dummy_task
-
-# eof

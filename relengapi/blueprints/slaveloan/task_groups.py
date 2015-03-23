@@ -68,5 +68,3 @@ def gpo_switch(loanid, slavetype):
         )
     else:
         return tasks.dummy_task.si()
-
-# eof

@@ -29,7 +29,7 @@
 </tbody>
 </table>
 
-<h2>New Loan</h2>
+<h2>Admin Provided Loan</h2>
 <form action="{{ url_for('slaveloan.new_loan_from_admin') }}"
       method="POST" id="new-loan">
   <fieldset>
@@ -48,21 +48,12 @@
     <label for="ipaddress">Machines IP: </label>
         <input type="text" name="ipaddress" /><br />
   </fieldset>
-<!--<label for="Bugzilla">Your Bugzilla E-mail</label><input type="text" name="bugzilla" />
-</fieldset>
-<fieldset><legend>Slave Info</legend>
-What Slave do you need?<br />
-<ul style="list-style-type:none"><li><input type="radio" name="slave_style" value="selected"><select><option>bld-centos6-hp-*</option><option>bld-linux64-ec2</option><option>...</option></select></li>
-<li><input type="radio" name="slave_style" value="other">Other (Specify):<input type="text" name="other_slave" /></li>
-<li><input type="radio" name="slave_style" value="unknown">I don't know what I need, I'll ping in #releng</li>
-</fieldset>
-<fieldset>-->
 <legend>Complete</legend>
 <button type="button" name="submit_loan" value="now" id="submit_loan">Submit Loan Info</button>
 </fieldset>
 </form>
 
-<h2>Request Loan</h2>
+<h2>Admin Requested Loan</h2>
 <form action="{{ url_for('slaveloan.new_loan_request') }}"
       method="POST" id="new-loan-request">
   <fieldset>
