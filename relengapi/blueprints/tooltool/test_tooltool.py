@@ -164,6 +164,7 @@ def assert_batch_response(resp, author='me', message='a batch',
     eq_(resp.status_code, 200, resp.data)
     result = json.loads(resp.data)['result']
     eq_(result['author'], author)
+    # TODO: eq_(result[
     eq_(result['message'], message)
     eq_(set(result['files']), set(files))
     for name, file in files.iteritems():
@@ -588,6 +589,7 @@ def test_search_batches(app, client):
             app, 'me@me.com', 'first batch', {'one': f1})
         b1j = {
             "author": "me@me.com",
+            "uploaded": "2015-03-05T22:02:02+00:00",
             "files": {"one": f1j},
             "id": 1,
             "message": "first batch"
@@ -596,6 +598,7 @@ def test_search_batches(app, client):
             app, 'me@me.com', 'second batch', {'two': f2})
         b2j = {
             "author": "me@me.com",
+            "uploaded": "2015-03-05T22:02:02+00:00",
             "files": {"two": f2j},
             "id": 2,
             "message": "second batch"
@@ -604,6 +607,7 @@ def test_search_batches(app, client):
             app, 'you@you.com', 'third batch', {'1': f1, '2': f2})
         b3j = {
             "author": "you@you.com",
+            "uploaded": "2015-03-05T22:02:02+00:00",
             "files": {"1": f1j, "2": f2j},
             "id": 3,
             "message": "third batch"
@@ -638,12 +642,14 @@ def test_get_batch_found(client):
         'digest': TWO_DIGEST,
         'visibility': 'public',
     }
-    resp = upload_batch(client, batch)
-    eq_(resp.status_code, 200, resp.data)
+    with set_time():
+        resp = upload_batch(client, batch)
+        eq_(resp.status_code, 200, resp.data)
     resp = client.get('/tooltool/upload/1')
     eq_(resp.status_code, 200, resp.data)
     eq_(json.loads(resp.data)['result'], {
         "author": "me",
+        "uploaded": "2015-03-05T22:02:02+00:00",
         "files": {
             "one": {
                 "algorithm": "sha512",

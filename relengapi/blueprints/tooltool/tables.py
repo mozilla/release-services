@@ -87,6 +87,7 @@ class Batch(db.declarative_base('tooltool')):
     def to_json(self):
         return types.UploadBatch(
             id=self.id,
+            uploaded=self.uploaded,
             author=self.author,
             message=self.message,
             files={n: f.to_json() for n, f in self.files.iteritems()})

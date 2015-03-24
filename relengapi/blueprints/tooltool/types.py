@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import datetime
 import wsme.types
 
 
@@ -47,6 +48,10 @@ class UploadBatch(wsme.types.Base):
 
     #: Identifier for this batch
     id = wsme.types.wsattr(int, mandatory=False)
+
+    #: The date and time when this upload occurred.  This will be added by the
+    #: server and need not be specified when making a new upload.
+    uploaded = wsme.types.wsattr(datetime.datetime, mandatory=False)
 
     #: The author (uploader) of the batch.  Do not include this when submitting
     #: a batch for upload; it will be filled in based on the request
