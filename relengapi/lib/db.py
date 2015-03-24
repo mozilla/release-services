@@ -2,12 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import logging
 import os
 import pytz
 import sqlalchemy as sa
 import threading
 
+from celery import signals
 from flask import current_app
 from relengapi.util import synchronized
 from sqlalchemy import event
@@ -53,7 +56,11 @@ class Alchemies(object):
         self.app = app
         self._engines = {}
         self._sessions = {}
-        app.teardown_request(self._teardown)
+
+        # destroy sessions after each Flask request
+        @app.teardown_request
+        def teardown_request(response_or_exc):
+            self.flush_sessions()
 
     def _get_db_config(self, dbname):
         uris = self.app.config.get('SQLALCHEMY_DATABASE_URIS')
@@ -100,9 +107,6 @@ class Alchemies(object):
         return self._sessions[dbname]
 
     def flush_sessions(self):
-        self._teardown(None)
-
-    def _teardown(self, response_or_exc):
         for s in self._sessions.values():
             s.remove()
         self._sessions = {}
@@ -137,6 +141,12 @@ def ping_connection(dbapi_connection, connection_record, connection_proxy):
         # connecting again up to three times before raising.
         raise exc.DisconnectionError()
     cursor.close()
+
+
+@signals.task_postrun.connect
+def task_postrun(sender=None, body=None, **kwargs):
+    # flush DB sessions after every celery task
+    current_app.db.flush_sessions()
 
 
 def make_db(app):
