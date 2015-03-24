@@ -11,6 +11,7 @@ from sqlalchemy import asc
 from flask import Blueprint
 from flask import g
 from flask import render_template
+from flask.ext.login import current_user
 from relengapi import apimethod
 from relengapi import p
 from relengapi.blueprints.slaveloan import task_groups
@@ -120,10 +121,13 @@ def new_loan_from_admin(body):
         l = Loans(status=body.status, human=h)
     history = History(for_loan=l,
                       timestamp=tz.utcnow(),
-                      msg="Adding to slave loan tool via admin interface")
+                      msg="%s added this entry to slave loan tool via admin interface" %
+                          current_user.authenticated_email)
     session.add(l)
     session.add(history)
     session.commit()
+    logger.info("%s manually added slave loan entry ID %s via admin interface" %
+                (current_user.authenticated_email, l.id))
     return l.to_wsme()
 
 
@@ -157,13 +161,16 @@ def new_loan_request(body):
     else:
         l = Loans(status="PENDING", human=h)
 
+    hist_line = "%s issued a loan request for slavetype %s (original: '%s') on behalf of %s" % \
+                (current_user.authenticated_email, slavetype,
+                 body.requested_slavetype, body.ldap_email)
     history = History(for_loan=l,
                       timestamp=tz.utcnow(),
-                      msg="Requesting loan for slavetype %s (original: '%s')" %
-                          (slavetype, body.requested_slavetype))
+                      msg=hist_line)
     session.add(l)
     session.add(history)
     session.commit()
+    logger.info(hist_line)
     chain_of_stuff = task_groups.generate_loan(loanid=l.id, slavetype=slavetype)
     chain_of_stuff.delay()
     return l.to_wsme()
