@@ -178,7 +178,7 @@ if [[ "${PROJECT}" =~ relengapi-[s]keleton ]]; then
     cp -r . ${tmpbase}/bubbler
     cd ${tmpbase}/bubbler
     find * -name '*skeleton*' | while read s; do d=$(echo $s | sed s/skeleton/bubbler/g); mv $s $d; done
-    git grep skeleton | cut -d: -f 1 | sort -u | while read s; do sed s/skeleton/bubbler/ < $s > $s~; mv $s~ $s; done
+    git grep skeleton | cut -d: -f 1 | sort -u | while read s; do sed s/skeleton/bubbler/g < $s > $s~; mv $s~ $s; done
     {
         virtualenv skeltest --no-site-packages &&
         skeltest/bin/pip install -e .[test] &&
