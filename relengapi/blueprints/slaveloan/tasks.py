@@ -184,7 +184,7 @@ def bmo_file_loan_bug(self, loanid, slavetype, *args, **kwargs):
 
 @task(bind=True)
 @add_to_history(
-    after="Waiting for a human to perform {kwargs[action_name]}")
+    after="Waiting for a human to perform {kwargs[action_name]} (id {retval!s})")
 def register_action_needed(self, loanid, action_name):
     if not action_name:
         raise ValueError("must supply an action name")
@@ -204,9 +204,23 @@ def register_action_needed(self, loanid, action_name):
                                msg=action_message)
         session.add(action)
         session.commit()
+        return action.id
     except ValueError:
         raise
     except Exception as exc:
+        self.retry(exc=exc)
+
+
+@task(bind=True, max_retries=None, default_retry_delay=60)
+@add_to_history(
+    after="Human performed waiting action (id {args[1]})")
+def waitfor_action(self, action_id, loanid):
+    try:
+        action = ManualActions.query.get(action_id)
+        if not action.timestamp_complete:
+            raise Exception("Retry me")
+    except Exception as exc:
+        logger.debug("Retrying...")
         self.retry(exc=exc)
 
 
@@ -222,4 +236,3 @@ clean_secrets = dummy_task
 update_loan_bug_with_details = dummy_task
 email_loan_details = dummy_task
 reboot_machine = dummy_task
-waitfor_action = dummy_task

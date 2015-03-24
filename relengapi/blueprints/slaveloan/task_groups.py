@@ -56,7 +56,7 @@ def disable_machine_from_buildbot(slavetype, loanid):
 def manual_action(loanid, action_name):
     return chain(
         tasks.register_action_needed.si(loanid=loanid, action_name=action_name),
-        tasks.waitfor_action.si(loanid=loanid, action_name=action_name)
+        tasks.waitfor_action.s(loanid=loanid)
     )
 
 
