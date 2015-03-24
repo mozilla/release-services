@@ -11,6 +11,7 @@ import signal
 from celery import chain
 from celery import group
 from celery.signals import worker_ready
+from flask import Flask
 from nose.tools import assert_raises
 from nose.tools import eq_
 from relengapi.lib import celery
@@ -160,3 +161,14 @@ def test_relengapi_celery_module():
         eq_(type(relengapi.celery.celery).__name__, 'Celery')
     finally:
         del os.environ['RELENGAPI_SETTINGS']
+
+
+def test_make_celery():
+    app = Flask('test')
+    celery.make_celery(app)
+    assert isinstance(app.celery_tasks, dict)
+
+
+def test_task_invalid_args():
+    assert_raises(TypeError, lambda:
+                  celery.task('arg1', 'arg2'))
