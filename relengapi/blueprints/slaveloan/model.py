@@ -7,6 +7,7 @@ import sqlalchemy as sa
 from relengapi.lib import db
 from relengapi.util import tz
 from sqlalchemy.orm import relationship
+from sqlalchemy.schema import Index
 
 from relengapi.blueprints.slaveloan import rest
 
