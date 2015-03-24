@@ -10,6 +10,7 @@ Types
 .. api:autotype:: Human
 .. api:autotype:: Loan
 .. api:autotype:: HistoryEntry
+.. api:autotype:: ManualAction
 .. api:autotype:: LoanRequest
 .. api:autotype:: LoanAdminRequest
 
