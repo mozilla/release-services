@@ -22,8 +22,7 @@ from relengapi.lib.testing.context import TestContext
 def dt(*args):
     return datetime.datetime(*args, tzinfo=pytz.UTC)
 
-test_context = TestContext(databases=['relengapi'],
-                           reuse_app=True)
+test_context = TestContext(databases=['relengapi'])
 
 
 def insert_job(app, task_id, created_at, **kwargs):
@@ -113,9 +112,12 @@ def add_data(app):
 
 def create_job(app):
     with app.app_context():
+        session = app.db.session('relengapi')
+        task = tables.BadpennyTask(id=10, name='test.task')
+        session.add(task)
         job = tables.BadpennyJob(task_id=10, created_at=dt(2014, 9, 16))
-        app.db.session('relengapi').add(job)
-        app.db.session('relengapi').commit()
+        session.add(job)
+        session.commit()
         return job.id
 
 
@@ -524,13 +526,17 @@ def test_cleanup(app):
         task = tables.BadpennyTask(name='foo')
         session.add(task)
 
-        def newjob(id, created_at):
-            task.jobs.append(tables.BadpennyJob(
-                id=id, task_id=task.id, created_at=created_at))
+        def newjob(id, created_at, log=None):
+            job = tables.BadpennyJob(
+                id=id, task=task, created_at=created_at)
+            session.add(job)
+            if log:
+                session.add(tables.BadpennyJobLog(id=id, content=log))
+
         newjob(1, dt(2014, 9, 20))
-        newjob(2, dt(2014, 9, 15))
+        newjob(2, dt(2014, 9, 15), log="Hello, world\n")
         newjob(3, dt(2014, 9, 10))
-        newjob(4, dt(2014, 9, 5))
+        newjob(4, dt(2014, 9, 5), log="Hello, world\n")
         session.commit()
         with mock.patch('relengapi.blueprints.badpenny.cleanup.time.now') as now:
             now.return_value = dt(2014, 9, 16)
@@ -538,3 +544,5 @@ def test_cleanup(app):
 
         eq_(sorted([j.id for j in tables.BadpennyJob.query.all()]),
             sorted([1, 2, 3]))  # 4 is gone
+        eq_(sorted([j.id for j in tables.BadpennyJobLog.query.all()]),
+            sorted([2]))  # log for 4 is gone

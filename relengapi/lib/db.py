@@ -77,8 +77,18 @@ class Alchemies(object):
     def engine(self, dbname):
         if dbname not in self._engines:
             uri = self._get_db_config(dbname)
-            self._engines[dbname] = sa.create_engine(uri)
+            self._engines[dbname] = engine = sa.create_engine(uri)
+            meth = "special_case_{}_engine".format(engine.dialect.name)
+            if hasattr(self, meth):
+                getattr(self, meth)(engine)
         return self._engines[dbname]
+
+    def special_case_sqlite_engine(self, engine):
+        # Enable checking of foreign key constraints by setting
+        # a pragma on each DB connection
+        @event.listens_for(engine, "connect")
+        def foreign_keys_on(dbapi_con, con_record):
+            dbapi_con.execute("PRAGMA foreign_keys = ON")
 
     @synchronized(threading.Lock())
     def session(self, dbname):

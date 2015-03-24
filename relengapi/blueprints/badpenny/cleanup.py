@@ -27,6 +27,8 @@ def cleanup_old_jobs(job_status):
         jobs = reversed(task.jobs[1:])
         for job in jobs:
             if job.created_at < old:
+                for log in job.logs:
+                    session.delete(log)
                 session.delete(job)
                 deleted += 1
 
