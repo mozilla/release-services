@@ -184,7 +184,7 @@ def bmo_file_loan_bug(self, loanid, slavetype, *args, **kwargs):
 
 @task(bind=True)
 @add_to_history(
-    after="Waiting for a human to perform {action_name}")
+    after="Waiting for a human to perform {kwargs[action_name]}")
 def register_action_needed(self, loanid, action_name):
     if not action_name:
         raise ValueError("must supply an action name")
@@ -205,7 +205,7 @@ def register_action_needed(self, loanid, action_name):
         session.add(action)
         session.commit()
     except ValueError:
-        raises
+        raise
     except Exception as exc:
         self.retry(exc=exc)
 

@@ -61,9 +61,9 @@ class ManualAction(wsme.types.Base):
     id = int
     #: Unique ID of the loan this log line is for
     loan_id = int
-    #: Datetime string (in UTC) of the start of the request. (e.g. "2014-06-06T20:02:46.937065+00:00")
+    #: Datetime string (in UTC) of the start of action. (e.g. "2014-06-06T20:02:46.937065+00:00")
     timestamp_start = unicode
-    #: Datetime string (in UTC) when the request was completed. (e.g. "2014-06-06T20:02:46.937065+00:00")
+    #: Datetime string (in UTC) when action was completed. (e.g. "2014-06-06T22:02:46.937065+00:00")
     timestamp_complete = unicode
     #: Who performed the completion (admin ldap)
     complete_by = unicode
