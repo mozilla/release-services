@@ -62,11 +62,6 @@ class Alchemies(object):
         def teardown_request(response_or_exc):
             self.flush_sessions()
 
-        # ..and after each celery task
-        @signals.task_postrun.connect
-        def task_postrun(sender=None, body=None, **kwargs):
-            self.flush_sessions()
-
     def _get_db_config(self, dbname):
         uris = self.app.config.get('SQLALCHEMY_DATABASE_URIS')
         if uris is not None:
@@ -136,6 +131,12 @@ def ping_connection(dbapi_connection, connection_record, connection_proxy):
         # connecting again up to three times before raising.
         raise exc.DisconnectionError()
     cursor.close()
+
+
+@signals.task_postrun.connect
+def task_postrun(sender=None, body=None, **kwargs):
+    # flush DB sessions after every celery task
+    current_app.db.flush_sessions()
 
 
 def make_db(app):
