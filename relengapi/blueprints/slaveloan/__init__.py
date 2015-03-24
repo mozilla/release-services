@@ -115,11 +115,13 @@ def new_loan_from_admin(body):
         l = Loans(status=body.status, human=h)
     history = History(for_loan=l,
                       timestamp=tz.utcnow(),
-                      msg="%s added to slave loan tool via admin interface" %
-                          current_user.authenticated_user)
+                      msg="%s added this entry to slave loan tool via admin interface" %
+                          current_user.authenticated_email)
     session.add(l)
     session.add(history)
     session.commit()
+    logger.info("%s manually added slave loan entry ID %s via admin interface" %
+                (current_user.authenticated_email, l.id))
     return l.to_wsme()
 
 
@@ -162,6 +164,7 @@ def new_loan_request(body):
     session.add(l)
     session.add(history)
     session.commit()
+    logger.info(hist_line)
     chain_of_stuff = task_groups.generate_loan(loanid=l.id, slavetype=slavetype)
     chain_of_stuff.delay()
     return l.to_wsme()
