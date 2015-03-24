@@ -7,18 +7,22 @@
             <span class="h2">Tooltool</span>
         </div>
         <div class="col-xs-8 tt-searchbar">
-            <div class="input-group">
-                <input type="text" class="form-control" placeholder="Search for...">
-                <span class="input-group-btn">
-                    <button class="btn btn-default" type="button">
-                        <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-                        <span class="sr-only">Search</span>
-                    </button>
-                </span>
+            <form ng-submit="startSearch()">
+                <div class="input-group">
+                    <input type="text" class="form-control"
+                        placeholder="Search for..." autofocus
+                        ng-model="search_query">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="submit">
+                            <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            <span class="sr-only">Search</span>
+                        </button>
+                    </span>
+                </form>
             </div>
         </div>
     </div>
-    <div clas="row">
+    <div class="row" ng-show="show_help">
         <div class="col-xs-12">
             <div class="alert alert-info" role="alert">
                 To begin, enter search terms above.  You can search by
@@ -31,33 +35,23 @@
             </div>
         </div>
     </div>
-    <div clas="row">
-        <div class="col-xs-12 tt-result" ng-repeat="f in [1, 2, 3, 4]">
-            <div class="tt-result-file">
-                <div class="tt-result-controls">
-                    <span class="glyphicon glyphicon-download-alt" arian-hidden="true"></span>
-                    <span class="sr-only">Download</span>
-                    <span class="glyphicon glyphicon-chevron-down" arian-hidden="true"></span>
-                    <span class="sr-only">Details</span>
-                </div>
-                <div class="tt-result-info">
-                    <span class="tt-sha512">abcd1234</span> -
-                    <!-- omitted if it has mutliple names in its batches -->
-                    <span class="tt-filename">test_file.ogg</span>
-                    <span class="text-muted">(1234 bytes)</span>
+    <div class="row" ng-show="file_results">
+        <div class="col-xs-12">
+            <span class="h3">Files</span>
+            <div class="list-group">
+                <div ng-repeat="res in file_results" class="list-group-item">
+                    <tt-result-file res="res"></tt-result-file>
                 </div>
             </div>
         </div>
-        <div class="col-xs-12 tt-result" ng-repeat="f in [1, 2, 3, 4]">
-            <div class="tt-result-batch">
-                <div class="tt-result-controls">
-                    <span class="glyphicon glyphicon-chevron-down" arian-hidden="true"></span>
-                    <span class="sr-only">Details</span>
-                </div>
-                <div class="tt-result-info">
-                    <span class="tt-upload-date">2015/03/26 14:52:49 -0400</span> -
-                    <span class="tt-upload-author">dustin@mozilla.com</span> -
-                    <span class="tt-upload-emssage"><a href="https://bugzilla.mozilla.org/">Bug 1234456</a>: Add a tooltool UI</span>
+    </div>
+
+    <div class="row" ng-show="batch_results">
+        <div class="col-xs-12">
+            <span class="h3">Upload Batches</span>
+            <div class="list-group">
+                <div ng-repeat="res in batch_results" class="list-group-item">
+                    <tt-result-batch res="res"></tt-result-batch>
                 </div>
             </div>
         </div>
