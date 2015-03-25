@@ -515,8 +515,11 @@ def test_command_purge_size():
 
 def test_command_fetch_no_url():
     with mock.patch('tooltool.fetch_files') as fetch_files:
-        eq_(call_main('tooltool', 'fetch'), 1)
-        assert not fetch_files.called
+        eq_(call_main('tooltool', 'fetch'), 0)
+        fetch_files.assert_called_with('manifest.tt',
+                                       ['https://api.pub.build.mozilla.org/tooltool/'],
+                                       [], cache_folder=None, auth_file=None,
+                                       region=None)
 
 
 def test_command_fetch():
@@ -558,8 +561,10 @@ def test_command_upload_no_message():
 
 def test_command_upload_no_url():
     with mock.patch('tooltool.upload') as upload:
-        eq_(call_main('tooltool', 'upload', '--message', 'msg'), 1)
-        assert not upload.called
+        eq_(call_main('tooltool', 'upload', '--message', 'msg'), 0)
+        upload.assert_called_with('manifest.tt', 'msg',
+                                  ['https://api.pub.build.mozilla.org/tooltool/'],
+                                  None, None)
 
 
 class UploadTests(TestDirMixin, unittest.TestCase):
@@ -601,7 +606,7 @@ class UploadTests(TestDirMixin, unittest.TestCase):
             files_on_server = cfg.get('files_on_server', [])
             for filename, file in body['files'].items():
                 if filename not in files_on_server:
-                    file['put_url'] = self.test_case.mkurl('/sha512/' + file['digest'])
+                    file['put_url'] = self.test_case.s3url('/sha512/' + file['digest'])
 
             if cfg.get('post_fails'):
                 self.send_response(409, 'Exploded')
@@ -617,7 +622,7 @@ class UploadTests(TestDirMixin, unittest.TestCase):
 
         def do_PUT(self):  # S3 upload
             cfg = self.test_case.server_config
-            assert self.path.startswith('/sha512/')
+            assert self.path.startswith('/sha512/'), self.path
             eq_(self.headers['content-type'], 'application/octet-stream')
             data = self.rfile.read(int(self.headers['content-length']))
             digest = hashlib.sha512(data).hexdigest()
@@ -685,6 +690,9 @@ class UploadTests(TestDirMixin, unittest.TestCase):
         return digest
 
     def mkurl(self, path):
+        return 'http://127.0.0.1:%d/tooltool/%s' % (self.http_port, path)
+
+    def s3url(self, path):
         return 'http://127.0.0.1:%d%s' % (self.http_port, path)
 
     def test_upload_success(self):
@@ -833,7 +841,7 @@ class UploadTests(TestDirMixin, unittest.TestCase):
 
     def test_s3_upload(self):
         self.start_server()
-        file = {'put_url': self.mkurl('/sha512/' + self.digest)}
+        file = {'put_url': self.s3url('/sha512/' + self.digest)}
         tooltool._s3_upload('testfile.txt', file)
         eq_(self.server_requests, {'PUT': [self.digest]})
         assert file['upload_ok']
@@ -841,7 +849,7 @@ class UploadTests(TestDirMixin, unittest.TestCase):
     def test_s3_upload_fails(self):
         self.start_server()
         self.server_config['upload_failures'] = [self.digest]
-        file = {'put_url': self.mkurl('/sha512/' + self.digest)}
+        file = {'put_url': self.s3url('/sha512/' + self.digest)}
         tooltool._s3_upload('testfile.txt', file)
         eq_(self.server_requests, {'PUT': [self.digest]})
         assert not file['upload_ok'], file

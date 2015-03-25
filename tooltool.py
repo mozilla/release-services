@@ -471,8 +471,8 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None, regio
     fetched_path = None
     for base_url in base_urls:
         # Generate the URL for the file on the server side
-        url = "%s/%s/%s" % (base_url, file_record.algorithm,
-                            file_record.digest)
+        url = urlparse.urljoin(base_url,
+                               '%s/%s' % (file_record.algorithm, file_record.digest))
         if region is not None:
             url += '?region=' + region
 
@@ -745,7 +745,7 @@ def _authorize(req, auth_file):
 
 
 def _send_batch(base_url, auth_file, batch, region):
-    url = urlparse.urljoin(base_url, '/tooltool/upload')
+    url = urlparse.urljoin(base_url, 'upload')
     if region is not None:
         url += "?region=" + region
     req = urllib2.Request(url, json.dumps(batch), {'Content-Type': 'application/json'})
@@ -786,7 +786,7 @@ def _notify_upload_complete(base_url, auth_file, file):
     req = urllib2.Request(
         urlparse.urljoin(
             base_url,
-            '/tooltool/upload/complete/%(algorithm)s/%(digest)s' % file))
+            'upload/complete/%(algorithm)s/%(digest)s' % file))
     _authorize(req, auth_file)
     try:
         urllib2.urlopen(req)
@@ -902,10 +902,6 @@ def process_command(options, args):
             log.critical('please specify the cache folder to be purged')
             return False
     elif cmd == 'fetch':
-        if not options.get('base_url'):
-            log.critical('fetch command requires at least one url provided using ' +
-                         'the url option in the command line')
-            return False
         return fetch_files(
             options['manifest'],
             options['base_url'],
@@ -916,9 +912,6 @@ def process_command(options, args):
     elif cmd == 'upload':
         if not options.get('message'):
             log.critical('upload command requires a message')
-            return False
-        if not options.get('base_url'):
-            log.critical('upload command requires at least one URL')
             return False
         return upload(
             options.get('manifest'),
@@ -954,7 +947,8 @@ def main(argv, _skip_logging=False):
                       dest='overwrite', action='store_true',
                       help='UNUSED; present for backward compatibility')
     parser.add_option('--url', dest='base_url', action='append',
-                      help='base url for fetching files')
+                      help='RelengAPI URL ending with /tooltool/; default '
+                      'is appropriate for Mozilla')
     parser.add_option('-c', '--cache-folder', dest='cache_folder',
                       help='Local cache folder')
     parser.add_option('-s', '--size',
@@ -972,6 +966,11 @@ def main(argv, _skip_logging=False):
                       dest='auth_file')
 
     (options_obj, args) = parser.parse_args(argv[1:])
+
+    # default the options list if not provided
+    if not options_obj.base_url:
+        options_obj.base_url = ['https://api.pub.build.mozilla.org/tooltool/']
+
     # Dictionaries are easier to work with
     options = vars(options_obj)
 
