@@ -35,12 +35,12 @@ def mocked_perms(permissions):
 
 
 def assert_disabled(app, js):
-    eq_(tables.Token.query.first().disabled, True)
+    eq_(tables.Token.query.filter_by(id=2).first().disabled, True)
     js.log_message.assert_called_with("Disabling token 2 for user me@me.com")
 
 
 def assert_enabled(app):
-    eq_(tables.Token.query.first().disabled, False)
+    eq_(tables.Token.query.filter_by(id=2).first().disabled, False)
 
 
 def assert_reenabled(app, js):
