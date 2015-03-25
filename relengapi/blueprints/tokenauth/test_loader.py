@@ -8,6 +8,7 @@ from flask import json
 from nose.tools import eq_
 from relengapi import p
 from relengapi.blueprints.tokenauth import loader
+from relengapi.blueprints.tokenauth import tables
 from relengapi.blueprints.tokenauth.test_tokenauth import test_context
 from relengapi.blueprints.tokenauth.util import FakeSerializer
 from relengapi.blueprints.tokenauth.util import insert_prm
@@ -141,3 +142,15 @@ def test_usr_loader(app):
     with app.app_context():
         eq_(loader.usr_loader({'typ': 'usr', 'jti': 't2'}).permissions,
             set([p.test_tokenauth.zig]))
+
+
+@test_context.specialize(db_setup=insert_usr)
+def test_usr_loader_disabled(app):
+    with app.app_context():
+        # disable the token
+        session = app.db.session('relengapi')
+        tok = tables.Token.query.first()
+        tok.disabled = True
+        session.commit()
+        # no TokenUser results
+        eq_(loader.usr_loader({'typ': 'usr', 'jti': 't2'}), None)

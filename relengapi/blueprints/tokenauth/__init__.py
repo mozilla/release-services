@@ -20,9 +20,9 @@ from relengapi.blueprints.tokenauth import loader
 from relengapi.blueprints.tokenauth import tables
 from relengapi.blueprints.tokenauth import tokenstr
 from relengapi.blueprints.tokenauth import types
+from relengapi.blueprints.tokenauth import usermonitor
 from relengapi.lib import angular
 from relengapi.lib import api
-from relengapi.lib import auth
 from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import Forbidden
@@ -77,6 +77,9 @@ def user_to_jsontoken(user):
         attrs['metadata'] = cl['mta']
     if 'prm' in cl:
         attrs['permissions'] = cl['prm']
+
+    # we never load disabled users, so this one isn't disabled
+    attrs['disabled'] = False
 
     if user.token_data:
         td = user.token_data
@@ -172,7 +175,8 @@ def issue_prm(body, requested_permissions):
     token_row = tables.Token(
         typ='prm',
         description=body.description,
-        permissions=requested_permissions)
+        permissions=requested_permissions,
+        disabled=False)
     session.add(token_row)
     session.commit()
 
@@ -208,7 +212,8 @@ def issue_tmp(body, requested_permissions):
                            not_before=tz.utcfromtimestamp(nbf),
                            expires=body.expires,
                            permissions=perm_strs,
-                           metadata=body.metadata)
+                           metadata=body.metadata,
+                           disabled=False)
 
 
 @token_issuer('usr')
@@ -223,7 +228,8 @@ def issue_usr(body, requested_permissions):
         typ='usr',
         user=email,
         description=body.description,
-        permissions=requested_permissions)
+        permissions=requested_permissions,
+        disabled=False)
     session.add(token_row)
     session.commit()
 
@@ -257,6 +263,10 @@ def issue_token(body):
     for attr in required_token_attributes[typ]:
         if getattr(body, attr) is wsme.Unset:
             raise BadRequest("missing %s" % attr)
+
+    # prohibit silly requests
+    if body.disabled:
+        raise BadRequest("can't issue disabled tokens")
 
     # All types have permissions, so handle those here -- ensure the request is
     # for a subset of the permissions the user can perform
@@ -332,10 +342,8 @@ def revoke_token(token_id):
     return None, 204
 
 
-# enable the loader to get a look at each incoming request
-auth.request_loader(loader.token_loader)
-
-
 @bp.record
 def init_blueprint(state):
     tokenstr.init_app(state.app)
+    loader.init_app(state.app)
+    usermonitor.init_app(state.app)

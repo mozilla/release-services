@@ -100,12 +100,14 @@ def assert_prm_token(data, **attrs):
     attrs['typ'] = 'prm'
     attrs['id'] = id = token.id
     attrs['token'] = FakeSerializer.prm(id)
+    attrs['disabled'] = False
     _eq_token(token, attrs)
 
 
 def assert_tmp_token(data, **attrs):
     token = _get_token(data)
     attrs['typ'] = 'tmp'
+    attrs['disabled'] = False
     nbf = JAN_2014
     exp = calendar.timegm(token.expires.utctimetuple())
     attrs['token'] = FakeSerializer.tmp(
@@ -119,6 +121,7 @@ def assert_usr_token(data, **attrs):
     attrs['typ'] = 'usr'
     attrs['id'] = id = token.id
     attrs['token'] = FakeSerializer.usr(id)
+    attrs['disabled'] = False
     _eq_token(token, attrs)
 
 
@@ -336,6 +339,15 @@ def test_issue_tmp_token_no_metadata(client):
     eq_(client.post_json('/tokenauth/tokens', request).status_code, 400)
 
 
+@test_context.specialize(user=userperms([p.base.tokens.usr.issue, p.test_tokenauth.zig]))
+def test_issue_usr_disabled(client):
+    """An issue request for a disabled token is rejected."""
+    request = {'permissions': ['test_tokenauth.zig'],
+               'disabled': True,
+               'description': 'More Zig', 'typ': 'usr'}
+    eq_(client.post_json('/tokenauth/tokens', request).status_code, 400)
+
+
 @test_context.specialize(user=userperms([]))
 def test_issue_usr_token_forbidden(client):
     """Issuing a temporary token requires base.tokens.prm.issue"""
@@ -398,7 +410,8 @@ def test_get_prm_token_success(client):
     """Getting an existing permanent token returns its id, permissions, and description."""
     eq_(json.loads(client.get('/tokenauth/tokens/1').data),
         {'result': {'id': 1, 'description': 'Zig only', 'typ': 'prm',
-                    'permissions': ['test_tokenauth.zig']}})
+                    'permissions': ['test_tokenauth.zig'],
+                    'disabled': False}})
 
 
 @test_context.specialize(user=userperms([]), db_setup=insert_usr)
@@ -470,7 +483,8 @@ def test_query_prm_token_exists(client):
     eq_(res.status_code, 200)
     eq_(json.loads(res.data),
         {'result': {'id': 1, 'description': 'Zig only', 'typ': 'prm',
-                    'permissions': ['test_tokenauth.zig']}})
+                    'permissions': ['test_tokenauth.zig'],
+                    'disabled': False}})
 
 
 @test_context.specialize(user=userperms([]), db_setup=insert_usr)
@@ -536,6 +550,7 @@ def test_query_tmp_token(client):
             'expires': '3000-01-01T00:00:00+00:00',
             'metadata': {},
             'permissions': ['test_tokenauth.zag'],
+            'disabled': False,
         }})
 
 

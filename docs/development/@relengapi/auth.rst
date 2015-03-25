@@ -234,3 +234,21 @@ The Permission class
 
     Return True if the current user can perform all of the given permissions
     See :py:meth:`Permission.can`.
+
+Out-of-band Authorization Access
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For cases where you need information about a user outside of a request context for that user, use ``app.authz``.
+
+The Flask application has an ``authz`` attribute that is a subclass of this class:
+
+.. py:class:: relengapi.lib.auth.base.BaseAuthz
+
+    .. py:method:: get_user_permissions(email)
+
+        :param email: user's email
+        :raises: NotImplementedError
+        :returns: set of permissions or None
+
+        Get the given user's permissions, or None if the user is not available.
+

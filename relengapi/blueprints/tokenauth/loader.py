@@ -85,6 +85,7 @@ class TokenLoader(object):
 
 
 token_loader = TokenLoader()
+auth.request_loader(token_loader)
 
 
 @token_loader.type_function('prm')
@@ -113,9 +114,13 @@ def tmp_loader(claims):
 def usr_loader(claims):
     token_id = tokenstr.jti2id(claims['jti'])
     token_data = tables.Token.query.filter_by(id=token_id).first()
-    if token_data:
+    if token_data and not token_data.disabled:
         assert token_data.typ == 'usr'
         return TokenUser(claims,
                          permissions=token_data.permissions,
                          token_data=token_data,
                          authenticated_email=token_data.user)
+
+
+def init_app(app):
+    pass

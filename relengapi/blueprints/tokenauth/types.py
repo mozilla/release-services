@@ -39,6 +39,10 @@ class JsonToken(wsme.types.Base):
     #: metadata fro limited-duration tokens (arbitrary JSON object)
     metadata = wsme.types.wsattr(jsonObject, mandatory=False)
 
+    #: if true, the token is disabled because the associated user's
+    #: permissions are no longer sufficient.
+    disabled = wsme.types.wsattr(bool, mandatory=False)
+
     #: list of permissions this token grants
     permissions = wsme.types.wsattr([unicode], mandatory=True)
 

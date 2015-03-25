@@ -3,7 +3,7 @@ Flask App
 
 The RelengAPI Flask App is mostly a normal Flask App, but has a few additional attributes that may be of use:
 
-.. py:class:: Flask
+.. py:class:: flask.Flask
 
     .. py:attribute:: relengapi_blueprints
 
@@ -18,3 +18,7 @@ The RelengAPI Flask App is mostly a normal Flask App, but has a few additional a
     .. py:attribute:: aws
 
         See :doc:`aws`
+
+    .. py:attribute:: authz
+
+        See :doc:`auth`
