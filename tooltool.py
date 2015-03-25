@@ -463,7 +463,7 @@ def _urlopen(url, auth_file=None):
     return urllib2.urlopen(url)
 
 
-def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None):
+def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None, region=None):
     # A file which is requested to be fetched that exists locally will be
     # overwritten by this function
     fd, temp_path = tempfile.mkstemp(dir=os.getcwd())
@@ -473,6 +473,8 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None):
         # Generate the URL for the file on the server side
         url = "%s/%s/%s" % (base_url, file_record.algorithm,
                             file_record.digest)
+        if region is not None:
+            url += '?region=' + region
 
         log.info("Attempting to fetch from '%s'..." % base_url)
 
@@ -545,7 +547,8 @@ def untar_file(filename):
     return True
 
 
-def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None, auth_file=None):
+def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None,
+                auth_file=None, region=None):
     # Lets load the manifest file
     try:
         manifest = open_manifest(manifest_file)
@@ -619,7 +622,7 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None, auth_
         # either in the working dir or in the cache
         if (f.filename in filenames or len(filenames) == 0) and f.filename not in present_files:
             log.debug("fetching %s" % f.filename)
-            temp_file_name = fetch_file(base_urls, f, auth_file=auth_file)
+            temp_file_name = fetch_file(base_urls, f, auth_file=auth_file, region=region)
             if temp_file_name:
                 fetched_files.append((f, temp_file_name))
             else:
@@ -906,7 +909,8 @@ def process_command(options, args):
             options['base_url'],
             cmd_args,
             cache_folder=options['cache_folder'],
-            auth_file=options.get("auth_file"))
+            auth_file=options.get("auth_file"),
+            region=options.get('region'))
     elif cmd == 'upload':
         if not options.get('message'):
             log.critical('upload command requires a message')
@@ -953,6 +957,8 @@ def main(argv, _skip_logging=False):
     parser.add_option('-s', '--size',
                       help='free space required (in GB)', dest='size',
                       type='float', default=0.)
+    parser.add_option('-r', '--region', help='Preferred AWS region for upload or fetch; '
+                      'example: --region=us-west-2')
     parser.add_option('--message',
                       help='The "commit message" for an upload; format with a bug number '
                            'and brief comment',

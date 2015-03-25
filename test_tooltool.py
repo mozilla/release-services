@@ -523,7 +523,17 @@ def test_command_fetch():
     with mock.patch('tooltool.fetch_files') as fetch_files:
         eq_(call_main('tooltool', 'fetch', 'a', 'b', '--url', 'http://foo'), 0)
         fetch_files.assert_called_with('manifest.tt', ['http://foo'], ['a', 'b'],
-                                       cache_folder=None, auth_file=None)
+                                       cache_folder=None, auth_file=None,
+                                       region=None)
+
+
+def test_command_fetch_region():
+    with mock.patch('tooltool.fetch_files') as fetch_files:
+        eq_(call_main('tooltool', 'fetch', 'a', 'b', '--url', 'http://foo',
+                      '--region', 'us-east-1'), 0)
+        fetch_files.assert_called_with('manifest.tt', ['http://foo'], ['a', 'b'],
+                                       cache_folder=None, auth_file=None,
+                                       region='us-east-1')
 
 
 def test_command_upload():
@@ -882,7 +892,7 @@ class FetchTests(TestDirMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownTestDir()
 
-    def fake_fetch_file(self, urls, file_record, auth_file=None):
+    def fake_fetch_file(self, urls, file_record, auth_file=None, region=None):
         eq_(urls, self.urls)
         if file_record.digest in self.server_files_by_hash:
             if self.server_corrupt:
@@ -1048,6 +1058,19 @@ class FetchTests(TestDirMixin, unittest.TestCase):
         self.assert_files('one', 'two', 'three', 'four', 'five')
         self.assert_cached_files('one', 'two', 'three', 'five')
 
+    def test_region_arg(self):
+        """A region argument passed to fetch_files gets passed on to fetch_file"""
+        self.make_manifest('manifest.tt', 'one')
+        with mock.patch('tooltool.fetch_file') as fetch_file:
+            fetch_file.side_effect = self.fake_fetch_file
+            eq_(tooltool.fetch_files('manifest.tt', self.urls, cache_folder='cache',
+                                     region='ca-north-2'),
+                True)
+            fetch_file.assert_called_with(self.urls, mock.ANY, auth_file=None,
+                                          region='ca-north-2')
+        self.assert_files('one')
+        self.assert_cached_files('one')
+
     def test_file_list(self):
         """fetch only fetches the files requested in the file list"""
         self.add_file_to_dir('one')
@@ -1159,6 +1182,15 @@ class FetchFileTests(BaseFileRecordTest):
             # the first URL doesn't match, so this loops twice
             self.fake_urlopen(_urlopen, {'http://b/sha512/' + self.sample_hash: 'abcd'})
             filename = tooltool.fetch_file(['http://a', 'http://b'], self.test_record)
+            assert filename
+            eq_(open(filename).read(), 'abcd')
+            os.unlink(filename)
+
+    def test_fetch_file_region(self):
+        with mock.patch('tooltool._urlopen') as _urlopen:
+            self.fake_urlopen(
+                _urlopen, {'http://a/sha512/%s?region=us-west-1' % self.sample_hash: 'abcd'})
+            filename = tooltool.fetch_file(['http://a'], self.test_record, region='us-west-1')
             assert filename
             eq_(open(filename).read(), 'abcd')
             os.unlink(filename)
