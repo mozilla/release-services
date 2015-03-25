@@ -1,16 +1,33 @@
 language: python
-python:
-  - "2.7"
 
-# command to install dependencies
-install:
-  - "pip install -e .[test]"
-  - "pip install coveralls"
-  - "pip freeze"
+# align the env's and the python's; below "$PY27 ||" will not be run on py26,
+# and "$PY27 &&" will only be run on py26.
+matrix:
+  include:
+    - python: "2.6"
+      env: PY27=false
+    - python: "2.7"
+      env: PY27=true
+
+
+# install dependencies.  The blueprint won't even install on Py26, so don't try
+install: |
+    if $PY27; then
+        pip install -e .[test]
+        pip install coveralls
+    else
+        pip install mock nosetests
+    fi;
+    pip freeze
 
 # run everything in a single script, so we get a nice summary at the end
-script:
-  - bash ./validate.sh
+script: |
+    if $PY27; then
+        bash ./validate.sh
+    else
+        nosetests test_tooltool.py
+    fi
 
 after_success:
-  - coveralls --rcfile coveragerc
+  # only get coverage on python-2.7
+  - $PY27 && coveralls --rcfile coveragerc
