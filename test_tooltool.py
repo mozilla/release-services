@@ -474,8 +474,8 @@ def test_command_package():
 class FetchTests(unittest.TestCase):
 
     _server_files = ['one', 'two', 'three']
-    server_files_by_hash = {hashlib.sha512(v).hexdigest(): v
-                            for v in _server_files}
+    server_files_by_hash = dict((hashlib.sha512(v).hexdigest(), v)
+                                for v in _server_files)
     server_corrupt = False
     urls = ['http://a', 'http://2']
 
