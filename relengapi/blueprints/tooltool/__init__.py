@@ -22,6 +22,7 @@ from relengapi.lib import angular
 from relengapi.lib import api
 from relengapi.lib import time
 from relengapi.lib.permissions import p
+from werkzeug import Response
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import Forbidden
 from werkzeug.exceptions import NotFound
@@ -186,10 +187,31 @@ def upload_batch(region=None, body=None):
 def upload_complete(digest):
     """Signal that a file has been uploaded and the server should begin
     validating it.  This is merely an optimization: the server also polls
-    occasionally for uploads and validates them when they appear.  The
-    response is an HTTP 202 indicating the signal has been accepted."""
+    occasionally for uploads and validates them when they appear.
+
+    Uploads cannot be safely validated until the upload URL has expired, which
+    occurs a short time after the URL is generated (currently 60 seconds but
+    subject to change).
+
+    If the upload URL has expired, then the response is an HTTP 202 indicating
+    that the signal has been accepted.  If the URL has not expired, then the
+    response is an HTTP 409, and the ``X-Retry-After`` header gives a time,
+    in seconds, that the client should wait before trying again."""
     if not is_valid_sha512(digest):
         raise BadRequest("Invalid sha512 digest")
+
+    # if the pending upload is still valid, then we can't check this file
+    # yet, so return 409 Conflict.  If there is no PU, or it's expired,
+    # then we can proceed.
+    file = tables.File.query.filter(tables.File.sha512 == digest).first()
+    if file:
+        for pu in file.pending_uploads:
+            until = pu.expires - time.now()
+            if until > datetime.timedelta(0):
+                # add 1 second to avoid rounding / skew errors
+                hdr = {'X-Retry-After': str(1 + int(until.total_seconds()))}
+                return Response(status=409, headers=hdr)
+
     # start a celery task in the background and return immediately
     grooming.check_file_pending_uploads.delay(digest)
     return '{}', 202

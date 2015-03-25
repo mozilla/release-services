@@ -477,12 +477,29 @@ def test_upload_change_visibility(client, app):
 
 @test_context
 def test_upload_complete(client, app):
-    """GET /upload/complete/<digest> causes a delayed call to check_file_pending_uploads"""
-    add_file_to_db(app, ONE, regions=[], pending_regions=['us-east-1'])
+    """GET /upload/complete/<digest> when the pending upload has expired causes
+    a delayed call to check_file_pending_uploads and returns 202"""
     with mock.patch('relengapi.blueprints.tooltool.grooming.check_file_pending_uploads') as cfpu:
-        resp = client.get('/tooltool/upload/complete/sha512/{}'.format(ONE_DIGEST))
+        with set_time(NOW - tooltool.UPLOAD_EXPIRES_IN - 1):
+            add_file_to_db(app, ONE, regions=[], pending_regions=['us-east-1'])
+        with set_time(NOW):
+            resp = client.get('/tooltool/upload/complete/sha512/{}'.format(ONE_DIGEST))
         eq_(resp.status_code, 202, resp.data)
         cfpu.delay.assert_called_with(ONE_DIGEST)
+
+
+@test_context
+def test_upload_complete_not_expired(client, app):
+    """GET /upload/complete/<digest> when the pending upload has not expired returns
+    409 with a header giving the time until expiration."""
+    with mock.patch('relengapi.blueprints.tooltool.grooming.check_file_pending_uploads') as cfpu:
+        with set_time(NOW - tooltool.UPLOAD_EXPIRES_IN + 5):
+            add_file_to_db(app, ONE, regions=[], pending_regions=['us-east-1'])
+        with set_time(NOW):
+            resp = client.get('/tooltool/upload/complete/sha512/{}'.format(ONE_DIGEST))
+        eq_(resp.status_code, 409, resp.data)
+        eq_(resp.headers.get('x-retry-after'), '6')  # 5 seconds + 1
+        eq_(cfpu.delay.mock_calls, [])
 
 
 @test_context
