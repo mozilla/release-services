@@ -744,8 +744,10 @@ def _authorize(req, auth_file):
         req.add_header('Authorization', 'Bearer %s' % (open(auth_file).read().strip()))
 
 
-def _send_batch(base_url, auth_file, batch):
+def _send_batch(base_url, auth_file, batch, region):
     url = urlparse.urljoin(base_url, '/tooltool/upload')
+    if region is not None:
+        url += "?region=" + region
     req = urllib2.Request(url, json.dumps(batch), {'Content-Type': 'application/json'})
     _authorize(req, auth_file)
     try:
@@ -802,7 +804,7 @@ def _notify_upload_complete(base_url, auth_file, file):
         log.exception("While notifying server of upload completion:")
 
 
-def upload(manifest, message, base_urls, auth_file):
+def upload(manifest, message, base_urls, auth_file, region):
     try:
         manifest = open_manifest(manifest)
     except InvalidManifest:
@@ -831,7 +833,7 @@ def upload(manifest, message, base_urls, auth_file):
         }
 
     # make the upload request
-    resp = _send_batch(base_urls[0], auth_file, batch)
+    resp = _send_batch(base_urls[0], auth_file, batch, region)
     if not resp:
         return None
     files = resp['files']
@@ -922,7 +924,8 @@ def process_command(options, args):
             options.get('manifest'),
             options.get('message'),
             options.get('base_url'),
-            options.get('auth_file'))
+            options.get('auth_file'),
+            options.get('region'))
     else:
         log.critical('command "%s" is not implemented' % cmd)
         return False

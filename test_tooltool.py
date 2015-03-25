@@ -540,7 +540,14 @@ def test_command_upload():
     with mock.patch('tooltool.upload') as upload:
         eq_(call_main('tooltool', 'upload', '--url', 'http://foo',
                       '--message', 'msg'), 0)
-        upload.assert_called_with('manifest.tt', 'msg', ['http://foo'], None)
+        upload.assert_called_with('manifest.tt', 'msg', ['http://foo'], None, None)
+
+
+def test_command_upload_region():
+    with mock.patch('tooltool.upload') as upload:
+        eq_(call_main('tooltool', 'upload', '--url', 'http://foo',
+                      '--message', 'msg', '--region=us-west-3'), 0)
+        upload.assert_called_with('manifest.tt', 'msg', ['http://foo'], None, 'us-west-3')
 
 
 def test_command_upload_no_message():
@@ -581,6 +588,8 @@ class UploadTests(TestDirMixin, unittest.TestCase):
 
         def do_POST(self):
             cfg = self.test_case.server_config
+            if '?region=' in self.path:
+                self.path, self.test_case.server_got_region = self.path.split('?')
             eq_(self.path, '/tooltool/upload')
             eq_(self.headers['content-type'], 'application/json')
             if not self.verify_auth():
@@ -684,7 +693,7 @@ class UploadTests(TestDirMixin, unittest.TestCase):
         self.start_server()
         foo_digest = self.add_file("foo.txt", on_server=True)
         bar_digest = self.add_file("bar.txt", on_server=False)
-        assert tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], None)
+        assert tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], None, None)
         self.server_requests['POST'].sort()
         eq_(self.server_requests, {
             'POST': [{
@@ -715,7 +724,7 @@ class UploadTests(TestDirMixin, unittest.TestCase):
         foo_digest = self.add_file("foo.txt", on_server=True)
         self.server_config['exp_auth_token'] = token = 'abcABC'
         open("auth", "w").write(token)
-        assert tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], 'auth')
+        assert tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], 'auth', None)
         eq_(self.server_requests, {
             'POST': [{
                 'files': {
@@ -730,20 +739,28 @@ class UploadTests(TestDirMixin, unittest.TestCase):
             }],
         })
 
+    def test_upload_success_region(self):
+        """An upload with a region specified results in a POST with that region in
+        the URL."""
+        self.start_server()
+        self.add_file("foo.txt", on_server=True)
+        assert tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], None, 'us-west-1')
+        eq_(self.server_got_region, 'region=us-west-1')
+
     def test_upload_failure_auth(self):
         """An upload with incorrect authentication information fails"""
         self.start_server()
         self.add_file("foo.txt", on_server=True)
         self.server_config['exp_auth_token'] = 'abcABC'
         open("auth", "w").write('not-the-token')
-        assert not tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], 'auth')
+        assert not tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], 'auth', None)
 
     def test_upload_s3_fails(self):
         """When an S3 upload fails, the upload fails and no notification takes
         place."""
         self.start_server()
         foo_digest = self.add_file("foo.txt", upload_fails=True)
-        assert not tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], None)
+        assert not tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], None, None)
         eq_(self.server_requests, {
             'POST': [{
                 'files': {
@@ -764,7 +781,7 @@ class UploadTests(TestDirMixin, unittest.TestCase):
         self.start_server()
         self.server_config['post_fails'] = True
         foo_digest = self.add_file("foo.txt", upload_fails=True)
-        assert not tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], None)
+        assert not tooltool.upload('manifest.tt', 'hi mom', [self.mkurl('')], None, None)
         eq_(self.server_requests, {
             'POST': [{
                 'files': {
@@ -781,30 +798,37 @@ class UploadTests(TestDirMixin, unittest.TestCase):
 
     def test_no_manifest(self):
         """When given a manifest that doesn't exist, upload fails."""
-        assert not tooltool.upload('nosuch.tt', 'hi mom', ['http://'], None)
+        assert not tooltool.upload('nosuch.tt', 'hi mom', ['http://'], None, None)
 
     def test_manifest_without_visibility(self):
         """When given a manifest with a file record without visibility, upload fails."""
         self.add_file("foo.txt", visibility=None)
-        assert not tooltool.upload('manifest.tt', 'hi mom', ['http://'], None)
+        assert not tooltool.upload('manifest.tt', 'hi mom', ['http://'], None, None)
 
     def test_invalid_manifest(self):
         """When given a manifest that doesn't validate, upload fails"""
         self.add_file("foo.txt")
         open("foo.txt", "w").write('bogus')
-        assert not tooltool.upload('manifest.tt', 'hi mom', ['http://'], None)
+        assert not tooltool.upload('manifest.tt', 'hi mom', ['http://'], None, None)
 
     def test_send_batch_success(self):
         self.start_server()
         batch = {'message': 'hi mom', 'files': {}}
-        eq_(tooltool._send_batch(self.mkurl(''), None, batch), batch)
+        eq_(tooltool._send_batch(self.mkurl(''), None, batch, None), batch)
         eq_(self.server_requests, {'POST': [batch]})
+
+    def test_send_batch_region(self):
+        self.start_server()
+        batch = {'message': 'hi mom', 'files': {}}
+        eq_(tooltool._send_batch(self.mkurl(''), None, batch, 'us-south-1'), batch)
+        eq_(self.server_requests, {'POST': [batch]})
+        eq_(self.server_got_region, 'region=us-south-1')
 
     def test_send_batch_failure(self):
         self.start_server()
         self.server_config['post_fails'] = True
         batch = {'message': 'hi mom', 'files': {}}
-        eq_(tooltool._send_batch(self.mkurl(''), None, batch), None)
+        eq_(tooltool._send_batch(self.mkurl(''), None, batch, None), None)
         eq_(self.server_requests, {'POST': [batch]})
 
     def test_s3_upload(self):
