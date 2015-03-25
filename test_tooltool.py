@@ -394,7 +394,7 @@ def call_main(*args):
         try:
             return tooltool.main(list(args), _skip_logging=True)
         except SystemExit, e:
-            return "exit {}".format(e.code)
+            return "exit %d" % e.code
     finally:
         sys.stderr = old_stderr
 
@@ -509,7 +509,7 @@ class FetchTests(unittest.TestCase):
 
     def add_file_to_dir(self, file, corrupt=False):
         content = 'X' * len(file) if corrupt else file
-        open(os.path.join(self.test_dir, "file-{}".format(file)), "w").write(content)
+        open(os.path.join(self.test_dir, "file-" + file), "w").write(content)
 
     def add_file_to_cache(self, file, corrupt=False):
         if not os.path.exists(self.cache_dir):
@@ -523,7 +523,7 @@ class FetchTests(unittest.TestCase):
         manifest = []
         for file in files:
             manifest.append({
-                'filename': 'file-{}'.format(file),
+                'filename': 'file-' + file,
                 'size': len(file),
                 'algorithm': 'sha512',
                 'digest': hashlib.sha512(file).hexdigest(),
@@ -768,7 +768,7 @@ class FetchFileTests(BaseFileRecordTest):
     def test_fetch_file(self):
         with mock.patch('tooltool._urlopen') as _urlopen:
             # the first URL doesn't match, so this loops twice
-            self.fake_urlopen(_urlopen, {'http://b/sha512/{}'.format(self.sample_hash): 'abcd'})
+            self.fake_urlopen(_urlopen, {'http://b/sha512/' + self.sample_hash: 'abcd'})
             filename = tooltool.fetch_file(['http://a', 'http://b'], self.test_record)
             assert filename
             eq_(open(filename).read(), 'abcd')
@@ -778,7 +778,7 @@ class FetchFileTests(BaseFileRecordTest):
         with mock.patch('tooltool._urlopen') as _urlopen:
             # the first URL doesn't match, so this loops twice
             self.fake_urlopen(
-                _urlopen, {'http://b/sha512/{}'.format(self.sample_hash): 'abcd'}, exp_size=1024)
+                _urlopen, {'http://b/sha512/' + self.sample_hash: 'abcd'}, exp_size=1024)
             filename = tooltool.fetch_file(
                 ['http://a', 'http://b'], self.test_record, grabchunk=1024)
             assert filename
@@ -788,7 +788,7 @@ class FetchFileTests(BaseFileRecordTest):
     def test_fetch_file_auth_file(self):
         with mock.patch('tooltool._urlopen') as _urlopen:
             # the first URL doesn't match, so this loops twice
-            self.fake_urlopen(_urlopen, {'http://b/sha512/{}'.format(self.sample_hash): 'abcd'},
+            self.fake_urlopen(_urlopen, {'http://b/sha512/' + self.sample_hash: 'abcd'},
                               exp_auth_file='auth')
             filename = tooltool.fetch_file(
                 ['http://a', 'http://b'], self.test_record, auth_file='auth')
