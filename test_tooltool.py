@@ -621,6 +621,10 @@ class UploadTests(TestDirMixin, unittest.TestCase):
             self.test_case.server_requests.setdefault('GET', []).append(digest)
             if cfg.get('get_fails'):
                 self.send_response(500, 'NOPE')
+            elif cfg.get('get_409s'):
+                self.send_response(409, 'Conflict')
+                self.send_header('X-Retry-After', '10')
+                del cfg['get_409s']  # succeed on retry
             else:
                 self.send_response(200, 'OK')
             self.send_header('Content-Type', 'text/plain')
@@ -815,6 +819,15 @@ class UploadTests(TestDirMixin, unittest.TestCase):
         tooltool._notify_upload_complete(self.mkurl(''), None, file)
         eq_(self.server_requests, {'GET': [self.digest]})
 
+    def test_notify_upload_wait(self):
+        self.start_server()
+        self.server_config['get_409s'] = True
+        file = {'algorithm': 'sha512', 'digest': self.digest}
+        with mock.patch('time.sleep') as fake_sleep:
+            tooltool._notify_upload_complete(self.mkurl(''), None, file)
+        fake_sleep.assert_called_with(10)
+        eq_(self.server_requests, {'GET': [self.digest, self.digest]})  # two reqs
+
     def test_notify_upload_fails(self):
         self.start_server()
         self.server_config['get_fails'] = True
@@ -823,6 +836,18 @@ class UploadTests(TestDirMixin, unittest.TestCase):
             tooltool._notify_upload_complete(self.mkurl(''), None, file)
         eq_(self.server_requests, {'GET': [self.digest]})
         eq_(logged, [(logging.ERROR, 'Error making RelengAPI request:')])
+
+    def test_notify_upload_exception(self):
+        self.start_server()
+        self.server_config['get_fails'] = True
+        file = {'algorithm': 'sha512', 'digest': self.digest}
+        with BufferHandler.capture('tooltool') as logged:
+            with mock.patch('urllib2.urlopen') as urlopen:
+                urlopen.side_effect = RuntimeError('oh noes')
+                tooltool._notify_upload_complete(self.mkurl(''), None, file)
+        eq_(self.server_requests, {})
+        eq_(logged[0],
+            (logging.ERROR, 'While notifying server of upload completion:'))
 
 
 def test_log_api_error_generic():

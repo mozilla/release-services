@@ -33,6 +33,7 @@ import sys
 import tarfile
 import tempfile
 import threading
+import time
 import urllib2
 import urlparse
 
@@ -784,8 +785,18 @@ def _notify_upload_complete(base_url, auth_file, file):
     _authorize(req, auth_file)
     try:
         urllib2.urlopen(req)
-    except (urllib2.URLError, urllib2.HTTPError) as e:
-        _log_api_error(e)
+    except urllib2.HTTPError as e:
+        if e.code != 409:
+            _log_api_error(e)
+            return
+        # 409 indicates that the upload URL hasn't expired yet and we
+        # should retry after a delay
+        to_wait = int(e.headers.get('X-Retry-After', 60))
+        log.warning("Waiting %d seconds for upload URLs to expire" % to_wait)
+        time.sleep(to_wait)
+        _notify_upload_complete(base_url, auth_file, file)
+    except Exception:
+        log.exception("While notifying server of upload completion:")
 
 
 def upload(manifest, message, base_urls, auth_file):
