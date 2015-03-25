@@ -192,6 +192,12 @@ class TestFileRecord(BaseFileRecordTest):
         self.assertEqual(self.test_record, test_record2)
         self.assertEqual(self.test_record, self.test_record)
 
+    def test_equality_validity(self):
+        test_record2 = copy.deepcopy(self.test_record)
+        self.test_record.visibility = True
+        test_record2.visibility = False
+        self.assertNotEqual(self.test_record, test_record2)
+
     def test_inequality(self):
         for i in ['filename', 'size', 'algorithm', 'digest']:
             test_record2 = copy.deepcopy(self.test_record)
@@ -266,7 +272,16 @@ class TestFileRecordJSONCodecs(BaseFileRecordListTest):
             self.test_record, cls=tooltool.FileRecordJSONEncoder)
         decoder = tooltool.FileRecordJSONDecoder()
         f = decoder.decode(json_string)
-        for i in ['filename', 'size', 'algorithm', 'digest']:
+        for i in ['filename', 'size', 'algorithm', 'digest', 'visibility']:
+            self.assertEqual(getattr(f, i), self.test_record.__dict__[i])
+
+    def test_decode_visibility(self):
+        self.test_record.visibility = True
+        json_string = json.dumps(
+            self.test_record, cls=tooltool.FileRecordJSONEncoder)
+        decoder = tooltool.FileRecordJSONDecoder()
+        f = decoder.decode(json_string)
+        for i in ['filename', 'size', 'algorithm', 'digest', 'visibility']:
             self.assertEqual(getattr(f, i), self.test_record.__dict__[i])
 
     def test_decode_dict_not_filerecord(self):
@@ -285,7 +300,7 @@ class TestFileRecordJSONCodecs(BaseFileRecordListTest):
         json_string = json.dumps(
             self.test_record, cls=tooltool.FileRecordJSONEncoder)
         from_json = json.loads(json_string,
-                cls=tooltool.FileRecordJSONDecoder)
+                               cls=tooltool.FileRecordJSONDecoder)
         for i in ['filename', 'size', 'algorithm', 'digest', 'unpack']:
             self.assertEqual(getattr(from_json, i), getattr(self.test_record, i), i)
 
@@ -465,7 +480,19 @@ def test_command_validate():
 def test_command_add():
     with mock.patch('tooltool.add_files') as add_files:
         eq_(call_main('tooltool', 'add', 'a', 'b'), 0)
-        add_files.assert_called_with('manifest.tt', 'sha512', ['a', 'b'])
+        add_files.assert_called_with('manifest.tt', 'sha512', ['a', 'b'], None)
+
+
+def test_command_add_visibility_internal():
+    with mock.patch('tooltool.add_files') as add_files:
+        eq_(call_main('tooltool', 'add', '--visibility', 'internal', 'a', 'b'), 0)
+        add_files.assert_called_with('manifest.tt', 'sha512', ['a', 'b'], 'internal')
+
+
+def test_command_add_visibility_public():
+    with mock.patch('tooltool.add_files') as add_files:
+        eq_(call_main('tooltool', 'add', '--visibility', 'public', 'a', 'b'), 0)
+        add_files.assert_called_with('manifest.tt', 'sha512', ['a', 'b'], 'public')
 
 
 def test_command_purge_no_folder():
@@ -622,11 +649,12 @@ class UploadTests(TestDirMixin, unittest.TestCase):
             self.server_thread.join()
         self.tearDownTestDir()
 
-    def add_file(self, filename, on_server=False, upload_fails=False):
+    def add_file(self, filename, on_server=False, upload_fails=False,
+                 visibility='internal'):
         data = os.urandom(1024)
         open(filename, "w").write(data)
         digest = hashlib.sha512(data).hexdigest()
-        tooltool.add_files('manifest.tt', 'sha512', [filename])
+        tooltool.add_files('manifest.tt', 'sha512', [filename], visibility)
         if on_server:
             self.server_config.setdefault('files_on_server', []).append(filename)
         if upload_fails:
@@ -740,6 +768,11 @@ class UploadTests(TestDirMixin, unittest.TestCase):
     def test_no_manifest(self):
         """When given a manifest that doesn't exist, upload fails."""
         assert not tooltool.upload('nosuch.tt', 'hi mom', ['http://'], None)
+
+    def test_manifest_without_visibility(self):
+        """When given a manifest with a file record without visibility, upload fails."""
+        self.add_file("foo.txt", visibility=None)
+        assert not tooltool.upload('manifest.tt', 'hi mom', ['http://'], None)
 
     def test_invalid_manifest(self):
         """When given a manifest that doesn't validate, upload fails"""
@@ -1242,21 +1275,37 @@ class AddFiles(BaseManifestTest):
         """Adding a new file to an existing manifest results in a manifest with
         two files"""
         file_json = self.make_file()
-        assert tooltool.add_files('manifest.tt', 'sha512', [file_json['filename']])
+        assert tooltool.add_files('manifest.tt', 'sha512', [file_json['filename']], None)
+        self.assert_manifest([self.test_record_json, file_json])
+
+    def test_append_internal(self):
+        """Adding a new file to an existing manifest results in a manifest with
+        two files, with the visibility set on the new one"""
+        file_json = self.make_file()
+        file_json['visibility'] = 'internal'
+        assert tooltool.add_files('manifest.tt', 'sha512', [file_json['filename']], 'internal')
+        self.assert_manifest([self.test_record_json, file_json])
+
+    def test_append_public(self):
+        """Adding a new file to an existing manifest results in a manifest with
+        two files, with the visibility set on the new one"""
+        file_json = self.make_file()
+        file_json['visibility'] = 'public'
+        assert tooltool.add_files('manifest.tt', 'sha512', [file_json['filename']], 'public')
         self.assert_manifest([self.test_record_json, file_json])
 
     def test_new_manifest(self):
         """Adding a new file to a new manifest results in a manifest with one
         file"""
         file_json = self.make_file()
-        assert tooltool.add_files('new_manifest.tt', 'sha512', [file_json['filename']])
+        assert tooltool.add_files('new_manifest.tt', 'sha512', [file_json['filename']], None)
         self.assert_manifest([file_json], manifest='new_manifest.tt')
 
     def test_file_already_exists(self):
         """Adding a file to a manifest that is already in that manifest fails"""
         assert not tooltool.add_files('manifest.tt', 'sha512',
                                       [os.path.join(os.path.dirname(__file__),
-                                                    self.sample_file)])
+                                                    self.sample_file)], None)
         self.assert_manifest([self.test_record_json])
 
     def test_filename_already_exists(self):
@@ -1264,7 +1313,7 @@ class AddFiles(BaseManifestTest):
         file fails"""
         self.make_file(self.sample_file)
         assert not tooltool.add_files('manifest.tt', 'sha512',
-                                      [self.sample_file])
+                                      [self.sample_file], None)
         self.assert_manifest([self.test_record_json])
 
 
@@ -1293,7 +1342,7 @@ class ListManifest(BaseManifestTest):
         # add two files
         open("foo.txt", "w").write("FOO!")
         open("bar.txt", "w").write("BAR!")
-        tooltool.add_files('manifest.tt', 'sha512', ['foo.txt', 'bar.txt'])
+        tooltool.add_files('manifest.tt', 'sha512', ['foo.txt', 'bar.txt'], None)
         open("bar.txt", "w").write("bar is invalid")
         old_stdout = sys.stdout
         sys.stdout = cStringIO.StringIO()

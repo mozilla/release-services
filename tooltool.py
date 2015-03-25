@@ -77,7 +77,7 @@ class MissingFileException(ExceptionWithFilename):
 
 class FileRecord(object):
 
-    def __init__(self, filename, size, digest, algorithm, unpack=False):
+    def __init__(self, filename, size, digest, algorithm, unpack=False, visibility=None):
         object.__init__(self)
         if '/' in filename or '\\' in filename:
             log.error(
@@ -88,6 +88,7 @@ class FileRecord(object):
         self.digest = digest
         self.algorithm = algorithm
         self.unpack = unpack
+        self.visibility = visibility
 
     def __eq__(self, other):
         if self is other:
@@ -95,7 +96,8 @@ class FileRecord(object):
         if self.filename == other.filename and \
            self.size == other.size and \
            self.digest == other.digest and \
-           self.algorithm == other.algorithm:
+           self.algorithm == other.algorithm and \
+           self.visibility == other.visibility:
             return True
         else:
             return False
@@ -107,12 +109,9 @@ class FileRecord(object):
         return repr(self)
 
     def __repr__(self):
-        return "%s.%s(filename='%s', size=%s, digest='%s', algorithm='%s')" % (
-            __name__,
-            self.__class__.__name__,
-            self.filename,
-            self.size,
-            self.digest, self.algorithm)
+        return "%s.%s(filename='%s', size=%s, digest='%s', algorithm='%s', visibility=%r)" % (
+            __name__, self.__class__.__name__, self.filename, self.size,
+            self.digest, self.algorithm, self.visibility)
 
     def present(self):
         # Doesn't check validity
@@ -176,6 +175,8 @@ class FileRecordJSONEncoder(json.JSONEncoder):
             }
             if obj.unpack:
                 rv['unpack'] = True
+            if obj.visibility is not None:
+                rv['visibility'] = obj.visibility
             return rv
 
     def default(self, f):
@@ -219,8 +220,10 @@ class FileRecordJSONDecoder(json.JSONDecoder):
 
             if not missing:
                 unpack = obj.get('unpack', False)
+                visibility = obj.get('visibility', None)
                 rv = FileRecord(
-                    obj['filename'], obj['size'], obj['digest'], obj['algorithm'], unpack)
+                    obj['filename'], obj['size'], obj['digest'], obj['algorithm'],
+                    unpack, visibility)
                 log.debug("materialized %s" % rv)
                 return rv
         return obj
@@ -387,7 +390,7 @@ def validate_manifest(manifest_file):
         return False
 
 
-def add_files(manifest_file, algorithm, filenames):
+def add_files(manifest_file, algorithm, filenames, visibility):
     # returns True if all files successfully added, False if not
     # and doesn't catch library Exceptions.  If any files are already
     # tracked in the manifest, return will be False because they weren't
@@ -404,6 +407,7 @@ def add_files(manifest_file, algorithm, filenames):
         log.debug("adding %s" % filename)
         path, name = os.path.split(filename)
         new_fr = create_file_record(filename, algorithm)
+        new_fr.visibility = visibility
         log.debug("appending a new file record to manifest file")
         add = True
         for fr in old_manifest.file_records:
@@ -796,6 +800,9 @@ def upload(manifest, message, base_urls, auth_file):
         log.error('manifest is invalid')
         return False
 
+    if any(fr.visibility is None for fr in manifest.file_records):
+        log.error('All files in a manifest for upload must have a visibility set')
+
     # convert the manifest to an upload batch
     batch = {
         'message': message,
@@ -806,7 +813,7 @@ def upload(manifest, message, base_urls, auth_file):
             'size': fr.size,
             'digest': fr.digest,
             'algorithm': fr.algorithm,
-            'visibility': 'internal',  # TODO: allow this to be specified in the manifest
+            'visibility': fr.visibility,
         }
 
     # make the upload request
@@ -870,7 +877,8 @@ def process_command(options, args):
     if cmd == 'validate':
         return validate_manifest(options['manifest'])
     elif cmd == 'add':
-        return add_files(options['manifest'], options['algorithm'], cmd_args)
+        return add_files(options['manifest'], options['algorithm'], cmd_args,
+                         options['visibility'])
     elif cmd == 'purge':
         if options['cache_folder']:
             purge(folder=options['cache_folder'], gigs=options['size'])
@@ -918,6 +926,12 @@ def main(argv, _skip_logging=False):
     parser.add_option('-d', '--algorithm', default='sha512',
                       dest='algorithm', action='store',
                       help='hashing algorithm to use (only sha512 is allowed)')
+    parser.add_option('--visibility', default=None,
+                      dest='visibility', choices=['internal', 'public'],
+                      help='Visibility level of this file; "internal" is for '
+                           'files that cannot be distributed out of the company '
+                           'but not for secrets; "public" files are available to '
+                           'anyone withou trestriction')
     parser.add_option('-o', '--overwrite', default=False,
                       dest='overwrite', action='store_true',
                       help='UNUSED; present for backward compatibility')
