@@ -167,12 +167,15 @@ class FileRecordJSONEncoder(json.JSONEncoder):
             log.warn(err)
             raise FileRecordJSONEncoderException(err)
         else:
-            return {
+            rv = {
                 'filename': obj.filename,
                 'size': obj.size,
                 'algorithm': obj.algorithm,
                 'digest': obj.digest,
             }
+            if obj.unpack:
+                rv['unpack'] = True
+            return rv
 
     def default(self, f):
         if issubclass(type(f), list):

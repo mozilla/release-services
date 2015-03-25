@@ -245,6 +245,15 @@ class TestFileRecordJSONCodecs(BaseFileRecordListTest):
         for i in ['filename', 'size', 'algorithm', 'digest']:
             self.assertEqual(dict_from_json[i], self.test_record.__dict__[i])
 
+    def test_json_dumps_with_unpack(self):
+        self.test_record.unpack = True
+        json_string = json.dumps(
+            self.test_record, cls=tooltool.FileRecordJSONEncoder)
+        from_json = json.loads(json_string,
+                cls=tooltool.FileRecordJSONDecoder)
+        for i in ['filename', 'size', 'algorithm', 'digest', 'unpack']:
+            self.assertEqual(getattr(from_json, i), getattr(self.test_record, i), i)
+
     def test_decode_list(self):
         json_string = json.dumps(
             self.record_list, cls=tooltool.FileRecordJSONEncoder)
