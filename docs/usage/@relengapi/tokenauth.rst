@@ -7,12 +7,12 @@ Authenticating with Tokens
 --------------------------
 
 When systems outside of the Releng API need to make API calls, they can do so using a *token*.
-Tokens are opaque strings (actually JSON Web Tokens) which are provided in the Authentication header:
+Tokens are opaque strings (actually JSON Web Tokens) which are provided in the Authorization header:
 
 .. code-block:: none
 
     GET /some/resource HTTP/1.1
-    Authentication: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6OSwidiI6MX0.pVmY1aTyASlf24h4acVOiqNgt85mfViXDTvxLsY_qdY
+    Authorization Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6OSwidiI6MX0.pVmY1aTyASlf24h4acVOiqNgt85mfViXDTvxLsY_qdY
 
 Each token permits a limited set of permissions, specified when the token is issued.
 
