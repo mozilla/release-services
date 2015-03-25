@@ -16,9 +16,8 @@ install: |
         pip install -e .[test]
         pip install coveralls
     else
-        pip install mock nosetests
-    fi;
-    pip freeze
+        pip install mock nose
+    fi && pip freeze
 
 # run everything in a single script, so we get a nice summary at the end
 script: |
