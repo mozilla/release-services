@@ -30,3 +30,11 @@
 .tt-upload-message {
     font-style: italic;
 }
+
+.download-link {
+    cursor: pointer;
+}
+
+.details-link {
+    cursor: pointer;
+}
