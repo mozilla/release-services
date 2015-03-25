@@ -246,9 +246,7 @@ class Manifest(object):
         # sort the file records by filename before comparing
         mine = sorted((fr.filename, fr) for fr in self.file_records)
         theirs = sorted((fr.filename, fr) for fr in other.file_records)
-        if mine != theirs:
-            return False
-        return True
+        return mine == theirs
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -328,7 +326,7 @@ def execute(cmd):
         line = process.stdout.readline()
         if not line:
             break
-        log.info(line.replace('\n', ''))
+        log.info(line.replace('\n', ' '))
     return process.wait() == 0
 
 
