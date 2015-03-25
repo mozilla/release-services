@@ -18,6 +18,20 @@ import urllib2
 from nose.tools import eq_
 
 
+class TestDirMixin(object):
+
+    def setUpTestDir(self):
+        self.test_dir = os.path.abspath(tempfile.mkdtemp())
+        self.__old_cwd = os.getcwd()
+        if os.path.exists(self.test_dir):
+            shutil.rmtree(self.test_dir)
+        os.makedirs(self.test_dir)
+        os.chdir(self.test_dir)
+
+    def tearDownTestDir(self):
+        os.chdir(self.__old_cwd)
+        shutil.rmtree(self.test_dir)
+
 class DigestTests(unittest.TestCase):
 
     def setUp(self):
@@ -73,24 +87,18 @@ class BaseFileRecordListTest(BaseFileRecordTest):
             self.record_list.append(record)
 
 
-class BaseManifestTest(BaseFileRecordTest):
+class BaseManifestTest(TestDirMixin, BaseFileRecordTest):
 
     def setUp(self):
         BaseFileRecordTest.setUp(self)
+        self.setUpTestDir()
         self.sample_manifest = tooltool.Manifest([self.test_record])
         self.sample_manifest_file = 'manifest.tt'
-        self.test_dir = 'test-dir'
-        self.startingwd = os.getcwd()
-        if os.path.exists(self.test_dir):
-            shutil.rmtree(self.test_dir)
-        os.mkdir(self.test_dir)
-        with open(os.path.join(self.test_dir, self.sample_manifest_file), 'w') as tmpfile:
+        with open(self.sample_manifest_file, 'w') as tmpfile:
             self.sample_manifest.dump(tmpfile, fmt='json')
-        os.chdir(self.test_dir)
 
     def tearDown(self):
-        os.chdir(self.startingwd)
-        shutil.rmtree(self.test_dir)
+        self.tearDownTestDir()
 
 
 class TestFileRecord(BaseFileRecordTest):
@@ -471,7 +479,7 @@ def test_command_package():
                                        cache_folder=None, auth_file=None)
 
 
-class FetchTests(unittest.TestCase):
+class FetchTests(TestDirMixin, unittest.TestCase):
 
     _server_files = ['one', 'two', 'three']
     server_files_by_hash = dict((hashlib.sha512(v).hexdigest(), v)
@@ -480,18 +488,11 @@ class FetchTests(unittest.TestCase):
     urls = ['http://a', 'http://2']
 
     def setUp(self):
-        self.test_dir = os.path.abspath('test-dir')
-        self.startingwd = os.getcwd()
-        if os.path.exists(self.test_dir):
-            shutil.rmtree(self.test_dir)
-        os.mkdir(self.test_dir)
-        self.cache_dir = os.path.join(self.test_dir, 'cache')
-        # fetch expects to work in the cwd
-        os.chdir(self.test_dir)
+        self.setUpTestDir()
+        self.cache_dir = os.path.abspath('cache')
 
     def tearDown(self):
-        os.chdir(self.startingwd)
-        shutil.rmtree(self.test_dir)
+        self.tearDownTestDir()
 
     def fake_fetch_file(self, urls, file_record, auth_file=None):
         eq_(urls, self.urls)
@@ -823,18 +824,13 @@ def test_touch_doesnt_exit():
     assert not os.path.exists("testfile")
 
 
-class PurgeTests(unittest.TestCase):
+class PurgeTests(TestDirMixin, unittest.TestCase):
 
     def setUp(self):
-        self.test_dir = 'test-dir'
-        self.startingwd = os.getcwd()
-        if os.path.exists(self.test_dir):
-            shutil.rmtree(self.test_dir)
-        os.mkdir(self.test_dir)
+        self.setUpTestDir()
 
     def tearDown(self):
-        os.chdir(self.startingwd)
-        shutil.rmtree(self.test_dir)
+        self.tearDownTestDir()
 
     def fake_freespace(self, p):
         # A fake 10G drive, with each file = 1G
