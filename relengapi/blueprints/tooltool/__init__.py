@@ -34,6 +34,7 @@ metadata = {
 }
 
 bp = Blueprint('tooltool', __name__,
+               template_folder='templates',
                static_folder='static')
 
 is_valid_sha512 = re.compile(r'^[0-9a-f]{128}$').match
@@ -61,6 +62,10 @@ def get_region_and_bucket(region_arg):
         return region_arg, cfg[region_arg]
     # no region specified, so return one at random
     return random.choice(cfg.items())
+
+bp.root_widget_template(
+    'tooltool_root_widget.html', priority=100,
+    condition=lambda: not current_user.is_anonymous())
 
 
 @bp.route('/')
