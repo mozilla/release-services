@@ -11,6 +11,7 @@ from sqlalchemy import asc
 from flask import Blueprint
 from flask import g
 from flask import render_template
+from flask.ext.login import current_user
 from relengapi import apimethod
 from relengapi import p
 from relengapi.blueprints.slaveloan import task_groups
@@ -206,6 +207,29 @@ def get_loan_actions(loan_id=None, all=False):
 def get_loan_action(action_id):
     "Get the manual actions for this loan"
     action = ManualActions.query.get(action_id)
+    return action.to_wsme()
+
+
+@bp.route('/manual_actions/<int:action_id>', methods=["PUT"])
+@p.slaveloan.admin.require()
+@apimethod(rest.ManualAction, int, body=rest.UpdateManualAction)
+def update_loan_action(action_id, body):
+    "Get the manual actions for this loan"
+    session = g.db.session('relengapi')
+    action = ManualActions.query.get(action_id)
+    if body.complete and action.timestamp_complete is None:
+        action.timestamp_complete = tz.utcnow()
+        action.complete_by = current_user.authenticated_email
+    else:
+        action.timestamp_complete = None
+        action.complete_by = None
+    session.add(action)
+    history = History(for_loan=action.loan_id,
+                      timestamp=tz.utcnow(),
+                      msg="Admin marked action (id: %s) as complete via web" %
+                          (action_id))
+    session.add(history)
+    session.commit()
     return action.to_wsme()
 
 

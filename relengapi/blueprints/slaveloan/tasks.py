@@ -213,7 +213,7 @@ def register_action_needed(self, loanid, action_name):
 
 @task(bind=True, max_retries=None, default_retry_delay=60)
 @add_to_history(
-    after="Human performed waiting action (id {args[1]})")
+    after="Noticed that a human performed pending action (id {args[1]}), continuing")
 def waitfor_action(self, action_id, loanid):
     try:
         action = ManualActions.query.get(action_id)
