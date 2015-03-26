@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import datetime
+import logging
 import random
 import re
 import sqlalchemy as sa
@@ -50,6 +51,8 @@ p.tooltool.manage.doc("Manage tooltool files, including deleting and changing vi
 # after it had been verified.
 UPLOAD_EXPIRES_IN = 60
 GET_EXPIRES_IN = 60
+
+log = logging.getLogger(__name__)
 
 
 def get_region_and_bucket(region_arg):
@@ -158,6 +161,8 @@ def upload_batch(region=None, body=None):
                     visibility=info.visibility,
                     size=info.size)
                 session.add(file)
+            log.info("generating signed PUT URL to {} for {}, expires in {}s".format(
+                     info.digest, current_user, UPLOAD_EXPIRES_IN))
             info.put_url = s3.generate_url(
                 method='PUT', expires_in=UPLOAD_EXPIRES_IN, bucket=bucket,
                 key=util.keyname(info.digest),
@@ -328,6 +333,8 @@ def download_file(digest, region=None):
     key = util.keyname(digest)
 
     s3 = current_app.aws.connect_to('s3', selected_region)
+    log.info("generating signed GET URL to {} for {}, expires in {}s".format(
+             digest, current_user, GET_EXPIRES_IN))
     signed_url = s3.generate_url(
         method='GET', expires_in=GET_EXPIRES_IN, bucket=bucket, key=key)
 
