@@ -315,8 +315,10 @@ def download_file(digest, region=None):
         raise NotFound
 
     # check visibility
-    if not p.get('tooltool.download.{}'.format(file_row.visibility)).can():
-        raise Forbidden
+    allow_pub_dl = current_app.config.get('TOOLTOOL_ALLOW_ANONYMOUS_PUBLIC_DOWNLOAD')
+    if file_row.visibility != 'public' or not allow_pub_dl:
+        if not p.get('tooltool.download.{}'.format(file_row.visibility)).can():
+            raise Forbidden
 
     # figure out which region to use, and from there which bucket
     cfg = current_app.config['TOOLTOOL_REGIONS']

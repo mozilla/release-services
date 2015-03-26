@@ -42,6 +42,9 @@ test_context = TestContext(config=cfg, databases=['tooltool'],
                            user=userperms([p.tooltool.download.public,
                                            p.tooltool.upload.public]))
 
+allow_anon_cfg = cfg.copy()
+allow_anon_cfg['TOOLTOOL_ALLOW_ANONYMOUS_PUBLIC_DOWNLOAD'] = True
+
 ONE = '1\n'
 ONE_DIGEST = hashlib.sha512(ONE).hexdigest()
 TWO = '22\n'
@@ -557,6 +560,36 @@ def test_download_file_exists(app, client):
         with not_so_random_choice():
             resp = client.get('/tooltool/sha512/{}'.format(ONE_DIGEST))
         assert_signed_302(resp, ONE_DIGEST, region='us-east-1')
+
+
+@moto.mock_s3
+@test_context.specialize(user=None)
+def test_download_file_anonymous_forbidden(app, client):
+    """Anonymously downloading a public file is forbidden if
+    TOOLTOOL_ALLOW_ANONYMOUS_PUBLIC_DOWNLOAD is not set"""
+    add_file_to_db(app, ONE, regions=['us-west-2'], visibility='public')
+    resp = client.get('/tooltool/sha512/{}'.format(ONE_DIGEST))
+    eq_(resp.status_code, 403)
+
+
+@moto.mock_s3
+@test_context.specialize(user=None, config=allow_anon_cfg)
+def test_download_file_anonymous_nonpublic_forbidden(app, client):
+    """Anonymously downloading an i nternal file is forbidden even if
+    TOOLTOOL_ALLOW_ANONYMOUS_PUBLIC_DOWNLOAD is set"""
+    add_file_to_db(app, ONE, regions=['us-west-2'], visibility='internal')
+    resp = client.get('/tooltool/sha512/{}'.format(ONE_DIGEST))
+    eq_(resp.status_code, 403)
+
+
+@moto.mock_s3
+@test_context.specialize(user=None, config=allow_anon_cfg)
+def test_download_file_anonymous_allowed(app, client):
+    """Anonymously downloading a public file is allowed if
+    TOOLTOOL_ALLOW_ANONYMOUS_PUBLIC_DOWNLOAD is set"""
+    add_file_to_db(app, ONE, regions=['us-west-2'], visibility='public')
+    resp = client.get('/tooltool/sha512/{}'.format(ONE_DIGEST))
+    eq_(resp.status_code, 302)
 
 
 @moto.mock_s3

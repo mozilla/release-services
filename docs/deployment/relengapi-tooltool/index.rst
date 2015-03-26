@@ -30,3 +30,5 @@ The following permissions control whether users can upload or download files at 
  * ``tooltool.upload.internal``
 
 Note that the ``internal`` permissions do not imply the ``public`` permissions.
+
+To allow any user (even unauthenticated) to download public files, set ``TOOLTOOL_ALLOW_ANONYMOUS_PUBLIC_DOWNLOAD = True``.
