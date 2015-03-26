@@ -184,6 +184,30 @@ def get_machine_classes():
     which match any of the globs in the array."""
     return slave_patterns()
 
+
+@bp.route('/manual_actions')
+@p.slaveloan.admin.require()
+@apimethod([rest.ManualAction], int, bool)
+def get_loan_actions(loan_id=None, all=False):
+    "Get the manual actions for this loan"
+    action_query = ManualActions.query \
+                                .order_by(asc(ManualActions.timestamp_start))
+    if loan_id:
+        action_query = action_query.filter(ManualActions.loan_id == int(loan_id))
+    if not all:
+        action_query = action_query.filter(ManualActions.timestamp_complete.is_(None))
+    return [a.to_wsme() for a in action_query.all()]
+
+
+@bp.route('/manual_actions/<int:action_id>')
+@p.slaveloan.admin.require()
+@apimethod(rest.ManualAction, int)
+def get_loan_action(action_id):
+    "Get the manual actions for this loan"
+    action = ManualActions.query.get(action_id)
+    return action.to_wsme()
+
+
 ##################
 # User Interface #
 ##################
