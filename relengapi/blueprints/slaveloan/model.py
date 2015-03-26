@@ -7,6 +7,7 @@ import sqlalchemy as sa
 from relengapi.lib import db
 from relengapi.util import tz
 from sqlalchemy.orm import relationship
+from sqlalchemy.schema import Index
 
 from relengapi.blueprints.slaveloan import rest
 
@@ -69,6 +70,7 @@ class Loans(db.declarative_base('relengapi')):
                            sa.ForeignKey(_tbl_prefix + 'machines.id'),
                            nullable=True)
     history = relationship("History", backref="for_loan")
+    manual_actions = relationship("ManualActions", backref="for_loan")
     # Backrefs
     # # human   (Humans)
     # # machine (Machines)
@@ -102,8 +104,39 @@ class History(db.declarative_base('relengapi')):
 
     def to_json(self):
         return dict(id=self.id, loan_id=self.loan_id,
-                    timestamp=self.timestamp.isoformat(),
+                    timestamp=self.timestamp,
                     msg=self.msg)
 
     def to_wsme(self):
         return rest.HistoryEntry(**self.to_json())
+
+
+class ManualActions(db.declarative_base('relengapi')):
+    __tablename__ = _tbl_prefix + 'manualactions'
+    id = sa.Column(sa.Integer, primary_key=True)
+    loan_id = sa.Column(sa.Integer,
+                        sa.ForeignKey(_tbl_prefix + 'loans.id'),
+                        nullable=False)
+    timestamp_start = sa.Column(db.UTCDateTime(timezone=True),
+                                default=tz.utcnow,
+                                nullable=False)
+    timestamp_complete = sa.Column(db.UTCDateTime(timezone=True),
+                                   default=None,
+                                   nullable=True)
+    complete_by = sa.Column(sa.String(255), nullable=True)
+    msg = sa.Column(sa.Text, nullable=False)
+
+    # Backrefs
+    # # for_loan  (Loan this applies to)
+
+    __table_args__ = (Index("loan_id_idx", "loan_id"), )
+
+    def to_json(self):
+        return dict(id=self.id, loan_id=self.loan_id,
+                    timestamp_start=self.timestamp_start,
+                    timestamp_complete=self.timestamp_complete,
+                    complete_by=self.complete_by,
+                    msg=self.msg)
+
+    def to_wsme(self):
+        return rest.ManualAction(**self.to_json())

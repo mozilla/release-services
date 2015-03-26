@@ -27,6 +27,7 @@ from relengapi.blueprints.slaveloan.model import History
 from relengapi.blueprints.slaveloan.model import Humans
 from relengapi.blueprints.slaveloan.model import Loans
 from relengapi.blueprints.slaveloan.model import Machines
+from relengapi.blueprints.slaveloan.model import ManualActions
 
 logger = logging.getLogger(__name__)
 
@@ -196,6 +197,55 @@ def get_machine_classes():
     Where the above would tell you we are loaning a 'b-2008-ix' machine for slaves
     which match any of the globs in the array."""
     return slave_patterns()
+
+
+@bp.route('/manual_actions')
+@p.slaveloan.admin.require()
+@apimethod([rest.ManualAction], int, bool)
+def get_loan_actions(loan_id=None, all=False):
+    "Get the manual actions for a loan"
+    action_query = ManualActions.query \
+                                .order_by(asc(ManualActions.timestamp_start))
+    if loan_id:
+        action_query = action_query.filter(ManualActions.loan_id == loan_id)
+    if not all:
+        action_query = action_query.filter(ManualActions.timestamp_complete.is_(None))
+    return [a.to_wsme() for a in action_query.all()]
+
+
+@bp.route('/manual_actions/<int:action_id>')
+@p.slaveloan.admin.require()
+@apimethod(rest.ManualAction, int)
+def get_loan_action(action_id):
+    "Get a specific action for a loan"
+    action = ManualActions.query.get(action_id)
+    return action.to_wsme()
+
+
+@bp.route('/manual_actions/<int:action_id>', methods=["PUT"])
+@p.slaveloan.admin.require()
+@apimethod(rest.ManualAction, int, body=rest.UpdateManualAction)
+def update_loan_action(action_id, body):
+    "Update a specific manual actions for a loan"
+    session = g.db.session('relengapi')
+    action = ManualActions.query.get(action_id)
+    if body.complete and action.timestamp_complete is None:
+        action.timestamp_complete = tz.utcnow()
+        action.complete_by = current_user.authenticated_email
+    elif not body.complete:
+        raise BadRequest("Once actions are completed, cannot undo.")
+    else:
+        logger.debug("Attempted to complete this action twice")
+        return action.to_wsme()
+    session.add(action)
+    history = History(loan_id=action.loan_id,
+                      timestamp=tz.utcnow(),
+                      msg="Admin marked action (id: %s) as complete via web" %
+                          (action.id))
+    session.add(history)
+    session.commit()
+    return action.to_wsme()
+
 
 ##################
 # User Interface #

@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from datetime import datetime
+
 import wsme.types
 
 
@@ -49,10 +51,35 @@ class HistoryEntry(wsme.types.Base):
     id = int
     #: Unique ID of the loan this log line is for
     loan_id = int
-    #: Datetime string (in UTC) of this entry. (e.g. "2014-06-06T20:02:46.937065+00:00")
-    timestamp = unicode
+    #: Datetime string (in UTC) of this entry. (see
+    #: :ref:`Datetime-Format` for format information)
+    timestamp = datetime
     #: The actual log message
     msg = unicode
+
+
+class ManualAction(wsme.types.Base):
+    "Represents a need for an admin to perform a manual action"
+    #: Unique ID for this action
+    id = int
+    #: Unique ID of the loan this log line is for
+    loan_id = int
+    #: Datetime string (in UTC) of the start of action.(see
+    #: :ref:`Datetime-Format` for format information)
+    timestamp_start = datetime
+    #: Datetime string (in UTC) when action was completed. (see
+    #: :ref:`Datetime-Format` for format information)
+    timestamp_complete = datetime
+    #: Who performed the completion (admin ldap)
+    complete_by = unicode
+    #: What action needs performing
+    msg = unicode
+
+
+class UpdateManualAction(wsme.types.Base):
+    "Represents payload used to update a manual action"
+    #: Mark the action as complete
+    complete = bool
 
 
 class LoanAdminRequest(wsme.types.Base):

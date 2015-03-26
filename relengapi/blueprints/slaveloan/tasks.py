@@ -20,6 +20,7 @@ from relengapi.blueprints.slaveloan import slave_mappings
 from relengapi.blueprints.slaveloan.model import History
 from relengapi.blueprints.slaveloan.model import Loans
 from relengapi.blueprints.slaveloan.model import Machines
+from relengapi.blueprints.slaveloan.model import ManualActions
 from relengapi.lib.celery import task
 from relengapi.util import tz
 
@@ -181,6 +182,48 @@ def bmo_file_loan_bug(self, loanid, slavetype, *args, **kwargs):
         self.retry(exc=exc)
 
 
+@task(bind=True)
+@add_to_history(
+    after="Waiting for a human to perform {kwargs[action_name]} (id {retval!s})")
+def register_action_needed(self, loanid, action_name):
+    if not action_name:
+        raise ValueError("must supply an action name")
+    try:
+        session = current_app.db.session('relengapi')
+        l = session.query(Loans).get(loanid)
+        if action_name == "add_to_vpn":
+            action_message = (
+                "Add user (%s) and machine (%s) to the VPN. "
+                "Following https://wiki.mozilla.org/ReleaseEngineering/How_To/Update_VPN_ACL"
+                % (l.human.ldap, l.machine.fqdn)
+            )
+        else:
+            raise ValueError("Invalid action name")
+        action = ManualActions(for_loan=l,
+                               timestamp_start=tz.utcnow(),
+                               msg=action_message)
+        session.add(action)
+        session.commit()
+        return action.id
+    except ValueError:
+        raise
+    except Exception as exc:
+        self.retry(exc=exc)
+
+
+@task(bind=True, max_retries=None, default_retry_delay=60)
+@add_to_history(
+    after="Noticed that a human performed pending action (id {args[1]}), continuing")
+def waitfor_action(self, action_id, loanid):
+    try:
+        action = ManualActions.query.get(action_id)
+        if not action.timestamp_complete:
+            raise Exception("Retry me")
+    except Exception as exc:
+        logger.debug("Retrying...")
+        self.retry(exc=exc)
+
+
 @task()
 def dummy_task(*args, **kwargs):
     pass
@@ -193,5 +236,3 @@ clean_secrets = dummy_task
 update_loan_bug_with_details = dummy_task
 email_loan_details = dummy_task
 reboot_machine = dummy_task
-register_action_needed = dummy_task
-waitfor_action = dummy_task
