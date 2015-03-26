@@ -104,7 +104,7 @@ class History(db.declarative_base('relengapi')):
 
     def to_json(self):
         return dict(id=self.id, loan_id=self.loan_id,
-                    timestamp=self.timestamp.isoformat(),
+                    timestamp=self.timestamp,
                     msg=self.msg)
 
     def to_wsme(self):
@@ -132,12 +132,9 @@ class ManualActions(db.declarative_base('relengapi')):
     __table_args__ = (Index("loan_id_idx", "loan_id"), )
 
     def to_json(self):
-        timestamp_complete = None
-        if self.timestamp_complete:
-            timestamp_complete = self.timestamp_complete.isoformat()
         return dict(id=self.id, loan_id=self.loan_id,
-                    timestamp_start=self.timestamp_start.isoformat(),
-                    timestamp_complete=timestamp_complete,
+                    timestamp_start=self.timestamp_start,
+                    timestamp_complete=self.timestamp_complete,
                     complete_by=self.complete_by,
                     msg=self.msg)
 

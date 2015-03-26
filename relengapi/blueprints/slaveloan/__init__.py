@@ -195,7 +195,7 @@ def get_loan_actions(loan_id=None, all=False):
     action_query = ManualActions.query \
                                 .order_by(asc(ManualActions.timestamp_start))
     if loan_id:
-        action_query = action_query.filter(ManualActions.loan_id == int(loan_id))
+        action_query = action_query.filter(ManualActions.loan_id == loan_id)
     if not all:
         action_query = action_query.filter(ManualActions.timestamp_complete.is_(None))
     return [a.to_wsme() for a in action_query.all()]
@@ -220,9 +220,11 @@ def update_loan_action(action_id, body):
     if body.complete and action.timestamp_complete is None:
         action.timestamp_complete = tz.utcnow()
         action.complete_by = current_user.authenticated_email
+    elif not body.complete:
+        raise BadRequest("Once actions are completed, cannot undo.")
     else:
-        action.timestamp_complete = None
-        action.complete_by = None
+        log.debug("Attempted to complete this action twice")
+        return action.to_wsme()
     session.add(action)
     history = History(loan_id=action.loan_id,
                       timestamp=tz.utcnow(),
