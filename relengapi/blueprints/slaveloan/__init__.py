@@ -25,6 +25,7 @@ from relengapi.blueprints.slaveloan.model import History
 from relengapi.blueprints.slaveloan.model import Humans
 from relengapi.blueprints.slaveloan.model import Loans
 from relengapi.blueprints.slaveloan.model import Machines
+from relengapi.blueprints.slaveloan.model import ManualActions
 
 logger = logging.getLogger(__name__)
 
