@@ -11,6 +11,7 @@ import json
 import logging
 import mock
 import os
+import os.path
 import shutil
 import sys
 import tempfile
@@ -537,6 +538,24 @@ def test_command_fetch_region():
         fetch_files.assert_called_with('manifest.tt', ['http://foo'], ['a', 'b'],
                                        cache_folder=None, auth_file=None,
                                        region='us-east-1')
+
+
+def test_command_fetch_auth_file():
+    # mock can't patch os.path.expanduser, because it looks for path.expanduser
+    # in the os module
+    old_expanduser = os.path.expanduser
+    os.path.expanduser = mock.Mock()
+    try:
+        with mock.patch('tooltool.fetch_files') as fetch_files:
+            os.path.expanduser.side_effect = lambda path: path.replace("~", "HOME")
+            eq_(call_main('tooltool', 'fetch', 'a', 'b', '--url', 'http://foo',
+                          '--authentication-file', '~/.tooltool-token'), 0)
+            fetch_files.assert_called_with('manifest.tt', ['http://foo'],
+                                           ['a', 'b'], cache_folder=None,
+                                           auth_file="HOME/.tooltool-token",
+                                           region=None)
+    finally:
+        os.path.expanduser = old_expanduser
 
 
 def test_command_upload():

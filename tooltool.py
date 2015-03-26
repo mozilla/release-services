@@ -971,6 +971,10 @@ def main(argv, _skip_logging=False):
     if not options_obj.base_url:
         options_obj.base_url = ['https://api.pub.build.mozilla.org/tooltool/']
 
+    # expand ~ in --authentication-file
+    if options_obj.auth_file:
+        options_obj.auth_file = os.path.expanduser(options_obj.auth_file)
+
     # Dictionaries are easier to work with
     options = vars(options_obj)
 
