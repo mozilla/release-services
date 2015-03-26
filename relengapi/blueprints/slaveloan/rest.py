@@ -71,6 +71,12 @@ class ManualAction(wsme.types.Base):
     msg = unicode
 
 
+class UpdateManualAction(wsme.types.Base):
+    "Represents payload used to update a manual action"
+    #: Mark the action as complete
+    complete = bool
+
+
 class LoanAdminRequest(wsme.types.Base):
     "Represents a new loan request with admin details"
 
