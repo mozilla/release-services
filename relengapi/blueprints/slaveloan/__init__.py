@@ -191,7 +191,7 @@ def get_machine_classes():
 @p.slaveloan.admin.require()
 @apimethod([rest.ManualAction], int, bool)
 def get_loan_actions(loan_id=None, all=False):
-    "Get the manual actions for this loan"
+    "Get the manual actions for a loan"
     action_query = ManualActions.query \
                                 .order_by(asc(ManualActions.timestamp_start))
     if loan_id:
@@ -205,7 +205,7 @@ def get_loan_actions(loan_id=None, all=False):
 @p.slaveloan.admin.require()
 @apimethod(rest.ManualAction, int)
 def get_loan_action(action_id):
-    "Get the manual actions for this loan"
+    "Get a specific action for a loan"
     action = ManualActions.query.get(action_id)
     return action.to_wsme()
 
@@ -214,7 +214,7 @@ def get_loan_action(action_id):
 @p.slaveloan.admin.require()
 @apimethod(rest.ManualAction, int, body=rest.UpdateManualAction)
 def update_loan_action(action_id, body):
-    "Get the manual actions for this loan"
+    "Update a specific manual actions for a loan"
     session = g.db.session('relengapi')
     action = ManualActions.query.get(action_id)
     if body.complete and action.timestamp_complete is None:
