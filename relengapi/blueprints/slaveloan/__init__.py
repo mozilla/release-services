@@ -223,7 +223,7 @@ def update_loan_action(action_id, body):
     elif not body.complete:
         raise BadRequest("Once actions are completed, cannot undo.")
     else:
-        log.debug("Attempted to complete this action twice")
+        logger.debug("Attempted to complete this action twice")
         return action.to_wsme()
     session.add(action)
     history = History(loan_id=action.loan_id,
