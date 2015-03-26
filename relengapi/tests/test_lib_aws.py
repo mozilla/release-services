@@ -135,17 +135,22 @@ def test_sqs_listen(app):
             if body == 'BODY2':
                 raise aws._StopListening
 
-        app.aws._spawn_sqs_listeners(_testing=True)
-        app.aws.sqs_write('us-east-1', 'my-sqs-queue', 'BODY1')
-        app.aws.sqs_write('us-east-1', 'my-sqs-queue', 'EXC')
-        app.aws.sqs_write('us-east-1', 'my-sqs-queue', 'BODY2')
+        threads = app.aws._spawn_sqs_listeners(_testing=True)
+        try:
+            app.aws.sqs_write('us-east-1', 'my-sqs-queue', 'BODY1')
+            app.aws.sqs_write('us-east-1', 'my-sqs-queue', 'EXC')
+            app.aws.sqs_write('us-east-1', 'my-sqs-queue', 'BODY2')
 
-        eq_(got_msgs.get(), 'BODY1')
-        eq_(got_msgs.get(), 'BODY2')
+            eq_(got_msgs.get(), 'BODY1')
+            eq_(got_msgs.get(), 'BODY2')
 
-        # check that the exception was logged
-        assert any(
-            'while invoking' in record.message for record in log_buffer.buffer)
+            # check that the exception was logged
+            assert any(
+                'while invoking' in record.message for record in log_buffer.buffer)
+
+        finally:
+            for th in threads:
+                th.join()
 
         # NOTE: moto does not support changing message visibility, so there's no
         # good way to programmatically verify that messages are being deleted
