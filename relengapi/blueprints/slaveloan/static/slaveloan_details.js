@@ -1,6 +1,6 @@
 $( document ).ready(function() {
 
-function reload_loans() {
+function reload_history() {
     $('#loans-history tbody').empty();
     $.ajax({
         url: _get_history_url,
@@ -15,13 +15,14 @@ function reload_loans() {
         }
     });
 }
-$(reload_loans);
+$(reload_history);
 
 function complete_action(evt){
     evt.target.disabled = true;
     var good = function(action) {
         alertify.success("Marked action as complete");
         reload_actions();
+        reload_history();
     };
     var bad = function(errmsg) {
         /* re-enable the button so users can try again */

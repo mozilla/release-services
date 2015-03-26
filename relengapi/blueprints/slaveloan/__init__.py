@@ -224,10 +224,10 @@ def update_loan_action(action_id, body):
         action.timestamp_complete = None
         action.complete_by = None
     session.add(action)
-    history = History(for_loan=action.loan_id,
+    history = History(loan_id=action.loan_id,
                       timestamp=tz.utcnow(),
                       msg="Admin marked action (id: %s) as complete via web" %
-                          (action_id))
+                          (action.id))
     session.add(history)
     session.commit()
     return action.to_wsme()
