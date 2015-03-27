@@ -30,8 +30,6 @@ def prep_machine_info(slavetype, loanid):
             manual_action(loanid=loanid, action_name="create_aws_system"),
             tasks.choose_aws_machine.si(loanid=loanid, loan_class=slavetype),
             group(
-                # XXX fixup machine Requires we create CNAMES for aws loaners
-                #     which is not true today
                 tasks.fixup_machine.s(loanid=loanid),
                 tasks.bmo_set_tracking_bug.s(loanid=loanid),
             )
