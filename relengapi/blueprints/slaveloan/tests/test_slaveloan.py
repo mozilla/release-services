@@ -19,42 +19,38 @@ test_context_admin = TestContext(databases=['relengapi'],
 
 
 @test_context
-def test_root(client):
+def test_ui_root(client):
     "The root of the blueprint is accessible without login"
     rv = client.get('/slaveloan/')
     eq_(rv.status_code, 200)
 
 
-@test_context
-def test_admin_ui_not_authorized(client):
-    "Test that an unlogged in user can't access the admin ui"
-    rv = client.get('/slaveloan/admin')
-    eq_(rv.status_code, 301)
+def test_ui_admin_required():
+    "Test that admin perm is required for ui endpoints"
+    paths = [
+        '/slaveloan/admin/',
+        '/slaveloan/details/2',
+    ]
 
+    @test_context
+    def t(path, app, client):
+        with app.test_request_context():
+            resp = client.get(path)
+            eq_(resp.status_code, 403)
 
-@test_context_admin
-def test_admin_ui_authorized(client):
-    "Test that an admin can access the admin ui"
-    rv = client.get('/slaveloan/admin')
-    eq_(rv.status_code, 200)
+    @test_context_admin
+    def t2(path, app, client):
+        with app.test_request_context():
+            resp = client.get(path)
+            eq_(resp.status_code, 200)
 
-
-@test_context
-def test_details_ui_not_authorized(client):
-    "Test that an logged out user can't access the loan details ui"
-    rv = client.get('/slaveloan/details/2')
-    eq_(rv.status_code, 200)
-
-
-@test_context_admin
-def test_details_ui_authorized(client):
-    "Test that an admin can access the loan details ui"
-    rv = client.get('/slaveloan/details/2')
-    eq_(rv.status_code, 200)
+    for path in paths:
+        yield t, path
+        yield t2, path
 
 
 @test_context
 def test_machine_classes(client):
     "Test that someone not logged in can access the slave class mapping"
-    rv = client.get('/machine/classes')
+    rv = client.get('/slaveloan/machine/classes')
     eq_(rv.status_code, 200)
