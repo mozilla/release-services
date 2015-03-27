@@ -47,35 +47,6 @@ def test_bug_load_info(app):
 
 
 @test_context
-def test_bug_load_info(app):
-    "Test that bug objects load their info"
-    with app.app_context():
-        with mock.patch("bzrest.client.BugzillaClient.get_bug") as mockbzclient:
-            mockbzclient.return_value = {'id': 12345, 'alias': "somealias"}
-            bug = bugzilla.Bug(12345)
-            eq_(bug.alias, "somealias")
-            eq_(bug.id, 12345)
-            eq_(bug.id_, 12345)
-            bug = bugzilla.Bug("somealias")
-            eq_(bug.alias, "somealias")
-            eq_(bug.id, 12345)
-
-
-@test_context
-def test_bug_property_id_(app):
-    "Test that bug id_ property exists and how it behaves"
-    bug = bugzilla.Bug(12345, loadInfo=False)
-    eq_(bug.id_, 12345)
-    bug = bugzilla.Bug("somealias", loadInfo=False)
-    eq_(bug.id_, "somealias")
-    with app.app_context():
-        with mock.patch("bzrest.client.BugzillaClient.get_bug") as mockbzclient:
-            mockbzclient.return_value = {'id': 12345, 'alias': "somealias"}
-            bug = bugzilla.Bug("somealias", loadInfo=False)
-            eq_(bug.id_, 12345)
-
-
-@test_context
 def test_bug_refresh(app):
     "Test that bug objects refresh when asked"
     with app.app_context():
@@ -92,3 +63,17 @@ def test_bug_refresh(app):
             eq_(bug.alias, "newalias")
             eq_(bug.id, 12345)
             assert_not_equal(olddata, bug.data)
+
+
+@test_context
+def test_bug_property_id_(app):
+    "Test that bug id_ property exists and how it behaves"
+    bug = bugzilla.Bug(12345, loadInfo=False)
+    eq_(bug.id_, 12345)
+    bug = bugzilla.Bug("somealias", loadInfo=False)
+    eq_(bug.id_, "somealias")
+    with app.app_context():
+        with mock.patch("bzrest.client.BugzillaClient.get_bug") as mockbzclient:
+            mockbzclient.return_value = {'id': 12345, 'alias': "somealias"}
+            bug = bugzilla.Bug("somealias", loadInfo=False)
+            eq_(bug.id_, 12345)
