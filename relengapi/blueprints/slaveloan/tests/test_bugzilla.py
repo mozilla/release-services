@@ -87,3 +87,31 @@ def test_problem_tracking_bug_slavename():
     bug = bugzilla.ProblemTrackingBug(slavename, loadInfo=False)
     eq_(bug.slave_name, slavename)
     eq_(bug.id_, slavename)
+
+
+@test_context
+def test_problem_tracking_bug_alias_length(app):
+    "Test alias length on problem tracking bug creation"
+    # The slave name doesn't actually matter for this test
+    slavename = "talos-mtnlion-r5-0010"
+
+    def create_bug_alias_ok(data):
+        data['id'] = 12345
+        eq_(data['alias'], slavename, msg="alias should be set when ok")
+        return data
+
+    def create_bug_alias_long(data):
+        data['id'] = 12345
+        eq_(data['alias'], None, msg="alias should be None when too long")
+        return data
+
+    with app.app_context():
+        with mock.patch("bzrest.client.BugzillaClient.create_bug") as mockcreatebug:
+            with mock.patch("relengapi.blueprints.slaveloan.bugzilla.MAX_ALIAS", 50):
+                mockcreatebug.side_effect = create_bug_alias_ok
+                bug = bugzilla.ProblemTrackingBug(slavename, loadInfo=False)
+                bug.create()
+            with mock.patch("relengapi.blueprints.slaveloan.bugzilla.MAX_ALIAS", 5):
+                mockcreatebug.side_effect = create_bug_alias_long
+                bug = bugzilla.ProblemTrackingBug(slavename, loadInfo=False)
+                bug.create()
