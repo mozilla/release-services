@@ -276,6 +276,8 @@ def issue_token(body):
     if not set(requested_permissions) <= current_user.permissions:
         raise BadRequest("bad permissions")
 
+    logger.info("Issuing token to {} with permissions {}".format(
+        current_user, requested_permissions))
     # Dispatch the rest to the per-type function.  Note that WSME has already
     # ensured `typ` is one of the recognized types.
     return token_issuers[typ](body, requested_permissions)
@@ -336,6 +338,8 @@ def revoke_token(token_id):
 
     if not can_access_token('revoke', token_data.typ, token_data.user):
         raise Forbidden
+
+    logger.info("Revoking {} token #{}".format(token_data.typ, token_data.id))
 
     tables.Token.query.filter_by(id=token_id).delete()
     session.commit()

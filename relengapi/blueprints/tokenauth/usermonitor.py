@@ -2,9 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import logging
+
 from flask import current_app
 from relengapi.blueprints.tokenauth import tables
 from relengapi.lib import badpenny
+
+logger = logging.getLogger(__name__)
 
 
 @badpenny.periodic_task(3600)
@@ -25,10 +29,16 @@ def monitor_users(job_status):
                 disable = False
 
         if disable and not token.disabled:
-            job_status.log_message("Disabling token %d for user %s" % (token.id, token.user))
+            logmsg = "Disabling token %d for user %s" % (
+                token.id, token.user)
+            logger.info(logmsg)
+            job_status.log_message(logmsg)
             token.disabled = True
         elif not disable and token.disabled:
-            job_status.log_message("Re-enabling token %d for user %s" % (token.id, token.user))
+            logmsg = "Re-enabling token %d for user %s" % (
+                token.id, token.user)
+            logger.info(logmsg)
+            job_status.log_message(logmsg)
             token.disabled = False
     session.commit()
 
