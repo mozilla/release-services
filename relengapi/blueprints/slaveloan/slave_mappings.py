@@ -113,7 +113,7 @@ def slave_filter(slave_class):
 def slavetype_to_awsprefix(slave_class):
     if not is_aws_serviceable(slave_class):
         raise ValueError("Unsupported Slave")
-    basic_slave_prefix = slave_to_slavetype(loan_class)
+    basic_slave_prefix = slave_to_slavetype(slave_class)
     if basic_slave_prefix.startswith("bld"):
         loan_prefix = basic_slave_prefix.replace("bld-", "dev-")
     elif basic_slave_prefix.startswith("tst"):

@@ -224,6 +224,13 @@ def register_action_needed(self, loanid, action_name):
                 "Following https://wiki.mozilla.org/ReleaseEngineering/How_To/Update_VPN_ACL"
                 % (l.human.ldap, l.machine.fqdn)
             )
+        elif action_name == "create_aws_system":
+            action_message = (
+                "Create an aws machine for %s of the type requested (see loan history)."
+                " Following "
+                "https://wiki.mozilla.org/ReleaseEngineering/How_To/Loan_a_Slave#AWS_machines"
+                % (l.human.ldap,)
+            )
         else:
             raise ValueError("Invalid action name")
         action = ManualActions(for_loan=l,
