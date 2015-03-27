@@ -26,10 +26,11 @@ def test_ui_root(client):
 
 
 def test_ui_admin_required():
-    "Test that admin perm is required for ui endpoints"
+    "Test that admin perm is required for endpoints"
     paths = [
         '/slaveloan/admin/',
         '/slaveloan/details/2',
+        '/slaveloan/manual_actions',
     ]
 
     @test_context
@@ -53,4 +54,18 @@ def test_ui_admin_required():
 def test_machine_classes(client):
     "Test that someone not logged in can access the slave class mapping"
     rv = client.get('/slaveloan/machine/classes')
+    eq_(rv.status_code, 200)
+
+
+@test_context_admin
+def test_manual_actions_all(client):
+    "Test that the query arg all is accepted"
+    rv = client.get('/slaveloan/manual_actions?all=1')
+    eq_(rv.status_code, 200)
+
+
+@test_context_admin
+def test_manual_actions_loan(client):
+    "Test that the query arg loan_id is accepted"
+    rv = client.get('/slaveloan/manual_actions?loan_id=2')
     eq_(rv.status_code, 200)
