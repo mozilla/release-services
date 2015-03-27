@@ -75,5 +75,5 @@ def test_bug_property_id_(app):
     with app.app_context():
         with mock.patch("bzrest.client.BugzillaClient.get_bug") as mockbzclient:
             mockbzclient.return_value = {'id': 12345, 'alias': "somealias"}
-            bug = bugzilla.Bug("somealias", loadInfo=False)
+            bug = bugzilla.Bug("somealias")
             eq_(bug.id_, 12345)
