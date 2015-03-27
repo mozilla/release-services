@@ -77,3 +77,13 @@ def test_bug_property_id_(app):
             mockbzclient.return_value = {'id': 12345, 'alias': "somealias"}
             bug = bugzilla.Bug("somealias")
             eq_(bug.id_, 12345)
+
+
+@test_context
+def test_problem_tracking_bug_slavename():
+    "Test that slavename is populated in problem tracking bug objects"
+    # The slave name doesn't actually matter for this test
+    slavename = "talos-mtnlion-r5-0010"
+    bug = bugzilla.ProblemTrackingBug(slavename)
+    eq_(bug.slavename, slavename)
+    eq_(bug.id_, slavename)
