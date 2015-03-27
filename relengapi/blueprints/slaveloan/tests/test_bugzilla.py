@@ -84,6 +84,6 @@ def test_problem_tracking_bug_slavename():
     "Test that slavename is populated in problem tracking bug objects"
     # The slave name doesn't actually matter for this test
     slavename = "talos-mtnlion-r5-0010"
-    bug = bugzilla.ProblemTrackingBug(slavename)
+    bug = bugzilla.ProblemTrackingBug(slavename, loadInfo=False)
     eq_(bug.slavename, slavename)
     eq_(bug.id_, slavename)
