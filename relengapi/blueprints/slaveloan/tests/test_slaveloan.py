@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from nose.tools import eq_
+from relengapi.lib import auth
+from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
 
 
