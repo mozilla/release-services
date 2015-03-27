@@ -240,7 +240,7 @@ def register_action_needed(self, loanid, action_name):
         session.commit()
         return action.id
     except ValueError:
-        raise
+        raise  # Don't indefinitely retry in this case
     except Exception as exc:
         self.retry(exc=exc)
 
