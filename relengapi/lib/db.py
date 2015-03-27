@@ -10,7 +10,6 @@ import pytz
 import sqlalchemy as sa
 import threading
 
-from celery import signals
 from flask import current_app
 from relengapi.util import synchronized
 from sqlalchemy import event
@@ -141,12 +140,6 @@ def ping_connection(dbapi_connection, connection_record, connection_proxy):
         # connecting again up to three times before raising.
         raise exc.DisconnectionError()
     cursor.close()
-
-
-@signals.task_postrun.connect
-def task_postrun(sender=None, body=None, **kwargs):
-    # flush DB sessions after every celery task
-    current_app.db.flush_sessions()
 
 
 def make_db(app):
