@@ -116,3 +116,8 @@ def slavetype_to_awsprefix(slave_class):
     basic_slave_prefix = slave_to_slavetype(loan_class)
     if basic_slave_prefix.startswith("bld"):
         loan_prefix = basic_slave_prefix.replace("bld-", "dev-")
+    elif basic_slave_prefix.startswith("tst"):
+        loan_prefix = basic_slave_prefix
+    else:
+        raise ValueError("Unsure how to name this aws slave")
+    return loan_prefix

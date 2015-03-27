@@ -32,7 +32,8 @@ def prep_machine_info(slavetype, loanid):
             group(
                 # XXX fixup machine Requires we create CNAMES for aws loaners
                 #     which is not true today
-                tasks.fixup_machine.s(loanid=loanid)
+                tasks.fixup_machine.s(loanid=loanid),
+                tasks.bmo_set_tracking_bug.s(loanid=loanid),
             )
         )
     else:
