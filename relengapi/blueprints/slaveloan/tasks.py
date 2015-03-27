@@ -83,6 +83,19 @@ def choose_inhouse_machine(self, loanid, loan_class):
     return chosen['name']
 
 
+@task(bind=True)
+@add_to_history(
+    before="Identifying aws machine name to use",
+    after="Chose aws machine {retval!s}")
+def choose_aws_machine(self, loanid, loan_class):
+    logger.debug("Choosing inhouse machine")
+    l = Loans.query.get(loanid)
+    prefix = slave_mappings.slavetype_to_awsprefix(loan_class)
+    user_prefix = l.human.ldap.split("@")[0]
+    logger.debug("Chosen Slave = %s" % chosen)
+    return chosen['name']
+
+
 @task(bind=True, max_retries=None)
 @add_to_history(
     before="Identifying FQDN and IP of {args[1]}",
