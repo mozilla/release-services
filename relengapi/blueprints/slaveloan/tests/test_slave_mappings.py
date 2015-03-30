@@ -12,6 +12,26 @@ from relengapi.lib.testing.context import TestContext
 
 test_context = TestContext()
 
+test_slavetype_map = {
+    "foobar": [
+        re.compile("^foobar-"),
+        re.compile("^foo-")
+    ],
+    "banana": [
+        re.compile("^banana-"),
+        re.compile("^orange-"),
+        re.compile("^apple-")
+    ],
+    "zodiac": [
+        re.compile("^zodiac-"),
+        re.compile("^libra-"),
+        re.compile("^leo-"),
+        re.compile("^virgo-")
+    ]
+}
+
+test_gpo_needed_list = ["foobar", "zodiac"]
+
 
 @test_context
 def test_slave_type_map_format_keys():
@@ -49,20 +69,9 @@ def test_slavetype_to_slave_returns_exact_match():
 def test_slavetype_to_slave_returns_match():
     "Test that the slave to slavetype func can scan a list of values properly"
     s2st = slave_mappings.slave_to_slavetype
-    test_map = {
-        "foobar": [
-            re.compile("^foobar-"),
-            re.compile("^foo-")
-        ],
-        "banana": [
-            re.compile("^banana-"),
-            re.compile("^orange-"),
-            re.compile("^apple-")
-        ]
-    }
 
     with mock.patch.dict("relengapi.blueprints.slaveloan.slave_mappings._slave_type",
-                         test_map,
+                         test_slavetype_map,
                          clear=True):
         eq_("foobar", s2st("foobar"))
         eq_("foobar", s2st("foobar-"))
@@ -71,3 +80,35 @@ def test_slavetype_to_slave_returns_match():
         eq_("banana", s2st("apple-10"))
         eq_("banana", s2st("orange-999"))
         eq_(None, s2st("america-100"), msg="None should be returned in a failed match")
+
+
+@test_context
+def test_gpo_needed_matches_keys():
+    "Test that matches for gpo are based on above keys"
+    map = slave_mappings._slave_type.keys()
+    for gpo in slave_mappings._gpo_needed:
+        ok_(gpo in map, msg="_gpo_needed should only contain loan types")
+
+
+@test_context
+def test_needs_gpo():
+    "Test that a value in gpo keys returns true, and that a value missing returns false"
+    ngpo = slave_mappings.needs_gpo
+
+    with mock.patch.dict("relengapi.blueprints.slaveloan.slave_mappings._slave_type",
+                         test_slavetype_map,
+                         clear=True):
+        with mock.patch("relengapi.blueprints.slaveloan.slave_mappings._gpo_needed",
+                        new=test_gpo_needed_list):
+            ok_(not ngpo("invalid"),
+                msg="GPO not needed for an invalid slave")
+            ok_(not ngpo("apple-10"),
+                msg="GPO not needed for an slave that doesn't directly match a key")
+            ok_(not ngpo("banana"),
+                msg="GPO not needed for an slave that matches a slavetype key but not in gpo list")
+            ok_(ngpo("foo-10"),
+                msg="GPO needed for a slave that doesn't directly match a key")
+            ok_(ngpo("foobar"),
+                msg="GPO needed for a slave that directly matches a key")
+            ok_(ngpo("libra-99"),
+                msg="GPO needed for a slave that is not first match on gpo keys")
