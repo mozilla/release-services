@@ -4,8 +4,8 @@
 
 import mock
 
-from nose.tools import assert_raises
 from nose.tools import assert_not_equal
+from nose.tools import assert_raises
 from nose.tools import eq_
 from nose.tools import ok_
 from relengapi.blueprints.slaveloan import bugzilla
@@ -171,7 +171,7 @@ def test_create_loan_bug_valueerror(app):
 
 
 @test_context
-def test_create_loan_bug(app):
+def test_create_loan_bug_servername(app):
     "Test problem loan bug creation requires SERVER_NAME set"
     # The slave name doesn't actually matter for this test
     slavetype = "foobar"
@@ -181,7 +181,7 @@ def test_create_loan_bug(app):
     with app.app_context():
         assert_raises(
             RuntimeError, bugzilla.create_loan_bug,
-            loan_id=10, slavetype=slavetype, bugzilla_username=who)
+            loan_id=loan_id, slavetype=slavetype, bugzilla_username=who)
 
 
 @test_context_servername
@@ -200,7 +200,7 @@ def test_create_loan_bug(app):
         ok_("comment" in data, msg="creation includes initial comment")
         ok_(slavetype in data['comment'], msg="comment includes slavetype")
         ok_(who in data['comment'], msg="comment includes who")
-        ok_(loan_id in data['comment'], msg="the loan id must appear in the comment")
+        ok_(str(loan_id) in data['comment'], msg="the loan id must appear in the comment")
         return data
 
     with app.app_context():
