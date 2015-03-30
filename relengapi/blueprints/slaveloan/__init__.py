@@ -100,6 +100,8 @@ def new_loan_from_admin(body):
         raise BadRequest("Missing LDAP E-Mail")
     if not body.bugzilla_email:
         raise BadRequest("Missing Bugzilla E-Mail")
+    if body.status != 'READY':
+        raise BadRequest("Only READY loans supported at this time")
     if body.status != 'PENDING':
         if not body.fqdn:
             raise BadRequest("Missing Machine FQDN")
@@ -118,7 +120,8 @@ def new_loan_from_admin(body):
 
     if body.status != 'PENDING':
         l = Loans(status=body.status, human=h, machine=m)
-    else:
+    else:  # pragma: no-cover
+        # Not supported at this time
         l = Loans(status=body.status, human=h)
     history = History(for_loan=l,
                       timestamp=tz.utcnow(),
@@ -162,9 +165,11 @@ def new_loan_request(body):
     else:
         l = Loans(status="PENDING", human=h)
 
-    hist_line = "%s issued a loan request for slavetype %s (original: '%s') on behalf of %s" % \
+    hist_line = "%s issued a loan request for slavetype %s (original: '%s')" % \
                 (current_user.authenticated_email, slavetype,
-                 body.requested_slavetype, body.ldap_email)
+                 body.requested_slavetype)
+    if body.ldap_email != current_user.authenticated_email:
+        hist_line += "on behalf of %s" % body.ldap_email
     history = History(for_loan=l,
                       timestamp=tz.utcnow(),
                       msg=hist_line)
