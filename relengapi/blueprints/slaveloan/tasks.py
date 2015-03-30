@@ -83,6 +83,33 @@ def choose_inhouse_machine(self, loanid, loan_class):
     return chosen['name']
 
 
+@task(bind=True)
+@add_to_history(
+    before="Identifying aws machine name to use",
+    after="Chose aws machine {retval!s}")
+def choose_aws_machine(self, loanid, loan_class):
+    logger.debug("Choosing aws machine name")
+    # We use foo-$user_shortname$N where $N is optional only if
+    # there exists another active loan with the foo-$user prefix
+    l = Loans.query.get(loanid)
+    prefix = slave_mappings.slavetype_to_awsprefix(loan_class)
+    user_shortname = l.human.ldap.split("@")[0]
+    bare_name = prefix + "-" + user_shortname
+    similar_loans = Loans.query \
+                         .filter(Loans.machine_id == Machines.id) \
+                         .filter(Machines.fqdn.like(bare_name + "%")) \
+                         .filter(~Loans.status.in_(["COMPLETE"])) \
+                         .order_by(Machines.fqdn.desc())
+    if similar_loans.count():
+        existing_aws_loan = similar_loans.first().machine.fqdn
+        shortname = existing_aws_loan.split(".")[0]
+        this_name = bare_name + str(int(shortname[len(bare_name):])) + 1
+    else:
+        this_name = bare_name
+    logger.debug("Chosen Slave Name = %s" % this_name)
+    return this_name
+
+
 @task(bind=True, max_retries=None)
 @add_to_history(
     before="Identifying FQDN and IP of {args[1]}",
@@ -197,6 +224,13 @@ def register_action_needed(self, loanid, action_name):
                 "Following https://wiki.mozilla.org/ReleaseEngineering/How_To/Update_VPN_ACL"
                 % (l.human.ldap, l.machine.fqdn)
             )
+        elif action_name == "create_aws_system":
+            action_message = (
+                "Create an aws machine for %s of the type requested (see loan history)."
+                " Following "
+                "https://wiki.mozilla.org/ReleaseEngineering/How_To/Loan_a_Slave#AWS_machines"
+                % (l.human.ldap,)
+            )
         else:
             raise ValueError("Invalid action name")
         action = ManualActions(for_loan=l,
@@ -206,7 +240,7 @@ def register_action_needed(self, loanid, action_name):
         session.commit()
         return action.id
     except ValueError:
-        raise
+        raise  # Don't indefinitely retry in this case
     except Exception as exc:
         self.retry(exc=exc)
 

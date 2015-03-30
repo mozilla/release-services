@@ -14,17 +14,7 @@ def generate_loan(slavetype, loanid):
     return chain(
         # Could add user to VPN earlier, here if automated.
         tasks.bmo_file_loan_bug.si(loanid=loanid, slavetype=slavetype),
-        tasks.choose_inhouse_machine.si(loanid=loanid, loan_class=slavetype),
-        group(
-            tasks.fixup_machine.s(loanid=loanid),
-            tasks.bmo_set_tracking_bug.s(loanid=loanid),
-            # disable_machine_from_buildbot(slavetype, loanid)
-            tasks.dummy_task.si(loanid=loanid)
-        ),
-        group(
-            manual_action(loanid=loanid, action_name="add_to_vpn"),
-            gpo_switch(loanid=loanid, slavetype=slavetype),
-        ),
+        prep_machine_info(loanid=loanid, slavetype=slavetype),
         tasks.clean_secrets.si(loanid=loanid),
         tasks.reboot_machine.si(loanid=loanid, waitforreboot=True),
         group(
@@ -32,6 +22,32 @@ def generate_loan(slavetype, loanid):
             tasks.email_loan_details.si(loanid=loanid)
         )
     )
+
+
+def prep_machine_info(slavetype, loanid):
+    if slave_mappings.is_aws_serviceable(slavetype):
+        return chain(
+            manual_action(loanid=loanid, action_name="create_aws_system"),
+            tasks.choose_aws_machine.si(loanid=loanid, loan_class=slavetype),
+            group(
+                tasks.fixup_machine.s(loanid=loanid),
+                tasks.bmo_set_tracking_bug.s(loanid=loanid),
+            )
+        )
+    else:
+        return chain(
+            tasks.choose_inhouse_machine.si(loanid=loanid, loan_class=slavetype),
+            group(
+                tasks.fixup_machine.s(loanid=loanid),
+                tasks.bmo_set_tracking_bug.s(loanid=loanid),
+                # disable_machine_from_buildbot(slavetype, loanid)
+                tasks.dummy_task.si(loanid=loanid)
+            ),
+            group(
+                manual_action(loanid=loanid, action_name="add_to_vpn"),
+                gpo_switch(loanid=loanid, slavetype=slavetype),
+            ),
+        )
 
 
 def disable_machine_from_buildbot(slavetype, loanid):
