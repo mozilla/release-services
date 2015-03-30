@@ -110,10 +110,14 @@ def verify_file_instance(file, key):
     # verify some settings on the key, in case the uploader configured
     # it differently
     if key.storage_class != 'STANDARD':
+        log.warning("File {} was uploaded with incorrect storage "
+                    "class {}".format(file.sha512, key.storage_class))
         return False
 
     if key.get_redirect():  # pragma: no cover
-        # (moto doesn't support redirects)
+        # (not covered because moto doesn't support redirects)
+        log.warning("File {} was uploaded with a website redirect set"
+                    .format(file.sha512, key.storage_class))
         return False
 
     # verifying the ACL is a bit tricky, so just set it correctly
