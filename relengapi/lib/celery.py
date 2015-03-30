@@ -22,7 +22,12 @@ def make_celery(app):
 
         def __call__(self, *args, **kwargs):
             with app.app_context():
-                return TaskBase.__call__(self, *args, **kwargs)
+                try:
+                    return TaskBase.__call__(self, *args, **kwargs)
+                finally:
+                    # flush any open DB sessions used by this task
+                    current_app.db.flush_sessions()
+
     celery.Task = ContextTask
     app.celery_tasks = dict((fn, celery.task(**kwargs)(fn))
                             for (fn, kwargs) in _defined_tasks.iteritems())
