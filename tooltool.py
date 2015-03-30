@@ -23,17 +23,19 @@
 # 'manifest.manifest'
 
 import hashlib
+import httplib
 import json
 import logging
 import optparse
 import os
-import re
 import shutil
 import sys
 import tarfile
 import tempfile
-import textwrap
+import threading
+import time
 import urllib2
+import urlparse
 
 from subprocess import PIPE
 from subprocess import Popen
@@ -76,7 +78,7 @@ class MissingFileException(ExceptionWithFilename):
 
 class FileRecord(object):
 
-    def __init__(self, filename, size, digest, algorithm, unpack=False):
+    def __init__(self, filename, size, digest, algorithm, unpack=False, visibility=None):
         object.__init__(self)
         if '/' in filename or '\\' in filename:
             log.error(
@@ -87,6 +89,7 @@ class FileRecord(object):
         self.digest = digest
         self.algorithm = algorithm
         self.unpack = unpack
+        self.visibility = visibility
 
     def __eq__(self, other):
         if self is other:
@@ -94,7 +97,8 @@ class FileRecord(object):
         if self.filename == other.filename and \
            self.size == other.size and \
            self.digest == other.digest and \
-           self.algorithm == other.algorithm:
+           self.algorithm == other.algorithm and \
+           self.visibility == other.visibility:
             return True
         else:
             return False
@@ -106,12 +110,9 @@ class FileRecord(object):
         return repr(self)
 
     def __repr__(self):
-        return "%s.%s(filename='%s', size=%s, digest='%s', algorithm='%s')" % (
-            __name__,
-            self.__class__.__name__,
-            self.filename,
-            self.size,
-            self.digest, self.algorithm)
+        return "%s.%s(filename='%s', size=%s, digest='%s', algorithm='%s', visibility=%r)" % (
+            __name__, self.__class__.__name__, self.filename, self.size,
+            self.digest, self.algorithm, self.visibility)
 
     def present(self):
         # Doesn't check validity
@@ -175,6 +176,8 @@ class FileRecordJSONEncoder(json.JSONEncoder):
             }
             if obj.unpack:
                 rv['unpack'] = True
+            if obj.visibility is not None:
+                rv['visibility'] = obj.visibility
             return rv
 
     def default(self, f):
@@ -218,8 +221,10 @@ class FileRecordJSONDecoder(json.JSONDecoder):
 
             if not missing:
                 unpack = obj.get('unpack', False)
+                visibility = obj.get('visibility', None)
                 rv = FileRecord(
-                    obj['filename'], obj['size'], obj['digest'], obj['algorithm'], unpack)
+                    obj['filename'], obj['size'], obj['digest'], obj['algorithm'],
+                    unpack, visibility)
                 log.debug("materialized %s" % rv)
                 return rv
         return obj
@@ -386,7 +391,7 @@ def validate_manifest(manifest_file):
         return False
 
 
-def add_files(manifest_file, algorithm, filenames, create_package=False):
+def add_files(manifest_file, algorithm, filenames, visibility):
     # returns True if all files successfully added, False if not
     # and doesn't catch library Exceptions.  If any files are already
     # tracked in the manifest, return will be False because they weren't
@@ -403,12 +408,7 @@ def add_files(manifest_file, algorithm, filenames, create_package=False):
         log.debug("adding %s" % filename)
         path, name = os.path.split(filename)
         new_fr = create_file_record(filename, algorithm)
-        if create_package:  # pragma: no cover
-            # this is going to go away with the `package` action
-            shutil.copy(filename,
-                        os.path.join(os.path.split(manifest_file)[0], new_fr.digest))
-            log.debug("Added file %s to tooltool package %s with hash %s" % (
-                filename, os.path.split(manifest_file)[0], new_fr.digest))
+        new_fr.visibility = visibility
         log.debug("appending a new file record to manifest file")
         add = True
         for fr in old_manifest.file_records:
@@ -463,7 +463,7 @@ def _urlopen(url, auth_file=None):
     return urllib2.urlopen(url)
 
 
-def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None):
+def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None, region=None):
     # A file which is requested to be fetched that exists locally will be
     # overwritten by this function
     fd, temp_path = tempfile.mkstemp(dir=os.getcwd())
@@ -471,8 +471,10 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None):
     fetched_path = None
     for base_url in base_urls:
         # Generate the URL for the file on the server side
-        url = "%s/%s/%s" % (base_url, file_record.algorithm,
-                            file_record.digest)
+        url = urlparse.urljoin(base_url,
+                               '%s/%s' % (file_record.algorithm, file_record.digest))
+        if region is not None:
+            url += '?region=' + region
 
         log.info("Attempting to fetch from '%s'..." % base_url)
 
@@ -545,7 +547,8 @@ def untar_file(filename):
     return True
 
 
-def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None, auth_file=None):
+def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None,
+                auth_file=None, region=None):
     # Lets load the manifest file
     try:
         manifest = open_manifest(manifest_file)
@@ -619,7 +622,7 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None, auth_
         # either in the working dir or in the cache
         if (f.filename in filenames or len(filenames) == 0) and f.filename not in present_files:
             log.debug("fetching %s" % f.filename)
-            temp_file_name = fetch_file(base_urls, f, auth_file=auth_file)
+            temp_file_name = fetch_file(base_urls, f, auth_file=auth_file, region=region)
             if temp_file_name:
                 fetched_files.append((f, temp_file_name))
             else:
@@ -727,105 +730,153 @@ def purge(folder, gigs):
             break
 
 
-def package(folder, algorithm, message):  # pragma: no cover
-    if not os.path.exists(folder) or not os.path.isdir(folder):
-        msg = 'Folder %s does not exist!' % folder
-        log.error(msg)
-        raise Exception(msg)
+def _log_api_error(e):
+    if hasattr(e, 'hdrs') and e.hdrs['content-type'] == 'application/json':
+        json_resp = json.load(e.fp)
+        log.error("%s: %s" % (json_resp['error']['name'],
+                              json_resp['error']['description']))
+    else:
+        log.exception("Error making RelengAPI request:")
 
-    from os import walk
 
-    dirname, basename = os.path.split(folder)
+def _authorize(req, auth_file):
+    if auth_file:
+        req.add_header('Authorization', 'Bearer %s' % (open(auth_file).read().strip()))
 
-    filenames = []
-    for (_dirpath, _dirnames, files) in walk(folder):
-        filenames.extend(files)
-        break  # not to navigate subfolders
 
-    package_name = basename + TOOLTOOL_PACKAGE_SUFFIX
-    manifest_name = basename + '.tt'
-    notes_name = basename + '.txt'
-
-    suffix = 1
-    while os.path.exists(os.path.join(dirname, package_name)):
-        package_name = basename + str(suffix) + TOOLTOOL_PACKAGE_SUFFIX
-        manifest_name = basename + str(suffix) + '.tt'
-        notes_name = basename + str(suffix) + '.txt'
-        suffix = suffix + 1
-
-    os.makedirs(os.path.join(dirname, package_name))
-
-    log.info("Creating package %s from folder %s..." %
-             (os.path.join(os.path.join(dirname, package_name)), folder))
-
-    add_files(os.path.join(os.path.join(dirname, package_name), manifest_name), algorithm, [
-              os.path.join(folder, x) for x in filenames], create_package=True)
-
+def _send_batch(base_url, auth_file, batch, region):
+    url = urlparse.urljoin(base_url, 'upload')
+    if region is not None:
+        url += "?region=" + region
+    req = urllib2.Request(url, json.dumps(batch), {'Content-Type': 'application/json'})
+    _authorize(req, auth_file)
     try:
-        f = open(
-            os.path.join(os.path.join(dirname, package_name), notes_name), 'wb')
-        try:
-            f.write(message)  # Write a string to a file
-        finally:
-            f.close()
-    except IOError:
-        pass
-
-    log.info("Package %s has been created from folder %s" %
-             (os.path.join(os.path.join(dirname, package_name)), folder))
-
-    return os.path.join(os.path.join(dirname, package_name))
+        resp = urllib2.urlopen(req)
+    except (urllib2.URLError, urllib2.HTTPError) as e:
+        _log_api_error(e)
+        return None
+    return json.load(resp)['result']
 
 
-def upload(package, user, host, path):  # pragma: no cover
-    package = re.sub("/*$", "", package)
-
-    cmd1 = "rsync  -a %s %s@%s:%s --progress -f '- *.tt' -f '- *.txt'" % (
-        package, user, host, path)
-    cmd2 = "rsync  %s/*.txt %s@%s:%s --progress" % (package, user, host, path)
-    cmd3 = "rsync  %s/*.tt %s@%s:%s --progress" % (package, user, host, path)
-
-    print textwrap.dedent("""\
-        **SECURITY WARNING**
-
-        Uploading files to tooltool is a risky operation.  Please consider:
-
-          * Is this data PUBLIC or INTERNAL?  If not don't upload it!  INTERNAL
-            data is non-public data that is not secret, for example,
-            non-redistributable binaries.  See
-            https://mana.mozilla.org/wiki/display/ITSECURITY/IT+Data+security+guidelines
-
-            INTERNAL data should not be uploaded to the `pub` directory.
-
-          * Is this data from a trustworthy source, downloaded via a secure protocol like HTTPS?
-
-          * Do you agree to disclose your email address in association with this upload?
-
-        If you answered any of these questions with "no", please stop the
-        upload now.  Otherwise, hit enter to continue.
-        """)
-    raw_input()
-    log.info(
-        "The following three rsync commands will be executed to transfer the tooltool package:")
-    log.info("1) %s" % cmd1)
-    log.info("2) %s" % cmd2)
-    log.info("3) %s" % cmd3)
-    log.info("Please note that the order of execution IS relevant!")
-    log.info("Uploading hashed files with command: %s" % cmd1)
-    execute(cmd1)
-    log.info("Uploading metadata files (notes)    with command: %s" % cmd2)
-    execute(cmd2)
-    log.info("Uploading metadata files (manifest) with command: %s" % cmd3)
-    execute(cmd3)
-
-    log.info("Package %s has been correctly uploaded to %s:%s" %
-             (package, host, path))
-
-    return True
+def _s3_upload(filename, file):
+    # urllib2 does not support streaming, so we fall back to good old httplib
+    url = urlparse.urlparse(file['put_url'])
+    cls = httplib.HTTPSConnection if url.scheme == 'https' else httplib.HTTPConnection
+    host, port = url.netloc.split(':') if ':' in url.netloc else (url.netloc, 443)
+    port = int(port)
+    conn = cls(host, port)
+    try:
+        req_path = "%s?%s" % (url.path, url.query) if url.query else url.path
+        conn.request('PUT', req_path, open(filename),
+                     {'Content-type': 'application/octet-stream'})
+        resp = conn.getresponse()
+        resp_body = resp.read()
+        conn.close()
+        if resp.status != 200:
+            raise RuntimeError("Non-200 return from AWS: %s %s\n%s" %
+                               (resp.status, resp.reason, resp_body))
+    except Exception:
+        file['upload_exception'] = sys.exc_info()
+        file['upload_ok'] = False
+    else:
+        file['upload_ok'] = True
 
 
-def distribute(folder, message, user, host, path, algorithm):  # pragma: no cover
-    return upload(package(folder, algorithm, message), user, host, path)
+def _notify_upload_complete(base_url, auth_file, file):
+    req = urllib2.Request(
+        urlparse.urljoin(
+            base_url,
+            'upload/complete/%(algorithm)s/%(digest)s' % file))
+    _authorize(req, auth_file)
+    try:
+        urllib2.urlopen(req)
+    except urllib2.HTTPError as e:
+        if e.code != 409:
+            _log_api_error(e)
+            return
+        # 409 indicates that the upload URL hasn't expired yet and we
+        # should retry after a delay
+        to_wait = int(e.headers.get('X-Retry-After', 60))
+        log.warning("Waiting %d seconds for upload URLs to expire" % to_wait)
+        time.sleep(to_wait)
+        _notify_upload_complete(base_url, auth_file, file)
+    except Exception:
+        log.exception("While notifying server of upload completion:")
+
+
+def upload(manifest, message, base_urls, auth_file, region):
+    try:
+        manifest = open_manifest(manifest)
+    except InvalidManifest:
+        log.exception("failed to load manifest file at '%s'")
+        return False
+
+    # verify the manifest, since we'll need the files present to upload
+    if not manifest.validate():
+        log.error('manifest is invalid')
+        return False
+
+    if any(fr.visibility is None for fr in manifest.file_records):
+        log.error('All files in a manifest for upload must have a visibility set')
+
+    # convert the manifest to an upload batch
+    batch = {
+        'message': message,
+        'files': {},
+    }
+    for fr in manifest.file_records:
+        batch['files'][fr.filename] = {
+            'size': fr.size,
+            'digest': fr.digest,
+            'algorithm': fr.algorithm,
+            'visibility': fr.visibility,
+        }
+
+    # make the upload request
+    resp = _send_batch(base_urls[0], auth_file, batch, region)
+    if not resp:
+        return None
+    files = resp['files']
+
+    # Upload the files, each in a thread.  This allows us to start all of the
+    # uploads before any of the URLs expire.
+    threads = {}
+    for filename, file in files.iteritems():
+        if 'put_url' in file:
+            log.info("%s: starting upload" % (filename,))
+            thd = threading.Thread(target=_s3_upload,
+                                   args=(filename, file))
+            thd.daemon = 1
+            thd.start()
+            threads[filename] = thd
+        else:
+            log.info("%s: already exists on server" % (filename,))
+
+    # re-join all of those threads as they exit
+    success = True
+    while threads:
+        for filename, thread in threads.items():
+            if not thread.is_alive():
+                # _s3_upload has annotated file with result information
+                file = files[filename]
+                thread.join()
+                if file['upload_ok']:
+                    log.info("%s: uploaded" % filename)
+                else:
+                    log.error("%s: failed" % filename,
+                              exc_info=file['upload_exception'])
+                    success = False
+                del threads[filename]
+
+    # notify the server that the uploads are completed.  If the notification
+    # fails, we don't consider that an error (the server will notice
+    # eventually)
+    for filename, file in files.iteritems():
+        if 'put_url' in file and file['upload_ok']:
+            log.info("notifying server of upload completion for %s" % (filename,))
+            _notify_upload_complete(base_urls[0], auth_file, file)
+
+    return success
 
 
 def process_command(options, args):
@@ -842,7 +893,8 @@ def process_command(options, args):
     if cmd == 'validate':
         return validate_manifest(options['manifest'])
     elif cmd == 'add':
-        return add_files(options['manifest'], options['algorithm'], cmd_args)
+        return add_files(options['manifest'], options['algorithm'], cmd_args,
+                         options['visibility'])
     elif cmd == 'purge':
         if options['cache_folder']:
             purge(folder=options['cache_folder'], gigs=options['size'])
@@ -850,47 +902,23 @@ def process_command(options, args):
             log.critical('please specify the cache folder to be purged')
             return False
     elif cmd == 'fetch':
-        if not options.get('base_url'):
-            log.critical('fetch command requires at least one url provided using ' +
-                         'the url option in the command line')
-            return False
         return fetch_files(
             options['manifest'],
             options['base_url'],
             cmd_args,
             cache_folder=options['cache_folder'],
-            auth_file=options.get("auth_file"))
-    elif cmd == 'package':  # pragma: no cover
-        if not options.get('folder') or not options.get('message'):
-            log.critical('package command requires a folder to be specified, containing the '
-                         'files to be added to the tooltool package, and a message providing info '
-                         'about the package')
-            return False
-        return package(options['folder'], options['algorithm'], options['message'])
-    elif cmd == 'upload':  # pragma: no cover
-        if not options.get('package') or not options.get('user') or \
-           not options.get('host') or not options.get('path'):
-            log.critical('upload command requires the package folder to be uploaded, and the '
-                         'user, host and path to be used to upload the tooltool upload server')
+            auth_file=options.get("auth_file"),
+            region=options.get('region'))
+    elif cmd == 'upload':
+        if not options.get('message'):
+            log.critical('upload command requires a message')
             return False
         return upload(
-            options.get('package'),
-            options.get('user'),
-            options.get('host'),
-            options.get('path'))
-    elif cmd == 'distribute':  # pragma: no cover
-        if not options.get('folder') or not options.get('message') or not options.get('user') or \
-           not options.get('host') or not options.get('path'):
-            log.critical('distribute command requires the following parameters: --folder, '
-                         '--message, --user, --host, --path')
-            return False
-        return distribute(
-            options.get('folder'),
+            options.get('manifest'),
             options.get('message'),
-            options.get('user'),
-            options.get('host'),
-            options.get('path'),
-            options.get('algorithm'))
+            options.get('base_url'),
+            options.get('auth_file'),
+            options.get('region'))
     else:
         log.critical('command "%s" is not implemented' % cmd)
         return False
@@ -909,42 +937,44 @@ def main(argv, _skip_logging=False):
     parser.add_option('-d', '--algorithm', default='sha512',
                       dest='algorithm', action='store',
                       help='hashing algorithm to use (only sha512 is allowed)')
+    parser.add_option('--visibility', default=None,
+                      dest='visibility', choices=['internal', 'public'],
+                      help='Visibility level of this file; "internal" is for '
+                           'files that cannot be distributed out of the company '
+                           'but not for secrets; "public" files are available to '
+                           'anyone withou trestriction')
     parser.add_option('-o', '--overwrite', default=False,
                       dest='overwrite', action='store_true',
                       help='UNUSED; present for backward compatibility')
     parser.add_option('--url', dest='base_url', action='append',
-                      help='base url for fetching files')
+                      help='RelengAPI URL ending with /tooltool/; default '
+                      'is appropriate for Mozilla')
     parser.add_option('-c', '--cache-folder', dest='cache_folder',
                       help='Local cache folder')
     parser.add_option('-s', '--size',
                       help='free space required (in GB)', dest='size',
                       type='float', default=0.)
-
-    parser.add_option('--folder',
-                      help='the folder containing files to be added to a tooltool package ready '
-                           'to be uploaded to tooltool servers',
-                      dest='folder')
+    parser.add_option('-r', '--region', help='Preferred AWS region for upload or fetch; '
+                      'example: --region=us-west-2')
     parser.add_option('--message',
-                      help='Any additional information about the tooltool package being generated '
-                           'and the files it includes',
+                      help='The "commit message" for an upload; format with a bug number '
+                           'and brief comment',
                       dest='message')
-
-    parser.add_option('--package',
-                      help='the folder containing files to be added to a tooltool package ready '
-                           'to be uploaded to tooltool servers',
-                      dest='package')
-    parser.add_option('--user',
-                      help='user to be used when uploading a tooltool package to a tooltool '
-                           'upload folder',
-                      dest='user')
-    parser.add_option('--host',
-                      help='host where to upload a tooltool package', dest='host')
-    parser.add_option('--path',
-                      help='Path on the tooltool upload server where to upload', dest='path')
     parser.add_option('--authentication-file',
-                      help='Use http authentication to download a file.', dest='auth_file')
+                      help='Use the RelengAPI token found in the given file to '
+                           'authenticate to the RelengAPI server.',
+                      dest='auth_file')
 
     (options_obj, args) = parser.parse_args(argv[1:])
+
+    # default the options list if not provided
+    if not options_obj.base_url:
+        options_obj.base_url = ['https://api.pub.build.mozilla.org/tooltool/']
+
+    # expand ~ in --authentication-file
+    if options_obj.auth_file:
+        options_obj.auth_file = os.path.expanduser(options_obj.auth_file)
+
     # Dictionaries are easier to work with
     options = vars(options_obj)
 

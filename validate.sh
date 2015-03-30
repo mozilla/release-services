@@ -6,7 +6,7 @@
 ## tweakable parameters
 
 # minimum acceptable coverage percentage
-COVERAGE_MIN=96
+COVERAGE_MIN=100
 
 # project name
 PROJECT=relengapi-tooltool

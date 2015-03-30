@@ -1,0 +1,19 @@
+<div>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     License, v. 2.0. If a copy of the MPL was not distributed with this
+     file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <div class="tt-result-controls">
+        <a href="/tooltool/{{res.algorithm}}/{{res.digest}}"><span class="glyphicon glyphicon-download download-link" aria-hidden="true"></span>
+        <span class="sr-only">Download</span></a>
+    </div>
+    <div class="tt-result-info">
+        <span ng-if="res.filenames">
+            <span class="tt-filename">{{res.filenames.join(', ')}}</span> -
+        </span>
+        <tt-digest algorithm="{{res.algorithm}}" digest="{{res.digest}}"></tt-digest> -
+        <!-- TODO: get all filenames used for this file in any batch -->
+        <span class="tt-filesize">{{res.size}} bytes</span> -
+        <span ng-if="res.visibility == 'public'" class="text-muted">PUBLIC</span>
+        <span ng-if="res.visibility == 'internal'" class="text-danger">INTERNAL</span>
+    </div>
+</div>
