@@ -206,4 +206,4 @@ def test_create_loan_bug(app):
     with app.app_context():
         with mock.patch("bzrest.client.BugzillaClient.create_bug") as mockcreatebug:
             mockcreatebug.side_effect = create_bug_comment
-            bugzilla.create_loan_bug(loan_id=10, slavetype=slavetype, bugzilla_username=who)
+            bugzilla.create_loan_bug(loan_id=loan_id, slavetype=slavetype, bugzilla_username=who)
