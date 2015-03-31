@@ -34,18 +34,22 @@ def mocked_perms(permissions):
         yield
 
 
-def assert_disabled(app, js):
+def assert_disabled(app, js, perms):
+    perms_str = ', '.join(str(p) for p in perms)
     eq_(tables.Token.query.filter_by(id=2).first().disabled, True)
-    js.log_message.assert_called_with("Disabling token 2 for user me@me.com")
+    js.log_message.assert_called_with("Disabling usr token #2 for user "
+                                      "me@me.com with permissions " + perms_str)
 
 
 def assert_enabled(app):
     eq_(tables.Token.query.filter_by(id=2).first().disabled, False)
 
 
-def assert_reenabled(app, js):
+def assert_reenabled(app, js, perms):
     assert_enabled(app)
-    js.log_message.assert_called_with("Re-enabling token 2 for user me@me.com")
+    perms_str = ', '.join(str(p) for p in perms)
+    js.log_message.assert_called_with("Re-enabling usr token #2 for user "
+                                      "me@me.com with permissions " + perms_str)
 
 
 @test_context
@@ -56,7 +60,7 @@ def test_monitor_users_disable_reduced_perms(app):
         with mocked_perms({'me@me.com': [A]}):
             js = mock.Mock()
             usermonitor.monitor_users(js)
-        assert_disabled(app, js)
+        assert_disabled(app, js, [A, B])
 
 
 @test_context
@@ -67,7 +71,7 @@ def test_monitor_users_disable_changed_perms(app):
         with mocked_perms({'me@me.com': [A, B]}):
             js = mock.Mock()
             usermonitor.monitor_users(js)
-        assert_disabled(app, js)
+        assert_disabled(app, js, [B, C])
 
 
 @test_context
@@ -78,7 +82,7 @@ def test_monitor_users_disable_user_gone(app):
         with mocked_perms({}):
             js = mock.Mock()
             usermonitor.monitor_users(js)
-        assert_disabled(app, js)
+        assert_disabled(app, js, [A, B])
 
 
 @test_context
@@ -89,7 +93,7 @@ def test_monitor_users_disable_user_gone_no_token_perms(app):
         with mocked_perms({}):
             js = mock.Mock()
             usermonitor.monitor_users(js)
-        assert_disabled(app, js)
+        assert_disabled(app, js, [])
 
 
 @test_context
@@ -122,4 +126,4 @@ def test_monitor_users_reenable(app):
         with mocked_perms({'me@me.com': [A, B, C]}):
             js = mock.Mock()
             usermonitor.monitor_users(js)
-        assert_reenabled(app, js)
+        assert_reenabled(app, js, [A, B])
