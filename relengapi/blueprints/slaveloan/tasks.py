@@ -280,7 +280,6 @@ def waitfor_disable_slave(self, data, loanid):
     requestid, machine = data
     try:
         url = furl(current_app.config.get("SLAVEAPI_URL", None))
-        url = furl(current_app.config.get("SLAVEAPI_URL", None))
         url.path.add(machine).add("actions").add("shutdown_buildslave")
         url.args["requestid"] = requestid
         ret = retry(requests.get, args=(str(url),), kwargs=dict()).json()
