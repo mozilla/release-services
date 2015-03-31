@@ -168,16 +168,16 @@ def bmo_set_tracking_bug(self, machine, loanid):
 
 @task(bind=True, max_retries=None)
 @add_to_history(
-    before="Calling slaveapi's disable method",
-    after="Disable request sent")
-def start_disable_slave(self, machine, loanid):
+    before="Disabling in slavealloc (via slaveapi)",
+    after="Disable request sent to slavealloc (via slaveapi)")
+def slavealloc_disable(self, machine, loanid):
     try:
         url = furl(current_app.config.get("SLAVEAPI_URL", None))
-        # XXX: ToDo raise fatal if no slavealloc
         url.path.add(machine).add("actions").add("disable")
         loan_bug = Loans.query.get(loanid).bug_id
         postdata = dict(reason="Being loaned on slaveloan bug %s" % loan_bug)
         retry(requests.post, args=(str(url),), kwargs=dict(data=postdata)).json()
+        return machine
     except Exception as exc:  # pylint: disable=W0703
         logger.exception(exc)
         self.retry(exc=exc)
@@ -258,12 +258,43 @@ def waitfor_action(self, action_id, loanid):
         self.retry(exc=exc)
 
 
+@task(bind=True, max_retries=None)
+@add_to_history(
+    before="Calling slaveapi's disable method to disable from buildbot",
+    after="Disable request sent")
+def start_disable_slave(self, machine, loanid):
+    try:
+        url = furl(current_app.config.get("SLAVEAPI_URL", None))
+        url.path.add(machine).add("actions").add("shutdown_buildslave")
+        ret = retry(requests.post, args=(str(url),), ).json()
+        return (ret["requestid"], machine)
+    except Exception as exc:
+        logger.exception(exc)
+        self.retry(exc=exc)
+
+
+@task(bind=True, max_retries=None)
+@add_to_history(
+    after="Noticed that machine was disabled (or waiting timed out)")
+def waitfor_disable_slave(self, data, loanid):
+    requestid, machine = data
+    try:
+        url = furl(current_app.config.get("SLAVEAPI_URL", None))
+        url = furl(current_app.config.get("SLAVEAPI_URL", None))
+        url.path.add(machine).add("actions").add("shutdown_buildslave")
+        url.args["requestid"] = requestid
+        ret = retry(requests.get, args=(str(url),), kwargs=dict()).json()
+        if ret["state"] in (0, 1):
+            # 0 = PENDING, 1 = RUNNING (3=Failed and 2=Success)
+            raise Exception("Continue waiting for disabled slave")
+    except Exception as exc:
+        self.retry(exc=exc)
+
+
 @task()
 def dummy_task(*args, **kwargs):
     pass
 
-waitfor_disable_slave = dummy_task
-slavealloc_disable = dummy_task
 bmo_file_gpo_bug = dummy_task
 bmo_waitfor_bug = dummy_task
 clean_secrets = dummy_task
