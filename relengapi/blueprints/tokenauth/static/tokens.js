@@ -24,7 +24,7 @@ angular.module('tokens').controller('TokenController',
     });
 
     $scope.can = function(query_perm) {
-        return initial_data.user.permissions.find(function(perm) {
+        return initial_data.user.permissions.some(function(perm) {
             return perm.name == query_perm;
         });
     };

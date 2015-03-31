@@ -69,7 +69,7 @@ angular.module('relengapi').provider('restapi', function() {
         return function() {
             var config;
             /* find the (possibly omitted) config argument */
-            var args = Array.slice(arguments);
+            var args = [].slice.apply(arguments);
             if (typeof args[0] === 'string') {
                 if (args.length < 2) {
                     args.push({});
