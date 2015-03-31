@@ -4,10 +4,26 @@
 
 
 from celery import chain
-from celery import group
+from celery import group as group_
 
 from relengapi.blueprints.slaveloan import slave_mappings
 from relengapi.blueprints.slaveloan import tasks
+
+
+def group(*args, **kwargs):
+    """Celery fails to chain two disparate groups together
+
+    e.g. it starts groupB before groupA has finished in:
+    groupA = group(...)
+    groupB = group(...)
+    all_tasks = chain(groupA, groupB)
+
+    By chaining a group with a `do nothing` task we can achieve the desired affect
+    This function replaces our use of group for simplicity
+    c.f. http://stackoverflow.com/questions/15123772/
+    """
+    return chain(group_(*args, **kwargs),
+                 tasks.dummy_task.si())
 
 
 def generate_loan(slavetype, loanid):
