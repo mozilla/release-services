@@ -5,7 +5,8 @@ function reload_loans() {
         dataType: 'json',
         success: function(data) {
             $.each(data.result,function(i,row){
-                $('<tr>').append(
+                row_html = $('<tr>')
+                row_html.append(
                     $('<td>').append(
                         $('<a>').attr("href", _details_url_prefix.replace('/0', '/'+row.id)).text(row.id)
                     ),
@@ -16,10 +17,17 @@ function reload_loans() {
                     ),
                     $('<td>').text(row.status),
                     $('<td>').text(row.human.ldap_email),
-                    $('<td>').text(row.human.bugzilla_email),
-                    $('<td>').text(row.machine.fqdn),
-                    $('<td>').text(row.machine.ipaddress)
-                ).appendTo('#loans-table tbody');
+                    $('<td>').text(row.human.bugzilla_email)
+                );
+                if (row.machine) {
+                    row_html.append(
+                        $('<td>').text(row.machine.fqdn),
+                        $('<td>').text(row.machine.ipaddress)
+                    )
+                } else {
+                    row_html.append($('<td>'), $('<td>'))
+                }
+                row_html.appendTo('#loans-table tbody');
             });
         }
     });
@@ -34,9 +42,9 @@ $(function() {
         /* disable the button to prevent double issues */
         button.prop('disabled', true);
 
-        var good = function(loan) {
+        var good = function(loanid) {
             reload_loans();
-            alertify.success("Loan entry created");
+            alertify.success("Loan creation successful (id: " + loanid + ")");
             form[0].reset(); // Converts to native JS DOM first
             /* re-enable the button so we can submit a loan again */
             button.prop('disabled', false);
@@ -85,9 +93,8 @@ $(function() {
                                  fqdn: form_fqdn,
                                  ipaddress: form_ipaddress})
         }).done(function(data) {
-            console.log(data);
-            if (data.result.loan) {
-                good(data.result.loan);
+            if (data.result) {
+                good(data.result.id);
             } else {
                 bad("Loan request failed in unknown way");
             }
@@ -104,10 +111,9 @@ $(function() {
         /* disable the button to prevent double issues */
         button.prop('disabled', true);
 
-        var good = function(loan) {
-            //reload_loans();
-            alertify.success("Loan entry created");
-            //form[0].reset(); // Converts to native JS DOM first
+        var good = function(loanid) {
+            reload_loans();
+            alertify.success("Loan creation successful (id: " + loanid + ")");
             /* re-enable the button so we can submit a loan again */
             button.prop('disabled', false);
         };
@@ -131,9 +137,8 @@ $(function() {
                                  bugzilla_email: form_bmo,
                                  requested_slavetype: form_slavetype})
         }).done(function(data) {
-            console.log(data);
-            if (data.result && data.result.loan) {
-                good(data.result.loan);
+            if (data.result) {
+                good(data.result.id);
             } else {
                 bad("Loan request failed in unknown way");
             }
