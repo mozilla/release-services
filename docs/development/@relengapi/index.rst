@@ -15,3 +15,4 @@
     badpenny
     aws
     memcached
+    safety
