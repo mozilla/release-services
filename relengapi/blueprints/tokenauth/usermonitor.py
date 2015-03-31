@@ -29,14 +29,16 @@ def monitor_users(job_status):
                 disable = False
 
         if disable and not token.disabled:
-            logmsg = "Disabling token %d for user %s" % (
-                token.id, token.user)
+            logmsg = "Disabling {} token #{} for user {} with permissions {}".format(
+                token.typ, token.id, token.user,
+                ', '.join(str(p) for p in token.permissions))
             logger.info(logmsg)
             job_status.log_message(logmsg)
             token.disabled = True
         elif not disable and token.disabled:
-            logmsg = "Re-enabling token %d for user %s" % (
-                token.id, token.user)
+            logmsg = "Re-enabling {} token #{} for user {} with permissions {}".format(
+                token.typ, token.id, token.user,
+                ', '.join(str(p) for p in token.permissions))
             logger.info(logmsg)
             job_status.log_message(logmsg)
             token.disabled = False
