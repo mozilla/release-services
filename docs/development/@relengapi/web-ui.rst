@@ -98,6 +98,8 @@ Extensions which wish to add content to the layout can use functionality defined
 In particular, :meth:`~relengapi.lib.layout.Layout.add_head_content` will add the given content to the ``head`` block of every page.
 For the more common case of adding a script tag linking to an external file, :meth:`~relengapi.lib.layout.Layout.add_script` will create the necessary tag, given the URL.
 
+These methods would typically be called in a blueprint's initialization code (via ``@bp.record``).
+
 .. _angular-templates:
 
 Angular Templates
