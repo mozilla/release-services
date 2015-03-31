@@ -11,6 +11,7 @@ from flask import url_for
 from flask.ext.login import login_user
 from flask.ext.login import logout_user
 from relengapi.lib import auth
+from relengapi.lib import safety
 
 logger = logging.getLogger(__name__)
 
@@ -48,4 +49,4 @@ def init_app(app):
             return 'ok'
         # this was from the browser, so send them somewhere useful
         next_url = request.args.get('next') or url_for('root')
-        return redirect(next_url)
+        return redirect(safety.safe_redirect_path(next_url))

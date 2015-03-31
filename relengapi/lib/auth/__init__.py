@@ -17,6 +17,7 @@ from flask.ext.login import LoginManager
 from flask.ext.login import current_user
 from flask.ext.login import user_logged_in
 from flask.ext.login import user_logged_out
+from relengapi.lib import safety
 from relengapi.lib.permissions import p
 
 
@@ -127,7 +128,7 @@ def login_request():
     """Redirect here to ask the user to authenticate"""
     if current_user.is_authenticated():
         next_url = request.args.get('next') or url_for('root')
-        return redirect(next_url)
+        return redirect(safety.safe_redirect_path(next_url))
     return render_template("login_request.html")
 
 
