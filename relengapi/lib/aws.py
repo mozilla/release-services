@@ -138,6 +138,8 @@ class AWS(object):
             while True:
                 time.sleep(2 ** 31)
 
+        return threads
+
 
 def init_app(app):
     app.aws = AWS(app.config.get('AWS', {}))
