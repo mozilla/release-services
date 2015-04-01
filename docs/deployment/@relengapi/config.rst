@@ -219,6 +219,13 @@ To avoid these warnings, use JSON instead:
     CELERY_TASK_SERIALIZER='json'
     CELERY_RESULT_SERIALIZER='json'
 
+Finally, by default Celery limits logging to the WARNING level.
+To see more output from RelengAPI, without the additional verbose output from Celery itself, set ``RELENGAPI_CELERY_LOG_LEVEL`` to the desired level:
+
+.. code-block:: none
+
+    RELENGAPI_CELERY_LOG_LEVEL = 'DEBUG'
+
 Documentation Configuration
 ---------------------------
 
