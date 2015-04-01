@@ -4,7 +4,10 @@
 
 from __future__ import absolute_import
 
+import logging
+
 from celery import Celery
+from celery.signals import celeryd_after_setup
 from flask import current_app
 from werkzeug.local import LocalProxy
 
@@ -53,3 +56,12 @@ def task(*args, **kwargs):
             '@db.task() takes exactly 1 argument ({0} given)'.format(
                 sum([len(args), len(kwargs)])))
     return inner(**kwargs)
+
+
+@celeryd_after_setup.connect
+def setup_relengapi_logging(sender, instance, conf, **kwargs):
+    _relengapi_log_lvl = conf.get("RELENGAPI_CELERY_LOG_LEVEL", None)
+    if _relengapi_log_lvl:
+        n = logging.getLogger('relengapi')
+        n.setLevel(_relengapi_log_lvl)
+        n.debug("Setting relengapi logger to %s", _relengapi_log_lvl)
