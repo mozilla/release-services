@@ -243,6 +243,14 @@ def register_action_needed(self, loanid, action_name):
                 "https://wiki.mozilla.org/ReleaseEngineering/How_To/Loan_a_Slave#Notifying"
                 % l.bug_id
             )
+        elif action_name == "gpo_switch":
+            action_message = (
+                "Need to switch host (%s) to be in the Loaner GPO group. Follow "
+                "https://wiki.mozilla.org/ReleaseEngineering/How_To/Loan_a_Slave"
+                "#t-xp32-ix.2C_t-w732-ix.2C_t-w864-ix.2C_w64-ix-slave "
+                "for more information"
+                % (l.machine.fqdn)
+            )
         else:
             raise ValueError("Invalid action name")
         action = ManualActions(for_loan=l,
