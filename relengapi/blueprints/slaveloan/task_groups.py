@@ -33,10 +33,7 @@ def generate_loan(slavetype, loanid):
         prep_machine_info(loanid=loanid, slavetype=slavetype),
         clean_secrets(loanid=loanid, slavetype=slavetype),
         tasks.reboot_machine.si(loanid=loanid, waitforreboot=True),
-        group(
-            tasks.update_loan_bug_with_details.si(loanid=loanid),
-            tasks.email_loan_details.si(loanid=loanid)
-        )
+        notify_loan_done(loanid=loanid, slavetype=slavetype)
     )
 
 
@@ -109,3 +106,11 @@ def clean_secrets(loanid, slavetype):
     else:
         # gpo does the secret cleaning for us
         return tasks.dummy_task.si()
+
+
+def notify_loan_done(loanid, slavetype):
+    return manual_action(loanid=loanid, action_name="notify_complete")
+    # return group(
+    #     tasks.update_loan_bug_with_details.si(loanid=loanid),
+    #     tasks.email_loan_details.si(loanid=loanid)
+    # )
