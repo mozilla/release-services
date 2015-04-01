@@ -28,6 +28,7 @@ class JobStatus(object):
 
     def log_message(self, message):
         """Add MESSAGE to the log output of the job"""
+        logger.debug("%r: %s" % (self.task_name, message))
         self._log_output.append(message)
 
     def _start(self):
@@ -63,6 +64,7 @@ def _run_job(task_name, job_id):
 
     job_status._start()
 
+    logger.info("Running task %r id %r" % (task_name, job_id))
     try:
         task.task_func(job_status)
     except Exception:
