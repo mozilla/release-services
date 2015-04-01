@@ -32,7 +32,6 @@ def generate_loan(slavetype, loanid):
         tasks.bmo_file_loan_bug.si(loanid=loanid, slavetype=slavetype),
         prep_machine_info(loanid=loanid, slavetype=slavetype),
         clean_secrets(loanid=loanid, slavetype=slavetype),
-        tasks.reboot_machine.si(loanid=loanid, waitforreboot=True),
         notify_loan_done(loanid=loanid, slavetype=slavetype)
     )
 

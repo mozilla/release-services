@@ -311,4 +311,3 @@ bmo_waitfor_bug = dummy_task
 clean_secrets = dummy_task
 update_loan_bug_with_details = dummy_task
 email_loan_details = dummy_task
-reboot_machine = dummy_task
