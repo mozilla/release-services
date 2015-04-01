@@ -105,5 +105,5 @@ python setup.py sdist
 
 message "if everything looks OK,"
 message " - git push --tags upstream"
-message " - twine upload dist/$name-$newversion.tar.gz"
+message " - twine upload --sign dist/$name-$newversion.tar.gz"
 message " - deploy dist/$name-$newversion.tar.gz to production"
