@@ -17,6 +17,8 @@ Breaking Changes
   * ``user``
   * ``disabled``
 
+* The ``badpenny_jobs`` table's ``task_id`` column is no longer nullable.
+
 * Previous versions of RelengAPI mistakenly expected a header named ``Authentication`` instead of the standard ``Authorization``.
   In this version of RelengAPI, both are accepted, but clients should switch to use the correct, standard header.
   Support for ``Authentication`` will be dropped in relengapi-3.0.0
