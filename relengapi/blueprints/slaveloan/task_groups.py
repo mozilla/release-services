@@ -31,7 +31,7 @@ def generate_loan(slavetype, loanid):
         # Could add user to VPN earlier, here if automated.
         tasks.bmo_file_loan_bug.si(loanid=loanid, slavetype=slavetype),
         prep_machine_info(loanid=loanid, slavetype=slavetype),
-        tasks.clean_secrets.si(loanid=loanid),
+        clean_secrets(loanid=loanid, slavetype=slavetype),
         tasks.reboot_machine.si(loanid=loanid, waitforreboot=True),
         group(
             tasks.update_loan_bug_with_details.si(loanid=loanid),
@@ -99,4 +99,13 @@ def gpo_switch(loanid, slavetype):
             tasks.bmo_waitfor_bug.si(loanid=loanid)
         )
     else:
+        return tasks.dummy_task.si()
+
+
+def clean_secrets(loanid, slavetype):
+    # tasks.clean_secrets.si(loanid=loanid)
+    if not slave_mappings.needs_gpo(slavetype):
+        return manual_action(loanid=loanid, action_name="clean_secrets")
+    else:
+        # gpo does the secret cleaning for us
         return tasks.dummy_task.si()

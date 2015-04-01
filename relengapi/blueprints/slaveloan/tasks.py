@@ -231,6 +231,11 @@ def register_action_needed(self, loanid, action_name):
                 "https://wiki.mozilla.org/ReleaseEngineering/How_To/Loan_a_Slave#AWS_machines"
                 % (l.human.ldap,)
             )
+        elif action_name == "clean_secrets":
+            action_message = (
+                "Clean secrets from the machine. See instructions at "
+                "https://wiki.mozilla.org/ReleaseEngineering/How_To/Loan_a_Slave#Cleaning"
+            )
         else:
             raise ValueError("Invalid action name")
         action = ManualActions(for_loan=l,
