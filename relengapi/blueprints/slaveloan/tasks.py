@@ -231,6 +231,13 @@ def register_action_needed(self, loanid, action_name):
                 "https://wiki.mozilla.org/ReleaseEngineering/How_To/Loan_a_Slave#AWS_machines"
                 % (l.human.ldap,)
             )
+        elif action_name == "notify_compelte":
+            action_message = (
+                "Notify the loanee in e-mail and the loan bug (Bug %s) that the loan is ready. "
+                "See template text for both in "
+                "https://wiki.mozilla.org/ReleaseEngineering/How_To/Loan_a_Slave#Notifying"
+                % l.bug_id
+            )
         else:
             raise ValueError("Invalid action name")
         action = ManualActions(for_loan=l,
