@@ -94,9 +94,10 @@ def manual_action(loanid, action_name):
 
 def gpo_switch(loanid, slavetype):
     if slave_mappings.needs_gpo(slavetype):
-        return chain(
-            tasks.bmo_file_gpo_bug.si(loanid=loanid),
-            tasks.bmo_waitfor_bug.si(loanid=loanid)
-        )
+        # return chain(
+        #     tasks.bmo_file_gpo_bug.si(loanid=loanid),
+        #     tasks.bmo_waitfor_bug.si(loanid=loanid)
+        # )
+        return manual_action(loanid=loanid, action_name="gpo_switch")
     else:
         return tasks.dummy_task.si()
