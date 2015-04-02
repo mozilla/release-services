@@ -157,7 +157,7 @@ class UTCDateTime(types.TypeDecorator):
             # to a naive Python datetime.  Passing it a tz-aware datetime
             # causes a warning ("Out of range value for column .."), so we make
             # it naive.
-            if dialect == 'mysql':
+            if dialect.name == 'mysql':
                 value = value.replace(tzinfo=None)
         # else assume UTC
         return value
