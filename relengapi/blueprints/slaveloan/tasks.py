@@ -229,7 +229,6 @@ def register_action_needed(self, loanid, action_name):
                 "Create an aws machine for %s of the type requested (see loan history)."
                 " Following "
                 "https://wiki.mozilla.org/ReleaseEngineering/How_To/Loan_a_Slave#AWS_machines"
-                "Be sure to grant LDAP groups too"
                 % (l.human.ldap,)
             )
         elif action_name == "clean_secrets":
