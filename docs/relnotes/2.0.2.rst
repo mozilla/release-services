@@ -1,0 +1,4 @@
+relengapi-2.0.2
+===============
+
+* Fixed special-casing for MySQL to handle UTCDateTime colums correctly (#202)
