@@ -47,3 +47,6 @@ The Mozilla deployment of RelengAPI has a WSGI file that looks like this::
     os.environ['RELENGAPI_SETTINGS'] = os.path.join(this_dir, 'settings.py')
     application = create_app()
 
+RelengAPI processes the ``Authorization`` header on its own to handle token authentication.
+However, mod_wsgi filters this header out by default.
+To fix this, set ``WSGIPassAuthorization On`` in your Apache configuration.
