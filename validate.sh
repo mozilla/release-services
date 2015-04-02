@@ -121,6 +121,7 @@ git_only='
     coveragerc
     validate.sh
     misc/fiximports.py
+    misc/release.sh
 '
 git ls-files . | while read f; do
                     ignore=false
