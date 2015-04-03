@@ -27,7 +27,7 @@ setup(
     url='https://api.pub.build.mozilla.org',
     install_requires=[
         "Flask",
-        "Flask-Login>=0.2.10",
+        "Flask-Login>=0.2.11",
         "Flask-Browserid",
         "Sphinx",
         "SQLAlchemy>=0.9.4",
