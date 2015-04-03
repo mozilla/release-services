@@ -236,7 +236,7 @@ def register_action_needed(self, loanid, action_name):
                 "Clean secrets from the machine. See instructions at "
                 "https://wiki.mozilla.org/ReleaseEngineering/How_To/Loan_a_Slave#Cleaning"
             )
-        elif action_name == "notify_compelte":
+        elif action_name == "notify_complete":
             action_message = (
                 "Notify the loanee in e-mail and the loan bug (Bug %s) that the loan is ready. "
                 "See template text for both in "
