@@ -5,6 +5,7 @@ from setuptools import setup, find_packages
 
 data_patterns = [
     'templates/**.html',
+    'static/**.html',
     'static/**.jpg',
     'static/**.css',
     'static/**.js',
@@ -18,6 +19,9 @@ setup(name='relengapi-slaveloan',
     author_email='slaveloan@mozilla.com',
     url='https://github.com/buildbot/build-relengapi-slaveloan',
     entry_points={
+        "relengapi.metadata": [
+            'relengapi-skeleton = relengapi.blueprints.skeleton:metadata',
+        ],
         "relengapi_blueprints": [
             'mapper = relengapi.blueprints.slaveloan:bp',
         ],

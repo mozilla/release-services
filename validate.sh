@@ -178,7 +178,7 @@ if [[ "${PROJECT}" =~ relengapi-[s]keleton ]]; then
     cp -r . ${tmpbase}/bubbler
     cd ${tmpbase}/bubbler
     find * -name '*slaveloan*' | while read s; do d=$(echo $s | sed s/slaveloan/bubbler/g); mv $s $d; done
-    git grep slaveloan | cut -d: -f 1 | sort -u | while read s; do sed s/slaveloan/bubbler/ < $s > $s~; mv $s~ $s; done
+    git grep slaveloan | cut -d: -f 1 | sort -u | while read s; do sed s/slaveloan/bubbler/g < $s > $s~; mv $s~ $s; done
     {
         virtualenv skeltest --no-site-packages &&
         skeltest/bin/pip install -e .[test] &&
@@ -189,7 +189,7 @@ if [[ "${PROJECT}" =~ relengapi-[s]keleton ]]; then
     rm -rf ${tmpbase}/bubbler
 
     status "testing installs and uninstalls"
-    # this is a regression test for https://github.com/mozilla/build-relengapi-slaveloan/pull/3
+    # this is a regression test for https://github.com/mozilla/build-relengapi-skeleton/pull/3
     mkdir ${tmpbase}/skeltest
     cd ${tmpbase}/skeltest
     {
