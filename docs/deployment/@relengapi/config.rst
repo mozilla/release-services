@@ -28,7 +28,9 @@ This is effective for development, but certainly not for production.
 The database for the relengapi core is named ``relengapi``.
 Other blueprints may require additional URIs.
 
-If you ever need to see what SQLAlchemy is doing with the connection pool, it is useful to enable the logging. To do that make sure you have the ``SQLALCHEMY_DB_LOG`` is flag to set to True.
+If you ever need to see what SQLAlchemy is doing with the connection pool, it is useful to enable verbose query logging.
+To do so, set ``SQLALCHEMY_DB_LOG = True``.
+Note that this output is *very* verbose and may severely impact site performance.
 
 .. _Deployment-Authentication:
 
