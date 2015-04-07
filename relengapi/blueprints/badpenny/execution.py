@@ -47,7 +47,7 @@ class JobStatus(object):
         session.commit()
 
 
-@celery.task()
+@celery.task(ignore_result=True)
 def _run_job(task_name, job_id):
     task = badpenny.Task.get(task_name)
     if not task:
