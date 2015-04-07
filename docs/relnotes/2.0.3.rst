@@ -1,0 +1,9 @@
+relengapi-2.0.3
+===============
+
+This release fixes some minor operational issues.
+
+* Log badpenny jobs more verbosely (#206)
+* Require Flask-Login 0.2.11 in order to handle the 'Authorization' header correctly (#208)
+* Ignore the celery result of badpenny tasks, since nothing is waiting for that result (#213)
+* Optionally (``SQLALCHEMY_DB_LOG``) log DB queries (#212)
