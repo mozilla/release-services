@@ -444,25 +444,6 @@ def touch(f):
         log.warn('impossible to update utime of file %s' % f)
 
 
-def _urlopen(url, auth_file=None):
-    if auth_file:  # pragma: no cover
-        # this is particularly hard to mock, and will change completely with
-        # the new tooltool anyway.
-        with open(auth_file, 'r') as fHandle:
-            data = fHandle.read()
-        data = data.split('\n')
-        handler = urllib2.HTTPBasicAuthHandler()
-        handler.add_password(
-            realm='Mozilla Contributors - LDAP Authentication',
-            uri="https://secure.pub.build.mozilla.org",
-            user=data[0].strip(),
-            passwd=data[1].strip())
-        opener = urllib2.build_opener(handler)
-        urllib2.install_opener(opener)
-
-    return urllib2.urlopen(url)
-
-
 def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None, region=None):
     # A file which is requested to be fetched that exists locally will be
     # overwritten by this function
@@ -478,10 +459,11 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None, regio
 
         log.info("Attempting to fetch from '%s'..." % base_url)
 
-        # TODO: This should be abstracted to make generic retrival protocol handling easy
         # Well, the file doesn't exist locally.  Let's fetch it.
         try:
-            f = _urlopen(url, auth_file)
+            req = urllib2.Request(url)
+            _authorize(req, auth_file)
+            f = urllib2.urlopen(req)
             log.debug("opened %s for reading" % url)
             with open(temp_path, 'wb') as out:
                 k = True
@@ -741,7 +723,9 @@ def _log_api_error(e):
 
 def _authorize(req, auth_file):
     if auth_file:
-        req.add_header('Authorization', 'Bearer %s' % (open(auth_file).read().strip()))
+        log.debug("using bearer token in %s" % auth_file)
+        req.add_unredirected_header('Authorization',
+                                    'Bearer %s' % (open(auth_file).read().strip()))
 
 
 def _send_batch(base_url, auth_file, batch, region):
