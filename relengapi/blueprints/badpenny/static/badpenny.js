@@ -52,12 +52,13 @@ angular.module('badpenny').controller('TasksController',
     };
 
     $scope.humanJobDuration = function(job) {
-        var dur = moment.duration(moment(job.started_at).diff(job.completed_at));
-        if (dur < 100) {
+        var dur = moment.duration(moment(job.completed_at).diff(job.started_at));
+        var ms = dur.asMilliseconds();
+        if (ms < 100) {
             return "instantly";
-        } else if (dur < 10000) {
-            // humanize just says "a few seconds", which isn't good enough
-            return "in " + (dur / 1000).toFixed(2) + ' seconds';
+        } else if (ms < 10000) {
+            // Humanize just says "a few seconds", which isn't good enough.
+            return "in " + (ms / 1000.0).toFixed(2) + ' seconds';
         } else {
             return "in " + moment.duration(diff).humanize();
         }
