@@ -1207,50 +1207,58 @@ class FetchTests(TestDirMixin, unittest.TestCase):
         self.assertFalse(tooltool.untar_file('basename.tar.shrink'))
 
 
-class FetchFileTests(BaseFileRecordTest):
+class FetchFileTests(BaseFileRecordTest, TestDirMixin):
 
-    def fake_urlopen(self, mock, data, exp_size=4096, exp_auth_file=None):
-        self.url_data = data
+    def setUp(self):
+        BaseFileRecordTest.setUp(self)
+        self.setUpTestDir()
 
-        def fake_read(url, size):
-            eq_(size, exp_size)
-            remaining = data[url]
-            rv, remaining = remaining[:size], remaining[size:]
-            data[url] = remaining
-            return rv
+    def tearDown(self):
+        self.tearDownTestDir()
+        BaseFileRecordTest.tearDown(self)
 
-        def urlopen(url, auth_file):
-            eq_(auth_file, exp_auth_file)
-            if url not in data:
-                raise urllib2.URLError("bogus url")
-            m = mock.Mock()
-            m.read = lambda size: fake_read(url, size)
-            return m
-        mock.side_effect = urlopen
+    @contextlib.contextmanager
+    def mocked_urllib2(self, data, exp_size=4096, exp_token=None):
+        with mock.patch('urllib2.urlopen') as urlopen:
+            def fake_read(url, size):
+                eq_(size, exp_size)
+                remaining = data[url]
+                rv, remaining = remaining[:size], remaining[size:]
+                data[url] = remaining
+                return rv
+
+            def replacement(req):
+                auth = req.get_header('Authorization')
+                if auth:
+                    eq_(auth, 'Bearer %s' % exp_token)
+                else:
+                    assert not exp_token, "got token auth when not expecting it"
+                url = req.get_full_url()
+                if url not in data:
+                    raise urllib2.URLError("bogus url")
+                m = mock.Mock(name='Response')
+                m.read = lambda size: fake_read(url, size)
+                return m
+            urlopen.side_effect = replacement
+            yield
 
     def test_fetch_file(self):
-        with mock.patch('tooltool._urlopen') as _urlopen:
-            # the first URL doesn't match, so this loops twice
-            self.fake_urlopen(_urlopen, {'http://b/sha512/' + self.sample_hash: 'abcd'})
+        # note: the first URL doesn't match, so this loops twice
+        with self.mocked_urllib2({'http://b/sha512/' + self.sample_hash: 'abcd'}):
             filename = tooltool.fetch_file(['http://a', 'http://b'], self.test_record)
             assert filename
             eq_(open(filename).read(), 'abcd')
             os.unlink(filename)
 
     def test_fetch_file_region(self):
-        with mock.patch('tooltool._urlopen') as _urlopen:
-            self.fake_urlopen(
-                _urlopen, {'http://a/sha512/%s?region=us-west-1' % self.sample_hash: 'abcd'})
+        with self.mocked_urllib2({'http://a/sha512/%s?region=us-west-1' % self.sample_hash: 'abcd'}):
             filename = tooltool.fetch_file(['http://a'], self.test_record, region='us-west-1')
             assert filename
             eq_(open(filename).read(), 'abcd')
             os.unlink(filename)
 
     def test_fetch_file_size(self):
-        with mock.patch('tooltool._urlopen') as _urlopen:
-            # the first URL doesn't match, so this loops twice
-            self.fake_urlopen(
-                _urlopen, {'http://b/sha512/' + self.sample_hash: 'abcd'}, exp_size=1024)
+        with self.mocked_urllib2({'http://b/sha512/' + self.sample_hash: 'abcd'}, exp_size=1024):
             filename = tooltool.fetch_file(
                 ['http://a', 'http://b'], self.test_record, grabchunk=1024)
             assert filename
@@ -1258,10 +1266,9 @@ class FetchFileTests(BaseFileRecordTest):
             os.unlink(filename)
 
     def test_fetch_file_auth_file(self):
-        with mock.patch('tooltool._urlopen') as _urlopen:
-            # the first URL doesn't match, so this loops twice
-            self.fake_urlopen(_urlopen, {'http://b/sha512/' + self.sample_hash: 'abcd'},
-                              exp_auth_file='auth')
+        with self.mocked_urllib2({'http://b/sha512/' + self.sample_hash: 'abcd'}, exp_token='TOKTOK'):
+            with open("auth", "w") as f:
+                f.write('TOKTOK')
             filename = tooltool.fetch_file(
                 ['http://a', 'http://b'], self.test_record, auth_file='auth')
             assert filename
@@ -1269,16 +1276,9 @@ class FetchFileTests(BaseFileRecordTest):
             os.unlink(filename)
 
     def test_fetch_file_fails(self):
-        with mock.patch('tooltool._urlopen') as _urlopen:
-            self.fake_urlopen(_urlopen, {})
+        with self.mocked_urllib2({}):
             filename = tooltool.fetch_file(['http://a'], self.test_record)
             assert filename is None
-
-
-def test_urlopen_no_auth_file():
-    with mock.patch("urllib2.urlopen") as urlopen:
-        tooltool._urlopen("url")
-        urlopen.assert_called_with("url")
 
 
 def test_touch():
