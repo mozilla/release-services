@@ -12,15 +12,19 @@ data_patterns = [
     'static/**.txt',
 ]
 
-setup(name='relengapi-clobberer',
+setup(
+    name='relengapi-clobberer',
     version='0.5.1',
     description='The RelengAPI clobberer service.',
     author='Morgan Phillips',
     author_email='mphillips@mozilla.com',
     url='https://github.com/mozilla/build-relengapi-clobberer',
     entry_points={
-        "relengapi_blueprints": [
+        "relengapi.blueprints": [
             'clobberer = relengapi.blueprints.clobberer:bp',
+        ],
+        "relengapi.metadata": [
+            'relengapi-clobberer = relengapi.blueprints.clobberer:metadata',
         ],
     },
     packages=find_packages(),

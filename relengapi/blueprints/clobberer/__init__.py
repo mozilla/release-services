@@ -243,3 +243,12 @@ def forceclobber():
     future_time = int(time.time()) + 3600
     builddir = request.args.get('builddir')
     return "{}:{}:forceclobber".format(builddir, future_time)
+
+_ROR = "https://github.com/mozilla/build-relengapi-clobberer"
+_ISSUE_URL = "%s/issues" % _ROR
+
+# See <relengapi>/docs/development/@relengapi/blueprints/#project-metadata
+metadata = {
+    "repository_of_record": _ROR,
+    "bug_report_url": _ISSUE_URL,
+}
