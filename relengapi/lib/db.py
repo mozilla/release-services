@@ -20,6 +20,7 @@ from sqlalchemy.ext import declarative
 from sqlalchemy.orm import scoping
 from sqlalchemy.pool import Pool
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -81,6 +82,13 @@ class Alchemies(object):
 
     @synchronized(threading.Lock())
     def engine(self, dbname):
+        # Set the log level for db logs
+        sqla_logger = logging.getLogger('sqlalchemy.engine')
+        if self.app.config.get('SQLALCHEMY_DB_LOG', False):
+            sqla_logger.setLevel(logging.INFO)
+        else:
+            sqla_logger.setLevel(logging.WARNING)
+
         if dbname not in self._engines:
             uri = self._get_db_config(dbname)
             self._engines[dbname] = engine = sa.create_engine(uri)
