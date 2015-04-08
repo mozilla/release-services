@@ -29,6 +29,7 @@ from models import DB_DECLARATIVE_BASE
 from relengapi import apimethod
 from relengapi.lib import angular
 from relengapi.lib import api
+from relengapi import p
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,8 @@ bp = Blueprint(
     template_folder='templates',
     static_folder='static'
 )
+
+p.clobberer.clobber.doc('Submit clobber requests')
 
 bp.root_widget_template('clobberer_root_widget.html', priority=100)
 
@@ -85,6 +88,7 @@ def _add_clobber(session, branch, builddir, slave=None):
 
 @bp.route('/clobber', methods=['POST'])
 @apimethod(None, body=[rest.ClobberRequest])
+@p.clobberer.clobber.require()
 def clobber(body):
     "Request clobbers for particular branches and builddirs."
     session = g.db.session(DB_DECLARATIVE_BASE)
@@ -101,6 +105,7 @@ def clobber(body):
 
 @bp.route('/clobber/by-builder', methods=['POST'])
 @apimethod(None, body=[rest.ClobberRequestByBuilder])
+@p.clobberer.clobber.require()
 def clobber_by_builder(body):
     """
     Request clobbers for app builddirs associated with a particular buildername.
