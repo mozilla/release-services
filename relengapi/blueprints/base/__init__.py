@@ -85,3 +85,25 @@ class SQSListenSubcommand(subcommands.Subcommand):
 
     def run(self, parser, args):
         current_app.aws._spawn_sqs_listeners()
+
+
+class ReplSubcommand(subcommands.Subcommand):
+
+    def make_parser(self, subparsers):
+        parser = subparsers.add_parser(
+            'repl', help='Open a Python REPL in the RelengAPI application context; '
+                         '`app` is the current app.')
+        return parser
+
+    def run(self, parser, args):
+        import code
+        # try to get readline for the interactive interpreter (it
+        # only uses it if it's already loaded)
+        try:
+            import readline
+            assert readline
+        except ImportError:
+            readline = None
+
+        print "'app' is the current application."
+        code.InteractiveConsole(locals={'app': current_app}).interact()

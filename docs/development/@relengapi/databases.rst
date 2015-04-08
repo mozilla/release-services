@@ -131,6 +131,27 @@ The list of database names is at ``current_app.db.database_names``.
 
 The known metadata for each database is in ``current_app.db.metadata``, keyed by database name.
 
+Interactive Use
+---------------
+
+It can sometimes be useful to "live" ORM operations at an interactive prompt.
+The ``relengapi repl`` command will run a read-eval-print loop with an active RelengAPI app:
+
+.. code-block:: none
+
+    $ relengapi repl
+    2015-04-08 15:20:16,642 registering blueprint badpenny
+    2015-04-08 15:20:16,644 registering blueprint base
+    2015-04-08 15:20:16,645 registering blueprint tokenauth
+    2015-04-08 15:20:16,646 registering blueprint auth
+    2015-04-08 15:20:16,647 registering blueprint docs
+    'app' is the current application.
+    Python 2.7.9 (default, Feb 22 2015, 12:26:28)
+    [GCC 4.8.3] on linux2
+    Type "help", "copyright", "credits" or "license" for more information.
+    (InteractiveConsole)
+    >>> s = app.db.session('relengapi')
+
 Alternative Column types
 ------------------------
 
