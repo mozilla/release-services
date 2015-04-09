@@ -9,9 +9,9 @@ from copy import deepcopy
 from nose.tools import assert_greater
 from nose.tools import eq_
 
-from relengapi.lib.testing.context import TestContext
-from relengapi.lib import auth
 from relengapi import p
+from relengapi.lib import auth
+from relengapi.lib.testing.context import TestContext
 
 from . import BUILDDIR_REL_PREFIX
 from . import BUILDER_REL_PREFIX
