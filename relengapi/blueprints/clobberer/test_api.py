@@ -32,7 +32,7 @@ _clobber_args_with_slave = {
 }
 
 auth_user = auth.HumanUser('winter2718@gmail.com')
-auth_user._permissions = set([p.clobberer.clobber])
+auth_user._permissions = set([p.clobberer.post.clobber])
 test_context = TestContext(databases=[DB_DECLARATIVE_BASE], reuse_app=True, user=auth_user)
 
 _last_clobber_args = deepcopy(_clobber_args)
