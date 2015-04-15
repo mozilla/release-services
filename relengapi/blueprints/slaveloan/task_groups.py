@@ -109,7 +109,10 @@ def clean_secrets(loanid, slavetype):
 
 
 def notify_loan_done(loanid, slavetype):
-    return manual_action(loanid=loanid, action_name="notify_complete")
+    return chain(
+        manual_action(loanid=loanid, action_name="notify_complete"),
+        tasks.mark_loan_status.si(loanid=loanid, status="ACTIVE")
+    )
     # return group(
     #     tasks.update_loan_bug_with_details.si(loanid=loanid),
     #     tasks.email_loan_details.si(loanid=loanid)

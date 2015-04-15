@@ -310,6 +310,19 @@ def waitfor_disable_slave(self, data, loanid):
         self.retry(exc=exc)
 
 
+@task(bind=True, max_retries=None)
+@add_to_history(
+    after="Marked loan as ACTIVE")
+def mark_loan_status(self, loanid, status):
+    try:
+        session = current_app.db.session('relengapi')
+        l = session.query(Loans).get(loanid)
+        l.status = status
+        session.commit()
+    except Exception as exc:
+        self.retry(exc=exc)
+
+
 @task()
 def dummy_task(*args, **kwargs):
     pass
