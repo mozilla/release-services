@@ -33,8 +33,8 @@ _slave_type = {
         re.compile("^tst-linux32-spot-"),
         re.compile("^tst-linux32-ec2-"),
         ],
-    "t-mavericks-r5": [
-        re.compile("^t-mavericks-r5-"),
+    "t-yosemite-r5": [
+        re.compile("^t-yosemite-r5-"),
         ],
     "talos-mtnlion-r5": [
         re.compile("^talos-mtnlion-r5-"),
@@ -51,12 +51,6 @@ _slave_type = {
         ],
     "t-xp32-ix": [
         re.compile("^t-xp32-ix-"),
-        ],
-    "tegra": [
-        re.compile("^tegra-"),
-        ],
-    "panda": [
-        re.compile("^panda-"),
         ],
     }
 
