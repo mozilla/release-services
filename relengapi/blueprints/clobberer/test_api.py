@@ -33,7 +33,7 @@ _clobber_args_with_slave = {
 
 auth_user = auth.HumanUser('winter2718@gmail.com')
 auth_user._permissions = set([p.clobberer.post.clobber])
-test_context = TestContext(databases=[DB_DECLARATIVE_BASE], reuse_app=True, user=auth_user)
+test_context = TestContext(databases=[DB_DECLARATIVE_BASE], user=auth_user, reuse_app=True)
 
 _last_clobber_args = deepcopy(_clobber_args)
 _last_clobber_args['buildername'] = 'buildername'
@@ -54,7 +54,7 @@ def test_clobber_request(client):
         'No new clobbers were detected, clobber request failed.')
 
 
-@ test_context
+@test_context
 def test_lastclobber_all(client):
     rv = client.get('/clobberer/lastclobber/all')
     eq_(rv.status_code, 200)
