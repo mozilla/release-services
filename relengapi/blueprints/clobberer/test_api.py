@@ -9,6 +9,8 @@ from copy import deepcopy
 from nose.tools import assert_greater
 from nose.tools import eq_
 
+from relengapi import p
+from relengapi.lib import auth
 from relengapi.lib.testing.context import TestContext
 
 from . import BUILDDIR_REL_PREFIX
@@ -29,7 +31,9 @@ _clobber_args_with_slave = {
     'slave': 'specific_slave',
 }
 
-test_context = TestContext(databases=[DB_DECLARATIVE_BASE], reuse_app=True)
+auth_user = auth.HumanUser('winter2718@gmail.com')
+auth_user._permissions = set([p.clobberer.post.clobber])
+test_context = TestContext(databases=[DB_DECLARATIVE_BASE], user=auth_user, reuse_app=True)
 
 _last_clobber_args = deepcopy(_clobber_args)
 _last_clobber_args['buildername'] = 'buildername'
@@ -50,7 +54,7 @@ def test_clobber_request(client):
         'No new clobbers were detected, clobber request failed.')
 
 
-@ test_context
+@test_context
 def test_lastclobber_all(client):
     rv = client.get('/clobberer/lastclobber/all')
     eq_(rv.status_code, 200)
@@ -103,7 +107,7 @@ def test_lastclobber(client):
     eq_(lastclobber_data[0], _last_clobber_args['builddir'])
     eq_(lastclobber_data[1].isdigit(), True,
         'lastclobber did not return a valid timestamp => {}'.format(lastclobber_data[1]))
-    eq_(lastclobber_data[2], 'anonymous',
+    eq_(lastclobber_data[2], 'winter2718@gmail.com',
         'lastclobber did not return a valid username')
 
     # Ensure a new build has been recorded matching the request args
