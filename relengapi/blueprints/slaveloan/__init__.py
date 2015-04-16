@@ -113,8 +113,8 @@ def new_loan_from_admin(body):
         if body.status != 'PENDING':
             m = Machines.as_unique(session, fqdn=body.fqdn,
                                    ipaddress=body.ipaddress)
-        h = Humans.as_unique(session, ldap=body.LDAP,
-                             bugzilla=body.bugzilla)
+        h = Humans.as_unique(session, ldap=body.ldap_email,
+                             bugzilla=body.bugzilla_email)
     except sa.exc.IntegrityError:
         raise InternalServerError("Integrity Error from Database, please retry.")
 
