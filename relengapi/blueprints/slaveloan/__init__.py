@@ -100,8 +100,8 @@ def new_loan_from_admin(body):
         raise BadRequest("Missing LDAP E-Mail")
     if not body.bugzilla_email:
         raise BadRequest("Missing Bugzilla E-Mail")
-    if body.status != 'READY':
-        raise BadRequest("Only READY loans supported at this time")
+    if body.status != 'ACTIVE':
+        raise BadRequest("Only ACTIVE loans supported at this time")
     if body.status != 'PENDING':
         if not body.fqdn:
             raise BadRequest("Missing Machine FQDN")
