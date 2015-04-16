@@ -72,12 +72,17 @@ def replicate_file(session, file):
         target_bucket = config[target_region]
         conn = current_app.aws.connect_to('s3', target_region)
         bucket = conn.get_bucket(target_bucket)
+
+        # commit the session before replicating, since the DB connection may
+        # otherwise go away while we're distracted.
+        session.commit()
         bucket.copy_key(new_key_name=key_name,
                         src_key_name=key_name,
                         src_bucket_name=source_bucket,
                         storage_class='STANDARD',
                         preserve_acl=False)
         session.add(tables.FileInstance(file=file, region=target_region))
+        session.commit()
 
 
 @celery.task
@@ -91,33 +96,32 @@ def check_file_pending_uploads(sha512):
     session.commit()
 
 
-def verify_file_instance(file, key):
-    """Verify that the given File table row and the given S3 Key match
-    in size and digest."""
-    if key.size != file.size:
+def verify_file_instance(sha512, size, key):
+    """Verify that the given S3 Key matches the given size and digest."""
+    if key.size != size:
         log.warning("Uploaded file {} has unexpected size {}; expected "
-                    "{}".format(file.sha512, key.size, file.size))
+                    "{}".format(sha512, key.size, size))
         return False
 
     m = hashlib.sha512()
     for bytes in key:
         m.update(bytes)
 
-    if m.hexdigest() != file.sha512:
-        log.warning("Digest of file {} does not match".format(file.sha512))
+    if m.hexdigest() != sha512:
+        log.warning("Digest of file {} does not match".format(sha512))
         return False
 
     # verify some settings on the key, in case the uploader configured
     # it differently
     if key.storage_class != 'STANDARD':
         log.warning("File {} was uploaded with incorrect storage "
-                    "class {}".format(file.sha512, key.storage_class))
+                    "class {}".format(sha512, key.storage_class))
         return False
 
     if key.get_redirect():  # pragma: no cover
         # (not covered because moto doesn't support redirects)
         log.warning("File {} was uploaded with a website redirect set"
-                    .format(file.sha512, key.storage_class))
+                    .format(sha512, key.storage_class))
         return False
 
     # verifying the ACL is a bit tricky, so just set it correctly
@@ -131,13 +135,16 @@ def check_pending_upload(session, pu):
     # (after which the user can't make any more changes, but the upload
     # may yet be incomplete) and 1 day afterward (ample time for the upload
     # to complete)
+    sha512 = pu.file.sha512
+    size = pu.file.size
+
     if time.now() < pu.expires:
         # URL is not expired yet
         return
     elif time.now() > pu.expires + timedelta(days=1):
         # Upload will probably never complete
         log.info(
-            "Deleting abandoned pending upload for {}".format(pu.file.sha512))
+            "Deleting abandoned pending upload for {}".format(sha512))
         session.delete(pu)
         return
 
@@ -146,26 +153,32 @@ def check_pending_upload(session, pu):
     cfg = current_app.config.get('TOOLTOOL_REGIONS')
     if not cfg or pu.region not in cfg:
         log.warning("Pending upload for {} was to an un-configured "
-                    "region".format(pu.file.sha512))
+                    "region".format(sha512))
         session.delete(pu)
         return
 
     bucket = s3.get_bucket(cfg[pu.region], validate=False)
-    key = bucket.get_key(util.keyname(pu.file.sha512))
+    key = bucket.get_key(util.keyname(sha512))
     if not key:
         # not uploaded yet
         return
 
-    if not verify_file_instance(pu.file, key):
+    # commit the session before verifying the file instance, since the
+    # DB connection may otherwise go away while we're distracted.
+    session.commit()
+
+    if not verify_file_instance(sha512, size, key):
         log.warning(
-            "Upload of {} was invalid; deleting key".format(pu.file.sha512))
+            "Upload of {} was invalid; deleting key".format(sha512))
         key.delete()
         session.delete(pu)
+        session.commit()
         return
 
-    log.info("Upload of {} considered valid".format(pu.file.sha512))
+    log.info("Upload of {} considered valid".format(sha512))
     tables.FileInstance(file=pu.file, region=pu.region)
     session.delete(pu)
+    session.commit()
 
     # note that we don't try to copy the file out just yet; that can wait for
     # the next scheduled distribution, and in the interim everyone will hit
