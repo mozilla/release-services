@@ -102,9 +102,8 @@ def set_time(now=NOW):
 def test_verify_file_instance_bad_size(app):
     """verify_file_instance returns False if the sizes are different"""
     with app.app_context():
-        file_row = add_file_row(len(DATA) + 2, DATA_DIGEST)
         key = make_key(app, 'us-east-1', 'tt-use1', DATA_KEY, DATA)
-        assert not grooming.verify_file_instance(file_row, key)
+        assert not grooming.verify_file_instance(DATA_DIGEST, len(DATA) + 2, key)
 
 
 @moto.mock_s3
@@ -112,10 +111,9 @@ def test_verify_file_instance_bad_size(app):
 def test_verify_file_instance_bad_digest(app):
     """verify_file_instance returns False if the digests are different"""
     with app.app_context():
-        file_row = add_file_row(len(DATA), DATA_DIGEST)
-        content = os.urandom(len(DATA))
-        key = make_key(app, 'us-east-1', 'tt-use1', DATA_KEY, content)
-        assert not grooming.verify_file_instance(file_row, key)
+        bogus_digest = hashlib.sha512(os.urandom(len(DATA))).hexdigest()
+        key = make_key(app, 'us-east-1', 'tt-use1', DATA_KEY, DATA)
+        assert not grooming.verify_file_instance(bogus_digest, len(DATA), key)
 
 
 @moto.mock_s3
@@ -123,10 +121,9 @@ def test_verify_file_instance_bad_digest(app):
 def test_verify_file_instance_bad_storage_class(app):
     """verify_file_instance returns False if the key's storage class is not STANDARD."""
     with app.app_context():
-        file_row = add_file_row(len(DATA), DATA_DIGEST)
         key = make_key(
             app, 'us-east-1', 'tt-use1', DATA_KEY, DATA, storage_class='RRS')
-        assert not grooming.verify_file_instance(file_row, key)
+        assert not grooming.verify_file_instance(DATA_DIGEST, len(DATA), key)
 
 
 @moto.mock_s3
@@ -134,10 +131,9 @@ def test_verify_file_instance_bad_storage_class(app):
 def test_verify_file_instance_bad_acl(app):
     """verify_file_instance returns True if the key has a bad URL, but fixes it."""
     with app.app_context():
-        file_row = add_file_row(len(DATA), DATA_DIGEST)
         key = make_key(app, 'us-east-1', 'tt-use1', DATA_KEY, DATA)
         key.set_acl('public-read')
-        assert grooming.verify_file_instance(file_row, key)
+        assert grooming.verify_file_instance(DATA_DIGEST, len(DATA), key)
         # moto doesn't support acls yet, so that's the best we can do
 
 
@@ -146,9 +142,8 @@ def test_verify_file_instance_bad_acl(app):
 def test_verify_file_instance(app):
     """verify_file_instance returns True if the size and digest match"""
     with app.app_context():
-        file_row = add_file_row(len(DATA), DATA_DIGEST)
         key = make_key(app, 'us-east-1', 'tt-use1', DATA_KEY, DATA)
-        assert grooming.verify_file_instance(file_row, key)
+        assert grooming.verify_file_instance(DATA_DIGEST, len(DATA), key)
 
 
 @test_context
