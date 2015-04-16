@@ -34,7 +34,7 @@ class Loan(wsme.types.Base):
 
     #: Unique ID for this entry
     id = int
-    #: Current status of the loan. Valid values ("PENDING", "READY")
+    #: Current status of the loan. Valid values ("PENDING", "ACTIVE", "COMPLETE")
     status = unicode
     #: Bugzilla Bug number of the Loan Request
     bug_id = int
