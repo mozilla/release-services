@@ -103,7 +103,8 @@ def test_verify_file_instance_bad_size(app):
     """verify_file_instance returns False if the sizes are different"""
     with app.app_context():
         key = make_key(app, 'us-east-1', 'tt-use1', DATA_KEY, DATA)
-        assert not grooming.verify_file_instance(DATA_DIGEST, len(DATA) + 2, key)
+        assert not grooming.verify_file_instance(
+            DATA_DIGEST, len(DATA) + 2, key)
 
 
 @moto.mock_s3
@@ -220,6 +221,29 @@ def test_check_pending_upload_not_valid(app):
 
 @moto.mock_s3
 @test_context
+def test_check_pending_upload_race(app):
+    """If check_pending_upload fails to add a file instance because it already
+    exists, as might happen when the function races with itself, the function
+    still succeeds."""
+    with app.app_context(), set_time():
+        expires = time.now() - timedelta(seconds=90)
+        pu_row, file_row = add_pending_upload_and_file_row(
+            len(DATA), DATA_DIGEST, expires, 'us-west-2')
+        make_key(app, 'us-west-2', 'tt-usw2', DATA_KEY, DATA)
+        session = app.db.session('tooltool')
+
+        def test_shim():
+            session.add(tables.FileInstance(file=file_row, region='us-west-2'))
+            session.commit()
+        grooming.check_pending_upload(session, pu_row, _test_shim=test_shim)
+        session.commit()
+        eq_(tables.PendingUpload.query.all(), [])  # PU is deleted
+        eq_(len(tables.File.query.first().instances), 1)  # FileInstance exists
+        assert key_exists(app, 'us-west-2', 'tt-usw2', DATA_KEY)
+
+
+@moto.mock_s3
+@test_context
 def test_check_pending_upload_success(app):
     """check_pending_upload deletes the PU and adds a FileInstance if valid"""
     with app.app_context(), set_time():
@@ -325,3 +349,23 @@ def test_replicate_file(app):
     assert_file_instances(app, DATA_DIGEST, ['us-east-1', 'us-west-2'])
     assert key_exists(app, 'us-east-1', 'tt-use1', util.keyname(DATA_DIGEST))
     assert key_exists(app, 'us-west-2', 'tt-usw2', util.keyname(DATA_DIGEST))
+
+
+@moto.mock_s3
+@test_context
+def test_replicate_file_race(app):
+    """If, while replicating a file, another replication completes and the
+    subsequent database insert fails, the replication function nonetheless
+    succeeds."""
+    with app.app_context():
+        file = add_file_row(len(DATA), DATA_DIGEST, instances=['us-east-1'])
+        make_key(app, 'us-east-1', 'tt-use1', util.keyname(DATA_DIGEST), DATA)
+        make_bucket(app, 'us-west-2', 'tt-usw2')
+
+        def test_shim():
+            session = app.db.session('tooltool')
+            session.add(tables.FileInstance(file=file, region='us-west-2'))
+            session.commit()
+        grooming.replicate_file(app.db.session('tooltool'), file,
+                                _test_shim=test_shim)
+    assert_file_instances(app, DATA_DIGEST, ['us-east-1', 'us-west-2'])
