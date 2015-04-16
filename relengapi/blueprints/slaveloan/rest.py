@@ -90,7 +90,7 @@ class LoanAdminRequest(wsme.types.Base):
     #: Users full LDAP e-mail
     ldap_email = unicode
     #: Users Bugzilla e-mail
-    bugzilla_mail = unicode
+    bugzilla_email = unicode
     #: If known in advance, fqdn of the machine to loan
     fqdn = unicode
     #: If known in advance, ip address of the machine to loan
