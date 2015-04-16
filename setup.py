@@ -17,7 +17,7 @@ data_patterns = [
 
 setup(
     name='relengapi-slaveloan',
-    version='0.1.1',
+    version='0.2',
     description='Slave Loan blueprint for RelengAPI',
     author='Justin Wood',
     author_email='callek@mozilla.com',
