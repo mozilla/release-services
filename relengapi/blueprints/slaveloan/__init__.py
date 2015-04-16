@@ -67,6 +67,19 @@ def get_loan(loanid):
     return l.to_wsme()
 
 
+@bp.route('/loans/<int:loanid>', methods=["DELETE"])
+@p.slaveloan.admin.require()
+@apimethod(rest.Loan, int)
+def complete_loan(loanid):
+    "Get the details of a loan, by id"
+    # XXX: Use permissions to ensure admin | loanee
+    session = g.db.session('relengapi')
+    l = session.query(Loans).get(loanid)
+    l.status = "RELINQUISHED"
+    session.commit()
+    return l.to_wsme()
+
+
 @bp.route('/loans/<int:loanid>/history')
 @p.slaveloan.admin.require()
 @apimethod([rest.HistoryEntry], int)
