@@ -525,17 +525,25 @@ def test_command_fetch_no_url():
 
 def test_command_fetch():
     with mock.patch('tooltool.fetch_files') as fetch_files:
-        eq_(call_main('tooltool', 'fetch', 'a', 'b', '--url', 'http://foo'), 0)
-        fetch_files.assert_called_with('manifest.tt', ['http://foo'], ['a', 'b'],
+        eq_(call_main('tooltool', 'fetch', 'a', 'b', '--url', 'http://foo/bar/'), 0)
+        fetch_files.assert_called_with('manifest.tt', ['http://foo/bar/'], ['a', 'b'],
+                                       cache_folder=None, auth_file=None,
+                                       region=None)
+
+
+def test_command_fetch_no_trailing_slash():
+    with mock.patch('tooltool.fetch_files') as fetch_files:
+        eq_(call_main('tooltool', 'fetch', 'a', 'b', '--url', 'http://foo/bar'), 0)
+        fetch_files.assert_called_with('manifest.tt', ['http://foo/bar/'], ['a', 'b'],
                                        cache_folder=None, auth_file=None,
                                        region=None)
 
 
 def test_command_fetch_region():
     with mock.patch('tooltool.fetch_files') as fetch_files:
-        eq_(call_main('tooltool', 'fetch', 'a', 'b', '--url', 'http://foo',
+        eq_(call_main('tooltool', 'fetch', 'a', 'b', '--url', 'http://foo/bar/',
                       '--region', 'us-east-1'), 0)
-        fetch_files.assert_called_with('manifest.tt', ['http://foo'], ['a', 'b'],
+        fetch_files.assert_called_with('manifest.tt', ['http://foo/bar/'], ['a', 'b'],
                                        cache_folder=None, auth_file=None,
                                        region='us-east-1')
 
@@ -548,9 +556,9 @@ def test_command_fetch_auth_file():
     try:
         with mock.patch('tooltool.fetch_files') as fetch_files:
             os.path.expanduser.side_effect = lambda path: path.replace("~", "HOME")
-            eq_(call_main('tooltool', 'fetch', 'a', 'b', '--url', 'http://foo',
+            eq_(call_main('tooltool', 'fetch', 'a', 'b', '--url', 'http://foo/bar/',
                           '--authentication-file', '~/.tooltool-token'), 0)
-            fetch_files.assert_called_with('manifest.tt', ['http://foo'],
+            fetch_files.assert_called_with('manifest.tt', ['http://foo/bar/'],
                                            ['a', 'b'], cache_folder=None,
                                            auth_file="HOME/.tooltool-token",
                                            region=None)
@@ -560,21 +568,21 @@ def test_command_fetch_auth_file():
 
 def test_command_upload():
     with mock.patch('tooltool.upload') as upload:
-        eq_(call_main('tooltool', 'upload', '--url', 'http://foo',
+        eq_(call_main('tooltool', 'upload', '--url', 'http://foo/',
                       '--message', 'msg'), 0)
-        upload.assert_called_with('manifest.tt', 'msg', ['http://foo'], None, None)
+        upload.assert_called_with('manifest.tt', 'msg', ['http://foo/'], None, None)
 
 
 def test_command_upload_region():
     with mock.patch('tooltool.upload') as upload:
-        eq_(call_main('tooltool', 'upload', '--url', 'http://foo',
+        eq_(call_main('tooltool', 'upload', '--url', 'http://foo/',
                       '--message', 'msg', '--region=us-west-3'), 0)
-        upload.assert_called_with('manifest.tt', 'msg', ['http://foo'], None, 'us-west-3')
+        upload.assert_called_with('manifest.tt', 'msg', ['http://foo/'], None, 'us-west-3')
 
 
 def test_command_upload_no_message():
     with mock.patch('tooltool.upload') as upload:
-        eq_(call_main('tooltool', 'upload', '--url', 'http://foo'), 1)
+        eq_(call_main('tooltool', 'upload', '--url', 'http://foo/'), 1)
         assert not upload.called
 
 
