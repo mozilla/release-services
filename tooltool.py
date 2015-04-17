@@ -955,6 +955,11 @@ def main(argv, _skip_logging=False):
     if not options_obj.base_url:
         options_obj.base_url = ['https://api.pub.build.mozilla.org/tooltool/']
 
+    # ensure all URLs have a trailing slash
+    def add_slash(url):
+        return url if url.endswith('/') else (url + '/')
+    options_obj.base_url = [add_slash(u) for u in options_obj.base_url]
+
     # expand ~ in --authentication-file
     if options_obj.auth_file:
         options_obj.auth_file = os.path.expanduser(options_obj.auth_file)
