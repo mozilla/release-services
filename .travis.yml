@@ -5,10 +5,8 @@ python:
 
 env:
   # the 'relengapi' command wants a settings file, but the contents
-  # aren't terribly important, so the example will do fine.  This is
-  # relative to the directory containing app.py, although Flask does not
-  # document that.
-  - RELENGAPI_SETTINGS=../settings_example.py
+  # aren't terribly important, so the example will do fine
+  - RELENGAPI_SETTINGS=settings_example.py
 
 # command to install dependencies
 install:
