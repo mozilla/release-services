@@ -5,16 +5,19 @@
 import logging
 
 from flask import Blueprint
+from flask import current_app
 from flask import url_for
 from relengapi import apimethod
 from relengapi import p
 from relengapi.blueprints.badpenny import cleanup
 from relengapi.blueprints.badpenny import cron
+from relengapi.blueprints.badpenny import execution
 from relengapi.blueprints.badpenny import rest
 from relengapi.blueprints.badpenny import tables
 from relengapi.lib import angular
 from relengapi.lib import api
 from relengapi.lib import permissions
+from relengapi.lib import time
 from werkzeug.exceptions import NotFound
 
 logger = logging.getLogger(__name__)
@@ -23,6 +26,7 @@ bp = Blueprint('badpenny', __name__,
                template_folder='templates')
 
 p.base.badpenny.view.doc('See scheduled tasks and logs of previous jobs')
+p.base.badpenny.run.doc('Force a run of a badpenny task')
 
 
 def permitted():
@@ -60,6 +64,25 @@ def get_task(task_name):
     if not t:
         raise NotFound
     return t.to_jsontask(with_jobs=True)
+
+
+@bp.route('/tasks/<task_name>/run-now', methods=['POST'])
+@apimethod(rest.BadpennyJob, unicode)
+@p.base.badpenny.run.require()
+def run_task_now(task_name):
+    """Force the given badpenny task to run now."""
+    t = tables.BadpennyTask.query.filter(
+        tables.BadpennyTask.name == task_name).first()
+    if not t:
+        raise NotFound
+
+    session = current_app.db.session('relengapi')
+    job = tables.BadpennyJob(task=t, created_at=time.now())
+    session.add(job)
+    session.commit()
+
+    execution.submit_job(task_name=t.name, job_id=job.id)
+    return job.to_jsonjob()
 
 
 @bp.route('/jobs')
