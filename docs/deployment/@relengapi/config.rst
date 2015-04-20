@@ -92,6 +92,8 @@ In a development scenario, it can be helpful to always login as the same user, w
         'email': 'username@domain.com',
     }
 
+Obviously this is not a safe alternative for a production deployment of RelengAPI.
+
 .. _Deployment-Permissions:
 
 Permissions
