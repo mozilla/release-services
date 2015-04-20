@@ -82,6 +82,18 @@ For example, ``mod_authnz_ldap`` sets ``AUTHENTICATE_*`` environment variables t
         'environ': 'AUTHENTICATE_MAIL',
     }
 
+Constant
+~~~~~~~~
+
+In a development scenario, it can be helpful to always login as the same user, with no need for authentication. ::
+
+    RELENGAPI_AUTHENTICATION = {
+        'type': 'constant',
+        'email': 'username@domain.com',
+    }
+
+Obviously this is not a safe alternative for a production deployment of RelengAPI.
+
 .. _Deployment-Permissions:
 
 Permissions
