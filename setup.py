@@ -3,7 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-from setuptools import setup, find_packages
+
+from setuptools import find_packages
+from setuptools import setup
 
 data_patterns = [
     'templates/**.html',
@@ -94,6 +96,7 @@ setup(
         "relengapi.auth.mechanisms": [
             'browserid = relengapi.lib.auth.browserid:init_app',
             'external = relengapi.lib.auth.external:init_app',
+            'constant = relengapi.lib.auth.constant:init_app',
         ],
         "relengapi.perms.mechanisms": [
             'static = relengapi.lib.auth.static_authz:init_app',
