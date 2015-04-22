@@ -17,17 +17,31 @@ LTCYAN="$_ESC[1;36m"
 YELLOW="$_ESC[1;33m"
 NORM="$_ESC[0;0m"
 
+TRAVIS=${TRAVIS:-false}
+
 fail() {
     echo "${RED}${@}${NORM}"
     exit 1
 }
 
-status() {
+start_step() {
+    running_step=$(echo -n ${*} | tr -c 'a-zA-Z0-9' '-')
     echo "${LTCYAN}-- ${*} --${NORM}"
+    if $TRAVIS; then
+        echo travis_fold:start:$running_step
+    fi
+}
+
+finish_step() {
+    if $TRAVIS; then
+        echo travis_fold:end:$running_step
+    fi
+    running_step=''
 }
 
 ok=true
 problem_summary=""
+running_step=''
 
 not_ok() {
     ok=false
@@ -61,13 +75,15 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 tmpbase=$(mktemp -d -t tmpbase.XXXXXX)
 trap 'rm -rf ${tmpbase}; exit 1' 1 2 3 15
 
-status "running pep8"
+start_step "running pep8"
 pep8 --config=pep8rc relengapi || not_ok "pep8 failed"
+finish_step
 
-status "running pyflakes"
+start_step "running pyflakes"
 pyflakes relengapi || not_ok "pyflakes failed"
+finish_step
 
-status "checking import module convention in modified files"
+start_step "checking import module convention in modified files"
 modified=false
 for filename in `find relengapi -type f -name "*.py" -print` ; do
     rv=0
@@ -79,19 +95,23 @@ for filename in `find relengapi -type f -name "*.py" -print` ; do
     esac
 done
 $modified && not_ok "some imports were re-ordered and changes will need to be committed"
+finish_step
 
-status "building docs"
+start_step "building docs"
 relengapi build-docs --development || not_ok "build-docs failed"
+finish_step
 
-status "running tests (under coverage)"
+start_step "running tests (under coverage)"
 coverage erase || not_ok "coverage failed"
 coverage run --rcfile=coveragerc --source=relengapi $(which relengapi) run-tests || not_ok "tests failed"
+finish_step
 
-status "checking coverage"
+start_step "checking coverage"
 coverage report --rcfile=coveragerc --fail-under=${COVERAGE_MIN} >${tmpbase}/covreport || not_ok "less than ${COVERAGE_MIN}% coverage"
 coverage html --rcfile=coveragerc -d .coverage-html
 head -n2 ${tmpbase}/covreport
 tail -n1 ${tmpbase}/covreport
+finish_step
 
 # get the version
 version=`python -c 'import pkg_resources; print pkg_resources.require("'relengapi'")[0].version'`
@@ -101,7 +121,7 @@ version=`python -c 'import pkg_resources; print pkg_resources.require("'relengap
 rm -f "relengapi.egg-info/SOURCES.txt"
 
 # get the list of files git thinks should be present
-status "getting file list from git"
+start_step "getting file list from git"
 git_only='
     .gitignore
     .travis.yml
@@ -120,17 +140,19 @@ git ls-files . | while read f; do
                     done
                     $ignore || echo $f
                  done | sort > ${tmpbase}/git-files
+finish_step
 
 # get the list of files in an sdist tarball
-status "getting file list from sdist"
+start_step "getting file list from sdist"
 python setup.py -q sdist --dist-dir=${tmpbase}
 tarball="${tmpbase}/relengapi-${version}.tar.gz"
 [ -f ${tarball} ] || fail "No tarball at ${tarball}"
 # exclude directories and a few auto-generated files from the tarball contents
 tar -ztf $tarball | grep -v  '/$' | cut -d/ -f 2- | grep -vE '(egg-info|PKG-INFO)' | sort > ${tmpbase}/sdist-files
+finish_step
 
 # get the list of files *installed* from that tarball
-status "getting file list from install"
+start_step "getting file list from install"
 (
     cd "${tmpbase}"
     tar -zxf ${tarball}
@@ -144,18 +166,24 @@ status "getting file list from install"
         grep '/relengapi-docs/' installed.txt | sed -e 's!.*/relengapi-docs/!docs/!'
     ) | sort > ${tmpbase}/install-files
 )
+finish_step
 
 # and calculate the list of git files that we expect to see installed:
 # anything not at the top level, but not the namespaced __init__.py's
 grep / ${tmpbase}/git-files | grep -Ev '^relengapi/(blueprints/|)__init__\.py$' > ${tmpbase}/git-expected-installed
 
 # start comparing!
-pushd ${tmpbase}
-status "comparing git and sdist"
+pushd ${tmpbase} >/dev/null
+
+start_step "comparing git and sdist"
 diff -u git-files sdist-files || not_ok "sdist files differ from files in git"
-status "comparing git and install"
+finish_step
+
+start_step "comparing git and install"
 diff -u git-expected-installed install-files || not_ok "installed files differ from files in git"
-popd
+finish_step
+
+popd >/dev/null
 
 show_results
 
