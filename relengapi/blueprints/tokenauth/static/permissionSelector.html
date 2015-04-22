@@ -10,7 +10,7 @@
         ng-class="{'success': permissions.indexOf(perm.name) != -1}"
         ng-click="togglePermission(perm)">
         </td><td>
-            <perm>{{perm.name}}</perm>
+            <perm name="{{perm.name}}" />
         </td><td>
             <small>{{perm.doc}}</small>
         </td>

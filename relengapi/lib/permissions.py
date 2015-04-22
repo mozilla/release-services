@@ -47,6 +47,9 @@ class Permissions(Permission):
             index = tuple(index.split('.'))
         return self._all[index]
 
+    def __iter__(self):
+        return ((prm, prm.__doc__) for prm in self._all.itervalues())
+
     def get(self, index, default=None):
         try:
             return self[index]

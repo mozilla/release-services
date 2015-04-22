@@ -17,7 +17,7 @@
     <div ng-show="initial_data.user.permissions">
       <ul>
       <li ng-repeat="perm in initial_data.user.permissions">
-        <span class="permission">{{perm.name}}</span> - <span class="action-docstring">{{perm.doc}}</span></li>
+      <perm name="{{perm.name}}"></perm> - <span class="action-docstring">{{perm.doc}}</span></li>
       </ul>
     </div>
     <div ng-hide="initial_data.user.permissions">

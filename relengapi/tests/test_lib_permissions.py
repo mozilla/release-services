@@ -47,6 +47,11 @@ def test_Permission_undoc_KeyError():
     assert_raises(KeyError, lambda: perms['a.b.never_mentioned'])
 
 
+def test_Permission_iter():
+    permissions.p.x.y.doc("XY")
+    assert (('x', 'y'), 'XY') in list(permissions.p)
+
+
 class TestUser(auth.BaseUser):
 
     anonymous = False
