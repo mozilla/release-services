@@ -3,11 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import inspect
+import logging
 import relengapi.app
 import wrapt
 
 from flask import json
 from relengapi.lib import auth
+
+log = logging.getLogger(__name__)
 
 
 class TestContext(object):
@@ -76,22 +79,40 @@ class TestContext(object):
             self.options['app_setup'](app)
         return app
 
+    def _wrap_client(self, client):
+        # create a post_json convenience method
+        def post_json(path, data):
+            return client.post(
+                path, data=json.dumps(data),
+                headers=[('Content-Type', 'application/json')])
+        client.post_json = post_json
+
+        # patch 'open' to log the request
+        old_open = client.open
+
+        def open(*args, **kwargs):
+            path = args[0]
+            method = kwargs.get('method')
+            log.info('request: {} {}'.format(method, path))
+            resp = old_open(*args, **kwargs)
+            log.info('response: {}'.format(resp.status))
+            return resp
+        client.open = open
+
     @wrapt.decorator
     def __call__(self, wrapped, instance, given_args, kwargs):
         arginfo = inspect.getargspec(wrapped)
         args = set((arginfo.args if arginfo.args else []) +
                    (arginfo.keywords if arginfo.keywords else []))
 
-        def post_json(path, data):
-            return kwargs['client'].post(
-                path, data=json.dumps(data),
-                headers=[('Content-Type', 'application/json')])
         app = self._make_app()
         if 'app' in args:
             kwargs['app'] = app
+
         if 'client' in args:
             kwargs['client'] = app.test_client()
-            kwargs['client'].post_json = post_json
+            self._wrap_client(kwargs['client'])
+
         if 'db_setup' in self.options:
             self.options['db_setup'](app)
         try:
