@@ -4,6 +4,7 @@
 
 import argparse
 import logging.handlers
+import os
 import pkg_resources
 import relengapi.app
 import sys
@@ -56,6 +57,13 @@ def main(args=None):
 
     if args._subcommand and args._subcommand.want_logging:
         setupConsoleLogging(args.quiet)
+
+    # make the RELENGAPI_SETTINGS env var an absolute path; without this, Flask
+    # uses the application's root_dir, which isn't especially helpful in a
+    # development context.
+    var_name = 'RELENGAPI_SETTINGS'
+    if var_name in os.environ:
+        os.environ[var_name] = os.path.abspath(os.environ[var_name])
 
     app = relengapi.app.create_app(cmdline=True)
     with app.app_context():
