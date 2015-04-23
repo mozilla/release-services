@@ -172,7 +172,7 @@ The Python code to render an Angular template faintly resembles normal Flask cod
     Render an HTML page containing the named template in its ``content`` block.
     All of the dependency URLs are loaded in the ``<head>`` element.
     Any keyword arguments are JSONified and passed to the Angular app in the ``initial_data`` module.
-    To use this data, depend on the module, and then inject ``initial_data``; see the example above.
+    To use this data, depend on the module, and then inject ``initial_data``; see the example below.
 
 The named template must contain an element with an ``ng-app`` attribute specifying a module of your devising, or Angular will do nothing.
 Inside of that element, the Angular documentation applies as usual.
@@ -182,6 +182,11 @@ Javascript best practices suggest supplying initial data for a page along with t
 The ``initial_data`` arguments, Angular module, and Angular constant make this easy.
 However, it's important that this data also be available via an API call.
 The most common way to accomplish this is to invoke the actual API call using :py:func:`~relengapi.lib.api.get_data`.
+
+The ``initial_data`` constant contains the following data in every template:
+
+    * ``initial_data.user`` -- the current user
+    * ``initial_data.perms`` -- all defined permissions, in the form of a map from permission name to permission documentation.
 
 Putting all of this together::
 
@@ -216,7 +221,7 @@ Angular Directives
 
 The following directives are available in any Angular template that requires the ``relengapi`` module:
 
- * ``<perm>foo.bar</perm>`` -- renders a permission name
+ * ``<perm name="foo.bar" />`` -- renders a permission name
 
 Angular Services
 ................

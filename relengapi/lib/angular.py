@@ -9,6 +9,7 @@ from flask import render_template
 from flask import request
 from flask import url_for
 from flask.ext.login import current_user
+from relengapi import p
 from relengapi.lib import permissions
 
 
@@ -32,12 +33,15 @@ def template(template_name, *dependency_urls, **initial_data):
 
     # include info on the current user
     user = {}
-    user['permissions'] = [permissions.JsonPermission(name='.'.join(p), doc=p.__doc__)
-                           for p in current_user.permissions]
+    user['permissions'] = [permissions.JsonPermission(name='.'.join(prm), doc=prm.__doc__)
+                           for prm in current_user.permissions]
     user['type'] = current_user.type
     if current_user.type == 'human':
         user['authenticated_email'] = current_user.authenticated_email
     initial_data['user'] = user
+
+    # include the full list of available permissions
+    initial_data['perms'] = {str(prm): doc for prm, doc in p}
 
     return render_template('angular.html',
                            template=template,

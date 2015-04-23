@@ -100,13 +100,24 @@ angular.module('relengapi').provider('restapi', function() {
     };
 });
 
-angular.module('relengapi').directive('perm', function() {
+angular.module('relengapi').directive('perm', function(initial_data) {
     return {
         restrict: 'E',
-        transclude: true,
-        template: function(elem, attr) {
+        replace: true,
+        scope: {
+            'name': '@'
+        },
+        template: 
             // note the trailing space!
-            return '<span class="label label-info" ng-transclude></span> ';
+            '<span class="label label-info" ' +
+                  'data-toggle="tooltip" data-placement="top" >{{name}}</span> ',
+        link: function(scope, elt) {
+            elt.tooltip({
+                delay: 250,
+                title: function() {
+                    return initial_data.perms[scope.name];
+                },
+            });
         }
     };
 });
