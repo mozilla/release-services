@@ -13,8 +13,7 @@ angular.module('tokens').controller('TokenController',
     // permissions -- this is just used to decide which pages to show.
     $scope.can_view = false;
     $scope.can_issue = false;
-    $scope.can_revoke = false;
-    angular.forEach(['view', 'issue', 'revoke'], function (action) {
+    angular.forEach(['view', 'issue'], function (action) {
         var re = new RegExp("^base\.tokens\.[^.]*\." + action + "(?:\.my|\.all)?");
         angular.forEach(initial_data.user.permissions, function (perm) {
             if (perm.name.match(re)) {
@@ -28,6 +27,34 @@ angular.module('tokens').controller('TokenController',
             return perm.name == query_perm;
         });
     };
+    $scope.any = function(token_typ) {
+        return initial_data.tokens.some(function(token) {
+            return token.typ == token_typ;
+        });
+    };
+
+    // 'can_revoke' := 'can_the_current_user_revoke_any_of_the_active_tokens'
+    $scope.can_revoke = false;
+
+    // 'prm' tokens exist & user can revoke
+    if ($scope.any('prm') && $scope.can('base.tokens.prm.revoke')) {
+        $scope.can_revoke = true;
+    }
+
+    // 'usr' tokens exist & user can revoke
+    if ($scope.any('usr')) {
+        if ($scope.can('base.tokens.usr.revoke.all')) {
+            $scope.can_revoke = true;
+        } else {
+            if ($scope.can('base.tokens.usr.revoke.my')) {
+                angular.forEach(initial_data.tokens, function (token) {
+                    if (token.user == initial_data.user.authenticated_email) {
+                        $scope.can_revoke = true;
+                    }
+                });
+            }
+        }
+    }
 
     $scope.canRevokeToken = function(token) {
         if (token.typ == 'usr') {
