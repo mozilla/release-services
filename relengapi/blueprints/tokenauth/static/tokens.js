@@ -27,18 +27,32 @@ angular.module('tokens').controller('TokenController',
             return perm.name == query_perm;
         });
     };
+    $scope.any = function(token_typ) {
+        return initial_data.tokens.some(function(token) {
+            return token.typ == token_typ;
+        });
+    };
 
-    $scope.can_revoke = false;
     // 'can_revoke' := 'can_the_current_user_revoke_any_of_the_active_tokens'
-    if ($scope.can('base.tokens.usr.revoke.all')) {
+    $scope.can_revoke = false;
+
+    // 'prm' tokens exist & user can revoke
+    if ($scope.any('prm') && $scope.can('base.tokens.prm.revoke')) {
         $scope.can_revoke = true;
-    } else {
-        if ($scope.can('base.tokens.usr.revoke.my')) {
-            angular.forEach(initial_data.tokens, function (token) {
-                if (token.user == initial_data.user.authenticated_email) {
-                    $scope.can_revoke = true;
-                }
-            });
+    }
+
+    // 'usr' tokens exist & user can revoke
+    if ($scope.any('usr')) {
+        if ($scope.can('base.tokens.usr.revoke.all')) {
+            $scope.can_revoke = true;
+        } else {
+            if ($scope.can('base.tokens.usr.revoke.my')) {
+                angular.forEach(initial_data.tokens, function (token) {
+                    if (token.user == initial_data.user.authenticated_email) {
+                        $scope.can_revoke = true;
+                    }
+                });
+            }
         }
     }
 
