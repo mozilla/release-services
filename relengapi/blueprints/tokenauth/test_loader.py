@@ -15,6 +15,22 @@ from relengapi.blueprints.tokenauth.util import insert_prm
 from relengapi.blueprints.tokenauth.util import insert_usr
 
 
+def test_TokenUser_str_tmp():
+    tu = loader.TokenUser({'typ': 'tmp', 'mta': '{}'})
+    eq_(str(tu), 'token:tmp')
+
+
+def test_TokenUser_str_usr():
+    tu = loader.TokenUser({'typ': 'usr', 'jti': '13'},
+                          authenticated_email='foo@bar.com')
+    eq_(str(tu), 'token:usr:id=13:user=foo@bar.com')
+
+
+def test_TokenUser_str_prm():
+    tu = loader.TokenUser({'typ': 'prm', 'jti': '13'})
+    eq_(str(tu), 'token:prm:id=13')
+
+
 @test_context
 def test_loader_no_header(app, client):
     """With no Authorization header, no permissions are allowed"""

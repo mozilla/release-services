@@ -26,8 +26,14 @@ class TokenUser(auth.BaseUser):
             self.authenticated_email = authenticated_email
 
     def get_id(self):
-        jti = (':' + self.claims['jti']) if 'jti' in self.claims else ''
-        return 'token:%s%s' % (self.claims['typ'], jti)
+        parts = ['token', self.claims['typ']]
+        if 'jti' in self.claims:
+            parts.append('id={}'.format(self.claims['jti']))
+        try:
+            parts.append('user={}'.format(self.authenticated_email))
+        except AttributeError:
+            pass
+        return ':'.join(parts)
 
     def get_permissions(self):
         return self._permissions
