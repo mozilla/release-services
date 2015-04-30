@@ -124,6 +124,7 @@ def can_access_token(access, typ, user):
 def root():
     return angular.template('tokens.html',
                             url_for('.static', filename='tokens.js'),
+                            url_for('.static', filename='tokens.css'),
                             tokens=api.get_data(list_tokens))
 
 

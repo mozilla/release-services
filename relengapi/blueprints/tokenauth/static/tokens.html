@@ -75,7 +75,7 @@
                         <input ng-model="newtoken.description" ng-required="true" class="form-control"
                             placeholder="Bug 1234567: Frobnicator access to update and delete frobs" />
                         <button class="btn btn-primary btn-block"
-                                ng-hide="form.$invalid"
+                                ng-disabled="form.$invalid"
                                 ng-click="issueToken()">Issue</button>
                     </form>
                 </div>
