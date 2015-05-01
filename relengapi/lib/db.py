@@ -117,6 +117,20 @@ class Alchemies(object):
 
         return engine
 
+    def create_mysql_engine(self, url):
+        url.query['use_unicode'] = "True"
+        engine = sa.create_engine(url)
+
+        @event.listens_for(engine, "connect")
+        def foreign_keys_on(dbapi_con, con_record):
+            # Set the default storage engine in case we create tables
+            dbapi_con.cursor().execute("SET default_storage_engine=InnoDB")
+            # and set the timezone for this connection to avoid any undesired
+            # translation
+            dbapi_con.cursor().execute("SET time_zone=UTC")
+
+        return engine
+
     @synchronized(threading.Lock())
     def session(self, dbname):
         # set up a session for each db; this uses scoped_session (based on the
