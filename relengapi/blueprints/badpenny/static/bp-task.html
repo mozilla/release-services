@@ -16,6 +16,8 @@
             gray-when="task.last_success == -1"></status-icon>
         {{task.name}}
         <small class="text-muted">{{task.schedule}}</small>
+        <button ng-if="can_force"
+                class="btn btn-xs" ng-click="runNow()">Run Now</button>
     </div>
     <div ng-if="details">
         <div class="list-group">

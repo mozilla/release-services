@@ -139,7 +139,12 @@ angular.module('badpenny').directive('statusIcon', function() {
     };
 });
 
-angular.module('badpenny').directive('bpTask', function(taskService) {
+angular.module('badpenny').directive('bpTask',
+    function(taskService, restapi, initial_data) {
+    var can_force = initial_data.user.permissions.some(function(perm) {
+            return perm.name == 'base.badpenny.run';
+    });
+
     return {
         restrict: 'E',
         replace: true,
@@ -150,10 +155,20 @@ angular.module('badpenny').directive('bpTask', function(taskService) {
         },  
         link: function(scope, element, attrs) {
             scope.details = false;
+            scope.can_force = can_force;
+
             scope.toggleDetails = function() {
                 scope.details = !scope.details;
                 taskService.loadTaskJobs(scope.task);
             };
+
+            scope.runNow = function() {
+                restapi.post('/badpenny/tasks/' + scope.task.name + '/run-now', '',
+                             {while: 'running task ' + scope.task.name})
+                .then(function (data, status, headers, config) {
+                    taskService.loadTaskJobs(scope.task, true);
+                });
+            }
         },
     };  
 });
