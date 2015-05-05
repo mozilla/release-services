@@ -16,6 +16,7 @@ from sqlalchemy import event
 from sqlalchemy import exc
 from sqlalchemy import orm
 from sqlalchemy import types
+from sqlalchemy.engine import url
 from sqlalchemy.ext import declarative
 from sqlalchemy.orm import scoping
 from sqlalchemy.pool import Pool
@@ -91,18 +92,44 @@ class Alchemies(object):
 
         if dbname not in self._engines:
             uri = self._get_db_config(dbname)
-            self._engines[dbname] = engine = sa.create_engine(uri)
-            meth = "special_case_{}_engine".format(engine.dialect.name)
-            if hasattr(self, meth):
-                getattr(self, meth)(engine)
+            u = url.make_url(uri)
+            dialect = u.drivername.split('+')[0]
+
+            try:
+                create_engine = getattr(self, 'create_{}_engine'.format(dialect))
+            except AttributeError:
+                create_engine = self.create_generic_engine
+
+            self._engines[dbname] = create_engine(u)
         return self._engines[dbname]
 
-    def special_case_sqlite_engine(self, engine):
+    def create_generic_engine(self, url):
+        return sa.create_engine(url)
+
+    def create_sqlite_engine(self, url):
+        engine = sa.create_engine(url)
+
         # Enable checking of foreign key constraints by setting
         # a pragma on each DB connection
         @event.listens_for(engine, "connect")
         def foreign_keys_on(dbapi_con, con_record):
             dbapi_con.execute("PRAGMA foreign_keys = ON")
+
+        return engine
+
+    def create_mysql_engine(self, url):
+        url.query['use_unicode'] = "True"
+        engine = sa.create_engine(url)
+
+        @event.listens_for(engine, "connect")
+        def foreign_keys_on(dbapi_con, con_record):
+            # Set the default storage engine in case we create tables
+            dbapi_con.cursor().execute("SET default_storage_engine=InnoDB")
+            # and set the timezone for this connection to avoid any undesired
+            # translation
+            dbapi_con.cursor().execute("SET time_zone=UTC")
+
+        return engine
 
     @synchronized(threading.Lock())
     def session(self, dbname):
