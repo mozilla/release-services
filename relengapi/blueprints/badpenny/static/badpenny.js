@@ -4,34 +4,76 @@
 angular.module('badpenny', ['relengapi', 'initial_data', 'angularMoment']);
 
 angular.module('badpenny').controller('TasksController',
-                                    function($scope, restapi, initial_data) {
-    var tasksByName = function(taskArray) {
-        var byName = {};
-        angular.forEach(taskArray, function(task) {
-            byName[task.name] = task;
-        });
-        return byName;
+                                    function($scope, taskService) {
+    $scope.tasks = taskService.tasks;
+
+    $scope.refresh = function() {
+        taskService.refresh();
+    };
+});
+
+angular.module('badpenny').factory('taskService', function(restapi, initial_data) {
+    /* This service handles all of the data for the page, including unfolding tasks
+     * to show their jobs and unfolding jobs to show their logs. */
+
+    var tasksByName = {};
+    angular.forEach(initial_data.tasks, function(task) {
+        tasksByName[task.name] = task;
+    });
+
+    var svc = {
+        tasks: tasksByName
     };
 
-    $scope.tasks = tasksByName(initial_data.tasks);
+    svc.loadTaskJobs = function(task, force) {
+        if (task._fetched && !force) {
+            return;
+        }
+        task._fetched = true;
 
-    var loadJobs = function(task) {
         restapi.get('/badpenny/tasks/' + task.name, {while: 'fetching task'})
         .then(function (data, status, headers, config) {
-            $scope.tasks[task.name] = data.data.result;
+            var newTask = data.data.result;
+            task.last_success = newTask.last_success;
+            task.schedule = newTask.schedule;
+
+            // merge jobs
+            var oldJobsById = {};
+            if (task.jobs) {
+                angular.forEach(task.jobs, function(oldJob) {
+                    oldJobsById[oldJob.id] = oldJob;
+                });
+            } else {
+                task.jobs = [];
+            }
+            angular.forEach(newTask.jobs, function(newJob) {
+                var oldJob = oldJobsById[newJob.id];
+                if (oldJob) {
+                    oldJob.created_at = newJob.created_at;
+                    oldJob.started_at = newJob.started_at;
+                    oldJob.completed_at = newJob.completed_at;
+                    oldJob.successful = newJob.successful;
+                    // reload the logs if they've already been loaded
+                    if (oldJob._fetched) {
+                        svc.loadJobLogs(oldJob, true);
+                    }
+                } else {
+                    task.jobs.push(newJob);
+                }
+            });
         });
     };
 
-    $scope.toggleTask = function(task) {
-        if (task.jobs) {
-            task.jobs = null;
-        } else {
-            loadJobs(task);
+    svc.loadJobLogs = function(job, force) {
+        if (job._fetched && !force) {
+            return;
         }
-    };
+        job._fetched = true;
 
-    var loadLogs = function(job) {
-        job.logs = 'loading';
+        if (!job.logs) {
+            job.logs = '..loading..';
+        }
+
         restapi.get('/badpenny/jobs/' + job.id + '/logs',
                     {while: 'fetching logs', expectedStatus: 404})
         .then(function (data, status, headers, config) {
@@ -43,40 +85,28 @@ angular.module('badpenny').controller('TasksController',
         });
     };
 
-    $scope.toggleJob = function(job) {
-        if (job.logs) {
-            job.logs = null;
-        } else {
-            loadLogs(job);
-        }
-    };
-
-    $scope.humanJobDuration = function(job) {
-        var dur = moment.duration(moment(job.completed_at).diff(job.started_at));
-        var ms = dur.asMilliseconds();
-        if (ms < 100) {
-            return "instantly";
-        } else if (ms < 10000) {
-            // Humanize just says "a few seconds", which isn't good enough.
-            return "in " + (ms / 1000.0).toFixed(2) + ' seconds';
-        } else {
-            return "in " + moment.duration(diff).humanize();
-        }
-    };
-
-    $scope.refresh = function() {
+    svc.refresh = function() {
         restapi.get('/badpenny/tasks', {while: 'refreshing tasks'})
         .then(function (data, status, headers, config) {
-            // re-request any existing job data, and start refreshing it
-            angular.forEach(data.data.result, function(task) {
-                if ($scope.tasks[task.name] && $scope.tasks[task.name].jobs) {
-                    task.jobs = $scope.tasks[task.name].jobs;
-                    loadTask(task);
+            // merge the updated data in with the existing data
+            angular.forEach(data.data.result, function(newTask) {
+                var oldTask = svc.tasks[newTask.name];
+                if (oldTask) {
+                    oldTask.last_success = newTask.last_success;
+                    oldTask.schedule = newTask.schedule;
+                } else {
+                    svc.tasks[newTask.name] = newTask;
+                }
+                // force-load the task if it was already loaded
+                task = svc.tasks[newTask.name];
+                if (task._fetched) {
+                    svc.loadTaskJobs(task, true);
                 }
             });
-            $scope.tasks = tasksByName(data.data.result);
         });
     };
+
+    return svc;
 });
 
 angular.module('badpenny').directive('statusIcon', function() {
@@ -108,3 +138,71 @@ angular.module('badpenny').directive('statusIcon', function() {
         },
     };
 });
+
+angular.module('badpenny').directive('bpTask',
+    function(taskService, restapi, initial_data) {
+    var can_force = initial_data.user.permissions.some(function(perm) {
+            return perm.name == 'base.badpenny.run';
+    });
+
+    return {
+        restrict: 'E',
+        replace: true,
+        priority: 1001, // run after ng-repeat
+        templateUrl: 'static/bp-task.html',
+        scope: {
+            task: '=',
+        },  
+        link: function(scope, element, attrs) {
+            scope.details = false;
+            scope.can_force = can_force;
+
+            scope.toggleDetails = function() {
+                scope.details = !scope.details;
+                taskService.loadTaskJobs(scope.task);
+            };
+
+            scope.runNow = function() {
+                restapi.post('/badpenny/tasks/' + scope.task.name + '/run-now', '',
+                             {while: 'running task ' + scope.task.name})
+                .then(function (data, status, headers, config) {
+                    taskService.loadTaskJobs(scope.task, true);
+                });
+            }
+        },
+    };  
+});
+
+angular.module('badpenny').directive('bpJob', function(taskService) {
+    return {
+        restrict: 'E',
+        replace: true,
+        priority: 1001, // run after ng-repeat
+        templateUrl: 'static/bp-job.html',
+        scope: {
+            job: '=',
+        },  
+        link: function(scope, element, attrs) {
+            scope.details = false;
+            scope.toggleDetails = function() {
+                scope.details = !scope.details;
+                taskService.loadJobLogs(scope.job);
+            };
+
+            scope.humanJobDuration = function(job) {
+                var dur = moment.duration(moment(job.completed_at).diff(job.started_at));
+                var ms = dur.asMilliseconds();
+                if (ms < 100) {
+                    return "instantly";
+                } else if (ms < 10000) {
+                    // Humanize just says "a few seconds", which isn't good enough.
+                    return "in " + (ms / 1000.0).toFixed(2) + ' seconds';
+                } else {
+                    return "in " + moment.duration(diff).humanize();
+                }
+            };
+
+        },
+    };  
+});
+

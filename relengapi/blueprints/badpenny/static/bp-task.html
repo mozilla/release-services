@@ -1,0 +1,30 @@
+<div>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     License, v. 2.0. If a copy of the MPL was not distributed with this
+     file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <div class="bp-controls">
+        <span ng-click="toggleDetails()"
+                class="glyphicon details-link"
+                ng-class="{'glyphicon-chevron-up': details,
+                           'glyphicon-chevron-down': !details}"
+                aria-hidden="true"></span>
+    </div>
+    <div class="bp-task-info">
+        <status-icon
+            bad-when="task.last_success == 0"
+            good-when="task.last_success == 1"
+            gray-when="task.last_success == -1"></status-icon>
+        {{task.name}}
+        <small class="text-muted">{{task.schedule}}</small>
+        <button ng-if="can_force"
+                class="btn btn-xs" ng-click="runNow()">Run Now</button>
+    </div>
+    <div ng-if="details">
+        <div class="list-group">
+            <div ng-repeat="job in task.jobs | orderBy:'created_at'"
+                 class="list-group-item">
+                <bp-job job="job"></bp-job>
+            </div>
+        </div>
+    </div>
+</div>

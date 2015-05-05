@@ -1,0 +1,21 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.list-group {
+    /* list-group's bottom margin is huge and looks awful when
+     * list-groups are nested */
+    margin-bottom:5px
+}
+
+
+.bp-controls {
+    text-align: right;
+    position: absolute;
+    right: 8px;
+    width: 3em;
+}
+
+.bp-task-info {
+    margin-bottom: 3px;
+}

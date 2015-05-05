@@ -274,6 +274,30 @@ def test_get_active_task(app, client):
                  'name': 'check', 'last_success': -1, 'jobs': []})
 
 
+@test_context.specialize(app_setup=add_data, perms=[p.base.badpenny.run])
+def test_run_task_nosuch(app, client):
+    """POST /tasks/$task/run-now returns 404 if no such task exists"""
+    with app.test_request_context():
+        resp = client.post('/badpenny/tasks/nosuch/run-now', '')
+        eq_(resp.status_code, 404)
+
+
+@test_context.specialize(app_setup=add_data, perms=[p.base.badpenny.run])
+def test_run_task(app, client):
+    """POST /tasks/$task/run-now starts a new job and returns it."""
+    with app.test_request_context():
+        with mock.patch('relengapi.blueprints.badpenny.execution.submit_job') as submit_job:
+            resp = client.post('/badpenny/tasks/report/run-now', '')
+            eq_(resp.status_code, 200)
+            result = json.loads(resp.data)['result']
+            eq_(result['task_name'], 'report')
+        submit_job.assert_called_with(task_name='report', job_id=result['id'])
+        got_job = tables.BadpennyJob.query.filter_by(id=result['id']).first()
+        eq_(got_job.started_at, None)
+        eq_(got_job.completed_at, None)
+        eq_(got_job.successful, None)
+
+
 @test_context.specialize(app_setup=add_data, perms=[p.base.badpenny.view])
 def test_get_jobs(app, client):
     """Getting /jobs gets a list of all jobs, in unspecified order"""

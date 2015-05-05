@@ -1,0 +1,30 @@
+<div>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     License, v. 2.0. If a copy of the MPL was not distributed with this
+     file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <div class="bp-controls">
+        <span ng-click="toggleDetails()"
+                class="glyphicon details-link"
+                ng-class="{'glyphicon-chevron-up': details,
+                           'glyphicon-chevron-down': !details}"
+                aria-hidden="true"></span>
+    </div>
+    <div class="bp-job-info">
+        <small>
+            <status-icon good-when="job.successful" bad-when="!job.successful"></status-icon>
+        </small>
+        <small ng-if="!job.started_at">
+            Job created {{job.created_at | amDateFormat:'l LTS'}}, not started
+        </small>
+        <small ng-if="job.started_at && !job.completed_at">
+            Job started {{job.started_at | amDateFormat:'l LTS'}}, not finished yet
+        </small>
+        <small ng-if="job.completed_at">
+            Job started {{job.started_at | amDateFormat:'l LTS'}},
+            finished {{humanJobDuration(job)}}
+        </small>
+        <div ng-if="details">
+            <pre>{{job.logs}}</pre>
+        </div>
+    </div>
+</div>

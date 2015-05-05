@@ -2,42 +2,15 @@
      License, v. 2.0. If a copy of the MPL was not distributed with this
      file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <div ng-app='badpenny' ng-controller="TasksController">
-    <h1>Bad Penny Tasks <button class="pull-right btn btn-default" ng-click="refresh()">Refresh</button></h1>
-    <div class="tasklist">
-        <ul class="list-group">
-            <li ng-repeat="task in tasks | orderBy:'name'" class="list-group-item">
-            <div ng-click="toggleTask(task)">
-                <status-icon
-                    bad-when="task.last_success == 0"
-                    good-when="task.last_success == 1"
-                    gray-when="task.last_success == -1"></status-icon>
-                {{task.name}} <small class="text-muted">{{task.schedule}}</small>
-                <span class="caret"></span>
-            </div>
-            <ul class="list-group" ng-if="task.jobs != null" style="margin-bottom: 0px;">
-                <li ng-repeat="job in task.jobs | orderBy:'created_at'"
-                    class="list-group-item"
-                    ng-click="toggleJob(job)">
-                    <small>
-                        <status-icon good-when="job.successful" bad-when="!job.successful"></status-icon>
-                    </small>
-                <small ng-if="!job.started_at">
-                    Job created {{job.created_at | amDateFormat:'l LTS'}}, not started
-                </small>
-                <small ng-if="job.started_at && !job.completed_at">
-                    Job started {{job.started_at | amDateFormat:'l LTS'}}, not finished yet
-                </small>
-                <small ng-if="job.completed_at">
-                    Job started {{job.started_at | amDateFormat:'l LTS'}},
-                    finished {{humanJobDuration(job)}}
-                </small>
-                (<a href="/badpenny/jobs/{{job.id}}">details</a>) <span class="caret"></span>
-                <div ng-if="job.logs != null">
-                    <pre>{{job.logs}}</pre>
+    <h1>Bad Penny Tasks
+        <button class="pull-right btn btn-default" ng-click="refresh()">Refresh</button></h1>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="tasklist list-group">
+                <div ng-repeat="task in tasks | orderBy:'name'" class="list-group-item">
+                    <bp-task task="task"></bp-task>
                 </div>
-                </li>
-            </ul>
-            </li>
-        </ul>
+            </div>
+        </div>
     </div>
 </div>
