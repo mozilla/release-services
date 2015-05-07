@@ -57,7 +57,9 @@ class LdapGroupsAuthz(base.BaseAuthz):
         try:
             l = ldap.initialize(self.uri)
             l.simple_bind_s(self.login_dn, self.login_password)
-            # convert mail to DN
+            groups = []
+
+            # convert mail to DN and search for groupOfNames with member=$dn
             people = l.search_s(self.user_base, ldap.SCOPE_SUBTREE,
                                 '(&(objectClass=inetOrgPerson)(mail=%s))' % (mail,), [])
             if not people or len(people) != 1:
@@ -65,9 +67,18 @@ class LdapGroupsAuthz(base.BaseAuthz):
             user_dn = people[0][0]
             result = l.search_s(self.group_base, ldap.SCOPE_SUBTREE,
                                 '(&(objectClass=groupOfNames)(member=%s))' % user_dn, ['cn'])
-            groups = []
             for glist in [g[1]['cn'] for g in result]:
                 groups.extend(glist)
+
+            # Mozilla uses some POSIX groups, which have a different class.
+            # The scm_level_N groups also have the unusual trait of using the mail
+            # in the memberUid attribute; other POSIX groups use the actual uid,
+            # and won't be matched by this clause
+            result = l.search_s(self.group_base, ldap.SCOPE_SUBTREE,
+                                '(&(objectClass=posixGroup)(memberUid=%s))' % mail, ['cn'])
+            for glist in [g[1]['cn'] for g in result]:
+                groups.extend(glist)
+
             return list(set(groups))
         except ldap.LDAPError:
             self.logger.exception("While connecting to the LDAP server")
