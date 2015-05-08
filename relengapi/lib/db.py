@@ -125,9 +125,6 @@ class Alchemies(object):
         def foreign_keys_on(dbapi_con, con_record):
             # Set the default storage engine in case we create tables
             dbapi_con.cursor().execute("SET default_storage_engine=InnoDB")
-            # and set the timezone for this connection to avoid any undesired
-            # translation
-            dbapi_con.cursor().execute("SET time_zone=UTC")
 
         return engine
 
