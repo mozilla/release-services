@@ -1,0 +1,25 @@
+relengapi-2.1.0
+===============
+
+This release contains some minor enhancements.
+
+UI changes:
+* Fix display of duration in badpenny tasks (#215)
+* Improve the ``<perm>`` element to show a tooltip (#161)
+* Hide the token auth "Revoke" button when none of the visible tokens can be revoked (#223)
+* Disable, rather than hiding, the token "Issue" button, when the form is not valid (#203)
+
+Development/deployment changes:
+* Add a ``constant`` authentication scheme which just assumes a single user is logged in (#222).
+* Allow ``settings.py`` to be a relative path (#221)
+* Add a ``buidlapi repl`` subcommand for an interactive prompt (#217)
+* Include all defined permissions in the Angular ``initial_data`` constant (#161)
+* Include ``contributing.json`` to increase discoverability by contributors (#226)
+* Format user tokens with more useful information in the logs (#210)
+* Provide a method for running badpenny tasks on-demand (#190)
+* Special-case database dialects and provide dialect-specific configuration (#31)
+* Support Mozilla-style POSIX LDAP groups such as ``scm_level_1`` (#228)
+
+Testing changes:
+* Fold validation output in Travis-CI (#69)
+* Log test client requests in test runs (#188)
