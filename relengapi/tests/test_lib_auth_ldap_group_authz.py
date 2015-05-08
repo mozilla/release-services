@@ -63,6 +63,11 @@ class TestGetUserGroups(unittest.TestCase):
             'cn': ['mary'],
             'mail': ['mary@org.org'],
         },
+        'cn=tom,ou=people,o=users': {
+            'objectClass': ['inetOrgPerson'],
+            'cn': ['tom'],
+            'mail': ['tom@tom.com'],
+        },
         'o=groups': {'o': 'groups'},
         'cn=authors,o=groups': {
             'objectClass': ['groupOfNames'],
@@ -78,6 +83,11 @@ class TestGetUserGroups(unittest.TestCase):
             'objectClass': ['groupOfNames'],
             'cn': ['c-suite'],
             'member': [],
+        },
+        'cn=scm_level_17,o=groups': {
+            'objectClass': ['posixGroup'],
+            'cn': ['scm_level_17'],
+            'memberUid': ['tom@tom.com', 'mary@org.org'],
         },
     }
 
@@ -110,10 +120,15 @@ class TestGetUserGroups(unittest.TestCase):
         self.call(mail='jimmy@org.org', exp_groups=['authors'])
 
     def test_get_user_groups_multiple(self):
-        self.call(mail='mary@org.org', exp_groups=['authors', 'editors'])
+        # note that this includes both POSIX and normal groups
+        self.call(mail='mary@org.org',
+                  exp_groups=['authors', 'editors', 'scm_level_17'])
 
     def test_get_user_groups_nosuch(self):
         self.call(mail='steve@org.org', exp_groups=None)
+
+    def test_get_user_groups_posix(self):
+        self.call(mail='tom@tom.com', exp_groups=['scm_level_17'])
 
     @test_context.specialize(config=BAD_CONFIG)
     def test_login_fail(self, app):
