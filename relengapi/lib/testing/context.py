@@ -90,11 +90,10 @@ class TestContext(object):
         # patch 'open' to log the request
         old_open = client.open
 
-        def open(*args, **kwargs):
-            path = args[0]
+        def open(path='/', base_url=None, *args, **kwargs):
             method = kwargs.get('method')
             log.info('request: {} {}'.format(method, path))
-            resp = old_open(*args, **kwargs)
+            resp = old_open(path, base_url, *args, **kwargs)
             log.info('response: {}'.format(resp.status))
             return resp
         client.open = open
