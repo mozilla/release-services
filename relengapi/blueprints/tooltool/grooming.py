@@ -49,7 +49,7 @@ def replicate(job_status):
     session.commit()
 
 
-def replicate_file(session, file):
+def replicate_file(session, file, _test_shim=lambda: None):
     config = current_app.config['TOOLTOOL_REGIONS']
     regions = set(config)
     file_regions = set([i.region for i in file.instances])
@@ -76,13 +76,17 @@ def replicate_file(session, file):
         # commit the session before replicating, since the DB connection may
         # otherwise go away while we're distracted.
         session.commit()
+        _test_shim()
         bucket.copy_key(new_key_name=key_name,
                         src_key_name=key_name,
                         src_bucket_name=source_bucket,
                         storage_class='STANDARD',
                         preserve_acl=False)
-        session.add(tables.FileInstance(file=file, region=target_region))
-        session.commit()
+        try:
+            session.add(tables.FileInstance(file=file, region=target_region))
+            session.commit()
+        except sa.exc.IntegrityError:
+            session.rollback()
 
 
 @celery.task
@@ -130,7 +134,7 @@ def verify_file_instance(sha512, size, key):
     return True
 
 
-def check_pending_upload(session, pu):
+def check_pending_upload(session, pu, _test_shim=lambda: None):
     # we can check the upload any time between the expiration of the URL
     # (after which the user can't make any more changes, but the upload
     # may yet be incomplete) and 1 day afterward (ample time for the upload
@@ -166,6 +170,7 @@ def check_pending_upload(session, pu):
     # commit the session before verifying the file instance, since the
     # DB connection may otherwise go away while we're distracted.
     session.commit()
+    _test_shim()
 
     if not verify_file_instance(sha512, size, key):
         log.warning(
@@ -176,7 +181,14 @@ def check_pending_upload(session, pu):
         return
 
     log.info("Upload of {} considered valid".format(sha512))
-    tables.FileInstance(file=pu.file, region=pu.region)
+    # add a file instance, but it's OK if it already exists
+    try:
+        tables.FileInstance(file=pu.file, region=pu.region)
+        session.commit()
+    except sa.exc.IntegrityError:
+        session.rollback()
+
+    # and delete the pending upload
     session.delete(pu)
     session.commit()
 
