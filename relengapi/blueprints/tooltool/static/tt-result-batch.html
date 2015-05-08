@@ -4,7 +4,9 @@
      file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
     <div class="tt-result-controls">
         <span ng-click="details = !details"
-                class="glyphicon glyphicon-chevron-down details-link"
+                class="glyphicon details-link"
+                ng-class="{'glyphicon-chevron-up': details,
+                           'glyphicon-chevron-down': !details}"
                 aria-hidden="true"></span>
     </div>
     <div class="tt-result-info">
