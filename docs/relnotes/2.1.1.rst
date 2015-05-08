@@ -1,0 +1,5 @@
+relengapi-2.1.1
+===============
+
+* Revert ``SET time_zone="UTC"`` as it doesn't work on all MySQL systems
+* Fix ``client.open`` signature to avoid test failures in tooltool.
