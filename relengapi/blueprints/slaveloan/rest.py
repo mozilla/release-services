@@ -87,6 +87,8 @@ class LoanAdminRequest(wsme.types.Base):
 
     #: Initial Status
     status = unicode
+    #: (optional) Loan Bug Id, if not passed in we create one for you
+    loan_bug_id = wsme.types.wsattr(int, mandatory=False)
     #: Users full LDAP e-mail
     ldap_email = unicode
     #: Users Bugzilla e-mail
