@@ -31,7 +31,7 @@ setup(
         "Flask",
         "Flask-Login>=0.2.11",
         "Flask-Browserid",
-        "Sphinx",
+        "Sphinx>=1.3",
         "SQLAlchemy>=0.9.4",
         "Celery>=3.1.16",  # see https://github.com/mozilla/build-relengapi/issues/145
         "argparse",
