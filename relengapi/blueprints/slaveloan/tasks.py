@@ -122,10 +122,14 @@ def fixup_machine(self, machine, loanid):
         m = Machines.as_unique(session,
                                fqdn=fqdn,
                                ipaddress=ipaddress)
+        #  Re-check validity of fqdn and ip
+        if m.fqdn != fqdn:
+            m.fqdn = fqdn
+        if m.ipaddress != ipaddress:
+            m.ipaddress = ipaddress
         l = session.query(Loans).get(loanid)
         l.machine = m
         session.commit()
-        l = session.query(Loans).get(loanid)
     except Exception as exc:  # pylint: disable=W0703
         logger.exception(exc)
         self.retry(exc=exc)
