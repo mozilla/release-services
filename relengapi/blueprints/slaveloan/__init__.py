@@ -118,11 +118,14 @@ def new_loan_from_admin(body):
     except sa.exc.IntegrityError:
         raise InternalServerError("Integrity Error from Database, please retry.")
 
+    loan_data = dict(status=body.status, human=h)
     if body.status != 'PENDING':
-        l = Loans(status=body.status, human=h, machine=m)
-    else:  # pragma: no-cover
-        # Not supported at this time
-        l = Loans(status=body.status, human=h)
+        loan_data.update(dict(machine=m))
+    if body.loan_bug_id:
+        loan_data.update(dict(bug_id=body.loan_bug_id))
+
+    l = Loans(**loan_data)
+
     history = History(for_loan=l,
                       timestamp=tz.utcnow(),
                       msg="%s added this entry to slave loan tool via admin interface" %

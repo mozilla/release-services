@@ -56,6 +56,7 @@ $(function() {
         };
 
         var form_status = form.find('select[name=status]').val();
+        var form_bug_id = form.find('input[name=bug_id]').val();
         var form_ldap = form.find('input[name=ldap_email]').val();
         var form_bmo = form.find('input[name=bugzilla_email]').val();
         var form_fqdn = form.find('input[name=fqdn]').val();
@@ -88,6 +89,7 @@ $(function() {
             type: 'POST',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify({status: form_status,
+                                 loan_bug_id: parseInt(form_bug_id),
                                  ldap_email: form_ldap,
                                  bugzilla_email: form_bmo,
                                  fqdn: form_fqdn,
