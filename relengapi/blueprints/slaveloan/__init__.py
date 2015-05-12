@@ -115,6 +115,8 @@ def new_loan_from_admin(body):
                                    ipaddress=body.ipaddress)
         h = Humans.as_unique(session, ldap=body.ldap_email,
                              bugzilla=body.bugzilla_email)
+        if h.bugzilla != body.bugzilla_email:
+            h.bugzilla = body.bugzilla_email
     except sa.exc.IntegrityError:
         raise InternalServerError("Integrity Error from Database, please retry.")
 
@@ -160,6 +162,8 @@ def new_loan_request(body):
     try:
         h = Humans.as_unique(session, ldap=body.ldap_email,
                              bugzilla=body.bugzilla_email)
+        if h.bugzilla != body.bugzilla_email:
+            h.bugzilla = body.bugzilla_email
     except sa.exc.IntegrityError:
         raise InternalServerError("Integrity Error from Database, please retry.")
 
