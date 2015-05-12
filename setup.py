@@ -52,7 +52,8 @@ setup(
         "furl",
         "relengapi>=0.3",
         "redo",
-        "bzrest",
+        # Temporary freeze until https://github.com/bhearsum/bzrest/pull/3 is fixed
+        "bzrest==0.9",
     ],
     extras_require={
         'test': [
