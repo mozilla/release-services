@@ -101,5 +101,13 @@
                 </div>
             </div>
         </div>
+        <div ng-controller="TokenListController"
+            class="col-xs-12"
+            ng-show="!can_view && !can_issue">
+            <div class="alert alert-danger"><b>Can't Do Much!</b>
+                You can't see or issue tokens.
+                If you think this is incorrect, head to #releng for help.
+            </div>
+        </div>
     </div>
 </div>
