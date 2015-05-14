@@ -17,10 +17,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-# An manifest file specifies files in that directory that are stored
-# elsewhere.  This file should only contain file in the directory
-# which the manifest file resides in and it should be called
-# 'manifest.manifest'
+# A manifest file specifies files in that directory that are stored
+# elsewhere. This file should only list files in the same directory
+# in which the manifest file resides and it should be called
+# 'manifest.tt'
 
 import hashlib
 import httplib
