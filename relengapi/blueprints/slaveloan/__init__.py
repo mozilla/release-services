@@ -17,6 +17,7 @@ from relengapi import p
 from relengapi.blueprints.slaveloan import task_groups
 from relengapi.blueprints.slaveloan.slave_mappings import slave_patterns
 from relengapi.blueprints.slaveloan.slave_mappings import slave_to_slavetype
+from relengapi.lib import angular
 from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import InternalServerError
@@ -267,7 +268,12 @@ def update_loan_action(action_id, body):
 @bp.route('/')
 @flask_login.login_required
 def root():
-    return render_template('slaveloan_root.html')
+    return angular.template(
+        'slaveloan_root.html',
+    )
+#        url_for('.static', filename='clobberer.js'),
+#        url_for('.static', filename='clobberer.css'),
+    # return render_template('slaveloan_root.html')
 
 
 @bp.route('/details/<int:id>')
