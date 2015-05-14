@@ -37,6 +37,8 @@ bp = Blueprint('slaveloan', __name__,
 
 p.slaveloan.admin.doc("Administer Slaveloans for all users")
 
+bp.root_widget_template('slaveloan_root_widget.html', priority=100)
+
 
 @bp.record
 def init_blueprint(state):
