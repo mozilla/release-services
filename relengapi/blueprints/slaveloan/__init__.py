@@ -75,7 +75,7 @@ def complete_loan(loanid):
     # XXX: Use permissions to ensure admin | loanee
     session = g.db.session('relengapi')
     l = session.query(Loans).get(loanid)
-    l.status = "RELINQUISHED"
+    l.status = "COMPLETE"
     session.commit()
     return l.to_wsme()
 
