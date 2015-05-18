@@ -55,7 +55,7 @@ setup(
             'pep8',
             'mockldap',
             'pyflakes',
-            'moto',
+            'moto>=0.4.1',
             'mockcache',
         ],
         # extras required only for LDAP authorization support
@@ -85,6 +85,7 @@ setup(
     entry_points={
         "relengapi.metadata": [
             'relengapi = relengapi.app:metadata',
+            'relengapi-tooltool = relengapi.blueprints.tooltool:metadata',
         ],
         "relengapi.blueprints": [
             'base = relengapi.blueprints.base:bp',
@@ -92,6 +93,7 @@ setup(
             'tokenauth = relengapi.blueprints.tokenauth:bp',
             'docs = relengapi.blueprints.docs:bp',
             'badpenny = relengapi.blueprints.badpenny:bp',
+            'tooltool = relengapi.blueprints.tooltool:bp',
         ],
         "relengapi.auth.mechanisms": [
             'browserid = relengapi.lib.auth.browserid:init_app',
