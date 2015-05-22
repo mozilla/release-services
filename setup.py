@@ -47,6 +47,11 @@ setup(
         "python-memcached",
         "elasticache-auto-discovery",
         "IPy",
+        "furl",
+        "redo",
+        "relengapi>=0.3",
+        # Temporary freeze until https://github.com/bhearsum/bzrest/pull/3 is fixed
+        "bzrest==0.9",
     ],
     extras_require={
         'test': [
@@ -88,6 +93,7 @@ setup(
             'relengapi = relengapi.app:metadata',
             'relengapi-tooltool = relengapi.blueprints.tooltool:metadata',
             'relengapi-clobberer = relengapi.blueprints.clobberer:metadata',
+            'relengapi-slaveloan = relengapi.blueprints.slaveloan.metadata:data',
         ],
         "relengapi.blueprints": [
             'base = relengapi.blueprints.base:bp',
@@ -98,6 +104,7 @@ setup(
             'tooltool = relengapi.blueprints.tooltool:bp',
             'clobberer = relengapi.blueprints.clobberer:bp',
             'mapper = relengapi.blueprints.mapper:bp',
+            'slaveloan = relengapi.blueprints.slaveloan:bp',
         ],
         "relengapi.auth.mechanisms": [
             'browserid = relengapi.lib.auth.browserid:init_app',
