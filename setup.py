@@ -46,6 +46,7 @@ setup(
         "boto",
         "python-memcached",
         "elasticache-auto-discovery",
+        "IPy",
     ],
     extras_require={
         'test': [
@@ -96,6 +97,7 @@ setup(
             'badpenny = relengapi.blueprints.badpenny:bp',
             'tooltool = relengapi.blueprints.tooltool:bp',
             'clobberer = relengapi.blueprints.clobberer:bp',
+            'mapper = relengapi.blueprints.mapper:bp',
         ],
         "relengapi.auth.mechanisms": [
             'browserid = relengapi.lib.auth.browserid:init_app',
