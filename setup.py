@@ -86,6 +86,7 @@ setup(
         "relengapi.metadata": [
             'relengapi = relengapi.app:metadata',
             'relengapi-tooltool = relengapi.blueprints.tooltool:metadata',
+            'relengapi-clobberer = relengapi.blueprints.clobberer:metadata',
         ],
         "relengapi.blueprints": [
             'base = relengapi.blueprints.base:bp',
@@ -94,6 +95,7 @@ setup(
             'docs = relengapi.blueprints.docs:bp',
             'badpenny = relengapi.blueprints.badpenny:bp',
             'tooltool = relengapi.blueprints.tooltool:bp',
+            'clobberer = relengapi.blueprints.clobberer:bp',
         ],
         "relengapi.auth.mechanisms": [
             'browserid = relengapi.lib.auth.browserid:init_app',

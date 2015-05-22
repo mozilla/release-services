@@ -1,0 +1,43 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     License, v. 2.0. If a copy of the MPL was not distributed with this
+     file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<div ng-app="clobberer" ng-controller="ClobberController">
+    <span class="input">
+        <input ng-model="builderFilter" type="text" placeholder="filter builders"/>
+    </span>
+    <span class="input">
+        <select class="clickable" 
+                name="SelectedBranch" 
+                ng-model="selectedBranch"  
+                ng-options="branch for branch in branches" 
+                ng-change="expandBranch(selectedBranch)"></select>
+    </span>
+    <span class="input">
+        <button class="clickable"
+                ng-click="submitClobbers()"
+                ng-disabled="objHasSelectedCheckboxes(selectedBuilders) == false">
+                Submit Clobbers</button></td>
+    </span>
+    
+    <table ng-show="branchData">
+        <tr>
+            <th>
+                <input type="checkbox" 
+                       ng-model="selectAllBuilders"
+                       ng-click="toggleSelectedBuilders()"/>
+            </th>
+            <th>Builder</th>
+            <th>Last Clobber</th>
+        <tr ng-repeat="builderName in availableBuilders() | filter:builderFilter">
+            <td><input class="blder-checkbox" 
+                        type="checkbox"
+                        ng-model="selectedBuilders[builderName]"/>
+            </td>
+            <td>{{ builderName }}</td>
+            <td><span ng-show="branchData[builderName][0].lastclobber != null">
+            {{ branchData[builderName][0].lastclobber * 1000 | date:'yyyy-MM-dd HH:mm:ss Z' }} 
+            by {{ branchData[builderName][0].who }}</span></td>
+        </tr>
+    </table>
+    <div ng-show="branchData == null">loading...</div>
+</div>
