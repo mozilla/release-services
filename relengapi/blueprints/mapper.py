@@ -211,10 +211,10 @@ def get_rev(projects, vcs_type, commit):
     _check_well_formed_sha(vcs_type, commit, exact_length=None)  # can raise http 400
     q = Hash.query.join(Project).filter(_project_filter(projects))
     if vcs_type == "git":
-        q = q.filter("git_commit like :cspatttern").params(
+        q = q.filter(sa.text("git_commit like :cspatttern")).params(
             cspatttern=commit + "%")
     elif vcs_type == "hg":
-        q = q.filter("hg_changeset like :cspatttern").params(
+        q = q.filter(sa.text("hg_changeset like :cspatttern")).params(
             cspatttern=commit + "%")
     try:
         row = q.one()
@@ -424,7 +424,7 @@ def insert_one(project, git_commit, hg_changeset):
     try:
         session.commit()
         q = Hash.query.join(Project).filter(_project_filter(project))
-        q = q.filter("git_commit == :commit").params(commit=git_commit)
+        q = q.filter(sa.text("git_commit == :commit")).params(commit=git_commit)
         return q.one().as_json()
     except sa.exc.IntegrityError:
         abort(409, "Provided mapping %s %s for project %s already exists and "
