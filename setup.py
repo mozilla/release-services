@@ -88,19 +88,8 @@ setup(
         ],
     },
     entry_points={
-        "relengapi.blueprints": [
-            'base = relengapi.blueprints.base:bp',
-            'auth = relengapi.blueprints.auth:bp',
-            'tokenauth = relengapi.blueprints.tokenauth:bp',
-            'docs = relengapi.blueprints.docs:bp',
-            'badpenny = relengapi.blueprints.badpenny:bp',
-            'tooltool = relengapi.blueprints.tooltool:bp',
-            'clobberer = relengapi.blueprints.clobberer:bp',
-            'mapper = relengapi.blueprints.mapper:bp',
-            'slaveloan = relengapi.blueprints.slaveloan:bp',
-        ],
         "console_scripts": [
-            'relengapi = relengapi.lib.subcommands:main',
+            'relengapi = relengapi.cmd:main',
         ],
     },
     license='MPL2',

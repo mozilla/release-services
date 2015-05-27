@@ -4,6 +4,7 @@
 
 import logging
 import os
+import pkg_resources
 import relengapi
 import wsme.types
 
@@ -36,7 +37,7 @@ class BlueprintInfo(wsme.types.Base):
 
     "Information about an installed Blueprint"
 
-    #: Python distribution containing this blueprint
+    #: Python distribution containing this blueprint (always 'relengapi')
     distribution = unicode
 
     #: Version of the blueprint (really, of its distribution)
@@ -68,9 +69,24 @@ class VersionInfo(wsme.types.Base):
     blueprints = {unicode: BlueprintInfo}
 
 
-def create_app(cmdline=False, test_config=None):
-    blueprints = introspection.get_blueprints()
+def _load_bp(n):
+    relengapi_mod = __import__('relengapi.blueprints.' + n)
+    return getattr(relengapi_mod.blueprints, n).bp
 
+blueprints = [_load_bp(n) for n in [
+    'auth',
+    'badpenny',
+    'base',
+    'clobberer',
+    'docs',
+    'mapper',
+    'slaveloan',
+    'tokenauth',
+    'tooltool',
+]]
+
+
+def create_app(cmdline=False, test_config=None):
     app = Flask(__name__)
     env_var = 'RELENGAPI_SETTINGS'
     if test_config:
@@ -129,9 +145,10 @@ def create_app(cmdline=False, test_config=None):
                 version=dist.version,
                 relengapi_metadata={})
         blueprints = {}
+        relengapi_dist = pkg_resources.get_distribution('relengapi')
         for bp in app.relengapi_blueprints.itervalues():
-            blueprints[bp.name] = BlueprintInfo(distribution=bp.dist.key,
-                                                version=bp.dist.version)
+            blueprints[bp.name] = BlueprintInfo(distribution='relengapi',
+                                                version=relengapi_dist.version)
         return VersionInfo(distributions=dists, blueprints=blueprints)
 
     return app

@@ -4,38 +4,16 @@
 
 import pkg_resources
 
-_blueprints = None
 _distributions = None
 
 
 def _fetch():
-    # get blueprints, dists, and so on from pkg_resources.
-    #
-    # We're careful to load all of the blueprints exactly once and before
-    # registering any of them, as this ensures everything is imported before
-    # any of the @bp.register-decorated methods are called
-    global _blueprints
     global _distributions
 
     if not _distributions:
         _distributions = {}
         for dist in pkg_resources.WorkingSet():
             _distributions[dist.key] = dist
-
-    if not _blueprints:
-        _blueprints = []
-        entry_points = (list(pkg_resources.iter_entry_points('relengapi_blueprints')) +
-                        list(pkg_resources.iter_entry_points('relengapi.blueprints')))
-        for ep in entry_points:
-            bp = ep.load()
-            # make sure we have only one copy of each Distribution
-            bp.dist = _distributions[ep.dist.key]
-            _blueprints.append(bp)
-
-
-def get_blueprints():
-    _fetch()
-    return _blueprints
 
 
 def get_distributions():

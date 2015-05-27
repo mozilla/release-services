@@ -7,7 +7,7 @@ import sys
 import tempfile
 
 from cStringIO import StringIO
-from relengapi.lib import subcommands
+from relengapi import cmd
 
 
 _settings = {}
@@ -26,7 +26,7 @@ def run_main(args, settings={'SQLALCHEMY_DATABASE_URIS': {}}):
     old_out = sys.stdout
     sys.stdout = fake_stdout = StringIO()
     try:
-        subcommands.main(args)
+        cmd.main(args)
     except SystemExit:
         pass
     finally:
