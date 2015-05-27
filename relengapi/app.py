@@ -53,8 +53,7 @@ class DistributionInfo(wsme.types.Base):
     #: Version of the distribution
     version = unicode
 
-    # TODO: ref docs
-    #: Additional RelengAPI-specific metadata
+    #: Additional RelengAPI-specific metadata (deprecated; always empty)
     relengapi_metadata = {unicode: unicode}
 
 
@@ -125,11 +124,10 @@ def create_app(cmdline=False, test_config=None):
     def versions():
         dists = {}
         for dist in introspection.get_distributions().itervalues():
-            relengapi_metadata = dist.relengapi_metadata
             dists[dist.key] = DistributionInfo(
                 project_name=dist.project_name,
                 version=dist.version,
-                relengapi_metadata=relengapi_metadata)
+                relengapi_metadata={})
         blueprints = {}
         for bp in app.relengapi_blueprints.itervalues():
             blueprints[bp.name] = BlueprintInfo(distribution=bp.dist.key,
@@ -137,8 +135,3 @@ def create_app(cmdline=False, test_config=None):
         return VersionInfo(distributions=dists, blueprints=blueprints)
 
     return app
-
-metadata = {
-    'repository_of_record': 'https://git.mozilla.org/?p=build/relengapi.git',
-    'bug_report_url': 'https://github.com/mozilla/build-relengapi/issues',
-}

@@ -89,12 +89,6 @@ setup(
         ],
     },
     entry_points={
-        "relengapi.metadata": [
-            'relengapi = relengapi.app:metadata',
-            'relengapi-tooltool = relengapi.blueprints.tooltool:metadata',
-            'relengapi-clobberer = relengapi.blueprints.clobberer:metadata',
-            'relengapi-slaveloan = relengapi.blueprints.slaveloan.metadata:data',
-        ],
         "relengapi.blueprints": [
             'base = relengapi.blueprints.base:bp',
             'auth = relengapi.blueprints.auth:bp',

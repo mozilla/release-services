@@ -15,9 +15,3 @@ def test_get_blueprints():
 def test_get_distributions():
     distributions = introspection.get_distributions()
     eq_(distributions['relengapi'].project_name, 'relengapi')
-
-
-def test_metadata():
-    distributions = introspection.get_distributions()
-    meta = distributions['relengapi'].relengapi_metadata
-    assert 'repository_of_record' in meta
