@@ -98,7 +98,7 @@ $modified && not_ok "some imports were re-ordered and changes will need to be co
 finish_step
 
 start_step "building docs"
-relengapi build-docs --development || not_ok "build-docs failed"
+relengapi build-docs || not_ok "build-docs failed"
 finish_step
 
 start_step "running tests (under coverage)"

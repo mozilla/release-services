@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
-
 from setuptools import find_packages
 from setuptools import setup
 
@@ -18,6 +16,12 @@ data_patterns = [
     'static/**.svg',
     'static/**.ttf',
     'static/**.woff',
+]
+
+docs_patterns = [
+    'docs/**.rst',
+    'docs/**.py',
+    'docs/**.css',
 ]
 
 setup(
@@ -73,12 +77,8 @@ setup(
     include_package_data=True,
     zip_safe=False,
     namespace_packages=['relengapi', 'relengapi.blueprints'],
-    # copy ./docs to %(sys.prefix)s/relengapi-docs, recursively
-    data_files=[
-        ('relengapi-' + dirpath, [os.path.join(dirpath, f) for f in files])
-        for dirpath, _, files in os.walk('docs')
-    ],
     package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
+        'relengapi': docs_patterns,
         'relengapi.blueprints.base': data_patterns,
         'relengapi.blueprints.auth': data_patterns,
         'relengapi.blueprints.tokenauth': data_patterns,
