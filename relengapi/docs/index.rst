@@ -2,8 +2,7 @@ Releng API
 ==========
 
 The documentation here is automatically generated from the installed version of
-RelengAPI (|version|) along with any other RelengAPI Blueprints that are
-installed in the same Python environment.
+RelengAPI (|version|).
 
 ..
     NOTE: if you add a section here, add it to
