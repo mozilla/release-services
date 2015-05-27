@@ -1,5 +1,5 @@
-Loaning Slaves
-==============
+Slave Loan
+==========
 
 The ``/slaveloan`` API endpoint.
 
