@@ -168,9 +168,9 @@ start_step "getting file list from install"
 )
 finish_step
 
-# and calculate the list of git files that we expect to see installed:
-# anything not at the top level, but not the namespaced __init__.py's
-grep / ${tmpbase}/git-files | grep -Ev '^relengapi/(blueprints/|)__init__\.py$' > ${tmpbase}/git-expected-installed
+# and calculate the list of git files that we expect to see installed: anything
+# not at the top level
+grep / ${tmpbase}/git-files > ${tmpbase}/git-expected-installed
 
 # start comparing!
 pushd ${tmpbase} >/dev/null

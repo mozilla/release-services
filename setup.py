@@ -56,7 +56,6 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    namespace_packages=['relengapi', 'relengapi.blueprints'],
     package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
         'relengapi': [
             'docs/**.rst',
