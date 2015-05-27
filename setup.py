@@ -100,15 +100,6 @@ setup(
             'mapper = relengapi.blueprints.mapper:bp',
             'slaveloan = relengapi.blueprints.slaveloan:bp',
         ],
-        "relengapi.auth.mechanisms": [
-            'browserid = relengapi.lib.auth.browserid:init_app',
-            'external = relengapi.lib.auth.external:init_app',
-            'constant = relengapi.lib.auth.constant:init_app',
-        ],
-        "relengapi.perms.mechanisms": [
-            'static = relengapi.lib.auth.static_authz:init_app',
-            'ldap-groups = relengapi.lib.auth.ldap_group_authz:init_app',
-        ],
         "console_scripts": [
             'relengapi = relengapi.lib.subcommands:main',
         ],

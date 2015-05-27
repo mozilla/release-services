@@ -8,7 +8,7 @@ from nose.tools import assert_raises
 from nose.tools import eq_
 from relengapi import p
 from relengapi.lib import auth
-from relengapi.lib.auth import static_authz
+from relengapi.lib.auth.perms_types import static
 
 p.test_static.foo.doc("Foo")
 p.test_static.bar.doc("Bar")
@@ -36,30 +36,30 @@ def test_bad_config():
 def test_on_permissions_stale_not_user():
     user = auth.HumanUser('jimmy@co.com')
     permissions = set()
-    static_authz.on_permissions_stale(perm_map, 'sender', user, permissions)
+    static.on_permissions_stale(perm_map, 'sender', user, permissions)
     eq_(permissions, set())
 
 
 def test_on_permissions_stale():
     user = auth.HumanUser('bar@co.com')
     permissions = set()
-    static_authz.on_permissions_stale(perm_map, 'sender', user, permissions)
+    static.on_permissions_stale(perm_map, 'sender', user, permissions)
     eq_(permissions, set(
         [p.test_static.foo, p.test_static.bar]))
 
 
 def test_get_user_permissions_no_such_user():
-    sa = static_authz.StaticAuthz({'foo@foo.com': ['test_static.foo']})
+    sa = static.StaticAuthz({'foo@foo.com': ['test_static.foo']})
     eq_(sa.get_user_permissions('bar@bar.com'), None)
 
 
 def test_get_user_permissions_no_perms():
-    sa = static_authz.StaticAuthz({'foo@foo.com': []})
+    sa = static.StaticAuthz({'foo@foo.com': []})
     eq_(sa.get_user_permissions('foo@foo.com'), set([]))
 
 
 def test_get_user_permissions_some_perms():
-    sa = static_authz.StaticAuthz({'foo@foo.com': ['test_static.foo']})
+    sa = static.StaticAuthz({'foo@foo.com': ['test_static.foo']})
     eq_(sa.get_user_permissions('foo@foo.com'), set([p.test_static.foo]))
 
 
@@ -72,4 +72,4 @@ def test_init_app_success():
             },
         },
     })
-    assert isinstance(app.authz, static_authz.StaticAuthz)
+    assert isinstance(app.authz, static.StaticAuthz)

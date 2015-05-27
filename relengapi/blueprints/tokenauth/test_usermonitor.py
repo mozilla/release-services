@@ -25,7 +25,7 @@ test_context = TestContext(databases=['relengapi'])
 
 @contextlib.contextmanager
 def mocked_perms(permissions):
-    with mock.patch('relengapi.lib.auth.static_authz.'
+    with mock.patch('relengapi.lib.auth.perms_types.static.'
                     'StaticAuthz.get_user_permissions') as gup:
         def side_effect(user):
             if user in permissions:

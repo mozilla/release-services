@@ -13,7 +13,7 @@ from nose.tools import assert_raises
 from nose.tools import eq_
 from relengapi import p
 from relengapi.lib import auth
-from relengapi.lib.auth import ldap_group_authz
+from relengapi.lib.auth.perms_types import ldap_groups
 from relengapi.lib.testing.context import TestContext
 
 p.test_lga.foo.doc("Foo")
@@ -109,7 +109,7 @@ class TestGetUserGroups(unittest.TestCase):
 
     @test_context
     def call(self, app, mail, exp_groups):
-        lg = ldap_group_authz.LdapGroupsAuthz(app)
+        lg = ldap_groups.LdapGroupsAuthz(app)
 
         def sorted_or_none(x):
             return x if x is None else sorted(x)
@@ -133,9 +133,9 @@ class TestGetUserGroups(unittest.TestCase):
     @test_context.specialize(config=BAD_CONFIG)
     def test_login_fail(self, app):
         hdlr = logging.handlers.BufferingHandler(100)
-        logging.getLogger(ldap_group_authz.__name__).addHandler(hdlr)
+        logging.getLogger(ldap_groups.__name__).addHandler(hdlr)
         try:
-            lg = ldap_group_authz.LdapGroupsAuthz(app)
+            lg = ldap_groups.LdapGroupsAuthz(app)
             eq_(lg.get_user_groups('x@y'), None)
             # make sure the error was logged
             for rec in hdlr.buffer:
@@ -144,14 +144,14 @@ class TestGetUserGroups(unittest.TestCase):
             else:
                 self.fail("login exception not logged")
         finally:
-            logging.getLogger(ldap_group_authz.__name__).removeHandler(hdlr)
+            logging.getLogger(ldap_groups.__name__).removeHandler(hdlr)
 
 
 @test_context
 def test_on_permissions_stale_not_user(app):
     user = auth.HumanUser('jimmy')
     permissions = set()
-    lg = ldap_group_authz.LdapGroupsAuthz(app)
+    lg = ldap_groups.LdapGroupsAuthz(app)
     lg.on_permissions_stale('sender', user, permissions)
     eq_(permissions, set())
 
@@ -160,7 +160,7 @@ def test_on_permissions_stale_not_user(app):
 def test_on_permissions_stale_groups_unique(app):
     user = auth.HumanUser('jimmy')
     permissions = set()
-    lg = ldap_group_authz.LdapGroupsAuthz(app)
+    lg = ldap_groups.LdapGroupsAuthz(app)
     lg.get_user_groups = lambda mail: ['group1', 'group2']
     lg.on_permissions_stale('sender', user, permissions)
     eq_(permissions, set(
@@ -171,7 +171,7 @@ def test_on_permissions_stale_groups_unique(app):
 def test_on_permissions_stale_groups_unknown_groups(app):
     user = auth.HumanUser('jimmy')
     permissions = set()
-    lg = ldap_group_authz.LdapGroupsAuthz(app)
+    lg = ldap_groups.LdapGroupsAuthz(app)
     lg.get_user_groups = lambda mail: ['group3', 'nosuch']
     lg.on_permissions_stale('sender', user, permissions)
     eq_(permissions, set([p.test_lga.bar]))
@@ -185,7 +185,7 @@ EVERYONE_CONFIG['RELENGAPI_PERMISSIONS'][
 def test_on_permissions_everyone(app):
     user = auth.HumanUser('jimmy')
     permissions = set()
-    lg = ldap_group_authz.LdapGroupsAuthz(app)
+    lg = ldap_groups.LdapGroupsAuthz(app)
     lg.get_user_groups = lambda mail: []
     lg.on_permissions_stale('sender', user, permissions)
     eq_(permissions, set([p.test_lga.bar]))
@@ -200,21 +200,21 @@ def fake_get_user_groups(mail):
 
 @test_context
 def test_get_user_permissions_no_such(app):
-    lg = ldap_group_authz.LdapGroupsAuthz(app)
+    lg = ldap_groups.LdapGroupsAuthz(app)
     lg.get_user_groups = fake_get_user_groups
     eq_(lg.get_user_permissions('bar@bar.com'), None)
 
 
 @test_context
 def test_get_user_permissions_no_groups(app):
-    lg = ldap_group_authz.LdapGroupsAuthz(app)
+    lg = ldap_groups.LdapGroupsAuthz(app)
     lg.get_user_groups = fake_get_user_groups
     eq_(lg.get_user_permissions('lonely'), set([]))
 
 
 @test_context
 def test_get_user_permissions_with_groups(app):
-    lg = ldap_group_authz.LdapGroupsAuthz(app)
+    lg = ldap_groups.LdapGroupsAuthz(app)
     lg.get_user_groups = fake_get_user_groups
     eq_(lg.get_user_permissions('foo@foo.com'),
         set([p.test_lga.foo, p.test_lga.bar]))
@@ -231,4 +231,4 @@ def test_init_app_with_bogus_perms():
 @test_context
 def test_init_app_success(app):
     # init_app's already been called; just make sure it set authz
-    assert isinstance(app.authz, ldap_group_authz.LdapGroupsAuthz)
+    assert isinstance(app.authz, ldap_groups.LdapGroupsAuthz)
