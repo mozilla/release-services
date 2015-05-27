@@ -29,4 +29,5 @@ Cleanup
 
 Every job is logged in the database, and for a busy production environment this can become a lot of data!
 
-The ``BADPENNY_OLD_JOB_DAYS`` configuration gives a number of days after which jobs will be purged from the database, defaulting to 7.
+A cleanup task runs regularly, purging information about old jobs.
+The ``BADPENNY_OLD_JOB_DAYS`` configuration parameter specifies the number of days after which jobs will be purged from the database, defaulting to 7.

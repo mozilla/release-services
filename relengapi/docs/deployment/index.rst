@@ -9,7 +9,7 @@ This is mostly limited to system administrators and those responsible for config
     installation
     environment
     logging
-    config
+    config/index
     documentation
     workers
     badpenny
