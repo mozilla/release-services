@@ -5,25 +5,6 @@
 from setuptools import find_packages
 from setuptools import setup
 
-data_patterns = [
-    'templates/**.html',
-    'static/**.jpg',
-    'static/**.css',
-    'static/**.js',
-    'static/**.map',
-    'static/**.txt',
-    'static/**.eot',
-    'static/**.svg',
-    'static/**.ttf',
-    'static/**.woff',
-]
-
-docs_patterns = [
-    'docs/**.rst',
-    'docs/**.py',
-    'docs/**.css',
-]
-
 setup(
     name='relengapi',
     version='2.1.1',
@@ -77,14 +58,22 @@ setup(
     zip_safe=False,
     namespace_packages=['relengapi', 'relengapi.blueprints'],
     package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
-        'relengapi': docs_patterns,
-        'relengapi.blueprints.base': data_patterns,
-        'relengapi.blueprints.auth': data_patterns,
-        'relengapi.blueprints.tokenauth': data_patterns,
-        'relengapi.blueprints.docs': data_patterns + [
-            'base/**.rst',
-            'base/_static/**',
-            'base/conf.py',
+        'relengapi': [
+            'docs/**.rst',
+            'docs/**.py',
+            'docs/**.css',
+        ],
+        'relengapi.blueprints': [
+            '*/templates/**.html',
+            '*/static/**.jpg',
+            '*/static/**.css',
+            '*/static/**.js',
+            '*/static/**.map',
+            '*/static/**.txt',
+            '*/static/**.eot',
+            '*/static/**.svg',
+            '*/static/**.ttf',
+            '*/static/**.woff',
         ],
     },
     entry_points={
