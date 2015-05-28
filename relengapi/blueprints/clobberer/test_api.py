@@ -293,3 +293,15 @@ def test_release_builder_hiding(client):
     eq_(rv.status_code, 200)
     clobbertimes = json.loads(rv.data)["result"]
     eq_(clobbertimes.get(buildername), None)
+
+
+@test_context
+def test_clobber_request_no_identity(client):
+    del auth_user.authenticated_email
+    session = test_context._app.db.session(DB_DECLARATIVE_BASE)
+    rv = client.post_json('/clobberer/clobber', data=[_clobber_args, _clobber_args_with_slave])
+    eq_(rv.status_code, 200)
+    clobber = session.query(ClobberTime.who)
+    # the last clobber should have a who value of automation, since we deleted
+    # authenticated_email
+    eq_(clobber.order_by('id').all()[0], ('automation',))

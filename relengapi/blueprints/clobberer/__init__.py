@@ -68,9 +68,16 @@ def _add_clobber(session, branch, builddir, slave=None):
     in is returned; but is only committed if the commit option is True.
     """
     if re.search('^' + BUILDDIR_REL_PREFIX + '.*', builddir) is None:
-        who = 'anonymous'
-        if current_user.anonymous is False:
+        try:
             who = current_user.authenticated_email
+        except AttributeError:
+            if current_user.anonymous:
+                who = 'anonymous'
+            else:
+                # TokenUser doesn't show up as anonymous; but also has no
+                # authenticated_email
+                who = 'automation'
+
         clobber_time = ClobberTime.as_unique(
             session,
             branch=branch,
