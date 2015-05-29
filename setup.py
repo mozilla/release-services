@@ -36,6 +36,7 @@ setup(
         "redo",
         # Temporary freeze until https://github.com/bhearsum/bzrest/pull/3 is fixed
         "bzrest==0.9",
+        "structlog",
     ],
     extras_require={
         'test': [

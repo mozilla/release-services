@@ -3,26 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
-import logging.handlers
 import os
 import relengapi.app
-import sys
 
 from relengapi.lib import subcommands
-
-
-def setupConsoleLogging(quiet):
-    root = logging.getLogger('')
-    if quiet:
-        root.setLevel(logging.WARNING)
-    else:
-        root.setLevel(logging.NOTSET)
-    formatter = logging.Formatter('%(asctime)s %(message)s')
-
-    stdout_log = logging.StreamHandler(sys.stdout)
-    stdout_log.setLevel(logging.DEBUG)
-    stdout_log.setFormatter(formatter)
-    root.addHandler(stdout_log)
+from relengapi.lib.logging import setupConsoleLogging
 
 
 def main(args=None):

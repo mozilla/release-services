@@ -2,10 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import logging
 import os
 import pkg_resources
 import relengapi
+import structlog
 import wsme.types
 
 from flask import Flask
@@ -18,6 +18,7 @@ from relengapi.lib import celery
 from relengapi.lib import db
 from relengapi.lib import introspection
 from relengapi.lib import layout
+from relengapi.lib import logging as relengapi_logging
 from relengapi.lib import memcached
 from relengapi.lib import monkeypatches
 from relengapi.lib import permissions
@@ -30,7 +31,7 @@ relengapi.apimethod = api.apimethod
 # apply monkey patches
 monkeypatches.monkeypatch()
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 class BlueprintInfo(wsme.types.Base):
@@ -89,6 +90,7 @@ blueprints = [_load_bp(n) for n in [
 
 def create_app(cmdline=False, test_config=None):
     app = Flask(__name__)
+    relengapi_logging.configure_logging(app)
     env_var = 'RELENGAPI_SETTINGS'
     if test_config:
         app.config.update(**test_config)
@@ -98,6 +100,9 @@ def create_app(cmdline=False, test_config=None):
         else:
             logger.warning("Using default settings; to configure relengapi, set "
                            "%s to point to your settings file" % env_var)
+
+    # reconfigure logging now that we have loaded configuration
+    relengapi_logging.configure_logging(app)
 
     # add the necessary components to the app
     app.db = db.make_db(app)

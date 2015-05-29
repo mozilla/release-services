@@ -62,3 +62,12 @@ One option is to replace the ``celery`` binary with a script of your own making 
     import sys
     from pkg_resources import load_entry_point
     ep = load_entry_point('celery', 'console_scripts', 'celery')
+
+Structured Logging
+------------------
+
+Releng API uses `structlog <https://structlog.readthedocs.org/>`_ internally to handle structrured log output.
+To format log output as JSON, set the ``JSON_STRUCTURED_LOGGING`` setting to ``True``.
+
+Note, however, that logging output produced by non-RelengAPI code (e.g., Celery, SQLAlchemy) will not be JSON-formatted.
+Consumers must be able to accept non-JSON inputs.
