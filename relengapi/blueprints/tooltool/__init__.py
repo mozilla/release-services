@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import datetime
-import logging
 import random
 import re
 import sqlalchemy as sa
+import structlog
 
 from flask import Blueprint
 from flask import current_app
@@ -53,7 +53,7 @@ p.tooltool.manage.doc("Manage tooltool files, including deleting and changing vi
 UPLOAD_EXPIRES_IN = 60
 GET_EXPIRES_IN = 60
 
-log = logging.getLogger(__name__)
+log = structlog.get_logger()
 
 
 def get_region_and_bucket(region_arg):

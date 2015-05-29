@@ -2,14 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import logging
+import structlog
 
 from flask import current_app
 from itsdangerous import BadData
 from itsdangerous import JSONWebSignatureSerializer
 
 TOKENAUTH_ISSUER = 'ra2'
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 def init_app(app):

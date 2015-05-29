@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import calendar
-import logging
 import sqlalchemy as sa
+import structlog
 import time
 import wsme
 
@@ -28,7 +28,7 @@ from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import Forbidden
 from werkzeug.exceptions import NotFound
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 bp = Blueprint('tokenauth', __name__,
                template_folder='templates',
                static_folder='static')

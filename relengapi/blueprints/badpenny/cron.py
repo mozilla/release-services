@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import logging
+import structlog
 
 from flask import Blueprint
 from flask import current_app
@@ -13,7 +13,7 @@ from relengapi.lib import subcommands
 from relengapi.lib import time
 
 bp = Blueprint('base', __name__)
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 class BadpennyCron(subcommands.Subcommand):

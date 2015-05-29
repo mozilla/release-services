@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import logging
+import structlog
 import traceback
 
 from flask import current_app
@@ -11,7 +11,7 @@ from relengapi.lib import badpenny
 from relengapi.lib import celery
 from relengapi.lib import time
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 def submit_job(task_name, job_id):

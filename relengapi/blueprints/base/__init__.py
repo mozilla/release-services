@@ -4,6 +4,7 @@
 
 import logging
 import os
+import structlog
 import sys
 
 from flask import Blueprint
@@ -13,7 +14,7 @@ from flask import current_app
 from relengapi.lib import subcommands
 
 bp = Blueprint('base', __name__)
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 class ServeSubcommand(subcommands.Subcommand):

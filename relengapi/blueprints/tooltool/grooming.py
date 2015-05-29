@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import hashlib
-import logging
 import sqlalchemy as sa
+import structlog
 
 from datetime import timedelta
 from flask import current_app
@@ -14,7 +14,7 @@ from relengapi.lib import badpenny
 from relengapi.lib import celery
 from relengapi.lib import time
 
-log = logging.getLogger(__name__)
+log = structlog.get_logger()
 
 
 @badpenny.periodic_task(seconds=600)
