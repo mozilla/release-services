@@ -15,6 +15,7 @@ This chapter is aimed at people hacking on RelengAPI itself and on RelengAPI Blu
     tasks
     auth
     tokenauth
+    logging
     utils
     app
     testing
