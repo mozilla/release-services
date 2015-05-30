@@ -35,11 +35,6 @@ The RelengAPI Flask App is mostly a normal Flask App, but has a few additional a
         Access to configured memcached caches.
         See :doc:`memcached`
 
-    .. py:attribute:: relengapi_blueprionts
-
-        Access to configured memcached caches.
-        See :doc:`memcached`
-
     .. py:attribute:: relengapi_blueprints
 
         This attribute gives a list of all RelengAPI blueprints.
