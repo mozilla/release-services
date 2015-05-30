@@ -8,6 +8,7 @@ import logging
 import structlog
 import sys
 
+from flask import g
 
 stdout_log = None
 
@@ -46,11 +47,21 @@ def add_relengapi(logger, method_name, event_dict):
     return event_dict
 
 
+def add_request_id(logger, method_name, event_dict):
+    try:
+        event_dict['request_id'] = g.request_id
+    except (AttributeError, RuntimeError):
+        # RuntimeError occurs when working outside request context
+        pass
+    return event_dict
+
+
 def configure_logging(app):
     if app.config.get('JSON_STRUCTURED_LOGGING'):
         processors = [
             structlog.stdlib.filter_by_level,
             add_relengapi,
+            add_request_id,
             structlog.stdlib.add_logger_name,
             structlog.stdlib.add_log_level,
             structlog.stdlib.PositionalArgumentsFormatter(),
@@ -62,6 +73,7 @@ def configure_logging(app):
     else:
         processors = [
             structlog.stdlib.filter_by_level,
+            add_request_id,
             structlog.stdlib.PositionalArgumentsFormatter(),
             UnstructuredRenderer()
         ]

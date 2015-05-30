@@ -6,6 +6,7 @@ import os
 import pkg_resources
 import relengapi
 import structlog
+import uuid
 import wsme.types
 
 from flask import Flask
@@ -91,6 +92,8 @@ blueprints = [_load_bp(n) for n in [
 def create_app(cmdline=False, test_config=None):
     app = Flask(__name__)
     relengapi_logging.configure_logging(app)
+    log = logger.new()
+
     env_var = 'RELENGAPI_SETTINGS'
     if test_config:
         app.config.update(**test_config)
@@ -98,11 +101,12 @@ def create_app(cmdline=False, test_config=None):
         if env_var in os.environ and os.environ[env_var]:
             app.config.from_envvar(env_var)
         else:
-            logger.warning("Using default settings; to configure relengapi, set "
-                           "%s to point to your settings file" % env_var)
+            log.warning("Using default settings; to configure relengapi, set "
+                        "%s to point to your settings file" % env_var)
 
     # reconfigure logging now that we have loaded configuration
     relengapi_logging.configure_logging(app)
+    log = logger.new()
 
     # add the necessary components to the app
     app.db = db.make_db(app)
@@ -116,19 +120,20 @@ def create_app(cmdline=False, test_config=None):
     app.relengapi_blueprints = {}
     for bp in blueprints:
         if cmdline:
-            logger.info("registering blueprint %s", bp.name)
+            log.info("registering blueprint %s", bp.name)
         app.register_blueprint(bp, url_prefix='/%s' % bp.name)
         app.relengapi_blueprints[bp.name] = bp
 
     # set up a random session key if none is specified
     if not app.config.get('SECRET_KEY'):
-        logger.warning("setting per-process session key - sessions will be reset on "
-                       "process restart")
+        log.warning("setting per-process session key - sessions will be reset on "
+                    "process restart")
         app.secret_key = os.urandom(24)
 
     @app.before_request
-    def add_db():
+    def decorate_g():
         g.db = app.db
+        g.request_id = str(uuid.uuid4())
 
     @app.route('/')
     def root():

@@ -125,6 +125,13 @@ def assert_usr_token(data, **attrs):
     _eq_token(token, attrs)
 
 
+def assert_result(json_data, expected):
+    data = json.loads(json_data)
+    if 'result' not in data:
+        raise AssertionError("no result: " + json_data)
+    eq_(data['result'], expected, json_data)
+
+
 # tests
 
 
@@ -139,8 +146,8 @@ def test_root(client):
 def test_list_tokens_forbidden(client):
     """Anyone can list tokens, but the list is empty without
     base.tokens.*.view"""
-    eq_(json.loads(client.get('/tokenauth/tokens').data),
-        {'result': []})
+    res = client.get('/tokenauth/tokens')
+    assert_result(res.data, [])
 
 
 @test_context.specialize(user=full_view_perms)
@@ -408,10 +415,11 @@ def test_get_prm_token_exists_forbidden(client):
                          db_setup=insert_prm)
 def test_get_prm_token_success(client):
     """Getting an existing permanent token returns its id, permissions, and description."""
-    eq_(json.loads(client.get('/tokenauth/tokens/1').data),
-        {'result': {'id': 1, 'description': 'Zig only', 'typ': 'prm',
-                    'permissions': ['test_tokenauth.zig'],
-                    'disabled': False}})
+    res = client.get('/tokenauth/tokens/1')
+    assert_result(res.data,
+                  {'id': 1, 'description': 'Zig only', 'typ': 'prm',
+                   'permissions': ['test_tokenauth.zig'],
+                   'disabled': False})
 
 
 @test_context.specialize(user=userperms([]), db_setup=insert_usr)
@@ -424,8 +432,8 @@ def test_get_usr_token_forbidden(client):
                          db_setup=insert_usr)
 def test_get_usr_token_view_all(client):
     """Getting a user token with base.tokens.usr.view.all returns the token"""
-    eq_(json.loads(client.get('/tokenauth/tokens/2').data),
-        {'result': usr_json})
+    res = client.get('/tokenauth/tokens/2')
+    assert_result(res.data, usr_json)
 
 
 @test_context.specialize(user=userperms([p.base.tokens.usr.view.my], email='me@me.com'),
@@ -433,8 +441,8 @@ def test_get_usr_token_view_all(client):
 def test_get_usr_token_view_my_matching(client):
     """Getting a user token with base.tokens.usr.view.my returns the token
     if the emails match"""
-    eq_(json.loads(client.get('/tokenauth/tokens/2').data),
-        {'result': usr_json})
+    res = client.get('/tokenauth/tokens/2')
+    assert_result(res.data, usr_json)
 
 
 @test_context.specialize(user=userperms([], email='me@me.com'),
@@ -481,10 +489,10 @@ def test_query_prm_token_exists(client):
     res = client.post_json('/tokenauth/tokens/query',
                            FakeSerializer.prm(1))
     eq_(res.status_code, 200)
-    eq_(json.loads(res.data),
-        {'result': {'id': 1, 'description': 'Zig only', 'typ': 'prm',
-                    'permissions': ['test_tokenauth.zig'],
-                    'disabled': False}})
+    assert_result(res.data,
+                  {'id': 1, 'description': 'Zig only', 'typ': 'prm',
+                   'permissions': ['test_tokenauth.zig'],
+                   'disabled': False})
 
 
 @test_context.specialize(user=userperms([]), db_setup=insert_usr)
@@ -512,7 +520,7 @@ def test_query_usr_token_success_mine(client):
     token if the emails match"""
     res = client.post_json('/tokenauth/tokens/query',
                            FakeSerializer.usr(2))
-    eq_(json.loads(res.data), {'result': usr_json})
+    assert_result(res.data, usr_json)
 
 
 @test_context.specialize(user=userperms([p.base.tokens.usr.view.all]),
@@ -521,7 +529,7 @@ def test_query_usr_token_success_all(client):
     """Querying a user token with base.tokens.usr.view.all returns the token."""
     res = client.post_json('/tokenauth/tokens/query',
                            FakeSerializer.usr(2))
-    eq_(json.loads(res.data), {'result': usr_json})
+    assert_result(res.data, usr_json)
 
 
 @test_context.specialize(user=userperms([p.base.tokens.prm.view]))
@@ -543,15 +551,14 @@ def test_query_tmp_token(client):
         mta={})
     res = client.post_json('/tokenauth/tokens/query', tok)
     eq_(res.status_code, 200)
-    eq_(json.loads(res.data),
-        {'result': {
-            'typ': 'tmp',
-            'not_before': '2000-01-01T00:00:00+00:00',
-            'expires': '3000-01-01T00:00:00+00:00',
-            'metadata': {},
-            'permissions': ['test_tokenauth.zag'],
-            'disabled': False,
-        }})
+    assert_result(res.data, {
+        'typ': 'tmp',
+        'not_before': '2000-01-01T00:00:00+00:00',
+        'expires': '3000-01-01T00:00:00+00:00',
+        'metadata': {},
+        'permissions': ['test_tokenauth.zag'],
+        'disabled': False,
+    })
 
 
 @test_context.specialize(user=userperms([p.base.tokens.prm.view]))
