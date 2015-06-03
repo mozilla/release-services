@@ -1,0 +1,60 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     License, v. 2.0. If a copy of the MPL was not distributed with this
+     file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<div ng-app='tooltool' ng-controller="TTSearchController">
+    <div class="row">
+        <div class="col-xs-4">
+            <span class="h2">Tooltool</span>
+        </div>
+        <div class="col-xs-8 tt-searchbar">
+            <form ng-submit="startSearch()">
+                <div class="input-group">
+                    <input type="text" class="form-control"
+                        placeholder="Search for..." autofocus
+                        ng-model="search_query">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="submit">
+                            <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            <span class="sr-only">Search</span>
+                        </button>
+                    </span>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="row" ng-show="show_help">
+        <div class="col-xs-12">
+            <div class="alert alert-info" role="alert">
+                To begin, enter search terms above.  You can search by
+                <ul>
+                    <li>Filename</li>
+                    <li>SHA512 hash</li>
+                    <li>Upload author</li>
+                    <li>Upload message (including bug number)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row" ng-show="file_results">
+        <div class="col-xs-12">
+            <span class="h3">Files</span>
+            <div class="list-group">
+                <div ng-repeat="res in file_results" class="list-group-item">
+                    <tt-result-file res="res"></tt-result-file>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" ng-show="batch_results">
+        <div class="col-xs-12">
+            <span class="h3">Upload Batches</span>
+            <div class="list-group">
+                <div ng-repeat="res in batch_results" class="list-group-item">
+                    <tt-result-batch res="res"></tt-result-batch>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

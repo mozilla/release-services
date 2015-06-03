@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import pkg_resources
 import time
 
 from flask import current_app
@@ -148,6 +147,20 @@ def logged_out(sender, user):
     flash("Logged out")
 
 
+def _init_mod(app, var_name, default, root_package):
+    mod_name = app.config.get(var_name, {}).get('type', default)
+    app.config[var_name + '_TYPE'] = mod_name
+    mod_name = mod_name.replace('-', '_')
+    mod_path = root_package + '.' + mod_name
+    try:
+        mod = __import__(mod_path)
+    except ImportError:
+        raise RuntimeError("no such %s %r" % (var_name, mod_name,))
+    for atom in mod_path.split('.')[1:]:
+        mod = getattr(mod, atom)
+    mod.init_app(app)
+
+
 def init_app(app):
     login_manager.init_app(app)
 
@@ -159,37 +172,7 @@ def init_app(app):
     # see https://github.com/maxcountryman/flask-login/issues/162
     user_logged_out.connect(logged_out, app)
 
-    auth_type = app.config.get(
-        'RELENGAPI_AUTHENTICATION', {}).get('type', 'browserid')
-    app.config['RELENGAPI_AUTHENTICATION_TYPE'] = auth_type
-
-    # load and initialize the appropriate auth mechanism.  Using entry_points
-    # like this avoids even importing plugins this app isn't using
-    entry_points = list(
-        pkg_resources.iter_entry_points('relengapi.auth.mechanisms', auth_type))
-    if len(entry_points) == 0:
-        raise RuntimeError("no such authentication type %r" % (auth_type,))
-    elif len(entry_points) > 1:  # pragma: no cover
-        raise RuntimeError(
-            "multiple authentication plugins defined for type %r" % (auth_type,))
-    ep = entry_points[0]
-    plugin_init_app = ep.load()
-    plugin_init_app(app)
-
-    perms_type = app.config.get(
-        'RELENGAPI_PERMISSIONS', {}).get('type', 'static')
-    app.config['RELENGAPI_PERMISSIONS_TYPE'] = perms_type
-
-    # now load and initialize the appropriate perms mechanism
-    entry_points = list(
-        pkg_resources.iter_entry_points('relengapi.perms.mechanisms', perms_type))
-    if len(entry_points) == 0:
-        raise RuntimeError("no such permissions type %r" % (perms_type,))
-    elif len(entry_points) > 1:  # pragma: no cover
-        raise RuntimeError(
-            "multiple permissions plugins defined for type %r" % (perms_type,))
-    ep = entry_points[0]
-    plugin_init_app = ep.load()
-    plugin_init_app(app)
+    _init_mod(app, 'RELENGAPI_AUTHENTICATION', 'browserid', 'relengapi.lib.auth.auth_types')
+    _init_mod(app, 'RELENGAPI_PERMISSIONS', 'static', 'relengapi.lib.auth.perms_types')
 
 permissions_stale = signals.Namespace().signal('permissions_stale')

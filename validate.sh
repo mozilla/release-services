@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-COVERAGE_MIN=98
+COVERAGE_MIN=88
 
 set -e
 
@@ -98,7 +98,7 @@ $modified && not_ok "some imports were re-ordered and changes will need to be co
 finish_step
 
 start_step "building docs"
-relengapi build-docs --development || not_ok "build-docs failed"
+relengapi build-docs || not_ok "build-docs failed"
 finish_step
 
 start_step "running tests (under coverage)"
@@ -168,9 +168,9 @@ start_step "getting file list from install"
 )
 finish_step
 
-# and calculate the list of git files that we expect to see installed:
-# anything not at the top level, but not the namespaced __init__.py's
-grep / ${tmpbase}/git-files | grep -Ev '^relengapi/(blueprints/|)__init__\.py$' > ${tmpbase}/git-expected-installed
+# and calculate the list of git files that we expect to see installed: anything
+# not at the top level
+grep / ${tmpbase}/git-files > ${tmpbase}/git-expected-installed
 
 # start comparing!
 pushd ${tmpbase} >/dev/null

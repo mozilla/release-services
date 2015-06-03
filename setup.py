@@ -2,23 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
-
 from setuptools import find_packages
 from setuptools import setup
-
-data_patterns = [
-    'templates/**.html',
-    'static/**.jpg',
-    'static/**.css',
-    'static/**.js',
-    'static/**.map',
-    'static/**.txt',
-    'static/**.eot',
-    'static/**.svg',
-    'static/**.ttf',
-    'static/**.woff',
-]
 
 setup(
     name='relengapi',
@@ -46,6 +31,11 @@ setup(
         "boto",
         "python-memcached",
         "elasticache-auto-discovery",
+        "IPy",
+        "furl",
+        "redo",
+        # Temporary freeze until https://github.com/bhearsum/bzrest/pull/3 is fixed
+        "bzrest==0.9",
     ],
     extras_require={
         'test': [
@@ -55,7 +45,7 @@ setup(
             'pep8',
             'mockldap',
             'pyflakes',
-            'moto',
+            'moto>=0.4.1',
             'mockcache',
         ],
         # extras required only for LDAP authorization support
@@ -66,44 +56,28 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    namespace_packages=['relengapi', 'relengapi.blueprints'],
-    # copy ./docs to %(sys.prefix)s/relengapi-docs, recursively
-    data_files=[
-        ('relengapi-' + dirpath, [os.path.join(dirpath, f) for f in files])
-        for dirpath, _, files in os.walk('docs')
-    ],
     package_data={  # NOTE: these files must *also* be specified in MANIFEST.in
-        'relengapi.blueprints.base': data_patterns,
-        'relengapi.blueprints.auth': data_patterns,
-        'relengapi.blueprints.tokenauth': data_patterns,
-        'relengapi.blueprints.docs': data_patterns + [
-            'base/**.rst',
-            'base/_static/**',
-            'base/conf.py',
+        'relengapi': [
+            'docs/**.rst',
+            'docs/**.py',
+            'docs/**.css',
+        ],
+        'relengapi.blueprints': [
+            '*/templates/**.html',
+            '*/static/**.jpg',
+            '*/static/**.css',
+            '*/static/**.js',
+            '*/static/**.map',
+            '*/static/**.txt',
+            '*/static/**.eot',
+            '*/static/**.svg',
+            '*/static/**.ttf',
+            '*/static/**.woff',
         ],
     },
     entry_points={
-        "relengapi.metadata": [
-            'relengapi = relengapi.app:metadata',
-        ],
-        "relengapi.blueprints": [
-            'base = relengapi.blueprints.base:bp',
-            'auth = relengapi.blueprints.auth:bp',
-            'tokenauth = relengapi.blueprints.tokenauth:bp',
-            'docs = relengapi.blueprints.docs:bp',
-            'badpenny = relengapi.blueprints.badpenny:bp',
-        ],
-        "relengapi.auth.mechanisms": [
-            'browserid = relengapi.lib.auth.browserid:init_app',
-            'external = relengapi.lib.auth.external:init_app',
-            'constant = relengapi.lib.auth.constant:init_app',
-        ],
-        "relengapi.perms.mechanisms": [
-            'static = relengapi.lib.auth.static_authz:init_app',
-            'ldap-groups = relengapi.lib.auth.ldap_group_authz:init_app',
-        ],
         "console_scripts": [
-            'relengapi = relengapi.lib.subcommands:main',
+            'relengapi = relengapi.cmd:main',
         ],
     },
     license='MPL2',

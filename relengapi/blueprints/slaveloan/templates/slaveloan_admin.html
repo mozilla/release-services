@@ -1,0 +1,76 @@
+{# This Source Code Form is subject to the terms of the Mozilla Public
+ # License, v. 2.0. If a copy of the MPL was not distributed with this
+ # file, You can obtain one at http://mozilla.org/MPL/2.0/. #}
+{% extends "layout.html" %}
+{% block head %}
+    {{ super() }}
+  <script type="text/javascript">
+      var _get_loans_url = '{{ url_for("slaveloan.get_all_loans") }}';
+      var _details_url_prefix = '{{ url_for("slaveloan.loan_details", id=0) }}';
+  </script>
+  <script src="{{ url_for('slaveloan.static', filename='slaveloan_admin.js') }}" type="text/javascript"></script>
+{%- endblock %}
+{% block content %}
+
+<h2> Active Loans</h2>
+<table border=1 id="loans-table">
+<thead>
+    <tr>
+        <th>ID</th>
+        <th>Bug</th>
+        <th>Status</th>
+        <th>User LDAP</th>
+        <th>User BMO</th>
+        <th>FQDN</th>
+        <th>IP Address</th>
+    </tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+
+<h2>Admin Provided Loan</h2>
+<form action="{{ url_for('slaveloan.new_loan_from_admin') }}"
+      method="POST" id="new-loan">
+  <fieldset>
+    <legend>Loan Info</legend>
+    <label for="status">Status: </label>
+        <select name="status">
+          <option>ACTIVE</option>
+          <!-- XXX ToDo <option>PENDING</option> -->
+        </select><br />
+    <label for="bug_id">Bugzilla ID: </label>
+        <input type="text" name="bug_id" placeholder="<create new bug>" /><br />
+    <label for="LDAP">Full LDAP Username: </label>
+        <input type="text" name="ldap_email" /><br />
+    <label for="bugzilla">Full Bugzilla E-mail: </label>
+        <input type="text" name="bugzilla_email" /><br />
+    <label for="fqdn">Machines FQDN: </label>
+        <input type="text" name="fqdn" /><br />
+    <label for="ipaddress">Machines IP: </label>
+        <input type="text" name="ipaddress" /><br />
+  </fieldset>
+<legend>Complete</legend>
+<button type="button" name="submit_loan" value="now" id="submit_loan">Submit Loan Info</button>
+</fieldset>
+</form>
+
+<h2>Admin Requested Loan</h2>
+<form action="{{ url_for('slaveloan.new_loan_request') }}"
+      method="POST" id="new-loan-request">
+  <fieldset>
+    <legend>Loan Info</legend>
+    <label for="bug_id">Bugzilla ID: </label>
+        <input type="text" name="bug_id" placeholder="<create new bug>" /><br />
+    <label for="ldap_email">Full LDAP Username: </label>
+        <input type="text" name="ldap_email" /><br />
+    <label for="bugzilla">Full Bugzilla E-mail: </label>
+        <input type="text" name="bugzilla_email" placeholder="foo@example.org" /><br />
+    <label for="slavetype">Slavetype: </label>
+        <input type="text" name="slavetype" /><br />
+  </fieldset>
+<legend>Complete</legend>
+<button type="button" name="submit_loan_request" value="now" id="submit_loan_request">Submit Loan Request</button>
+</fieldset>
+</form>
+{% endblock %}

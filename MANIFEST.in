@@ -1,7 +1,7 @@
 # NOTE: these files must *also* be specified in setup.py
-include docs/conf.py
-recursive-include docs *.rst
-recursive-include docs/_static *
+include relengapi/docs/conf.py
+recursive-include relengapi/docs *.rst
+recursive-include relengapi/docs/_static *
 recursive-include relengapi *.html *.jpg *.css *.js *.txt *.map *.eot *.svg *.ttf *.woff
 include LICENSE.txt
 include README.md

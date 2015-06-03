@@ -1,0 +1,40 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.list-group {
+    /* list-group's bottom margin is huge and looks awful when
+     * list-groups are nested */
+    margin-bottom:5px
+}
+.tt-searchbar {
+    /* a little breathing room beneath the searchbar */
+    margin-bottom: 1em;
+}
+
+.tt-result-controls {
+    text-align: right;
+    position: absolute;
+    right: 8px;
+    width: 3em;
+}
+
+.tt-filesize {
+    color: #888;
+}
+
+.tt-sha512 {
+    text-size: 85%;
+}
+
+.tt-upload-message {
+    font-style: italic;
+}
+
+.download-link {
+    cursor: pointer;
+}
+
+.details-link {
+    cursor: pointer;
+}

@@ -7,7 +7,6 @@ import logging
 import os
 import pkg_resources
 import shutil
-import sys
 
 from flask import Blueprint
 from flask import abort
@@ -28,18 +27,19 @@ bp.root_widget_template('docs_root_widget.html', priority=100)
 def get_builddir():
     if 'DOCS_BUILD_DIR' in current_app.config:
         return current_app.config['DOCS_BUILD_DIR']
-    relengapi_dist = pkg_resources.working_set.find(
-        pkg_resources.Requirement.parse('relengapi'))
-    return os.path.join(
-        pkg_resources.resource_filename(relengapi_dist.as_requirement(), ''),
-        'docs_build_dir')
+    # default to a sibling directory to the 'relengapi' package if
+    # not configured; this will work well for development and simple
+    # installs, but fail for production installs where the source is
+    # not modifiable.
+    relengapi_dist = pkg_resources.get_distribution('relengapi')
+    return os.path.join(relengapi_dist.location, 'docs_build_dir')
 
 
 def get_support(force=False, quiet=False):
     if not hasattr(current_app, 'docs_websupport') or force:
         builddir = get_builddir()
         # this is where files installed by setup.py's data_files go..
-        srcdir = os.path.join(sys.prefix, 'relengapi-docs')
+        srcdir = pkg_resources.resource_filename('relengapi', 'docs')
         kwargs = {}
         if quiet:
             kwargs['status'] = StringIO.StringIO()
@@ -84,25 +84,10 @@ class BuildDocsSubcommand(subcommands.Subcommand):
 
     def make_parser(self, subparsers):
         parser = subparsers.add_parser('build-docs',
-                                       help='make a built version of the '
-                                            'sphinx documentation')
+                                       help='build the sphinx documentation')
         parser.add_argument("--quiet", action='store_true',
                             help="Quiet output")
-        parser.add_argument("--development", '-d', action='store_true',
-                            help="""Build docs in development mode.  Use this if the
-                                 relengapi packages are installed with `setup.py
-                                 develop` or `pip install -e`""")
         return parser
-
-    def copy_docs(self, src_root, dst_root):
-        logger.info(
-            "Copying documentation from {!r} to {!r}".format(src_root, dst_root))
-        for src, dirs, files in os.walk(src_root):
-            dst = src.replace(src_root, dst_root)
-            if not os.path.isdir(dst):
-                os.makedirs(dst)
-            for f in files:
-                shutil.copyfile(os.path.join(src, f), os.path.join(dst, f))
 
     def run(self, parser, args):
         # always start with a fresh build dir
@@ -115,19 +100,6 @@ class BuildDocsSubcommand(subcommands.Subcommand):
         # creates some directories in its constructor, which may have been
         # called before the builddir was erased.
         support = get_support(force=True, quiet=args.quiet)
-
-        # if we're in development mode, go find and merge all of the `docs`
-        # directories from any distribution with a relengapi blueprint into the
-        # srcdir.  This is the same operation that 'setup.py install' would do,
-        # but that doesn't happen automatically on 'setup.py develop'.
-        if args.development:
-            dists = sorted(set(bp.dist for bp in current_app.relengapi_blueprints.itervalues()))
-            for dist in dists:
-                docs_dir = os.path.join(dist.location, 'docs')
-                if not os.path.isdir(docs_dir):
-                    # not covered because we may not have such a dist installed
-                    continue  # pragma: no cover
-                self.copy_docs(docs_dir, support.srcdir)
 
         # actually build the docs
         support.build()
