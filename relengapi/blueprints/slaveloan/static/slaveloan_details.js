@@ -69,4 +69,19 @@ function reload_actions() {
 }
 $(reload_actions);
 
+$('#complete_loan').click(
+  function() {
+    // XXX When has any automatic parts, make a confirmation
+    $.ajax({
+        type: 'DELETE',
+        url: _complete_loan_url,
+        dataType: 'json',
+        success: function(data) {
+            alertify.success("Successfully marked loan as Complete (Relinquished)");
+            reload_history();
+        }
+    })
+  }
+);
+
 });
