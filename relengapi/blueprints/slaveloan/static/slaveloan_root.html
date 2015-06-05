@@ -1,0 +1,47 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     License, v. 2.0. If a copy of the MPL was not distributed with this
+     file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<div ng-app="slaveloan" ng-controller="slaveloanController">
+    <h2>New Loan</h2>
+    
+    <form>
+        <fieldset><legend>Who You Are</legend>
+          <div class="form-group">
+            <label for="LDAP" class="control-label col-sm-2">Full LDAP Username: </label>
+            <div class="col-sm-4">
+              <input type="text" name="LDAP" value="{{user}}" class="form-control" disabled />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="Bugzilla" class="control-label col-sm-2">Your Bugzilla E-mail: </label>
+            <div class="col-sm-4">
+              <input type="text" name="bugzilla" class="form-control" placeholder="{{user}}" />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset><legend>Slave Info</legend>
+          <div class="form-group">
+            <label for="slave2loan" class="control-label col-sm-2">Slave to loan: </label>
+            <div class="col-sm-3">
+              <select name="slave2loan" class="form-control">
+                <option></option>
+                <option ng-repeat="(key, value) in machineTypes">{{key}}</option>
+              </select>
+            </div>
+          </div>
+          <div class="alert alert-info col-xs-12" role="alert">
+            If you don't know what machine you need either ping us for help in
+            <a href="irc://irc.mozilla.org/#releng">#releng
+              <span class="glyphicon glyphicon-new-window"></span></a>
+            or file a <a href="http://bugzil.la/foo">bug
+              <span class="glyphicon glyphicon-new-window"></span></a> instead,
+          </div>
+        <fieldset>
+
+<legend>Complete</legend>
+<span style="color:dark-green;">Submitting Request...</span>
+<button type="submit">Submit Loan Request</button>
+</fieldset>
+</form>
+</div>

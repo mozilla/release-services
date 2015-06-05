@@ -11,6 +11,7 @@ from sqlalchemy import asc
 from flask import Blueprint
 from flask import g
 from flask import render_template
+from flask import url_for
 from flask.ext.login import current_user
 from relengapi import apimethod
 from relengapi import p
@@ -18,6 +19,7 @@ from relengapi.blueprints.slaveloan import task_groups
 from relengapi.blueprints.slaveloan.slave_mappings import slave_patterns
 from relengapi.blueprints.slaveloan.slave_mappings import slave_to_slavetype
 from relengapi.lib import angular
+from relengapi.lib import api
 from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import InternalServerError
@@ -270,6 +272,8 @@ def update_loan_action(action_id, body):
 def root():
     return angular.template(
         'slaveloan_root.html',
+        url_for('.static', filename='slaveloan_root.js'),
+        machine_types=api.get_data(get_machine_classes),
     )
 #        url_for('.static', filename='clobberer.js'),
 #        url_for('.static', filename='clobberer.css'),
