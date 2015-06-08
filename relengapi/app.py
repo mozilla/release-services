@@ -12,6 +12,7 @@ import wsme.types
 from flask import Flask
 from flask import g
 from flask import render_template
+from flask import request
 from relengapi.lib import api
 from relengapi.lib import auth
 from relengapi.lib import aws
@@ -129,11 +130,20 @@ def create_app(cmdline=False, test_config=None):
                        "process restart")
         app.secret_key = os.urandom(24)
 
+    request_id_header = app.config.get('REQUEST_ID_HEADER')
+
+    def get_req_id_uuid():
+        return str(uuid.uuid4())
+
+    def get_req_id_header():
+        return request.headers.get(request_id_header) or get_req_id_uuid()
+    get_req_id = get_req_id_header if request_id_header else get_req_id_uuid
+
     @app.before_request
     def setup_request():
         # set up `g`
         g.db = app.db
-        g.request_id = str(uuid.uuid4())
+        g.request_id = get_req_id()
 
         # reset the logging context, deleting any info for the previous request
         # in this thread and binding new

@@ -71,3 +71,12 @@ To format log output as JSON, set the ``JSON_STRUCTURED_LOGGING`` setting to ``T
 
 Note, however, that logging output produced by non-RelengAPI code (e.g., Celery, SQLAlchemy) will not be JSON-formatted.
 Consumers must be able to accept non-JSON inputs.
+
+Request IDs
+-----------
+
+By default, RelengAPI will invent a "request ID" for each request it receives, and include that in all logging during the request handling.
+If you are deploying RelengAPI behind a load balancer or other service which has its own request IDs (such as Heroku's `HTTP Request IDs <https://devcenter.heroku.com/articles/http-request-id>`_), you can use those instead.
+Set ``REQUEST_ID_HEADER`` to the name of the header containing the request id; for example::
+
+    REQUEST_ID_HEADER = "X-Request-Id"
