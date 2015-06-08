@@ -4,6 +4,7 @@ recursive-include relengapi/docs *.rst
 recursive-include relengapi/docs/_static *
 recursive-include relengapi *.html *.jpg *.css *.js *.txt *.map *.eot *.svg *.ttf *.woff
 include LICENSE.txt
+include CONTRIBUTING.rst
 include README.md
 include contribute.json
 prune docs_build_dir
