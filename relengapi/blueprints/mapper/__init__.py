@@ -192,22 +192,7 @@ def _add_hash(session, git_commit, hg_changeset, project):
 
 @bp.route('/<projects>/rev/<vcs_type>/<commit>')
 def get_rev(projects, vcs_type, commit):
-    """Return the hg changeset SHA for a git commit id, or vice versa.
-
-    Args:
-        projects: Comma-delimited project names(s) string
-        vcs: String 'hg' or 'git' to categorize the commit you are passing
-              (not the type you wish to receive back)
-        commit: Revision or partial revision string of SHA to be converted
-
-    Returns:
-        (git_commit hg_changeset\n)
-
-    Exceptions:
-        HTTP 400: Unknown vcs or malformed SHA
-        HTTP 404: No corresponding SHA found
-        HTTP 500: Multiple corresponding SHAs found
-    """
+    # (documentation in relengapi/docs/usage/mapper.rst)
     _check_well_formed_sha(vcs_type, commit, exact_length=None)  # can raise http 400
     q = Hash.query.join(Project).filter(_project_filter(projects))
     if vcs_type == "git":
@@ -234,19 +219,7 @@ def get_rev(projects, vcs_type, commit):
 
 @bp.route('/<projects>/mapfile/full')
 def get_full_mapfile(projects):
-    """Get a map file containing mappings for one or more projects.
-
-    Args:
-        projects: Comma-delimited project names(s) string
-
-    Returns:
-        A map file containing all SHA mappings for the specified project(s) as
-        lines (git_commit hg_changeset\n), ordered by hg SHA, with mime type
-        'text/plain'
-
-    Exceptions:
-        HTTP 404: No results found
-    """
+    # (documentation in relengapi/docs/usage/mapper.rst)
     q = Hash.query.join(Project).filter(_project_filter(projects))
     q = q.order_by(Hash.hg_changeset)
     mapfile = _build_mapfile(q)
@@ -257,24 +230,7 @@ def get_full_mapfile(projects):
 
 @bp.route('/<projects>/mapfile/since/<since>')
 def get_mapfile_since(projects, since):
-    """Get a map file since date.
-
-    Args:
-        projects: Comma-delimited project names(s) string
-        since: Timestamp, in a format parsed by [dateutil.parser.parse]
-            (https://labix.org/python-dateutil)
-            evaluated based on the time the record was inserted into mapper
-            database, not the time of commit and not the time of conversion.
-
-    Returns:
-        A map file containing all SHA mappings for the specified project(s) as
-        lines (git_commit hg_changeset\n), ordered by hg SHA, with mime type
-        'text/plain', inserted in the mapper database since the time given
-
-    Exceptions:
-        HTTP 400: Invalid date format specified
-        HTTP 404: No results found
-    """
+    # (documentation in relengapi/docs/usage/mapper.rst)
     try:
         since_dt = dateutil.parser.parse(since)
     except ValueError as e:
@@ -350,74 +306,21 @@ def _insert_many(project, ignore_dups=False):
 @bp.route('/<project>/insert', methods=('POST',))
 @p.mapper.mapping.insert.require()
 def insert_many_no_dups(project):
-    """Insert many git-hg mapping entries via POST, and error on duplicate SHAs.
-
-    Args:
-        project: Single project name string
-        POST data: Map file lines (git_commit hg_changeset\n)
-        Content-Type: text/plain
-
-    Returns:
-        An empty json response body
-
-    Exceptions:
-        HTTP 400: Request content-type is not 'text/plain'
-        HTTP 400: Malformed SHA
-        HTTP 404: Project not found
-        HTTP 409: Duplicate mappings found
-        HTTP 500: Multiple matching projects found with same name
-    """
+    # (documentation in relengapi/docs/usage/mapper.rst)
     return _insert_many(project, ignore_dups=False)  # can raise HTTP 400, 404, 409, 500
 
 
 @bp.route('/<project>/insert/ignoredups', methods=('POST',))
 @p.mapper.mapping.insert.require()
 def insert_many_ignore_dups(project):
-    """Insert many git-hg mapping entries via POST, allowing duplicate SHAs.
-
-    Args:
-        project: Single project name string
-        POST data: Map file lines (git_commit hg_changeset\n)
-        Content-Type: text/plain
-
-    Returns:
-        An empty json response body
-
-    Exceptions:
-        HTTP 400: Request content-type is not 'text/plain'
-        HTTP 400: Malformed SHA
-        HTTP 404: Project not found
-        HTTP 500: Multiple matching projects found with same name
-    """
+    # (documentation in relengapi/docs/usage/mapper.rst)
     return _insert_many(project, ignore_dups=True)  # can raise HTTP 400, 404, 500
 
 
 @bp.route('/<project>/insert/<git_commit>/<hg_changeset>', methods=('POST',))
 @p.mapper.mapping.insert.require()
 def insert_one(project, git_commit, hg_changeset):
-    """Insert a single git-hg mapping.
-
-    Args:
-        project: Single project name string
-        git_commit: 40 char hexadecimal string
-        hg_changeset: 40 char hexadecimal string
-
-    Returns:
-        a json representation of the inserted data:
-        {
-            'date_added': <date>,
-            'project_name': <project>,
-            'git_commit': <git SHA>,
-            'hg_changeset': <hg SHA>,
-        }
-
-    Exceptions:
-        HTTP 400: Malformed SHA
-        HTTP 404: Project not found in database
-        HTTP 409: Mapping already exists for this project
-        HTTP 500: Problem inserting new mapping into database
-        HTTP 500: Multiple matching projects found with same name
-    """
+    # (documentation in relengapi/docs/usage/mapper.rst)
     session = g.db.session('mapper')
     proj = _get_project(session, project)  # can raise HTTP 404 or HTTP 500
     _add_hash(session, git_commit, hg_changeset, proj)  # can raise HTTP 400
@@ -440,18 +343,7 @@ def insert_one(project, git_commit, hg_changeset):
 @bp.route('/<project>', methods=('POST',))
 @p.mapper.project.insert.require()
 def add_project(project):
-    """Insert a new project into the database.
-
-    Args:
-        project: Single project name string
-
-    Returns:
-        An empty json response body
-
-    Exceptions:
-        HTTP 409: Project already exists
-    """
-
+    # (documentation in relengapi/docs/usage/mapper.rst)
     session = g.db.session('mapper')
     p = Project(name=project)
     session.add(p)
