@@ -32,8 +32,6 @@ relengapi.apimethod = api.apimethod
 # apply monkey patches
 monkeypatches.monkeypatch()
 
-logger = structlog.get_logger()
-
 
 class BlueprintInfo(wsme.types.Base):
 
@@ -92,7 +90,7 @@ blueprints = [_load_bp(n) for n in [
 def create_app(cmdline=False, test_config=None):
     app = Flask(__name__)
     relengapi_logging.configure_logging(app)
-    log = logger.new()
+    logger = structlog.get_logger()
 
     env_var = 'RELENGAPI_SETTINGS'
     if test_config:
@@ -101,12 +99,13 @@ def create_app(cmdline=False, test_config=None):
         if env_var in os.environ and os.environ[env_var]:
             app.config.from_envvar(env_var)
         else:
-            log.warning("Using default settings; to configure relengapi, set "
-                        "%s to point to your settings file" % env_var)
+            logger.warning("Using default settings; to configure relengapi, set "
+                           "%s to point to your settings file" % env_var)
 
     # reconfigure logging now that we have loaded configuration
     relengapi_logging.configure_logging(app)
-    log = logger.new()
+    # and re-construct the logger to get updated configuration
+    logger = structlog.get_logger()
 
     # add the necessary components to the app
     app.db = db.make_db(app)
@@ -120,20 +119,25 @@ def create_app(cmdline=False, test_config=None):
     app.relengapi_blueprints = {}
     for bp in blueprints:
         if cmdline:
-            log.info("registering blueprint %s", bp.name)
+            logger.info("registering blueprint %s", bp.name)
         app.register_blueprint(bp, url_prefix='/%s' % bp.name)
         app.relengapi_blueprints[bp.name] = bp
 
     # set up a random session key if none is specified
     if not app.config.get('SECRET_KEY'):
-        log.warning("setting per-process session key - sessions will be reset on "
-                    "process restart")
+        logger.warning("setting per-process session key - sessions will be reset on "
+                       "process restart")
         app.secret_key = os.urandom(24)
 
     @app.before_request
-    def decorate_g():
+    def setup_request():
+        # set up `g`
         g.db = app.db
         g.request_id = str(uuid.uuid4())
+
+        # reset the logging context, deleting any info for the previous request
+        # in this thread and binding new
+        relengapi_logging.reset_context(request_id=g.request_id)
 
     @app.route('/')
     def root():

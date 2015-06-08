@@ -5,13 +5,18 @@
 from __future__ import absolute_import
 
 import logging
+import structlog
 
 from celery import Celery
 from celery.signals import celeryd_after_setup
+from celery.signals import task_postrun
+from celery.signals import task_prerun
 from flask import current_app
+from relengapi.lib import logging as relengapi_logging
 from werkzeug.local import LocalProxy
 
 _defined_tasks = {}
+logger = structlog.get_logger()
 
 
 def make_celery(app):
@@ -56,6 +61,17 @@ def task(*args, **kwargs):
             '@db.task() takes exactly 1 argument ({0} given)'.format(
                 sum([len(args), len(kwargs)])))
     return inner(**kwargs)
+
+
+@task_prerun.connect
+def per_task_setup(sender, task_id, task, args, kwargs, **_kwargs):
+    relengapi_logging.reset_context(task_id=task_id, task_name=task.name)
+    logger.info("starting task %s" % (task_id,))
+
+
+@task_postrun.connect
+def log_task_complete(sender, task_id, task, args, kwargs, **_kwargs):
+    logger.info("completed task %s" % (task_id,))
 
 
 @celeryd_after_setup.connect

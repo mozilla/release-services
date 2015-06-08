@@ -8,9 +8,8 @@ import logging
 import structlog
 import sys
 
-from flask import g
-
 stdout_log = None
+logger = structlog.get_logger()
 
 
 def setupConsoleLogging(quiet):
@@ -47,13 +46,8 @@ def add_relengapi(logger, method_name, event_dict):
     return event_dict
 
 
-def add_request_id(logger, method_name, event_dict):
-    try:
-        event_dict['request_id'] = g.request_id
-    except (AttributeError, RuntimeError):
-        # RuntimeError occurs when working outside request context
-        pass
-    return event_dict
+def reset_context(**kwargs):
+    logger.new(**kwargs)
 
 
 def configure_logging(app):
@@ -61,7 +55,6 @@ def configure_logging(app):
         processors = [
             structlog.stdlib.filter_by_level,
             add_relengapi,
-            add_request_id,
             structlog.stdlib.add_logger_name,
             structlog.stdlib.add_log_level,
             structlog.stdlib.PositionalArgumentsFormatter(),
@@ -73,7 +66,6 @@ def configure_logging(app):
     else:
         processors = [
             structlog.stdlib.filter_by_level,
-            add_request_id,
             structlog.stdlib.PositionalArgumentsFormatter(),
             UnstructuredRenderer()
         ]
@@ -82,7 +74,7 @@ def configure_logging(app):
         stdout_log.setFormatter(logging.Formatter('%(message)s'))
 
     structlog.configure(
-        context_class=dict,
+        context_class=structlog.threadlocal.wrap_dict(dict),
         processors=processors,
         logger_factory=structlog.stdlib.LoggerFactory(),
         wrapper_class=structlog.stdlib.BoundLogger,
