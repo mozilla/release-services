@@ -92,10 +92,7 @@ class TokenLoader(object):
             typ_fn = self.type_functions[claims['typ']]
         except KeyError:
             return
-        user = typ_fn(claims)
-        if user:
-            logger.debug("Token access by %s", user)
-        return user
+        return typ_fn(claims)
 
 
 token_loader = TokenLoader()
