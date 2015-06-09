@@ -3,9 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import logging
 import os
-import tempfile
 import requests
+import tempfile
 import urllib2
+
 from boto.s3.key import Key
 
 from flask import current_app
