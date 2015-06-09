@@ -1,0 +1,8 @@
+relengapi-3.0.0
+===============
+
+* All RelengAPI blueprints are now contained in the same repository and Python distribution.
+  This release merges the history from the slaveloan, mapper, tooltool, and clobberer repositories.
+  All API endpoints remain unchanged after the merge.
+
+* Show a message in the tokenauth UI if no permissions are present (#227)
