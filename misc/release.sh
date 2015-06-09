@@ -53,12 +53,12 @@ message "$name-$oldversion -> $name-$newversion"
 
 status "creating release notes"
 
-relnote_file="docs/relnotes/${newversion}.rst"
+relnote_file="relengapi/docs/relnotes/${newversion}.rst"
 if [ -f "${relnote_file}" ]; then
     message "(${relnote_file} already exists)"
 else
-    sed -i $'/\.\. toctree::/a \\\n    '"${newversion}" docs/relnotes/index.rst
-    git add docs/relnotes/index.rst
+    sed -i $'/\.\. toctree::/a \\\n    '"${newversion}" relengapi/docs/relnotes/index.rst
+    git add relengapi/docs/relnotes/index.rst
 
     (
         echo "$name-$newversion"
