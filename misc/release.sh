@@ -82,7 +82,7 @@ git add ${relnote_file}
 
 status "building docs to verify"
 
-if ! relengapi build-docs --development; then
+if ! relengapi build-docs; then
     message "If the error was in the new release notes, re-run this script to try again"
     fail "building docs failed"
 fi
