@@ -13,6 +13,7 @@ from flask import Flask
 from flask import g
 from flask import render_template
 from flask import request
+from flask.ext.login import current_user
 from relengapi.lib import api
 from relengapi.lib import auth
 from relengapi.lib import aws
@@ -147,7 +148,9 @@ def create_app(cmdline=False, test_config=None):
 
         # reset the logging context, deleting any info for the previous request
         # in this thread and binding new
-        relengapi_logging.reset_context(request_id=g.request_id)
+        relengapi_logging.reset_context(
+                request_id=g.request_id,
+                user=str(current_user))
 
     @app.route('/')
     def root():
