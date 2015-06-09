@@ -53,7 +53,7 @@ p.tooltool.manage.doc("Manage tooltool files, including deleting and changing vi
 UPLOAD_EXPIRES_IN = 60
 GET_EXPIRES_IN = 60
 
-log = structlog.get_logger()
+logger = structlog.get_logger()
 
 
 def get_region_and_bucket(region_arg):
@@ -167,8 +167,9 @@ def upload_batch(region=None, body=None):
                     visibility=info.visibility,
                     size=info.size)
                 session.add(file)
-            log.info("generating signed PUT URL to {} for {}, expires in {}s".format(
-                     info.digest, current_user, UPLOAD_EXPIRES_IN))
+            logger.info("generating signed PUT URL to {} for {}, expires in {}s".format(
+                        info.digest, current_user, UPLOAD_EXPIRES_IN),
+                        tooltool_sha512=info.digest)
             info.put_url = s3.generate_url(
                 method='PUT', expires_in=UPLOAD_EXPIRES_IN, bucket=bucket,
                 key=util.keyname(info.digest),
@@ -341,8 +342,9 @@ def download_file(digest, region=None):
     key = util.keyname(digest)
 
     s3 = current_app.aws.connect_to('s3', selected_region)
-    log.info("generating signed GET URL to {} for {}, expires in {}s".format(
-             digest, current_user, GET_EXPIRES_IN))
+    logger.info("generating signed GET URL to {} for {}, expires in {}s".format(
+                digest, current_user, GET_EXPIRES_IN),
+                tooltool_sha512=digest)
     signed_url = s3.generate_url(
         method='GET', expires_in=GET_EXPIRES_IN, bucket=bucket, key=key)
 
