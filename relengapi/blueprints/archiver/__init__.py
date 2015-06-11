@@ -19,6 +19,7 @@ log = logging.getLogger(__name__)
 
 GET_EXPIRES_IN = 300
 
+
 @bp.route('/status/<task_id>')
 @api.apimethod(MozharnessArchiveTask, unicode)
 def task_status(task_id):
@@ -27,7 +28,7 @@ def task_status(task_id):
     of <task_id>.
 
     If the task is unknown, state will be PENDING. Once the task starts it will be updated to
-    PROGRESS and finally, if it completes, it will be either SUCCESS (no exceptions), or FAILURE.
+    STARTED and finally, if it completes, it will be either SUCCESS (no exceptions), or FAILURE.
 
     See update_state() within create_and_upload_archive and
     http://celery.readthedocs.org/en/latest/reference/celery.states.html for more details.
@@ -84,7 +85,8 @@ def get_archive_from_repo(cfg, rev, repo, region, suffix):
     # sanity check
     if not bucket_name or not bucket_region:
         valid_regions = str([bucket['REGION'] for bucket in cfg['S3_BUCKETS']])
-        log.warning('Unsupported region given: "{}" Valid Regions "{}"'.format(region, valid_regions))
+        log.warning('Unsupported region given: "{}" Valid Regions "{}"'.format(region,
+                                                                               valid_regions))
         raise NotFound
 
     s3 = current_app.aws.connect_to('s3', bucket_region)
@@ -94,9 +96,10 @@ def get_archive_from_repo(cfg, rev, repo, region, suffix):
     # first, see if the key exists
     if not bucket.get_key(key):
         task_id = rev
-        if create_and_upload_archive.AsyncResult(task_id).state != 'PROGRESS':
+        if create_and_upload_archive.AsyncResult(task_id).state != 'STARTED':
             # task is currently not in progress so start one.
-            create_and_upload_archive.apply_async(args=[cfg, rev, repo, suffix, key], task_id=task_id)
+            create_and_upload_archive.apply_async(args=[cfg, rev, repo, suffix, key],
+                                                  task_id=task_id)
         return {}, 202, {'Location': url_for('archiver.task_status', task_id=task_id)}
 
     log.info("generating GET URL to {}, expires in {}s".format(rev, GET_EXPIRES_IN))
@@ -106,4 +109,3 @@ def get_archive_from_repo(cfg, rev, repo, region, suffix):
         bucket=bucket_name, key=key
     )
     return redirect(signed_url)
-

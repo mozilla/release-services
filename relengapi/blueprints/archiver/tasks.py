@@ -5,7 +5,6 @@ import logging
 import os
 import requests
 import tempfile
-import urllib2
 
 from boto.s3.key import Key
 
@@ -28,17 +27,17 @@ def upload_url_archive_to_s3(key, url, region, bucket, suffix):
     # rather than worrying about pointers and seeking, let's avail of a named temp file that is
     # allowed to persist after the file is closed. Finally, when are finished, we can clean up
     # the temp file
+    resp = requests.get(url)
     temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".{}".format(suffix), delete=False)
-    data = urllib2.urlopen(url).read()
     with open(temp_file.name, "wb") as tmpf:
-        tmpf.write(data)
+        tmpf.write(resp.content)
     k.set_contents_from_filename(temp_file.name)
     os.unlink(temp_file.name)  # clean up tmp file
 
     return s3.generate_url(expires_in=GET_EXPIRES_IN, method='GET', bucket=bucket, key=key)
 
 
-@celery.task(bind=True)
+@celery.task(bind=True, track_started=True)
 def create_and_upload_archive(self, cfg, rev, repo, suffix, key):
     """
     A celery task that downloads an archive if it exists from a src location and attempts to upload
@@ -47,29 +46,24 @@ def create_and_upload_archive(self, cfg, rev, repo, suffix, key):
     Throughout this process, update the state of the task and finally return the location of the
     s3 urls if successful.
     """
-    return_status = "Task completed! Check 's3_urls' for upload locations."
+    status = "Task completed! Check 's3_urls' for upload locations."
     s3_urls = {}
     src_url = cfg['URL_SRC_TEMPLATE'].format(repo=repo, rev=rev, suffix=suffix)
 
-    self.update_state(state='PROGRESS',
-                      meta={'status': 'ensuring archive origin location exists.', 'src_url': src_url})
-    resp = requests.get(src_url)
+    resp = requests.head(src_url)
     if resp.status_code == 200:
-        self.update_state(state='PROGRESS',
-                          meta={'status': 'uploading archive to s3 buckets', 'src_url': src_url})
         for bucket in cfg['S3_BUCKETS']:
             s3_urls[bucket['REGION']] = upload_url_archive_to_s3(key, src_url, bucket['REGION'],
                                                                  bucket['NAME'], suffix)
         if not any(s3_urls.values()):
-            return_status = "Could not upload any archives to s3. Check logs for errors."
-            log.warning(return_status)
+            status = "Could not upload any archives to s3. Check logs for errors."
+        log.warning(status)
     else:
-        return_status = "Can't find archive given branch, rev, and suffix. Does url {} exist? " \
-                        "Request Response code: {}".format(src_url, resp.status_code)
-        log.warning(return_status)
-
+        status = "Can't find archive given branch, rev, and suffix. Does url {} exist? " \
+                 "Request Response code: {}".format(src_url, resp.status_code)
+        log.warning(status)
     return {
-        'status': return_status,
+        'status': status,
         'src_url': src_url,
         's3_urls': s3_urls,
     }

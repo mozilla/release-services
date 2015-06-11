@@ -22,5 +22,3 @@ class MozharnessArchiveTask(wsme.types.Base):
 
     #: s3 links for the archives by region
     s3_urls = {str: str}
-
-
