@@ -277,7 +277,7 @@ def root():
         'slaveloan_root.html',
         url_for('.static', filename='slaveloan_root.js'),
         machine_types=api.get_data(get_machine_classes),
-        loanRequestUrl=url_for(new_loan_request),
+        loanRequestUrl=url_for("slaveloan.new_loan_request"),
     )
 
 
