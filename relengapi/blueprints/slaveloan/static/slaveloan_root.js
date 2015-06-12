@@ -34,7 +34,7 @@ angular.module('slaveloan').controller('slaveloanController',
             } else {
                 alertify.error("Error submitting loan");
             }
-        });        
+        });
     };
 
 });
