@@ -279,9 +279,6 @@ def root():
         machine_types=api.get_data(get_machine_classes),
         loanRequestUrl=url_for(new_loan_request),
     )
-#        url_for('.static', filename='clobberer.js'),
-#        url_for('.static', filename='clobberer.css'),
-    # return render_template('slaveloan_root.html')
 
 
 @bp.route('/details/<int:id>')

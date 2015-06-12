@@ -12,13 +12,13 @@ angular.module('slaveloan').controller('slaveloanController',
         slavetype: '',
     };
 
-    $scope.submitLoanRequest = function(str) {
+    $scope.submitLoanRequest = function() {
         var ldap = $scope.newLoanModel.ldap_email;
         var bugzilla = $scope.newLoanModel.bugzilla_email;
         var slavetype = $scope.newLoanModel.slavetype;
 
         restapi({
-            url: loanRequestUrl,
+            url: $scope.loanRequestUrl,
             method: 'POST',
             headers: {'Content-Type': 'application/json; charset=utf-8'},
             data: JSON.stringify({
