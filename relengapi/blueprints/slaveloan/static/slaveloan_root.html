@@ -7,15 +7,15 @@
     <form>
         <fieldset><legend>Who You Are</legend>
           <div class="form-group">
-            <label for="LDAP" class="control-label col-sm-2">Full LDAP Username: </label>
+            <label for="ldap_email" class="control-label col-sm-2">Full LDAP Username: </label>
             <div class="col-sm-4">
-              <input type="text" name="LDAP" value="{{user}}" class="form-control" disabled />
+              <input type="text" ng-model="newLoanModel.ldap_email" name="ldap_email" class="form-control" disabled />
             </div>
           </div>
           <div class="form-group">
-            <label for="Bugzilla" class="control-label col-sm-2">Your Bugzilla E-mail: </label>
+            <label for="bugzilla_email" class="control-label col-sm-2">Your Bugzilla E-mail: </label>
             <div class="col-sm-4">
-              <input type="text" name="bugzilla" class="form-control" placeholder="{{user}}" />
+              <input type="text" name="bugzilla_email" ng-model="newLoanModel.bugzilla_email" class="form-control" placeholder="{{user}}" />
             </div>
           </div>
         </fieldset>
@@ -24,7 +24,7 @@
           <div class="form-group">
             <label for="slave2loan" class="control-label col-sm-2">Slave to loan: </label>
             <div class="col-sm-3">
-              <select name="slave2loan" class="form-control">
+              <select name="slave2loan" class="form-control" ng-model="newLoanModel.slavetype" ng-required="true">
                 <option></option>
                 <option ng-repeat="(key, value) in machineTypes">{{key}}</option>
               </select>
@@ -41,7 +41,7 @@
 
 <legend>Complete</legend>
 <span style="color:dark-green;">Submitting Request...</span>
-<button type="submit">Submit Loan Request</button>
+<button class="btn btn-primary btn-block"  ng-disabled="addSlaveForm.$invalid" ng-click="submitLoanRequest('hi')">Submit Loan Request</button>
 </fieldset>
 </form>
 </div>

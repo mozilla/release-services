@@ -144,12 +144,15 @@ def new_loan_from_admin(body):
 
 
 @bp.route('/loans/request', methods=['POST'])
-@p.slaveloan.admin.require()
 @apimethod(rest.Loan, body=rest.LoanRequest)
 def new_loan_request(body):
     "User Loan Requesting, returns the id of the loan"
     if not body.ldap_email:
         raise BadRequest("Missing LDAP E-Mail")
+    if not p.slaveloan.admin.can():
+        if not body.ldap_email == current_user.authenticated_email:
+            raise BadRequest("You can't request loans on behalf of others.")
+
     if not body.requested_slavetype:
         raise BadRequest("Missing slavetype")
 
@@ -274,6 +277,7 @@ def root():
         'slaveloan_root.html',
         url_for('.static', filename='slaveloan_root.js'),
         machine_types=api.get_data(get_machine_classes),
+        loanRequestUrl=url_for(new_loan_request),
     )
 #        url_for('.static', filename='clobberer.js'),
 #        url_for('.static', filename='clobberer.css'),
