@@ -7,7 +7,9 @@ import requests
 import tempfile
 
 from boto.s3.key import Key
+from random import randint
 
+from celery.task import current
 from flask import current_app
 from relengapi.lib import celery
 
@@ -37,7 +39,7 @@ def upload_url_archive_to_s3(key, url, region, bucket, suffix):
     return s3.generate_url(expires_in=GET_EXPIRES_IN, method='GET', bucket=bucket, key=key)
 
 
-@celery.task(bind=True, track_started=True)
+@celery.task(bind=True, track_started=True, max_retries=3)
 def create_and_upload_archive(self, cfg, rev, repo, suffix, key):
     """
     A celery task that downloads an archive if it exists from a src location and attempts to upload
@@ -52,15 +54,22 @@ def create_and_upload_archive(self, cfg, rev, repo, suffix, key):
 
     resp = requests.head(src_url)
     if resp.status_code == 200:
-        for bucket in cfg['S3_BUCKETS']:
-            s3_urls[bucket['REGION']] = upload_url_archive_to_s3(key, src_url, bucket['REGION'],
-                                                                 bucket['NAME'], suffix)
+        try:
+            for bucket in cfg['S3_BUCKETS']:
+                s3_urls[bucket['REGION']] = upload_url_archive_to_s3(key, src_url, bucket['REGION'],
+                                                                     bucket['NAME'], suffix)
+        except Exception as exc:
+            # set a jitter enabled delay
+            # where an aggressive delay would result in: 7s, 49s, and 343s
+            # and a gentle delay would result in: 4s, 16s, and 64s
+            delay = randint(4, 7) ** (current.request.retries + 1)  # retries == 0 on first attempt
+            current.retry(exc=exc, countdown=delay)
         if not any(s3_urls.values()):
             status = "Could not upload any archives to s3. Check logs for errors."
         log.warning(status)
     else:
-        status = "Can't find archive given branch, rev, and suffix. Does url {} exist? " \
-                 "Request Response code: {}".format(src_url, resp.status_code)
+        status = "Url not found. Does it exist? url: '{}', response: '{}' ".format(src_url,
+                                                                                   resp.status_code)
         log.warning(status)
     return {
         'status': status,
