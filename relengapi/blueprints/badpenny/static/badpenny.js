@@ -198,7 +198,7 @@ angular.module('badpenny').directive('bpJob', function(taskService) {
                     // Humanize just says "a few seconds", which isn't good enough.
                     return "in " + (ms / 1000.0).toFixed(2) + ' seconds';
                 } else {
-                    return "in " + moment.duration(diff).humanize();
+                    return "in " + dur.humanize();
                 }
             };
 
