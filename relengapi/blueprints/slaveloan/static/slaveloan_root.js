@@ -8,7 +8,7 @@ angular.module('slaveloan').controller('slaveloanController',
                                     function($scope, restapi, initial_data) {
     $scope.machineTypes = initial_data.machine_types;
     $scope.user = initial_data.user.authenticated_email;
-    $scope.loanRequestUrl = initial_data.loanRequestUrl;
+    $scope.loanRequestUrl = initial_data.loan_request_url;
 
     $scope.newLoan = {
         ldap_email: $scope.user,
