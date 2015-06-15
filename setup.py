@@ -50,7 +50,7 @@ setup(
     install_requires=[
         "Flask",
         "furl",
-        "relengapi>=0.3",
+        "relengapi>=0.3,<3.0",
         "redo",
         # Temporary freeze until https://github.com/bhearsum/bzrest/pull/3 is fixed
         "bzrest==0.9",
