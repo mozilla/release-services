@@ -6,16 +6,18 @@ angular.module('slaveloan').controller('slaveloanController',
     $scope.user = initial_data.user.authenticated_email;
     $scope.loanRequestUrl = initial_data.loanRequestUrl;
 
-    $scope.newLoanModel = {
+    $scope.newLoan = {
         ldap_email: $scope.user,
         bugzilla_email: '',
         slavetype: '',
     };
 
+    $scope.origNewLoan = angular.copy($scope.newLoan);
+
     $scope.submitLoanRequest = function() {
-        var ldap = $scope.newLoanModel.ldap_email;
-        var bugzilla = $scope.newLoanModel.bugzilla_email;
-        var slavetype = $scope.newLoanModel.slavetype;
+        var ldap = $scope.newLoan.ldap_email;
+        var bugzilla = $scope.newLoan.bugzilla_email;
+        var slavetype = $scope.newLoan.slavetype;
 
         restapi({
             url: $scope.loanRequestUrl,
@@ -30,7 +32,9 @@ angular.module('slaveloan').controller('slaveloanController',
         }).then(function(response) {
             if (response.data.result) {
                 var r = response.data.result;
-                alertify("Loan id " + r.id + " successfully filed")
+                $scope.newLoan = angular.copy($scope.origNewLoan);
+                $scope.newLoanForm.$setPristine();
+                alertify.success("Loan id " + r.id + " successfully filed")
             } else {
                 alertify.error("Error submitting loan");
             }

@@ -4,18 +4,18 @@
 <div ng-app="slaveloan" ng-controller="slaveloanController">
     <h2>New Loan</h2>
     
-    <form>
+    <form name="newLoanForm">
         <fieldset><legend>Who You Are</legend>
           <div class="form-group">
             <label for="ldap_email" class="control-label col-sm-2">Full LDAP Username: </label>
             <div class="col-sm-4">
-              <input type="text" ng-model="newLoanModel.ldap_email" name="ldap_email" class="form-control" disabled />
+              <input type="text" ng-model="newLoan.ldap_email" name="ldap_email" class="form-control" disabled />
             </div>
           </div>
           <div class="form-group">
             <label for="bugzilla_email" class="control-label col-sm-2">Your Bugzilla E-mail: </label>
             <div class="col-sm-4">
-              <input type="text" name="bugzilla_email" ng-model="newLoanModel.bugzilla_email" class="form-control" placeholder="{{user}}" />
+              <input type="text" name="bugzilla_email" ng-model="newLoan.bugzilla_email" class="form-control" placeholder="{{user}}" />
             </div>
           </div>
         </fieldset>
@@ -24,7 +24,7 @@
           <div class="form-group">
             <label for="slave2loan" class="control-label col-sm-2">Slave to loan: </label>
             <div class="col-sm-3">
-              <select name="slave2loan" class="form-control" ng-model="newLoanModel.slavetype" ng-required="true">
+              <select name="slave2loan" class="form-control" ng-model="newLoan.slavetype" ng-required="true">
                 <option></option>
                 <option ng-repeat="(key, value) in machineTypes">{{key}}</option>
               </select>
