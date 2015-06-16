@@ -49,8 +49,7 @@ def test_invalid_hg_url(app, client):
     with app.app_context():
         task = create_and_upload_archive.apply_async(args=[config, rev, repo, suffix, key],
                                                      task_id='9ebd530c5843')
-    assert ("Url not found. Does it exist?" in task.info.get('status', {}),
-            "invalid hg url was not caught!")
+    assert "Url not found." in task.info.get('status', {}), "invalid hg url was not caught!"
 
 
 @moto.mock_s3
@@ -64,8 +63,10 @@ def test_s3_urls_exist_for_each_region(app, client):
         task = create_and_upload_archive.apply_async(args=[config, rev, repo, suffix, key],
                                                      task_id='9ebd530c5843')
     expected_regions = [b["REGION"] for b in cfg["SUBREPO_MOZHARNESS_CFG"]["S3_BUCKETS"]]
-    assert (all([task.info.get("s3_urls", {}).get("region") for region in expected_regions]),
-            "s3 urls not uploaded for each region!")
+    all_regions_have_s3_urls = [
+        task.info.get("s3_urls", {}).get(region) for region in expected_regions
+    ]
+    assert all(all_regions_have_s3_urls), "s3 urls not uploaded for each region!"
 
 
 @moto.mock_s3
