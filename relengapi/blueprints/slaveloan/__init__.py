@@ -11,12 +11,15 @@ from sqlalchemy import asc
 from flask import Blueprint
 from flask import g
 from flask import render_template
+from flask import url_for
 from flask.ext.login import current_user
 from relengapi import apimethod
 from relengapi import p
 from relengapi.blueprints.slaveloan import task_groups
 from relengapi.blueprints.slaveloan.slave_mappings import slave_patterns
 from relengapi.blueprints.slaveloan.slave_mappings import slave_to_slavetype
+from relengapi.lib import angular
+from relengapi.lib import api
 from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import InternalServerError
@@ -162,12 +165,15 @@ def new_loan_from_admin(body):
 
 
 @bp.route('/loans/request', methods=['POST'])
-@p.slaveloan.admin.require()
 @apimethod(rest.Loan, body=rest.LoanRequest)
 def new_loan_request(body):
     "User Loan Requesting, returns the id of the loan"
     if not body.ldap_email:
         raise BadRequest("Missing LDAP E-Mail")
+    if not p.slaveloan.admin.can():
+        if not body.ldap_email == current_user.authenticated_email:
+            raise BadRequest("You can't request loans on behalf of others.")
+
     if not body.requested_slavetype:
         raise BadRequest("Missing slavetype")
 
@@ -288,7 +294,12 @@ def update_loan_action(action_id, body):
 @bp.route('/')
 @flask_login.login_required
 def root():
-    return render_template('slaveloan_root.html')
+    return angular.template(
+        'slaveloan_root.html',
+        url_for('.static', filename='slaveloan_root.js'),
+        machine_types=api.get_data(get_machine_classes),
+        loan_request_url=url_for("slaveloan.new_loan_request"),
+    )
 
 
 @bp.route('/details/<int:id>')
