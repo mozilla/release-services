@@ -17,20 +17,29 @@ logger = logging.getLogger(__name__)
 def cleanup_old_jobs(job_status):
     session = current_app.db.session('relengapi')
     Task = tables.BadpennyTask
+    Job = tables.BadpennyJob
 
     old_job_days = current_app.config.get('BADPENNY_OLD_JOB_DAYS', 7)
     old = time.now() - datetime.timedelta(days=old_job_days)
     deleted = 0
 
     for task in Task.query.all():
-        # consider all but the most recent job
-        jobs = reversed(task.jobs[1:])
-        for job in jobs:
-            if job.created_at < old:
-                for log in job.logs:
+        # Iterate until we find a job that's not too old.  Only
+        # delete on the next iteration to avoid deleting the most
+        # recent job.
+        to_delete = None
+        for job in Job.query.filter(Job.task_id == task.id).order_by(Job.created_at):
+            if to_delete:
+                for log in to_delete.logs:
                     session.delete(log)
-                session.delete(job)
+                session.delete(to_delete)
+                to_delete = None
                 deleted += 1
+
+            if job.created_at < old:
+                to_delete = job
+            else:
+                break
 
     if deleted:
         logger.info("removed %d old jobs", deleted)

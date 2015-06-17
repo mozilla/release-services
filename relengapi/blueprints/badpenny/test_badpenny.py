@@ -557,16 +557,17 @@ def test_cleanup(app):
             if log:
                 session.add(tables.BadpennyJobLog(id=id, content=log))
 
-        newjob(1, dt(2014, 9, 20))
-        newjob(2, dt(2014, 9, 15), log="Hello, world\n")
-        newjob(3, dt(2014, 9, 10))
-        newjob(4, dt(2014, 9, 5), log="Hello, world\n")
+        newjob(1, dt(2014, 9, 4))
+        newjob(2, dt(2014, 9, 20))
+        newjob(3, dt(2014, 9, 15), log="Hello, world\n")
+        newjob(4, dt(2014, 9, 10))
+        newjob(5, dt(2014, 9, 5), log="Hello, world\n")
         session.commit()
         with mock.patch('relengapi.blueprints.badpenny.cleanup.time.now') as now:
             now.return_value = dt(2014, 9, 16)
             cleanup.cleanup_old_jobs(job_status)
 
         eq_(sorted([j.id for j in tables.BadpennyJob.query.all()]),
-            sorted([1, 2, 3]))  # 4 is gone
+            sorted([2, 3, 4]))  # 1, 5 are gone
         eq_(sorted([j.id for j in tables.BadpennyJobLog.query.all()]),
-            sorted([2]))  # log for 4 is gone
+            sorted([3]))  # log for 5 is gone
