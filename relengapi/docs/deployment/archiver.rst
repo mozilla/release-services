@@ -8,7 +8,7 @@ the endpoint.
 For AWS credentials, each bucket should be limited to the AWS IAM role corresponding to the AWS credentials. Buckets in
 the configuration are required to be pre-existing.
 
-Finally, Archiver avails of Celery. You will need to provide a broker and back-end.
+Finally, Archiver uses Celery. You will need to provide a broker and back-end.
 
 Example config::
 
@@ -21,11 +21,9 @@ Example config::
         'secret_access_key': 'secretAccessKeyExample',
     }
 
-    # for the mozharness endpoint
-    SUBREPO_MOZHARNESS_CFG = {
-        'S3_BUCKETS': [
-            {'REGION': 'us-east-1', 'NAME': 'example-bucket-name-for-us-east-1'},
-            {'REGION': 'us-west-2', 'NAME': 'example-bucket-name-for-us-west-2'}
-        ],
-        "URL_SRC_TEMPLATE": "https://hg.mozilla.org/{repo}/archive/{rev}.{suffix}/testing/mozharness"
+    ARCHIVER_S3_BUCKETS = {
+        'us-east-1', 'archiver-us-east-1',
+        'us-west-2', 'archiver-us-west-2'
     }
+
+    ARCHIVER_HGMO_URL_TEMPLATE = "https://hg.mozilla.org/{repo}/archive/{rev}.{suffix}/{subdir}"
