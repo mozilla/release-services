@@ -31,3 +31,9 @@ Every job is logged in the database, and for a busy production environment this 
 
 A cleanup task runs regularly, purging information about old jobs.
 The ``BADPENNY_OLD_JOB_DAYS`` configuration parameter specifies the number of days after which jobs will be purged from the database, defaulting to 7.
+
+Administration
+--------------
+
+Give ``base.badpenny.view`` permission to anyone who should be able to examine badpenny task history and logs.
+The ``base.badpenny.run`` permission allows jobs to be run via API call, which can be helpful when testing.
