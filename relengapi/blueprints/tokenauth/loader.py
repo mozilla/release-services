@@ -9,6 +9,7 @@ from relengapi import p
 from relengapi.blueprints.tokenauth import tables
 from relengapi.blueprints.tokenauth import tokenstr
 from relengapi.lib import auth
+from werkzeug.exceptions import BadRequest
 
 logger = logging.getLogger(__name__)
 
@@ -71,10 +72,17 @@ class TokenLoader(object):
             # see https://github.com/mozilla/build-relengapi/pull/192/files
             logger.warning("client is using 'Authentication' header instead of "
                            "'Authorization'")
+
+        # If we've gotten this far, then we'll either authenticate the request
+        # or fail with 400 Bad Request.  This is less confusing for users than
+        # succeeding with no permissions.
         header = header.split()
         if len(header) != 2 or header[0].lower() != 'bearer':
-            return
-        return self.from_str(header[1])
+            raise BadRequest("Invalid Authorization header")
+        user = self.from_str(header[1])
+        if not user:
+            raise BadRequest("Invalid Authorization header")
+        return user
 
     def from_str(self, token_str):
         claims = tokenstr.str_to_claims(token_str)
