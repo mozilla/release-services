@@ -134,10 +134,11 @@ def upload_batch(region=None, body=None):
     except AttributeError:
         raise BadRequest("Could not determine authenticated username")
 
-    # validate permission first
+    # verify permissions based on visibilities
     visibilities = set(f.visibility for f in body.files.itervalues())
     for v in visibilities:
-        if not p.get('tooltool.upload.{}'.format(v)).can():
+        prm = p.get('tooltool.upload.{}'.format(v))
+        if not prm or not prm.can():
             raise Forbidden("no permission to upload {} files".format(v))
 
     session = g.db.session('relengapi')

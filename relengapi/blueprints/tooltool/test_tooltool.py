@@ -354,6 +354,19 @@ def test_upload_batch_mixed_visibility_no_permissions(app, client):
 
 @moto.mock_s3
 @test_context
+def test_upload_batch_no_visibility(app, client):
+    """If no visibility is supplied for a file in a batch, the request is
+    invalid (400)"""
+    # note that it's WSME that enforces this validity
+    batch = mkbatch()
+    del batch['files']['one']['visibility']
+    resp = upload_batch(client, batch)
+    eq_(resp.status_code, 400, resp.data)
+    assert_no_upload_rows(app)
+
+
+@moto.mock_s3
+@test_context
 def test_upload_batch_success_fresh(client, app):
     """A POST to /upload with a good batch succeeds, returns signed URLs expiring
     in one hour, and inserts the new batch into the DB with links to files, but
