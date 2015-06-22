@@ -52,8 +52,5 @@ class JsonToken(wsme.types.Base):
     #: user email for user-associated tokens
     user = wsme.types.wsattr(unicode, mandatory=False)
 
-    #: client id for client-associated tokens
-    client_id = wsme.types.wsattr(int, mandatory=False)
-
     #: the opaque token string (only set on new tokens)
     token = wsme.types.wsattr(unicode, mandatory=False)
