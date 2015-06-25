@@ -1,0 +1,68 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     License, v. 2.0. If a copy of the MPL was not distributed with this
+     file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<div ng-app='treestatus' id="treestatus" ng-controller="TreeDetailController">
+    <div class="row">
+        <div class="col-xs-12">
+            <h2 class="treestatus">{{tree.tree}} status is
+                <span class="{{tree.status|status2class}}">{{tree.status|uppercase}}</span>
+            </h2><br/>
+            <h2 class="treestatus" ng-if="tree.reason">Reason:
+                <span ng-bind-html="tree.reason|linkifyBugs"></span></h2>
+            <h3 class="treestatus" ng-if="tree.message_of_the_day"
+                ng-bind-html="tree.message_of_the_day|linkifyBugs"></h3>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12" ng-class="{'col-lg-8': can_sheriff}">
+            <table class="history">
+                <thead>
+                    <tr>
+                        <th class="tableWho">User</th>
+                        <th class="tableWhen">Time</th>
+                        <th class="tableState">Action</th>
+                        <th class="tableReason">Reason</th>
+                        <th class="tableTags">Tags</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="log in logs">
+                    <td class="tableWho">{{log.who|shortName}}</td>
+                    <td class="tableWhen">{{log.when}} UTC</td>
+                    <td class="tableState {{log.action|status2class}}">
+                        {{log.action|uppercase}}
+                    </td>
+                    <td class="tableReason" ng-bind-html="log.reason|linkifyBugs"></td>
+                    <td class="tableTags">{{log.tags|list}}</td>
+                </tr>
+                <tfoot ng-hide="show_all_logs">
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            <a ng-click="loadAllLogs()">More..</a>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="col-xs-12 col-lg-4" ng-if="can_sheriff">
+            <tree-status-control update="updateTree(status, reason, tags, remember)">
+            </tree-status-control>
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Message of the Day</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="input-group" ng-if="can_sheriff">
+                        <input type="text" class="form-control" placeholder="message of the day"
+                               ng-model="new_motd" />
+                        <span class="input-group-btn">
+                            <button class="btn btn-default"
+                                    ng-click="setMotd(new_motd)">Set MOTD</button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <ng-include src="'/treestatus/static/footer.html'"></ng-include>
+</div>

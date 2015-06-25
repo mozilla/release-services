@@ -1,0 +1,54 @@
+<div class="panel panel-primary">
+    <div class="panel-heading">
+        <h3 class="panel-title" ng-if="!plural">Update Tree</h3>
+        <h3 class="panel-title" ng-if="plural">Update Trees</h3>
+    </div>
+    <div class="panel-body">
+        <form name="tsForm" novalidate ng-submit="submit()">
+            <div class="form-group">
+                <label for="status">New Tree Status</label>
+                <select name="status" class="form-control"
+                    ng-model="status" ng-options="st for st in allowed_statuses">
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Tags</label>
+                <span ng-if="status == 'closed'" class="text-muted">(required to close)</span>
+                <div ng-repeat="(tag, descr) in allowed_tags" class="checkbox">
+                    <label>
+                            <input ng-model="tags[tag]" type="checkbox" />{{descr}}
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="reason">Reason for Change</label>
+                <span ng-if="status == 'closed'" class="text-muted">(required to close)</span>
+                <ul>
+                    <li class="small">Please indicate the reason for closure,
+                        preferably with a bug link</li>
+                    <li class="small">Please indicate conditions for reopening,
+                        especially if you might disappear before reopening the
+                        tree yourself.</li>
+                </ul>
+                <input type="text" name="reason" class="form-control"
+                    placeholder="reason" ng-model="reason" ng-required="status == 'closed'">
+            </div>
+            <div class="form-group">
+                <label for="remember">Remember Change</label>
+                <div class="checkbox">
+                    <label>
+                        <input ng-model="remember" type="checkbox" />
+                        Remember this change to undo later
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <!-- TODO: add an "=disabled" to disable this externally (when
+                     nothing's checked) -->
+                <button ng-disabled="tsForm.$invalid || formInvalid() || disabled"
+                        class="btn btn-block btn-primary">Update
+                        <span ng-if="plural">Selected Trees</span></button>
+            </div>
+        </form>
+    </div>
+</div>
