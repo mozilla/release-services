@@ -71,7 +71,8 @@ def get_task(task_name):
 @apimethod(rest.BadpennyJob, unicode)
 @p.base.badpenny.run.require()
 def run_task_now(task_name):
-    """Force the given badpenny task to run now."""
+    """Force the given badpenny task to run now.  This method requires the
+    ``base.badpenny.run`` permission."""
     t = tables.BadpennyTask.query.filter(
         tables.BadpennyTask.name == task_name).first()
     if not t:
