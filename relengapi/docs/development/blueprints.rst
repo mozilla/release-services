@@ -48,20 +48,8 @@ Create a test script, ``relengapi/blueprints/bubbler/test_bubbler.py``::
     # License, v. 2.0. If a copy of the MPL was not distributed with this
     # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-    import contextlib
-    import datetime
-    import mock
-    import pytz
-
     from flask import json
     from nose.tools import eq_
-    from relengapi.blueprints.badpenny import cleanup
-    from relengapi.blueprints.badpenny import cron
-    from relengapi.blueprints.badpenny import execution
-    from relengapi.blueprints.badpenny import rest
-    from relengapi.blueprints.badpenny import tables
-    from relengapi.lib import badpenny
-    from relengapi.lib.permissions import p
     from relengapi.lib.testing.context import TestContext
 
     test_context = TestContext()
