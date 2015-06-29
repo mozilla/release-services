@@ -22,8 +22,8 @@ Example config::
     }
 
     ARCHIVER_S3_BUCKETS = {
-        'us-east-1', 'archiver-us-east-1',
-        'us-west-2', 'archiver-us-west-2'
+        'us-east-1': 'archiver-us-east-1',
+        'us-west-2': 'archiver-us-west-2'
     }
 
     ARCHIVER_HGMO_URL_TEMPLATE = "https://hg.mozilla.org/{repo}/archive/{rev}.{suffix}/{subdir}"
