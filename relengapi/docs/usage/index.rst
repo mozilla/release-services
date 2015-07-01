@@ -16,3 +16,4 @@ Subsequent sections describe the interfaces provided by the individual component
     clobberer
     tooltool
     slaveloan
+    archiver

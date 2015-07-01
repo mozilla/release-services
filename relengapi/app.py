@@ -83,6 +83,7 @@ blueprints = [_load_bp(n) for n in [
     'slaveloan',
     'tokenauth',
     'tooltool',
+    'archiver',
 ]]
 
 

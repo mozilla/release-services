@@ -16,3 +16,4 @@ This is mostly limited to system administrators and those responsible for config
     sqs
     tooltool
     slaveloan
+    archiver
