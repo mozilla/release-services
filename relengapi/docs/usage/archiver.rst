@@ -15,7 +15,7 @@ Currently, only hg.mozilla.org support is configured:
 
 Examples::
 
-    # To get an in-tree Mozharness archive based on: http://hg.mozilla.org/mozilla-central/rev/3d11cb4f31b9
+    # To get an in-tree Mozharness archive based on: http://hg.mozilla.org/projects/ash/rev/42bf8560b395
     > curl -i http://127.0.0.1:8010/archiver/hgmo/projects/ash/42bf8560b395?subdir=testing/mozharness&preferred_region=us-west-2
     HTTP/1.0 202 ACCEPTED
     Content-Type: application/json
