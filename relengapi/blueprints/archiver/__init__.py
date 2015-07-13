@@ -36,6 +36,12 @@ def task_status(task_id):
     If state is SUCCESS, it is safe to check response['s3_urls'] for the archives submitted to s3
     """
     task = create_and_upload_archive.AsyncResult(task_id)
+    # archiver does not create any custom states, so we can assume to have only the defaults:
+    # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-states
+    # therefore, delete our state_id tracker from the db if the celery state is in a finite state:
+    # e.g. not RETRY, STARTED, or PENDING
+    # if task.state in ['SUCCESS', 'FAILURE', 'REVOKED']:
+        # delete the task_id from the db
     task_info = task.info or {}
     response = {
         'state': task.state,
@@ -104,10 +110,18 @@ def get_archive(src_url, key, preferred_region):
     # first, see if the key exists
     if not s3.get_bucket(bucket).get_key(key):
         task_id = key.replace('/', '_')  # keep things simple and avoid slashes in task url
+        # if task_id doesn't exists in db:
+        #     create_and_upload_archive.apply_async(args=[src_url, key], task_id=task_id)
+        #     create new row with task_id and state
+        # return {}, 202, {'Location': url_for('archiver.task_status', task_id=task_id)}
+
+
+        ##### remove
         if create_and_upload_archive.AsyncResult(task_id).state != 'STARTED':
             # task is currently not in progress so start one.
             create_and_upload_archive.apply_async(args=[src_url, key], task_id=task_id)
         return {}, 202, {'Location': url_for('archiver.task_status', task_id=task_id)}
+        #####
 
     log.info("generating GET URL to {}, expires in {}s".format(key, GET_EXPIRES_IN))
     # return 302 pointing to s3 url with archive
