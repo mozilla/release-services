@@ -213,6 +213,7 @@ def assert_file_response(resp, content, visibility='public', instances=['us-east
         "size": len(content),
         "visibility": visibility,
         'instances': instances,
+        "has_instances": any(instances),
     }
     eq_(json.loads(resp.data)['result'], exp, resp.data)
 
@@ -639,14 +640,16 @@ def test_search_batches(app, client):
             "algorithm": "sha512",
             "digest": ONE_DIGEST,
             "size": len(ONE),
-            "visibility": "public"
+            "visibility": "public",
+            "has_instances": True,
         }
         f2 = add_file_to_db(app, TWO)
         f2j = {
             "algorithm": "sha512",
             "digest": TWO_DIGEST,
             "size": len(TWO),
-            "visibility": "public"
+            "visibility": "public",
+            "has_instances": True,
         }
         add_batch_to_db(
             app, 'me@me.com', 'first batch', {'one': f1})
@@ -718,13 +721,15 @@ def test_get_batch_found(client):
                 "algorithm": "sha512",
                 "digest": ONE_DIGEST,
                 "size": len(ONE),
-                "visibility": "public"
+                "visibility": "public",
+                "has_instances": False,
             },
             "two": {
                 "algorithm": "sha512",
                 "digest": TWO_DIGEST,
                 "size": len(TWO),
-                "visibility": "public"
+                "visibility": "public",
+                "has_instances": False,
             }
         },
         "id": 1,
@@ -740,14 +745,16 @@ def test_get_files(app, client):
         "algorithm": "sha512",
         "digest": ONE_DIGEST,
         "size": len(ONE),
-        "visibility": "public"
+        "visibility": "public",
+        "has_instances": True,
     }
     f2 = add_file_to_db(app, TWO)
     f2j = {
         "algorithm": "sha512",
         "digest": TWO_DIGEST,
         "size": len(TWO),
-        "visibility": "public"
+        "visibility": "public",
+        "has_instances": True,
     }
     add_batch_to_db(
         app, 'me@me.com', 'first batch', {'one': f1})
