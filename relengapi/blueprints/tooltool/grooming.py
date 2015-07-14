@@ -100,6 +100,23 @@ def check_file_pending_uploads(sha512):
             check_pending_upload(session, pu)
     session.commit()
 
+@celery.task
+def remove_file_pending_deletion(sha512):
+    """Remove all instances of a file"""
+    session = current_app.db.session('relengapi')
+    file = tables.File.query.filter(tables.File.sha512 == sha512).first()
+    if not file:
+        return
+
+    config = current_app.config['TOOLTOOL_REGIONS']
+    key_name = util.keyname(file.sha512)
+    for instance in file.instances:
+        target_bucket = config[instance.region]
+        conn = current_app.aws.connect_to('s3', instance.region)
+        bucket = conn.get_bucket(target_bucket)
+        bucket.delete_key(key_name)
+        session.delete(instance)
+    session.commit()
 
 def verify_file_instance(sha512, size, key):
     """Verify that the given S3 Key matches the given size and digest."""
