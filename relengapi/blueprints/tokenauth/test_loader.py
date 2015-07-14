@@ -40,12 +40,11 @@ def test_loader_no_header(app, client):
 
 @test_context
 def test_loader_not_bearer(app, client):
-    """With an Authorization header that does not start with 'Bearer', no
-    permissions are allowed"""
-    auth = json.loads(
-        client.get('/test_tokenauth',
-                   headers=[('Authorization', 'Penguiner TOK/1/v1')]).data)
-    eq_(auth['permissions'], [])
+    """With an Authorization header that does not start with 'Bearer', the
+    request is denied as a bad request"""
+    resp = client.get('/test_tokenauth',
+                      headers=[('Authorization', 'Penguiner TOK/1/v1')])
+    eq_(resp.status_code, 400)
 
 
 @test_context.specialize(db_setup=insert_prm)
@@ -96,29 +95,28 @@ def test_from_str_bad_type(app):
 
 @test_context
 def test_loader_bad_header(app, client):
-    """With a bad Authorization header, no permissions are allowed"""
-    auth = json.loads(
-        client.get('/test_tokenauth',
-                   headers=[('Authorization', 'Bearer xxxxx')]).data)
-    eq_(auth['permissions'], [])
+    """With a bad Authorization header, the request is denied as a bad
+    request"""
+    resp = client.get('/test_tokenauth',
+                      headers=[('Authorization', 'Bearer xxxxx')])
+    eq_(resp.status_code, 400)
 
 
 @test_context
 def test_loader_malformed_header(app, client):
-    """With a malformed Authorization header, no permissions are allowed"""
-    auth = json.loads(
-        client.get('/test_tokenauth',
-                   headers=[('Authorization', 'no-space-ma')]).data)
-    eq_(auth['permissions'], [])
+    """With a malformed Authorization header, the request is denied as a bad request"""
+    resp = client.get('/test_tokenauth',
+                      headers=[('Authorization', 'no-space-ma')])
+    eq_(resp.status_code, 400)
 
 
 @test_context.specialize(db_setup=insert_prm)
 def test_loader_good_header_not_in_db(app, client):
-    """With a good Authorization header but no row in the DB, no permissions are allowed"""
-    auth = json.loads(
-        client.get('/test_tokenauth',
-                   headers=[('Authorization', 'Bearer TOK/2/v1')]).data)
-    eq_(auth['permissions'], [])
+    """With a good Authorization header but no row in the DB, the request is
+    denied as a bad request"""
+    resp = client.get('/test_tokenauth',
+                      headers=[('Authorization', 'Bearer TOK/2/v1')])
+    eq_(resp.status_code, 400)
 
 
 @test_context.specialize(db_setup=insert_prm)
