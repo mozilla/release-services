@@ -28,6 +28,9 @@ class File(wsme.types.Base):
         wsme.types.Enum(unicode, 'public', 'internal'),
         mandatory=True)
 
+    #: Boolean to determine whether the file is available to download.
+    has_instances = bool
+
     #: The regions containing an instance of this file.  This field is generally
     #: omitted except where specified
     instances = [unicode]
