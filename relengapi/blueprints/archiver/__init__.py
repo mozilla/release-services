@@ -14,7 +14,7 @@ from flask import current_app
 from flask import redirect
 from flask import url_for
 
-from relengapi.lib import time
+from relengapi.lib.time import now
 from relengapi.lib import badpenny
 from relengapi.blueprints.archiver import tables
 from relengapi.blueprints.archiver.tasks import create_and_upload_archive, TASK_TIME_OUT
@@ -48,14 +48,17 @@ def update_tracker_state(tracker, state):
         session.rollback()
 
 
-@badpenny.periodic_task(seconds=3600)
+@badpenny.periodic_task(seconds=TASK_TIME_OUT)
 def cleanup_old_tasks():
     """delete any tracker task if it is older than the time a task can live for."""
-    expires_at = time.now() - datetime.timedelta(seconds=TASK_TIME_OUT)
+    session = current_app.db.session('relengapi')
+    expiry_cutoff = now() - datetime.timedelta(seconds=TASK_TIME_OUT)
     table = tables.ArchiverTask
-    for tracker in table.query.query.all().order_by(table.created_at):
-        if tracker.created_at > expires_at:
+    for tracker in session.query(table).order_by(table.created_at):
+        if tracker.created_at < expiry_cutoff:
             delete_tracker(tracker)
+        else:
+            break
 
 
 @bp.route('/status/<task_id>')
@@ -75,13 +78,14 @@ def task_status(task_id):
     """
     task = create_and_upload_archive.AsyncResult(task_id)
     task_tracker = tables.ArchiverTask.query.filter(tables.ArchiverTask.task_id == task_id).first()
+    log.info("checking status of task id {}: current state {}".format(task_id, task.state))
 
     # archiver does not create any custom states, so we can assume to have only the defaults:
     # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-states
     # therefore, delete our state_id tracker from the db if the celery state is in a finite state:
     # e.g. not RETRY, STARTED, or PENDING
     if task_tracker:
-        if task_tracker.state in FINISHED_STATES:
+        if task.state in FINISHED_STATES:
             delete_tracker(task_tracker)
         elif task_tracker.state != task.state:
             update_tracker_state(task_tracker, task.state)
@@ -115,6 +119,8 @@ def get_hgmo_archive(repo, rev, subdir=None, suffix='tar.gz', preferred_region=N
     :param suffix: the archive extension type. defaulted to tar.gz
     :param preferred_region: the preferred s3 region to use
     """
+    # allow for the short hash and full hash to be passed
+    rev = rev[0:12]
     src_url = current_app.config['ARCHIVER_HGMO_URL_TEMPLATE'].format(
         repo=repo, rev=rev, suffix=suffix, subdir=subdir or ''
     )
@@ -155,6 +161,8 @@ def get_archive(src_url, key, preferred_region):
     # first, see if the key exists
     if not s3.get_bucket(bucket).get_key(key):
         task_id = key.replace('/', '_')  # keep things simple and avoid slashes in task url
+        # can't use unique support: https://api.pub.build.mozilla.org/docs/development/databases/#unique-row-support-get-or-create
+        # because we want to know when the table doesn't exist before creating it
         task_tracker = tables.ArchiverTask.query.filter(tables.ArchiverTask.task_id == task_id).first()
         if task_tracker and task_tracker.state in FINISHED_STATES:
             log.info('Task tracker: {} exists but finished with state: '
@@ -164,14 +172,14 @@ def get_archive(src_url, key, preferred_region):
             task_tracker = None
         if not task_tracker:
             log.info("Creating new celery task and task tracker for: {}".format(task_id))
-            create_and_upload_archive.apply_async(args=[src_url, key], task_id=task_id)
             try:
-                session.add(tables.ArchiverTask(task_id=task_id, created_at=time.now(),
+                session.add(tables.ArchiverTask(task_id=task_id, created_at=now(),
                                                 src_url=src_url, state="PENDING"))
                 session.commit()
             except sa.exc.IntegrityError:
                 log.error("Could not add tracker {} to ArchiveTask table".format(task_id))
                 session.rollback()
+            create_and_upload_archive.apply_async(args=[src_url, key], task_id=task_id)
         return {}, 202, {'Location': url_for('archiver.task_status', task_id=task_id)}
 
     log.info("generating GET URL to {}, expires in {}s".format(key, GET_EXPIRES_IN))
