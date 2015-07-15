@@ -188,6 +188,12 @@ def upload_batch(region=None, body=None):
                 expires=time.now() + datetime.timedelta(seconds=UPLOAD_EXPIRES_IN))
             session.merge(pu)
         session.add(tables.BatchFile(filename=filename, file=file, batch=batch))
+
+        # Reset the time to live
+        file.expires = None
+        if info.ttl and info.ttl > 0:
+            file.expires = datetime.datetime.now() + datetime.timedelta(info.ttl)
+
     session.add(batch)
     session.commit()
 

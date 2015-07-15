@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import datetime
 import hashlib
 import sqlalchemy as sa
 import structlog
@@ -23,6 +24,19 @@ def check_pending_uploads(job_status):
     session = current_app.db.session('relengapi')
     for pu in tables.PendingUpload.query.all():
         check_pending_upload(session, pu)
+    session.commit()
+
+
+@badpenny.periodic_task(seconds=3600)
+def check_file_expirations(job_status):
+    """ Check for files that are set to expire and remove them if found."""
+    session = current_app.db.session('relengapi')
+    expired_files = tables.File\
+                          .query\
+                          .filter(tables.File.expires is not None)\
+                          .filter(tables.File.expires < datetime.datetime.now())
+    for expired in expired_files:
+        remove_file_pending_deletion(session, expired)
     session.commit()
 
 
@@ -100,14 +114,9 @@ def check_file_pending_uploads(sha512):
             check_pending_upload(session, pu)
     session.commit()
 
-@celery.task
-def remove_file_pending_deletion(sha512):
-    """Remove all instances of a file"""
-    session = current_app.db.session('relengapi')
-    file = tables.File.query.filter(tables.File.sha512 == sha512).first()
-    if not file:
-        return
 
+def remove_file_pending_deletion(session, file):
+    """Remove all instances of a file"""
     config = current_app.config['TOOLTOOL_REGIONS']
     key_name = util.keyname(file.sha512)
     for instance in file.instances:
@@ -117,6 +126,7 @@ def remove_file_pending_deletion(sha512):
         bucket.delete_key(key_name)
         session.delete(instance)
     session.commit()
+
 
 def verify_file_instance(sha512, size, key):
     """Verify that the given S3 Key matches the given size and digest."""
