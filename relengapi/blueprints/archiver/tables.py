@@ -2,6 +2,7 @@ import sqlalchemy as sa
 
 from relengapi.lib import db
 
+
 class ArchiverTask(db.declarative_base('relengapi')):
     __tablename__ = 'archiver_tasks'
     id = sa.Column(sa.Integer, primary_key=True)

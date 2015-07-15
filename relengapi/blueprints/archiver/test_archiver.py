@@ -1,24 +1,27 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import json
 import datetime
-import pytz
+import json
 import mock
 import moto
+import pytz
 
 from nose.tools import eq_
-from relengapi.blueprints.archiver import tables, update_tracker_state, delete_tracker, \
-    TASK_TIME_OUT, cleanup_old_tasks
-from relengapi.lib import time
-from relengapi.blueprints.archiver.test_util import EXPECTED_TASK_STATUS_FAILED_RESPONSE, \
-    EXPECTED_TASK_STATUS_INCOMPLETE_RESPONSE, fake_incomplete_task_status
+from relengapi.blueprints.archiver import TASK_TIME_OUT
+from relengapi.blueprints.archiver import cleanup_old_tasks
+from relengapi.blueprints.archiver import delete_tracker
+from relengapi.blueprints.archiver import tables
+from relengapi.blueprints.archiver import update_tracker_state
+from relengapi.blueprints.archiver.test_util import EXPECTED_TASK_STATUS_FAILED_RESPONSE
 from relengapi.blueprints.archiver.test_util import EXPECTED_TASK_STATUS_SUCCESSFUL_RESPONSE
 from relengapi.blueprints.archiver.test_util import create_s3_items
 from relengapi.blueprints.archiver.test_util import fake_200_response
 from relengapi.blueprints.archiver.test_util import fake_failed_task_status
+from relengapi.blueprints.archiver.test_util import fake_incomplete_task_status
 from relengapi.blueprints.archiver.test_util import fake_successful_task_status
 from relengapi.blueprints.archiver.test_util import setup_buckets
+from relengapi.lib import time
 
 from relengapi.lib.testing.context import TestContext
 
@@ -45,12 +48,16 @@ cfg = {
 
 test_context = TestContext(config=cfg, databases=['relengapi'])
 
+
 def create_fake_tracker_row(app, id, created_at=None, src_url='https://foo.com', state="PENDING"):
     if not created_at:
         created_at = time.now()
     session = app.db.session('relengapi')
-    session.add(tables.ArchiverTask(task_id=id, created_at=created_at, src_url=src_url, state=state))
+    session.add(
+        tables.ArchiverTask(task_id=id, created_at=created_at, src_url=src_url, state=state)
+    )
     session.commit()
+
 
 @moto.mock_s3
 @test_context
@@ -130,7 +137,6 @@ def test_tracker_update(app, client):
         eq_(tracker.state, "SUCCESS", "original tracker state was not updated.")
 
 
-
 @moto.mock_s3
 @test_context
 def test_tracker_added_when_celery_task_is_created(app, client):
@@ -149,8 +155,6 @@ def test_tracker_added_when_celery_task_is_created(app, client):
                 tables.ArchiverTask.task_id == expected_tracker_id
             ).first()
             eq_(tracker.task_id, expected_tracker_id, "tracker was not created for celery task")
-
-
 
 
 @moto.mock_s3

@@ -5,21 +5,23 @@
 import logging
 
 
-from random import randint
 import datetime
 import sqlalchemy as sa
+
+from random import randint
 
 from flask import Blueprint
 from flask import current_app
 from flask import redirect
 from flask import url_for
 
-from relengapi.lib.time import now
-from relengapi.lib import badpenny
 from relengapi.blueprints.archiver import tables
-from relengapi.blueprints.archiver.tasks import create_and_upload_archive, TASK_TIME_OUT
+from relengapi.blueprints.archiver.tasks import TASK_TIME_OUT
+from relengapi.blueprints.archiver.tasks import create_and_upload_archive
 from relengapi.blueprints.archiver.types import MozharnessArchiveTask
 from relengapi.lib import api
+from relengapi.lib import badpenny
+from relengapi.lib.time import now
 
 bp = Blueprint('archiver', __name__)
 log = logging.getLogger(__name__)
@@ -161,16 +163,17 @@ def get_archive(src_url, key, preferred_region):
     # first, see if the key exists
     if not s3.get_bucket(bucket).get_key(key):
         task_id = key.replace('/', '_')  # keep things simple and avoid slashes in task url
-        # can't use unique support: https://api.pub.build.mozilla.org/docs/development/databases/#unique-row-support-get-or-create
+        # can't use unique support:
+        # api.pub.build.mozilla.org/docs/development/databases/#unique-row-support-get-or-create
         # because we want to know when the table doesn't exist before creating it
-        task_tracker = tables.ArchiverTask.query.filter(tables.ArchiverTask.task_id == task_id).first()
-        if task_tracker and task_tracker.state in FINISHED_STATES:
+        tracker = tables.ArchiverTask.query.filter(tables.ArchiverTask.task_id == task_id).first()
+        if tracker and tracker.state in FINISHED_STATES:
             log.info('Task tracker: {} exists but finished with state: '
-                     '{}'.format(task_id, task_tracker.state))
+                     '{}'.format(task_id, tracker.state))
             # remove tracker and try celery task again
-            delete_tracker(task_tracker)
-            task_tracker = None
-        if not task_tracker:
+            delete_tracker(tracker)
+            tracker = None
+        if not tracker:
             log.info("Creating new celery task and task tracker for: {}".format(task_id))
             try:
                 session.add(tables.ArchiverTask(task_id=task_id, created_at=now(),

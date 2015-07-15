@@ -86,4 +86,3 @@ def fake_incomplete_task_status():
     task.state = EXPECTED_TASK_STATUS_INCOMPLETE_RESPONSE['state']
     task.info = EXPECTED_TASK_STATUS_INCOMPLETE_RESPONSE['status']
     return task
-
