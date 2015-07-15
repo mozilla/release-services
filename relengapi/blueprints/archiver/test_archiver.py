@@ -191,6 +191,41 @@ def test_tracker_is_deleted_when_task_status_shows_task_complete(app, client):
 
 @moto.mock_s3
 @test_context
+def test_tracker_is_deleted_when_task_is_complete_but_s3_url_not_present(app, client):
+    now = datetime.datetime(2015, 7, 14, 23, 19, 42, tzinfo=pytz.UTC)  # freeze time
+    older_time = now - datetime.timedelta(seconds=TASK_TIME_OUT + 10)
+    old_task_id = "mozilla-central-9213957d166d.tar.gz_testing_mozharness"
+    create_fake_tracker_row(app, old_task_id, created_at=older_time, state="SUCCESS")
+    setup_buckets(app, cfg)
+    with mock.patch("relengapi.blueprints.archiver.tasks.requests.get") as get, \
+            mock.patch("relengapi.blueprints.archiver.tasks.requests.head") as head, \
+            mock.patch('relengapi.blueprints.archiver.now') as time_traveller:
+        time_traveller.return_value = now
+        # don't actually hit hg.m.o, we just care about starting a subprocess and
+        # returning a 202 accepted
+        get.return_value = fake_200_response()
+        head.return_value = fake_200_response()
+
+        with app.app_context():
+            old_task = tables.ArchiverTask.query.filter(
+                tables.ArchiverTask.task_id == old_task_id
+            ).first()
+            eq_(old_task.created_at, older_time,
+                "old_task tracker created_at column doesn't match expected")
+            # now query api for an archive that would match an id with a tracker still in the db.
+            # Since the task tracker will show as complete yet there is still no s3 url, the current
+            # old tracker should be deleted and a new one created along with a new celery task
+            client.get('/archiver/hgmo/mozilla-central/9213957d166d?'
+                       'subdir=testing/mozharness&preferred_region=us-west-2')
+            tracker = tables.ArchiverTask.query.filter(
+                tables.ArchiverTask.task_id == old_task_id
+            ).first()
+            eq_(tracker.created_at, now, "old completed tracker was never re-created")
+            eq_(tracker.state, "PENDING", "old completed tracker was never re-created")
+
+
+@moto.mock_s3
+@test_context
 def test_task_tracker_badpenny_cleanup(app, client):
     now = datetime.datetime(2015, 7, 14, 23, 19, 42, tzinfo=pytz.UTC)  # freeze time
     with app.app_context():

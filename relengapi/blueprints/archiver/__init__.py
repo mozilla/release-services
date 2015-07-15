@@ -33,11 +33,8 @@ FINISHED_STATES = ['SUCCESS', 'FAILURE', 'REVOKED']
 def delete_tracker(tracker):
     session = current_app.db.session('relengapi')
     log.info("deleting tracker with id: {}".format(tracker.id))
-    try:
-        session.delete(tracker)
-        session.commit()
-    except sa.exc.IntegrityError:
-        session.rollback()
+    session.delete(tracker)
+    session.commit()
 
 
 def update_tracker_state(tracker, state):
@@ -84,7 +81,7 @@ def task_status(task_id):
 
     # archiver does not create any custom states, so we can assume to have only the defaults:
     # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-states
-    # therefore, delete our state_id tracker from the db if the celery state is in a finite state:
+    # therefore, delete our state_id tracker from the db if the celery state is in a final state:
     # e.g. not RETRY, STARTED, or PENDING
     if task_tracker:
         if task.state in FINISHED_STATES:
@@ -165,7 +162,7 @@ def get_archive(src_url, key, preferred_region):
         task_id = key.replace('/', '_')  # keep things simple and avoid slashes in task url
         # can't use unique support:
         # api.pub.build.mozilla.org/docs/development/databases/#unique-row-support-get-or-create
-        # because we want to know when the table doesn't exist before creating it
+        # because we want to know when the row doesn't exist before creating it
         tracker = tables.ArchiverTask.query.filter(tables.ArchiverTask.task_id == task_id).first()
         if tracker and tracker.state in FINISHED_STATES:
             log.info('Task tracker: {} exists but finished with state: '
@@ -175,13 +172,9 @@ def get_archive(src_url, key, preferred_region):
             tracker = None
         if not tracker:
             log.info("Creating new celery task and task tracker for: {}".format(task_id))
-            try:
-                session.add(tables.ArchiverTask(task_id=task_id, created_at=now(),
-                                                src_url=src_url, state="PENDING"))
-                session.commit()
-            except sa.exc.IntegrityError:
-                log.error("Could not add tracker {} to ArchiveTask table".format(task_id))
-                session.rollback()
+            session.add(tables.ArchiverTask(task_id=task_id, created_at=now(),
+                                            src_url=src_url, state="PENDING"))
+            session.commit()
             create_and_upload_archive.apply_async(args=[src_url, key], task_id=task_id)
         return {}, 202, {'Location': url_for('archiver.task_status', task_id=task_id)}
 
