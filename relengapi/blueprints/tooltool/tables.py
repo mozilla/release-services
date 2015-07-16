@@ -35,7 +35,8 @@ class File(db.declarative_base('relengapi')):
             size=self.size,
             digest=self.sha512,
             algorithm='sha512',
-            visibility=self.visibility)
+            visibility=self.visibility,
+            has_instances=any(self.instances))
         if include_instances:
             rv.instances = [i.region for i in self.instances]
         return rv
