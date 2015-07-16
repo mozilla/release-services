@@ -15,7 +15,9 @@ from relengapi.lib import celery
 
 log = logging.getLogger(__name__)
 
-GET_EXPIRES_IN = 300
+SIGNED_URL_EXPIRY = 300
+TASK_EXPIRY = 1800
+TASK_TIME_OUT = 3600
 
 
 def upload_url_archive_to_s3(key, url, buckets):
@@ -39,7 +41,7 @@ def upload_url_archive_to_s3(key, url, buckets):
         # give it the same attachment filename
         k.set_metadata('Content-Disposition', resp.headers['Content-Disposition'])
         k.set_contents_from_file(tempf, rewind=True)   # rewind points tempf back to start for us
-        s3_urls[region] = s3.generate_url(expires_in=GET_EXPIRES_IN, method='GET',
+        s3_urls[region] = s3.generate_url(expires_in=SIGNED_URL_EXPIRY, method='GET',
                                           bucket=buckets[region], key=key)
 
     resp.close()
@@ -47,7 +49,8 @@ def upload_url_archive_to_s3(key, url, buckets):
     return s3_urls
 
 
-@celery.task(bind=True, track_started=True, max_retries=3)
+@celery.task(bind=True, track_started=True, max_retries=3,
+             time_limit=TASK_TIME_OUT, expires=TASK_EXPIRY)
 def create_and_upload_archive(self, src_url, key):
     """
     A celery task that downloads an archive if it exists from a src location and attempts to upload
@@ -55,6 +58,10 @@ def create_and_upload_archive(self, src_url, key):
 
     Throughout this process, update the state of the task and finally return the location of the
     s3 urls if successful.
+
+    expires after 30m if the task hasn't been picked up from the message queue
+
+    task is killed if exceeds time_limit of an hour after it has started
     """
     status = "Task completed! Check 's3_urls' for upload locations."
     s3_urls = {}

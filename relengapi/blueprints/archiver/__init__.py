@@ -4,20 +4,60 @@
 
 import logging
 
+
+import datetime
+import sqlalchemy as sa
+
 from random import randint
 
 from flask import Blueprint
 from flask import current_app
 from flask import redirect
 from flask import url_for
+
+from relengapi.blueprints.archiver import tables
+from relengapi.blueprints.archiver.tasks import TASK_TIME_OUT
 from relengapi.blueprints.archiver.tasks import create_and_upload_archive
 from relengapi.blueprints.archiver.types import MozharnessArchiveTask
 from relengapi.lib import api
+from relengapi.lib import badpenny
+from relengapi.lib.time import now
 
 bp = Blueprint('archiver', __name__)
 log = logging.getLogger(__name__)
 
 GET_EXPIRES_IN = 300
+FINISHED_STATES = ['SUCCESS', 'FAILURE', 'REVOKED']
+
+
+def delete_tracker(tracker):
+    session = current_app.db.session('relengapi')
+    log.info("deleting tracker with id: {}".format(tracker.id))
+    session.delete(tracker)
+    session.commit()
+
+
+def update_tracker_state(tracker, state):
+    session = current_app.db.session('relengapi')
+    log.info("updating tracker with id: {} to state: {}".format(tracker.id, state))
+    try:
+        tracker.state = state
+        session.commit()
+    except sa.exc.IntegrityError:
+        session.rollback()
+
+
+@badpenny.periodic_task(seconds=TASK_TIME_OUT)
+def cleanup_old_tasks():
+    """delete any tracker task if it is older than the time a task can live for."""
+    session = current_app.db.session('relengapi')
+    expiry_cutoff = now() - datetime.timedelta(seconds=TASK_TIME_OUT)
+    table = tables.ArchiverTask
+    for tracker in session.query(table).order_by(table.created_at):
+        if tracker.created_at < expiry_cutoff:
+            delete_tracker(tracker)
+        else:
+            break
 
 
 @bp.route('/status/<task_id>')
@@ -36,6 +76,19 @@ def task_status(task_id):
     If state is SUCCESS, it is safe to check response['s3_urls'] for the archives submitted to s3
     """
     task = create_and_upload_archive.AsyncResult(task_id)
+    task_tracker = tables.ArchiverTask.query.filter(tables.ArchiverTask.task_id == task_id).first()
+    log.info("checking status of task id {}: current state {}".format(task_id, task.state))
+
+    # archiver does not create any custom states, so we can assume to have only the defaults:
+    # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-states
+    # therefore, delete our state_id tracker from the db if the celery state is in a final state:
+    # e.g. not RETRY, STARTED, or PENDING
+    if task_tracker:
+        if task.state in FINISHED_STATES:
+            delete_tracker(task_tracker)
+        elif task_tracker.state != task.state:
+            update_tracker_state(task_tracker, task.state)
+
     task_info = task.info or {}
     response = {
         'state': task.state,
@@ -65,6 +118,8 @@ def get_hgmo_archive(repo, rev, subdir=None, suffix='tar.gz', preferred_region=N
     :param suffix: the archive extension type. defaulted to tar.gz
     :param preferred_region: the preferred s3 region to use
     """
+    # allow for the short hash and full hash to be passed
+    rev = rev[0:12]
     src_url = current_app.config['ARCHIVER_HGMO_URL_TEMPLATE'].format(
         repo=repo, rev=rev, suffix=suffix, subdir=subdir or ''
     )
@@ -100,12 +155,26 @@ def get_archive(src_url, key, preferred_region):
     region = preferred_region if preferred_region and preferred_region in buckets else random_region
     bucket = buckets[region]
     s3 = current_app.aws.connect_to('s3', region)
+    session = current_app.db.session('relengapi')
 
     # first, see if the key exists
     if not s3.get_bucket(bucket).get_key(key):
         task_id = key.replace('/', '_')  # keep things simple and avoid slashes in task url
-        if create_and_upload_archive.AsyncResult(task_id).state != 'STARTED':
-            # task is currently not in progress so start one.
+        # can't use unique support:
+        # api.pub.build.mozilla.org/docs/development/databases/#unique-row-support-get-or-create
+        # because we want to know when the row doesn't exist before creating it
+        tracker = tables.ArchiverTask.query.filter(tables.ArchiverTask.task_id == task_id).first()
+        if tracker and tracker.state in FINISHED_STATES:
+            log.info('Task tracker: {} exists but finished with state: '
+                     '{}'.format(task_id, tracker.state))
+            # remove tracker and try celery task again
+            delete_tracker(tracker)
+            tracker = None
+        if not tracker:
+            log.info("Creating new celery task and task tracker for: {}".format(task_id))
+            session.add(tables.ArchiverTask(task_id=task_id, created_at=now(),
+                                            src_url=src_url, state="PENDING"))
+            session.commit()
             create_and_upload_archive.apply_async(args=[src_url, key], task_id=task_id)
         return {}, 202, {'Location': url_for('archiver.task_status', task_id=task_id)}
 

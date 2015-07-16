@@ -11,6 +11,13 @@ EXPECTED_TASK_STATUS_FAILED_RESPONSE = {
               ", u'exc_type': u'AttributeError'}"
 }
 
+EXPECTED_TASK_STATUS_INCOMPLETE_RESPONSE = {
+    "s3_urls": {},
+    "src_url": "",
+    "state": "STARTED",
+    "status": "no task status at this point",
+}
+
 EXPECTED_TASK_STATUS_SUCCESSFUL_RESPONSE = {
     "s3_urls": {
         "us-east-1": "https://archiver-us-east-1.s3.amazonaws.com/mozilla-central-9213957d1.tar.gz",
@@ -56,14 +63,14 @@ def fake_404_response():
     return response
 
 
-def fake_failed_task_status(task_id):
+def fake_failed_task_status():
     task = mock.Mock()
     task.state = EXPECTED_TASK_STATUS_FAILED_RESPONSE['state']
     task.info = EXPECTED_TASK_STATUS_FAILED_RESPONSE['status']
     return task
 
 
-def fake_successful_task_status(task_id):
+def fake_successful_task_status():
     task = mock.Mock()
     task.state = EXPECTED_TASK_STATUS_SUCCESSFUL_RESPONSE['state']
     task.info = {
@@ -71,4 +78,11 @@ def fake_successful_task_status(task_id):
         's3_urls': EXPECTED_TASK_STATUS_SUCCESSFUL_RESPONSE['s3_urls'],
         'status': EXPECTED_TASK_STATUS_SUCCESSFUL_RESPONSE['status'],
     }
+    return task
+
+
+def fake_incomplete_task_status():
+    task = mock.Mock()
+    task.state = EXPECTED_TASK_STATUS_INCOMPLETE_RESPONSE['state']
+    task.info = EXPECTED_TASK_STATUS_INCOMPLETE_RESPONSE['status']
     return task
