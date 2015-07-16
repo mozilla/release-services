@@ -32,7 +32,7 @@ FINISHED_STATES = ['SUCCESS', 'FAILURE', 'REVOKED']
 
 def delete_tracker(tracker):
     session = current_app.db.session('relengapi')
-    log.info("deleting tracker with id: {}".format(tracker.id))
+    log.info("deleting tracker with id: {}".format(tracker.task_id))
     session.delete(tracker)
     session.commit()
 
