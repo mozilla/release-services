@@ -23,7 +23,6 @@ TASK_TIME_OUT = 3600
 def upload_url_archive_to_s3(key, url, buckets):
     s3_urls = {}
 
-
     log.info('Key to be uploaded to S3: %s - downloading and unpacking archive from src_url', key)
     # make the source request
     resp = requests.get(url, stream=True)

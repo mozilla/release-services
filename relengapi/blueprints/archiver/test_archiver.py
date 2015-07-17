@@ -244,7 +244,7 @@ def test_task_tracker_badpenny_cleanup(app, client):
             eq_(session.query(tables.ArchiverTask).count(), 3,
                 "couldn't create fake task trackers for testing.")
             # force run badpenny clean up job
-            cleanup_old_tasks()
+            cleanup_old_tasks('fake_job_status')
             eq_(session.query(tables.ArchiverTask).count(), 1,
                 "expected only one tracker task to persist after cleaning up old tasks")
             tracker = session.query(tables.ArchiverTask).first()
