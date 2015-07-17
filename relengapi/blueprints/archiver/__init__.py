@@ -172,11 +172,14 @@ def get_archive(src_url, key, preferred_region):
             tracker = None
         if not tracker:
             log.info("Creating new celery task and task tracker for: {}".format(task_id))
-            session.add(tables.ArchiverTask(task_id=task_id, created_at=now(),
-                                            src_url=src_url, state="PENDING"))
-            session.commit()
-            create_and_upload_archive.apply_async(args=[src_url, key], task_id=task_id)
-        return {}, 202, {'Location': url_for('archiver.task_status', task_id=task_id)}
+            task = create_and_upload_archive.apply_async(args=[src_url, key], task_id=task_id)
+            if task and task.id:
+                session.add(tables.ArchiverTask(task_id=task.id, created_at=now(),
+                                                src_url=src_url, state="PENDING"))
+                session.commit()
+                return {}, 202, {'Location': url_for('archiver.task_status', task_id=task.id)}
+            else:
+                return {}, 500
 
     log.info("generating GET URL to {}, expires in {}s".format(key, GET_EXPIRES_IN))
     # return 302 pointing to s3 url with archive

@@ -23,6 +23,8 @@ TASK_TIME_OUT = 3600
 def upload_url_archive_to_s3(key, url, buckets):
     s3_urls = {}
 
+
+    log.info('Key to be uploaded to S3: %s - downloading and unpacking archive from src_url', key)
     # make the source request
     resp = requests.get(url, stream=True)
 
@@ -67,6 +69,7 @@ def create_and_upload_archive(self, src_url, key):
     s3_urls = {}
     buckets = current_app.config['ARCHIVER_S3_BUCKETS']
 
+    log.info('Key to be uploaded to S3: %s - Verifying src_url: %s', key, src_url)
     resp = requests.head(src_url)
     if resp.status_code == 200:
         try:
