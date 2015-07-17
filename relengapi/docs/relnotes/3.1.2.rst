@@ -1,0 +1,6 @@
+relengapi-3.1.2
+===============
+
+* small modification to archiver delete tracker output: logs column task_id instead of sql generated column id
+
+

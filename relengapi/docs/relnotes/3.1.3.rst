@@ -1,0 +1,7 @@
+relengapi-3.1.3
+===============
+
+* add job_status arg for archiver clean up badpenny job
+* in archiver add log lines to archiver tasks.py
+* require that async_result returns an id and succeeded before creating tracker
+
