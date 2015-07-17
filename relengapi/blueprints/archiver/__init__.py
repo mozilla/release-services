@@ -48,7 +48,7 @@ def update_tracker_state(tracker, state):
 
 
 @badpenny.periodic_task(seconds=TASK_TIME_OUT)
-def cleanup_old_tasks():
+def cleanup_old_tasks(job_status):
     """delete any tracker task if it is older than the time a task can live for."""
     session = current_app.db.session('relengapi')
     expiry_cutoff = now() - datetime.timedelta(seconds=TASK_TIME_OUT)
