@@ -10,3 +10,5 @@ import os
 def main():
     dbname = os.path.basename(os.path.dirname(__file__))
     env_py_main(context, dbname)
+
+main()

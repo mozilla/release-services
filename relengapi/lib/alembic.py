@@ -10,6 +10,7 @@ def env_py_main(context, dbname):
     import sys
     print >>sys.stderr, dbname
     config = context.config
+    config.set_main_option('sqlalchemy.url', current_app.db._get_db_config(dbname))
 
     with app.create_app(cmdline=True).app_context():
         if context.is_offline_mode():
@@ -55,12 +56,13 @@ def run_migrations_online(context, config, dbname):
     and associate a connection with the context.
 
     """
+    target_metadata = current_app.db.metadata[dbname]
 
     engine = current_app.db.engine(dbname)
     connection = engine.connect()
     context.configure(
         connection=connection,
-        # target_metadata=target_metadata,
+        target_metadata=target_metadata,
         **get_configure_args(config, dbname)
     )
 
