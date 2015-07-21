@@ -7,8 +7,6 @@ from relengapi import app
 
 
 def env_py_main(context, dbname):
-    import sys
-    print >>sys.stderr, dbname
     config = context.config
     config.set_main_option('sqlalchemy.url', current_app.db._get_db_config(dbname))
 

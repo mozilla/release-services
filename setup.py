@@ -19,6 +19,7 @@ setup(
         "Sphinx>=1.3",
         "SQLAlchemy>=0.9.4",
         "Celery>=3.1.16",  # see https://github.com/mozilla/build-relengapi/issues/145
+        "alembic",
         "argparse",
         "requests",
         "wrapt",
@@ -74,6 +75,11 @@ setup(
             '*/static/**.svg',
             '*/static/**.ttf',
             '*/static/**.woff',
+        ],
+        'relengapi.alembic' : [
+            '*.ini',
+            '*.py',
+            '*.mako',
         ],
     },
     entry_points={
