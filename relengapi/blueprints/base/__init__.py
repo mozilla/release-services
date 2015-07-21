@@ -20,7 +20,8 @@ import relengapi
 from relengapi.lib import subcommands
 
 bp = Blueprint('base', __name__)
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
+__all__ = ['AlembicSubcommand', ]
 
 
 class ServeSubcommand(subcommands.Subcommand):
