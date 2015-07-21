@@ -3,9 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from relengapi.lib.alembic import env_py_main
+from alembic import context
 import os
 
 
 def main():
     dbname = os.path.basename(os.path.dirname(__file__))
-    env_py_main(dbname)
+    env_py_main(context, dbname)

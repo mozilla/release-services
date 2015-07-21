@@ -3,21 +3,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from flask import current_app
-from alembic import context
 from relengapi import app
 
 
-def env_py_main(dbname):
+def env_py_main(context, dbname):
     import sys
     print >>sys.stderr, dbname
-    return
     config = context.config
 
     with app.create_app(cmdline=True).app_context():
         if context.is_offline_mode():
-            run_migrations_offline(config, dbname)
+            run_migrations_offline(context, config, dbname)
         else:
-            run_migrations_online(config, dbname)
+            run_migrations_online(context, config, dbname)
 
 
 def get_configure_args(config, dbname):
@@ -28,7 +26,7 @@ def get_configure_args(config, dbname):
     return args
 
 
-def run_migrations_offline(config, dbname):
+def run_migrations_offline(context, config, dbname):
     """Run migrations in 'offline' mode.
 
     This configures the context with just a URL
@@ -50,7 +48,7 @@ def run_migrations_offline(config, dbname):
         context.run_migrations()
 
 
-def run_migrations_online(config, dbname):
+def run_migrations_online(context, config, dbname):
     """Run migrations in 'online' mode.
 
     In this scenario we need to create an Engine
