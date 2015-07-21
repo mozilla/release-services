@@ -16,6 +16,7 @@ from flask import Flask
 from flask import current_app
 
 import relengapi
+
 from relengapi.lib import subcommands
 
 bp = Blueprint('base', __name__)
@@ -59,11 +60,12 @@ class CreateDBSubcommand(subcommands.Subcommand):
 
             # load the Alembic config and stamp it with the most recent rev
             config_path = os.path.join(os.path.dirname(relengapi.__file__),
-                                        'alembic', dbname, 'alembic.ini')
+                                       'alembic', dbname, 'alembic.ini')
             if os.path.isfile(config_path):
                 logger.info("stamping database %s with head", dbname)
                 alembic_cfg = Config(config_path)
                 command.stamp(alembic_cfg, "head")
+
 
 class RunTestsSubcommand(subcommands.Subcommand):
 

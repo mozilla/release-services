@@ -62,7 +62,7 @@ def run_migrations_online(config, dbname):
     connection = engine.connect()
     context.configure(
         connection=connection,
-        #target_metadata=target_metadata,
+        # target_metadata=target_metadata,
         **get_configure_args(config, dbname)
     )
 

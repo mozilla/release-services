@@ -25,13 +25,14 @@ def _get_config(directory):
     config.set_main_option('script_location', directory)
     return config
 
+
 class AlembicSubcommand(subcommands.Subcommand):
 
     def make_parser(self, subparsers):
         parser = subparsers.add_parser(
             'alembic', help='Wrapper for alembic commands')
         parser.add_argument('dbname', default=None,
-                            help='Name of the database to interact with')        
+                            help='Name of the database to interact with')
         subparsers = parser.add_subparsers()
         cmds = [cls() for cls in AlembicSubcommand.__subclasses__()]
         for cmd in cmds:
@@ -44,46 +45,46 @@ class AlembicSubcommand(subcommands.Subcommand):
             logger.warning("You must specify a database name")
             return
         args.directory = os.path.join(os.path.dirname(relengapi.__file__),
-                                        'alembic', args.dbname)
+                                      'alembic', args.dbname)
         args._alembic_subcommands.run(parser, args)
 
 
 class AlembicRevisionSubcommand(AlembicSubcommand):
     def make_parser(self, subparsers):
-        parser = subparsers.add_parser('revision', help=self.revision.__doc__)      
+        parser = subparsers.add_parser('revision', help=self.revision.__doc__)
         parser.add_argument('--rev-id', dest='rev_id', default=None,
-                               help=('Specify a hardcoded revision id instead of '
-                                     'generating one'))
+                            help=('Specify a hardcoded revision id instead of '
+                                  'generating one'))
         parser.add_argument('--version-path', dest='version_path', default=None,
-                               help=('Specify specific path from config for version '
-                                     'file'))
+                            help=('Specify specific path from config for version '
+                                  'file'))
         parser.add_argument('--branch-label', dest='branch_label', default=None,
-                               help=('Specify a branch label to apply to the new '
-                                     'revision'))
+                            help=('Specify a branch label to apply to the new '
+                                  'revision'))
         parser.add_argument('--splice', dest='splice', action='store_true',
-                               default=False,
-                               help=('Allow a non-head revision as the "head" to '
-                                     'splice onto'))
+                            default=False,
+                            help=('Allow a non-head revision as the "head" to '
+                                  'splice onto'))
         parser.add_argument('--head', dest='head', default='head',
-                               help=('Specify head revision or <branchname>@head to '
-                                     'base new revision on'))
+                            help=('Specify head revision or <branchname>@head to '
+                                  'base new revision on'))
         parser.add_argument('--sql', dest='sql', action='store_true', default=False,
-                               help=("Don't emit SQL to database - dump to standard "
-                                     "output instead"))
+                            help=("Don't emit SQL to database - dump to standard "
+                                  "output instead"))
         parser.add_argument('--autogenerate', dest='autogenerate',
-                               action='store_true', default=False,
-                               help=('Populate revision script with andidate migration '
-                                     'operatons, based on comparison of database to '
-                                     'model'))
+                            action='store_true', default=False,
+                            help=('Populate revision script with andidate migration '
+                                  'operatons, based on comparison of database to '
+                                  'model'))
         parser.add_argument('-m', '--message', dest='message', default=None)
         parser.add_argument('-d', '--directory', dest='directory', default=None,
-                               help=("migration script directory (default is "
-                                     "'migrations')"))
+                            help=("migration script directory (default is "
+                                  "'migrations')"))
         return parser
 
     def run(self, parser, args):
         self.revision(**vars(args))
-        
+
     def revision(self, directory=None, message=None, autogenerate=False, sql=False,
                  head='head', splice=False, branch_label=None, version_path=None,
                  rev_id=None, **kwargs):
@@ -101,28 +102,28 @@ class AlembicMigrateSubcommand(AlembicSubcommand):
     def make_parser(self, subparsers):
         parser = subparsers.add_parser('migrate', help=self.migrate.__doc__)
         parser.add_argument('--rev-id', dest='rev_id', default=None,
-                               help=('Specify a hardcoded revision id instead of '
-                                     'generating one'))
+                            help=('Specify a hardcoded revision id instead of '
+                                  'generating one'))
         parser.add_argument('--version-path', dest='version_path', default=None,
-                               help=('Specify specific path from config for version '
-                                     'file'))
+                            help=('Specify specific path from config for version '
+                                  'file'))
         parser.add_argument('--branch-label', dest='branch_label', default=None,
-                               help=('Specify a branch label to apply to the new '
-                                     'revision'))
+                            help=('Specify a branch label to apply to the new '
+                                  'revision'))
         parser.add_argument('--splice', dest='splice', action='store_true',
-                               default=False,
-                               help=('Allow a non-head revision as the "head" to '
-                                     'splice onto'))
+                            default=False,
+                            help=('Allow a non-head revision as the "head" to '
+                                  'splice onto'))
         parser.add_argument('--head', dest='head', default='head',
-                               help=('Specify head revision or <branchname>@head to '
-                                     'base new revision on'))
+                            help=('Specify head revision or <branchname>@head to '
+                                  'base new revision on'))
         parser.add_argument('--sql', dest='sql', action='store_true', default=False,
-                               help=("Don't emit SQL to database - dump to standard "
-                                     "output instead"))
+                            help=("Don't emit SQL to database - dump to standard "
+                                  "output instead"))
         parser.add_argument('-m', '--message', dest='message', default=None)
         parser.add_argument('-d', '--directory', dest='directory', default=None,
-                               help=("migration script directory (default is "
-                                     "'migrations')"))
+                            help=("migration script directory (default is "
+                                  "'migrations')"))
         return parser
 
     def run(self, parser, args):
@@ -144,17 +145,17 @@ class AlembicMergeSubcommand(AlembicSubcommand):
     def make_parser(self, subparsers):
         parser = subparsers.add_parser('merge', help=self.merge.__doc__)
         parser.add_argument('--rev-id', dest='rev_id', default=None,
-                               help=('Specify a hardcoded revision id instead of '
-                                     'generating one'))
+                            help=('Specify a hardcoded revision id instead of '
+                                  'generating one'))
         parser.add_argument('--branch-label', dest='branch_label', default=None,
-                               help=('Specify a branch label to apply to the new '
-                                     'revision'))
+                            help=('Specify a branch label to apply to the new '
+                                  'revision'))
         parser.add_argument('-m', '--message', dest='message', default=None)
         parser.add_argument('revisions',
-                               help='one or more revisions, or "heads" for all heads')
+                            help='one or more revisions, or "heads" for all heads')
         parser.add_argument('-d', '--directory', dest='directory', default=None,
-                               help=("migration script directory (default is "
-                                     "'migrations')"))
+                            help=("migration script directory (default is "
+                                  "'migrations')"))
         return parser
 
     def run(self, parser, args):
@@ -175,16 +176,16 @@ class AlembicUpgradeSubcommand(AlembicSubcommand):
     def make_parser(self, subparsers):
         parser = subparsers.add_parser('upgrade', help=self.upgrade.__doc__)
         parser.add_argument('--tag', dest='tag', default=None,
-                               help=("Arbitrary 'tag' name - can be used by custom "
-                                     "env.py scripts"))
+                            help=("Arbitrary 'tag' name - can be used by custom "
+                                  "env.py scripts"))
         parser.add_argument('--sql', dest='sql', action='store_true', default=False,
-                               help=("Don't emit SQL to database - dump to standard "
-                                     "output instead"))
+                            help=("Don't emit SQL to database - dump to standard "
+                                  "output instead"))
         parser.add_argument('revision', nargs='?', default='head',
-                               help="revision identifier")
+                            help="revision identifier")
         parser.add_argument('-d', '--directory', dest='directory', default=None,
-                               help=("migration script directory (default is "
-                                     "'migrations')"))
+                            help=("migration script directory (default is "
+                                  "'migrations')"))
         return parser
 
     def run(self, parser, args):
@@ -200,16 +201,16 @@ class AlembicDowngradeSubcommand(AlembicSubcommand):
     def make_parser(self, subparsers):
         parser = subparsers.add_parser('downgrade', help=self.downgrade.__doc__)
         parser.add_argument('--tag', dest='tag', default=None,
-                               help=("Arbitrary 'tag' name - can be used by custom "
-                                     "env.py scripts"))
+                            help=("Arbitrary 'tag' name - can be used by custom "
+                                  "env.py scripts"))
         parser.add_argument('--sql', dest='sql', action='store_true', default=False,
-                               help=("Don't emit SQL to database - dump to standard "
-                                     "output instead"))
+                            help=("Don't emit SQL to database - dump to standard "
+                                  "output instead"))
         parser.add_argument('revision', nargs='?', default="-1",
-                               help="revision identifier")
+                            help="revision identifier")
         parser.add_argument('-d', '--directory', dest='directory', default=None,
-                               help=("migration script directory (default is "
-                                     "'migrations')"))
+                            help=("migration script directory (default is "
+                                  "'migrations')"))
         return parser
 
     def run(self, parser, args):
@@ -225,10 +226,10 @@ class AlembicShowSubcommand(AlembicSubcommand):
     def make_parser(self, subparsers):
         parser = subparsers.add_parser('show', help=self.show.__doc__)
         parser.add_argument('revision', nargs='?', default="head",
-                               help="revision identifier")
+                            help="revision identifier")
         parser.add_argument('-d', '--directory', dest='directory', default=None,
-                               help=("migration script directory (default is "
-                                     "'migrations')"))
+                            help=("migration script directory (default is "
+                                  "'migrations')"))
         return parser
 
     def run(self, parser, args):
@@ -242,16 +243,17 @@ class AlembicShowSubcommand(AlembicSubcommand):
         else:
             raise RuntimeError('Alembic 0.7.0 or greater is required')
 
+
 class AlembicHistorySubcommand(AlembicSubcommand):
     def make_parser(self, subparsers):
         parser = subparsers.add_parser('history', help=self.history.__doc__)
         parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
-                               default=False, help='Use more verbose output')
+                            default=False, help='Use more verbose output')
         parser.add_argument('-r', '--rev-range', dest='rev_range', default=None,
-                               help='Specify a revision range; format is [start]:[end]')
+                            help='Specify a revision range; format is [start]:[end]')
         parser.add_argument('-d', '--directory', dest='directory', default=None,
-                               help=("migration script directory (default is "
-                                     "'migrations')"))
+                            help=("migration script directory (default is "
+                                  "'migrations')"))
         return parser
 
     def run(self, parser, args):
@@ -265,17 +267,18 @@ class AlembicHistorySubcommand(AlembicSubcommand):
         else:
             command.history(config, rev_range)
 
+
 class AlembicHeadsSubcommand(AlembicSubcommand):
     def make_parser(self, subparsers):
         parser = subparsers.add_parser('heads', help=self.heads.__doc__)
         parser.add_argument('--resolve-dependencies', dest='resolve_dependencies',
-                               action='store_true', default=False,
-                               help='Treat dependency versions as down revisions')
+                            action='store_true', default=False,
+                            help='Treat dependency versions as down revisions')
         parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
-                               default=False, help='Use more verbose output')
+                            default=False, help='Use more verbose output')
         parser.add_argument('-d', '--directory', dest='directory', default=None,
-                               help=("migration script directory (default is "
-                                     "'migrations')"))
+                            help=("migration script directory (default is "
+                                  "'migrations')"))
         return parser
 
     def run(self, parser, args):
@@ -290,14 +293,15 @@ class AlembicHeadsSubcommand(AlembicSubcommand):
         else:
             raise RuntimeError('Alembic 0.7.0 or greater is required')
 
+
 class AlembicBranchesSubcommand(AlembicSubcommand):
     def make_parser(self, subparsers):
         parser = subparsers.add_parser('branches', help=self.branches.__doc__)
         parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
-                               default=False, help='Use more verbose output')
+                            default=False, help='Use more verbose output')
         parser.add_argument('-d', '--directory', dest='directory', default=None,
-                               help=("migration script directory (default is "
-                                     "'migrations')"))
+                            help=("migration script directory (default is "
+                                  "'migrations')"))
         return parser
 
     def run(self, parser, args):
@@ -316,13 +320,13 @@ class AlembicCurrentSubcommand(AlembicSubcommand):
     def make_parser(self, subparsers):
         parser = subparsers.add_parser('current', help=self.current.__doc__)
         parser.add_argument('--head-only', dest='head_only', action='store_true',
-                               default=False,
-                               help='Deprecated. Use --verbose for additional output')
+                            default=False,
+                            help='Deprecated. Use --verbose for additional output')
         parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
-                               default=False, help='Use more verbose output')
+                            default=False, help='Use more verbose output')
         parser.add_argument('-d', '--directory', dest='directory', default=None,
-                               help=("migration script directory (default is "
-                                     "'migrations')"))
+                            help=("migration script directory (default is "
+                                  "'migrations')"))
         return parser
 
     def run(self, parser, args):
@@ -341,15 +345,15 @@ class AlembicStampSubcommand(AlembicSubcommand):
     def make_parser(self, subparsers):
         parser = subparsers.add_parser('stamp', help=self.stamp.__doc__)
         parser.add_argument('--tag', dest='tag', default=None,
-                               help=("Arbitrary 'tag' name - can be used by custom "
-                                     "env.py scripts"))
+                            help=("Arbitrary 'tag' name - can be used by custom "
+                                  "env.py scripts"))
         parser.add_argument('--sql', dest='sql', action='store_true', default=False,
-                               help=("Don't emit SQL to database - dump to standard "
-                                     "output instead"))
+                            help=("Don't emit SQL to database - dump to standard "
+                                  "output instead"))
         parser.add_argument('revision', default=None, help="revision identifier")
         parser.add_argument('-d', '--directory', dest='directory', default=None,
-                               help=("migration script directory (default is "
-                                     "'migrations')"))
+                            help=("migration script directory (default is "
+                                  "'migrations')"))
         return parser
 
     def run(self, parser, args):

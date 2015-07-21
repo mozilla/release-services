@@ -5,6 +5,7 @@
 from relengapi.lib.alembic import env_py_main
 import os
 
+
 def main():
     dbname = os.path.basename(os.path.dirname(__file__))
     env_py_main(dbname)
