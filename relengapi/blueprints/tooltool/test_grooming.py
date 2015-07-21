@@ -55,9 +55,9 @@ def file_instance_exists(app, digest, exp_regions):
         return bool(set(regions) & set(exp_regions))
 
 
-def add_file_row(size, sha512, instances=[]):
+def add_file_row(size, sha512, instances=[], expires=None):
     session = current_app.db.session('relengapi')
-    file_row = tables.File(size=size, visibility='public', sha512=sha512)
+    file_row = tables.File(size=size, visibility='public', sha512=sha512, expires=expires)
     session.add(file_row)
     for region in instances:
         session.add(tables.FileInstance(file=file_row, region=region))
@@ -387,7 +387,47 @@ def test_remove_file_pending_deletion(app):
     instances = ['us-east-1']
     with app.app_context():
         make_key(app, 'us-east-1', 'tt-use1', util.keyname(DATA_DIGEST), DATA)
-        add_file_row(len(DATA), DATA_DIGEST, instances=instances)
+        file = add_file_row(len(DATA), DATA_DIGEST, instances=instances)
         assert_file_instances(app, DATA_DIGEST, instances)
-        grooming.remove_file_pending_deletion(app.db.session('relengapi'), DATA_DIGEST)
+        grooming.remove_file_pending_deletion(app.db.session('relengapi'), file)
     assert not file_instance_exists(app, DATA_DIGEST, instances)
+
+
+@moto.mock_s3
+@test_context
+def test_check_file_expirations_no_expiration(app):
+    """The file should not be removed by the expiration task"""
+    instances = ['us-east-1']
+    with app.app_context():
+        make_key(app, 'us-east-1', 'tt-use1', util.keyname(DATA_DIGEST), DATA)
+        add_file_row(len(DATA), DATA_DIGEST, instances=instances, expires=None)
+        assert_file_instances(app, DATA_DIGEST, instances)
+        grooming.check_file_expirations(None)
+    assert file_instance_exists(app, DATA_DIGEST, instances)
+
+
+@moto.mock_s3
+@test_context
+def test_check_file_expirations_expired_file(app):
+    """The files should be removed by the expiration task"""
+    instances = ['us-east-1']
+    with app.app_context():
+        make_key(app, 'us-east-1', 'tt-use1', util.keyname(DATA_DIGEST), DATA)
+        add_file_row(len(DATA), DATA_DIGEST, instances=instances, expires=datetime(1999, 1, 1))
+        assert_file_instances(app, DATA_DIGEST, instances)
+        grooming.check_file_expirations(None)
+    assert not file_instance_exists(app, DATA_DIGEST, instances)
+
+
+@moto.mock_s3
+@test_context
+def test_check_file_expirations_living_file(app):
+    """The files should not be removed by the expiration task"""
+    instances = ['us-east-1']
+    with app.app_context():
+        make_key(app, 'us-east-1', 'tt-use1', util.keyname(DATA_DIGEST), DATA)
+        add_file_row(len(DATA), DATA_DIGEST, instances=instances,
+                     expires=datetime.now() + timedelta(1))
+        assert_file_instances(app, DATA_DIGEST, instances)
+        grooming.check_file_expirations(None)
+    assert file_instance_exists(app, DATA_DIGEST, instances)
