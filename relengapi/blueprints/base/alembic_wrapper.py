@@ -216,7 +216,7 @@ class AlembicDowngradeSubcommand(AlembicSubcommand):
     def run(self, parser, args):
         self.downgrade(**vars(args))
 
-    def downgrade(directory=None, revision='-1', sql=False, tag=None, **kwargs):
+    def downgrade(self, directory=None, revision='-1', sql=False, tag=None, **kwargs):
         """Revert to a previous version"""
         config = _get_config(directory)
         command.downgrade(config, revision, sql=sql, tag=tag)
