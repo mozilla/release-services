@@ -94,7 +94,13 @@ class TestContext(object):
             method = kwargs.get('method')
             log.info('request: {} {}'.format(method, path))
             resp = old_open(path, base_url, *args, **kwargs)
-            log.info('response: {}'.format(resp.status))
+            # try to extract the description, failing gracefully
+            try:
+                data = json.loads(resp.data)
+                extra = ' - ' + data['error']['description']
+            except Exception:
+                extra = ''
+            log.info('response: {}{}'.format(resp.status, extra))
             return resp
         client.open = open
 
