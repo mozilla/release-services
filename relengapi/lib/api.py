@@ -168,6 +168,14 @@ class JsonObject(wsme.types.UserType):
 jsonObject = JsonObject()
 
 
+def dumps(datatype, obj):
+    return json.dumps(wsme.rest.json.tojson(datatype, obj))
+
+
+def loads(datatype, data):
+    return wsme.rest.json.fromjson(datatype, json.loads(data))
+
+
 def init_app(app):
     # install a universal error handler that will render errors based on the
     # Accept header in the request

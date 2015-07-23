@@ -34,10 +34,26 @@ See the WSME_ documentation for more detail.
 
 As a utility, an arbitrary JSON Object can be described with this class:
 
-.. attribute:: relengapi.lib.api.jsonObject
+.. py:attribute:: relengapi.lib.api.jsonObject
 
     A WSME custom type describing an arbitrary JSON object.
     This validates that the value is an object (equivalent to a ``dict`` in Python) and that it can be JSON-encoded.
+
+If you find the need to convert such objects to or from JSON strings, use these functions:
+
+.. py:function:: relengapi.lib.api.dumps(datatype, obj)
+
+    Dump the given object as a JSON string, assuming it is of the given WSME datatype.
+    For example::
+
+        print(api.dumps(JsonThing, my_thing))
+
+.. py:function:: relengapi.lib.api.loads(datatype, obj)
+
+    Load the given object from a JSON string, assuming it is of the given WSME datatype.
+    For example::
+
+        api.loads(JsonThing, data)
 
 Decorator
 ---------
