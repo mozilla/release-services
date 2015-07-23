@@ -2,10 +2,6 @@
      License, v. 2.0. If a copy of the MPL was not distributed with this
      file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <div ng-app='treestatus' id="treestatus" ng-controller="TreeListController">
-    <div  class="pull-right">
-        <label><input type="checkbox" ng-model="can_admin" /> can admin</label> /
-        <label><input type="checkbox" ng-model="can_sheriff" /> can sheriff</label>
-    </div>
     <div class="row">
         <div class="col-xs-12">
             <h1 class="treestatus">TreeStatus</h1>
@@ -42,7 +38,7 @@
             <!-- change stack -->
             <div class="panel panel-primary" ng-if="can_sheriff && stack.length > 0">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Revert Changes</h3>
+                    <h3 class="panel-title">Restore Changes</h3>
                 </div>
                 <div class="panel-body">
                     <ul class="list-group">
@@ -50,7 +46,7 @@
                             <div class="pull-right">
                                 <div class="btn-group" role="group" aria-label="options">
                                     <button ng-click="revertChange(st.id)"
-                                        class="btn btn-xs btn-success">Revert</button>
+                                        class="btn btn-xs btn-success">Restore</button>
                                     <button ng-click="discardChange(st.id)"
                                         class="btn btn-xs btn-warning">Discard</button>
                                 </div>
@@ -99,9 +95,7 @@
             </div>
         </div>
         <div class="col-xs-12 col-lg-4" ng-if="can_sheriff">
-            <tree-status-control plural="1"
-                update="updateTrees(status, reason, tags, remember)"
-                disabled="selected_trees.length == 0">
+            <tree-status-control trees="selected_trees" updated="treesUpdated()">
             </tree-status-control>
         </div>
     </div>

@@ -93,14 +93,19 @@ class JsonTreeUpdate(wsme.types.Base):
     trees = wsme.types.wsattr([unicode], mandatory=True)
 
     #: the new tree status (for all affected trees)
-    status = wsme.types.wsattr(unicode, mandatory=True)
+    status = wsme.types.wsattr(unicode)
 
     #: the reason for the status
-    reason = wsme.types.wsattr(unicode, mandatory=True)
+    reason = wsme.types.wsattr(unicode)
 
-    #: tags associated with the status update
-    tags = wsme.types.wsattr([unicode], mandatory=True)
+    #: the message of the day for the tree
+    message_of_the_day = wsme.types.wsattr(unicode)
 
-    #: if true, add this change to the undo stack; if false,
-    #: remove the affected trees from the undo stack.
-    remember = wsme.types.wsattr(bool, mandatory=True)
+    #: tags associated with the status update; this is required (including at
+    #: least one tag) if status = 'closed',
+
+    tags = wsme.types.wsattr([unicode])
+
+    #: if true, add the change to the status and reason to the undo stack.
+    #: Note that updates to the message of the day are not recorded.
+    remember = wsme.types.wsattr(bool)

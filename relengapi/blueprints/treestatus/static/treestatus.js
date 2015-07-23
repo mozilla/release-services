@@ -90,30 +90,37 @@ angular.module('treestatus').filter('linkifyBugs', function($sce) {
 
 // Directives
 
-// Input panel for updating trees; the "update" attribute is evaluated with
-// `status`, `reason`, `tags`, and `remember` set when the form is submitted.
-// Set `plural="1"` for a form that can affect multiple trees.  The `disabled`
-// attribute gives an expression to disable the whole form (e.g., when no
-// trees are selected)
+// Input panel for updating trees; attributes:
+//   trees: list of tree names affected
+//   updated: expression evaluated after a successful update, with 'update'
+//      set to the update object
 angular.module('treestatus').directive('treeStatusControl',
-function(allowed_statuses, allowed_tags) {
+function(allowed_statuses, allowed_tags, restapi) {
     return {
         restrict: 'E',
         replace: true,
         templateUrl: '/treestatus/static/treeStatusControl.html',
         scope: {
-            disabled: '=disabled',
-            update: '&update',
-            plural: '@plural',
+            trees: '=trees',
+            updated: '&updated',
         },
         link: function(scope, element, attrs, ctrl) {
             scope.allowed_statuses = allowed_statuses;
             scope.allowed_tags = allowed_tags;
 
-            scope.status = allowed_statuses[0];
-            scope.tags = {};
-            scope.reason = "";
-            scope.remember = true;
+            var resetForm = function() {
+                scope.status = '';
+                scope.tags = {};
+                scope.reason = '';
+                scope.remember = true;
+                scope.message_of_the_day = '';
+            };
+            resetForm();
+
+            // define a convenience for changing singular/plural in the UI
+            scope.$watch('trees', function(newValue) {
+                scope.plural = !newValue || (newValue.length != 1);
+            });
 
             // ngModel handles tags as an object with boolean values, so
             // convert it to an array of tag names as the API expects
@@ -136,16 +143,64 @@ function(allowed_statuses, allowed_tags) {
                 return false;
             };
 
+            scope.makeUpdate = function() {
+                var update = {trees: scope.trees};
+
+                // only update the MOTD if it's nonempty (which precludes empty
+                // MOTD's, but that's OK)
+                if (scope.message_of_the_day) {
+                    update['message_of_the_day'] = scope.message_of_the_day;
+                };
+
+                // if the status was specified, include all four fields
+                if (scope.status) {
+                    update.status = scope.status;
+                    update.tags = tagList(scope.tags);
+                    update.reason = scope.reason;
+                    update.remember = scope.remember;
+                }
+
+                return update;
+            };
+
+            scope.updateIsValid = function() {
+                var update = scope.makeUpdate();
+
+                // apply some sane business rules; some of these overlap
+                // with the server, but some are just for the UI.
+                if (!update.trees) {
+                    return false;
+                }
+
+                if (!update.status && !update.message_of_the_day) {
+                    return false;
+                }
+
+                if (update.status == 'closed') {
+                    if (!update.tags) {
+                        return false;
+                    }
+                    if (!update.reason) {
+                        return false;
+                    }
+                }
+
+                return true;
+            };
+
             scope.submit = function() {
-                scope.update({
-                    status: scope.status,
-                    reason: scope.reason,
-                    tags: tagList(scope.tags),
-                    remember: scope.remember,
+                var update = scope.makeUpdate();
+
+                restapi({
+                    url: '/treestatus/trees',
+                    method: 'PATCH',
+                    data: JSON.stringify(update),
+                    headers: {'Content-Type': 'application/json'},
+                    while: 'updating trees',
+                }).then(function() {
+                    resetForm();
+                    scope.updated();
                 });
-                // reset the form
-                scope.tags = {};
-                scope.reason = '';
             };
         },
     };
@@ -273,24 +328,9 @@ angular.module('treestatus').controller('TreeListController',
         });
     };
 
-    $scope.updateTrees = function(status, reason, tags, remember) {
-        var update = {
-            trees: $scope.selected_trees,
-            status: status,
-            reason: reason,
-            tags: tags,
-            remember: remember,
-        };
-        restapi({
-            url: '/treestatus/trees',
-            method: 'UPDATE',
-            data: JSON.stringify(update),
-            headers: {'Content-Type': 'application/json'},
-            while: 'updating tree',
-        }).then(function (data, status, headers, config) {
-            reloadTrees();
-            reloadStack();
-        });
+    $scope.treesUpdated = function() {
+        reloadTrees();
+        reloadStack();
     };
 });
 
@@ -333,39 +373,8 @@ angular.module('treestatus').controller('TreeDetailController',
         reloadLogs();
     };
 
-    $scope.setMotd = function(new_motd) {
-        restapi({
-            url: '/treestatus/trees/' + treename,
-            method: 'PATCH',
-            data: JSON.stringify({
-                tree: treename,
-                status: $scope.tree.status,
-                reason: $scope.tree.reason,
-                message_of_the_day: new_motd,
-            }),
-            while: 'updating message of the day',
-        }).then(function (data, status, headers, config) {
-            $scope.tree.message_of_the_day = new_motd;
-        });
-    };
-
-    $scope.updateTree = function(status, reason, tags, remember) {
-        var update = {
-            trees: [treename],
-            status: status,
-            reason: reason,
-            tags: tags,
-            remember: remember,
-        };
-        restapi({
-            url: '/treestatus/trees',
-            method: 'UPDATE',
-            data: JSON.stringify(update),
-            headers: {'Content-Type': 'application/json'},
-            while: 'updating tree',
-        }).then(function (data, status, headers, config) {
-            reloadLogs();
-            reloadTree();
-        });
+    $scope.treeUpdated = function() {
+        reloadLogs();
+        reloadTree();
     };
 });

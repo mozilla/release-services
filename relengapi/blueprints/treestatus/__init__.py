@@ -16,6 +16,7 @@ from relengapi.lib import api
 from relengapi.lib import time as relengapi_time
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import NotFound
+from wsme import Unset
 
 from relengapi import p
 from relengapi.blueprints.treestatus import model
@@ -34,26 +35,28 @@ TREE_SUMMARY_LOG_LIMIT = 5
 
 # TODO: replicate cache control headers
 # TODO: use elasticache
-# TODO: rename columns, tables
+# TODO: rename columns, tables, move to relengapi DB
 # TODO: remove user table, tokens
 # TODO: test deleting a tree with logs or history
 # TODO: add "refresh", run it periodically
 
-def update_tree_status(session, tree, status=None, reason=None, tags=[]):
+def update_tree_status(session, tree, status=None, reason=None,
+                       tags=[], message_of_the_day=None):
     """Update the given tree's status; note that this does not commit
     the session.  Supply a tree object or name."""
-    if not hasattr(tree, 'tree'):
-        tree = session.query(model.DbTree).get(tree)
-        if not tree:
-            raise NotFound
-
     if status is not None:
         tree.status = status
     if reason is not None:
         tree.reason = reason
+    if message_of_the_day is not None:
+        tree.message_of_the_day = message_of_the_day
 
-    # log it
+    # log it if the reason or status have changed
     if status or reason:
+        if status is None:
+            status = 'no change'
+        if reason is None:
+            reason = 'no change'
         l = model.DbLog(
             tree=tree.tree,
             when=relengapi_time.now(),
@@ -127,29 +130,6 @@ def make_tree(tree_name, body):
     return None, 204
 
 
-# TODO: make a generic set-motd method?  Why check that everything else
-# matches?  Or just allow updates with optional fields?
-@bp.route('/trees/<path:tree_name>', methods=['PATCH'])
-@p.treestatus.sheriff.require()
-@apimethod(unicode, unicode, body=types.JsonTree)
-def modify_tree(tree_name, body):
-    """Modify a tree.  This cannot modify the tree's status, reason, or name."""
-    session = current_app.db.session('treestatus')
-    t = current_app.db.session('treestatus').query(model.DbTree).get(tree_name)
-    if not t:
-        raise NotFound("No such tree")
-    # ensure everything matches
-    if body.tree != tree_name:
-        raise BadRequest("Tree names must match")
-    if body.status != t.status:
-        raise BadRequest("Cannot modify status (use UPDATE instead)")
-    if body.reason != t.reason:
-        raise BadRequest("Cannot modify reason (use UPDATE instead)")
-    t.message_of_the_day = body.message_of_the_day
-    session.commit()
-    return None, 204
-
-
 @bp.route('/trees/<path:tree>', methods=['DELETE'])
 @p.treestatus.admin.require()
 @apimethod(None, unicode)
@@ -212,17 +192,16 @@ def revert_change(id):
     if not ch:
         raise NotFound
 
-    for t in ch.trees:
-        # TODO: test last_state is correct
-        last_state = json.loads(t.last_state)
-        try:
-            update_tree_status(
-                session, t.tree,
-                status=last_state['status'],
-                reason=last_state['reason'])
-        except NotFound:
+    for chtree in ch.trees:
+        last_state = json.loads(chtree.last_state)
+        tree = model.DbTree.query.get(chtree.tree)
+        if tree is None:
             # if there's no tree to update, don't worry about it
             pass
+        update_tree_status(
+            session, tree,
+            status=last_state['status'],
+            reason=last_state['reason'])
 
     session.delete(ch)
     session.commit()
@@ -247,7 +226,7 @@ def delete_change(id):
     return None, 204
 
 
-@bp.route('/trees', methods=['UPDATE'])
+@bp.route('/trees', methods=['PATCH'])
 @p.treestatus.sheriff.require()
 @apimethod(None, body=types.JsonTreeUpdate)
 def update_trees(body):
@@ -255,10 +234,10 @@ def update_trees(body):
     Update trees' status.
 
     If the update indicates that the previous state should be saved, then a new
-    change will be added to the undo stack containing the previous status and
-    reason.
+    change will be added to the stack containing the previous status and
+    reason.  In this case, both reason and status must be supplied.
 
-    The `tags` must not be empty if `status` is `closed`.
+    The `tags` property must not be empty if `status` is `closed`.
     """
     session = current_app.db.session('treestatus')
     trees = [session.query(model.DbTree).get(t) for t in body.trees]
@@ -269,7 +248,9 @@ def update_trees(body):
         raise BadRequest("tags are required when closing a tree")
 
     if body.remember:
-        # add a new stack entry with the existing states
+        if body.status is Unset or body.reason is Unset:
+            raise BadRequest("must specify status and reason to remember the change")
+        # add a new stack entry with the new and existing states
         st = model.DbStatusStack(
             who=str(current_user),
             reason=body.reason,
@@ -284,11 +265,19 @@ def update_trees(body):
         session.add(st)
 
     # update the trees as requested
+    def unset_to_none(x):
+        return x if x is not Unset else None
+    new_status = unset_to_none(body.status)
+    new_reason = unset_to_none(body.reason)
+    new_motd = unset_to_none(body.message_of_the_day)
+    new_tags = unset_to_none(body.tags) or []
+
     for tree in trees:
         update_tree_status(session, tree,
-                           status=body.status,
-                           reason=body.reason,
-                           tags=body.tags)
+                           status=new_status,
+                           reason=new_reason,
+                           message_of_the_day=new_motd,
+                           tags=new_tags)
 
     session.commit()
     return None, 204

@@ -131,6 +131,28 @@ def assert_logged(app, tree, action, reason, when=None,
         raise AssertionError("no matching log")
 
 
+def assert_nothing_logged(app, tree):
+    with app.app_context():
+        session = app.db.session('treestatus')
+        q = session.query(model.DbLog)
+        q = q.filter_by(tree=tree)
+        q = q.order_by(model.DbLog.when)
+        logs = q[:]
+        if len(logs) != 3:
+            pprint.pprint([l.__dict__ for l in logs[3:]])
+            raise AssertionError("logs present beyond those in test data")
+
+
+def assert_change_last_state(app, change_id, **exp_last_states):
+    with app.app_context():
+        change = model.DbStatusStack.query.get(change_id)
+        got_last_states = {}
+        for chtree in change.trees:
+            ls = json.loads(chtree.last_state)
+            got_last_states[chtree.tree] = (ls['status'], ls['reason'])
+        eq_(got_last_states, exp_last_states)
+
+
 @test_context
 def test_index_view(client):
     """Getting /treestatus/ results in an index page"""
@@ -235,53 +257,6 @@ def test_delete_tree_nosuch(client):
     """Deleting a tree that does not exist fails"""
     resp = client.delete('/treestatus/trees/99999')
     eq_(resp.status_code, 404)
-
-
-@test_context.specialize(user=sheriff)
-def test_modify_tree(client):
-    """Modifying a tree changes its message_of_the_day"""
-    resp = client.patch('/treestatus/trees/tree1', data=json.dumps(
-        dict(tree='tree1', status='closed', reason='because',
-             message_of_the_day="if it don't fit force it")),
-        headers=[('Content-Type', 'application/json')])
-    eq_(resp.status_code, 204)
-    resp = client.get('/treestatus/trees/tree1')
-    eq_(json.loads(resp.data)['result'], dict(tree='tree1', status='closed', reason='because',
-                                              message_of_the_day="if it don't fit force it"))
-
-
-@test_context.specialize(user=admin)
-def test_modify_tree_no_perms(client):
-    """Modifying a tree without sheriff perms fails"""
-    resp = client.patch('/treestatus/trees/tree1', data=json.dumps(
-        dict(tree='tree1', status='closed', reason='because',
-             message_of_the_day="if it don't fit force it")),
-        headers=[('Content-Type', 'application/json')])
-    eq_(resp.status_code, 403)
-
-
-@test_context.specialize(user=sheriff)
-def test_modify_tree_nosuch(client):
-    """Modifying a tree that does not exist returns a 404 error"""
-    resp = client.patch('/treestatus/trees/nosuch', data=json.dumps(
-        dict(tree='tree1', status='closed', reason='because',
-             message_of_the_day="if it don't fit force it")),
-        headers=[('Content-Type', 'application/json')])
-    eq_(resp.status_code, 404)
-
-
-@test_context.specialize(user=sheriff)
-def test_modify_tree_invalid_field(client):
-    """Modifying a tree's name, status, or reason fails."""
-    def mod(**mods):
-        d = tree1_json.copy()
-        d.update(mods)
-        return d
-    for t in [mod(tree='tree2'), mod(status='open'), mod(reason='i said so')]:
-        resp = client.patch('/treestatus/trees/tree1',
-                            data=json.dumps(t),
-                            headers=[('Content-Type', 'application/json')])
-        eq_(resp.status_code, 400)
 
 
 @test_context
@@ -463,30 +438,116 @@ def test_delete_stack_nosuch(client):
     eq_(resp.status_code, 404)
 
 
+@test_context.specialize(user=sheriff)
+def test_patch_tree_status(app, client):
+    """PATCHing a tree's status changes its status and logs"""
+    resp = client.patch('/treestatus/trees', data=json.dumps(
+        dict(trees=['tree1'], status='approval required')),
+        headers=[('Content-Type', 'application/json')])
+    eq_(resp.status_code, 204)
+    resp = client.get('/treestatus/trees/tree1')
+    eq_(json.loads(resp.data)['result'],
+        dict(tree='tree1', status='approval required',
+             reason='because', message_of_the_day="enjoy troy"))
+    assert_logged(app, 'tree1', 'approval required', 'no change')
+
+
+@test_context.specialize(user=sheriff)
+def test_patch_tree_reason(app, client):
+    """PATCHing a tree's reason changes its reason and logs"""
+    resp = client.patch('/treestatus/trees', data=json.dumps(
+        dict(trees=['tree1'], reason='slow mac builds')),
+        headers=[('Content-Type', 'application/json')])
+    eq_(resp.status_code, 204)
+    resp = client.get('/treestatus/trees/tree1')
+    eq_(json.loads(resp.data)['result'],
+        dict(tree='tree1', status='closed', reason='slow mac builds',
+             message_of_the_day="enjoy troy"))
+    assert_logged(app, 'tree1', 'no change', 'slow mac builds')
+
+
+@test_context.specialize(user=sheriff)
+def test_patch_tree_motd(app, client):
+    """PATCHing a tree's message_of_the_day updates the message but doesn't log"""
+    resp = client.patch('/treestatus/trees', data=json.dumps(
+        dict(trees=['tree1'], message_of_the_day="if it don't fit force it")),
+        headers=[('Content-Type', 'application/json')])
+    eq_(resp.status_code, 204)
+    resp = client.get('/treestatus/trees/tree1')
+    eq_(json.loads(resp.data)['result'],
+        dict(tree='tree1', status='closed', reason='because',
+             message_of_the_day="if it don't fit force it"))
+    assert_nothing_logged(app, 'tree1')
+
+
+@test_context.specialize(user=admin)
+def test_patch_tree_no_perms(client):
+    """PATCHing a tree without sheriff perms fails"""
+    resp = client.patch('/treestatus/trees', data=json.dumps(
+        dict(trees=['tree1'], status='closed', reason='because',
+             message_of_the_day="if it don't fit force it")),
+        headers=[('Content-Type', 'application/json')])
+    eq_(resp.status_code, 403)
+
+
+@test_context.specialize(user=sheriff)
+def test_patch_tree_nosuch(client):
+    """PATCHing a tree that does not exist returns a 404 error"""
+    resp = client.patch('/treestatus/trees', data=json.dumps(
+        dict(trees=['nosuch'], status='open', reason='because',
+             message_of_the_day="if it don't fit force it")),
+        headers=[('Content-Type', 'application/json')])
+    eq_(resp.status_code, 404)
+
+
+@test_context.specialize(user=sheriff)
+def test_patch_tree_tags_required_to_close(client):
+    """PATCHing a tree's with status=closed and no tags fails"""
+    resp = client.patch('/treestatus/trees', data=json.dumps(
+        dict(trees=['tree1'], status='closed')),
+        headers=[('Content-Type', 'application/json')])
+    eq_(resp.status_code, 400)
+
+
+@test_context.specialize(user=sheriff)
+def test_patch_tree_status_required_to_remember(client):
+    """PATCHing a tree's with remember=true fails without a status"""
+    resp = client.patch('/treestatus/trees', data=json.dumps(
+        dict(trees=['tree1'], reason='all klear', remember=True)),
+        headers=[('Content-Type', 'application/json')])
+    eq_(resp.status_code, 400)
+
+
+@test_context.specialize(user=sheriff)
+def test_patch_tree_reason_required_to_remember(client):
+    """PATCHing a tree's with remember=true fails without a rerason"""
+    resp = client.patch('/treestatus/trees', data=json.dumps(
+        dict(trees=['tree1'], status='open', remember=True)),
+        headers=[('Content-Type', 'application/json')])
+    eq_(resp.status_code, 400)
+
+
 @test_context.specialize(db_setup=db_setup_stack, user=admin)
-def test_update_trees_no_perms(app, client):
-    """UPDATE'ing a tree without admin perms fails"""
-    update = {'trees': ['tree1'], 'status': 'open',
-              'reason': 'fire extinguished',
-              'tags': ['fire', 'water'],
-              'remember': False}
-    resp = client.open('/treestatus/trees', method='UPDATE',
-                       data=json.dumps(update),
-                       headers=[('Content-Type', 'application/json')])
+def test_patch_trees_no_perms(app, client):
+    """PATCHing a tree without sherrif perms fails"""
+    resp = client.patch('/treestatus/trees', data=json.dumps(
+        dict(trees=['tree1'], status='open', reason='because',
+             message_of_the_day="if it don't fit force it")),
+        headers=[('Content-Type', 'application/json')])
     eq_(resp.status_code, 403)
 
 
 @test_context.specialize(db_setup=db_setup_stack, user=sheriff)
-def test_update_trees_no_remember(app, client):
-    """UPDATE'ing a tree without remembering changes updates those trees but
+def test_patch_trees_no_remember(app, client):
+    """PATCHing a tree without remembering changes updates those trees but
     does not clear out the stack for those trees."""
     update = {'trees': ['tree1', 'tree0'], 'status': 'open',
               'reason': 'fire extinguished',
               'tags': [],
               'remember': False}
-    resp = client.open('/treestatus/trees', method='UPDATE',
-                       data=json.dumps(update),
-                       headers=[('Content-Type', 'application/json')])
+    resp = client.patch('/treestatus/trees',
+                        data=json.dumps(update),
+                        headers=[('Content-Type', 'application/json')])
     eq_(resp.status_code, 204)
 
     resp = client.get('/treestatus/trees')
@@ -525,28 +586,28 @@ def test_update_trees_no_remember(app, client):
 
 
 @test_context.specialize(db_setup=db_setup_stack, user=sheriff)
-def test_update_trees_closed_without_tags(client):
-    """UPDATE'ing trees to close them without tags is a bad request"""
+def test_patch_trees_closed_without_tags(client):
+    """PATCHing trees to close them without tags is a bad request"""
     update = {'trees': ['tree1', 'tree0'], 'status': 'closed',
               'reason': 'bomb damage',
               'tags': [], 'remember': True}
-    resp = client.open('/treestatus/trees', method='UPDATE',
-                       data=json.dumps(update),
-                       headers=[('Content-Type', 'application/json')])
+    resp = client.patch('/treestatus/trees',
+                        data=json.dumps(update),
+                        headers=[('Content-Type', 'application/json')])
     eq_(resp.status_code, 400)
 
 
 @test_context.specialize(db_setup=db_setup_stack, user=sheriff)
-def test_update_trees_remember(app, client):
-    """UPDATE'ing a tree and remembering changes updates those trees and
+def test_patch_trees_remember(app, client):
+    """PATCHing a tree and remembering changes updates those trees and
     adds a stack entry."""
     update = {'trees': ['tree1', 'tree0'], 'status': 'closed',
               'reason': 'bomb damage',
               'tags': ['c4'], 'remember': True}
     with set_time(datetime.datetime(2015, 7, 21, 0, 0, 0)):
-        resp = client.open('/treestatus/trees', method='UPDATE',
-                           data=json.dumps(update),
-                           headers=[('Content-Type', 'application/json')])
+        resp = client.patch('/treestatus/trees',
+                            data=json.dumps(update),
+                            headers=[('Content-Type', 'application/json')])
     eq_(resp.status_code, 204)
 
     resp = client.get('/treestatus/trees')
@@ -589,3 +650,6 @@ def test_update_trees_remember(app, client):
 
     assert_logged(app, 'tree0', 'closed', 'bomb damage', tags=['c4'])
     assert_logged(app, 'tree1', 'closed', 'bomb damage', tags=['c4'])
+    assert_change_last_state(app, 3,
+                             tree0=('closed', 'bug 123'),
+                             tree1=('closed', 'bug 456'))

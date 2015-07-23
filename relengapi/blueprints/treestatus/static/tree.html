@@ -45,23 +45,8 @@
             </table>
         </div>
         <div class="col-xs-12 col-lg-4" ng-if="can_sheriff">
-            <tree-status-control update="updateTree(status, reason, tags, remember)">
+            <tree-status-control trees="[tree.tree]" updated="treeUpdated()">
             </tree-status-control>
-            <div class="panel panel-primary">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Message of the Day</h3>
-                </div>
-                <div class="panel-body">
-                    <div class="input-group" ng-if="can_sheriff">
-                        <input type="text" class="form-control" placeholder="message of the day"
-                               ng-model="new_motd" />
-                        <span class="input-group-btn">
-                            <button class="btn btn-default"
-                                    ng-click="setMotd(new_motd)">Set MOTD</button>
-                        </span>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
     <ng-include src="'/treestatus/static/footer.html'"></ng-include>
