@@ -19,7 +19,7 @@ setup(
         "Sphinx>=1.3",
         "SQLAlchemy>=0.9.4",
         "Celery>=3.1.16",  # see https://github.com/mozilla/build-relengapi/issues/145
-        "alembic",
+        "alembic>=0.7.0",
         "argparse",
         "requests",
         "wrapt",

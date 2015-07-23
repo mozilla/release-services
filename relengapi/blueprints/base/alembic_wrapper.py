@@ -75,8 +75,8 @@ class AlembicRevisionSubcommand(AlembicSubcommand):
                                   "output instead"))
         parser.add_argument('--autogenerate', dest='autogenerate',
                             action='store_true', default=False,
-                            help=('Populate revision script with andidate migration '
-                                  'operatons, based on comparison of database to '
+                            help=('Populate revision script with candidate migration '
+                                  'operation, based on comparison of database to '
                                   'model'))
         parser.add_argument('-m', '--message', dest='message', default=None)
         parser.add_argument('-d', '--directory', dest='directory', default=None,
@@ -92,12 +92,9 @@ class AlembicRevisionSubcommand(AlembicSubcommand):
                  rev_id=None, **kwargs):
         """Create a new revision file."""
         config = _get_config(directory)
-        if alembic_version >= (0, 7, 0):
-            command.revision(config, message, autogenerate=autogenerate, sql=sql,
-                             head=head, splice=splice, branch_label=branch_label,
-                             version_path=version_path, rev_id=rev_id)
-        else:
-            command.revision(config, message, autogenerate=autogenerate, sql=sql)
+        command.revision(config, message, autogenerate=autogenerate, sql=sql,
+                         head=head, splice=splice, branch_label=branch_label,
+                         version_path=version_path, rev_id=rev_id)
 
 
 class AlembicMigrateSubcommand(AlembicSubcommand):
@@ -135,12 +132,9 @@ class AlembicMigrateSubcommand(AlembicSubcommand):
                 branch_label=None, version_path=None, rev_id=None, **kwargs):
         """Alias for 'revision --autogenerate'"""
         config = _get_config(directory)
-        if alembic_version >= (0, 7, 0):
-            command.revision(config, message, autogenerate=True, sql=sql, head=head,
-                             splice=splice, branch_label=branch_label,
-                             version_path=version_path, rev_id=rev_id)
-        else:
-            command.revision(config, message, autogenerate=True, sql=sql)
+        command.revision(config, message, autogenerate=True, sql=sql, head=head,
+                         splice=splice, branch_label=branch_label,
+                         version_path=version_path, rev_id=rev_id)
 
 
 class AlembicMergeSubcommand(AlembicSubcommand):
@@ -166,12 +160,9 @@ class AlembicMergeSubcommand(AlembicSubcommand):
     def merge(self, directory=None, revisions='', message=None, branch_label=None,
               rev_id=None, **kwargs):
         """Merge two revisions together.  Creates a new migration file"""
-        if alembic_version >= (0, 7, 0):
-            config = _get_config(directory)
-            command.merge(config, revisions, message=message,
-                          branch_label=branch_label, rev_id=rev_id)
-        else:
-            raise RuntimeError('Alembic 0.7.0 or greater is required')
+        config = _get_config(directory)
+        command.merge(config, revisions, message=message,
+                      branch_label=branch_label, rev_id=rev_id)
 
 
 class AlembicUpgradeSubcommand(AlembicSubcommand):
@@ -239,11 +230,8 @@ class AlembicShowSubcommand(AlembicSubcommand):
 
     def show(self, directory=None, revision='head', **kwargs):
         """Show the revision denoted by the given symbol."""
-        if alembic_version >= (0, 7, 0):
-            config = _get_config(directory)
-            command.show(config, revision)
-        else:
-            raise RuntimeError('Alembic 0.7.0 or greater is required')
+        config = _get_config(directory)
+        command.show(config, revision)
 
 
 class AlembicHistorySubcommand(AlembicSubcommand):
@@ -264,10 +252,7 @@ class AlembicHistorySubcommand(AlembicSubcommand):
     def history(self, directory=None, rev_range=None, verbose=False, **kwargs):
         """List changeset scripts in chronological order."""
         config = _get_config(directory)
-        if alembic_version >= (0, 7, 0):
-            command.history(config, rev_range, verbose=verbose)
-        else:
-            command.history(config, rev_range)
+        command.history(config, rev_range, verbose=verbose)
 
 
 class AlembicHeadsSubcommand(AlembicSubcommand):
@@ -288,12 +273,9 @@ class AlembicHeadsSubcommand(AlembicSubcommand):
 
     def heads(self, directory=None, verbose=False, resolve_dependencies=False, **kwargs):
         """Show current available heads in the script directory"""
-        if alembic_version >= (0, 7, 0):
-            config = _get_config(directory)
-            command.heads(config, verbose=verbose,
-                          resolve_dependencies=resolve_dependencies)
-        else:
-            raise RuntimeError('Alembic 0.7.0 or greater is required')
+        config = _get_config(directory)
+        command.heads(config, verbose=verbose,
+                      resolve_dependencies=resolve_dependencies)
 
 
 class AlembicBranchesSubcommand(AlembicSubcommand):
@@ -312,10 +294,7 @@ class AlembicBranchesSubcommand(AlembicSubcommand):
     def branches(self, directory=None, verbose=False, **kwargs):
         """Show current branch points"""
         config = _get_config(directory)
-        if alembic_version >= (0, 7, 0):
-            command.branches(config, verbose=verbose)
-        else:
-            command.branches(config)
+        command.branches(config, verbose=verbose)
 
 
 class AlembicCurrentSubcommand(AlembicSubcommand):
@@ -337,10 +316,7 @@ class AlembicCurrentSubcommand(AlembicSubcommand):
     def current(self, directory=None, verbose=False, head_only=False, **kwargs):
         """Display the current revision for each database."""
         config = _get_config(directory)
-        if alembic_version >= (0, 7, 0):
-            command.current(config, verbose=verbose, head_only=head_only)
-        else:
-            command.current(config)
+        command.current(config, verbose=verbose, head_only=head_only)
 
 
 class AlembicStampSubcommand(AlembicSubcommand):
