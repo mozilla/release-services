@@ -10,7 +10,9 @@ from contextlib import contextmanager
 from flask import json
 from nose.tools import eq_
 from relengapi import p
+from relengapi.blueprints import treestatus
 from relengapi.blueprints.treestatus import model
+from relengapi.blueprints.treestatus import types
 from relengapi.lib import auth
 from relengapi.lib.testing.context import TestContext
 
@@ -96,8 +98,11 @@ admin_and_sheriff = userperms([p.treestatus.admin, p.treestatus.sheriff])
 admin = userperms([p.treestatus.admin])
 sheriff = userperms([p.treestatus.sheriff])
 
+config = {'TREESTATUS_CACHE': 'mock://ts'}
+
 test_context = TestContext(databases=['treestatus'],
-                           db_setup=db_setup)
+                           db_setup=db_setup,
+                           config=config)
 
 
 @contextmanager
@@ -152,6 +157,33 @@ def assert_change_last_state(app, change_id, **exp_last_states):
             got_last_states[chtree.tree] = (ls['status'], ls['reason'])
         eq_(got_last_states, exp_last_states)
 
+# tests
+
+
+@test_context.specialize(config={})
+def test_memcache_no_config(app):
+    """With no cache configured, the (private) memcached functions do nothing"""
+    with app.app_context():
+        # always misses
+        eq_(treestatus.tree_cache_get(u't'), None)
+        # always succeed
+        eq_(treestatus.tree_cache_set(u't', types.JsonTree()), None)
+        eq_(treestatus.tree_cache_invalidate(u't'), None)
+
+
+@test_context
+def test_memcache_functions(app):
+    """The (private) memcached functions correctly get, set, and invalidate
+    a cached item using a mock cache"""
+    with app.app_context():
+        tree = types.JsonTree(tree='t', status='o', reason='r',
+                              message_of_the_day='motd')
+        eq_(treestatus.tree_cache_get(u't'), None)
+        treestatus.tree_cache_set(u't', tree)
+        eq_(treestatus.tree_cache_get(u't').status, 'o')
+        treestatus.tree_cache_invalidate(u't')
+        eq_(treestatus.tree_cache_get(u't'), None)
+
 
 @test_context
 def test_index_view(client):
@@ -185,6 +217,18 @@ def test_get_tree(client):
     eq_(json.loads(resp.data)['result'], tree1_json)
     eq_(resp.headers['Cache-Control'], 'no-cache')
     eq_(resp.headers['Access-Control-Allow-Origin'], '*')
+
+
+@test_context
+def test_get_tree_cached(app, client):
+    """Getting /treestatus/trees/tree1 when that tree is cached
+    results in a read from the cache"""
+    with app.app_context():
+        tree = types.JsonTree(tree='tree1', status='o', reason='r',
+                              message_of_the_day='motd')
+        treestatus.tree_cache_set(u'tree1', tree)
+    resp = client.get('/treestatus/trees/tree1')
+    eq_(json.loads(resp.data)['result']['status'], 'o')
 
 
 @test_context

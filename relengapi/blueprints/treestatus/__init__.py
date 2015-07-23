@@ -6,6 +6,7 @@ import json
 import logging
 import sqlalchemy as sa
 
+from contextlib import contextmanager
 from flask import Blueprint
 from flask import current_app
 from flask import url_for
@@ -36,8 +37,6 @@ public_data = http.response_headers(
     ('cache-control', 'no-cache'),
     ('access-control-allow-origin', '*'))
 
-# TODO: use elasticache
-
 
 def update_tree_status(session, tree, status=None, reason=None,
                        tags=[], message_of_the_day=None):
@@ -64,6 +63,44 @@ def update_tree_status(session, tree, status=None, reason=None,
             reason=reason,
             tags=tags)
         session.add(l)
+
+    tree_cache_invalidate(tree.tree)
+
+
+@contextmanager
+def _get_mc():
+    cfg = current_app.config.get('TREESTATUS_CACHE')
+    if not cfg:
+        yield None
+    else:
+        with current_app.memcached.cache(cfg) as mc:
+            yield mc
+
+
+def tree_cache_get(tree):
+    with _get_mc() as mc:
+        if not mc:
+            return None
+        data = mc.get(tree.encode('utf-8'))
+        if not data:
+            return
+        print "HIT"
+        return api.loads(types.JsonTree, data.decode('utf-8'))
+
+
+def tree_cache_set(tree, data):
+    with _get_mc() as mc:
+        if not mc:
+            return None
+        j = api.dumps(types.JsonTree, data)
+        mc.set(tree.encode('utf-8'), j.encode('utf-8'))
+
+
+def tree_cache_invalidate(tree):
+    with _get_mc() as mc:
+        if not mc:
+            return None
+        mc.delete(tree.encode('utf-8'))
 
 
 @bp.route('/')
@@ -103,11 +140,19 @@ def get_trees():
 def get_tree(tree):
     """
     Get the status of a single tree.
+
+    This endpoint is cached heavily and is safe to call frequently to verify
+    the status of a tree.
     """
+    r = tree_cache_get(tree)
+    if r:
+        return r
     t = current_app.db.session('treestatus').query(model.DbTree).get(tree)
     if not t:
         raise NotFound("No such tree")
-    return t.to_json()
+    j = t.to_json()
+    tree_cache_set(tree, j)
+    return j
 
 
 @bp.route('/trees/<path:tree_name>', methods=['PUT'])
@@ -145,6 +190,7 @@ def kill_tree(tree):
     model.DbLog.query.filter_by(tree=tree).delete()
     model.DbStatusChangeTree.query.filter_by(tree=tree).delete()
     session.commit()
+    tree_cache_invalidate(tree)
     return None, 204
 
 
