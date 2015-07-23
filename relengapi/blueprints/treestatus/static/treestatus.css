@@ -95,9 +95,5 @@ h1.treestatus {
 
 
 #footer {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
     text-align: center;
-    height: 60px;
 }
