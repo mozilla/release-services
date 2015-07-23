@@ -170,16 +170,21 @@ def test_tree_view(client):
 @test_context
 def test_get_trees(client):
     """Getting /treestatus/trees results in a dictionary of trees keyed by
-    name"""
+    name, with a no-cache header and ACAO *"""
     resp = client.get('/treestatus/trees')
     eq_(json.loads(resp.data)['result'], {'tree1': tree1_json})
+    eq_(resp.headers['Cache-Control'], 'no-cache')
+    eq_(resp.headers['Access-Control-Allow-Origin'], '*')
 
 
 @test_context
 def test_get_tree(client):
-    """Getting /treestatus/trees/tree1 results in the tree data"""
+    """Getting /treestatus/trees/tree1 results in the tree data, with a
+    no-cache header and ACAO *"""
     resp = client.get('/treestatus/trees/tree1')
     eq_(json.loads(resp.data)['result'], tree1_json)
+    eq_(resp.headers['Cache-Control'], 'no-cache')
+    eq_(resp.headers['Access-Control-Allow-Origin'], '*')
 
 
 @test_context
@@ -279,7 +284,7 @@ def test_delete_tree_nosuch(client):
 @test_context
 def test_get_logs(client):
     """Getting /treestatus/trees/tree1/logs results in a sorted list of log
-    entries (newest first)"""
+    entries (newest first), with a no-cache header and ACAO *"""
     resp = client.get('/treestatus/trees/tree1/logs')
     eq_(json.loads(resp.data)['result'], [{
         'tree': 'tree1',
@@ -304,6 +309,8 @@ def test_get_logs(client):
         'status': 'opened',
     }
     ])
+    eq_(resp.headers['Cache-Control'], 'no-cache')
+    eq_(resp.headers['Access-Control-Allow-Origin'], '*')
 
 
 @test_context

@@ -13,6 +13,7 @@ from flask.ext.login import current_user
 from relengapi import apimethod
 from relengapi.lib import angular
 from relengapi.lib import api
+from relengapi.lib import http
 from relengapi.lib import time as relengapi_time
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import NotFound
@@ -31,10 +32,12 @@ p.treestatus.admin.doc('Administrate treestatus (add, delete, modify trees)')
 
 log = logging.getLogger(__name__)
 TREE_SUMMARY_LOG_LIMIT = 5
+public_data = http.response_headers(
+    ('cache-control', 'no-cache'),
+    ('access-control-allow-origin', '*'))
 
-
-# TODO: replicate cache control headers
 # TODO: use elasticache
+
 
 def update_tree_status(session, tree, status=None, reason=None,
                        tags=[], message_of_the_day=None):
@@ -82,6 +85,7 @@ def show_tree_details(tree):
 
 
 @bp.route('/trees')
+@public_data
 @apimethod({unicode: types.JsonTree})
 def get_trees():
     """
@@ -94,6 +98,7 @@ def get_trees():
 
 
 @bp.route('/trees/<path:tree>')
+@public_data
 @apimethod(types.JsonTree, unicode)
 def get_tree(tree):
     """
@@ -144,6 +149,7 @@ def kill_tree(tree):
 
 
 @bp.route('/trees/<path:tree>/logs')
+@public_data
 @apimethod([types.JsonTreeLog], unicode, int)
 def get_logs(tree, all=0):
     """
