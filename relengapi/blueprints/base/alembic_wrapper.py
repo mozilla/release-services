@@ -33,6 +33,9 @@ class AlembicSubcommand(subcommands.Subcommand):
             'alembic', help='Wrapper for alembic commands')
         parser.add_argument('dbname', default=None,
                             help='Name of the database to interact with')
+        parser.add_argument('-d', '--directory', dest='base_directory',
+                            default=os.path.join(os.path.dirname(relengapi.__file__), 'alembic'),
+                            help="base alembic directory, where the migrations folder lives")
         subparsers = parser.add_subparsers()
         cmds = [cls() for cls in AlembicSubcommand.__subclasses__()]
         for cmd in cmds:
@@ -44,8 +47,7 @@ class AlembicSubcommand(subcommands.Subcommand):
         if args.dbname is None:
             logger.warning("You must specify a database name")
             return
-        args.directory = os.path.join(os.path.dirname(relengapi.__file__),
-                                      'alembic', args.dbname)
+        args.directory = os.path.join(args.base_directory, args.dbname)
         args._alembic_subcommands.run(parser, args)
 
 
