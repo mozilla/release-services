@@ -35,8 +35,6 @@ TREE_SUMMARY_LOG_LIMIT = 5
 
 # TODO: replicate cache control headers
 # TODO: use elasticache
-# TODO: rename columns, tables, move to relengapi DB
-# TODO: remove user table, tokens
 # TODO: test deleting a tree with logs or history
 # TODO: add "refresh", run it periodically
 
@@ -61,7 +59,7 @@ def update_tree_status(session, tree, status=None, reason=None,
             tree=tree.tree,
             when=relengapi_time.now(),
             who=str(current_user),
-            action=status,  # action, status same thing
+            status=status,
             reason=reason,
             tags=tags)
         session.add(l)
@@ -173,8 +171,8 @@ def get_stack():
     """
     Get the "undo stack" of changes to trees, most recent first.
     """
-    tbl = model.DbStatusStack
-    return [st.to_json() for st in tbl.query.order_by(tbl.when.desc())]
+    tbl = model.DbStatusChange
+    return [ch.to_json() for ch in tbl.query.order_by(tbl.when.desc())]
 
 
 @bp.route('/stack/<int:id>', methods=['REVERT'])
@@ -188,7 +186,7 @@ def revert_change(id):
     affected trees, and deletes the change from the stack.
     """
     session = current_app.db.session('treestatus')
-    ch = session.query(model.DbStatusStack).get(id)
+    ch = session.query(model.DbStatusChange).get(id)
     if not ch:
         raise NotFound
 
@@ -216,7 +214,7 @@ def delete_change(id):
     Delete the given change from the undo stack, without applying it.
     """
     session = current_app.db.session('treestatus')
-    ch = session.query(model.DbStatusStack).get(id)
+    ch = session.query(model.DbStatusChange).get(id)
     if not ch:
         raise NotFound
 
@@ -251,18 +249,18 @@ def update_trees(body):
         if body.status is Unset or body.reason is Unset:
             raise BadRequest("must specify status and reason to remember the change")
         # add a new stack entry with the new and existing states
-        st = model.DbStatusStack(
+        ch = model.DbStatusChange(
             who=str(current_user),
             reason=body.reason,
             when=relengapi_time.now(),
             status=body.status)
         for tree in trees:
-            stt = model.DbStatusStackTree(
+            stt = model.DbStatusChangeTree(
                 tree=tree.tree,
                 last_state=json.dumps(
                     {'status': tree.status, 'reason': tree.reason}))
-            st.trees.append(stt)
-        session.add(st)
+            ch.trees.append(stt)
+        session.add(ch)
 
     # update the trees as requested
     def unset_to_none(x):

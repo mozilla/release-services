@@ -29,8 +29,8 @@
                 <tr ng-repeat="log in logs">
                     <td class="tableWho">{{log.who|shortName}}</td>
                     <td class="tableWhen">{{log.when}} UTC</td>
-                    <td class="tableState {{log.action|status2class}}">
-                        {{log.action|uppercase}}
+                    <td class="tableState {{log.status|status2class}}">
+                        {{log.status|uppercase}}
                     </td>
                     <td class="tableReason" ng-bind-html="log.reason|linkifyBugs"></td>
                     <td class="tableTags">{{log.tags|list}}</td>

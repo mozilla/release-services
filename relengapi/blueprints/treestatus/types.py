@@ -44,8 +44,8 @@ class JsonTreeLog(wsme.types.Base):
     #: the user making the change
     who = wsme.types.wsattr(unicode, mandatory=True)
 
-    #: the action (the new status)
-    action = wsme.types.wsattr(unicode, mandatory=True)
+    #: the new status
+    status = wsme.types.wsattr(unicode, mandatory=True)
 
     #: the reason for the status
     reason = wsme.types.wsattr(unicode, mandatory=True)

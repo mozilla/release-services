@@ -34,7 +34,7 @@ def db_setup(app):
 
     def when(day):
         return datetime.datetime(2015, 7, day, 17, 44, 00)
-    for tree, action, when, reason, tags in [
+    for tree, status, when, reason, tags in [
         ('tree1', 'opened', when(13), 'i wanted to', ['a']),
         ('tree1', 'opened', when(15), 'i really wanted to', []),
         ('tree1', 'closed', when(14), 'because', ['a', 'b']),
@@ -44,7 +44,7 @@ def db_setup(app):
             tree=tree,
             when=when,
             who='dustin',
-            action=action,
+            status=status,
             reason=reason,
             tags=tags)
         session.add(l)
@@ -66,23 +66,23 @@ def db_setup_stack(app):
         return json.dumps({'status': status, 'reason': reason})
 
     # first change closed tree0 and tree1
-    stack = model.DbStatusStack(
+    stack = model.DbStatusChange(
         who='dustin', reason='bug 123', status='closed',
         when=datetime.datetime(2015, 7, 14))
     session.add(stack)
     for tree in 'tree0', 'tree1':
-        session.add(model.DbStatusStackTree(tree=tree, stack=stack,
-                                            last_state=ls('open', tree)))
+        session.add(model.DbStatusChangeTree(tree=tree, stack=stack,
+                                             last_state=ls('open', tree)))
 
     # second change closed tree1 and tree2
-    stack = model.DbStatusStack(
+    stack = model.DbStatusChange(
         who='dustin', reason='bug 456', status='closed',
         when=datetime.datetime(2015, 7, 16))
     session.add(stack)
-    session.add(model.DbStatusStackTree(tree='tree1', stack=stack,
-                                        last_state=ls('closed', 'bug 123')))
-    session.add(model.DbStatusStackTree(tree='tree2', stack=stack,
-                                        last_state=ls('open', 'tree2')))
+    session.add(model.DbStatusChangeTree(tree='tree1', stack=stack,
+                                         last_state=ls('closed', 'bug 123')))
+    session.add(model.DbStatusChangeTree(tree='tree2', stack=stack,
+                                         last_state=ls('open', 'tree2')))
 
     session.commit()
 
@@ -107,7 +107,7 @@ def set_time(now):
         yield
 
 
-def assert_logged(app, tree, action, reason, when=None,
+def assert_logged(app, tree, status, reason, when=None,
                   who='human:user@domain.com', tags=[]):
     with app.app_context():
         session = app.db.session('treestatus')
@@ -116,7 +116,7 @@ def assert_logged(app, tree, action, reason, when=None,
         q = q.order_by(model.DbLog.when)
         logs = q[:]
         for l in logs:
-            if l.action != action:
+            if l.status != status:
                 continue
             if l.reason != reason:
                 continue
@@ -145,7 +145,7 @@ def assert_nothing_logged(app, tree):
 
 def assert_change_last_state(app, change_id, **exp_last_states):
     with app.app_context():
-        change = model.DbStatusStack.query.get(change_id)
+        change = model.DbStatusChange.query.get(change_id)
         got_last_states = {}
         for chtree in change.trees:
             ls = json.loads(chtree.last_state)
@@ -270,21 +270,21 @@ def test_get_logs(client):
         'who': 'dustin',
         'when': '2015-07-15T17:44:00',
         'reason': 'i really wanted to',
-        'action': 'opened',
+        'status': 'opened',
     }, {
         'tree': 'tree1',
         'tags': ['a', 'b'],
         'who': 'dustin',
         'when': '2015-07-14T17:44:00',
         'reason': 'because',
-        'action': 'closed',
+        'status': 'closed',
     }, {
         'tree': 'tree1',
         'tags': ['a'],
         'who': 'dustin',
         'when': '2015-07-13T17:44:00',
         'reason': 'i wanted to',
-        'action': 'opened',
+        'status': 'opened',
     }
     ])
 
@@ -300,7 +300,7 @@ def test_get_logs_all(client, app):
             tree='tree1',
             when=datetime.datetime(2015, 6, 15, 17, 44, 00),
             who='jimmy',
-            action='halfopen',
+            status='halfopen',
             reason='being difficult',
             tags=[])
         session.add(l)
