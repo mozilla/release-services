@@ -35,7 +35,6 @@ TREE_SUMMARY_LOG_LIMIT = 5
 
 # TODO: replicate cache control headers
 # TODO: use elasticache
-# TODO: test deleting a tree with logs or history
 
 def update_tree_status(session, tree, status=None, reason=None,
                        tags=[], message_of_the_day=None):
@@ -137,6 +136,9 @@ def kill_tree(tree):
     if not t:
         raise NotFound("No such tree")
     session.delete(t)
+    # delete from logs and change stack, too
+    model.DbLog.query.filter_by(tree=tree).delete()
+    model.DbStatusChangeTree.query.filter_by(tree=tree).delete()
     session.commit()
     return None, 204
 

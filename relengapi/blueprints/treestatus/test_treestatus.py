@@ -234,15 +234,32 @@ def test_make_tree_dup_name(client):
     eq_(resp.status_code, 400)
 
 
-@test_context.specialize(user=admin)
-def test_delete_tree(client):
-    """Deleting a tree .. deletes the tree"""
+@test_context.specialize(user=admin, db_setup=db_setup_stack)
+def test_delete_tree(app, client):
+    """Deleting a tree deletes the tree and any associated logs
+    and changes"""
+    with app.app_context():
+        session = app.db.session('treestatus')
+        l = model.DbLog(
+            tree='tree1',
+            when=datetime.datetime(2015, 6, 15, 17, 44, 00),
+            who='jimmy',
+            status='halfopen',
+            reason='being difficult',
+            tags=[])
+        session.add(l)
+        session.commit()
+
     resp = client.get('/treestatus/trees/tree1')
     eq_(resp.status_code, 200)
     resp = client.delete('/treestatus/trees/tree1')
     eq_(resp.status_code, 204)
     resp = client.get('/treestatus/trees/tree1')
     eq_(resp.status_code, 404)
+
+    with app.app_context():
+        eq_(model.DbLog.query.filter_by(tree='tree1')[:], [])
+        eq_(model.DbStatusChangeTree.query.filter_by(tree='tree1')[:], [])
 
 
 @test_context.specialize(user=sheriff)
