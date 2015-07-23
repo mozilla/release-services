@@ -38,7 +38,6 @@ TREE_SUMMARY_LOG_LIMIT = 5
 # TODO: remove user table, tokens
 # TODO: test deleting a tree with logs or history
 # TODO: add "refresh", run it periodically
-# TODO: allow editing reason without affecting stack
 
 def update_tree_status(session, tree, status=None, reason=None, tags=[]):
     """Update the given tree's status; note that this does not commit
@@ -256,9 +255,8 @@ def update_trees(body):
     Update trees' status.
 
     If the update indicates that the previous state should be saved, then a new
-    change will be added to the undo stack containing the previous state.
-    Otherwise, all affected trees will be removed from the undo stack, which
-    may result in changes being removed from the stack when no trees remain.
+    change will be added to the undo stack containing the previous status and
+    reason.
 
     The `tags` must not be empty if `status` is `closed`.
     """
@@ -284,16 +282,6 @@ def update_trees(body):
                     {'status': tree.status, 'reason': tree.reason}))
             st.trees.append(stt)
         session.add(st)
-    else:
-        tree_names = set(t.tree for t in trees)
-        # delete any stack records for this tree
-        for st in session.query(model.DbStatusStack):
-            for t in st.trees[:]:
-                if t.tree in tree_names:
-                    session.delete(t)
-                    st.trees.remove(t)
-            if not st.trees:
-                session.delete(st)
 
     # update the trees as requested
     for tree in trees:

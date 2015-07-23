@@ -43,7 +43,7 @@ class DbLog(db.declarative_base('treestatus')):
     tree = Column(String(32), nullable=False, index=True)
     when = Column(DateTime, nullable=False, index=True)
     who = Column(String(100), nullable=False)
-    action = Column(String(16), nullable=False)
+    action = Column(String(64), nullable=False)
     reason = Column(String(256), nullable=False)
     _tags = Column("tags", String(256), nullable=False)
 

@@ -463,52 +463,6 @@ def test_delete_stack_nosuch(client):
     eq_(resp.status_code, 404)
 
 
-@test_context.specialize(db_setup=db_setup_stack, user=sheriff)
-def test_update_trees_no_remember(app, client):
-    """UPDATE'ing a tree without remembering changes updates those trees and
-    clears out the stack for those trees."""
-    update = {'trees': ['tree1'], 'status': 'open',
-              'reason': 'fire extinguished',
-              'tags': ['fire', 'water'],
-              'remember': False}
-    resp = client.open('/treestatus/trees', method='UPDATE',
-                       data=json.dumps(update),
-                       headers=[('Content-Type', 'application/json')])
-    eq_(resp.status_code, 204)
-
-    resp = client.get('/treestatus/trees')
-    eq_(resp.status_code, 200)
-    updated_status = sorted([(t['tree'], t['status'], t['reason'])
-                             for t in json.loads(resp.data)['result'].values()])
-    eq_(updated_status, [
-        ('tree0', 'closed', 'bug 123'),
-        ('tree1', 'open', 'fire extinguished'),
-        ('tree2', 'closed', 'bug 456'),
-    ])
-
-    resp = client.get('/treestatus/stack')
-    res = json.loads(resp.data)
-    eq_(res['result'], [{
-        'id': 2,
-        'trees': ['tree2'],  # tree1 removed
-        'when': '2015-07-16T00:00:00',
-        'who': 'dustin',
-        'reason': 'bug 456',
-        'status': 'closed',
-    }, {
-        'id': 1,
-        'trees': ['tree0'],  # tree1 removed
-        'who': 'dustin',
-        'when': '2015-07-14T00:00:00',
-        'reason': 'bug 123',
-        'status': 'closed',
-    }
-    ])
-
-    assert_logged(app, 'tree1', 'open', 'fire extinguished',
-                  tags=['fire', 'water'])
-
-
 @test_context.specialize(db_setup=db_setup_stack, user=admin)
 def test_update_trees_no_perms(app, client):
     """UPDATE'ing a tree without admin perms fails"""
@@ -523,10 +477,9 @@ def test_update_trees_no_perms(app, client):
 
 
 @test_context.specialize(db_setup=db_setup_stack, user=sheriff)
-def test_update_trees_no_remember_remove_stack_entry(app, client):
-    """UPDATE'ing a tree without remembering changes updates those trees and
-    clears out the stack for those trees.  When a stack entry has no trees,
-    it is removed."""
+def test_update_trees_no_remember(app, client):
+    """UPDATE'ing a tree without remembering changes updates those trees but
+    does not clear out the stack for those trees."""
     update = {'trees': ['tree1', 'tree0'], 'status': 'open',
               'reason': 'fire extinguished',
               'tags': [],
@@ -548,14 +501,24 @@ def test_update_trees_no_remember_remove_stack_entry(app, client):
 
     resp = client.get('/treestatus/stack')
     res = json.loads(resp.data)
+    for st in res['result']:
+        st['trees'].sort()
     eq_(res['result'], [{
         'id': 2,
-        'trees': ['tree2'],  # tree1 removed
+        'trees': ['tree1', 'tree2'],  # tree0, tree1 still present
         'when': '2015-07-16T00:00:00',
         'who': 'dustin',
         'reason': 'bug 456',
         'status': 'closed',
-    }])  # stack entry 1 removed
+    }, {
+        'id': 1,
+        'trees': ['tree0', 'tree1'],
+        'who': 'dustin',
+        'when': '2015-07-14T00:00:00',
+        'reason': 'bug 123',
+        'status': 'closed',
+    }
+    ])
 
     assert_logged(app, 'tree0', 'open', 'fire extinguished')
     assert_logged(app, 'tree1', 'open', 'fire extinguished')
