@@ -36,7 +36,6 @@ TREE_SUMMARY_LOG_LIMIT = 5
 # TODO: replicate cache control headers
 # TODO: use elasticache
 # TODO: test deleting a tree with logs or history
-# TODO: add "refresh", run it periodically
 
 def update_tree_status(session, tree, status=None, reason=None,
                        tags=[], message_of_the_day=None):

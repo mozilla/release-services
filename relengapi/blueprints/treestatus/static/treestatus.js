@@ -328,7 +328,7 @@ angular.module('treestatus').controller('TreeListController',
         });
     };
 
-    $scope.treesUpdated = function() {
+    $scope.refresh = function() {
         reloadTrees();
         reloadStack();
     };
@@ -373,7 +373,7 @@ angular.module('treestatus').controller('TreeDetailController',
         reloadLogs();
     };
 
-    $scope.treeUpdated = function() {
+    $scope.refresh = function() {
         reloadLogs();
         reloadTree();
     };

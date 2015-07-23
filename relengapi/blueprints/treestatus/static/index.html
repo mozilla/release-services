@@ -4,6 +4,10 @@
 <div ng-app='treestatus' id="treestatus" ng-controller="TreeListController">
     <div class="row">
         <div class="col-xs-12">
+            <div class="pull-right">
+                <button class="btn btn-default"
+                    ng-click="refresh()"><span class="glyphicon glyphicon-refresh">
+            </div>
             <h1 class="treestatus">TreeStatus</h1>
         </div>
     </div>
@@ -95,7 +99,7 @@
             </div>
         </div>
         <div class="col-xs-12 col-lg-4" ng-if="can_sheriff">
-            <tree-status-control trees="selected_trees" updated="treesUpdated()">
+            <tree-status-control trees="selected_trees" updated="refresh()">
             </tree-status-control>
         </div>
     </div>
