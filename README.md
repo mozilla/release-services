@@ -2,6 +2,7 @@ RelengAPI
 =========
 
 Continuous Integration: https://travis-ci.org/mozilla/build-relengapi
+[![codecov.io](http://codecov.io/github/mozilla/build-relengapi/coverage.svg?branch=master)](http://codecov.io/github/mozilla/build-relengapi?branch=master)
 
 Your Interface to Release Engineering Automation.
 
