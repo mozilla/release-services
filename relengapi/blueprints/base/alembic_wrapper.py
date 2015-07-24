@@ -1,16 +1,20 @@
 import logging
 import os
-
-from alembic import __version__ as __alembic_version__
-from alembic import command
-from alembic.config import Config
-
 import relengapi
 
+from alembic import command
+from alembic.config import Config as AlembicConfig
+from flask import current_app
 from relengapi.lib import subcommands
 
+
 logger = logging.getLogger(__name__)
-alembic_version = tuple([int(v) for v in __alembic_version__.split('.')[0:3]])
+
+
+class Config(AlembicConfig):
+    def get_template_directory(self):
+        alembic_dir = os.path.join(os.path.dirname(relengapi.__file__), 'alembic')
+        return os.path.join(alembic_dir, 'templates')
 
 
 def _get_config(directory):
@@ -27,7 +31,6 @@ def _get_config(directory):
 
 
 class AlembicSubcommand(subcommands.Subcommand):
-
     def make_parser(self, subparsers):
         parser = subparsers.add_parser(
             'alembic', help='Wrapper for alembic commands')
@@ -45,10 +48,31 @@ class AlembicSubcommand(subcommands.Subcommand):
 
     def run(self, parser, args):
         if args.dbname is None:
-            logger.warning("You must specify a database name")
+            logger.error("You must specify a database name")
+            return
+        if args.dbname not in current_app.db.database_names:
+            logger.error("You must specify a valid database name")
             return
         args.directory = os.path.join(args.base_directory, args.dbname)
         args._alembic_subcommands.run(parser, args)
+
+
+class AlembicInitSubcommand(AlembicSubcommand):
+    def make_parser(self, subparsers):
+        parser = subparsers.add_parser('init', help=self.init.__doc__)
+        parser.add_argument('-d', '--directory', dest='directory', default=None,
+                            help="migration script directory (default is 'migrations')")
+        return parser
+
+    def run(self, parser, args):
+        self.init(**vars(args))
+
+    def init(self, directory, **kwargs):
+        """Generates a new migration"""
+        config = Config()
+        config.set_main_option('script_location', directory)
+        config.config_file_name = os.path.join(directory, 'alembic.ini')
+        command.init(config, directory, 'relengapi')
 
 
 class AlembicRevisionSubcommand(AlembicSubcommand):
