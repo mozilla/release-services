@@ -129,7 +129,7 @@ def get_trees():
     Get the status of all trees.
     """
     trees = {}
-    for t in current_app.db.session('treestatus').query(model.DbTree):
+    for t in current_app.db.session('relengapi').query(model.DbTree):
         trees[t.tree] = t.to_json()
     return trees
 
@@ -147,7 +147,7 @@ def get_tree(tree):
     r = tree_cache_get(tree)
     if r:
         return r
-    t = current_app.db.session('treestatus').query(model.DbTree).get(tree)
+    t = current_app.db.session('relengapi').query(model.DbTree).get(tree)
     if not t:
         raise NotFound("No such tree")
     j = t.to_json()
@@ -160,7 +160,7 @@ def get_tree(tree):
 @apimethod(None, unicode, body=types.JsonTree)
 def make_tree(tree_name, body):
     """Make a new tree."""
-    session = current_app.db.session('treestatus')
+    session = current_app.db.session('relengapi')
     if body.tree != tree_name:
         raise BadRequest("Tree names must match")
     t = model.DbTree(
@@ -181,7 +181,7 @@ def make_tree(tree_name, body):
 @apimethod(None, unicode)
 def kill_tree(tree):
     """Delete a tree."""
-    session = current_app.db.session('treestatus')
+    session = current_app.db.session('relengapi')
     t = session.query(model.DbTree).get(tree)
     if not t:
         raise NotFound("No such tree")
@@ -203,12 +203,12 @@ def get_logs(tree, all=0):
     5 entries by default.  Use `?all=1` to get all log entries.
     """
     # verify the tree exists first
-    t = current_app.db.session('treestatus').query(model.DbTree).get(tree)
+    t = current_app.db.session('relengapi').query(model.DbTree).get(tree)
     if not t:
         raise NotFound("No such tree")
 
     logs = []
-    q = current_app.db.session('treestatus').query(
+    q = current_app.db.session('relengapi').query(
         model.DbLog).filter_by(tree=tree)
     q = q.order_by(model.DbLog.when.desc())
     if not all:
@@ -238,7 +238,7 @@ def revert_change(id):
     This applies the settings that were present before the change to the
     affected trees, and deletes the change from the stack.
     """
-    session = current_app.db.session('treestatus')
+    session = current_app.db.session('relengapi')
     ch = session.query(model.DbStatusChange).get(id)
     if not ch:
         raise NotFound
@@ -266,7 +266,7 @@ def delete_change(id):
     """
     Delete the given change from the undo stack, without applying it.
     """
-    session = current_app.db.session('treestatus')
+    session = current_app.db.session('relengapi')
     ch = session.query(model.DbStatusChange).get(id)
     if not ch:
         raise NotFound
@@ -290,7 +290,7 @@ def update_trees(body):
 
     The `tags` property must not be empty if `status` is `closed`.
     """
-    session = current_app.db.session('treestatus')
+    session = current_app.db.session('relengapi')
     trees = [session.query(model.DbTree).get(t) for t in body.trees]
     if not all(trees):
         raise NotFound("one or more trees not found")

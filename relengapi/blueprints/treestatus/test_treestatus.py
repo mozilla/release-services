@@ -26,7 +26,7 @@ tree1_json = {
 
 
 def db_setup(app):
-    session = app.db.session('treestatus')
+    session = app.db.session('relengapi')
     tree = model.DbTree(
         tree=tree1_json['tree'],
         status=tree1_json['status'],
@@ -56,7 +56,7 @@ def db_setup(app):
 
 def db_setup_stack(app):
     for tn in range(3):
-        session = app.db.session('treestatus')
+        session = app.db.session('relengapi')
         tree = model.DbTree(
             tree='tree%d' % tn,
             status='closed',
@@ -100,7 +100,7 @@ sheriff = userperms([p.treestatus.sheriff])
 
 config = {'TREESTATUS_CACHE': 'mock://ts'}
 
-test_context = TestContext(databases=['treestatus'],
+test_context = TestContext(databases=['relengapi'],
                            db_setup=db_setup,
                            config=config)
 
@@ -115,7 +115,7 @@ def set_time(now):
 def assert_logged(app, tree, status, reason, when=None,
                   who='human:user@domain.com', tags=[]):
     with app.app_context():
-        session = app.db.session('treestatus')
+        session = app.db.session('relengapi')
         q = session.query(model.DbLog)
         q = q.filter_by(tree=tree)
         q = q.order_by(model.DbLog.when)
@@ -138,7 +138,7 @@ def assert_logged(app, tree, status, reason, when=None,
 
 def assert_nothing_logged(app, tree):
     with app.app_context():
-        session = app.db.session('treestatus')
+        session = app.db.session('relengapi')
         q = session.query(model.DbLog)
         q = q.filter_by(tree=tree)
         q = q.order_by(model.DbLog.when)
@@ -288,7 +288,7 @@ def test_delete_tree(app, client):
     """Deleting a tree deletes the tree and any associated logs
     and changes"""
     with app.app_context():
-        session = app.db.session('treestatus')
+        session = app.db.session('relengapi')
         l = model.DbLog(
             tree='tree1',
             when=datetime.datetime(2015, 6, 15, 17, 44, 00),
@@ -362,7 +362,7 @@ def test_get_logs_all(client, app):
     """Getting /treestatus/trees/tree1/logs with over 5 logs present
     results in only 5 logs, unless given ?all=1"""
     # add the log entries
-    session = app.db.session('treestatus')
+    session = app.db.session('relengapi')
     for ln in range(5):
         l = model.DbLog(
             tree='tree1',

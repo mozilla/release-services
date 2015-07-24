@@ -20,7 +20,7 @@ from relengapi.blueprints.treestatus import types
 log = logging.getLogger(__name__)
 
 
-class DbTree(db.declarative_base('treestatus')):
+class DbTree(db.declarative_base('relengapi')):
     __tablename__ = 'treestatus_trees'
     tree = Column(String(32), primary_key=True)
     status = Column(String(64), default="open", nullable=False)
@@ -36,7 +36,7 @@ class DbTree(db.declarative_base('treestatus')):
         )
 
 
-class DbLog(db.declarative_base('treestatus')):
+class DbLog(db.declarative_base('relengapi')):
     __tablename__ = 'treestatus_log'
 
     id = Column(Integer, primary_key=True)
@@ -67,7 +67,7 @@ class DbLog(db.declarative_base('treestatus')):
         )
 
 
-class DbStatusChange(db.declarative_base('treestatus')):
+class DbStatusChange(db.declarative_base('relengapi')):
     __tablename__ = 'treestatus_changes'
     id = Column(Integer, primary_key=True)
     who = Column(Text, nullable=False)
@@ -86,7 +86,7 @@ class DbStatusChange(db.declarative_base('treestatus')):
         )
 
 
-class DbStatusChangeTree(db.declarative_base('treestatus')):
+class DbStatusChangeTree(db.declarative_base('relengapi')):
     __tablename__ = 'treestatus_change_trees'
     id = Column(Integer, primary_key=True)
     stack_id = Column(Integer, ForeignKey(DbStatusChange.id), index=True)
