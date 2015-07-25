@@ -84,5 +84,7 @@ def fake_successful_task_status():
 def fake_incomplete_task_status():
     task = mock.Mock()
     task.state = EXPECTED_TASK_STATUS_INCOMPLETE_RESPONSE['state']
-    task.info = EXPECTED_TASK_STATUS_INCOMPLETE_RESPONSE['status']
+    task.status = {
+        'status': EXPECTED_TASK_STATUS_INCOMPLETE_RESPONSE['status'],
+    }
     return task

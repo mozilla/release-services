@@ -49,12 +49,18 @@ cfg = {
 test_context = TestContext(config=cfg, databases=['relengapi'])
 
 
-def create_fake_tracker_row(app, id, created_at=None, src_url='https://foo.com', state="PENDING"):
+def create_fake_tracker_row(app, id, s3_key='key', created_at=None, pending_expires_at=None,
+                            src_url='https://foo.com', state="PENDING"):
+    now = datetime.datetime(2015, 7, 14, 23, 19, 42, tzinfo=pytz.UTC)  # freeze time
+    pending_expiry = now + datetime.timedelta(seconds=60)
     if not created_at:
-        created_at = time.now()
+        created_at = now
+    if not pending_expires_at:
+        pending_expires_at = pending_expiry
     session = app.db.session('relengapi')
     session.add(
-        tables.ArchiverTask(task_id=id, created_at=created_at, src_url=src_url, state=state)
+        tables.ArchiverTask(task_id=id, s3_key=s3_key, created_at=created_at,
+                            pending_expires_at=pending_expires_at, src_url=src_url, state=state)
     )
     session.commit()
 
@@ -151,9 +157,14 @@ def test_tracker_added_when_celery_task_is_created(app, client):
                    'subdir=testing/mozharness&preferred_region=us-west-2')
         with app.app_context():
             expected_tracker_id = "mozilla-central-9213957d166d.tar.gz_testing_mozharness"
+            expected_tracker_s3_key = "mozilla-central-9213957d166d.tar.gz/testing/mozharness"
             tracker = tables.ArchiverTask.query.filter(
                 tables.ArchiverTask.task_id == expected_tracker_id
             ).first()
+            eq_(tracker.task_id, expected_tracker_id, "tracker id doesn't match task")
+            eq_(tracker.s3_key, expected_tracker_s3_key, "tracker s3_key doesn't match task")
+            eq_(tracker.task_id, expected_tracker_id, "tracker was not created for celery task")
+            eq_(tracker.task_id, expected_tracker_id, "tracker was not created for celery task")
             eq_(tracker.task_id, expected_tracker_id, "tracker was not created for celery task")
 
 
@@ -163,7 +174,10 @@ def test_tracker_is_updated_when_task_state_changes_but_is_not_complete(app, cli
     with app.app_context():
         task_id = 'foo'
         session = app.db.session('relengapi')
-        session.add(tables.ArchiverTask(task_id=task_id, created_at=time.now(),
+        now = datetime.datetime(2015, 7, 14, 23, 19, 42, tzinfo=pytz.UTC)  # freeze time
+        pending_expiry = now + datetime.timedelta(seconds=60)
+        session.add(tables.ArchiverTask(task_id=task_id, s3_key='key', created_at=now,
+                                        pending_expires_at=pending_expiry,
                                         src_url='https://foo.com', state="PENDING"))
         session.commit()
         with mock.patch("relengapi.blueprints.archiver.create_and_upload_archive") as caua:
@@ -179,7 +193,10 @@ def test_tracker_is_deleted_when_task_status_shows_task_complete(app, client):
     with app.app_context():
         task_id = 'foo'
         session = app.db.session('relengapi')
-        session.add(tables.ArchiverTask(task_id=task_id, created_at=time.now(),
+        now = datetime.datetime(2015, 7, 14, 23, 19, 42, tzinfo=pytz.UTC)  # freeze time
+        pending_expiry = now + datetime.timedelta(seconds=60)
+        session.add(tables.ArchiverTask(task_id=task_id, s3_key='key', created_at=now,
+                                        pending_expires_at=pending_expiry,
                                         src_url='https://foo.com', state="PENDING"))
         session.commit()
         with mock.patch("relengapi.blueprints.archiver.create_and_upload_archive") as caua:
