@@ -32,6 +32,9 @@ Compound types are defined by subclassing ``wsme.types.Base``::
 
 See the WSME_ documentation for more detail.
 
+Manually Converting to/from JSON
+................................
+
 As a utility, an arbitrary JSON Object can be described with this class:
 
 .. py:attribute:: relengapi.lib.api.jsonObject
@@ -54,6 +57,24 @@ If you find the need to convert such objects to or from JSON strings, use these 
     For example::
 
         api.loads(JsonThing, data)
+
+As an example, assume the type::
+
+    class TestType(wsme.types.Base):
+        name = unicode
+        value = int
+
+Then:
+
+.. code-block:: none
+
+    >>> thing = TestType(name='n', value=3)
+    >>> api.dumps(TestType, thing)
+    '{"name": "n", "value": 3}'
+    >>> api.loads(TestType, '{"name": "n", "value": 3}')
+    <TestType object at 0x7fdb7a20f790>  # not a dictionary
+    >>> _.name, _.value
+    (u'n', 3)
 
 Decorator
 ---------
