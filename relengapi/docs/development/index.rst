@@ -7,6 +7,7 @@ This chapter is aimed at people hacking on RelengAPI itself and on RelengAPI Blu
     contributing
     blueprints
     api_methods
+    http
     web-ui
     databases
     subcommands
