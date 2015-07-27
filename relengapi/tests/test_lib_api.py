@@ -270,3 +270,13 @@ def test_date_formatting():
     j = {'when': '2015-02-28T01:02:03+00:00'}
     eq_(tojson(TypeWithDate, d), j)
     eq_(fromjson(TypeWithDate, j).when, d.when)
+
+
+def test_dumps():
+    thing = TestType(name="n", value=3)
+    eq_(json.loads(api.dumps(TestType, thing)), dict(name=u"n", value=3))
+
+
+def test_loads():
+    thing = api.loads(TestType, '{"name": "n", "value": 3}')
+    eq_((thing.name, thing.value), (u'n', 3))
