@@ -60,6 +60,15 @@ def test_response_headers_error_raised(app, client):
     assert 'foo' in client.get('/test').headers
 
 
+@test_context
+def test_response_headers_error_raised_ignored(app, client):
+    @app.route('/test')
+    @http.response_headers(('foo', 'bar'), status_codes='2xx')
+    def response_view_func():
+        raise BadRequest("oh noes")
+    assert 'foo' not in client.get('/test').headers
+
+
 def _add_numeric_route(app, status_codes):
     @app.route('/test/<int:c>')
     @http.response_headers(('foo', 'bar'), status_codes=status_codes)
