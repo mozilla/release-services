@@ -114,7 +114,7 @@ def task_status(task_id):
             create_and_upload_archive.apply_async(args=[task_tracker.src_url, task_tracker.s3_key],
                                                   task_id=task.id)
             response['state'] = 'RETRY'
-            response['status'] = 'Task has expired from pending too long. Re-creating task.'
+            response['status'] = 'Task has expired from pending for too long. Re-creating task.'
         elif task_tracker.state != task.state:
             update_tracker_state(task_tracker, task.state)
 

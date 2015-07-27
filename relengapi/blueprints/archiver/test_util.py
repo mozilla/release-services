@@ -29,6 +29,17 @@ EXPECTED_TASK_STATUS_SUCCESSFUL_RESPONSE = {
 }
 
 
+EXPECTED_TASK_STATUS_PENDING_RESPONSE = {
+    "s3_urls": {
+        "us-east-1": "https://archiver-us-east-1.s3.amazonaws.com/mozilla-central-9213957d1.tar.gz",
+        "us-west-2": "https://archiver-us-west-2.s3.amazonaws.com/mozilla-central-9213957d1.tar.gz",
+    },
+    "src_url": "https://hg.mozilla.org/mozilla-central/archive/9213957d1.tar.gz/testing/mozharness",
+    "state": "PENDING",
+    "status": "no task status at this point",
+}
+
+
 def setup_buckets(app, cfg):
     for region, bucket in cfg['ARCHIVER_S3_BUCKETS'].iteritems():
         s3 = app.aws.connect_to('s3', region)
@@ -77,6 +88,17 @@ def fake_successful_task_status():
         'src_url': EXPECTED_TASK_STATUS_SUCCESSFUL_RESPONSE['src_url'],
         's3_urls': EXPECTED_TASK_STATUS_SUCCESSFUL_RESPONSE['s3_urls'],
         'status': EXPECTED_TASK_STATUS_SUCCESSFUL_RESPONSE['status'],
+    }
+    return task
+
+
+def fake_expired_task_status():
+    task = mock.Mock()
+    task.state = EXPECTED_TASK_STATUS_PENDING_RESPONSE['state']
+    task.info = {
+        'src_url': EXPECTED_TASK_STATUS_PENDING_RESPONSE['src_url'],
+        's3_urls': EXPECTED_TASK_STATUS_PENDING_RESPONSE['s3_urls'],
+        'status': EXPECTED_TASK_STATUS_PENDING_RESPONSE['status'],
     }
     return task
 
