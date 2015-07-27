@@ -19,6 +19,12 @@ def reset_stdout_log():
     relengapi_logging.stdout_log = None
 
 
+def set_stdout_log():
+    stdout_log = logging.NullHandler()
+    logging.getLogger('').addHandler(stdout_log)
+    relengapi_logging.stdout_log = stdout_log
+
+
 def remove_stdout_log():
     logging.getLogger("").removeHandler(relengapi_logging.stdout_log)
     relengapi_logging.stdout_log = None
@@ -44,13 +50,14 @@ def test_setupConsoleLogging_loud(app):
     eq_(root.level, logging.NOTSET)
 
 
+@with_setup(set_stdout_log, remove_stdout_log)
 @test_context.specialize(config={'JSON_STRUCTURED_LOGGING': True})
 def test_configure_logging(app):
     hdlr = logging.handlers.BufferingHandler(100)
     logging.getLogger(__name__).addHandler(hdlr)
     try:
         logger = structlog.get_logger(__name__)
-        logger.info("test message")
+        logger.warn("test message")
 
         # find that event in the handler..
         for rec in hdlr.buffer:
@@ -58,13 +65,14 @@ def test_configure_logging(app):
                 data = json.loads(rec.msg)
             except Exception:
                 pass
-            if data["event"] == "test message":
+            if data["summary"] == "test message":
                 break
         else:
             assert 0, "login exception not logged"
 
         # check a few other fields
-        eq_(data['relengapi'], True)
-        eq_(data['level'], 'info')
+        eq_(data['source'], __name__)
+        eq_(data['severity'], 'WARNING')
+        eq_(data['tags'], ['relengapi'])
     finally:
         logging.getLogger(__name__).removeHandler(hdlr)

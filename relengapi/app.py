@@ -149,8 +149,8 @@ def create_app(cmdline=False, test_config=None):
         # reset the logging context, deleting any info for the previous request
         # in this thread and binding new
         relengapi_logging.reset_context(
-                request_id=g.request_id,
-                user=str(current_user))
+            request_id=g.request_id,
+            user=str(current_user))
 
     @app.route('/')
     def root():
@@ -167,6 +167,8 @@ def create_app(cmdline=False, test_config=None):
     @api.apimethod(VersionInfo)
     def versions():
         dists = {}
+        log = logger.bind(frobnication_id='12345', permissions=['frob', 'blob'])
+        log.warning("frobnication failed")
         for dist in introspection.get_distributions().itervalues():
             dists[dist.key] = DistributionInfo(
                 project_name=dist.project_name,

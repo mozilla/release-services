@@ -5,8 +5,11 @@
 from __future__ import absolute_import
 
 import logging
+import os
 import structlog
 import sys
+
+from datetime import datetime
 
 stdout_log = None
 logger = structlog.get_logger()
@@ -41,8 +44,25 @@ class UnstructuredRenderer(structlog.processors.KeyValueRenderer):
             return event
 
 
-def add_relengapi(logger, method_name, event_dict):
-    event_dict['relengapi'] = True
+def mozdef_format(logger, method_name, event_dict):
+    # see http://mozdef.readthedocs.org/en/latest/usage.html#sending-logs-to-mozdef
+
+    # move everything to a 'details' sub-key
+    details = event_dict
+    event_dict = {'details': details}
+
+    # but pull out the summary/event
+    event_dict['summary'] = details.pop('event')
+    if not details:
+        event_dict.pop('details')
+
+    # and set some other fields based on context
+    event_dict['timestamp'] = datetime.utcnow().isoformat()
+    event_dict['processid'] = os.getpid()
+    event_dict['processname'] = 'relengapi'
+    event_dict['source'] = logger.name
+    event_dict['severity'] = method_name.upper()
+    event_dict['tags'] = ['relengapi']
     return event_dict
 
 
@@ -54,13 +74,10 @@ def configure_logging(app):
     if app.config.get('JSON_STRUCTURED_LOGGING'):
         processors = [
             structlog.stdlib.filter_by_level,
-            add_relengapi,
-            structlog.stdlib.add_logger_name,
-            structlog.stdlib.add_log_level,
             structlog.stdlib.PositionalArgumentsFormatter(),
-            structlog.processors.TimeStamper(fmt='iso'),
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
+            mozdef_format,
             structlog.processors.JSONRenderer()
         ]
     else:
@@ -71,6 +88,8 @@ def configure_logging(app):
         ]
 
     if app.config.get('JSON_STRUCTURED_LOGGING') and stdout_log:
+        # structlog has combined all of the interesting data into the
+        # (JSON-formatted) message, so only log that
         stdout_log.setFormatter(logging.Formatter('%(message)s'))
 
     structlog.configure(
