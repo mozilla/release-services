@@ -113,6 +113,51 @@ head -n2 ${tmpbase}/covreport
 tail -n1 ${tmpbase}/covreport
 finish_step
 
+start_step "checking alembic heads"
+for filename in `find relengapi/alembic -type f -name "alembic.ini" ! -path template`; do
+    [ `alembic -c $filename heads | wc -l` -le 1 ] || not_ok "multiple heads exist in migrations"
+done
+finish_step
+
+# run migration tests, only if we're on travis ci
+if $TRAVIS; then
+start_step "check database migrations"
+# set up the settings file
+test_dir=$(mktemp -d)
+settings_file="$test_dir/test_settings.py"
+settings="SQLALCHEMY_DATABASE_URIS = {\n"
+for dbname in relengapi mapper clobberer; do
+    mysql -u root -e "drop database if exists test_$dbname; create database test_$dbname"
+    settings="$settings    '$dbname': 'mysql://root@localhost/test_$dbname',\n"
+done
+settings="$settings}"
+
+# create the database
+echo -e $settings > $settings_file
+export RELENGAPI_SETTINGS=$settings_file
+relengapi --quiet createdb
+
+# run the actual migration tests
+for filename in `find relengapi/alembic -type f -name "alembic.ini" ! -path template`; do
+    num=`alembic -c $filename history | wc -l`
+    [ $num -eq 0 ] && continue
+
+    dbname=`basename $(dirname $filename)`
+    mysqldump -u root --password= --no-data --skip-comments test_$dbname > "$test_dir/$dbname-original"
+    for i in {1..$num}; do
+        relengapi --quiet alembic $dbname downgrade || (not_okay "$dbname downgrade failed" && continue 2)
+    done
+    for i in {i..$num}; do
+        relengapi --quiet alembic $dbname upgrade || (not_okay "$dbname upgrade failed" && continue 2)
+    done
+    mysqldump -u root --password= --no-data --skip-comments test_$dbname > "$test_dir/$dbname-modified"
+    if [[ -n `diff "$test_dir/$dbname-original" "$test_dir/$dbname-modified" -q` ]]; then
+        not_okay "database schemas for $dbname differ"
+    fi
+done
+finish_step
+fi
+
 # get the version
 version=`python -c 'import pkg_resources; print pkg_resources.require("'relengapi'")[0].version'`
 
