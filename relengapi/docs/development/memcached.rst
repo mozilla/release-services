@@ -8,7 +8,7 @@ The configuration syntax is described in :ref:`memcached-configuration`.
 Getting a Client
 ----------------
 
-To get the Client instance, pass the configuration value to :meth:`app.memcached.get <relengapi.lib.memcached.CacheFinder.cache`, using the result as a context manager.
+To get the Client instance, pass the configuration value to :meth:`app.memcached.cache <relengapi.lib.memcached.CacheFinder.cache>`, using the result as a context manager.
 For example::
 
     @bp.route('/bears')
@@ -17,7 +17,7 @@ For example::
             mc.get(..)
             ..
 
-This usage ensures that the (non-thread-safe!) ``Cache`` instance can be safely re-used as necessary by other threads.
+This usage ensures that the (non-thread-safe!) ``Client`` instance can be safely re-used as necessary by other threads.
 This minimizes the number of new memcached connections required, while ensuring instances aren't used simultaneously by multiple threads.
 
 .. py:class:: relengapi.lib.memcached.CacheFinder
