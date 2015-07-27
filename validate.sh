@@ -135,6 +135,8 @@ settings="$settings}"
 # create the database
 echo -e $settings > $settings_file
 export RELENGAPI_SETTINGS=$settings_file
+# apparently, createdb needs to be run twice because of an error on creating an index in mysql
+`(relengapi createdb) &>/dev/null` || true
 relengapi --quiet createdb
 
 # run the actual migration tests
