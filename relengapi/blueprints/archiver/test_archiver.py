@@ -11,17 +11,19 @@ from nose.tools import eq_
 from relengapi.blueprints.archiver import TASK_TIME_OUT
 from relengapi.blueprints.archiver import cleanup_old_tasks
 from relengapi.blueprints.archiver import delete_tracker
+from relengapi.blueprints.archiver import renew_tracker_pending_expiry
 from relengapi.blueprints.archiver import tables
 from relengapi.blueprints.archiver import update_tracker_state
 from relengapi.blueprints.archiver.test_util import EXPECTED_TASK_STATUS_FAILED_RESPONSE
+from relengapi.blueprints.archiver.test_util import EXPECTED_TASK_STATUS_PENDING_RESPONSE
 from relengapi.blueprints.archiver.test_util import EXPECTED_TASK_STATUS_SUCCESSFUL_RESPONSE
 from relengapi.blueprints.archiver.test_util import create_s3_items
 from relengapi.blueprints.archiver.test_util import fake_200_response
+from relengapi.blueprints.archiver.test_util import fake_expired_task_status
 from relengapi.blueprints.archiver.test_util import fake_failed_task_status
 from relengapi.blueprints.archiver.test_util import fake_incomplete_task_status
 from relengapi.blueprints.archiver.test_util import fake_successful_task_status
 from relengapi.blueprints.archiver.test_util import setup_buckets
-from relengapi.lib import time
 
 from relengapi.lib.testing.context import TestContext
 
@@ -49,12 +51,18 @@ cfg = {
 test_context = TestContext(config=cfg, databases=['relengapi'])
 
 
-def create_fake_tracker_row(app, id, created_at=None, src_url='https://foo.com', state="PENDING"):
+def create_fake_tracker_row(app, id, s3_key='key', created_at=None, pending_expires_at=None,
+                            src_url='https://foo.com', state="PENDING"):
+    now = datetime.datetime(2015, 7, 14, 23, 19, 42, tzinfo=pytz.UTC)  # freeze time
+    pending_expiry = now + datetime.timedelta(seconds=60)
     if not created_at:
-        created_at = time.now()
+        created_at = now
+    if not pending_expires_at:
+        pending_expires_at = pending_expiry
     session = app.db.session('relengapi')
     session.add(
-        tables.ArchiverTask(task_id=id, created_at=created_at, src_url=src_url, state=state)
+        tables.ArchiverTask(task_id=id, s3_key=s3_key, created_at=created_at,
+                            pending_expires_at=pending_expires_at, src_url=src_url, state=state)
     )
     session.commit()
 
@@ -116,6 +124,63 @@ def test_task_status_when_success(app, client):
 
 @moto.mock_s3
 @test_context
+def test_task_status_when_pending_expired(app, client):
+    now = datetime.datetime(2015, 7, 14, 23, 19, 42, tzinfo=pytz.UTC)  # freeze time
+    pending_expiry = now + datetime.timedelta(seconds=60)
+    new_expected_pending_expiry = now + datetime.timedelta(seconds=121)
+    expired_future = now + datetime.timedelta(seconds=61)
+    task_id = "mozilla-central-9213957d166d.tar.gz_testing_mozharness"
+    create_fake_tracker_row(app, task_id, created_at=now,
+                            pending_expires_at=pending_expiry)
+    expected_response = EXPECTED_TASK_STATUS_PENDING_RESPONSE
+
+    with app.app_context():
+        with mock.patch('relengapi.blueprints.archiver.now') as time_traveller, \
+                mock.patch("relengapi.blueprints.archiver.create_and_upload_archive") as caua:
+            caua.AsyncResult.return_value = fake_expired_task_status()
+            time_traveller.return_value = expired_future
+            response = client.get('/archiver/status/{task_id}'.format(task_id=task_id))
+            # status will change state to RETRY
+            expected_response['state'] = "RETRY"
+            expected_response['status'] = "Task has expired from pending for too long. " \
+                                          "Re-creating task."
+            eq_(cmp(json.loads(response.data)['result'], expected_response), 0,
+                "An expired task status check does not equal expected status.")
+            tracker = tables.ArchiverTask.query.filter(
+                tables.ArchiverTask.task_id == task_id
+            ).first()
+            eq_(tracker.pending_expires_at, new_expected_pending_expiry,
+                "New pending expiry does not match expected")
+
+
+@moto.mock_s3
+@test_context
+def test_task_status_when_pending_but_not_expired(app, client):
+    now = datetime.datetime(2015, 7, 14, 23, 19, 42, tzinfo=pytz.UTC)  # freeze time
+    pending_expiry = now + datetime.timedelta(seconds=60)
+    future = now + datetime.timedelta(seconds=59)
+    task_id = "mozilla-central-9213957d166d.tar.gz_testing_mozharness"
+    create_fake_tracker_row(app, task_id, created_at=now,
+                            pending_expires_at=pending_expiry)
+    expected_response = EXPECTED_TASK_STATUS_PENDING_RESPONSE
+
+    with app.app_context():
+        with mock.patch('relengapi.blueprints.archiver.now') as time_traveller, \
+                mock.patch("relengapi.blueprints.archiver.create_and_upload_archive") as caua:
+            caua.AsyncResult.return_value = fake_expired_task_status()
+            time_traveller.return_value = future
+            response = client.get('/archiver/status/{task_id}'.format(task_id=task_id))
+            eq_(cmp(json.loads(response.data)['result'], expected_response), 0,
+                "A pending task that has not expired does not equal expected status.")
+            tracker = tables.ArchiverTask.query.filter(
+                tables.ArchiverTask.task_id == task_id
+            ).first()
+            eq_(tracker.pending_expires_at, pending_expiry,
+                "Tracker does not match original pending expiry.")
+
+
+@moto.mock_s3
+@test_context
 def test_tracker_delete(app, client):
     with app.app_context():
         create_fake_tracker_row(app, 'foo')
@@ -124,6 +189,26 @@ def test_tracker_delete(app, client):
         delete_tracker(tracker)
         tracker = tables.ArchiverTask.query.filter(tables.ArchiverTask.task_id == 'foo').first()
         eq_(tracker, None, "tracker was not deleted")
+
+
+@moto.mock_s3
+@test_context
+def test_renew_tracker_pending_expiry(app, client):
+    now = datetime.datetime(2015, 7, 14, 23, 19, 42, tzinfo=pytz.UTC)  # freeze time
+    expected_pending_expiry = now + datetime.timedelta(seconds=60)
+    with mock.patch('relengapi.blueprints.archiver.now') as time_traveller:
+        time_traveller.return_value = now
+        with app.app_context():
+            create_fake_tracker_row(app, 'foo', created_at=now,
+                                    pending_expires_at=expected_pending_expiry)
+            tracker = tables.ArchiverTask.query.filter(tables.ArchiverTask.task_id == 'foo').first()
+            eq_(tracker.pending_expires_at, expected_pending_expiry,
+                "original pending expiry does not match expected")
+            renew_tracker_pending_expiry(tracker)
+            tracker = tables.ArchiverTask.query.filter(tables.ArchiverTask.task_id == 'foo').first()
+            expected_new_pending_expiry = now + datetime.timedelta(seconds=60)
+            eq_(tracker.pending_expires_at, expected_new_pending_expiry,
+                "new pending expiry does not match expected")
 
 
 @moto.mock_s3
@@ -141,20 +226,33 @@ def test_tracker_update(app, client):
 @test_context
 def test_tracker_added_when_celery_task_is_created(app, client):
     setup_buckets(app, cfg)
-    with mock.patch("relengapi.blueprints.archiver.tasks.requests.get") as get, \
+    now = datetime.datetime(2015, 7, 14, 23, 19, 42, tzinfo=pytz.UTC)  # freeze time
+    expected_pending_expiry = now + datetime.timedelta(seconds=60)
+    expected_tracker_id = "mozilla-central-9213957d166d.tar.gz_testing_mozharness"
+    expected_tracker_s3_key = "mozilla-central-9213957d166d.tar.gz/testing/mozharness"
+    expected_src_url = cfg['ARCHIVER_HGMO_URL_TEMPLATE'].format(
+        repo='mozilla-central', rev='9213957d166d', suffix='tar.gz', subdir='testing/mozharness'
+    )
+    with mock.patch('relengapi.blueprints.archiver.now') as time_traveller, \
+            mock.patch("relengapi.blueprints.archiver.tasks.requests.get") as get, \
             mock.patch("relengapi.blueprints.archiver.tasks.requests.head") as head:
-        # don't actually hit hg.m.o, we just care about starting a subprocess and
-        # returning a 202 accepted
-        get.return_value = fake_200_response()
-        head.return_value = fake_200_response()
-        client.get('/archiver/hgmo/mozilla-central/9213957d166d?'
-                   'subdir=testing/mozharness&preferred_region=us-west-2')
-        with app.app_context():
-            expected_tracker_id = "mozilla-central-9213957d166d.tar.gz_testing_mozharness"
-            tracker = tables.ArchiverTask.query.filter(
-                tables.ArchiverTask.task_id == expected_tracker_id
-            ).first()
-            eq_(tracker.task_id, expected_tracker_id, "tracker was not created for celery task")
+            # don't actually hit hg.m.o, we just care about starting a subprocess and
+            # returning a 202 accepted
+            get.return_value = fake_200_response()
+            head.return_value = fake_200_response()
+            time_traveller.return_value = now
+            client.get('/archiver/hgmo/mozilla-central/9213957d166d?'
+                       'subdir=testing/mozharness&preferred_region=us-west-2')
+            with app.app_context():
+                tracker = tables.ArchiverTask.query.filter(
+                    tables.ArchiverTask.task_id == expected_tracker_id
+                ).first()
+                eq_(tracker.task_id, expected_tracker_id, "tracker id doesn't match task")
+                eq_(tracker.s3_key, expected_tracker_s3_key, "tracker s3_key doesn't match task")
+                eq_(tracker.created_at, now, "tracker created_at doesn't match task")
+                eq_(tracker.pending_expires_at, expected_pending_expiry,
+                    "tracker pending_expires_at doesn't match task")
+                eq_(tracker.src_url, expected_src_url, "tracker src_url doesn't match task")
 
 
 @moto.mock_s3
@@ -163,7 +261,10 @@ def test_tracker_is_updated_when_task_state_changes_but_is_not_complete(app, cli
     with app.app_context():
         task_id = 'foo'
         session = app.db.session('relengapi')
-        session.add(tables.ArchiverTask(task_id=task_id, created_at=time.now(),
+        now = datetime.datetime(2015, 7, 14, 23, 19, 42, tzinfo=pytz.UTC)  # freeze time
+        pending_expiry = now + datetime.timedelta(seconds=60)
+        session.add(tables.ArchiverTask(task_id=task_id, s3_key='key', created_at=now,
+                                        pending_expires_at=pending_expiry,
                                         src_url='https://foo.com', state="PENDING"))
         session.commit()
         with mock.patch("relengapi.blueprints.archiver.create_and_upload_archive") as caua:
@@ -179,7 +280,10 @@ def test_tracker_is_deleted_when_task_status_shows_task_complete(app, client):
     with app.app_context():
         task_id = 'foo'
         session = app.db.session('relengapi')
-        session.add(tables.ArchiverTask(task_id=task_id, created_at=time.now(),
+        now = datetime.datetime(2015, 7, 14, 23, 19, 42, tzinfo=pytz.UTC)  # freeze time
+        pending_expiry = now + datetime.timedelta(seconds=60)
+        session.add(tables.ArchiverTask(task_id=task_id, s3_key='key', created_at=now,
+                                        pending_expires_at=pending_expiry,
                                         src_url='https://foo.com', state="PENDING"))
         session.commit()
         with mock.patch("relengapi.blueprints.archiver.create_and_upload_archive") as caua:

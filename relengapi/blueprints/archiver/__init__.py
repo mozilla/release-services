@@ -27,6 +27,7 @@ bp = Blueprint('archiver', __name__)
 log = logging.getLogger(__name__)
 
 GET_EXPIRES_IN = 300
+PENDING_EXPIRES_IN = 60
 FINISHED_STATES = ['SUCCESS', 'FAILURE', 'REVOKED']
 
 
@@ -60,6 +61,14 @@ def cleanup_old_tasks(job_status):
             break
 
 
+def renew_tracker_pending_expiry(tracker):
+    pending_expires_at = now() + datetime.timedelta(seconds=PENDING_EXPIRES_IN)
+    session = current_app.db.session('relengapi')
+    log.info("renewing tracker {} with pending expiry: {}".format(tracker.id, pending_expires_at))
+    tracker.pending_expires_at = pending_expires_at
+    session.commit()
+
+
 @bp.route('/status/<task_id>')
 @api.apimethod(MozharnessArchiveTask, unicode)
 def task_status(task_id):
@@ -78,17 +87,6 @@ def task_status(task_id):
     task = create_and_upload_archive.AsyncResult(task_id)
     task_tracker = tables.ArchiverTask.query.filter(tables.ArchiverTask.task_id == task_id).first()
     log.info("checking status of task id {}: current state {}".format(task_id, task.state))
-
-    # archiver does not create any custom states, so we can assume to have only the defaults:
-    # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-states
-    # therefore, delete our state_id tracker from the db if the celery state is in a final state:
-    # e.g. not RETRY, STARTED, or PENDING
-    if task_tracker:
-        if task.state in FINISHED_STATES:
-            delete_tracker(task_tracker)
-        elif task_tracker.state != task.state:
-            update_tracker_state(task_tracker, task.state)
-
     task_info = task.info or {}
     response = {
         'state': task.state,
@@ -102,6 +100,23 @@ def task_status(task_id):
         response['status'] = str(task.info)  # this is the exception raised
         response['src_url'] = ''
         response['s3_urls'] = {}
+
+    # archiver does not create any custom states, so we can assume to have only the defaults:
+    # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-states
+    # therefore, delete our state_id tracker from the db if the celery state is in a final state:
+    # e.g. not RETRY, STARTED, or PENDING
+    if task_tracker:
+        if task.state in FINISHED_STATES:
+            delete_tracker(task_tracker)
+        elif task.state == "PENDING" and task_tracker.pending_expires_at < now():
+            log.info("Task {} has expired from pending too long. Re-creating task".format(task.id))
+            renew_tracker_pending_expiry(task_tracker)  # let exceptions bubble up before moving on
+            create_and_upload_archive.apply_async(args=[task_tracker.src_url, task_tracker.s3_key],
+                                                  task_id=task.id)
+            response['state'] = 'RETRY'
+            response['status'] = 'Task has expired from pending for too long. Re-creating task.'
+        elif task_tracker.state != task.state:
+            update_tracker_state(task_tracker, task.state)
 
     return MozharnessArchiveTask(**response)
 
@@ -174,12 +189,14 @@ def get_archive(src_url, key, preferred_region):
             log.info("Creating new celery task and task tracker for: {}".format(task_id))
             task = create_and_upload_archive.apply_async(args=[src_url, key], task_id=task_id)
             if task and task.id:
-                session.add(tables.ArchiverTask(task_id=task.id, created_at=now(),
+                pending_expires_at = now() + datetime.timedelta(seconds=PENDING_EXPIRES_IN)
+                session.add(tables.ArchiverTask(task_id=task.id, s3_key=key, created_at=now(),
+                                                pending_expires_at=pending_expires_at,
                                                 src_url=src_url, state="PENDING"))
                 session.commit()
-                return {}, 202, {'Location': url_for('archiver.task_status', task_id=task.id)}
             else:
                 return {}, 500
+        return {}, 202, {'Location': url_for('archiver.task_status', task_id=task.id)}
 
     log.info("generating GET URL to {}, expires in {}s".format(key, GET_EXPIRES_IN))
     # return 302 pointing to s3 url with archive
