@@ -196,7 +196,7 @@ def get_archive(src_url, key, preferred_region):
                 session.commit()
             else:
                 return {}, 500
-        return {}, 202, {'Location': url_for('archiver.task_status', task_id=task.id)}
+        return {}, 202, {'Location': url_for('archiver.task_status', task_id=task_id)}
 
     log.info("generating GET URL to {}, expires in {}s".format(key, GET_EXPIRES_IN))
     # return 302 pointing to s3 url with archive
