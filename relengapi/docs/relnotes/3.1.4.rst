@@ -1,0 +1,7 @@
+relengapi-3.1.4
+===============
+
+* adds a pending expiry column to task tracker
+
+* fixes cases where s3 url is returned but doesn't exist
+
