@@ -1,4 +1,0 @@
-relengapi-3.4.5
-===============
-
-* fixes typo where archiver task was referenced before it was assigned
