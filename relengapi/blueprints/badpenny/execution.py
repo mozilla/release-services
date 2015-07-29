@@ -21,9 +21,9 @@ def submit_job(task_name, job_id):
 
 class JobStatus(object):
 
-    def __init__(self, task_name, job):
+    def __init__(self, task_name, job_id):
         self.task_name = task_name
-        self.job = job
+        self.job_id = job_id
         self._log_output = []
 
     def log_message(self, message):
@@ -31,20 +31,27 @@ class JobStatus(object):
         logger.debug("%r: %s" % (self.task_name, message))
         self._log_output.append(message)
 
+    def _update_job(self, update):
+        session = current_app.db.session('relengapi')
+        session.query(tables.BadpennyJob).filter(
+            tables.BadpennyJob.id == self.job_id).update(update)
+        session.commit()
+
     def _start(self):
-        self.job.started_at = time.now()
+        self._update_job({tables.BadpennyJob.started_at: time.now()})
         current_app.db.session('relengapi').commit()
 
     def _finish(self, successful):
-        session = current_app.db.session('relengapi')
-
-        self.job.completed_at = time.now()
-        self.job.successful = successful
+        self._update_job({
+            tables.BadpennyJob.completed_at: time.now(),
+            tables.BadpennyJob.successful: successful,
+        })
         if self._log_output:
+            session = current_app.db.session('relengapi')
             content = u'\n'.join(self._log_output)
-            l = tables.BadpennyJobLog(id=self.job.id, content=content)
+            l = tables.BadpennyJobLog(id=self.job_id, content=content)
             session.add(l)
-        session.commit()
+            session.commit()
 
 
 @celery.task(ignore_result=True)
@@ -60,7 +67,7 @@ def _run_job(task_name, job_id):
         logger.warning("No job with id %r; request dropped", job_id)
         return
 
-    job_status = JobStatus(task_name, job)
+    job_status = JobStatus(task_name, job.id)
 
     job_status._start()
 
