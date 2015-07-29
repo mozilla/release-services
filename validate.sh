@@ -75,6 +75,11 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 tmpbase=$(mktemp -d -t tmpbase.XXXXXX)
 trap 'rm -rf ${tmpbase}; exit 1' 1 2 3 15
 
+coverage erase || {
+    not_ok "coverage erase failed"
+    exit 1
+}
+
 start_step "running pep8"
 pep8 --config=pep8rc relengapi || not_ok "pep8 failed"
 finish_step
@@ -102,15 +107,7 @@ relengapi build-docs || not_ok "build-docs failed"
 finish_step
 
 start_step "running tests (under coverage)"
-coverage erase || not_ok "coverage failed"
 coverage run --rcfile=coveragerc --source=relengapi $(which relengapi) run-tests || not_ok "tests failed"
-finish_step
-
-start_step "checking coverage"
-coverage report --rcfile=coveragerc --fail-under=${COVERAGE_MIN} >${tmpbase}/covreport || not_ok "less than ${COVERAGE_MIN}% coverage"
-coverage html --rcfile=coveragerc -d .coverage-html
-head -n2 ${tmpbase}/covreport
-tail -n1 ${tmpbase}/covreport
 finish_step
 
 start_step "checking alembic heads"
@@ -121,7 +118,7 @@ finish_step
 
 # run migration tests, only if we're on travis ci
 if $TRAVIS; then
-start_step "check database migrations"
+start_step "check database migrations (under coverage)"
 # set up the settings file
 test_dir=$(mktemp -d)
 settings_file="$test_dir/test_settings.py"
@@ -137,7 +134,7 @@ echo -e $settings > $settings_file
 export RELENGAPI_SETTINGS=$settings_file
 # apparently, createdb needs to be run twice because of an error on creating an index in mysql
 `(relengapi createdb) &>/dev/null` || true
-relengapi --quiet createdb
+coverage run --rcfile=coveragerc --source=relengapi $(which relengapi) --quiet createdb
 
 # run the actual migration tests
 for filename in `find relengapi/alembic -type f -name "alembic.ini" ! -path template`; do
@@ -147,10 +144,10 @@ for filename in `find relengapi/alembic -type f -name "alembic.ini" ! -path temp
     dbname=`basename $(dirname $filename)`
     mysqldump -u root --password= --no-data --skip-comments test_$dbname > "$test_dir/$dbname-original"
     for i in {1..$num}; do
-        relengapi --quiet alembic $dbname downgrade || (not_okay "$dbname downgrade failed" && continue 2)
+        coverage run --rcfile=coveragerc --source=relengapi $(which relengapi) --quiet alembic $dbname downgrade || (not_okay "$dbname downgrade failed" && continue 2)
     done
     for i in {i..$num}; do
-        relengapi --quiet alembic $dbname upgrade || (not_okay "$dbname upgrade failed" && continue 2)
+        coverage run --rcfile=coveragerc --source=relengapi $(which relengapi) --quiet alembic $dbname upgrade || (not_okay "$dbname upgrade failed" && continue 2)
     done
     mysqldump -u root --password= --no-data --skip-comments test_$dbname > "$test_dir/$dbname-modified"
     if [[ -n `diff "$test_dir/$dbname-original" "$test_dir/$dbname-modified" -q` ]]; then
@@ -159,6 +156,13 @@ for filename in `find relengapi/alembic -type f -name "alembic.ini" ! -path temp
 done
 finish_step
 fi
+
+start_step "checking coverage"
+coverage report --rcfile=coveragerc --fail-under=${COVERAGE_MIN} >${tmpbase}/covreport || not_ok "less than ${COVERAGE_MIN}% coverage"
+coverage html --rcfile=coveragerc -d .coverage-html
+head -n2 ${tmpbase}/covreport
+tail -n1 ${tmpbase}/covreport
+finish_step
 
 # get the version
 version=`python -c 'import pkg_resources; print pkg_resources.require("'relengapi'")[0].version'`
