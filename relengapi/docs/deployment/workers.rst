@@ -8,3 +8,5 @@ Releng API workers are simply Celery workers invoked with ::
 
 On a system or Python virtualenv where relengapi are installed.
 The ``RELENGAPI_SETTINGS`` environment variable must be set correctly.
+
+All Celery settings are configured within the RelengAPI settings file.

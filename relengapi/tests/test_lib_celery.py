@@ -5,6 +5,7 @@
 import Queue
 import contextlib
 import logging
+import mock
 import multiprocessing
 import os
 import shutil
@@ -231,3 +232,14 @@ def test_make_celery():
 def test_task_invalid_args():
     assert_raises(TypeError, lambda:
                   celery.task('arg1', 'arg2'))
+
+
+@test_context
+def test_backend_cleanup(app):
+    with app.app_context():
+        task = app.celery.tasks['celery.backend_cleanup']
+        task.apply = mock.Mock(spec=task.apply)
+
+        celery.backend_cleanup(None)
+
+        task.apply.assert_called_with()

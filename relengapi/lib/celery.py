@@ -9,6 +9,7 @@ import logging
 from celery import Celery
 from celery.signals import celeryd_after_setup
 from flask import current_app
+from relengapi.lib import badpenny
 from werkzeug.local import LocalProxy
 
 _defined_tasks = {}
@@ -56,6 +57,14 @@ def task(*args, **kwargs):
             '@db.task() takes exactly 1 argument ({0} given)'.format(
                 sum([len(args), len(kwargs)])))
     return inner(**kwargs)
+
+
+@badpenny.periodic_task(3600 * 24)
+def backend_cleanup(js):
+    # Celery's built-in backend_cleanup task depends on Beat, which relengapi
+    # does not use, so we just run it via badpenny
+    backend_cleanup_task = current_app.celery.tasks['celery.backend_cleanup']
+    backend_cleanup_task.apply()
 
 
 @celeryd_after_setup.connect
