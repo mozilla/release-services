@@ -4,7 +4,6 @@
 
 import logging
 import os
-import structlog
 import sys
 
 from alembic import command
