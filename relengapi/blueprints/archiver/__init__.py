@@ -2,11 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import logging
-
-
 import datetime
 import sqlalchemy as sa
+import structlog
 
 from random import randint
 
@@ -24,7 +22,7 @@ from relengapi.lib import badpenny
 from relengapi.lib.time import now
 
 bp = Blueprint('archiver', __name__)
-log = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 GET_EXPIRES_IN = 300
 PENDING_EXPIRES_IN = 60
@@ -33,14 +31,16 @@ FINISHED_STATES = ['SUCCESS', 'FAILURE', 'REVOKED']
 
 def delete_tracker(tracker):
     session = current_app.db.session('relengapi')
-    log.info("deleting tracker with id: {}".format(tracker.task_id))
+    logger.info("deleting tracker with id: {}".format(tracker.task_id),
+                archiver_task=tracker.task_id)
     session.delete(tracker)
     session.commit()
 
 
 def update_tracker_state(tracker, state):
     session = current_app.db.session('relengapi')
-    log.info("updating tracker with id: {} to state: {}".format(tracker.id, state))
+    logger.info("updating tracker with id: {} to state: {}".format(tracker.id, state),
+                archiver_task=tracker.task_id, archiver_task_state=state)
     try:
         tracker.state = state
         session.commit()
@@ -64,7 +64,8 @@ def cleanup_old_tasks(job_status):
 def renew_tracker_pending_expiry(tracker):
     pending_expires_at = now() + datetime.timedelta(seconds=PENDING_EXPIRES_IN)
     session = current_app.db.session('relengapi')
-    log.info("renewing tracker {} with pending expiry: {}".format(tracker.id, pending_expires_at))
+    logger.info("renewing tracker {} with pending expiry: {}".format(
+                tracker.id, pending_expires_at), archiver_task=tracker.task_id)
     tracker.pending_expires_at = pending_expires_at
     session.commit()
 
@@ -86,6 +87,7 @@ def task_status(task_id):
     """
     task = create_and_upload_archive.AsyncResult(task_id)
     task_tracker = tables.ArchiverTask.query.filter(tables.ArchiverTask.task_id == task_id).first()
+    log = logger.bind(archiver_task=task_id, archiver_task_state=task.state)
     log.info("checking status of task id {}: current state {}".format(task_id, task.state))
     task_info = task.info or {}
     response = {
@@ -180,12 +182,14 @@ def get_archive(src_url, key, preferred_region):
         # because we want to know when the row doesn't exist before creating it
         tracker = tables.ArchiverTask.query.filter(tables.ArchiverTask.task_id == task_id).first()
         if tracker and tracker.state in FINISHED_STATES:
+            log = logger.bind(archiver_task=task_id, archiver_task_state=tracker.state)
             log.info('Task tracker: {} exists but finished with state: '
                      '{}'.format(task_id, tracker.state))
             # remove tracker and try celery task again
             delete_tracker(tracker)
             tracker = None
         if not tracker:
+            log = logger.bind(archiver_task=task_id)
             log.info("Creating new celery task and task tracker for: {}".format(task_id))
             task = create_and_upload_archive.apply_async(args=[src_url, key], task_id=task_id)
             if task and task.id:
@@ -198,7 +202,7 @@ def get_archive(src_url, key, preferred_region):
                 return {}, 500
         return {}, 202, {'Location': url_for('archiver.task_status', task_id=task_id)}
 
-    log.info("generating GET URL to {}, expires in {}s".format(key, GET_EXPIRES_IN))
+    logger.info("generating GET URL to {}, expires in {}s".format(key, GET_EXPIRES_IN))
     # return 302 pointing to s3 url with archive
     signed_url = s3.generate_url(
         method='GET', expires_in=GET_EXPIRES_IN,

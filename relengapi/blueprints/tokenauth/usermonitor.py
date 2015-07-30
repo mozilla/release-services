@@ -2,13 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import logging
+import structlog
 
 from flask import current_app
 from relengapi.blueprints.tokenauth import tables
 from relengapi.lib import badpenny
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 @badpenny.periodic_task(3600)
@@ -28,18 +28,19 @@ def monitor_users(job_status):
             else:
                 disable = False
 
+        perm_str = ', '.join(str(p) for p in token.permissions)
+        log = logger.bind(token_typ=token.typ, token_id=token.id,
+                          token_user=token.user, token_permissions=perm_str)
         if disable and not token.disabled:
             logmsg = "Disabling {} token #{} for user {} with permissions {}".format(
-                token.typ, token.id, token.user,
-                ', '.join(str(p) for p in token.permissions))
-            logger.info(logmsg)
+                token.typ, token.id, token.user, perm_str)
+            log.info(logmsg)
             job_status.log_message(logmsg)
             token.disabled = True
         elif not disable and token.disabled:
             logmsg = "Re-enabling {} token #{} for user {} with permissions {}".format(
-                token.typ, token.id, token.user,
-                ', '.join(str(p) for p in token.permissions))
-            logger.info(logmsg)
+                token.typ, token.id, token.user, perm_str)
+            log.info(logmsg)
             job_status.log_message(logmsg)
             token.disabled = False
     session.commit()

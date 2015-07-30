@@ -2,12 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import contextlib
 import mock
 import sys
 import wsme.exc
 import wsme.types
 
 from datetime import datetime
+from flask import g
 from flask import json
 from flask import redirect
 from nose.tools import assert_raises
@@ -71,6 +73,12 @@ def app_setup(app):
         return redirect('/foo')
 
 
+@contextlib.contextmanager
+def fixed_uuid4(uuid):
+    with mock.patch('uuid.uuid4') as uuid4:
+        uuid4.return_value = uuid
+        yield
+
 test_context = TestContext(app_setup=app_setup, reuse_app=True)
 
 
@@ -88,8 +96,9 @@ def test_get_handler():
 def test_JsonHandler_render_response(app):
     h = api.JsonHandler()
     with app.test_request_context():
+        g.request_id = 'RQID'
         eq_(json.loads(h.render_response([1, 2, 3], 200, {}).data),
-            {'result': [1, 2, 3]})
+            {'result': [1, 2, 3], 'request_id': 'RQID'})
 
 
 @test_context
@@ -98,6 +107,7 @@ def test_JsonHandler_handle_exception_httpexception(app):
     information about the status code"""
     h = api.JsonHandler()
     with app.test_request_context():
+        g.request_id = 'RQID'
         try:
             raise BadRequest()
         except Exception:
@@ -113,6 +123,7 @@ def test_JsonHandler_handle_exception(app):
     """JsonHandler handles regular exceptions with an error response"""
     h = api.JsonHandler()
     with app.test_request_context():
+        g.request_id = 'RQID'
         app.debug = True
         # mock out log_exception, since it prints to stdout
         with mock.patch("flask.current_app.log_exception"):
@@ -165,20 +176,24 @@ def test_HtmlHandler_handle_exception(app):
 def test_apimethod():
     @test_context
     def t(client, path, exp_status_code=200, exp_data=None, exp_headers=None):
-        resp = client.get(path)
+        with fixed_uuid4('RQID'):
+            resp = client.get(path)
         eq_(resp.status_code, exp_status_code)
-        eq_(json.loads(resp.data), exp_data or {'result': ['ok']})
+        eq_(json.loads(resp.data), exp_data or {'result': ['ok'], 'request_id': 'RQID'})
         for k, v in (exp_headers or {}).iteritems():
             assert resp.headers[k] == v
 
     yield lambda: t(path='/apimethod/ok')
     yield lambda: t(path='/apimethod/fail', exp_status_code=400,
-                    exp_data={'error': {
-                        'code': 400,
-                        'description': 'The browser (or proxy) sent a request that this '
-                        'server could not understand.',
-                        'name': 'Bad Request',
-                    }})
+                    exp_data={
+                        'error': {
+                            'code': 400,
+                            'description': 'The browser (or proxy) sent a request that this '
+                            'server could not understand.',
+                            'name': 'Bad Request',
+                        },
+                        'request_id': 'RQID',
+                    })
     yield lambda: t(path='/apimethod/201', exp_status_code=201)
     yield lambda: t(path='/apimethod/201/header', exp_status_code=201,
                     exp_headers={'X-Header': 'Header'})

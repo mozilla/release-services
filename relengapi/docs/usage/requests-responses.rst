@@ -55,7 +55,8 @@ Other top-level response keys may be added during development of the API.
           },
           # ..
         }
-      }
+      },
+      "request_id": "00c3a6aa-a22d-4712-834a-3f9ba328415e"
     }
 
 An error (4xx or 5xx) response will contain an ``error`` object with keys ``code``, ``description``, and ``name`` describing the error:
@@ -77,9 +78,10 @@ An error (4xx or 5xx) response will contain an ``error`` object with keys ``code
         "code": 404,
         "description": "The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.",
        "name": "Not Found"
-      }
+      },
+      "request_id": "00c3a6aa-a22d-4712-834a-3f9ba328415e"
     }
 
 For internal server errors, if debug mode is enabled, then the ``error`` object will also contain a ``traceback`` giving the failing Python traceback.
 
-
+In either case, the supplied ``request_id`` can be correlated with server-side logs to aid in debugging.

@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import datetime
-import logging
 import random
 import re
 import sqlalchemy as sa
+import structlog
 
 from flask import Blueprint
 from flask import current_app
@@ -53,7 +53,7 @@ p.tooltool.manage.doc("Manage tooltool files, including deleting and changing vi
 UPLOAD_EXPIRES_IN = 60
 GET_EXPIRES_IN = 60
 
-log = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 def get_region_and_bucket(region_arg):
@@ -149,6 +149,8 @@ def upload_batch(region=None, body=None):
 
     s3 = current_app.aws.connect_to('s3', region)
     for filename, info in body.files.iteritems():
+        log = logger.bind(tooltool_sha512=info.digest, tooltool_operation='upload',
+                          tooltool_batch_id=batch.id)
         if info.algorithm != 'sha512':
             raise BadRequest("'sha512' is the only allowed digest algorithm")
         if not is_valid_sha512(info.digest):
@@ -167,8 +169,8 @@ def upload_batch(region=None, body=None):
                     visibility=info.visibility,
                     size=info.size)
                 session.add(file)
-            log.info("generating signed PUT URL to {} for {}, expires in {}s".format(
-                     info.digest, current_user, UPLOAD_EXPIRES_IN))
+            log.info("generating signed S3 PUT URL to {} for {}; expiring in {}s".format(
+                info.digest[:10], current_user, UPLOAD_EXPIRES_IN))
             info.put_url = s3.generate_url(
                 method='PUT', expires_in=UPLOAD_EXPIRES_IN, bucket=bucket,
                 key=util.keyname(info.digest),
@@ -311,6 +313,7 @@ def download_file(digest, region=None):
     The query argument ``region=us-west-1`` indicates a preference for a URL in
     that region, although if the file is not available in tht region then a URL
     from another region may be returned."""
+    log = logger.bind(tooltool_sha512=digest, tooltool_operation='download')
     if not is_valid_sha512(digest):
         raise BadRequest("Invalid sha512 digest")
 
@@ -341,8 +344,8 @@ def download_file(digest, region=None):
     key = util.keyname(digest)
 
     s3 = current_app.aws.connect_to('s3', selected_region)
-    log.info("generating signed GET URL to {} for {}, expires in {}s".format(
-             digest, current_user, GET_EXPIRES_IN))
+    log.info("generating signed S3 GET URL for {}.. expiring in {}s".format(
+        digest[:10], GET_EXPIRES_IN))
     signed_url = s3.generate_url(
         method='GET', expires_in=GET_EXPIRES_IN, bucket=bucket, key=key)
 

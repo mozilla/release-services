@@ -173,11 +173,11 @@ def test_get_mapfile_since(app, client):
 def test_insert_one(client):
     # TODO: this should really be POST
     with mock.patch('time.time') as time:
-        time.return_value = 1234.0
+        time.return_value = 1434378379.0
         rv = client.post('/mapper/proj/insert/%s/%s' % (SHA1, SHA2))
     eq_(rv.status_code, 200)
     eq_(json.loads(rv.data), {
-        'date_added': 1234.0,
+        'date_added': 1434378379.0,
         'project_name': 'proj',
         'git_commit': SHA1,
         'hg_changeset': SHA2,

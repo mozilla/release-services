@@ -4,7 +4,7 @@
 
 import collections
 import flask_login
-import logging
+import structlog
 import time
 
 import re
@@ -31,7 +31,7 @@ from relengapi import p
 from relengapi.lib import angular
 from relengapi.lib import api
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 bp = Blueprint(
     'clobberer',
@@ -191,7 +191,7 @@ def lastclobber_by_builder(branch):
     ).filter(
         Build.branch == branch,
         not_(Build.buildername.startswith(BUILDER_REL_PREFIX))
-        ).distinct().order_by(Build.buildername)
+    ).distinct().order_by(Build.buildername)
 
     summary = collections.defaultdict(list)
     for result in full_query:

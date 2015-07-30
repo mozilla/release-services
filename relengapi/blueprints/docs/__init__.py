@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import StringIO
-import logging
 import os
 import pkg_resources
 import shutil
+import structlog
 
 from flask import Blueprint
 from flask import abort
@@ -17,7 +17,7 @@ from relengapi.lib import subcommands
 from sphinx.websupport import WebSupport
 from sphinx.websupport.errors import DocumentNotFoundError
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 bp = Blueprint('docs', __name__,
                template_folder='templates')
