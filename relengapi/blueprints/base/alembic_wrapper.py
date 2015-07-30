@@ -18,9 +18,6 @@ class Config(AlembicConfig):
 
 
 def _get_config(directory):
-    if directory is None:
-        logger.error("Directory must be specified")
-        quit()
     config_path = os.path.join(directory, 'alembic.ini')
     if not os.path.isfile(config_path):
         logger.error("Configuration file does not exist in %s", directory)
@@ -47,9 +44,6 @@ class AlembicSubcommand(subcommands.Subcommand):
         return parser
 
     def run(self, parser, args):
-        if args.dbname is None:
-            logger.error("You must specify a database name")
-            return
         if args.dbname not in current_app.db.database_names:
             logger.error("You must specify a valid database name")
             return
@@ -153,7 +147,7 @@ class AlembicMigrateSubcommand(AlembicSubcommand):
         self.migrate(**vars(args))
 
     def migrate(self, directory=None, message=None, sql=False, head='head', splice=False,
-                branch_label=None, version_path=None, rev_id=None, **kwargs):
+                branch_label=None, version_path=None, rev_id=None, **kwargs):  # pragma: no cover
         """Alias for 'revision --autogenerate'"""
         config = _get_config(directory)
         command.revision(config, message, autogenerate=True, sql=sql, head=head,
@@ -182,7 +176,7 @@ class AlembicMergeSubcommand(AlembicSubcommand):
         self.merge(**vars(args))
 
     def merge(self, directory=None, revisions='', message=None, branch_label=None,
-              rev_id=None, **kwargs):
+              rev_id=None, **kwargs):  # pragma: no cover
         """Merge two revisions together.  Creates a new migration file"""
         config = _get_config(directory)
         command.merge(config, revisions, message=message,
@@ -208,7 +202,8 @@ class AlembicUpgradeSubcommand(AlembicSubcommand):
     def run(self, parser, args):
         self.upgrade(**vars(args))
 
-    def upgrade(self, directory=None, revision='head', sql=False, tag=None, **kwargs):
+    def upgrade(self, directory=None, revision='head', sql=False, tag=None,
+                **kwargs):  # pragma: no cover
         """Upgrade to a later version"""
         config = _get_config(directory)
         command.upgrade(config, revision, sql=sql, tag=tag)
@@ -233,7 +228,8 @@ class AlembicDowngradeSubcommand(AlembicSubcommand):
     def run(self, parser, args):
         self.downgrade(**vars(args))
 
-    def downgrade(self, directory=None, revision='-1', sql=False, tag=None, **kwargs):
+    def downgrade(self, directory=None, revision='-1', sql=False, tag=None,
+                  **kwargs):  # pragma: no cover
         """Revert to a previous version"""
         config = _get_config(directory)
         command.downgrade(config, revision, sql=sql, tag=tag)
@@ -252,7 +248,7 @@ class AlembicShowSubcommand(AlembicSubcommand):
     def run(self, parser, args):
         self.show(**vars(args))
 
-    def show(self, directory=None, revision='head', **kwargs):
+    def show(self, directory=None, revision='head', **kwargs):  # pragma: no cover
         """Show the revision denoted by the given symbol."""
         config = _get_config(directory)
         command.show(config, revision)
@@ -273,7 +269,7 @@ class AlembicHistorySubcommand(AlembicSubcommand):
     def run(self, parser, args):
         self.history(**vars(args))
 
-    def history(self, directory=None, rev_range=None, verbose=False, **kwargs):
+    def history(self, directory=None, rev_range=None, verbose=False, **kwargs):  # pragma: no cover
         """List changeset scripts in chronological order."""
         config = _get_config(directory)
         command.history(config, rev_range, verbose=verbose)
@@ -295,7 +291,8 @@ class AlembicHeadsSubcommand(AlembicSubcommand):
     def run(self, parser, args):
         self.heads(**vars(args))
 
-    def heads(self, directory=None, verbose=False, resolve_dependencies=False, **kwargs):
+    def heads(self, directory=None, verbose=False, resolve_dependencies=False,
+              **kwargs):  # pragma: no cover
         """Show current available heads in the script directory"""
         config = _get_config(directory)
         command.heads(config, verbose=verbose,
@@ -315,7 +312,7 @@ class AlembicBranchesSubcommand(AlembicSubcommand):
     def run(self, parser, args):
         self.branches(**vars(args))
 
-    def branches(self, directory=None, verbose=False, **kwargs):
+    def branches(self, directory=None, verbose=False, **kwargs):  # pragma: no cover
         """Show current branch points"""
         config = _get_config(directory)
         command.branches(config, verbose=verbose)
@@ -337,7 +334,7 @@ class AlembicCurrentSubcommand(AlembicSubcommand):
     def run(self, parser, args):
         self.current(**vars(args))
 
-    def current(self, directory=None, verbose=False, head_only=False, **kwargs):
+    def current(self, directory=None, verbose=False, head_only=False, **kwargs):  # pragma: no cover
         """Display the current revision for each database."""
         config = _get_config(directory)
         command.current(config, verbose=verbose, head_only=head_only)
@@ -361,7 +358,8 @@ class AlembicStampSubcommand(AlembicSubcommand):
     def run(self, parser, args):
         self.stamp(**vars(args))
 
-    def stamp(self, directory=None, revision='head', sql=False, tag=None, **kwargs):
+    def stamp(self, directory=None, revision='head', sql=False, tag=None,
+              **kwargs):  # pragma: no cover
         """'stamp' the revision table with the given revision; don't run any
         migrations"""
         config = _get_config(directory)

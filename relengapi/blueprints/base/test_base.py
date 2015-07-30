@@ -15,17 +15,18 @@ from relengapi.lib.testing.subcommands import run_main
 
 
 @contextmanager
-def copy_alembic_folder(dbname):
+def copy_alembic_folder(dbname, copy=True):
     """ Copy the production config into a temporary folder without versions """
     temp_dir = tempfile.mkdtemp()
     try:
-        src = os.path.join(os.path.dirname(relengapi.__file__), 'alembic', dbname)
-        dest = os.path.join(temp_dir, dbname)
-        shutil.copytree(src, dest)
-        # remove all the current migrations in that folder for a clean slate
-        files = glob.glob(os.path.join(dest, 'versions', '*'))
-        for f in files:
-            os.remove(f)
+        if copy:
+            src = os.path.join(os.path.dirname(relengapi.__file__), 'alembic', dbname)
+            dest = os.path.join(temp_dir, dbname)
+            shutil.copytree(src, dest)
+            # remove all the current migrations in that folder for a clean slate
+            files = glob.glob(os.path.join(dest, 'versions', '*'))
+            for f in files:
+                os.remove(f)
         yield temp_dir
     finally:
         shutil.rmtree(temp_dir)
@@ -87,6 +88,35 @@ def test_sqs_listen():
         p.assert_called_with()
 
 
+def test_invalid_database_name():
+    """show an error when we specify an invalid database name """
+    dbname = 'relengapi'
+    settings = {'SQLALCHEMY_DATABASE_URIS': {}}
+    for name in db._declarative_bases:
+        settings['SQLALCHEMY_DATABASE_URIS'][name] = 'sqlite:///'  # in-memory
+    run_main(["createdb"], settings=settings)
+    with copy_alembic_folder(dbname) as base_dir:
+        # create the revision
+        output = run_main(["alembic", 'invalid_db_name', "--directory", base_dir, "revision"],
+                          settings=settings)
+        assert "specify a valid database name" in output
+
+
+def test_invalid_configuration():
+    """ When specifying a valid db that hasn't been initialized, we spit out an error message"""
+    dbname = 'relengapi'
+    uninit_db = 'clobberer'
+    settings = {'SQLALCHEMY_DATABASE_URIS': {}}
+    for name in db._declarative_bases:
+        settings['SQLALCHEMY_DATABASE_URIS'][name] = 'sqlite:///'  # in-memory
+    run_main(["createdb"], settings=settings)
+    with copy_alembic_folder(dbname) as base_dir:
+        # create the revision
+        output = run_main(["alembic", uninit_db, "--directory", base_dir, "revision"],
+                          settings=settings)
+        assert "Configuration file does not exist" in output
+
+
 def test_alembic_revision():
     """ When creating a revision, a migration script should exist with the current head"""
     dbname = 'relengapi'
@@ -98,27 +128,22 @@ def test_alembic_revision():
         # create the revision
         output = run_main(["alembic", dbname, "--directory", base_dir, "revision"],
                           settings=settings)
-
         assert "Generating {}".format(base_dir) in output
 
 
 def test_alembic_init():
-    """ When creating a revision, a migration script should exist with the current head"""
+    """ When we initialize a db, make sure that the ini exists """
     dbname = 'relengapi'
     settings = {'SQLALCHEMY_DATABASE_URIS': {}}
     for name in db._declarative_bases:
         settings['SQLALCHEMY_DATABASE_URIS'][name] = 'sqlite:///'  # in-memory
     run_main(["createdb"], settings=settings)
-    with copy_alembic_folder(dbname) as base_dir:
-        with mock.patch(
-                "relengapi.blueprints.base.alembic_wrapper.AlembicInitSubcommand.init") as p:
-            # create the revision
+    with copy_alembic_folder(dbname, copy=False) as base_dir:
             run_main(["alembic", dbname, "--directory", base_dir, "init"], settings=settings)
-            assert p.called
+            assert os.path.exists(os.path.join(base_dir, dbname, 'alembic.ini'))
 
 
 def test_alembic_migrate():
-    """ When creating a revision, a migration script should exist with the current head"""
     dbname = 'relengapi'
     settings = {'SQLALCHEMY_DATABASE_URIS': {}}
     for name in db._declarative_bases:
@@ -127,14 +152,12 @@ def test_alembic_migrate():
     with copy_alembic_folder(dbname) as base_dir:
         with mock.patch(
                 "relengapi.blueprints.base.alembic_wrapper.AlembicMigrateSubcommand.migrate") as p:
-            # create the revision
             run_main(["alembic", dbname, "--directory", base_dir, "migrate"],
                      settings=settings)
             assert p.called
 
 
 def test_alembic_upgrade():
-    """ When creating a revision, a migration script should exist with the current head"""
     dbname = 'relengapi'
     settings = {'SQLALCHEMY_DATABASE_URIS': {}}
     for name in db._declarative_bases:
@@ -143,14 +166,12 @@ def test_alembic_upgrade():
     with copy_alembic_folder(dbname) as base_dir:
         with mock.patch(
                 "relengapi.blueprints.base.alembic_wrapper.AlembicUpgradeSubcommand.upgrade") as p:
-            # create the revision
             run_main(["alembic", dbname, "--directory", base_dir, "upgrade"],
                      settings=settings)
             assert p.called
 
 
 def test_alembic_downgrade():
-    """ When creating a revision, a migration script should exist with the current head"""
     dbname = 'relengapi'
     settings = {'SQLALCHEMY_DATABASE_URIS': {}}
     for name in db._declarative_bases:
@@ -160,14 +181,12 @@ def test_alembic_downgrade():
         with mock.patch(
                 "relengapi.blueprints.base.alembic_wrapper."
                 "AlembicDowngradeSubcommand.downgrade") as p:
-            # create the revision
             run_main(["alembic", dbname, "--directory", base_dir, "downgrade"],
                      settings=settings)
             assert p.called
 
 
 def test_alembic_stamp():
-    """ When creating a revision, a migration script should exist with the current head"""
     dbname = 'relengapi'
     settings = {'SQLALCHEMY_DATABASE_URIS': {}}
     for name in db._declarative_bases:
@@ -176,14 +195,12 @@ def test_alembic_stamp():
     with copy_alembic_folder(dbname) as base_dir:
         with mock.patch(
                 "relengapi.blueprints.base.alembic_wrapper.AlembicStampSubcommand.stamp") as p:
-            # create the revision
             run_main(["alembic", dbname, "--directory", base_dir, "stamp", "head"],
                      settings=settings)
             assert p.called
 
 
 def test_alembic_current():
-    """ When creating a revision, a migration script should exist with the current head"""
     dbname = 'relengapi'
     settings = {'SQLALCHEMY_DATABASE_URIS': {}}
     for name in db._declarative_bases:
@@ -192,14 +209,12 @@ def test_alembic_current():
     with copy_alembic_folder(dbname) as base_dir:
         with mock.patch(
                 "relengapi.blueprints.base.alembic_wrapper.AlembicCurrentSubcommand.current") as p:
-            # create the revision
             run_main(["alembic", dbname, "--directory", base_dir, "current"],
                      settings=settings)
             assert p.called
 
 
 def test_alembic_history():
-    """ When creating a revision, a migration script should exist with the current head"""
     dbname = 'relengapi'
     settings = {'SQLALCHEMY_DATABASE_URIS': {}}
     for name in db._declarative_bases:
@@ -208,14 +223,12 @@ def test_alembic_history():
     with copy_alembic_folder(dbname) as base_dir:
         with mock.patch(
                 "relengapi.blueprints.base.alembic_wrapper.AlembicHistorySubcommand.history") as p:
-            # create the revision
             run_main(["alembic", dbname, "--directory", base_dir, "history"],
                      settings=settings)
             assert p.called
 
 
 def test_alembic_show():
-    """ When creating a revision, a migration script should exist with the current head"""
     dbname = 'relengapi'
     settings = {'SQLALCHEMY_DATABASE_URIS': {}}
     for name in db._declarative_bases:
@@ -224,14 +237,12 @@ def test_alembic_show():
     with copy_alembic_folder(dbname) as base_dir:
         with mock.patch(
                 "relengapi.blueprints.base.alembic_wrapper.AlembicShowSubcommand.show") as p:
-            # create the revision
             run_main(["alembic", dbname, "--directory", base_dir, "show", "head"],
                      settings=settings)
             assert p.called
 
 
 def test_alembic_merge():
-    """ When creating a revision, a migration script should exist with the current head"""
     dbname = 'relengapi'
     settings = {'SQLALCHEMY_DATABASE_URIS': {}}
     for name in db._declarative_bases:
@@ -240,14 +251,12 @@ def test_alembic_merge():
     with copy_alembic_folder(dbname) as base_dir:
         with mock.patch(
                 "relengapi.blueprints.base.alembic_wrapper.AlembicMergeSubcommand.merge") as p:
-            # create the revision
             run_main(["alembic", dbname, "--directory", base_dir, "merge", "head"],
                      settings=settings)
             assert p.called
 
 
 def test_alembic_heads():
-    """ When creating a revision, a migration script should exist with the current head"""
     dbname = 'relengapi'
     settings = {'SQLALCHEMY_DATABASE_URIS': {}}
     for name in db._declarative_bases:
@@ -256,14 +265,12 @@ def test_alembic_heads():
     with copy_alembic_folder(dbname) as base_dir:
         with mock.patch(
                 "relengapi.blueprints.base.alembic_wrapper.AlembicHeadsSubcommand.heads") as p:
-            # create the revision
             run_main(["alembic", dbname, "--directory", base_dir, "heads"],
                      settings=settings)
             assert p.called
 
 
 def test_alembic_branches():
-    """ When creating a revision, a migration script should exist with the current head"""
     dbname = 'relengapi'
     settings = {'SQLALCHEMY_DATABASE_URIS': {}}
     for name in db._declarative_bases:
@@ -273,7 +280,6 @@ def test_alembic_branches():
         with mock.patch(
                 "relengapi.blueprints.base.alembic_wrapper."
                 "AlembicBranchesSubcommand.branches") as p:
-            # create the revision
             run_main(["alembic", dbname, "--directory", base_dir, "branches"],
                      settings=settings)
             assert p.called
