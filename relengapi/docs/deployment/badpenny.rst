@@ -32,6 +32,10 @@ Every job is logged in the database, and for a busy production environment this 
 A cleanup task runs regularly, purging information about old jobs.
 The ``BADPENNY_OLD_JOB_DAYS`` configuration parameter specifies the number of days after which jobs will be purged from the database, defaulting to 7.
 
+Badpenny also runs Celery's own cleanup jobs:
+
+ * ``celery.backend_cleanup`` - removes old task results from the ``CELERY_BACKEND``
+
 Administration
 --------------
 
