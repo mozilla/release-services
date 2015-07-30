@@ -31,14 +31,16 @@ FINISHED_STATES = ['SUCCESS', 'FAILURE', 'REVOKED']
 
 def delete_tracker(tracker):
     session = current_app.db.session('relengapi')
-    logger.info("deleting tracker with id: {}".format(tracker.task_id))
+    logger.info("deleting tracker with id: {}".format(tracker.task_id),
+                archiver_task=tracker.task_id)
     session.delete(tracker)
     session.commit()
 
 
 def update_tracker_state(tracker, state):
     session = current_app.db.session('relengapi')
-    logger.info("updating tracker with id: {} to state: {}".format(tracker.id, state))
+    logger.info("updating tracker with id: {} to state: {}".format(tracker.id, state),
+                archiver_task=tracker.task_id, archiver_task_state=state)
     try:
         tracker.state = state
         session.commit()
@@ -62,7 +64,8 @@ def cleanup_old_tasks(job_status):
 def renew_tracker_pending_expiry(tracker):
     pending_expires_at = now() + datetime.timedelta(seconds=PENDING_EXPIRES_IN)
     session = current_app.db.session('relengapi')
-    log.info("renewing tracker {} with pending expiry: {}".format(tracker.id, pending_expires_at))
+    logger.info("renewing tracker {} with pending expiry: {}".format(
+                tracker.id, pending_expires_at), archiver_task=tracker.task_id)
     tracker.pending_expires_at = pending_expires_at
     session.commit()
 
