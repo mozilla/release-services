@@ -115,6 +115,10 @@ config = {
     'CELERY_RESULT_BACKEND': 'db+sqlite:///%s/celery.db' % test_temp_dir,
     'CELERYD_POOL': 'solo',
 }
+
+config_no_expires = config.copy()
+config_no_expires['CELERY_TASK_RESULT_EXPIRES'] = 0
+
 test_context = TestContext(config=config)
 
 config_with_logging = config.copy()
@@ -243,3 +247,16 @@ def test_backend_cleanup(app):
         celery.backend_cleanup(None)
 
         task.apply.assert_called_with()
+
+
+@test_context.specialize(config=config_no_expires)
+def test_backend_cleanup_skip(app):
+    """With CELERY_TASK_RESULT_EXPIRES false, the backend cleanup
+    task does nothing"""
+    with app.app_context():
+        task = app.celery.tasks['celery.backend_cleanup']
+        task.apply = mock.Mock(spec=task.apply)
+
+        celery.backend_cleanup(None)
+
+        eq_(task.apply.mock_calls, [])
