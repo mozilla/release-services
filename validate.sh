@@ -125,6 +125,7 @@ start_step "getting file list from git"
 git_only='
     .gitignore
     .travis.yml
+    .taskclusterrc
     pep8rc
     coveragerc
     validate.sh
