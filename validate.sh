@@ -143,37 +143,32 @@ run_migrations_test () {
 
     # run the actual migration tests
     for filename in `find relengapi/alembic -type f -name "alembic.ini" ! -path template`; do
-        num=`alembic -c $filename history | wc -l`
+        num=`ls $(dirname $filename)/versions/*.py | wc -l`
         [ $num -eq 0 ] && continue
 
         dbname=`basename $(dirname $filename)`
         offline_script="$test_dir/migration.sql"
 
         mysqldump ${mysql_options} --no-data --skip-comments test_$dbname > "$test_dir/$dbname-original"
-        for i in {1..$num}; do
-            if $run_offline_test; then
-                coverage run --append --rcfile=coveragerc --source=relengapi \
-                $(which relengapi) -Q alembic $dbname downgrade --sql > $offline_script || \
-                (not_okay "$dbname downgrade failed" && continue 2)
-                mysql ${mysql_options} test_$dbname < $offline_script
-            else
-                coverage run --append --rcfile=coveragerc --source=relengapi \
-                $(which relengapi) -Q alembic $dbname downgrade || \
-                (not_okay "$dbname downgrade failed" && continue 2)
-            fi
-        done
-        for i in {i..$num}; do
-            if $run_offline_test; then
-                coverage run --append --rcfile=coveragerc --source=relengapi \
-                $(which relengapi) -Q alembic $dbname upgrade --sql > $offline_script || \
-                (not_okay "$dbname upgrade failed" && continue 2)
-                mysql ${mysql_options} test_$dbname < $offline_script
-            else
-                coverage run --append --rcfile=coveragerc --source=relengapi \
-                $(which relengapi) -Q alembic $dbname upgrade || \
-                (not_okay "$dbname upgrade failed" && continue 2)
-            fi
-        done
+        if $run_offline_test; then
+            (coverage run --append --rcfile=coveragerc --source=relengapi \
+            $(which relengapi) -Q alembic $dbname downgrade head:base --sql > $offline_script && \
+            mysql ${mysql_options} test_$dbname < $offline_script) || \
+            (not_okay "$dbname downgrade failed" && continue)
+
+            (coverage run --append --rcfile=coveragerc --source=relengapi \
+            $(which relengapi) -Q alembic $dbname upgrade --sql > $offline_script && \
+            mysql ${mysql_options} test_$dbname < $offline_script) || \
+            (not_okay "$dbname upgrade failed" && continue)
+        else
+            coverage run --append --rcfile=coveragerc --source=relengapi \
+            $(which relengapi) -Q alembic $dbname downgrade base || \
+            (not_okay "$dbname downgrade failed" && continue)
+
+            coverage run --append --rcfile=coveragerc --source=relengapi \
+            $(which relengapi) -Q alembic $dbname upgrade || \
+            (not_okay "$dbname upgrade failed" && continue)
+        fi
         mysqldump ${mysql_options} --no-data --skip-comments test_$dbname > "$test_dir/$dbname-modified"
         if [[ -n `diff "$test_dir/$dbname-original" "$test_dir/$dbname-modified" -q` ]]; then
             not_okay "database schemas for $dbname differ"
