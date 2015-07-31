@@ -108,6 +108,8 @@ class ReplSubcommand(subcommands.Subcommand):
         parser = subparsers.add_parser(
             'repl', help='Open a Python REPL in the RelengAPI application context; '
                          '`app` is the current app.')
+        parser.add_argument("-c", "--command", metavar='COMMAND',
+                            help="Python program passed in as string")
         return parser
 
     def run(self, parser, args):
@@ -120,5 +122,8 @@ class ReplSubcommand(subcommands.Subcommand):
         except ImportError:
             readline = None
 
-        print "'app' is the current application."
-        code.InteractiveConsole(locals={'app': current_app}).interact()
+        if args.command:
+            exec args.command in {'app': current_app}
+        else:
+            print "'app' is the current application."
+            code.InteractiveConsole(locals={'app': current_app}).interact()
