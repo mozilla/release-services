@@ -214,6 +214,7 @@ rm -f "relengapi.egg-info/SOURCES.txt"
 start_step "getting file list from git"
 git_only='
     .gitignore
+    .taskclusterrc
     .travis.yml
     pep8rc
     coveragerc
