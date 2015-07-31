@@ -107,7 +107,7 @@ relengapi build-docs || not_ok "build-docs failed"
 finish_step
 
 start_step "running tests (under coverage)"
-coverage run --rcfile=coveragerc --source=relengapi $(which relengapi) run-tests || not_ok "tests failed"
+coverage run --append --rcfile=coveragerc --source=relengapi $(which relengapi) run-tests || not_ok "tests failed"
 finish_step
 
 start_step "checking alembic heads"
@@ -116,44 +116,83 @@ for filename in `find relengapi/alembic -type f -name "alembic.ini" ! -path temp
 done
 finish_step
 
+# run migration tests. This takes one parameter, a bool, determining whether
+# to run this offline or not.
+run_migrations_test () {
+    run_offline_test=${1:-false}
+    # set up the settings file
+    database_names="relengapi mapper clobberer"
+
+    test_dir=$(mktemp -d)
+    settings_file="$test_dir/test_settings.py"
+    settings="SQLALCHEMY_DATABASE_URIS = {\n"
+    for dbname in $database_names; do
+        mysql -u root -e "drop database if exists test_$dbname; create database test_$dbname"
+        settings="$settings    '$dbname': 'mysql://root@localhost/test_$dbname',\n"
+    done
+    settings="$settings}"
+
+    # create the database
+    echo -e $settings > $settings_file
+    export RELENGAPI_SETTINGS=$settings_file
+    # apparently, createdb needs to be run twice because of an error on creating an index in mysql
+    `(relengapi createdb) &>/dev/null` || true
+    coverage run --append --rcfile=coveragerc --source=relengapi $(which relengapi) -Q createdb
+
+    # run the actual migration tests
+    for filename in `find relengapi/alembic -type f -name "alembic.ini" ! -path template`; do
+        num=`alembic -c $filename history | wc -l`
+        [ $num -eq 0 ] && continue
+
+        dbname=`basename $(dirname $filename)`
+        offline_script="$test_dir/migration.sql"
+
+        mysqldump -u root --password= --no-data --skip-comments test_$dbname > "$test_dir/$dbname-original"
+        for i in {1..$num}; do
+            if $run_offline_test; then
+                coverage run --append --rcfile=coveragerc --source=relengapi \
+                $(which relengapi) -Q alembic $dbname downgrade --sql > $offline_script || \
+                (not_okay "$dbname downgrade failed" && continue 2)
+                mysql -u root test_$dbname < $offline_script
+            else
+                coverage run --append --rcfile=coveragerc --source=relengapi \
+                $(which relengapi) -Q alembic $dbname downgrade || \
+                (not_okay "$dbname downgrade failed" && continue 2)
+            fi
+        done
+        for i in {i..$num}; do
+            if $run_offline_test; then
+                coverage run --append --rcfile=coveragerc --source=relengapi \
+                $(which relengapi) -Q alembic $dbname upgrade --sql > $offline_script || \
+                (not_okay "$dbname upgrade failed" && continue 2)
+                mysql -u root test_$dbname < $offline_script
+            else
+                coverage run --append --rcfile=coveragerc --source=relengapi \
+                $(which relengapi) -Q alembic $dbname upgrade || \
+                (not_okay "$dbname upgrade failed" && continue 2)
+            fi
+        done
+        mysqldump -u root --password= --no-data --skip-comments test_$dbname > "$test_dir/$dbname-modified"
+        if [[ -n `diff "$test_dir/$dbname-original" "$test_dir/$dbname-modified" -q` ]]; then
+            not_okay "database schemas for $dbname differ"
+        fi
+    done
+
+    # clean up
+    for dbname in $database_names; do
+        mysql -u root -e "drop database if exists test_$dbname;"
+    done
+    rm -r $test_dir
+}
+
 # run migration tests, only if we're on travis ci
 if $TRAVIS; then
-start_step "check database migrations (under coverage)"
-# set up the settings file
-test_dir=$(mktemp -d)
-settings_file="$test_dir/test_settings.py"
-settings="SQLALCHEMY_DATABASE_URIS = {\n"
-for dbname in relengapi mapper clobberer; do
-    mysql -u root -e "drop database if exists test_$dbname; create database test_$dbname"
-    settings="$settings    '$dbname': 'mysql://root@localhost/test_$dbname',\n"
-done
-settings="$settings}"
+start_step "check database migrations online (under coverage)"
+run_migrations_test
+finish_step
 
-# create the database
-echo -e $settings > $settings_file
-export RELENGAPI_SETTINGS=$settings_file
-# apparently, createdb needs to be run twice because of an error on creating an index in mysql
-`(relengapi createdb) &>/dev/null` || true
-coverage run --rcfile=coveragerc --source=relengapi $(which relengapi) --quiet createdb
-
-# run the actual migration tests
-for filename in `find relengapi/alembic -type f -name "alembic.ini" ! -path template`; do
-    num=`alembic -c $filename history | wc -l`
-    [ $num -eq 0 ] && continue
-
-    dbname=`basename $(dirname $filename)`
-    mysqldump -u root --password= --no-data --skip-comments test_$dbname > "$test_dir/$dbname-original"
-    for i in {1..$num}; do
-        coverage run --rcfile=coveragerc --source=relengapi $(which relengapi) --quiet alembic $dbname downgrade || (not_okay "$dbname downgrade failed" && continue 2)
-    done
-    for i in {i..$num}; do
-        coverage run --rcfile=coveragerc --source=relengapi $(which relengapi) --quiet alembic $dbname upgrade || (not_okay "$dbname upgrade failed" && continue 2)
-    done
-    mysqldump -u root --password= --no-data --skip-comments test_$dbname > "$test_dir/$dbname-modified"
-    if [[ -n `diff "$test_dir/$dbname-original" "$test_dir/$dbname-modified" -q` ]]; then
-        not_okay "database schemas for $dbname differ"
-    fi
-done
+start_step "check database migrations offline (under coverage)"
+run_migrations_test true
 finish_step
 fi
 
