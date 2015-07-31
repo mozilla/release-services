@@ -1,8 +1,7 @@
 Using Databases
 ===============
 
-Releng API uses `SQLAlchemy Core <http://sqlalchemy.org/>`_ to access databases.
-Releng API does not use the SQLAlchemy ORM.
+RelengAPI uses `SQLAlchemy Core <http://sqlalchemy.org/>`_ to access databases.
 
 The system supports multiple, independent databases, each identified by a short name.
 Of course, it's impossible to perform joins between independent databases.
@@ -78,6 +77,121 @@ As a shortcut, each table object has a ``query`` property which is automatically
         u = User.query.filter_by(name='Foo').first()
         return jsonify(userid=u.id)
 
+Changing Schema
+---------------
+
+RelengAPI uses `Alembic <https://alembic.readthedocs.org/>`_ to manage schema changes, such as adding tables or altering column types.
+Alembic provides a framework to support smooth upgrades and downgrades of the production database without downtime.
+However, it still requires careful thought and attention to design such upgrades!
+
+In production, RelengAPI has a MySQL backend, so migrations target MySQL.
+Unfortunately, SQLite, which is used by default in development environments, does not have very good support for schema modification.
+As a result, many schema migrations will not run correctly on SQLite, although ``relengapi createdb`` will.
+If you are developing a schema change, please set up a MySQL environment so support your testing.
+It may also help to include ``SQLALCHEMY_DB_LOG = True`` in your settings to see the DDL statements Alembic and SQLAlchemy are generating.
+
+Running Alembic
+...............
+
+The ``relengapi alembic`` command wraps most ``alembic`` commands, adding a database name.
+For example, where the Alembic documentation suggests running ``alembic stamp``, you might instead run ``relengapi alembic relengapi stamp``, where the second ``relengapi`` indicates the database to which you wish to apply the stamp operation.
+
+Writing A Migration
+...................
+
+To make a change to the database, first make the change in your Python model.
+For the sake of example, we'll add a ``comment`` field to the ``auth_tokens`` table in the ``relengapi`` database:
+
+.. code-block:: diff
+
+
+    diff --git a/relengapi/blueprints/tokenauth/tables.py b/relengapi/blueprints/tokenauth/tables.py
+    index ef51a66..f53f0fc 100644
+    --- a/relengapi/blueprints/tokenauth/tables.py
+    +++ b/relengapi/blueprints/tokenauth/tables.py
+    @@ -21,4 +21,5 @@ class Token(db.declarative_base('relengapi')):
+         typ = sa.Column(sa.String(4), nullable=False)
+         description = sa.Column(sa.Text, nullable=False)
+    +    comment = sa.Column(sa.Text, nullable=False)
+         user = sa.Column(sa.Text, nullable=True)
+         disabled = sa.Column(sa.Boolean, nullable=False)
+
+Next, create a migration using ``revision`` with ``--autogenerate``.
+
+
+.. code-block:: none
+
+    relengapi alembic relengapi revision -m "add auth_tokens.comment" --autogenerate
+
+This consults the live database, comparing it to the SQLAlchemy model.
+It produces a new migration file tagged with a short hexadecimal revision ID, and provides the filename to you.
+Open that file in your editor to fine-tune it.
+
+.. note::
+
+    If you have multiple RelengAPI databases configured with the same SQLAlchemy URL in your settings file, Alembic may add unexpected ``op.drop_table`` invocations.
+    Simply delete these from the generated migration file.
+
+The result for this example looks like this:
+
+.. code-block:: none
+
+    # revision identifiers, used by Alembic.
+    revision = '175160eab61f'
+    down_revision = '2de009660da3'
+    branch_labels = None
+    depends_on = None
+
+
+    def upgrade():
+        op.add_column('auth_tokens', sa.Column('comment', sa.Text(), nullable=False))
+
+
+    def downgrade():
+        op.drop_column('auth_tokens', 'comment')
+
+Try out the upgrade:
+
+.. code-block:: none
+
+    relengapi alembic relengapi upgrade
+
+And try out the downgrade:
+
+.. code-block:: none
+
+    relengapi alembic relengapi downgrade
+
+Then re-upgrade and update the code to use the new schema.
+Commit the migration file right alongside the code changes.
+
+When you create a pull request, the ``validate.sh`` script will automatically run your upgrade and downgrade and verify that they result in the expected schemas.
+
+Non-Compatible Migrations
+.........................
+
+It's impossible to deploy new code and a schema migration at exactly the same time.
+If a migration will make existing code fail, then applying that migration will cause an outage.
+Thankfully, most migrations involve adding tables or columns.
+Adding a table is always safe, unless there are no inter-table consistency checks.
+Adding a column is generally safe, as long as it has a default or allows NULL so that insert operations not mentioning the column do not fail.
+In general, it's best to test your schema migration's compatibility by hand: apply the upgrade, then check out the pre-upgrade code, run it, and verify that all of the possibly-affected operations still work.
+
+If you must make an incompatible change, you may need to perform several deployments of code and schema changes.
+In general, you will need to either deploy an intermediate schema which is compatible with both old and new code, or deploy an intermediate code revision which is compatible with both old and new schemas.
+
+Let's take the example of changing a column from an integer to a string.
+There's no good in-between schema, so we'll create an in-between code revision
+
+#. Add code to handle inserts, updates, and queries where the column is a string.
+   This can be a simple as adding a try/except that retries with a string when an integer fails.
+   Deploy this code.
+#. Deploy the schema upgrade.
+#. Update the code to assume strings, removing support for integers.
+   Deploy this code.
+
+If you are proposing a non-compatible migration, it's best to submit the whole process as a series of pull requests, with each step clearly described.
+
 Unique Row Support (Get or Create)
 ----------------------------------
 
@@ -115,7 +229,9 @@ Usage is quite simple with one caveat, you need to pass the DB session through e
 
 The above would return a row from ``MyTable`` with ``name='unique_name'`` if it exists, if not it would create said row, putting in ``'foo'`` as the value for the ``other`` column.
 
-.. note:: If the row existed, and the other column contained different data than foo (e.g. ``'bar'``) the value returned would have 'bar' as the ``other`` column, this code does not assume you'd want to update the existing row, merely get it.
+.. note::
+
+    If the row existed, and the other column contained different data than foo (e.g. ``'bar'``) the value returned would have 'bar' as the ``other`` column, this code does not assume you'd want to update the existing row, merely get it.
 
 
 Engines, MetaData, etc.

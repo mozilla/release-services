@@ -4,17 +4,23 @@
 
 import logging
 import os
-import structlog
 import sys
+
+from alembic import command
+from alembic.config import Config
+from alembic_wrapper import AlembicSubcommand
 
 from flask import Blueprint
 from flask import Flask
 from flask import current_app
 
+import relengapi
+
 from relengapi.lib import subcommands
 
 bp = Blueprint('base', __name__)
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
+__all__ = ['AlembicSubcommand', ]
 
 
 class ServeSubcommand(subcommands.Subcommand):
@@ -51,6 +57,14 @@ class CreateDBSubcommand(subcommands.Subcommand):
             meta = current_app.db.metadata[dbname]
             engine = current_app.db.engine(dbname)
             meta.create_all(bind=engine)
+
+            # load the Alembic config and stamp it with the most recent rev
+            config_path = os.path.join(os.path.dirname(relengapi.__file__),
+                                       'alembic', dbname, 'alembic.ini')
+            if os.path.isfile(config_path):
+                logger.info("stamping database %s with head", dbname)
+                alembic_cfg = Config(config_path)
+                command.stamp(alembic_cfg, "head")
 
 
 class RunTestsSubcommand(subcommands.Subcommand):
