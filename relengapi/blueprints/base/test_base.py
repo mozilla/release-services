@@ -80,6 +80,12 @@ def test_createdb():
     assert 'creating tables for database relengapi' in output
 
 
+def test_repl_command():
+    output = run_main(["repl", '-c', 'print(app)\nprint("hello world")'])
+    assert 'relengapi.app' in output  # from 'print(app)'
+    assert 'hello world' in output  # from 'print("hello world")'
+
+
 def test_sqs_listen():
     # this doesn't do much more than see that the AWS method is called;
     # that method is tested elsewhere
