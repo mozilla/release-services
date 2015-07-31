@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import datetime
 import hashlib
 import sqlalchemy as sa
 import structlog
@@ -34,7 +33,7 @@ def check_file_expirations(job_status):
     expired_files = tables.File\
                           .query\
                           .filter(tables.File.expires is not None)\
-                          .filter(tables.File.expires < datetime.datetime.now())
+                          .filter(tables.File.expires < time.now())
     for expired in expired_files:
         remove_file_pending_deletion(session, expired)
     session.commit()

@@ -159,6 +159,16 @@ def upload_batch(region=None, body=None):
         file = tables.File.query.filter(tables.File.sha512 == digest).first()
         if file and file.visibility != info.visibility:
             raise BadRequest("Cannot change a file's visibility level")
+        pending_expiry = None
+        if info.ttl and info.ttl > 0:
+            pending_expiry = time.now() + datetime.timedelta(info.ttl)
+        if file:
+            # Make this file permanent
+            if not info.ttl:
+                file.expires = None
+            # Update this file's time to live
+            elif file.expires and pending_expiry and pending_expiry > file.expires:
+                file.expires = pending_expiry
         if file and file.instances != []:
             if file.size != info.size:
                 raise BadRequest("Size mismatch for {}".format(filename))
@@ -167,7 +177,8 @@ def upload_batch(region=None, body=None):
                 file = tables.File(
                     sha512=digest,
                     visibility=info.visibility,
-                    size=info.size)
+                    size=info.size,
+                    expires=pending_expiry)
                 session.add(file)
             log.info("generating signed S3 PUT URL to {} for {}; expiring in {}s".format(
                 info.digest[:10], current_user, UPLOAD_EXPIRES_IN))
@@ -188,11 +199,6 @@ def upload_batch(region=None, body=None):
                 expires=time.now() + datetime.timedelta(seconds=UPLOAD_EXPIRES_IN))
             session.merge(pu)
         session.add(tables.BatchFile(filename=filename, file=file, batch=batch))
-
-        # Reset the time to live
-        file.expires = None
-        if info.ttl and info.ttl > 0:
-            file.expires = datetime.datetime.now() + datetime.timedelta(info.ttl)
 
     session.add(batch)
     session.commit()

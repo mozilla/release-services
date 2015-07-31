@@ -53,8 +53,8 @@ TWO_DIGEST = hashlib.sha512(TWO).hexdigest()
 NOW = 1425592922
 
 
-def mkbatch(message="a batch"):
-    return {
+def mkbatch(message="a batch", ttl=None):
+    batch = {
         'message': message,
         'files': {
             'one': {
@@ -65,6 +65,9 @@ def mkbatch(message="a batch"):
             },
         },
     }
+    if ttl:
+        batch['files']['one']['ttl'] = ttl
+    return batch
 
 
 def upload_batch(client, batch, region=None):
@@ -216,6 +219,18 @@ def assert_file_response(resp, content, visibility='public', instances=['us-east
         "has_instances": any(instances),
     }
     eq_(json.loads(resp.data)['result'], exp, resp.data)
+
+
+def ttl_date(days):
+    return relengapi_time.now() + datetime.timedelta(days)
+
+
+def get_expiration_date(app, digest):
+    with app.app_context():
+        tbl = tables.File
+        file = tbl.query.filter(tbl.sha512 == digest).first()
+        print(file.expires)
+        return file.expires
 
 
 def do_patch(client, algo, digest, ops):
@@ -476,6 +491,44 @@ def test_upload_batch_success_some_existing_files(client, app):
                          ('two', len(TWO), TWO_DIGEST, []),
     ])
     assert_pending_upload(app, TWO_DIGEST, 'us-west-2')
+
+
+@moto.mock_s3
+@test_context
+def test_upload_batch_ttl(app, client):
+    """An upload with a ttl of 1 should expire before 2 days time"""
+    batch = mkbatch(ttl=5)
+    resp = upload_batch(client, batch)
+    eq_(resp.status_code, 200, resp.data)
+    expires = get_expiration_date(app, ONE_DIGEST)
+    assert expires is not None
+    assert ttl_date(4) < expires < ttl_date(6)
+
+
+@moto.mock_s3
+@test_context
+def test_upload_batch_ttl_update(app, client):
+    """An upload updating ttl on an expired task should update the ttl."""
+    batch = mkbatch(ttl=5)
+    upload_batch(client, batch)
+    assert ttl_date(4) < get_expiration_date(app, ONE_DIGEST) < ttl_date(6)
+    # update ttl
+    batch = mkbatch(ttl=50)
+    upload_batch(client, batch)
+    assert ttl_date(49) < get_expiration_date(app, ONE_DIGEST) < ttl_date(51)
+
+
+@moto.mock_s3
+@test_context
+def test_upload_batch_ttl_update_permanent(app, client):
+    """An upload attempting to modify a file that has no expiration should not
+    change the expiration date."""
+    batch = mkbatch(ttl=1)
+    add_file_to_db(app, ONE)
+    eq_(get_expiration_date(app, ONE_DIGEST), None)
+    resp = upload_batch(client, batch)
+    eq_(resp.status_code, 200, resp.data)
+    eq_(get_expiration_date(app, ONE_DIGEST), None)
 
 
 @test_context
