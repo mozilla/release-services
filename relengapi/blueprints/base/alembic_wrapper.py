@@ -232,6 +232,8 @@ class AlembicDowngradeSubcommand(AlembicSubcommand):
                   **kwargs):  # pragma: no cover
         """Revert to a previous version"""
         config = _get_config(directory)
+        if sql and revision == '-1':
+            revision = 'head:-1'
         command.downgrade(config, revision, sql=sql, tag=tag)
 
 
