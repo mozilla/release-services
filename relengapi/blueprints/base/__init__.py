@@ -113,17 +113,17 @@ class ReplSubcommand(subcommands.Subcommand):
         return parser
 
     def run(self, parser, args):
-        import code
-        # try to get readline for the interactive interpreter (it
-        # only uses it if it's already loaded)
-        try:
-            import readline
-            assert readline
-        except ImportError:
-            readline = None
-
         if args.command:
             exec args.command in {'app': current_app}
-        else:
+        else:  # pragma: no-cover
+            import code
+            # try to get readline for the interactive interpreter (it
+            # only uses it if it's already loaded)
+            try:
+                import readline
+                assert readline
+            except ImportError:
+                readline = None
+
             print "'app' is the current application."
             code.InteractiveConsole(locals={'app': current_app}).interact()
