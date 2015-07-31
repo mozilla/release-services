@@ -120,11 +120,12 @@ finish_step
 # to run this offline or not.
 run_migrations_test () {
     run_offline_test=${1:-false}
-    # set up the settings file
-    database_names="relengapi mapper clobberer"
-
+    unset RELENGAPI_SETTINGS
+    database_names=$(relengapi -Q repl -c 'print(" ".join(app.db.database_names))')
     mysql_options="-u ${MYSQL_USER} -h ${MYSQL_HOST}"
     test_dir=$(mktemp -d)
+
+    # set up the settings file
     settings_file="$test_dir/test_settings.py"
     settings="SQLALCHEMY_DATABASE_URIS = {\n"
     for dbname in $database_names; do
