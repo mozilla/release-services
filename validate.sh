@@ -123,12 +123,13 @@ run_migrations_test () {
     # set up the settings file
     database_names="relengapi mapper clobberer"
 
+    mysql_options="-u ${MYSQL_USER} -h ${MYSQL_HOST}"
     test_dir=$(mktemp -d)
     settings_file="$test_dir/test_settings.py"
     settings="SQLALCHEMY_DATABASE_URIS = {\n"
     for dbname in $database_names; do
-        mysql -u root -e "drop database if exists test_$dbname; create database test_$dbname"
-        settings="$settings    '$dbname': 'mysql://root@localhost/test_$dbname',\n"
+        mysql ${mysql_options} -e "drop database if exists test_$dbname; create database test_$dbname"
+        settings="$settings    '$dbname': 'mysql://${MYSQL_USER}@${MYSQL_HOST}/test_$dbname',\n"
     done
     settings="$settings}"
 
@@ -147,13 +148,13 @@ run_migrations_test () {
         dbname=`basename $(dirname $filename)`
         offline_script="$test_dir/migration.sql"
 
-        mysqldump -u root --password= --no-data --skip-comments test_$dbname > "$test_dir/$dbname-original"
+        mysqldump ${mysql_options} --no-data --skip-comments test_$dbname > "$test_dir/$dbname-original"
         for i in {1..$num}; do
             if $run_offline_test; then
                 coverage run --append --rcfile=coveragerc --source=relengapi \
                 $(which relengapi) -Q alembic $dbname downgrade --sql > $offline_script || \
                 (not_okay "$dbname downgrade failed" && continue 2)
-                mysql -u root test_$dbname < $offline_script
+                mysql ${mysql_options} test_$dbname < $offline_script
             else
                 coverage run --append --rcfile=coveragerc --source=relengapi \
                 $(which relengapi) -Q alembic $dbname downgrade || \
@@ -165,14 +166,14 @@ run_migrations_test () {
                 coverage run --append --rcfile=coveragerc --source=relengapi \
                 $(which relengapi) -Q alembic $dbname upgrade --sql > $offline_script || \
                 (not_okay "$dbname upgrade failed" && continue 2)
-                mysql -u root test_$dbname < $offline_script
+                mysql ${mysql_options} test_$dbname < $offline_script
             else
                 coverage run --append --rcfile=coveragerc --source=relengapi \
                 $(which relengapi) -Q alembic $dbname upgrade || \
                 (not_okay "$dbname upgrade failed" && continue 2)
             fi
         done
-        mysqldump -u root --password= --no-data --skip-comments test_$dbname > "$test_dir/$dbname-modified"
+        mysqldump ${mysql_options} --no-data --skip-comments test_$dbname > "$test_dir/$dbname-modified"
         if [[ -n `diff "$test_dir/$dbname-original" "$test_dir/$dbname-modified" -q` ]]; then
             not_okay "database schemas for $dbname differ"
         fi
@@ -180,20 +181,27 @@ run_migrations_test () {
 
     # clean up
     for dbname in $database_names; do
-        mysql -u root -e "drop database if exists test_$dbname;"
+        mysql ${mysql_options} -e "drop database if exists test_$dbname;"
     done
     rm -r $test_dir
 }
 
-# run migration tests, only if we're on travis ci
+# run migration tests, only if we're on travis ci or have a mysql user set
 if $TRAVIS; then
-start_step "check database migrations online (under coverage)"
-run_migrations_test
-finish_step
+    MYSQL_USER=root
+    MYSQL_HOST=localhost
+fi
+if [ -n "$MYSQL_USER" ]; then
+    MYSQL_HOST=${MYSQL_HOST:-localhost}
+    start_step "check database migrations online (under coverage)"
+    run_migrations_test
+    finish_step
 
-start_step "check database migrations offline (under coverage)"
-run_migrations_test true
-finish_step
+    start_step "check database migrations offline (under coverage)"
+    run_migrations_test true
+    finish_step
+else
+    warning "Skipping DB migration tests; set MYSQL_USER and (optionally) MYSQL_HOST to enable them locally"
 fi
 
 start_step "checking coverage"
