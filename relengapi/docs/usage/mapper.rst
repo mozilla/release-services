@@ -157,3 +157,15 @@ Maps are represented in a text format, with one mapping per line, in the format 
 
     Example: https://api.pub.build.mozilla.org/mapper/build-puppet
 
+.. api:endpoint:: mapper.projects
+    GET /mapper/projects
+
+    :respose: JSON list of defined projects
+
+    Return the list of defined projects
+
+    Exceptions:
+        None
+
+    Example: https://api.pub.build.mozilla.org/mapper/projects
+

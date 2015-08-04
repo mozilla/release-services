@@ -89,6 +89,17 @@ def hash_pair_exists(app, git, hg):
         return False
 
 
+def set_projects(app, new_list=[]):
+    engine = app.db.engine("mapper")
+    engine.execute("delete from projects")
+    Session.configure(bind=engine)
+    session = Session()
+    for new_proj in new_list:
+        project = Project(name=new_proj)
+        session.add(project)
+    session.commit()
+
+
 @test_context
 def test_get_rev_git(app, client):
     insert_some_hashes(app)
@@ -274,4 +285,34 @@ def test_add_project_existing(client):
     # TODO: check that return is JSON, once it is
 
 
+@test_context
+def test_query_all_projects_1_result(client):
+    rv = client.get('/mapper/projects')
+    eq_(rv.status_code, 200)
+    eq_(json.loads(rv.data), {
+        "projects": ["proj", ]
+    })
+
+
+@test_context
+def test_query_all_projects(app, client):
+    # add some extra projects
+    projects = ['p%d' % x for x in range(10)]
+    set_projects(app, projects)
+    rv = client.get('/mapper/projects')
+    eq_(rv.status_code, 200)
+    eq_(json.loads(rv.data), {
+        "projects": projects
+        })
+
+
+@test_context
+def test_query_all_projects_0_results(app, client):
+    # add some extra projects
+    set_projects(app, [])
+    rv = client.get('/mapper/projects')
+    eq_(rv.status_code, 200)
+    eq_(json.loads(rv.data), {
+        "projects": []
+        })
 # TODO: also assert content types
