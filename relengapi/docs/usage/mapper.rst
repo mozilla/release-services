@@ -80,6 +80,18 @@ Maps are represented in a text format, with one mapping per line, in the format 
 
     Example: https://api.pub.build.mozilla.org/mapper/build-mozharness/mapfile/since/29.05.2014%2017:02:09%20CEST
 
+.. api:endpoint:: mapper.projects
+    GET /mapper/projects
+
+    :respose: JSON list of defined projects
+
+    Return the list of defined projects
+
+    Exceptions:
+        None
+
+    Example: https://api.pub.build.mozilla.org/mapper/projects
+
 .. api:endpoint:: mapper.insert_many_no_dups
     POST /<project>/insert
 
@@ -156,16 +168,3 @@ Maps are represented in a text format, with one mapping per line, in the format 
      *  HTTP 409: Project already exists
 
     Example: https://api.pub.build.mozilla.org/mapper/build-puppet
-
-.. api:endpoint:: mapper.projects
-    GET /mapper/projects
-
-    :respose: JSON list of defined projects
-
-    Return the list of defined projects
-
-    Exceptions:
-        None
-
-    Example: https://api.pub.build.mozilla.org/mapper/projects
-

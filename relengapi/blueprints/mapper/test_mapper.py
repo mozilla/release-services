@@ -45,6 +45,17 @@ def db_teardown(app):
     engine.execute("delete from projects")
 
 
+def set_projects(app, new_list=[]):
+    engine = app.db.engine("mapper")
+    engine.execute("delete from projects")
+    Session.configure(bind=engine)
+    session = Session()
+    for new_proj in new_list:
+        project = Project(name=new_proj)
+        session.add(project)
+    session.commit()
+
+
 class User(auth.BaseUser):
 
     def get_id(self):
@@ -87,17 +98,6 @@ def hash_pair_exists(app, git, hg):
         return True
     except (MultipleResultsFound, NoResultFound):
         return False
-
-
-def set_projects(app, new_list=[]):
-    engine = app.db.engine("mapper")
-    engine.execute("delete from projects")
-    Session.configure(bind=engine)
-    session = Session()
-    for new_proj in new_list:
-        project = Project(name=new_proj)
-        session.add(project)
-    session.commit()
 
 
 @test_context
