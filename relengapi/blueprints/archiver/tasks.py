@@ -23,27 +23,34 @@ TASK_TIME_OUT = 3600
 def upload_url_archive_to_s3(key, url, buckets):
     s3_urls = {}
 
-    log.info('Key to be uploaded to S3: %s - downloading and unpacking archive from src_url', key)
-    # make the source request
-    resp = requests.get(url, stream=True)
+    log.info('Key to be uploaded to S3: %s - Verifying src_url: %s', key, url)
+    resp = requests.get(url, stream=True, timeout=60)
 
-    # create a temporary file for it
-    tempf = tempfile.TemporaryFile()
-    # copy the data, block-by-block, into that file
-    resp.raw.decode_content = True
-    shutil.copyfileobj(resp.raw, tempf)
+    if resp.status_code == 200:
+        log.info('Key to be uploaded to S3: %s - downloading and unpacking archive from src_url', key)
+        # make the source request
 
-    # write it out to S3
-    for region in buckets:
-        s3 = current_app.aws.connect_to('s3', region)
-        k = Key(s3.get_bucket(buckets[region]))
-        k.key = key
-        k.set_metadata('Content-Type', resp.headers['Content-Type'])
-        # give it the same attachment filename
-        k.set_metadata('Content-Disposition', resp.headers['Content-Disposition'])
-        k.set_contents_from_file(tempf, rewind=True)   # rewind points tempf back to start for us
-        s3_urls[region] = s3.generate_url(expires_in=SIGNED_URL_EXPIRY, method='GET',
-                                          bucket=buckets[region], key=key)
+        # create a temporary file for it
+        tempf = tempfile.TemporaryFile()
+        # copy the data, block-by-block, into that file
+        resp.raw.decode_content = True
+        shutil.copyfileobj(resp.raw, tempf)
+
+        # write it out to S3
+        for region in buckets:
+            s3 = current_app.aws.connect_to('s3', region)
+            k = Key(s3.get_bucket(buckets[region]))
+            k.key = key
+            k.set_metadata('Content-Type', resp.headers['Content-Type'])
+            # give it the same attachment filename
+            k.set_metadata('Content-Disposition', resp.headers['Content-Disposition'])
+            k.set_contents_from_file(tempf, rewind=True)   # rewind points tempf back to start for us
+            s3_urls[region] = s3.generate_url(expires_in=SIGNED_URL_EXPIRY, method='GET',
+                                              bucket=buckets[region], key=key)
+    else:
+        status = "Url not found. Does it exist? url: '{}', response: '{}' ".format(url,
+                                                                                   resp.status_code)
+        log.warning(status)
 
     resp.close()
 
@@ -68,21 +75,15 @@ def create_and_upload_archive(self, src_url, key):
     s3_urls = {}
     buckets = current_app.config['ARCHIVER_S3_BUCKETS']
 
-    log.info('Key to be uploaded to S3: %s - Verifying src_url: %s', key, src_url)
-    resp = requests.head(src_url)
-    if resp.status_code == 200:
-        try:
-            s3_urls = upload_url_archive_to_s3(key, src_url, buckets)
-        except Exception as exc:
-            # set a jitter enabled delay
-            # where an aggressive delay would result in: 7s, 49s, and 343s
-            # and a gentle delay would result in: 4s, 16s, and 64s
-            delay = randint(4, 7) ** (current.request.retries + 1)  # retries == 0 on first attempt
-            current.retry(exc=exc, countdown=delay)
-    else:
-        status = "Url not found. Does it exist? url: '{}', response: '{}' ".format(src_url,
-                                                                                   resp.status_code)
-        log.warning(status)
+    try:
+        s3_urls = upload_url_archive_to_s3(key, src_url, buckets)
+    except Exception as exc:
+        # set a jitter enabled delay
+        # where an aggressive delay would result in: 7s, 49s, and 343s
+        # and a gentle delay would result in: 4s, 16s, and 64s
+        delay = randint(4, 7) ** (current.request.retries + 1)  # retries == 0 on first attempt
+        current.retry(exc=exc, countdown=delay)
+
     return {
         'status': status,
         'src_url': src_url,
