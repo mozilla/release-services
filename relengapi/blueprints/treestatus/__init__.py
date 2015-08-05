@@ -84,7 +84,6 @@ def tree_cache_get(tree):
         data = mc.get(tree.encode('utf-8'))
         if not data:
             return
-        print "HIT"
         return api.loads(types.JsonTree, data.decode('utf-8'))
 
 
