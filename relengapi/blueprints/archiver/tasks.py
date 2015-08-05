@@ -27,31 +27,33 @@ def upload_url_archive_to_s3(key, url, buckets):
     logger.info('Key to be uploaded to S3: %s - Verifying src_url: %s', key, url)
     resp = requests.get(url, stream=True, timeout=60)
 
-    if resp.status_code == 200:
-        logger.info('S3 Key: %s - downloading and unpacking archive from src_url', key)
-        # create a temporary file for it
-        tempf = tempfile.TemporaryFile()
-        # copy the data, block-by-block, into that file
-        resp.raw.decode_content = True
-        shutil.copyfileobj(resp.raw, tempf)
+    try:
+        resp.raise_for_status()
+    except requests.exceptions.HTTPError:
+        status = "Could not get a valid response from src_url. Does {} exist?".format(url)
+        logger.exception(status)
+        resp.close()
+        return s3_urls, status
 
-        # write it out to S3
-        for region in buckets:
-            s3 = current_app.aws.connect_to('s3', region)
-            k = Key(s3.get_bucket(buckets[region]))
-            k.key = key
-            k.set_metadata('Content-Type', resp.headers['Content-Type'])
-            # give it the same attachment filename
-            k.set_metadata('Content-Disposition', resp.headers['Content-Disposition'])
-            k.set_contents_from_file(tempf, rewind=True)   # rewind points tempf back to start
-            s3_urls[region] = s3.generate_url(expires_in=SIGNED_URL_EXPIRY, method='GET',
-                                              bucket=buckets[region], key=key)
-        status = "Task completed! Check 's3_urls' for upload locations."
-    else:
-        status = "Url not found. Does it exist? url: '{}', response: '{}' ".format(url,
-                                                                                   resp.status_code)
-        logger.warning(status)
+    logger.info('S3 Key: %s - downloading and unpacking archive from src_url', key)
+    # create a temporary file for it
+    tempf = tempfile.TemporaryFile()
+    # copy the data, block-by-block, into that file
+    resp.raw.decode_content = True
+    shutil.copyfileobj(resp.raw, tempf)
 
+    # write it out to S3
+    for region in buckets:
+        s3 = current_app.aws.connect_to('s3', region)
+        k = Key(s3.get_bucket(buckets[region]))
+        k.key = key
+        k.set_metadata('Content-Type', resp.headers['Content-Type'])
+        # give it the same attachment filename
+        k.set_metadata('Content-Disposition', resp.headers['Content-Disposition'])
+        k.set_contents_from_file(tempf, rewind=True)   # rewind points tempf back to start
+        s3_urls[region] = s3.generate_url(expires_in=SIGNED_URL_EXPIRY, method='GET',
+                                          bucket=buckets[region], key=key)
+    status = "Task completed! Check 's3_urls' for upload locations."
     resp.close()
 
     return s3_urls, status

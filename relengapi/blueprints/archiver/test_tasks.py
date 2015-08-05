@@ -47,7 +47,8 @@ def test_invalid_hg_url(app):
             get.return_value = fake_404_response()
             task = create_and_upload_archive.apply_async(args=[src_url, key],
                                                          task_id=key.replace('/', '_'))
-    assert "Url not found." in task.info.get('status', {}), "invalid hg url was not caught!"
+    assert "Could not get a valid response from src_url" in task.info.get('status', {}), \
+        "invalid hg url was not caught!"
 
 
 @moto.mock_s3
