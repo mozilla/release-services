@@ -21,8 +21,8 @@ The Mozilla deployment of RelengAPI has a WSGI file that looks like this::
 
     # set up application logging
     import sys
-    import logging
-    import logging.handlers
+    import structlog
+    import structlog.handlers
 
     root = logging.getLogger('')
     root.setLevel(logging.NOTSET)

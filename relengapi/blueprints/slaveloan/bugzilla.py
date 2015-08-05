@@ -5,13 +5,13 @@
 # XXX Much of this functionality should probably be its own
 #     Separate relengapi blueprint
 
-import logging
+import structlog
 
 from bzrest.client import BugzillaClient
 from flask import current_app
 from flask import url_for
 
-log = logging.getLogger(__name__)
+log = structlog.get_logger()
 
 MAX_ALIAS = 15
 DEFAULT_BUGZILLA_URL = "https://bugzilla-dev.allizom.org/rest/"

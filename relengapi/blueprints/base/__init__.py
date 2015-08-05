@@ -6,14 +6,21 @@ import logging
 import os
 import sys
 
+from alembic import command
+from alembic.config import Config
+from alembic_wrapper import AlembicSubcommand
+
 from flask import Blueprint
 from flask import Flask
 from flask import current_app
+
+import relengapi
 
 from relengapi.lib import subcommands
 
 bp = Blueprint('base', __name__)
 logger = logging.getLogger(__name__)
+__all__ = ['AlembicSubcommand', ]
 
 
 class ServeSubcommand(subcommands.Subcommand):
@@ -50,6 +57,14 @@ class CreateDBSubcommand(subcommands.Subcommand):
             meta = current_app.db.metadata[dbname]
             engine = current_app.db.engine(dbname)
             meta.create_all(bind=engine)
+
+            # load the Alembic config and stamp it with the most recent rev
+            config_path = os.path.join(os.path.dirname(relengapi.__file__),
+                                       'alembic', dbname, 'alembic.ini')
+            if os.path.isfile(config_path):
+                logger.info("stamping database %s with head", dbname)
+                alembic_cfg = Config(config_path)
+                command.stamp(alembic_cfg, "head")
 
 
 class RunTestsSubcommand(subcommands.Subcommand):
@@ -93,17 +108,22 @@ class ReplSubcommand(subcommands.Subcommand):
         parser = subparsers.add_parser(
             'repl', help='Open a Python REPL in the RelengAPI application context; '
                          '`app` is the current app.')
+        parser.add_argument("-c", "--command", metavar='COMMAND',
+                            help="Python program passed in as string")
         return parser
 
     def run(self, parser, args):
-        import code
-        # try to get readline for the interactive interpreter (it
-        # only uses it if it's already loaded)
-        try:
-            import readline
-            assert readline
-        except ImportError:
-            readline = None
+        if args.command:
+            exec args.command in {'app': current_app}
+        else:  # pragma: no-cover
+            import code
+            # try to get readline for the interactive interpreter (it
+            # only uses it if it's already loaded)
+            try:
+                import readline
+                assert readline
+            except ImportError:
+                readline = None
 
-        print "'app' is the current application."
-        code.InteractiveConsole(locals={'app': current_app}).interact()
+            print "'app' is the current application."
+            code.InteractiveConsole(locals={'app': current_app}).interact()

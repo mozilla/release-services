@@ -3,6 +3,7 @@ include relengapi/docs/conf.py
 recursive-include relengapi/docs *.rst
 recursive-include relengapi/docs/_static *
 recursive-include relengapi *.html *.jpg *.css *.js *.txt *.map *.eot *.svg *.ttf *.woff
+recursive-include relengapi/alembic *.ini *.mako README *.py
 include LICENSE.txt
 include CONTRIBUTING.rst
 include README.md

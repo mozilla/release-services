@@ -25,9 +25,9 @@ from relengapi.lib.celery import task
 from relengapi.util import tz
 
 import celery
-import logging
+import structlog
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 def add_task_to_history(loanid, msg):

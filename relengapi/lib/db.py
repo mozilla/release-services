@@ -8,6 +8,7 @@ import logging
 import os
 import pytz
 import sqlalchemy as sa
+import structlog
 import threading
 
 from flask import current_app
@@ -22,7 +23,7 @@ from sqlalchemy.orm import scoping
 from sqlalchemy.pool import Pool
 
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 class _QueryProperty(object):

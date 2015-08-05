@@ -4,7 +4,7 @@
 
 import itertools
 import ldap
-import logging
+import structlog
 
 from relengapi import p
 from relengapi.lib.auth import base
@@ -33,7 +33,7 @@ class LdapGroupsAuthz(base.BaseAuthz):
         self.group_base = permissions_cfg['group_base']
         self.debug = permissions_cfg.get('debug')
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = structlog.get_logger()
 
         permissions_stale.connect_via(app)(self.on_permissions_stale)
 

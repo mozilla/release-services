@@ -3,26 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
-import logging.handlers
+import logging
 import os
 import relengapi.app
-import sys
 
 from relengapi.lib import subcommands
-
-
-def setupConsoleLogging(quiet):
-    root = logging.getLogger('')
-    if quiet:
-        root.setLevel(logging.WARNING)
-    else:
-        root.setLevel(logging.NOTSET)
-    formatter = logging.Formatter('%(asctime)s %(message)s')
-
-    stdout_log = logging.StreamHandler(sys.stdout)
-    stdout_log.setLevel(logging.DEBUG)
-    stdout_log.setFormatter(formatter)
-    root.addHandler(stdout_log)
+from relengapi.lib.logging import setupConsoleLogging
 
 
 def main(args=None):
@@ -30,6 +16,8 @@ def main(args=None):
         description="Releng API Command Line Tool")
     parser.add_argument("--quiet", '-q', action='store_true',
                         help="Silence all logging below WARNING level")
+    parser.add_argument("--disable-logging", '-Q', action='store_true',
+                        help="Silence all logging")
     subparsers = parser.add_subparsers(help='sub-command help')
 
     # each of the Subcommand subclasses was loaded when the blueprints were
@@ -41,8 +29,11 @@ def main(args=None):
 
     args = parser.parse_args(args)
 
-    if args._subcommand and args._subcommand.want_logging:
+    if args._subcommand and args._subcommand.want_logging and not args.disable_logging:
         setupConsoleLogging(args.quiet)
+    else:
+        # blueprints.slaveloan.bugzilla complains about not having a handler
+        logging.getLogger().addHandler(logging.NullHandler())
 
     # make the RELENGAPI_SETTINGS env var an absolute path; without this, Flask
     # uses the application's root_dir, which isn't especially helpful in a

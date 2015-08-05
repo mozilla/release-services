@@ -1,0 +1,107 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     License, v. 2.0. If a copy of the MPL was not distributed with this
+     file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<div ng-app='treestatus' id="treestatus" ng-controller="TreeListController">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="pull-right">
+                <button class="btn btn-default"
+                    ng-click="refresh()"><span class="glyphicon glyphicon-refresh">
+            </div>
+            <h1 class="treestatus">TreeStatus</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12" ng-class="{'col-lg-8': can_sheriff}">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="tableCheck" ng-if="can_sheriff">
+                            <input type="checkbox" ng-checked="allChecked()"
+                                   ng-click="checkAllClicked()" />
+                        </th>
+                        <th class="tableName">Name</th>
+                        <th class="tableState">State</th>
+                        <th class="tableReason">Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="(tname, tree) in trees">
+                        <td class="tableCheck" ng-if="can_sheriff">
+                            <input type="checkbox" ng-model="_selected_trees[tname]">
+                        </td>
+                        <td class="tableName">
+                            <a href="/treestatus/details/{{tname|urlencode}}">{{tname}}</a>
+                        </td>
+                        <td class="tableState {{tree.status | status2class}}">
+                            {{tree.status|uppercase}}
+                        </td>
+                    <td class="tableReason" ng-bind-html="tree.reason|linkifyBugs"></td>
+                </tr>
+            </table>
+            <!-- change stack -->
+            <div class="panel panel-primary" ng-if="can_sheriff && stack.length > 0">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Restore Changes</h3>
+                </div>
+                <div class="panel-body">
+                    <ul class="list-group">
+                        <li class="list-group-item" ng-repeat="st in stack">
+                            <div class="pull-right">
+                                <div class="btn-group" role="group" aria-label="options">
+                                    <button ng-click="revertChange(st.id)"
+                                        class="btn btn-xs btn-success">Restore</button>
+                                    <button ng-click="discardChange(st.id)"
+                                        class="btn btn-xs btn-warning">Discard</button>
+                                </div>
+                            </div>
+                            At {{st.when}} UTC, {{st.who|shortName}} changed
+                            <span ng-if="st.trees.length == 1">tree</span>
+                            <span ng-if="st.trees.length != 1">trees</span>
+                            <em>{{st.trees|list}}</em> to
+                            <span ng-bind="st.status|uppercase"
+                                class={{st.status|status2class}}></span>
+                            <span ng-if="st.reason != ''">with reason "{{st.reason}}"</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <!-- delete trees -->
+            <div class="panel panel-primary" ng-if="can_admin && selected_trees.length != 0">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Delete Trees</h3>
+                </div>
+                <div class="panel-body">
+                    <button class="btn btn-block btn-danger"
+                            ng-disabled="selected_trees.length == 0"
+                            ng-click="deleteTrees()">
+                        Delete Selected Trees</button>
+                </div>
+            </div>
+            <!-- add trees -->
+            <div class="panel panel-primary" ng-if="can_admin && selected_trees.length == 0">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Add Tree</h3>
+                </div>
+                <div class="panel-body">
+                    <form novalidate
+                        ng-submit="addTree(new_tree_name); new_tree_name = ''">
+                        <div class="input-group">
+                            <input type="text" placeholder="Tree Name"
+                                class="form-control" ng-model="new_tree_name" />
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary"
+                                    ng-disabled="!new_tree_name">Add</button>
+                            </span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-lg-4" ng-if="can_sheriff">
+            <tree-status-control trees="selected_trees" updated="refresh()">
+            </tree-status-control>
+        </div>
+    </div>
+    <ng-include src="'/treestatus/static/footer.html'">
+</div>

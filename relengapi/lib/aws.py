@@ -8,13 +8,14 @@ import boto
 import importlib
 import json
 import logging
+import structlog
 import threading
 import time
 import wsme.rest.json
 
 from boto.sqs import message as sqs_message
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 class _StopListening(Exception):

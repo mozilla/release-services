@@ -57,3 +57,10 @@ Utilities
             #   File ".../base/relengapi/util/tz.py", line 17, in dt_as_timezone
             #     raise ValueError("Must pass a timezone aware datetime object")
             # ValueError: Must pass a timezone aware datetime object
+
+Request ID
+----------
+
+Each request is assigned a unique ID, available in ``g.request_id``.
+This ID is included in structured logging output.
+It may also be helpful to supply this ID to the user when an error occurs, or anywhere it may be useful for debugging.

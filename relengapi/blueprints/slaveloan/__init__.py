@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import flask_login
-import logging
 import sqlalchemy as sa
+import structlog
 
 from sqlalchemy import asc
 
@@ -32,7 +32,7 @@ from relengapi.blueprints.slaveloan.model import Loans
 from relengapi.blueprints.slaveloan.model import Machines
 from relengapi.blueprints.slaveloan.model import ManualActions
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 bp = Blueprint('slaveloan', __name__,
                template_folder='templates',

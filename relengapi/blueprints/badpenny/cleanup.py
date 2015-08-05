@@ -3,14 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import datetime
-import logging
+import structlog
 
 from flask import current_app
 from relengapi.blueprints.badpenny import tables
 from relengapi.lib import badpenny
 from relengapi.lib import time
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 @badpenny.periodic_task(seconds=24 * 3600)

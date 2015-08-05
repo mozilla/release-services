@@ -19,6 +19,7 @@ setup(
         "Sphinx>=1.3",
         "SQLAlchemy>=0.9.4",
         "Celery>=3.1.16",  # see https://github.com/mozilla/build-relengapi/issues/145
+        "alembic>=0.7.0",
         "argparse",
         "requests",
         "wrapt",
@@ -36,6 +37,7 @@ setup(
         "redo",
         # Temporary freeze until https://github.com/bhearsum/bzrest/pull/3 is fixed
         "bzrest==0.9",
+        "structlog",
     ],
     extras_require={
         'test': [
@@ -73,6 +75,11 @@ setup(
             '*/static/**.svg',
             '*/static/**.ttf',
             '*/static/**.woff',
+        ],
+        'relengapi.alembic' : [
+            '*.ini',
+            '*.py',
+            '*.mako',
         ],
     },
     entry_points={

@@ -17,3 +17,4 @@ Subsequent sections describe the interfaces provided by the individual component
     tooltool
     slaveloan
     archiver
+    treestatus

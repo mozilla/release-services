@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import logging
+import structlog
 import traceback
 
 from flask import current_app
@@ -11,7 +11,7 @@ from relengapi.lib import badpenny
 from relengapi.lib import celery
 from relengapi.lib import time
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 def submit_job(task_name, job_id):
@@ -49,26 +49,27 @@ class JobStatus(object):
 
 @celery.task(ignore_result=True)
 def _run_job(task_name, job_id):
+    log = logger.bind(badpenny_task=task_name, badpenny_job_id=job_id)
     task = badpenny.Task.get(task_name)
     if not task:
-        logger.warning("No such task %r; request dropped", task_name)
+        log.warning("No such task %r; request dropped", task_name)
         return
 
     job = tables.BadpennyJob.query.filter(
         tables.BadpennyJob.id == job_id).first()
     if not job:
-        logger.warning("No job with id %r; request dropped", job_id)
+        log.warning("No job with id %r; request dropped", job_id)
         return
 
     job_status = JobStatus(task_name, job)
 
     job_status._start()
 
-    logger.info("Running task %r id %r" % (task_name, job_id))
+    log.info("Running badpenny task %r id %r" % (task_name, job_id))
     try:
         task.task_func(job_status)
     except Exception:
-        logger.exception("Job %r failed", job_id)
+        log.exception("Job failed")
         job_status.log_message(traceback.format_exc())
         job_status._finish(successful=False)
         return

@@ -2,15 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import logging
 import os
 import pkg_resources
 import relengapi
+import structlog
+import uuid
 import wsme.types
 
 from flask import Flask
 from flask import g
 from flask import render_template
+from flask import request
+from flask.ext.login import current_user
 from relengapi.lib import api
 from relengapi.lib import auth
 from relengapi.lib import aws
@@ -18,6 +21,7 @@ from relengapi.lib import celery
 from relengapi.lib import db
 from relengapi.lib import introspection
 from relengapi.lib import layout
+from relengapi.lib import logging as relengapi_logging
 from relengapi.lib import memcached
 from relengapi.lib import monkeypatches
 from relengapi.lib import permissions
@@ -29,8 +33,6 @@ relengapi.apimethod = api.apimethod
 
 # apply monkey patches
 monkeypatches.monkeypatch()
-
-logger = logging.getLogger(__name__)
 
 
 class BlueprintInfo(wsme.types.Base):
@@ -84,11 +86,15 @@ blueprints = [_load_bp(n) for n in [
     'tokenauth',
     'tooltool',
     'archiver',
+    'treestatus',
 ]]
 
 
 def create_app(cmdline=False, test_config=None):
     app = Flask(__name__)
+    relengapi_logging.configure_logging(app)
+    logger = structlog.get_logger()
+
     env_var = 'RELENGAPI_SETTINGS'
     if test_config:
         app.config.update(**test_config)
@@ -98,6 +104,11 @@ def create_app(cmdline=False, test_config=None):
         else:
             logger.warning("Using default settings; to configure relengapi, set "
                            "%s to point to your settings file" % env_var)
+
+    # reconfigure logging now that we have loaded configuration
+    relengapi_logging.configure_logging(app)
+    # and re-construct the logger to get updated configuration
+    logger = structlog.get_logger()
 
     # add the necessary components to the app
     app.db = db.make_db(app)
@@ -121,9 +132,26 @@ def create_app(cmdline=False, test_config=None):
                        "process restart")
         app.secret_key = os.urandom(24)
 
+    request_id_header = app.config.get('REQUEST_ID_HEADER')
+
+    def get_req_id_uuid():
+        return str(uuid.uuid4())
+
+    def get_req_id_header():
+        return request.headers.get(request_id_header) or get_req_id_uuid()
+    get_req_id = get_req_id_header if request_id_header else get_req_id_uuid
+
     @app.before_request
-    def add_db():
+    def setup_request():
+        # set up `g`
         g.db = app.db
+        g.request_id = get_req_id()
+
+        # reset the logging context, deleting any info for the previous request
+        # in this thread and binding new
+        relengapi_logging.reset_context(
+            request_id=g.request_id,
+            user=str(current_user))
 
     @app.route('/')
     def root():
@@ -140,6 +168,8 @@ def create_app(cmdline=False, test_config=None):
     @api.apimethod(VersionInfo)
     def versions():
         dists = {}
+        log = logger.bind(frobnication_id='12345', permissions=['frob', 'blob'])
+        log.warning("frobnication failed")
         for dist in introspection.get_distributions().itervalues():
             dists[dist.key] = DistributionInfo(
                 project_name=dist.project_name,

@@ -4,9 +4,9 @@
 
 import calendar
 import dateutil.parser
-import logging
 import re
 import sqlalchemy as sa
+import structlog
 import time
 
 from flask import Blueprint
@@ -22,7 +22,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from relengapi import p
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 # logging.basicConfig(level=logging.DEBUG)
 bp = Blueprint('mapper', __name__)
 

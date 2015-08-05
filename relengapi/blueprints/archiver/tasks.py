@@ -1,9 +1,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import logging
+
 import requests
 import shutil
+import structlog
 import tempfile
 
 from boto.s3.key import Key
@@ -13,7 +14,7 @@ from random import randint
 
 from relengapi.lib import celery
 
-log = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 SIGNED_URL_EXPIRY = 300
 TASK_EXPIRY = 1800
@@ -23,13 +24,11 @@ TASK_TIME_OUT = 3600
 def upload_url_archive_to_s3(key, url, buckets):
     s3_urls = {}
 
-    log.info('Key to be uploaded to S3: %s - Verifying src_url: %s', key, url)
+    logger.info('Key to be uploaded to S3: %s - Verifying src_url: %s', key, url)
     resp = requests.get(url, stream=True, timeout=60)
 
     if resp.status_code == 200:
-        log.info('S3 Key: %s - downloading and unpacking archive from src_url', key)
-        # make the source request
-
+        logger.info('S3 Key: %s - downloading and unpacking archive from src_url', key)
         # create a temporary file for it
         tempf = tempfile.TemporaryFile()
         # copy the data, block-by-block, into that file
@@ -51,7 +50,7 @@ def upload_url_archive_to_s3(key, url, buckets):
     else:
         status = "Url not found. Does it exist? url: '{}', response: '{}' ".format(url,
                                                                                    resp.status_code)
-        log.warning(status)
+        logger.warning(status)
 
     resp.close()
 

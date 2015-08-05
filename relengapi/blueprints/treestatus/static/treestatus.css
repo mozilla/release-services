@@ -1,0 +1,99 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@font-face {
+    font-family: 'Open sans';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Open sans') url('/static/opensans.woff');
+}
+
+#treestatus {
+    font-family: sans-serif;
+}
+
+h1.treestatus,
+h2.treestatus,
+h3.treestatus {
+    color: rgb(72,72,72);
+    font-family: 'Open sans', sans-serif;
+    font-weight: bold;
+    text-align: center;
+}
+
+h1.treestatus {
+    font-size: 300%;
+}
+
+#treestatus table {
+    margin-left: auto;
+    margin-right: auto;
+    border-collapse: collapse;
+    min-width: 720px;
+    margin-bottom: 40px;
+}
+
+#treestatus thead {
+    background-color: #0095dd;
+    color: white;
+    font-family: 'Open sans', sans-serif;
+    text-align: left;
+}
+
+#treestatus th {
+    padding: 5px;
+}
+
+#treestatus tr {
+    border-top: 1px solid gray;
+}
+
+#treestatus td {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+#treestatus thead > tr {
+    border: none;
+}
+
+#treestatus a {
+    color:#2983c8;
+    text-decoration:none
+}
+
+#treestatus a:hover, #treestatus a:active{
+    color:#20679e;
+    text-decoration:underline;
+}
+
+#treestatus a:hover.loginout, a:active.loginout {
+    color: white;
+    text-decoration: none;
+}
+
+.tableCheck {
+    min-width: 20px;
+}
+
+.tableName {
+    min-width: 200px;
+}
+
+.tableState {
+    min-width: 100px;
+}
+
+.tableReason {
+    min-width: 400px;
+}
+
+.tableTree {
+    min-width: 200px;
+}
+
+
+#footer {
+    text-align: center;
+}

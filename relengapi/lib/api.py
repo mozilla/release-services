@@ -14,6 +14,7 @@ import wsme.types
 
 from flask import Response
 from flask import current_app
+from flask import g
 from flask import json
 from flask import jsonify
 from flask import render_template
@@ -29,7 +30,9 @@ class JsonHandler(object):
     media_type = 'application/json'
 
     def render_response(self, result, code, headers):
-        resp = jsonify(result=result)
+        resp = jsonify(
+            result=result,
+            request_id=g.request_id)
         resp.status_code = code
         resp.headers.extend(headers)
         return resp
@@ -40,7 +43,7 @@ class JsonHandler(object):
                 'code': exc_value.code,
                 'name': exc_value.name,
                 'description': exc_value.description,
-            })
+            }, request_id=g.request_id)
             resp.status_code = exc_value.code
         else:
             current_app.log_exception((exc_type, exc_value, exc_tb))
@@ -53,7 +56,8 @@ class JsonHandler(object):
                 error['traceback'] = traceback.format_exc().split('\n')
                 error['name'] = exc_type.__name__
                 error['description'] = str(exc_value)
-            resp = jsonify(error=error)
+            resp = jsonify(error=error,
+                           request_id=g.request_id)
             resp.status_code = 500
         return resp
 

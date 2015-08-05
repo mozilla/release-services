@@ -12,14 +12,13 @@ env:
 install:
   - "pip install -e .[test]"
   - "pip install coverage"
-  - "pip install coveralls"
   - "pip install codecov"
   - "pip freeze"
+  - "pip install MySQL-python"
 
 # run everything in a single script, so we get a nice summary at the end
 script:
   - bash ./validate.sh
 
 after_success:
-  - coveralls --rcfile coveragerc
   - codecov
