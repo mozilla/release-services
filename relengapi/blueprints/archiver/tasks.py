@@ -27,7 +27,7 @@ def upload_url_archive_to_s3(key, url, buckets):
     resp = requests.get(url, stream=True, timeout=60)
 
     if resp.status_code == 200:
-        log.info('Key to be uploaded to S3: %s - downloading and unpacking archive from src_url', key)
+        log.info('S3 Key: %s - downloading and unpacking archive from src_url', key)
         # make the source request
 
         # create a temporary file for it
@@ -44,9 +44,10 @@ def upload_url_archive_to_s3(key, url, buckets):
             k.set_metadata('Content-Type', resp.headers['Content-Type'])
             # give it the same attachment filename
             k.set_metadata('Content-Disposition', resp.headers['Content-Disposition'])
-            k.set_contents_from_file(tempf, rewind=True)   # rewind points tempf back to start for us
+            k.set_contents_from_file(tempf, rewind=True)   # rewind points tempf back to start
             s3_urls[region] = s3.generate_url(expires_in=SIGNED_URL_EXPIRY, method='GET',
                                               bucket=buckets[region], key=key)
+        status = "Task completed! Check 's3_urls' for upload locations."
     else:
         status = "Url not found. Does it exist? url: '{}', response: '{}' ".format(url,
                                                                                    resp.status_code)
@@ -54,7 +55,7 @@ def upload_url_archive_to_s3(key, url, buckets):
 
     resp.close()
 
-    return s3_urls
+    return s3_urls, status
 
 
 @celery.task(bind=True, track_started=True, max_retries=3,
@@ -71,12 +72,12 @@ def create_and_upload_archive(self, src_url, key):
 
     task is killed if exceeds time_limit of an hour after it has started
     """
-    status = "Task completed! Check 's3_urls' for upload locations."
+    status = ""
     s3_urls = {}
     buckets = current_app.config['ARCHIVER_S3_BUCKETS']
 
     try:
-        s3_urls = upload_url_archive_to_s3(key, src_url, buckets)
+        s3_urls, status = upload_url_archive_to_s3(key, src_url, buckets)
     except Exception as exc:
         # set a jitter enabled delay
         # where an aggressive delay would result in: 7s, 49s, and 343s
