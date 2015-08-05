@@ -253,10 +253,7 @@ def get_projects():
     # (documentation in relengapi/docs/usage/mapper.rst)
     session = g.db.session('mapper')
     q = session.query(Project)
-    try:
-        rows = q.all()
-    except NoResultFound:
-        rows = []
+    rows = q.all()
     return jsonify(projects=[x.name for x in rows])
 
 

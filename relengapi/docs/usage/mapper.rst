@@ -83,9 +83,10 @@ Maps are represented in a text format, with one mapping per line, in the format 
 .. api:endpoint:: mapper.projects
     GET /mapper/projects
 
-    :respose: JSON list of defined projects
+    :respose: JSON list of defined project names
 
-    Return the list of defined projects
+    Return the list of defined project names, which are valid for the
+    "<project>" parameter in other API calls
 
     Exceptions:
         None

@@ -47,7 +47,7 @@ def db_teardown(app):
 
 def set_projects(app, new_list=[]):
     engine = app.db.engine("mapper")
-    engine.execute("delete from projects")
+    app.db.session('mapper').query(Project).delete()
     Session.configure(bind=engine)
     session = Session()
     for new_proj in new_list:
