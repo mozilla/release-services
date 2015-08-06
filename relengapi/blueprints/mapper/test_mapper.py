@@ -27,29 +27,24 @@ SHAFILE = "%s %s\n%s %s\n%s %s\n" % (
     SHA2, SHA2R,
     SHA3, SHA3R)
 
-Session = sessionmaker()
-
 
 def db_setup(app):
-    engine = app.db.engine("mapper")
-    Session.configure(bind=engine)
-    session = Session()
+    session = app.db.session('mapper')
     project = Project(name='proj')
     session.add(project)
     session.commit()
 
 
 def db_teardown(app):
-    engine = app.db.engine("mapper")
-    engine.execute("delete from hashes")
-    engine.execute("delete from projects")
+    session = app.db.session('mapper')
+    session.query(Hash).delete()
+    session.query(Project).delete()
+    session.commit()
 
 
 def set_projects(app, new_list=[]):
-    engine = app.db.engine("mapper")
-    app.db.session('mapper').query(Project).delete()
-    Session.configure(bind=engine)
-    session = Session()
+    session = app.db.session('mapper')
+    session.query(Project).delete()
     for new_proj in new_list:
         project = Project(name=new_proj)
         session.add(project)
@@ -75,9 +70,7 @@ test_context = TestContext(databases=['mapper'],
 
 
 def insert_some_hashes(app):
-    engine = app.db.engine("mapper")
-    Session.configure(bind=engine)
-    session = Session()
+    session = app.db.session('mapper')
     project = session.query(Project).filter(Project.name == 'proj').one()
     session.add(
         Hash(git_commit=SHA1, hg_changeset=SHA1R, project=project, date_added=12345))
@@ -89,9 +82,7 @@ def insert_some_hashes(app):
 
 
 def hash_pair_exists(app, git, hg):
-    engine = app.db.engine("mapper")
-    Session.configure(bind=engine)
-    session = Session()
+    session = app.db.session('mapper')
     try:
         session.query(Hash).filter(Hash.hg_changeset == hg).filter(
             Hash.git_commit == git).one()
