@@ -1,0 +1,6 @@
+relengapi-3.2.1
+===============
+
+* Better support for relative directories in ``alembic.ini`` (#321)
+
+* Add a mapper enpoint to enumerate all objects (#318)
