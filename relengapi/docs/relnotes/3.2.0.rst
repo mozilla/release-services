@@ -1,0 +1,8 @@
+relengapi-3.2.0
+===============
+
+* Add Alembic support for database migrations (#300, #315, #316)
+* Add support for structured logging (using structlog) (#220)
+* Port the ``treestatus`` app to a RelengAPI blueprint (#308)
+* Put a time limit on individual requests from archiver to hg.mozilla.org (#319)
+* Run the celery ``backend_cleanup`` task via BadPenny (#312)

@@ -7,7 +7,7 @@ from setuptools import setup
 
 setup(
     name='relengapi',
-    version='3.1.5',
+    version='3.2.0',
     description='The code behind https://api.pub.build.mozilla.org',
     author='Dustin J. Mitchell',
     author_email='dustin@mozilla.com',
