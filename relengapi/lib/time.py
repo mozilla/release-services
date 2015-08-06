@@ -8,8 +8,3 @@ import pytz
 
 def now():
     return datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
-
-
-def seconds_from_epoch(time):
-    return int(
-        (time - datetime.datetime.utcfromtimestamp(0).replace(tzinfo=pytz.UTC)).total_seconds())

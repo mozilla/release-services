@@ -66,7 +66,7 @@ def mkbatch(message="a batch", ttl=None):
         },
     }
     if ttl:
-        batch['files']['one']['ttl'] = ttl
+        batch['files']['one']['ttl'] = ttl*86400
     return batch
 
 
