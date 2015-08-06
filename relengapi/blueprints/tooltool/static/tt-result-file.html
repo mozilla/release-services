@@ -15,5 +15,8 @@
         <span class="tt-filesize">{{res.size}} bytes</span> -
         <span ng-if="res.visibility == 'public'" class="text-muted">PUBLIC</span>
         <span ng-if="res.visibility == 'internal'" class="text-danger">INTERNAL</span>
+        <span ng-if="res.ttl != 0">
+            - <span class="text-muted">Expires {{ res.ttl | date:'mediumDate' }}</span>
+        </span>
     </div>
 </div>

@@ -6,6 +6,7 @@ import sqlalchemy as sa
 
 from relengapi.blueprints.tooltool import types
 from relengapi.lib import db
+from relengapi.lib import time
 
 allowed_regions = ('us-east-1', 'us-west-1', 'us-west-2')
 
@@ -32,12 +33,17 @@ class File(db.declarative_base('relengapi')):
         return {bf.filename: bf.batch for bf in self._batches}
 
     def to_json(self, include_instances=False):
+        if self.expires is None or self.expires < time.now():
+            expires = 0
+        else:  # pragma: no cover
+            expires = time.seconds_from_epoch(self.expires)*1000
         rv = types.File(
             size=self.size,
             digest=self.sha512,
             algorithm='sha512',
             visibility=self.visibility,
-            has_instances=any(self.instances))
+            has_instances=any(self.instances),
+            ttl=expires)
         if include_instances:
             rv.instances = [i.region for i in self.instances]
         return rv
