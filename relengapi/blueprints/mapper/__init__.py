@@ -248,6 +248,15 @@ def get_mapfile_since(projects, since):
     return mapfile
 
 
+@bp.route('/projects', methods=('GET',))
+def get_projects():
+    # (documentation in relengapi/docs/usage/mapper.rst)
+    session = g.db.session('mapper')
+    q = session.query(Project)
+    rows = q.all()
+    return jsonify(projects=[x.name for x in rows])
+
+
 def _insert_many(project, ignore_dups=False):
     """Update the database with many git-hg mappings.
 

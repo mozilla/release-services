@@ -11,7 +11,6 @@ from relengapi.blueprints.mapper import Hash
 from relengapi.blueprints.mapper import Project
 from relengapi.lib import auth
 from relengapi.lib.testing.context import TestContext
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -27,22 +26,28 @@ SHAFILE = "%s %s\n%s %s\n%s %s\n" % (
     SHA2, SHA2R,
     SHA3, SHA3R)
 
-Session = sessionmaker()
-
 
 def db_setup(app):
-    engine = app.db.engine("mapper")
-    Session.configure(bind=engine)
-    session = Session()
+    session = app.db.session('mapper')
     project = Project(name='proj')
     session.add(project)
     session.commit()
 
 
 def db_teardown(app):
-    engine = app.db.engine("mapper")
-    engine.execute("delete from hashes")
-    engine.execute("delete from projects")
+    session = app.db.session('mapper')
+    session.query(Hash).delete()
+    session.query(Project).delete()
+    session.commit()
+
+
+def set_projects(app, new_list=[]):
+    session = app.db.session('mapper')
+    session.query(Project).delete()
+    for new_proj in new_list:
+        project = Project(name=new_proj)
+        session.add(project)
+    session.commit()
 
 
 class User(auth.BaseUser):
@@ -64,9 +69,7 @@ test_context = TestContext(databases=['mapper'],
 
 
 def insert_some_hashes(app):
-    engine = app.db.engine("mapper")
-    Session.configure(bind=engine)
-    session = Session()
+    session = app.db.session('mapper')
     project = session.query(Project).filter(Project.name == 'proj').one()
     session.add(
         Hash(git_commit=SHA1, hg_changeset=SHA1R, project=project, date_added=12345))
@@ -78,9 +81,7 @@ def insert_some_hashes(app):
 
 
 def hash_pair_exists(app, git, hg):
-    engine = app.db.engine("mapper")
-    Session.configure(bind=engine)
-    session = Session()
+    session = app.db.session('mapper')
     try:
         session.query(Hash).filter(Hash.hg_changeset == hg).filter(
             Hash.git_commit == git).one()
@@ -274,4 +275,34 @@ def test_add_project_existing(client):
     # TODO: check that return is JSON, once it is
 
 
+@test_context
+def test_query_all_projects_1_result(client):
+    rv = client.get('/mapper/projects')
+    eq_(rv.status_code, 200)
+    eq_(json.loads(rv.data), {
+        "projects": ["proj", ]
+    })
+
+
+@test_context
+def test_query_all_projects(app, client):
+    # add some extra projects
+    projects = ['p%d' % x for x in range(10)]
+    set_projects(app, projects)
+    rv = client.get('/mapper/projects')
+    eq_(rv.status_code, 200)
+    eq_(json.loads(rv.data), {
+        "projects": projects
+        })
+
+
+@test_context
+def test_query_all_projects_0_results(app, client):
+    # add some extra projects
+    set_projects(app, [])
+    rv = client.get('/mapper/projects')
+    eq_(rv.status_code, 200)
+    eq_(json.loads(rv.data), {
+        "projects": []
+        })
 # TODO: also assert content types
