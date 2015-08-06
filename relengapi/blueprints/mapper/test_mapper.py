@@ -11,7 +11,6 @@ from relengapi.blueprints.mapper import Hash
 from relengapi.blueprints.mapper import Project
 from relengapi.lib import auth
 from relengapi.lib.testing.context import TestContext
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
 
