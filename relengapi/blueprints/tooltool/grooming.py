@@ -26,7 +26,7 @@ def check_pending_uploads(job_status):
     session.commit()
 
 
-@badpenny.periodic_task(seconds=3600)
+@badpenny.periodic_task(seconds=86400)
 def check_file_expirations(job_status):
     """ Check for files that are set to expire and remove them if found."""
     session = current_app.db.session('relengapi')
@@ -122,7 +122,8 @@ def remove_file_pending_deletion(session, file):
         target_bucket = config[instance.region]
         conn = current_app.aws.connect_to('s3', instance.region)
         bucket = conn.get_bucket(target_bucket)
-        bucket.delete_key(key_name)
+        if bucket.get_key(key_name):
+            bucket.delete_key(key_name)
         session.delete(instance)
     session.commit()
 

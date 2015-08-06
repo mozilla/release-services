@@ -161,7 +161,7 @@ def upload_batch(region=None, body=None):
             raise BadRequest("Cannot change a file's visibility level")
         pending_expiry = None
         if info.ttl and info.ttl > 0:
-            pending_expiry = time.now() + datetime.timedelta(info.ttl)
+            pending_expiry = time.now() + datetime.timedelta(seconds=info.ttl)
         if file:
             # Make this file permanent
             if not info.ttl:

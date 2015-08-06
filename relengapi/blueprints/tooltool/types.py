@@ -31,7 +31,8 @@ class File(wsme.types.Base):
     #: Boolean to determine whether the file is available to download.
     has_instances = bool
 
-    #: The time to live for the file, in days
+    #: The time to live for the file, in seconds relative from now uploaded from the client
+    #: When used to display dates server side, it is time relative from epoch in milliseconds
     ttl = int
 
     #: The regions containing an instance of this file.  This field is generally
