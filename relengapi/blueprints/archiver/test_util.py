@@ -1,5 +1,7 @@
 import mock
 
+import requests
+
 from StringIO import StringIO
 from boto.s3.key import Key
 
@@ -71,6 +73,7 @@ def fake_200_response():
 def fake_404_response():
     response = mock.Mock()
     response.status_code = 404
+    response.raise_for_status.side_effect = requests.exceptions.HTTPError('does not exist yo!')
     return response
 
 

@@ -43,11 +43,12 @@ def test_invalid_hg_url(app):
     src_url = cfg['ARCHIVER_HGMO_URL_TEMPLATE'].format(repo=repo, rev=rev, suffix=suffix,
                                                        subdir='testing/mozharness')
     with app.app_context():
-        with mock.patch("relengapi.blueprints.archiver.tasks.requests.head") as head:
-            head.return_value = fake_404_response()
+        with mock.patch("relengapi.blueprints.archiver.tasks.requests.get") as get:
+            get.return_value = fake_404_response()
             task = create_and_upload_archive.apply_async(args=[src_url, key],
                                                          task_id=key.replace('/', '_'))
-    assert "Url not found." in task.info.get('status', {}), "invalid hg url was not caught!"
+    assert "Could not get a valid response from src_url" in task.info.get('status', {}), \
+        "invalid hg url was not caught!"
 
 
 @moto.mock_s3
