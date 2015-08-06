@@ -52,6 +52,8 @@ class CreateDBSubcommand(subcommands.Subcommand):
         return parser
 
     def run(self, parser, args):
+        # alembic.ini uses relative paths, so set the working directory
+        os.chdir(os.path.dirname(os.path.dirname(relengapi.__file__)))
         for dbname in current_app.db.database_names:
             logger.info("creating tables for database %s", dbname)
             meta = current_app.db.metadata[dbname]
