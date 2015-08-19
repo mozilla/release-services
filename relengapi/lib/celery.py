@@ -21,6 +21,13 @@ logger = structlog.get_logger()
 
 
 def make_celery(app):
+    # default to using JSON, rather than Pickle (Celery's default, but Celery
+    # warns about it)
+    for var, dfl in [
+            ('CELERY_ACCEPT_CONTENT', ['json']),
+            ('CELERY_TASK_SERIALIZER', 'json'),
+            ('CELERY_RESULT_SERIALIZER', 'json')]:
+        app.config[var] = app.config.get(var, dfl)
     broker = app.config.get('CELERY_BROKER_URL', 'memory://')
     celery = Celery(app.import_name, broker=broker)
     celery.conf.update(app.config)
