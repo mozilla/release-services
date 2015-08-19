@@ -81,7 +81,7 @@ Decorator
 
 All API view methods should be wrapped with :py:func:`~relengapi.lib.api.apimethod`, which is available in the ``relengapi`` namespace::
 
-    from relengapi import apimethod
+    from relengapi.lib.api import apimethod
     ...
     @bp.route('/widget/<int:widget_id>')
     @apimethod(Widget, int)

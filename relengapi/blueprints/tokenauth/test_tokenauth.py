@@ -11,7 +11,6 @@ from datetime import datetime
 from flask import json
 from flask.ext.login import current_user
 from nose.tools import eq_
-from relengapi import p
 from relengapi.blueprints.tokenauth import types
 from relengapi.blueprints.tokenauth.tables import Token
 from relengapi.blueprints.tokenauth.util import FakeSerializer
@@ -21,6 +20,7 @@ from relengapi.blueprints.tokenauth.util import insert_usr
 from relengapi.blueprints.tokenauth.util import prm_json
 from relengapi.blueprints.tokenauth.util import usr_json
 from relengapi.lib import auth
+from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
 from wsme.rest.json import fromjson
 from wsme.rest.json import tojson

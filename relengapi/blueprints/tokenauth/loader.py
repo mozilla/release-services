@@ -5,10 +5,10 @@
 import structlog
 import time
 
-from relengapi import p
 from relengapi.blueprints.tokenauth import tables
 from relengapi.blueprints.tokenauth import tokenstr
 from relengapi.lib import auth
+from relengapi.lib.permissions import p
 from werkzeug.exceptions import BadRequest
 
 logger = structlog.get_logger()

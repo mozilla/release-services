@@ -26,10 +26,10 @@ from models import Build
 from models import ClobberTime
 from models import DB_DECLARATIVE_BASE
 
-from relengapi import apimethod
-from relengapi import p
 from relengapi.lib import angular
 from relengapi.lib import api
+from relengapi.lib.api import apimethod
+from relengapi.lib.permissions import p
 
 logger = structlog.get_logger()
 

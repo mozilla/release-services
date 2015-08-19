@@ -6,10 +6,10 @@ import json
 import mock
 
 from nose.tools import eq_
-from relengapi import p
 from relengapi.blueprints.mapper import Hash
 from relengapi.blueprints.mapper import Project
 from relengapi.lib import auth
+from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound

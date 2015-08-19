@@ -11,9 +11,9 @@ import unittest
 
 from nose.tools import assert_raises
 from nose.tools import eq_
-from relengapi import p
 from relengapi.lib import auth
 from relengapi.lib.auth.perms_types import ldap_groups
+from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
 
 p.test_lga.foo.doc("Foo")

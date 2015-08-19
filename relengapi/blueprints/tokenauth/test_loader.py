@@ -6,13 +6,13 @@ import mock
 
 from flask import json
 from nose.tools import eq_
-from relengapi import p
 from relengapi.blueprints.tokenauth import loader
 from relengapi.blueprints.tokenauth import tables
 from relengapi.blueprints.tokenauth.test_tokenauth import test_context
 from relengapi.blueprints.tokenauth.util import FakeSerializer
 from relengapi.blueprints.tokenauth.util import insert_prm
 from relengapi.blueprints.tokenauth.util import insert_usr
+from relengapi.lib.permissions import p
 
 
 def test_TokenUser_str_tmp():

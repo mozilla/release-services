@@ -13,13 +13,13 @@ from flask import g
 from flask import render_template
 from flask import url_for
 from flask.ext.login import current_user
-from relengapi import apimethod
-from relengapi import p
 from relengapi.blueprints.slaveloan import task_groups
 from relengapi.blueprints.slaveloan.slave_mappings import slave_patterns
 from relengapi.blueprints.slaveloan.slave_mappings import slave_to_slavetype
 from relengapi.lib import angular
 from relengapi.lib import api
+from relengapi.lib.api import apimethod
+from relengapi.lib.permissions import p
 from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import InternalServerError

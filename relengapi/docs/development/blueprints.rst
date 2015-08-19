@@ -27,7 +27,7 @@ Within ``__init__.py``, create a new blueprint::
     import structlog
 
     from flask import Blueprint
-    from relengapi import apimethod
+    from relengapi.lib.api import apimethod
 
     logger = structlog.get_logger()
     bp = Blueprint('bubbler', __name__,

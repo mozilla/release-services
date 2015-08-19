@@ -6,10 +6,10 @@ import contextlib
 import mock
 
 from nose.tools import eq_
-from relengapi import p
 from relengapi.blueprints.tokenauth import tables
 from relengapi.blueprints.tokenauth import usermonitor
 from relengapi.blueprints.tokenauth.util import insert_usr
+from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
 
 p.test_usermonitor.a.doc("A")

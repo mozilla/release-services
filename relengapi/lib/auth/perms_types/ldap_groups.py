@@ -6,9 +6,9 @@ import itertools
 import ldap
 import structlog
 
-from relengapi import p
 from relengapi.lib.auth import base
 from relengapi.lib.auth import permissions_stale
+from relengapi.lib.permissions import p
 
 
 class LdapGroupsAuthz(base.BaseAuthz):

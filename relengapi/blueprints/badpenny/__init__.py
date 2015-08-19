@@ -7,8 +7,6 @@ import structlog
 from flask import Blueprint
 from flask import current_app
 from flask import url_for
-from relengapi import apimethod
-from relengapi import p
 from relengapi.blueprints.badpenny import cleanup
 from relengapi.blueprints.badpenny import cron
 from relengapi.blueprints.badpenny import execution
@@ -18,6 +16,8 @@ from relengapi.lib import angular
 from relengapi.lib import api
 from relengapi.lib import permissions
 from relengapi.lib import time
+from relengapi.lib.api import apimethod
+from relengapi.lib.permissions import p
 from werkzeug.exceptions import NotFound
 
 logger = structlog.get_logger()

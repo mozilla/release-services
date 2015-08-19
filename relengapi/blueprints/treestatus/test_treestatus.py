@@ -9,11 +9,11 @@ import pprint
 from contextlib import contextmanager
 from flask import json
 from nose.tools import eq_
-from relengapi import p
 from relengapi.blueprints import treestatus
 from relengapi.blueprints.treestatus import model
 from relengapi.blueprints.treestatus import types
 from relengapi.lib import auth
+from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
 
 

@@ -14,8 +14,6 @@ from flask import g
 from flask import url_for
 from flask.ext.login import current_user
 from flask.ext.login import login_required
-from relengapi import apimethod
-from relengapi import p
 from relengapi.blueprints.tokenauth import loader
 from relengapi.blueprints.tokenauth import tables
 from relengapi.blueprints.tokenauth import tokenstr
@@ -23,6 +21,8 @@ from relengapi.blueprints.tokenauth import types
 from relengapi.blueprints.tokenauth import usermonitor
 from relengapi.lib import angular
 from relengapi.lib import api
+from relengapi.lib.api import apimethod
+from relengapi.lib.permissions import p
 from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import Forbidden
