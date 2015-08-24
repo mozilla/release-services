@@ -31,6 +31,9 @@ class File(wsme.types.Base):
     #: Boolean to determine whether the file is available to download.
     has_instances = bool
 
+    #: The time to live for the file, in seconds relative from the current time
+    ttl = int
+
     #: The regions containing an instance of this file.  This field is generally
     #: omitted except where specified
     instances = [unicode]

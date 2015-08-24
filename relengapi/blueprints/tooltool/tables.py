@@ -6,6 +6,7 @@ import sqlalchemy as sa
 
 from relengapi.blueprints.tooltool import types
 from relengapi.lib import db
+from relengapi.lib import time
 
 allowed_regions = ('us-east-1', 'us-west-1', 'us-west-2')
 
@@ -21,6 +22,7 @@ class File(db.declarative_base('relengapi')):
     size = sa.Column(sa.Integer, nullable=False)
     sha512 = sa.Column(sa.String(128), unique=True, nullable=False)
     visibility = sa.Column(sa.Enum('public', 'internal'), nullable=False)
+    expires = sa.Column(db.UTCDateTime, index=True, nullable=True)
 
     instances = sa.orm.relationship('FileInstance', backref='file')
 
@@ -37,6 +39,8 @@ class File(db.declarative_base('relengapi')):
             algorithm='sha512',
             visibility=self.visibility,
             has_instances=any(self.instances))
+        if self.expires is not None and self.expires > time.now():  # pragma: no cover
+            rv.ttl = int((self.expires - time.now()).total_seconds())
         if include_instances:
             rv.instances = [i.region for i in self.instances]
         return rv
