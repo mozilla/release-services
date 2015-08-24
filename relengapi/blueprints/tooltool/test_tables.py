@@ -2,6 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import contextlib
+import datetime
+import mock
+import pytz
+import wsme
+
 from nose.tools import eq_
 from relengapi.blueprints.tooltool import tables
 from relengapi.lib import time
@@ -34,3 +40,27 @@ def test_file_batches_relationship(app):
     with app.app_context():
         batch = tables.Batch.query.first()
         eq_(batch.files['foo.txt'].sha512, 'abcd')
+
+
+@contextlib.contextmanager
+def set_time(now):
+    with mock.patch('relengapi.lib.time.now') as fake_now:
+        fake_now.return_value = now
+        yield
+
+
+@test_context
+def test_expires_to_ttl_unset(app):
+    f = tables.File(size=100, sha512='ffffff',
+                    visibility='internal', expires=None)
+    eq_(f.to_json().ttl, wsme.Unset)
+
+
+@test_context
+def test_expires_to_ttl_set(app):
+    now = datetime.datetime(2015, 8, 22, tzinfo=pytz.UTC)
+    later = now + datetime.timedelta(hours=2)
+    f = tables.File(size=100, sha512='ffffff',
+                    visibility='internal', expires=later)
+    with set_time(now):
+        eq_(f.to_json().ttl, 7200)

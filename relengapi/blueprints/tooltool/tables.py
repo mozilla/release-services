@@ -39,7 +39,7 @@ class File(db.declarative_base('relengapi')):
             algorithm='sha512',
             visibility=self.visibility,
             has_instances=any(self.instances))
-        if self.expires is not None and self.expires > time.now():  # pragma: no cover
+        if self.expires is not None and self.expires > time.now():
             rv.ttl = int((self.expires - time.now()).total_seconds())
         if include_instances:
             rv.instances = [i.region for i in self.instances]
