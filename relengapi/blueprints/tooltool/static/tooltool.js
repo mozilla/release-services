@@ -24,9 +24,6 @@ angular.module('tooltool').controller('TTSearchController',
             while: 'searching files',
         }).then(function(response) {
             $scope.file_results = response.data.result;
-            $scope.file_results.forEach(function(el, idx, arr) {
-                arr[idx].date = el.ttl ? new Date().getTime() + el.ttl*1000 : 0;
-            });
         });
 
         restapi({

@@ -122,7 +122,6 @@ run_migrations_test () {
     run_offline_test=${1:-false}
     unset RELENGAPI_SETTINGS
     database_names=$(relengapi -Q repl -c 'print(" ".join(app.db.database_names))')
-
     mysql_options="-u ${MYSQL_USER} -h ${MYSQL_HOST}"
     test_dir=$(mktemp -d)
 

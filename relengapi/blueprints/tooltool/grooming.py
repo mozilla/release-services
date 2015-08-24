@@ -26,19 +26,6 @@ def check_pending_uploads(job_status):
     session.commit()
 
 
-@badpenny.periodic_task(seconds=86400)
-def check_file_expirations(job_status):
-    """ Check for files that are set to expire and remove them if found."""
-    session = current_app.db.session('relengapi')
-    expired_files = tables.File\
-                          .query\
-                          .filter(tables.File.expires is not None)\
-                          .filter(tables.File.expires < time.now())
-    for expired in expired_files:
-        remove_file_pending_deletion(session, expired)
-    session.commit()
-
-
 @badpenny.periodic_task(seconds=3600)
 def replicate(job_status):
     """Replicate objects between regions as necessary"""
@@ -111,20 +98,6 @@ def check_file_pending_uploads(sha512):
     if file:
         for pu in file.pending_uploads:
             check_pending_upload(session, pu)
-    session.commit()
-
-
-def remove_file_pending_deletion(session, file):
-    """Remove all instances of a file"""
-    config = current_app.config['TOOLTOOL_REGIONS']
-    key_name = util.keyname(file.sha512)
-    for instance in file.instances:
-        target_bucket = config[instance.region]
-        conn = current_app.aws.connect_to('s3', instance.region)
-        bucket = conn.get_bucket(target_bucket)
-        if bucket.get_key(key_name):
-            bucket.delete_key(key_name)
-        session.delete(instance)
     session.commit()
 
 
