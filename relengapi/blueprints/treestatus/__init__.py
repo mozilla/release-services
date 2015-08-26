@@ -134,9 +134,10 @@ def get_trees():
     return trees
 
 
-@bp.route('/compat/trees/')
+@bp.route('/v0/trees')
+@bp.route('/v0/trees/')
 @public_data
-def compat_get_trees():
+def v0_get_trees():
     """
     Get the status of all trees in a format compatible with the old
     treestatus
@@ -168,9 +169,9 @@ def get_tree(tree):
     return j
 
 
-@bp.route('/compat/trees/<path:tree>')
+@bp.route('/v0/trees/<path:tree>')
 @public_data
-def compat_get_tree(tree):
+def v0_get_tree(tree):
     """
     Get the status of a single tree in a format compatible with the old
     treestatus

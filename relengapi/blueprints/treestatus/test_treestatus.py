@@ -210,11 +210,11 @@ def test_get_trees(client):
 
 
 @test_context
-def test_compat_get_trees(client):
-    """Getting /treestatus/compat/trees/ results in a dictionary of trees keyed
+def test_v0_get_trees(client):
+    """Getting /treestatus/v0/trees/ results in a dictionary of trees keyed
     by name, without the usual `result` wrapper, with content-type
     application/json, and with a no-cache header and ACAO *"""
-    resp = client.get('/treestatus/compat/trees/')
+    resp = client.get('/treestatus/v0/trees/')
     eq_(json.loads(resp.data), {'tree1': tree1_json})
     eq_(resp.headers['Content-Type'], 'application/json')
     eq_(resp.headers['Cache-Control'], 'no-cache')
@@ -222,11 +222,21 @@ def test_compat_get_trees(client):
 
 
 @test_context
-def test_compat_get_tree(client):
-    """Getting /treestatus/compat/tree/ results in a single tree, without the
+def test_v0_get_trees_no_slash(client):
+    """Getting /treestatus/v0/trees is the same as /v0/trees/"""
+    resp = client.get('/treestatus/v0/trees/')
+    eq_(json.loads(resp.data), {'tree1': tree1_json})
+    eq_(resp.headers['Content-Type'], 'application/json')
+    eq_(resp.headers['Cache-Control'], 'no-cache')
+    eq_(resp.headers['Access-Control-Allow-Origin'], '*')
+
+
+@test_context
+def test_v0_get_tree(client):
+    """Getting /treestatus/v0/tree/ results in a single tree, without the
     usual `result` wrapper, with content-type application/json, and with a
     no-cache header and ACAO *"""
-    resp = client.get('/treestatus/compat/trees/tree1')
+    resp = client.get('/treestatus/v0/trees/tree1')
     eq_(json.loads(resp.data), tree1_json)
     eq_(resp.headers['Content-Type'], 'application/json')
     eq_(resp.headers['Cache-Control'], 'no-cache')
