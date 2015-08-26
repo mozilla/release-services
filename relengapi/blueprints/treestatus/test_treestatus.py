@@ -210,6 +210,30 @@ def test_get_trees(client):
 
 
 @test_context
+def test_compat_get_trees(client):
+    """Getting /treestatus/compat/trees/ results in a dictionary of trees keyed
+    by name, without the usual `result` wrapper, with content-type
+    application/json, and with a no-cache header and ACAO *"""
+    resp = client.get('/treestatus/compat/trees/')
+    eq_(json.loads(resp.data), {'tree1': tree1_json})
+    eq_(resp.headers['Content-Type'], 'application/json')
+    eq_(resp.headers['Cache-Control'], 'no-cache')
+    eq_(resp.headers['Access-Control-Allow-Origin'], '*')
+
+
+@test_context
+def test_compat_get_tree(client):
+    """Getting /treestatus/compat/tree/ results in a single tree, without the
+    usual `result` wrapper, with content-type application/json, and with a
+    no-cache header and ACAO *"""
+    resp = client.get('/treestatus/compat/trees/tree1')
+    eq_(json.loads(resp.data), tree1_json)
+    eq_(resp.headers['Content-Type'], 'application/json')
+    eq_(resp.headers['Cache-Control'], 'no-cache')
+    eq_(resp.headers['Access-Control-Allow-Origin'], '*')
+
+
+@test_context
 def test_get_tree(client):
     """Getting /treestatus/trees/tree1 results in the tree data, with a
     no-cache header and ACAO *"""

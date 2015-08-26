@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import flask
 import json
 import logging
 import sqlalchemy as sa
@@ -133,6 +134,19 @@ def get_trees():
     return trees
 
 
+@bp.route('/compat/trees/')
+@public_data
+def compat_get_trees():
+    """
+    Get the status of all trees in a format compatible with the old
+    treestatus
+    """
+    trees = api.get_data(get_trees)
+    resp = flask.Response(api.dumps({unicode: types.JsonTree}, trees))
+    resp.headers['content-type'] = 'application/json'
+    return resp
+
+
 @bp.route('/trees/<path:tree>')
 @public_data
 @apimethod(types.JsonTree, unicode)
@@ -152,6 +166,19 @@ def get_tree(tree):
     j = t.to_json()
     tree_cache_set(tree, j)
     return j
+
+
+@bp.route('/compat/trees/<path:tree>')
+@public_data
+def compat_get_tree(tree):
+    """
+    Get the status of a single tree in a format compatible with the old
+    treestatus
+    """
+    tree = api.get_data(get_tree, tree)
+    resp = flask.Response(api.dumps(types.JsonTree, tree))
+    resp.headers['content-type'] = 'application/json'
+    return resp
 
 
 @bp.route('/trees/<path:tree_name>', methods=['PUT'])
