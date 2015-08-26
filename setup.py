@@ -25,7 +25,7 @@ setup(
         "wrapt",
         "blinker",  # required to use flask signals
         "pytz",
-        "wsme",
+        "wsme<0.8",  # see https://github.com/mozilla/build-relengapi/issues/325
         "croniter",
         "python-dateutil",
         "simplejson",

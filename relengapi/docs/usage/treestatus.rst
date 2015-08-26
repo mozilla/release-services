@@ -30,3 +30,9 @@ Endpoints
 ---------
 
 .. api:autoendpoint:: treestatus.*
+
+Compatibility Endpoints
+.......................
+
+The paths ``/treestatus/compat/trees/`` and ``/treestatus/compat/trees/<tree>`` provide the same data as ``/treestatus/trees`` and ``/treestatus/trees/<tree>``, but without the ``result`` wrapper object.
+These paths provide support for the API calls used against https://treestatus.mozilla.org.
