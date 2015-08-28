@@ -107,7 +107,7 @@ relengapi -Q build-docs || not_ok "build-docs failed"
 finish_step
 
 start_step "running tests (under coverage)"
-coverage run --append --rcfile=coveragerc --source=relengapi $(which relengapi) run-tests -- -v || not_ok "tests failed"
+coverage run --append --rcfile=coveragerc --source=relengapi $(which relengapi) run-tests || not_ok "tests failed"
 finish_step
 
 start_step "checking alembic heads"

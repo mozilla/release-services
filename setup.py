@@ -47,7 +47,7 @@ setup(
             'pep8',
             'mockldap',
             'pyflakes',
-            'moto>=0.4.1',
+            'moto==0.4.1',  # https://github.com/mozilla/build-relengapi/issues/329
             'mockcache',
         ],
         # extras required only for LDAP authorization support
