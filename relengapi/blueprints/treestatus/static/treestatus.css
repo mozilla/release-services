@@ -97,3 +97,16 @@ h1.treestatus {
 #footer {
     text-align: center;
 }
+
+
+.open {
+    color: green;
+}
+
+.closed {
+    color: red;
+}
+
+.approval_required {
+    color: #ffa500;
+}
