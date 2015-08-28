@@ -73,6 +73,12 @@ h1.treestatus {
     text-decoration: none;
 }
 
+.tableWhen {
+    /* this column can get a little tight, so encourage some breathing room */
+    padding-right: 0.5em;
+    padding-left: 0.5em;
+}
+
 .tableCheck {
     min-width: 20px;
 }

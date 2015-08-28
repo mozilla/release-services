@@ -23,7 +23,7 @@
                 <thead>
                     <tr>
                         <th class="tableWho">User</th>
-                        <th class="tableWhen">Time</th>
+                        <th class="tableWhen">Time (UTC)</th>
                         <th class="tableState">Action</th>
                         <th class="tableReason">Reason</th>
                         <th class="tableTags">Tags</th>
@@ -32,7 +32,7 @@
                 <tbody>
                 <tr ng-repeat="log in logs">
                     <td class="tableWho">{{log.who|shortName}}</td>
-                    <td class="tableWhen">{{log.when}} UTC</td>
+                    <td class="tableWhen">{{log.when}}</td>
                     <td class="tableState {{log.status|status2class}}">
                         {{log.status|uppercase}}
                     </td>
