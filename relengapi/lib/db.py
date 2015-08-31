@@ -126,6 +126,15 @@ class Alchemies(object):
         def foreign_keys_on(dbapi_con, con_record):
             # Set the default storage engine in case we create tables
             dbapi_con.cursor().execute("SET default_storage_engine=InnoDB")
+            # verify that the connection is utf-8
+
+        @event.listens_for(engine, "connect")
+        def check_client_charset(dbapi_con, con_record):
+            curs = dbapi_con.cursor()
+            curs.execute("show variables like 'character_set_client'")
+            
+            if curs.fetchone()[1] != 'utf8':
+                raise RuntimeError("MySQL client connection is not using utf8 encoding")
 
         return engine
 
