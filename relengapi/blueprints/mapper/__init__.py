@@ -20,7 +20,7 @@ from sqlalchemy import orm
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
 
-from relengapi import p
+from relengapi.lib.permissions import p
 
 logger = structlog.get_logger()
 # logging.basicConfig(level=logging.DEBUG)

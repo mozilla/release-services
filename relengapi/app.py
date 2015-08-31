@@ -4,7 +4,6 @@
 
 import os
 import pkg_resources
-import relengapi
 import structlog
 import uuid
 import wsme.types
@@ -24,12 +23,6 @@ from relengapi.lib import layout
 from relengapi.lib import logging as relengapi_logging
 from relengapi.lib import memcached
 from relengapi.lib import monkeypatches
-from relengapi.lib import permissions
-
-# set up the 'relengapi' namespace; it's a namespaced module, so no code
-# is allowed in __init__.py
-relengapi.p = permissions.p
-relengapi.apimethod = api.apimethod
 
 # apply monkey patches
 monkeypatches.monkeypatch()

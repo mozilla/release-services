@@ -12,18 +12,18 @@ from flask import Blueprint
 from flask import current_app
 from flask import url_for
 from flask.ext.login import current_user
-from relengapi import apimethod
 from relengapi.lib import angular
 from relengapi.lib import api
 from relengapi.lib import http
 from relengapi.lib import time as relengapi_time
+from relengapi.lib.api import apimethod
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import NotFound
 from wsme import Unset
 
-from relengapi import p
 from relengapi.blueprints.treestatus import model
 from relengapi.blueprints.treestatus import types
+from relengapi.lib.permissions import p
 
 bp = Blueprint('treestatus', __name__,
                static_folder='static',

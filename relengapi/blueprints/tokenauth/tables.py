@@ -4,9 +4,9 @@
 
 import sqlalchemy as sa
 
-from relengapi import p
 from relengapi.blueprints.tokenauth import types
 from relengapi.lib import db
+from relengapi.lib.permissions import p
 
 
 class Token(db.declarative_base('relengapi')):

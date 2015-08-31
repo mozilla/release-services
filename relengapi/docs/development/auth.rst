@@ -113,7 +113,7 @@ Accessing Permissions
 
 A bit of syntactic sugar makes it very easy to access permissions ::
 
-    from relengapi import p
+    from relengapi.lib.permissions import p
     r = p.tasks.view
 
 The ``permissions`` object generates permissions through attribute access, so the example above creates the ``tasks.view`` permission.
@@ -123,7 +123,7 @@ Adding Permissions
 
 To add a new permission, simply access it and document it with the  :py:meth:`~relengapi.lib.permissions.Permission.doc` method::
 
-    from relengapi import p
+    from relengapi.lib.permissions import p
     p.tasks.view.doc("View tasks")
 
 Verifying a Permission

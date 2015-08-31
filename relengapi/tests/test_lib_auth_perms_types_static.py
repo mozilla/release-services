@@ -6,9 +6,9 @@ import relengapi.app
 
 from nose.tools import assert_raises
 from nose.tools import eq_
-from relengapi import p
 from relengapi.lib import auth
 from relengapi.lib.auth.perms_types import static
+from relengapi.lib.permissions import p
 
 p.test_static.foo.doc("Foo")
 p.test_static.bar.doc("Bar")

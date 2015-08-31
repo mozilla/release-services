@@ -5,9 +5,9 @@
 import itertools
 
 from functools import partial
-from relengapi import p
 from relengapi.lib.auth import base
 from relengapi.lib.auth import permissions_stale
+from relengapi.lib.permissions import p
 
 
 class StaticAuthz(base.BaseAuthz):
