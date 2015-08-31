@@ -6,9 +6,11 @@ import Queue
 import json
 import logging
 import mock
+import moto
 
 from logging import handlers
 from moto import mock_sqs
+from nose.plugins.skip import SkipTest
 from nose.tools import assert_raises
 from nose.tools import eq_
 from relengapi.lib import aws
@@ -115,8 +117,10 @@ def test_sqs_listen_no_such_queue(app):
 @mock_sqs
 @test_context
 def test_sqs_listen(app):
+    if hasattr(moto, '__version__') and moto.__version__ == '0.4.11':
+        raise SkipTest(
+            "See https://github.com/mozilla/build-relengapi/pull/329")
     log_buffer = handlers.BufferingHandler(100)
-
     logging.getLogger().addHandler(log_buffer)
     try:
         conn = app.aws.connect_to('sqs', 'us-east-1')
