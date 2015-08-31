@@ -492,7 +492,7 @@ def test_run_job_no_such_task(app):
     with run_job_setup() as task_ran:
         # no such task..
         with app.app_context():
-            execution._run_job.apply((__name__ + '.nosuch', 10))
+            execution._run_job.apply((__name__ + '.nosuch', 10), throw=True)
         assert not task_ran
 
 
@@ -501,7 +501,7 @@ def test_run_job_no_job(app):
     """`execution._run_job` ignores runs with no existing job row"""
     with run_job_setup() as task_ran:
         with app.app_context():
-            execution._run_job.apply((__name__ + '.my_task', 10))
+            execution._run_job.apply((__name__ + '.my_task', 10), throw=True)
         assert not task_ran
 
 
@@ -511,7 +511,7 @@ def test_run_job_success(app):
     with run_job_setup() as task_ran:
         job_id = create_job(app)
         with app.app_context():
-            execution._run_job.apply((__name__ + '.my_task', job_id))
+            execution._run_job.apply((__name__ + '.my_task', job_id), throw=True)
         assert task_ran
 
         job = get_job(app, job_id)
@@ -528,7 +528,7 @@ def test_run_job(app):
     with run_job_setup() as task_ran:
         job_id = create_job(app)
         with app.app_context():
-            execution._run_job.apply((__name__ + '.failz', job_id))
+            execution._run_job.apply((__name__ + '.failz', job_id), throw=True)
         assert task_ran
 
         job = get_job(app, job_id)

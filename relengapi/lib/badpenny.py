@@ -41,7 +41,7 @@ def _task_decorator(runnable_now, schedule):
 
 
 def periodic_task(seconds):
-    """Decorator for a periodic task executed ever INTERVAL seconds"""
+    """Decorator for a periodic task executed every INTERVAL seconds"""
     assert seconds > 0
     delta = relativedelta(seconds=seconds)
 
