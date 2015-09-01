@@ -120,6 +120,7 @@ class Alchemies(object):
 
     def create_mysql_engine(self, url):
         url.query['use_unicode'] = "True"
+        url.query['charset'] = "utf8"
         engine = sa.create_engine(url)
 
         @event.listens_for(engine, "connect")
@@ -130,6 +131,9 @@ class Alchemies(object):
 
         @event.listens_for(engine, "connect")
         def check_client_charset(dbapi_con, con_record):
+            # older versions of the MySQL default to `latin1` for all of the client-derived
+            # charsets.  That's no fun.  The charset=utf8 above should fix this, but it's best
+            # to be sure.
             curs = dbapi_con.cursor()
             curs.execute("show variables like 'character_set_client'")
             
