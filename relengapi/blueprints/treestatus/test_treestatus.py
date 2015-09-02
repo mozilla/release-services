@@ -503,7 +503,7 @@ def test_revert_stack_badarg(client):
     for arg in (2, -1, "january"):
         resp = client.open('/treestatus/stack/2?revert=%s' % arg,
                            method='DELETE')
-        eq_(resp.status_code, 503)
+        eq_(resp.status_code, 400)
 
 
 @test_context.specialize(db_setup=db_setup_stack, user=sheriff)
