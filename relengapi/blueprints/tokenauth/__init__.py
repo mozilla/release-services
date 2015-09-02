@@ -281,7 +281,7 @@ def issue_token(body):
     # ensured `typ` is one of the recognized types.
     token = token_issuers[typ](body, requested_permissions)
     perms_str = ', '.join(str(p) for p in requested_permissions)
-    log = logger.bind(token_typ=token.typ, token_permissions=perms_str)
+    log = logger.bind(token_typ=token.typ, token_permissions=perms_str, mozdef=True)
     if token.id:
         log = log.bind(token_id=token.id)
     log.info("Issuing {} token to {} with permissions {}".format(
@@ -347,7 +347,7 @@ def revoke_token(token_id):
 
     perms_str = ', '.join(str(p) for p in token_data.permissions)
     log = logger.bind(token_typ=token_data.typ, token_permissions=perms_str,
-                      token_id=token_id)
+                      token_id=token_id, mozdef=True)
     log.info("Revoking {} token #{} with permissions {}".format(
         token_data.typ, token_data.id, perms_str))
 

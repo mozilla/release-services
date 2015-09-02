@@ -30,7 +30,7 @@ def monitor_users(job_status):
 
         perm_str = ', '.join(str(p) for p in token.permissions)
         log = logger.bind(token_typ=token.typ, token_id=token.id,
-                          token_user=token.user, token_permissions=perm_str)
+                          token_user=token.user, token_permissions=perm_str, mozdef=True)
         if disable and not token.disabled:
             logmsg = "Disabling {} token #{} for user {} with permissions {}".format(
                 token.typ, token.id, token.user, perm_str)

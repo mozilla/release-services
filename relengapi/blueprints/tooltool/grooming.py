@@ -50,7 +50,7 @@ def replicate(job_status):
 
 
 def replicate_file(session, file, _test_shim=lambda: None):
-    log = logger.bind(tooltool_sha512=file.sha512)
+    log = logger.bind(tooltool_sha512=file.sha512, mozdef=True)
     config = current_app.config['TOOLTOOL_REGIONS']
     regions = set(config)
     file_regions = set([i.region for i in file.instances])
@@ -103,7 +103,7 @@ def check_file_pending_uploads(sha512):
 
 def verify_file_instance(sha512, size, key):
     """Verify that the given S3 Key matches the given size and digest."""
-    log = logger.bind(tooltool_sha512=sha512)
+    log = logger.bind(tooltool_sha512=sha512, mozdef=True)
     if key.size != size:
         log.warning("Uploaded file {} has unexpected size {}; expected "
                     "{}".format(sha512, key.size, size))
@@ -144,7 +144,7 @@ def check_pending_upload(session, pu, _test_shim=lambda: None):
     sha512 = pu.file.sha512
     size = pu.file.size
 
-    log = logger.bind(tooltool_sha512=sha512)
+    log = logger.bind(tooltool_sha512=sha512, mozdef=True)
 
     if time.now() < pu.expires:
         # URL is not expired yet

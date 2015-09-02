@@ -5,11 +5,8 @@
 from __future__ import absolute_import
 
 import logging
-import os
 import structlog
 import sys
-
-from datetime import datetime
 
 stdout_log = None
 logger = structlog.get_logger()
@@ -44,26 +41,32 @@ class UnstructuredRenderer(structlog.processors.KeyValueRenderer):
             return event
 
 
-def mozdef_format(logger, method_name, event_dict):
-    # see http://mozdef.readthedocs.org/en/latest/usage.html#sending-logs-to-mozdef
+def mozdef_sender(target):
+    import mozdef_client
+    sev_map = {
+        'critical': mozdef_client.MozDefEvent.SEVERITY_CRITICAL,
+        'error': mozdef_client.MozDefEvent.SEVERITY_ERROR,
+        'warning': mozdef_client.MozDefEvent.SEVERITY_WARNING,
+        'info': mozdef_client.MozDefEvent.SEVERITY_INFO,
+        'debug': mozdef_client.MozDefEvent.SEVERITY_DEBUG,
+    }
 
-    # move everything to a 'details' sub-key
-    details = event_dict
-    event_dict = {'details': details}
-
-    # but pull out the summary/event
-    event_dict['summary'] = details.pop('event')
-    if not details:
-        event_dict.pop('details')
-
-    # and set some other fields based on context
-    event_dict['timestamp'] = datetime.utcnow().isoformat()
-    event_dict['processid'] = os.getpid()
-    event_dict['processname'] = 'relengapi'
-    event_dict['source'] = logger.name
-    event_dict['severity'] = method_name.upper()
-    event_dict['tags'] = ['relengapi']
-    return event_dict
+    def send(logger, method_name, event_dict):
+        # only send to mozdef if `mozdef` is set
+        if event_dict.pop('mozdef', False):
+            msg = mozdef_client.MozDefEvent(target)
+            msg.summary = event_dict.get('event', '')
+            msg.tags = ['relengapi']
+            if set(event_dict) - {'event'}:
+                msg.details = event_dict.copy()
+                msg.details.pop('event', None)
+            msg.source = logger.name
+            msg.set_severity(sev_map.get(method_name,
+                                         mozdef_client.MozDefEvent.SEVERITY_INFO))
+            msg.send()
+        # return the message unchanged
+        return event_dict
+    return send
 
 
 def reset_context(**kwargs):
@@ -71,26 +74,16 @@ def reset_context(**kwargs):
 
 
 def configure_logging(app):
-    if app.config.get('JSON_STRUCTURED_LOGGING'):
-        processors = [
-            structlog.stdlib.filter_by_level,
-            structlog.stdlib.PositionalArgumentsFormatter(),
-            structlog.processors.StackInfoRenderer(),
-            structlog.processors.format_exc_info,
-            mozdef_format,
-            structlog.processors.JSONRenderer()
-        ]
-    else:
-        processors = [
-            structlog.stdlib.filter_by_level,
-            structlog.stdlib.PositionalArgumentsFormatter(),
-            UnstructuredRenderer()
-        ]
-
-    if app.config.get('JSON_STRUCTURED_LOGGING') and stdout_log:
-        # structlog has combined all of the interesting data into the
-        # (JSON-formatted) message, so only log that
-        stdout_log.setFormatter(logging.Formatter('%(message)s'))
+    processors = [
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+    ]
+    # send to mozdef before formatting into a string
+    if app.config.get('MOZDEF_TARGET'):
+        processors.append(mozdef_sender(app.config['MOZDEF_TARGET']))
+    processors.append(UnstructuredRenderer())
 
     structlog.configure(
         context_class=structlog.threadlocal.wrap_dict(dict),

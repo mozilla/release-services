@@ -38,6 +38,8 @@ setup(
         # Temporary freeze until https://github.com/bhearsum/bzrest/pull/3 is fixed
         "bzrest==0.9",
         "structlog",
+        "mozdef_client",
+        "requests_futures",
     ],
     extras_require={
         'test': [
@@ -76,7 +78,7 @@ setup(
             '*/static/**.ttf',
             '*/static/**.woff',
         ],
-        'relengapi.alembic' : [
+        'relengapi.alembic': [
             '*.ini',
             '*.py',
             '*.mako',
