@@ -257,20 +257,20 @@ def get_stack():
 
 @bp.route('/stack/<int:id>', methods=['DELETE'])
 @p.treestatus.sheriff.require()
-@apimethod(None, int)
+@apimethod(None, int, int)
 def revert_change(id, revert=None):
     """
     Remove the given change from the undo stack.
 
     With ``?revert=1`` This applies the settings that were
     present before the change to the affected trees.
-    
+
     With ``?revert=0`` or omitting the revert keyword, it merely removes
     the change from the stack without changing the settings on the tree.
     """
     if revert not in (0, 1, None):
         raise BadRequest("Unexpected value for 'revert'")
-    
+
     session = current_app.db.session('relengapi')
     ch = session.query(model.DbStatusChange).get(id)
     if not ch:
