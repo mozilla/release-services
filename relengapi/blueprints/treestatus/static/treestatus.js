@@ -275,8 +275,8 @@ angular.module('treestatus').controller('TreeListController',
 
     $scope.revertChange = function(stack_id) {
         restapi({
-            url: '/treestatus/stack/' + stack_id,
-            method: 'REVERT',
+            url: '/treestatus/stack/' + stack_id + '?revert=1',
+            method: 'DELETE',
             while: 'reverting change',
         }).then(function (data, status, headers, config) {
             reloadTrees();
