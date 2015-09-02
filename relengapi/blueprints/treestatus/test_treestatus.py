@@ -500,7 +500,7 @@ def test_revert_stack_nosuch(client):
 @test_context.specialize(db_setup=db_setup_stack, user=sheriff)
 def test_revert_stack_badarg(client):
     """DELETEing /treestatus/stack/N with ?revert=<bad_argument> should fail"""
-    for arg in (2, -1, "january"):
+    for arg in (2, -1):
         resp = client.open('/treestatus/stack/2?revert=%s' % arg,
                            method='DELETE')
         eq_(resp.status_code, 400)
