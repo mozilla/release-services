@@ -6,6 +6,11 @@ from nose.tools import eq_
 from relengapi.lib import auth
 from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
+from relengapi.blueprints.slaveloan.model import History
+from relengapi.blueprints.slaveloan.model import Humans
+from relengapi.blueprints.slaveloan.model import Loans
+from relengapi.blueprints.slaveloan.model import Machines
+from relengapi.blueprints.slaveloan.model import ManualActions
 
 
 def userperms(perms, email='me@example.com'):
@@ -17,6 +22,28 @@ test_context = TestContext(disable_login_view=True)
 test_context_admin = TestContext(databases=['relengapi'],
                                  user=userperms([p.slaveloan.admin]),
                                  disable_login_view=True)
+
+
+def db_setup(app):
+    session = app.db.session('relengapi')
+    machines = []
+    for m in (("127.0.0.1", "host1.mozilla.org"),
+              ("127.0.0.2", "host2.mozilla.org"),
+              ("127.0.0.3", "host3.mozilla.org"),
+              ("127.0.0.4", "host4.mozilla.org"),
+              ("127.0.0.5", "host5.mozilla.org")):
+        machines.append(Machines(ipaddress=m[0], fqdn=m[1]))
+    session.add_all(machines)
+
+    humans = []
+    for u in (("user1@mozilla.com", "user1@mozilla.com"),
+              ("user2@mozilla.com", "user2@mozilla.com"),
+              ("user3@mozilla.com", "user3@allizom.com"),
+              ("user1@mozilla.com", "user1@mozilla.com"),
+              ("user4@mozilla.com", "user4@mozilla.com")):
+        humans.append(Humans(ldap=u[0], bugzilla=u[1]))
+    session.add_all(humans)
+    session.commit()
 
 
 @test_context
@@ -70,3 +97,11 @@ def test_manual_actions_loan(client):
     "Test that the query arg loan_id is accepted"
     rv = client.get('/slaveloan/manual_actions?loan_id=2')
     eq_(rv.status_code, 200)
+
+
+@test_context_admin
+def test_get_loans_raises(client):
+    """Getting a list of loans with ?all=<bad_argument> should fail"""
+    for arg in (2, -1):
+        rv = client.get('/slaveloan/loans/?all=%s' % arg)
+        eq_(rv.status_code, 400)

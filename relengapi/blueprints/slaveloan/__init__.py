@@ -54,11 +54,21 @@ def init_blueprint(state):
 
 @bp.route('/loans/')
 @p.slaveloan.admin.require()
-@apimethod([rest.Loan])
-def get_loans():
-    "Get the list of all `active` loans you can see"
+@apimethod([rest.Loan], int)
+def get_loans(all=None):
+    """Get the list of loans you can see
+
+    by default this only lists active (non complete) loans, use ``?all=1``
+    if you want to list completed loans as well"""
+
+    if all not in (None, 0, 1):
+        raise BadRequest("Unexpected Value for 'all'.")
+
     # XXX: Use permissions to filter if not an admin
-    loans = Loans.query.filter(Loans.machine_id.isnot(None))
+    loans = Loans.query
+    if not all:
+        loans.filter(Loans.machine_id.isnot(None))
+
     return [l.to_wsme() for l in loans.all()]
 
 
@@ -101,16 +111,6 @@ def get_loan_history(loanid):
                        .filter(History.loan_id == loanid) \
                        .order_by(asc(History.timestamp))
     return [h.to_wsme() for h in histories.all()]
-
-
-@bp.route('/loans/all')
-@p.slaveloan.admin.require()
-@apimethod([rest.Loan])
-def get_all_loans():
-    "Get the list of all loans you can see"
-    # XXX: Use permissions to filter if not an admin
-    loans = Loans.query
-    return [l.to_wsme() for l in loans.all()]
 
 
 @bp.route('/loans/new', methods=['POST'])
