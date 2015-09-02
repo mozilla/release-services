@@ -16,12 +16,31 @@ from flask import send_from_directory
 from relengapi.lib import subcommands
 from sphinx.websupport import WebSupport
 from sphinx.websupport.errors import DocumentNotFoundError
+from sphinx.websupport.storage import StorageBackend
 
 logger = structlog.get_logger()
 
 bp = Blueprint('docs', __name__,
                template_folder='templates')
 bp.root_widget_template('docs_root_widget.html', priority=100)
+
+
+class NullStorageBackend(StorageBackend):
+
+    # We don't want any storage backend for the docs -- we don't allow
+    # comments, votes, etc.
+    #
+    # Most methods are either null in the parent class, or aren't called at
+    # all; these few appear to be called, and so must be overridden
+
+    def get_metadata(self, *args, **kwargs):
+        return
+
+    def has_node(self, *args, **kwargs):
+        return False
+
+    def add_node(self, *args, **kwargs):
+        return False
 
 
 def get_builddir():
@@ -48,6 +67,7 @@ def get_support(force=False, quiet=False):
             builddir=builddir,
             staticroot='/docs/static',
             docroot='/docs',
+            storage=NullStorageBackend(),
             **kwargs)
     return current_app.docs_websupport
 
