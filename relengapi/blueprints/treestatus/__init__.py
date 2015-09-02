@@ -255,52 +255,41 @@ def get_stack():
     return [ch.to_json() for ch in tbl.query.order_by(tbl.when.desc())]
 
 
-@bp.route('/stack/<int:id>', methods=['REVERT'])
-@p.treestatus.sheriff.require()
-@apimethod(None, int)
-def revert_change(id):
-    """
-    Revert the given change from the undo stack.
-
-    This applies the settings that were present before the change to the
-    affected trees, and deletes the change from the stack.
-    """
-    session = current_app.db.session('relengapi')
-    ch = session.query(model.DbStatusChange).get(id)
-    if not ch:
-        raise NotFound
-
-    for chtree in ch.trees:
-        last_state = json.loads(chtree.last_state)
-        tree = model.DbTree.query.get(chtree.tree)
-        if tree is None:
-            # if there's no tree to update, don't worry about it
-            pass
-        update_tree_status(
-            session, tree,
-            status=last_state['status'],
-            reason=last_state['reason'])
-
-    session.delete(ch)
-    session.commit()
-    return None, 204
-
-
 @bp.route('/stack/<int:id>', methods=['DELETE'])
 @p.treestatus.sheriff.require()
 @apimethod(None, int)
-def delete_change(id):
+def revert_change(id, revert=None):
     """
-    Delete the given change from the undo stack, without applying it.
+    Remove the given change from the undo stack.
+
+    With ``?revert=1`` This applies the settings that were
+    present before the change to the affected trees.
+    
+    With ``?revert=0`` or omitting the revert keyword, it merely removes
+    the change from the stack without changing the settings on the tree.
     """
+    if revert not in (0, 1, None):
+        raise BadRequest("Unexpected value for 'revert'")
+    
     session = current_app.db.session('relengapi')
     ch = session.query(model.DbStatusChange).get(id)
     if not ch:
         raise NotFound
 
+    if revert:
+        for chtree in ch.trees:
+            last_state = json.loads(chtree.last_state)
+            tree = model.DbTree.query.get(chtree.tree)
+            if tree is None:
+                # if there's no tree to update, don't worry about it
+                pass
+            update_tree_status(
+                session, tree,
+                status=last_state['status'],
+                reason=last_state['reason'])
+
     session.delete(ch)
     session.commit()
-
     return None, 204
 
 
