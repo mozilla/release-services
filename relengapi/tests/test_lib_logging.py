@@ -66,12 +66,16 @@ def test_mozdef(app):
         logger = structlog.get_logger(__name__)
         logger.warn("unseen")
         logger.warn("test message", mozdef=True)
+        logger.warn("with attr", attr="foo", mozdef=True)
 
     # check that 'unseen' wasn't seen, since mozdef was not true
-    eq_([m.summary for m in sent], ["test message"])
+    eq_({m.summary for m in sent}, {"test message", "with attr"})
 
-    # check a few other fields in that one message logged
+    # check a few other fields in one of the messages
     msg = sent[0]
     eq_(msg.source, __name__)
     eq_(msg._severity, orig_MozDefEvent.SEVERITY_WARNING)
     eq_(msg.tags, ['relengapi'])
+
+    # and verify that the attribute showed up in details
+    assert any([m.details.get('attr') == 'foo' for m in sent])
