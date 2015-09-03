@@ -3,14 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from nose.tools import eq_
-from relengapi.lib import auth
-from relengapi.lib.permissions import p
-from relengapi.lib.testing.context import TestContext
 from relengapi.blueprints.slaveloan.model import History
 from relengapi.blueprints.slaveloan.model import Humans
 from relengapi.blueprints.slaveloan.model import Loans
 from relengapi.blueprints.slaveloan.model import Machines
 from relengapi.blueprints.slaveloan.model import ManualActions
+from relengapi.lib import auth
+from relengapi.lib.permissions import p
+from relengapi.lib.testing.context import TestContext
 
 
 def userperms(perms, email='me@example.com'):
@@ -39,10 +39,24 @@ def db_setup(app):
     for u in (("user1@mozilla.com", "user1@mozilla.com"),
               ("user2@mozilla.com", "user2@mozilla.com"),
               ("user3@mozilla.com", "user3@allizom.com"),
-              ("user1@mozilla.com", "user1@mozilla.com"),
               ("user4@mozilla.com", "user4@mozilla.com")):
         humans.append(Humans(ldap=u[0], bugzilla=u[1]))
     session.add_all(humans)
+
+    loans = []
+    for l in (  # status, bug, machine, human
+             ("ACTIVE", 1234001, machines[0], humans[0]),
+             ("COMPLETE", 1234002, machines[1], humans[1]),
+             ("PENDING", 1234003, machines[2], humans[2]),
+             ("ACTIVE", 1234004, machines[3], humans[0]),
+             ("ACTIVE", 1234005, machines[4], humans[1]),
+             ("PENDING", 1234006, None, humans[0])):
+        loans.append(Loans(status=l[0], bug_id=l[1], machine=l[2], human=l[3]))
+    session.add_all(loans)
+    if 0:
+        # XXX History Tests
+        # XXX ManualAction Tests
+        _ = (History, ManualActions)  # silence pyflakes
     session.commit()
 
 
@@ -105,3 +119,23 @@ def test_get_loans_raises(client):
     for arg in (2, -1):
         rv = client.get('/slaveloan/loans/?all=%s' % arg)
         eq_(rv.status_code, 400)
+
+
+@test_context_admin.specialize(db_setup=db_setup)
+def test_get_loans_default(client):
+    """Get the list of loans, does not include pending"""
+    rv = client.get('/slaveloan/loans/')
+    eq_(rv.status_code, 200)
+
+    loans = json.loads(resp.data)['result']
+    eq_(len(loans), 5)
+
+
+@test_context_admin.specialize(db_setup=db_setup)
+def test_get_loans_default(client):
+    """Get the list of loans, does not include pending"""
+    rv = client.get('/slaveloan/loans/?all=1')
+    eq_(rv.status_code, 200)
+
+    loans = json.loads(resp.data)['result']
+    eq_(len(loans), 6)

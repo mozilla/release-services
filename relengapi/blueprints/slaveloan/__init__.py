@@ -67,7 +67,7 @@ def get_loans(all=None):
     # XXX: Use permissions to filter if not an admin
     loans = Loans.query
     if not all:
-        loans.filter(Loans.machine_id.isnot(None))
+        loans = loans.filter(Loans.status != "COMPLETE")
 
     return [l.to_wsme() for l in loans.all()]
 
