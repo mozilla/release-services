@@ -143,7 +143,7 @@ def test_get_loans_all(client):
 @test_context_admin.specialize(db_setup=db_setup)
 def test_get_loans_specific(client):
     """Get the list of loans, does not include pending"""
-    resp = client.get('/slaveloan/loans/0')
+    resp = client.get('/slaveloan/loans/1')
     eq_(resp.status_code, 200)
 
     loan = json.loads(resp.data)['result']
