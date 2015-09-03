@@ -138,3 +138,27 @@ def test_get_loans_all(client):
 
     loans = json.loads(resp.data)['result']
     eq_(len(loans), 6)
+
+
+@test_context_admin.specialize(db_setup=db_setup)
+def test_get_loans_specific(client):
+    """Get the list of loans, does not include pending"""
+    resp = client.get('/slaveloan/loans/0')
+    eq_(resp.status_code, 200)
+
+    loan = json.loads(resp.data)['result']
+    eq_(loan, {
+        "bug_id": 1234001,
+        "human": {
+            "bugzilla_email": "user1@mozilla.com",
+            "id": 1,
+            "ldap_email": "user1@mozilla.com"
+        },
+        "id": 1,
+        "machine": {
+            "fqdn": "host1.mozilla.org",
+            "id": 1,
+            "ipaddress": "127.0.0.1"
+        },
+        "status": "ACTIVE"
+    })
