@@ -450,9 +450,9 @@ def test_get_stack(client):
 
 @test_context.specialize(db_setup=db_setup_stack, user=sheriff)
 def test_revert_stack(app, client):
-    """REVERTing /treestatus/stack/N undoes the effects of that change and removes
-    it from the stack"""
-    resp = client.open('/treestatus/stack/2', method='REVERT')
+    """DELETEing /treestatus/stack/N with ?revert=1 undoes the effects of
+    that change and removes it from the stack"""
+    resp = client.open('/treestatus/stack/2?revert=1', method='DELETE')
     eq_(resp.status_code, 204)
 
     resp = client.get('/treestatus/trees')
@@ -484,16 +484,26 @@ def test_revert_stack(app, client):
 
 @test_context.specialize(db_setup=db_setup_stack, user=admin)
 def test_revert_stack_no_perms(app, client):
-    """REVERTing a stack without sheriff privs fails"""
-    resp = client.open('/treestatus/stack/2', method='REVERT')
+    """DELETEing a stack (using ?revert=1) without sheriff privs fails"""
+    resp = client.open('/treestatus/stack/2?revert=1', method='DELETE')
     eq_(resp.status_code, 403)
 
 
 @test_context.specialize(db_setup=db_setup_stack, user=sheriff)
 def test_revert_stack_nosuch(client):
-    """REVERTing /treestatus/stack/N where there's no such stack ID returns 404"""
-    resp = client.open('/treestatus/stack/99', method='REVERT')
+    """DELETEing /treestatus/stack/N with ?revert=1 where there's no such
+    stack ID returns 404"""
+    resp = client.open('/treestatus/stack/99?revert=1', method='DELETE')
     eq_(resp.status_code, 404)
+
+
+@test_context.specialize(db_setup=db_setup_stack, user=sheriff)
+def test_revert_stack_badarg(client):
+    """DELETEing /treestatus/stack/N with ?revert=<bad_argument> should fail"""
+    for arg in (2, -1):
+        resp = client.open('/treestatus/stack/2?revert=%s' % arg,
+                           method='DELETE')
+        eq_(resp.status_code, 400)
 
 
 @test_context.specialize(db_setup=db_setup_stack, user=sheriff)
