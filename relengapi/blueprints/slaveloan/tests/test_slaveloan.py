@@ -4,12 +4,15 @@
 
 from flask import json
 from nose.tools import eq_
+from nose.tools import ok_
+from relengapi.blueprints.slaveloan.model import History
 from relengapi.blueprints.slaveloan.model import Humans
 from relengapi.blueprints.slaveloan.model import Loans
 from relengapi.blueprints.slaveloan.model import Machines
 from relengapi.lib import auth
 from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
+from relengapi.util import tz
 
 
 def userperms(perms, email='me@example.com'):
@@ -122,7 +125,7 @@ def test_get_loans_raises(client):
 
 @test_context_admin.specialize(db_setup=db_setup)
 def test_get_loans_default(client):
-    """Get the list of loans, does not include pending"""
+    """Get the list of loans, does not include completed"""
     resp = client.get('/slaveloan/loans/')
     eq_(resp.status_code, 200)
 
@@ -132,7 +135,7 @@ def test_get_loans_default(client):
 
 @test_context_admin.specialize(db_setup=db_setup)
 def test_get_loans_all(client):
-    """Get the list of loans, does not include pending"""
+    """Get the list of all loans"""
     resp = client.get('/slaveloan/loans/?all=1')
     eq_(resp.status_code, 200)
 
@@ -142,7 +145,7 @@ def test_get_loans_all(client):
 
 @test_context_admin.specialize(db_setup=db_setup)
 def test_get_loans_specific(client):
-    """Get the list of loans, does not include pending"""
+    """Get a specific loan, by id"""
     resp = client.get('/slaveloan/loans/1')
     eq_(resp.status_code, 200)
 
@@ -162,3 +165,39 @@ def test_get_loans_specific(client):
         },
         "status": "ACTIVE"
     })
+
+
+@test_context.specialize(db_setup=db_setup)
+def test_complete_loan_requires_admin(client):
+    "Getting a loan by ID currently requires admin privs"
+    resp = client.open('/slaveloan/loans/1', method='DELETE')
+    eq_(resp.status_code, 403)
+
+
+@test_context_admin.specialize(db_setup=db_setup)
+def test_complete_loan(client):
+    "DELETEing a loan marks it as complete, regardless of what the prior value of status was"
+    for i in (1, 2, 3):
+        resp = client.open('/slaveloan/loans/%s' % i, method='DELETE')
+        eq_(resp.status_code, 200)
+
+        loan = json.loads(resp.data)['result']
+        eq_(loan["status"], "COMPLETE")
+
+
+@test_context_admin.specialize(db_setup=db_setup)
+def test_complete_loan_history(app, client):
+    "DELETEing a loan adds a history line"
+    initial_time = tz.utcnow()
+    with app.app_context():
+        q = History.query
+        q = q.filter(History.loan_id == 1)
+        q = q.order_by(History.timestamp)
+        eq_(0, len(q.all()))
+
+        resp = client.open('/slaveloan/loans/1', method='DELETE')
+        eq_(resp.status_code, 200)
+
+        histories = q.all()
+        eq_(1, len(q.all()))
+        ok_(histories[0].timestamp > initial_time)
