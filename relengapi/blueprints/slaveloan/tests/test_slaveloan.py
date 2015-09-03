@@ -125,8 +125,8 @@ def test_get_loans_raises(client):
 @test_context_admin.specialize(db_setup=db_setup)
 def test_get_loans_default(client):
     """Get the list of loans, does not include pending"""
-    rv = client.get('/slaveloan/loans/')
-    eq_(rv.status_code, 200)
+    resp = client.get('/slaveloan/loans/')
+    eq_(resp.status_code, 200)
 
     loans = json.loads(resp.data)['result']
     eq_(len(loans), 5)
@@ -135,8 +135,8 @@ def test_get_loans_default(client):
 @test_context_admin.specialize(db_setup=db_setup)
 def test_get_loans_default(client):
     """Get the list of loans, does not include pending"""
-    rv = client.get('/slaveloan/loans/?all=1')
-    eq_(rv.status_code, 200)
+    resp = client.get('/slaveloan/loans/?all=1')
+    eq_(resp.status_code, 200)
 
     loans = json.loads(resp.data)['result']
     eq_(len(loans), 6)
