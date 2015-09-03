@@ -119,12 +119,12 @@ def test_require_can(app):
             @permissions.require(perms.test.writer, perms.test.deleter)
             def bad_func_browser_anon():
                 return "ok"
-            eq_(bad_func_browser_anon().status_code, 302)
+            assert_raises(werkzeug.exceptions.Unauthorized, bad_func_browser_anon)
 
             @perms.test.deleter.require()
             def bad_meth_browser_anon():
                 return "ok"
-            eq_(bad_meth_browser_anon().status_code, 302)
+            assert_raises(werkzeug.exceptions.Unauthorized, bad_meth_browser_anon)
 
         # empty are invalid
         assert_raises(AssertionError, permissions.require)

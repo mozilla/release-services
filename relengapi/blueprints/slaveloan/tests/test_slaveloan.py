@@ -20,9 +20,9 @@ test_context_admin = TestContext(databases=['relengapi'],
 
 @test_context
 def test_ui_root(client):
-    "The root of the blueprint is accessible without login"
+    "The root of the blueprint is not accessible without login"
     rv = client.get('/slaveloan/')
-    eq_(rv.status_code, 200)
+    eq_(rv.status_code, 401)
 
 
 def test_ui_admin_required():
@@ -37,7 +37,7 @@ def test_ui_admin_required():
     def t(path, app, client):
         with app.test_request_context():
             resp = client.get(path)
-            eq_(resp.status_code, 403)
+            eq_(resp.status_code, 401)
 
     @test_context_admin
     def t2(path, app, client):

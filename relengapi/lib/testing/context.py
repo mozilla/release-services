@@ -47,6 +47,7 @@ class TestContext(object):
             return self._app
         config = self.options.get('config', {}).copy()
         config['TESTING'] = True
+        config['LOGIN_DISABLED'] = False  # Make @login_required enforced in tests.
         config['SECRET_KEY'] = 'test'
         config['SQLALCHEMY_DATABASE_URIS'] = uris = {}
         dbnames = self.options.get('databases', [])
@@ -68,6 +69,8 @@ class TestContext(object):
             @app.before_request
             def set_user():
                 auth.login_manager.reload_user(user)
+        # Don't issue a 302 redirection when login is needed.
+        auth.login_manager.login_view = None
 
         # set up the requested DBs
         for dbname in dbnames:
