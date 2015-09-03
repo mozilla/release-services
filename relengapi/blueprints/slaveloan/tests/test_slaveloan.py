@@ -4,11 +4,9 @@
 
 from flask import json
 from nose.tools import eq_
-from relengapi.blueprints.slaveloan.model import History
 from relengapi.blueprints.slaveloan.model import Humans
 from relengapi.blueprints.slaveloan.model import Loans
 from relengapi.blueprints.slaveloan.model import Machines
-from relengapi.blueprints.slaveloan.model import ManualActions
 from relengapi.lib import auth
 from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
@@ -54,10 +52,10 @@ def db_setup(app):
              ("PENDING", 1234006, None, humans[0])):
         loans.append(Loans(status=l[0], bug_id=l[1], machine=l[2], human=l[3]))
     session.add_all(loans)
-    if 0:
-        # XXX History Tests
-        # XXX ManualAction Tests
-        _ = (History, ManualActions)  # silence pyflakes
+
+    # XXX History Tests
+    # XXX ManualAction Tests
+    # _ = (History, ManualActions)  # silence pyflakes
     session.commit()
 
 
@@ -133,7 +131,7 @@ def test_get_loans_default(client):
 
 
 @test_context_admin.specialize(db_setup=db_setup)
-def test_get_loans_default(client):
+def test_get_loans_all(client):
     """Get the list of loans, does not include pending"""
     resp = client.get('/slaveloan/loans/?all=1')
     eq_(resp.status_code, 200)
