@@ -150,7 +150,7 @@ def upload_batch(region=None, body=None):
     s3 = current_app.aws.connect_to('s3', region)
     for filename, info in body.files.iteritems():
         log = logger.bind(tooltool_sha512=info.digest, tooltool_operation='upload',
-                          tooltool_batch_id=batch.id)
+                          tooltool_batch_id=batch.id, mozdef=True)
         if info.algorithm != 'sha512':
             raise BadRequest("'sha512' is the only allowed digest algorithm")
         if not is_valid_sha512(info.digest):

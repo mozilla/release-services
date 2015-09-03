@@ -2,8 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import json
 import logging
+import mock
+import mozdef_client
 import structlog
 
 from nose.tools import eq_
@@ -51,28 +52,30 @@ def test_setupConsoleLogging_loud(app):
 
 
 @with_setup(set_stdout_log, remove_stdout_log)
-@test_context.specialize(config={'JSON_STRUCTURED_LOGGING': True})
-def test_configure_logging(app):
-    hdlr = logging.handlers.BufferingHandler(100)
-    logging.getLogger(__name__).addHandler(hdlr)
-    try:
+@test_context.specialize(config={'MOZDEF_TARGET': 'https://localhost/mozdef'})
+def test_mozdef(app):
+    sent = []
+    orig_MozDefEvent = mozdef_client.MozDefEvent
+    with mock.patch('mozdef_client.MozDefEvent') as MozDefEvent:
+        def constructor(target):
+            msg = orig_MozDefEvent(target)
+            msg.send = lambda: sent.append(msg)
+            return msg
+        MozDefEvent.side_effect = constructor
+
         logger = structlog.get_logger(__name__)
-        logger.warn("test message")
+        logger.warn("unseen")
+        logger.warn("test message", mozdef=True)
+        logger.warn("with attr", attr="foo", mozdef=True)
 
-        # find that event in the handler..
-        for rec in hdlr.buffer:
-            try:
-                data = json.loads(rec.msg)
-            except Exception:
-                pass
-            if data["summary"] == "test message":
-                break
-        else:
-            assert 0, "login exception not logged"
+    # check that 'unseen' wasn't seen, since mozdef was not true
+    eq_({m.summary for m in sent}, {"test message", "with attr"})
 
-        # check a few other fields
-        eq_(data['source'], __name__)
-        eq_(data['severity'], 'WARNING')
-        eq_(data['tags'], ['relengapi'])
-    finally:
-        logging.getLogger(__name__).removeHandler(hdlr)
+    # check a few other fields in one of the messages
+    msg = sent[0]
+    eq_(msg.source, __name__)
+    eq_(msg._severity, orig_MozDefEvent.SEVERITY_WARNING)
+    eq_(msg.tags, ['relengapi'])
+
+    # and verify that the attribute showed up in details
+    assert any([m.details.get('attr') == 'foo' for m in sent])
