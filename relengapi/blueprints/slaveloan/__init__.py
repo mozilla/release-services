@@ -164,7 +164,7 @@ def new_loan_from_admin(body):
     return l.to_wsme()
 
 
-@bp.route('/loans/request', methods=['POST'])
+@bp.route('/loans/', methods=['POST'])
 @apimethod(rest.Loan, body=rest.LoanRequest)
 def new_loan_request(body):
     "User Loan Requesting, returns the id of the loan"
