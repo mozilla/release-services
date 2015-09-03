@@ -206,8 +206,8 @@ def test_complete_loan_history(app, client):
 def test_new_loan_request_missing_required(client):
     "Test that a post to with missing required fields fail"
     request = {}
-    eq_(client.post_json('/slaveloan/loans', request).status_code, 403)
+    eq_(client.post_json('/slaveloan/loans/', request).status_code, 403)
     request = {"ldap_email": "user1@mozilla.com"}
-    eq_(client.post_json('/slaveloan/loans', request).status_code, 403)
+    eq_(client.post_json('/slaveloan/loans/', request).status_code, 403)
     request = {"requested_slavetype": "invalid_slave"}
-    eq_(client.post_json('/slaveloan/loans', request).status_code, 403)
+    eq_(client.post_json('/slaveloan/loans/', request).status_code, 403)
