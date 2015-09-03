@@ -7,7 +7,6 @@ import logging
 
 from relengapi.lib import db
 from sqlalchemy import Column
-from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
@@ -41,7 +40,7 @@ class DbLog(db.declarative_base('relengapi')):
 
     id = Column(Integer, primary_key=True)
     tree = Column(String(32), nullable=False, index=True)
-    when = Column(DateTime, nullable=False, index=True)
+    when = Column(db.UTCDateTime, nullable=False, index=True)
     who = Column(Text, nullable=False)
     status = Column(String(64), nullable=False)
     reason = Column(Text, nullable=False)
@@ -72,7 +71,7 @@ class DbStatusChange(db.declarative_base('relengapi')):
     id = Column(Integer, primary_key=True)
     who = Column(Text, nullable=False)
     reason = Column(Text, nullable=False)
-    when = Column(DateTime, nullable=False, index=True)
+    when = Column(db.UTCDateTime, nullable=False, index=True)
     status = Column(String(64), nullable=False)
 
     def to_json(self):

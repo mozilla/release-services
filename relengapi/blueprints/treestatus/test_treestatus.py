@@ -368,21 +368,21 @@ def test_get_logs(client):
         'tree': 'tree1',
         'tags': [],
         'who': 'dustin',
-        'when': '2015-07-15T17:44:00',
+        'when': '2015-07-15T17:44:00+00:00',
         'reason': 'i really wanted to',
         'status': 'opened',
     }, {
         'tree': 'tree1',
         'tags': ['a', 'b'],
         'who': 'dustin',
-        'when': '2015-07-14T17:44:00',
+        'when': '2015-07-14T17:44:00+00:00',
         'reason': 'because',
         'status': 'closed',
     }, {
         'tree': 'tree1',
         'tags': ['a'],
         'who': 'dustin',
-        'when': '2015-07-13T17:44:00',
+        'when': '2015-07-13T17:44:00+00:00',
         'reason': 'i wanted to',
         'status': 'opened',
     }
@@ -433,7 +433,7 @@ def test_get_stack(client):
     eq_(res['result'], [{
         'id': 2,
         'trees': ['tree1', 'tree2'],
-        'when': '2015-07-16T00:00:00',
+        'when': '2015-07-16T00:00:00+00:00',
         'who': 'dustin',
         'reason': 'bug 456',
         'status': 'closed',
@@ -441,7 +441,7 @@ def test_get_stack(client):
         'id': 1,
         'trees': ['tree0', 'tree1'],
         'who': 'dustin',
-        'when': '2015-07-14T00:00:00',
+        'when': '2015-07-14T00:00:00+00:00',
         'reason': 'bug 123',
         'status': 'closed',
     }
@@ -471,7 +471,7 @@ def test_revert_stack(app, client):
         'id': 1,
         'trees': ['tree0', 'tree1'],
         'who': 'dustin',
-        'when': '2015-07-14T00:00:00',
+        'when': '2015-07-14T00:00:00+00:00',
         'reason': 'bug 123',
         'status': 'closed',
     }
@@ -529,7 +529,7 @@ def test_delete_stack_change(client):
         'id': 1,
         'trees': ['tree0', 'tree1'],
         'who': 'dustin',
-        'when': '2015-07-14T00:00:00',
+        'when': '2015-07-14T00:00:00+00:00',
         'reason': 'bug 123',
         'status': 'closed',
     }
@@ -679,7 +679,7 @@ def test_patch_trees_no_remember(app, client):
     eq_(res['result'], [{
         'id': 2,
         'trees': ['tree1', 'tree2'],  # tree0, tree1 still present
-        'when': '2015-07-16T00:00:00',
+        'when': '2015-07-16T00:00:00+00:00',
         'who': 'dustin',
         'reason': 'bug 456',
         'status': 'closed',
@@ -687,7 +687,7 @@ def test_patch_trees_no_remember(app, client):
         'id': 1,
         'trees': ['tree0', 'tree1'],
         'who': 'dustin',
-        'when': '2015-07-14T00:00:00',
+        'when': '2015-07-14T00:00:00+00:00',
         'reason': 'bug 123',
         'status': 'closed',
     }
@@ -739,14 +739,14 @@ def test_patch_trees_remember(app, client):
     eq_(res['result'], [{
         'id': 3,
         'trees': ['tree0', 'tree1'],
-        'when': '2015-07-21T00:00:00',
+        'when': '2015-07-21T00:00:00+00:00',
         'who': 'human:user@domain.com',
         'reason': 'bomb damage',
         'status': 'closed',
     }, {
         'id': 2,
         'trees': ['tree1', 'tree2'],
-        'when': '2015-07-16T00:00:00',
+        'when': '2015-07-16T00:00:00+00:00',
         'who': 'dustin',
         'reason': 'bug 456',
         'status': 'closed',
@@ -754,7 +754,7 @@ def test_patch_trees_remember(app, client):
         'id': 1,
         'trees': ['tree0', 'tree1'],
         'who': 'dustin',
-        'when': '2015-07-14T00:00:00',
+        'when': '2015-07-14T00:00:00+00:00',
         'reason': 'bug 123',
         'status': 'closed',
     }
