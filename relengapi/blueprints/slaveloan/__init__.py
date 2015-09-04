@@ -165,6 +165,7 @@ def new_loan_from_admin(body):
 
 
 @bp.route('/loans/', methods=['POST'])
+@flask_login.login_required
 @apimethod(rest.Loan, body=rest.LoanRequest)
 def new_loan_request(body):
     "User Loan Requesting, returns the id of the loan"

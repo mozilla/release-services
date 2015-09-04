@@ -24,6 +24,9 @@ test_context = TestContext(databases=['relengapi'], disable_login_view=True)
 test_context_admin = TestContext(databases=['relengapi'],
                                  user=userperms([p.slaveloan.admin]),
                                  disable_login_view=True)
+test_context_noperm_user = TestContext(databases=['relengapi'],
+                                       user=userperms([], "noperm@mozilla.org"), 
+                                       disable_login_view=True)
 
 
 def db_setup(app):
@@ -89,9 +92,17 @@ def test_ui_admin_required():
             resp = client.get(path)
             eq_(resp.status_code, 200)
 
+    @test_context_noperm_user
+    def t3(path, app, client):
+        with app.test_request_context():
+            resp = client.get(path)
+            eq_(resp.status_code, 403)
+
+
     for path in paths:
         yield t, path
         yield t2, path
+        yield t3, path
 
 
 @test_context
@@ -204,6 +215,13 @@ def test_complete_loan_history(app, client):
 
 
 @test_context.specialize(db_setup=db_setup)
+def test_new_loan_login_required(client):
+    "Test that a post without a login fails"
+    request = {}
+    eq_(client.post_json('/slaveloan/loans/', request).status_code, 401)
+
+
+@test_context_noperm_user.specialize(db_setup=db_setup)
 def test_new_loan_request_missing_required(client):
     "Test that a post to with missing required fields fail"
     request = {}
