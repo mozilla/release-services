@@ -13,9 +13,10 @@ def userperms(perms, email='me@example.com'):
     u._permissions = set(perms)
     return u
 
-test_context = TestContext()
+test_context = TestContext(disable_login_view=True)
 test_context_admin = TestContext(databases=['relengapi'],
-                                 user=userperms([p.slaveloan.admin]))
+                                 user=userperms([p.slaveloan.admin]),
+                                 disable_login_view=True)
 
 
 @test_context
