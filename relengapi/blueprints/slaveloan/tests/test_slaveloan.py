@@ -98,7 +98,6 @@ def test_ui_admin_required():
             resp = client.get(path)
             eq_(resp.status_code, 403)
 
-
     for path in paths:
         yield t, path
         yield t2, path
@@ -223,10 +222,20 @@ def test_new_loan_login_required(client):
 
 @test_context_noperm_user.specialize(db_setup=db_setup)
 def test_new_loan_request_missing_required(client):
-    "Test that a post to with missing required fields fail"
+    "Test that a loan request with missing required fields fail"
     request = {}
     eq_(client.post_json('/slaveloan/loans/', request).status_code, 400)
-    request = {"ldap_email": "user1@mozilla.com"}
+    request = {"ldap_email": "noperm@mozilla.com"}
     eq_(client.post_json('/slaveloan/loans/', request).status_code, 400)
     request = {"requested_slavetype": "invalid_slave"}
     eq_(client.post_json('/slaveloan/loans/', request).status_code, 400)
+
+
+@test_context_noperm_user.specialize(db_setup=db_setup)
+def test_new_loan_request_notme_unauthed(client):
+    "Test that a loan request specifying a different ldap fails"
+    request = {"ldap_email": "a_different_email@mozilla.com"}
+    resp = client.post_json('/slaveloan/loans/', request)
+    eq_(resp.status_code, 400)
+    data = json.loads(resp.data)
+    ok_("on behalf of others" in data["error"]["description"])
