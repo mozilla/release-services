@@ -239,6 +239,7 @@ def get_machine_classes():
 
 
 @bp.route('/manual_actions')
+@flask_login.login_required
 @p.slaveloan.admin.require()
 @apimethod([rest.ManualAction], int, bool)
 def get_loan_actions(loan_id=None, all=False):

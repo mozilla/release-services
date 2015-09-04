@@ -25,6 +25,7 @@ class TestContext(object):
         'perms',  # TODO: doc
         'user',
         'accept',
+        'disable_login_view',
     ])
 
     def __init__(self, **options):
@@ -47,6 +48,7 @@ class TestContext(object):
             return self._app
         config = self.options.get('config', {}).copy()
         config['TESTING'] = True
+        config['LOGIN_DISABLED'] = False  # Make @login_required enforced in tests.
         config['SECRET_KEY'] = 'test'
         config['SQLALCHEMY_DATABASE_URIS'] = uris = {}
         dbnames = self.options.get('databases', [])
@@ -120,8 +122,13 @@ class TestContext(object):
 
         if 'db_setup' in self.options:
             self.options['db_setup'](app)
+        old_login_view = auth.login_manager.login_view
+        if self.options.get('disable_login_view', False):
+            # Don't issue a 302 redirection when login is needed.
+            auth.login_manager.login_view = None
         try:
             wrapped(*given_args, **kwargs)
         finally:
+            auth.login_manager.login_view = old_login_view
             if 'db_teardown' in self.options:
                 self.options['db_teardown'](app)
