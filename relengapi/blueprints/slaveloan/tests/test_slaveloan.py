@@ -25,7 +25,7 @@ test_context_admin = TestContext(databases=['relengapi'],
                                  user=userperms([p.slaveloan.admin]),
                                  disable_login_view=True)
 test_context_noperm_user = TestContext(databases=['relengapi'],
-                                       user=userperms([], "noperm@mozilla.org"), 
+                                       user=userperms([], "noperm@mozilla.org"),
                                        disable_login_view=True)
 
 
