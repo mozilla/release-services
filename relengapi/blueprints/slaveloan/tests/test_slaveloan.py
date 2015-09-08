@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import mock
+
 from flask import json
 from nose.tools import eq_
 from nose.tools import ok_
@@ -25,7 +27,7 @@ test_context_admin = TestContext(databases=['relengapi'],
                                  user=userperms([p.slaveloan.admin]),
                                  disable_login_view=True)
 test_context_noperm_user = TestContext(databases=['relengapi'],
-                                       user=userperms([], "noperm@mozilla.org"),
+                                       user=userperms([], "noperm@mozilla.com"),
                                        disable_login_view=True)
 
 
@@ -239,3 +241,27 @@ def test_new_loan_request_notme_unauthed(client):
     eq_(resp.status_code, 400)
     data = json.loads(resp.data)
     ok_("on behalf of others" in data["error"]["description"])
+
+
+@test_context_noperm_user.specialize(db_setup=db_setup)
+def test_new_loan_request_valid_works(client):
+    "Test that a user with no permissions can issue a loan request"
+    request = {"ldap_email": "noperm@mozilla.com",
+               "requested_slavetype": "talos-mtnlion-r5"}
+    with mock.patch("relengapi.blueprints.slaveloan.task_groups.chain") as mockedchain:
+        resp = client.post_json('/slaveloan/loans/', request)
+        eq_(resp.status_code, 200)
+        data = json.loads(resp.data)
+        expect = {
+            u'bug_id': None,
+            u'machine': None,
+            u'status': u'PENDING',
+            u'id': 7,
+            u'human': {
+                u'ldap_email': u'noperm@mozilla.com',
+                u'bugzilla_email': u'noperm@mozilla.com',
+                u'id': 5
+            }
+        }
+        eq_(data["result"], expect)
+        eq_(mockedchain().delay.called, True)
