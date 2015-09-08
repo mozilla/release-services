@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mock
+import sqlalchemy as sa
 
 from flask import json
 from nose.tools import eq_
@@ -157,7 +158,7 @@ def test_get_loans_all(client):
 
 @test_context_admin.specialize(db_setup=db_setup)
 def test_get_loans_specific(client):
-    """Get a specific loan, by id"""
+    """Admins can get a specific loan, by id"""
     resp = client.get('/slaveloan/loans/1')
     eq_(resp.status_code, 200)
 
@@ -174,6 +175,38 @@ def test_get_loans_specific(client):
             "fqdn": "host1.mozilla.org",
             "id": 1,
             "ipaddress": "127.0.0.1"
+        },
+        "status": "ACTIVE"
+    })
+
+
+@test_context_noperm_user.specialize(db_setup=db_setup)
+def test_get_my_loans_specific_invalid(client):
+    """Users can't get a specific loan of another users"""
+    resp = client.get('/slaveloan/loans/5')
+    eq_(resp.status_code, 403)
+
+
+@test_context_admin.specialize(db_setup=db_setup,
+                               user=userperms([], "user2@mozilla.com"))
+def test_get_my_loans_specific(client):
+    """Users can get a specific loan of their own, by id"""
+    resp = client.get('/slaveloan/loans/5')
+    eq_(resp.status_code, 200)
+
+    loan = json.loads(resp.data)['result']
+    eq_(loan, {
+        "bug_id": 1234005,
+        "human": {
+            "bugzilla_email": "user2@mozilla.com",
+            "id": 2,
+            "ldap_email": "user2@mozilla.com"
+        },
+        "id": 5,
+        "machine": {
+            "fqdn": "host5.mozilla.org",
+            "id": 5,
+            "ipaddress": "127.0.0.5"
         },
         "status": "ACTIVE"
     })
@@ -234,6 +267,15 @@ def test_new_loan_request_missing_required(client):
 
 
 @test_context_noperm_user.specialize(db_setup=db_setup)
+def test_new_loan_request_invalid_slave(client):
+    "Test that a loan request with an invalid slave"
+    request = {}
+    request = {"ldap_email": "noperm@mozilla.com",
+               "requested_slavetype": "invalid_slave"}
+    eq_(client.post_json('/slaveloan/loans/', request).status_code, 400)
+
+
+@test_context_noperm_user.specialize(db_setup=db_setup)
 def test_new_loan_request_notme_unauthed(client):
     "Test that a loan request specifying a different ldap fails"
     request = {"ldap_email": "a_different_email@mozilla.com"}
@@ -265,3 +307,48 @@ def test_new_loan_request_valid_works(client):
         }
         eq_(data["result"], expect)
         eq_(mockedchain().delay.called, True)
+
+
+@test_context_noperm_user.specialize(db_setup=db_setup,
+                                     user=userperms([], "user2@mozilla.com"))
+def test_new_loan_request_new_bugmail(client):
+    "Test that a user can change their own bugmail"
+    request = {"ldap_email": "user2@mozilla.com",
+               "bugzilla_email": "user2+bugspam@mozilla.com",
+               "requested_slavetype": "talos-mtnlion-r5"}
+    with mock.patch("relengapi.blueprints.slaveloan.task_groups.chain") as mockedchain:
+        resp = client.post_json('/slaveloan/loans/', request)
+        eq_(resp.status_code, 200)
+        data = json.loads(resp.data)
+        expect = {
+            u'bug_id': None,
+            u'machine': None,
+            u'status': u'PENDING',
+            u'id': 7,
+            u'human': {
+                u'ldap_email': u'user2@mozilla.com',
+                u'bugzilla_email': u'user2+bugspam@mozilla.com',
+                u'id': 2
+            }
+        }
+        eq_(data["result"], expect)
+        eq_(mockedchain().delay.called, True)
+    resp = client.get('/slaveloan/loans/5')  # 5 is an active loan with user2
+    eq_(resp.status_code, 200)
+    loan = json.loads(resp.data)['result']
+    eq_(loan["human"]["bugzilla_email"], "user2+bugspam@mozilla.com")
+
+
+@test_context_noperm_user.specialize(db_setup=db_setup)
+def test_new_loan_request_human_integrity(client):
+    "Test that an integrity error on the DB will report for us to Retry."
+    request = {"ldap_email": "noperm@mozilla.com",
+               "bugzilla_email": "noperm@mozilla.com",
+               "requested_slavetype": "talos-mtnlion-r5"}
+    exception_obj = sa.exc.IntegrityError("TEST_STMT", [], sa.exc.IntegrityError)
+    with mock.patch("relengapi.blueprints.slaveloan.model.Humans.as_unique") as as_unique:
+        as_unique.side_effect = exception_obj
+        resp = client.post_json('/slaveloan/loans/', request)
+        eq_(resp.status_code, 500)
+        data = json.loads(resp.data)
+        ok_("retry" in data["error"]["description"])

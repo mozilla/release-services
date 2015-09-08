@@ -22,6 +22,7 @@ from relengapi.lib.api import apimethod
 from relengapi.lib.permissions import p
 from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import Forbidden
 from werkzeug.exceptions import InternalServerError
 
 from relengapi.blueprints.slaveloan import bugzilla
@@ -73,12 +74,13 @@ def get_loans(all=None):
 
 
 @bp.route('/loans/<int:loanid>')
-@p.slaveloan.admin.require()
 @apimethod(rest.Loan, int)
 def get_loan(loanid):
     "Get the details of a loan, by id"
-    # XXX: Use permissions to ensure admin | loanee
     l = Loans.query.get(loanid)
+    if not p.slaveloan.admin.can():
+        if l.human.ldap != current_user.authenticated_email:
+            raise Forbidden
     return l.to_wsme()
 
 
