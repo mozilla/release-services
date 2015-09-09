@@ -15,7 +15,7 @@ from flask import Flask
 from flask import current_app
 
 import relengapi
-from alembic_wrapper import AlembicSubcommand
+from relengapi.blueprints.base.alembic_wrapper import AlembicSubcommand
 from relengapi.lib import subcommands
 
 bp = Blueprint('base', __name__)

@@ -11,9 +11,9 @@ from copy import deepcopy
 from nose.tools import assert_greater
 from nose.tools import eq_
 
-from models import DB_DECLARATIVE_BASE
-from models import Build
-from models import ClobberTime
+from relengapi.blueprints.clobberer.models import DB_DECLARATIVE_BASE
+from relengapi.blueprints.clobberer.models import Build
+from relengapi.blueprints.clobberer.models import ClobberTime
 from relengapi.lib import auth
 from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext

@@ -21,10 +21,10 @@ from sqlalchemy import func
 from sqlalchemy import not_
 from sqlalchemy import or_
 
-import rest
-from models import DB_DECLARATIVE_BASE
-from models import Build
-from models import ClobberTime
+from relengapi.blueprints.clobberer import rest
+from relengapi.blueprints.clobberer.models import DB_DECLARATIVE_BASE
+from relengapi.blueprints.clobberer.models import Build
+from relengapi.blueprints.clobberer.models import ClobberTime
 from relengapi.lib import angular
 from relengapi.lib import api
 from relengapi.lib.api import apimethod
