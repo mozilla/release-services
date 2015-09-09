@@ -18,7 +18,7 @@ from relengapi.lib.testing.context import TestContext
 from relengapi.util import tz
 
 
-def userperms(perms, email='me@example.com'):
+def userperms(perms, email='slaveadmin@mozilla.com'):
     u = auth.HumanUser(email)
     u._permissions = set(perms)
     return u
@@ -73,6 +73,13 @@ def test_ui_root(client):
     "The root of the blueprint is not accessible without login"
     rv = client.get('/slaveloan/')
     eq_(rv.status_code, 401)
+
+
+@test_context_noperm_user
+def test_ui_root_viewable(client):
+    "The root of the blueprint is accessible with no permissions once logged in"
+    rv = client.get('/slaveloan/')
+    eq_(rv.status_code, 200)
 
 
 def test_ui_admin_required():
@@ -307,6 +314,63 @@ def test_new_loan_request_valid_works(client):
         }
         eq_(data["result"], expect)
         eq_(mockedchain().delay.called, True)
+
+
+@test_context_noperm_user.specialize(db_setup=db_setup)
+def test_new_loan_request_set_bug(client):
+    "Test that a loan request can pre-emptively set a bug ID"
+    request = {"ldap_email": "noperm@mozilla.com",
+               "requested_slavetype": "b-2008-ix",
+               "loan_bug_id": 123456}
+    with mock.patch("relengapi.blueprints.slaveloan.task_groups.chain") as mockedchain:
+        resp = client.post_json('/slaveloan/loans/', request)
+        eq_(resp.status_code, 200)
+        data = json.loads(resp.data)
+        expect = {
+            u'bug_id': 123456,
+            u'machine': None,
+            u'status': u'PENDING',
+            u'id': 7,
+            u'human': {
+                u'ldap_email': u'noperm@mozilla.com',
+                u'bugzilla_email': u'noperm@mozilla.com',
+                u'id': 5
+            }
+        }
+        eq_(data["result"], expect)
+        eq_(mockedchain().delay.called, True)
+
+
+@test_context_admin.specialize(db_setup=db_setup)
+def test_new_loan_request_admin_other_user(client, app):
+    "Test that an admin user can issue a loan request for someone else"
+    request = {"ldap_email": "noperm@mozilla.com",
+               "requested_slavetype": "talos-mtnlion-r5"}
+    with mock.patch("relengapi.blueprints.slaveloan.task_groups.chain") as mockedchain:
+        resp = client.post_json('/slaveloan/loans/', request)
+        eq_(resp.status_code, 200)
+        data = json.loads(resp.data)
+        expect = {
+            u'bug_id': None,
+            u'machine': None,
+            u'status': u'PENDING',
+            u'id': 7,
+            u'human': {
+                u'ldap_email': u'noperm@mozilla.com',
+                u'bugzilla_email': u'noperm@mozilla.com',
+                u'id': 5
+            }
+        }
+        eq_(data["result"], expect)
+        eq_(mockedchain().delay.called, True)
+    # Now test that the admin user e-mail is in history
+    with app.app_context():
+        q = History.query
+        q = q.filter(History.loan_id == 7)
+        histories = q.all()
+        eq_(1, len(histories))
+        ok_("noperm@mozilla.com" in histories[0].msg)
+        ok_("slaveadmin@mozilla.com" in histories[0].msg)
 
 
 @test_context_noperm_user.specialize(db_setup=db_setup,

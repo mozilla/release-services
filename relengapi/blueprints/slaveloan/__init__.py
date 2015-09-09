@@ -206,7 +206,7 @@ def new_loan_request(body):
                 (current_user.authenticated_email, slavetype,
                  body.requested_slavetype)
     if body.ldap_email != current_user.authenticated_email:
-        hist_line += "on behalf of %s" % body.ldap_email
+        hist_line += " on behalf of %s" % body.ldap_email
     history = History(for_loan=l,
                       timestamp=tz.utcnow(),
                       msg=hist_line)
