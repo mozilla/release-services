@@ -53,6 +53,7 @@ setup(
             'pyflakes',
             'moto',
             'mockcache',
+            'isort',
         ],
         # extras required only for LDAP authorization support
         'ldap': [
