@@ -13,7 +13,6 @@ Types
 .. api:autotype:: ManualAction
 .. api:autotype:: UpdateManualAction
 .. api:autotype:: LoanRequest
-.. api:autotype:: LoanAdminRequest
 
 Endpoints
 ---------

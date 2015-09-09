@@ -82,17 +82,6 @@ class UpdateManualAction(wsme.types.Base):
     complete = bool
 
 
-class LoanAdminRequest(wsme.types.Base):
-    "Represents a new loan request with admin details"
-
-    #: (optional) Loan Bug Id, if not passed in we create one for you
-    loan_bug_id = wsme.types.wsattr(int, mandatory=False)
-    #: Users full LDAP e-mail
-    ldap_email = unicode
-    #: Users Bugzilla e-mail
-    bugzilla_email = unicode
-
-
 class LoanRequest(wsme.types.Base):
     "Represents a new loan request"
 

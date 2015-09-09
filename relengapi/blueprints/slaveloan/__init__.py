@@ -115,57 +115,6 @@ def get_loan_history(loanid):
     return [h.to_wsme() for h in histories.all()]
 
 
-@bp.route('/loans/new', methods=['POST'])
-@p.slaveloan.admin.require()
-@apimethod(rest.Loan, body=rest.LoanAdminRequest)
-def new_loan_from_admin(body):
-    "Creates a new loan entry"
-    # if not body.status:
-    #    raise BadRequest("Missing Status Field")
-    # if not body.ldap_email:
-    #    raise BadRequest("Missing LDAP E-Mail")
-    # if not body.bugzilla_email:
-    #    raise BadRequest("Missing Bugzilla E-Mail")
-    # if body.status != 'ACTIVE':
-    #     raise BadRequest("Only ACTIVE loans supported at this time")
-    # if body.status != 'PENDING':
-    #     if not body.fqdn:
-    #         raise BadRequest("Missing Machine FQDN")
-    #     if not body.ipaddress:
-    #         raise BadRequest("Missing Machine IP Address")
-
-    session = g.db.session('relengapi')
-    try:
-        if body.status != 'PENDING':
-            m = Machines.as_unique(session, fqdn=body.fqdn,
-                                   ipaddress=body.ipaddress)
-        h = Humans.as_unique(session, ldap=body.ldap_email,
-                             bugzilla=body.bugzilla_email)
-        if h.bugzilla != body.bugzilla_email:
-            h.bugzilla = body.bugzilla_email
-    except sa.exc.IntegrityError:
-        raise InternalServerError("Integrity Error from Database, please retry.")
-
-    loan_data = dict(status=body.status, human=h)
-    if body.status != 'PENDING':
-        loan_data.update(dict(machine=m))
-    if body.loan_bug_id:
-        loan_data.update(dict(bug_id=body.loan_bug_id))
-
-    l = Loans(**loan_data)
-
-    history = History(for_loan=l,
-                      timestamp=tz.utcnow(),
-                      msg="%s added this entry to slave loan tool via admin interface" %
-                          current_user.authenticated_email)
-    session.add(l)
-    session.add(history)
-    session.commit()
-    logger.info("%s manually added slave loan entry ID %s via admin interface" %
-                (current_user.authenticated_email, l.id))
-    return l.to_wsme()
-
-
 @bp.route('/loans/', methods=['POST'])
 @flask_login.login_required
 @apimethod(rest.Loan, body=rest.LoanRequest)
