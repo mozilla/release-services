@@ -3,10 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import wrapt
-
 from flask import make_response
 from werkzeug.exceptions import HTTPException
-
 
 _status_ranges = {
     '2xx': lambda c: 200 <= c < 300,

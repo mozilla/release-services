@@ -3,29 +3,26 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import collections
-import flask_login
-import structlog
+import re
 import time
 
-import re
-import rest
-
+import flask_login
+import structlog
+from flask import Blueprint
+from flask import g
+from flask import request
+from flask import url_for
+from flask.ext.login import current_user
 from sqlalchemy import and_
 from sqlalchemy import desc
 from sqlalchemy import func
 from sqlalchemy import not_
 from sqlalchemy import or_
 
-from flask import Blueprint
-from flask import g
-from flask import request
-from flask import url_for
-from flask.ext.login import current_user
-
+import rest
+from models import DB_DECLARATIVE_BASE
 from models import Build
 from models import ClobberTime
-from models import DB_DECLARATIVE_BASE
-
 from relengapi.lib import angular
 from relengapi.lib import api
 from relengapi.lib.api import apimethod

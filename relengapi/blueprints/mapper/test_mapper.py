@@ -3,16 +3,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
-import mock
 
+import mock
 from nose.tools import eq_
+from sqlalchemy.orm.exc import MultipleResultsFound
+from sqlalchemy.orm.exc import NoResultFound
+
 from relengapi.blueprints.mapper import Hash
 from relengapi.blueprints.mapper import Project
 from relengapi.lib import auth
 from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
-from sqlalchemy.orm.exc import MultipleResultsFound
-from sqlalchemy.orm.exc import NoResultFound
 
 SHA1 = '111111705d7c41c8f101b5b1e3438d95d0fcfa7a'
 SHA1R = ''.join(reversed(SHA1))

@@ -3,13 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import sqlalchemy as sa
-
-from relengapi.lib import db
-from relengapi.util import tz
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Index
 
 from relengapi.blueprints.slaveloan import rest
+from relengapi.lib import db
+from relengapi.util import tz
 
 _tbl_prefix = 'slaveloan_'
 

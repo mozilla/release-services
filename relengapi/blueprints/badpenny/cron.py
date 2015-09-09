@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import structlog
-
 from flask import Blueprint
 from flask import current_app
+
 from relengapi.blueprints.badpenny import execution
 from relengapi.blueprints.badpenny import tables
 from relengapi.lib import badpenny

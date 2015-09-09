@@ -3,11 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import datetime
-import sqlalchemy as sa
-import structlog
-
 from random import randint
 
+import sqlalchemy as sa
+import structlog
 from flask import Blueprint
 from flask import current_app
 from flask import redirect

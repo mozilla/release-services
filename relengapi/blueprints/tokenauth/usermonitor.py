@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import structlog
-
 from flask import current_app
+
 from relengapi.blueprints.tokenauth import tables
 from relengapi.lib import badpenny
 

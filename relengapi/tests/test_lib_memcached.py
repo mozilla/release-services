@@ -4,10 +4,11 @@
 
 import contextlib
 import itertools
-import mock
 import socket
 
+import mock
 from nose.tools import eq_
+
 from relengapi.lib.testing.context import TestContext
 
 test_context = TestContext(reuse_app=False)

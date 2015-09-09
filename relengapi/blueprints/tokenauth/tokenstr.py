@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import structlog
-
 from flask import current_app
 from itsdangerous import BadData
 from itsdangerous import JSONWebSignatureSerializer

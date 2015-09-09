@@ -3,19 +3,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import datetime
-import mock
 import pprint
-
 from contextlib import contextmanager
+
+import mock
 from flask import json
 from nose.tools import eq_
+
 from relengapi.blueprints import treestatus
 from relengapi.blueprints.treestatus import model
 from relengapi.blueprints.treestatus import types
 from relengapi.lib import auth
 from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
-
 
 tree1_json = {
     'tree': 'tree1',

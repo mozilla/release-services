@@ -8,14 +8,12 @@ import sys
 
 from alembic import command
 from alembic.config import Config
-from alembic_wrapper import AlembicSubcommand
-
 from flask import Blueprint
 from flask import Flask
 from flask import current_app
 
 import relengapi
-
+from alembic_wrapper import AlembicSubcommand
 from relengapi.lib import subcommands
 
 bp = Blueprint('base', __name__)

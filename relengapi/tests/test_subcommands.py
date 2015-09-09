@@ -5,6 +5,7 @@
 import logging
 
 from nose.tools import eq_
+
 from relengapi.lib import subcommands
 from relengapi.lib.testing.subcommands import run_main
 

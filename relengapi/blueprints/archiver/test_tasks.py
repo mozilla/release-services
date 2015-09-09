@@ -10,7 +10,6 @@ from relengapi.blueprints.archiver.test_util import fake_404_response
 from relengapi.blueprints.archiver.test_util import setup_buckets
 from relengapi.lib.testing.context import TestContext
 
-
 cfg = {
     'RELENGAPI_CELERY_LOG_LEVEL': 'DEBUG',
 

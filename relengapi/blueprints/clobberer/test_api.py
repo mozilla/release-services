@@ -4,21 +4,20 @@
 
 import json
 import time
-
 from copy import deepcopy
+
 from nose.tools import assert_greater
 from nose.tools import eq_
 
+from models import DB_DECLARATIVE_BASE
+from models import Build
+from models import ClobberTime
 from relengapi.lib import auth
 from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
 
 from . import BUILDDIR_REL_PREFIX
 from . import BUILDER_REL_PREFIX
-
-from models import Build
-from models import ClobberTime
-from models import DB_DECLARATIVE_BASE
 
 _clobber_args = {
     'branch': 'branch',

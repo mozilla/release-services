@@ -8,10 +8,10 @@ from flask.ext.login import current_user
 from nose.tools import assert_raises
 from nose.tools import eq_
 from nose.tools import with_setup
+
 from relengapi.lib import auth
 from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
-
 
 test_context = TestContext()
 p.test_lib_auth.a.doc("test perm a")

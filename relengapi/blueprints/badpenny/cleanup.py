@@ -3,9 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import datetime
-import structlog
 
+import structlog
 from flask import current_app
+
 from relengapi.blueprints.badpenny import tables
 from relengapi.lib import badpenny
 from relengapi.lib import time

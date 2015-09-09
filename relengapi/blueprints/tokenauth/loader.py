@@ -2,14 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import structlog
 import time
+
+import structlog
+from werkzeug.exceptions import BadRequest
 
 from relengapi.blueprints.tokenauth import tables
 from relengapi.blueprints.tokenauth import tokenstr
 from relengapi.lib import auth
 from relengapi.lib.permissions import p
-from werkzeug.exceptions import BadRequest
 
 logger = structlog.get_logger()
 

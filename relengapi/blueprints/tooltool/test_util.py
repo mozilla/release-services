@@ -5,6 +5,7 @@
 import hashlib
 
 from nose.tools import eq_
+
 from relengapi.blueprints.tooltool import util
 
 ONE = '1\n'

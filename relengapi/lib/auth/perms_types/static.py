@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import itertools
-
 from functools import partial
+
 from relengapi.lib.auth import base
 from relengapi.lib.auth import permissions_stale
 from relengapi.lib.permissions import p

@@ -3,23 +3,23 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import calendar
-import dateutil.parser
 import re
-import sqlalchemy as sa
-import structlog
 import time
 
+import dateutil.parser
+import sqlalchemy as sa
+import structlog
 from flask import Blueprint
 from flask import Response
 from flask import abort
 from flask import g
 from flask import jsonify
 from flask import request
-from relengapi.lib import db
 from sqlalchemy import orm
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
 
+from relengapi.lib import db
 from relengapi.lib.permissions import p
 
 logger = structlog.get_logger()

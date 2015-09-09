@@ -1,8 +1,7 @@
-import mock
-
-import requests
-
 from StringIO import StringIO
+
+import mock
+import requests
 from boto.s3.key import Key
 
 EXPECTED_TASK_STATUS_FAILED_RESPONSE = {

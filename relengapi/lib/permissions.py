@@ -4,10 +4,10 @@
 
 import wrapt
 import wsme.types
-
 from flask import abort
 from flask import current_app
 from flask.ext.login import current_user
+
 from relengapi import util
 
 

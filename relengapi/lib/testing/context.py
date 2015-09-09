@@ -3,11 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import inspect
-import relengapi.app
+
 import structlog
 import wrapt
-
 from flask import json
+
+import relengapi.app
 from relengapi.lib import auth
 
 log = structlog.get_logger()

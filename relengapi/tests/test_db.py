@@ -4,10 +4,9 @@
 
 import datetime
 import os
-import sqlalchemy as sa
 
 import pytz
-
+import sqlalchemy as sa
 from nose.tools import assert_not_equal
 from nose.tools import assert_raises
 from nose.tools import eq_

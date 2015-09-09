@@ -4,11 +4,12 @@
 
 import contextlib
 import datetime
+
 import mock
 import pytz
-
 from flask import json
 from nose.tools import eq_
+
 from relengapi.blueprints.badpenny import cleanup
 from relengapi.blueprints.badpenny import cron
 from relengapi.blueprints.badpenny import execution

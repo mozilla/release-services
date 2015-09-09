@@ -3,9 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import contextlib
-import mock
 
+import mock
 from nose.tools import eq_
+
 from relengapi.blueprints.tokenauth import tables
 from relengapi.blueprints.tokenauth import usermonitor
 from relengapi.blueprints.tokenauth.util import insert_usr

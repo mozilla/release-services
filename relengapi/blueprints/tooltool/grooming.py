@@ -3,11 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import hashlib
+from datetime import timedelta
+
 import sqlalchemy as sa
 import structlog
-
-from datetime import timedelta
 from flask import current_app
+
 from relengapi.blueprints.tooltool import tables
 from relengapi.blueprints.tooltool import util
 from relengapi.lib import badpenny

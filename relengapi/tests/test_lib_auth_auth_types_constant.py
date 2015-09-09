@@ -3,8 +3,8 @@
 
 from flask.ext.login import current_user
 from nose.tools import eq_
-from relengapi.lib.testing.context import TestContext
 
+from relengapi.lib.testing.context import TestContext
 
 test_context = TestContext(
     config={'RELENGAPI_AUTHENTICATION': {'type': 'constant', 'email': 'me@me.com'}})

@@ -3,11 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import datetime
 import json
+
 import mock
 import moto
 import pytz
-
 from nose.tools import eq_
+
 from relengapi.blueprints.archiver import TASK_TIME_OUT
 from relengapi.blueprints.archiver import cleanup_old_tasks
 from relengapi.blueprints.archiver import delete_tracker
@@ -16,7 +17,8 @@ from relengapi.blueprints.archiver import tables
 from relengapi.blueprints.archiver import update_tracker_state
 from relengapi.blueprints.archiver.test_util import EXPECTED_TASK_STATUS_FAILED_RESPONSE
 from relengapi.blueprints.archiver.test_util import EXPECTED_TASK_STATUS_PENDING_RESPONSE
-from relengapi.blueprints.archiver.test_util import EXPECTED_TASK_STATUS_SUCCESSFUL_RESPONSE
+from relengapi.blueprints.archiver.test_util import \
+    EXPECTED_TASK_STATUS_SUCCESSFUL_RESPONSE
 from relengapi.blueprints.archiver.test_util import create_s3_items
 from relengapi.blueprints.archiver.test_util import fake_200_response
 from relengapi.blueprints.archiver.test_util import fake_expired_task_status
@@ -24,9 +26,7 @@ from relengapi.blueprints.archiver.test_util import fake_failed_task_status
 from relengapi.blueprints.archiver.test_util import fake_incomplete_task_status
 from relengapi.blueprints.archiver.test_util import fake_successful_task_status
 from relengapi.blueprints.archiver.test_util import setup_buckets
-
 from relengapi.lib.testing.context import TestContext
-
 
 cfg = {
     'RELENGAPI_CELERY_LOG_LEVEL': 'DEBUG',

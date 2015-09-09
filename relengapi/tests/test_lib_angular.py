@@ -4,6 +4,7 @@
 
 from flask import url_for
 from nose.tools import assert_raises
+
 from relengapi.lib import angular
 from relengapi.lib.testing.context import TestContext
 

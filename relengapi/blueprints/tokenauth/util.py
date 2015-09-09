@@ -5,8 +5,10 @@
 import json
 
 from itsdangerous import BadData
+
 from relengapi.blueprints.tokenauth.tables import Token
 from relengapi.lib.permissions import p
+
 
 # test utilities
 

@@ -3,17 +3,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import calendar
+import time
+
 import sqlalchemy as sa
 import structlog
-import time
 import wsme
-
 from flask import Blueprint
 from flask import current_app
 from flask import g
 from flask import url_for
 from flask.ext.login import current_user
 from flask.ext.login import login_required
+from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import Forbidden
+from werkzeug.exceptions import NotFound
+
 from relengapi.blueprints.tokenauth import loader
 from relengapi.blueprints.tokenauth import tables
 from relengapi.blueprints.tokenauth import tokenstr
@@ -24,9 +28,6 @@ from relengapi.lib import api
 from relengapi.lib.api import apimethod
 from relengapi.lib.permissions import p
 from relengapi.util import tz
-from werkzeug.exceptions import BadRequest
-from werkzeug.exceptions import Forbidden
-from werkzeug.exceptions import NotFound
 
 logger = structlog.get_logger()
 bp = Blueprint('tokenauth', __name__,

@@ -5,7 +5,6 @@
 import json
 import logging
 
-from relengapi.lib import db
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
@@ -15,6 +14,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relation
 
 from relengapi.blueprints.treestatus import types
+from relengapi.lib import db
 
 log = logging.getLogger(__name__)
 

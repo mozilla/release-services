@@ -2,21 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import Queue
 import contextlib
 import logging
-import mock
 import multiprocessing
 import os
+import Queue
 import shutil
 import signal
 
+import mock
 from celery import chain
 from celery import group
 from celery.signals import worker_ready
 from flask import Flask
 from nose.tools import assert_raises
 from nose.tools import eq_
+
 from relengapi.lib import celery
 from relengapi.lib.testing.context import TestContext
 

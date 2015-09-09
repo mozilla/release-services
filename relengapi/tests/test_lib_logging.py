@@ -3,15 +3,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
+
 import mock
 import mozdef_client
 import structlog
-
 from nose.tools import eq_
 from nose.tools import with_setup
+
 from relengapi.lib import logging as relengapi_logging
 from relengapi.lib.testing.context import TestContext
-
 
 test_context = TestContext()
 

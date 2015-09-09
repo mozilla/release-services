@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from nose.tools import eq_
+
 from relengapi.lib.auth.auth_types import browserid
 from relengapi.lib.testing.context import TestContext
-
 
 test_context = TestContext(
     config={'RELENGAPI_AUTHENTICATION': {'type': 'browserid'}})

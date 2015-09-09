@@ -6,7 +6,6 @@
 #     Separate relengapi blueprint
 
 import structlog
-
 from bzrest.client import BugzillaClient
 from flask import current_app
 from flask import url_for

@@ -2,16 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import docutils.nodes
 import fnmatch
 import re
 import sys
+
+import docutils.nodes
 import wsme
 import wsme.api
 import wsme.rest.args
 import wsme.rest.json
 import wsme.types
-
 from docutils.statemachine import ViewList
 from flask import current_app
 from sphinx import addnodes
@@ -25,6 +25,7 @@ from sphinx.util.docfields import Field
 from sphinx.util.docfields import GroupedField
 from sphinx.util.docfields import TypedField
 from sphinx.util.nodes import make_refnode
+
 
 # Note that this file is not subject to coverage.  This code is only used in
 # the documentation-generation process, and not directly tested, aside from

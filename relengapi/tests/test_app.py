@@ -3,14 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
-import mock
 import os
-import relengapi.app
 
+import mock
 from flask import g
 from nose.tools import eq_
-from relengapi.lib.testing.context import TestContext
 
+import relengapi.app
+from relengapi.lib.testing.context import TestContext
 
 test_context = TestContext(reuse_app=False)
 

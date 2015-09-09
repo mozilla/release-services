@@ -16,6 +16,7 @@ from flask.ext.login import LoginManager
 from flask.ext.login import current_user
 from flask.ext.login import user_logged_in
 from flask.ext.login import user_logged_out
+
 from relengapi.lib import safety
 from relengapi.lib.permissions import p
 

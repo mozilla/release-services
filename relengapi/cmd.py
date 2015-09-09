@@ -5,8 +5,8 @@
 import argparse
 import logging
 import os
-import relengapi.app
 
+import relengapi.app
 from relengapi.lib import subcommands
 from relengapi.lib.logging import setupConsoleLogging
 

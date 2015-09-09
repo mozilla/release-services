@@ -7,9 +7,9 @@ import shutil
 import tempfile
 
 from flask import url_for
+
 from relengapi.lib import angular
 from relengapi.lib.testing.context import TestContext
-
 
 tempdir = None
 

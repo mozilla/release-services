@@ -5,10 +5,9 @@
 import os
 import sys
 import tempfile
-
 from cStringIO import StringIO
-from relengapi import cmd
 
+from relengapi import cmd
 
 _settings = {}
 

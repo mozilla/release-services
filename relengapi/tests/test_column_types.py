@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import sqlalchemy as sa
-
 from nose.tools import eq_
+
 from relengapi.lib import db
 
 

@@ -6,6 +6,7 @@ import threading
 
 from nose.tools import eq_
 from nose.tools import with_setup
+
 from relengapi.lib.proxy import proxy
 from relengapi.lib.testing.context import TestContext
 

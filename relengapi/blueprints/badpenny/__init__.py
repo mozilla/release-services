@@ -3,10 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import structlog
-
 from flask import Blueprint
 from flask import current_app
 from flask import url_for
+from werkzeug.exceptions import NotFound
+
 from relengapi.blueprints.badpenny import cleanup
 from relengapi.blueprints.badpenny import cron
 from relengapi.blueprints.badpenny import execution
@@ -18,7 +19,6 @@ from relengapi.lib import permissions
 from relengapi.lib import time
 from relengapi.lib.api import apimethod
 from relengapi.lib.permissions import p
-from werkzeug.exceptions import NotFound
 
 logger = structlog.get_logger()
 bp = Blueprint('badpenny', __name__,

@@ -1,12 +1,12 @@
 import logging
 import os
-import relengapi
 
 from alembic import command
 from alembic.config import Config as AlembicConfig
 from flask import current_app
-from relengapi.lib import subcommands
 
+import relengapi
+from relengapi.lib import subcommands
 
 logger = logging.getLogger(__name__)
 

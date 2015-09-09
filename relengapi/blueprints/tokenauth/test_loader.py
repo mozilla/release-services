@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mock
-
 from flask import json
 from nose.tools import eq_
+
 from relengapi.blueprints.tokenauth import loader
 from relengapi.blueprints.tokenauth import tables
 from relengapi.blueprints.tokenauth.test_tokenauth import test_context

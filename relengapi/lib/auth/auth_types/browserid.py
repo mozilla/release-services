@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from flask.ext.browserid import BrowserID
-from relengapi.lib import auth
 
+from relengapi.lib import auth
 
 browser_id = BrowserID()
 

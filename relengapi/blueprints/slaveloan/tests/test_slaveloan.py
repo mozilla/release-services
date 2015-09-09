@@ -4,10 +4,10 @@
 
 import mock
 import sqlalchemy as sa
-
 from flask import json
 from nose.tools import eq_
 from nose.tools import ok_
+
 from relengapi.blueprints.slaveloan.model import History
 from relengapi.blueprints.slaveloan.model import Humans
 from relengapi.blueprints.slaveloan.model import Loans

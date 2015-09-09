@@ -4,6 +4,7 @@
 
 from nose.tools import assert_raises
 from nose.tools import eq_
+
 from relengapi.blueprints.tokenauth import tokenstr
 from relengapi.lib.testing.context import TestContext
 

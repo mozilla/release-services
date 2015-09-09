@@ -5,6 +5,7 @@
 import json
 
 from nose.tools import eq_
+
 from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
 

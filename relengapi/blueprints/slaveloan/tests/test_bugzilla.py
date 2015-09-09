@@ -3,11 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mock
-
 from nose.tools import assert_not_equal
 from nose.tools import assert_raises
 from nose.tools import eq_
 from nose.tools import ok_
+
 from relengapi.blueprints.slaveloan import bugzilla
 from relengapi.lib.testing.context import TestContext
 

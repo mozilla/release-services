@@ -2,15 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import mock
 import os
 import shutil
 import sys
 
+import mock
 from nose.tools import eq_
+from sphinx import websupport
+
 from relengapi.blueprints import docs
 from relengapi.lib.testing.context import TestContext
-from sphinx import websupport
 
 
 class NullStorage(websupport.StorageBackend):

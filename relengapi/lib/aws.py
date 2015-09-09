@@ -4,15 +4,15 @@
 
 from __future__ import absolute_import
 
-import boto
 import importlib
 import json
 import logging
-import structlog
 import threading
 import time
-import wsme.rest.json
 
+import boto
+import structlog
+import wsme.rest.json
 from boto.sqs import message as sqs_message
 
 logger = structlog.get_logger()

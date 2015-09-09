@@ -3,13 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import glob
-import mock
 import os
-import relengapi
 import shutil
 import tempfile
-
 from contextlib import contextmanager
+
+import mock
+
+import relengapi
 from relengapi.lib import db
 from relengapi.lib.testing.subcommands import run_main
 
