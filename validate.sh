@@ -89,17 +89,11 @@ pyflakes relengapi || not_ok "pyflakes failed"
 finish_step
 
 start_step "checking import module convention in modified files"
-modified=false
-for filename in `find relengapi -type f -name "*.py" -print` ; do
-    rv=0
-    python misc/fiximports.py "$filename" || rv=$?
-    case $rv in
-        0) ;;
-        1) not_ok "cannot fix imports of $filename" ;;
-        2) modified=true ;;
-    esac
-done
-$modified && not_ok "some imports were re-ordered and changes will need to be committed"
+isort -c -q -rc . --diff || not_ok "Import order is incorrect (diff provided)"
+finish_step
+
+start_step "checking all python files have absolute_import specified"
+isort -c -q -a "from __future__ import absolute_import" -rc . || not_ok "Missing absolute_import in referenced files"
 finish_step
 
 start_step "building docs"
@@ -218,6 +212,7 @@ rm -f "relengapi.egg-info/SOURCES.txt"
 start_step "getting file list from git"
 git_only='
     .gitignore
+    .isort.cfg
     .taskclusterrc
     .travis.yml
     .taskclusterrc
@@ -226,7 +221,6 @@ git_only='
     validate.sh
     src
     settings_example.py
-    misc/fiximports.py
     misc/release.sh
 '
 git ls-files . | while read f; do

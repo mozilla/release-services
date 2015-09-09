@@ -2,20 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import logging
 import os
 import sys
 
 from alembic import command
 from alembic.config import Config
-from alembic_wrapper import AlembicSubcommand
-
 from flask import Blueprint
 from flask import Flask
 from flask import current_app
 
 import relengapi
-
+from relengapi.blueprints.base.alembic_wrapper import AlembicSubcommand
 from relengapi.lib import subcommands
 
 bp = Blueprint('base', __name__)

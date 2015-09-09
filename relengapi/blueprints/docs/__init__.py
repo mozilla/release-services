@@ -2,21 +2,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import StringIO
-import os
-import pkg_resources
-import shutil
-import structlog
+from __future__ import absolute_import
 
+import os
+import shutil
+import StringIO
+
+import pkg_resources
+import structlog
 from flask import Blueprint
 from flask import abort
 from flask import current_app
 from flask import render_template
 from flask import send_from_directory
-from relengapi.lib import subcommands
 from sphinx.websupport import WebSupport
 from sphinx.websupport.errors import DocumentNotFoundError
 from sphinx.websupport.storage import StorageBackend
+
+from relengapi.lib import subcommands
 
 logger = structlog.get_logger()
 

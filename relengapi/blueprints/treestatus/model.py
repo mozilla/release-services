@@ -2,10 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import json
 import logging
 
-from relengapi.lib import db
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
@@ -15,6 +16,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relation
 
 from relengapi.blueprints.treestatus import types
+from relengapi.lib import db
 
 log = logging.getLogger(__name__)
 

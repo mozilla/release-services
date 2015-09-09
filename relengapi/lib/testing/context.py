@@ -2,12 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import inspect
-import relengapi.app
+
 import structlog
 import wrapt
-
 from flask import json
+
+import relengapi.app
 from relengapi.lib import auth
 
 log = structlog.get_logger()

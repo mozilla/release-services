@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import os
 import sys
 import tempfile
-
 from cStringIO import StringIO
-from relengapi import cmd
 
+from relengapi import cmd
 
 _settings = {}
 

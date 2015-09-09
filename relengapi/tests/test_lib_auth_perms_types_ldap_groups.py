@@ -2,15 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import copy
 import logging
 import logging.handlers
-import mockldap
-import relengapi.app
 import unittest
 
+import mockldap
 from nose.tools import assert_raises
 from nose.tools import eq_
+
+import relengapi.app
 from relengapi.lib import auth
 from relengapi.lib.auth.perms_types import ldap_groups
 from relengapi.lib.permissions import p

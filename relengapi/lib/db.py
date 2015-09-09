@@ -6,13 +6,12 @@ from __future__ import absolute_import
 
 import logging
 import os
+import threading
+
 import pytz
 import sqlalchemy as sa
 import structlog
-import threading
-
 from flask import current_app
-from relengapi.util import synchronized
 from sqlalchemy import event
 from sqlalchemy import exc
 from sqlalchemy import orm
@@ -22,6 +21,7 @@ from sqlalchemy.ext import declarative
 from sqlalchemy.orm import scoping
 from sqlalchemy.pool import Pool
 
+from relengapi.util import synchronized
 
 logger = structlog.get_logger()
 

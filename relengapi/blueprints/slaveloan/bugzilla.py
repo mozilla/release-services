@@ -5,8 +5,9 @@
 # XXX Much of this functionality should probably be its own
 #     Separate relengapi blueprint
 
-import structlog
+from __future__ import absolute_import
 
+import structlog
 from bzrest.client import BugzillaClient
 from flask import current_app
 from flask import url_for

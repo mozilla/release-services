@@ -26,9 +26,28 @@ It is in GitHub-flavored Markdown format for ease of copy-pasting.
       * [ ] tests do not depend on time (`time.sleep`, etc.)
     * style (much of this is verified by `validate.sh`
       * [ ] pep8, pyflakes-compliant
-      * [ ] one import per line, sorted lexically
+      * [ ] `from __future__ import absolute_imports` used in all python files
+      * [ ] one import per line, sorted by `isort`
       * [ ] all files have an MPL license header
     * code quality
       * [ ] configuration is read from the configuration file, not embedded in source files
       * [ ] generic functionality is implemented in `relengapi.lib`
       * [ ] no code outside of a blueprint explicitly imports code in that blueprint
+
+How To Correct Import Order Issues
+----------------------------------
+
+Relengapi uses isort to validate import order and groupings, as well as to check
+for `from __future__ import absolute_imports` in every file.
+
+If you get Travis failures for bad import order, you can run (from the repository root)
+
+.. code-block :: shell
+
+    $ isort -q -rc .
+
+Which will change all incorrect files for you. Alternatively you can run:
+
+.. code-block :: shell
+
+    $ isort -q $FILE1 [$FILE2, ..]

@@ -5,13 +5,14 @@
 from __future__ import absolute_import
 
 import contextlib
-import elasticache_auto_discovery
-import memcache
 import socket
-import structlog
 import threading
 import time
 import urlparse
+
+import elasticache_auto_discovery
+import memcache
+import structlog
 
 logger = structlog.get_logger()
 

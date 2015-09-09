@@ -1,6 +1,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import time
 
 from flask import session
@@ -8,10 +10,10 @@ from flask.ext.login import current_user
 from nose.tools import assert_raises
 from nose.tools import eq_
 from nose.tools import with_setup
+
 from relengapi.lib import auth
 from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
-
 
 test_context = TestContext()
 p.test_lib_auth.a.doc("test perm a")

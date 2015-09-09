@@ -5,8 +5,9 @@
 from __future__ import absolute_import
 
 import logging
-import structlog
 import sys
+
+import structlog
 
 stdout_log = None
 logger = structlog.get_logger()

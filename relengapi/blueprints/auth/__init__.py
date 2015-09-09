@@ -2,10 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 from flask import Blueprint
 from flask import url_for
 from flask.ext.login import current_user
 from flask.ext.login import login_required
+
 from relengapi.lib import angular
 from relengapi.lib import permissions
 from relengapi.lib.api import apimethod

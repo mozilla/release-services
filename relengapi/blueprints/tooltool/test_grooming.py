@@ -2,17 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import boto
-import hashlib
-import mock
-import moto
-import os
+from __future__ import absolute_import
 
+import hashlib
+import os
 from contextlib import contextmanager
 from datetime import datetime
 from datetime import timedelta
+
+import boto
+import mock
+import moto
 from flask import current_app
 from nose.tools import eq_
+
 from relengapi.blueprints.tooltool import grooming
 from relengapi.blueprints.tooltool import tables
 from relengapi.blueprints.tooltool import util

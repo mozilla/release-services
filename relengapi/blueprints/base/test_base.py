@@ -2,14 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import glob
-import mock
 import os
-import relengapi
 import shutil
 import tempfile
-
 from contextlib import contextmanager
+
+import mock
+
+import relengapi
 from relengapi.lib import db
 from relengapi.lib.testing.subcommands import run_main
 

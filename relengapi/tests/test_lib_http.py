@@ -2,15 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import werkzeug
+from __future__ import absolute_import
 
+import werkzeug
 from nose.tools import assert_raises
 from nose.tools import eq_
+from werkzeug.exceptions import BadRequest
 
 from relengapi.lib import api
 from relengapi.lib import http
 from relengapi.lib.testing.context import TestContext
-from werkzeug.exceptions import BadRequest
 
 test_context = TestContext()
 

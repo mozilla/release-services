@@ -2,17 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import Queue
+from __future__ import absolute_import
+
 import json
 import logging
+import Queue
+from logging import handlers
+
 import mock
 import moto
-
-from logging import handlers
 from moto import mock_sqs
 from nose.plugins.skip import SkipTest
 from nose.tools import assert_raises
 from nose.tools import eq_
+
 from relengapi.lib import aws
 from relengapi.lib.testing.context import TestContext
 

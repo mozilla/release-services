@@ -5,16 +5,17 @@
 from __future__ import absolute_import
 
 import logging
-import structlog
 
+import structlog
 from celery import Celery
 from celery.signals import celeryd_after_setup
 from celery.signals import task_postrun
 from celery.signals import task_prerun
 from flask import current_app
-from relengapi.lib import badpenny
-from relengapi.lib import logging as relengapi_logging
 from werkzeug.local import LocalProxy
+
+from relengapi.lib import logging as relengapi_logging
+from relengapi.lib import badpenny
 
 _defined_tasks = {}
 logger = structlog.get_logger()

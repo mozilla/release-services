@@ -2,26 +2,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import contextlib
-import mock
 import sys
+from datetime import datetime
+
+import mock
 import wsme.exc
 import wsme.types
-
-from datetime import datetime
 from flask import g
 from flask import json
 from flask import redirect
 from nose.tools import assert_raises
 from nose.tools import eq_
 from pytz import UTC
-from relengapi.lib import api
-from relengapi.lib.permissions import p
-from relengapi.lib.testing.context import TestContext
 from werkzeug.exceptions import BadRequest
 from wsme.rest.json import fromjson
 from wsme.rest.json import tojson
 
+from relengapi.lib import api
+from relengapi.lib.permissions import p
+from relengapi.lib.testing.context import TestContext
 
 p.test_api.doc('test permission')
 

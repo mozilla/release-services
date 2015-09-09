@@ -3,7 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+from __future__ import absolute_import
+
 from nose.tools import eq_
+
 from relengapi.blueprints.tooltool import tables
 from relengapi.lib import time
 from relengapi.lib.testing.context import TestContext

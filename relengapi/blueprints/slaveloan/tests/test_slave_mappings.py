@@ -2,11 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import mock
+from __future__ import absolute_import
+
 import re
 
+import mock
 from nose.tools import eq_
 from nose.tools import ok_
+
 from relengapi.blueprints.slaveloan import slave_mappings
 from relengapi.lib.testing.context import TestContext
 

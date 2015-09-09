@@ -2,17 +2,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import os
+import uuid
+
 import pkg_resources
 import structlog
-import uuid
 import wsme.types
-
 from flask import Flask
 from flask import g
 from flask import render_template
 from flask import request
 from flask.ext.login import current_user
+
+from relengapi.lib import logging as relengapi_logging
 from relengapi.lib import api
 from relengapi.lib import auth
 from relengapi.lib import aws
@@ -20,7 +24,6 @@ from relengapi.lib import celery
 from relengapi.lib import db
 from relengapi.lib import introspection
 from relengapi.lib import layout
-from relengapi.lib import logging as relengapi_logging
 from relengapi.lib import memcached
 from relengapi.lib import monkeypatches
 

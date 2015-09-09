@@ -2,10 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import datetime
-import structlog
+from __future__ import absolute_import
 
+import datetime
+
+import structlog
 from flask import current_app
+
 from relengapi.blueprints.badpenny import tables
 from relengapi.lib import badpenny
 from relengapi.lib import time

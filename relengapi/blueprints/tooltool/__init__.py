@@ -2,12 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import datetime
 import random
 import re
+
 import sqlalchemy as sa
 import structlog
-
 from flask import Blueprint
 from flask import current_app
 from flask import g
@@ -15,6 +17,11 @@ from flask import redirect
 from flask import url_for
 from flask.ext.login import current_user
 from flask.ext.login import login_required
+from werkzeug import Response
+from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import Forbidden
+from werkzeug.exceptions import NotFound
+
 from relengapi.blueprints.tooltool import grooming
 from relengapi.blueprints.tooltool import tables
 from relengapi.blueprints.tooltool import types
@@ -23,10 +30,6 @@ from relengapi.lib import angular
 from relengapi.lib import api
 from relengapi.lib import time
 from relengapi.lib.permissions import p
-from werkzeug import Response
-from werkzeug.exceptions import BadRequest
-from werkzeug.exceptions import Forbidden
-from werkzeug.exceptions import NotFound
 
 metadata = {
     'repository_of_record': 'https://git.mozilla.org/?p=build/tooltool.git;a=summary',

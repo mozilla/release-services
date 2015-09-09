@@ -2,19 +2,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import random
 import socket
-
-from furl import furl
+from functools import wraps
 
 import bzrest
+import celery
 import requests
-
+import structlog
+from flask import current_app
+from furl import furl
+from redo import retry
 from requests import RequestException
 
-from flask import current_app
-from functools import wraps
-from redo import retry
 from relengapi.blueprints.slaveloan import bugzilla
 from relengapi.blueprints.slaveloan import slave_mappings
 from relengapi.blueprints.slaveloan.model import History
@@ -23,9 +25,6 @@ from relengapi.blueprints.slaveloan.model import Machines
 from relengapi.blueprints.slaveloan.model import ManualActions
 from relengapi.lib.celery import task
 from relengapi.util import tz
-
-import celery
-import structlog
 
 logger = structlog.get_logger()
 

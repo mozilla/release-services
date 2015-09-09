@@ -3,8 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-from celery import chain
+from __future__ import absolute_import
+
 from celery import group as group_
+from celery import chain
 
 from relengapi.blueprints.slaveloan import slave_mappings
 from relengapi.blueprints.slaveloan import tasks

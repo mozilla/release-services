@@ -1,6 +1,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import
+
 import mock
 import moto
 
@@ -9,7 +11,6 @@ from relengapi.blueprints.archiver.test_util import fake_200_response
 from relengapi.blueprints.archiver.test_util import fake_404_response
 from relengapi.blueprints.archiver.test_util import setup_buckets
 from relengapi.lib.testing.context import TestContext
-
 
 cfg = {
     'RELENGAPI_CELERY_LOG_LEVEL': 'DEBUG',

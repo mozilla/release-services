@@ -2,18 +2,29 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import flask_login
 import sqlalchemy as sa
 import structlog
-
-from sqlalchemy import asc
-
 from flask import Blueprint
 from flask import g
 from flask import render_template
 from flask import url_for
 from flask.ext.login import current_user
+from sqlalchemy import asc
+from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import Forbidden
+from werkzeug.exceptions import InternalServerError
+
+from relengapi.blueprints.slaveloan import bugzilla
+from relengapi.blueprints.slaveloan import rest
 from relengapi.blueprints.slaveloan import task_groups
+from relengapi.blueprints.slaveloan.model import History
+from relengapi.blueprints.slaveloan.model import Humans
+from relengapi.blueprints.slaveloan.model import Loans
+from relengapi.blueprints.slaveloan.model import Machines
+from relengapi.blueprints.slaveloan.model import ManualActions
 from relengapi.blueprints.slaveloan.slave_mappings import slave_patterns
 from relengapi.blueprints.slaveloan.slave_mappings import slave_to_slavetype
 from relengapi.lib import angular
@@ -21,17 +32,6 @@ from relengapi.lib import api
 from relengapi.lib.api import apimethod
 from relengapi.lib.permissions import p
 from relengapi.util import tz
-from werkzeug.exceptions import BadRequest
-from werkzeug.exceptions import Forbidden
-from werkzeug.exceptions import InternalServerError
-
-from relengapi.blueprints.slaveloan import bugzilla
-from relengapi.blueprints.slaveloan import rest
-from relengapi.blueprints.slaveloan.model import History
-from relengapi.blueprints.slaveloan.model import Humans
-from relengapi.blueprints.slaveloan.model import Loans
-from relengapi.blueprints.slaveloan.model import Machines
-from relengapi.blueprints.slaveloan.model import ManualActions
 
 logger = structlog.get_logger()
 
