@@ -85,7 +85,8 @@ class UpdateManualAction(wsme.types.Base):
 class LoanRequest(wsme.types.Base):
     "Represents a new loan request"
 
-    #: Initial Status (Must have slaveloan.admin perm, without throws a Forbidden)
+    #: Initial Status
+    #: (Must have slaveloan.admin perm to set this attribute, without throws a Forbidden)
     status = unicode
     #: (optional) Loan Bug Id, if not passed in we create one for you
     loan_bug_id = wsme.types.wsattr(int, mandatory=False)
@@ -96,8 +97,8 @@ class LoanRequest(wsme.types.Base):
     #: Slave type to loan
     requested_slavetype = unicode
     #: If known in advance, fqdn of the machine to loan
-    #: (Must have slaveloan.admin perm, without throws a Forbidden)
+    #: (Must have slaveloan.admin perm to set this attribute, without throws a Forbidden)
     fqdn = unicode
     #: If known in advance, ip address of the machine to loan
-    #: (Must have slaveloan.admin perm, without throws a Forbidden)
+    #: (Must have slaveloan.admin perm to set this attribute, without throws a Forbidden)
     ipaddress = unicode
