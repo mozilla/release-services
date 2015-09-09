@@ -6,6 +6,8 @@
 # permission granted by authors @tardyp and @Stibbons in
 # https://github.com/mozilla/build-relengapi/pull/116
 
+from __future__ import absolute_import
+
 import re
 import sys
 

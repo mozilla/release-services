@@ -5,6 +5,7 @@ Revises:
 Create Date: 2015-07-21 12:38:56.959792
 
 """
+from __future__ import absolute_import
 
 # revision identifiers, used by Alembic.
 revision = '993e4d841aa'
