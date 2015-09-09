@@ -274,6 +274,96 @@ def test_new_loan_request_missing_required(client):
 
 
 @test_context_noperm_user.specialize(db_setup=db_setup)
+def test_new_loan_request_nonadmin_status(client):
+    "Test that a user with no permissions can issue a loan request"
+    request = {"ldap_email": "noperm@mozilla.com",
+               "requested_slavetype": "talos-mtnlion-r5",
+               "status": "COMPLETE"}
+    eq_(client.post_json('/slaveloan/loans/', request).status_code, 403)
+
+
+@test_context_admin.specialize(db_setup=db_setup)
+def test_new_loan_request_admin_status(client):
+    "Test that a user with no permissions can issue a loan request"
+    request = {"ldap_email": "noperm@mozilla.com",
+               "requested_slavetype": "talos-mtnlion-r5",
+               "status": "PENDING"}
+    with mock.patch("relengapi.blueprints.slaveloan.task_groups.chain") as mockedchain:
+        resp = client.post_json('/slaveloan/loans/', request)
+        eq_(resp.status_code, 200)
+        data = json.loads(resp.data)
+        expect = {
+            u'bug_id': None,
+            u'machine': None,
+            u'status': u'PENDING',
+            u'id': 7,
+            u'human': {
+                u'ldap_email': u'noperm@mozilla.com',
+                u'bugzilla_email': u'noperm@mozilla.com',
+                u'id': 5
+            }
+        }
+        eq_(data["result"], expect)
+        eq_(mockedchain().delay.called, True)
+
+
+@test_context_admin.specialize(db_setup=db_setup)
+def test_new_loan_request_invalid_status(client):
+    "Test an admin user setting an invalid status code"
+    request = {"ldap_email": "noperm@mozilla.com",
+               "requested_slavetype": "talos-mtnlion-r5",
+               "status": "UNEXPECTED"}
+    eq_(client.post_json('/slaveloan/loans/', request).status_code, 400)
+
+
+@test_context_admin.specialize(db_setup=db_setup)
+def test_new_loan_request_specific_values(client):
+    "Test that an admin user must set fqdn and ipaddress when ACTIVE"
+    request = {"ldap_email": "noperm@mozilla.com",
+               "status": "ACTIVE",
+               "ipaddress": "127.0.0.99"}
+    eq_(client.post_json('/slaveloan/loans/', request).status_code, 400)
+    request = {"ldap_email": "noperm@mozilla.com",
+               "status": "ACTIVE",
+               "fqdn": "host99.mozilla.org"}
+    eq_(client.post_json('/slaveloan/loans/', request).status_code, 400)
+    request = {"ldap_email": "noperm@mozilla.com",
+               "ipaddress": "127.0.0.99",
+               "fqdn": "host99.mozilla.org"}
+    eq_(client.post_json('/slaveloan/loans/', request).status_code, 400)
+    request = {"ldap_email": "noperm@mozilla.com",
+               "status": "PENDING",
+               "ipaddress": "127.0.0.99",
+               "fqdn": "host99.mozilla.org"}
+    eq_(client.post_json('/slaveloan/loans/', request).status_code, 400)
+    request = {"ldap_email": "noperm@mozilla.com",
+               "requested_slavetype": "talos-mtnlion-r5",
+               "status": "ACTIVE",
+               "ipaddress": "127.0.0.99",
+               "fqdn": "host99.mozilla.org"}
+    eq_(client.post_json('/slaveloan/loans/', request).status_code, 400)
+
+
+@test_context_noperm_user.specialize(db_setup=db_setup)
+def test_new_loan_request_specific_values_denied(client):
+    "Test that a non-admin user gets FORBIDDEN when trying to set fqdn and ipaddress"
+    # status field purposely left out, to get past the status FORBIDDEN
+    request = {"ldap_email": "noperm@mozilla.com",
+               "requested_slavetype": "talos-mtnlion-r5",
+               "ipaddress": "127.0.0.99"}
+    eq_(client.post_json('/slaveloan/loans/', request).status_code, 403)
+    request = {"ldap_email": "noperm@mozilla.com",
+               "requested_slavetype": "talos-mtnlion-r5",
+               "fqdn": "host99.mozilla.org"}
+    eq_(client.post_json('/slaveloan/loans/', request).status_code, 403)
+    request = {"ldap_email": "noperm@mozilla.com",
+               "requested_slavetype": "talos-mtnlion-r5",
+               "ipaddress": "127.0.0.99",
+               "fqdn": "host99.mozilla.org"}
+    eq_(client.post_json('/slaveloan/loans/', request).status_code, 403)
+
+
+@test_context_noperm_user.specialize(db_setup=db_setup)
 def test_new_loan_request_invalid_slave(client):
     "Test that a loan request with an invalid slave"
     request = {}
@@ -416,3 +506,59 @@ def test_new_loan_request_human_integrity(client):
         eq_(resp.status_code, 500)
         data = json.loads(resp.data)
         ok_("retry" in data["error"]["description"])
+
+
+@test_context_admin.specialize(db_setup=db_setup)
+def test_new_loan_request_machine_integrity(client):
+    "Test that an integrity error on the DB will report for us to Retry."
+    request = {"ldap_email": "noperm@mozilla.com",
+               "bugzilla_email": "noperm@mozilla.com",
+               "fqdn": "host99.mozilla.org",
+               "ipaddress": "127.0.0.99",
+               "status": "ACTIVE"}
+    exception_obj = sa.exc.IntegrityError("TEST_STMT", [], sa.exc.IntegrityError)
+    with mock.patch("relengapi.blueprints.slaveloan.model.Machines.as_unique") as as_unique:
+        as_unique.side_effect = exception_obj
+        resp = client.post_json('/slaveloan/loans/', request)
+        eq_(resp.status_code, 500)
+        data = json.loads(resp.data)
+        ok_("retry" in data["error"]["description"])
+
+
+@test_context_admin.specialize(db_setup=db_setup)
+def test_new_loan_request_admin_specific(client, app):
+    "Test that an admin user can issue a loan in active state"
+    request = {"ldap_email": "noperm@mozilla.com",
+               "loan_bug_id": 123456,
+               "fqdn": "host99.mozilla.org",
+               "ipaddress": "127.0.0.99",
+               "status": "ACTIVE"}
+    with mock.patch("relengapi.blueprints.slaveloan.task_groups.chain") as mockedchain:
+        resp = client.post_json('/slaveloan/loans/', request)
+        eq_(resp.status_code, 200)
+        data = json.loads(resp.data)
+        expect = {
+            u'bug_id': 123456,
+            u'machine': {
+                u'ipaddress': '127.0.0.99',
+                u'fqdn': 'host99.mozilla.org',
+                u'id': 6
+            },
+            u'status': u'ACTIVE',
+            u'id': 7,
+            u'human': {
+                u'ldap_email': u'noperm@mozilla.com',
+                u'bugzilla_email': u'noperm@mozilla.com',
+                u'id': 5
+            }
+        }
+        eq_(data["result"], expect)
+        eq_(mockedchain().delay.called, False)
+    # Now test that the admin user e-mail is in history
+    with app.app_context():
+        q = History.query
+        q = q.filter(History.loan_id == 7)
+        histories = q.all()
+        eq_(1, len(histories))
+        ok_("noperm@mozilla.com" in histories[0].msg)
+        ok_("slaveadmin@mozilla.com" in histories[0].msg)
