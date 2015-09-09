@@ -267,7 +267,11 @@ class AutoTypeDirective(Directive):
         # extract the attribute documentation.
         analyzer = ModuleAnalyzer.for_module(ty.__module__)
         module_attrs = analyzer.find_attr_docs()  # (scope is broken!)
-        return {k[1]: v[0] for k, v in module_attrs.iteritems()}
+        # Make sure we can split lines for type docs on long lines
+        attrs_docs = {}
+        for k, v in module_attrs.iteritems():
+            attrs_docs[k[1]] = "\n".join(v).strip()
+        return attrs_docs
 
     def run(self):
         src = '<autotype>'
