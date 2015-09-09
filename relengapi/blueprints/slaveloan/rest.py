@@ -82,26 +82,12 @@ class UpdateManualAction(wsme.types.Base):
     complete = bool
 
 
-class LoanAdminRequest(wsme.types.Base):
-    "Represents a new loan request with admin details"
-
-    #: Initial Status
-    status = unicode
-    #: (optional) Loan Bug Id, if not passed in we create one for you
-    loan_bug_id = wsme.types.wsattr(int, mandatory=False)
-    #: Users full LDAP e-mail
-    ldap_email = unicode
-    #: Users Bugzilla e-mail
-    bugzilla_email = unicode
-    #: If known in advance, fqdn of the machine to loan
-    fqdn = unicode
-    #: If known in advance, ip address of the machine to loan
-    ipaddress = unicode
-
-
 class LoanRequest(wsme.types.Base):
     "Represents a new loan request"
 
+    #: Initial Status
+    #: (Must have slaveloan.admin perm to set this attribute, without throws a Forbidden)
+    status = unicode
     #: (optional) Loan Bug Id, if not passed in we create one for you
     loan_bug_id = wsme.types.wsattr(int, mandatory=False)
     #: Users full LDAP e-mail
@@ -110,3 +96,9 @@ class LoanRequest(wsme.types.Base):
     bugzilla_email = wsme.types.wsattr(unicode, mandatory=False)
     #: Slave type to loan
     requested_slavetype = unicode
+    #: If known in advance, fqdn of the machine to loan
+    #: (Must have slaveloan.admin perm to set this attribute, without throws a Forbidden)
+    fqdn = unicode
+    #: If known in advance, ip address of the machine to loan
+    #: (Must have slaveloan.admin perm to set this attribute, without throws a Forbidden)
+    ipaddress = unicode

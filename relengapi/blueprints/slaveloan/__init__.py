@@ -22,6 +22,7 @@ from relengapi.lib.api import apimethod
 from relengapi.lib.permissions import p
 from relengapi.util import tz
 from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import Forbidden
 from werkzeug.exceptions import InternalServerError
 
 from relengapi.blueprints.slaveloan import bugzilla
@@ -54,21 +55,32 @@ def init_blueprint(state):
 
 @bp.route('/loans/')
 @p.slaveloan.admin.require()
-@apimethod([rest.Loan])
-def get_loans():
-    "Get the list of all `active` loans you can see"
+@apimethod([rest.Loan], int)
+def get_loans(all=None):
+    """Get the list of loans you can see
+
+    by default this only lists active (non complete) loans, use ``?all=1``
+    if you want to list completed loans as well"""
+
+    if all not in (None, 0, 1):
+        raise BadRequest("Unexpected Value for 'all'.")
+
     # XXX: Use permissions to filter if not an admin
-    loans = Loans.query.filter(Loans.machine_id.isnot(None))
+    loans = Loans.query
+    if not all:
+        loans = loans.filter(Loans.status != "COMPLETE")
+
     return [l.to_wsme() for l in loans.all()]
 
 
 @bp.route('/loans/<int:loanid>')
-@p.slaveloan.admin.require()
 @apimethod(rest.Loan, int)
 def get_loan(loanid):
     "Get the details of a loan, by id"
-    # XXX: Use permissions to ensure admin | loanee
     l = Loans.query.get(loanid)
+    if not p.slaveloan.admin.can():
+        if l.human.ldap != current_user.authenticated_email:
+            raise Forbidden
     return l.to_wsme()
 
 
@@ -103,68 +115,8 @@ def get_loan_history(loanid):
     return [h.to_wsme() for h in histories.all()]
 
 
-@bp.route('/loans/all')
-@p.slaveloan.admin.require()
-@apimethod([rest.Loan])
-def get_all_loans():
-    "Get the list of all loans you can see"
-    # XXX: Use permissions to filter if not an admin
-    loans = Loans.query
-    return [l.to_wsme() for l in loans.all()]
-
-
-@bp.route('/loans/new', methods=['POST'])
-@p.slaveloan.admin.require()
-@apimethod(rest.Loan, body=rest.LoanAdminRequest)
-def new_loan_from_admin(body):
-    "Creates a new loan entry"
-    if not body.status:
-        raise BadRequest("Missing Status Field")
-    if not body.ldap_email:
-        raise BadRequest("Missing LDAP E-Mail")
-    if not body.bugzilla_email:
-        raise BadRequest("Missing Bugzilla E-Mail")
-    if body.status != 'ACTIVE':
-        raise BadRequest("Only ACTIVE loans supported at this time")
-    if body.status != 'PENDING':
-        if not body.fqdn:
-            raise BadRequest("Missing Machine FQDN")
-        if not body.ipaddress:
-            raise BadRequest("Missing Machine IP Address")
-
-    session = g.db.session('relengapi')
-    try:
-        if body.status != 'PENDING':
-            m = Machines.as_unique(session, fqdn=body.fqdn,
-                                   ipaddress=body.ipaddress)
-        h = Humans.as_unique(session, ldap=body.ldap_email,
-                             bugzilla=body.bugzilla_email)
-        if h.bugzilla != body.bugzilla_email:
-            h.bugzilla = body.bugzilla_email
-    except sa.exc.IntegrityError:
-        raise InternalServerError("Integrity Error from Database, please retry.")
-
-    loan_data = dict(status=body.status, human=h)
-    if body.status != 'PENDING':
-        loan_data.update(dict(machine=m))
-    if body.loan_bug_id:
-        loan_data.update(dict(bug_id=body.loan_bug_id))
-
-    l = Loans(**loan_data)
-
-    history = History(for_loan=l,
-                      timestamp=tz.utcnow(),
-                      msg="%s added this entry to slave loan tool via admin interface" %
-                          current_user.authenticated_email)
-    session.add(l)
-    session.add(history)
-    session.commit()
-    logger.info("%s manually added slave loan entry ID %s via admin interface" %
-                (current_user.authenticated_email, l.id))
-    return l.to_wsme()
-
-
-@bp.route('/loans/request', methods=['POST'])
+@bp.route('/loans/', methods=['POST'])
+@flask_login.login_required
 @apimethod(rest.Loan, body=rest.LoanRequest)
 def new_loan_request(body):
     "User Loan Requesting, returns the id of the loan"
@@ -173,13 +125,38 @@ def new_loan_request(body):
     if not p.slaveloan.admin.can():
         if not body.ldap_email == current_user.authenticated_email:
             raise BadRequest("You can't request loans on behalf of others.")
+    if body.status:
+        if not p.slaveloan.admin.can():
+            raise Forbidden("Permission denied to set loan status manually")
+        if body.status not in ["PENDING", "COMPLETE", "ACTIVE"]:
+            raise BadRequest("Loan status (%s) is unsupported at this time" % body.status)
+
+    if body.status and body.status != 'PENDING':
+        if not body.fqdn:
+            raise BadRequest("Must set Machine FQDN")
+        if not body.ipaddress:
+            raise BadRequest("Must set Machine IP Address")
+    else:
+        if body.fqdn or body.ipaddress:
+            if p.slaveloan.admin.can():
+                msg = ("Unable to explicitly set fqdn or ipaddress when not"
+                       "also explicitly setting status")
+                if body.status == "PENDING":
+                    msg += " (to something other than PENDING)"
+                raise BadRequest(msg)
+            else:
+                raise Forbidden("Permission denied to set fqdn and ipaddress manually")
 
     if not body.requested_slavetype:
-        raise BadRequest("Missing slavetype")
+        if not body.fqdn and not body.ipaddress:
+            raise BadRequest("Missing slavetype")
+    else:
+        if body.fqdn or body.ipaddress:
+            raise BadRequest("Unable to request a host if you're passing in the specifics")
 
-    slavetype = slave_to_slavetype(body.requested_slavetype)
-    if not slavetype:
-        raise BadRequest("Unsupported slavetype")
+        slavetype = slave_to_slavetype(body.requested_slavetype)
+        if not slavetype:
+            raise BadRequest("Unsupported slavetype")
 
     if not body.bugzilla_email:
         # Set bugzilla e-mail to ldap e-mail by default
@@ -194,16 +171,36 @@ def new_loan_request(body):
     except sa.exc.IntegrityError:
         raise InternalServerError("Integrity Error from Database, please retry.")
 
-    if body.loan_bug_id:
-        l = Loans(status="PENDING", human=h, bug_id=body.loan_bug_id)
-    else:
-        l = Loans(status="PENDING", human=h)
+    m = None
+    if body.fqdn and body.ipaddress:
+        try:
+            m = Machines.as_unique(session, fqdn=body.fqdn,
+                                   ipaddress=body.ipaddress)
+        except sa.exc.IntegrityError:
+            raise InternalServerError("Integrity Error from Database, please retry.")
 
-    hist_line = "%s issued a loan request for slavetype %s (original: '%s')" % \
-                (current_user.authenticated_email, slavetype,
-                 body.requested_slavetype)
+    loan_data = dict(human=h)
+    if body.loan_bug_id:
+        loan_data.update(dict(bug_id=body.loan_bug_id))
+    if m:
+        loan_data.update(dict(machine=m))
+    if body.status:
+        loan_data.update(dict(status=body.status))
+    else:
+        loan_data.update(dict(status="PENDING"))
+
+    l = Loans(**loan_data)
+
+    if m:
+        hist_line = "%s logged a %s loan on host: %s (ip: %s)" % \
+                    (current_user.authenticated_email, body.status, body.fqdn,
+                     body.ipaddress)
+    else:
+        hist_line = "%s issued a loan request for slavetype %s (original: '%s')" % \
+                    (current_user.authenticated_email, slavetype,
+                     body.requested_slavetype)
     if body.ldap_email != current_user.authenticated_email:
-        hist_line += "on behalf of %s" % body.ldap_email
+        hist_line += " on behalf of %s" % body.ldap_email
     history = History(for_loan=l,
                       timestamp=tz.utcnow(),
                       msg=hist_line)
@@ -211,8 +208,9 @@ def new_loan_request(body):
     session.add(history)
     session.commit()
     logger.info(hist_line)
-    chain_of_stuff = task_groups.generate_loan(loanid=l.id, slavetype=slavetype)
-    chain_of_stuff.delay()
+    if not m:
+        chain_of_stuff = task_groups.generate_loan(loanid=l.id, slavetype=slavetype)
+        chain_of_stuff.delay()
     return l.to_wsme()
 
 
