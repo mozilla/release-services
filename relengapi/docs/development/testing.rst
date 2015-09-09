@@ -46,7 +46,7 @@ Most tests take place in the context of an app, some databases, some data, and s
 
 To support, this, use the :py:class:`relengapi.lib.testing.context.TestContext` class.
 
-.. py:class:: TestContext(databases, app_setup, db_setup, db_teardown, reuse_app, config)
+.. py:class:: TestContext(databases, app_setup, db_setup, db_teardown, reuse_app, config, user, disable_login_view)
 
     :param databases: list by name of databases to set up
     :param app_setup: application setup function; see below
@@ -55,6 +55,7 @@ To support, this, use the :py:class:`relengapi.lib.testing.context.TestContext` 
     :param reuse_app: if true, only create a single Flask app and re-use it for all test cases
     :param config: application configuration
     :param user: a user object, substituted into ``current_user`` during each request
+    :param disable_login_view: a boolean, defaults to ``False``. Set to ``True`` to disable @login_required's redirect to the login page, and just test for a 401 response.
 
     A test context acts as a decorator to perform API-specific setup and tear-down for tests.
 
