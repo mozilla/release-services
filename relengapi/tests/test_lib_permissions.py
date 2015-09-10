@@ -116,17 +116,18 @@ def test_require_can(app):
 
             # with a browser and an anonymous user, they return 302's
             is_browser.return_value = True
-            current_user.is_anonymous = lambda: True
+            with mock.patch.object(auth.BaseUser, 'is_anonymous') as is_anonymous:
+                is_anonymous.__get__ = mock.Mock(return_value=True)
 
-            @permissions.require(perms.test.writer, perms.test.deleter)
-            def bad_func_browser_anon():
-                return "ok"
-            eq_(bad_func_browser_anon().status_code, 302)
+                @permissions.require(perms.test.writer, perms.test.deleter)
+                def bad_func_browser_anon():
+                    return "ok"
+                eq_(bad_func_browser_anon().status_code, 302)
 
-            @perms.test.deleter.require()
-            def bad_meth_browser_anon():
-                return "ok"
-            eq_(bad_meth_browser_anon().status_code, 302)
+                @perms.test.deleter.require()
+                def bad_meth_browser_anon():
+                    return "ok"
+                eq_(bad_meth_browser_anon().status_code, 302)
 
         # empty are invalid
         assert_raises(AssertionError, permissions.require)

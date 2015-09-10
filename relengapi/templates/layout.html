@@ -73,7 +73,7 @@
               <span class="glyphicon glyphicon-user"></span>
               <span class="caret"></span></a>
             <ul class="dropdown-menu dropdown-menu-right navbar-user-info">
-              {% if current_user.is_authenticated() %}
+              {% if current_user.is_authenticated %}
                 <li class="text-center">Logged in as
                     {% if current_user.type == "human" %}
                       <span class="user_email">{{ current_user.authenticated_email }}</span>
