@@ -88,12 +88,12 @@ start_step "running pyflakes"
 pyflakes relengapi || not_ok "pyflakes failed"
 finish_step
 
-start_step "checking import module convention in modified files"
-isort -c -q -rc . --diff || not_ok "Import order is incorrect (diff provided)"
+start_step "checking import module convention in all files"
+isort -c -q -rc relengapi --diff || not_ok "Import order is incorrect (diff provided)"
 finish_step
 
 start_step "checking all python files have absolute_import specified"
-isort -c -q -a "from __future__ import absolute_import" -rc . || not_ok "Missing absolute_import in referenced files"
+isort -c -q -a "from __future__ import absolute_import" -rc relengapi || not_ok "Missing absolute_import in referenced files"
 finish_step
 
 start_step "building docs"
