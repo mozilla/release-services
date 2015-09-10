@@ -13,9 +13,11 @@ from alembic.config import Config
 from flask import Blueprint
 from flask import Flask
 from flask import current_app
+from nose.plugins.base import Plugin
 
 import relengapi
 from relengapi.blueprints.base.alembic_wrapper import AlembicSubcommand
+from relengapi.lib import logging as relengapi_logging
 from relengapi.lib import subcommands
 
 bp = Blueprint('base', __name__)
@@ -69,6 +71,19 @@ class CreateDBSubcommand(subcommands.Subcommand):
                 command.stamp(alembic_cfg, "head")
 
 
+class ResetLogging(Plugin):
+
+    """Reset the logging context after each test."""
+
+    def configure(self, options, conf):
+        super(ResetLogging, self).configure(options, conf)
+        # enable automatically
+        self.enabled = True
+
+    def afterTest(self, test):
+        relengapi_logging.reset_context()
+
+
 class RunTestsSubcommand(subcommands.Subcommand):
 
     want_logging = False
@@ -90,7 +105,7 @@ class RunTestsSubcommand(subcommands.Subcommand):
         # push a fake app context to avoid tests accidentally using the
         # runtime app context (for example, the development DB)
         with Flask(__name__).app_context():
-            nose.main()
+            nose.main(addplugins=[ResetLogging()])
 
 
 class SQSListenSubcommand(subcommands.Subcommand):
