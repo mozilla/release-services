@@ -20,8 +20,8 @@ from nose.tools import eq_
 from relengapi.blueprints import tooltool
 from relengapi.blueprints.tooltool import tables
 from relengapi.blueprints.tooltool import util
-from relengapi.lib import time as relengapi_time
 from relengapi.lib import auth
+from relengapi.lib import time as relengapi_time
 from relengapi.lib.permissions import p
 from relengapi.lib.testing.context import TestContext
 

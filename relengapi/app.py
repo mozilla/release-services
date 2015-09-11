@@ -16,7 +16,6 @@ from flask import render_template
 from flask import request
 from flask.ext.login import current_user
 
-from relengapi.lib import logging as relengapi_logging
 from relengapi.lib import api
 from relengapi.lib import auth
 from relengapi.lib import aws
@@ -24,6 +23,7 @@ from relengapi.lib import celery
 from relengapi.lib import db
 from relengapi.lib import introspection
 from relengapi.lib import layout
+from relengapi.lib import logging as relengapi_logging
 from relengapi.lib import memcached
 from relengapi.lib import monkeypatches
 
