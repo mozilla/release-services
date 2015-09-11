@@ -68,7 +68,7 @@ def get_region_and_bucket(region_arg):
 
 bp.root_widget_template(
     'tooltool_root_widget.html', priority=100,
-    condition=lambda: not current_user.is_anonymous())
+    condition=lambda: not current_user.is_anonymous)
 
 
 @bp.route('/')

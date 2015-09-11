@@ -28,9 +28,9 @@ def test_AnonymousUser():
     u = auth.AnonymousUser()
     eq_(u.type, 'anonymous')
     eq_(str(u), 'anonymous:')
-    eq_(u.is_authenticated(), False)
-    eq_(u.is_active(), False)
-    eq_(u.is_anonymous(), True)
+    eq_(u.is_authenticated, False)
+    eq_(u.is_active, False)
+    eq_(u.is_anonymous, True)
     eq_(u.permissions, set())
 
 
@@ -40,9 +40,9 @@ def test_HumanUser(app):
     eq_(u.type, 'human')
     eq_(u.authenticated_email, 'florence@nightingale.com')
     eq_(str(u), 'human:florence@nightingale.com')
-    eq_(u.is_authenticated(), True)
-    eq_(u.is_active(), True)
-    eq_(u.is_anonymous(), False)
+    eq_(u.is_authenticated, True)
+    eq_(u.is_active, True)
+    eq_(u.is_anonymous, False)
     with app.test_request_context('/'):
         eq_(u.permissions, set())
 

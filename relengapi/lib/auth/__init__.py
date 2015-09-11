@@ -31,12 +31,15 @@ class BaseUser(object):
     def __eq__(self, other):
         return isinstance(other, BaseUser) and self.get_id() == other.get_id()
 
+    @property
     def is_authenticated(self):
         return not self.anonymous
 
+    @property
     def is_active(self):
         return not self.anonymous
 
+    @property
     def is_anonymous(self):
         return self.anonymous
 
@@ -128,7 +131,7 @@ def _request_loader(request):
 
 def login_request():
     """Redirect here to ask the user to authenticate"""
-    if current_user.is_authenticated():
+    if current_user.is_authenticated:
         next_url = request.args.get('next') or url_for('root')
         return redirect(safety.safe_redirect_path(next_url))
     return render_template("login_request.html")
