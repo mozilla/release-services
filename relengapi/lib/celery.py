@@ -14,8 +14,8 @@ from celery.signals import task_prerun
 from flask import current_app
 from werkzeug.local import LocalProxy
 
-from relengapi.lib import logging as relengapi_logging
 from relengapi.lib import badpenny
+from relengapi.lib import logging as relengapi_logging
 
 _defined_tasks = {}
 logger = structlog.get_logger()

@@ -5,8 +5,8 @@
 
 from __future__ import absolute_import
 
-from celery import group as group_
 from celery import chain
+from celery import group as group_
 
 from relengapi.blueprints.slaveloan import slave_mappings
 from relengapi.blueprints.slaveloan import tasks
