@@ -63,7 +63,7 @@ Maps are represented in a text format, with one mapping per line, in the format 
     Example: https://api.pub.build.mozilla.org/mapper/build-puppet/mapfile/full
 
 .. api:endpoint:: mapper.get_mapfile_since
-    GET /<project>/mapfile/since/<since>
+    GET /mapper/<project>/mapfile/since/<since>
 
     :param projects: Comma-delimited project names(s) string
     :param since: Timestamp in a format parsed by [dateutil.parser.parse]
@@ -94,7 +94,7 @@ Maps are represented in a text format, with one mapping per line, in the format 
     Example: https://api.pub.build.mozilla.org/mapper/projects
 
 .. api:endpoint:: mapper.insert_many_no_dups
-    POST /<project>/insert
+    POST /mapper/<project>/insert
 
     :param project: Single project name string
     :body: map file
@@ -112,7 +112,7 @@ Maps are represented in a text format, with one mapping per line, in the format 
     Example: https://api.pub.build.mozilla.org/mapper/insert
 
 .. api:endpoint:: mapper.insert_many_ignore_dups
-    POST /<project>/insert/ignoredups
+    POST /mapper/<project>/insert/ignoredups
 
     :param project: Single project name string
     :body: map file
@@ -129,7 +129,7 @@ Maps are represented in a text format, with one mapping per line, in the format 
     Example: https://api.pub.build.mozilla.org/mapper/insert/ignoredups
 
 .. api:endpoint:: mapper.insert_one
-    POST  /<project>/insert/<git_commit>/<hg_changeset>
+    POST /mapper/<project>/insert/<git_commit>/<hg_changeset>
 
     :param project: Single project name string
     :param git_commit: 40 char hexadecimal string
@@ -158,7 +158,7 @@ Maps are represented in a text format, with one mapping per line, in the format 
     Example: https://api.pub.build.mozilla.org/mapper/insert/69d64a8a18e6e001eb015646a82bcdaba0e78a24/68f1b2b9996c4e33aa57771b3478932c9fb7e161
 
 .. api:endpoint:: mapper.add_project
-    POST /<project>
+    POST /mapper/<project>
 
     :param project: Single project name string
     :response: ``{}``
