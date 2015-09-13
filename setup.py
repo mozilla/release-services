@@ -46,7 +46,7 @@ setup(
     extras_require={
         'test': [
             'nose',
-            'mock',
+            'funcsigs',  # https://github.com/mozilla/build-relengapi/issues/345
             'coverage',
             'pep8',
             'mockldap',
