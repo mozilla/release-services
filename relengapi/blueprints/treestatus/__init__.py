@@ -41,6 +41,10 @@ public_data = http.response_headers(
     ('access-control-allow-origin', '*'))
 
 
+bp.root_widget_template(
+    'treestatus_root_widget.html', priority=100)
+
+
 def update_tree_status(session, tree, status=None, reason=None,
                        tags=[], message_of_the_day=None):
     """Update the given tree's status; note that this does not commit
