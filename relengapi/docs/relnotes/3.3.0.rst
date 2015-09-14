@@ -1,0 +1,48 @@
+relengapi-3.3.0
+===============
+
+BREAKING Changes:
+
+* Treestatus endpoint ``/treestatus/stack/<int:id>`` no longer supports nonstandard HTTP verb ``REVERT``
+  use the ``DELETE`` verb with ``?revert=True`` instead for previous behavior. (#323)
+* Slaveloan should use more REST-like path semantics. (#273)
+
+  * ``GET`` of ``/slaveloan/loans/all`` now available as ``/slaveloan/loans/?all=1``
+  * admin-only ``POST`` to ``/slaveloan/loans/new`` now is a ``POST`` to ``/slaveloan/loans/``
+  * old loan requests via ``POST`` to ``/slaveloan/loans/request`` now is a ``POST`` to ``/slaveloan/loans/``
+  * ``REST`` type ``LoanAdminRequest`` merged with type ``LoanRequest``
+
+UI Changes:
+
+* Added compat endpoints to ease transition of treestatus (#324)
+* Add tree status colors (#327)
+* Improve readability of log time in treestatus (#328)
+* Upgrade ``AngularJS`` to version ``1.4.5`` from version ``1.2.9`` (#304)
+* Slaveloan improvements to allow non-admins to see more of their own loan details (#273)
+
+  * You can view your own loans details via an api call at ``/slaveloan/loans/<int:id>`` without admin permission.
+
+Development Changes:
+
+* Set ``CELERY_ACCEPT_CONTENT`` if it's not already set (#285)
+* Make ``relengapi.apimethod``, etc. exist when importing ``relengapi`` (#290)
+* Explicitly log directly to ``mozdef`` when warranted, rather than via syslog (Bug 1192021, and PR #332)
+* Support ``disable_login_view`` in tests, which disables automatic redirects for login. (#335)
+* Set flask ``LOGIN_DISABLED`` explicitly to False in the test context (#335)
+* Use package ``isort`` for better pep8-compliant import ordering (#302, #339, #343)
+* Support ``Flask-Login>=0.3`` (#340, #341)
+
+Bug Fixes:
+
+* Fix handling of sessions in badpenny execution (#311)
+* Badpenny execution fails when calling the task fails (#311)
+* Set and verify ``MySQL`` connection charset (#330)
+* Use a null ``StorageBackend`` to avoid ``SQLite`` errors when building sphinx docs (#331)
+* Use ``UTCDateTime`` for treestatus (and enforce it instead of column type ``DateTime`` everywhere) (#334)
+* ``AutoType`` should allow newlines for type comments in docs (#338)
+* Improved slaveloan test coverage by 16.89% (and total relengapi code coverage by 2.7% at the same time) (#273)
+* ``logger.bind`` bleeds to other modules/scopes, mostly noticeable in tests (#336)
+* Some documentation missing ``/mapper`` prefix (#344)
+
+
+See the Full Changelog/diff on `github <https://github.com/mozilla/build-relengapi/compare/relengapi-3.2.1...master>`_
