@@ -31,7 +31,7 @@ angular.module('treestatus').filter('urlencode', function() {
 // convert a tree status to a CSS class name
 angular.module('treestatus').filter('status2class', function() {
     return function(input) {
-        return input.toLowerCase().replace(" ", "_", "g");
+        return input.toLowerCase().replace(/ /g, "_");
     };
 });
 
