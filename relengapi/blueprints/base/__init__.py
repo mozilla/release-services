@@ -13,12 +13,18 @@ from alembic.config import Config
 from flask import Blueprint
 from flask import Flask
 from flask import current_app
-from nose.plugins.base import Plugin
 
 import relengapi
 from relengapi.blueprints.base.alembic_wrapper import AlembicSubcommand
 from relengapi.lib import logging as relengapi_logging
 from relengapi.lib import subcommands
+
+try:
+    from nose.plugins.base import Plugin
+    assert Plugin
+except ImportError:  # pragma: no cover
+    Plugin = None
+
 
 bp = Blueprint('base', __name__)
 logger = logging.getLogger(__name__)
@@ -71,17 +77,18 @@ class CreateDBSubcommand(subcommands.Subcommand):
                 command.stamp(alembic_cfg, "head")
 
 
-class ResetLogging(Plugin):
+if Plugin:
+    class ResetLogging(Plugin):
 
-    """Reset the logging context after each test."""
+        """Reset the logging context after each test."""
 
-    def configure(self, options, conf):
-        super(ResetLogging, self).configure(options, conf)
-        # enable automatically
-        self.enabled = True
+        def configure(self, options, conf):
+            super(ResetLogging, self).configure(options, conf)
+            # enable automatically
+            self.enabled = True
 
-    def afterTest(self, test):
-        relengapi_logging.reset_context()
+        def afterTest(self, test):
+            relengapi_logging.reset_context()
 
 
 class RunTestsSubcommand(subcommands.Subcommand):
