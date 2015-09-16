@@ -9,6 +9,11 @@ angular.module('relengapi').config(function($httpProvider) {
         var url = config.url;
         return meth + " " + url;
     };
+
+    // Unlike POST and PUT, Angular doesn't set the content-type for 'patch' by
+    // default, but we'd like it to do so
+    $httpProvider.defaults.headers.patch['Content-Type'] = $httpProvider.defaults.headers.post['Content-Type'];
+
     $httpProvider.interceptors.push(function($q) {
         return {
             'request': function(config) {
@@ -16,7 +21,7 @@ angular.module('relengapi').config(function($httpProvider) {
                     if (config.data) {
                         // Firefox will helpfully produce a clickable rendition of the data
                         console.log("RelengAPI request:", summarize_config(config),
-                                    'body', JSON.parse(config.data));
+                                    'body', config.data);
                     } else {
                         console.log("RelengAPI request:", summarize_config(config));
                     }
@@ -65,19 +70,15 @@ angular.module('relengapi').config(function($httpProvider) {
 });
 
 angular.module('relengapi').provider('restapi', function() {
-    var wrap = function(wrapped) {
+    var wrap = function(wrapped, config_pos) {
         return function() {
             var config;
-            /* find the (possibly omitted) config argument */
+            /* find the (possibly omitted) config argument at config_pos */
             var args = [].slice.apply(arguments);
-            if (typeof args[0] === 'string') {
-                if (args.length < 2) {
-                    args.push({});
-                }
-                config = args[1];
-            } else {
-                config = args[0];
+            if (args.length == config_pos) {
+                args.push({});
             }
+            config = args[config_pos];
 
             /* add the flag that our interceptor uses to identify RelengAPI requests */
             config.is_restapi_request = true;
@@ -88,14 +89,14 @@ angular.module('relengapi').provider('restapi', function() {
 
     this.$get = function($http) {
         // wrap the $http provider specifically for access to the backend API
-        var relengapi = wrap($http);
-        relengapi.get = wrap($http.get);
-        relengapi.head = wrap($http.head);
-        relengapi.post = wrap($http.post);
-        relengapi.put = wrap($http.put);
-        relengapi.delete = wrap($http.delete);
-        relengapi.jsonp = wrap($http.jsonp);
-        relengapi.patch = wrap($http.patch);
+        var relengapi = wrap($http, 0);
+        relengapi.get = wrap($http.get, 1);
+        relengapi.head = wrap($http.head, 1);
+        relengapi.post = wrap($http.post, 2);
+        relengapi.put = wrap($http.put, 2);
+        relengapi.delete = wrap($http.delete, 1);
+        relengapi.jsonp = wrap($http.jsonp, 1);
+        relengapi.patch = wrap($http.patch, 2);
         return relengapi;
     };
 });
