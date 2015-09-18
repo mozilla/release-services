@@ -111,17 +111,12 @@ angular.module('tokens').controller('NewTokenController', function($scope, resta
         var permissions = $scope.newtoken.permissions;
         var description = $scope.newtoken.description;
 
-        restapi({
-            url: '/tokenauth/tokens',
-            method: 'POST',
-            headers: {'Content-Type': 'application/json; charset=utf-8'},
-            data: JSON.stringify({
+        restapi.post('/tokenauth/tokens', {
                 typ: typ,
                 permissions: permissions,
                 description: description,
-            }),
-            while: 'issuing token',
-        }).then(function(response) {
+            }, {while: 'issuing token'}
+        ).then(function(response) {
             if (response.data.result.token) {
                 $scope.token = response.data.result.token;
                 $scope.tokens.push(response.data.result);
