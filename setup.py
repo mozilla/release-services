@@ -37,7 +37,7 @@ setup(
         "IPy",
         "furl",
         "redo",
-        "bzrest==1.1",
+        "bzrest>=1.1",
         "structlog",
         "mozdef_client",
         "requests_futures",

@@ -6,7 +6,7 @@ Bugzilla
 
 Slaveloan makes extensive use of Bugzilla's REST API for classifying new loans, reopening slave tracking bugs, etc.
 
-In order to use it, you *must* specify where and what user to use (in the settings file). e.g.::
+In order to use it, you *must* specify where and what api key to use (in the settings file). e.g.::
 
     BUGZILLA_URL = "https://bugzilla-dev.allizom.org/rest/"
     BUGZILLA_API_KEY = "bugzilla.api.key"
