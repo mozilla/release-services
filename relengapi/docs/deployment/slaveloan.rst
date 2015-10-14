@@ -9,8 +9,7 @@ Slaveloan makes extensive use of Bugzilla's REST API for classifying new loans, 
 In order to use it, you *must* specify where and what user to use (in the settings file). e.g.::
 
     BUGZILLA_URL = "https://bugzilla-dev.allizom.org/rest/"
-    BUGZILLA_USER = "my.user@example.com"
-    BUGZILLA_PASS = "my.passw0rd"
+    BUGZILLA_API_KEY = "bugzilla.api.key"
 
 Slavealloc
 ..........

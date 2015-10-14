@@ -20,14 +20,11 @@ DEFAULT_BUGZILLA_URL = "https://bugzilla-dev.allizom.org/rest/"
 
 def init_app(app):
     bzurl = app.config.get('BUGZILLA_URL', DEFAULT_BUGZILLA_URL)
-    if not app.config.get('BUGZILLA_USER', None):
-        log.warning("No bugzilla user specified. (Set BUGZILLA_USER in config to fix)")
-    if not app.config.get('BUGZILLA_PASS', None):
-        log.warning("No bugzilla password specified. (Set BUGZILLA_PASS in config to fix)")
+    if not app.config.get('BUGZILLA_API_KEY', None):
+        log.warning("No bugzilla api key specified. (Set BUGZILLA_API_KEY in config to fix)")
     bzclient = BugzillaClient()
     bzclient.configure(bzurl=bzurl,
-                       username=app.config.get('BUGZILLA_USER', None),
-                       password=app.config.get('BUGZILLA_PASS', None))
+                       apikey=app.config.get('BUGZILLA_API_KEY', None))
     app.bzclient = bzclient
 
 
