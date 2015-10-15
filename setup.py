@@ -37,8 +37,7 @@ setup(
         "IPy",
         "furl",
         "redo",
-        # Temporary freeze until https://github.com/bhearsum/bzrest/pull/3 is fixed
-        "bzrest==0.9",
+        "bzrest>=1.1",
         "structlog",
         "mozdef_client",
         "requests_futures",
