@@ -1,0 +1,6 @@
+relengapi-3.3.2
+===============
+
+* Bug 1215544: fixed HTML escaping for treestatus motd's and reasons
+
+* The slavealon blueprint now takes a ``BUGZILLA_API_KEY`` configuration parameter rather than ``BUGZILLA_USER`` and ``BUGZILLA_PASS`` (#352)
