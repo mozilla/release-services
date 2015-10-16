@@ -56,9 +56,9 @@ angular.module('treestatus').filter('linkifyBugs', function($sce) {
     return function(input) {
         // perform some basic sanitization
         var str = (input || '')
-            .replace('<', '&lt;')
-            .replace('>', '&gt;')
-            .replace('&', '&amp;');
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
 
         var bug_matches = str.match(/-- ([0-9]+)|bug.([0-9]+)/ig);
         var pr_matches = str.match(/PR#([0-9]+)/ig);
