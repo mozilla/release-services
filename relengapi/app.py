@@ -160,6 +160,10 @@ def create_app(cmdline=False, test_config=None):
             tpl for (_, tpl, condition) in bp_widgets if not condition or condition()]
         return render_template('root.html', bp_widgets=bp_widgets)
 
+    @app.route('/robots.txt')
+    def robots_txt():
+        return render_template("robots.txt")
+
     @app.route('/versions')
     @api.apimethod(VersionInfo)
     def versions():

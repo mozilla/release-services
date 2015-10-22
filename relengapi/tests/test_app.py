@@ -62,6 +62,13 @@ def test_request_id_header_no_header(app, client):
 
 
 @test_context
+def test_robots(client):
+    """The robots page loads with 200 OK"""
+    resp = client.get('/robots.txt')
+    eq_(resp.status_code, 200, resp.data)
+
+
+@test_context
 def test_versions(client):
     """The /versions API method returns information about the base
     blueprint, at least"""
