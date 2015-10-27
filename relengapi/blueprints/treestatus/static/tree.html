@@ -8,7 +8,7 @@
                 <button class="btn btn-default"
                     ng-click="refresh()"><span class="glyphicon glyphicon-refresh">
             </div>
-            <h2 class="treestatus">{{tree.tree}} status is
+            <h2 class="treestatus"><a href="/treestatus">{{tree.tree}}</a> status is
                 <span class="{{tree.status|status2class}}">{{tree.status|uppercase}}</span>
             </h2><br/>
             <h2 class="treestatus" ng-if="tree.reason">Reason:
