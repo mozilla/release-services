@@ -127,7 +127,7 @@ def create_loan_bug(loan_id=None, slavetype=None, bugzilla_username=None):
     c_zero = COMMENT_ZERO.format(
         slavetype=slavetype,
         human=bugzilla_username,
-        loan_url=url_for("slaveloan.loan_details", id=loan_id))
+        loan_url=url_for("slaveloan.loan_details", id=loan_id, _scheme="https", _external=True))
     loan_bug = LoanerBug(loadInfo=False)
     bug = loan_bug.create(comment=c_zero, summary=summary)
     return bug.id
