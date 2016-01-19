@@ -106,20 +106,24 @@ def _project_filter(projects_arg):
         return Project.name == projects_arg
 
 
-def _build_mapfile(query):
+def _stream_mapfile(query):
     """Helper method to build a map file from a SQLAlchemy query.
     Args:
         query: SQLAlchemy query
 
     Returns:
         * Text output: 40 characters git commit SHA, a space,
-          40 characters hg changeset SHA, a newline; or
-        * None: if the query returns no results
+          40 characters hg changeset SHA, a newline (streamed); or
+        * HTTP 404: if the query returns no results
     """
-    contents = '\n'.join('%s %s' % (r.git_commit, r.hg_changeset)
-                         for r in query)
+    if query.count() == 0:
+        abort(404, 'No mappings found')
+
+    def contents():
+        for r in query:
+            yield '%s %s' % (r.git_commit, r.hg_changeset) + "\n"
     if contents:
-        return Response(contents + '\n', mimetype='text/plain')
+        return Response(contents(), mimetype='text/plain')
 
 
 def _check_well_formed_sha(vcs, sha, exact_length=40):
@@ -224,10 +228,7 @@ def get_full_mapfile(projects):
     # (documentation in relengapi/docs/usage/mapper.rst)
     q = Hash.query.join(Project).filter(_project_filter(projects))
     q = q.order_by(Hash.hg_changeset)
-    mapfile = _build_mapfile(q)
-    if not mapfile:
-        abort(404, 'No results found in database for requested map file')
-    return mapfile
+    return _stream_mapfile(q)
 
 
 @bp.route('/<projects>/mapfile/since/<since>')
@@ -242,12 +243,7 @@ def get_mapfile_since(projects, since):
     q = Hash.query.join(Project).filter(_project_filter(projects))
     q = q.order_by(Hash.hg_changeset)
     q = q.filter(Hash.date_added > since_epoch)
-    print q
-    mapfile = _build_mapfile(q)
-    if not mapfile:
-        abort(404, 'No mappings inserted into database for project(s) %s since %s'
-              % (projects, since))
-    return mapfile
+    return _stream_mapfile(q)
 
 
 @bp.route('/projects', methods=('GET',))
