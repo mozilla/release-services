@@ -1,0 +1,4 @@
+relengapi-3.3.4
+===============
+
+* Bug 1204758: add `yield_per` to mapper full-mapfile downloads, helping reduce (but not fixing) excessive memory use
