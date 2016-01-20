@@ -116,6 +116,11 @@ def _stream_mapfile(query):
           40 characters hg changeset SHA, a newline (streamed); or
         * HTTP 404: if the query returns no results
     """
+    # this helps keep memory use down a little, but the DBAPI still loads
+    # the entire result set into memory..
+    # http://docs.sqlalchemy.org/en/latest/orm/query.html#sqlalchemy.orm.query.Query.yield_per
+    query = query.yield_per(100)
+
     if query.count() == 0:
         abort(404, 'No mappings found')
 
