@@ -56,6 +56,17 @@ TWO_DIGEST = hashlib.sha512(TWO).hexdigest()
 NOW = 1425592922
 
 
+class NoEmailUser(auth.BaseUser):
+
+    type = 'no-email'
+
+    def get_id(self):
+        return 'no-email:sorry'
+
+    def get_permissions(self):
+        return [p.tooltool.upload.public]
+
+
 def mkbatch(message="a batch"):
     return {
         'message': message,
@@ -270,13 +281,17 @@ def test_upload_batch_author(app, client):
 
 
 @moto.mock_s3
-@test_context.specialize(user=auth.AnonymousUser())
+@test_context.specialize(user=NoEmailUser())
 def test_upload_batch_no_user(app, client):
-    """A POST to /upload with non-user-associated authentication fails"""
+    """A POST to /upload with non-user-associated authentication succeeds,
+    using the string form of the token as author"""
     batch = mkbatch()
     resp = upload_batch(client, batch)
-    eq_(resp.status_code, 400)
-    assert_no_upload_rows(app)
+    eq_(resp.status_code, 200)
+    assert_batch_response(resp, author='no-email:sorry', files={
+        'one': {'algorithm': 'sha512',
+                'size': len(ONE),
+                'digest': ONE_DIGEST}})
 
 
 @moto.mock_s3
