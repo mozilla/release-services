@@ -135,7 +135,9 @@ def upload_batch(region=None, body=None):
     try:
         body.author = current_user.authenticated_email
     except AttributeError:
-        raise BadRequest("Could not determine authenticated username")
+        # no authenticated_email -> use the stringified user (probably a token
+        # ID)
+        body.author = str(current_user)
 
     # verify permissions based on visibilities
     visibilities = set(f.visibility for f in body.files.itervalues())
