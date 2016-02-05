@@ -222,6 +222,7 @@ git_only='
     src
     settings_example.py
     misc/release.sh
+    requirements.txt
 '
 git ls-files . | while read f; do
                     ignore=false

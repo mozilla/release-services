@@ -4,12 +4,16 @@
 
 from __future__ import absolute_import
 
+import os
+
 from setuptools import find_packages
 from setuptools import setup
 
+here = os.path.dirname(__file__)
+
 setup(
     name='relengapi',
-    version='3.3.6',
+    version=open(os.path.join(here, 'VERSION')).read(),
     description='The code behind https://api.pub.build.mozilla.org',
     author='Dustin J. Mitchell',
     author_email='dustin@mozilla.com',
@@ -22,7 +26,6 @@ setup(
         "SQLAlchemy>=0.9.4",
         "Celery>=3.1.22",  # see https://bugzilla.mozilla.org/show_bug.cgi?id=1254340
         "alembic>=0.7.0",
-        "argparse",
         "requests",
         "wrapt",
         "itsdangerous>=0.24",  # 0.23 can sometimes raise TypeError while de-serializing JWTs
