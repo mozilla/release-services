@@ -147,8 +147,8 @@ function(allowed_statuses, allowed_tags, restapi) {
                 var update = {trees: scope.trees};
 
                 // only update the MOTD if it's nonempty (which precludes empty
-                // MOTD's, but that's OK)
-                if (scope.message_of_the_day) {
+                // MOTD's, but that's OK) and only if a single tree is selected
+                if (scope.message_of_the_day && scope.plural == false) {
                     update['message_of_the_day'] = scope.message_of_the_day;
                 };
 
