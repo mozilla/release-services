@@ -1,0 +1,4 @@
+relengapi-3.3.6
+===============
+
+* Bug 1248205 - Don't allow changing the motd for more than one tree at a time
