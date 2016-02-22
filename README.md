@@ -67,7 +67,7 @@ Omit this if you won't be running tests.
 
 [optional] Build the docs:
 
-    relengapi build-docs --development
+    relengapi build-docs 
 
 [optional] Set up your settings file:
 
