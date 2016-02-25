@@ -10,7 +10,9 @@ import time
 
 import flask_login
 import structlog
+import taskcluster
 from flask import Blueprint
+from flask import current_app
 from flask import g
 from flask import request
 from flask import url_for
@@ -254,6 +256,120 @@ def forceclobber():
     future_time = int(time.time()) + 3600
     builddir = request.args.get('builddir')
     return "{}:{}:forceclobber".format(builddir, future_time)
+
+
+def tc_branches():
+    decision_namespace = 'gecko.v2.%s.latest.firefox.decision'
+
+    index = taskcluster.Index()
+    queue = taskcluster.Queue()
+
+    result = index.listNamespaces('gecko.v2', dict(limit=1000))
+
+    branches = {
+        i['name']: dict(name=i['name'], workerTypes=dict())
+        for i in result.get('namespaces', [])
+    }
+
+    for branchName, branch in branches.items():
+
+        # decision task might not exist
+        try:
+            decision_task = index.findTask(decision_namespace % branchName)
+            decision_graph = queue.getLatestArtifact(
+                decision_task['taskId'], 'public/graph.json')
+        except taskcluster.exceptions.TaskclusterRestFailure:
+            continue
+
+        for task in decision_graph.get('tasks', []):
+            task = task['task']
+            task_cache = task.get('payload', dict()).get('cache', dict())
+
+            provisionerId = task.get('provisionerId')
+            if provisionerId:
+                branch['provisionerId'] = provisionerId
+
+            workerType = task.get('workerType')
+            if workerType:
+                branch['workerTypes'].setdefault(
+                    workerType, dict(name=workerType, caches=[]))
+
+                if len(task_cache) > 0:
+                    branch['workerTypes'][workerType]['caches'] = list(set(
+                        branch['workerTypes'][workerType]['caches'] +
+                        task_cache.keys()
+                    ))
+
+    caches_to_skip = current_app.config.get('TASKCLUSTER_CACHES_TO_SKIP', [])
+
+    return [
+        rest.TCBranch(
+            name=branchName,
+            provisionerId=branch.get('provisionerId'),
+            workerTypes={
+                workerType: rest.TCWorkerType(
+                        name=workerType,
+                        caches=[
+                            cache
+                            for cache in branch['workerTypes'][workerType]['caches']
+                            if cache not in caches_to_skip
+                        ],
+                    )
+                for workerType in branch['workerTypes']
+            })
+        for branchName, branch in branches.items()]
+
+
+@bp.route('/tc/branches', methods=['GET'])
+@apimethod([rest.TCBranch])
+def tc_branches_cached():
+    """List of all the gecko branches with their worker types
+    """
+
+    def cache_key():
+        return time.time() // current_app.config.get(
+            'TASKCLUSTER_CACHE_DURATION', 60 * 5)
+
+    def cache(fun):
+        def wrap(*args, **kwargs):
+            key = cache_key()
+            if getattr(fun, '__cache_key', None) != key:
+                fun.__cache_value = fun(*args, **kwargs)
+                fun.__cache_key = key
+            return getattr(fun, '__cache_value', None)
+        return wrap
+
+    return cache(tc_branches)()
+
+
+@bp.route('/tc/purgecache', methods=['POST'])
+@apimethod(None, body=[rest.TCPurgeCacheRequest])
+@p.clobberer.post.clobber.require()
+def tc_purgecache(body):
+    """Purge cache on taskcluster
+    """
+
+    credentials = []
+
+    client_id = current_app.config.get('TASKCLUSTER_CLIENTID')
+    access_token = current_app.config.get('TASKCLUSTER_ACCESSTOKEN')
+
+    if client_id and access_token:
+        credentials = [dict(
+            credentials=dict(
+                clientId=client_id,
+                accessToken=access_token,
+            ))]
+
+    purge_cache = taskcluster.PurgeCache(*credentials)
+
+    for item in body:
+        purge_cache.purgeCache(item.provisionerId,
+                               item.workerType,
+                               dict(cacheName=item.cacheName))
+
+    return None
+
 
 _ROR = "https://github.com/mozilla/build-relengapi-clobberer"
 _ISSUE_URL = "%s/issues" % _ROR

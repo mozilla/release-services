@@ -8,6 +8,7 @@ import json
 import time
 from copy import deepcopy
 
+from mock import patch
 from nose.tools import assert_greater
 from nose.tools import eq_
 
@@ -306,3 +307,111 @@ def test_clobber_request_no_identity(client):
     # the last clobber should have a who value of automation, since we deleted
     # authenticated_email
     eq_(clobber.order_by('id').all()[0], ('automation',))
+
+
+@test_context
+def test_clobber_tc_purgecache_no_call(client):
+
+    with patch('taskcluster.PurgeCache.purgeCache', return_value='WORKS') as p:
+        rv = client.post_json('/clobberer/tc/purgecache', data=[])
+
+        eq_(rv.status_code, 200)
+        eq_(json.loads(rv.data)["result"], None)
+
+        eq_(p.called, False)
+
+
+@test_context
+def test_clobber_tc_purgecache_wrong_args(client):
+
+    with patch('taskcluster.PurgeCache.purgeCache', return_value='WORKS') as p:
+        rv = client.post_json(
+            '/clobberer/tc/purgecache',
+            data=[dict(wrong="something")])
+
+        eq_(rv.status_code, 200)
+        eq_(json.loads(rv.data)["result"], None)
+
+        eq_(p.called, True)
+        eq_(str(p.call_args), "call(None, None, {'cacheName': None})")
+
+
+@test_context
+def test_clobber_tc_purgecache_works(client):
+
+    with patch('taskcluster.PurgeCache.purgeCache', return_value='WORKS') as p:
+        rv = client.post_json(
+            '/clobberer/tc/purgecache',
+            data=[dict(
+                cacheName="1",
+                provisionerId="2",
+                workerType="3",
+            )])
+
+        eq_(rv.status_code, 200)
+        eq_(json.loads(rv.data)["result"], None)
+
+        eq_(p.called, True)
+        eq_(str(p.call_args), "call(u'2', u'3', {'cacheName': u'1'})")
+
+
+@test_context
+def test_clobber_tc_branches_caching(client):
+
+    with patch('relengapi.blueprints.clobberer.tc_branches',
+               return_value=[]) as p:
+        rv = client.get('/clobberer/tc/branches')
+
+        eq_(rv.status_code, 200)
+        eq_(json.loads(rv.data)["result"], [])
+
+        eq_(p.called, True)
+        eq_(p.call_count, 1)
+
+        rv = client.get('/clobberer/tc/branches')
+
+        eq_(rv.status_code, 200)
+        eq_(json.loads(rv.data)["result"], [])
+
+        eq_(p.called, True)
+        eq_(p.call_count, 1)
+
+
+def test_clobber_tc_branches():
+
+    from relengapi.blueprints.clobberer import tc_branches
+
+    with patch('taskcluster.Index.listNamespaces',
+               return_value=dict(namespaces=[dict(name="branch1")])
+               ) as listNamespaces:
+        with patch('taskcluster.Index.findTask',
+                   return_value=dict(taskId='task1')) as findTask:
+            with patch('taskcluster.Queue.getLatestArtifact',
+                       return_value=dict(tasks=[dict(
+                           task=dict(
+                               workerType="workerType1",
+                               provisionerId="provisionerId1",
+                               payload=dict(cache=dict(cache1="value1"))
+                               )
+                           )])) as getLatestArtifact:
+
+                result = tc_branches()
+
+                eq_(len(result), 1)
+                eq_(result[0].name, 'branch1')
+                eq_(result[0].provisionerId, 'provisionerId1')
+                eq_(len(result[0].workerTypes), 1)
+                eq_(result[0].workerTypes['workerType1'].name, 'workerType1')
+                eq_(result[0].workerTypes['workerType1'].caches, ['cache1'])
+
+                eq_(listNamespaces.call_count, 1)
+                eq_(str(listNamespaces.call_args),
+                    "call('gecko.v2', {'limit': 1000})")
+
+                eq_(findTask.call_count, 1)
+                eq_(str(findTask.call_args),
+                    "call('gecko.v2.branch1.latest.firefox.decision')")
+
+                eq_(getLatestArtifact.call_count, 1)
+                eq_(str(getLatestArtifact.call_args),
+                    "call('task1', 'public/graph.json')")

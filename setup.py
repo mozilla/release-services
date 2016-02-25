@@ -45,6 +45,7 @@ setup(
         "structlog",
         "mozdef_client",
         "requests_futures",
+        "taskcluster",
     ],
     extras_require={
         'test': [

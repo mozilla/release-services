@@ -1,10 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-angular.module('clobberer', ['relengapi', 'initial_data']);
 
-angular.module('clobberer').controller('ClobberController',
-                                    function($scope, restapi, initial_data) {
+angular.module('clobberer', ['relengapi', 'initial_data']);
+angular
+  .module('clobberer')
+  .controller('ClobberController', function($scope, restapi, initial_data) {
 
     $scope.branches = initial_data.branches;
     $scope.selectedBranch = initial_data.selected_branch || $scope.branches[0];
@@ -31,7 +32,8 @@ angular.module('clobberer').controller('ClobberController',
         var builders = [];
         for (builder in $scope.branchData) {
                 if ($scope.builderFilter == undefined ||
-                    builder.toLowerCase().match($scope.builderFilter.toLowerCase()) != null) {
+                    builder.toLowerCase().match(
+                      $scope.builderFilter.toLowerCase()) != null) {
                     builders.push(builder);
                 }
         }
@@ -81,4 +83,82 @@ angular.module('clobberer').controller('ClobberController',
     if ($scope.selectedBranch != null) {
         $scope.expandBranch($scope.selectedBranch);
     }
+
+    // Taskcluster
+
+    $scope.purgeCacheButtonDisabled = function() {
+      if ($scope.TCBranches === null) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+
+    $scope.toggleWorkerTypes = function() {
+      if ($scope.currentWorkerTypes().length > 0) {
+        for (let workerType in $scope.selectedTCBranch.workerTypes) {
+          $scope.selectedTCWorkerTypes[workerType] = false;
+        }
+        $scope.toggleWorkerTypesButton = false;
+
+      } else {
+        for (let workerType in $scope.selectedTCBranch.workerTypes) {
+          $scope.selectedTCWorkerTypes[workerType] = true;
+        }
+        $scope.toggleWorkerTypesButton = true;
+      }
+    };
+
+    $scope.clearSelectedTCWorkerTypes = function() {
+      $scope.selectedTCWorkerTypes = {};
+    };
+
+    $scope.currentWorkerTypes = function() {
+      return Object.keys($scope.selectedTCWorkerTypes)
+                .filter(function(i) { return $scope.selectedTCWorkerTypes[i] === true; });
+    };
+
+    $scope.listWorkerTypes = function() {
+      workerTypes = [];
+      if ($scope.selectedTCBranch !== null) {
+        for (let workerType in $scope.selectedTCBranch.workerTypes) {
+          workerTypes.push($scope.selectedTCBranch.workerTypes[workerType]);
+        }
+      }
+      return workerTypes;
+    };
+
+    $scope.loadBranches = function() {
+        $scope.TCBranches = null;
+        $scope.selectedTCBranch = null;
+        $scope.selectedTCWorkerTypes = {};
+
+        restapi.get('/clobberer/tc/branches').then(function (data) {
+            $scope.$apply(function() {
+              $scope.TCBranches = data.data.result;
+            })
+        });
+    };
+
+    $scope.purgeCache = function() {
+      let provisionerId = $scope.selectedTCBranch.provisionerId;
+      let workerTypes = $scope.currentWorkerTypes();
+
+      for (let workerType of $scope.currentWorkerTypes()) {
+        let cacheNames = $scope.selectedTCBranch.workerTypes[workerType].caches
+
+        for (let cacheName of cacheNames) {
+          restapi
+            .post('/clobberer/tc/purgecache', [{ provisionerId: provisionerId,
+                                                 workerType: workerType,
+                                                 cacheName: cacheName }])
+            .then(function(response) {
+              alertify.success(
+                  'Cache with name `' + cacheName + '` on worker type `' + workerType  + '` purged sucessfully.');
+            });
+        }
+      }
+    };
+
+    $scope.loadBranches();
 });
