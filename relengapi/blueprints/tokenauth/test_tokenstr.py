@@ -50,6 +50,15 @@ def test_str_to_claims_invalid_str(app):
 
 
 @TestContext()
+def test_str_to_claims_invalid_padding(app):
+    # (with the current verison of itsdagerous, at least, bad padding gives
+    # TypeError instead of BadData)
+    with app.app_context():
+        got_claims = tokenstr.str_to_claims('eyJhbGciOiJIUzI1NiJ9.e')
+        eq_(got_claims, None)
+
+
+@TestContext()
 def test_claims_to_str_to_claims(app):
     with app.app_context():
         input_claims = {'iss': 'ra2', 'typ': 'prm', 'jti': 't10'}
