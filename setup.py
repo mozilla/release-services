@@ -25,6 +25,7 @@ setup(
         "argparse",
         "requests",
         "wrapt",
+        "itsdangerous>=0.24",  # 0.23 can sometimes raise TypeError while de-serializing JWTs
         "blinker",  # required to use flask signals
         "pytz",
         "wsme<0.8",  # see https://github.com/mozilla/build-relengapi/issues/325
