@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+import mock
 from nose.tools import assert_raises
 from nose.tools import eq_
 
@@ -51,11 +52,20 @@ def test_str_to_claims_invalid_str(app):
 
 @TestContext()
 def test_str_to_claims_invalid_padding(app):
-    # (with the current verison of itsdagerous, at least, bad padding gives
-    # TypeError instead of BadData)
     with app.app_context():
         got_claims = tokenstr.str_to_claims('eyJhbGciOiJIUzI1NiJ9.e')
         eq_(got_claims, None)
+
+
+@TestContext()
+def test_str_to_claims_bad_exception(app):
+    # some errors can cause itsdangerous to raise errors other than
+    # BadData, and these should be handled correctly
+    with app.app_context():
+        with mock.patch('itsdangerous.JSONWebSignatureSerializer.loads') as loads:
+            loads.side_effect = RuntimeError("uhoh")
+            got_claims = tokenstr.str_to_claims('eyJhbGciOiJIUzI1NiJ9.e')
+            eq_(got_claims, None)
 
 
 @TestContext()
