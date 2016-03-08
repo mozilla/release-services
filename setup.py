@@ -20,7 +20,7 @@ setup(
         "Flask-Browserid",
         "Sphinx>=1.3",
         "SQLAlchemy>=0.9.4",
-        "Celery>=3.1.16",  # see https://github.com/mozilla/build-relengapi/issues/145
+        "Celery>=3.1.22",  # see https://bugzilla.mozilla.org/show_bug.cgi?id=1254340
         "alembic>=0.7.0",
         "argparse",
         "requests",
