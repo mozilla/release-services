@@ -32,6 +32,9 @@ def str_to_claims(token_str):
     except BadData:
         logger.warning("Got invalid signature in token %r", token_str)
         return None
+    except Exception:
+        logger.exception("Error processing signature in token %r", token_str)
+        return None
 
     # convert v1 to ra2
     if claims.get('v') == 1:
