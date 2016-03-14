@@ -13,7 +13,7 @@ here = os.path.dirname(__file__)
 
 setup(
     name='relengapi',
-    version=open(os.path.join(here, 'VERSION')).read(),
+    version=open(os.path.join(here, 'VERSION')).read().strip(),
     description='The code behind https://api.pub.build.mozilla.org',
     author='Dustin J. Mitchell',
     author_email='dustin@mozilla.com',
