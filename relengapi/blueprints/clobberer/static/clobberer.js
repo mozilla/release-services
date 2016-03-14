@@ -134,13 +134,7 @@ angular
         $scope.selectedTCWorkerTypes = {};
 
         restapi.get('/clobberer/tc/branches').then(function (data) {
-<<<<<<< Updated upstream
-            $scope.$apply(function() {
-              $scope.TCBranches = data.data.result;
-            })
-=======
             $scope.TCBranches = data.data.result;
->>>>>>> Stashed changes
         });
     };
 
