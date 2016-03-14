@@ -1,0 +1,8 @@
+relengapi-3.3.7
+===============
+
+* Handle all errors from itsdangerous (#366)
+* Require Celery-3.1.22 or higher (#367)
+* Bug 1174263: Support clobbering TaskCluster caches (#365)
+  * New requirement: ``taskcluster``
+  * New configuration option: ``TASKCLUSTER_CACHES_TO_SKIP``
