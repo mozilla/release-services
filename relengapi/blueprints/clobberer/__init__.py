@@ -351,8 +351,8 @@ def tc_purgecache(body):
 
     credentials = []
 
-    client_id = current_app.config.get('TASKCLUSTER_CLIENTID')
-    access_token = current_app.config.get('TASKCLUSTER_ACCESSTOKEN')
+    client_id = current_app.config.get('TASKCLUSTER_CLIENT_ID')
+    access_token = current_app.config.get('TASKCLUSTER_ACCESS_TOKEN')
 
     if client_id and access_token:
         credentials = [dict(
