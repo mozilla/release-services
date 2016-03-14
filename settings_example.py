@@ -10,6 +10,7 @@ from __future__ import absolute_import
 # SQLALCHEMY_DATABASE_URIS = {
 #    'relengapi': 'sqlite:////tmp/relengapi.db',
 #    'clobberer': 'sqlite:////tmp/clobberer.db',
+#    'mapper': 'sqlite:////tmp/mapper.db',
 #    # .. add other database URIs here, as appropriate for the blueprints
 # }
 #

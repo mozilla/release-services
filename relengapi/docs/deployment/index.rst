@@ -17,4 +17,5 @@ This is mostly limited to system administrators and those responsible for config
     tooltool
     slaveloan
     archiver
+    clobberer
     alembic

@@ -2,42 +2,111 @@
      License, v. 2.0. If a copy of the MPL was not distributed with this
      file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <div ng-app="clobberer" ng-controller="ClobberController">
-    <span class="input">
-        <input ng-model="builderFilter" type="text" placeholder="filter builders"/>
-    </span>
-    <span class="input">
-        <select class="clickable" 
-                name="SelectedBranch" 
-                ng-model="selectedBranch"  
-                ng-options="branch for branch in branches" 
-                ng-change="expandBranch(selectedBranch)"></select>
-    </span>
-    <span class="input">
-        <button class="clickable"
-                ng-click="submitClobbers()"
-                ng-disabled="objHasSelectedCheckboxes(selectedBuilders) == false">
-                Submit Clobbers</button></td>
-    </span>
-    
-    <table ng-show="branchData">
-        <tr>
-            <th>
-                <input type="checkbox" 
-                       ng-model="selectAllBuilders"
-                       ng-click="toggleSelectedBuilders()"/>
-            </th>
-            <th>Builder</th>
-            <th>Last Clobber</th>
-        <tr ng-repeat="builderName in availableBuilders() | filter:builderFilter">
-            <td><input class="blder-checkbox" 
-                        type="checkbox"
-                        ng-model="selectedBuilders[builderName]"/>
-            </td>
-            <td>{{ builderName }}</td>
-            <td><span ng-show="branchData[builderName][0].lastclobber != null">
-            {{ branchData[builderName][0].lastclobber * 1000 | date:'yyyy-MM-dd HH:mm:ss Z' }} 
-            by {{ branchData[builderName][0].who }}</span></td>
-        </tr>
+
+    <h1>Taskcluster</h1>
+
+    <form ng-show="TCBranches != null" class="form-inline">
+      <div class="form-group">
+        <select class="form-control"
+                ng-model="selectedTCBranch"
+                ng-change="clearSelectedTCWorkerTypes()"
+                ng-options="i as i.name for i in TCBranches track by i.name">
+          <option value="" disabled selected hidden>Branches:</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary"
+              ng-click="purgeCache()"
+              ng-disabled="currentWorkerTypes().length === 0">Purge cache</button>
+    </form>
+
+    <table ng-show="TCBranches != null && selectedTCBranch">
+      <tr>
+        <th>
+          <input type="checkbox"
+                 ng-model="toggleWorkerTypesButton"
+                 ng-click="toggleWorkerTypes()"/>
+        </th>
+        <th>Worker Type</th>
+        <th>Caches</th>
+      </tr>
+      <tr ng-repeat="workerType in listWorkerTypes()">
+        <td>
+          <input type="checkbox"
+                 ng-model="selectedTCWorkerTypes[workerType.name]"/>
+        </td>
+        <td>{{ workerType.name }}</td>
+        <td>
+          <ul ng-show="workerType.caches && workerType.caches.length > 0">
+            <li ng-repeat="cache in workerType.caches">
+              {{ cache }}
+            </li>
+          </ul>
+        </td>
+      </tr>
     </table>
-    <div ng-show="branchData == null">loading...</div>
+
+    <div ng-show="TCBranches == null" class="container">
+      <div class="progress">
+        <div class="progress-bar progress-bar-striped active"
+            role="progressbar" aria-valuenow="45" aria-valuemin="0"
+            aria-valuemax="100" style="width: 100%">
+          <span>Loading ...</span>
+        </div>
+      </div>
+    </div>
+
+    <h1>Buildbot builders</h1>
+
+    <form class="form-inline">
+      <div class="form-group">
+        <input type="text" class="form-control" required placeholder="Filter builders"
+               ng-model="builderFilter">
+        <select class="form-control"
+                name="SelectedBranch"
+                ng-model="selectedBranch"
+                ng-options="branch for branch in branches"
+                ng-change="expandBranch(selectedBranch)">
+          <option value="" disabled selected hidden>Select branch</option>
+        </select>
+      </div>
+      <button class="btn btn-primary"
+              ng-click="submitClobbers()"
+              ng-disabled="objHasSelectedCheckboxes(selectedBuilders) == false">Submit clobbers</button>
+
+    </form>
+
+    <table ng-show="branchData">
+      <tr>
+        <th>
+          <input type="checkbox"
+                 ng-model="selectAllBuilders"
+                 ng-click="toggleSelectedBuilders()"/>
+        </th>
+        <th>Builder</th>
+        <th>Last Clobber</th>
+      </tr>
+      <tr ng-repeat="builderName in availableBuilders() | filter:builderFilter">
+        <td>
+          <input class="blder-checkbox" type="checkbox"
+                 ng-model="selectedBuilders[builderName]"/>
+        </td>
+        <td>{{ builderName }}</td>
+        <td>
+          <span ng-show="branchData[builderName][0].lastclobber != null">
+            {{ branchData[builderName][0].lastclobber * 1000 | date:'yyyy-MM-dd HH:mm:ss Z' }}
+            by {{ branchData[builderName][0].who }}</span>
+        </td>
+      </tr>
+    </table>
+
+    <div ng-show="branchData == null" class="container">
+      <div class="progress">
+        <div class="progress-bar progress-bar-striped active"
+            role="progressbar" aria-valuenow="45" aria-valuemin="0"
+            aria-valuemax="100" style="width: 100%">
+          <span>Loading ...</span>
+        </div>
+      </div>
+    </div>
+
 </div>
