@@ -11,6 +11,8 @@ Configuration
 
 The configuration option `TASKCLUSTER_CACHES_TO_SKIP` gives a list of TaskCluster cache names that should not be clobbered or displayed to the user.
 
+Clobberer calls out to TaskCluster, so it needs a ``TASKCLUSTER_CLIENT_ID`` and ``TASKCLUSTER_ACCESS_TOKEN`` granting ``purge-cache:<provisionerId>/<workerType>:<cacheName>`` for the appropriate workerTypes.
+
 Permissions
 -----------
 
