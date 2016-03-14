@@ -37,19 +37,8 @@ newversion="${1}"
 
 status "getting information from setup.py"
 
-# monkey-patch setuptools.setup to just print a few args in shell format
-setup_info=`python <<'EOF'
-import setuptools
-from pipes import quote  # replace with shlex.quote in python3
-def setup(name, version, **kwargs):
-    print "name={}".format(quote(name))
-    print "oldversion='{}'".format(quote(version))
-setuptools.setup = setup
-import setup
-EOF`
-eval $setup_info
-
-message "$name-$oldversion -> $name-$newversion"
+oldversion=$(<VERSION)
+message "relengapi-$oldversion -> relengapi-$newversion"
 
 status "creating release notes"
 
@@ -61,8 +50,8 @@ else
     git add relengapi/docs/relnotes/index.rst
 
     (
-        echo "$name-$newversion"
-        echo "$name-$newversion" | tr -c $'\n' '='
+        echo "relengapi-$newversion"
+        echo "relengapi-$newversion" | tr -c $'\n' '='
         echo ""
         echo "* thing that changed"
         echo ""
@@ -87,17 +76,16 @@ if ! relengapi build-docs; then
     fail "building docs failed"
 fi
 
-status "updating version in setup.py"
+status "updating version in VERSION"
 
-sed -i "s/version=['\"][^']*['\"],/version='$newversion',/" setup.py
-git diff --quiet setup.py && fail "no change to setup.py?"
-git add setup.py
+echo $newversion > VERSION
+git add VERSION
 
 status "committing and tagging"
 
-git commit -m "Bump to version $name-$newversion"
-git tag $name-$newversion
-git log -1 --decorate $name-$newversion
+git commit -m "Bump to version relengapi-$newversion"
+git tag relengapi-$newversion
+git log -1 --decorate relengapi-$newversion
 
 status "building sdist"
 
@@ -105,5 +93,5 @@ python setup.py sdist
 
 message "if everything looks OK,"
 message " - git push --tags upstream"
-message " - twine upload --sign dist/$name-$newversion.tar.gz"
-message " - deploy dist/$name-$newversion.tar.gz to production"
+message " - twine upload --sign dist/relengapi-$newversion.tar.gz"
+message " - deploy dist/relengapi-$newversion.tar.gz to production"
