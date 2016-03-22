@@ -225,6 +225,8 @@ git_only='
     requirements.txt
     requirements-test.txt
     requirements-ldap.txt
+    default.nix
+    release.nix
 '
 git ls-files . | while read f; do
                     ignore=false
