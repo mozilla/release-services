@@ -49,15 +49,18 @@ setup(
     ],
     extras_require={
         'test': [
-            'nose',
-            'mock',
+            'MySQL-python',
+            'codecov',
             'coverage',
-            'pep8',
-            'mockldap',
-            'pyflakes',
-            'moto',
-            'mockcache',
+            'coverage',
             'isort',
+            'mock',
+            'mockcache',
+            'mockldap',
+            'moto',
+            'nose',
+            'pep8',
+            'pyflakes',
         ],
         # extras required only for LDAP authorization support
         'ldap': [

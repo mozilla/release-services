@@ -223,6 +223,8 @@ git_only='
     settings_example.py
     misc/release.sh
     requirements.txt
+    requirements-test.txt
+    requirements-ldap.txt
 '
 git ls-files . | while read f; do
                     ignore=false

@@ -10,11 +10,7 @@ env:
 
 # command to install dependencies
 install:
-  - "pip install -e .[test]"
-  - "pip install coverage"
-  - "pip install codecov"
-  - "pip freeze"
-  - "pip install MySQL-python"
+  - pip install -r requirements.txt -r requirements-ldap.txt -r requirements-test.txt -e .
 
 # run everything in a single script, so we get a nice summary at the end
 script:
