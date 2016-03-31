@@ -1,4 +1,4 @@
-{ relengapi ? { outPath = ./.; name = "relengapi-src"; }
+{ relengapi ? { outPath = ./src/relengapi; name = "relengapi-src"; }
 , pkgs ? import (builtins.fetchTarball "https://github.com/NixOS/nixpkgs-channels/archive/954925771482b50493a24615c6e7e82e044a4fdf.tar.gz") {}
 
 , pythonVersion ? "python27Packages"
@@ -422,7 +422,7 @@ let
       }
   ]);
 
-  version = pkgs.lib.removeSuffix "\n" (builtins.head (pkgs.lib.splitString "\n" (builtins.readFile ./VERSION)));
+  version = pkgs.lib.removeSuffix "\n" (builtins.head (pkgs.lib.splitString "\n" (builtins.readFile ./src/relengapi/VERSION)));
 
 in pythonPackages.buildPythonPackage rec {
   name = "relengapi-${version}";
@@ -441,11 +441,14 @@ in pythonPackages.buildPythonPackage rec {
   doCheck = false;  # TODO: skip tests for now since they dont run in nix's restricted env
   checkPhase = ''
     export RELENGAPI_SETTINGS=settings_example.py
-    export VIRTUAL_ENV=something
     export PATH=$out/bin:$PATH
     sh ./validate.sh
   '';
+  preShellHook = ''
+    cd src/relengapi/
+  '';
   postShellHook = ''
+    cd ../../
     export RELENGAPI_SETTINGS=`pwd`/settings.py
   '';
 }

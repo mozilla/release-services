@@ -6,11 +6,11 @@ python:
 env:
   # the 'relengapi' command wants a settings file, but the contents
   # aren't terribly important, so the example will do fine
-  - RELENGAPI_SETTINGS=settings_example.py
+  - RELENGAPI_SETTINGS=$PWD/settings_example.py
 
 # command to install dependencies
 install:
-  - pip install -r requirements.txt -r requirements-ldap.txt -r requirements-test.txt -e .
+  - pip install -r requirements.txt -r requirements-ldap.txt -r requirements-test.txt -e src/relengapi
 
 # run everything in a single script, so we get a nice summary at the end
 script:
