@@ -1,0 +1,35 @@
+
+// Colors (from https://github.com/mozilla/mozmaker/blob/master/src/scss/custom/_colors.scss)
+$charcoal: #4d4f53;
+$white: #fff;
+$black: #000;
+$dino-red: #d24735;
+$firefox-orange: #f26c23;
+$market-orange: #f89c24;
+$flame-yellow: #ffcd02;
+$gecko-green: #7dc14c;
+$summit-teal: #3bba99;
+$mobile-blue: #16afe5;
+$developer-blue: #4383bf;
+$nightly-blue: #5a6ba4;
+$aurora-purple: #ab5da4;
+$bikeshed-magenta: #e14164;
+
+// Font
+$font-family-sans-serif: 'Fira Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+$font-family-serif: 'Fira Sans', Georgia, 'Times New Roman', Times, serif;
+$font-family-monospace: 'Fira Sans', Menlo, Monaco, Consolas, 'Courier New', monospace;
+$font-family-base: 'Fira Sans', $font-family-sans-serif;
+
+
+#navbar {
+    background-color: $firefox-orange;
+    border-radius: 0;
+    a { color: $white; }
+}
+
+#content {
+    margin: 0.9375rem;
+}
+
+@import "../node_modules/bootstrap/scss/bootstrap";
