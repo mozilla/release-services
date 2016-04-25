@@ -1,6 +1,14 @@
-{ relengapi ? { outPath = ./src/relengapi; name = "relengapi-src"; }
-, pkgs ? import (builtins.fetchTarball "https://github.com/NixOS/nixpkgs-channels/archive/954925771482b50493a24615c6e7e82e044a4fdf.tar.gz") {}
+let
+  _pkgs = import <nixpkgs> {};
+in
 
+{ relengapi ? { outPath = ./.; name = "relengapi-src"; }
+, pkgs ? import (_pkgs.fetchFromGitHub {
+    owner = "NixOS";
+    repo = "nixpkgs-channels";
+    rev = "32b7b0009f168cb7e020d297c2f336ef352e9ec1";
+    sha256 = "17zh9zc92z3vfc7xx03bj94mblkp4bjwsfga71ndjlzshx7i58j1";
+  }) {}
 , pythonVersion ? "python27Packages"
 , ldap ? true
 , develop ? true
@@ -422,26 +430,27 @@ let
       }
   ]);
 
-  version = pkgs.lib.removeSuffix "\n" (builtins.head (pkgs.lib.splitString "\n" (builtins.readFile ./src/relengapi/VERSION)));
+  version = pkgs.lib.removeSuffix "\n" (builtins.head (pkgs.lib.splitString "\n" (builtins.readFile ./VERSION)));
 
 in pythonPackages.buildPythonPackage rec {
   name = "relengapi-${version}";
   src = relengapi;
-  # TODO: read from requirements-dev.txt
-  buildInputs =
-    (fromRequirements ./requirements-test.txt)
+  # TODO: read from requirements-dev.txt when in nix-shell
+  buildInputs = [ pkgs.which ]
+    ++ (fromRequirements ./requirements-test.txt)
     ++ (builtins.attrValues pythonPackages.python.modules)
     ++ (pkgs.lib.optionals develop (with self; [
       ipdb
     ]));
-  # TODO: read from requirements.txt
   propagatedBuildInputs = 
     (fromRequirements ./requirements.txt)
     ++ pkgs.lib.optionals ldap (fromRequirements ./requirements-ldap.txt);
-  doCheck = false;  # TODO: skip tests for now since they dont run in nix's restricted env
+  #doCheck = false;  # TODO: skip tests for now since they dont run in nix's restricted env
   checkPhase = ''
     export RELENGAPI_SETTINGS=settings_example.py
     export PATH=$out/bin:$PATH
+    export PYTHONPATH=$PWD:$PYTHONPATH
+    rm relengapi/tests/test_lib_celery.py  # skipping since we get "OSError: [Errno 12] Cannot allocate memory"
     sh ./validate.sh
   '';
   preShellHook = ''

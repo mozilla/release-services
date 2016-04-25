@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 COVERAGE_MIN=90
+RELENGAPI_SCRIPT="`dirname \`realpath \\\`which relengapi\\\`\``/.relengapi-wrapped"
 
 set -e
 
@@ -79,19 +80,19 @@ coverage erase || {
 }
 
 start_step "running pep8"
-pep8 --config=pep8rc src/relengapi/relengapi || not_ok "pep8 failed"
+pep8 --config=pep8rc relengapi || not_ok "pep8 failed"
 finish_step
 
 start_step "running pyflakes"
-pyflakes src/relengapi/relengapi || not_ok "pyflakes failed"
+pyflakes relengapi || not_ok "pyflakes failed"
 finish_step
 
 start_step "checking import module convention in all files"
-isort -c -q -rc src/relengapi/relengapi --diff || not_ok "Import order is incorrect (diff provided)"
+isort -c -q -rc relengapi --diff || not_ok "Import order is incorrect (diff provided)"
 finish_step
 
 start_step "checking all python files have absolute_import specified"
-isort -c -q -a "from __future__ import absolute_import" -rc src/relengapi/relengapi || not_ok "Missing absolute_import in referenced files"
+isort -c -q -a "from __future__ import absolute_import" -rc relengapi || not_ok "Missing absolute_import in referenced files"
 finish_step
 
 start_step "building docs"
@@ -99,17 +100,13 @@ relengapi -Q build-docs || not_ok "build-docs failed"
 finish_step
 
 start_step "running tests (under coverage)"
-cd src/relengapi
-coverage run --append --rcfile=coveragerc --source=relengapi $(which relengapi) run-tests || not_ok "tests failed"
-cd ../..
+coverage run --append --rcfile=coveragerc --source=relengapi $RELENGAPI_SCRIPT run-tests || not_ok "tests failed"
 finish_step
 
 start_step "checking alembic heads"
-cd src/relengapi
 for filename in `find relengapi/alembic -type f -name "alembic.ini" ! -path template`; do
     [ `alembic -c $filename heads | wc -l` -le 1 ] || not_ok "multiple heads exist in migrations"
 done
-cd ../..
 finish_step
 
 # run migration tests. This takes one parameter, a bool, determining whether
@@ -135,12 +132,10 @@ run_migrations_test () {
     export RELENGAPI_SETTINGS=$settings_file
     # apparently, createdb needs to be run twice because of an error on creating an index in mysql
     `(relengapi createdb) &>/dev/null` || true
-    cd src/relengapi
-    coverage run --append --rcfile=coveragerc --source=relengapi $(which relengapi) -Q createdb
-    cd ../..
+    coverage run --append --rcfile=coveragerc --source=relengapi $RELENGAPI_SCRIPT -Q createdb
 
     # run the actual migration tests
-    for filename in `find src/relengapi/relengapi/alembic -type f -name "alembic.ini" ! -path template`; do
+    for filename in `find relengapi/alembic -type f -name "alembic.ini" ! -path template`; do
         num=`ls $(dirname $filename)/versions/*.py | wc -l`
         [ $num -eq 0 ] && continue
 
@@ -148,27 +143,25 @@ run_migrations_test () {
         offline_script="$test_dir/migration.sql"
 
         mysqldump ${mysql_options} --no-data --skip-comments test_$dbname > "$test_dir/$dbname-original"
-        cd src/relengapi
         if $run_offline_test; then
             (coverage run --append --rcfile=coveragerc --source=relengapi \
-            $(which relengapi) -Q alembic $dbname downgrade head:base --sql > $offline_script && \
+            $RELENGAPI_SCRIPT -Q alembic $dbname downgrade head:base --sql > $offline_script && \
             mysql ${mysql_options} test_$dbname < $offline_script) || \
             (not_okay "$dbname downgrade failed" && continue)
 
             (coverage run --append --rcfile=coveragerc --source=relengapi \
-            $(which relengapi) -Q alembic $dbname upgrade --sql > $offline_script && \
+            $RELENGAPI_SCRIPT -Q alembic $dbname upgrade --sql > $offline_script && \
             mysql ${mysql_options} test_$dbname < $offline_script) || \
             (not_okay "$dbname upgrade failed" && continue)
         else
             coverage run --append --rcfile=coveragerc --source=relengapi \
-            $(which relengapi) -Q alembic $dbname downgrade base || \
+            $RELENGAPI_SCRIPT -Q alembic $dbname downgrade base || \
             (not_okay "$dbname downgrade failed" && continue)
 
             coverage run --append --rcfile=coveragerc --source=relengapi \
-            $(which relengapi) -Q alembic $dbname upgrade || \
+            $RELENGAPI_SCRIPT -Q alembic $dbname upgrade || \
             (not_okay "$dbname upgrade failed" && continue)
         fi
-        cd ../..
         mysqldump ${mysql_options} --no-data --skip-comments test_$dbname > "$test_dir/$dbname-modified"
         if [[ -n `diff "$test_dir/$dbname-original" "$test_dir/$dbname-modified" -q` ]]; then
             not_okay "database schemas for $dbname differ"
@@ -201,22 +194,22 @@ else
 fi
 
 start_step "checking coverage"
-cd src/relengapi
 coverage report --rcfile=coveragerc --fail-under=${COVERAGE_MIN} >${tmpbase}/covreport || not_ok "less than ${COVERAGE_MIN}% coverage"
 coverage html --rcfile=coveragerc -d .coverage-html
 head -n2 ${tmpbase}/covreport
 tail -n1 ${tmpbase}/covreport
-cd ../..
 finish_step
 
 # get the version
-version=`cat src/relengapi/VERSION`
+version=`cat VERSION`
 
 # remove SOURCES.txt, as it caches the expected contents of the package,
 # over and above those specified in setup.py, MANIFEST, and MANIFEST.in
-rm -f "src/relengapi/relengapi.egg-info/SOURCES.txt"
+rm -f "relengapi.egg-info/SOURCES.txt"
 
 # get the list of files git thinks should be present
+if [ -d .git ]; then 
+
 start_step "getting file list from git"
 git_only='
     .gitignore
@@ -236,7 +229,6 @@ git_only='
     release.nix
 '
 
-cd src/relengapi
 git ls-files | while read f; do
                     ignore=false
                     for go in $git_only; do
@@ -244,12 +236,11 @@ git ls-files | while read f; do
                     done
                     $ignore || echo $f
                  done | sort > ${tmpbase}/git-files
-cd ../..
 finish_step
 
 # get the list of files in an sdist tarball
 start_step "getting file list from sdist"
-cd src/relengapi && python setup.py -q sdist --dist-dir=${tmpbase} && cd ../..
+python setup.py -q sdist --dist-dir=${tmpbase}
 tarball="${tmpbase}/relengapi-${version}.tar.gz"
 [ -f ${tarball} ] || fail "No tarball at ${tarball}"
 # exclude directories and a few auto-generated files from the tarball contents
@@ -289,6 +280,8 @@ diff -u git-expected-installed install-files || not_ok "installed files differ f
 finish_step
 
 popd >/dev/null
+
+fi
 
 show_results
 
