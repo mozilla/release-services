@@ -5,10 +5,10 @@
   "main": "src/index.js",
   "repository": "https://github.com/mozilla/build-relengapi",
   "scripts": {
-    "build": "node_modules/.bin/webpack",
-    "dev": "node_modules/.bin/webpack-dev-server",
-    "test": "node_modules/.bin/karma start",
-    "test:dev": "node_modules/.bin/karma start --no-single-run --auto-watch"
+    "build": "webpack",
+    "dev": "webpack-dev-server",
+    "test": "karma start",
+    "test:dev": "karma start --no-single-run --auto-watch"
   },
   "keywords": [
     "mozilla",
