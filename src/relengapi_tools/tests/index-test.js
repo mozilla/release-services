@@ -4,8 +4,7 @@ import chaiEnzyme from 'chai-enzyme'
 import { Link } from 'react-router'
 import { shallow } from 'enzyme'
 
-import Layout from '../src/layout'
-import routes from '../src/routes'
+import { Layout, routes } from './../src/app'
 
 const expect = chai.expect;
 

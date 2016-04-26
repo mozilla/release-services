@@ -48,7 +48,7 @@ const common = {
     ],
     module: {
       loaders: [
-        { loaders: [ 'babel?presets[]=es2015&presets[]=stage-0&presets[]=react', ], //'eslint' ],
+        { loaders: [ 'babel?presets[]=es2015&presets[]=stage-0&presets[]=react' ,'eslint' ],
           test: /\.jsx?$/,
           exclude: /(node_modules|bower_components|build)/
         }
