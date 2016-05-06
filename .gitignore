@@ -10,6 +10,6 @@
 /src/relengapi/.coverage-html
 /src/relengapi/docs_build_dir/
 /src/relengapi/relengapi.egg-info/
+/src/relengapi_tools/.coverage
 /src/relengapi_tools/build
-/src/relengapi_tools/coverage
 /src/relengapi_tools/node_modules
