@@ -1,0 +1,26 @@
+-e ../relengapi_common
+-e ../relengapi_clobberer
+blinker==1.4
+Flask==0.10.1
+Flask-BrowserID==0.0.4
+Flask-Login==0.3.2
+gunicorn==19.4.5
+itsdangerous==0.24
+Jinja2==2.8
+MarkupSafe==0.23
+mohawk==0.3.2.1
+netaddr==0.7.18
+pytz==2016.4
+requests==2.10.0
+simplegeneric==0.8.1
+six==1.10.0
+slugid==1.0.7
+SQLAlchemy==1.0.12
+structlog==16.0.0
+taskcluster==0.3.3
+virtualenv==13.1.2
+WebOb==1.6.0
+Werkzeug==0.11.9
+wheel==0.24.0
+wrapt==1.10.8
+WSME==0.7.0

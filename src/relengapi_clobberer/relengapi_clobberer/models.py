@@ -5,10 +5,9 @@
 from __future__ import absolute_import
 
 import time
-
 import sqlalchemy as sa
 
-from relengapi.lib import db
+from relengapi_common import db
 
 DB_DECLARATIVE_BASE = 'clobberer'
 
@@ -24,7 +23,7 @@ class ClobbererBase(db.declarative_base(DB_DECLARATIVE_BASE)):
 class Build(ClobbererBase, db.UniqueMixin):
     "A clobberable build."
 
-    __tablename__ = 'builds'
+    __tablename__ = 'clobberer_builds'
 
     buildername = sa.Column(sa.String(100))
     last_build_time = sa.Column(
@@ -38,7 +37,8 @@ class Build(ClobbererBase, db.UniqueMixin):
         return "{}:{}:{}".format(branch, builddir, buildername)
 
     @classmethod
-    def unique_filter(cls, query, branch, builddir, buildername, *args, **kwargs):
+    def unique_filter(cls, query, branch, builddir, buildername,
+                      *args, **kwargs):
         return query.filter(
             cls.branch == branch,
             cls.builddir == builddir,
@@ -49,10 +49,10 @@ class Build(ClobbererBase, db.UniqueMixin):
 class ClobberTime(ClobbererBase, db.UniqueMixin):
     "A clobber request."
 
-    __tablename__ = 'clobber_times'
+    __tablename__ = 'clobberer_times'
     __table_args__ = (
         # Index to speed up lastclobber lookups
-        sa.Index('ix_get_clobber_times', 'slave', 'builddir', 'branch'),
+        sa.Index('ix_get_clobberer_times', 'slave', 'builddir', 'branch'),
     )
     slave = sa.Column(sa.String(30), index=True)
     lastclobber = sa.Column(
