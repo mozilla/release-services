@@ -1,4 +1,0 @@
-relengapi-3.3.5
-===============
-
-* Bug 1245170: allow tooltool uploads with non-user-associatd tokens

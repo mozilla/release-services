@@ -1,7 +1,0 @@
-[pep8]
-show-source = yes
-statistics = yes
-count = yes
-max-line-length = 100
-# exclude the Sphinx config file
-exclude = src/relengapi/relengapi/blueprints/docs/src/conf.py
