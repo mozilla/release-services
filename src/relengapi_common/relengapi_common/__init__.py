@@ -9,20 +9,22 @@ import sys
 import jinja2
 
 from flask import Flask
+from flask import render_template
+
 from relengapi_common import api, auth, log
 
-__app = None
+__APP = dict()
 
 
 def create_app(name, extensions=[], config=None):
-    global __app
-    if __app:
-        return __app
+    global __APP
+    if __APP and name in __APP:
+        return __APP[name]
 
     if name == '__main__':
         log.setup_console_logging()
 
-    app = Flask(name)
+    app = __APP[name] = Flask(name)
 
     # load config (settings.py)
     if config:
@@ -46,5 +48,15 @@ def create_app(name, extensions=[], config=None):
     # configure/initialize specific app features
     #   aws -> tooltool, archiver (only s3 needed)
     #   memcached -> treestatus (via https://pythonhosted.org/Flask-Cache)
+
+    return app
+
+
+def create_app_list(name, apps):
+    app = create_app(name)
+
+    @app.route('/')
+    def root():
+        return render_template('apps.html', apps=apps)
 
     return app
