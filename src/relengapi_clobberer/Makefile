@@ -7,15 +7,13 @@ help:
 
 env: clean-env
 	$(VIRTUALENV) $(ENV)
-	$(ENV)/bin/pip install -e ../relengapi_common -e ../relengapi_clobberer gunicorn
+	$(ENV)/bin/pip install -e ../relengapi_common -e ../relengapi_clobberer gunicorn psycopg2
 
 develop:
 	RELENGAPI_SETTINGS=$(PWD)/settings.py $(ENV)/bin/python relengapi_clobberer/__init__.py
 
-requirements.txt: env clean-requirements
-	echo "-e ../relengapi_common" > requirements.txt
-	echo "-e ../relengapi_clobberer" >> requirements.txt
-	$(ENV)/bin/pip freeze | grep -v relengapi- >> requirements.txt
+requirements.txt: clean-requirements
+	$(ENV)/bin/pip freeze | grep -v relengapi- > requirements.txt
 
 nix: clean-nix
 	cat requirements.txt | grep -v relengapi_ | grep -v wheel > python-packages.txt
