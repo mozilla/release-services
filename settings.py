@@ -1,0 +1,11 @@
+import os
+
+SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
+
+if not SQLALCHEMY_DATABASE_URI:
+    raise Exception("You need to specify SQLALCHEMY_DATABASE_URI variable.")
+
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+SQLALCHEMY_DATABASE_URIS = dict(
+    clobberer=SQLALCHEMY_DATABASE_URI,
+)
