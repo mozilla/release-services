@@ -2,19 +2,14 @@ language: python
 sudo: false
 python:
   - "2.7"
-
 env:
-  # the 'relengapi' command wants a settings file, but the contents
-  # aren't terribly important, so the example will do fine
-  - RELENGAPI_SETTINGS=$PWD/settings_example.py
-
-# command to install dependencies
+  - DATABASE_URL=sqlite:///$PWD/app.db
+  - NODE_VERSION=6
 install:
-  - pip install -r requirements.txt -r requirements-ldap.txt -r requirements-test.txt -e src/relengapi
-
-# run everything in a single script, so we get a nice summary at the end
-script:
-  - bash ./validate.sh
-
+  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $NODE_VERSION
+  - make install
+  - git clone https://github.com/taskcluster/neo
+  - sed -i -e 's|file:../../../neo|file:../../neo|' src/relengapi_tools/package.json
+script: "make lint check docs"
 after_success:
   - codecov
