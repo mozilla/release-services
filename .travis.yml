@@ -6,9 +6,9 @@ env:
   - DATABASE_URL=sqlite:///$PWD/app.db
 install:
   - git clone https://github.com/taskcluster/neo
+  - sed -i -e 's|file:../../../neo|file:../../neo|' src/relengapi_tools/package.json
   - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install 6
   - make install
-  - sed -i -e 's|file:../../../neo|file:../../neo|' src/relengapi_tools/package.json
 script: "make lint check docs"
 after_success:
   - codecov
