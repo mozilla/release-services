@@ -9,13 +9,12 @@ ENV=./env
 
 .PHONY: help
 help:
-	@echo "Commands:"
-	@echo ""
-	@echo "  install		TODO..."
-	@echo "  check			TODO..."
-	@echo "  docs			TODO..."
-	@echo "  lint			TODO..."
-	@echo "  clean			TODO..."
+	@echo "Please use \`make <target>' where <target> is one of"
+	@echo "  install  install development environment for all subprojects"
+	@echo "  check    run tests for all the subprojects"
+	@echo "  docs     build documentation to docs/build"
+	@echo "  lint     check coding style for all the code"
+	@echo "  clean    remove all installed environments"
 
 
 .PHONY: install
