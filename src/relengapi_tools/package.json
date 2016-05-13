@@ -12,7 +12,7 @@
   "scripts": {
     "build": "webpack",
     "start": "webpack-dev-server",
-    "test": "karma start",
+    "test": "./node_modules/.bin/karma start",
     "test:dev": "karma start --no-single-run --auto-watch"
   },
   "keywords": [

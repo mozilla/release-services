@@ -4,7 +4,7 @@ import chaiEnzyme from 'chai-enzyme'
 import { Link } from 'react-router'
 import { shallow } from 'enzyme'
 
-import { Layout, routes } from './../src/app'
+import { Layout, Routes } from './../src/app'
 
 const expect = chai.expect;
 
@@ -20,7 +20,7 @@ describe('<Layout />', () => {
 
   it('renders <Link/> elements for all routes', () => {
     const wrapper = shallow(<Layout/>);
-    expect(wrapper.find(Link)).to.have.length(routes.length);
+    expect(wrapper.find(Link)).to.have.length(Routes.length);
   });
 
 });
