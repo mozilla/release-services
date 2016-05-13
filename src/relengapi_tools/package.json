@@ -22,6 +22,7 @@
   "author": "Rok Garbas <rok@garbas.si>",
   "license": "MPL-2.0",
   "devDependencies": {
+    "karma": "^0.13.22",
     "neo": "file:../../../neo"
   }
 }
