@@ -8,15 +8,14 @@ import os
 import sys
 import jinja2
 
-from flask import Flask
-from flask import render_template
+from flask import Flask, send_from_directory
 
 from relengapi_common import api, auth, log
 
 __APP = dict()
 
 
-def create_app(name, extensions=[], config=None):
+def create_app(name, extensions=[], config=None, **kw):
     global __APP
     if __APP and name in __APP:
         return __APP[name]
@@ -24,7 +23,7 @@ def create_app(name, extensions=[], config=None):
     if name == '__main__':
         log.setup_console_logging()
 
-    app = __APP[name] = Flask(name)
+    app = __APP[name] = Flask(name, **kw)
 
     # load config (settings.py)
     if config:
@@ -52,11 +51,14 @@ def create_app(name, extensions=[], config=None):
     return app
 
 
-def create_app_list(name, apps):
+def create_tools_app(name, apps):
     app = create_app(name)
 
-    @app.route('/')
-    def root():
-        return render_template('apps.html', apps=apps)
+    @app.route('/', defaults=dict(path='index.html'))
+    @app.route('/<path:path>')
+    def root(path):
+        base_dir = os.path.abspath(os.path.join(
+            os.path.dirname(__file__), '../../relengapi_tools/build'))
+        return send_from_directory(base_dir, path)
 
     return app
