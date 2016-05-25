@@ -6,6 +6,9 @@
   "author": "Rok Garbas <rok@garbas.si>",
   "repository": "https://github.com/mozilla/build-relengapi",
   "license": "MPL-2.0",
+  "engines": {
+    "node": ">=6.0.0"
+  },
   "config": {
     "entry": "src/run.js",
     "ghooks": {
