@@ -80,3 +80,21 @@ TODO: ask dustin how setup ssl and deploy taskcluster docs to s3
 .. _`babel-preset-es2015`: http://babeljs.io/docs/plugins/preset-es2015/
 .. _`babel-preset-react`: http://babeljs.io/docs/plugins/preset-react/
 .. _`babel-preset-stage-0`: http://babeljs.io/docs/plugins/preset-stage-0/
+
+todo:
+    https://pageshot.dev.mozaws.net/
+    https://mozilla.github.io/mozmaker/demo/
+    https://github.com/mozilla/tabzilla
+
+    https://github.com/xgrommx/awesome-redux
+    https://github.com/reactjs/reselect
+    http://indexiatech.github.io/re-notif/
+    https://github.com/michaelcontento/redux-storage
+
+    https://github.com/raisemarketplace/redux-loop
+    http://yelouafi.github.io/redux-saga/
+    http://redux.js.org/docs/advanced/Middleware.html
+    http://redux.js.org/docs/advanced/ExampleRedditAPI.html
+    http://yelouafi.github.io/redux-saga/docs/basics/ErrorHandling.html
+
+    https://auth0.com/blog/2016/01/04/secure-your-react-and-redux-app-with-jwt-authentication/

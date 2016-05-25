@@ -1,9 +1,43 @@
-require('expose?$!expose?jQuery!jquery')
-require('expose?Tether!tether')
-require('bootstrap')
-require("./index.scss")
+import App from 'mozilla-neo';
+import Layout, { routes } from './layout';
 
-import {renderApp} from 'neo'
-import {App, Layout, Routes} from './app'
+import { reducers as clobbererReducers } from './clobberer';
 
-renderApp(App, Layout, Routes)
+
+export const reducers = {
+  clobberer: clobbererReducers
+};
+
+export const initialState = {
+  clobberer: {
+    taskcluster: {
+      options: [
+        { id: 1, title: "One" },
+        { id: 2, title: "Two" },
+        { id: 3, title: "Three" }
+      ]
+    },
+    buildbot: {
+      options: [
+        { id: 1, title: "One" },
+        { id: 2, title: "Two" },
+        { id: 3, title: "Three" }
+      ]
+    }
+  }
+};
+
+const app_routes = routes.keySeq().map(routeName => {
+  let route = routes.get(routeName);
+  return {
+    path: route.get('path'),
+    component: require('./' + routeName).default
+  };
+}).toJS();
+
+export default App({
+    reducers,
+    initialState,
+    Layout,
+    routes: app_routes
+});

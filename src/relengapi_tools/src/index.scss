@@ -15,21 +15,157 @@ $nightly-blue: #5a6ba4;
 $aurora-purple: #ab5da4;
 $bikeshed-magenta: #e14164;
 
+// my colors
+$border-color: #adadad;
+
 // Font
-$font-family-sans-serif: 'Fira Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-$font-family-serif: 'Fira Sans', Georgia, 'Times New Roman', Times, serif;
-$font-family-monospace: 'Fira Sans', Menlo, Monaco, Consolas, 'Courier New', monospace;
-$font-family-base: 'Fira Sans', $font-family-sans-serif;
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic,600,600italic,700,700italic,800,800italic);
 
+$font-family-sans-serif: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+$font-family-serif: 'Open Sans', Georgia, 'Times New Roman', Times, serif;
+$font-family-monospace: 'Open Sans', Menlo, Monaco, Consolas, 'Courier New', monospace;
+$font-family-base: 'Open Sans', $font-family-sans-serif;
+$font-size-root: 16px;
 
-#navbar {
-    background-color: $firefox-orange;
-    border-radius: 0;
-    a { color: $white; }
-}
-
-#content {
-    margin: 0.9375rem;
-}
+$headings-font-weight: 300;
 
 @import "~bootstrap/scss/bootstrap";
+
+#navbar {
+    background-color: $charcoal;
+    font-size: 14px;
+    padding: 1rem;
+
+    .navbar-toggler {
+        color: $white;
+        font-size: 14px;
+        border: 0;
+        padding: 0;
+        float: right;
+    }
+    .nav {
+        float: right;
+    }
+    .nav-item a {
+        color: darken($white, 20%);
+        padding: 0;
+    }
+    .nav-item.active a {
+        color: $white !important;
+    }
+    .navbar-brand {
+        color: $white;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        padding: 0 1em 0 0;
+        text-transform: uppercase;
+    }
+}
+
+
+#content {
+    #banner-not-home {
+        background-color: $developer-blue;
+        height: 10px;
+    }
+    #banner-home {
+        background-color: $developer-blue;
+        min-height: 200px;
+        color: $white;
+
+        .container {
+            font-size: 34px;
+            padding: 73px 0;
+            margin: 0 auto;
+            text-align: center;
+            line-height: 54px;
+        }
+    }
+    .container {
+        margin: 1em auto;
+    }
+}
+
+.linked-card {
+    color: #373a3c;
+}
+.linked-card:hover {
+    color: $white;
+    text-decoration: none;
+    .card {
+        background-color: $developer-blue;
+    }
+}
+
+footer {
+    font-size: 12px;
+    line-height: 1.6em;
+    margin: 2em 0;
+    text-align: center;
+    ul li {
+        display: inline-block;
+        margin: 0 1em;
+    }
+    ul {
+        list-style: none;
+    }
+}
+
+.progress-wrapper {
+    position: relative;
+    margin: 1rem;
+
+    progress {
+        height:  1.5em;
+    }
+    span {
+        position: absolute;
+        top: 0;
+        left: 0;
+        color: $white;
+        font-size: 0.9em;
+        text-align: center;
+        width: 100%;
+    }
+}
+
+.btn-dropdown {
+    width: 100%;
+    display: flex;
+
+    .btn:nth-child(1) {
+        width: 100%;
+        text-align: left;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    &.open .btn:nth-child(1) {
+        border-bottom-left-radius: 0;
+    }
+    &.open .btn, &.open .btn:hover, .btn:hover {
+        background-color: $white;
+        border-color: $border-color;
+    }
+    .btn:nth-child(1)::after {
+        display: none;
+    }
+    .btn:nth-child(2) {
+        order: 1;
+    }
+    &.open .btn:nth-child(2) {
+        border-bottom-right-radius: 0;
+    }
+    .dropdown-menu {
+        margin-top: 0;
+        width: 100%;
+        border-color: $border-color;
+        border-top: 0;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        & > a {
+          padding-left: 16px;
+          padding-right: 16px;
+        };
+    }
+}

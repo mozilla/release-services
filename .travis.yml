@@ -9,7 +9,7 @@ env:
   - DATABASE_URL=sqlite:///$PWD/app.db
 install:
   - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install 6
-  - git clone https://github.com/taskcluster/neo
+  - git clone https://github.com/garbas/neo
   - cd neo && npm install && cd ..
   - sed -i -e 's|file:../../../neo|file:../../neo|' src/relengapi_tools/package.json
   - make install
