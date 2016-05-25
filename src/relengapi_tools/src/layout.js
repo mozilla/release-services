@@ -11,7 +11,7 @@ export const routes = fromJS({
   badpenny: { path: '/badpenny' , title: 'BadPenny' },
   clobberer: { path: '/clobberer' , title: 'Clobberer',
                description: 'A repairer of buildbot builders and taskcluster worker types.' },
-  slaveload: { path: '/slaveload', title: 'SlaveLoad' },
+  slaveloan: { path: '/slaveloan', title: 'SlaveLoan' },
   tokens: { path: '/tokens', title: 'Tokens' },
   tooltool: { path: '/tooltool', title: 'ToolTool' },
   treestatus: { path: '/treestatus', title: 'TreeStatus' }
