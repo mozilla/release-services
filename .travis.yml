@@ -1,8 +1,8 @@
 language: python
 sudo: false
 branches:
-  except:
-    - /^heroku-.*$/
+  only:
+    - master
 python:
   - "2.7"
 env:
