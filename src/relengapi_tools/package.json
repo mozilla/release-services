@@ -33,7 +33,7 @@
     "expose-loader": "0.7.1",
     "ghooks": "1.2.1",
     "jquery": "2.2.3",
-    "mozilla-neo": "file:../../../neo",
+    "mozilla-neo": "git://github.com/garbas/neo.git",
     "react": "15.0.2",
     "react-addons-test-utils": "15.0.2",
     "react-dom": "15.0.2",
