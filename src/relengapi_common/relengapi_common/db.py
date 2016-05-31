@@ -11,6 +11,7 @@ import threading
 import pytz
 import sqlalchemy as sa
 from flask import current_app
+from flask import g
 from sqlalchemy import event
 from sqlalchemy import exc
 from sqlalchemy import orm
@@ -279,5 +280,9 @@ def init_app(app):
         meta = db.metadata[dbname]
         engine = db.engine(dbname)
         meta.create_all(bind=engine, checkfirst=True)
+
+    @app.before_request
+    def setup_request():
+        g.db = app.db
 
     return db

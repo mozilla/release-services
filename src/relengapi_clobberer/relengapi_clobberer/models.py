@@ -20,8 +20,10 @@ class ClobbererBase(db.declarative_base(DB_DECLARATIVE_BASE)):
     builddir = sa.Column(sa.String(100), index=True)
 
 
-class Build(ClobbererBase, db.UniqueMixin):
-    "A clobberable build."
+class ClobbererBuilds(ClobbererBase, db.UniqueMixin):
+    """
+    A clobberable builds.
+    """
 
     __tablename__ = 'clobberer_builds'
 
@@ -46,8 +48,10 @@ class Build(ClobbererBase, db.UniqueMixin):
         )
 
 
-class ClobberTime(ClobbererBase, db.UniqueMixin):
-    "A clobber request."
+class ClobbererTime(ClobbererBase, db.UniqueMixin):
+    """
+    A clobber request.
+    """
 
     __tablename__ = 'clobberer_times'
     __table_args__ = (

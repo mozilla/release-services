@@ -39,24 +39,6 @@ class ClobberTime(wsme.types.Base):
     who = unicode  #: User who initiated the last clobber.
 
 
-class TCWorkerType(wsme.types.Base):
-    """Represents worker type of taskcluster
-    """
-
-    name = wsme.types.wsattr(unicode, mandatory=True)
-    caches = wsme.types.wsattr([str], mandatory=False, default=[])
-
-
-class TCBranch(wsme.types.Base):
-    """Represents branches of taskcluster
-    """
-
-    name = wsme.types.wsattr(unicode, mandatory=True)
-    provisionerId = wsme.types.wsattr(unicode, mandatory=False, default=None)
-    workerTypes = wsme.types.wsattr(
-        {str: TCWorkerType}, mandatory=False, default=dict())
-
-
 class TCPurgeCacheRequest(wsme.types.Base):
     """A clobber request for purging cache on taskcluster.
          http://docs.taskcluster.net/services/purge-cache

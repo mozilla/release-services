@@ -232,6 +232,8 @@ def init_app(app):
         def default(self, o):
             if isinstance(o, wsme.types.Base):
                 return wsme.rest.json.tojson(type(o), o)
+            if o == get_req_id_uuid:
+                return str(o())
             return old_json_encoder.default(self, o)
 
     app.json_encoder = WSMEEncoder
