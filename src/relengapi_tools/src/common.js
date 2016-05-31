@@ -1,19 +1,35 @@
 import React from 'react';
+import fetch from 'isomorphic-fetch';
 
-export const Loading = (props, children)  => {
-  if (props.loading === false)
-      return <children {...props} />;
-  else
-      return (
-        <div className="progress-wrapper">
-          <progress className="progress progress-striped progress-animated"
-                    value="100" max="100">Loading ...</progress>
-          <span>Loading ...</span>
-        </div>
-      );
+export const Loading = (props)  => {
+  if (props.loading === true) {
+    return (
+      <div className="progress-wrapper">
+        <progress className="progress progress-striped progress-animated"
+                  value="100" max="100">Loading ...</progress>
+        <span>Loading ...</span>
+      </div>
+    );
+  } else if (props.error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+        <strong>Error: </strong>
+        <span>{props.error}.</span>
+        <a className="alert-link" href="#" onClick={props.reload}> Click to retry.</a>
+      </div>
+    );
+  } else {
+    return <props.component {...props} />;
+  }
 };
 
-export const Dropdown = ({ selected=null, options=[], placeholder='', onChange }) => {
+export const Dropdown = (props) => {
+  let {
+    selected = null,
+    options = [],
+    placeholder = '',
+    onChange
+  } = props;
   return (
     <div className="btn-group btn-dropdown">
       <span type="button" className="btn btn-secondary dropdown-toggle"
@@ -35,4 +51,10 @@ export const Dropdown = ({ selected=null, options=[], placeholder='', onChange }
       </div>
     </div>
   );
+};
+
+export const fetchJSON = (url, options) => {
+  return fetch(url, options)
+    .then(response => response.json())
+    .then(response => response);
 };

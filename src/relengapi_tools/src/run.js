@@ -3,6 +3,7 @@ require('expose?Tether!tether');
 require('bootstrap');
 require("./index.scss");
 
-import app from './index';
+import app, { sagaMiddleware, sagas } from './index';
 
 app.render()
+sagaMiddleware.run(sagas);

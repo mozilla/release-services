@@ -1,34 +1,98 @@
 import React from 'react';
-import { connect } from 'react-redux';
-import { combineReducers } from 'redux-immutable';
 import { Map } from 'immutable';
-import { routes } from './layout';
-import { Loading, Dropdown } from './common';
+import { call, fork, put } from 'redux-saga/effects'
+import { combineReducers } from 'redux-immutable';
+import { connect } from 'react-redux';
+import { takeLatest } from 'redux-saga';
 
-// TODO: in future we could make this one big tree
-// eg. http://jsfiddle.net/infiniteluke/908earbh/9/
+import { Loading, Dropdown, fetchJSON } from './common';
+import { routes } from './layout';
+import { app } from './';
+
+// --- helpers ---
+
+const url = (path) => process.env.NEO_CLOBBERER_BASE_URL + path;
+
 
 // --- actions ---
 
-const initialFetch = type => {
+const fetchBranches = type => {
   return {
-    type: 'CLOBBERER.' + type.toUpperCase() + '.FETCH_BRANCHES'
+    type: 'CLOBBERER.' + type.toUpperCase() + '_BRANCHES.FETCH'
   };
 };
 
 const selectBranch = (type, selected) => {
   return {
-    type: 'CLOBBERER.' + type.toUpperCase() + '.SELECT_ITEM',
+    type: 'CLOBBERER.' + type.toUpperCase() + '_BRANCHES.SELECT',
     payload: selected
   };
 };
 
-// --- END: actions ---
+
+// --- Sagas ---
+
+const fetchBranchesForReal = type => {
+  return function*() {
+    try {
+      const response = yield call(fetchJSON, url('/' + type + '/branches'));
+      yield put({
+        type: 'CLOBBERER.' + type.toUpperCase() + '_BRANCHES.FETCH_SUCCESS',
+        payload: response
+      });
+    } catch (e) {
+      yield put({
+        type: 'CLOBBERER.' + type.toUpperCase() + '_BRANCHES.FETCH_FAILED',
+        payload: e.message
+      });
+    }
+  }
+};
+
+const watchFetchBranches = type => {
+  return function* () {
+    yield takeLatest(
+      'CLOBBERER.' + type.toUpperCase() + '_BRANCHES.FETCH',
+      fetchBranchesForReal(type)
+    );
+  };
+};
+
+const initialFetch = type => {
+  return function*() {
+    yield put(fetchBranches(type));
+  };
+};
+
+export const sagas = [
+   fork(watchFetchBranches('taskcluster')),
+   fork(watchFetchBranches('buildbot')),
+   fork(initialFetch('taskcluster')),
+   fork(initialFetch('buildbot'))
+];
+
+// --- END: sagas ---
+
 
 
 const reducerFor = type => (state = Map(), action) => {
     switch (action.type) {
-      case 'CLOBBERER.' + type.toUpperCase() + '.SELECT_ITEM':
+      case 'CLOBBERER.' + type.toUpperCase() + '_BRANCHES.FETCH':
+        return state.set('loading', true);
+      case 'CLOBBERER.' + type.toUpperCase() + '_BRANCHES.FETCH_FAILED':
+        return state.set('loading', false)
+                    .set('error', action.payload);
+      case 'CLOBBERER.' + type.toUpperCase() + '_BRANCHES.FETCH_SUCCESS':
+
+        if (action.payload.error) {
+            return state.set('loading', false)
+                        .set('error', 'Something went wrong');
+        }
+        return state.set('loading', false)
+                    .set('options', action.payload.result.map(x => {
+                        return { id: x.name, title: x.name };
+                    }));
+      case 'CLOBBERER.' + type.toUpperCase() + '_BRANCHES.SELECT':
         return state.set('selected', action.payload);
       default:
         return state;
@@ -42,24 +106,29 @@ export const reducers = combineReducers({
 
 
 const mapToProps = type => [
-  state => state.getIn(['clobberer', type], Map()).toJS(),
+  state => {
+
+    return state.getIn(['clobberer', type], Map()).toJS()
+  },
   (dispatch, props) => {
     return {
-      onChange: (selected) => () => {
+      reload: selected => () => {
+        dispatch(fetchBranches(type));
+      },
+      onChange: selected => () => {
         dispatch(selectBranch(type, selected));
       }
     }
   }
 ];
     
-const Taskcluster = connect(...mapToProps('taskcluster'))(props => {
-  return <Dropdown {...props} placeholder="Select branch ..." />
+const BranchesDropdown = type => connect(...mapToProps(type))(props => {
+  return (
+    <Loading {...props} placeholder="Select branch ..." component={Dropdown} />
+  );
 });
-
-const Buildbot = connect(...mapToProps('buildbot'))(props => {
-  return <Dropdown {...props} placeholder="Select branch ..." />
-});
-
+const TaskclusterBranches = BranchesDropdown('taskcluster');
+const BuildbotBranches = BranchesDropdown('buildbot');
 
 export const Clobberer = () => (
   <div>
@@ -71,11 +140,11 @@ export const Clobberer = () => (
       <div className="row">
         <div className="col-sm-6">
           <h2>Taskcluster</h2>
-          <Taskcluster/>
+          <TaskclusterBranches/>
         </div>
         <div className="col-sm-6">
           <h2>Buildbot</h2>
-          <Buildbot/>
+          <BuildbotBranches/>
         </div>
       </div>
     </div>

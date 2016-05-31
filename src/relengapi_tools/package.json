@@ -11,9 +11,6 @@
   },
   "config": {
     "entry": "src/run.js",
-    "ghooks": {
-      "pre-commit": "npm test"
-    },
     "html": {
       "title": "RelengAPI Tools",
       "description": "Collection of Mozilla Release Engineering Tools",
@@ -35,6 +32,7 @@
     "classnames": "^2.2.5",
     "expose-loader": "0.7.1",
     "ghooks": "1.2.1",
+    "isomorphic-fetch": "^2.2.1",
     "jquery": "2.2.3",
     "mozilla-neo": "git://github.com/garbas/neo.git",
     "react": "15.0.2",
