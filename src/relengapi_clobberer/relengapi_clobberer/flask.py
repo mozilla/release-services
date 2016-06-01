@@ -7,7 +7,6 @@ from __future__ import absolute_import
 import wsme.types
 
 from flask import g
-from flask import current_app
 
 from relengapi_common.api import apimethod
 from relengapi_common.permissions import p
