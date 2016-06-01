@@ -11,7 +11,7 @@ import { app } from './';
 
 // --- helpers ---
 
-const url = (path) => process.env.NEO_CLOBBERER_BASE_URL + path;
+const url = (path) => (process.env.NEO_CLOBBERER_BASE_URL || '/__api__/clobberer') + path;
 
 
 // --- actions ---
