@@ -22,7 +22,7 @@ from flask import json
 from flask import jsonify
 from flask import render_template
 from flask import request
-from flask.ext.login import current_user
+from flask_login import current_user
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import HTTPException
 

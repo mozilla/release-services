@@ -28,7 +28,7 @@ def buildout_branches(session):
 
     branches = branches.order_by(ClobbererBuilds.branch)
 
-    return branches
+    return [i for i in branches]
 
 
 def taskcluster_branches():

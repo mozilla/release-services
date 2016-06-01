@@ -22,6 +22,7 @@ setup(
     install_requires=[
         "Flask",
         "Flask-Browserid",
+        "Flask-Cache",
         "Flask-Login>=0.3.0",
         "blinker",  # required to use flask signals
         "structlog",

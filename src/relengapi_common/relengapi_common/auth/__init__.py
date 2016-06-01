@@ -14,10 +14,10 @@ from flask import request
 from flask import session
 from flask import signals
 from flask import url_for
-from flask.ext.login import LoginManager
-from flask.ext.login import current_user
-from flask.ext.login import user_logged_in
-from flask.ext.login import user_logged_out
+from flask_login import LoginManager
+from flask_login import current_user
+from flask_login import user_logged_in
+from flask_login import user_logged_out
 
 from relengapi_common.permissions import p
 from relengapi_common import utils

@@ -12,7 +12,6 @@ from flask import current_app
 from relengapi_common.api import apimethod
 from relengapi_common.permissions import p
 from relengapi_clobberer import api
-from relengapi_clobberer.utils import cache
 from relengapi_clobberer.models import DB_DECLARATIVE_BASE
 
 
@@ -45,6 +44,8 @@ def init_app(app):
 
     p.clobberer.post.clobber.doc('Submit clobber requests')
 
+    caches_to_skip = app.config.get('TASKCLUSTER_CACHES_TO_SKIP', [])
+
     @app.route('/')
     def root():
         return 'Clobberer running ...'
@@ -55,11 +56,12 @@ def init_app(app):
         """List of all buildbot branches.
         """
         session = g.db.session(DB_DECLARATIVE_BASE)
+        branches = app.cache.cached()(api.buildout_branches)(session)
         return [
             BuildbotBranch(
                 name=branch[0],
             )
-            for branch in api.buildout_branches(session)
+            for branch in branches
         ]
 
     @app.route('/taskcluster/branches', methods=['GET'])
@@ -67,12 +69,7 @@ def init_app(app):
     def taskcluster_branches():
         """List of all the gecko branches with their worker types
         """
-        config = current_app.config
-        cache_duration = config.get('TASKCLUSTER_CACHE_DURATION', 60 * 5)
-        caches_to_skip = config.get('TASKCLUSTER_CACHES_TO_SKIP', [])
-
-        branches = cache(api.taskcluster_branches, cache_duration)()
-
+        branches = app.cache.cached()(api.taskcluster_branches)()
         return [
             TaskclusterBranch(
                 name=branchName,
