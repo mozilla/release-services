@@ -1,5 +1,6 @@
 psycopg2==2.6.1
 newrelic==2.64.0.48
+redis==2.10.5
 
 -e ./src/relengapi_common/
 -e ./src/relengapi_clobberer/
