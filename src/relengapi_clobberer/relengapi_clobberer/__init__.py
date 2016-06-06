@@ -5,9 +5,9 @@
 from __future__ import absolute_import
 
 from relengapi_common import create_app, db
-from relengapi_clobberer import flask
+from relengapi_clobberer import _flask
 
-app = create_app(__name__, [db, flask])
+app = create_app(__name__, [db, _flask])
 
 if __name__ == '__main__':
     app.run(debug=True)
