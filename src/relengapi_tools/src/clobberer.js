@@ -1,9 +1,10 @@
 import React from 'react';
 import { Map } from 'immutable';
-import { call, fork, put } from 'redux-saga/effects'
+import { call, fork, put, take } from 'redux-saga/effects'
 import { combineReducers } from 'redux-immutable';
 import { connect } from 'react-redux';
 import { takeLatest } from 'redux-saga';
+import { LOCATION_CHANGE } from 'react-router-redux';
 
 import { Loading, Dropdown, fetchJSON } from './common';
 import { routes } from './layout';
@@ -58,17 +59,25 @@ const watchFetchBranches = type => {
   };
 };
 
-const initialFetch = type => {
+const initialFetch = (type, initialPathname) => {
   return function*() {
-    yield put(fetchBranches(type));
+    if (initialPathname === Clobberer.__path__) {
+        yield put(fetchBranches(type));
+    }
+    let action = null;
+    while (action = yield take(LOCATION_CHANGE)) {
+      if (action.payload.pathname === Clobberer.__path__) {
+        yield put(fetchBranches(type));
+      }
+    }
   };
 };
 
 export const sagas = [
    fork(watchFetchBranches('taskcluster')),
    fork(watchFetchBranches('buildbot')),
-   fork(initialFetch('taskcluster')),
-   fork(initialFetch('buildbot'))
+   fork(initialFetch('taskcluster', window.location.pathname)),
+   fork(initialFetch('buildbot', window.location.pathname))
 ];
 
 // --- END: sagas ---
@@ -78,7 +87,9 @@ export const sagas = [
 const reducerFor = type => (state = Map(), action) => {
     switch (action.type) {
       case 'CLOBBERER.' + type.toUpperCase() + '_BRANCHES.FETCH':
-        return state.set('loading', true);
+        return state.set('loading', true)
+                    .set('error', null)
+                    .set('options', []);
       case 'CLOBBERER.' + type.toUpperCase() + '_BRANCHES.FETCH_FAILED':
         return state.set('loading', false)
                     .set('error', action.payload);
@@ -134,7 +145,7 @@ export const Clobberer = () => (
   <div>
     <div id="banner-not-home"></div>
     <div className="container">
-      <h1>Clobberer</h1>
+      <h1>{ Clobberer.__name__ }</h1>
       <p>{ routes.getIn(['clobberer', 'description']) }</p>
       <p>TODO: link to documentation</p>
       <div className="row">
@@ -152,5 +163,6 @@ export const Clobberer = () => (
 )
 
 Clobberer.__name__ = 'Clobberer'
+Clobberer.__path__ = '/clobberer'
 
 export default Clobberer;
