@@ -59,7 +59,7 @@ def create_tools_app(name, apps):
     def root(path):
         base_dir = os.path.abspath(os.path.join(
             os.path.dirname(__file__), '../../relengapi_tools/build'))
-        if not any(map(path.endswith, ['.js', '.css', '.jpg', '.html'])):
+        if not os.path.exists(os.path.join(base_dir, path)):
             path = 'index.html'
         return send_from_directory(base_dir, path)
 
