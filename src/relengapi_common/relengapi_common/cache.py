@@ -3,11 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+from flask_cache import Cache
 
-from relengapi_common import create_app, db
-from relengapi_clobberer import _flask
 
-app = create_app(__name__, [db, _flask])
-
-if __name__ == '__main__':
-    app.run(debug=True)
+def init_app(app):
+    cache_config = app.config.get('CACHE', {'CACHE_TYPE': 'simple'})
+    cache = Cache(app, config=cache_config)
+    return cache

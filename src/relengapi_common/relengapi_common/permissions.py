@@ -9,7 +9,7 @@ import wsme.types
 
 from flask import abort
 from flask import current_app
-from flask.ext.login import current_user
+from flask_login import current_user
 
 from relengapi_common import utils
 

@@ -10,7 +10,7 @@ import jinja2
 
 from flask import Flask, send_from_directory
 
-from relengapi_common import api, auth, log
+from relengapi_common import api, auth, log, cache
 
 __APP = dict()
 
@@ -38,7 +38,7 @@ def create_app(name, extensions=[], config=None, **kw):
     app.jinja_loader = jinja2.loaders.FileSystemLoader(
             os.path.join(os.path.dirname(__file__), 'templates'))
 
-    for extension in [log, auth, api] + extensions:
+    for extension in [log, auth, api, cache] + extensions:
         extension_name = extension.__name__.split('.')[-1]
         setattr(app, extension_name, extension.init_app(app))
         if hasattr(app, 'log'):
@@ -59,6 +59,8 @@ def create_tools_app(name, apps):
     def root(path):
         base_dir = os.path.abspath(os.path.join(
             os.path.dirname(__file__), '../../relengapi_tools/build'))
+        if not os.path.exists(os.path.join(base_dir, path)):
+            path = 'index.html'
         return send_from_directory(base_dir, path)
 
     return app

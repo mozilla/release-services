@@ -7,8 +7,8 @@ from __future__ import absolute_import
 from flask import redirect
 from flask import request
 from flask import url_for
-from flask.ext.login import login_user
-from flask.ext.login import logout_user
+from flask_login import login_user
+from flask_login import logout_user
 
 from relengapi_common import auth
 from relengapi_common import utils

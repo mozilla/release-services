@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import
 
-from flask.ext.browserid import BrowserID
+from flaskext.browserid import BrowserID
 
 from relengapi_common import auth
 

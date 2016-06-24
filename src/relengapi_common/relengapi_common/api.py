@@ -22,7 +22,7 @@ from flask import json
 from flask import jsonify
 from flask import render_template
 from flask import request
-from flask.ext.login import current_user
+from flask_login import current_user
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import HTTPException
 
@@ -232,6 +232,8 @@ def init_app(app):
         def default(self, o):
             if isinstance(o, wsme.types.Base):
                 return wsme.rest.json.tojson(type(o), o)
+            if o == get_req_id_uuid:
+                return str(o())
             return old_json_encoder.default(self, o)
 
     app.json_encoder = WSMEEncoder

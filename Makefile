@@ -17,11 +17,18 @@ help:
 	@echo "  clean    remove all installed environments"
 
 
+clobberer-requirements:
+	cd src/relengapi_clobberer/ && $(MAKE) env requirements.txt
+
+requirements: clobberer-requirements
+
+
 .PHONY: install
 install: env
 	rm -f requirements-flatten.txt
 	$(PYTHON) flatten_requirements.py requirements-dev.txt requirements-flatten.txt
 	$(PIP) install -r requirements-flatten.txt
+	rm -rf src/relengapi_tools/node_modules
 	cd src/relengapi_tools && $(NPM) install
 
 .PHONY: lint
@@ -33,7 +40,7 @@ lint:
 			src/relengapi_clobberer/relengapi_clobberer
 	cd src/relengapi_tools && $(NPM) run build
 
-.PHONY: docs 
+.PHONY: docs
 docs:
 	cd docs/ && $(MAKE) html
 
