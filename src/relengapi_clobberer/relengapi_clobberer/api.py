@@ -6,9 +6,12 @@ from __future__ import absolute_import
 
 import taskcluster
 
+from sqlalchemy import and_
+from sqlalchemy import func
 from sqlalchemy import not_
 
 from relengapi_clobberer.models import ClobbererBuilds
+from relengapi_clobberer.models import ClobbererTimes
 
 
 BUILDBOT_BUILDDIR_REL_PREFIX = 'rel-'
@@ -16,7 +19,7 @@ BUILDBOT_BUILDER_REL_PREFIX = 'release-'
 TASKCLUSTER_DECISION_NAMESPACE = 'gecko.v2.%s.latest.firefox.decision'
 
 
-def buildout_branches(session):
+def buildbot_branches(session):
     """List of all buildbot branches.
     """
 
@@ -28,11 +31,65 @@ def buildout_branches(session):
 
     branches = branches.order_by(ClobbererBuilds.branch)
 
-    return [i for i in branches]
+    return [dict(name=branch[0],
+                 builders=buildbot_branch_summary(session, branch[0])) 
+            for branch in branches]
+
+
+def buildbot_branch_summary(session, branch):
+    """Return a dictionary of most recent ClobbererTimess grouped by
+       buildername.
+    """
+    # Isolates the maximum lastclobber for each builddir on a branch
+    max_ct_sub_query = session.query(
+        func.max(ClobbererTimes.lastclobber).label('lastclobber'),
+        ClobbererTimes.builddir,
+        ClobbererTimes.branch
+    ).group_by(
+        ClobbererTimes.builddir,
+        ClobbererTimes.branch
+    ).filter(ClobbererTimes.branch == branch).subquery()
+
+    # Finds the "greatest n per group" by joining with the
+    # max_ct_sub_query
+    # This is necessary to get the correct "who" values
+    sub_query = session.query(ClobbererTimes).join(max_ct_sub_query, and_(
+        ClobbererTimes.builddir == max_ct_sub_query.c.builddir,
+        ClobbererTimes.lastclobber == max_ct_sub_query.c.lastclobber,
+        ClobbererTimes.branch == max_ct_sub_query.c.branch)).subquery()
+
+    # Attaches builddirs, along with their max lastclobber to a
+    # buildername
+    full_query = session.query(
+        ClobbererBuilds.buildername,
+        ClobbererBuilds.builddir,
+        sub_query.c.lastclobber,
+        sub_query.c.who
+    ).outerjoin(
+        sub_query,
+        ClobbererBuilds.builddir == sub_query.c.builddir,
+    ).filter(
+        ClobbererBuilds.branch == branch,
+        not_(ClobbererBuilds.buildername.startswith(BUILDBOT_BUILDER_REL_PREFIX))
+    ).distinct().order_by(ClobbererBuilds.buildername)
+
+    summary = dict()
+    for result in full_query:
+        buildername, builddir, lastclobber, who = result
+        summary.setdefault(buildername, [])
+        summary[buildername].append(
+            ClobbererTimes(
+                branch=branch,
+                builddir=builddir,
+                lastclobber=lastclobber,
+                who=who
+            )
+        )
+    return summary
 
 
 def taskcluster_branches():
-    """Dict of workerTypes per branch with their respected hashes
+    """Dict of workerTypes per branch with their respected workerTypes
     """
     index = taskcluster.Index()
     queue = taskcluster.Queue()

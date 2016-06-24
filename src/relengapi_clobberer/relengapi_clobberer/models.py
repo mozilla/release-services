@@ -48,7 +48,7 @@ class ClobbererBuilds(ClobbererBase, db.UniqueMixin):
         )
 
 
-class ClobbererTime(ClobbererBase, db.UniqueMixin):
+class ClobbererTimes(ClobbererBase, db.UniqueMixin):
     """
     A clobber request.
     """

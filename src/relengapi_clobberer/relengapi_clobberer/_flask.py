@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+import datetime
 import wsme.types
 
 from flask import g
@@ -17,26 +18,12 @@ from relengapi_clobberer.models import DB_DECLARATIVE_BASE
 __name__ = 'clobberer'
 
 
-class TaskclusterWorkerType(wsme.types.Base):
-    """Represents worker type of taskcluster
-    """
-    name = wsme.types.wsattr(unicode, mandatory=True)
-    caches = wsme.types.wsattr([str], mandatory=False, default=[])
-
-
-class TaskclusterBranch(wsme.types.Base):
-    """Represents branches of taskcluster
-    """
-    name = wsme.types.wsattr(unicode, mandatory=True)
-    provisionerId = wsme.types.wsattr(unicode, mandatory=False, default=None)
-    workerTypes = wsme.types.wsattr(
-        {str: TaskclusterWorkerType}, mandatory=False, default=dict())
-
-
-class BuildbotBranch(wsme.types.Base):
+class Branch(wsme.types.Base):
     """Represents branches of buildbot
     """
     name = wsme.types.wsattr(unicode, mandatory=True)
+    data = wsme.types.wsattr(
+        {unicode: [unicode]}, mandatory=False, default=list())
 
 
 def init_app(app):
@@ -47,64 +34,73 @@ def init_app(app):
 
     @app.route('/')
     def root():
-        return 'Clobberer running ...'
+        # TODO: point to tools page for clobberer or documentation
+        return 'Clobberer is running ...'
 
-    @app.route('/buildbot/branches', methods=['GET'])
-    @apimethod([BuildbotBranch])
-    def branches():
+    @app.route('/buildbot', methods=['GET'])
+    @apimethod([Branch])
+    def get_buildout():
         """List of all buildbot branches.
         """
         session = g.db.session(DB_DECLARATIVE_BASE)
-        branches = app.cache.cached()(api.buildout_branches)(session)
+        # TODO: only cache this in production
+        #branches = app.cache.cached()(api.buildbot_branches)(session)
+        branches = api.buildbot_branches(session)
         return [
-            BuildbotBranch(
-                name=branch[0],
+            Branch(
+                name=branch['name'],
+                data={
+                    name: [
+                        datetime.datetime.fromtimestamp(
+                            builder.lastclobber).strftime("%Y-%m-%d %H:%M:%S")
+                        for builder in builders
+                        if builder.lastclobber
+                    ]
+                    for name, builders in branch['builders'].items()
+                }
             )
             for branch in branches
         ]
+    @app.route('/buildbot', methods=['POST'])
+    @apimethod(unicode, body=[(unicode, unicode)])  # TODO: do we need more specific types
+    @p.clobberer.post.clobber.require()
+    def post_buildout(body):
+        """
+        Request clobbers for particular branches and builddirs.
+        """
+        session = g.db.session(DB_DECLARATIVE_BASE)
+        for clobber in body:
+            _add_clobber(
+                app,
+                session,
+                branch=clobber.branch,
+                builddir=clobber.builddir,
+                slave=clobber.slave
+            )
+        session.commit()
+        return None
 
-    @app.route('/taskcluster/branches', methods=['GET'])
-    @apimethod([TaskclusterBranch])
-    def taskcluster_branches():
+
+    @app.route('/taskcluster', methods=['GET'])
+    @apimethod([Branch])
+    def get_taskcluster():
         """List of all the gecko branches with their worker types
         """
         branches = app.cache.cached()(api.taskcluster_branches)()
         return [
-            TaskclusterBranch(
+            Branch(
                 name=branchName,
-                provisionerId=branch.get('provisionerId'),
-                workerTypes={
-                    workerName: TaskclusterWorkerType(
-                        name=workerName,
-                        caches=filter(lambda x: x not in caches_to_skip,
-                                      worker['caches'])
-                    )
+                data={
+                    workerName: filter(lambda x: x not in caches_to_skip, worker['caches'])  # noqa
                     for workerName, worker in branch['workerTypes'].items()
                 }
             )
             for branchName, branch in branches.items()
         ]
 
-    return api
+    # TODO post_taskcluster
 
-    # @app.route('/buildbot/clobber', methods=['POST'])
-    # @apimethod(None, body=[api.ClobberRequest])
-    # @p.clobberer.post.clobber.require()
-    # def clobber(body):
-    #     """
-    #     Request clobbers for particular branches and builddirs.
-    #     """
-    #     session = g.db.session(DB_DECLARATIVE_BASE)
-    #     for clobber in body:
-    #         _add_clobber(
-    #             app,
-    #             session,
-    #             branch=clobber.branch,
-    #             builddir=clobber.builddir,
-    #             slave=clobber.slave
-    #         )
-    #     session.commit()
-    #     return None
+    return api
 
     # @app.route('/buildbot/clobber/by-builder', methods=['POST'])
     # @apimethod(None, body=[rest.ClobberRequestByBuilder])
@@ -133,13 +129,6 @@ def init_app(app):
     #             )
     #     session.commit()
     #     return None
-
-    # @app.route('/lastclobber/all', methods=['GET'])
-    # @apimethod([rest.ClobberTime])
-    # def lastclobber_all():
-    #     "Return a sorted list of all clobbers"
-    #     session = g.db.session(DB_DECLARATIVE_BASE)
-    #     return session.query(ClobberTime).order_by(ClobberTime.lastclobber)
 
     # @app.route('/lastclobber/branch/by-builder/<string:branch>',
     #            methods=['GET'])
