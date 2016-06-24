@@ -1,4 +1,4 @@
-import App from 'mozilla-neo';
+import App from '@garbas/mozilla-neo';
 import Layout, { routes } from './layout';
 import createSagaMiddleware from 'redux-saga';
 import * as clobberer from './clobberer';
