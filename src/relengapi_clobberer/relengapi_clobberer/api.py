@@ -32,7 +32,7 @@ def buildbot_branches(session):
     branches = branches.order_by(ClobbererBuilds.branch)
 
     return [dict(name=branch[0],
-                 builders=buildbot_branch_summary(session, branch[0])) 
+                 builders=buildbot_branch_summary(session, branch[0]))
             for branch in branches]
 
 
@@ -70,7 +70,7 @@ def buildbot_branch_summary(session, branch):
         ClobbererBuilds.builddir == sub_query.c.builddir,
     ).filter(
         ClobbererBuilds.branch == branch,
-        not_(ClobbererBuilds.buildername.startswith(BUILDBOT_BUILDER_REL_PREFIX))
+        not_(ClobbererBuilds.buildername.startswith(BUILDBOT_BUILDER_REL_PREFIX))  # noqa
     ).distinct().order_by(ClobbererBuilds.buildername)
 
     summary = dict()

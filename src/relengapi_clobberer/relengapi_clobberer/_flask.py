@@ -4,18 +4,52 @@
 
 from __future__ import absolute_import
 
+import time
+import re
 import datetime
 import wsme.types
 
-from flask import g
+from flask import g, current_user
 
 from relengapi_common.api import apimethod
 from relengapi_common.permissions import p
 from relengapi_clobberer import api
-from relengapi_clobberer.models import DB_DECLARATIVE_BASE
+from relengapi_clobberer.models import DB_DECLARATIVE_BASE, ClobbererTimes
 
 
 __name__ = 'clobberer'
+
+
+def _add_clobber(app, session, branch, builddir, slave=None):
+    """
+    A common method for adding clobber times to a session. The session passed
+    in is returned; but is only committed if the commit option is True.
+    """
+    match = re.search('^' + api.BUILDBOT_BUILDDIR_REL_PREFIX + '.*', builddir)
+    if match is None:
+        try:
+            who = current_user.authenticated_email
+        except AttributeError:
+            if current_user.anonymous:
+                who = 'anonymous'
+            else:
+                # TokenUser doesn't show up as anonymous; but also has no
+                # authenticated_email
+                who = 'automation'
+
+        clobberer_times = ClobbererTimes.as_unique(
+            session,
+            branch=branch,
+            builddir=builddir,
+            slave=slave,
+        )
+        clobberer_times.lastclobber = int(time.time())
+        clobberer_times.who = who
+        session.add(clobberer_times)
+        return None
+    app.log.debug('Rejecting clobber of builddir with release '
+                  'prefix: {}'.format(builddir))
+    return None
 
 
 class Branch(wsme.types.Base):
@@ -44,7 +78,7 @@ def init_app(app):
         """
         session = g.db.session(DB_DECLARATIVE_BASE)
         # TODO: only cache this in production
-        #branches = app.cache.cached()(api.buildbot_branches)(session)
+        # branches = app.cache.cached()(api.buildbot_branches)(session)
         branches = api.buildbot_branches(session)
         return [
             Branch(
@@ -61,8 +95,10 @@ def init_app(app):
             )
             for branch in branches
         ]
+
     @app.route('/buildbot', methods=['POST'])
-    @apimethod(unicode, body=[(unicode, unicode)])  # TODO: do we need more specific types
+    # TODO: do we need more specific types
+    @apimethod(unicode, body=[(unicode, unicode)])
     @p.clobberer.post.clobber.require()
     def post_buildout(body):
         """
@@ -79,7 +115,6 @@ def init_app(app):
             )
         session.commit()
         return None
-
 
     @app.route('/taskcluster', methods=['GET'])
     @apimethod([Branch])
@@ -263,33 +298,3 @@ def init_app(app):
     #                                dict(cacheName=item.cacheName))
 
     #     return None
-
-# def _add_clobber(app, session, branch, builddir, slave=None):
-#     """
-#     A common method for adding clobber times to a session. The session passed
-#     in is returned; but is only committed if the commit option is True.
-#     """
-#     if re.search('^' + BUILDDIR_REL_PREFIX + '.*', builddir) is None:
-#         try:
-#             who = current_user.authenticated_email
-#         except AttributeError:
-#             if current_user.anonymous:
-#                 who = 'anonymous'
-#             else:
-#                 # TokenUser doesn't show up as anonymous; but also has no
-#                 # authenticated_email
-#                 who = 'automation'
-#
-#         clobber_time = ClobberTime.as_unique(
-#             session,
-#             branch=branch,
-#             builddir=builddir,
-#             slave=slave,
-#         )
-#         clobber_time.lastclobber = int(time.time())
-#         clobber_time.who = who
-#         session.add(clobber_time)
-#         return None
-#     app.log.debug('Rejecting clobber of builddir with release '
-#                   'prefix: {}'.format(builddir))
-#     return None
