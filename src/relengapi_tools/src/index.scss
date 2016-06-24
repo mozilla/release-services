@@ -169,3 +169,15 @@ footer {
         };
     }
 }
+
+.clobberer-submit-description {
+    font-size: 0.8em;
+    margin: 1em 0;
+    ul {
+      margin: 0.5em 0 1rem 0;
+      border: 1px solid $border-color;
+      li {
+          margin: 0.5em 0;
+      }
+    }
+}

@@ -15,7 +15,7 @@ export const Loading = (props)  => {
       <div className="alert alert-danger" role="alert">
         <strong>Error: </strong>
         <span>{props.error}.</span>
-        <a className="alert-link" href="#" onClick={props.reload}> Click to retry.</a>
+        <a className="alert-link" href="#" onClick={props.onRetry}> Click to retry.</a>
       </div>
     );
   } else {
@@ -28,7 +28,7 @@ export const Dropdown = (props) => {
     selected = null,
     options = [],
     placeholder = '',
-    onChange
+    onSelect
   } = props;
   return (
     <div className="btn-group btn-dropdown">
@@ -43,7 +43,7 @@ export const Dropdown = (props) => {
       <div className="dropdown-menu">
       {
         options.map(option => (
-          <a className="dropdown-item" key={option.id} onClick={onChange(option.id)}>
+          <a className="dropdown-item" key={option.id} onClick={onSelect(option.id)}>
             {option.title}
           </a>
         ))
@@ -55,6 +55,12 @@ export const Dropdown = (props) => {
 
 export const fetchJSON = (url, options) => {
   return fetch(url, options)
-    .then(response => response.json())
-    .then(response => response);
+    .then(response => {
+      if (response.status >= 200 && response.status < 300) {
+        return response.json()
+      }
+      const error = new Error(response.statusText);
+      error.response = response;
+      return error;
+    });
 };
