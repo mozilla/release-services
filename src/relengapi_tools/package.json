@@ -28,12 +28,13 @@
     "relengapi"
   ],
   "dependencies": {
+    "@garbas/mozilla-neo": "1.0.2",
     "bootstrap": "4.0.0-alpha.2",
     "classnames": "2.2.5",
     "expose-loader": "0.7.1",
     "isomorphic-fetch": "2.2.1",
     "jquery": "2.2.3",
-    "@garbas/mozilla-neo": "1.0.2",
+    "querystring": "^0.2.0",
     "react": "15.0.2",
     "react-addons-test-utils": "15.0.2",
     "react-dom": "15.0.2",
@@ -42,7 +43,8 @@
     "react-router-redux": "4.0.4",
     "redux": "3.5.2",
     "redux-saga": "0.10.4",
-    "tether": "1.3.2"
+    "tether": "1.3.2",
+    "url": "^0.11.0"
   },
   "devDependencies": {
     "chai-immutable": "^1.5.4"

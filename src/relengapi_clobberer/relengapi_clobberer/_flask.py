@@ -9,10 +9,10 @@ import re
 import datetime
 import wsme.types
 
-from flask import g, current_user
+from flask import g
+from flask_login import current_user
 
 from relengapi_common.api import apimethod
-from relengapi_common.permissions import p
 from relengapi_clobberer import api
 from relengapi_clobberer.models import DB_DECLARATIVE_BASE, ClobbererTimes
 
@@ -62,8 +62,6 @@ class Branch(wsme.types.Base):
 
 def init_app(app):
 
-    p.clobberer.post.clobber.doc('Submit clobber requests')
-
     caches_to_skip = app.config.get('TASKCLUSTER_CACHES_TO_SKIP', [])
 
     @app.route('/')
@@ -97,9 +95,7 @@ def init_app(app):
         ]
 
     @app.route('/buildbot', methods=['POST'])
-    # TODO: do we need more specific types
-    @apimethod(unicode, body=[(unicode, unicode)])
-    @p.clobberer.post.clobber.require()
+    @apimethod(unicode, body=[unicode, unicode])
     def post_buildout(body):
         """
         Request clobbers for particular branches and builddirs.

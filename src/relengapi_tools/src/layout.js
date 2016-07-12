@@ -7,7 +7,9 @@ import classNames from  'classnames';
 const NOOP = () => null;
 
 export const routes = fromJS({
-  home: { path: '/', title: 'RelengAPI' },
+  home: { path: '/', title: 'RelengAPI',
+          banner: 'Collection of Release Engineering services.' },
+  login: { path: '/login', title: 'Login' },
   badpenny: { path: '/badpenny' , title: 'BadPenny' },
   clobberer: { path: '/clobberer' , title: 'Clobberer',
                description: 'A repairer of buildbot builders and taskcluster worker types.' },
@@ -17,18 +19,36 @@ export const routes = fromJS({
   treestatus: { path: '/treestatus', title: 'TreeStatus' }
 });
 
+export const services = [
+  routes.get('badpenny'),
+  routes.get('clobberer'),
+  routes.get('slaveloan'),
+  routes.get('tokens'),
+  routes.get('tooltool'),
+  routes.get('treestatus')
+];
 
-export const mapStateToProps = state => {
-  const path = state.getIn(['routing', 'locationBeforeTransitions', 'pathname']);
-  return {
-    current_route: routes.keySeq().reduce((result, routeName) => {
-      routes.getIn([routeName, 'path']) === path ? routes.get(routeName).toJS() : result
-    }, {})
-  };
-};
+const mapToProps = [
+  state => {
+    const path = state.getIn(['routing', 'locationBeforeTransitions', 'pathname']);
+    return {
+      login: state.get('login'),
+      current_route: routes.keySeq().reduce((result, routeName) => {
+        return routes.getIn([routeName, 'path']) === path ? routes.get(routeName).toJS() : result
+      }, {})
+    };
+  },
+  (dispatch, props) => {
+    return {
+      logout: () => {
+        dispatch({ type: 'LOGIN.SIGN_OUT' });
+      },
+    };
+  }
+];
 
 
-export const Layout = ({ children=NOOP, current_route={} }) => (
+export const Layout = ({ login, logout, children=NOOP, current_route={} }) => (
   <div>
     <nav id="navbar" className="navbar navbar-full navbar-light">
       <div className="container">
@@ -42,27 +62,57 @@ export const Layout = ({ children=NOOP, current_route={} }) => (
         </Link>
         <div className="collapse navbar-toggleable-sm navbar-collapse pull-right">
           <ul className="nav navbar-nav">
-          {
-            routes.keySeq()
-              .filter(x => x !== 'home')
-              .map(x=> (
-                <li key={x}
-                    className={
-                      classNames({
-                        'nav-item': true,
-                        'active': current_route.path === routes.getIn([x, 'path'])
-                      })}>
-                <Link className="nav-link" to={routes.getIn([x, 'path'])}>
-                  {routes.getIn([x, 'title'])}
-                </Link>
-              </li>
-            ))
-          }
+            <li key="services" className="nav-item">
+              <div className="dropdown">
+                <a className="nav-link dropdown-toggle" id="dropdownServices" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                  Services
+                </a>
+                <div className="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownServices">
+                {
+                  services.map(route=> (
+                      <Link key={route.get('path')} className="dropdown-item" to={route.get('path')}>
+                        {route.get('title')}
+                      </Link>
+                    ))
+                }
+                </div>
+              </div>
+            </li>
+            <li key="login" className="nav-item">
+              { 
+                login.has('credentials')
+                 ? (
+                  <a className="nav-link" href="#" onClick={logout}>
+                    Logout
+                  </a>
+                 ) : (
+                  <Link className="nav-link" to={routes.getIn(['login', 'path'])}>
+                    {routes.getIn(['login', 'title'])}
+                  </Link>
+                 )
+              }
+            </li>
           </ul>
         </div>
       </div>
     </nav>
-    <div id="content">{children}</div>
+    {
+      current_route.banner === undefined ? (
+        <div id="banner-empty"></div>
+      ) : (
+        <div id="banner">
+          <div className="container">
+            {current_route.banner}
+          </div>
+        </div>
+      )
+    }
+    <div id="content">
+      <div className="container">
+        {children}
+      </div>
+    </div>
     <footer className="container">
       <hr/>
       <ul>
@@ -74,4 +124,4 @@ export const Layout = ({ children=NOOP, current_route={} }) => (
   </div>
 );
 
-export default connect(mapStateToProps)(Layout)
+export default connect(...mapToProps)(Layout)

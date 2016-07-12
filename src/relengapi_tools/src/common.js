@@ -1,5 +1,10 @@
 import React from 'react';
 import fetch from 'isomorphic-fetch';
+import querystring from 'querystring';
+import { put, take } from 'redux-saga/effects'
+import { takeLatest } from 'redux-saga'
+import { LOCATION_CHANGE } from 'react-router-redux';
+
 
 export const Loading = (props)  => {
   if (props.loading === true) {
@@ -62,5 +67,43 @@ export const fetchJSON = (url, options) => {
       const error = new Error(response.statusText);
       error.response = response;
       return error;
+    })
+    .catch(e => {
+      const error = new Error(e.message);
+      error.response = e;
+      return error
     });
 };
+
+export const watchFor = (pattern, saga) => function*() {
+  yield takeLatest(pattern, saga);
+};
+
+export const watchForRoute = (initialPathname, pathname, action) => {
+  return function*() {
+    if (initialPathname === pathname) {
+        yield put(action);
+    }
+    let location_action = null;
+    while (location_action = yield take(LOCATION_CHANGE)) {
+      if (location_action.payload.pathname === pathname) {
+        yield put(action);
+      }
+    }
+  };
+};
+
+export const parseCredentials = query => {
+  try {
+    let credentials = querystring.parse(query.substr(1)) ;
+    if (!credentials.clientId || !credentials.accessToken) {
+      return null;
+    }
+    if (credentials.certificate && typeof(credentials.certificate) === "string") {
+      credentials.certificate = JSON.parse(credentials.certificate);
+    }
+    return credentials;
+  } catch (e) {
+    return null;
+  }
+}

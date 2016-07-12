@@ -7,3 +7,5 @@ import app, { sagaMiddleware, sagas } from './index';
 
 app.render()
 sagaMiddleware.run(sagas);
+
+window.APP = app;

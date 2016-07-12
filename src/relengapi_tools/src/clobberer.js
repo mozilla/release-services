@@ -6,14 +6,14 @@ import { combineReducers } from 'redux-immutable';
 import { connect } from 'react-redux';
 import { takeLatest, delay } from 'redux-saga';
 
-import { Loading, Dropdown, fetchJSON } from './common';
+import { Loading, Dropdown, fetchJSON, watchFor } from './common';
 import { routes } from './layout';
 import { app } from './';
 
 // --- helpers ---
 
 const url = (path) => (process.env.NEO_CLOBBERER_BASE_URL || '/__api__/clobberer') + path;
-const TIMEOUT = parseInt(process.env.NEO_CLOBBERER_FETCH_TIMEOUT || '60', 10);
+const TIMEOUT = parseInt(process.env.NEO_TIMEOUT || '60', 10);
 
 
 // --- actions ---
@@ -150,8 +150,8 @@ const initialFetch = (type, initialPathname) => {
 export const sagas = [
    fork(watchToClobber('taskcluster')),
    fork(watchToClobber('buildbot')),
-   fork(watchFetchBranches('taskcluster')),
-   fork(watchFetchBranches('buildbot')),
+   fork(watchFor('CLOBBERER.TASKCLUSTER.FETCH', fetchBranchesForReal('taskcluster'))),
+   fork(watchFor('CLOBBERER.BUILDBOT.FETCH', fetchBranchesForReal('buildbot'))),
    fork(initialFetch('taskcluster', window.location.pathname)),
    fork(initialFetch('buildbot', window.location.pathname))
 ];
@@ -182,7 +182,7 @@ const reducerFor = type => (state = Map(), action) => {
 
       case 'CLOBBERER.' + type.toUpperCase() + '.FETCH_FAILED':
         return state.set('loading', false)
-                    .set('error', action.payload);
+                    .set('error', action.payload.message);
 
       case 'CLOBBERER.' + type.toUpperCase() + '.FETCH_SUCCESS':
 
@@ -380,20 +380,17 @@ const Branches = type => React.createElement(connect(...mapToProps(type))(props 
 
 export const Clobberer = () => (
   <div>
-    <div id="banner-not-home"></div>
-    <div className="container">
-      <h1>{ Clobberer.__name__ }</h1>
-      <p>{ routes.getIn(['clobberer', 'description']) }</p>
-      <p>TODO: link to documentation</p>
-      <div className="row">
-        <div className="col-md-6">
-          <h2>Taskcluster</h2>
-          {Branches('taskcluster')}
-        </div>
-        <div className="col-md-6">
-          <h2>Buildbot</h2>
-          {Branches('buildbot')}
-        </div>
+    <h1>{ Clobberer.__name__ }</h1>
+    <p>{ routes.getIn(['clobberer', 'description']) }</p>
+    <p>TODO: link to documentation</p>
+    <div className="row">
+      <div className="col-md-6">
+        <h2>Taskcluster</h2>
+        {Branches('taskcluster')}
+      </div>
+      <div className="col-md-6">
+        <h2>Buildbot</h2>
+        {Branches('buildbot')}
       </div>
     </div>
   </div>
