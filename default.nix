@@ -19,6 +19,7 @@ in pkgs.stdenv.mkDerivation {
     mysql.lib
     zlib
     openssl
+    elmPackages.elm
   ];
   shellHook = ''
     export CACHE_DEFAULT_TIMEOUT=3600

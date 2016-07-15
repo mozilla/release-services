@@ -1,5 +1,6 @@
 
 NPM=npm
+ELM=elm
 VIRTUALENV=virtualenv
 PYTHON=./env/bin/python
 PIP=./env/bin/pip
@@ -29,7 +30,7 @@ install: env
 	$(PYTHON) flatten_requirements.py requirements-dev.txt requirements-flatten.txt
 	$(PIP) install -r requirements-flatten.txt
 	rm -rf src/relengapi_tools/node_modules
-	cd src/relengapi_tools && $(NPM) install
+	cd src/relengapi_tools && $(NPM) install && $(ELM) package install -y
 
 .PHONY: lint
 lint:
@@ -58,6 +59,7 @@ env:
 clean:
 	rm -rf $(ENV)
 	rm -rf src/relengapi_tools/node_modules/
+	rm -rf src/relengapi_tools/elm-stuff/
 
 .PHONY: clean
 requirements-dev.txt: clean env

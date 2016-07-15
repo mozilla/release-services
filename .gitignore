@@ -16,5 +16,6 @@
 /src/relengapi_clobberer/relengapi_clobberer.egg-info/
 /src/relengapi_common/relengapi_common.egg-info/
 /src/relengapi_tools/.coverage
+/src/relengapi_tools/elm-stuff/
 /src/relengapi_tools/build
 /src/relengapi_tools/node_modules
