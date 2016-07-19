@@ -1,28 +1,16 @@
-module Main exposing (main)
+module Main exposing (..)
 
 import App
 import RouteUrl
 
 
--- MAIN
-
-
-main : Program Never
+main : Program App.Flags
 main =
-    RouteUrl.program
+    RouteUrl.programWithFlags
         { delta2url = App.delta2url
         , location2messages = App.location2messages
-        , init = App.defaultModel
-        , update = App.defaultUpdate
+        , init = App.init
+        , update = App.update
         , view = App.view
-        , subscriptions = subscriptions
+        , subscriptions = App.subscriptions
         }
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : App.Model -> Sub App.Msg
-subscriptions model =
-    Sub.none

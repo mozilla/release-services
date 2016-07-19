@@ -1,308 +1,310 @@
-module App exposing (..)
+port module App exposing (..)
 
 import Dict exposing ( Dict )
-import Exts.RemoteData exposing ( RemoteData(..), WebData )
-import Html exposing ( Html, Attribute, div, nav, button, text, a, ul, li, hr
-                     , footer, h1, h2, h3, p )
-import Html.Attributes exposing ( attribute, id, class, type', href )
+import Html exposing ( Html, div, nav, button, text, a, ul, li, footer, hr )
+import Html.App
+import Html.Attributes exposing ( attribute, id, class, type', href, target )
 import Html.Events as Events
-import Json.Decode as JsonDecode
-import Navigation exposing ( Location, modifyUrl )
-import RouteUrl exposing ( HistoryEntry(..), UrlChange )
-import RouteUrl.Builder as Builder exposing ( Builder )
-import List.Split exposing ( chunksOfLeft )
+import Json.Decode as JsonDecode exposing ( (:=) )
+import Navigation exposing ( Location )
+import RouteUrl exposing ( UrlChange )
+import RouteUrl.Builder as Builder exposing ( Builder, builder, replacePath )
+import Result exposing ( Result(Ok, Err))
 
-
--- Root
-
-
-viewRoot : RouteView
-viewRoot model =
-    div [] <| List.map viewRootServiceRow
-           <| chunksOfLeft 3
-           <| Dict.values routes 
-
-viewRootServiceRow row =
-    div [ class "row" ] <| List.map viewRootService row
-
-viewRootService route =
-    div [ class "col-sm-4" ]
-        [ createLink (Maybe route.id) [ class "linked-card" ]
-                                      [ div [ class "card card-block" ]
-                                            [ h3 [ class "card-title" ] [ text route.title ]
-                                            , p [ class "card-text" ] [ text route.description ]
-                                            ]
-                                      ]
-        ]
-
-
--- Clobberer
-
-clobberer = createRoute "clobberer" (Just "Clobberer")
-                                    (Just "A repairer of buildbot builders and taskcluster worker types.")
-                                     Nothing
-                                     (Just viewClobberer)
-                                     Nothing
-
-viewClobberer: RouteView
-viewClobberer model =
-    let
-        -- XXX: for some reason i can not access clobberer
-        --        TypeError: _p4._0.view is not a function   
-        clobberer = createRoute "clobberer" (Just "Clobberer")
-                                            (Just "A repairer of buildbot builders and taskcluster worker types.")
-                                             Nothing
-                                             (Just viewClobberer)
-                                             Nothing
-    in
-        div [] [ h1 [] [ text clobberer.title ]
-               , p [] [ text clobberer.description ]
-               , div [ class "row" ]
-                     [ div [ class "col-md-6" ]
-                           [ h2 [] [ text "TaskCluster" ]
-                           , viewClobbererTaskcluster model
-                           ]
-                     , div [ class "col-md-6" ]
-                           [ h2 [] [ text "Buildbot" ]
-                           , viewClobbererBuildbot model
-                           ]
-                     ]
-               ]
-
-
-viewClobbererTaskcluster model =
-    div [] [ text "TODO" ]
-
-viewClobbererBuildbot model' =
-    div [] [ text "TODO" ]
+import App.Home as Home 
+import App.Clobberer as Clobberer
 
 
 
-
--- ROUTING
-
-
-routes : Dict String Route
-routes =
-    Dict.fromList 
-     [ ( clobberer.id, clobberer )
-     --, createRoute2 "slaveloan" "SlaveLoan"
-     --, createRoute2 "tokens" "Tokens"
-     --, createRoute2 "tooltool" "ToolTool"
-     --, createRoute2 "treestatus" "TreeStatus"
-     ]
-
-getRoute : String -> Maybe Route
-getRoute route_id = Dict.get route_id routes
-
-
-
-
-
-
--- UTILS
-
-onClick msg = Events.onWithOptions "click" (Events.Options False True) (JsonDecode.succeed msg)
-
-createLink page attributes = a ([ onClick <| SetCurrentPage page, href "#"  ] ++ attributes)
-
-
--- MODEL
-
-type alias RouteModel = ( Model, Cmd Msg )
-type alias RouteView = Model -> Html Msg
-type alias RouteUpdate = Msg -> Model -> ( Model, Cmd Msg )
-
-type alias RouteID = String
-
-type alias Route =
-    { id: RouteID
-    , title : String
-    , description : String
-    , model: RouteModel
-    , view: RouteView
-    , update: RouteUpdate
-    }
+-- TODO:
+--   - add NotFound page and redirect to it when route not found
+--
 
 
 type Page
-    = Root
-    | NotFound
-    | Maybe RouteID
+    = Home
+    | Clobberer
 
-
-
-type alias Model =
-    { current_page: Page
+type alias UserCertificate =
+    { version : Int
+    , scopes : List String
+    , start : Int
+    , expiry : Int
+    , seed : String
+    , signature : String
+    , issuer : String
     }
 
+type alias User =
+    { client_id : Maybe String
+    , access_token : Maybe String
+    , certificate : Maybe UserCertificate
+    }
 
-defaultModel : RouteModel
-defaultModel = ( { current_page = Root }, Cmd.none )
+type alias Model =
+    { clobberer : Clobberer.Model
+    , current_page : Page
+    , current_user : Maybe User
+    }
 
-defaultView : RouteView
-defaultView model = text ""
+type alias RedirectUrl =
+    { url : String
+    , target : Maybe (String, String)
+    }
 
-defaultUpdate : RouteUpdate
-defaultUpdate msg model =
+type Msg
+    = ShowPage Page
+    | SaveCredentials User
+    | LoadCredentials (Maybe User)
+    | ClearCredentials
+    | Redirect RedirectUrl
+    | ClobbererMsg Clobberer.Msg
+
+
+
+onClick msg =
+    Events.onWithOptions
+        "click"
+        (Events.Options False True)
+        (JsonDecode.succeed msg)
+
+eventLink msg attributes =
+    a ([ onClick <| msg, href "#"  ] ++ attributes)
+
+pageLink page attributes =
+    eventLink (ShowPage page) attributes
+
+
+delta2url' : Model -> Model -> Maybe Builder
+delta2url' previous current =
+    case current.current_page of
+        Clobberer ->
+            Maybe.map
+                (Builder.prependToPath ["clobberer"])
+                (Just builder)
+        _ ->
+            Maybe.map
+                (Builder.prependToPath [])
+                (Just builder)
+
+delta2url : Model -> Model -> Maybe UrlChange
+delta2url previous current =
     let
-      log = Debug.log "MODEL (BEFORE) " model
-      log' = Debug.log "MESSAGE " msg
+        log' = Debug.log "DELTA2URL (PREVIOUS)" previous
+        log = Debug.log "DELTA2URL(CURRENT)" current
+    in
+    Maybe.map Builder.toUrlChange <| delta2url' previous current
+
+
+services =
+    [ { page = Clobberer
+      , title = "Clobberer"
+      }
+    ]
+
+
+decodeUserCertificate : String -> Result String UserCertificate
+decodeUserCertificate text =
+    JsonDecode.decodeString
+        (JsonDecode.object7 UserCertificate
+            ( "version"     := JsonDecode.int )
+            ( "scopes"      := JsonDecode.list JsonDecode.string )
+            ( "start"       := JsonDecode.int )
+            ( "expiry"      := JsonDecode.int )
+            ( "seed"        := JsonDecode.string )
+            ( "signature"   := JsonDecode.string )
+            ( "issuer"      := JsonDecode.string )
+        ) text
+
+convertQueryToUser : Dict String String -> User
+convertQueryToUser query =
+    User (Dict.get "clientId" query)
+         (Dict.get "accessToken" query)
+         (case Dict.get "certificate" query of
+             Just certificate -> Result.toMaybe <| decodeUserCertificate certificate
+             Nothing -> Nothing
+         )
+
+location2messages' : Builder -> List Msg
+location2messages' builder =
+    let
+        log = Debug.log "LOCATION2MESSAGES (PATH)" Builder.path builder
+    in
+    case Builder.path builder of
+        first :: rest ->
+            let
+                builder' = Builder.replacePath rest builder
+            in
+                case first of
+                    "login" ->
+                        [ SaveCredentials (convertQueryToUser <| Builder.query builder),
+                          ShowPage Home
+                        ]
+                    "clobberer" ->
+                        [ ShowPage Clobberer ] --:: List.map ClobbererMsg ( Clobberer.location2messages builder' )
+                    _ ->
+                        [ ShowPage Home ]
+        _ ->
+            [ ShowPage Home ]
+
+location2messages : Location -> List Msg
+location2messages location =
+    let
+        log = Debug.log "LOCATION2MESSAGES (LOCATION)" location
+    in
+    location2messages' (Builder.fromUrl location.href)
+
+type alias Flags = { user : Maybe User }
+
+init : Flags -> (Model, Cmd Msg)
+init flags =
+    ( { clobberer = fst Clobberer.init
+      , current_page = Home 
+      , current_user = 
+          case flags.user of
+              Just user -> Just (User user.client_id user.access_token user.certificate)
+              Nothing -> Nothing
+
+      }
+    , Cmd.none
+    )
+
+
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model =
+    let
+        log' = Debug.log "UPDATE (MSG)" msg
+        log = Debug.log "UPDATE (MODEL)" model 
     in
     case msg of
-        RedirectToUrl url ->
-            ( model , modifyUrl url )
-        SetCurrentPage page ->
-            ( { model | current_page = page },  Cmd.none )
+        Redirect url ->
+            ( model, redirect url )
+        ShowPage page ->
+            case page of
+                Clobberer ->
+                    ( { model | current_page = page
+                              , clobberer =  fst Clobberer.init
+                      }
+                    , Cmd.map ClobbererMsg <| snd Clobberer.init
+                    )
+                _ ->
+                    ( { model | current_page = page }, Cmd.none )
+        ClobbererMsg msg' ->
+            let
+                (newModel, newCmd) = Clobberer.update msg' model.clobberer
+            in
+                ( { model | clobberer = newModel }, Cmd.map ClobbererMsg newCmd )
+        SaveCredentials user ->
+            ( model, save_credentials user )
+        LoadCredentials user ->
+            ( { model | current_user = user }, Cmd.none )
+        ClearCredentials ->
+            ( { model | current_user = Nothing }, clear_credentials "")
 
 
-createRoute : RouteID ->
-              Maybe String ->
-              Maybe String ->
-              Maybe RouteModel ->
-              Maybe RouteView ->
-              Maybe RouteUpdate ->
-              Route
-createRoute id title description model view update =
-    let
-        title' = Maybe.withDefault id title
-        description' = Maybe.withDefault "" description
-        model' = Maybe.withDefault defaultModel model
-        view' = Maybe.withDefault defaultView view
-        update' = Maybe.withDefault defaultUpdate update
-    in
-        Route id title' description' model' view' update'
+viewPage model =
+    case model.current_page of
+        Home ->
+            Home.view model
+        Clobberer ->
+            Html.App.map ClobbererMsg (Clobberer.view model.clobberer)
 
 
--- VIEW
-
-
-view : Model -> Html Msg
-view model =
-    div []
-        [ nav [ id "navbar"
-              , class "navbar navbar-full navbar-light"
+viewDropdown title pages =
+    [ div [ class "dropdown" ]
+          [ a [ class "nav-link dropdown-toggle"
+              , id ("dropdown" ++ title)
+              , href "#"
+              , attribute "data-toggle" "dropdown"
+              , attribute "aria-haspopup" "true"
+              , attribute "aria-expanded" "false"
               ]
-              [ div [ class "container" ]
-                    [ button [ class "navbar-toggler hidden-md-up"
-                             , type' "button"
-                             , attribute "data-toggle" "collapse"
-                             , attribute "data-target" ".navbar-collapse"
-                             , attribute "aria-controls" "navbar-header"
-                             ]
-                             [ text "&#9776;" ]
-                    , createLink Root [ class "navbar-brand" ]
-                                      [ text "RelengAPI" ]
-                    , div [ class "collapse navbar-toggleable-sm navbar-collapse pull-right" ]
-                          [ ul [ class "nav navbar-nav" ]
-                               [ li [ class "nav-item" ]
-                                    [ div [ class "dropdown" ]
-                                          [ a [ class "nav-link dropdown-toggle"
-                                              , id "dropdownServices"
-                                              , href "#"
-                                              , attribute "data-toggle" "dropdown"
-                                              , attribute "aria-haspopup" "true"
-                                              , attribute "aria-expanded" "false"
-                                              ]
-                                              [ text "Services" ]
-                                          , div [ class "dropdown-menu dropdown-menu-right"
-                                                , attribute "aria-labelledby" "dropdownServices"
-                                                ]
-                                                (
-                                                    List.map (\route -> createLink (Maybe route.id) [ class "dropdown-item" ]
-                                                                                                    [ text route.title ])
-                                                             (Dict.values routes)
-                                                )
-                                          ]
-                                    ]
-                               , li [ class "nav-item" ] [] --(viewLoginLogout model.current_user)
-                               ]
-                          ]
+              [ text title ]
+          , div [ class "dropdown-menu dropdown-menu-right"
+                , attribute "aria-labelledby" "dropdownServices"
+                ] pages
+          ]
+    ]
+
+viewUser model =
+    case model.current_user of
+        Just user ->
+            viewDropdown (Maybe.withDefault "UNKNOWN" user.client_id )
+                    [ a [ class "dropdown-item"
+                        , href "https://tools.taskcluster.net/credentials"
+                        , target "_blank"
+                        ]
+                        [ text "Manage credentials" ]
+                    , eventLink ClearCredentials
+                                [ class "dropdown-item" ]
+                                [ text "Logout" ]
                     ]
-              ]
-        , div [ id "content" ]
-              [ div [ class "container" ]
-                     [
-                        case model.current_page of
-                           Root ->
-                               div [] [ viewRoot model ]
-                           NotFound ->
-                               div [] [ text "NotFound" ]
-                           Maybe route_id ->
-                               div [] ( case getRoute route_id of
-                                            Just route ->
-                                                [route.view model]
-                                            Nothing -> 
-                                                []
-                                      )
-                     ]
-              ]
-        , footer [ class "container" ]
-                 [ hr [] []
-                 , ul [] 
-                      [ li [] [ a [ href "#" ] [ text "Github" ]]
-                      , li [] [ a [ href "#" ] [ text "Contribute" ]]
-                      , li [] [ a [ href "#" ] [ text "Contact" ]]
-                      -- TODO: add version / revision
-                      ]
-
-                 ]
-        ]
-
-viewLoginLogout current_user = --TODO need to include this
-    case current_user of
-        Success _ ->
-            [
-                a [ class "nav-link"
-                  , href "/logout" --TODO: pick from routes
-                  ]
-                  [ text "Logout" ]
-            ]
-        _ ->
-            [
-                a [ class "nav-link"
-                  , href "/login" --TODO: pick from routes
-                  ]
+        Nothing ->
+            [ eventLink
+                  ( Redirect
+                      ( RedirectUrl "https://login.taskcluster.net"
+                          ( Just ( "/login", "RelengAPI is a collection of Release Engineering services" )
+                          )
+                      )
+                  )
+                  [ class "nav-link" ]
                   [ text "Login" ]
             ]
 
 
--- UPDATE
+viewNavBar model =
+    [ button [ class "navbar-toggler hidden-md-up"
+             , type' "button"
+             , attribute "data-toggle" "collapse"
+             , attribute "data-target" ".navbar-collapse"
+             , attribute "aria-controls" "navbar-header"
+             ]
+             [ text "&#9776;" ]
+    , pageLink Home [ class "navbar-brand" ]
+                    [ text "RelengAPI" ]
+    , div [ class "collapse navbar-toggleable-sm navbar-collapse pull-right" ]
+          [ ul [ class "nav navbar-nav" ]
+               [ li [ class "nav-item" ]
+                    ( viewDropdown "Services" ( List.map (\x -> pageLink x.page [ class "dropdown-item" ]
+                                                                                [ text x.title ]) services ))
+               , li [ class "nav-item" ] ( viewUser model )
+               ]
+          ]
+    ]
+
+viewFooter =
+    [ hr [] []
+    , ul [] 
+         [ li [] [ a [ href "#" ] [ text "Github" ]]
+         , li [] [ a [ href "#" ] [ text "Contribute" ]]
+         , li [] [ a [ href "#" ] [ text "Contact" ]]
+         -- TODO: add version / revision
+         ]
+
+    ]
+
+view : Model -> Html Msg
+view model =
+    let
+        log = Debug.log "VIEW (MODEL)" model 
+        log' = Debug.log "LOCATION" (builder)
+    in
+    div []
+        [ nav [ id "navbar", class "navbar navbar-full navbar-light" ]
+              [ div [ class "container" ] ( viewNavBar model ) ]
+        , div [ id "content" ]
+              [ div [ class "container" ] [ viewPage model ] ]
+        , footer [ class "container" ] viewFooter
+        ]
 
 
-type Msg
-    = SetCurrentPage Page
-    | RedirectToUrl String
+port load_credentials : (Maybe User -> msg) -> Sub msg
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    load_credentials LoadCredentials
 
 
-
-
-
--- ROUTER
-
-
-delta2url : Model -> Model -> Maybe UrlChange
-delta2url previous current =
-    case current.current_page of
-        Root ->
-            Just <| UrlChange NewEntry "/"
-        NotFound ->
-            Just <| UrlChange NewEntry "/404"
-        Maybe route_id ->
-            Just <| UrlChange NewEntry ("/" ++ route_id)
-
-
-
-location2messages : Location -> List Msg
-location2messages location =
-     case Builder.path <| Builder.fromUrl location.href of
-         [] ->
-             [ SetCurrentPage Root ]
-         ["404"] ->
-             [ SetCurrentPage NotFound ]
-         first :: rest ->
-             case getRoute first of
-                 Just route -> 
-                     [ SetCurrentPage (Maybe route.id ) ]
-                 Nothing ->
-                     [ RedirectToUrl "/404" ] 
+port redirect : RedirectUrl -> Cmd msg
+port save_credentials : User -> Cmd msg
+port clear_credentials : String -> Cmd msg
