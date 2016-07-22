@@ -7,7 +7,7 @@ require("./index.scss");
 
 var user = null;
 try {
-  user = JSON.parse(window.localStorage.getItem('relengapi-credentials'));
+  user = JSON.parse(window.localStorage.getItem('shipit-credentials'));
 } catch (e) {
   console.log(e);
 }
@@ -16,16 +16,15 @@ var url = require('url');
 var app = require('./Main.elm').Main.fullscreen({
   user: user
 });
-    
+
 
 app.ports.clear_credentials.subscribe(function() {
-    window.localStorage.removeItem('relengapi-credentials');
+    window.localStorage.removeItem('shipit-credentials');
     app.ports.load_credentials.send(null);
 });
 
 app.ports.save_credentials.subscribe(function(user) {
-    window.localStorage.setItem('relengapi-credentials', JSON.stringify(user));
-    console.log(user);
+    window.localStorage.setItem('shipit-credentials', JSON.stringify(user));
     app.ports.load_credentials.send(user);
 });
 
@@ -48,3 +47,4 @@ app.ports.redirect.subscribe(function(redirect) {
    }
    window.location = redirect_url;
 });
+
