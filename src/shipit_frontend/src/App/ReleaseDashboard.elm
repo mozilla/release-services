@@ -7,6 +7,8 @@ import Http
 import Json.Decode as Json exposing (Decoder, (:=))
 
 
+-- Models
+
 type alias User = {
   email: String,
   name: String
@@ -34,27 +36,27 @@ type alias Analysis = {
 }
 
 
-type alias Model =
-    { analysis : List Analysis
-    }
-
-
-----
+type alias Model = {
+  -- All analysis in use
+  analysis : List Analysis
+}
 
 
 init : (Model, Cmd Msg)
 init =
-  ( { analysis =  [ Analysis 1 "Analysis1" [] ] }
-  , Cmd.none
-  -- , Cmd.batch [ fetchAnalysis, fetchData, ... ]
-  -- or
-  -- fetchAnalysis
-  )
+  let
+    model = { analysis =  [ Analysis 1 "Analysis1" [] ] }
+  in
+    ( 
+      model, 
+      -- Initial fetch of every analysis in model
+      Cmd.batch <| List.map fetchAnalysis model.analysis
+    )
 
 -- Update
 
 type Msg
-   = FetchAnalysis Int
+   = FetchAnalysis Analysis
    | FetchAnalysisSuccess Analysis
    | FetchAnalysisFailure Http.Error
 
@@ -62,8 +64,8 @@ type Msg
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    FetchAnalysis id ->
-      (model, fetchAnalysis id)
+    FetchAnalysis analysis ->
+      (model, fetchAnalysis analysis)
 
     FetchAnalysisSuccess newAnalysis ->
       ({ model | analysis = [ newAnalysis ] }, Cmd.none)
@@ -71,10 +73,10 @@ update msg model =
     FetchAnalysisFailure _ ->
       (model, Cmd.none)
     
-fetchAnalysis : Int -> Cmd Msg
-fetchAnalysis id =
+fetchAnalysis : Analysis -> Cmd Msg
+fetchAnalysis analysis =
   let 
-    url = "http://localhost:5000/analysis/" ++ toString id ++ "/"
+    url = "http://localhost:5000/analysis/" ++ toString analysis.id ++ "/"
   in
     Task.perform FetchAnalysisFailure FetchAnalysisSuccess (Http.get decodeAnalysis url)
 
@@ -119,17 +121,20 @@ subscriptions analysis =
 
 view : Model -> Html Msg
 view model =
-  let
-      analysis = List.head model.analysis
-  in
-     case analysis of 
-         Just x ->
-            div []
-              [ h1 [] [text ("Analysis: " ++ x.name)]
-              , div [] (List.map viewBug x.bugs)
-              ]
-         Nothing ->
-             div [] [ text "Error: no analysis" ]
+
+  -- Display all analysis
+  if List.isEmpty model.analysis then
+    div [class "alert alert-danger"] [ text "Error: no analysis" ]
+  else
+    div [] 
+      (List.map viewAnalysis model.analysis)
+
+viewAnalysis: Analysis -> Html Msg
+viewAnalysis analysis =
+  div []
+    [ h1 [] [text ("Analysis: " ++ analysis.name)]
+    , div [] (List.map viewBug analysis.bugs)
+    ]
 
 
 viewBug: Bug -> Html Msg

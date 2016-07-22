@@ -19,3 +19,6 @@
 /src/relengapi_tools/elm-stuff/
 /src/relengapi_tools/build
 /src/relengapi_tools/node_modules
+/src/shipit_frontend/elm-stuff/
+/src/shipit_frontend/build
+/src/shipit_frontend/node_modules
