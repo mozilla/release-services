@@ -92,7 +92,8 @@ class HtmlHandler(object):
 
 def _get_handler():
     """Get an appropriate handler based on the request"""
-    return HtmlHandler() if utils.is_browser() else JsonHandler()
+    #return HtmlHandler() if utils.is_browser() else JsonHandler()
+    return JsonHandler()
 
 
 def apimethod(return_type, *arg_types, **options):
