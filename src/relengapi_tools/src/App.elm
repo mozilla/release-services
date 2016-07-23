@@ -1,129 +1,61 @@
-port module App exposing (..)
+module App exposing (..)
+
 
 import Dict exposing ( Dict )
-import Html exposing ( Html, div, nav, button, text, a, ul, li, footer, hr )
+import Html exposing (..)
 import Html.App
-import Html.Attributes exposing ( attribute, id, class, type', href, target )
-import Html.Events as Events
+import Html.Attributes exposing (..)
 import Json.Decode as JsonDecode exposing ( (:=) )
 import Navigation exposing ( Location )
 import RouteUrl exposing ( UrlChange )
 import RouteUrl.Builder as Builder exposing ( Builder, builder, replacePath )
 import Result exposing ( Result(Ok, Err))
 
-import App.Home as Home 
+import App.User as User
+import App.Home as Home
 import App.Clobberer as Clobberer
+import App.Utils exposing ( eventLink )
 
 
 
--- TODO:
---   - add NotFound page and redirect to it when route not found
---
+
+-- ROUTING
 
 
 type Page
     = Home
     | Clobberer
 
-type alias UserCertificate =
-    { version : Int
-    , scopes : List String
-    , start : Int
-    , expiry : Int
-    , seed : String
-    , signature : String
-    , issuer : String
-    }
 
-type alias User =
-    { client_id : Maybe String
-    , access_token : Maybe String
-    , certificate : Maybe UserCertificate
-    }
-
-type alias Model =
-    { clobberer : Clobberer.Model
-    , current_page : Page
-    , current_user : Maybe User
-    }
-
-type alias RedirectUrl =
-    { url : String
-    , target : Maybe (String, String)
-    }
-
-type Msg
-    = ShowPage Page
-    | SaveCredentials User
-    | LoadCredentials (Maybe User)
-    | ClearCredentials
-    | Redirect RedirectUrl
-    | ClobbererMsg Clobberer.Msg
-
-
-
-onClick msg =
-    Events.onWithOptions
-        "click"
-        (Events.Options False True)
-        (JsonDecode.succeed msg)
-
-eventLink msg attributes =
-    a ([ onClick <| msg, href "#"  ] ++ attributes)
-
-pageLink page attributes =
-    eventLink (ShowPage page) attributes
+pageLink page = eventLink (ShowPage page)
 
 
 delta2url' : Model -> Model -> Maybe Builder
 delta2url' previous current =
-    case current.current_page of
+    case current.currentPage of
         Clobberer ->
             Maybe.map
                 (Builder.prependToPath ["clobberer"])
                 (Just builder)
-        _ ->
+        Home ->
             Maybe.map
                 (Builder.prependToPath [])
                 (Just builder)
+        -- TODO: we currently redirect to Home but we should redirect to
+        --       notfound page
+        --NotFound ->
+        --    Maybe.map
+        --        (Builder.prependToPath ["404"])
+        --        (Just builder)
 
 delta2url : Model -> Model -> Maybe UrlChange
 delta2url previous current =
-    let
-        log' = Debug.log "DELTA2URL (PREVIOUS)" previous
-        log = Debug.log "DELTA2URL(CURRENT)" current
-    in
-    Maybe.map Builder.toUrlChange <| delta2url' previous current
+    Maybe.map Builder.toUrlChange <| delta2url'
+        (Debug.log "DELTA2URL (PREVIOUS)" previous)
+        (Debug.log "DELTA2URL  (CURRENT)" current)
 
 
-services =
-    [ { page = Clobberer
-      , title = "Clobberer"
-      }
-    ]
 
-
-decodeUserCertificate : String -> Result String UserCertificate
-decodeUserCertificate text =
-    JsonDecode.decodeString
-        (JsonDecode.object7 UserCertificate
-            ( "version"     := JsonDecode.int )
-            ( "scopes"      := JsonDecode.list JsonDecode.string )
-            ( "start"       := JsonDecode.int )
-            ( "expiry"      := JsonDecode.int )
-            ( "seed"        := JsonDecode.string )
-            ( "signature"   := JsonDecode.string )
-            ( "issuer"      := JsonDecode.string )
-        ) text
-
-convertQueryToUser : Dict String String -> User
-convertQueryToUser query =
-    User (Dict.get "clientId" query)
-         (Dict.get "accessToken" query)
-         (case Dict.get "certificate" query of
-             Just certificate -> Result.toMaybe <| decodeUserCertificate certificate
-             Nothing -> Nothing
-         )
 
 location2messages' : Builder -> List Msg
 location2messages' builder =
@@ -137,11 +69,16 @@ location2messages' builder =
             in
                 case first of
                     "login" ->
-                        [ SaveCredentials (convertQueryToUser <| Builder.query builder),
-                          ShowPage Home
+                        [ 
+                          Builder.query builder
+                              |> User.convertUrlQueryToModel
+                              |> User.LoggingIn
+                              |> UserMsg
+                        , ShowPage Home
                         ]
                     "clobberer" ->
-                        [ ShowPage Clobberer ] --:: List.map ClobbererMsg ( Clobberer.location2messages builder' )
+                        [ ShowPage Clobberer ]
+                    -- TODO: This should redirect to NotFound
                     _ ->
                         [ ShowPage Home ]
         _ ->
@@ -149,61 +86,100 @@ location2messages' builder =
 
 location2messages : Location -> List Msg
 location2messages location =
-    let
-        log = Debug.log "LOCATION2MESSAGES (LOCATION)" location
-    in
-    location2messages' (Builder.fromUrl location.href)
+    location2messages'
+        <| Builder.fromUrl (Debug.log "LOCATION2MESSAGES (LOCATION)" location).href
 
-type alias Flags = { user : Maybe User }
+
+
+-- MODEL / INIT
+
+
+type alias Model =
+    { currentPage : Page
+    , currentUser : Maybe User.Model
+    , clobberer : Clobberer.Model
+    , clobbererUrl : String
+    }
+
+type alias Flags =
+    { user : Maybe User.Model
+    , clobbererUrl : String
+    }
+
 
 init : Flags -> (Model, Cmd Msg)
 init flags =
-    ( { clobberer = fst Clobberer.init
-      , current_page = Home 
-      , current_user = 
-          case flags.user of
-              Just user -> Just (User user.client_id user.access_token user.certificate)
-              Nothing -> Nothing
-
+    ( { clobberer = Clobberer.init
+      , clobbererUrl = flags.clobbererUrl
+      , currentPage = Home
+      , currentUser = flags.user
       }
     , Cmd.none
     )
 
 
-update : Msg -> Model -> (Model, Cmd Msg)
-update msg model =
-    let
-        log' = Debug.log "UPDATE (MSG)" msg
-        log = Debug.log "UPDATE (MODEL)" model 
-    in
-    case msg of
-        Redirect url ->
-            ( model, redirect url )
-        ShowPage page ->
-            case page of
-                Clobberer ->
-                    ( { model | current_page = page
-                              , clobberer =  fst Clobberer.init
-                      }
-                    , Cmd.map ClobbererMsg <| snd Clobberer.init
-                    )
-                _ ->
-                    ( { model | current_page = page }, Cmd.none )
-        ClobbererMsg msg' ->
+-- UPDATE
+
+
+type Msg
+    = ShowPage Page
+    | UserMsg User.Msg
+    | ClobbererMsg Clobberer.Msg
+
+
+updatePage model page =
+    case page of
+        Clobberer ->
             let
-                (newModel, newCmd) = Clobberer.update msg' model.clobberer
+                clobberer = Clobberer.initPage
+                    model.clobbererUrl model.clobberer
             in
-                ( { model | clobberer = newModel }, Cmd.map ClobbererMsg newCmd )
-        SaveCredentials user ->
-            ( model, save_credentials user )
-        LoadCredentials user ->
-            ( { model | current_user = user }, Cmd.none )
-        ClearCredentials ->
-            ( { model | current_user = Nothing }, clear_credentials "")
+                ( { model | currentPage = page
+                          , clobberer = fst clobberer
+                  }
+                , Cmd.map ClobbererMsg <| snd clobberer
+                )
+        _ ->
+            ( { model | currentPage = page }, Cmd.none )
+
+
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg' model =
+    let
+        log1 = Debug.log "UPDATE   (MSG)" msg'
+        log2 = Debug.log "UPDATE (MODEL)" model
+    in
+        case msg' of
+            ShowPage page -> updatePage model page
+            ClobbererMsg msg ->
+                let
+                    (newModel, newCmd) = Clobberer.update msg model.clobberer
+                in
+                    ( { model | clobberer = newModel }
+                    , Cmd.map ClobbererMsg newCmd
+                    )
+            UserMsg msg -> 
+                let
+                    (newModel, newCmd) = User.update msg model.currentUser
+                in
+                    ( { model | currentUser = newModel }
+                    , Cmd.map UserMsg newCmd
+                    )
+
+
+-- VIEW
+-- XXX: maybe we want to have this in separate file (eg. App/Layout.elm)
+
+
+services =
+    [ { page = Clobberer
+      , title = "Clobberer"
+      }
+    ]
 
 
 viewPage model =
-    case model.current_page of
+    case model.currentPage of
         Home ->
             Home.view model
         Clobberer ->
@@ -227,29 +203,32 @@ viewDropdown title pages =
     ]
 
 viewUser model =
-    case model.current_user of
+    case model.currentUser of
         Just user ->
-            viewDropdown (Maybe.withDefault "UNKNOWN" user.client_id )
+            viewDropdown (Maybe.withDefault "UNKNOWN" user.clientId )
                     [ a [ class "dropdown-item"
                         , href "https://tools.taskcluster.net/credentials"
                         , target "_blank"
                         ]
                         [ text "Manage credentials" ]
-                    , eventLink ClearCredentials
+                    , eventLink (UserMsg User.Logout)
                                 [ class "dropdown-item" ]
                                 [ text "Logout" ]
                     ]
         Nothing ->
-            [ eventLink
-                  ( Redirect
-                      ( RedirectUrl "https://login.taskcluster.net"
-                          ( Just ( "/login", "RelengAPI is a collection of Release Engineering services" )
-                          )
-                      )
-                  )
-                  [ class "nav-link" ]
-                  [ text "Login" ]
-            ]
+            let
+                loginTarget =
+                    Just ( "/login"
+                         , "RelengAPI is a collection of Release Engineering services"
+                         )
+                loginUrl =
+                    { url = "https://login.taskcluster.net"
+                    , target = loginTarget
+                    }
+                loginMsg = UserMsg <| User.Login loginUrl
+            in
+                [ eventLink loginMsg [ class "nav-link" ] [ text "Login" ]
+                ]
 
 
 viewNavBar model =
@@ -274,19 +253,18 @@ viewNavBar model =
 
 viewFooter =
     [ hr [] []
-    , ul [] 
+    , ul []
          [ li [] [ a [ href "#" ] [ text "Github" ]]
          , li [] [ a [ href "#" ] [ text "Contribute" ]]
          , li [] [ a [ href "#" ] [ text "Contact" ]]
          -- TODO: add version / revision
          ]
-
     ]
 
 view : Model -> Html Msg
 view model =
     let
-        log = Debug.log "VIEW (MODEL)" model 
+        log = Debug.log "VIEW (MODEL)" model
         log' = Debug.log "LOCATION" (builder)
     in
     div []
@@ -298,13 +276,12 @@ view model =
         ]
 
 
-port load_credentials : (Maybe User -> msg) -> Sub msg
+
+-- SUBSCRIPTIONS
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    load_credentials LoadCredentials
-
-
-port redirect : RedirectUrl -> Cmd msg
-port save_credentials : User -> Cmd msg
-port clear_credentials : String -> Cmd msg
+    Sub.batch
+    [ Sub.map UserMsg (User.localstorage_get (User.LoggedIn))
+    ]

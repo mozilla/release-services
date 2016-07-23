@@ -2,7 +2,8 @@ module App.Clobberer exposing (..)
 
 import Dict exposing ( Dict )
 import Focus exposing ( set, create, Focus, (=>) )
-import Html exposing ( Html, div, text )
+import Html exposing (..)
+import Html.Attributes exposing (..)
 import Http
 import Json.Decode as JsonDecode exposing ( (:=) )
 import RemoteData as RemoteData exposing ( WebData, RemoteData(Loading) )
@@ -12,50 +13,80 @@ import Task exposing ( Task )
 
 -- TYPES
 
-type Msg
-    = FetchData (WebData DataItems)
-
-type alias DataItem =
+type alias BackendItem =
     { name : String
     , data : Dict String (List String)
     }
 
-type alias DataItems = List DataItem
+type alias BackendData = List BackendItem
 
-type alias Model' =
-    { data : WebData DataItems
+type alias ModelBackend =
+    { title : String
+    , data : WebData BackendData
     }
 
 type alias Model =
-    { buildbot : Model'
-    --, taskcluster : Model'
+    { baseUrl : String
+    , buildbot : ModelBackend
+    , taskcluster : ModelBackend
     }
-type Clobberer
-    = Buildbot
-    --| Taskcluster
+
+type Backend 
+    = BuildbotBackend
+    | TaskclusterBackend
+
+
+type Msg
+    = FetchData (WebData BackendData)
 
 
 -- API
 
+viewBackend : ModelBackend -> Html Msg
+viewBackend backend =
+    div [] [ text (toString backend) ]
+
 view : Model -> Html Msg
 view model =
-    div [] [ text (toString model) ]
+    div [] 
+        [ h1 [] [ text "Clobberer" ]
+        , p [] [ text "A repairer of buildbot builders and taskcluster worker types." ]
+        , p [] [ text "TODO: link to documentation" ]
+        , div [ class "row" ]
+              [ div [ class "col-md-6" ]
+                    [ h2 [] [ text "Taskcluster" ]
+                    , viewBackend model.taskcluster
+                    ]
+              , div [ class "col-md-6" ]
+                    [ h2 [] [ text "Clobberer" ]
+                    , viewBackend model.taskcluster
+                    ]
+              ]
+        ]
 
 
-init' : Clobberer -> Model'
-init' clobberer =
-    case clobberer of
-        Buildbot ->
-            { data = Loading }
-        --Taskcluster ->
-        --    { data = "taskcluster" }
+initBackend : String -> ModelBackend
+initBackend title  =
+    { title = title
+    , data = Loading
+    }
 
-init : (Model, Cmd Msg)
+init : Model
 init =
-    ( { buildbot = init' Buildbot
-      --, taskcluster = init' Taskcluster
+    { buildbot = initBackend "Buildbot"
+    , taskcluster = initBackend "Taskcluster"
+    , baseUrl = "http://127.0.0.1:5500/clobberer"
+    }
+
+initPage : String -> Model -> (Model, Cmd Msg)
+initPage  baseUrl model =
+    ( { buildbot = initBackend "Buildbot"
+      , taskcluster = initBackend "Taskcluster"
+      , baseUrl = baseUrl
       }
-    , Cmd.batch [ fetchData ]
+    , Cmd.batch [ fetchBackend (baseUrl ++ "/buildbot")
+                , fetchBackend (baseUrl ++ "/taskcluster")
+                ]
     )
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -73,22 +104,25 @@ update msg model =
 buildbot : Focus { record | buildbot : a } a
 buildbot = create .buildbot (\f r -> { r | buildbot = f r.buildbot })
 
+taskcluster : Focus { record | taskcluster : a } a
+taskcluster = create .taskcluster (\f r -> { r | taskcluster = f r.taskcluster })
+
 data : Focus { record | data : a } a
 data = create .data (\f r -> { r | data = f r.data })
 
-decodeData : JsonDecode.Decoder (List DataItem)
+decodeData : JsonDecode.Decoder (List BackendItem)
 decodeData =
     JsonDecode.at [ "result" ]
        ( JsonDecode.list
-           ( JsonDecode.object2  DataItem
+           ( JsonDecode.object2  BackendItem
                                  ( "name" := JsonDecode.string )
                                  ( "data" := JsonDecode.dict (JsonDecode.list JsonDecode.string) )
            )
        )
 
-fetchData: Cmd Msg
-fetchData =
-    Http.get decodeData "http://127.0.0.1:8000/__api__/clobberer/buildbot"
+fetchBackend : String -> Cmd Msg
+fetchBackend  url =
+    Http.get decodeData url
         |> RemoteData.asCmd
         |> Cmd.map FetchData
 
@@ -97,7 +131,7 @@ fetchData =
 
 
 
--- TODO: this should work
+-- TODO: this should work but header is never sent
 getJson : JsonDecode.Decoder value -> String -> Task Http.Error value
 getJson decoder url =
   let request =
