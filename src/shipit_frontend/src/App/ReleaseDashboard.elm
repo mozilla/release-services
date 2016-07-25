@@ -38,23 +38,21 @@ type alias Analysis = {
 
 type alias Model = {
   -- All analysis in use
-  analysis : List (WebData Analysis)
+  analysis : WebData (List Analysis)
 }
 
 type Msg
-   = FetchedAnalysis (WebData Analysis)
+   = FetchedAnalysis (WebData (List Analysis))
 
 
 init : (Model, Cmd Msg)
 init =
   let
-    --model = { analysis =  [ WebData <| Analysis 1 "Analysis1" [] ] }
-    model = {analysis = [] }
+    model = {analysis = NotAsked}
   in
     ( 
       model, 
       -- Initial fetch of every analysis in model
-      --Cmd.batch <| List.map fetchAnalysis model.analysis
       fetchAnalysis
     )
 
@@ -63,30 +61,31 @@ init =
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    FetchedAnalysis newAnalysis ->
+    FetchedAnalysis allAnalysis ->
       (
-        -- Prepend the new Analysis to model
-        { model | analysis = (newAnalysis :: model.analysis)},
+        { model | analysis = allAnalysis },
         Cmd.none
       )
     
 fetchAnalysis : Cmd Msg
 fetchAnalysis =
-  -- Load a single static analysis 
+  -- Load all analysis
   let 
-    url = "http://localhost:5000/analysis/1/"
+    url = "http://localhost:5000/analysis/"
   in
     Http.get decodeAnalysis url
       |> RemoteData.asCmd
       |> Cmd.map FetchedAnalysis
 
 
-decodeAnalysis : Decoder Analysis
+decodeAnalysis : Decoder (List Analysis)
 decodeAnalysis =
-  Json.object3 Analysis
-    ("id" := Json.int)
-    ("name" := Json.string)
-    ("bugs" := Json.list decodeBug)
+  Json.list (
+    Json.object3 Analysis
+      ("id" := Json.int)
+      ("name" := Json.string)
+      ("bugs" := Json.list decodeBug)
+  )
 
 decodeBug : Decoder Bug
 decodeBug =
@@ -122,13 +121,7 @@ subscriptions analysis =
 
 view : Model -> Html Msg
 view model =
-  div []
-    (List.map viewWebAnalysis model.analysis)
-
-
-viewWebAnalysis: WebData Analysis -> Html Msg
-viewWebAnalysis webAnalysis =
-  case webAnalysis of
+  case model.analysis of
     NotAsked ->
       div [class "alert alert-info"] [text "Initialising ..."]
 
@@ -138,8 +131,10 @@ viewWebAnalysis webAnalysis =
     Failure err ->
       div [class "alert alert-danger"] [text ("Error: " ++ toString err)]
 
-    Success analysis ->
-      viewAnalysis analysis
+    Success allAnalysis ->
+      div []
+        (List.map viewAnalysis allAnalysis)
+
 
 viewAnalysis: Analysis -> Html Msg
 viewAnalysis analysis =
