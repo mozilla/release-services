@@ -2,9 +2,9 @@ module App.ReleaseDashboard exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Task
 import Http
 import Json.Decode as Json exposing (Decoder, (:=))
+import RemoteData as RemoteData exposing ( WebData, RemoteData(Loading, Success, NotAsked, Failure) )
 
 
 -- Models
@@ -38,47 +38,48 @@ type alias Analysis = {
 
 type alias Model = {
   -- All analysis in use
-  analysis : List Analysis
+  analysis : List (WebData Analysis)
 }
+
+type Msg
+   = FetchedAnalysis (WebData Analysis)
 
 
 init : (Model, Cmd Msg)
 init =
   let
-    model = { analysis =  [ Analysis 1 "Analysis1" [] ] }
+    --model = { analysis =  [ WebData <| Analysis 1 "Analysis1" [] ] }
+    model = {analysis = [] }
   in
     ( 
       model, 
       -- Initial fetch of every analysis in model
-      Cmd.batch <| List.map fetchAnalysis model.analysis
+      --Cmd.batch <| List.map fetchAnalysis model.analysis
+      fetchAnalysis
     )
 
 -- Update
 
-type Msg
-   = FetchAnalysis Analysis
-   | FetchAnalysisSuccess Analysis
-   | FetchAnalysisFailure Http.Error
-
-
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    FetchAnalysis analysis ->
-      (model, fetchAnalysis analysis)
-
-    FetchAnalysisSuccess newAnalysis ->
-      ({ model | analysis = [ newAnalysis ] }, Cmd.none)
-
-    FetchAnalysisFailure _ ->
-      (model, Cmd.none)
+    FetchedAnalysis newAnalysis ->
+      (
+        -- Prepend the new Analysis to model
+        { model | analysis = (newAnalysis :: model.analysis)},
+        Cmd.none
+      )
     
-fetchAnalysis : Analysis -> Cmd Msg
-fetchAnalysis analysis =
+fetchAnalysis : Cmd Msg
+fetchAnalysis =
+  -- Load a single static analysis 
   let 
-    url = "http://localhost:5000/analysis/" ++ toString analysis.id ++ "/"
+    url = "http://localhost:5000/analysis/1/"
   in
-    Task.perform FetchAnalysisFailure FetchAnalysisSuccess (Http.get decodeAnalysis url)
+    Http.get decodeAnalysis url
+      |> RemoteData.asCmd
+      |> Cmd.map FetchedAnalysis
+
 
 decodeAnalysis : Decoder Analysis
 decodeAnalysis =
@@ -121,13 +122,24 @@ subscriptions analysis =
 
 view : Model -> Html Msg
 view model =
+  div []
+    (List.map viewWebAnalysis model.analysis)
 
-  -- Display all analysis
-  if List.isEmpty model.analysis then
-    div [class "alert alert-danger"] [ text "Error: no analysis" ]
-  else
-    div [] 
-      (List.map viewAnalysis model.analysis)
+
+viewWebAnalysis: WebData Analysis -> Html Msg
+viewWebAnalysis webAnalysis =
+  case webAnalysis of
+    NotAsked ->
+      div [class "alert alert-info"] [text "Initialising ..."]
+
+    Loading ->
+      div [class "alert alert-info"] [text "Loading ..."]
+
+    Failure err ->
+      div [class "alert alert-danger"] [text ("Error: " ++ toString err)]
+
+    Success analysis ->
+      viewAnalysis analysis
 
 viewAnalysis: Analysis -> Html Msg
 viewAnalysis analysis =
