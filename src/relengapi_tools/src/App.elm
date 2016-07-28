@@ -50,18 +50,13 @@ delta2url' previous current =
 
 delta2url : Model -> Model -> Maybe UrlChange
 delta2url previous current =
-    Maybe.map Builder.toUrlChange <| delta2url'
-        (Debug.log "DELTA2URL (PREVIOUS)" previous)
-        (Debug.log "DELTA2URL  (CURRENT)" current)
+    Maybe.map Builder.toUrlChange <| delta2url' previous current
 
 
 
 
 location2messages' : Builder -> List Msg
 location2messages' builder =
-    let
-        log = Debug.log "LOCATION2MESSAGES (PATH)" Builder.path builder
-    in
     case Builder.path builder of
         first :: rest ->
             let
@@ -87,7 +82,7 @@ location2messages' builder =
 location2messages : Location -> List Msg
 location2messages location =
     location2messages'
-        <| Builder.fromUrl (Debug.log "LOCATION2MESSAGES (LOCATION)" location).href
+        <| Builder.fromUrl location.href
 
 
 
@@ -145,26 +140,22 @@ updatePage model page =
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg' model =
-    let
-        log1 = Debug.log "UPDATE   (MSG)" msg'
-        log2 = Debug.log "UPDATE (MODEL)" model
-    in
-        case msg' of
-            ShowPage page -> updatePage model page
-            ClobbererMsg msg ->
-                let
-                    (newModel, newCmd) = Clobberer.update msg model.clobberer
-                in
-                    ( { model | clobberer = newModel }
-                    , Cmd.map ClobbererMsg newCmd
-                    )
-            UserMsg msg -> 
-                let
-                    (newModel, newCmd) = User.update msg model.currentUser
-                in
-                    ( { model | currentUser = newModel }
-                    , Cmd.map UserMsg newCmd
-                    )
+    case msg' of
+        ShowPage page -> updatePage model page
+        ClobbererMsg msg ->
+            let
+                (newModel, newCmd) = Clobberer.update msg model.clobberer
+            in
+                ( { model | clobberer = newModel }
+                , Cmd.map ClobbererMsg newCmd
+                )
+        UserMsg msg -> 
+            let
+                (newModel, newCmd) = User.update msg model.currentUser
+            in
+                ( { model | currentUser = newModel }
+                , Cmd.map UserMsg newCmd
+                )
 
 
 -- VIEW
@@ -263,10 +254,6 @@ viewFooter =
 
 view : Model -> Html Msg
 view model =
-    let
-        log = Debug.log "VIEW (MODEL)" model
-        log' = Debug.log "LOCATION" (builder)
-    in
     div []
         [ nav [ id "navbar", class "navbar navbar-full navbar-light" ]
               [ div [ class "container" ] ( viewNavBar model ) ]

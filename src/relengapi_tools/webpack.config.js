@@ -12,4 +12,6 @@ config.module.loaders.push({
 
 config.module.noParse = ELM_EXT;
 
+config.devServer.https = true;
+
 module.exports = config;
