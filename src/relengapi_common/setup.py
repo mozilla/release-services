@@ -6,39 +6,27 @@ from __future__ import absolute_import
 
 import os
 
-from setuptools import find_packages
-from setuptools import setup
+from setuptools import find_packages, setup
+
 
 here = os.path.dirname(__file__)
 
+with open(os.path.join(here, 'VERSION')) as f:
+    version = f.read().strip()
+
+with open(os.path.join(here, 'requirements.txt')) as f:
+    install_requires = f.read().strip().split('\n')
+
+
 setup(
     name='relengapi_common',
-    version=open(os.path.join(here, 'VERSION')).read().strip(),
+    version=version,
     description='Common code for all services behind '
                 'https://mozilla-releng.net',
-    author='Rok Garbas',
-    author_email='rgarbas@mozilla.com',
+    author='Mozilla Release Engineering',
+    author_email='release@mozilla.com',
     url='https://github.com/mozilla/build-relengapi',
-    install_requires=[
-        "Flask",
-        "Flask-Browserid",
-        "Flask-Cache",
-        "Flask-Login>=0.3.0",
-        "blinker",  # required to use flask signals
-        "structlog",
-        "werkzeug",
-        "wrapt",
-        "wsme<0.8.0",  # https://github.com/mozilla/build-relengapi/issues/325
-        "SQLAlchemy>=0.9.4",
-    ],
-    extras_require={
-        'test': [
-            'pytest',
-         ],
-        'ldap': [
-            'python-ldap',
-        ],
-    },
+    install_requires=install_requires,
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,

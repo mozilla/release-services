@@ -16,21 +16,13 @@ setup(
     version=open(os.path.join(here, 'VERSION')).read().strip(),
     description='The code behind https://clobberer.mozilla-releng.net',
     author='Rok Garbas',
-    author_email='rgarbas@mozilla.com',
+    author_email='garbas@mozilla.com',
     url='https://clobberer.mozilla-releng.net',
     install_requires=[
         "relengapi_common",
-        "taskcluster",
     ],
-    extras_require={
-    },
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    entry_points={
-        "console_scripts": [
-            'relengapi = relengapi.cmd:main',
-        ],
-    },
     license='MPL2',
 )

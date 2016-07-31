@@ -4,8 +4,10 @@
 
 from __future__ import absolute_import
 
-from flask_restplus import Api
-
+from flask_cors import CORS
 
 def init_app(app):
-    return Api(app)
+    cors = CORS()
+    cors.init_app(app)
+    return cors
+
