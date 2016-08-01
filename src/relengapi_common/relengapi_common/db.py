@@ -4,11 +4,12 @@
 
 from __future__ import absolute_import
 
-from flask_sqlalchemy import SQLALchemy
+from flask import g
+from flask_sqlalchemy import SQLAlchemy
 
 
 def init_app(app):
-    db = SQLALchemy()
+    db = SQLAlchemy()
     db.init_app(app)
 
     # ensure tables get created

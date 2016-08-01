@@ -28,7 +28,7 @@ def create_app(name, extensions=[], config=None, **kw):
     # load config (settings.py)
     if config:
         app.config.update(**config)
-    elif os.environ.has_key('RELENGAPI_SETTINGS'):  # noqa
+    elif os.environ.get('RELENGAPI_SETTINGS'):  # noqa
         app.config.from_envvar('RELENGAPI_SETTINGS')
     else:
         print ("Using default settings; to configure relengapi, set "
@@ -51,12 +51,12 @@ def create_app(name, extensions=[], config=None, **kw):
     return app
 
 
-def create_tools_app(name, apps):
+def create_apps(name):
     app = create_app(name)
 
-    @app.route('/', defaults=dict(path='index.html'))
-    @app.route('/<path:path>')
-    def root(path):
+    @app.route('/', defaults=dict(path='index.html'), methods=['GET'])
+    @app.route('/<path:path>', methods=['GET'])
+    def index(path):
         base_dir = os.path.abspath(os.path.join(
             os.path.dirname(__file__), '../../relengapi_tools/build'))
         if not os.path.exists(os.path.join(base_dir, path)):

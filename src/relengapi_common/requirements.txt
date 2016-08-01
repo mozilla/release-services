@@ -2,8 +2,8 @@ Flask
 Flask-Cache
 Flask-Cors
 Flask-Login
-flask-marshmallow
 Flask-SQLAlchemy
 Logbook
+flask-restplus
 structlog
 taskcluster

@@ -2,15 +2,13 @@ import os
 
 from werkzeug.serving import run_simple
 from werkzeug.wsgi import DispatcherMiddleware
-from relengapi_common import create_tools_app
+from relengapi_common import create_apps
 
 
 NOAPP = object()
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.environ.get('APP', NOAPP)
-APPS = os.listdir(os.path.join(HERE, 'src'))
-APPS = filter(lambda x: os.path.isfile(os.path.join('src', x, 'requirements.txt')), APPS)  # noqa
-APPS = map(lambda x: x.lstrip('relengapi_'), APPS)
+APPS = ["clobberer"]
 RELENGAPI_SETTINGS = os.path.join(HERE, 'settings.py')
 
 
@@ -23,7 +21,7 @@ if not os.environ.get('RELENGAPI_SETTINGS') and \
 
 if APP == NOAPP:
     apps = {'/__api__/' + app:  getattr(__import__('relengapi_' + app), 'app') for app in APPS}  # noqa
-    app = DispatcherMiddleware(create_tools_app(__name__, APPS), apps)
+    app = DispatcherMiddleware(create_apps(__name__), apps)
     if __name__ == '__main__':
         for app_ in apps.values():
             app_.debug = True

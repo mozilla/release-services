@@ -18,10 +18,6 @@ let
           )
         )
       );
-  buildInputs = []; #builtins.attrValues python.pkgs;
-  propagatedBuildInputs = from_requirements [ ./src/relengapi_common/requirements.txt
-                                              ./src/relengapi_clobberer/requirements.txt
-                                            ];
   srcs = [
     "./src/relengapi_common"
     "./src/relengapi_clobberer"
@@ -33,7 +29,10 @@ in python.mkDerivation {
   srcs = if pkgs.lib.inNixShell then null else [ ./src/relengapi_common
                                                  ./src/relengapi_clobberer
                                                ];
-  inherit buildInputs propagatedBuildInputs;
+  buildInputs = builtins.filter (x: ! builtins.isFunction x) (builtins.attrValues python.pkgs);
+  propagatedBuildInputs = from_requirements [ ./src/relengapi_common/requirements.txt
+                                              ./src/relengapi_clobberer/requirements.txt
+                                            ];
   patchPhase = ''
     for i in ./*; do
       if [ -d $i ]; then
@@ -43,6 +42,8 @@ in python.mkDerivation {
     done
   '';
   shellHook = ''
+    alias python=`which python3`
+
     export CACHE_DEFAULT_TIMEOUT=3600
     export CACHE_TYPE=filesystem
     export CACHE_DIR=$TMPDIR/clobberer
