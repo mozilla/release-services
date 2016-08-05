@@ -10,10 +10,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.environ.get('APP', NOAPP)
 RELENGAPI_SETTINGS = os.path.join(HERE, 'settings.py')
 
-APPS = [
-    'relengapi_clobberer',
-    'shipit',
-]
+APPS = []
+NOT_APPS = ['relengapi_common']
+
+for app in os.listdir(os.path.join(HERE, 'src')):
+    if os.path.isdir(os.path.join(HERE, 'src', app)) and \
+       os.path.isfile(os.path.join(HERE, 'src', app, 'setup.py')) and \
+       app not in NOT_APPS:
+        APPS.append(app)
 
 if not os.environ.get('RELENGAPI_SETTINGS') and \
         os.path.isfile(RELENGAPI_SETTINGS):
@@ -23,15 +27,23 @@ if not os.environ.get('RELENGAPI_SETTINGS') and \
 
 
 if APP == NOAPP:
-    apps = {
-        '/__api__/' + ('/'.join(app.split('_'))):
-            getattr(__import__(app), 'app')
-        for app in APPS
-    }
+
+    apps = {}
+    for app_name in APPS:
+        app_path = '/__api__/' + ('/'.join(app_name.split('_')))
+        app = getattr(__import__(app_name), 'app')
+
+        print('Serving "{}" on: {}'.format(app_name, app_path))
+
+        apps[app_path] = app
+        os.environ['{}_BASE_URL'.format(app_name.upper())] = \
+            'http://localhost:5000' + app_path
+
     app = DispatcherMiddleware(create_apps(__name__), apps)
     if __name__ == '__main__':
         for app_ in apps.values():
             app_.debug = True
+
 else:
     app = getattr(__import__('relengapi_' + APP), 'app')
 

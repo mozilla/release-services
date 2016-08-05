@@ -11,10 +11,11 @@ from relengapi_common import create_app, db
 
 here = os.path.dirname(__file__)
 
+
 def init_app(app):
     app.api.register(
         os.path.join(here, "swagger.yml"),
-        base_url=app.config.get('CLOBBERER_BASE_URL'),
+        base_url=app.config['SWAGGER_BASE_URL']['relengapi_clobberer'],
     )
 
 app = create_app(__name__, [db, init_app])
