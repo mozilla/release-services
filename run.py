@@ -24,7 +24,8 @@ if not os.environ.get('RELENGAPI_SETTINGS') and \
 
 if APP == NOAPP:
     apps = {
-        '/__api__/' + app:  getattr(__import__(app), 'app')
+        '/__api__/' + ('/'.join(app.split('_'))):
+            getattr(__import__(app), 'app')
         for app in APPS
     }
     app = DispatcherMiddleware(create_apps(__name__), apps)
