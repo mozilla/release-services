@@ -2,14 +2,25 @@
 
 self: super: {
 
-  "flask-restplus" = python.overrideDerivation super."flask-restplus" (old: {
-    # https://github.com/noirbizarre/flask-restplus/pull/165
-    name = "flask-restplus-0.9.3.dev5d20449e";
-    src = pkgs.fetchFromGitHub {
-      owner = "stevezau";
-      repo = "flask-restplus";
-      rev = "5d20449ef13a3d3d3051438fc408534a6bb9362f";
-      sha256= "0f1z7qiq556vn60yr75kx4s2whf5qazvk2b4na887fnwlpa2c9q3";
-    };
+  "connexion" = python.overrideDerivation super."connexion" (old: {
+    # TODO: report this upstream
+    patchPhase = ''
+      sed -i -e "s|long_description=open('README.rst').read(),|long_description=\"\",|" setup.py
+      sed -i -e "s|base_url or self.base_url|\'\'|" connexion/api.py
+    '';
   });
+
+  "flake8" = python.overrideDerivation super."flake8" (old: {
+    buildInputs = old.buildInputs ++ [ self."pytest-runner" ];
+  });
+
+  "mccabe" = python.overrideDerivation super."mccabe" (old: {
+    buildInputs = old.buildInputs ++ [ self."pytest-runner" ];
+  });
+
+
+  "pytest-runner" = python.overrideDerivation super."pytest-runner" (old: {
+    buildInputs = old.buildInputs ++ [ self."setuptools-scm" ];
+  });
+
 }

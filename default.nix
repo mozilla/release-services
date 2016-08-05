@@ -21,14 +21,13 @@ let
   srcs = [
     "./src/relengapi_common"
     "./src/relengapi_clobberer"
+    "./src/shipit"
   ];
 
 in python.mkDerivation {
   name = "relengapi-${version}";
   tracePhases = true;
-  srcs = if pkgs.lib.inNixShell then null else [ ./src/relengapi_common
-                                                 ./src/relengapi_clobberer
-                                               ];
+  srcs = if pkgs.lib.inNixShell then null else (map (x: ./. + ("/" + x)) srcs);
   buildInputs = builtins.filter (x: ! builtins.isFunction x) (builtins.attrValues python.pkgs);
   propagatedBuildInputs = from_requirements [ ./src/relengapi_common/requirements.txt
                                               ./src/relengapi_clobberer/requirements.txt

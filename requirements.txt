@@ -1,2 +1,3 @@
 -e ./src/relengapi_common/
 -e ./src/relengapi_clobberer/
+-e ./src/shipit/

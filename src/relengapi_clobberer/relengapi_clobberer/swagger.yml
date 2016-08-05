@@ -1,0 +1,91 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "Clobberer"
+paths:
+
+  /buildbot:
+
+    get:
+      operationId: "relengapi_clobberer.api.get_buildbot"
+      responses:
+        200:
+          description: An array of branches
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Branch'
+
+    post:
+      operationId: "relengapi_clobberer.api.post_buildbot"
+      responses:
+        200:
+          description: Branches clobbered
+
+
+  /taskcluster:
+
+    get:
+      operationId: "relengapi_clobberer.api.get_taskcluster"
+      responses:
+        200:
+          description: An array of branches
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Branch'
+
+    post:
+      operationId: "relengapi_clobberer.api.post_taskcluster"
+      responses:
+        200:
+          description: Branches clobbered
+
+definitions:
+
+  BuildTime:
+    type: object
+    description: Definition of a BuildTime
+    required:
+      - lastclobber
+    properties:
+      branch:
+        type: string
+      builddir:
+        type: string
+      lastclobber:
+        type: integer
+      who:
+        type: string
+
+  Builder:
+    type: object
+    description: Definition of a WorkerType
+    required:
+      - name
+      - build_times
+    properties:
+      name:
+        type: string
+        description: Name of WorkerType
+      build_times:
+        type: array
+        description: Build times
+        items:
+          $ref: '#/definitions/BuildTime'
+
+  Branch:
+    type: object
+    description: Definition of a Branch
+    required:
+      - name
+      - builders
+    properties:
+      name:
+        type: string
+        description: Name of Branch
+      builders:
+        type: array
+        items:
+          $ref: '#/definitions/Builder'

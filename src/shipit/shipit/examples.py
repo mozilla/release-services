@@ -122,7 +122,7 @@ def transition(input_schema, success_schema, error_schema):
 @transition('schemas/input.json',
             success='schemas/output.json',
             error='schemas/error.json')
-def check_for_existing_revision(input_):
+Sdef check_for_existing_revision(input_):
     success = check(input_['rev'], input_['repo'])
 
     if success
@@ -223,5 +223,27 @@ def check_for_existing_revision(input_):
         }
    }
 }
+"""
+
+
+"""
+terminology
+- unidirectional workflow
+- uniflow
+
+- train
+- trainstop
+- traincargo
+
+"""
+
+
+"""
+TODO:
+
+- working together on the first task
+    using tests to input data.
+
+- another 2 tasks separatly
 """
 

@@ -20,7 +20,6 @@ setup(
     url='https://ship-it.mozilla-releng.net',
     install_requires=[
         "relengapi_common",
-        "taskcluster",
     ],
     extras_require={
     },
@@ -34,4 +33,3 @@ setup(
     },
     license='MPL2',
 )
-

@@ -1,4 +1,4 @@
-# generated using pypi2nix tool (version: 1.4.0dev)
+# generated using pypi2nix tool (version: 1.4.0.dev0)
 #
 # COMMAND:
 #   pypi2nix -V 3.5 -r requirements.txt -r requirements-prod.txt -r requirements-dev.txt -E postgresql
@@ -27,7 +27,6 @@ self: {
       license = licenses.bsdOriginal;
       description = "A microframework based on Werkzeug, Jinja2 and good intentions";
     };
-    passthru.top_level = false;
   };
 
 
@@ -48,7 +47,6 @@ self: {
       license = licenses.bsdOriginal;
       description = "Adds cache support to your Flask application";
     };
-    passthru.top_level = false;
   };
 
 
@@ -70,7 +68,6 @@ self: {
       license = licenses.mit;
       description = "A Flask extension adding a decorator for CORS support";
     };
-    passthru.top_level = false;
   };
 
 
@@ -91,7 +88,6 @@ self: {
       license = licenses.mit;
       description = "User session management for Flask";
     };
-    passthru.top_level = false;
   };
 
 
@@ -113,7 +109,6 @@ self: {
       license = licenses.bsdOriginal;
       description = "Adds SQLAlchemy support to your Flask application";
     };
-    passthru.top_level = false;
   };
 
 
@@ -134,7 +129,6 @@ self: {
       license = licenses.bsdOriginal;
       description = "A small but fast and easy to use stand-alone template engine written in pure python.";
     };
-    passthru.top_level = false;
   };
 
 
@@ -157,7 +151,6 @@ self: {
       license = licenses.bsdOriginal;
       description = "A logging replacement for Python";
     };
-    passthru.top_level = false;
   };
 
 
@@ -176,7 +169,24 @@ self: {
       license = licenses.bsdOriginal;
       description = "Implements a XML/HTML/XHTML Markup safe string for Python";
     };
-    passthru.top_level = false;
+  };
+
+
+
+  "PyYAML" = python.mkDerivation {
+    name = "PyYAML-3.11";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/75/5e/b84feba55e20f8da46ead76f14a3943c8cb722d40360702b2365b91dec00/PyYAML-3.11.tar.gz";
+      sha256= "c36c938a872e5ff494938b33b14aaa156cb439ec67548fcab3535bb78b0846e8";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "YAML parser and emitter for Python";
+    };
   };
 
 
@@ -195,7 +205,6 @@ self: {
       license = licenses.bsdOriginal;
       description = "Pygments is a syntax highlighting package written in Python.";
     };
-    passthru.top_level = false;
   };
 
 
@@ -214,7 +223,6 @@ self: {
       license = licenses.mit;
       description = "Database Abstraction Library";
     };
-    passthru.top_level = false;
   };
 
 
@@ -233,16 +241,15 @@ self: {
       license = licenses.bsdOriginal;
       description = "The Swiss Army knife of Python web development";
     };
-    passthru.top_level = false;
   };
 
 
 
   "aiohttp" = python.mkDerivation {
-    name = "aiohttp-0.22.4";
+    name = "aiohttp-0.22.5";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/b0/db/f9c64d2c7e84fe333cc0360c9f5e3433f202021ed2cd66ae9c700b55c9bc/aiohttp-0.22.4.tar.gz";
-      sha256= "167ec7373a3319419834e6c61846b7267c5fc6748b9dd2504b7e9378b55afcdd";
+      url = "https://pypi.python.org/packages/55/9d/38fb3cb174f4723b50a3f0593e18a51418c9a73a7857fdcaee46b83ff1c4/aiohttp-0.22.5.tar.gz";
+      sha256= "9c51af030c866f91e18a219614e39d345db4483ed9860389d0536d74d04b0d3b";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -252,31 +259,9 @@ self: {
     ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
-      license = "Apache 2";
+      license = licenses.asl20;
       description = "http client/server for asyncio";
     };
-    passthru.top_level = false;
-  };
-
-
-
-  "aniso8601" = python.mkDerivation {
-    name = "aniso8601-1.1.0";
-    src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/66/f3/e0f17c6a2cb8d46055123d85368d86679e08ed06f16eb3ccb83f5adbbbcb/aniso8601-1.1.0.tar.gz";
-      sha256= "4fc462db59811f541bc25d865b86367153d8ce773ae75b16d54e2e1cd393b5cc";
-    };
-    doCheck = commonDoCheck;
-    buildInputs = commonBuildInputs;
-    propagatedBuildInputs = [
-      self."python-dateutil"
-    ];
-    meta = with pkgs.stdenv.lib; {
-      homepage = "";
-      license = "";
-      description = "A library for parsing ISO 8601 strings.";
-    };
-    passthru.top_level = false;
   };
 
 
@@ -292,10 +277,9 @@ self: {
     propagatedBuildInputs = [ ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
-      license = "LGPL";
+      license = licenses.lgpl2;
       description = "Universal encoding detector for Python 2 and 3";
     };
-    passthru.top_level = false;
   };
 
 
@@ -311,10 +295,35 @@ self: {
     propagatedBuildInputs = [ ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
-      license = "";
+      license = licenses.bsdOriginal;
       description = "A simple wrapper around optparse for powerful command line utilities.";
     };
-    passthru.top_level = false;
+  };
+
+
+
+  "connexion" = python.mkDerivation {
+    name = "connexion-1.0.109";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/7e/cf/818a9784400c6eaf9e8f6b81b875b9ed0394f2b2e96f0e48ced4574a93ed/connexion-1.0.109.tar.gz";
+      sha256= "b6d2b320020258fbc3adf21c7ecec25431bd6e93c4f085081fab4b37e821066a";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."Flask"
+      self."PyYAML"
+      self."jsonschema"
+      self."requests"
+      self."six"
+      self."strict-rfc3339"
+      self."swagger-spec-validator"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = "Apache License Version 2.0";
+      description = "Connexion - API first applications with OpenAPI/Swagger and Flask";
+    };
   };
 
 
@@ -330,58 +339,31 @@ self: {
     propagatedBuildInputs = [ ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
-      license = "new BSD License";
+      license = licenses.bsdOriginal;
       description = "Better living through Python with decorators";
     };
-    passthru.top_level = false;
   };
 
 
 
-  "flask-marshmallow" = python.mkDerivation {
-    name = "flask-marshmallow-0.7.0";
+  "flake8" = python.mkDerivation {
+    name = "flake8-3.0.3";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/6d/ac/d7efffdbc19daf28a39bf3aefae3796ed608600bbb6b02281c6cfd82d8de/flask-marshmallow-0.7.0.tar.gz";
-      sha256= "83e2a3bb767a97db63c23a84345430cd3fda51615e7e99131a6b313295f6b7f0";
+      url = "https://pypi.python.org/packages/e2/dd/cf299399dec65eed186509d625760195938e83d3bcf78f47d443d58aff7d/flake8-3.0.3.tar.gz";
+      sha256= "fa8ebbdc9a78991af150b86cd0e3377361586ce7d1fed0079f0077f2ada227ec";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
-      self."Flask"
-      self."marshmallow"
-      self."six"
-    ];
-    meta = with pkgs.stdenv.lib; {
-      homepage = "";
-      license = "Copyright 2014-2016 Steven Loria and contributors";
-      description = "Flask + marshmallow for beautiful APIs";
-    };
-    passthru.top_level = false;
-  };
-
-
-
-  "flask-restplus" = python.mkDerivation {
-    name = "flask-restplus-0.9.2";
-    src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/9b/9d/a4a5a0a9aa777a8c9e6544cfcdea717a63a657f14e24d10b4070312d288f/flask-restplus-0.9.2.tar.gz";
-      sha256= "c4313097a673ef2cffabceb44b6fdd03132ee5e7ab34d0289c37af12a3d11186";
-    };
-    doCheck = commonDoCheck;
-    buildInputs = commonBuildInputs;
-    propagatedBuildInputs = [
-      self."Flask"
-      self."aniso8601"
-      self."jsonschema"
-      self."pytz"
-      self."six"
+      self."mccabe"
+      self."pycodestyle"
+      self."pyflakes"
     ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
       license = licenses.mit;
-      description = "Fully featured framework for fast, easy and documented API development with Flask";
+      description = "the modular source code checker: pep8, pyflakes and co";
     };
-    passthru.top_level = false;
   };
 
 
@@ -400,7 +382,6 @@ self: {
       license = licenses.mit;
       description = "WSGI HTTP Server for UNIX";
     };
-    passthru.top_level = false;
   };
 
 
@@ -421,7 +402,6 @@ self: {
       license = licenses.bsdOriginal;
       description = "IPython-enabled pdb";
     };
-    passthru.top_level = false;
   };
 
 
@@ -449,7 +429,6 @@ self: {
       license = licenses.bsdOriginal;
       description = "IPython: Productive Interactive Computing";
     };
-    passthru.top_level = false;
   };
 
 
@@ -468,7 +447,6 @@ self: {
       license = licenses.bsdOriginal;
       description = "Vestigial utilities from IPython";
     };
-    passthru.top_level = false;
   };
 
 
@@ -484,10 +462,9 @@ self: {
     propagatedBuildInputs = [ ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
-      license = "";
+      license = licenses.bsdOriginal;
       description = "Various helpers to pass trusted data to untrusted environments and back.";
     };
-    passthru.top_level = false;
   };
 
 
@@ -500,34 +477,32 @@ self: {
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
-    propagatedBuildInputs = [ ];
+    propagatedBuildInputs = [
+      self."strict-rfc3339"
+    ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
       license = licenses.mit;
       description = "An implementation of JSON Schema validation for Python";
     };
-    passthru.top_level = false;
   };
 
 
 
-  "marshmallow" = python.mkDerivation {
-    name = "marshmallow-2.9.1";
+  "mccabe" = python.mkDerivation {
+    name = "mccabe-0.5.2";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/86/bc/8858c00703ba9e9dad7d61bf668cd496fd81b0c5c7ecdfc5d41534d38cf2/marshmallow-2.9.1.tar.gz";
-      sha256= "dcee3529deefb037e58d203d81f3629194a1777f3420429e8e26cc070df5bc10";
+      url = "https://pypi.python.org/packages/f1/b7/ff36d1a163079688633a776e1717b5459caccbb68973afab2aa8345ac40f/mccabe-0.5.2.tar.gz";
+      sha256= "3473f06c8b757bbb5cdf295099bf64032e5f7d6fe0ec2f97ee9b23cb0a435aff";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
-    propagatedBuildInputs = [
-      self."python-dateutil"
-    ];
+    propagatedBuildInputs = [ ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
       license = licenses.mit;
-      description = "A lightweight library for converting complex datatypes to and from native Python datatypes.";
+      description = "McCabe checker, plugin for flake8";
     };
-    passthru.top_level = false;
   };
 
 
@@ -545,29 +520,27 @@ self: {
     ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
-      license = "MPL 2.0 (Mozilla Public License)";
+      license = licenses.mpl20;
       description = "Library for Hawk HTTP authorization";
     };
-    passthru.top_level = false;
   };
 
 
 
   "multidict" = python.mkDerivation {
-    name = "multidict-1.2.1";
+    name = "multidict-1.2.2";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/17/46/d0a6bbdee0f32d0b50a632e2bb5ec6fec949cba62d4f645005e506876cf9/multidict-1.2.1.tar.gz";
-      sha256= "633857df51a8a84d9bde49ad905ee9d97fd1d60a6761eeb438b10fed7a7400c8";
+      url = "https://pypi.python.org/packages/fd/5b/3dd32b8e53703ff7a27a72e9a118e7f78c14a171554ec8c99dd4759c4018/multidict-1.2.2.tar.gz";
+      sha256= "2fc5fab0dd14d4b8193bfc003b33aa14e0d0cbc97d51ba58aa5fd52b1cb9a6a3";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [ ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
-      license = "Apache 2";
+      license = licenses.asl20;
       description = "multidict implementation";
     };
-    passthru.top_level = false;
   };
 
 
@@ -583,10 +556,9 @@ self: {
     propagatedBuildInputs = [ ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
-      license = "New Relic License";
+      license = "License :: Other/Proprietary License";
       description = "New Relic Python Agent";
     };
-    passthru.top_level = false;
   };
 
 
@@ -604,10 +576,9 @@ self: {
     ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
-      license = "ISC license";
+      license = licenses.isc;
       description = "Pexpect allows easy control of interactive console applications.";
     };
-    passthru.top_level = false;
   };
 
 
@@ -626,16 +597,15 @@ self: {
       license = licenses.mit;
       description = "Tiny 'shelve'-like database with concurrency support";
     };
-    passthru.top_level = false;
   };
 
 
 
   "prompt-toolkit" = python.mkDerivation {
-    name = "prompt-toolkit-1.0.3";
+    name = "prompt-toolkit-1.0.5";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/8d/de/412f23919929c01e6b55183e124623f705e4b91796d3d2dce2cb53d595ad/prompt_toolkit-1.0.3.tar.gz";
-      sha256= "805e026f0cbad27467e93f9dd3e3777718d401a62788c1e84ca038e967ad8ba2";
+      url = "https://pypi.python.org/packages/c0/d0/dcb9235c812b70f20d8d1ff110f9caa85daf4bf1ec2ac10516f51c07957e/prompt_toolkit-1.0.5.tar.gz";
+      sha256= "b726807349e8158a70773cf6ac2a90f0c62849dd02a339aac910ba1cd882f313";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -645,10 +615,9 @@ self: {
     ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
-      license = "";
+      license = licenses.bsdOriginal;
       description = "Library for building powerful interactive command lines in Python";
     };
-    passthru.top_level = false;
   };
 
 
@@ -664,10 +633,9 @@ self: {
     propagatedBuildInputs = [ ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
-      license = "LGPL with exceptions or ZPL";
+      license = licenses.lgpl2;
       description = "psycopg2 - Python-PostgreSQL Database Adapter";
     };
-    passthru.top_level = false;
   };
 
 
@@ -686,37 +654,15 @@ self: {
       license = "";
       description = "Run a subprocess in a pseudo terminal";
     };
-    passthru.top_level = false;
   };
 
 
 
-  "python-dateutil" = python.mkDerivation {
-    name = "python-dateutil-2.5.3";
+  "pycodestyle" = python.mkDerivation {
+    name = "pycodestyle-2.0.0";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/3e/f5/aad82824b369332a676a90a8c0d1e608b17e740bbb6aeeebca726f17b902/python-dateutil-2.5.3.tar.gz";
-      sha256= "1408fdb07c6a1fa9997567ce3fcee6a337b39a503d80699e0f213de4aa4b32ed";
-    };
-    doCheck = commonDoCheck;
-    buildInputs = commonBuildInputs;
-    propagatedBuildInputs = [
-      self."six"
-    ];
-    meta = with pkgs.stdenv.lib; {
-      homepage = "";
-      license = "Simplified BSD";
-      description = "Extensions to the standard Python datetime module";
-    };
-    passthru.top_level = false;
-  };
-
-
-
-  "pytz" = python.mkDerivation {
-    name = "pytz-2016.6.1";
-    src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/f7/c7/08e54702c74baf9d8f92d0bc331ecabf6d66a56f6d36370f0a672fc6a535/pytz-2016.6.1.tar.bz2";
-      sha256= "b5aff44126cf828537581e534cc94299b223b945a2bb3b5434d37bf8c7f3a10c";
+      url = "https://pypi.python.org/packages/db/b1/9f798e745a4602ab40bf6a9174e1409dcdde6928cf800d3aab96a65b1bbf/pycodestyle-2.0.0.tar.gz";
+      sha256= "37f0420b14630b0eaaf452978f3a6ea4816d787c3e6dcbba6fb255030adae2e7";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -724,9 +670,44 @@ self: {
     meta = with pkgs.stdenv.lib; {
       homepage = "";
       license = licenses.mit;
-      description = "World timezone definitions, modern and historical";
+      description = "Python style guide checker";
     };
-    passthru.top_level = false;
+  };
+
+
+
+  "pyflakes" = python.mkDerivation {
+    name = "pyflakes-1.2.3";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/54/80/6a641f832eb6c6a8f7e151e7087aff7a7c04dd8b4aa6134817942cdda1b6/pyflakes-1.2.3.tar.gz";
+      sha256= "2e4a1b636d8809d8f0a69f341acf15b2e401a3221ede11be439911d23ce2139e";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "passive checker of Python programs";
+    };
+  };
+
+
+
+  "pytest-runner" = python.mkDerivation {
+    name = "pytest-runner-2.9";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/11/d4/c335ddf94463e451109e3494e909765c3e5205787b772e3b25ee8601b86a/pytest-runner-2.9.tar.gz";
+      sha256= "50378de59b02f51f64796d3904dfe71b9dc6f06d88fc6bfbd5c8e8366ae1d131";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "Invoke py.test as distutils command with dependency resolution";
+    };
   };
 
 
@@ -745,7 +726,6 @@ self: {
       license = licenses.mit;
       description = "Python client for Redis key-value store";
     };
-    passthru.top_level = false;
   };
 
 
@@ -764,7 +744,24 @@ self: {
       license = licenses.asl20;
       description = "Python HTTP for Humans.";
     };
-    passthru.top_level = false;
+  };
+
+
+
+  "setuptools-scm" = python.mkDerivation {
+    name = "setuptools-scm-1.11.1";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/84/aa/c693b5d41da513fed3f0ee27f1bf02a303caa75bbdfa5c8cc233a1d778c4/setuptools_scm-1.11.1.tar.gz";
+      sha256= "8c45f738a23410c5276b0ed9294af607f491e4260589f1eb90df8312e23819bf";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "the blessed package to manage your versions by scm tags";
+    };
   };
 
 
@@ -783,7 +780,6 @@ self: {
       license = licenses.zpt21;
       description = "Simple generic functions (similar to Python's own len(), pickle.dump(), etc.)";
     };
-    passthru.top_level = false;
   };
 
 
@@ -802,7 +798,6 @@ self: {
       license = licenses.mit;
       description = "Python 2 and 3 compatibility utilities";
     };
-    passthru.top_level = false;
   };
 
 
@@ -818,10 +813,27 @@ self: {
     propagatedBuildInputs = [ ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
-      license = "MPL 2.0";
+      license = licenses.mpl20;
       description = "Base64 encoded uuid v4 slugs";
     };
-    passthru.top_level = false;
+  };
+
+
+
+  "strict-rfc3339" = python.mkDerivation {
+    name = "strict-rfc3339-0.7";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/56/e4/879ef1dbd6ddea1c77c0078cd59b503368b0456bcca7d063a870ca2119d3/strict-rfc3339-0.7.tar.gz";
+      sha256= "5cad17bedfc3af57b399db0fed32771f18fc54bbd917e85546088607ac5e1277";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.gpl3;
+      description = "Strict, simple, lightweight RFC3339 functions";
+    };
   };
 
 
@@ -839,10 +851,30 @@ self: {
     ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
-      license = "MIT or Apache License, Version 2.0";
+      license = licenses.mit;
       description = "Structured Logging for Python";
     };
-    passthru.top_level = false;
+  };
+
+
+
+  "swagger-spec-validator" = python.mkDerivation {
+    name = "swagger-spec-validator-2.0.2";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/98/79/b3243192c42cf3ce983e76f2bf38b3dc343f594f35dec6ec3793055f50b8/swagger_spec_validator-2.0.2.tar.gz";
+      sha256= "1947d671cac6096eb578d28767209a65e02a4d24081bf6fc605f09ed6ae1d66b";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."jsonschema"
+      self."six"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.asl20;
+      description = "Validation of Swagger specifications";
+    };
   };
 
 
@@ -867,7 +899,6 @@ self: {
       license = "";
       description = "Python client for Taskcluster";
     };
-    passthru.top_level = false;
   };
 
 
@@ -889,7 +920,6 @@ self: {
       license = licenses.bsdOriginal;
       description = "Traitlets Python config system";
     };
-    passthru.top_level = false;
   };
 
 
@@ -908,28 +938,6 @@ self: {
       license = licenses.mit;
       description = "Measures number of Terminal column cells of wide-character codes";
     };
-    passthru.top_level = false;
-  };
-
-
-
-  "webargs" = python.mkDerivation {
-    name = "webargs-1.3.4";
-    src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/cb/94/b123fbcb9dbf598204c6010a8ea2d4bce3e594e4a0b51d7a86e019aadad7/webargs-1.3.4.tar.gz";
-      sha256= "a073a3933d2934a502531e7a692a4e52b54cdd194157442e1832b9c19036b796";
-    };
-    doCheck = commonDoCheck;
-    buildInputs = commonBuildInputs;
-    propagatedBuildInputs = [
-      self."marshmallow"
-    ];
-    meta = with pkgs.stdenv.lib; {
-      homepage = "";
-      license = "Copyright 2014-2016 Steven Loria and contributors";
-      description = "A friendly library for parsing HTTP request arguments, with built-in support for popular web frameworks, including Flask, Django, Bottle, Tornado, Pyramid, webapp2, and Falcon.";
-    };
-    passthru.top_level = false;
   };
 
 }

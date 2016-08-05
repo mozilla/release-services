@@ -20,12 +20,15 @@ if not DATABASE_URL:
     raise Exception("You need to specify DATABASE_URL variable.")
 
 if not CACHE:
-    raise Exception("You need to specify DATABASE_URL variable.")
+    raise Exception("You need to specify CACHE variable.")
 
-SQLALCHEMY_TRACK_MODIFICATIONS = False
-SQLALCHEMY_DATABASE_URIS = dict(
-    clobberer=DATABASE_URL
-)
+SQLALCHEMY_DATABASE_URI = DATABASE_URL
 
 SWAGGER_UI_DOC_EXPANSION = 'list'
 SWAGGER_UI_JSONEDITOR = True
+
+LOG_LEVEL = "DEBUG"
+
+
+CLOBBERER_BASE_URL = os.environ.get('CLOBBERER_BASE_URL', '/__api__/clobberer')
+SHIPIT_BASE_URL = os.environ.get('SHIPIT_BASE_URL', '/__api__/shipit')

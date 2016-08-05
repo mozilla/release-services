@@ -1,0 +1,61 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "Task 1 - Initial submission"
+paths:
+  /:
+    get:
+      responses:
+        200:
+          description: list of all tasks
+  /<uid>:
+
+    put:
+      # for task1
+      # {
+      #   body: { stage0: {...} }
+      # }
+      # for task2:
+      # {
+      #   body: { stage0: {...}, stage1: {...} }
+      # }
+      parameters:
+        - name: body
+          in: body
+          required: true
+          scheme:
+            $ref: '#/definitions/XXX'
+      responses:
+        200:
+          description: Start the task
+          scheme:
+
+            $ref: '#/definitions/XXX'
+        400:
+          description: Extra validation
+          scheme:
+            type: object
+            schema:
+              type:
+                type: string
+              message:
+                type: string
+    post:
+      responses:
+        200:
+          description: Restart of the task
+          schema:
+    delete:
+      responses:
+        200:
+          description: Stop of the task
+    get:
+      responses:
+        200:
+          description: Status of the task
+          schema:
+
+
+definitions:
+
