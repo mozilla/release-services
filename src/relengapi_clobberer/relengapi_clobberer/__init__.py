@@ -4,10 +4,21 @@
 
 from __future__ import absolute_import
 
-from relengapi_common import create_app, db
-from relengapi_clobberer import _app
+import os
 
-app = create_app(__name__, [db, _app])
+from relengapi_common import create_app, db
+
+
+here = os.path.dirname(__file__)
+
+def init_app(app):
+    app.api.register(
+        os.path.join(here, "swagger.yml"),
+        base_url=app.config.get('CLOBBERER_BASE_URL'),
+    )
+
+app = create_app(__name__, [db, init_app])
+
 
 if __name__ == '__main__':
     app.run(debug=True)

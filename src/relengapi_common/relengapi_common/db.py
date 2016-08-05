@@ -8,22 +8,14 @@ from flask import g
 from flask_sqlalchemy import SQLAlchemy
 
 
+db = SQLAlchemy()
+
 def init_app(app):
-    db = SQLAlchemy()
     db.init_app(app)
-
-    # ensure tables get created
-    # TODO: for dbname in db.database_names:
-    # TODO:     app.log.info("creating tables for database %s", dbname)
-
-    # TODO:     meta = db.metadata[dbname]
-    # TODO:     engine = db.engine(dbname)
-    # TODO:     meta.create_all(bind=engine, checkfirst=True)
+    db.create_all(app=app)
 
     @app.before_request
     def setup_request():
         g.db = app.db
 
     return db
-
-

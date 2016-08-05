@@ -19,9 +19,28 @@ paths:
 
     post:
       operationId: "relengapi_clobberer.api.post_buildbot"
+      parameters:
+        - name: body
+          in: body
+          description: List of Builds to clobber.
+          required: true
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Builder'
       responses:
         200:
-          description: Branches clobbered
+          description: Builders clobbered
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Success'
+        500:
+          description: Something went wrong when clobbering builders
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Error'
 
 
   /taskcluster:
@@ -31,10 +50,6 @@ paths:
       responses:
         200:
           description: An array of branches
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Branch'
 
     post:
       operationId: "relengapi_clobberer.api.post_taskcluster"
@@ -44,48 +59,52 @@ paths:
 
 definitions:
 
-  BuildTime:
-    type: object
-    description: Definition of a BuildTime
-    required:
-      - lastclobber
-    properties:
-      branch:
-        type: string
-      builddir:
-        type: string
-      lastclobber:
-        type: integer
-      who:
-        type: string
+  Success:
+    type: string 
 
-  Builder:
+  Error:
     type: object
-    description: Definition of a WorkerType
     required:
-      - name
-      - build_times
+      - error_title
     properties:
-      name:
+      error_title:
         type: string
-        description: Name of WorkerType
-      build_times:
-        type: array
-        description: Build times
-        items:
-          $ref: '#/definitions/BuildTime'
+      error_message:
+        type: string
 
   Branch:
     type: object
-    description: Definition of a Branch
     required:
       - name
       - builders
     properties:
       name:
         type: string
-        description: Name of Branch
       builders:
         type: array
+        description: Builders per branch
         items:
           $ref: '#/definitions/Builder'
+
+  Builder:
+    type: object
+    required:
+      - name
+      - branch
+      - builddir
+      - slave
+      - lastclobber
+      - who
+    properties:
+      name:
+        type: string
+      branch:
+        type: string
+      builddir:
+        type: string
+      slave:
+        type: string
+      lastclobber:
+        type: integer
+      who:
+        type: string

@@ -4,131 +4,61 @@
 
 from __future__ import absolute_import
 
-import taskcluster
-
-from sqlalchemy import and_
-from sqlalchemy import func
-from sqlalchemy import not_
-
-from relengapi_clobberer.models import ClobbererBuilds
-from relengapi_clobberer.models import ClobbererTimes
+from flask import g, current_app
+from relengapi_clobberer import models
 
 
-BUILDBOT_BUILDDIR_REL_PREFIX = 'rel-'
-BUILDBOT_BUILDER_REL_PREFIX = 'release-'
-TASKCLUSTER_DECISION_NAMESPACE = 'gecko.v2.%s.latest.firefox.decision'
+def get_buildbot():
+    return models.buildbot_branches(g.db.session)
 
 
-def buildbot_branches(session):
-    """List of all buildbot branches.
-    """
+def post_buildbot(body):
+    result = []
 
-    branches = session.query(ClobbererBuilds.branch).distinct()
-
-    # Users shouldn't see any branch associated with a release builddir
-    branches = branches.filter(not_(
-        ClobbererBuilds.builddir.startswith(BUILDBOT_BUILDDIR_REL_PREFIX)))
-
-    branches = branches.order_by(ClobbererBuilds.branch)
-
-    return [dict(name=branch[0],
-                 builders=buildbot_branch_summary(session, branch[0]))
-            for branch in branches]
-
-
-def buildbot_branch_summary(session, branch):
-    """Return a dictionary of most recent ClobbererTimess grouped by
-       buildername.
-    """
-    # Isolates the maximum lastclobber for each builddir on a branch
-    max_ct_sub_query = session.query(
-        func.max(ClobbererTimes.lastclobber).label('lastclobber'),
-        ClobbererTimes.builddir,
-        ClobbererTimes.branch
-    ).group_by(
-        ClobbererTimes.builddir,
-        ClobbererTimes.branch
-    ).filter(ClobbererTimes.branch == branch).subquery()
-
-    # Finds the "greatest n per group" by joining with the
-    # max_ct_sub_query
-    # This is necessary to get the correct "who" values
-    sub_query = session.query(ClobbererTimes).join(max_ct_sub_query, and_(
-        ClobbererTimes.builddir == max_ct_sub_query.c.builddir,
-        ClobbererTimes.lastclobber == max_ct_sub_query.c.lastclobber,
-        ClobbererTimes.branch == max_ct_sub_query.c.branch)).subquery()
-
-    # Attaches builddirs, along with their max lastclobber to a
-    # buildername
-    full_query = session.query(
-        ClobbererBuilds.buildername,
-        ClobbererBuilds.builddir,
-        sub_query.c.lastclobber,
-        sub_query.c.who
-    ).outerjoin(
-        sub_query,
-        ClobbererBuilds.builddir == sub_query.c.builddir,
-    ).filter(
-        ClobbererBuilds.branch == branch,
-        not_(ClobbererBuilds.buildername.startswith(BUILDBOT_BUILDER_REL_PREFIX))  # noqa
-    ).distinct().order_by(ClobbererBuilds.buildername)
-
-    summary = dict()
-    for result in full_query:
-        buildername, builddir, lastclobber, who = result
-        summary.setdefault(buildername, [])
-        summary[buildername].append(
-            ClobbererTimes(
-                branch=branch,
-                builddir=builddir,
-                lastclobber=lastclobber,
-                who=who
+    try:
+        for clobber in body:
+            result.append(
+                models.clobber_buildbot(
+                    g.db.session,
+                    branch=clobber['branch'],
+                    builddir=clobber['builddir'],
+                    slave=clobber['slave']
+                )
             )
-        )
-    return summary
+        g.db.session.commit()
+
+    except Exception as e:
+        g.db.session.rollback()
+        return dict(error=str(e.message))
+
+    return result
 
 
-def taskcluster_branches():
-    """Dict of workerTypes per branch with their respected workerTypes
-    """
-    index = taskcluster.Index()
-    queue = taskcluster.Queue()
+def get_taskcluster():
+    caches_to_skip = current_app.config.get('TASKCLUSTER_CACHES_TO_SKIP', [])
+    return models.taskcluster_branches(caches_to_skip)
 
-    result = index.listNamespaces('gecko.v2', dict(limit=1000))
 
-    branches = {
-        i['name']: dict(name=i['name'], workerTypes=dict())
-        for i in result.get('namespaces', [])
-    }
+def post_taskcluster():
+    # TODO: need to make this route work
+    credentials = []
 
-    for branchName, branch in branches.items():
+    # XXX: it should get authenticated via Authenticated header
+    client_id = current_app.config.get('TASKCLUSTER_CLIENT_ID')
+    access_token = current_app.config.get('TASKCLUSTER_ACCESS_TOKEN')
 
-        # decision task might not exist
-        try:
-            decision_task = index.findTask(
-                TASKCLUSTER_DECISION_NAMESPACE % branchName)
-            decision_graph = queue.getLatestArtifact(
-                decision_task['taskId'], 'public/graph.json')
-        except taskcluster.exceptions.TaskclusterRestFailure:
-            continue
+    if client_id and access_token:
+        credentials = [dict(
+            credentials=dict(
+                clientId=client_id,
+                accessToken=access_token,
+            ))]
 
-        for task in decision_graph.get('tasks', []):
-            task = task['task']
-            task_cache = task.get('payload', dict()).get('cache', dict())
+    purge_cache = taskcluster.PurgeCache(*credentials)
 
-            provisionerId = task.get('provisionerId')
-            if provisionerId:
-                branch['provisionerId'] = provisionerId
+    for item in body:
+        purge_cache.purgeCache(item.provisionerId,
+                               item.workerType,
+                               dict(cacheName=item.cacheName))
 
-            workerType = task.get('workerType')
-            if workerType:
-                branch['workerTypes'].setdefault(
-                    workerType, dict(name=workerType, caches=[]))
-
-                if len(task_cache) > 0:
-                    branch['workerTypes'][workerType]['caches'] = list(set(
-                        branch['workerTypes'][workerType]['caches'] +
-                        task_cache.keys()
-                    ))
-
-    return branches
+    return None

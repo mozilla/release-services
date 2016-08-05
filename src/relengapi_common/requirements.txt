@@ -4,6 +4,6 @@ Flask-Cors
 Flask-Login
 Flask-SQLAlchemy
 Logbook
-flask-restplus
+connexion
 structlog
 taskcluster

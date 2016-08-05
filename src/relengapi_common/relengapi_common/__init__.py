@@ -39,14 +39,21 @@ def create_app(name, extensions=[], config=None, **kw):
             os.path.join(os.path.dirname(__file__), 'templates'))
 
     for extension in [log, auth, api, cache] + extensions:
-        extension_name = extension.__name__.split('.')[-1]
-        setattr(app, extension_name, extension.init_app(app))
+        if type(extension) is tuple:
+            extension_name, extension_init = extension
+        elif not hasattr(extension, 'init_app'):
+            extension_name = None
+            extension_init = extension
+        else:
+            extension_name = extension.__name__.split('.')[-1]
+            extension_init = extension.init_app
+
+        _app = extension_init(app)
+        if _app and extension_name is not None:
+            setattr(app, extension_name, _app)
+
         if hasattr(app, 'log'):
             app.log.debug('extension `%s` configured.' % extension_name)
-
-    # configure/initialize specific app features
-    #   aws -> tooltool, archiver (only s3 needed)
-    #   memcached -> treestatus (via https://pythonhosted.org/Flask-Cache)
 
     return app
 
