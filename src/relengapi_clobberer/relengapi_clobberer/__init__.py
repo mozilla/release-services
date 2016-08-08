@@ -6,20 +6,12 @@ from __future__ import absolute_import
 
 import os
 
-from relengapi_common import create_app, db
+from relengapi_common import db
 
 
-here = os.path.dirname(__file__)
+extensions = [db]
 
 
 def init_app(app):
-    app.api.register(
-        os.path.join(here, "swagger.yml"),
-        base_url=app.config['SWAGGER_BASE_URL']['relengapi_clobberer'],
-    )
-
-app = create_app(__name__, [db, init_app])
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    return app.api.register(
+        os.path.join(os.path.dirname(__file__), 'swagger.yml'))

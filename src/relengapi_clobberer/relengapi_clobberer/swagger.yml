@@ -42,7 +42,6 @@ paths:
             items:
               $ref: '#/definitions/Error'
 
-
   /taskcluster:
 
     get:

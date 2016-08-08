@@ -6,8 +6,10 @@ from __future__ import absolute_import
 
 from flask_cors import CORS
 
+
+cors = CORS()
+
+
 def init_app(app):
-    cors = CORS()
     cors.init_app(app)
     return cors
-

@@ -4,18 +4,21 @@
 
 from __future__ import absolute_import
 
+import jinja2
+import logging
 import os
 import sys
-import jinja2
 
 from flask import Flask, send_from_directory
 
-from relengapi_common import api, auth, log, cache
+from relengapi_common import api, auth, log, cache, cors
 
 __APP = dict()
 
+logger = logging.getLogger('relengapi_common')
 
-def create_app(name, extensions=[], config=None, **kw):
+
+def create_app(name, extensions=[], config=None, debug=False, **kw):
     global __APP
     if __APP and name in __APP:
         return __APP[name]
@@ -23,7 +26,10 @@ def create_app(name, extensions=[], config=None, **kw):
     if name == '__main__':
         log.setup_console_logging()
 
+    logger.debug('Initializing app: {}'.format(name))
+
     app = __APP[name] = Flask(name, **kw)
+    app.debug = debug
 
     # load config (settings.py)
     if config:
@@ -31,14 +37,19 @@ def create_app(name, extensions=[], config=None, **kw):
     elif os.environ.get('RELENGAPI_SETTINGS'):  # noqa
         app.config.from_envvar('RELENGAPI_SETTINGS')
     else:
-        print ("Using default settings; to configure relengapi, set "
-               "RELENGAPI_SETTINGS to point to your settings file")
+        print("Using default settings; to configure relengapi, set "
+              "RELENGAPI_SETTINGS to point to your settings file")
         sys.exit(1)
 
     app.jinja_loader = jinja2.loaders.FileSystemLoader(
             os.path.join(os.path.dirname(__file__), 'templates'))
 
-    for extension in [log, auth, api, cache] + extensions:
+    base_extensions = [log, auth, api, cache]
+    if app.debug is True:
+        base_extensions.append(cors)
+
+    for extension in base_extensions + extensions:
+
         if type(extension) is tuple:
             extension_name, extension_init = extension
         elif not hasattr(extension, 'init_app'):
@@ -47,6 +58,9 @@ def create_app(name, extensions=[], config=None, **kw):
         else:
             extension_name = extension.__name__.split('.')[-1]
             extension_init = extension.init_app
+
+        logger.debug('Initializing extension "{}" for ""'.format(
+            extension_name or str(extension_init), name))
 
         _app = extension_init(app)
         if _app and extension_name is not None:
@@ -58,8 +72,8 @@ def create_app(name, extensions=[], config=None, **kw):
     return app
 
 
-def create_apps(name):
-    app = create_app(name)
+def create_apps(name, debug=False):
+    app = create_app(name, debug=debug)
 
     @app.route('/', defaults=dict(path='index.html'), methods=['GET'])
     @app.route('/<path:path>', methods=['GET'])

@@ -108,10 +108,14 @@ class Api:
         :rtype: None
         """
 
+        app = self.__app
         if hasattr(resolver, '__call__'):
             resolver = connexion.resolver.Resolver(resolver)
 
         logger.debug('Adding API: %s', swagger_file)
+
+        if base_url is None:
+            base_url = app.config['SWAGGER_BASE_URL'].get(app.name)
 
         self.__api = connexion.api.Api(
             swagger_yaml_path=pathlib.Path(swagger_file),
@@ -125,9 +129,10 @@ class Api:
             validate_responses=validate_responses,
             strict_validation=strict_validation,
             auth_all_paths=auth_all_paths,
-            debug=self.__app.debug,
+            debug=app.debug,
         )
-        self.__app.register_blueprint(self.__api.blueprint)
+        app.register_blueprint(self.__api.blueprint)
+        return self.__api
 
 
 def init_app(app):
