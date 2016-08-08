@@ -75,11 +75,20 @@ def create_app(name, extensions=[], config=None, debug=False, **kw):
 def create_apps(name, debug=False):
     app = create_app(name, debug=debug)
 
-    @app.route('/', defaults=dict(path='index.html'), methods=['GET'])
-    @app.route('/<path:path>', methods=['GET'])
-    def index(path):
+    @app.route('/relengapi', defaults=dict(path='index.html'), methods=['GET'])
+    @app.route('/relengapi/<path:path>', methods=['GET'])
+    def relengapi_frontend(path):
         base_dir = os.path.abspath(os.path.join(
-            os.path.dirname(__file__), '../../relengapi_tools/build'))
+            os.path.dirname(__file__), '../../relengapi_frontend/build'))
+        if not os.path.exists(os.path.join(base_dir, path)):
+            path = 'index.html'
+        return send_from_directory(base_dir, path)
+
+    @app.route('/shipit', defaults=dict(path='index.html'), methods=['GET'])
+    @app.route('/shipit/<path:path>', methods=['GET'])
+    def shipit_frontend(path):
+        base_dir = os.path.abspath(os.path.join(
+            os.path.dirname(__file__), '../../shipit_frontend/build'))
         if not os.path.exists(os.path.join(base_dir, path)):
             path = 'index.html'
         return send_from_directory(base_dir, path)

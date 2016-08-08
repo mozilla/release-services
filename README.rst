@@ -87,9 +87,9 @@ Repository structure
 
   Directory where we keep all our source code
 
-  - ``relengapi_tools/``
+  - ``relengapi_frontend/``
 
-    Read its `README<src/relengapi_tools/README.md` for more info.
+    Read its `README<src/relengapi_frontend/README.md` for more info.
 
   - ``relengapi_clobberer/``
 

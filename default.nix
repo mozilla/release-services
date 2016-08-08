@@ -47,7 +47,7 @@ in python.mkDerivation {
     export CACHE_TYPE=filesystem
     export CACHE_DIR=$TMPDIR/clobberer
     export DATABASE_URL=sqlite:///$PWD/app.db
-    export PATH=$PWD/src/relengapi_tools//node_modules/.bin:$PATH
+    export PATH=$PWD/src/relengapi_frontend//node_modules/.bin:$PATH
 
     for i in ${builtins.concatStringsSep " " srcs}; do
       if test -e $i/setup.py; then

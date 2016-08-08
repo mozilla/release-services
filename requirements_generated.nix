@@ -1,7 +1,7 @@
 # generated using pypi2nix tool (version: 1.4.0.dev0)
 #
 # COMMAND:
-#   pypi2nix -V 3.5 -r requirements.txt -r requirements-prod.txt -r requirements-dev.txt -E postgresql
+#   pypi2nix -v -V 3.5 -r requirements.txt -r requirements-prod.txt -r requirements-dev.txt -E postgresql
 #
 
 { pkgs, python, commonBuildInputs ? [], commonDoCheck ? false }:
@@ -321,7 +321,7 @@ self: {
     ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
-      license = "Apache License Version 2.0";
+      license = licenses.asl20;
       description = "Connexion - API first applications with OpenAPI/Swagger and Flask";
     };
   };
@@ -347,10 +347,10 @@ self: {
 
 
   "flake8" = python.mkDerivation {
-    name = "flake8-3.0.3";
+    name = "flake8-3.0.4";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/e2/dd/cf299399dec65eed186509d625760195938e83d3bcf78f47d443d58aff7d/flake8-3.0.3.tar.gz";
-      sha256= "fa8ebbdc9a78991af150b86cd0e3377361586ce7d1fed0079f0077f2ada227ec";
+      url = "https://pypi.python.org/packages/b0/56/48727b2a6c92b7e632180cf2c1411a0de7cf4f636b4f844c6c46f7edc86b/flake8-3.0.4.tar.gz";
+      sha256= "b4c210c998f07d6ff24325dd91fbc011f2c37bcd6bf576b188de01d8656e970d";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
