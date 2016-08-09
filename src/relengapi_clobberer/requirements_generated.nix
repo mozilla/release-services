@@ -1,7 +1,7 @@
 # generated using pypi2nix tool (version: 1.4.0.dev0)
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -r requirements.txt -r requirements-prod.txt -r requirements-dev.txt -E postgresql
+#   pypi2nix -v -V 3.5 -E postgresql -r requirements.txt -r requirements-setup.txt -r requirements-dev.txt -r requirements-prod.txt
 #
 
 { pkgs, python, commonBuildInputs ? [], commonDoCheck ? false }:
@@ -731,10 +731,10 @@ self: {
 
 
   "requests" = python.mkDerivation {
-    name = "requests-2.10.0";
+    name = "requests-2.11.0";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/49/6f/183063f01aae1e025cf0130772b55848750a2f3a89bfa11b385b35d7329d/requests-2.10.0.tar.gz";
-      sha256= "63f1815788157130cee16a933b2ee184038e975f0017306d723ac326b5525b54";
+      url = "https://pypi.python.org/packages/8d/66/649f861f980c0a168dd4cccc4dd0ed8fa5bd6c1bed3bea9a286434632771/requests-2.11.0.tar.gz";
+      sha256= "b2ff053e93ef11ea08b0e596a1618487c4e4c5f1006d7a1706e3671c57dea385";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -919,6 +919,24 @@ self: {
       homepage = "";
       license = licenses.bsdOriginal;
       description = "Traitlets Python config system";
+    };
+  };
+
+
+
+  "vcversioner" = python.mkDerivation {
+    name = "vcversioner-2.16.0.0";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/c5/cc/33162c0a7b28a4d8c83da07bc2b12cee58c120b4a9e8bba31c41c8d35a16/vcversioner-2.16.0.0.tar.gz";
+      sha256= "dae60c17a479781f44a4010701833f1829140b1eeccd258762a74974aa06e19b";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.isc;
+      description = "Use version control tags to discover version numbers";
     };
   };
 

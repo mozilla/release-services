@@ -6,12 +6,34 @@ from __future__ import absolute_import
 
 import os
 
-from relengapi_common import db
+from relengapi_common import db, create_app
 
 
-extensions = [db]
+DEBUG = os.environ.get('DEBUG', __name__ == '__main__')
+HERE = os.path.dirname(os.path.abspath(__file__))
+APP_SETTINGS = os.path.abspath(os.path.join(HERE, '..', 'settings.py'))
 
 
 def init_app(app):
     return app.api.register(
         os.path.join(os.path.dirname(__file__), 'swagger.yml'))
+
+
+if DEBUG and not os.environ.get('DATABASE_URL'):
+    os.environ['DATABASE_URL'] = 'sqlite:///%s' % (
+        os.path.abspath(os.path.join(HERE, '..', 'app.db')))
+
+if not os.environ.get('APP_SETTINGS') and \
+       os.path.isfile(APP_SETTINGS):
+    os.environ['APP_SETTINGS'] = APP_SETTINGS
+
+
+app = create_app(
+    "relengapi_clobberer",
+    extensions=[db, init_app],
+    debug=DEBUG,
+    debug_src=HERE,
+)
+
+if __name__ == "__main__":
+    app.run(**app.run_options())

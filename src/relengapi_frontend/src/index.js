@@ -11,7 +11,7 @@ var user = null;
 try {
   user = JSON.parse(window.localStorage.getItem('credentials'));
 } catch (e) {
-  console.log(e);
+  // pass
 }
 
 var clobbererUrl = document.body.getAttribute('data-clobberer-url');
@@ -48,7 +48,7 @@ app.ports.localstorage_set.subscribe(function(user) {
 app.ports.redirect.subscribe(function(redirect) {
    var redirect_url = url.parse(redirect.url);
    if (redirect.target !== null) {
-     redirect_url = url.format($.extend({}, redirect_url, {
+     redirect_url = url.format(window.$.extend({}, redirect_url, {
        query: {
          target: url.format({
              protocol: window.location.protocol,

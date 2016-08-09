@@ -18,7 +18,8 @@ __APP = dict()
 logger = logging.getLogger('relengapi_common')
 
 
-def create_app(name, extensions=[], config=None, debug=False, **kw):
+def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
+               **kw):
     global __APP
     if __APP and name in __APP:
         return __APP[name]
@@ -34,11 +35,11 @@ def create_app(name, extensions=[], config=None, debug=False, **kw):
     # load config (settings.py)
     if config:
         app.config.update(**config)
-    elif os.environ.get('RELENGAPI_SETTINGS'):  # noqa
-        app.config.from_envvar('RELENGAPI_SETTINGS')
+    elif os.environ.get('APP_SETTINGS'):  # noqa
+        app.config.from_envvar('APP_SETTINGS')
     else:
         print("Using default settings; to configure relengapi, set "
-              "RELENGAPI_SETTINGS to point to your settings file")
+              "APP_SETTINGS to point to your settings file")
         sys.exit(1)
 
     app.jinja_loader = jinja2.loaders.FileSystemLoader(
@@ -69,28 +70,23 @@ def create_app(name, extensions=[], config=None, debug=False, **kw):
         if hasattr(app, 'log'):
             app.log.debug('extension `%s` configured.' % extension_name)
 
-    return app
+    def get_run_options():
+        extra_files = []
+        if debug_src:
+            for base, dirs, files in os.walk(debug_src):
+                for file in files:
+                    if file.endswith(".yml"):
+                        extra_files.append(os.path.join(base, file))
 
+        return dict(
+            host=os.environ.get('HOST', 'localhost'),
+            port=int(os.environ.get('PORT', '5000')),
+            debug=DEBUG,
+            use_reloader=debug,
+            use_debugger=debug,
+            use_evalex=debug,
+            extra_files=extra_files,
+        )
 
-def create_apps(name, debug=False):
-    app = create_app(name, debug=debug)
-
-    @app.route('/relengapi', defaults=dict(path='index.html'), methods=['GET'])
-    @app.route('/relengapi/<path:path>', methods=['GET'])
-    def relengapi_frontend(path):
-        base_dir = os.path.abspath(os.path.join(
-            os.path.dirname(__file__), '../../relengapi_frontend/build'))
-        if not os.path.exists(os.path.join(base_dir, path)):
-            path = 'index.html'
-        return send_from_directory(base_dir, path)
-
-    @app.route('/shipit', defaults=dict(path='index.html'), methods=['GET'])
-    @app.route('/shipit/<path:path>', methods=['GET'])
-    def shipit_frontend(path):
-        base_dir = os.path.abspath(os.path.join(
-            os.path.dirname(__file__), '../../shipit_frontend/build'))
-        if not os.path.exists(os.path.join(base_dir, path)):
-            path = 'index.html'
-        return send_from_directory(base_dir, path)
-
+    app.get_run_options = get_run_options
     return app

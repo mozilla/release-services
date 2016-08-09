@@ -1,15 +1,17 @@
-{ pkgs ? import (builtins.fetchTarball "https://github.com/garbas/nixpkgs/archive/9d1bd64f43cacd72f1c6aaeeb333e3618a838524.tar.gz") {}
-, version ? pkgs.lib.removeSuffix "\n" (builtins.readFile ./VERSION)
+let pkgs' = import <nixpkgs> {}; in
+{ pkgs ? import (pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs_src.json))) {}
 }:
 
 let
-  python = import ./requirements.nix { inherit pkgs; };
-  from_requirements = files:
+
+  elmPackages = pkgs.elmPackages.override { nodejs = pkgs."nodejs-6_x"; };
+
+  from_requirements = files: pkgs':
     map
-      (requirement: builtins.getAttr requirement python.pkgs)
+      (requirement: builtins.getAttr requirement pkgs')
       (pkgs.lib.unique
         (builtins.filter
-          (x: x != "")
+          (x: x != "" && builtins.substring 0 1 x != "-")
           (pkgs.lib.flatten
             (map
               (file: pkgs.lib.splitString "\n"(pkgs.lib.removeSuffix "\n" (builtins.readFile file)))
@@ -18,47 +20,14 @@ let
           )
         )
       );
-  srcs = [
-    "./src/relengapi_common"
-    "./src/relengapi_clobberer"
-    "./src/shipit"
-  ];
 
-in python.mkDerivation {
-  name = "relengapi-${version}";
-  tracePhases = true;
-  srcs = if pkgs.lib.inNixShell then null else (map (x: ./. + ("/" + x)) srcs);
-  buildInputs = builtins.filter (x: ! builtins.isFunction x) (builtins.attrValues python.pkgs);
-  propagatedBuildInputs = from_requirements [ ./src/relengapi_common/requirements.txt
-                                              ./src/relengapi_clobberer/requirements.txt
-                                            ];
-  patchPhase = ''
-    for i in ./*; do
-      if [ -d $i ]; then
-        rm -f $i/VERSION
-        echo ${version} > $i/VERSION
-      fi
-    done
-  '';
-  shellHook = ''
-    alias python=`which python3`
+  self = {
 
-    export CACHE_DEFAULT_TIMEOUT=3600
-    export CACHE_TYPE=filesystem
-    export CACHE_DIR=$TMPDIR/clobberer
-    export DATABASE_URL=sqlite:///$PWD/app.db
-    export PATH=$PWD/src/relengapi_frontend//node_modules/.bin:$PATH
+     relengapi_clobberer = import ./src/relengapi_clobberer { inherit pkgs from_requirements; };
 
-    for i in ${builtins.concatStringsSep " " srcs}; do
-      if test -e $i/setup.py; then
-        pushd $i >> /dev/null
-        tmp_path=$(mktemp -d)
-        export PATH="$tmp_path/bin:$PATH"
-        export PYTHONPATH="$tmp_path/${python.__old.python.sitePackages}:$PYTHONPATH"
-        mkdir -p $tmp_path/${python.__old.python.sitePackages}
-        ${python.__old.bootstrapped-pip}/bin/pip install -q -e . --prefix $tmp_path
-        popd >> /dev/null
-      fi
-    done
-  '';
-}
+     relengapi_frontend = import ./src/relengapi_frontend { inherit pkgs; };
+
+     #shipit = import ./src/shipit { inherit pkgs from_requirements; };
+   };
+
+in self

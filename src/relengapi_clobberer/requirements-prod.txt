@@ -1,5 +1,3 @@
--r ./requirements.txt
-
 gunicorn
 psycopg2
 newrelic

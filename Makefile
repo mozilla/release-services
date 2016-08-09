@@ -2,24 +2,25 @@
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
-	@echo "  develop  install and enter development environment"
-	@echo "  build    update nix expressions to latest"
-	@echo "  update   run tests for all the subprojects"
 
 
-develop:
-	nix-shell
+develop-clobberer:
+	nix-shell -A relengapi_clobberer
 
-build:
-	nix-build
+check-clobberer:
+	nix-build -A relengapi_clobberer
 
-update: update-requirements update-relengapi_frontend update-shipit_frontend
+docker-clobberer:
+	rm -f result-clobberer
+	nix-build release.nix -A docker.relengapi_clobberer -o result- clobberer
 
-update-requirements:
-	pypi2nix -v -V 3.5 -r requirements.txt -r requirements-prod.txt -r requirements-dev.txt -E "postgresql"
-
-update-relengapi_frontend:
-	cd src/relengapi_frontend && node2nix --flatten --pkg-name nodejs-6_x
-
-update-shipit_frontend:
-	cd src/shipit_frontend && node2nix --flatten --pkg-name nodejs-6_x
+deploy-clobberer-staging: docker-clobberer
+	if [[ -n "`docker images -q registry.heroku.com/releng-clobberer-staging/web`" ]]; then \
+			docker rmi -f registry.heroku.com/releng-clobberer-staging/web; \
+		fi
+	if [[ -n "`docker images -q relengapi_clobberer`" ]]; then \
+			docker rmi -f `docker images -q relengapi_clobberer`; \
+		fi
+	cat result-clobberer | docker load
+	docker tag `docker images -q relengapi_clobberer` registry.heroku.com/releng-clobberer-staging/web
+	docker push registry.heroku.com/releng-clobberer-staging/web

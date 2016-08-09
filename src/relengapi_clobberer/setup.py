@@ -11,6 +11,15 @@ from setuptools import setup
 
 here = os.path.dirname(__file__)
 
+with open(os.path.join(here, 'requirements.txt')) as f:
+    install_requires = filter(
+        lambda x: not x.startswith('-r'),
+        map(
+            lambda x: x.startswith('-e ../') and x[6:] or x,
+            f.read().strip().split('\n')
+        )
+    )
+
 setup(
     name='relengapi_clobberer',
     version=open(os.path.join(here, 'VERSION')).read().strip(),
@@ -18,9 +27,7 @@ setup(
     author='Rok Garbas',
     author_email='garbas@mozilla.com',
     url='https://clobberer.mozilla-releng.net',
-    install_requires=[
-        "relengapi_common",
-    ],
+    install_requires=install_requires,
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,

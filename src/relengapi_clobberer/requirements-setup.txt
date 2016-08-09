@@ -1,8 +1,4 @@
--r ./requirements.txt
-
-ipdb
-
 flake8
-
 pytest-runner
 setuptools-scm
+vcversioner
