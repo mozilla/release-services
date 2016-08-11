@@ -1,12 +1,17 @@
-{ pkgs, from_requirements }: 
+{ releng_pkgs }: 
 
 let
 
+  inherit (builtins) readFile concatStringsSep;
+  inherit (releng_pkgs) from_requirements;
+  inherit (releng_pkgs.pkgs) makeWrapper;
+  inherit (releng_pkgs.pkgs.lib) removeSuffix inNixShell;
+
   python = import ./requirements.nix {
-    inherit pkgs;
+    inherit (releng_pkgs) pkgs;
   };
 
-  version = pkgs.lib.removeSuffix "\n" (builtins.readFile ./VERSION);
+  version = removeSuffix "\n" (readFile ./VERSION);
 
   srcs = [
     "./../relengapi_common"
@@ -16,9 +21,9 @@ let
   self = python.mkDerivation {
      namePrefix = "";
      name = "relengapi_clobberer-${version}";
-     srcs = if pkgs.lib.inNixShell then null else (map (x: ./. + ("/" + x)) srcs);
+     srcs = if inNixShell then null else (map (x: ./. + ("/" + x)) srcs);
      sourceRoot = ".";
-     buildInputs = [ pkgs.makeWrapper ] ++
+     buildInputs = [ makeWrapper ] ++
        from_requirements [ ./requirements-dev.txt
                            ./requirements-setup.txt ] python.packages;
      propagatedBuildInputs =
@@ -48,7 +53,7 @@ let
        export CACHE_DIR=$PWD/cache
        export DATABASE_URL=sqlite:///$PWD/app.db
 
-       for i in ${builtins.concatStringsSep " " srcs}; do
+       for i in ${concatStringsSep " " srcs}; do
          if test -e $i/setup.py; then
            pushd $i >> /dev/null
            tmp_path=$(mktemp -d)

@@ -1,5 +1,5 @@
 let pkgs' = import <nixpkgs> {}; in
-{ pkgs ? import (pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs_src.json))) {}
+{ pkgs ? import (pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs.json))) {}
 }:
 
 let
@@ -15,8 +15,6 @@ let
         )
         (builtins.attrNames pkgs')
       );
-
-  build = pkg: pkg;
 
   docker = pkg:
     let
@@ -34,9 +32,4 @@ let
       } // dockerConfig;
     };
 
-  jobs = {
-    build = forEach build releng_pkgs;
-    docker = forEach docker releng_pkgs;
-  };
-
-in jobs
+in forEach docker releng_pkgs

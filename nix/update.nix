@@ -1,10 +1,12 @@
 let pkgs' = import <nixpkgs> {}; in
-{ pkgs ? import (pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs_src.json))) {}
+{ pkgs ? import (pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs.json))) {}
 , pkg ? null
 }:
 
 let
 
+  # TODO: provdie pypi2nix in releng_pkgs.tools
+  # TODO: move this to releng_pkgs.tools in nix/default.nix 
   elm2nix = pkgs.stdenv.mkDerivation {
     name = "elm2nix";
     buildInputs = [ pkgs.ruby ];
@@ -17,13 +19,21 @@ let
     '';
   };
 
-  elmPackages = pkgs.elmPackages.override { nodejs = pkgs."nodejs-6_x"; };
+  releng_pkgs = import ./default.nix {};
 
   pkgsUpdates = {
+    # TODO: nixpkgs = ...
+    tools = ''
+      pushd nix/
+      pypi2nix -v \
+        -V 3.5 \
+        -r requirements.txt
+      popd
+    '';
     relengapi_clobberer = ''
       pushd src/relengapi_clobberer
       pypi2nix -v \
-      -V 3.5 \
+        -V 3.5 \
         -E "postgresql" \
         -r requirements.txt \
         -r requirements-setup.txt \
@@ -42,8 +52,8 @@ let
   };
 
 in pkgs.stdenv.mkDerivation {
-  name = "update-relengapi";
-  buildInputs = [ elmPackages.elm elm2nix ];  # TODO: add pypi2nix
+  name = "update-releng";
+  buildInputs = [ ]; #releng_pkgs.elmPackages.elm elm2nix ];  # TODO: add pypi2nix
   buildCommand = ''
     echo "+--------------------------------------------------------+"
     echo "| Not possible to update repositories using \`nix-build\`. |"
