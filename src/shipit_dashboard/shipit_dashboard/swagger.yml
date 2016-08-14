@@ -1,0 +1,70 @@
+---
+swagger: "2.0"
+info:
+  version: "0.1.0"
+  title: "Shipit Dashboard"
+paths:
+
+  /analysis:
+
+    get:
+      operationId: "shipit_dashboard.api.list_analysis"
+      responses:
+        200:
+          description: An array of Analysis
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Analysis'
+
+  /analysis/:analysis_id:
+
+    get:
+      operationId: "shipit_dashboard.api.get_analysis"
+      responses:
+        200:
+          description: A specific analysis
+
+definitions:
+
+  Success:
+    type: string 
+
+  Error:
+    type: object
+    required:
+      - error_title
+    properties:
+      error_title:
+        type: string
+      error_message:
+        type: string
+
+  Analysis:
+    type: object
+    required:
+      - id
+      - name
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      bugs:
+        type: array
+        items:
+          $ref: '#/definitions/Analysis'
+
+  Bug:
+    type: object
+    required:
+      - id
+      - bugzilla_id
+      - payload
+    properties:
+      id:
+        type: integer
+      bugzilla_id:
+        type: integer 
+      payload:
+        type: object
