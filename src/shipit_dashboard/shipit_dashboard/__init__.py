@@ -7,6 +7,7 @@ from __future__ import absolute_import
 import os
 
 from relengapi_common import db, create_app
+from shipit_dashboard.workflow import run_workflow
 
 
 DEBUG = os.environ.get('DEBUG', __name__ == '__main__')
@@ -34,6 +35,10 @@ app = create_app(
     debug=DEBUG,
     debug_src=HERE,
 )
+
+
+# Register extra commands
+app.cli.add_command(run_workflow)
 
 if __name__ == "__main__":
     app.run(**app.run_options())

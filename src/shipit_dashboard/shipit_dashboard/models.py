@@ -49,7 +49,7 @@ class BugResult(db.Model):
 
     id = sa.Column(sa.Integer, primary_key=True)
     bugzilla_id = sa.Column(sa.Integer, unique=True)
-    payload = sa.Column(sa.Text())
+    payload = sa.Column(sa.Binary())
     payload_hash = sa.Column(sa.String(40))
 
     created = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
