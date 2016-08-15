@@ -11,8 +11,27 @@ help:
 	@echo "TODO: need to write help for commands"
 
 
+
+
 develop: require-APP
 	nix-shell nix/default.nix -A $(APP) --run $$SHELL
+
+
+
+
+develop-run: require-APP develop-run-$(APP)
+
+develop-run-relengapi_clobberer:
+	CACHE_TYPE=filesystem \
+	CACHE_DIR=$$PWD/src/$(APP)/cache \
+	DATABASE_URL=sqlite:///$$PWD/app.db \
+	APP_SETTINGS=$$PWD/src/$(APP)/settings.py \
+		nix-shell nix/default.nix -A $(APP) \
+			--run "gunicorn $(APP):app -w 2 -t 3600 --reload --log-file -"
+
+develop-run-relengapi_frontend:
+	nix-shell nix/default.nix -A $(APP) --run "neo start --config webpack.config.js"
+
 
 
 
@@ -49,7 +68,7 @@ deploy-staging-relengapi_clobberer: docker-relengapi_clobberer
 		registry.heroku.com/releng-staging-$(subst deploy-staging-,,$@)/web
 
 deploy-staging-relengapi_frontend: require-AWS build-relengapi_frontend tools-awscli
-	./result/bin/aws s3 sync \
+	./result-tools-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read  \
 		result-$(subst deploy-staging-,,$@)/ \
@@ -75,7 +94,7 @@ deploy-production-relengapi_clobberer: docker-relengapi_clobberer
 		registry.heroku.com/releng-production-$(subst deploy-production-,,$@)/web
 
 deploy-production-relengapi_frontend: require-AWS build-relengapi_frontend tools-awscli
-	./result/bin/aws s3 sync \
+	./result-tools-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read \
 		result-$(subst deploy-production-,,$@)/ \
@@ -97,7 +116,7 @@ update-%:
 # --- helpers
 
 tools-awscli:
-	nix-build nix/default.nix -A tools.awscli -o result-awscli
+	nix-build nix/default.nix -A tools.awscli -o result-tools-awscli
 
 require-APP:
 	@if [[ -z "$(APP)" ]]; then \

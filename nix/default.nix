@@ -8,13 +8,40 @@ let
     inherit pkgs;
   };
 
+  node2nixSrc = pkgs.fetchFromGitHub {
+    owner = "svanderburg";
+    repo = "node2nix";
+    rev = "c973ef418d94311031b84552527c4e1390dc69c8";
+    sha256 = "1iq0d6rv0g72kxpas3yrrcnjfsr5gk5jf2z4x9lmyqms89aj2x4g";
+  };
+
   releng_pkgs = {
 
     inherit pkgs;
 
     tools = {
+
       awscli = python_tools.packages."awscli";
       aws-shell = python_tools.packages."aws-shell";
+
+      node2nix =
+        (import "${node2nixSrc}/default.nix" {
+          inherit pkgs;
+          inherit (pkgs.stdenv) system;
+        }).package;
+
+      elm2nix = pkgs.stdenv.mkDerivation {
+        name = "elm2nix";
+        buildInputs = [ pkgs.ruby ];
+        buildCommand = ''
+          mkdir -p $out/bin
+          cp ${<nixpkgs/pkgs/development/compilers/elm/elm2nix.rb>} $out/bin/elm2nix
+          sed -i -e "s|\"package.nix\"|ARGV[0]|" $out/bin/elm2nix
+          chmod +x $out/bin/elm2nix
+          patchShebangs $out/bin
+        '';
+      };
+
     };
 
     from_requirements = files: pkgs':

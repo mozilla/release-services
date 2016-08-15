@@ -20,8 +20,8 @@
     sha256 = "0bw8ppazywjljbdbph7319fnlcr8qnxdpd8556b50fzhy57a4bjq";
   };
   "elm-lang/dom" = {
-    version = "1.0.0";
-    sha256 = "0bnvy3v8q991rv63rx0kdw9yknn0vqylnzq1r1a9w31y4immkq3p";
+    version = "1.1.0";
+    sha256 = "1l8yn7g2ikpxc0qylzmv18hpiafgyip77nz886fjm77qpys7ibbw";
   };
   "elm-lang/html" = {
     version = "1.1.0";
@@ -40,7 +40,7 @@
     sha256 = "0a6vs559qhf12acdhdjm6qxwq0qfvpi2630pdw24aiikbrvv29kn";
   };
   "elm-lang/core" = {
-    version = "4.0.4";
-    sha256 = "15x4v12rx1w7xiyb10k90ji9fpkdrrs6a6vbm7z220mi7mmbp8c8";
+    version = "4.0.5";
+    sha256 = "14ayra6w474qppg2xmbbyg4ai0p2l134k0vl22drhpqmay852060";
   };
 }

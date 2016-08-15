@@ -1,7 +1,7 @@
 aws-shell==0.1.1
-awscli==1.10.54
+awscli==1.10.56
 boto3==1.4.0
-botocore==1.4.44
+botocore==1.4.46
 colorama==0.3.7
 configobj==5.0.6
 docutils==0.12

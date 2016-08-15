@@ -1,7 +1,5 @@
-let config = require(
-    'mozilla-neo/config/webpack.' +
-     (process.env.npm_lifecycle_event === 'build' ? 'prod' : 'dev'));
-
+const config_type = process.argv.indexOf('start') !== -1 ? 'dev' : 'prod';
+const config = require('mozilla-neo/config/webpack.' + config_type);
 const ELM_EXT = /\.elm$/;
 
 config.module.loaders.push({
@@ -12,6 +10,6 @@ config.module.loaders.push({
 
 config.module.noParse = ELM_EXT;
 
-config.devServer.https = true;
+// TODO: config.devServer.https = true;
 
 module.exports = config;
