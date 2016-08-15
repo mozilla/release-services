@@ -6,7 +6,6 @@ info:
 paths:
 
   /analysis:
-
     get:
       operationId: "shipit_dashboard.api.list_analysis"
       responses:
@@ -17,10 +16,15 @@ paths:
             items:
               $ref: '#/definitions/Analysis'
 
-  /analysis/:analysis_id:
-
+  /analysis/{analysis_id}:
     get:
       operationId: "shipit_dashboard.api.get_analysis"
+      parameters:
+      - name: analysis_id
+        in: path
+        description: ID of the Analysis to retrieve
+        required: true
+        type: integer
       responses:
         200:
           description: A specific analysis
