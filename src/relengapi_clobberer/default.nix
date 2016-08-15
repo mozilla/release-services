@@ -54,8 +54,9 @@ let
        export DATABASE_URL=sqlite:///$PWD/app.db
 
        for i in ${concatStringsSep " " srcs}; do
-         if test -e $i/setup.py; then
-           pushd $i >> /dev/null
+         if test -e src/''${i:5}/setup.py; then
+           echo "Setting \"''${i:5}\" in development mode ..."
+           pushd src/''${i:5} >> /dev/null
            tmp_path=$(mktemp -d)
            export PATH="$tmp_path/bin:$PATH"
            export PYTHONPATH="$tmp_path/${python.__old.python.sitePackages}:$PYTHONPATH"
