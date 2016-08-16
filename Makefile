@@ -22,12 +22,13 @@ develop: require-APP
 develop-run: require-APP develop-run-$(APP)
 
 develop-run-relengapi_clobberer:
+	DEBUG=true \
 	CACHE_TYPE=filesystem \
 	CACHE_DIR=$$PWD/src/$(APP)/cache \
 	DATABASE_URL=sqlite:///$$PWD/app.db \
 	APP_SETTINGS=$$PWD/src/$(APP)/settings.py \
 		nix-shell nix/default.nix -A $(APP) \
-			--run "gunicorn $(APP):app -w 2 -t 3600 --reload --log-file -"
+			--run "gunicorn $(APP):app --certfile=src/relengapi_frontend/node_modules/mozilla-neo/node_modules/webpack-dev-server/ssl/server.crt --keyfile=src/relengapi_frontend/node_modules/mozilla-neo/node_modules/webpack-dev-server/ssl/server.key -w 2 -t 3600 --reload --log-file -"
 
 develop-run-relengapi_frontend:
 	nix-shell nix/default.nix -A $(APP) --run "neo start --config webpack.config.js"
