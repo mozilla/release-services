@@ -18,12 +18,22 @@ import App.Utils exposing (..)
 
 -- TYPES
 
-type alias BackendItem =
-    { name : String
-    , data : Dict String (List String)
+type alias BackendBuilder =
+    { branch : String
+    , builddir : String
+    , lastclobber : Int
+    , name : String
+    , slave : String
+    , who : String
     }
 
-type alias BackendData = List BackendItem
+type alias BackendBranch =
+    { name : String
+    , builders: List BackendBuilder
+    }
+
+type alias BackendData =
+    List BackendBranch
 
 type alias ModelBackend =
     { title : String
@@ -74,9 +84,6 @@ viewClobberButton backend model =
                , App.Utils.onClick <| Clobber backend
                ]
                [ text buttonText ]
-        --  <button className="btn btn-primary btn-large"
-        --          onClick={props.clobber(props.table_selected)}
-        --  </button>
 
 
 viewClobberDetails backend model =
@@ -135,91 +142,98 @@ viewBackend backend model =
                 Nothing ->
                     div [] []
                 Just selected_dropdown ->
-                    table [ class "table table-hover" ]
-                          [ thead []
-                                  [ tr []
-                                       [ th []
-                                            [ input [ type' "checkbox"
-                                                    , onCheck (\checked -> case checked of
-                                                                                True -> SelectAll backend selected_dropdown
-                                                                                False -> SelectNone backend selected_dropdown
-                                                              )
-                                                    , checked
-                                                        ( let
-                                                             data = case model.data of
-                                                                 Success data -> data
-                                                                 _ -> []
-                                                             all = Dict.keys
-                                                                 <| Maybe.withDefault Dict.empty
-                                                                 <| Dict.get selected_dropdown
-                                                                 <| Dict.fromList (List.map (\x -> (x.name, x.data)) data)
-                                                             current = Maybe.withDefault []
-                                                                 <| Dict.get selected_dropdown model.selected
-                                                          in
-                                                             if current == all && current /= []
-                                                                then True
-                                                                else False
-                                                        )
-                                                    ] []
-                                            ]
-                                       , th []
-                                            [ text ( case backend of
-                                                         TaskclusterBackend -> 
-                                                             "Worker Type"
-                                                         BuildbotBackend ->
-                                                             "Builder"
-                                                   )
-                                            ]
-                                       , th []
-                                            [ text ( case backend of
-                                                         TaskclusterBackend -> 
-                                                             "Caches"
-                                                         BuildbotBackend ->
-                                                             "Last clobber"
-                                                   )
-                                            ]
-                                       ]
-                                  ]
-                          , Html.Keyed.node "tbody" []
-                            ( let
-                                  data = case model.data of
-                                      Success data -> data
-                                      _ -> []
-                                  items' = Dict.get selected_dropdown <| Dict.fromList (List.map (\x -> (x.name, x.data)) data)
-                              in
-                                 case items' of
-                                     Nothing -> []
-                                     Just items ->
-                                         Dict.values <| Dict.map
-                                             (\k v ->
-                                                 ( k 
-                                                 , tr []
-                                                      [ td []
-                                                           [ input [ type' "checkbox"
-                                                                   , onCheck
-                                                                       (\checked ->
-                                                                           case checked of
-                                                                               True -> AddSelected backend selected_dropdown k
-                                                                               False -> RemoveSelected backend selected_dropdown k
-                                                                       )
-                                                                   , checked (
-                                                                       case Dict.get selected_dropdown model.selected of
-                                                                         Just itemz -> List.member k itemz
-                                                                         Nothing -> False
-                                                                     )
-                                                                   ] []
-                                                           ]
-                                                      , td []
-                                                           [ text k ]
-                                                      , td []
-                                                           [ ul [] <| List.map (\x -> li [] [ text x ]) v
-                                                           ]
-                                                      ]
-                                                 )
-                                             )
-                                             items
-                            )
-                          ]
+                    let
+                        data = case model.data of
+                            Success data -> data
+                            _ -> []
+                        items = data
+                            |> List.filter (\x -> x.name == selected_dropdown)
+                            |> List.map (\x -> x.builders)
+                            |> List.concat
+                            |> List.foldr
+                                (\x y ->
+                                    Dict.update x.name
+                                        (\z -> Maybe.withDefault [] z
+                                                    |> (::) x
+                                                    |> Just
+                                        )
+                                        y
+                                )
+                                Dict.empty
+                    in
+                        table [ class "table table-hover" ]
+                              [ thead []
+                                      [ tr []
+                                           [ th []
+                                                [ input [ type' "checkbox"
+                                                        , onCheck (\checked -> case checked of
+                                                                                    True -> SelectAll backend selected_dropdown
+                                                                                    False -> SelectNone backend selected_dropdown
+                                                                  )
+                                                        , checked
+                                                            ( let
+                                                                 all =
+                                                                     items
+                                                                         |> Dict.keys 
+                                                                 current =
+                                                                     Dict.get selected_dropdown model.selected
+                                                                         |> Maybe.withDefault []
+                                                              in
+                                                                 if current == all && current /= []
+                                                                    then True
+                                                                    else False
+                                                            )
+                                                        ] []
+                                                ]
+                                           , th []
+                                                [ text ( case backend of
+                                                             TaskclusterBackend -> 
+                                                                 "Worker Type"
+                                                             BuildbotBackend ->
+                                                                 "Builder"
+                                                       )
+                                                ]
+                                           , th []
+                                                [ text ( case backend of
+                                                             TaskclusterBackend -> 
+                                                                 "Caches"
+                                                             BuildbotBackend ->
+                                                                 "Last clobber"
+                                                       )
+                                                ]
+                                           ]
+                                      ]
+                              , Html.Keyed.node "tbody" []
+                                  ( Dict.values <| Dict.map
+                                          (\builder_name builders ->
+                                              ( builder_name
+                                              , tr []
+                                                   [ td []
+                                                        [ input [ type' "checkbox"
+                                                                , onCheck
+                                                                    (\checked ->
+                                                                        case checked of
+                                                                            True -> AddSelected backend selected_dropdown builder_name
+                                                                            False -> RemoveSelected backend selected_dropdown builder_name
+                                                                    )
+                                                                , checked (
+                                                                    case Dict.get selected_dropdown model.selected of
+                                                                      Just itemz -> List.member builder_name itemz
+                                                                      Nothing -> False
+                                                                  )
+                                                                ] []
+                                                        ]
+                                                   , td []
+                                                        [ text builder_name ]
+                                                   , td []
+                                                        [ ul [] <| List.map (\x -> li [] [ text (toString x.lastclobber) ]) builders
+                                                        ]
+                                                   ]
+                                              )
+                                          )
+                                          items
+                                  )
+                              ]
           )
         ]
 
@@ -249,7 +263,7 @@ initBackend title  =
     , data = NotAsked
     , clobber = NotAsked
     , clobber_messages = []
-    , selected_dropdown = Nothing
+    , selected_dropdown = Just "mozilla-aurora"
     , selected = Dict.empty
     , selected_details = False
     }
@@ -414,11 +428,22 @@ update msg model =
                             data = case model.taskcluster.data of
                                 Success data -> data
                                 _ -> []
-                            all = Dict.keys
-                                <| Maybe.withDefault Dict.empty
-                                <| Dict.get selected_dropdown
-                                <| Dict.fromList (List.map (\x -> (x.name, x.data)) data)
-                            newSelected = Dict.insert selected_dropdown all model.taskcluster.selected
+                            newItems = data
+                                |> List.filter (\x -> x.name == selected_dropdown)
+                                |> List.map (\x -> x.builders)
+                                |> List.concat
+                                |> List.foldr
+                                    (\x y ->
+                                        Dict.update x.name
+                                            (\z -> Maybe.withDefault [] z
+                                                        |> (::) x
+                                                        |> Just
+                                            )
+                                            y
+                                    )
+                                    Dict.empty
+                                |> Dict.keys
+                            newSelected = Dict.insert selected_dropdown newItems model.taskcluster.selected
                         in
                             set (taskcluster => selected) newSelected model
                     BuildbotBackend ->
@@ -426,11 +451,22 @@ update msg model =
                             data = case model.buildbot.data of
                                 Success data -> data
                                 _ -> []
-                            all = Dict.keys
-                                <| Maybe.withDefault Dict.empty
-                                <| Dict.get selected_dropdown
-                                <| Dict.fromList (List.map (\x -> (x.name, x.data)) data)
-                            newSelected = Dict.insert selected_dropdown all model.buildbot.selected
+                            newItems = data
+                                |> List.filter (\x -> x.name == selected_dropdown)
+                                |> List.map (\x -> x.builders)
+                                |> List.concat
+                                |> List.foldr
+                                    (\x y ->
+                                        Dict.update x.name
+                                            (\z -> Maybe.withDefault [] z
+                                                        |> (::) x
+                                                        |> Just
+                                            )
+                                            y
+                                    )
+                                    Dict.empty
+                                |> Dict.keys
+                            newSelected = Dict.insert selected_dropdown newItems model.buildbot.selected
                         in
                             set (buildbot => selected) newSelected model
             in
@@ -478,15 +514,24 @@ selected_details: Focus { record | selected_details: a } a
 selected_details= create .selected_details (\f r -> { r | selected_details = f r.selected_details })
 
 
-decodeData : JsonDecode.Decoder (List BackendItem)
+decodeData : JsonDecode.Decoder BackendData
 decodeData =
-    JsonDecode.at [ "result" ]
-       ( JsonDecode.list
-           ( JsonDecode.object2 BackendItem
-                                ( "name" := JsonDecode.string )
-                                ( "data" := JsonDecode.dict (JsonDecode.list JsonDecode.string) )
-           )
-       )
+    JsonDecode.list
+        ( JsonDecode.object2 BackendBranch
+            ( "name" := JsonDecode.string )
+            ( "builders" :=
+                ( JsonDecode.list
+                    ( JsonDecode.object6 BackendBuilder
+                        ( "branch" := JsonDecode.string )
+                        ( "builddir" := JsonDecode.string )
+                        ( "lastclobber" := JsonDecode.int )
+                        ( "name" := JsonDecode.string )
+                        ( "slave" := JsonDecode.string )
+                        ( "who" := JsonDecode.string )
+                    )
+                )
+            )
+        )
 
 fetchBackend : (WebData BackendData -> Msg) -> String -> Cmd Msg
 fetchBackend afterMsg url =
@@ -505,8 +550,6 @@ clobberBackend afterMsg url body =
 -- UTILS
 
 
-
--- XXX: this should work but header is never sent
 
 getJson : JsonDecode.Decoder value -> String -> Task Http.Error value
 getJson decoder url =

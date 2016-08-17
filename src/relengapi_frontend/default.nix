@@ -17,8 +17,10 @@ let
                 )
       ./.;
     buildInputs = [ elmPackages.elm ] ++ (builtins.attrValues node_modules);
-    configurePhase = elmPackages.lib.makeElmStuff (import ./elm-package.nix) + ''
+    configurePhase = ''
       rm -rf node_modules
+      rm -rf elm-stuff
+    '' + elmPackages.lib.makeElmStuff (import ./elm-package.nix) + ''
       mkdir node_modules
       for item in ${builtins.concatStringsSep " " (builtins.attrValues node_modules)}; do
         ln -s $item/lib/node_modules/* ./node_modules

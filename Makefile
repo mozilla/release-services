@@ -31,7 +31,8 @@ develop-run-relengapi_clobberer:
 			--run "gunicorn $(APP):app --certfile=src/relengapi_frontend/node_modules/mozilla-neo/node_modules/webpack-dev-server/ssl/server.crt --keyfile=src/relengapi_frontend/node_modules/mozilla-neo/node_modules/webpack-dev-server/ssl/server.key -w 2 -t 3600 --reload --log-file -"
 
 develop-run-relengapi_frontend:
-	nix-shell nix/default.nix -A $(APP) --run "neo start --config webpack.config.js"
+	NEO_CLOBBERER_URL=https://localhost:8000 \
+		nix-shell nix/default.nix -A $(APP) --run "neo start --config webpack.config.js"
 
 
 

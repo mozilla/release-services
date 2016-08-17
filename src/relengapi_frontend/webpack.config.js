@@ -10,6 +10,8 @@ config.module.loaders.push({
 
 config.module.noParse = ELM_EXT;
 
-// TODO: config.devServer.https = true;
+if (config_type === 'dev') {
+  config.devServer.https = true;
+}
 
 module.exports = config;
