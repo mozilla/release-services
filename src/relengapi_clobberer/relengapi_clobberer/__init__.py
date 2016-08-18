@@ -13,7 +13,6 @@ DEBUG = bool(os.environ.get('DEBUG', __name__ == '__main__'))
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_SETTINGS = os.path.abspath(os.path.join(HERE, '..', 'settings.py'))
 
-print("DEBUG: {}".format(DEBUG))
 
 def init_app(app):
     return app.api.register(
