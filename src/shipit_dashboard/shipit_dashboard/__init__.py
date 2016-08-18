@@ -16,6 +16,11 @@ APP_SETTINGS = os.path.abspath(os.path.join(HERE, '..', 'settings.py'))
 
 
 def init_app(app):
+
+    # Register extra commands
+    app.cli.add_command(run_workflow)
+
+    # Register swagger api
     return app.api.register(
         os.path.join(os.path.dirname(__file__), 'swagger.yml'))
 
@@ -31,24 +36,11 @@ if not os.environ.get('APP_SETTINGS') and \
 
 app = create_app(
     "shipit_dashboard",
-    extensions=[db, init_app],
+    extensions=[init_app, db],
     debug=DEBUG,
     debug_src=HERE,
 )
 
 
-# Register extra commands
-app.cli.add_command(run_workflow)
-
 if __name__ == "__main__":
     app.run(**app.run_options())
-
-'''
-# Enable CORS requests
-from flask_cors import CORS
-CORS(app)
-
-# Use our default serializer
-from backend.serializers import TimedeltaJSONEncoder
-app.json_encoder = TimedeltaJSONEncoder
-'''
