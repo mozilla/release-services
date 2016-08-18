@@ -11,7 +11,7 @@ import sys
 
 from flask import Flask, send_from_directory
 
-from relengapi_common import api, auth, log, cache, cors
+import relengapi_common
 
 __APP = dict()
 
@@ -45,9 +45,13 @@ def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
     app.jinja_loader = jinja2.loaders.FileSystemLoader(
             os.path.join(os.path.dirname(__file__), 'templates'))
 
-    base_extensions = [log, auth, api, cache]
+    base_extensions = [
+        relengapi_common.log,
+        relengapi_common.auth,
+        relengapi_common.api,
+    ]
     if app.debug is True:
-        base_extensions.append(cors)
+        base_extensions.append(relengapi_common.cors)
 
     for extension in base_extensions + extensions:
 
