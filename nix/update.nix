@@ -41,6 +41,17 @@ let
       elm2nix elm-package.nix
       popd
     '';
+    shipit_dashboard = ''
+      pushd src/shipit_dashboard
+      pypi2nix -v \
+        -V 3.5 \
+        -E "postgresql" \
+        -r requirements.txt \
+        -r requirements-setup.txt \
+        -r requirements-dev.txt \
+        -r requirements-prod.txt 
+      popd
+    '';
   };
 
 in pkgs.stdenv.mkDerivation {

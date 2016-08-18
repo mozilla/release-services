@@ -4,7 +4,12 @@
 	update-all
 
 APP=
-APPS=relengapi_clobberer relengapi_frontend
+APPS=relengapi_clobberer relengapi_frontend shipit_dashboard
+
+APP_PORT_relengapi_clobberer=8000
+APP_PORT_relengapi_frontend=8001
+APP_PORT_shipit_dashboard=8002
+APP_PORT_shipit_frontend=8003
 
 
 help:
@@ -21,18 +26,26 @@ develop: require-APP
 
 develop-run: require-APP develop-run-$(APP)
 
-develop-run-relengapi_clobberer:
+develop-run-BACKEND: require-APP 
 	DEBUG=true \
 	CACHE_TYPE=filesystem \
 	CACHE_DIR=$$PWD/src/$(APP)/cache \
 	DATABASE_URL=sqlite:///$$PWD/app.db \
 	APP_SETTINGS=$$PWD/src/$(APP)/settings.py \
 		nix-shell nix/default.nix -A $(APP) \
-			--run "gunicorn $(APP):app --certfile=src/relengapi_frontend/node_modules/mozilla-neo/node_modules/webpack-dev-server/ssl/server.crt --keyfile=src/relengapi_frontend/node_modules/mozilla-neo/node_modules/webpack-dev-server/ssl/server.key -w 2 -t 3600 --reload --log-file -"
+		--run "gunicorn $(APP):app --bind 'localhost:$(APP_PORT_$(APP))' --certfile=nix/dev_ssl/server.crt --keyfile=nix/dev_ssl/server.key --workers 2 --timeout 3600 --reload --log-file -"
 
-develop-run-relengapi_frontend:
-	NEO_CLOBBERER_URL=https://localhost:8000 \
+develop-run-FRONTEND: require-APP 
+	NEO_BASE_URL=https://localhost:$$APP_PORT_$(APP) \
 		nix-shell nix/default.nix -A $(APP) --run "neo start --config webpack.config.js"
+
+develop-run-relengapi_clobberer: develop-run-BACKEND
+develop-run-relengapi_frontend: develop-run-FRONTEND
+
+develop-run-shipit_dashboard: develop-run-BACKEND
+develop-run-shipit_frontend: develop-run-BACKEND
+
+
 
 
 
@@ -82,7 +95,7 @@ deploy-staging-relengapi_frontend: require-AWS build-relengapi_frontend tools-aw
 
 deploy-production-all: deploy-production-$(APPS)
 
-deploy-production: $(APP) deploy-production-$(APP)
+deploy-production: require-APP deploy-production-$(APP)
 
 deploy-production-relengapi_clobberer: docker-relengapi_clobberer
 	if [[ -n "`docker images -q $(subst deploy-production-,,$@)`" ]]; then \
@@ -108,6 +121,8 @@ update-all: \
 	update-nixpkgs \
 	update-tools \
 	update-$(APPS)
+
+update: require-APP update-$(APP)
 
 update-%:
 	echo $@

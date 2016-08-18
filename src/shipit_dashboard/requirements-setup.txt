@@ -1,0 +1,5 @@
+
+# needed since pypi2nix can not detect setup_requires
+setuptools-scm
+vcversioner
+pytest-runner
