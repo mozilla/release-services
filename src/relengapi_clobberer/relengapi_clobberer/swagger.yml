@@ -27,20 +27,27 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/Builder'
+              type: object
+              properties:
+                branch:
+                  type: string
+                builddir:
+                  type: string
+                slave:
+                  type: string
       responses:
         200:
           description: Builders clobbered
           schema:
             type: array
             items:
-              $ref: '#/definitions/Success'
+              $ref: '#/definitions/Message'
         500:
           description: Something went wrong when clobbering builders
           schema:
             type: array
             items:
-              $ref: '#/definitions/Error'
+              $ref: '#/definitions/Message'
 
   /taskcluster:
 
@@ -58,18 +65,18 @@ paths:
 
 definitions:
 
-  Success:
-    type: string 
-
-  Error:
-    type: object
+  Message:
     required:
-      - error_title
+      - title
+      - message
     properties:
-      error_title:
+      title:
         type: string
-      error_message:
+      message:
         type: string
+      extra:
+        type: string
+
 
   Branch:
     type: object

@@ -32,6 +32,10 @@ type alias BackendBranch =
     , builders: List BackendBuilder
     }
 
+
+type alias BackendResponse =
+    List String
+
 type alias BackendData =
     List BackendBranch
 
@@ -317,17 +321,19 @@ update msg model =
                         --    <| Dict.toList model.buildout.selected
                         )
             in
-                (newModel, clobberBackend (Clobbered backend) backendUrl body)
+               (model, Cmd.none)
+                --(newModel, clobberBackend (Clobbered backend) backendUrl)
         Clobbered backend newData ->
             let
                 -- TODO from newData set clobber_message
-                newModel = case backend of
-                    TaskclusterBackend ->
-                        set (taskcluster => clobber) NotAsked model
-                    BuildbotBackend ->
-                        set (buildbot => clobber) NotAsked model
+                newModel = Debug.log "XXX" newData
+                --case backend of
+                --    TaskclusterBackend ->
+                --        set (taskcluster => clobber) NotAsked model
+                --    BuildbotBackend ->
+                --        set (buildbot => clobber) NotAsked model
             in
-                ( newModel, Cmd.none )
+                ( model, Cmd.none )
         FetchData backend ->
             let
                 (newModel, backendUrl) = case backend of
@@ -514,8 +520,8 @@ selected_details: Focus { record | selected_details: a } a
 selected_details= create .selected_details (\f r -> { r | selected_details = f r.selected_details })
 
 
-decodeData : JsonDecode.Decoder BackendData
-decodeData =
+decodeFetchData : JsonDecode.Decoder BackendData
+decodeFetchData =
     JsonDecode.list
         ( JsonDecode.object2 BackendBranch
             ( "name" := JsonDecode.string )
@@ -533,15 +539,20 @@ decodeData =
             )
         )
 
+decodeClobberData : JsonDecode.Decoder BackendResponse
+decodeClobberData =
+    JsonDecode.list JsonDecode.string
+
+
 fetchBackend : (WebData BackendData -> Msg) -> String -> Cmd Msg
 fetchBackend afterMsg url =
-   getJson decodeData url
+   getJson decodeFetchData url
         |> RemoteData.asCmd
         |> Cmd.map afterMsg
 
-clobberBackend : (WebData BackendData -> Msg)  -> String -> Http.Body -> Cmd Msg
+clobberBackend : (WebData BackendResponse -> Msg)  -> String -> Http.Body -> Cmd Msg
 clobberBackend afterMsg url body =
-   postJson decodeData url body
+   postJson decodeClobberData url body
         |> RemoteData.asCmd
         |> Cmd.map afterMsg
 
