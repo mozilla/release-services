@@ -12,14 +12,29 @@ def get_buildbot():
     return models.buildbot_branches(g.db.session)
 
 
+## TODO: this will change with tc authentication, it should be passed
+#try:
+#    who = current_user.authenticated_email
+#except AttributeError:
+#    if current_user.anonymous:
+#        who = 'anonymous'
+#    else:
+#        # TokenUser doesn't show up as anonymous; but also has no
+#        # authenticated_email
+#        who = 'automation'
+
+# TODO: require scopes
+# relengapi_common.auth.auth.require_scope('releng???/api/clobberer/buildbot/post)
 def post_buildbot(body):
     result = []
 
+    who = current_user.authenticated_email
     try:
         for clobber in body:
             result.append(
                 models.clobber_buildbot(
                     g.db.session,
+                    who=who,
                     branch=clobber['branch'],
                     builddir=clobber['builddir'],
                     slave=clobber['slave']

@@ -4,7 +4,15 @@
 	update-all
 
 APP=
-APPS=relengapi_clobberer relengapi_frontend shipit_dashboard
+APPS=relengapi_clobberer \
+	 relengapi_frontend \
+	 shipit_dashboard
+
+TOOL=
+TOOLS=pypi2nix awscli \
+	  node2nix \
+	  mysql2sqlite \
+	  mysql2pgsql
 
 APP_PORT_relengapi_clobberer=8000
 APP_PORT_relengapi_frontend=8001
@@ -50,12 +58,12 @@ develop-run-shipit_frontend: develop-run-BACKEND
 
 
 
-build-all: build-$(APPS)
+build-apps: $(foreach app, $(APPS), build-app-$(app))
 
-build: require-APP build-$(APP)
+build-app: require-APP build-app-$(APP)
 
-build-%:
-	nix-build nix/default.nix -A $(subst build-,,$@) -o result-$(subst build-,,$@)
+build-app-%:
+	nix-build nix/default.nix -A $(subst build-app-,,$@) -o result-$(subst build-app-,,$@)
 
 
 
@@ -67,7 +75,7 @@ docker-%:
 
 
 
-deploy-staging-all: deploy-staging-$(APPS)
+deploy-staging-all: $(foreach app, $(APPS), deploy-staging-$(app))
 
 deploy-staging: require-APP deploy-staging-$(APP)
 
@@ -82,8 +90,8 @@ deploy-staging-relengapi_clobberer: docker-relengapi_clobberer
 	docker push \
 		registry.heroku.com/releng-staging-$(subst deploy-staging-,,$@)/web
 
-deploy-staging-relengapi_frontend: require-AWS build-relengapi_frontend tools-awscli
-	./result-tools-awscli/bin/aws s3 sync \
+deploy-staging-relengapi_frontend: require-AWS build-app-relengapi_frontend tools-awscli
+	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read  \
 		result-$(subst deploy-staging-,,$@)/ \
@@ -93,7 +101,7 @@ deploy-staging-relengapi_frontend: require-AWS build-relengapi_frontend tools-aw
 
 
 
-deploy-production-all: deploy-production-$(APPS)
+deploy-production-all: $(foreach app, $(APPS), deploy-production-$(app))
 
 deploy-production: require-APP deploy-production-$(APP)
 
@@ -108,8 +116,8 @@ deploy-production-relengapi_clobberer: docker-relengapi_clobberer
 	docker push \
 		registry.heroku.com/releng-production-$(subst deploy-production-,,$@)/web
 
-deploy-production-relengapi_frontend: require-AWS build-relengapi_frontend tools-awscli
-	./result-tools-awscli/bin/aws s3 sync \
+deploy-production-relengapi_frontend: require-AWS build-app-relengapi_frontend tools-awscli
+	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read \
 		result-$(subst deploy-production-,,$@)/ \
@@ -118,33 +126,54 @@ deploy-production-relengapi_frontend: require-AWS build-relengapi_frontend tools
 
 
 update-all: \
-	update-nixpkgs \
-	update-tools \
-	update-$(APPS)
+	$(foreach tool, $(TOOLS), update-tools.$(tool)) \
+	$(foreach app, $(APPS), update-$(app))
 
 update: require-APP update-$(APP)
 
 update-%:
-	echo $@
 	nix-shell nix/update.nix --argstr pkg $(subst update-,,$@)
+
+
+
+
+
+build-tools: $(foreach tool, $(TOOLS), build-tool-$(tool))
+
+build-tool: require-TOOL build-tool-$(TOOL)
+
+build-tool-%:
+	nix-build nix/default.nix -A tools.$(subst build-tool-,,$@) -o result-tool-$(subst build-tool-,,$@)
 
 
 
 # --- helpers
 
-tools-awscli:
-	nix-build nix/default.nix -A tools.awscli -o result-tools-awscli
 
+require-TOOL:
+	@if [[ -z "$(TOOL)" ]]; then \
+		echo ""; \
+		echo "You need to specify which TOOL to build, eg:"; \
+		echo "  make build-tool TOOL=awscli"; \
+		echo "  ..."; \
+		echo ""; \
+		echo "Available TOOLS are: "; \
+		for tool in $(TOOLS); do \
+			echo " - $$tool"; \
+		done; \
+		echo ""; \
+		exit 1; \
+	fi
 require-APP:
 	@if [[ -z "$(APP)" ]]; then \
 		echo ""; \
 		echo "You need to specify which APP, eg:"; \
 		echo "  make develop APP=relengapi_clobberer"; \
-		echo "  make build APP=relengapi_clobberer"; \
+		echo "  make build-app APP=relengapi_clobberer"; \
 		echo "  ..."; \
 		echo ""; \
 		echo "Available APPS are: "; \
-		for app in "$(APPS)"; do \
+		for app in $(APPS); do \
 			echo " - $$app"; \
 		done; \
 		echo ""; \
@@ -164,3 +193,5 @@ require-AWS:
 		echo ""; \
 		exit 1; \
 	fi
+
+all: build-apps build-tools

@@ -2,14 +2,27 @@
 
 let
 
+  name = "relengapi_clobberer";
+
+  beforeSQL = ''
+    DROP TABLE IF EXISTS clobberer_builds;
+    DROP TABLE IF EXISTS clobberer_times;
+    DROP TABLE IF EXISTS builds;
+    DROP TABLE IF EXISTS clobber_times;
+  '';
+  afterSQL = ''
+    ALTER TABLE builds        RENAME TO clobberer_builds;
+    ALTER TABLE clobber_times RENAME TO clobberer_times;
+  '';
+
   inherit (builtins) readFile concatStringsSep;
-  inherit (releng_pkgs) from_requirements;
+  inherit (releng_pkgs.lib) fromRequirementsFile;
   inherit (releng_pkgs.pkgs) makeWrapper;
   inherit (releng_pkgs.pkgs.lib) removeSuffix inNixShell;
 
-  python = import ./requirements.nix {
-    inherit (releng_pkgs) pkgs;
-  };
+  python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+
+  migrate = import ./migrate.nix { inherit releng_pkgs; };
 
   version = removeSuffix "\n" (readFile ./VERSION);
 
@@ -20,16 +33,16 @@ let
 
   self = python.mkDerivation {
      namePrefix = "";
-     name = "relengapi_clobberer-${version}";
+     name = "${name}-${version}";
      srcs = if inNixShell then null else (map (x: ./. + ("/" + x)) srcs);
      sourceRoot = ".";
      buildInputs = [ makeWrapper ] ++
-       from_requirements [ ./requirements-dev.txt
-                           ./requirements-setup.txt ] python.packages;
+       fromRequirementsFile [ ./requirements-dev.txt
+                              ./requirements-setup.txt ] python.packages;
      propagatedBuildInputs =
-       from_requirements [ ./../relengapi_common/requirements.txt
-                           ./requirements.txt
-                           ./requirements-prod.txt ] python.packages;
+       fromRequirementsFile [ ./../relengapi_common/requirements.txt
+                              ./requirements.txt
+                              ./requirements-prod.txt ] python.packages;
      postInstall = ''
        mkdir -p $out/bin $out/etc
 
@@ -66,6 +79,12 @@ let
          fi
        done
      '';
+     passthru.mysql2sqlite = migrate.mysql2sqlite {
+       inherit name beforeSQL afterSQL;
+     };
+     passthru.mysql2postgresql = migrate.mysql2postgresql {
+       inherit name beforeSQL afterSQL;
+     };
      passthru.python = python;
      passthru.dockerEnvs = [
        "APP_SETTINGS=${self}/etc/settings.py"
@@ -77,5 +96,16 @@ let
              "--timeout" "300" "--log-file" "-"
        ];
      };
+     passthru.updateSrc = releng_pkgs.pkgs.writeScriptBin "update" ''
+       pushd src/relengapi_clobberer
+       ${releng_pkgs.tools.pypi2nix}/bin/pypi2nix -v \
+         -V 3.5 \
+         -E "postgresql" \
+         -r requirements.txt \
+         -r requirements-setup.txt \
+         -r requirements-dev.txt \
+         -r requirements-prod.txt 
+       popd
+     '';
    };
 in self

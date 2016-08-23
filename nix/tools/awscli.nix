@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql -r requirements.txt -r requirements-setup.txt -r requirements-dev.txt -r requirements-prod.txt
+#   pypi2nix --basename awscli -V 3.5 -e awscli -v
 #
 
 { pkgs ? import <nixpkgs> {}
@@ -20,7 +20,7 @@ let
     self = pythonPackages;
   };
 
-  commonBuildInputs = with pkgs; [ postgresql ];
+  commonBuildInputs = [];
   commonDoCheck = false;
 
   withPackages = pkgs':
@@ -61,7 +61,7 @@ let
 
   python = withPackages {};
 
-  generated = import ./requirements_generated.nix { inherit pkgs python commonBuildInputs commonDoCheck; };
-  overrides = import ./requirements_override.nix { inherit pkgs python; };
+  generated = import ./awscli_generated.nix { inherit pkgs python commonBuildInputs commonDoCheck; };
+  overrides = import ./awscli_override.nix { inherit pkgs python; };
 
 in python.withPackages (fix' (extends overrides generated))

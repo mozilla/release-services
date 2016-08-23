@@ -36,6 +36,21 @@ let
     shellHook = ''
       cd src/${pkg.name}
     '' + self.configurePhase;
+    passthru.updateSrc = releng_pkgs.pkgs.writeScriptBin "update" ''
+      export SSL_CERT_FILE="${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+      pushd src/relengapi_frontend
+      ${releng_pkgs.tools.node2nix}/bin/node2nix \
+        --composition package.nix \
+        --input node-packages.json \
+        --output node-packages.nix \
+        --node-env node-env.nix \
+        --flatten \
+        --pkg-name nodejs-6_x
+      rm -rf elm-stuff
+      ${elmPackages.elm}/bin/elm-package install -y
+      ${releng_pkgs.tools.elm2nix}/bin/elm2nix elm-package.nix
+      popd
+    '';
   };
 
 in self

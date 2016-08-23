@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql -r requirements.txt -r requirements-setup.txt -r requirements-dev.txt -r requirements-prod.txt
+#   pypi2nix --basename mysql2pgsql -V 2.7 -e py-mysql2pgsql -E postgresql mysql.lib -v
 #
 
 { pkgs ? import <nixpkgs> {}
@@ -16,18 +16,18 @@ let
   pythonPackages = import "${toString pkgs.path}/pkgs/top-level/python-packages.nix" {
     inherit pkgs;
     inherit (pkgs) stdenv;
-    python = pkgs.python35;
+    python = pkgs.python27Full;
     self = pythonPackages;
   };
 
-  commonBuildInputs = with pkgs; [ postgresql ];
+  commonBuildInputs = with pkgs; [ postgresql mysql.lib ];
   commonDoCheck = false;
 
   withPackages = pkgs':
     let
       pkgs = builtins.removeAttrs pkgs' ["__unfix__"];
       interpreter = pythonPackages.buildPythonPackage {
-        name = "python35-interpreter";
+        name = "python27Full-interpreter";
         buildInputs = [ makeWrapper ] ++ (builtins.attrValues pkgs);
         buildCommand = ''
           mkdir -p $out/bin
@@ -61,7 +61,7 @@ let
 
   python = withPackages {};
 
-  generated = import ./requirements_generated.nix { inherit pkgs python commonBuildInputs commonDoCheck; };
-  overrides = import ./requirements_override.nix { inherit pkgs python; };
+  generated = import ./mysql2pgsql_generated.nix { inherit pkgs python commonBuildInputs commonDoCheck; };
+  overrides = import ./mysql2pgsql_override.nix { inherit pkgs python; };
 
 in python.withPackages (fix' (extends overrides generated))

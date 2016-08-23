@@ -5,7 +5,7 @@ let
   name = "shipit_dashboard";
 
   inherit (builtins) readFile concatStringsSep;
-  inherit (releng_pkgs) from_requirements;
+  inherit (releng_pkgs.lib) fromRequirementsFile;
   inherit (releng_pkgs.pkgs) makeWrapper;
   inherit (releng_pkgs.pkgs.lib) removeSuffix inNixShell;
 
@@ -26,12 +26,12 @@ let
      srcs = if inNixShell then null else (map (x: ./. + ("/" + x)) srcs);
      sourceRoot = ".";
      buildInputs = [ makeWrapper ] ++
-       from_requirements [ ./requirements-dev.txt
-                           ./requirements-setup.txt ] python.packages;
+       fromRequirementsFile [ ./requirements-dev.txt
+                              ./requirements-setup.txt ] python.packages;
      propagatedBuildInputs = [ python.packages."clouseau" ] ++
-       from_requirements [ ./../relengapi_common/requirements.txt
-                           ./requirements.txt
-                           ./requirements-prod.txt ] python.packages;
+       fromRequirementsFile [ ./../relengapi_common/requirements.txt
+                              ./requirements.txt
+                              ./requirements-prod.txt ] python.packages;
      postInstall = ''
        mkdir -p $out/bin $out/etc
 
@@ -79,5 +79,16 @@ let
              "--timeout" "300" "--log-file" "-"
        ];
      };
+     passthru.updateSrc = releng_pkgs.pkgs.writeScriptBin "update" ''
+       pushd src/${name}
+       ${releng_pkgs.tools.pypi2nix}/bin/pypi2nix -v \
+        -V 3.5 \
+        -E "postgresql" \
+        -r requirements.txt \
+        -r requirements-setup.txt \
+        -r requirements-dev.txt \
+        -r requirements-prod.txt 
+       popd
+     '';
    };
 in self

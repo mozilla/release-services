@@ -1,4 +1,4 @@
-# generated using pypi2nix tool (version: 1.4.0.dev0)
+# generated using pypi2nix tool (version: 1.5.0.dev0)
 #
 # COMMAND:
 #   pypi2nix -v -V 3.5 -E postgresql -r requirements.txt -r requirements-setup.txt -r requirements-dev.txt -r requirements-prod.txt
@@ -52,10 +52,10 @@ self: {
 
 
   "Flask-Cors" = python.mkDerivation {
-    name = "Flask-Cors-2.1.2";
+    name = "Flask-Cors-3.0.0";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/99/c3/a65908bc5a031652248dfdb1fd4814391e7b8efca704a94008d764c45292/Flask-Cors-2.1.2.tar.gz";
-      sha256 = "f262e73adce557b2802a64054c82a0395576c88fbb944e3a9e1e2147140aa639";
+      url = "https://pypi.python.org/packages/b9/0f/b67770a6aaad19aefce1aea7d4ae7c199eccecdec91448c44996d798e2c2/Flask-Cors-3.0.0.tar.gz";
+      sha256 = "dd1e27226594e18a710a70d08fb9522dfa3d9ec6d4fc4168480edc60d0897050";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -605,10 +605,10 @@ self: {
 
 
   "pexpect" = python.mkDerivation {
-    name = "pexpect-4.2.0";
+    name = "pexpect-4.2.1";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/b3/7b/7b3659b9d7059d6d21e23b2464c5c84bffd4a34450cbf0ed19c9a8a4a52f/pexpect-4.2.0.tar.gz";
-      sha256 = "bf6816b8cc8d301a499e7adf338828b39bc7548eb64dbed4dd410ed93d95f853";
+      url = "https://pypi.python.org/packages/e8/13/d0b0599099d6cd23663043a2a0bb7c61e58c6ba359b2656e6fb000ef5b98/pexpect-4.2.1.tar.gz";
+      sha256 = "3d132465a75b57aa818341c6521392a06cc660feb3988d7f1074f39bd23c9a92";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -643,10 +643,10 @@ self: {
 
 
   "prompt-toolkit" = python.mkDerivation {
-    name = "prompt-toolkit-1.0.6";
+    name = "prompt-toolkit-1.0.7";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/b5/49/f961bb8307a6a5196beb06e441f4ae526748561366a085344974f9b1d318/prompt_toolkit-1.0.6.tar.gz";
-      sha256 = "fa8f0c3668afbc85abbb4601ebc8db1db9d5009c8a833feea107fc63f1e7ef22";
+      url = "https://pypi.python.org/packages/dd/55/2fb4883d2b21d072204fd21ca5e6040faa253135554590d0b67380669176/prompt_toolkit-1.0.7.tar.gz";
+      sha256 = "ef0b8188179fe7d052161ed274b43e18f5a680ff84d01462293b327e1668d2ef";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;

@@ -1,0 +1,10 @@
+awscli==1.10.58
+botocore==1.4.48
+colorama==0.3.7
+docutils==0.12
+jmespath==0.9.0
+pyasn1==0.1.9
+python-dateutil==2.5.3
+rsa==3.4.2
+s3transfer==0.1.2
+six==1.10.0

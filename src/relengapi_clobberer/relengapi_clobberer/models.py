@@ -63,8 +63,8 @@ class ClobberTime(db.Model):
     lastclobber = sa.Column(
         sa.Integer,
         nullable=False,
-        default=int(time.time()),
-        index=True
+        default=lambda: int(time.time()),
+        index=True,
     )
     who = sa.Column(sa.String(50))
 
@@ -167,18 +167,8 @@ def buildbot_branch_builders(db_session, branch):
     ).distinct()
 
 
-## TODO: this will change with tc authentication, it should be passed
-#try:
-#    who = current_user.authenticated_email
-#except AttributeError:
-#    if current_user.anonymous:
-#        who = 'anonymous'
-#    else:
-#        # TokenUser doesn't show up as anonymous; but also has no
-#        # authenticated_email
-#        who = 'automation'
-
-def buildbot_clobber(db_session, branch, slave, builddir, who, log=None):
+def clobber_buildbot(db_session, who, branch=None, slave=None, builddir=None,
+                     log=None):
     """ TODO:
     """
 

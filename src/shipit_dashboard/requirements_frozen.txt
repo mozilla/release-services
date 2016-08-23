@@ -7,7 +7,7 @@ elasticsearch==2.4.0
 flake8==3.0.4
 Flask==0.11.1
 Flask-Cache==0.13.1
-Flask-Cors==2.1.2
+Flask-Cors==3.0.0
 Flask-Login==0.3.2
 Flask-SQLAlchemy==2.1
 gunicorn==19.6.0
@@ -24,9 +24,9 @@ mccabe==0.5.2
 mohawk==0.3.3
 multidict==1.2.2
 newrelic==2.68.0.50
-pexpect==4.2.0
+pexpect==4.2.1
 pickleshare==0.7.4
-prompt-toolkit==1.0.6
+prompt-toolkit==1.0.7
 psycopg2==2.6.2
 ptyprocess==0.5.1
 pycodestyle==2.0.0
