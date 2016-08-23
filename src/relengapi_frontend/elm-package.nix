@@ -12,8 +12,8 @@
     sha256 = "013mndac19z01802rcwc0fbzfq3sf923m7sx065ak7viaiclnlay";
   };
   "elm-lang/virtual-dom" = {
-    version = "1.1.0";
-    sha256 = "16g66cvvh85ddciq0ymaqfyq2bcz11pxn0g0dc1wx7bmlqx7q1jz";
+    version = "1.1.1";
+    sha256 = "0mihz195qd8lilbdja0552k16jrdv2h66b7kx0waylhswpw6ml1b";
   };
   "evancz/elm-http" = {
     version = "3.0.1";

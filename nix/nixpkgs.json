@@ -1,6 +1,6 @@
 {
-    "owner": "garbas",
-    "repo": "nixpkgs",
-    "rev": "094c35983ac6cba071f293f07284978fa417e309",
-    "sha256": "13h01hzignrb8a0yls674ahwwra6hzjccs731pw86ljxgkhb6nc2"
+  "owner": "garbas",
+  "repo": "nixpkgs",
+  "rev": "97598ba6707bcd0d6992dcf87ca391326a9c2107",
+  "sha256": "0szd2dgxs30k9f8xfk4lavd2sa7yv6r8ry35iys2sjac50m8crbv"
 }

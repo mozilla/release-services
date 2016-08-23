@@ -2,7 +2,20 @@
 
 let
 
-  inherit (releng_pkgs) pkgs;
+  inherit (releng_pkgs.pkgs)
+    cacert
+    coreutils
+    curl
+    gnugrep
+    gnused
+    jq
+    nix-prefetch-scripts
+    writeScriptBin;
+  inherit (releng_pkgs.pkgs.lib)
+    flatten
+    removeSuffix
+    splitString
+    unique;
 
   ignoreRequirementsLines = specs:
     builtins.filter
@@ -18,13 +31,13 @@ let
       removeVersion = spec:
         let
           possible_specs =
-            pkgs.lib.unique
+            unique
               (builtins.filter
                 (x: x != null)
                 (map
                   (separator:
                     let
-                      spec' = pkgs.lib.splitString separator spec;
+                      spec' = splitString separator spec;
                     in
                       if builtins.length spec' != 1
                       then builtins.head spec'
@@ -42,20 +55,25 @@ let
 
 in {
 
-  from_requirements = files: pkgs':
+  packagesToUpdate = pkgs':
+    builtins.filter
+      (pkg: builtins.hasAttr "updateSrc" pkg)
+      (builtins.attrValues pkgs');
+
+  fromRequirementsFile = files: pkgs':
     let
       # read all files and flatten the dependencies
       # TODO: read recursivly all -r statements
       specs =
-        pkgs.lib.flatten
+        flatten
           (map
-            (file: pkgs.lib.splitString "\n"(pkgs.lib.removeSuffix "\n" (builtins.readFile file)))
+            (file: splitString "\n"(removeSuffix "\n" (builtins.readFile file)))
             files
           );
     in
       map
         (requirement: builtins.getAttr requirement pkgs')
-        (pkgs.lib.unique
+        (unique
           (cleanRequirementsSpecification
             (ignoreRequirementsLines
               specs
@@ -63,4 +81,47 @@ in {
           )
         );
 
+  updateFromGitHub = { owner, repo, path, branch }:
+    writeScriptBin "update" ''
+      export SSL_CERT_FILE=${cacert}/etc/ssl/certs/ca-bundle.crt
+
+      github_rev() {
+        ${curl.bin}/bin/curl -sSf "https://api.github.com/repos/$1/$2/branches/$3" | \
+          ${jq}/bin/jq '.commit.sha' | \
+          ${gnused}/bin/sed 's/"//g'
+      }
+
+      github_sha256() {
+        ${nix-prefetch-scripts}/bin/nix-prefetch-zip \
+           --hash-type sha256 \
+           "https://github.com/$1/$2/archive/$3.tar.gz" 2>&1 | \
+           ${gnugrep}/bin/grep "hash is " | \
+           ${gnused}/bin/sed 's/hash is //'
+      }
+
+      echo "=== ${owner}/${repo}@${branch} ==="
+
+      echo -n "Looking up latest revision ... "
+      rev=$(github_rev "${owner}" "${repo}" "${branch}");
+      echo "revision is \`$rev\`."
+
+      sha256=$(github_sha256 "${owner}" "${repo}" "$rev");
+      echo "sha256 is \`$sha256\`."
+
+      if [ "$sha256" == "" ]; then
+        echo "sha256 is not valid!"
+        exit 2
+      fi
+      source_file=$HOME/${path}
+      echo "Content of source file (``$source_file``) written."
+      cat <<REPO | ${coreutils}/bin/tee "$source_file"
+      {
+        "owner": "${owner}",
+        "repo": "${repo}",
+        "rev": "$rev",
+        "sha256": "$sha256"
+      }
+      REPO
+      echo
+    '';
 }

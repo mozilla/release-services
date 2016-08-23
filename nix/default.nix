@@ -1,5 +1,8 @@
-let pkgs' = import <nixpkgs> {}; in
-{ pkgs ? import (pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs.json))) {}
+let
+  pkgs' = import <nixpkgs> {};
+  nixpkgs = pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs.json));
+in
+{ pkgs ? import nixpkgs {}
 }:
 
 let
@@ -7,6 +10,16 @@ let
   releng_pkgs = {
 
     inherit pkgs;
+
+    nixpkgs = nixpkgs // {
+      name = "nixpkgs-2016-08-23";
+      updateSrc = releng_pkgs.lib.updateFromGitHub {
+        owner = "garbas";
+        repo = "nixpkgs";
+        branch = "python-srcs";
+        path = "nix/nixpkgs.json";
+      };
+    };
 
     lib = import ./lib/default.nix { inherit releng_pkgs; };
 

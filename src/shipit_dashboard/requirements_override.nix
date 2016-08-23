@@ -6,8 +6,8 @@ self: super: {
     buildInputs = old.buildInputs ++ [ self."flake8" ];
     # TODO: report this upstream
     patchPhase = ''
-      sed -i -e "s|long_description=open('README.rst').read(),|long_description=\"\",|" ./src-*/setup.py
-      sed -i -e "s|base_url or self.base_url|\'\'|" ./src-*/connexion/api.py
+      sed -i -e "s|long_description=open('README.rst').read(),|long_description=\"\",|" setup.py
+      sed -i -e "s|base_url or self.base_url|\'\'|" connexion/api.py
     '';
   });
 
@@ -52,7 +52,6 @@ self: super: {
      recursive-exclude * __pycache__
      recursive-exclude * *.py[co]
      EOT
-     cd ..
     '';
     propagatedBuildInputs = [
       self."requests"

@@ -5,63 +5,20 @@ let pkgs' = import <nixpkgs> {}; in
 
 let
 
-  releng_pkgs = import ./default.nix {};
+  releng_pkgs = import ./default.nix { inherit pkgs; };
 
-  pkgsUpdates = {
-    # TODO: nixpkgs = ...
-    tools = ''
-      pushd nix/
-      pypi2nix -v \
-        -V 3.5 \
-        -r requirements.txt 
-      popd
-    '';
-    relengapi_clobberer = ''
-      pushd src/relengapi_clobberer
-      pypi2nix -v \
-        -V 3.5 \
-        -E "postgresql" \
-        -r requirements.txt \
-        -r requirements-setup.txt \
-        -r requirements-dev.txt \
-        -r requirements-prod.txt 
-      popd
-    '';
-    relengapi_frontend = ''
-      pushd src/relengapi_frontend
-      node2nix \
-        --composition package.nix \
-        --input node-packages.json \
-        --output node-packages.nix \
-        --node-env node-env.nix \
-        --flatten \
-        --pkg-name nodejs-6_x
-      rm -rf elm-stuff
-      elm-package install -y
-      elm2nix elm-package.nix
-      popd
-    '';
-    shipit_dashboard = ''
-      pushd src/shipit_dashboard
-      pypi2nix -v \
-        -V 3.5 \
-        -E "postgresql" \
-        -r requirements.txt \
-        -r requirements-setup.txt \
-        -r requirements-dev.txt \
-        -r requirements-prod.txt 
-      popd
-    '';
-  };
+  packages =
+    if pkg == null
+      then 
+        ((releng_pkgs.lib.packagesToUpdate releng_pkgs) ++
+         (releng_pkgs.lib.packagesToUpdate releng_pkgs.tools))
+    else if (builtins.substring 0 6 pkg) == "tools."
+      then [(builtins.getAttr (builtins.substring 6 100 pkg) releng_pkgs.tools)]
+    else
+      [(builtins.getAttr pkg releng_pkgs)];
 
 in pkgs.stdenv.mkDerivation {
   name = "update-releng";
-  buildInputs = [
-    releng_pkgs.elmPackages.elm
-    releng_pkgs.tools.elm2nix
-    releng_pkgs.tools.node2nix
-    # TODO: releng_pkgs.tools.pypi2nix
-  ];
   buildCommand = ''
     echo "+--------------------------------------------------------+"
     echo "| Not possible to update repositories using \`nix-build\`. |"
@@ -70,12 +27,11 @@ in pkgs.stdenv.mkDerivation {
     exit 1
   '';
   shellHook = ''
-    export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-  '' + (
-    if pkg == null
-    then builtins.concatStringsSep "\n\n" (builtins.attrValues pkgsUpdates)
-    else builtins.getAttr pkg pkgsUpdates
-  ) + ''
+    export HOME=$PWD
+    echo "Updating packages ..."
+    ${builtins.concatStringsSep "\n\n" (
+        map (pkg: "echo ' - ${(builtins.parseDrvName pkg.name).name}';${pkg.updateSrc}/bin/update") packages)}
+    echo "" 
     echo "Packages updated!"
     exit
   '';

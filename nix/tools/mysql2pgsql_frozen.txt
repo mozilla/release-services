@@ -1,0 +1,5 @@
+MySQL-python==1.2.5
+psycopg2==2.6.2
+py-mysql2pgsql==0.1.5
+PyYAML==3.11
+termcolor==1.1.0
