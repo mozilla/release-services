@@ -9,8 +9,7 @@ APPS=relengapi_clobberer \
 	 shipit_dashboard
 
 TOOL=
-TOOLS=pypi2nix \
-	  awscli \
+TOOLS=pypi2nix awscli \
 	  node2nix \
 	  mysql2sqlite \
 	  mysql2pgsql
@@ -59,12 +58,12 @@ develop-run-shipit_frontend: develop-run-BACKEND
 
 
 
-build-all: $(foreach app, $(APPS), build-$(app))
+build-apps: $(foreach app, $(APPS), build-app-$(app))
 
-build: require-APP build-$(APP)
+build-app: require-APP build-app-$(APP)
 
-build-%:
-	nix-build nix/default.nix -A $(subst build-,,$@) -o result-$(subst build-,,$@)
+build-app-%:
+	nix-build nix/default.nix -A $(subst build-app-,,$@) -o result-$(subst build-app-,,$@)
 
 
 
@@ -91,8 +90,8 @@ deploy-staging-relengapi_clobberer: docker-relengapi_clobberer
 	docker push \
 		registry.heroku.com/releng-staging-$(subst deploy-staging-,,$@)/web
 
-deploy-staging-relengapi_frontend: require-AWS build-relengapi_frontend tools-awscli
-	./result-tools-awscli/bin/aws s3 sync \
+deploy-staging-relengapi_frontend: require-AWS build-app-relengapi_frontend tools-awscli
+	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read  \
 		result-$(subst deploy-staging-,,$@)/ \
@@ -117,8 +116,8 @@ deploy-production-relengapi_clobberer: docker-relengapi_clobberer
 	docker push \
 		registry.heroku.com/releng-production-$(subst deploy-production-,,$@)/web
 
-deploy-production-relengapi_frontend: require-AWS build-relengapi_frontend tools-awscli
-	./result-tools-awscli/bin/aws s3 sync \
+deploy-production-relengapi_frontend: require-AWS build-app-relengapi_frontend tools-awscli
+	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read \
 		result-$(subst deploy-production-,,$@)/ \
@@ -137,7 +136,6 @@ update-%:
 
 
 
-# --- helpers
 
 
 build-tools: $(foreach tool, $(TOOLS), build-tool-$(tool))
@@ -145,17 +143,22 @@ build-tools: $(foreach tool, $(TOOLS), build-tool-$(tool))
 build-tool: require-TOOL build-tool-$(TOOL)
 
 build-tool-%:
-	nix-build nix/default.nix -A tools.$(subst build-tool-,,$@) -o result-$(subst build-tool-,,$@)
+	nix-build nix/default.nix -A tools.$(subst build-tool-,,$@) -o result-tool-$(subst build-tool-,,$@)
+
+
+
+# --- helpers
+
 
 require-TOOL:
 	@if [[ -z "$(TOOL)" ]]; then \
 		echo ""; \
 		echo "You need to specify which TOOL to build, eg:"; \
-		echo "  make build-tool TOOL =awscli"; \
+		echo "  make build-tool TOOL=awscli"; \
 		echo "  ..."; \
 		echo ""; \
-		echo "Available APPS are: "; \
-		for tool in "$(TOOLS)"; do \
+		echo "Available TOOLS are: "; \
+		for tool in $(TOOLS); do \
 			echo " - $$tool"; \
 		done; \
 		echo ""; \
@@ -166,11 +169,11 @@ require-APP:
 		echo ""; \
 		echo "You need to specify which APP, eg:"; \
 		echo "  make develop APP=relengapi_clobberer"; \
-		echo "  make build APP=relengapi_clobberer"; \
+		echo "  make build-app APP=relengapi_clobberer"; \
 		echo "  ..."; \
 		echo ""; \
 		echo "Available APPS are: "; \
-		for app in "$(APPS)"; do \
+		for app in $(APPS); do \
 			echo " - $$app"; \
 		done; \
 		echo ""; \
@@ -191,4 +194,4 @@ require-AWS:
 		exit 1; \
 	fi
 
-all: build-all build-tools-all
+all: build-apps build-tools

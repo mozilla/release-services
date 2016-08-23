@@ -4,15 +4,25 @@ let
 
   name = "relengapi_clobberer";
 
+  beforeSQL = ''
+    DROP TABLE IF EXISTS clobberer_builds;
+    DROP TABLE IF EXISTS clobberer_times;
+    DROP TABLE IF EXISTS builds;
+    DROP TABLE IF EXISTS clobber_times;
+  '';
+  afterSQL = ''
+    ALTER TABLE builds        RENAME TO clobberer_builds;
+    ALTER TABLE clobber_times RENAME TO clobberer_times;
+  '';
+
   inherit (builtins) readFile concatStringsSep;
   inherit (releng_pkgs.lib) fromRequirementsFile;
-  inherit (releng_pkgs.tools) mysql2sqlite;
-  inherit (releng_pkgs.pkgs) makeWrapper writeScriptBin bash coreutils openssh sqlite;
+  inherit (releng_pkgs.pkgs) makeWrapper;
   inherit (releng_pkgs.pkgs.lib) removeSuffix inNixShell;
 
-  python = import ./requirements.nix {
-    inherit (releng_pkgs) pkgs;
-  };
+  python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+
+  migrate = import ./migrate.nix { inherit releng_pkgs; };
 
   version = removeSuffix "\n" (readFile ./VERSION);
 
@@ -20,62 +30,6 @@ let
     "./../relengapi_common"
     "./../relengapi_clobberer"
   ];
-
-  migrate_from_mysql_to_postgresql = writeScriptBin "migrate-from-mysql-to-postgresql" ''
-    #${bash}/bin/bash -e
-  '';
-  migrate_from_mysql_to_sqlite = writeScriptBin "migrate-from-mysql-to-sqlite" ''
-    #${bash}/bin/bash -e
-
-    MIGRATE_USER=$1
-    MIGRATE_DB_PASSWORD=$2
-    MIGRATE_DB=$3
-
-    if [[ -z "$MIGRATE_DB_PASSWORD" ]] ||
-       [[ -s "$MIGRATE_USER" ]]; then
-       echo "ERROR:"
-       echo ""
-       echo "You need to provide "
-       echo " - username: to connect to 'relengwebadm.private.scl3.mozilla.com' server as first argument"
-       echo " - password: for 'devtools-rw-vip.db.scl3.mozilla.com' mysql database"
-       echo " - database: path to sqlite database file"
-       echo ""
-       exit 1
-    fi
-
-    MIGRATE_TMPDIR=`${coreutils}/bin/mktemp -d -t "migrate-${name}-XXXXX"`
-    MIGRATE_DUMP="$MIGRATE_TMPDIR/dump.sql"
-    MIGRATE_DUMP_TMP="$MIGRATE_DUMP.tmp"
-
-    # administration server
-    RELENGADM_URL="relengwebadm.private.scl3.mozilla.com"
-
-    # XXX: maybe we need to make this configurable
-    MYSQL_PRODUCTION_USER="clobberer2"
-    MYSQL_PRODUCTION_URL="devtools-rw-vip.db.scl3.mozilla.com"
-    MYSQL_PRODUCTION_DBNAME="clobberer"
-    MYSQL_DUMP_TMP="mysqldump_${name}.sql"
-
-    ${coreutils}/bin/rm -f $MIGRATE_DUMP $MIGRATE_DUMP_TMP
-
-    ${sqlite.bin}/bin/sqlite3 $MIGRATE_DB "DROP TABLE IF EXISTS \`clobberer_builds\`;"
-    ${sqlite.bin}/bin/sqlite3 $MIGRATE_DB "DROP TABLE IF EXISTS \`clobberer_times\`;"
-    ${sqlite.bin}/bin/sqlite3 $MIGRATE_DB "DROP TABLE IF EXISTS \`builds\`;"
-    ${sqlite.bin}/bin/sqlite3 $MIGRATE_DB "DROP TABLE IF EXISTS \`clobber_times\`;"
-
-    ${openssh}/bin/ssh $MIGRATE_USER@$RELENGADM_URL "rm -f $MYSQL_DUMP_TMP && mysqldump --skip-extended-insert --compact -u $MYSQL_PRODUCTION_USER -p$MIGRATE_DB_PASSWORD -h $MYSQL_PRODUCTION_URL $MYSQL_PRODUCTION_DBNAME > $MYSQL_DUMP_TMP" 2> /dev/null
-    ${openssh}/bin/scp $MIGRATE_USER@$RELENGADM_URL:$MYSQL_DUMP_TMP $MIGRATE_DUMP_TMP
-    ${openssh}/bin/ssh $MIGRATE_USER@$RELENGADM_URL "rm $MYSQL_DUMP_TMP"
-
-    ${coreutils}/bin/cat $MIGRATE_DUMP_TMP               >> $MIGRATE_DUMP
-
-    ${mysql2sqlite}/bin/mysql2sqlite $MIGRATE_DUMP | ${sqlite.bin}/bin/sqlite3 $MIGRATE_DB
-
-    ${sqlite.bin}/bin/sqlite3 $MIGRATE_DB "ALTER TABLE \`builds\` RENAME TO \`clobberer_builds\`;"
-    ${sqlite.bin}/bin/sqlite3 $MIGRATE_DB "ALTER TABLE \`clobber_times\` RENAME TO \`clobberer_times\`;"
-
-    rm -rf $MIGRATE_TMPDIR
-  '';
 
   self = python.mkDerivation {
      namePrefix = "";
@@ -125,8 +79,12 @@ let
          fi
        done
      '';
-     passthru.migrate_from_mysql_to_sqlite = migrate_from_mysql_to_sqlite;
-     passthru.migrate_from_mysql_to_postgresql = migrate_from_mysql_to_postgresql;
+     passthru.mysql2sqlite = migrate.mysql2sqlite {
+       inherit name beforeSQL afterSQL;
+     };
+     passthru.mysql2postgresql = migrate.mysql2postgresql {
+       inherit name beforeSQL afterSQL;
+     };
      passthru.python = python;
      passthru.dockerEnvs = [
        "APP_SETTINGS=${self}/etc/settings.py"
