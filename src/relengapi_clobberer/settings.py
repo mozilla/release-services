@@ -6,24 +6,13 @@ from __future__ import absolute_import
 
 import os
 
+
+SWAGGER_BASE_URL = os.environ.get('SWAGGER_BASE_URL')
 DATABASE_URL = os.environ.get('DATABASE_URL')
-CACHE = {x: os.environ.get(x) for x in os.environ.keys() if x.startswith('CACHE_')}   # noqa
-SWAGGER_BASE_URL = os.environ.get('SWAGGER_BASE_URL', None)
-
-
-if 'CACHE_DEFAULT_TIMEOUT' not in CACHE:
-    CACHE['CACHE_DEFAULT_TIMEOUT'] = 60 * 5
-
-
-if 'REDIS_URL' in os.environ:
-    CACHE['CACHE_TYPE'] = 'redis'
-    CACHE['CACHE_REDIS_URL'] = os.environ['REDIS_URL']
 
 if not DATABASE_URL:
     raise Exception("You need to specify DATABASE_URL variable.")
 
-if not CACHE:
-    raise Exception("You need to specify CACHE variable.")
 
 SQLALCHEMY_DATABASE_URI = DATABASE_URL
 SQLALCHEMY_TRACK_MODIFICATIONS = False
