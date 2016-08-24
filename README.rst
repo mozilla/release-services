@@ -1,11 +1,12 @@
-Welcome to relengapi
-====================
+Welcome to releng
+=================
 
-Purspose of relengapi ... TODO
+Purspose of releng ... TODO
 
-- Documentation: https://docs.relengapi.mozilla.org
-- Issues: https://gitub.com/mozilla/build-relengapi/issues
-- Code: https://gitub.com/mozilla/build-relengapi
+- Documentation: https://docs.mozilla-releng.org
+- Issues: https://gitub.com/garbas/mozilla-releng/issues
+- Code: https://gitub.com/garbas/mozilla-releng
+
 
 Repository structure
 ====================
@@ -81,18 +82,18 @@ Repository structure
 
 - ``settings.py``
 
-  Production relengapi settings file for Heroku.
+  Production releng settings file for Heroku.
 
 - ``src/``
 
   Directory where we keep all our source code
 
-  - ``relengapi_frontend/``
+  - ``releng_frontend/``
 
-    Read its `README<src/relengapi_frontend/README.md` for more info.
+    Read its `README<src/releng_frontend/README.md` for more info.
 
-  - ``relengapi_clobberer/``
+  - ``releng_clobberer/``
 
-    Read its `README<src/relengapi_clobberer/README.md` for more info.
+    Read its `README<src/releng_clobberer/README.md` for more info.
 
 .. _pip: https://pip.pypa.io

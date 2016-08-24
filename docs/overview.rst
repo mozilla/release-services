@@ -12,24 +12,24 @@ Quick overview of all releng services with short description.
 .. todo:: write about AWS policies (production/staging)
 
 
-relengapi_frontend
-------------------
+releng_frontend
+---------------
 
 Staging:
 
 - Url: https://staging.mozilla-releng.org
-- S3: https://console.aws.amazon.com/s3/home?region=us-west-2&bucket=releng-staging-relengapi-frontend
+- S3: https://console.aws.amazon.com/s3/home?region=us-west-2&bucket=releng-staging-frontend
 - CloudFront: https://console.aws.amazon.com/cloudfront/home?region=us-west-2#distribution-settings:E21OUD0VFT2UQ6
 
 Production:
 
 - Url: https://mozilla-releng.org
-- S3: https://console.aws.amazon.com/s3/home?region=us-west-2&bucket=releng-production-relengapi-frontend
+- S3: https://console.aws.amazon.com/s3/home?region=us-west-2&bucket=releng-production-frontend
 - CloudFront: https://console.aws.amazon.com/cloudfront/home?region=us-west-2#distribution-settings:E7SMSK9P6UW3N
 
 
-relengapi_clobberer
--------------------
+releng_clobberer
+----------------
 
 .. todo:: mention that newrelic and papertrail addons are used
 

@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 import os
 
-from relengapi_common import db, create_app
+from releng_common import db, create_app
 
 
 DEBUG = bool(os.environ.get('DEBUG', __name__ == '__main__'))
@@ -29,7 +29,7 @@ if not os.environ.get('APP_SETTINGS') and \
 
 
 app = create_app(
-    "relengapi_clobberer",
+    "releng_clobberer",
     extensions=[init_app, db],
     debug=DEBUG,
     debug_src=HERE,

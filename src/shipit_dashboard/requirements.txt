@@ -1,5 +1,5 @@
--r ../relengapi_common/requirements.txt
--e ../relengapi_common
+-r ../releng_common/requirements.txt
+-e ../releng_common
 
 # from https://github.com/calixteman/clouseau/blob/master/requirements.txt
 requests>=2.7.0

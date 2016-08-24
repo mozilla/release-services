@@ -1,10 +1,10 @@
 {
-  "name": "relengapi_frontend",
+  "name": "releng_frontend",
   "version": "0.1.0",
-  "description": "relengapi frontend",
+  "description": "releng frontend",
   "main": "src/index.js",
   "author": "Rok Garbas <rok@garbas.si>",
-  "repository": "https://github.com/mozilla/build-relengapi",
+  "repository": "https://github.com/garbas/mozilla-releng",
   "license": "MPL-2.0",
   "engines": {
     "node": ">=6.0.0"
@@ -25,7 +25,7 @@
   },
   "keywords": [
     "mozilla",
-    "relengapi"
+    "releng"
   ],
   "dependencies": {
     "bootstrap": "4.0.0-alpha.2",

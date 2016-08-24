@@ -8,7 +8,7 @@ paths:
   /buildbot:
 
     get:
-      operationId: "relengapi_clobberer.api.get_buildbot"
+      operationId: "releng_clobberer.api.get_buildbot"
       responses:
         200:
           description: An array of branches
@@ -18,7 +18,7 @@ paths:
               $ref: '#/definitions/Branch'
 
     post:
-      operationId: "relengapi_clobberer.api.post_buildbot"
+      operationId: "releng_clobberer.api.post_buildbot"
       parameters:
         - name: body
           in: body
@@ -52,13 +52,13 @@ paths:
   /taskcluster:
 
     get:
-      operationId: "relengapi_clobberer.api.get_taskcluster"
+      operationId: "releng_clobberer.api.get_taskcluster"
       responses:
         200:
           description: An array of branches
 
     post:
-      operationId: "relengapi_clobberer.api.post_taskcluster"
+      operationId: "releng_clobberer.api.post_taskcluster"
       responses:
         200:
           description: Branches clobbered

@@ -1,2 +1,0 @@
--r ../relengapi_common/requirements.txt
--e ../relengapi_common

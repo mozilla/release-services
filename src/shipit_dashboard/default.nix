@@ -2,21 +2,18 @@
 
 let
 
-  name = "shipit_dashboard";
-
   inherit (builtins) readFile concatStringsSep;
   inherit (releng_pkgs.lib) fromRequirementsFile;
   inherit (releng_pkgs.pkgs) makeWrapper;
   inherit (releng_pkgs.pkgs.lib) removeSuffix inNixShell;
 
-  python = import ./requirements.nix {
-    inherit (releng_pkgs) pkgs;
-  };
-
+  name = "shipit_dashboard";
   version = removeSuffix "\n" (readFile ./VERSION);
 
+  python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+
   srcs = [
-    "./../relengapi_common"
+    "./../releng_common"
     "./../${name}"
   ];
 
@@ -29,7 +26,7 @@ let
        fromRequirementsFile [ ./requirements-dev.txt
                               ./requirements-setup.txt ] python.packages;
      propagatedBuildInputs = [ python.packages."clouseau" ] ++
-       fromRequirementsFile [ ./../relengapi_common/requirements.txt
+       fromRequirementsFile [ ./../releng_common/requirements.txt
                               ./requirements.txt
                               ./requirements-prod.txt ] python.packages;
      postInstall = ''

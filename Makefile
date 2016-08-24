@@ -1,23 +1,27 @@
-.PHONY: help develop build-all build docker \
+.PHONY: help develop build docker \
 	deploy-staging-all deploy-staging \
 	deploy-production-all deploy-production \
 	update-all
 
 APP=
-APPS=relengapi_clobberer \
-	 relengapi_frontend \
-	 shipit_dashboard
+APPS=\
+	releng_frontend \
+	releng_clobberer \
+	shipit_dashboard
 
 TOOL=
-TOOLS=pypi2nix awscli \
-	  node2nix \
-	  mysql2sqlite \
-	  mysql2pgsql
+TOOLS=\
+	pypi2nix \
+	awscli \
+	node2nix \
+	mysql2sqlite \
+	mysql2pgsql
 
-APP_PORT_relengapi_clobberer=8000
-APP_PORT_relengapi_frontend=8001
-APP_PORT_shipit_dashboard=8002
+
+APP_PORT_releng_frontend=8001
+APP_PORT_releng_clobberer=8002
 APP_PORT_shipit_frontend=8003
+APP_PORT_shipit_dashboard=8004
 
 
 help:
@@ -47,8 +51,8 @@ develop-run-FRONTEND: require-APP
 	NEO_BASE_URL=https://localhost:$$APP_PORT_$(APP) \
 		nix-shell nix/default.nix -A $(APP) --run "neo start --config webpack.config.js"
 
-develop-run-relengapi_clobberer: develop-run-BACKEND
-develop-run-relengapi_frontend: develop-run-FRONTEND
+develop-run-releng_clobberer: develop-run-BACKEND
+develop-run-releng_frontend: develop-run-FRONTEND
 
 develop-run-shipit_dashboard: develop-run-BACKEND
 develop-run-shipit_frontend: develop-run-BACKEND
@@ -79,7 +83,7 @@ deploy-staging-all: $(foreach app, $(APPS), deploy-staging-$(app)) deploy-stagin
 
 deploy-staging: require-APP deploy-staging-$(APP)
 
-deploy-staging-relengapi_clobberer: docker-relengapi_clobberer
+deploy-staging-releng_clobberer: docker-releng_clobberer
 	if [[ -n "`docker images -q $(subst deploy-staging-,,$@)`" ]]; then \
 		docker rmi -f `docker images -q $(subst deploy-staging-,,$@)`; \
 	fi
@@ -90,7 +94,7 @@ deploy-staging-relengapi_clobberer: docker-relengapi_clobberer
 	docker push \
 		registry.heroku.com/releng-staging-$(subst deploy-staging-,,$@)/web
 
-deploy-staging-relengapi_frontend: require-AWS build-app-relengapi_frontend build-tool-awscli
+deploy-staging-releng_frontend: require-AWS build-app-releng_frontend build-tool-awscli
 	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read  \
@@ -113,7 +117,7 @@ deploy-production-all: $(foreach app, $(APPS), deploy-production-$(app)) deploy-
 
 deploy-production: require-APP deploy-production-$(APP)
 
-deploy-production-relengapi_clobberer: docker-relengapi_clobberer
+deploy-production-releng_clobberer: docker-releng_clobberer
 	if [[ -n "`docker images -q $(subst deploy-production-,,$@)`" ]]; then \
 		docker rmi -f `docker images -q $(subst deploy-production-,,$@)`; \
 	fi
@@ -124,7 +128,7 @@ deploy-production-relengapi_clobberer: docker-relengapi_clobberer
 	docker push \
 		registry.heroku.com/releng-production-$(subst deploy-production-,,$@)/web
 
-deploy-production-relengapi_frontend: require-AWS build-app-relengapi_frontend build-tool-awscli
+deploy-production-releng_frontend: require-AWS build-app-releng_frontend build-tool-awscli
 	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read \
@@ -189,8 +193,8 @@ require-APP:
 	@if [[ -z "$(APP)" ]]; then \
 		echo ""; \
 		echo "You need to specify which APP, eg:"; \
-		echo "  make develop APP=relengapi_clobberer"; \
-		echo "  make build-app APP=relengapi_clobberer"; \
+		echo "  make develop APP=releng_clobberer"; \
+		echo "  make build-app APP=releng_clobberer"; \
 		echo "  ..."; \
 		echo ""; \
 		echo "Available APPS are: "; \
@@ -207,7 +211,7 @@ require-AWS:
 		[[ -z "$$AWS_SECRET_ACCESS_KEY" ]]; then \
 		echo ""; \
 		echo "You need to specify AWS credentials, eg:"; \
-		echo "  make deploy-production-relengapi_clobberer \\"; \
+		echo "  make deploy-production-releng_clobberer \\"; \
 	    echo "       AWS_ACCESS_KEY_ID=\"...\" \\"; \
 		echo "       AWS_SECRET_ACCESS_KEY=\"...\""; \
 		echo ""; \

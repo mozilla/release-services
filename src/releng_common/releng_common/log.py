@@ -24,7 +24,7 @@ class UnstructuredRenderer(structlog.processors.KeyValueRenderer):
 
 
 def setup_console_logging(quiet=False):
-    root = logging.getLogger('relengapi_common')
+    root = logging.getLogger('releng_common')
     if quiet:
         root.setLevel(logging.WARNING)
     else:

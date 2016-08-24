@@ -5,7 +5,7 @@
 from __future__ import absolute_import
 
 from flask import g, current_app
-from relengapi_clobberer import models
+from releng_clobberer import models
 
 
 def get_buildbot():
@@ -24,7 +24,7 @@ def get_buildbot():
 #        who = 'automation'
 
 # TODO: require scopes
-# relengapi_common.auth.auth.require_scope('releng???/api/clobberer/buildbot/post)
+# releng_common.auth.auth.require_scope('releng???/api/clobberer/buildbot/post)
 def post_buildbot(body):
     result = []
 

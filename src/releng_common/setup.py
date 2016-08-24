@@ -19,13 +19,12 @@ with open(os.path.join(here, 'requirements.txt')) as f:
 
 
 setup(
-    name='relengapi_common',
+    name='releng_common',
     version=version,
-    description='Common code for all services behind '
-                'https://mozilla-releng.net',
+    description='Services behind https://mozilla-releng.net',
     author='Mozilla Release Engineering',
     author_email='release@mozilla.com',
-    url='https://github.com/mozilla/build-relengapi',
+    url='https://github.com/garbas/mozilla-releng',
     install_requires=install_requires,
     packages=find_packages(),
     include_package_data=True,

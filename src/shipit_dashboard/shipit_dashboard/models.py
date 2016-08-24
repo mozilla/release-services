@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 
 import sqlalchemy as sa
-from relengapi_common.db import db
+from releng_common.db import db
 
 import datetime
 import pickle

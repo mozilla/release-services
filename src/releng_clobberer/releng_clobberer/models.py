@@ -9,7 +9,7 @@ import sqlalchemy as sa
 import taskcluster as tc
 import time
 
-from relengapi_common.db import db
+from releng_common.db import db
 
 
 BUILDBOT_BUILDDIR_REL_PREFIX = 'rel-'

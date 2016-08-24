@@ -1,5 +1,5 @@
 # coding=utf-8
-from relengapi_common.db import db
+from releng_common.db import db
 from shipit_dashboard.models import BugAnalysis, BugResult
 from shipit_dashboard.helpers import compute_dict_hash
 from clouseau.bugzilla import Bugzilla

@@ -21,7 +21,7 @@ with open(os.path.join(here, 'requirements.txt')) as f:
     )
 
 setup(
-    name='relengapi_clobberer',
+    name='releng_clobberer',
     version=open(os.path.join(here, 'VERSION')).read().strip(),
     description='The code behind https://clobberer.mozilla-releng.net',
     author='Rok Garbas',

@@ -224,7 +224,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'RelengAPI.tex', u'RelengAPI Documentation',
+    (master_doc, 'Releng.tex', u'Release Engineering Documentation',
      u'Rok Garbas', 'manual'),
 ]
 
@@ -254,7 +254,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'relengapi', u'RelengAPI Documentation',
+    (master_doc, 'releng', u'Release Engineering Documentation',
      [author], 1)
 ]
 
@@ -268,8 +268,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'RelengAPI', u'RelengAPI Documentation',
-     author, 'RelengAPI', 'One line description of project.',
+    (master_doc, 'RelEng', u'Release Engineering Documentation',
+     author, 'RelEng', 'One line description of project.',
      'Miscellaneous'),
 ]
 

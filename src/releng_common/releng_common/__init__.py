@@ -11,11 +11,11 @@ import sys
 
 from flask import Flask, send_from_directory
 
-from relengapi_common import api, log, cors
+from releng_common import api, log, cors
 
 __APP = dict()
 
-logger = logging.getLogger('relengapi_common')
+logger = logging.getLogger('releng_common')
 
 
 def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
@@ -38,7 +38,7 @@ def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
     elif os.environ.get('APP_SETTINGS'):  # noqa
         app.config.from_envvar('APP_SETTINGS')
     else:
-        print("Using default settings; to configure relengapi, set "
+        print("Using default settings; to configure releng, set "
               "APP_SETTINGS to point to your settings file")
         sys.exit(1)
 

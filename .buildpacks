@@ -1,3 +1,0 @@
-src/relengapi_tools=https://github.com/heroku/heroku-buildpack-nodejs
-src/relengapi_tools=https://github.com/garbas/heroku-buildpack-neo
-https://github.com/heroku/heroku-buildpack-python

@@ -1,0 +1,2 @@
+-r ../releng_common/requirements.txt
+-e ../releng_common

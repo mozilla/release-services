@@ -1,8 +1,8 @@
 *.db
 *.pyc
 *.swp
+.-rplugin~
 
-/.-rplugin~
 /.floo
 /docs/build/
 /result*

@@ -1,7 +1,7 @@
-recursive-include relengapi_clobberer/*
+recursive-include releng_clobberer/*
 
 include VERSION
-include relengapi_clobberer/*.yml
+include releng_clobberer/*.yml
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]

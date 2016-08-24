@@ -31,5 +31,5 @@ current implementation
     
 
 Technical stuff:
- - relengapi stack
- - relengapi repo
+ - releng stack
+ - releng repo

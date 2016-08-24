@@ -10,7 +10,7 @@ import pathlib
 import werkzeug.exceptions
 
 
-logger = logging.getLogger('relengapi_common.api')
+logger = logging.getLogger('releng_common.api')
 
 
 def common_error_handler(exception):

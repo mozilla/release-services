@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 import os
 
-from relengapi_common import db, create_app
+from releng_common import db, create_app
 from shipit_dashboard.workflow import run_workflow
 
 

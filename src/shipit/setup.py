@@ -19,7 +19,7 @@ setup(
     author_email='release@mozilla.com',
     url='https://ship-it.mozilla-releng.net',
     install_requires=[
-        "relengapi_common",
+        "releng_common",
     ],
     extras_require={
     },
@@ -28,7 +28,7 @@ setup(
     zip_safe=False,
     entry_points={
         "console_scripts": [
-            'relengapi = relengapi.cmd:main',
+            'releng = releng.cmd:main',
         ],
     },
     license='MPL2',
