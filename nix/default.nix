@@ -27,6 +27,8 @@ let
 
     elmPackages = pkgs.elmPackages.override { nodejs = pkgs."nodejs-6_x"; };
 
+    releng_docs = import ./../docs { inherit releng_pkgs; };
+
     relengapi_clobberer = import ./../src/relengapi_clobberer { inherit releng_pkgs; };
 
     relengapi_frontend = import ./../src/relengapi_frontend { inherit releng_pkgs; };

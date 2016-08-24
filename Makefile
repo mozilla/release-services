@@ -75,7 +75,7 @@ docker-%:
 
 
 
-deploy-staging-all: $(foreach app, $(APPS), deploy-staging-$(app))
+deploy-staging-all: $(foreach app, $(APPS), deploy-staging-$(app)) deploy-staging-docs
 
 deploy-staging: require-APP deploy-staging-$(APP)
 
@@ -90,18 +90,26 @@ deploy-staging-relengapi_clobberer: docker-relengapi_clobberer
 	docker push \
 		registry.heroku.com/releng-staging-$(subst deploy-staging-,,$@)/web
 
-deploy-staging-relengapi_frontend: require-AWS build-app-relengapi_frontend tools-awscli
+deploy-staging-relengapi_frontend: require-AWS build-app-relengapi_frontend build-tool-awscli
 	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read  \
 		result-$(subst deploy-staging-,,$@)/ \
 		s3://$(subst deploy-,releng-,$(subst _,-,$@))
 
+deploy-staging-docs: require-AWS build-docs build-tool-awscli
+	./result-tool-awscli/bin/aws s3 sync \
+		--delete \
+		--acl public-read  \
+		result-docs \
+		s3://releng-staging-docs
 
 
 
 
-deploy-production-all: $(foreach app, $(APPS), deploy-production-$(app))
+
+
+deploy-production-all: $(foreach app, $(APPS), deploy-production-$(app)) deploy-production-docs
 
 deploy-production: require-APP deploy-production-$(APP)
 
@@ -116,12 +124,19 @@ deploy-production-relengapi_clobberer: docker-relengapi_clobberer
 	docker push \
 		registry.heroku.com/releng-production-$(subst deploy-production-,,$@)/web
 
-deploy-production-relengapi_frontend: require-AWS build-app-relengapi_frontend tools-awscli
+deploy-production-relengapi_frontend: require-AWS build-app-relengapi_frontend build-tool-awscli
 	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read \
 		result-$(subst deploy-production-,,$@)/ \
 		s3://$(subst deploy-,releng-,$(subst _,-,$@))
+
+deploy-production-docs: require-AWS build-docs build-tool-awscli
+	./result-tool-awscli/bin/aws s3 sync \
+		--delete \
+		--acl public-read  \
+		result-docs \
+		s3://releng-production-docs
 
 
 
@@ -145,6 +160,12 @@ build-tool: require-TOOL build-tool-$(TOOL)
 build-tool-%:
 	nix-build nix/default.nix -A tools.$(subst build-tool-,,$@) -o result-tool-$(subst build-tool-,,$@)
 
+
+
+
+
+build-docs:
+	nix-build nix/default.nix -A releng_docs -o result-docs
 
 
 # --- helpers
