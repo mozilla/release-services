@@ -71,7 +71,7 @@ fetchAnalysis : Cmd Msg
 fetchAnalysis =
   -- Load all analysis
   let 
-    url = "http://localhost:5000/analysis/"
+    url = "http://localhost:5000/analysis"
   in
     Http.get decodeAnalysis url
       |> RemoteData.asCmd
