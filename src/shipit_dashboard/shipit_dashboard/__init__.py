@@ -8,17 +8,26 @@ import os
 
 from releng_common import db, create_app
 from shipit_dashboard.workflow import run_workflow
+from shipit_dashboard.encoder import ShipitJSONEncoder
 
 
-DEBUG = os.environ.get('DEBUG', __name__ == '__main__')
+DEBUG = os.environ.get('DEBUG') == 'true' or __name__ == '__main__'
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_SETTINGS = os.path.abspath(os.path.join(HERE, '..', 'settings.py'))
 
+import logging
+
+if DEBUG:
+    # Debug logging
+    logging.basicConfig(level=logging.DEBUG)
 
 def init_app(app):
 
     # Register extra commands
     app.cli.add_command(run_workflow)
+
+    # Use custom json encoder
+    app.json_encoder = ShipitJSONEncoder
 
     # Register swagger api
     return app.api.register(
@@ -40,7 +49,6 @@ app = create_app(
     debug=DEBUG,
     debug_src=HERE,
 )
-
 
 if __name__ == "__main__":
     app.run(**app.run_options())

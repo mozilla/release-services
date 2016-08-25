@@ -31,12 +31,20 @@ class AnalysisWorkflow(object):
             # Get bugs from bugzilla, for all analysis
             raw_bugs = self.list_bugs(analysis)
 
-            # Do patch analysis on bugs
-            bugs = [self.update_bug(b) for b in raw_bugs.values()]
-
-            # Update sqlalchemy relation
-            analysis.bugs[:] = bugs
+            # Empty m2m relation
+            analysis.bugs[:] = []
             db.session.commit()
+
+            # Do patch analysis on bugs
+            for raw_bug in raw_bugs.values():
+                bug = self.update_bug(raw_bug)
+
+                # Save updated & linked bug
+                if bug:
+                    analysis.bugs.append(bug)
+                    db.session.add(bug)
+                    db.session.add(analysis)
+                    db.session.commit()
 
     def list_bugs(self, analysis):
         """
@@ -78,7 +86,7 @@ class AnalysisWorkflow(object):
             # Check the bug has changed since last update
             if br.payload_hash == bug_hash:
                 logger.info('Same bug hash, skip bug analysis {}'.format(br))
-                return
+                return br
 
         except NoResultFound:
             br = BugResult(bug_id)
@@ -97,10 +105,6 @@ class AnalysisWorkflow(object):
         }
         br.payload = pickle.dumps(payload, 2)
         br.payload_hash = bug_hash
-
-        # Save payload
-        db.session.add(br)
-        db.session.commit()
         logger.info('Updated payload of {}'.format(br))
 
         # Save in local cache

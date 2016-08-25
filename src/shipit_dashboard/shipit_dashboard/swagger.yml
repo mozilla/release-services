@@ -57,7 +57,7 @@ definitions:
       bugs:
         type: array
         items:
-          $ref: '#/definitions/Analysis'
+          $ref: '#/definitions/Bug'
 
   Bug:
     type: object
