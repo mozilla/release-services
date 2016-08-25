@@ -1,7 +1,4 @@
-.PHONY: help develop build docker \
-	deploy-staging-all deploy-staging \
-	deploy-production-all deploy-production \
-	update-all
+.PHONY: help develop develop-run
 
 APP=
 APPS=\
@@ -90,9 +87,9 @@ deploy-staging-releng_clobberer: docker-releng_clobberer
 	cat result-$(subst deploy-staging-,docker-,$@) | docker load
 	docker tag `docker images -q \
 		$(subst deploy-staging-,,$@)` \
-		registry.heroku.com/releng-staging-$(subst deploy-staging-,,$@)/web
+		registry.heroku.com/releng-staging-$(subst deploy-staging-releng_,,$@)/web
 	docker push \
-		registry.heroku.com/releng-staging-$(subst deploy-staging-,,$@)/web
+		registry.heroku.com/releng-staging-$(subst deploy-staging-releng_,,$@)/web
 
 deploy-staging-releng_frontend: require-AWS build-app-releng_frontend build-tool-awscli
 	./result-tool-awscli/bin/aws s3 sync \
