@@ -12,7 +12,9 @@ import RouteUrl.Builder as Builder exposing ( Builder, builder, replacePath )
 import Result exposing ( Result(Ok, Err))
 
 import App.Home as Home 
+import App.User as User
 import App.ReleaseDashboard as ReleaseDashboard
+import App.Utils exposing ( eventLink )
 
 
 
@@ -25,51 +27,25 @@ type Page
     = Home
     | ReleaseDashboard
 
-type alias UserCertificate =
-    { version : Int
-    , scopes : List String
-    , start : Int
-    , expiry : Int
-    , seed : String
-    , signature : String
-    , issuer : String
-    }
-
-type alias User =
-    { client_id : Maybe String
-    , access_token : Maybe String
-    , certificate : Maybe UserCertificate
-    }
 
 type alias Model =
-    { releaseDashboard : ReleaseDashboard.Model
+    { release_dashboard : ReleaseDashboard.Model
     , current_page : Page
-    , current_user : Maybe User
-    }
-
-type alias RedirectUrl =
-    { url : String
-    , target : Maybe (String, String)
+    , current_user : Maybe User.Model
+    , backend_url : String
     }
 
 type Msg
     = ShowPage Page
-    | SaveCredentials User
-    | LoadCredentials (Maybe User)
-    | ClearCredentials
-    | Redirect RedirectUrl
+    | UserMsg User.Msg
     | ReleaseDashboardMsg ReleaseDashboard.Msg
 
+type alias Flags = {
+    user : Maybe User.Model,
+    backendUrl : String
+}
 
 
-onClick msg =
-    Events.onWithOptions
-        "click"
-        (Events.Options False True)
-        (JsonDecode.succeed msg)
-
-eventLink msg attributes =
-    a ([ onClick <| msg, href "#"  ] ++ attributes)
 
 pageLink page attributes =
     eventLink (ShowPage page) attributes
@@ -89,10 +65,6 @@ delta2url' previous current =
 
 delta2url : Model -> Model -> Maybe UrlChange
 delta2url previous current =
-    let
-        log' = Debug.log "DELTA2URL (PREVIOUS)" previous
-        log = Debug.log "DELTA2URL(CURRENT)" current
-    in
     Maybe.map Builder.toUrlChange <| delta2url' previous current
 
 
@@ -102,34 +74,8 @@ pages =
       }
     ]
 
-
-decodeUserCertificate : String -> Result String UserCertificate
-decodeUserCertificate text =
-    JsonDecode.decodeString
-        (JsonDecode.object7 UserCertificate
-            ( "version"     := JsonDecode.int )
-            ( "scopes"      := JsonDecode.list JsonDecode.string )
-            ( "start"       := JsonDecode.int )
-            ( "expiry"      := JsonDecode.int )
-            ( "seed"        := JsonDecode.string )
-            ( "signature"   := JsonDecode.string )
-            ( "issuer"      := JsonDecode.string )
-        ) text
-
-convertQueryToUser : Dict String String -> User
-convertQueryToUser query =
-    User (Dict.get "clientId" query)
-         (Dict.get "accessToken" query)
-         (case Dict.get "certificate" query of
-             Just certificate -> Result.toMaybe <| decodeUserCertificate certificate
-             Nothing -> Nothing
-         )
-
 location2messages' : Builder -> List Msg
 location2messages' builder =
-    let
-        log = Debug.log "LOCATION2MESSAGES (PATH)" Builder.path builder
-    in
     case Builder.path builder of
         first :: rest ->
             let
@@ -137,11 +83,17 @@ location2messages' builder =
             in
                 case first of
                     "login" ->
-                        [ SaveCredentials (convertQueryToUser <| Builder.query builder),
-                          ShowPage Home
+                        [ 
+                          Builder.query builder
+                              |> User.convertUrlQueryToModel
+                              |> User.LoggingIn
+                              |> UserMsg
+                        , ShowPage Home
                         ]
                     "release-dashboard" ->
-                        [ ShowPage ReleaseDashboard ] --:: List.map ReleaseDashboardMsg ( ReleaseDashboard.location2messages builder' )
+                        [ ShowPage ReleaseDashboard ]
+
+                    -- TODO: This should redirect to NotFound
                     _ ->
                         [ ShowPage Home ]
         _ ->
@@ -149,22 +101,17 @@ location2messages' builder =
 
 location2messages : Location -> List Msg
 location2messages location =
-    let
-        log = Debug.log "LOCATION2MESSAGES (LOCATION)" location
-    in
-    location2messages' (Builder.fromUrl location.href)
+    location2messages'
+        <| Builder.fromUrl location.href
 
-type alias Flags = { user : Maybe User }
 
 init : Flags -> (Model, Cmd Msg)
 init flags =
-    ( { releaseDashboard = fst ReleaseDashboard.init
-      , current_page = Home 
-      , current_user = 
-          case flags.user of
-              Just user -> Just (User user.client_id user.access_token user.certificate)
-              Nothing -> Nothing
-
+    ( {
+         release_dashboard = fst (ReleaseDashboard.init flags.user),
+         current_page = Home,
+         current_user = flags.user,
+         backend_url = flags.backendUrl
       }
     , Cmd.none
     )
@@ -172,34 +119,35 @@ init flags =
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
-    let
-        log' = Debug.log "UPDATE (MSG)" msg
-        log = Debug.log "UPDATE (MODEL)" model 
-    in
     case msg of
-        Redirect url ->
-            ( model, redirect url )
         ShowPage page ->
             case page of
                 ReleaseDashboard ->
-                    ( { model | current_page = page
-                              , releaseDashboard =  fst ReleaseDashboard.init
-                      }
-                    , Cmd.map ReleaseDashboardMsg <| snd ReleaseDashboard.init
-                    )
+                    let 
+                        (dashboard, newCmd) = ReleaseDashboard.init model.current_user
+                    in
+                        (
+                            { model | current_page = page, release_dashboard = dashboard },
+                            Cmd.map ReleaseDashboardMsg newCmd
+                        )
                 _ ->
                     ( { model | current_page = page }, Cmd.none )
+
         ReleaseDashboardMsg msg' ->
             let
-                (newModel, newCmd) = ReleaseDashboard.update msg' model.releaseDashboard
+                (newModel, newCmd) = ReleaseDashboard.update msg' model.release_dashboard
             in
-                ( { model | releaseDashboard = newModel }, Cmd.map ReleaseDashboardMsg newCmd )
-        SaveCredentials user ->
-            ( model, save_credentials user )
-        LoadCredentials user ->
-            ( { model | current_user = user }, Cmd.none )
-        ClearCredentials ->
-            ( { model | current_user = Nothing }, clear_credentials "")
+                ( { model | release_dashboard = newModel }, Cmd.map ReleaseDashboardMsg newCmd )
+
+        UserMsg msg' -> 
+            let
+                log' = Debug.log "UserMSG" msg'
+                (newModel, newCmd) = User.update msg' model.current_user
+            in
+                ( { model | current_user = newModel }
+                , Cmd.map UserMsg newCmd
+                )
+
 
 
 viewPage model =
@@ -207,7 +155,7 @@ viewPage model =
         Home ->
             Home.view model
         ReleaseDashboard ->
-            Html.App.map ReleaseDashboardMsg (ReleaseDashboard.view model.releaseDashboard)
+            Html.App.map ReleaseDashboardMsg (ReleaseDashboard.view model.release_dashboard)
 
 
 viewDropdown title pages =
@@ -226,30 +174,34 @@ viewDropdown title pages =
           ]
     ]
 
+
 viewUser model =
     case model.current_user of
         Just user ->
-            viewDropdown (Maybe.withDefault "UNKNOWN" user.client_id )
+            viewDropdown (Maybe.withDefault "UNKNOWN" user.clientId )
                     [ a [ class "dropdown-item"
                         , href "https://tools.taskcluster.net/credentials"
                         , target "_blank"
                         ]
                         [ text "Manage credentials" ]
-                    , eventLink ClearCredentials
+                    , eventLink (UserMsg User.Logout)
                                 [ class "dropdown-item" ]
                                 [ text "Logout" ]
                     ]
         Nothing ->
-            [ eventLink
-                  ( Redirect
-                      ( RedirectUrl "https://login.taskcluster.net"
-                          ( Just ( "/login", "RelengAPI is a collection of Release Engineering services" )
-                          )
-                      )
-                  )
-                  [ class "nav-link" ]
-                  [ text "Login" ]
-            ]
+            let
+                loginTarget =
+                    Just ( "/login"
+                         , "RelengAPI is a collection of Release Engineering services"
+                         )
+                loginUrl =
+                    { url = "https://login.taskcluster.net"
+                    , target = loginTarget
+                    }
+                loginMsg = UserMsg <| User.Login loginUrl
+            in
+                [ eventLink loginMsg [ class "nav-link" ] [ text "Login" ]
+                ]
 
 
 viewNavBar model =
@@ -286,8 +238,7 @@ viewFooter =
 view : Model -> Html Msg
 view model =
     let
-        log = Debug.log "VIEW (MODEL)" model 
-        log' = Debug.log "LOCATION" (builder)
+        log = Debug.log "LOCATION" (builder)
     in
     div []
         [ nav [ id "navbar", class "navbar navbar-full navbar-light" ]
@@ -298,15 +249,9 @@ view model =
         ]
 
 
--- XXX: needs to be above subscriptions
-port load_credentials : (Maybe User -> msg) -> Sub msg
-
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    load_credentials LoadCredentials
-
-
-port redirect : RedirectUrl -> Cmd msg
-port save_credentials : User -> Cmd msg
-port clear_credentials : String -> Cmd msg
-
+    Sub.batch
+    [ 
+      Sub.map UserMsg (User.localstorage_get (User.LoggedIn))
+    ]

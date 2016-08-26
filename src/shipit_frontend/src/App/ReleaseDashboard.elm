@@ -6,17 +6,18 @@ import Http
 import Json.Decode as Json exposing (Decoder, (:=))
 import RemoteData as RemoteData exposing ( WebData, RemoteData(Loading, Success, NotAsked, Failure) )
 
+import App.User as User
 
 -- Models
 
-type alias User = {
+type alias Contributor = {
   email: String,
   name: String
 }
 
 type alias UpliftRequest = {
   bugzilla_id: Int,
-  author: User,
+  author: Contributor,
   text: String
 }
 
@@ -24,8 +25,8 @@ type alias Bug = {
   id: Int,
   bugzilla_id: Int,
   summary: String,
-  creator: User,
-  assignee: User,
+  creator: Contributor,
+  assignee: Contributor,
   uplift_request: Maybe UpliftRequest
 }
 
@@ -35,26 +36,28 @@ type alias Analysis = {
   bugs: List Bug
 }
 
-
 type alias Model = {
   -- All analysis in use
-  analysis : WebData (List Analysis)
+  analysis : WebData (List Analysis),
+
+  -- Current connected user
+  current_user : Maybe User.Model
 }
 
 type Msg
    = FetchedAnalysis (WebData (List Analysis))
 
 
-init : (Model, Cmd Msg)
-init =
-  let
-    model = {analysis = NotAsked}
-  in
-    ( 
-      model, 
-      -- Initial fetch of every analysis in model
-      fetchAnalysis
-    )
+init : (Maybe User.Model) -> (Model, Cmd Msg)
+init user =
+  (
+    {
+      analysis = NotAsked,
+      current_user = user
+    }, 
+    -- Initial fetch of every analysis in model
+    fetchAnalysis user
+  )
 
 -- Update
 
@@ -66,16 +69,36 @@ update msg model =
         { model | analysis = allAnalysis },
         Cmd.none
       )
+
+fromJust : Maybe a -> a
+fromJust x = case x of
+    Just y -> y
+    Nothing -> Debug.crash "error: fromJust Nothing"
     
-fetchAnalysis : Cmd Msg
-fetchAnalysis =
+fetchAnalysis : (Maybe User.Model) -> Cmd Msg
+fetchAnalysis maybeUser =
   -- Load all analysis
-  let 
-    url = "http://localhost:5000/analysis"
-  in
-    Http.get decodeAnalysis url
-      |> RemoteData.asCmd
-      |> Cmd.map FetchedAnalysis
+  case maybeUser of
+    Just user ->
+      -- With Credentials
+      let 
+        baseUrl = "http://localhost:5000/analysis" 
+        url = Http.url baseUrl [
+          ("clientId", fromJust user.clientId),
+          ("accessToken", fromJust user.accessToken)
+        ]
+        log' = Debug.log "URL to fetch analysis" url
+      in
+        Http.get decodeAnalysis url
+          |> RemoteData.asCmd
+          |> Cmd.map FetchedAnalysis
+
+    Nothing ->
+      -- No credentials
+      let
+        log = Debug.log "No credentials to fetch analysis"
+      in
+        Cmd.none
 
 
 decodeAnalysis : Decoder (List Analysis)
@@ -93,13 +116,13 @@ decodeBug =
     ("id" := Json.int)
     ("bugzilla_id" := Json.int)
     (Json.at ["payload", "bug", "summary"] Json.string)
-    (Json.at ["payload", "analysis", "users", "creator"] decodeUser)
-    (Json.at ["payload", "analysis", "users", "assignee"] decodeUser)
+    (Json.at ["payload", "analysis", "users", "creator"] decodeContributor)
+    (Json.at ["payload", "analysis", "users", "assignee"] decodeContributor)
     (Json.maybe ((Json.at ["payload", "analysis"] decodeUpliftRequest)))
 
-decodeUser : Decoder User
-decodeUser = 
-  Json.object2 User
+decodeContributor : Decoder Contributor
+decodeContributor = 
+  Json.object2 Contributor
     ("email" := Json.string)
     ("real_name" := Json.string)
 
@@ -107,7 +130,7 @@ decodeUpliftRequest : Decoder UpliftRequest
 decodeUpliftRequest  =
   Json.object3 UpliftRequest
     (Json.at ["uplift_comment", "id"] Json.int)
-    ("uplift_author" := decodeUser)
+    ("uplift_author" := decodeContributor)
     (Json.at ["uplift_comment", "raw_text"] Json.string)
 
 -- Subscriptions
@@ -148,8 +171,8 @@ viewBug: Bug -> Html Msg
 viewBug bug =
   div [class "bug"] [
     h4 [] [text bug.summary],
-    viewUser bug.creator "Creator",
-    viewUser bug.assignee "Assignee",
+    viewContributor bug.creator "Creator",
+    viewContributor bug.assignee "Assignee",
     viewUpliftRequest bug.uplift_request,
     p [] [
       span [] [text ("#" ++ (toString bug.bugzilla_id))],
@@ -158,8 +181,8 @@ viewBug bug =
     hr [] []
   ]
 
-viewUser: User -> String -> Html Msg
-viewUser user title = 
+viewContributor: Contributor -> String -> Html Msg
+viewContributor user title = 
   div [class "user"] [
     strong [] [text (title ++ ": ")],
     a [href ("mailto:" ++ user.email)] [text user.name]
@@ -170,7 +193,7 @@ viewUpliftRequest maybe =
   case maybe of
     Just request -> 
       div [class "uplift-request"] [
-        viewUser request.author "Uplift request",
+        viewContributor request.author "Uplift request",
         blockquote [] [text request.text]
       ]
     Nothing -> 
