@@ -27,6 +27,7 @@ type alias Bug = {
   summary: String,
   creator: Contributor,
   assignee: Contributor,
+  reviewers: List String, -- Should use Contributor with Maybe
   uplift_request: Maybe UpliftRequest
 }
 
@@ -112,12 +113,13 @@ decodeAnalysis =
 
 decodeBug : Decoder Bug
 decodeBug =
-  Json.object6 Bug
+  Json.object7 Bug
     ("id" := Json.int)
     ("bugzilla_id" := Json.int)
     (Json.at ["payload", "bug", "summary"] Json.string)
     (Json.at ["payload", "analysis", "users", "creator"] decodeContributor)
     (Json.at ["payload", "analysis", "users", "assignee"] decodeContributor)
+    (Json.at ["payload", "analysis", "users", "reviewers"] (Json.list Json.string))
     (Json.maybe ((Json.at ["payload", "analysis"] decodeUpliftRequest)))
 
 decodeContributor : Decoder Contributor
@@ -126,11 +128,17 @@ decodeContributor =
     ("email" := Json.string)
     ("real_name" := Json.string)
 
+decodeUpliftContributor : Decoder Contributor
+decodeUpliftContributor = 
+  Json.object2 Contributor
+    ("name" := Json.string) -- name is actually the email :/
+    ("real_name" := Json.string)
+
 decodeUpliftRequest : Decoder UpliftRequest
 decodeUpliftRequest  =
   Json.object3 UpliftRequest
     (Json.at ["uplift_comment", "id"] Json.int)
-    ("uplift_author" := decodeContributor)
+    ("uplift_author" := decodeUpliftContributor)
     (Json.at ["uplift_comment", "raw_text"] Json.string)
 
 -- Subscriptions
@@ -173,6 +181,7 @@ viewBug bug =
     h4 [] [text bug.summary],
     viewContributor bug.creator "Creator",
     viewContributor bug.assignee "Assignee",
+    viewReviewers bug.reviewers,
     viewUpliftRequest bug.uplift_request,
     p [] [
       span [] [text ("#" ++ (toString bug.bugzilla_id))],
@@ -188,11 +197,24 @@ viewContributor user title =
     a [href ("mailto:" ++ user.email)] [text user.name]
   ]
 
+viewReviewers: (List String) -> Html Msg
+viewReviewers users = 
+  div [class "users"] [
+    strong [] [text "Reviewers:"],
+    ul [] (List.map viewReviewer users)
+  ]
+  
+viewReviewer: String -> Html Msg
+viewReviewer user =
+  li [class "user"] [
+    a [href ("mailto:" ++ user)] [text user]
+  ]
+
 viewUpliftRequest: Maybe UpliftRequest -> Html Msg
 viewUpliftRequest maybe =
   case maybe of
     Just request -> 
-      div [class "uplift-request"] [
+      div [class "uplift-request", id (toString request.bugzilla_id)] [
         viewContributor request.author "Uplift request",
         blockquote [] [text request.text]
       ]
