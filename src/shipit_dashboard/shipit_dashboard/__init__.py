@@ -6,19 +6,28 @@ from __future__ import absolute_import
 
 import os
 
-from releng_common import db, create_app
+from releng_common import auth, db, create_app
 from shipit_dashboard.workflow import run_workflow
+from shipit_dashboard.encoder import ShipitJSONEncoder
 
 
-DEBUG = os.environ.get('DEBUG', __name__ == '__main__')
+DEBUG = os.environ.get('DEBUG') == 'true' or __name__ == '__main__'
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_SETTINGS = os.path.abspath(os.path.join(HERE, '..', 'settings.py'))
 
+import logging
+
+if DEBUG:
+    # Debug logging
+    logging.basicConfig(level=logging.DEBUG)
 
 def init_app(app):
 
     # Register extra commands
     app.cli.add_command(run_workflow)
+
+    # Use custom json encoder
+    app.json_encoder = ShipitJSONEncoder
 
     # Register swagger api
     return app.api.register(
@@ -36,11 +45,10 @@ if not os.environ.get('APP_SETTINGS') and \
 
 app = create_app(
     "shipit_dashboard",
-    extensions=[init_app, db],
+    extensions=[init_app, db, auth],
     debug=DEBUG,
     debug_src=HERE,
 )
-
 
 if __name__ == "__main__":
     app.run(**app.run_options())

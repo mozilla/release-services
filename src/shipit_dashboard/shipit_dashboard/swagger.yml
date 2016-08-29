@@ -57,18 +57,59 @@ definitions:
       bugs:
         type: array
         items:
-          $ref: '#/definitions/Analysis'
+          $ref: '#/definitions/Bug'
 
   Bug:
     type: object
     required:
       - id
       - bugzilla_id
-      - payload
+      - summary
+      - changes_size
+      - creator
+      - assignee
+      - reviewers
     properties:
       id:
         type: integer
       bugzilla_id:
         type: integer 
-      payload:
-        type: object
+      summary:
+        type: string
+      changes_size:
+        type: integer
+      creator:
+        $ref: '#/definitions/Contributor'
+      assignee:
+        $ref: '#/definitions/Contributor'
+      reviewers:
+        type: array
+        items:
+          $ref: '#/definitions/Contributor'
+      uplift:
+        $ref: '#/definitions/UpliftRequest'
+
+  Contributor:
+    type: object
+    required:
+      - email
+      - real_name
+    properties:
+      email:
+        type: string
+      real_name:
+        type: string
+
+  UpliftRequest:
+    type: object
+    required:
+      - id
+      - author
+      - comment
+    properties:
+      id: 
+        type: integer
+      author:
+        $ref: '#/definitions/Contributor'
+      comment:
+        type: string

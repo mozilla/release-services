@@ -5,33 +5,45 @@ require('expose?Tether!tether');
 require('bootstrap');
 require("./index.scss");
 
+// Load backend url
+var backendUrl = document.body.getAttribute('data-backend-url');
+if (backendUrl === null)
+    backendUrl = process.env.NEO_BACKEND_URL || 'http://localhost:5000';
+console.info('Backend used', backendUrl);
+
+// Load credentials
 var user = null;
 try {
   user = JSON.parse(window.localStorage.getItem('shipit-credentials'));
+  user = user.value || user;
+  console.info('Loaded user', user);
 } catch (e) {
-  console.log(e);
+  console.warn('Loading user failed', e);
 }
 
+// Start the ELM application
 var url = require('url');
 var app = require('./Main.elm').Main.fullscreen({
-  user: user
+  user: user,
+  backendUrl: backendUrl,
 });
 
-
-app.ports.clear_credentials.subscribe(function() {
-    window.localStorage.removeItem('shipit-credentials');
-    app.ports.load_credentials.send(null);
+// Local storage ports
+app.ports.localstorage_remove.subscribe(function() {
+  window.localStorage.removeItem('shipit-credentials');
+  app.ports.localstorage_get.send(null);
 });
 
-app.ports.save_credentials.subscribe(function(user) {
-    window.localStorage.setItem('shipit-credentials', JSON.stringify(user));
-    app.ports.load_credentials.send(user);
+app.ports.localstorage_set.subscribe(function(user) {
+  user = user ? user.value : null;
+  window.localStorage.setItem('shipit-credentials', JSON.stringify(user));
+  app.ports.localstorage_get.send(user);
 });
 
 app.ports.redirect.subscribe(function(redirect) {
    var redirect_url = url.parse(redirect.url);
    if (redirect.target !== null) {
-     redirect_url = url.format($.extend({}, redirect_url, {
+     redirect_url = url.format(window.$.extend({}, redirect_url, {
        query: {
          target: url.format({
              protocol: window.location.protocol,
@@ -47,4 +59,3 @@ app.ports.redirect.subscribe(function(redirect) {
    }
    window.location = redirect_url;
 });
-

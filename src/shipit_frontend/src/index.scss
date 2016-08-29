@@ -28,3 +28,19 @@ $headings-font-weight: 300;
 
 @import "~bootstrap/scss/bootstrap";
 
+// Uplift requests
+div.bugs {
+  div.bug {
+    margin-bottom: 8px;
+    padding-top: 15px;
+    border-bottom: 1px solid #EEE;
+
+    div.uplift-request {
+      div.comment {
+        p {
+          margin-bottom: 1px;
+        }
+      }
+    }
+  }
+}
