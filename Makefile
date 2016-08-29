@@ -96,7 +96,7 @@ deploy-staging-releng_frontend: require-AWS build-app-releng_frontend build-tool
 		--delete \
 		--acl public-read  \
 		result-$(subst deploy-staging-,,$@)/ \
-		s3://$(subst deploy-,releng-,$(subst _,-,$@))
+		s3://$(subst deploy-,releng-,$(subst releng_,,$@))
 
 deploy-staging-docs: require-AWS build-docs build-tool-awscli
 	./result-tool-awscli/bin/aws s3 sync \
@@ -130,7 +130,7 @@ deploy-production-releng_frontend: require-AWS build-app-releng_frontend build-t
 		--delete \
 		--acl public-read \
 		result-$(subst deploy-production-,,$@)/ \
-		s3://$(subst deploy-,releng-,$(subst _,-,$@))
+		s3://$(subst deploy-,releng-,$(subst releng_,,$@))
 
 deploy-production-docs: require-AWS build-docs build-tool-awscli
 	./result-tool-awscli/bin/aws s3 sync \
