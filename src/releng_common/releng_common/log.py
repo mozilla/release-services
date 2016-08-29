@@ -23,20 +23,6 @@ class UnstructuredRenderer(structlog.processors.KeyValueRenderer):
             return event
 
 
-def setup_console_logging(quiet=False):
-    root = logging.getLogger('releng_common')
-    if quiet:
-        root.setLevel(logging.WARNING)
-    else:
-        root.setLevel(logging.NOTSET)
-    formatter = logging.Formatter('%(asctime)s %(message)s')
-
-    stdout_log = logging.StreamHandler(sys.stdout)
-    stdout_log.setLevel(logging.DEBUG)
-    stdout_log.setFormatter(formatter)
-    root.addHandler(stdout_log)
-
-
 def init_app(app):
     mozdef = app.config.get('MOZDEF_TARGET', None)
 

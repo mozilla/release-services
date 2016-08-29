@@ -32,7 +32,7 @@ type alias Model =
     { release_dashboard : ReleaseDashboard.Model
     , current_page : Page
     , current_user : Maybe User.Model
-    , backend_url : String
+    , dashboard_url: String
     }
 
 type Msg
@@ -42,7 +42,7 @@ type Msg
 
 type alias Flags = {
     user : Maybe User.Model,
-    backendUrl : String
+    dashboardUrl : String
 }
 
 
@@ -111,7 +111,7 @@ init flags =
          release_dashboard = fst (ReleaseDashboard.init flags.user),
          current_page = Home,
          current_user = flags.user,
-         backend_url = flags.backendUrl
+         dashboard_url = flags.dashboardUrl
       }
     , Cmd.none
     )

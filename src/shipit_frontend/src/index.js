@@ -5,11 +5,8 @@ require('expose?Tether!tether');
 require('bootstrap');
 require("./index.scss");
 
-// Load backend url
-var backendUrl = document.body.getAttribute('data-backend-url');
-if (backendUrl === null)
-    backendUrl = process.env.NEO_BACKEND_URL || 'http://localhost:5000';
-console.info('Backend used', backendUrl);
+var dashboardUrl = process.env.NEO_DASHBOARD_URL || "http://localhost:5000";
+console.info('Dashboard backend used ', dashboardUrl);
 
 // Load credentials
 var user = null;
@@ -25,7 +22,7 @@ try {
 var url = require('url');
 var app = require('./Main.elm').Main.fullscreen({
   user: user,
-  backendUrl: backendUrl,
+  dashboardUrl: dashboardUrl
 });
 
 // Local storage ports

@@ -24,8 +24,8 @@ def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
     if __APP and name in __APP:
         return __APP[name]
 
-    if name == '__main__':
-        log.setup_console_logging()
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
 
     logger.debug('Initializing app: {}'.format(name))
 

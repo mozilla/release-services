@@ -4,6 +4,7 @@ APP=
 APPS=\
 	releng_frontend \
 	releng_clobberer \
+	shipit_frontend \
 	shipit_dashboard
 
 TOOL=
@@ -15,10 +16,27 @@ TOOLS=\
 	mysql2pgsql
 
 
-APP_PORT_releng_frontend=8001
-APP_PORT_releng_clobberer=8002
-APP_PORT_shipit_frontend=8003
-APP_PORT_shipit_dashboard=8004
+APP_DEV_PORT_releng_frontend=8001
+APP_DEV_PORT_releng_clobberer=8002
+APP_DEV_PORT_shipit_frontend=8003
+APP_DEV_PORT_shipit_dashboard=8004
+
+APP_DEV_ENV_releng_frontend=NEO_CLOBBERER_URL=https://localhost:$(APP_DEV_PORT_releng_clobberer)
+APP_DEV_ENV_shipit_frontend=NEO_DASHBOARD_URL=https://localhost:$(APP_DEV_PORT_shipit_dashboard)
+
+APP_STAGING_HEROKU_releng_clobberer=releng-staging-clobberer
+APP_STAGING_HEROKU_shipit_dashboard=shipit-staging-dashboard
+
+APP_STAGING_S3_docs=releng-staging-docs
+APP_STAGING_S3_releng_frontend=releng-staging-frontend
+APP_STAGING_S3_shipit_frontend=shipit-staging-frontend
+
+APP_PRODUCTION_HEROKU_releng_clobberer=releng-production-clobberer
+APP_PRODUCTION_HEROKU_shipit_dashboard=shipit-production-dashboard
+
+APP_PRODUCTION_S3_docs=releng-production-docs
+APP_PRODUCTION_S3_releng_frontend=releng-production-frontend
+APP_PRODUCTION_S3_shipit_frontend=shipit-production-frontend
 
 
 help:
@@ -47,17 +65,17 @@ develop-run-BACKEND: nix require-APP
 	DATABASE_URL=sqlite:///$$PWD/app.db \
 	APP_SETTINGS=$$PWD/src/$(APP)/settings.py \
 		nix-shell nix/default.nix -A $(APP) \
-		--run "gunicorn $(APP):app --bind 'localhost:$(APP_PORT_$(APP))' --certfile=nix/dev_ssl/server.crt --keyfile=nix/dev_ssl/server.key --workers 2 --timeout 3600 --reload --log-file -"
+		--run "gunicorn $(APP):app --bind 'localhost:$(APP_DEV_PORT_$(APP))' --certfile=nix/dev_ssl/server.crt --keyfile=nix/dev_ssl/server.key --workers 2 --timeout 3600 --reload --log-file -"
 
 develop-run-FRONTEND: nix require-APP 
-	NEO_BASE_URL=https://localhost:$$APP_PORT_$(APP) \
-		nix-shell nix/default.nix -A $(APP) --run "neo start --config webpack.config.js"
+	nix-shell nix/default.nix --pure -A $(APP) \
+		--run "$(APP_DEV_ENV_$(APP)) neo start --port $(APP_DEV_PORT_$(APP)) --config webpack.config.js"
 
 develop-run-releng_clobberer: develop-run-BACKEND
 develop-run-releng_frontend: develop-run-FRONTEND
 
 develop-run-shipit_dashboard: develop-run-BACKEND
-develop-run-shipit_frontend: develop-run-BACKEND
+develop-run-shipit_frontend: develop-run-FRONTEND
 
 
 
@@ -85,31 +103,27 @@ deploy-staging-all: $(foreach app, $(APPS), deploy-staging-$(app)) deploy-stagin
 
 deploy-staging: require-APP deploy-staging-$(APP)
 
-deploy-staging-releng_clobberer: docker-releng_clobberer
-	if [[ -n "`docker images -q $(subst deploy-staging-,,$@)`" ]]; then \
-		docker rmi -f `docker images -q $(subst deploy-staging-,,$@)`; \
+deploy-staging-HEROKU: require-APP
+	if [[ -n "`docker images -q $(APP)`" ]]; then \
+		docker rmi -f `docker images -q $(APP)`; \
 	fi
-	cat result-$(subst deploy-staging-,docker-,$@) | docker load
-	docker tag `docker images -q \
-		$(subst deploy-staging-,,$@)` \
-		registry.heroku.com/releng-staging-$(subst deploy-staging-releng_,,$@)/web
-	docker push \
-		registry.heroku.com/releng-staging-$(subst deploy-staging-releng_,,$@)/web
+	cat result-docker-$(APP) | docker load
+	docker tag `docker images -q $(APP) registry.heroku.com/$(APP_STAGING_HEROKU_$(APP))
+	docker push registry.heroku.com/$(APP_STAGING_HEROKU_$(APP))
 
-deploy-staging-releng_frontend: require-AWS build-app-releng_frontend build-tool-awscli
+deploy-staging-S3: require-AWS require-APP build-tool-awscli build-app-$(APP)
 	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read  \
-		result-$(subst deploy-staging-,,$@)/ \
-		s3://$(subst deploy-,releng-,$(subst releng_,,$@))
+		result-$(APP)/ \
+		s3://$(APP_STAGING_S3_$(APP))
 
-deploy-staging-docs: require-AWS build-docs build-tool-awscli
-	./result-tool-awscli/bin/aws s3 sync \
-		--delete \
-		--acl public-read  \
-		result-docs \
-		s3://releng-staging-docs
+deploy-staging-releng_clobberer: deploy-staging-HEROKU
+deploy-staging-shipit_dashboard: deploy-staging-HEROKU
 
+deploy-staging-docs: deploy-staging-S3
+deploy-staging-releng_frontend: deploy-staging-S3
+deploy-staging-shipit_frontend: deploy-staging-S3
 
 
 
@@ -119,30 +133,28 @@ deploy-production-all: $(foreach app, $(APPS), deploy-production-$(app)) deploy-
 
 deploy-production: require-APP deploy-production-$(APP)
 
-deploy-production-releng_clobberer: docker-releng_clobberer
-	if [[ -n "`docker images -q $(subst deploy-production-,,$@)`" ]]; then \
-		docker rmi -f `docker images -q $(subst deploy-production-,,$@)`; \
+deploy-production-HEROKU: require-APP
+	if [[ -n "`docker images -q $(APP)`" ]]; then \
+		docker rmi -f `docker images -q $(APP)`; \
 	fi
-	cat result-$(subst deploy-production-,docker-,$@) | docker load
-	docker tag `docker images -q \
-		$(subst deploy-production-,,$@)` \
-		registry.heroku.com/releng-production-$(subst deploy-production-,,$@)/web
-	docker push \
-		registry.heroku.com/releng-production-$(subst deploy-production-,,$@)/web
+	cat result-docker-$(APP) | docker load
+	docker tag `docker images -q $(APP) registry.heroku.com/$(APP_PRODUCTION_HEROKU_$(APP))
+	docker push registry.heroku.com/$(APP_PRODUCTION_HEROKU_$(APP))
 
-deploy-production-releng_frontend: require-AWS build-app-releng_frontend build-tool-awscli
-	./result-tool-awscli/bin/aws s3 sync \
-		--delete \
-		--acl public-read \
-		result-$(subst deploy-production-,,$@)/ \
-		s3://$(subst deploy-,releng-,$(subst releng_,,$@))
-
-deploy-production-docs: require-AWS build-docs build-tool-awscli
+deploy-production-S3: require-AWS require-APP build-tool-awscli build-app-$(APP)
 	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read  \
-		result-docs \
-		s3://releng-production-docs
+		result-$(APP)/ \
+		s3://$(APP_PRODUCTION_S3_$(APP))
+
+deploy-production-releng_clobberer: deploy-production-HEROKU
+deploy-production-shipit_dashboard: deploy-production-HEROKU
+
+deploy-production-docs: deploy-production-S3
+deploy-production-releng_frontend: deploy-production-S3
+deploy-production-shipit_frontend: deploy-production-S3
+
 
 
 

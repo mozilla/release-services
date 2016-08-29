@@ -14,20 +14,7 @@ try {
   // pass
 }
 
-var clobbererUrl = document.body.getAttribute('data-clobberer-url');
-
-if (clobbererUrl === null) {
-    clobbererUrl = process.env.NEO_CLOBBERER_URL;
-}
-
-if (clobbererUrl === null) {
-    clobbererUrl = url.format({
-        protocol: window.location.protocol,
-        host: window.location.host,
-        port: window.location.port,
-        pathname: '/__api__/clobberer'
-    });
-}
+var clobbererUrl = process.env.NEO_CLOBBERER_URL || "You need to set NEO_CLOBBERER_URL variable";
 
 var app = require('./Main.elm').Main.fullscreen({
   user: user,

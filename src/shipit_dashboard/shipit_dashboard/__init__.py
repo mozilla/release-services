@@ -15,11 +15,6 @@ DEBUG = os.environ.get('DEBUG') == 'true' or __name__ == '__main__'
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_SETTINGS = os.path.abspath(os.path.join(HERE, '..', 'settings.py'))
 
-import logging
-
-if DEBUG:
-    # Debug logging
-    logging.basicConfig(level=logging.DEBUG)
 
 def init_app(app):
 
@@ -27,6 +22,7 @@ def init_app(app):
     app.cli.add_command(run_workflow)
 
     # Use custom json encoder
+    # XXX: why do we need custom encoder
     app.json_encoder = ShipitJSONEncoder
 
     # Register swagger api
@@ -34,6 +30,7 @@ def init_app(app):
         os.path.join(os.path.dirname(__file__), 'swagger.yml'))
 
 
+# XXX: we shouuld move this to create_app
 if DEBUG and not os.environ.get('DATABASE_URL'):
     os.environ['DATABASE_URL'] = 'sqlite:///%s' % (
         os.path.abspath(os.path.join(HERE, '..', 'app.db')))

@@ -90,6 +90,7 @@ fetchAnalysis maybeUser =
     Just user ->
       -- With Credentials
       let 
+        -- TODO: use dashboardUrl
         baseUrl = "http://localhost:5000/analysis" 
         url = Http.url baseUrl [
           ("clientId", fromJust user.clientId),

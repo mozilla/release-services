@@ -52,14 +52,14 @@ let
       ln -s ${python.packages."gunicorn"}/bin/gunicorn $out/bin
       ln -s ${python.packages."newrelic"}/bin/newrelic-admin $out/bin
    
-      cp ./src-*-releng_clobberer/settings.py $out/etc
+      cp ./src-*-${name}/settings.py $out/etc
 
       for i in $out/bin/*; do
         wrapProgram $i --set PYTHONPATH $PYTHONPATH
       done
     '';
     checkPhase = ''
-      flake8 settings.py setup.py releng_clobberer/
+      flake8 settings.py setup.py ${name}/
       # TODO: pytest ${name}/
     '';
     shellHook = ''

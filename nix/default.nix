@@ -30,7 +30,7 @@ let
     releng_frontend = import ./../src/releng_frontend { inherit releng_pkgs; };
     releng_clobberer = import ./../src/releng_clobberer { inherit releng_pkgs; };
 
-    #shipit_frontend = import ./../src/shipit_frontend { inherit releng_pkgs; };
+    shipit_frontend = import ./../src/shipit_frontend { inherit releng_pkgs; };
     shipit_dashboard = import ./../src/shipit_dashboard { inherit releng_pkgs; };
 
   };
