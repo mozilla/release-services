@@ -5,6 +5,7 @@ import Html.Attributes exposing (..)
 import Http
 import String
 import Json.Decode as Json exposing (Decoder, (:=))
+import Json.Decode.Extra as JsonExtra exposing ((|:))
 import RemoteData as RemoteData exposing ( WebData, RemoteData(Loading, Success, NotAsked, Failure) )
 
 import App.User as User
@@ -26,6 +27,7 @@ type alias Bug = {
   id: Int,
   bugzilla_id: Int,
   summary: String,
+  keywords: List String,
 
   -- Users
   creator: Contributor,
@@ -121,15 +123,16 @@ decodeAnalysis =
 
 decodeBug : Decoder Bug
 decodeBug =
-  Json.object8 Bug
-    ("id" := Json.int)
-    ("bugzilla_id" := Json.int)
-    ("summary" := Json.string)
-    ("creator" := decodeContributor)
-    ("assignee" := decodeContributor)
-    ("reviewers" := (Json.list decodeContributor))
-    (Json.maybe ("uplift" := decodeUpliftRequest))
-    ("changes_size" := Json.int)
+  Json.succeed Bug
+    |: ("id" := Json.int)
+    |: ("bugzilla_id" := Json.int)
+    |: ("summary" := Json.string)
+    |: ("keywords" := Json.list Json.string)
+    |: ("creator" := decodeContributor)
+    |: ("assignee" := decodeContributor)
+    |: ("reviewers" := (Json.list decodeContributor))
+    |: (Json.maybe ("uplift" := decodeUpliftRequest))
+    |: ("changes_size" := Json.int)
     
 
 decodeContributor : Decoder Contributor
@@ -242,8 +245,13 @@ viewUpliftText upliftText =
 viewStats: Bug -> Html Msg
 viewStats bug =
   div [class "stats"] [
+    p [] (List.map viewKeyword bug.keywords),
     p [] [
       span [class "label label-info"] [text "Changes"],
       span [] [text (toString bug.changes)]
     ]
   ]
+
+viewKeyword: String -> Html Msg
+viewKeyword keyword =
+  span [class "label label-default"] [text keyword]

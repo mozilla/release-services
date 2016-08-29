@@ -65,6 +65,7 @@ definitions:
       - id
       - bugzilla_id
       - summary
+      - keywords
       - changes_size
       - creator
       - assignee
@@ -76,6 +77,10 @@ definitions:
         type: integer 
       summary:
         type: string
+      keywords:
+        type: array 
+        items:
+          type: string
       changes_size:
         type: integer
       creator:

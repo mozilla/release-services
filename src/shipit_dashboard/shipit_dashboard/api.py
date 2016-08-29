@@ -39,6 +39,7 @@ def _serialize_bug(bug):
         'id': bug.id,
         'bugzilla_id': bug.bugzilla_id,
         'summary' : bug_data['summary'],
+        'keywords' : bug_data['keywords'],
 
         # Contributor structures
         'creator' : analysis['users']['creator'],
