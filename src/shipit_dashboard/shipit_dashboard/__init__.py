@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 import os
 
-from releng_common import db, create_app
+from releng_common import auth, db, create_app
 from shipit_dashboard.workflow import run_workflow
 from shipit_dashboard.encoder import ShipitJSONEncoder
 
@@ -45,7 +45,7 @@ if not os.environ.get('APP_SETTINGS') and \
 
 app = create_app(
     "shipit_dashboard",
-    extensions=[init_app, db],
+    extensions=[init_app, db, auth],
     debug=DEBUG,
     debug_src=HERE,
 )

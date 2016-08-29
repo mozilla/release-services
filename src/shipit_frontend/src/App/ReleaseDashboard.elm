@@ -3,6 +3,7 @@ module App.ReleaseDashboard exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
+import String
 import Json.Decode as Json exposing (Decoder, (:=))
 import RemoteData as RemoteData exposing ( WebData, RemoteData(Loading, Success, NotAsked, Failure) )
 
@@ -25,10 +26,16 @@ type alias Bug = {
   id: Int,
   bugzilla_id: Int,
   summary: String,
+
+  -- Users
   creator: Contributor,
   assignee: Contributor,
-  reviewers: List String, -- Should use Contributor with Maybe
-  uplift_request: Maybe UpliftRequest
+  reviewers: List Contributor,
+
+  uplift_request: Maybe UpliftRequest,
+
+  -- Stats
+  changes: Int
 }
 
 type alias Analysis = {
@@ -113,14 +120,16 @@ decodeAnalysis =
 
 decodeBug : Decoder Bug
 decodeBug =
-  Json.object7 Bug
+  Json.object8 Bug
     ("id" := Json.int)
     ("bugzilla_id" := Json.int)
-    (Json.at ["payload", "bug", "summary"] Json.string)
-    (Json.at ["payload", "analysis", "users", "creator"] decodeContributor)
-    (Json.at ["payload", "analysis", "users", "assignee"] decodeContributor)
-    (Json.at ["payload", "analysis", "users", "reviewers"] (Json.list Json.string))
-    (Json.maybe ((Json.at ["payload", "analysis"] decodeUpliftRequest)))
+    ("summary" := Json.string)
+    ("creator" := decodeContributor)
+    ("assignee" := decodeContributor)
+    ("reviewers" := (Json.list decodeContributor))
+    (Json.maybe ("uplift" := decodeUpliftRequest))
+    ("changes_size" := Json.int)
+    
 
 decodeContributor : Decoder Contributor
 decodeContributor = 
@@ -128,18 +137,12 @@ decodeContributor =
     ("email" := Json.string)
     ("real_name" := Json.string)
 
-decodeUpliftContributor : Decoder Contributor
-decodeUpliftContributor = 
-  Json.object2 Contributor
-    ("name" := Json.string) -- name is actually the email :/
-    ("real_name" := Json.string)
-
 decodeUpliftRequest : Decoder UpliftRequest
 decodeUpliftRequest  =
   Json.object3 UpliftRequest
-    (Json.at ["uplift_comment", "id"] Json.int)
-    ("uplift_author" := decodeUpliftContributor)
-    (Json.at ["uplift_comment", "raw_text"] Json.string)
+    ("id" := Json.int)
+    ("author" := decodeContributor)
+    ("comment" := Json.string)
 
 -- Subscriptions
 
@@ -171,7 +174,7 @@ viewAnalysis: Analysis -> Html Msg
 viewAnalysis analysis =
   div []
     [ h1 [] [text ("Analysis: " ++ analysis.name)]
-    , div [] (List.map viewBug analysis.bugs)
+    , div [class "bugs"] (List.map viewBug analysis.bugs)
     ]
 
 
@@ -179,15 +182,23 @@ viewBug: Bug -> Html Msg
 viewBug bug =
   div [class "bug"] [
     h4 [] [text bug.summary],
-    viewContributor bug.creator "Creator",
-    viewContributor bug.assignee "Assignee",
-    viewReviewers bug.reviewers,
-    viewUpliftRequest bug.uplift_request,
-    p [] [
+    div [class "row"] [
+      div [class "col-xs-4"] [
+        viewContributor bug.creator "Creator",
+        viewContributor bug.assignee "Assignee",
+        viewReviewers bug.reviewers
+      ],
+      div [class "col-xs-4"] [
+        viewUpliftRequest bug.uplift_request
+      ],
+      div [class "col-xs-4"] [
+        viewStats bug
+      ]
+    ],
+    div [class "text-muted"] [
       span [] [text ("#" ++ (toString bug.bugzilla_id))],
       a [href ("https://bugzilla.mozilla.org/show_bug.cgi?id=" ++ (toString bug.bugzilla_id)), target "_blank"] [text "View on bugzilla"]
-    ],
-    hr [] []
+    ]
   ]
 
 viewContributor: Contributor -> String -> Html Msg
@@ -197,17 +208,18 @@ viewContributor user title =
     a [href ("mailto:" ++ user.email)] [text user.name]
   ]
 
-viewReviewers: (List String) -> Html Msg
-viewReviewers users = 
-  div [class "users"] [
-    strong [] [text "Reviewers:"],
-    ul [] (List.map viewReviewer users)
-  ]
   
-viewReviewer: String -> Html Msg
+viewReviewers: (List Contributor) -> Html Msg
+viewReviewers users =
+  div [] [
+    strong [] [text "Reviewers:"],
+    ul [class "users"] (List.map viewReviewer users)
+  ]
+
+viewReviewer: Contributor -> Html Msg
 viewReviewer user =
   li [class "user"] [
-    a [href ("mailto:" ++ user)] [text user]
+    a [href ("mailto:" ++ user.email)] [text user.name]
   ]
 
 viewUpliftRequest: Maybe UpliftRequest -> Html Msg
@@ -216,8 +228,21 @@ viewUpliftRequest maybe =
     Just request -> 
       div [class "uplift-request", id (toString request.bugzilla_id)] [
         viewContributor request.author "Uplift request",
-        blockquote [] [text request.text]
+        div [class "comment"] (List.map viewUpliftText (String.split "\n" request.text))
       ]
     Nothing -> 
       div [class "alert alert-warning"] [text "No uplift request."]
 
+
+viewUpliftText: String -> Html Msg
+viewUpliftText upliftText =
+  p [] [text upliftText]
+
+viewStats: Bug -> Html Msg
+viewStats bug =
+  div [class "stats"] [
+    p [] [
+      span [class "label label-info"] [text "Changes"],
+      span [] [text (toString bug.changes)]
+    ]
+  ]

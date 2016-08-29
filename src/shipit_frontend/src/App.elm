@@ -244,7 +244,7 @@ view model =
         [ nav [ id "navbar", class "navbar navbar-full navbar-light" ]
               [ div [ class "container" ] ( viewNavBar model ) ]
         , div [ id "content" ]
-              [ div [ class "container" ] [ viewPage model ] ]
+              [ div [ class "container-fluid" ] [ viewPage model ] ]
         , footer [ class "container" ] viewFooter
         ]
 
