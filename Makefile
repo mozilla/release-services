@@ -1,4 +1,4 @@
-.PHONY: help develop develop-run
+.PHONY: *
 
 APP=
 APPS=\
@@ -25,9 +25,14 @@ help:
 	@echo "TODO: need to write help for commands"
 
 
+nix:
+	@if [[ -z "`which nix-build`" ]]; then \
+		curl https://nixos.org/nix/install | sh; \
+		source $HOME/.nix-profile/etc/profile.d/nix.sh; \
+	fi
 
 
-develop: require-APP
+develop: nix require-APP
 	nix-shell nix/default.nix -A $(APP) --run $$SHELL
 
 
@@ -35,7 +40,7 @@ develop: require-APP
 
 develop-run: require-APP develop-run-$(APP)
 
-develop-run-BACKEND: require-APP 
+develop-run-BACKEND: nix require-APP 
 	DEBUG=true \
 	CACHE_TYPE=filesystem \
 	CACHE_DIR=$$PWD/src/$(APP)/cache \
@@ -44,7 +49,7 @@ develop-run-BACKEND: require-APP
 		nix-shell nix/default.nix -A $(APP) \
 		--run "gunicorn $(APP):app --bind 'localhost:$(APP_PORT_$(APP))' --certfile=nix/dev_ssl/server.crt --keyfile=nix/dev_ssl/server.key --workers 2 --timeout 3600 --reload --log-file -"
 
-develop-run-FRONTEND: require-APP 
+develop-run-FRONTEND: nix require-APP 
 	NEO_BASE_URL=https://localhost:$$APP_PORT_$(APP) \
 		nix-shell nix/default.nix -A $(APP) --run "neo start --config webpack.config.js"
 
@@ -63,14 +68,14 @@ build-apps: $(foreach app, $(APPS), build-app-$(app))
 
 build-app: require-APP build-app-$(APP)
 
-build-app-%:
+build-app-%: nix
 	nix-build nix/default.nix -A $(subst build-app-,,$@) -o result-$(subst build-app-,,$@)
 
 
 
 docker: require-APP docker-$(APP)
 
-docker-%:
+docker-%: nix
 	rm -f result-$@
 	nix-build nix/docker.nix -A $(subst docker-,,$@) -o result-$@
 
@@ -147,7 +152,7 @@ update-all: \
 
 update: require-APP update-$(APP)
 
-update-%:
+update-%: nix
 	nix-shell nix/update.nix --argstr pkg $(subst update-,,$@)
 
 
@@ -158,14 +163,14 @@ build-tools: $(foreach tool, $(TOOLS), build-tool-$(tool))
 
 build-tool: require-TOOL build-tool-$(TOOL)
 
-build-tool-%:
+build-tool-%: nix
 	nix-build nix/default.nix -A tools.$(subst build-tool-,,$@) -o result-tool-$(subst build-tool-,,$@)
 
 
 
 
 
-build-docs:
+build-docs: nix
 	nix-build nix/default.nix -A releng_docs -o result-docs
 
 
