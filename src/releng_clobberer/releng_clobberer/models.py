@@ -6,7 +6,6 @@ from __future__ import absolute_import
 
 
 import sqlalchemy as sa
-import taskcluster as tc
 import time
 
 from releng_common.db import db
@@ -14,7 +13,6 @@ from releng_common.db import db
 
 BUILDBOT_BUILDDIR_REL_PREFIX = 'rel-'
 BUILDBOT_BUILDER_REL_PREFIX = 'release-'
-TASKCLUSTER_DECISION_NAMESPACE = 'gecko.v2.%s.latest.firefox.decision'
 
 
 class Build(db.Model):
@@ -200,49 +198,3 @@ def clobber_buildbot(db_session, who, branch=None, slave=None, builddir=None,
 
     if log:
         log.debug('Skipping clobbering of builder: {}'.format(builder))
-
-
-def taskcluster_branches():
-    """Dict of workerTypes per branch with their respected workerTypes
-    """
-    index = tc.Index()
-    queue = tc.Queue()
-
-    result = index.listNamespaces('gecko.v2', dict(limit=1000))
-
-    branches = {
-        i['name']: dict(name=i['name'], workerTypes=dict())
-        for i in result.get('namespaces', [])
-    }
-
-    for branchName, branch in branches.items():
-
-        # decision task might not exist
-        try:
-            decision_task = index.findTask(
-                TASKCLUSTER_DECISION_NAMESPACE % branchName)
-            decision_graph = queue.getLatestArtifact(
-                decision_task['taskId'], 'public/graph.json')
-        except tc.exceptions.TaskclusterRestFailure:
-            continue
-
-        for task in decision_graph.get('tasks', []):
-            task = task['task']
-            task_cache = task.get('payload', dict()).get('cache', dict())
-
-            provisionerId = task.get('provisionerId')
-            if provisionerId:
-                branch['provisionerId'] = provisionerId
-
-            workerType = task.get('workerType')
-            if workerType:
-                branch['workerTypes'].setdefault(
-                    workerType, dict(name=workerType, caches=[]))
-
-                if len(task_cache) > 0:
-                    branch['workerTypes'][workerType]['caches'] = list(set(
-                        branch['workerTypes'][workerType]['caches'] +
-                        task_cache.keys()
-                    ))
-
-    return branches

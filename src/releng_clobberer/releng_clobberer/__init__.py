@@ -4,9 +4,13 @@
 
 from __future__ import absolute_import
 
+import click
+import json
 import os
 
-from releng_common import db, create_app
+import releng_clobberer.cli
+import releng_common
+import releng_common.db
 
 
 DEBUG = bool(os.environ.get('DEBUG', __name__ == '__main__'))
@@ -28,12 +32,19 @@ if not os.environ.get('APP_SETTINGS') and \
     os.environ['APP_SETTINGS'] = APP_SETTINGS
 
 
-app = create_app(
+app = releng_common.create_app(
     "releng_clobberer",
-    extensions=[init_app, db],
+    extensions=[init_app, releng_common.db],
     debug=DEBUG,
     debug_src=HERE,
 )
+
+
+@app.cli.command()
+def taskcluster_workertypes():
+    workertypes = releng_clobberer.cli.taskcluster_workertypes()
+    click.echo(json.dumps(workertypes, indent=2, sort_keys=True))
+
 
 if __name__ == "__main__":
     app.run(**app.run_options())

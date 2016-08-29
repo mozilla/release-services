@@ -48,6 +48,7 @@ let
       mkdir -p $out/bin $out/etc
 
       ln -s ${python.interpreter.interpreter} $out/bin
+      ln -s ${python.packages."Flask"}/bin/flask $out/bin
       ln -s ${python.packages."gunicorn"}/bin/gunicorn $out/bin
       ln -s ${python.packages."newrelic"}/bin/newrelic-admin $out/bin
    
