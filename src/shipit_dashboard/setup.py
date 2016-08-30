@@ -20,10 +20,6 @@ with open(os.path.join(here, 'requirements.txt')) as f:
         )
     )
 
-# until clouseau gets properly packaged
-# https://github.com/calixteman/clouseau/pull/68
-install_requires = [i for i in install_requires] + ['clouseau']
-
 setup(
     name='shipit_dashboard',
     version=open(os.path.join(here, 'VERSION')).read().strip(),
