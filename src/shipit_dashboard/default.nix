@@ -25,7 +25,7 @@ let
     buildInputs = [ makeWrapper ] ++
       fromRequirementsFile [ ./requirements-dev.txt
                              ./requirements-setup.txt ] python.packages;
-    propagatedBuildInputs = [ python.packages."clouseau" ] ++
+    propagatedBuildInputs =
       fromRequirementsFile [ ./../releng_common/requirements.txt
                              ./requirements.txt
                              ./requirements-prod.txt ] python.packages;
@@ -81,7 +81,7 @@ let
       pushd src/${name}
       ${releng_pkgs.tools.pypi2nix}/bin/pypi2nix -v \
        -V 3.5 \
-       -E "postgresql" \
+       -E "postgresql libffi openssl" \
        -r requirements.txt \
        -r requirements-setup.txt \
        -r requirements-dev.txt \

@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql -r requirements.txt -r requirements-setup.txt -r requirements-dev.txt -r requirements-prod.txt
+#   pypi2nix -v -V 3.5 -E postgresql libffi openssl -r requirements.txt -r requirements-setup.txt -r requirements-dev.txt -r requirements-prod.txt
 #
 
 { pkgs ? import <nixpkgs> {}
@@ -20,7 +20,7 @@ let
     self = pythonPackages;
   };
 
-  commonBuildInputs = with pkgs; [ postgresql ];
+  commonBuildInputs = with pkgs; [ postgresql libffi openssl ];
   commonDoCheck = false;
 
   withPackages = pkgs':

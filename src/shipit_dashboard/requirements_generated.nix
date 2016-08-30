@@ -1,7 +1,7 @@
 # generated using pypi2nix tool (version: 1.5.0.dev0)
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql -r requirements.txt -r requirements-setup.txt -r requirements-dev.txt -r requirements-prod.txt
+#   pypi2nix -v -V 3.5 -E postgresql libffi openssl -r requirements.txt -r requirements-setup.txt -r requirements-dev.txt -r requirements-prod.txt
 #
 
 { pkgs, python, commonBuildInputs ? [], commonDoCheck ? false }:
@@ -174,10 +174,10 @@ self: {
 
 
   "PyYAML" = python.mkDerivation {
-    name = "PyYAML-3.11";
+    name = "PyYAML-3.12";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/75/5e/b84feba55e20f8da46ead76f14a3943c8cb722d40360702b2365b91dec00/PyYAML-3.11.tar.gz";
-      sha256 = "c36c938a872e5ff494938b33b14aaa156cb439ec67548fcab3535bb78b0846e8";
+      url = "https://pypi.python.org/packages/4a/85/db5a2df477072b2902b0eb892feb37d88ac635d36245a72a6a69b23b383a/PyYAML-3.12.tar.gz";
+      sha256 = "592766c6303207a20efc445587778322d7f73b161bd994f227adaa341ba212ab";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -266,6 +266,26 @@ self: {
 
 
 
+  "cffi" = python.mkDerivation {
+    name = "cffi-1.7.0";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/83/3c/00b553fd05ae32f27b3637f705c413c4ce71290aa9b4c4764df694e906d9/cffi-1.7.0.tar.gz";
+      sha256 = "6ed5dd6afd8361f34819c68aaebf9e8fc12b5a5893f91f50c9e50c8886bb60df";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."pycparser"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "Foreign Function Interface for Python calling C code.";
+    };
+  };
+
+
+
   "chardet" = python.mkDerivation {
     name = "chardet-2.3.0";
     src = pkgs.fetchurl {
@@ -323,6 +343,31 @@ self: {
       homepage = "";
       license = licenses.asl20;
       description = "Connexion - API first applications with OpenAPI/Swagger and Flask";
+    };
+  };
+
+
+
+  "cryptography" = python.mkDerivation {
+    name = "cryptography-1.5";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/6e/96/b8dab146e8be98061dae07e127f80cffa3061ab0e8da0d3d42f3308c6e91/cryptography-1.5.tar.gz";
+      sha256 = "52f47ec9a57676043f88e3ca133638790b6b71e56e8890d9d7f3ae4fcd75fa24";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."cffi"
+      self."flake8"
+      self."idna"
+      self."pyasn1"
+      self."pytz"
+      self."six"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers.";
     };
   };
 
@@ -422,6 +467,24 @@ self: {
       homepage = "";
       license = licenses.bsdOriginal;
       description = "iCalendar parser/generator";
+    };
+  };
+
+
+
+  "idna" = python.mkDerivation {
+    name = "idna-2.1";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/fb/84/8c27516fbaa8147acd2e431086b473c453c428e24e8fb99a1d89ce381851/idna-2.1.tar.gz";
+      sha256 = "ed36f281aebf3cd0797f163bb165d84c31507cedd15928b095b1675e2d04c676";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "Internationalized Domain Names in Applications (IDNA)";
     };
   };
 
@@ -530,6 +593,32 @@ self: {
 
 
 
+  "libmozdata" = python.mkDerivation {
+    name = "libmozdata-0.1.0";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/e1/88/e067cd86a8da68f80d0cc152ebc2dc59bc3a9409101be6451b7080e5bee7/libmozdata-0.1.0.tar.gz";
+      sha256 = "7d1f3cfd9cfd0d60efcf17aaf7852ec1a994c363046af7ad5339322fb444a111";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."elasticsearch"
+      self."icalendar"
+      self."python-dateutil"
+      self."requests"
+      self."requests-futures"
+      self."six"
+      self."whatthepatch"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = "MPL2";
+      description = "Library to access several Mozilla data sources.";
+    };
+  };
+
+
+
   "mccabe" = python.mkDerivation {
     name = "mccabe-0.5.2";
     src = pkgs.fetchurl {
@@ -581,6 +670,27 @@ self: {
       homepage = "";
       license = licenses.asl20;
       description = "multidict implementation";
+    };
+  };
+
+
+
+  "ndg-httpsclient" = python.mkDerivation {
+    name = "ndg-httpsclient-0.4.2";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/a2/a7/ad1c1c48e35dc7545dab1a9c5513f49d5fa3b5015627200d2be27576c2a0/ndg_httpsclient-0.4.2.tar.gz";
+      sha256 = "580987ef194334c50389e0d7de885fccf15605c13c6eecaabd8d6c43768eb8ac";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."pyOpenSSL"
+      self."pyasn1"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "Provides enhanced HTTPS support for httplib and urllib2 using PyOpenSSL";
     };
   };
 
@@ -699,6 +809,45 @@ self: {
 
 
 
+  "pyOpenSSL" = python.mkDerivation {
+    name = "pyOpenSSL-16.1.0";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/15/1e/79c75db50e57350a7cefb70b110255757e9abd380a50ebdc0cfd853b7450/pyOpenSSL-16.1.0.tar.gz";
+      sha256 = "88f7ada2a71daf2c78a4f139b19d57551b4c8be01f53a1cb5c86c2f3bf01355f";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."cryptography"
+      self."six"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.asl20;
+      description = "Python wrapper module around the OpenSSL library";
+    };
+  };
+
+
+
+  "pyasn1" = python.mkDerivation {
+    name = "pyasn1-0.1.9";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/f7/83/377e3dd2e95f9020dbd0dfd3c47aaa7deebe3c68d3857a4e51917146ae8b/pyasn1-0.1.9.tar.gz";
+      sha256 = "853cacd96d1f701ddd67aa03ecc05f51890135b7262e922710112f12a2ed2a7f";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "ASN.1 types and codecs";
+    };
+  };
+
+
+
   "pycodestyle" = python.mkDerivation {
     name = "pycodestyle-2.0.0";
     src = pkgs.fetchurl {
@@ -712,6 +861,24 @@ self: {
       homepage = "";
       license = licenses.mit;
       description = "Python style guide checker";
+    };
+  };
+
+
+
+  "pycparser" = python.mkDerivation {
+    name = "pycparser-2.14";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/6d/31/666614af3db0acf377876d48688c5d334b6e493b96d21aa7d332169bee50/pycparser-2.14.tar.gz";
+      sha256 = "7959b4a74abdc27b312fed1c21e6caf9309ce0b29ea86b591fd2e99ecdf27f73";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "C parser in Python";
     };
   };
 
@@ -817,7 +984,11 @@ self: {
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
-    propagatedBuildInputs = [ ];
+    propagatedBuildInputs = [
+      self."ndg-httpsclient"
+      self."pyOpenSSL"
+      self."pyasn1"
+    ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
       license = licenses.asl20;
@@ -1031,7 +1202,11 @@ self: {
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
-    propagatedBuildInputs = [ ];
+    propagatedBuildInputs = [
+      self."ndg-httpsclient"
+      self."pyOpenSSL"
+      self."pyasn1"
+    ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
       license = licenses.mit;
