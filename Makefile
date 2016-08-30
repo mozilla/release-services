@@ -2,18 +2,19 @@
 
 APP=
 APPS=\
-	releng_frontend \
 	releng_clobberer \
-	shipit_frontend \
-	shipit_dashboard
+	releng_frontend \
+	shipit_dashboard \
+	shipit_frontend
 
 TOOL=
 TOOLS=\
-	pypi2nix \
 	awscli \
-	node2nix \
+	createcert \
+	mysql2pgsql \
 	mysql2sqlite \
-	mysql2pgsql
+	node2nix \
+	pypi2nix
 
 
 APP_DEV_PORT_releng_frontend=8001
@@ -21,9 +22,10 @@ APP_DEV_PORT_releng_clobberer=8002
 APP_DEV_PORT_shipit_frontend=8003
 APP_DEV_PORT_shipit_dashboard=8004
 
+APP_DEV_SSL=SSL_CACERT=$$PWD/tmp/ca.crt SSL_CERT=$$PWD/tmp/server.crt SSL_KEY=$$PWD/tmp/server.key
 APP_DEV_ENV_releng_frontend=NEO_CLOBBERER_URL=https://localhost:$(APP_DEV_PORT_releng_clobberer)
-APP_DEV_ENV_shipit_frontend=NEO_DASHBOARD_URL=https://localhost:$(APP_DEV_PORT_shipit_dashboard)
-
+APP_DEV_ENV_shipit_frontend=NEO_DASHBOARD_URL=https://localhost:$(APP_DEV_PORT_shipit_dashboard) $(APP_DEV_SSL)
+	
 APP_STAGING_HEROKU_releng_clobberer=releng-staging-clobberer
 APP_STAGING_HEROKU_shipit_dashboard=shipit-staging-dashboard
 
@@ -58,16 +60,16 @@ develop: nix require-APP
 
 develop-run: require-APP develop-run-$(APP)
 
-develop-run-BACKEND: nix require-APP 
+develop-run-BACKEND: build-certs nix require-APP 
 	DEBUG=true \
 	CACHE_TYPE=filesystem \
 	CACHE_DIR=$$PWD/src/$(APP)/cache \
 	DATABASE_URL=sqlite:///$$PWD/app.db \
 	APP_SETTINGS=$$PWD/src/$(APP)/settings.py \
 		nix-shell nix/default.nix -A $(APP) \
-		--run "gunicorn $(APP):app --bind 'localhost:$(APP_DEV_PORT_$(APP))' --certfile=nix/dev_ssl/server.crt --keyfile=nix/dev_ssl/server.key --workers 2 --timeout 3600 --reload --log-file -"
+		--run "gunicorn $(APP):app --bind 'localhost:$(APP_DEV_PORT_$(APP))' --ca-certs=$$PWD/tmp/ca.crt --certfile=$$PWD/tmp/server.crt --keyfile=$$PWD/tmp/server.key --workers 2 --timeout 3600 --reload --log-file -"
 
-develop-run-FRONTEND: nix require-APP 
+develop-run-FRONTEND: build-certs nix require-APP
 	nix-shell nix/default.nix --pure -A $(APP) \
 		--run "$(APP_DEV_ENV_$(APP)) neo start --port $(APP_DEV_PORT_$(APP)) --config webpack.config.js"
 
@@ -164,8 +166,8 @@ update-all: \
 
 update: require-APP update-$(APP)
 
-update-%: nix
-	nix-shell nix/update.nix --argstr pkg $(subst update-,,$@)
+update-%: tmpdir nix
+	TMPDIR=$$PWD/tmp nix-shell nix/update.nix --argstr pkg $(subst update-,,$@)
 
 
 
@@ -186,7 +188,21 @@ build-docs: nix
 	nix-build nix/default.nix -A releng_docs -o result-docs
 
 
+build-certs: tmpdir build-tool-createcert
+	@if [[ ! -e "$$PWD/tmp/ca.crt" ]] && \
+	   [[ ! -e "$$PWD/tmp/ca.key" ]] && \
+	   [[ ! -e "$$PWD/tmp/ca.srl" ]] && \
+	   [[ ! -e "$$PWD/tmp/server.crt" ]] && \
+	   [[ ! -e "$$PWD/tmp/server.key" ]]; then \
+	  ./result-tool-createcert/bin/createcert $$PWD/tmp; \
+	fi
+
+
 # --- helpers
+
+
+tmpdir:
+	@mkdir -p $$PWD/tmp
 
 
 require-TOOL:

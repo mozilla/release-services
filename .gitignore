@@ -12,3 +12,4 @@
 /src/**/build
 /src/**/elm-stuff/
 /src/**/node_modules/
+/tmp

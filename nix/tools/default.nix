@@ -49,4 +49,6 @@ in {
     '';
   };
 
+  createcert = import ./createcert.nix { inherit releng_pkgs; };
+
 }

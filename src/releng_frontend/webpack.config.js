@@ -12,6 +12,9 @@ config.module.noParse = ELM_EXT;
 
 if (config_type === 'dev') {
   config.devServer.https = true;
+  config.devServer.cacert= fs.readFileSync(process.env.SSL_CACERT);
+  config.devServer.cert = fs.readFileSync(process.env.SSL_CERT);
+  config.devServer.key= fs.readFileSync(process.env.SSL_KEY);
 }
 
 module.exports = config;
