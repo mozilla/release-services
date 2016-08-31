@@ -49,11 +49,14 @@ definitions:
     required:
       - id
       - name
+      - count
     properties:
       id:
         type: integer
       name:
         type: string
+      count:
+        type: integer
       bugs:
         type: array
         items:

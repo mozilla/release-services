@@ -43,30 +43,44 @@ type alias Bug = {
 type alias Analysis = {
   id: Int,
   name: String,
+  count: Int,
   bugs: List Bug
 }
 
 type alias Model = {
   -- All analysis in use
-  analysis : WebData (List Analysis),
+  all_analysis : WebData (List Analysis),
 
   -- Current connected user
-  current_user : Maybe User.Model
+  current_user : Maybe User.Model,
+
+  -- Current Analysis used
+  current_analysis : WebData (Analysis),
+
+  -- Backend base endpoint
+  backend_url : String
 }
 
 type Msg
-   = FetchedAnalysis (WebData (List Analysis))
+   = FetchedAllAnalysis (WebData (List Analysis))
+   | FetchedAnalysis (WebData Analysis)
+   | SelectAnalysis Analysis
 
 
-init : (Maybe User.Model) -> (Model, Cmd Msg)
-init user =
+init : (Maybe User.Model) -> String -> (Model, Cmd Msg)
+init user backend_url =
+  let
+    model = {
+      all_analysis = NotAsked,
+      current_analysis = NotAsked,
+      current_user = user,
+      backend_url = backend_url
+    }
+  in
   (
-    {
-      analysis = NotAsked,
-      current_user = user
-    }, 
+    model,
     -- Initial fetch of every analysis in model
-    fetchAnalysis user
+    fetchAllAnalysis model
   )
 
 -- Update
@@ -74,52 +88,98 @@ init user =
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    FetchedAnalysis allAnalysis ->
+    FetchedAllAnalysis allAnalysis ->
       (
-        { model | analysis = allAnalysis },
+        { model | all_analysis = allAnalysis },
         Cmd.none
+      )
+
+    FetchedAnalysis analysis ->
+      (
+        { model | current_analysis = analysis },
+        Cmd.none
+      )
+  
+    SelectAnalysis analysis ->
+      (
+        { model | current_analysis = Loading },
+        fetchAnalysis model analysis.id
       )
 
 fromJust : Maybe a -> a
 fromJust x = case x of
     Just y -> y
     Nothing -> Debug.crash "error: fromJust Nothing"
-    
-fetchAnalysis : (Maybe User.Model) -> Cmd Msg
-fetchAnalysis maybeUser =
-  -- Load all analysis
-  case maybeUser of
+
+sendRequest: Model -> String -> Decoder value -> Maybe (Platform.Task Http.Error value)
+sendRequest model url decoder =
+  case model.current_user of
     Just user ->
-      -- With Credentials
-      let 
-        -- TODO: use dashboardUrl
-        baseUrl = "http://localhost:5000/analysis" 
-        url = Http.url baseUrl [
-          ("clientId", fromJust user.clientId),
-          ("accessToken", fromJust user.accessToken)
-        ]
-        log' = Debug.log "URL to fetch analysis" url
+      let
+        request = {
+          verb = "GET",
+          headers = [
+            -- TODO: use Hawk port here
+            -- ("Authorization", user.accessToken),
+            ( "Accept", "application/json" )
+          ],
+          url = model.backend_url ++ url,
+          body = Http.empty
+        }
       in
-        Http.get decodeAnalysis url
-          |> RemoteData.asCmd
-          |> Cmd.map FetchedAnalysis
+        Just (Http.fromJson decoder
+          (Http.send Http.defaultSettings request))
 
     Nothing ->
       -- No credentials
       let
         log = Debug.log "No credentials to fetch analysis"
       in
+        Nothing
+    
+fetchAllAnalysis : Model -> Cmd Msg
+fetchAllAnalysis model =
+  -- Load all analysis
+  let
+    response = sendRequest model "/analysis" decodeAllAnalysis 
+  in
+    case response of
+      Just response' ->
+          -- Process request
+          response'
+            |> RemoteData.asCmd
+            |> Cmd.map FetchedAllAnalysis
+      Nothing ->
+        Cmd.none
+
+fetchAnalysis : Model -> Int -> Cmd Msg
+fetchAnalysis model analysis_id =
+  -- With Credentials
+  let 
+    url = "/analysis/" ++ (toString analysis_id)
+    response = sendRequest model url decodeAnalysis 
+  in
+    case response of
+      Just response' ->
+          -- Process request
+          response'
+            |> RemoteData.asCmd
+            |> Cmd.map FetchedAnalysis
+      Nothing ->
         Cmd.none
 
 
-decodeAnalysis : Decoder (List Analysis)
+decodeAllAnalysis : Decoder (List Analysis)
+decodeAllAnalysis =
+  Json.list decodeAnalysis
+
+decodeAnalysis : Decoder Analysis
 decodeAnalysis =
-  Json.list (
-    Json.object3 Analysis
-      ("id" := Json.int)
-      ("name" := Json.string)
-      ("bugs" := Json.list decodeBug)
-  )
+  Json.object4 Analysis
+    ("id" := Json.int)
+    ("name" := Json.string)
+    ("count" := Json.int)
+    ("bugs" := Json.list decodeBug)
 
 decodeBug : Decoder Bug
 decodeBug =
@@ -159,7 +219,7 @@ subscriptions analysis =
 
 view : Model -> Html Msg
 view model =
-  case model.analysis of
+  case model.current_analysis of
     NotAsked ->
       div [class "alert alert-info"] [text "Initialising ..."]
 
@@ -169,9 +229,8 @@ view model =
     Failure err ->
       div [class "alert alert-danger"] [text ("Error: " ++ toString err)]
 
-    Success allAnalysis ->
-      div []
-        (List.map viewAnalysis allAnalysis)
+    Success analysis ->
+      viewAnalysis analysis
 
 
 viewAnalysis: Analysis -> Html Msg

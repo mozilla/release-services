@@ -15,7 +15,6 @@ DEBUG = os.environ.get('DEBUG') == 'true' or __name__ == '__main__'
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_SETTINGS = os.path.abspath(os.path.join(HERE, '..', 'settings.py'))
 
-
 def init_app(app):
 
     # Register extra commands

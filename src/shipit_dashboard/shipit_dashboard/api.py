@@ -56,22 +56,30 @@ def _serialize_bug(bug):
         'uplift' : uplift,
     }
 
-def _serialize_analysis(analysis):
+def _serialize_analysis(analysis, full=True):
     """
     Helper to serialize an analysis
     """
-    return {
+    out = {
         'id': analysis.id,
         'name': analysis.name,
-        'bugs': [_serialize_bug(b) for b in analysis.bugs if b.payload],
+        'count' : len(analysis.bugs),
     }
+
+    if full:
+        # Add bugs
+        out['bugs'] = [_serialize_bug(b) for b in analysis.bugs if b.payload]
+    else:
+        out['bugs'] = []
+
+    return out
 
 def list_analysis():
     """
     List all available analysis
     """
     all_analysis = BugAnalysis.query.all()
-    return [_serialize_analysis(analysis) for analysis in all_analysis]
+    return [_serialize_analysis(analysis, False) for analysis in all_analysis]
 
 def get_analysis(analysis_id):
     """
