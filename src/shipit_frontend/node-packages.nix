@@ -3703,13 +3703,13 @@ let
         sha1 = "ce2e1bef835204b4f3099928c602f8b6ae615650";
       };
     };
-    "sshpk-1.9.2" = {
+    "sshpk-1.10.0" = {
       name = "sshpk";
       packageName = "sshpk";
-      version = "1.9.2";
+      version = "1.10.0";
       src = fetchurl {
-        url = "https://registry.npmjs.org/sshpk/-/sshpk-1.9.2.tgz";
-        sha1 = "3b41351bbad5c34ddf4bd8119937efee31a46765";
+        url = "https://registry.npmjs.org/sshpk/-/sshpk-1.10.0.tgz";
+        sha1 = "104d6ba2afb2ac099ab9567c0d193977f29c6dfa";
       };
     };
     "extsprintf-1.0.2" = {
@@ -3809,6 +3809,24 @@ let
       src = fetchurl {
         url = "https://registry.npmjs.org/ecc-jsbn/-/ecc-jsbn-0.1.1.tgz";
         sha1 = "0fc73a9ed5f0d53c38193398523ef7e543777505";
+      };
+    };
+    "bcrypt-pbkdf-1.0.0" = {
+      name = "bcrypt-pbkdf";
+      packageName = "bcrypt-pbkdf";
+      version = "1.0.0";
+      src = fetchurl {
+        url = "https://registry.npmjs.org/bcrypt-pbkdf/-/bcrypt-pbkdf-1.0.0.tgz";
+        sha1 = "3ca76b85241c7170bf7d9703e7b9aa74630040d4";
+      };
+    };
+    "tweetnacl-0.14.3" = {
+      name = "tweetnacl";
+      packageName = "tweetnacl";
+      version = "0.14.3";
+      src = fetchurl {
+        url = "https://registry.npmjs.org/tweetnacl/-/tweetnacl-0.14.3.tgz";
+        sha1 = "3da382f670f25ded78d7b3d1792119bca0b7132d";
       };
     };
     "mime-db-1.23.0" = {
@@ -4504,13 +4522,13 @@ let
         sha1 = "afab96262910a7f33c19a5775825c69f34e350ca";
       };
     };
-    "bluebird-3.4.3" = {
+    "bluebird-3.4.5" = {
       name = "bluebird";
       packageName = "bluebird";
-      version = "3.4.3";
+      version = "3.4.5";
       src = fetchurl {
-        url = "https://registry.npmjs.org/bluebird/-/bluebird-3.4.3.tgz";
-        sha1 = "1bdf56bb9336f4206f0f4efb7bedd5b5e9392058";
+        url = "https://registry.npmjs.org/bluebird/-/bluebird-3.4.5.tgz";
+        sha1 = "dfea23c733b7b8e924af97662f9c7bbefefe5ff9";
       };
     };
     "slice-ansi-0.0.4" = {
@@ -7501,13 +7519,13 @@ let
         sha1 = "a0b870729aae214005b7d5032ec2cbbb0fb4451a";
       };
     };
-    "process-0.11.8" = {
+    "process-0.11.9" = {
       name = "process";
       packageName = "process";
-      version = "0.11.8";
+      version = "0.11.9";
       src = fetchurl {
-        url = "https://registry.npmjs.org/process/-/process-0.11.8.tgz";
-        sha1 = "58ff3d04ae0641be72c5a6e60ce8f7822d64eb3c";
+        url = "https://registry.npmjs.org/process/-/process-0.11.9.tgz";
+        sha1 = "7bd5ad21aa6253e7da8682264f1e11d11c0318c1";
       };
     };
     "punycode-1.4.1" = {
@@ -10395,7 +10413,7 @@ in
       sources."sntp-1.0.9"
       sources."assert-plus-0.2.0"
       sources."jsprim-1.3.0"
-      (sources."sshpk-1.9.2" // {
+      (sources."sshpk-1.10.0" // {
         dependencies = [
           sources."assert-plus-1.0.0"
         ];
@@ -10418,6 +10436,11 @@ in
       sources."tweetnacl-0.13.3"
       sources."jodid25519-1.0.2"
       sources."ecc-jsbn-0.1.1"
+      (sources."bcrypt-pbkdf-1.0.0" // {
+        dependencies = [
+          sources."tweetnacl-0.14.3"
+        ];
+      })
       sources."mime-db-1.23.0"
       sources."tr46-0.0.3"
       sources."object-keys-1.0.11"
@@ -10510,7 +10533,7 @@ in
       sources."caller-path-0.1.0"
       sources."resolve-from-1.0.1"
       sources."callsites-0.2.0"
-      sources."bluebird-3.4.3"
+      sources."bluebird-3.4.5"
       sources."slice-ansi-0.0.4"
       sources."tv4-1.2.7"
       sources."xregexp-3.1.1"
@@ -10965,7 +10988,7 @@ in
       sources."https-browserify-0.0.0"
       sources."os-browserify-0.1.2"
       sources."path-browserify-0.0.0"
-      sources."process-0.11.8"
+      sources."process-0.11.9"
       sources."punycode-1.4.1"
       sources."querystring-es3-0.2.1"
       (sources."stream-browserify-1.0.0" // {

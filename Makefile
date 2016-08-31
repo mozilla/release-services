@@ -80,7 +80,15 @@ develop-run-shipit_dashboard: develop-run-BACKEND
 develop-run-shipit_frontend: develop-run-FRONTEND
 
 
-
+develop-flask-shell: nix require-APP
+	DEBUG=true \
+	CACHE_TYPE=filesystem \
+	CACHE_DIR=$$PWD/src/$(APP)/cache \
+	DATABASE_URL=sqlite:///$$PWD/app.db \
+  FLASK_APP=$(APP) \
+	APP_SETTINGS=$$PWD/src/$(APP)/settings.py \
+		nix-shell nix/default.nix -A $(APP) \
+    --run "flask shell"
 
 
 

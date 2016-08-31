@@ -2,8 +2,8 @@
 from releng_common.db import db
 from shipit_dashboard.models import BugAnalysis, BugResult
 from shipit_dashboard.helpers import compute_dict_hash
-from clouseau.bugzilla import Bugzilla
-from clouseau.patchanalysis import bug_analysis
+from libmozdata.bugzilla import Bugzilla
+from libmozdata.patchanalysis import bug_analysis
 from sqlalchemy.orm.exc import NoResultFound
 from flask.cli import with_appcontext
 import logging
