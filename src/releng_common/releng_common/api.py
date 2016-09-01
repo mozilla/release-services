@@ -61,7 +61,7 @@ class Api:
                  swagger_json=True,
                  swagger_ui=True,
                  swagger_path=None,
-                 swagger_url="swagger",
+                 swagger_url="docs",
                  validate_responses=True,
                  strict_validation=True,
                  resolver=connexion.resolver.Resolver(),

@@ -32,4 +32,4 @@ current implementation
 
 Technical stuff:
  - releng stack
- - releng repo
+ - relengi repo
