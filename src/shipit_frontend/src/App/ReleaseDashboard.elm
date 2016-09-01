@@ -65,23 +65,18 @@ type Msg
    = FetchedAllAnalysis (WebData (List Analysis))
    | FetchedAnalysis (WebData Analysis)
    | SelectAnalysis Analysis
+   | UserUpdate (Maybe User.Model)
 
 
-init : (Maybe User.Model) -> String -> (Model, Cmd Msg)
-init user backend_url =
-  let
-    model = {
-      all_analysis = NotAsked,
-      current_analysis = NotAsked,
-      current_user = user,
-      backend_url = backend_url
-    }
-  in
-  (
-    model,
-    -- Initial fetch of every analysis in model
-    fetchAllAnalysis model
-  )
+init : String -> (Model, Cmd Msg)
+init backend_url =
+  -- Init empty model
+  ({
+    all_analysis = NotAsked,
+    current_analysis = NotAsked,
+    current_user = Nothing,
+    backend_url = backend_url
+  }, Cmd.none)
 
 -- Update
 
@@ -106,6 +101,16 @@ update msg model =
         fetchAnalysis model analysis.id
       )
 
+    UserUpdate user ->
+      let
+        newModel = { model | current_user = user }
+      in
+      (
+        newModel,
+        -- Reload all analysis
+        fetchAllAnalysis newModel
+      )
+
 fromJust : Maybe a -> a
 fromJust x = case x of
     Just y -> y
@@ -115,32 +120,36 @@ sendRequest: Model -> String -> Decoder value -> Maybe (Platform.Task Http.Error
 sendRequest model url decoder =
   case model.current_user of
     Just user ->
-      let
-        request = {
-          verb = "GET",
-          headers = [
-            -- TODO: use Hawk port here
-            -- ("Authorization", user.accessToken),
-            ( "Accept", "application/json" )
-          ],
-          url = model.backend_url ++ url,
-          body = Http.empty
-        }
-      in
-        Just (Http.fromJson decoder
-          (Http.send Http.defaultSettings request))
+
+      case user.hawkHeader of
+        Just hawkHeader ->
+          let
+            request = {
+              verb = "GET",
+              headers = [
+                ( "Authorization", hawkHeader),
+                ( "Accept", "application/json" )
+              ],
+              url = model.backend_url ++ url,
+              body = Http.empty
+            }
+          in
+            Just (Http.fromJson decoder
+              (Http.send Http.defaultSettings request))
+
+        Nothing ->
+          -- No header
+          Nothing
 
     Nothing ->
       -- No credentials
-      let
-        log = Debug.log "No credentials to fetch analysis"
-      in
-        Nothing
+      Nothing
     
 fetchAllAnalysis : Model -> Cmd Msg
 fetchAllAnalysis model =
   -- Load all analysis
   let
+    l = Debug.log "in cmd"
     response = sendRequest model "/analysis" decodeAllAnalysis 
   in
     case response of

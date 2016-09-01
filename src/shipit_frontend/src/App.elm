@@ -43,7 +43,6 @@ type Msg
     | SelectAnalysis ReleaseDashboard.Analysis
 
 type alias Flags = {
-    user : Maybe User.Model,
     backend_url : String
 }
 
@@ -105,17 +104,22 @@ location2messages location =
 init : Flags -> (Model, Cmd Msg)
 init flags =
     let
-        (dashboard, newCmd) = ReleaseDashboard.init flags.user flags.backend_url
+        (dashboard, newCmd) = ReleaseDashboard.init flags.backend_url
     in
     (
       {
          release_dashboard = dashboard,
          current_page = Home,
-         current_user = flags.user,
+         current_user = Nothing,
          backend_url = flags.backend_url
       },
-      -- Follow through with release dashboard init
-      Cmd.map ReleaseDashboardMsg newCmd
+      Cmd.batch [
+        -- Follow through with release dashboard init
+        Cmd.map ReleaseDashboardMsg newCmd,
+
+        -- Try to load local user
+        User.localstorage_load True
+      ]
     )
 
 
@@ -123,17 +127,7 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
         ShowPage page ->
-            case page of
-                ReleaseDashboard ->
-                    let 
-                        (dashboard, newCmd) = ReleaseDashboard.init model.current_user model.backend_url
-                    in
-                        (
-                            { model | current_page = page, release_dashboard = dashboard },
-                            Cmd.map ReleaseDashboardMsg newCmd
-                        )
-                _ ->
-                    ( { model | current_page = page }, Cmd.none )
+            ( { model | current_page = page }, Cmd.none )
 
         SelectAnalysis analysis ->
             let
@@ -150,13 +144,20 @@ update msg model =
             in
                 ( { model | release_dashboard = newModel }, Cmd.map ReleaseDashboardMsg newCmd )
 
-        UserMsg msg' -> 
+        UserMsg usermsg -> 
             let
-                log' = Debug.log "UserMSG" msg'
-                (newModel, newCmd) = User.update msg' model.current_user
+                (newUser, userCmd) = User.update usermsg model.current_user
+
+                -- Send new user to dashboard
+                -- TODO: use a message ?
+                (newDashboard, dashboardCmd) = ReleaseDashboard.update (ReleaseDashboard.UserUpdate newUser) model.release_dashboard
             in
-                ( { model | current_user = newModel }
-                , Cmd.map UserMsg newCmd
+                (
+                  { model | current_user = newUser, release_dashboard = newDashboard },
+                  Cmd.batch [
+                    Cmd.map UserMsg userCmd,
+                    Cmd.map ReleaseDashboardMsg dashboardCmd
+                  ]
                 )
 
 
@@ -296,7 +297,7 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-    [ 
-      Sub.map UserMsg (User.localstorage_get (User.LoggedIn))
+    Sub.batch [ 
+      Sub.map UserMsg (User.localstorage_get (User.LoggedIn)),
+      Sub.map UserMsg (User.hawk_get (User.ReceivedHawkHeader)) 
     ]
