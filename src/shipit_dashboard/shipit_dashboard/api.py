@@ -34,11 +34,16 @@ def _serialize_bug(bug):
             'comment' : comment['raw_text'],
         }
 
+    status_base_flag = 'cf_status_'
+
     return {
         # Base
         'id': bug.id,
         'bugzilla_id': bug.bugzilla_id,
         'summary' : bug_data['summary'],
+        'keywords' : bug_data['keywords'],
+        'flags_status' : dict([(k.replace(status_base_flag, '', 1) ,v) for k,v in bug_data.items() if k.startswith(status_base_flag)]),
+
 
         # Contributor structures
         'creator' : analysis['users']['creator'],
@@ -55,22 +60,30 @@ def _serialize_bug(bug):
         'uplift' : uplift,
     }
 
-def _serialize_analysis(analysis):
+def _serialize_analysis(analysis, full=True):
     """
     Helper to serialize an analysis
     """
-    return {
+    out = {
         'id': analysis.id,
         'name': analysis.name,
-        'bugs': [_serialize_bug(b) for b in analysis.bugs if b.payload],
+        'count' : len(analysis.bugs),
     }
+
+    if full:
+        # Add bugs
+        out['bugs'] = [_serialize_bug(b) for b in analysis.bugs if b.payload]
+    else:
+        out['bugs'] = []
+
+    return out
 
 def list_analysis():
     """
     List all available analysis
     """
     all_analysis = BugAnalysis.query.all()
-    return [_serialize_analysis(analysis) for analysis in all_analysis]
+    return [_serialize_analysis(analysis, False) for analysis in all_analysis]
 
 def get_analysis(analysis_id):
     """

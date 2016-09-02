@@ -31,6 +31,10 @@
     version = "2.0.1";
     sha256 = "1qafhfzp55z8lzldcxm0ydlp7znp9rj6pcdv6qlvpgm2ds1217xn";
   };
+  "elm-community/json-extra" = {
+    version = "1.0.0";
+    sha256 = "1sanh3qdw91dbdrkbsp3n0wdz6ixaq16842k4ml4f0b59ggf47hy";
+  };
   "evancz/focus" = {
     version = "2.0.1";
     sha256 = "05qm4vx0pxa7s721sjm78kvrk69n4rcbg9vr77ii33jpa28xbkn3";

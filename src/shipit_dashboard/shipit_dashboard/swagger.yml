@@ -49,11 +49,14 @@ definitions:
     required:
       - id
       - name
+      - count
     properties:
       id:
         type: integer
       name:
         type: string
+      count:
+        type: integer
       bugs:
         type: array
         items:
@@ -65,6 +68,8 @@ definitions:
       - id
       - bugzilla_id
       - summary
+      - keywords
+      - flags_status
       - changes_size
       - creator
       - assignee
@@ -76,6 +81,14 @@ definitions:
         type: integer 
       summary:
         type: string
+      keywords:
+        type: array 
+        items:
+          type: string
+      flags_status:
+        type: object
+        additionalProperties:
+          type: string
       changes_size:
         type: integer
       creator:

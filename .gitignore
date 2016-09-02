@@ -13,3 +13,5 @@
 /src/**/elm-stuff/
 /src/**/node_modules/
 /tmp
+.cache
+.elm

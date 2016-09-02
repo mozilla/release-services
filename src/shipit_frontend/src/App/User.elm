@@ -22,6 +22,7 @@ type alias Model =
     { clientId : Maybe String
     , accessToken : Maybe String
     , certificate : Maybe Certificate
+    , hawkHeader : Maybe String
     }
 
 
@@ -35,23 +36,48 @@ type Msg
     = Login LoginUrl
     | LoggingIn Model
     | LoggedIn (Maybe Model)
+    | LocalUser
+    | ReceivedHawkHeader String
     | Logout 
 
 
---XXXupdate : Msg -> Model -> (Model, Cmd Msg)
+update : Msg -> (Maybe Model) -> ((Maybe Model), Cmd Msg)
 update msg model =
     case msg of
         Login url ->
             ( model, redirect url )
+
         LoggingIn user ->
             ( model, localstorage_set { name = "shipit-credentials"
                                       , value = Just user
                                       }
             )
         LoggedIn user ->
-            ( user, Cmd.none )
+            case user of
+              Just user' ->
+                -- Build hawk header
+                ( user,  hawk_build {
+                  user = user',
+                  method = "GET",
+                  url = "http://demo.mozilla.org" -- is this url used ??
+                })
+              Nothing ->
+                ( Nothing, Cmd.none)
+
+        LocalUser ->
+            -- Fetch local user from localstorage
+            ( model, localstorage_load True )
+
         Logout ->
-            ( model, localstorage_remove "shipit-credentials")
+            ( model, localstorage_remove True )
+
+        ReceivedHawkHeader header ->
+            -- Store hawk header
+            case model of
+              Just user ->
+                ( Just { user | hawkHeader = Just header }, Cmd.none )
+              Nothing ->
+                ( Nothing, Cmd.none )
 
 
 decodeCertificate : String -> Result String Certificate
@@ -77,7 +103,8 @@ convertUrlQueryToModel query =
                  Just certificate ->
                      Result.toMaybe <| decodeCertificate certificate
                  Nothing -> Nothing
-         }
+    , hawkHeader = Nothing
+     }
 
 
 -- PORTS
@@ -90,8 +117,17 @@ type alias LocalStorage =
     }
 
 port localstorage_get : (Maybe Model -> msg) -> Sub msg
-port localstorage_remove : String -> Cmd msg
+port localstorage_load : Bool -> Cmd msg
+port localstorage_remove : Bool -> Cmd msg
 port localstorage_set : LocalStorage -> Cmd msg
+
+type alias HawkRequest = {
+  url : String,
+  method : String,
+  user : Model
+}
+port hawk_get : (String -> msg )-> Sub msg
+port hawk_build : HawkRequest -> Cmd msg
 
 -- XXX: we need to find elm implementation for redirect
 

@@ -1,7 +1,7 @@
 port module App exposing (..)
 
 import Dict exposing ( Dict )
-import Html exposing ( Html, div, nav, button, text, a, ul, li, footer, hr )
+import Html exposing ( Html, div, nav, button, text, a, ul, li, footer, hr, span, strong )
 import Html.App
 import Html.Attributes exposing ( attribute, id, class, type', href, target )
 import Html.Events as Events
@@ -10,6 +10,7 @@ import Navigation exposing ( Location )
 import RouteUrl exposing ( UrlChange )
 import RouteUrl.Builder as Builder exposing ( Builder, builder, replacePath )
 import Result exposing ( Result(Ok, Err))
+import RemoteData as RemoteData exposing ( RemoteData(Loading, Success, NotAsked, Failure) )
 
 import App.Home as Home 
 import App.User as User
@@ -28,27 +29,28 @@ type Page
     | ReleaseDashboard
 
 
-type alias Model =
-    { release_dashboard : ReleaseDashboard.Model
-    , current_page : Page
-    , current_user : Maybe User.Model
-    , dashboard_url: String
-    }
+type alias Model = {
+  release_dashboard : ReleaseDashboard.Model,
+  current_page : Page,
+  current_user : Maybe User.Model,
+  backend_dashboard_url: String
+}
 
 type Msg
     = ShowPage Page
     | UserMsg User.Msg
     | ReleaseDashboardMsg ReleaseDashboard.Msg
+    | SelectAnalysis ReleaseDashboard.Analysis
 
 type alias Flags = {
-    user : Maybe User.Model,
-    dashboardUrl : String
+    backend_dashboard_url : String
 }
-
-
 
 pageLink page attributes =
     eventLink (ShowPage page) attributes
+
+analysisLink analysis attributes =
+    eventLink (SelectAnalysis analysis) attributes
 
 
 delta2url' : Model -> Model -> Maybe Builder
@@ -67,12 +69,6 @@ delta2url : Model -> Model -> Maybe UrlChange
 delta2url previous current =
     Maybe.map Builder.toUrlChange <| delta2url' previous current
 
-
-pages =
-    [ { page = ReleaseDashboard
-      , title = "Release Dashboard"
-      }
-    ]
 
 location2messages' : Builder -> List Msg
 location2messages' builder =
@@ -107,13 +103,23 @@ location2messages location =
 
 init : Flags -> (Model, Cmd Msg)
 init flags =
-    ( {
-         release_dashboard = fst (ReleaseDashboard.init flags.user),
+    let
+        (dashboard, newCmd) = ReleaseDashboard.init flags.backend_dashboard_url
+    in
+    (
+      {
+         release_dashboard = dashboard,
          current_page = Home,
-         current_user = flags.user,
-         dashboard_url = flags.dashboardUrl
-      }
-    , Cmd.none
+         current_user = Nothing,
+         backend_dashboard_url = flags.backend_dashboard_url
+      },
+      Cmd.batch [
+        -- Follow through with release dashboard init
+        Cmd.map ReleaseDashboardMsg newCmd,
+
+        -- Try to load local user
+        User.localstorage_load True
+      ]
     )
 
 
@@ -121,17 +127,16 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
         ShowPage page ->
-            case page of
-                ReleaseDashboard ->
-                    let 
-                        (dashboard, newCmd) = ReleaseDashboard.init model.current_user
-                    in
-                        (
-                            { model | current_page = page, release_dashboard = dashboard },
-                            Cmd.map ReleaseDashboardMsg newCmd
-                        )
-                _ ->
-                    ( { model | current_page = page }, Cmd.none )
+            ( { model | current_page = page }, Cmd.none )
+
+        SelectAnalysis analysis ->
+            let
+                (newModel, newCmd) = ReleaseDashboard.update (ReleaseDashboard.SelectAnalysis analysis) model.release_dashboard
+            in
+                (
+                  { model | release_dashboard = newModel, current_page = ReleaseDashboard },
+                  Cmd.map ReleaseDashboardMsg newCmd
+                )
 
         ReleaseDashboardMsg msg' ->
             let
@@ -139,13 +144,20 @@ update msg model =
             in
                 ( { model | release_dashboard = newModel }, Cmd.map ReleaseDashboardMsg newCmd )
 
-        UserMsg msg' -> 
+        UserMsg usermsg -> 
             let
-                log' = Debug.log "UserMSG" msg'
-                (newModel, newCmd) = User.update msg' model.current_user
+                (newUser, userCmd) = User.update usermsg model.current_user
+
+                -- Send new user to dashboard
+                -- TODO: use a message ?
+                (newDashboard, dashboardCmd) = ReleaseDashboard.update (ReleaseDashboard.UserUpdate newUser) model.release_dashboard
             in
-                ( { model | current_user = newModel }
-                , Cmd.map UserMsg newCmd
+                (
+                  { model | current_user = newUser, release_dashboard = newDashboard },
+                  Cmd.batch [
+                    Cmd.map UserMsg userCmd,
+                    Cmd.map ReleaseDashboardMsg dashboardCmd
+                  ]
                 )
 
 
@@ -214,14 +226,41 @@ viewNavBar model =
              [ text "&#9776;" ]
     , pageLink Home [ class "navbar-brand" ]
                     [ text "RelengAPI" ]
-    , div [ class "collapse navbar-toggleable-sm navbar-collapse pull-right" ]
+    , div [ class "collapse navbar-toggleable-sm navbar-collapse navbar-right" ]
           [ ul [ class "nav navbar-nav" ]
-               [ li [ class "nav-item" ]
-                    ( viewDropdown "Pages" ( List.map (\x -> pageLink x.page [ class "dropdown-item" ]
-                                                                                [ text x.title ]) pages ))
-               , li [ class "nav-item" ] ( viewUser model )
-               ]
+              (List.concat [
+                  (viewNavDashboard model.release_dashboard),
+                  [li [ class "nav-item" ] ( viewUser model )]
+              ])
           ]
+    ]
+
+viewNavDashboard: ReleaseDashboard.Model -> List (Html Msg)
+viewNavDashboard dashboard = 
+
+  case dashboard.all_analysis of
+    NotAsked -> [
+      li [class "nav-item text-info"] [text "Initialising ..."]
+    ]
+
+    Loading -> [
+      li [class "nav-item text-info"] [text "Loading ..."]
+    ]
+
+    Failure err -> [
+      li [class "nav-item text-danger"] [text ("Error: " ++ toString err)]
+    ]
+
+    Success allAnalysis -> 
+      (List.map viewNavAnalysis allAnalysis)
+
+viewNavAnalysis: ReleaseDashboard.Analysis -> Html Msg
+viewNavAnalysis analysis =
+    li [class "nav-item"] [
+      analysisLink analysis [class "btn btn-secondary"] [
+        span [] [text (analysis.name ++ " ")],
+        span [class "label label-primary"] [text (toString analysis.count)]
+      ]
     ]
 
 viewFooter =
@@ -237,21 +276,28 @@ viewFooter =
 
 view : Model -> Html Msg
 view model =
-    let
-        log = Debug.log "LOCATION" (builder)
-    in
-    div []
-        [ nav [ id "navbar", class "navbar navbar-full navbar-light" ]
-              [ div [ class "container" ] ( viewNavBar model ) ]
-        , div [ id "content" ]
-              [ div [ class "container-fluid" ] [ viewPage model ] ]
-        , footer [ class "container" ] viewFooter
-        ]
+  div [] [
+    nav [ id "navbar", class "navbar navbar-full navbar-light" ] [
+      div [ class "container" ] ( viewNavBar model )
+    ],
+    div [ id "content" ] [
+      case model.current_user of
+        Just user ->
+          div [class "container-fluid" ] [ viewPage model ]
+        Nothing ->
+          div [class "container"] [
+            div [class "alert alert-warning"] [
+              text "Please login first."
+            ]
+          ]
+    ]
+    , footer [ class "container" ] viewFooter
+  ]
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-    [ 
-      Sub.map UserMsg (User.localstorage_get (User.LoggedIn))
+    Sub.batch [ 
+      Sub.map UserMsg (User.localstorage_get (User.LoggedIn)),
+      Sub.map UserMsg (User.hawk_get (User.ReceivedHawkHeader)) 
     ]
