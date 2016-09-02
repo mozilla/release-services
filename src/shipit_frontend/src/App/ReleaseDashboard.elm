@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
 import String
+import Dict
 import Json.Decode as Json exposing (Decoder, (:=))
 import Json.Decode.Extra as JsonExtra exposing ((|:))
 import RemoteData as RemoteData exposing ( WebData, RemoteData(Loading, Success, NotAsked, Failure) )
@@ -28,6 +29,7 @@ type alias Bug = {
   bugzilla_id: Int,
   summary: String,
   keywords: List String,
+  flags_status : Dict.Dict String String,
 
   -- Users
   creator: Contributor,
@@ -197,6 +199,7 @@ decodeBug =
     |: ("bugzilla_id" := Json.int)
     |: ("summary" := Json.string)
     |: ("keywords" := Json.list Json.string)
+    |: ("flags_status" := Json.dict Json.string)
     |: ("creator" := decodeContributor)
     |: ("assignee" := decodeContributor)
     |: ("reviewers" := (Json.list decodeContributor))
@@ -264,7 +267,8 @@ viewBug bug =
         viewUpliftRequest bug.uplift_request
       ],
       div [class "col-xs-4"] [
-        viewStats bug
+        viewStats bug,
+        viewFlags bug
       ]
     ],
     div [class "text-muted"] [
@@ -319,6 +323,31 @@ viewStats bug =
       span [] [text (toString bug.changes)]
     ]
   ]
+
+viewFlags: Bug -> Html Msg
+viewFlags bug =
+  let
+    useful_flags = Dict.filter (\k v -> not (v == "---")) bug.flags_status
+  in 
+    div [class "flags"] [
+      h5 [] [text "Tracking flags - status"],
+      ul [] (List.map viewFlag (Dict.toList useful_flags))
+    ]
+
+viewFlag tuple =
+  let
+    (key, value) = tuple
+  in
+    li [] [
+      strong [] [text key],
+      case value of
+        "affected" -> span [class "label label-danger"] [text value]
+        "verified" -> span [class "label label-info"] [text value]
+        "fixed" -> span [class "label label-success"] [text value]
+        "wontfix" -> span [class "label label-warning"] [text value]
+        _ -> span [class "label label-default"] [text value]
+      
+    ]
 
 viewKeyword: String -> Html Msg
 viewKeyword keyword =

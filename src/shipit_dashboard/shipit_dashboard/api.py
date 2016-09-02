@@ -34,12 +34,16 @@ def _serialize_bug(bug):
             'comment' : comment['raw_text'],
         }
 
+    status_base_flag = 'cf_status_'
+
     return {
         # Base
         'id': bug.id,
         'bugzilla_id': bug.bugzilla_id,
         'summary' : bug_data['summary'],
         'keywords' : bug_data['keywords'],
+        'flags_status' : dict([(k.replace(status_base_flag, '', 1) ,v) for k,v in bug_data.items() if k.startswith(status_base_flag)]),
+
 
         # Contributor structures
         'creator' : analysis['users']['creator'],

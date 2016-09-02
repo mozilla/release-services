@@ -69,6 +69,7 @@ definitions:
       - bugzilla_id
       - summary
       - keywords
+      - flags_status
       - changes_size
       - creator
       - assignee
@@ -83,6 +84,10 @@ definitions:
       keywords:
         type: array 
         items:
+          type: string
+      flags_status:
+        type: object
+        additionalProperties:
           type: string
       changes_size:
         type: integer
