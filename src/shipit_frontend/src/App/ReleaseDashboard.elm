@@ -58,7 +58,7 @@ type alias Model = {
   current_analysis : WebData (Analysis),
 
   -- Backend base endpoint
-  backend_url : String
+  backend_dashboard_url : String
 }
 
 type Msg
@@ -69,13 +69,13 @@ type Msg
 
 
 init : String -> (Model, Cmd Msg)
-init backend_url =
+init backend_dashboard_url =
   -- Init empty model
   ({
     all_analysis = NotAsked,
     current_analysis = NotAsked,
     current_user = Nothing,
-    backend_url = backend_url
+    backend_dashboard_url = backend_dashboard_url
   }, Cmd.none)
 
 -- Update
@@ -130,7 +130,7 @@ sendRequest model url decoder =
                 ( "Authorization", hawkHeader),
                 ( "Accept", "application/json" )
               ],
-              url = model.backend_url ++ url,
+              url = model.backend_dashboard_url ++ url,
               body = Http.empty
             }
           in

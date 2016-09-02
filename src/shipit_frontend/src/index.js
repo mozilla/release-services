@@ -6,15 +6,15 @@ require('bootstrap');
 var Hawk = require('hawk');
 require("./index.scss");
 
-var backend_url = process.env.NEO_DASHBOARD_URL || "http://localhost:5000";
-console.info('Dashboard backend used ', backend_url);
+var backend_dashboard_url = process.env.NEO_DASHBOARD_URL || "http://localhost:5000";
+console.info('Dashboard backend used ', backend_dashboard_url);
 
 var storage_key = 'shipit-credentials';
 
 // Start the ELM application
 var url = require('url');
 var app = require('./Main.elm').Main.fullscreen({
-  backend_url: backend_url
+  backend_dashboard_url: backend_dashboard_url
 });
 
 // Local storage ports

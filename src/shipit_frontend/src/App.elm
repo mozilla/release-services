@@ -33,7 +33,7 @@ type alias Model = {
   release_dashboard : ReleaseDashboard.Model,
   current_page : Page,
   current_user : Maybe User.Model,
-  backend_url: String
+  backend_dashboard_url: String
 }
 
 type Msg
@@ -43,7 +43,7 @@ type Msg
     | SelectAnalysis ReleaseDashboard.Analysis
 
 type alias Flags = {
-    backend_url : String
+    backend_dashboard_url : String
 }
 
 pageLink page attributes =
@@ -104,14 +104,14 @@ location2messages location =
 init : Flags -> (Model, Cmd Msg)
 init flags =
     let
-        (dashboard, newCmd) = ReleaseDashboard.init flags.backend_url
+        (dashboard, newCmd) = ReleaseDashboard.init flags.backend_dashboard_url
     in
     (
       {
          release_dashboard = dashboard,
          current_page = Home,
          current_user = Nothing,
-         backend_url = flags.backend_url
+         backend_dashboard_url = flags.backend_dashboard_url
       },
       Cmd.batch [
         -- Follow through with release dashboard init
