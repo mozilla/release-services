@@ -19,7 +19,8 @@ tasks:
       maxRunTime: 7200 # seconds (i.e. two hours)
       image: "nixos/nix:latest"
       command:
-        - "env"
+        - "make"
+        - "build-apps"
     metadata:
       name: "make build-apps"
       description: "Build and run tests for all projects"
