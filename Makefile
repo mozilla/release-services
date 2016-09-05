@@ -40,7 +40,7 @@ APP_PRODUCTION_S3_docs=releng-production-docs
 APP_PRODUCTION_S3_releng_frontend=releng-production-frontend
 APP_PRODUCTION_S3_shipit_frontend=shipit-production-frontend
 
-TC_CACHE_SECRETS=taskcluster/secrets/v1/secret/repo:garbage/garbas/temp-releng-services
+TC_CACHE_SECRETS=taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services
 
 
 help:
