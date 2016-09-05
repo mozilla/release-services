@@ -7,7 +7,7 @@ var Hawk = require('hawk');
 require("./index.scss");
 
 var backend_dashboard_url = process.env.NEO_DASHBOARD_URL || "http://localhost:5000";
-console.info('Dashboard backend used ', backend_dashboard_url);
+//console.info('Dashboard backend used ', backend_dashboard_url);
 
 var storage_key = 'shipit-credentials';
 
@@ -25,9 +25,9 @@ app.ports.localstorage_load.subscribe(function(){
     user = JSON.parse(window.localStorage.getItem(storage_key));
     user = user.value || user;
     user.hawkHeader = null;
-    console.info('Loaded user', user);
+    //console.info('Loaded user', user);
   } catch (e) {
-    console.warn('Loading user failed', e);
+    //console.warn('Loading user failed', e);
   }
   app.ports.localstorage_get.send(user);
 });
