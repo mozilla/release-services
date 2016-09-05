@@ -17,7 +17,7 @@ tasks:
           - push
     payload:
       maxRunTime: 7200 # seconds (i.e. two hours)
-      image: "garbas/mozilla-releng:1"
+      image: "nixos/nix:latest"
       command:
         - "nix-shell"
         - "-p"
