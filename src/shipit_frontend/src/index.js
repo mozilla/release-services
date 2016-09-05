@@ -45,12 +45,15 @@ app.ports.localstorage_set.subscribe(function(user) {
 
 // HAWK auth
 app.ports.hawk_build.subscribe(function(request){
-  var credentials = {
-    id: request.user.clientId,
-    key: request.user.accessToken,
-    algorithm: 'sha256'
-  };
-  var header = Hawk.client.header(request.url, request.method, { credentials: credentials, });
+  var url = backend_dashboard_url + request.url; // TODO: use direct request.url
+  var header = Hawk.client.header(url, request.method, {
+    credentials: {
+      id: request.user.clientId,
+      key: request.user.accessToken,
+      algorithm: 'sha256'
+    },
+    ext: new Buffer(JSON.stringify({certificate: request.user.certificate})).toString('base64'),
+  });
   app.ports.hawk_get.send(header.field);
 });
 

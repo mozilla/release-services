@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 from shipit_dashboard.models import BugAnalysis
 from sqlalchemy.orm.exc import NoResultFound
+from flask_login import login_required
 from flask import abort
 
 def _serialize_bug(bug):
@@ -78,6 +79,7 @@ def _serialize_analysis(analysis, full=True):
 
     return out
 
+@login_required
 def list_analysis():
     """
     List all available analysis
