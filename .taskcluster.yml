@@ -23,8 +23,9 @@ tasks:
         - "-p"
         - "curl"
         - "gnumake"
+        - "gnutar"
         - "--run"
-        - "'mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o tmp.tar.gz && tar zxf tmp.tar.gz && cd mozilla-* && make build-apps'"
+        - "'mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o tmp.tar.gz && tar zxf tmp.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make build-apps'"
     metadata:
       name: "make build-apps"
       description: "Build and run tests for all projects"
