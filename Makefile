@@ -193,10 +193,6 @@ build-tool-%: nix
 
 
 
-build-pkgs-curl: nix
-	nix-build nix/default.nix -A pkgs.$(subst build-pkgs-,,$@).bin -o result-pkgs-$(subst build-pkgs-,,$@)
-	mv result-pkgs-$(subst build-pkgs-,,$@)-bin result-pkgs-$(subst build-pkgs-,,$@)
-
 build-pkgs-jq: nix
 	nix-build nix/default.nix -A pkgs.$(subst build-pkgs-,,$@) -o result-pkgs-$(subst build-pkgs-,,$@)
 
@@ -247,9 +243,10 @@ tmpdir:
 	@mkdir -p $$PWD/tmp
 
 
-require-TC_CACHE_SECRETS: tmpdir build-pkgs-curl build-pkgs-jq
+require-TC_CACHE_SECRETS: tmpdir build-pkgs-jq
 	rm -f tmp/tc_cache_secrets
-	./result-pkgs-curl/bin/curl $(TC_CACHE_SECRETS) > tmp/tc_cache_secrets
+	wget $(TC_CACHE_SECRETS)
+	mv temp-releng-services tmp/tc_cache_secrets
 	$(eval export TC_CACHE=$(shell cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.CACHE_BUCKET'))
 	$(eval export AWS_ACCESS_KEY_ID=$(shell cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.CACHE_AWS_ACCESS_KEY_ID'))
 	$(eval export AWS_SECRET_ACCESS_KEY=$(shell cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.CACHE_AWS_SECRET_ACCESS_KEY'))
