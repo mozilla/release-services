@@ -230,7 +230,7 @@ taskcluster-init:
 	echo 'binary-caches = https://cache.nixos.org/ https://s3.amazonaws.com/releng-cache/' > /etc/nix/nix.conf
 
 
-taskcluster-app: taskcluste-init require-APP require-TC_CACHE_SECRETS build-tool-awscli build-cache-$(APP)
+taskcluster-app: taskcluster-init require-APP require-TC_CACHE_SECRETS build-tool-awscli build-cache-$(APP)
 	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read  \
