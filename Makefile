@@ -248,7 +248,7 @@ tmpdir:
 
 require-TC_CACHE_SECRETS: tmpdir build-pkgs-curl build-pkgs-jq
 	rm -f tmp/tc_cache_secrets
-	./result-pkgs-curl/bin/curl $(TC_CACHE_SECRETS) > tmp/tc_cache_secrets
+	./result-pkgs-curl-dev/bin/curl $(TC_CACHE_SECRETS) > tmp/tc_cache_secrets
 	$(eval export TC_CACHE=$(shell cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.CACHE_BUCKET'))
 	$(eval export AWS_ACCESS_KEY_ID=$(shell cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.CACHE_AWS_ACCESS_KEY_ID'))
 	$(eval export AWS_SECRET_ACCESS_KEY=$(shell cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.CACHE_AWS_SECRET_ACCESS_KEY'))
