@@ -59,7 +59,7 @@ update msg model =
                 ( user,  hawk_build {
                   user = user',
                   method = "GET",
-                  url = "http://demo.mozilla.org" -- is this url used ??
+                  url = "/analysis"
                 })
               Nothing ->
                 ( Nothing, Cmd.none)

@@ -1,4 +1,9 @@
 from flask_login import LoginManager
+from flask import request
+import logging
+import taskcluster
+
+logger = logging.getLogger(__name__)
 
 class BaseUser(object):
 
@@ -48,33 +53,23 @@ class TaskclusterUser(BaseUser):
     type = 'taskcluster'
 
     def __init__(self, credentials):
-        self.credentials = taskcluster
-        self._permissions = None
+        assert isinstance(credentials, dict)
+        assert 'clientId' in credentials
+        assert 'scopes' in credentials
+        assert isinstance(credentials['scopes'], list)
+        self.credentials = credentials
+
+        # Extract infos
+        self.clientId = self.credentials['clientId']
+        self.scopes = self.credentials['scopes']
+
+        logger.info('Init user {}'.format(self.clientId))
 
     def get_id(self):
-        import pdb
-        pdb.set_trace()
-        return 'taskcluster:%s' % self.authenticated_email
+        return self.clientId
 
     def get_permissions(self):
-        # TODO:
-        import pdb
-        pdb.set_trace()
-        if self._permissions is not None:
-            return self._permissions
-        if 'perms' in session and session.get('perms_exp', 0) > time.time():
-            self._permissions = set(p[perm] for perm in session['perms'])
-        else:
-            self._permissions = perms = set()
-            permissions_stale.send(
-                current_app._get_current_object(),
-                user=self,
-                permissions=perms)
-            session['perms'] = [str(perm) for perm in perms]
-            lifetime = current_app.config.get(
-                'RELENGAPI_PERMISSIONS', {}).get('lifetime', 3600)
-            session['perms_exp'] = int(time.time() + lifetime)
-        return self._permissions
+        return self.scopes
 
 
 class Auth(object):
@@ -97,29 +92,32 @@ def init_app(app):
     login_manager = LoginManager()
     login_manager.anonymous_user = AnonymousUser
 
-    @login_manager.user_loader
-    def user_loader(session_identifier):
-        import pdb
-        pdb.set_trace()
-        # TODO: load 
-        try:
-            typ, email = session_identifier.split(':', 1)
-        except ValueError:
-            return
-        if typ == 'human':
-            return HumanUser(email)
+    @login_manager.header_loader
+    def user_loader(auth_header):
 
-    @login_manager.request_loader
-    def request_loader(request):
+        # Get Endpoint configuration
+        host, port = request.host.split(':')
+        method = request.method.lower()
+        resource = request.path
 
-        header = request.headers.get('Authorization')
-        if not header:
-            return
+        # Build taskcluster payload
+        payload = {
+            'resource' : resource,
+            'method' : method,
+            'host' : host,
+            'port' : int(port),
+            'authorization' : auth_header,
+        }
 
-        import pdb
-        pdb.set_trace()
+        # Auth with taskcluster
+        auth = taskcluster.Auth()
+        resp = auth.authenticateHawk(payload)
+        if not resp.get('status') == 'auth-success':
+            raise Exception('Taskcluster rejected the authentication')
 
+        return TaskclusterUser(resp)
 
     login_manager.init_app(app)
 
     return Auth(login_manager)
+
