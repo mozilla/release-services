@@ -9,6 +9,9 @@ tasks:
     workerType: "{{ taskcluster.docker.workerType }}"
     scopes:
       - secrets:get:garbage/garbas/temp-releng-services
+    features:
+      dind: true
+      taskclusterProxy: true
     extra:
       github:
         env: true
