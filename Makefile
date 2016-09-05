@@ -247,9 +247,9 @@ require-TC_CACHE_SECRETS: tmpdir build-pkgs-jq
 	rm -f tmp/tc_cache_secrets
 	wget $(TC_CACHE_SECRETS)
 	mv temp-releng-services tmp/tc_cache_secrets
-	$(eval export TC_CACHE=$(shell cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_BUCKET'))
-	$(eval export AWS_ACCESS_KEY_ID=$(shell cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_AWS_ACCESS_KEY_ID'))
-	$(eval export AWS_SECRET_ACCESS_KEY=$(shell cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_AWS_SECRET_ACCESS_KEY'))
+	$(eval export TC_CACHE=`cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_BUCKET'`)
+	$(eval export AWS_ACCESS_KEY_ID=`cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_AWS_ACCESS_KEY_ID'`)
+	$(eval export AWS_SECRET_ACCESS_KEY=`cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_AWS_SECRET_ACCESS_KEY'`)
 	rm -f tmp/tc_cache_secrets
 
 	
