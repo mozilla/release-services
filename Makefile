@@ -40,6 +40,8 @@ APP_PRODUCTION_S3_docs=releng-production-docs
 APP_PRODUCTION_S3_releng_frontend=releng-production-frontend
 APP_PRODUCTION_S3_shipit_frontend=shipit-production-frontend
 
+TC_CACHE_SECRETS=taskcluster/secrets/v1/secret/repo:garbage/garbas/temp-releng-services
+
 
 help:
 	@echo "TODO: need to write help for commands"
@@ -191,9 +193,18 @@ build-tool-%: nix
 
 
 
+build-pkgs-curl: nix
+	nix-build nix/default.nix -A pkgs.$(subst build-pkgs-,,$@) -o result-pkgs-$(subst build-pkgs-,,$@)
+
+build-pkgs-jq: nix
+	nix-build nix/default.nix -A pkgs.$(subst build-pkgs-,,$@) -o result-pkgs-$(subst build-pkgs-,,$@)
+
+
+
 
 build-docs: nix
 	nix-build nix/default.nix -A releng_docs -o result-docs
+
 
 
 build-certs: tmpdir build-tool-createcert
@@ -206,11 +217,44 @@ build-certs: tmpdir build-tool-createcert
 	fi
 
 
+
+
+build-cache-%: tmpdir require-APP nix build-app-$(APP)
+	mkdir -p tmp/cache-$(APP)
+	nix-push --dest "$$PWD/tmp/cache-$(APP)" --force ./result-$(APP)
+
+
+taskcluster-init:
+	$(eval export IN_NIX_SHELL=0)
+	mkdir -p /etc/nix
+	echo 'binary-caches = https://cache.nixos.org/ https://s3.amazonaws.com/releng-cache/' > /etc/nix/nix.conf
+
+
+taskcluster-app: taskcluste-init require-APP require-TC_CACHE_SECRETS build-tool-awscli build-cache-$(APP)
+	./result-tool-awscli/bin/aws s3 sync \
+		--delete \
+		--acl public-read  \
+		tmp/cache-$(APP)/ \
+		s3://$(TC_CACHE)
+
+
+
 # --- helpers
 
 
 tmpdir:
 	@mkdir -p $$PWD/tmp
+
+
+require-TC_CACHE_SECRETS: tmpdir build-pkgs-curl build-pkgs-jq
+	rm -f tmp/tc_cache_secrets
+	./result-pkgs-curl/bin/curl $(TC_CACHE_SECRETS) > tmp/tc_cache_secrets
+	$(eval export TC_CACHE=$(shell cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.CACHE_BUCKET'))
+	$(eval export AWS_ACCESS_KEY_ID=$(shell cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.CACHE_AWS_ACCESS_KEY_ID'))
+	$(eval export AWS_SECRET_ACCESS_KEY=$(shell cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.CACHE_AWS_SECRET_ACCESS_KEY'))
+	rm -f tmp/tc_cache_secrets
+
+	
 
 
 require-TOOL:
