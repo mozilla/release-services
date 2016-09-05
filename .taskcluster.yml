@@ -21,7 +21,8 @@ tasks:
       command:
         - "nix-shell"
         - "-p"
-        - "nixpkgs.curl nixpkgs.gnumake"
+        - "curl"
+        - "gnumake"
         - "--run"
         - "'mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o tmp.tar.gz && tar zxf tmp.tar.gz && cd mozilla-* && make build-apps'"
     metadata:
