@@ -24,6 +24,8 @@ tasks:
         - "curl"
         - "--run"
         - "mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o tmp.tar.gz && tar zxf tmp.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=releng_clobberer"
+    scopes:
+      - secrets:get:repo:garbage/garbas/temp-releng-services
     metadata:
       name: "releng_clobberer"
       description: "Build and run tests for all projects"
