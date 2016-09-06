@@ -5,7 +5,6 @@ metadata:
   owner: "{{ event.head.user.email }}"
   source: "{{ event.head.repo.url }}"
 tasks:
-
   - metadata:
       name: "releng_frontend"
       description: "Test, build and deploy Releng Frontend"
@@ -20,7 +19,7 @@ tasks:
           - pull_request.*
           - push
         branches:
-          - staging
+          - master
     provisionerId: "{{ taskcluster.docker.provisionerId }}"
     workerType: "{{ taskcluster.docker.workerType }}"
     payload:
@@ -35,7 +34,6 @@ tasks:
         - "curl"
         - "--run"
         - "mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o tmp.tar.gz && tar zxf tmp.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=releng_frontend"
-
   - metadata:
       name: "releng_clobberer"
       description: "Test, build and deploy RelEng Clobberer service"
@@ -65,7 +63,6 @@ tasks:
         - "curl"
         - "--run"
         - "mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o tmp.tar.gz && tar zxf tmp.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=releng_clobberer"
-
   - metadata:
       name: "shipit_frontend"
       description: "Test, build and deploy ShipIt Frontend"
@@ -80,7 +77,7 @@ tasks:
           - pull_request.*
           - push
         branches:
-          - staging
+          - master
     provisionerId: "{{ taskcluster.docker.provisionerId }}"
     workerType: "{{ taskcluster.docker.workerType }}"
     payload:
@@ -95,7 +92,6 @@ tasks:
         - "curl"
         - "--run"
         - "mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o tmp.tar.gz && tar zxf tmp.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=shipit_frontend"
-
   - metadata:
       name: "shipit_dashboard"
       description: "Test, build and deploy ShipIt Dashboard service"
@@ -110,7 +106,7 @@ tasks:
           - pull_request.*
           - push
         branches:
-          - staging
+          - master
     provisionerId: "{{ taskcluster.docker.provisionerId }}"
     workerType: "{{ taskcluster.docker.workerType }}"
     payload:
