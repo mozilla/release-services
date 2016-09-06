@@ -225,7 +225,7 @@ build-cache-%: tmpdir require-APP nix build-app-$(APP)
 taskcluster-init:
 	$(eval export IN_NIX_SHELL=0)
 	mkdir -p /etc/nix
-	echo 'binary-caches = https://cache.nixos.org/ https://s3.amazonaws.com/releng-cache/' > /etc/nix/nix.conf
+	echo 'binary-caches = https://s3.amazonaws.com/releng-cache/ https://cache.nixos.org/' > /etc/nix/nix.conf
 
 
 taskcluster-app: taskcluster-init require-APP require-TC_CACHE_SECRETS build-tool-awscli build-cache-$(APP)
