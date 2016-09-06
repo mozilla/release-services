@@ -37,7 +37,7 @@ tasks:
       command:
         - "/bin/bash"
         - "-c"
-        - "nix-env -iA nixpkgs.gnumake && mkdir /src && cd /src && wget https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=releng_frontend"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=releng_frontend"
 
   - metadata:
       name: "releng_clobberer"
@@ -65,7 +65,7 @@ tasks:
       command:
         - "/bin/bash"
         - "-c"
-        - "nix-env -iA nixpkgs.gnumake && mkdir /src && cd /src && wget https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=releng_clobberer"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=releng_clobberer"
 
   #
   # staging | releng
@@ -104,7 +104,7 @@ tasks:
       command:
         - "/bin/bash"
         - "-c"
-        - "nix-env -iA nixpkgs.gnumake && mkdir /src && cd /src && wget https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=shipit_frontend"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=shipit_frontend"
   - metadata:
       name: "shipit_dashboard"
       description: "Test, build and deploy ShipIt Dashboard service"
@@ -131,4 +131,4 @@ tasks:
       command:
         - "/bin/bash"
         - "-c"
-        - "nix-env -iA nixpkgs.gnumake && mkdir /src && cd /src && wget https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=shipit_dashboard"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=shipit_dashboard"
