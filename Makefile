@@ -217,9 +217,9 @@ build-certs: tmpdir build-tool-createcert
 
 
 
-build-cache-%: tmpdir require-APP nix build-app-$(APP)
+build-cache-%: tmpdir require-APP
 	mkdir -p tmp/cache-$(APP)
-	nix-push --dest "$$PWD/tmp/cache-$(APP)" --force ./result-$(APP)
+	nix-push --dest "$$PWD/tmp/cache-$(APP)" --force ./result-*
 
 
 taskcluster-init:
