@@ -230,7 +230,7 @@ taskcluster-init:
 
 taskcluster-app: taskcluster-init require-APP require-TC_CACHE_SECRETS build-tool-awscli build-cache-$(APP)
 	AWS_ACCESS_KEY_ID="$(CACHE_AWS_ACCESS_KEY_ID)" \
-	AWS_SECRET_ACCESS_KEY="$(CAHCE_AWS_SECRET_ACCESS_KEY)" \
+	AWS_SECRET_ACCESS_KEY="$(CACHE_AWS_SECRET_ACCESS_KEY)" \
 	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read  \
@@ -251,7 +251,7 @@ require-TC_CACHE_SECRETS: tmpdir build-pkgs-jq
 	mv temp-releng-services tmp/tc_cache_secrets
 	$(eval CACHE_BUCKET := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_BUCKET'`)
 	$(eval CACHE_AWS_ACCESS_KEY_ID := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_AWS_ACCESS_KEY_ID'`)
-	$(eval CACHE_SECRET_ACCESS_KEY := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_AWS_SECRET_ACCESS_KEY'`)
+	$(eval CACHE_AWS_SECRET_ACCESS_KEY := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_AWS_SECRET_ACCESS_KEY'`)
 
 	
 
