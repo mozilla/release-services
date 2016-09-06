@@ -111,6 +111,7 @@ docker-%: nix
 
 
 
+
 deploy-staging-all: $(foreach app, $(APPS), deploy-staging-$(app)) deploy-staging-docs
 
 deploy-staging: require-APP deploy-staging-$(APP)
@@ -121,7 +122,7 @@ deploy-staging-HEROKU: require-APP
 	fi
 	cat result-docker-$(APP) | docker load
 	docker tag `docker images -q $(APP) registry.heroku.com/$(APP_STAGING_HEROKU_$(APP))
-	docker push registry.heroku.com/$(APP_STAGING_HEROKU_$(APP))
+	docker push registry .heroku.com/$(APP_STAGING_HEROKU_$(APP))
 
 deploy-staging-S3: require-AWS require-APP build-tool-awscli build-app-$(APP)
 	./result-tool-awscli/bin/aws s3 sync \
@@ -228,14 +229,13 @@ taskcluster-init:
 
 
 taskcluster-app: taskcluster-init require-APP require-TC_CACHE_SECRETS build-tool-awscli build-cache-$(APP)
-	AWS_ACCESS_KEY_ID="$(AWS_ACCESS_KEY_ID)" \
-	AWS_SECRET_ACCESS_KEY="$(AWS_SECRET_ACCESS_KEY)" \
+	AWS_ACCESS_KEY_ID="$(CACHE_AWS_ACCESS_KEY_ID)" \
+	AWS_SECRET_ACCESS_KEY="$(CAHCE_AWS_SECRET_ACCESS_KEY)" \
 	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read  \
 		tmp/cache-$(APP)/ \
-		s3://$(TC_CACHE)
-
+		s3://$(CACHE_BUCKET)
 
 
 # --- helpers
@@ -249,9 +249,9 @@ require-TC_CACHE_SECRETS: tmpdir build-pkgs-jq
 	rm -f tmp/tc_cache_secrets
 	wget $(TC_CACHE_SECRETS)
 	mv temp-releng-services tmp/tc_cache_secrets
-	$(eval TC_CACHE := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_BUCKET'`)
-	$(eval AWS_ACCESS_KEY_ID := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_AWS_ACCESS_KEY_ID'`)
-	$(eval AWS_SECRET_ACCESS_KEY := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_AWS_SECRET_ACCESS_KEY'`)
+	$(eval CACHE_BUCKET := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_BUCKET'`)
+	$(eval CACHE_AWS_ACCESS_KEY_ID := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_AWS_ACCESS_KEY_ID'`)
+	$(eval CACHE_SECRET_ACCESS_KEY := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_AWS_SECRET_ACCESS_KEY'`)
 
 	
 

@@ -1,22 +1,58 @@
 version: 0
 metadata:
-  name: "Mozilla Releng"
-  description: "Mozilla Releng Services"
+  name: "Mozilla RelEng"
+  description: "Mozilla RelEng Services"
   owner: "{{ event.head.user.email }}"
   source: "{{ event.head.repo.url }}"
 tasks:
-  - provisionerId: "{{ taskcluster.docker.provisionerId }}"
-    workerType: "{{ taskcluster.docker.workerType }}"
+
+  - metadata:
+      name: "releng_frontend"
+      description: "Test, build and deploy Releng Frontend"
+      owner: "{{ event.head.user.email }}"
+      source: "{{ event.head.repo.url }}"
     scopes:
       - secrets:get:garbage/garbas/temp-releng-services
     extra:
       github:
         env: true
         events:
-          - pull_request.opened
-          - pull_request.synchronize
-          - pull_request.reopened
+          - pull_request.*
           - push
+        branches:
+          - staging
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        dind: true
+        taskclusterProxy: true
+      command:
+        - "nix-shell"
+        - "-p"
+        - "curl"
+        - "--run"
+        - "mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o tmp.tar.gz && tar zxf tmp.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=releng_frontend"
+
+  - metadata:
+      name: "releng_clobberer"
+      description: "Test, build and deploy RelEng Clobberer service"
+      owner: "{{ event.head.user.email }}"
+      source: "{{ event.head.repo.url }}"
+    scopes:
+      - secrets:get:garbage/garbas/temp-releng-services
+    extra:
+      github:
+        env: true
+        events:
+          - pull_request.*
+          - push
+        branches:
+          - master
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
     payload:
       maxRunTime: 7200 # seconds (i.e. two hours)
       image: "nixos/nix:latest"
@@ -29,8 +65,63 @@ tasks:
         - "curl"
         - "--run"
         - "mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o tmp.tar.gz && tar zxf tmp.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=releng_clobberer"
-    metadata:
-      name: "releng_clobberer"
-      description: "Build and run tests for all projects"
+
+  - metadata:
+      name: "shipit_frontend"
+      description: "Test, build and deploy ShipIt Frontend"
       owner: "{{ event.head.user.email }}"
       source: "{{ event.head.repo.url }}"
+    scopes:
+      - secrets:get:garbage/garbas/temp-releng-services
+    extra:
+      github:
+        env: true
+        events:
+          - pull_request.*
+          - push
+        branches:
+          - staging
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        dind: true
+        taskclusterProxy: true
+      command:
+        - "nix-shell"
+        - "-p"
+        - "curl"
+        - "--run"
+        - "mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o tmp.tar.gz && tar zxf tmp.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=shipit_frontend"
+
+  - metadata:
+      name: "shipit_dashboard"
+      description: "Test, build and deploy ShipIt Dashboard service"
+      owner: "{{ event.head.user.email }}"
+      source: "{{ event.head.repo.url }}"
+    scopes:
+      - secrets:get:garbage/garbas/temp-releng-services
+    extra:
+      github:
+        env: true
+        events:
+          - pull_request.*
+          - push
+        branches:
+          - staging
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        dind: true
+        taskclusterProxy: true
+      command:
+        - "nix-shell"
+        - "-p"
+        - "curl"
+        - "--run"
+        - "mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o tmp.tar.gz && tar zxf tmp.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-app APP=shipit_dashboard"
