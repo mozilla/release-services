@@ -14,6 +14,7 @@ TOOLS=\
 	mysql2pgsql \
 	mysql2sqlite \
 	node2nix \
+	push \
 	pypi2nix
 
 
@@ -103,11 +104,10 @@ build-app-%: nix
 
 
 
-docker: require-APP docker-$(APP)
+build-docker: require-APP build-docker-$(APP)
 
-docker-%: nix
-	rm -f result-$@
-	nix-build nix/docker.nix -A $(subst docker-,,$@) -o result-$@
+build-docker-%: nix
+	nix-build nix/docker.nix -A $(subst build-docker-,,$@) -o result-docker-$(subst build-docker-,,$@)
 
 
 
@@ -116,13 +116,14 @@ deploy-staging-all: $(foreach app, $(APPS), deploy-staging-$(app)) deploy-stagin
 
 deploy-staging: require-APP deploy-staging-$(APP)
 
-deploy-staging-HEROKU: require-APP
-	if [[ -n "`docker images -q $(APP)`" ]]; then \
-		docker rmi -f `docker images -q $(APP)`; \
-	fi
-	cat result-docker-$(APP) | docker load
-	docker tag `docker images -q $(APP) registry.heroku.com/$(APP_STAGING_HEROKU_$(APP))
-	docker push registry .heroku.com/$(APP_STAGING_HEROKU_$(APP))
+deploy-staging-HEROKU: require-APP require-HEROKU build-tool-push build-docker-$(APP)
+	./result-tool-push/bin/push \
+		`realpath ./result-docker-$(APP)` \
+		https://registry.heroku.com \
+		-u $(HEROKU_USERNAME) \
+		-p $(HEROKU_PASSWORD) \
+		-N $(APP_STAGING_HEROKU_$(APP))/web \
+		-T latest
 
 deploy-staging-S3: require-AWS require-APP build-tool-awscli build-app-$(APP)
 	./result-tool-awscli/bin/aws s3 sync \
@@ -147,12 +148,13 @@ deploy-production-all: $(foreach app, $(APPS), deploy-production-$(app)) deploy-
 deploy-production: require-APP deploy-production-$(APP)
 
 deploy-production-HEROKU: require-APP
-	if [[ -n "`docker images -q $(APP)`" ]]; then \
-		docker rmi -f `docker images -q $(APP)`; \
-	fi
-	cat result-docker-$(APP) | docker load
-	docker tag `docker images -q $(APP) registry.heroku.com/$(APP_PRODUCTION_HEROKU_$(APP))
-	docker push registry.heroku.com/$(APP_PRODUCTION_HEROKU_$(APP))
+	./result-tool-push/bin/push \
+		`realpath ./result-docker-$(APP)` \
+		https://registry.heroku.com \
+		-u $(HEROKU_USERNAME) \
+		-p $(HEROKU_PASSWORD) \
+		-N $(APP_PRODUCTION_HEROKU_$(APP))/web \
+		-T latest
 
 deploy-production-S3: require-AWS require-APP build-tool-awscli build-app-$(APP)
 	./result-tool-awscli/bin/aws s3 sync \
@@ -171,15 +173,18 @@ deploy-production-shipit_frontend: deploy-production-S3
 
 
 
-update-all: \
-	$(foreach tool, $(TOOLS), update-tools.$(tool)) \
-	$(foreach app, $(APPS), update-$(app))
+update-all: update-tools update-apps
+update-tools: $(foreach tool, $(TOOLS), update-tool-$(tool))
+update-apps: $(foreach app, $(APPS), update-app-$(app))
 
-update: require-APP update-$(APP)
+update-app: require-APP update-app-$(APP)
+update-app-%: tmpdir nix
+	TMPDIR=$$PWD/tmp nix-shell nix/update.nix --argstr pkg $(subst update-app-,,$@)
 
-update-%: tmpdir nix
-	TMPDIR=$$PWD/tmp nix-shell nix/update.nix --argstr pkg $(subst update-,,$@)
 
+update-tool: require-TOOL update-tool-$(TOOL)
+update-tool-%: tmpdir nix
+	TMPDIR=$$PWD/tmp nix-shell nix/update.nix --argstr pkg tools.$(subst update-tool-,,$@)
 
 
 
@@ -290,12 +295,26 @@ require-AWS:
 		[[ -z "$$AWS_SECRET_ACCESS_KEY" ]]; then \
 		echo ""; \
 		echo "You need to specify AWS credentials, eg:"; \
-		echo "  make deploy-production-releng_clobberer \\"; \
+		echo "  make deploy-production-releng_frontend \\"; \
 	    echo "       AWS_ACCESS_KEY_ID=\"...\" \\"; \
 		echo "       AWS_SECRET_ACCESS_KEY=\"...\""; \
 		echo ""; \
 		echo ""; \
 		exit 1; \
 	fi
+
+require-HEROKU:
+	@if [[ -z "$$HEROKU_USERNAME" ]] || \
+		[[ -z "$$HEROKU_PASSWORD" ]]; then \
+		echo ""; \
+		echo "You need to specify HEROKU credentials, eg:"; \
+		echo "  make deploy-production-releng_clobberer \\"; \
+	    echo "       HEROKU_USERNAME=\"...\" \\"; \
+		echo "       HEROKU_PASSWORD=\"...\""; \
+		echo ""; \
+		echo ""; \
+		exit 1; \
+	fi
+
 
 all: build-apps build-tools
