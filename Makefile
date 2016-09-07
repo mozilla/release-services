@@ -2,6 +2,7 @@
 
 APP=
 APPS=\
+	releng_docs \
 	releng_clobberer \
 	releng_frontend \
 	shipit_dashboard \
@@ -30,14 +31,14 @@ APP_DEV_ENV_shipit_frontend=NEO_DASHBOARD_URL=https://localhost:$(APP_DEV_PORT_s
 APP_STAGING_HEROKU_releng_clobberer=releng-staging-clobberer
 APP_STAGING_HEROKU_shipit_dashboard=shipit-staging-dashboard
 
-APP_STAGING_S3_docs=releng-staging-docs
+APP_STAGING_S3_releng_docs=releng-staging-docs
 APP_STAGING_S3_releng_frontend=releng-staging-frontend
 APP_STAGING_S3_shipit_frontend=shipit-staging-frontend
 
 APP_PRODUCTION_HEROKU_releng_clobberer=releng-production-clobberer
 APP_PRODUCTION_HEROKU_shipit_dashboard=shipit-production-dashboard
 
-APP_PRODUCTION_S3_docs=releng-production-docs
+APP_PRODUCTION_S3_releng_docs=releng-production-docs
 APP_PRODUCTION_S3_releng_frontend=releng-production-frontend
 APP_PRODUCTION_S3_shipit_frontend=shipit-production-frontend
 
@@ -112,7 +113,7 @@ build-docker-%: nix
 
 
 
-deploy-staging-all: $(foreach app, $(APPS), deploy-staging-$(app)) deploy-staging-docs
+deploy-staging-all: $(foreach app, $(APPS), deploy-staging-$(app))
 
 deploy-staging: require-APP deploy-staging-$(APP)
 
@@ -132,18 +133,17 @@ deploy-staging-S3: require-AWS require-APP build-tool-awscli build-app-$(APP)
 		result-$(APP)/ \
 		s3://$(APP_STAGING_S3_$(APP))
 
+deploy-staging-releng_docs: deploy-staging-S3
+deploy-staging-releng_frontend: deploy-staging-S3
 deploy-staging-releng_clobberer: deploy-staging-HEROKU
+
+deploy-staging-shipit_frontend: deploy-staging-S3
 deploy-staging-shipit_dashboard: deploy-staging-HEROKU
 
-deploy-staging-docs: deploy-staging-S3
-deploy-staging-releng_frontend: deploy-staging-S3
-deploy-staging-shipit_frontend: deploy-staging-S3
 
 
 
-
-
-deploy-production-all: $(foreach app, $(APPS), deploy-production-$(app)) deploy-production-docs
+deploy-production-all: $(foreach app, $(APPS), deploy-production-$(app))
 
 deploy-production: require-APP deploy-production-$(APP)
 
@@ -163,12 +163,13 @@ deploy-production-S3: require-AWS require-APP build-tool-awscli build-app-$(APP)
 		result-$(APP)/ \
 		s3://$(APP_PRODUCTION_S3_$(APP))
 
+deploy-production-releng_docs: deploy-production-S3
+deploy-production-releng_frontend: deploy-production-S3
 deploy-production-releng_clobberer: deploy-production-HEROKU
+
+deploy-production-shipit_frontend: deploy-production-S3
 deploy-production-shipit_dashboard: deploy-production-HEROKU
 
-deploy-production-docs: deploy-production-S3
-deploy-production-releng_frontend: deploy-production-S3
-deploy-production-shipit_frontend: deploy-production-S3
 
 
 
@@ -202,11 +203,6 @@ build-tool-%: nix
 build-pkgs-jq: nix
 	nix-build nix/default.nix -A pkgs.$(subst build-pkgs-,,$@) -o result-pkgs-$(subst build-pkgs-,,$@)
 
-
-
-
-build-docs: nix
-	nix-build nix/default.nix -A releng_docs -o result-docs
 
 
 

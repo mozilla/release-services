@@ -1,5 +1,5 @@
-Mozilla RelEng Services
-=======================
+Mozilla Release Engineering Services
+====================================
 
 
 A repository to converge development of different projects. Currently setup
