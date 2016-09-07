@@ -222,6 +222,15 @@ build-cache-%: tmpdir require-APP
 	mkdir -p tmp/cache-$(APP)
 	nix-push --dest "$$PWD/tmp/cache-$(APP)" --force ./result-*
 
+deploy-cache: require-APP require-TC_CACHE_SECRETS
+	AWS_ACCESS_KEY_ID="$(CACHE_AWS_ACCESS_KEY_ID)" \
+	AWS_SECRET_ACCESS_KEY="$(CACHE_AWS_SECRET_ACCESS_KEY)" \
+	./result-tool-awscli/bin/aws s3 sync \
+		--acl public-read  \
+		tmp/cache-$(APP)/ \
+		s3://$(CACHE_BUCKET)
+
+
 
 taskcluster-init:
 	$(eval export IN_NIX_SHELL=0)
@@ -229,13 +238,8 @@ taskcluster-init:
 	echo 'binary-caches = https://s3.amazonaws.com/releng-cache/ https://cache.nixos.org/' > /etc/nix/nix.conf
 
 
-taskcluster-app: taskcluster-init require-APP require-TC_CACHE_SECRETS build-tool-awscli build-cache-$(APP)
-	AWS_ACCESS_KEY_ID="$(CACHE_AWS_ACCESS_KEY_ID)" \
-	AWS_SECRET_ACCESS_KEY="$(CACHE_AWS_SECRET_ACCESS_KEY)" \
-	./result-tool-awscli/bin/aws s3 sync \
-		--acl public-read  \
-		tmp/cache-$(APP)/ \
-		s3://$(CACHE_BUCKET)
+taskcluster-app: taskcluster-init require-APP require-TC_CACHE_SECRETS build-tool-awscli build-cache-$(APP) deploy-cache
+	
 
 taskcluster-deploy-staging: taskcluster-init require-APP require-TC_CACHE_SECRETS taskcluster-app
 	$(MAKE) deploy-staging-$(APP) \
@@ -244,6 +248,7 @@ taskcluster-deploy-staging: taskcluster-init require-APP require-TC_CACHE_SECRET
 		AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
 		HEROKU_USERNAME=$(HEROKU_USERNAME) \
 		HEROKU_PASSWORD=$(HEROKU_PASSWORD)
+	$(MAKE) deploy-cache APP=$(APP)
 	
 
 # --- helpers
