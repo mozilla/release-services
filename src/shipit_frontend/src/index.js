@@ -42,12 +42,11 @@ app.ports.localstorage_set.subscribe(function(user) {
 
 // HAWK auth
 app.ports.hawk_build.subscribe(function(request){
-console.info('request', request);
 
   // Build optional cert
   var extData = null;
   if(request.certificate)
-    extData = new Buffer(JSON.stringify({certificate: request.user.certificate})).toString('base64');
+    extData = new Buffer(JSON.stringify({certificate: request.certificate})).toString('base64');
 
   // Build hawk header
   var header = Hawk.client.header(request.url, request.method, {

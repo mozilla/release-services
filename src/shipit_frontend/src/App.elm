@@ -116,7 +116,7 @@ init flags =
          backend_dashboard_url = flags.backend_dashboard_url
       },
       Cmd.batch [
-        -- Follow through with release dashboard init
+        -- Follow through with sub parts init
         Cmd.map ReleaseDashboardMsg newCmd,
 
         -- Try to load local user
@@ -163,12 +163,13 @@ update msg model =
                 )
 
         HawkMsg hawkMsg ->
-            -- Send msg to Hawk module
+            -- Send msg to Hawk module through RD :/
+            -- TODO: attach Hawk to user ?
             let
-                l = Debug.log "hawk MSG" hawkMsg
-                hawkCmd = Hawk.update hawkMsg
+                l = Debug.log "APP: hawk MSG" hawkMsg
+                (newDashboard, dashboardCmd) = ReleaseDashboard.update (ReleaseDashboard.HawkMsg hawkMsg) model.release_dashboard
             in
-                (model, Cmd.map HawkMsg hawkCmd)
+                ( { model | release_dashboard = newDashboard }, Cmd.map ReleaseDashboardMsg dashboardCmd)
 
 
 viewPage model =

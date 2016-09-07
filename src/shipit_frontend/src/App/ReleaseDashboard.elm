@@ -62,6 +62,9 @@ type alias Model = {
   -- Current Analysis used
   current_analysis : WebData (Analysis),
 
+  -- Hawk request
+  hawk : Hawk.Model,
+
   -- Backend base endpoint
   backend_dashboard_url : String
 }
@@ -71,18 +74,22 @@ type Msg
    | FetchedAnalysis (WebData Analysis)
    | SelectAnalysis Analysis
    | UserUpdate (Maybe User.Model)
-   | FetchFailure Never
+   | HawkMsg Hawk.Msg
 
 
 init : String -> (Model, Cmd Msg)
 init backend_dashboard_url =
   -- Init empty model
-  ({
-    all_analysis = NotAsked,
-    current_analysis = NotAsked,
-    current_user = Nothing,
-    backend_dashboard_url = backend_dashboard_url
-  }, Cmd.none)
+  let
+    (hawk, hawkCmd) = Hawk.init
+  in
+    ({
+      all_analysis = NotAsked,
+      current_analysis = NotAsked,
+      current_user = Nothing,
+      hawk = hawk,
+      backend_dashboard_url = backend_dashboard_url
+    }, Cmd.map HawkMsg hawkCmd)
 
 -- Update
 
@@ -102,47 +109,95 @@ update msg model =
       )
   
     SelectAnalysis analysis ->
-      (
-        { model | current_analysis = Loading },
+      let
+        newModel = { model | current_analysis = Loading }
+      in
         fetchAnalysis model analysis.id
-      )
 
     UserUpdate user ->
       let
         newModel = { model | current_user = user }
       in
-      (
-        newModel,
         -- Reload all analysis
         fetchAllAnalysis newModel
-      )
 
-    FetchFailure never ->
+    HawkMsg msg ->
+      -- Forward messages to hawk
       let
-        l = Debug.log "Should never happen" never
+        (hawk, newCmd) = Hawk.update msg model.hawk
+        newModel = { model | hawk = hawk }
       in
-        ( model, Cmd.none)
+        -- Process awaiting tasks from HAWK
+        case hawk.requestType of
+          Hawk.AllAnalysis ->
+            processAllAnalysis newModel
+          Hawk.Analysis ->
+            processAnalysis newModel
+          _ ->
+            (newModel, Cmd.map HawkMsg newCmd )
 
 
-fetchAllAnalysis : Model -> Cmd Msg
+fetchAllAnalysis : Model -> (Model, Cmd Msg)
 fetchAllAnalysis model =
   -- Fetch all analysis summary
-  let 
-    url = model.backend_dashboard_url ++ "/analysis"
-  in
-    (Hawk.workflow model.current_user "GET" url decodeAllAnalysis)
-    |> RemoteData.fromTask
-    |> Task.perform FetchFailure FetchedAllAnalysis
+  case model.current_user of
+    Just user ->
+      let 
+        url = model.backend_dashboard_url ++ "/analysis"
+        (hawk, cmd) = Hawk.update (Hawk.InitRequest user "GET" url Hawk.AllAnalysis) model.hawk
+      in
+        (
+          { model | hawk = hawk },
+          Cmd.map HawkMsg cmd
+        )
 
-fetchAnalysis : Model -> Int -> Cmd Msg
+    Nothing ->
+      (model, Cmd.none) -- no credentials 
+
+processAllAnalysis : Model -> (Model, Cmd Msg)
+processAllAnalysis model =
+  -- Decode and save all analysis
+  case model.hawk.task of
+    Just task ->
+      (
+        model,
+        (Http.fromJson decodeAllAnalysis task)
+        |> RemoteData.asCmd
+        |> Cmd.map FetchedAllAnalysis
+      )
+    Nothing ->
+        ( model, Cmd.none )
+
+fetchAnalysis : Model -> Int -> (Model, Cmd Msg)
 fetchAnalysis model analysis_id =
   -- Fetch a specific analysis with details
-  let 
-    url = model.backend_dashboard_url ++ "/analysis/" ++ (toString analysis_id)
-  in
-    (Hawk.workflow model.current_user "GET" url decodeAnalysis)
-    |> RemoteData.fromTask
-    |> Task.perform FetchFailure FetchedAnalysis
+  case model.current_user of
+    Just user ->
+      let 
+        url = model.backend_dashboard_url ++ "/analysis/" ++ (toString analysis_id)
+        (hawk, cmd) = Hawk.update (Hawk.InitRequest user "GET" url Hawk.Analysis) model.hawk
+      in
+        (
+          { model | hawk = hawk },
+          Cmd.map HawkMsg cmd
+        )
+
+    Nothing ->
+      (model, Cmd.none) -- no credentials 
+
+processAnalysis : Model -> (Model, Cmd Msg)
+processAnalysis model =
+  -- Decode and save a single analysis
+  case model.hawk.task of
+    Just task ->
+      (
+        model,
+        (Http.fromJson decodeAnalysis task)
+        |> RemoteData.asCmd
+        |> Cmd.map FetchedAnalysis
+      )
+    Nothing ->
+        ( model, Cmd.none )
 
 decodeAllAnalysis : Decoder (List Analysis)
 decodeAllAnalysis =
