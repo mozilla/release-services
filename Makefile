@@ -236,7 +236,7 @@ taskcluster-app: taskcluster-init require-APP require-TC_CACHE_SECRETS build-too
 		tmp/cache-$(APP)/ \
 		s3://$(CACHE_BUCKET)
 
-taskcluster-deploy-staging: taskcluste-init require-APP require-TC_CACHE_SECRETS taskcluster-app
+taskcluster-deploy-staging: taskcluster-init require-APP require-TC_CACHE_SECRETS taskcluster-app
 	$(MAKE) deploy-staging-$(APP) \
 		APP=$(APP) \
 		AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
