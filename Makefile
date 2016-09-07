@@ -236,6 +236,14 @@ taskcluster-app: taskcluster-init require-APP require-TC_CACHE_SECRETS build-too
 		tmp/cache-$(APP)/ \
 		s3://$(CACHE_BUCKET)
 
+taskcluster-deploy-staging: require-APP require-TC_CACHE_SECRETS taskcluster-build-app
+	$(MAKE) deploy-staging-$(APP) \
+		APP=$(APP) \
+		AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
+		AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
+		HEROKU_USERNAME=$(HEROKU_USERNAME) \
+		HEROKU_PASSWORD=$(HEROKU_PASSWORD)
+	
 
 # --- helpers
 
@@ -251,6 +259,10 @@ require-TC_CACHE_SECRETS: tmpdir build-pkgs-jq
 	$(eval CACHE_BUCKET := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_BUCKET'`)
 	$(eval CACHE_AWS_ACCESS_KEY_ID := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_AWS_ACCESS_KEY_ID'`)
 	$(eval CACHE_AWS_SECRET_ACCESS_KEY := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_AWS_SECRET_ACCESS_KEY'`)
+	$(eval AWS_ACCESS_KEY_ID := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.AWS_ACCESS_KEY_ID'`)
+	$(eval AWS_SECRET_ACCESS_KEY := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.AWS_SECRET_ACCESS_KEY'`)
+	$(eval HEROKU_USERNAME := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.HEROKU_USERNAME'`)
+	$(eval HEROKU_PASSWORD := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.HEROKU_PASSWORD'`)
 
 	
 

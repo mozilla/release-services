@@ -96,7 +96,83 @@ tasks:
   # staging | releng
   #
 
-  # TODO
+  - metadata:
+      name: "releng_docs"
+      description: "Test, build and deploy Releng Frontend"
+      owner: "{{ event.head.user.email }}"
+      source: "{{ event.head.repo.url }}"
+    scopes:
+      - secrets:get:garbage/garbas/temp-releng-services
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - staging
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-deploy-staging APP=releng_docs"
+
+  - metadata:
+      name: "releng_frontend"
+      description: "Test, build and deploy Releng Frontend"
+      owner: "{{ event.head.user.email }}"
+      source: "{{ event.head.repo.url }}"
+    scopes:
+      - secrets:get:garbage/garbas/temp-releng-services
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - staging
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-deploy-staging APP=releng_frontend"
+
+  - metadata:
+      name: "releng_clobberer"
+      description: "Test, build and deploy RelEng Clobberer service"
+      owner: "{{ event.head.user.email }}"
+      source: "{{ event.head.repo.url }}"
+    scopes:
+      - secrets:get:garbage/garbas/temp-releng-services
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - staging
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && make taskcluster-deploy-staging APP=releng_clobberer"
 
   #
   # master | shipit
