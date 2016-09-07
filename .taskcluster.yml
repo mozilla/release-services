@@ -32,7 +32,6 @@ tasks:
       maxRunTime: 7200 # seconds (i.e. two hours)
       image: "nixos/nix:latest"
       features:
-        dind: true
         taskclusterProxy: true
       command:
         - "/bin/bash"
@@ -60,7 +59,6 @@ tasks:
       maxRunTime: 7200 # seconds (i.e. two hours)
       image: "nixos/nix:latest"
       features:
-        dind: true
         taskclusterProxy: true
       command:
         - "/bin/bash"
@@ -99,7 +97,6 @@ tasks:
       maxRunTime: 7200 # seconds (i.e. two hours)
       image: "nixos/nix:latest"
       features:
-        dind: true
         taskclusterProxy: true
       command:
         - "/bin/bash"
@@ -126,7 +123,6 @@ tasks:
       maxRunTime: 7200 # seconds (i.e. two hours)
       image: "nixos/nix:latest"
       features:
-        dind: true
         taskclusterProxy: true
       command:
         - "/bin/bash"
