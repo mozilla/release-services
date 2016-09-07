@@ -21,6 +21,14 @@ in {
     '';
   };
 
+  push = (import ./push.nix { inherit (releng_pkgs) pkgs; }).packages."push" // {
+    updateSrc = writeScriptBin "update" ''
+      pushd nix/tools
+      ${releng_pkgs.tools.pypi2nix}/bin/pypi2nix --basename "push" -V "3.5" -r push.txt -v
+      popd
+    '';
+  };
+
   node2nix = import ./node2nix.nix { inherit releng_pkgs; } // {
     updateSrc = releng_pkgs.lib.updateFromGitHub {
       owner = "svanderburg";
