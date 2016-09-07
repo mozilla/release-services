@@ -233,6 +233,7 @@ taskcluster-app: taskcluster-init require-APP require-TC_CACHE_SECRETS build-too
 	AWS_ACCESS_KEY_ID="$(CACHE_AWS_ACCESS_KEY_ID)" \
 	AWS_SECRET_ACCESS_KEY="$(CACHE_AWS_SECRET_ACCESS_KEY)" \
 	./result-tool-awscli/bin/aws s3 sync \
+		--acl public-read  \
 		tmp/cache-$(APP)/ \
 		s3://$(CACHE_BUCKET)
 
