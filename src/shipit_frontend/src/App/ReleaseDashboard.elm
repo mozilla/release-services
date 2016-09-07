@@ -2,14 +2,17 @@ module App.ReleaseDashboard exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Http
 import String
 import Dict
 import Json.Decode as Json exposing (Decoder, (:=))
 import Json.Decode.Extra as JsonExtra exposing ((|:))
 import RemoteData as RemoteData exposing ( WebData, RemoteData(Loading, Success, NotAsked, Failure) )
+import Http
+import Task exposing (Task)
+import Basics exposing (Never)
 
 import App.User as User
+import App.Hawk as Hawk
 
 -- Models
 
@@ -68,6 +71,7 @@ type Msg
    | FetchedAnalysis (WebData Analysis)
    | SelectAnalysis Analysis
    | UserUpdate (Maybe User.Model)
+   | FetchFailure Never
 
 
 init : String -> (Model, Cmd Msg)
@@ -113,72 +117,32 @@ update msg model =
         fetchAllAnalysis newModel
       )
 
-fromJust : Maybe a -> a
-fromJust x = case x of
-    Just y -> y
-    Nothing -> Debug.crash "error: fromJust Nothing"
+    FetchFailure never ->
+      let
+        l = Debug.log "Should never happen" never
+      in
+        ( model, Cmd.none)
 
-sendRequest: Model -> String -> Decoder value -> Maybe (Platform.Task Http.Error value)
-sendRequest model url decoder =
-  case model.current_user of
-    Just user ->
 
-      case user.hawkHeader of
-        Just hawkHeader ->
-          let
-            request = {
-              verb = "GET",
-              headers = [
-                ( "Authorization", hawkHeader),
-                ( "Accept", "application/json" )
-              ],
-              url = model.backend_dashboard_url ++ url,
-              body = Http.empty
-            }
-          in
-            Just (Http.fromJson decoder
-              (Http.send Http.defaultSettings request))
-
-        Nothing ->
-          -- No header
-          Nothing
-
-    Nothing ->
-      -- No credentials
-      Nothing
-    
 fetchAllAnalysis : Model -> Cmd Msg
 fetchAllAnalysis model =
-  -- Load all analysis
-  let
-    l = Debug.log "in cmd"
-    response = sendRequest model "/analysis" decodeAllAnalysis 
+  -- Fetch all analysis summary
+  let 
+    url = model.backend_dashboard_url ++ "/analysis"
   in
-    case response of
-      Just response' ->
-          -- Process request
-          response'
-            |> RemoteData.asCmd
-            |> Cmd.map FetchedAllAnalysis
-      Nothing ->
-        Cmd.none
+    (Hawk.workflow model.current_user "GET" url decodeAllAnalysis)
+    |> RemoteData.fromTask
+    |> Task.perform FetchFailure FetchedAllAnalysis
 
 fetchAnalysis : Model -> Int -> Cmd Msg
 fetchAnalysis model analysis_id =
-  -- With Credentials
+  -- Fetch a specific analysis with details
   let 
-    url = "/analysis/" ++ (toString analysis_id)
-    response = sendRequest model url decodeAnalysis 
+    url = model.backend_dashboard_url ++ "/analysis/" ++ (toString analysis_id)
   in
-    case response of
-      Just response' ->
-          -- Process request
-          response'
-            |> RemoteData.asCmd
-            |> Cmd.map FetchedAnalysis
-      Nothing ->
-        Cmd.none
-
+    (Hawk.workflow model.current_user "GET" url decodeAnalysis)
+    |> RemoteData.fromTask
+    |> Task.perform FetchFailure FetchedAnalysis
 
 decodeAllAnalysis : Decoder (List Analysis)
 decodeAllAnalysis =

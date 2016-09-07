@@ -14,6 +14,7 @@ import RemoteData as RemoteData exposing ( RemoteData(Loading, Success, NotAsked
 
 import App.Home as Home 
 import App.User as User
+import App.Hawk as Hawk
 import App.ReleaseDashboard as ReleaseDashboard
 import App.Utils exposing ( eventLink )
 
@@ -39,6 +40,7 @@ type alias Model = {
 type Msg
     = ShowPage Page
     | UserMsg User.Msg
+    | HawkMsg Hawk.Msg
     | ReleaseDashboardMsg ReleaseDashboard.Msg
     | SelectAnalysis ReleaseDashboard.Analysis
 
@@ -160,6 +162,13 @@ update msg model =
                   ]
                 )
 
+        HawkMsg hawkMsg ->
+            -- Send msg to Hawk module
+            let
+                l = Debug.log "hawk MSG" hawkMsg
+                hawkCmd = Hawk.update hawkMsg
+            in
+                (model, Cmd.map HawkMsg hawkCmd)
 
 
 viewPage model =
@@ -299,5 +308,5 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch [ 
       Sub.map UserMsg (User.localstorage_get (User.LoggedIn)),
-      Sub.map UserMsg (User.hawk_get (User.ReceivedHawkHeader)) 
+      Sub.map HawkMsg (Hawk.hawk_get (Hawk.BuiltHeader)) 
     ]
