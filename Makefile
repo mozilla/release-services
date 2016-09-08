@@ -209,17 +209,15 @@ build-certs: tmpdir build-tool-createcert
 
 
 
-build-cache-%: tmpdir require-APP
-	mkdir -p tmp/cache-$(APP)
-	nix-push --dest "$$PWD/tmp/cache-$(APP)" --force ./result-*
+build-cache: tmpdir
+	mkdir -p tmp/cache
+	nix-push --dest "$$PWD/tmp/cache" --force ./result-*
 
-deploy-cache: require-APP require-CACHE build-tool-awscli build-cache-$(APP)
-	AWS_ACCESS_KEY_ID="$(CACHE_AWS_ACCESS_KEY_ID)" \
-	AWS_SECRET_ACCESS_KEY="$(CACHE_AWS_SECRET_ACCESS_KEY)" \
+deploy-cache: require-AWS require-CACHE_BUCKET build-tool-awscli build-cache
 	./result-tool-awscli/bin/aws s3 sync \
 		--size-only \
 		--acl public-read  \
-		tmp/cache-$(APP)/ \
+		tmp/cache/ \
 		s3://$(CACHE_BUCKET)
 
 
@@ -289,16 +287,12 @@ require-HEROKU:
 		exit 1; \
 	fi
 
-require-CACHE:
-	@if [[ -z "$$CACHE_BUCKET" ]] || \
-		[[ -z "$$CACHE_AWS_ACCESS_KEY_ID" ]] || \
-		[[ -z "$$CACHE_AWS_SECRET_ACCESS_KEY" ]]; then \
+require-CACHE_BUCKET:
+	@if [[ -z "$$CACHE_BUCKET" ]]; then \
 		echo ""; \
-		echo "You need to specify CACHE_* variables (, eg:"; \
+		echo "You need to specify CACHE_BUCKET variable, eg:"; \
 		echo "  make deploy-cache \\"; \
-	    echo "       CACHE_BUCKET=\"...\" \\"; \
-		echo "       CACHE_AWS_ACCESS_KEY_ID=\"...\""; \
-		echo "       CACHE_AWS_SECRET_ACCESS_KEY=\"...\""; \
+		echo "       CACHE_BUCKET=\"...\" \\"; \
 		echo ""; \
 		echo ""; \
 		exit 1; \
