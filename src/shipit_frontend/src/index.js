@@ -7,7 +7,6 @@ var Hawk = require('hawk');
 require("./index.scss");
 
 var backend_dashboard_url = process.env.NEO_DASHBOARD_URL || "http://localhost:5000";
-//console.info('Dashboard backend used ', backend_dashboard_url);
 
 var storage_key = 'shipit-credentials';
 
@@ -24,10 +23,8 @@ app.ports.localstorage_load.subscribe(function(){
   try {
     user = JSON.parse(window.localStorage.getItem(storage_key));
     user = user.value || user;
-    user.hawkHeader = null;
-    //console.info('Loaded user', user);
   } catch (e) {
-    //console.warn('Loading user failed', e);
+    console.warn('Loading user failed', e);
   }
   app.ports.localstorage_get.send(user);
 });
@@ -45,15 +42,23 @@ app.ports.localstorage_set.subscribe(function(user) {
 
 // HAWK auth
 app.ports.hawk_build.subscribe(function(request){
-  var url = backend_dashboard_url + request.url; // TODO: use direct request.url
-  var header = Hawk.client.header(url, request.method, {
+
+  // Build optional cert
+  var extData = null;
+  if(request.certificate)
+    extData = new Buffer(JSON.stringify({certificate: request.certificate})).toString('base64');
+
+  // Build hawk header
+  var header = Hawk.client.header(request.url, request.method, {
     credentials: {
-      id: request.user.clientId,
-      key: request.user.accessToken,
+      id: request.id,
+      key: request.key,
       algorithm: 'sha256'
     },
-    ext: new Buffer(JSON.stringify({certificate: request.user.certificate})).toString('base64'),
+    ext: extData,
   });
+
+  // Send back header
   app.ports.hawk_get.send(header.field);
 });
 

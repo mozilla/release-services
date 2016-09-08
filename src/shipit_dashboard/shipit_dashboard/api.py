@@ -87,6 +87,7 @@ def list_analysis():
     all_analysis = BugAnalysis.query.all()
     return [_serialize_analysis(analysis, False) for analysis in all_analysis]
 
+@login_required
 def get_analysis(analysis_id):
     """
     Fetch an analysis and all its bugs

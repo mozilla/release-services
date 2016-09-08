@@ -14,6 +14,7 @@ import RemoteData as RemoteData exposing ( RemoteData(Loading, Success, NotAsked
 
 import App.Home as Home 
 import App.User as User
+import App.Hawk as Hawk
 import App.ReleaseDashboard as ReleaseDashboard
 import App.Utils exposing ( eventLink )
 
@@ -39,6 +40,7 @@ type alias Model = {
 type Msg
     = ShowPage Page
     | UserMsg User.Msg
+    | HawkMsg Hawk.Msg
     | ReleaseDashboardMsg ReleaseDashboard.Msg
     | SelectAnalysis ReleaseDashboard.Analysis
 
@@ -114,7 +116,7 @@ init flags =
          backend_dashboard_url = flags.backend_dashboard_url
       },
       Cmd.batch [
-        -- Follow through with release dashboard init
+        -- Follow through with sub parts init
         Cmd.map ReleaseDashboardMsg newCmd,
 
         -- Try to load local user
@@ -160,6 +162,14 @@ update msg model =
                   ]
                 )
 
+        HawkMsg hawkMsg ->
+            -- Send msg to Hawk module through RD :/
+            -- TODO: attach Hawk to user ?
+            let
+                l = Debug.log "APP: hawk MSG" hawkMsg
+                (newDashboard, dashboardCmd) = ReleaseDashboard.update (ReleaseDashboard.HawkMsg hawkMsg) model.release_dashboard
+            in
+                ( { model | release_dashboard = newDashboard }, Cmd.map ReleaseDashboardMsg dashboardCmd)
 
 
 viewPage model =
@@ -299,5 +309,5 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch [ 
       Sub.map UserMsg (User.localstorage_get (User.LoggedIn)),
-      Sub.map UserMsg (User.hawk_get (User.ReceivedHawkHeader)) 
+      Sub.map HawkMsg (Hawk.hawk_get (Hawk.BuiltHeader)) 
     ]

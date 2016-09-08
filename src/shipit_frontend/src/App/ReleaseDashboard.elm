@@ -2,14 +2,17 @@ module App.ReleaseDashboard exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Http
 import String
 import Dict
 import Json.Decode as Json exposing (Decoder, (:=))
 import Json.Decode.Extra as JsonExtra exposing ((|:))
 import RemoteData as RemoteData exposing ( WebData, RemoteData(Loading, Success, NotAsked, Failure) )
+import Http
+import Task exposing (Task)
+import Basics exposing (Never)
 
 import App.User as User
+import App.Hawk as Hawk
 
 -- Models
 
@@ -59,6 +62,9 @@ type alias Model = {
   -- Current Analysis used
   current_analysis : WebData (Analysis),
 
+  -- Hawk request
+  hawk : Hawk.Model,
+
   -- Backend base endpoint
   backend_dashboard_url : String
 }
@@ -68,17 +74,22 @@ type Msg
    | FetchedAnalysis (WebData Analysis)
    | SelectAnalysis Analysis
    | UserUpdate (Maybe User.Model)
+   | HawkMsg Hawk.Msg
 
 
 init : String -> (Model, Cmd Msg)
 init backend_dashboard_url =
   -- Init empty model
-  ({
-    all_analysis = NotAsked,
-    current_analysis = NotAsked,
-    current_user = Nothing,
-    backend_dashboard_url = backend_dashboard_url
-  }, Cmd.none)
+  let
+    (hawk, hawkCmd) = Hawk.init
+  in
+    ({
+      all_analysis = NotAsked,
+      current_analysis = NotAsked,
+      current_user = Nothing,
+      hawk = hawk,
+      backend_dashboard_url = backend_dashboard_url
+    }, Cmd.map HawkMsg hawkCmd)
 
 -- Update
 
@@ -98,87 +109,95 @@ update msg model =
       )
   
     SelectAnalysis analysis ->
-      (
-        { model | current_analysis = Loading },
+      let
+        newModel = { model | current_analysis = Loading }
+      in
         fetchAnalysis model analysis.id
-      )
 
     UserUpdate user ->
       let
         newModel = { model | current_user = user }
       in
-      (
-        newModel,
         -- Reload all analysis
         fetchAllAnalysis newModel
-      )
 
-fromJust : Maybe a -> a
-fromJust x = case x of
-    Just y -> y
-    Nothing -> Debug.crash "error: fromJust Nothing"
+    HawkMsg msg ->
+      -- Forward messages to hawk
+      let
+        (hawk, newCmd) = Hawk.update msg model.hawk
+        newModel = { model | hawk = hawk }
+      in
+        -- Process awaiting tasks from HAWK
+        case hawk.requestType of
+          Hawk.AllAnalysis ->
+            processAllAnalysis newModel
+          Hawk.Analysis ->
+            processAnalysis newModel
+          _ ->
+            (newModel, Cmd.map HawkMsg newCmd )
 
-sendRequest: Model -> String -> Decoder value -> Maybe (Platform.Task Http.Error value)
-sendRequest model url decoder =
+
+fetchAllAnalysis : Model -> (Model, Cmd Msg)
+fetchAllAnalysis model =
+  -- Fetch all analysis summary
   case model.current_user of
     Just user ->
-
-      case user.hawkHeader of
-        Just hawkHeader ->
-          let
-            request = {
-              verb = "GET",
-              headers = [
-                ( "Authorization", hawkHeader),
-                ( "Accept", "application/json" )
-              ],
-              url = model.backend_dashboard_url ++ url,
-              body = Http.empty
-            }
-          in
-            Just (Http.fromJson decoder
-              (Http.send Http.defaultSettings request))
-
-        Nothing ->
-          -- No header
-          Nothing
+      let 
+        url = model.backend_dashboard_url ++ "/analysis"
+        (hawk, cmd) = Hawk.update (Hawk.InitRequest user "GET" url Hawk.AllAnalysis) model.hawk
+      in
+        (
+          { model | hawk = hawk },
+          Cmd.map HawkMsg cmd
+        )
 
     Nothing ->
-      -- No credentials
-      Nothing
-    
-fetchAllAnalysis : Model -> Cmd Msg
-fetchAllAnalysis model =
-  -- Load all analysis
-  let
-    l = Debug.log "in cmd"
-    response = sendRequest model "/analysis" decodeAllAnalysis 
-  in
-    case response of
-      Just response' ->
-          -- Process request
-          response'
-            |> RemoteData.asCmd
-            |> Cmd.map FetchedAllAnalysis
-      Nothing ->
-        Cmd.none
+      (model, Cmd.none) -- no credentials 
 
-fetchAnalysis : Model -> Int -> Cmd Msg
+processAllAnalysis : Model -> (Model, Cmd Msg)
+processAllAnalysis model =
+  -- Decode and save all analysis
+  case model.hawk.task of
+    Just task ->
+      (
+        model,
+        (Http.fromJson decodeAllAnalysis task)
+        |> RemoteData.asCmd
+        |> Cmd.map FetchedAllAnalysis
+      )
+    Nothing ->
+        ( model, Cmd.none )
+
+fetchAnalysis : Model -> Int -> (Model, Cmd Msg)
 fetchAnalysis model analysis_id =
-  -- With Credentials
-  let 
-    url = "/analysis/" ++ (toString analysis_id)
-    response = sendRequest model url decodeAnalysis 
-  in
-    case response of
-      Just response' ->
-          -- Process request
-          response'
-            |> RemoteData.asCmd
-            |> Cmd.map FetchedAnalysis
-      Nothing ->
-        Cmd.none
+  -- Fetch a specific analysis with details
+  case model.current_user of
+    Just user ->
+      let 
+        url = model.backend_dashboard_url ++ "/analysis/" ++ (toString analysis_id)
+        (hawk, cmd) = Hawk.update (Hawk.InitRequest user "GET" url Hawk.Analysis) model.hawk
+      in
+        (
+          { model | hawk = hawk },
+          Cmd.map HawkMsg cmd
+        )
 
+    Nothing ->
+      (model, Cmd.none) -- no credentials 
+
+processAnalysis : Model -> (Model, Cmd Msg)
+processAnalysis model =
+  -- Decode and save a single analysis
+  case model.hawk.task of
+    Just task ->
+      (
+        model,
+        (Http.fromJson decodeAnalysis task)
+        |> RemoteData.asCmd
+        |> Cmd.map FetchedAnalysis
+      )
+    Nothing ->
+        ( model, Cmd.none )
 
 decodeAllAnalysis : Decoder (List Analysis)
 decodeAllAnalysis =
