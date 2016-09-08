@@ -42,7 +42,6 @@ APP_PRODUCTION_S3_releng_docs=releng-production-docs
 APP_PRODUCTION_S3_releng_frontend=releng-production-frontend
 APP_PRODUCTION_S3_shipit_frontend=shipit-production-frontend
 
-TC_CACHE_SECRETS=taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services
 
 
 help:
@@ -199,13 +198,6 @@ build-tool-%: nix
 
 
 
-
-build-pkgs-jq: nix
-	nix-build nix/default.nix -A pkgs.$(subst build-pkgs-,,$@) -o result-pkgs-$(subst build-pkgs-,,$@)
-
-
-
-
 build-certs: tmpdir build-tool-createcert
 	@if [[ ! -e "$$PWD/tmp/ca.crt" ]] && \
 	   [[ ! -e "$$PWD/tmp/ca.key" ]] && \
@@ -217,12 +209,11 @@ build-certs: tmpdir build-tool-createcert
 
 
 
-
 build-cache-%: tmpdir require-APP
 	mkdir -p tmp/cache-$(APP)
 	nix-push --dest "$$PWD/tmp/cache-$(APP)" --force ./result-*
 
-deploy-cache: require-APP require-TC_CACHE_SECRETS
+deploy-cache: require-APP require-CACHE build-tool-awscli build-cache-$(APP)
 	AWS_ACCESS_KEY_ID="$(CACHE_AWS_ACCESS_KEY_ID)" \
 	AWS_SECRET_ACCESS_KEY="$(CACHE_AWS_SECRET_ACCESS_KEY)" \
 	./result-tool-awscli/bin/aws s3 sync \
@@ -233,47 +224,13 @@ deploy-cache: require-APP require-TC_CACHE_SECRETS
 
 
 
-taskcluster-init:
-	$(eval export IN_NIX_SHELL=0)
-	mkdir -p /etc/nix
-	echo 'binary-caches = https://s3.amazonaws.com/releng-cache/ https://cache.nixos.org/' > /etc/nix/nix.conf
-
-
-taskcluster-app: taskcluster-init require-APP require-TC_CACHE_SECRETS build-tool-awscli build-cache-$(APP) deploy-cache
-	
-
-taskcluster-deploy-staging: taskcluster-init require-APP require-TC_CACHE_SECRETS taskcluster-app
-	$(MAKE) deploy-staging-$(APP) \
-		APP=$(APP) \
-		AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
-		AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
-		HEROKU_USERNAME=$(HEROKU_USERNAME) \
-		HEROKU_PASSWORD=$(HEROKU_PASSWORD)
-	$(MAKE) deploy-cache APP=$(APP)
-	
-
 # --- helpers
 
 
 tmpdir:
 	@mkdir -p $$PWD/tmp
 
-
-require-TC_CACHE_SECRETS: tmpdir build-pkgs-jq
-	rm -f tmp/tc_cache_secrets
-	wget $(TC_CACHE_SECRETS)
-	mv temp-releng-services tmp/tc_cache_secrets
-	$(eval CACHE_BUCKET := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_BUCKET'`)
-	$(eval CACHE_AWS_ACCESS_KEY_ID := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_AWS_ACCESS_KEY_ID'`)
-	$(eval CACHE_AWS_SECRET_ACCESS_KEY := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.CACHE_AWS_SECRET_ACCESS_KEY'`)
-	$(eval AWS_ACCESS_KEY_ID := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.AWS_ACCESS_KEY_ID'`)
-	$(eval AWS_SECRET_ACCESS_KEY := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.AWS_SECRET_ACCESS_KEY'`)
-	$(eval HEROKU_USERNAME := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.HEROKU_USERNAME'`)
-	$(eval HEROKU_PASSWORD := `cat tmp/tc_cache_secrets | ./result-pkgs-jq/bin/jq -r '.secret.HEROKU_PASSWORD'`)
-
 	
-
-
 require-TOOL:
 	@if [[ -z "$(TOOL)" ]]; then \
 		echo ""; \
@@ -288,6 +245,7 @@ require-TOOL:
 		echo ""; \
 		exit 1; \
 	fi
+
 require-APP:
 	@if [[ -z "$(APP)" ]]; then \
 		echo ""; \
@@ -326,6 +284,21 @@ require-HEROKU:
 		echo "  make deploy-production-releng_clobberer \\"; \
 	    echo "       HEROKU_USERNAME=\"...\" \\"; \
 		echo "       HEROKU_PASSWORD=\"...\""; \
+		echo ""; \
+		echo ""; \
+		exit 1; \
+	fi
+
+require-CACHE:
+	@if [[ -z "$$CACHE_BUCKET" ]] || \
+		[[ -z "$$CACHE_AWS_ACCESS_KEY_ID" ]] || \
+		[[ -z "$$CACHE_AWS_SECRET_ACCESS_KEY" ]]; then \
+		echo ""; \
+		echo "You need to specify CACHE_* variables (, eg:"; \
+		echo "  make deploy-cache \\"; \
+	    echo "       CACHE_BUCKET=\"...\" \\"; \
+		echo "       CACHE_AWS_ACCESS_KEY_ID=\"...\""; \
+		echo "       CACHE_AWS_SECRET_ACCESS_KEY=\"...\""; \
 		echo ""; \
 		echo ""; \
 		exit 1; \

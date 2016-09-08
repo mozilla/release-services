@@ -4,6 +4,8 @@ let
   inherit (releng_pkgs.pkgs) writeScriptBin;
 in {
 
+  inherit (releng_pkgs.pkgs) jq;
+
   pypi2nix = import ./pypi2nix.nix { inherit releng_pkgs; } // {
     updateSrc = releng_pkgs.lib.updateFromGitHub {
       owner = "garbas";
