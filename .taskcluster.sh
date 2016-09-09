@@ -21,6 +21,8 @@ rm -f tmp/taskcluster_secrets
 wget $TASKCLUSTER_SECRETS -O tmp/taskcluster_secrets
 
 make build-tool-jq build-app APP=$APP
+RETVAL=$?
+[ $RETVAL -ne 0 ] && exit $RETVAL
 
 if [[ "$GITHUB_BASE_BRANCH" = "staging" ]] ||
    [[ "$GITHUB_BASE_BRANCH" = "production" ]]; then
@@ -30,9 +32,13 @@ if [[ "$GITHUB_BASE_BRANCH" = "staging" ]] ||
         AWS_SECRET_ACCESS_KEY=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.AWS_SECRET_ACCESS_KEY'` \
         HEROKU_USERNAME=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.HEROKU_USERNAME'` \
         HEROKU_PASSWORD=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.HEROKU_PASSWORD'`
+    RETVAL=$?
+    [ $RETVAL -ne 0 ] && exit $RETVAL
 fi
 
 make deploy-cache \
     CACHE_BUCKET=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.CACHE_BUCKET'` \
     AWS_ACCESS_KEY_ID=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.AWS_ACCESS_KEY_ID'` \
     AWS_SECRET_ACCESS_KEY=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.AWS_SECRET_ACCESS_KEY'`
+RETVAL=$?
+[ $RETVAL -ne 0 ] && exit $RETVAL
