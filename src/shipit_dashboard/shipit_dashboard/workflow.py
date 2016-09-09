@@ -9,6 +9,7 @@ from flask.cli import with_appcontext
 import logging
 import pickle
 import click
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -20,16 +21,18 @@ class AnalysisWorkflow(object):
     def __init__(self):
         self.bugs = {}
 
-    def run(self):
+    def run_local_db(self):
         """
-        Main workflow enty point
+        Use all analysis stored on local db
+        and update them directly
         """
 
         all_analysis = BugAnalysis.query.all()
         for analysis in all_analysis:
 
             # Get bugs from bugzilla, for all analysis
-            raw_bugs = self.list_bugs(analysis)
+            logger.info('List bugs for {}'.format(analysis))
+            raw_bugs = self.list_bugs(analysis.parameters)
 
             # Empty m2m relation
             analysis.bugs[:] = []
@@ -46,25 +49,46 @@ class AnalysisWorkflow(object):
                     db.session.add(analysis)
                     db.session.commit()
 
-    def list_bugs(self, analysis):
+    def run_taskcluster(self, name, parameters):
         """
-        List all the bugs in an analysis
+        Build bug analysis for a specified Bugzilla query
+        Used by taskcluster - no db interaction
         """
-        assert isinstance(analysis, BugAnalysis)
-        assert analysis.parameters is not None
 
-        logger.info('List bugs for {}'.format(analysis))
+        # Get bugs from bugzilla, for all analysis
+        logger.info('List bugs for {}'.format(name))
+        raw_bugs = self.list_bugs(parameters)
 
+        # Do patch analysis on bugs
+        output = {
+            'name' : name,
+            'bugs' : [],
+        }
+        for raw_bug in raw_bugs.values():
+            bug = self.update_bug(raw_bug, use_db=False)
+            if bug:
+                output['bugs'].append({
+                    'bugzilla_id' : bug.bugzilla_id,
+                    'payload' : bug.payload,
+                    'payload_hash' : bug.payload_hash,
+                })
+
+        return json.dumps(output)
+
+    def list_bugs(self, query):
+        """
+        List all the bugs from a Bugzilla query
+        """
         def _bughandler(bug, data):
             data[bug['id']] = bug
 
         bugs = {}
-        bz = Bugzilla(analysis.parameters, bughandler=_bughandler, bugdata=bugs)
+        bz = Bugzilla(query, bughandler=_bughandler, bugdata=bugs)
         bz.get_data().wait()
 
         return bugs
 
-    def update_bug(self, bug):
+    def update_bug(self, bug, use_db=True):
         """
         Update a bug
         """
@@ -78,17 +102,22 @@ class AnalysisWorkflow(object):
         # Compute the hash of the new bug
         bug_hash = compute_dict_hash(bug)
 
-        # Fetch or create existing bug result
-        try:
-            br = BugResult.query.filter_by(bugzilla_id=bug_id).one()
-            logger.info('Update existing {}'.format(br))
+        if use_db:
+            # Fetch or create existing bug result
+            try:
+                br = BugResult.query.filter_by(bugzilla_id=bug_id).one()
+                logger.info('Update existing {}'.format(br))
 
-            # Check the bug has changed since last update
-            if br.payload_hash == bug_hash:
-                logger.info('Same bug hash, skip bug analysis {}'.format(br))
-                return br
+                # Check the bug has changed since last update
+                if br.payload_hash == bug_hash:
+                    logger.info('Same bug hash, skip bug analysis {}'.format(br))
+                    return br
 
-        except NoResultFound:
+            except NoResultFound:
+                br = BugResult(bug_id)
+                logger.info('Create new {}'.format(br))
+        else:
+            # Create a new instance
             br = BugResult(bug_id)
             logger.info('Create new {}'.format(br))
 
@@ -103,7 +132,7 @@ class AnalysisWorkflow(object):
             'bug': bug,
             'analysis': analysis,
         }
-        br.payload = pickle.dumps(payload, 2)
+        br.payload = use_db and pickle.dumps(payload, 2) or payload
         br.payload_hash = bug_hash
         logger.info('Updated payload of {}'.format(br))
 
@@ -113,11 +142,23 @@ class AnalysisWorkflow(object):
         return br
 
 
-@click.command('run_workflow', short_help='Update all analysis & related bugs')
+@click.command('run_workflow_local', short_help='Update all analysis & related bugs, using local database.')
 @with_appcontext
-def run_workflow():
+def run_workflow_local():
     """
-    Run the bug update workflow
+    Run the full bug update workflow
     """
     workflow = AnalysisWorkflow()
-    workflow.run()
+    workflow.run_local_db()
+
+
+@click.command('run_workflow', short_help='Run analysis on a specified Bugzilla search request. Outputs on stdout, used by taskcluster.')
+@click.argument('name')
+@click.argument('parameters')
+@with_appcontext
+def run_workflow(name, parameters):
+    """
+    Build analysis, without storing it in DB
+    """
+    workflow = AnalysisWorkflow()
+    print(workflow.run_taskcluster(name, parameters))
