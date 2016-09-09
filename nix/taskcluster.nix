@@ -33,7 +33,7 @@ let
         features:
           taskclusterProxy: true
         env:
-          APP: "releng_docs"
+          APP: "${name}"
           TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/${secrets}"
         command:
           - "/bin/bash"

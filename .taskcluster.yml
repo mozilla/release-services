@@ -29,7 +29,7 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_docs"
+        APP: "releng_frontend"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services-master"
       command:
         - "/bin/bash"
@@ -89,7 +89,7 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_docs"
+        APP: "releng_clobberer"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services-master"
       command:
         - "/bin/bash"
@@ -118,7 +118,7 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_docs"
+        APP: "releng_frontend"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services-staging"
       command:
         - "/bin/bash"
@@ -176,7 +176,7 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_docs"
+        APP: "releng_clobberer"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services-staging"
       command:
         - "/bin/bash"
@@ -205,7 +205,7 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_docs"
+        APP: "releng_frontend"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services-production"
       command:
         - "/bin/bash"
@@ -263,7 +263,7 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_docs"
+        APP: "releng_clobberer"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services-production"
       command:
         - "/bin/bash"
@@ -293,7 +293,7 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_docs"
+        APP: "shipit_frontend"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services-master"
       command:
         - "/bin/bash"
@@ -323,7 +323,7 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_docs"
+        APP: "shipit_dashboard"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services-master"
       command:
         - "/bin/bash"
@@ -352,7 +352,7 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_docs"
+        APP: "shipit_frontend"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services-staging"
       command:
         - "/bin/bash"
@@ -381,7 +381,7 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_docs"
+        APP: "shipit_dashboard"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services-staging"
       command:
         - "/bin/bash"
@@ -410,7 +410,7 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_docs"
+        APP: "shipit_frontend"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services-production"
       command:
         - "/bin/bash"
@@ -439,7 +439,7 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_docs"
+        APP: "shipit_dashboard"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services-production"
       command:
         - "/bin/bash"
