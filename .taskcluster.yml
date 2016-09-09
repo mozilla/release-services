@@ -6,16 +6,11 @@ metadata:
   source: "{{ event.head.repo.url }}"
 tasks:
 
-  #
-  # master | releng
-  #  - test and build releng_* apps
-  #
-
   - metadata:
-      name: "releng_docs"
-      description: "Test, build and deploy Releng Frontend"
+      name: "releng_frontend"
+      description: "Test, build and deploy releng_frontend"
       owner: "{{ event.head.user.email }}"
-      source: "{{ event.head.repo.url }}"
+      source: "https://github.com/mozilla-releng/services/tree/master/src/releng_frontend"
     scopes:
       - secrets:get:garbage/garbas/temp-releng-services
     extra:
@@ -39,77 +34,73 @@ tasks:
       command:
         - "/bin/bash"
         - "-c"
-        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-
-  - metadata:
-      name: "releng_frontend"
-      description: "Test, build and deploy Releng Frontend"
-      owner: "{{ event.head.user.email }}"
-      source: "{{ event.head.repo.url }}"
-    scopes:
-      - secrets:get:garbage/garbas/temp-releng-services
-    extra:
-      github:
-        env: true
-        events:
-          - pull_request.*
-          - push
-        branches:
-          - master
-    provisionerId: "{{ taskcluster.docker.provisionerId }}"
-    workerType: "{{ taskcluster.docker.workerType }}"
-    payload:
-      maxRunTime: 7200 # seconds (i.e. two hours)
-      image: "nixos/nix:latest"
-      features:
-        taskclusterProxy: true
-      env:
-        APP: "releng_frontend"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services"
-      command:
-        - "/bin/bash"
-        - "-c"
-        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-
-  - metadata:
-      name: "releng_clobberer"
-      description: "Test, build and deploy RelEng Clobberer service"
-      owner: "{{ event.head.user.email }}"
-      source: "{{ event.head.repo.url }}"
-    scopes:
-      - secrets:get:garbage/garbas/temp-releng-services
-    extra:
-      github:
-        env: true
-        events:
-          - pull_request.*
-          - push
-        branches:
-          - master
-    provisionerId: "{{ taskcluster.docker.provisionerId }}"
-    workerType: "{{ taskcluster.docker.workerType }}"
-    payload:
-      maxRunTime: 7200 # seconds (i.e. two hours)
-      image: "nixos/nix:latest"
-      features:
-        taskclusterProxy: true
-      env:
-        APP: "releng_clobberer"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services"
-      command:
-        - "/bin/bash"
-        - "-c"
-        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-
-  #
-  # staging | releng
-  #
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
 
   - metadata:
       name: "releng_docs"
-      description: "Test, build and deploy Releng Frontend"
+      description: "Test, build and deploy releng_docs"
       owner: "{{ event.head.user.email }}"
-      source: "{{ event.head.repo.url }}"
+      source: "https://github.com/mozilla-releng/services/tree/master/src/releng_docs"
+    scopes:
+      - secrets:get:garbage/garbas/temp-releng-services
+    extra:
+      github:
+        env: true
+        events:
+          - pull_request.*
+          - push
+        branches:
+          - master
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "releng_docs"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+
+  - metadata:
+      name: "releng_clobberer"
+      description: "Test, build and deploy releng_clobberer"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/master/src/releng_clobberer"
+    scopes:
+      - secrets:get:garbage/garbas/temp-releng-services
+    extra:
+      github:
+        env: true
+        events:
+          - pull_request.*
+          - push
+        branches:
+          - master
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "releng_docs"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+
+  - metadata:
+      name: "releng_frontend"
+      description: "Test, build and deploy releng_frontend"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/staging/src/releng_frontend"
     scopes:
       - secrets:get:garbage/garbas/temp-releng-services
     extra:
@@ -132,13 +123,13 @@ tasks:
       command:
         - "/bin/bash"
         - "-c"
-        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
 
   - metadata:
-      name: "releng_frontend"
-      description: "Test, build and deploy Releng Frontend"
+      name: "releng_docs"
+      description: "Test, build and deploy releng_docs"
       owner: "{{ event.head.user.email }}"
-      source: "{{ event.head.repo.url }}"
+      source: "https://github.com/mozilla-releng/services/tree/staging/src/releng_docs"
     scopes:
       - secrets:get:garbage/garbas/temp-releng-services
     extra:
@@ -156,18 +147,18 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_frontend"
+        APP: "releng_docs"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services"
       command:
         - "/bin/bash"
         - "-c"
-        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
 
   - metadata:
       name: "releng_clobberer"
-      description: "Test, build and deploy RelEng Clobberer service"
+      description: "Test, build and deploy releng_clobberer"
       owner: "{{ event.head.user.email }}"
-      source: "{{ event.head.repo.url }}"
+      source: "https://github.com/mozilla-releng/services/tree/staging/src/releng_clobberer"
     scopes:
       - secrets:get:garbage/garbas/temp-releng-services
     extra:
@@ -185,23 +176,105 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_clobberer"
+        APP: "releng_docs"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services"
       command:
         - "/bin/bash"
         - "-c"
-        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
 
-  #
-  # master | shipit
-  #
+  - metadata:
+      name: "releng_frontend"
+      description: "Test, build and deploy releng_frontend"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/production/src/releng_frontend"
+    scopes:
+      - secrets:get:garbage/garbas/temp-releng-services
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - production
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "releng_docs"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
 
+  - metadata:
+      name: "releng_docs"
+      description: "Test, build and deploy releng_docs"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/production/src/releng_docs"
+    scopes:
+      - secrets:get:garbage/garbas/temp-releng-services
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - production
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "releng_docs"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+
+  - metadata:
+      name: "releng_clobberer"
+      description: "Test, build and deploy releng_clobberer"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/production/src/releng_clobberer"
+    scopes:
+      - secrets:get:garbage/garbas/temp-releng-services
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - production
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "releng_docs"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
 
   - metadata:
       name: "shipit_frontend"
-      description: "Test, build and deploy ShipIt Frontend"
+      description: "Test, build and deploy shipit_frontend"
       owner: "{{ event.head.user.email }}"
-      source: "{{ event.head.repo.url }}"
+      source: "https://github.com/mozilla-releng/services/tree/master/src/shipit_frontend"
     scopes:
       - secrets:get:garbage/garbas/temp-releng-services
     extra:
@@ -220,18 +293,18 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "shipit_frontend"
+        APP: "releng_docs"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services"
       command:
         - "/bin/bash"
         - "-c"
-        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
 
   - metadata:
       name: "shipit_dashboard"
-      description: "Test, build and deploy ShipIt Dashboard service"
+      description: "Test, build and deploy shipit_dashboard"
       owner: "{{ event.head.user.email }}"
-      source: "{{ event.head.repo.url }}"
+      source: "https://github.com/mozilla-releng/services/tree/master/src/shipit_dashboard"
     scopes:
       - secrets:get:garbage/garbas/temp-releng-services
     extra:
@@ -250,9 +323,126 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "shipit_dashboard"
+        APP: "releng_docs"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services"
       command:
         - "/bin/bash"
         - "-c"
-        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/garbas/mozilla-releng/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd mozilla-releng-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+
+  - metadata:
+      name: "shipit_frontend"
+      description: "Test, build and deploy shipit_frontend"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/staging/src/shipit_frontend"
+    scopes:
+      - secrets:get:garbage/garbas/temp-releng-services
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - staging
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "releng_docs"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+
+  - metadata:
+      name: "shipit_dashboard"
+      description: "Test, build and deploy shipit_dashboard"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/staging/src/shipit_dashboard"
+    scopes:
+      - secrets:get:garbage/garbas/temp-releng-services
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - staging
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "releng_docs"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+
+  - metadata:
+      name: "shipit_frontend"
+      description: "Test, build and deploy shipit_frontend"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/production/src/shipit_frontend"
+    scopes:
+      - secrets:get:garbage/garbas/temp-releng-services
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - production
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "releng_docs"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+
+  - metadata:
+      name: "shipit_dashboard"
+      description: "Test, build and deploy shipit_dashboard"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/production/src/shipit_dashboard"
+    scopes:
+      - secrets:get:garbage/garbas/temp-releng-services
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - production
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "releng_docs"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/garbage/garbas/temp-releng-services"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+
