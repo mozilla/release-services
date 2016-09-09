@@ -100,14 +100,14 @@ build-apps: $(foreach app, $(APPS), build-app-$(app))
 build-app: require-APP build-app-$(APP)
 
 build-app-%: nix
-	nix-build nix/default.nix -A $(subst build-app-,,$@) -o result-$(subst build-app-,,$@)
+	nix-build nix/default.nix -A $(subst build-app-,,$@) -o result-$(subst build-app-,,$@) --fallback
 
 
 
 build-docker: require-APP build-docker-$(APP)
 
 build-docker-%: nix
-	nix-build nix/docker.nix -A $(subst build-docker-,,$@) -o result-docker-$(subst build-docker-,,$@)
+	nix-build nix/docker.nix -A $(subst build-docker-,,$@) -o result-docker-$(subst build-docker-,,$@) --fallback
 
 
 
@@ -194,7 +194,7 @@ build-tools: $(foreach tool, $(TOOLS), build-tool-$(tool))
 build-tool: require-TOOL build-tool-$(TOOL)
 
 build-tool-%: nix
-	nix-build nix/default.nix -A tools.$(subst build-tool-,,$@) -o result-tool-$(subst build-tool-,,$@)
+	nix-build nix/default.nix -A tools.$(subst build-tool-,,$@) -o result-tool-$(subst build-tool-,,$@) --fallback
 
 
 
@@ -222,7 +222,7 @@ deploy-cache: require-AWS require-CACHE_BUCKET build-tool-awscli build-cache
 
 
 taskcluster: nix
-	nix-build nix/taskcluster.nix -o result-taskcluster
+	nix-build nix/taskcluster.nix -o result-taskcluster --fallback
 	cp -f ./result-taskcluster .taskcluster.yml
 
 
