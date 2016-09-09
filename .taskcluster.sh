@@ -40,5 +40,3 @@ make deploy-cache \
     CACHE_BUCKET=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.CACHE_BUCKET'` \
     AWS_ACCESS_KEY_ID=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.AWS_ACCESS_KEY_ID'` \
     AWS_SECRET_ACCESS_KEY=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.AWS_SECRET_ACCESS_KEY'`
-RETVAL=$?
-[ $RETVAL -ne 0 ] && exit $RETVAL
