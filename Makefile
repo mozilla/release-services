@@ -146,7 +146,7 @@ deploy-production-all: $(foreach app, $(APPS), deploy-production-$(app))
 
 deploy-production: require-APP deploy-production-$(APP)
 
-deploy-production-HEROKU: require-APP
+deploy-production-HEROKU: require-APP require-HEROKU build-tool-push build-docker-$(APP)
 	./result-tool-push/bin/push \
 		`realpath ./result-docker-$(APP)` \
 		https://registry.heroku.com \
