@@ -6,7 +6,7 @@ let
   createTask =
     { name
     , branch
-    , secrets ? "garbage/garbas/temp-releng-services"
+    , secrets ? "garbage/garbas/temp-releng-services-${branch}"
     }:
     ''
     - metadata:
