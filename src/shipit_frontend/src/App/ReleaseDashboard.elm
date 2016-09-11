@@ -12,7 +12,6 @@ import Task exposing (Task)
 import Basics exposing (Never)
 
 import App.User as User
-import App.Hawk as Hawk
 
 -- Models
 
@@ -56,14 +55,8 @@ type alias Model = {
   -- All analysis in use
   all_analysis : WebData (List Analysis),
 
-  -- Current connected user
-  current_user : Maybe User.Model,
-
   -- Current Analysis used
   current_analysis : WebData (Analysis),
-
-  -- Hawk request
-  hawk : Hawk.Model,
 
   -- Backend base endpoint
   backend_dashboard_url : String
@@ -72,132 +65,125 @@ type alias Model = {
 type Msg
    = FetchedAllAnalysis (WebData (List Analysis))
    | FetchedAnalysis (WebData Analysis)
-   | SelectAnalysis Analysis
-   | UserUpdate (Maybe User.Model)
-   | HawkMsg Hawk.Msg
+   | FetchAllAnalysis
+   | FetchAnalysis Analysis
+   | ProcessHawkRequest
+   | UserMsg User.Msg
 
 
 init : String -> (Model, Cmd Msg)
 init backend_dashboard_url =
   -- Init empty model
-  let
-    (hawk, hawkCmd) = Hawk.init
-  in
-    ({
-      all_analysis = NotAsked,
-      current_analysis = NotAsked,
-      current_user = Nothing,
-      hawk = hawk,
-      backend_dashboard_url = backend_dashboard_url
-    }, Cmd.map HawkMsg hawkCmd)
+  ({
+    all_analysis = NotAsked,
+    current_analysis = NotAsked,
+    backend_dashboard_url = backend_dashboard_url
+  }, Cmd.none)
 
 -- Update
 
-update : Msg -> Model -> (Model, Cmd Msg)
-update msg model =
+update : Msg -> Model -> User.Model -> (Model, User.Model, Cmd Msg)
+update msg model user =
   case msg of
+    FetchAllAnalysis ->
+      let
+        newModel = { model | all_analysis = Loading }
+      in
+        fetchAllAnalysis newModel user
+
+    FetchAnalysis analysis ->
+      let
+        newModel = { model | current_analysis = Loading }
+      in
+        fetchAnalysis newModel user analysis.id
+
     FetchedAllAnalysis allAnalysis ->
       (
         { model | all_analysis = allAnalysis },
+        user,
         Cmd.none
       )
 
     FetchedAnalysis analysis ->
       (
         { model | current_analysis = analysis },
+        user,
         Cmd.none
       )
   
-    SelectAnalysis analysis ->
+    ProcessHawkRequest ->
+      -- Process awaiting tasks from HAWK
+      case user.hawk.requestType of
+        User.AllAnalysis ->
+          processAllAnalysis model user
+        User.Analysis ->
+          processAnalysis model user
+        _ ->
+          (model, user, Cmd.none)
+
+    UserMsg msg ->
+      -- Process messages for user
       let
-        newModel = { model | current_analysis = Loading }
+        (newUser, userCmd) = User.update msg user
       in
-        fetchAnalysis model analysis.id
-
-    UserUpdate user ->
-      let
-        newModel = { model | current_user = user }
-      in
-        -- Reload all analysis
-        fetchAllAnalysis newModel
-
-    HawkMsg msg ->
-      -- Forward messages to hawk
-      let
-        (hawk, newCmd) = Hawk.update msg model.hawk
-        newModel = { model | hawk = hawk }
-      in
-        -- Process awaiting tasks from HAWK
-        case hawk.requestType of
-          Hawk.AllAnalysis ->
-            processAllAnalysis newModel
-          Hawk.Analysis ->
-            processAnalysis newModel
-          _ ->
-            (newModel, Cmd.map HawkMsg newCmd )
+        ( model, user, Cmd.map UserMsg userCmd)
 
 
-fetchAllAnalysis : Model -> (Model, Cmd Msg)
-fetchAllAnalysis model =
+fetchAllAnalysis : Model -> User.Model -> (Model, User.Model, Cmd Msg)
+fetchAllAnalysis model user =
   -- Fetch all analysis summary
-  case model.current_user of
-    Just user ->
-      let 
-        url = model.backend_dashboard_url ++ "/analysis"
-        (hawk, cmd) = Hawk.update (Hawk.InitRequest user "GET" url Hawk.AllAnalysis) model.hawk
-      in
-        (
-          { model | hawk = hawk },
-          Cmd.map HawkMsg cmd
-        )
+  let 
+    url = model.backend_dashboard_url ++ "/analysis"
+    (user', userCmd) = User.update (User.InitHawkRequest "GET" url User.AllAnalysis) user
+  in
+    (
+      model,
+      user',
+      Cmd.map UserMsg userCmd
+    )
 
-    Nothing ->
-      (model, Cmd.none) -- no credentials 
-
-processAllAnalysis : Model -> (Model, Cmd Msg)
-processAllAnalysis model =
+processAllAnalysis : Model -> User.Model -> (Model, User.Model, Cmd Msg)
+processAllAnalysis model user =
   -- Decode and save all analysis
-  case model.hawk.task of
+  case user.hawk.task of
     Just task ->
       (
         model,
+        user,
         (Http.fromJson decodeAllAnalysis task)
         |> RemoteData.asCmd
         |> Cmd.map FetchedAllAnalysis
       )
     Nothing ->
-        ( model, Cmd.none )
+        ( model, user, Cmd.none )
 
-fetchAnalysis : Model -> Int -> (Model, Cmd Msg)
-fetchAnalysis model analysis_id =
+fetchAnalysis : Model -> User.Model -> Int -> (Model, User.Model, Cmd Msg)
+fetchAnalysis model user analysis_id =
   -- Fetch a specific analysis with details
-  case model.current_user of
-    Just user ->
-      let 
-        url = model.backend_dashboard_url ++ "/analysis/" ++ (toString analysis_id)
-        (hawk, cmd) = Hawk.update (Hawk.InitRequest user "GET" url Hawk.Analysis) model.hawk
-      in
-        (
-          { model | hawk = hawk },
-          Cmd.map HawkMsg cmd
-        )
+  let 
+    url = model.backend_dashboard_url ++ "/analysis/" ++ (toString analysis_id)
+    (user', userCmd) = User.update (User.InitHawkRequest "GET" url User.Analysis) user
+  in
+    (
+      model,
+      user',
+      Cmd.map UserMsg userCmd
+    )
 
-    Nothing ->
-      (model, Cmd.none) -- no credentials 
-
-processAnalysis : Model -> (Model, Cmd Msg)
-processAnalysis model =
+processAnalysis : Model -> User.Model -> (Model, User.Model, Cmd Msg)
+processAnalysis model user =
   -- Decode and save a single analysis
-  case model.hawk.task of
+  case user.hawk.task of
     Just task ->
       (
         model,
+        user,
         (Http.fromJson decodeAnalysis task)
         |> RemoteData.asCmd
         |> Cmd.map FetchedAnalysis
       )
     Nothing ->
-        ( model, Cmd.none )
+        ( model, user, Cmd.none )
 
 decodeAllAnalysis : Decoder (List Analysis)
 decodeAllAnalysis =

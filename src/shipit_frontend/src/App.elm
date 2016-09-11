@@ -14,7 +14,6 @@ import RemoteData as RemoteData exposing ( RemoteData(Loading, Success, NotAsked
 
 import App.Home as Home 
 import App.User as User
-import App.Hawk as Hawk
 import App.ReleaseDashboard as ReleaseDashboard
 import App.Utils exposing ( eventLink )
 
@@ -33,16 +32,16 @@ type Page
 type alias Model = {
   release_dashboard : ReleaseDashboard.Model,
   current_page : Page,
-  current_user : Maybe User.Model,
+  current_user : User.Model,
   backend_dashboard_url: String
 }
 
 type Msg
     = ShowPage Page
-    | UserMsg User.Msg
-    | HawkMsg Hawk.Msg
+    | UserMsg User.Msg -- triggers fetch all analysis
+    | HawkMsg User.Msg -- update current hawk header
     | ReleaseDashboardMsg ReleaseDashboard.Msg
-    | SelectAnalysis ReleaseDashboard.Analysis
+    | FetchAnalysis ReleaseDashboard.Analysis
 
 type alias Flags = {
     backend_dashboard_url : String
@@ -52,7 +51,7 @@ pageLink page attributes =
     eventLink (ShowPage page) attributes
 
 analysisLink analysis attributes =
-    eventLink (SelectAnalysis analysis) attributes
+    eventLink (FetchAnalysis analysis) attributes
 
 
 delta2url' : Model -> Model -> Maybe Builder
@@ -83,7 +82,7 @@ location2messages' builder =
                     "login" ->
                         [ 
                           Builder.query builder
-                              |> User.convertUrlQueryToModel
+                              |> User.convertUrlQueryToUser
                               |> User.LoggingIn
                               |> UserMsg
                         , ShowPage Home
@@ -107,20 +106,19 @@ init : Flags -> (Model, Cmd Msg)
 init flags =
     let
         (dashboard, newCmd) = ReleaseDashboard.init flags.backend_dashboard_url
+        (user, userCmd) = User.init flags.backend_dashboard_url
     in
     (
       {
          release_dashboard = dashboard,
          current_page = Home,
-         current_user = Nothing,
+         current_user = user,
          backend_dashboard_url = flags.backend_dashboard_url
       },
+      -- Follow through with sub parts init
       Cmd.batch [
-        -- Follow through with sub parts init
         Cmd.map ReleaseDashboardMsg newCmd,
-
-        -- Try to load local user
-        User.localstorage_load True
+        Cmd.map UserMsg userCmd
       ]
     )
 
@@ -131,46 +129,57 @@ update msg model =
         ShowPage page ->
             ( { model | current_page = page }, Cmd.none )
 
-        SelectAnalysis analysis ->
+        FetchAnalysis analysis ->
             let
-                (newModel, newCmd) = ReleaseDashboard.update (ReleaseDashboard.SelectAnalysis analysis) model.release_dashboard
+                (newModel, newUser, newCmd) = ReleaseDashboard.update (ReleaseDashboard.FetchAnalysis analysis) model.release_dashboard model.current_user
             in
                 (
-                  { model | release_dashboard = newModel, current_page = ReleaseDashboard },
+                  { model | release_dashboard = newModel, current_page = ReleaseDashboard, current_user = newUser },
                   Cmd.map ReleaseDashboardMsg newCmd
                 )
 
         ReleaseDashboardMsg msg' ->
             let
-                (newModel, newCmd) = ReleaseDashboard.update msg' model.release_dashboard
-            in
-                ( { model | release_dashboard = newModel }, Cmd.map ReleaseDashboardMsg newCmd )
-
-        UserMsg usermsg -> 
-            let
-                (newUser, userCmd) = User.update usermsg model.current_user
-
-                -- Send new user to dashboard
-                -- TODO: use a message ?
-                (newDashboard, dashboardCmd) = ReleaseDashboard.update (ReleaseDashboard.UserUpdate newUser) model.release_dashboard
+                (newModel, newUser, newCmd) = ReleaseDashboard.update msg' model.release_dashboard model.current_user
             in
                 (
-                  { model | current_user = newUser, release_dashboard = newDashboard },
+                  { model | release_dashboard = newModel, current_user = newUser },
+                  Cmd.map ReleaseDashboardMsg newCmd
+                )
+
+        UserMsg usermsg -> 
+          let
+              -- Use current user
+              (newUser, userCmd) = User.update usermsg model.current_user
+
+              -- Reload all analysis on an user update
+              (newDashboard, newUser', newCmd) = ReleaseDashboard.update ReleaseDashboard.FetchAllAnalysis model.release_dashboard newUser
+            in
+                (
+                  { model | current_user = newUser', release_dashboard = newDashboard },
                   Cmd.batch [
                     Cmd.map UserMsg userCmd,
-                    Cmd.map ReleaseDashboardMsg dashboardCmd
+                    Cmd.map ReleaseDashboardMsg newCmd
                   ]
                 )
 
-        HawkMsg hawkMsg ->
-            -- Send msg to Hawk module through RD :/
-            -- TODO: attach Hawk to user ?
-            let
-                l = Debug.log "APP: hawk MSG" hawkMsg
-                (newDashboard, dashboardCmd) = ReleaseDashboard.update (ReleaseDashboard.HawkMsg hawkMsg) model.release_dashboard
-            in
-                ( { model | release_dashboard = newDashboard }, Cmd.map ReleaseDashboardMsg dashboardCmd)
+        HawkMsg usermsg -> 
+          let
+              -- Use current user
+              (newUser, userCmd) = User.update usermsg model.current_user
 
+              -- Send message to RD to process awaiting requests
+              -- TODO: filter requests here ?
+              (newDashboard, newUser', newCmd) = ReleaseDashboard.update ReleaseDashboard.ProcessHawkRequest model.release_dashboard newUser
+              
+            in
+                (
+                  { model | current_user = newUser', release_dashboard = newDashboard },
+                  Cmd.batch [
+                    Cmd.map UserMsg userCmd,
+                    Cmd.map ReleaseDashboardMsg newCmd
+                  ]
+                )
 
 viewPage model =
     case model.current_page of
@@ -196,34 +205,36 @@ viewDropdown title pages =
           ]
     ]
 
+viewLogin =
+  let
+      loginTarget =
+          Just ( "/login"
+               , "RelengAPI is a collection of Release Engineering services"
+               )
+      loginUrl =
+          { url = "https://login.taskcluster.net"
+          , target = loginTarget
+          }
+      loginMsg = UserMsg <| User.Login loginUrl
+  in
+      [ eventLink loginMsg [ class "nav-link" ] [ text "Login" ]
+      ]
 
 viewUser model =
-    case model.current_user of
-        Just user ->
-            viewDropdown (Maybe.withDefault "UNKNOWN" user.clientId )
-                    [ a [ class "dropdown-item"
-                        , href "https://tools.taskcluster.net/credentials"
-                        , target "_blank"
-                        ]
-                        [ text "Manage credentials" ]
-                    , eventLink (UserMsg User.Logout)
-                                [ class "dropdown-item" ]
-                                [ text "Logout" ]
+    case model.current_user.user of
+      Just user ->
+        viewDropdown user.clientId
+                [ a [ class "dropdown-item"
+                    , href "https://tools.taskcluster.net/credentials"
+                    , target "_blank"
                     ]
-        Nothing ->
-            let
-                loginTarget =
-                    Just ( "/login"
-                         , "RelengAPI is a collection of Release Engineering services"
-                         )
-                loginUrl =
-                    { url = "https://login.taskcluster.net"
-                    , target = loginTarget
-                    }
-                loginMsg = UserMsg <| User.Login loginUrl
-            in
-                [ eventLink loginMsg [ class "nav-link" ] [ text "Login" ]
-                ]
+                    [ text "Manage credentials" ]
+                , eventLink (UserMsg User.Logout)
+                            [ class "dropdown-item" ]
+                            [ text "Logout" ]
+              ]
+
+      Nothing -> viewLogin
 
 
 viewNavBar model =
@@ -291,7 +302,7 @@ view model =
       div [ class "container" ] ( viewNavBar model )
     ],
     div [ id "content" ] [
-      case model.current_user of
+      case model.current_user.user of
         Just user ->
           div [class "container-fluid" ] [ viewPage model ]
         Nothing ->
@@ -309,5 +320,6 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch [ 
       Sub.map UserMsg (User.localstorage_get (User.LoggedIn)),
-      Sub.map HawkMsg (Hawk.hawk_get (Hawk.BuiltHeader)) 
+      Sub.map HawkMsg (User.hawk_get (User.BuiltHawkHeader)) 
+--      Sub.map HawkMsg (User.hawk_get (User.BuiltHawkHeader)) 
     ]
