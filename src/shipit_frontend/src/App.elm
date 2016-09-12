@@ -1,7 +1,7 @@
 port module App exposing (..)
 
 import Dict exposing ( Dict )
-import Html exposing ( Html, div, nav, button, text, a, ul, li, footer, hr, span, strong )
+import Html exposing ( Html, div, nav, button, text, a, ul, li, footer, hr, span, strong, p )
 import Html.App
 import Html.Attributes exposing ( attribute, id, class, type', href, target )
 import Html.Events as Events
@@ -149,8 +149,8 @@ update msg model =
 
         UserMsg usermsg -> 
           let
-              -- Use current user
-              (newUser, userCmd) = User.update usermsg model.current_user
+              -- Update current user
+              (newUser, workflow, userCmd) = User.update usermsg model.current_user
 
               -- Reload all analysis on an user update
               (newDashboard, newUser', newCmd) = ReleaseDashboard.update ReleaseDashboard.FetchAllAnalysis model.release_dashboard newUser
@@ -164,22 +164,32 @@ update msg model =
                 )
 
         HawkMsg usermsg -> 
-          let
-              -- Use current user
-              (newUser, userCmd) = User.update usermsg model.current_user
-
-              -- Send message to RD to process awaiting requests
-              -- TODO: filter requests here ?
-              (newDashboard, newUser', newCmd) = ReleaseDashboard.update ReleaseDashboard.ProcessHawkRequest model.release_dashboard newUser
-              
+            let
+              -- Update current user
+              (newUser, workflow, userCmd) = User.update usermsg model.current_user
             in
-                (
-                  { model | current_user = newUser', release_dashboard = newDashboard },
-                  Cmd.batch [
-                    Cmd.map UserMsg userCmd,
-                    Cmd.map ReleaseDashboardMsg newCmd
-                  ]
-                )
+
+              case workflow of
+                Just workflow' ->
+                  -- Send message to sub parts to process requests
+                  let
+                    (dashboard, newUser', dashboardCmd) = ReleaseDashboard.update (ReleaseDashboard.ProcessWorkflow workflow') model.release_dashboard newUser
+                    (newUser'', workflow, userCmd') = User.update (User.ProcessWorkflow workflow') newUser'
+                  in
+                    (
+                      { model | current_user = newUser'', release_dashboard = dashboard },
+                      Cmd.batch [
+                        Cmd.map UserMsg userCmd',
+                        Cmd.map ReleaseDashboardMsg dashboardCmd
+                      ]
+                    )
+
+                Nothing ->
+                  -- Just run user update.
+                  (
+                    { model | current_user = newUser },
+                    Cmd.map UserMsg userCmd
+                  )
 
 viewPage model =
     case model.current_page of
@@ -284,6 +294,26 @@ viewNavAnalysis analysis =
       ]
     ]
 
+viewBugzillaAuth: User.Model -> Html Msg
+viewBugzillaAuth user = 
+
+  case user.bugzilla_auth of
+    NotAsked ->
+      p [class "alert alert-info"] [text "Initializing auth..."]
+
+    Loading ->
+      p [class "alert alert-info"] [text "Loading bugzilla auth."]
+
+    Failure err ->
+      p [class "alert alert-error"] [text ("Error while loading bugzilla auth: " ++ toString err)]
+
+    Success auth -> 
+      if auth.authenticated then
+        p [class "alert alert-success"] [text "Authenticated on bugzilla !"]
+
+      else
+        p [class "alert alert-error"] [text ("Error with your bugzilla auth: " ++ auth.message)]
+
 viewFooter =
     [ hr [] []
     , ul [] 
@@ -302,6 +332,7 @@ view model =
       div [ class "container" ] ( viewNavBar model )
     ],
     div [ id "content" ] [
+      viewBugzillaAuth model.current_user,
       case model.current_user.user of
         Just user ->
           div [class "container-fluid" ] [ viewPage model ]
@@ -321,5 +352,4 @@ subscriptions model =
     Sub.batch [ 
       Sub.map UserMsg (User.localstorage_get (User.LoggedIn)),
       Sub.map HawkMsg (User.hawk_get (User.BuiltHawkHeader)) 
---      Sub.map HawkMsg (User.hawk_get (User.BuiltHawkHeader)) 
     ]

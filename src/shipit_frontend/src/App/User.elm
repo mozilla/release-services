@@ -3,6 +3,7 @@ port module App.User exposing (..)
 import Dict exposing ( Dict )
 import Json.Decode as JsonDecode exposing (Decoder, (:=) )
 import Json.Encode as JsonEncode
+import RemoteData as RemoteData exposing ( WebData, RemoteData(Loading, Success, NotAsked, Failure) )
 import App.Utils exposing ( eventLink )
 import Task exposing (Task)
 import Http
@@ -13,20 +14,26 @@ type alias LoginUrl =
     }
 
 type alias Hawk = {
-  request : Maybe HawkRequest,
+  request : HawkRequest,
   header : Maybe String,
-  response : Maybe Http.Response,
   task : Maybe (Task Http.RawError Http.Response),
   requestType : HawkRequestType
 }
 
 type alias HawkRequest = {
   -- Simple data for port communication
+  workflowId : Int,
   id : String,
   key : String,
   certificate : Maybe Certificate,
   url : String,
   method : String
+}
+
+type alias HawkResponse = {
+  -- Simple data for port communication
+  workflowId : Int,
+  header : String
 }
 
 type alias Certificate =
@@ -45,10 +52,21 @@ type alias User = {
   certificate : Maybe Certificate
 }
 
+type alias BugzillaAuth = {
+  authenticated : Bool,
+  message : String
+}
+
 type alias Model = {
   backend_dashboard_url : String,
   user : Maybe User,
-  hawk : Hawk
+
+  -- Hawk workflows
+  workflows : Dict Int Hawk,
+  workflow_id : Int,
+
+  -- Bugzilla auth
+  bugzilla_auth : WebData (BugzillaAuth)
 }
 
 type HawkRequestType = Empty
@@ -69,8 +87,10 @@ type Msg
   | LoggedIn (Maybe User)
   | LocalUser
   | Logout 
+  | ProcessWorkflow Hawk
   | InitHawkRequest String String HawkRequestType
-  | BuiltHawkHeader String
+  | BuiltHawkHeader (Maybe HawkResponse)
+  | FetchedBugzillaAuth (WebData BugzillaAuth)
 
 
 init : String -> (Model, Cmd Msg)
@@ -80,26 +100,22 @@ init backend_dashboard_url =
     model = {
       backend_dashboard_url = backend_dashboard_url, 
       user = Nothing,
-      hawk = {
-        request = Nothing,
-        header = Nothing,
-        response = Nothing,
-        task = Nothing,
-        requestType = Empty
-      }
+      bugzilla_auth = NotAsked,
+      workflows = Dict.empty,
+      workflow_id = 0
     }
   in
     -- Load user from local storage
     ( model, localstorage_load True )
 
-update : Msg -> Model -> (Model, Cmd Msg)
+update : Msg -> Model -> (Model, (Maybe Hawk), Cmd Msg)
 update msg model =
   case msg of
     Login url ->
-      ( model, redirect url )
+      ( model, Nothing, redirect url )
 
     LoggingIn user ->
-      ( model, localstorage_set { name = "shipit-credentials"
+      ( model, Nothing, localstorage_set { name = "shipit-credentials"
                                 , value = Just user
                                 }
       )
@@ -109,24 +125,42 @@ update msg model =
       -- Also save new user !
       let
         model' = { model | user = user }
-        url = "/bugzilla/auth"
+        url = model.backend_dashboard_url ++ "/bugzilla/auth"
+        l = Debug.log "Check bugzilla" url
       in
-        ( model' , Cmd.none )
-        -- buildHawkRequest model' "GET" url GetBugzillaAuth
+        buildHawkRequest model' "GET" url GetBugzillaAuth
 
     LocalUser ->
       -- Fetch local user from localstorage
-      ( model, localstorage_load True )
+      ( model, Nothing, localstorage_load True )
 
     Logout ->
-      ( model, localstorage_remove True )
+      ( model, Nothing, localstorage_remove True )
 
     InitHawkRequest method url requestType ->
       -- Start a new request
       buildHawkRequest model method url requestType 
 
-    BuiltHawkHeader header ->
-      saveHawkHeader model header
+    BuiltHawkHeader response ->
+      case response of
+        Just response' -> 
+          saveHawkHeader model response'
+        Nothing ->
+          ( model, Nothing, Cmd.none)
+
+    ProcessWorkflow workflow ->
+      -- Process task from workflow
+      let
+        cmd = case workflow.requestType of
+          GetBugzillaAuth ->
+            processBugzillaAuth workflow
+          _ ->
+            Cmd.none
+      in
+        (model, Nothing, cmd)
+
+    FetchedBugzillaAuth auth ->
+      ( { model | bugzilla_auth = auth }, Nothing, Cmd.none )
 
 decodeCertificate : String -> Result String Certificate
 decodeCertificate text =
@@ -154,57 +188,72 @@ convertUrlQueryToUser query =
                  Nothing -> Nothing
     }
 
-buildHawkRequest: Model -> String -> String -> HawkRequestType -> (Model, Cmd Msg)
+buildHawkRequest: Model -> String -> String -> HawkRequestType -> (Model, (Maybe Hawk), Cmd Msg)
 buildHawkRequest model method url requestType =
   -- Build a new hawk request towards a backend
   case model.user of
     Just user ->
       let
+        -- Build an id to match port & hawk requests
+        wid = model.workflow_id + 1
+
+        -- Build hawk request for port
         request = {
           id = user.clientId,
+          workflowId = wid,
           key = user.accessToken,
           certificate = user.certificate,
           url = url,
           method = method
         }
 
-        -- Reset hawk
-        hawk = {
-          request = Just request,
+        -- Init hawk workflow
+        workflow = {
+          request = request,
           requestType = requestType,
           header = Nothing,
-          response = Nothing,
           task = Nothing
         }
+
+        -- Add the new request in dict
+        workflows = Dict.insert wid workflow model.workflows
       in
-        -- Use port to build the header
         (
-          { model | hawk = hawk },
-          hawk_build request
+          { model | workflows = workflows, workflow_id = wid },
+          Just workflow,
+          hawk_build workflow.request
         )
 
     Nothing ->
-      ( model, Cmd.none )
+      ( model, Nothing, Cmd.none )
 
-saveHawkHeader: Model -> String -> (Model, Cmd Msg)
-saveHawkHeader model header =
-  -- Save the newly received hawk header
-  case model.user of
-    Just user ->
-      case model.hawk.request of
-        -- Store header and build Task to send request later on
-        Just request ->
-          let
-            hawk = model.hawk
-            hawk' = { hawk | header = Just header, task = Just (buildHttpTask request header) }
-          in
-            ( { model | hawk = hawk' }, Cmd.none )
+saveHawkHeader: Model -> HawkResponse -> (Model, (Maybe Hawk), Cmd Msg)
+saveHawkHeader model response =
+  -- Find matching worfkow for response
+  let
+    wid = response.workflowId
+  in
+    case Dict.get wid model.workflows of
+      Just workflow ->
+        let 
+          -- Use the newly received hawk header
+          -- to build the http task
+          workflow' = { workflow |
+            header = Just response.header,
+            task = Just (buildHttpTask workflow.request response.header)
+          }
 
-        Nothing ->
-            ( model, Cmd.none )
+          -- Update existing workflow
+          workflows = Dict.insert wid workflow' model.workflows
+        in
+          (
+            { model | workflows = workflows },
+            Just workflow',
+             Cmd.none
+          )
 
-    Nothing ->
-      ( model, Cmd.none )
+      Nothing ->
+          ( model, Nothing, Cmd.none )
 
 buildHttpTask: HawkRequest -> String -> Task Http.RawError Http.Response
 buildHttpTask request header =
@@ -220,21 +269,24 @@ buildHttpTask request header =
   }
 
 
+processBugzillaAuth: Hawk -> Cmd Msg
+processBugzillaAuth workflow =
+  -- Decode and save all analysis
+  case workflow.task of
+    Just task ->
+      (Http.fromJson decodeBugzillaAuth task)
+      |> RemoteData.asCmd
+      |> Cmd.map FetchedBugzillaAuth
 
---processBugzillaAuth: (Maybe Model) -> ((Maybe Model), Cmd Msg)
---processBugzillaAuth model =
---  -- Decode and save all analysis
---  case model.hawk.task of
---    Just task ->
---      (
---        model,
---        (Http.fromJson decodeAllAnalysis task)
---        |> RemoteData.asCmd
---        |> Cmd.map FetchedAllAnalysis
---      )
---    Nothing ->
---        ( model, Cmd.none )
---
+    Nothing ->
+        Cmd.none
+
+decodeBugzillaAuth : Decoder BugzillaAuth
+decodeBugzillaAuth =
+  JsonDecode.object2 BugzillaAuth
+    ("authenticated" := JsonDecode.bool)
+    ("message" := JsonDecode.string)
+
 -- PORTS
 
 -- XXX: until https://github.com/elm-lang/local-storage is ready
@@ -254,5 +306,5 @@ port localstorage_set : LocalStorage -> Cmd msg
 port redirect : LoginUrl -> Cmd msg
 
 -- Hawk ports
-port hawk_get : (String -> msg) -> Sub msg
+port hawk_get : (Maybe HawkResponse -> msg) -> Sub msg
 port hawk_build : HawkRequest -> Cmd msg

@@ -59,7 +59,10 @@ app.ports.hawk_build.subscribe(function(request){
   });
 
   // Send back header
-  app.ports.hawk_get.send(header.field);
+  app.ports.hawk_get.send({
+    workflowId : request.workflowId,
+    header : header.field,
+  });
 });
 
 app.ports.redirect.subscribe(function(redirect) {

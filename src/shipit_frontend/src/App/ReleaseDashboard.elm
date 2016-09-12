@@ -11,7 +11,7 @@ import Http
 import Task exposing (Task)
 import Basics exposing (Never)
 
-import App.User as User
+import App.User as User exposing (Hawk)
 
 -- Models
 
@@ -67,7 +67,7 @@ type Msg
    | FetchedAnalysis (WebData Analysis)
    | FetchAllAnalysis
    | FetchAnalysis Analysis
-   | ProcessHawkRequest
+   | ProcessWorkflow Hawk
    | UserMsg User.Msg
 
 
@@ -110,21 +110,25 @@ update msg model user =
         user,
         Cmd.none
       )
-  
-    ProcessHawkRequest ->
-      -- Process awaiting tasks from HAWK
-      case user.hawk.requestType of
-        User.AllAnalysis ->
-          processAllAnalysis model user
-        User.Analysis ->
-          processAnalysis model user
-        _ ->
-          (model, user, Cmd.none)
+
+    ProcessWorkflow workflow ->
+      -- Process task from workflow
+      let
+        cmd = case workflow.requestType of
+          User.AllAnalysis ->
+            processAllAnalysis workflow
+          User.Analysis ->
+            processAnalysis workflow
+          _ ->
+            Cmd.none
+      in
+        (model, user, cmd)
+        
 
     UserMsg msg ->
       -- Process messages for user
       let
-        (newUser, userCmd) = User.update msg user
+        (newUser, workflow, userCmd) = User.update msg user
       in
         ( model, user, Cmd.map UserMsg userCmd)
 
@@ -134,7 +138,7 @@ fetchAllAnalysis model user =
   -- Fetch all analysis summary
   let 
     url = model.backend_dashboard_url ++ "/analysis"
-    (user', userCmd) = User.update (User.InitHawkRequest "GET" url User.AllAnalysis) user
+    (user', workflow, userCmd) = User.update (User.InitHawkRequest "GET" url User.AllAnalysis) user
   in
     (
       model,
@@ -142,27 +146,24 @@ fetchAllAnalysis model user =
       Cmd.map UserMsg userCmd
     )
 
-processAllAnalysis : Model -> User.Model -> (Model, User.Model, Cmd Msg)
-processAllAnalysis model user =
+processAllAnalysis : Hawk -> Cmd Msg
+processAllAnalysis workflow =
   -- Decode and save all analysis
-  case user.hawk.task of
+  case workflow.task of
     Just task ->
-      (
-        model,
-        user,
-        (Http.fromJson decodeAllAnalysis task)
-        |> RemoteData.asCmd
-        |> Cmd.map FetchedAllAnalysis
-      )
+      (Http.fromJson decodeAllAnalysis task)
+      |> RemoteData.asCmd
+      |> Cmd.map FetchedAllAnalysis
+
     Nothing ->
-        ( model, user, Cmd.none )
+        Cmd.none
 
 fetchAnalysis : Model -> User.Model -> Int -> (Model, User.Model, Cmd Msg)
 fetchAnalysis model user analysis_id =
   -- Fetch a specific analysis with details
   let 
     url = model.backend_dashboard_url ++ "/analysis/" ++ (toString analysis_id)
-    (user', userCmd) = User.update (User.InitHawkRequest "GET" url User.Analysis) user
+    (user', workflow, userCmd) = User.update (User.InitHawkRequest "GET" url User.Analysis) user
   in
     (
       model,
@@ -170,20 +171,17 @@ fetchAnalysis model user analysis_id =
       Cmd.map UserMsg userCmd
     )
 
-processAnalysis : Model -> User.Model -> (Model, User.Model, Cmd Msg)
-processAnalysis model user =
+processAnalysis : Hawk -> Cmd Msg
+processAnalysis workflow =
   -- Decode and save a single analysis
-  case user.hawk.task of
+  case workflow.task of
     Just task ->
-      (
-        model,
-        user,
-        (Http.fromJson decodeAnalysis task)
-        |> RemoteData.asCmd
-        |> Cmd.map FetchedAnalysis
-      )
+      (Http.fromJson decodeAnalysis task)
+      |> RemoteData.asCmd
+      |> Cmd.map FetchedAnalysis
+
     Nothing ->
-        ( model, user, Cmd.none )
+        Cmd.none
 
 decodeAllAnalysis : Decoder (List Analysis)
 decodeAllAnalysis =
