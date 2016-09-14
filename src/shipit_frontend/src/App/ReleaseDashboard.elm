@@ -138,8 +138,11 @@ fetchAllAnalysis model user =
   -- Fetch all analysis summary
   let 
     params = {
-      method = "GET",
-      url = model.backend_dashboard_url ++ "/analysis",
+      backend = {
+        method = "GET",
+        url = model.backend_dashboard_url ++ "/analysis"
+      },
+      target = Nothing,
       body = Nothing,
       requestType = User.AllAnalysis
     }
@@ -168,8 +171,11 @@ fetchAnalysis model user analysis_id =
   -- Fetch a specific analysis with details
   let 
     params = {
-      method = "GET",
-      url = model.backend_dashboard_url ++ "/analysis/" ++ (toString analysis_id),
+      backend = {
+        method = "GET",
+        url = model.backend_dashboard_url ++ "/analysis/" ++ (toString analysis_id)
+      },
+      target = Nothing,
       body = Nothing,
       requestType = User.Analysis
     }

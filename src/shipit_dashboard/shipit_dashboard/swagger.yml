@@ -29,6 +29,33 @@ paths:
         200:
           description: A specific analysis
 
+  /bugzilla/auth:
+    get:
+      operationId: "shipit_dashboard.api.get_bugzilla_auth"
+      responses:
+        200:
+          description: Check Bugzilla credentials status
+          schema:
+            $ref: '#/definitions/BugzillaAuth'
+
+    post:
+      operationId: "shipit_dashboard.api.update_bugzilla_auth"
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/BugzillaCredentials'
+      responses:
+        200:
+          description: Update Bugzilla credentials
+          schema:
+            $ref: '#/definitions/BugzillaAuth'
+
+
 definitions:
 
   Success:
@@ -125,4 +152,23 @@ definitions:
       author:
         $ref: '#/definitions/Contributor'
       comment:
+        type: string
+
+  BugzillaAuth:
+    type: object
+    required:
+      - authenticated
+      - message
+    properties:
+      authenticated:
+        type: boolean
+      message:
+        type: string
+
+  BugzillaCredentials:
+    type: object
+    properties:
+      login:
+        type: string 
+      token:
         type: string

@@ -16,16 +16,22 @@ type alias LoginUrl =
 
 type alias Hawk = {
   request : HawkRequest,
-  header : Maybe String,
+  header_backend : Maybe String,
+  header_target : Maybe String,
   task : Maybe (Task Http.RawError Http.Response),
   requestType : HawkRequestType
+}
+
+type alias UrlMethod = {
+  url : String,
+  method: String
 }
 
 type alias HawkParameters = {
   -- Simple structure to store parameters
   -- before building an hawk request
-  url : String,
-  method : String,
+  backend : UrlMethod, -- Build an hawk header for backend auth
+  target : Maybe UrlMethod, -- Build an optional hawk header for a sub target hit from backend (TC)
   body : Maybe String,
   requestType : HawkRequestType
 }
@@ -36,15 +42,16 @@ type alias HawkRequest = {
   id : String,
   key : String,
   certificate : Maybe Certificate,
-  url : String,
-  method : String,
+  backend : UrlMethod,
+  target : Maybe UrlMethod,
   body : Maybe String
 }
 
 type alias HawkResponse = {
   -- Simple data for port communication
   workflowId : Int,
-  header : String
+  header_backend : String,
+  header_target : Maybe String
 }
 
 type alias Certificate =
@@ -156,8 +163,15 @@ update msg model =
       let
         model' = { model | user = user }
         params = {
-          method = "GET",
-          url = model.backend_dashboard_url ++ "/bugzilla/auth",
+          backend = {
+            method = "GET",
+            url = model.backend_dashboard_url ++ "/bugzilla/auth"
+          },
+          target = Just {
+            -- Backend will check the secret
+            method = "GET",
+            url = "https://secrets.taskcluster.net/v1/secret/garbage%2Fshipit%2Fbugzilla"
+          },
           body = Nothing,
           requestType = GetBugzillaAuth
         }
@@ -209,8 +223,14 @@ update msg model =
               ("token", JsonEncode.string creds'.token)
             ])
             params = {
-              method = "POST",
-              url = model.backend_dashboard_url ++ "/bugzilla/auth",
+              backend = {
+                method = "POST",
+                url = model.backend_dashboard_url ++ "/bugzilla/auth"
+              },
+              target = Just {
+                method = "PUT",
+                url = "https://secrets.taskcluster.net/v1/secret/garbage%2Fshipit%2Fbugzilla"
+              },
               body = Just credsJson,    
               requestType = UpdateBugzillaAuth
             }
@@ -275,8 +295,8 @@ buildHawkRequest model params =
           workflowId = wid,
           key = user.accessToken,
           certificate = user.certificate,
-          url = params.url,
-          method = params.method,
+          backend = params.backend,
+          target = params.target,
           body = params.body
         }
 
@@ -284,7 +304,8 @@ buildHawkRequest model params =
         workflow = {
           request = request,
           requestType = params.requestType,
-          header = Nothing,
+          header_backend = Nothing,
+          header_target = Nothing,
           task = Nothing
         }
 
@@ -316,8 +337,9 @@ saveHawkHeader model response =
           -- Use the newly received hawk header
           -- to build the http task
           workflow' = { workflow |
-            header = Just response.header,
-            task = Just (buildHttpTask workflow.request response.header)
+            header_backend = Just response.header_backend,
+            header_target = response.header_target,
+            task = Just (buildHttpTask workflow.request response.header_backend response.header_target)
           }
 
           -- Update existing workflow
@@ -332,21 +354,29 @@ saveHawkHeader model response =
       Nothing ->
           ( model, [], Cmd.none )
 
-buildHttpTask: HawkRequest -> String -> Task Http.RawError Http.Response
-buildHttpTask request header =
+buildHttpTask: HawkRequest -> String -> Maybe String -> Task Http.RawError Http.Response
+buildHttpTask request header_backend header_target =
   -- Build Http request task
   let
     body = case request.body of
       Just body' -> Http.string body'
       Nothing -> Http.empty
+
+    headers = [
+      -- Always use backend Hawk header
+      ( "Authorization", header_backend ),
+      ( "Accept", "application/json" ),
+      ( "Content-Type", "application/json" )
+    ] ++ case header_target of
+      -- Only use extra target header when available
+      Just h -> [ ("X-Authorization-Target", h) ]
+      Nothing -> []
   in
+    -- Always send to backend
     Http.send Http.defaultSettings {
-      url = request.url,
-      verb = request.method,
-      headers = [
-        ( "Authorization", header ),
-        ( "Accept", "application/json" )
-      ],
+      url = request.backend.url,
+      verb = request.backend.method,
+      headers = headers,
       body = body
     }
 

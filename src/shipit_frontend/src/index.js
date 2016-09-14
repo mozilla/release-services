@@ -48,20 +48,27 @@ app.ports.hawk_build.subscribe(function(request){
   if(request.certificate)
     extData = new Buffer(JSON.stringify({certificate: request.certificate})).toString('base64');
 
-  // Build hawk header
-  var header = Hawk.client.header(request.url, request.method, {
+  // Generic payload for both headers
+  var payload = {
     credentials: {
       id: request.id,
       key: request.key,
       algorithm: 'sha256'
     },
     ext: extData,
-  });
+  };
 
-  // Send back header
+  // Build backend & target (optional) headers
+  var backend = Hawk.client.header(request.backend.url, request.backend.method, payload);
+  var target = null;
+  if(request.target)
+    target = Hawk.client.header(request.target.url, request.target.method, payload);
+
+  // Send back headers
   app.ports.hawk_get.send({
     workflowId : request.workflowId,
-    header : header.field,
+    header_backend : backend.field,
+    header_target : target ? target.field : null,
   });
 });
 

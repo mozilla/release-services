@@ -71,6 +71,31 @@ class TaskclusterUser(BaseUser):
     def get_permissions(self):
         return self.scopes
 
+    def taskcluster_secrets(self):
+        """
+        Configure the TaskCluster Secrets client
+        with optional target HAWK header
+        """
+        class MySecrets(taskcluster.Secrets):
+            # TODO: make patch upstream to support this use case
+            def __init__(self, authorization_header=None, *args, **kwargs):
+                self.authorization_header = authorization_header
+                super(MySecrets, self).__init__(*args, **kwargs)
+
+            def makeHeaders(self, *args, **kwargs):
+                headers = super(MySecrets, self).makeHeaders(*args, **kwargs)
+
+                # Override auth header when local one is provided
+                if self.authorization_header:
+                    headers['Authorization'] = self.authorization_header
+
+                return headers
+
+        target_header = request.environ.get('HTTP_X_AUTHORIZATION_TARGET')
+        if not target_header:
+            raise Exception('Missing X-AUTHORIZATION-TARGET header')
+
+        return MySecrets(target_header)
 
 class Auth(object):
 
