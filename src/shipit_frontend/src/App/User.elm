@@ -11,12 +11,22 @@ import Http
 type alias LoginUrl =
     { url : String
     , target : Maybe (String, String)
+    , targetName : String
     }
 
 type alias Hawk = {
   request : HawkRequest,
   header : Maybe String,
   task : Maybe (Task Http.RawError Http.Response),
+  requestType : HawkRequestType
+}
+
+type alias HawkParameters = {
+  -- Simple structure to store parameters
+  -- before building an hawk request
+  url : String,
+  method : String,
+  body : Maybe String,
   requestType : HawkRequestType
 }
 
@@ -27,7 +37,8 @@ type alias HawkRequest = {
   key : String,
   certificate : Maybe Certificate,
   url : String,
-  method : String
+  method : String,
+  body : Maybe String
 }
 
 type alias HawkResponse = {
@@ -57,6 +68,11 @@ type alias BugzillaAuth = {
   message : String
 }
 
+type alias BugzillaCredentials = {
+  login: String,
+  token: String
+}
+
 type alias Model = {
   backend_dashboard_url : String,
   user : Maybe User,
@@ -64,6 +80,7 @@ type alias Model = {
   -- Hawk workflows
   workflows : Dict Int Hawk,
   workflow_id : Int,
+  skipped_requests : List HawkParameters,
 
   -- Bugzilla auth
   bugzilla_auth : WebData (BugzillaAuth)
@@ -88,10 +105,10 @@ type Msg
   | LocalUser
   | Logout 
   | ProcessWorkflow Hawk
-  | InitHawkRequest String String HawkRequestType
+  | InitHawkRequest HawkParameters
   | BuiltHawkHeader (Maybe HawkResponse)
   | FetchedBugzillaAuth (WebData BugzillaAuth)
-
+  | ReceivedBugzillaCreds (Maybe BugzillaCredentials)
 
 init : String -> (Model, Cmd Msg)
 init backend_dashboard_url =
@@ -102,51 +119,69 @@ init backend_dashboard_url =
       user = Nothing,
       bugzilla_auth = NotAsked,
       workflows = Dict.empty,
-      workflow_id = 0
+      workflow_id = 0,
+      skipped_requests = []
     }
   in
     -- Load user from local storage
     ( model, localstorage_load True )
 
-update : Msg -> Model -> (Model, (Maybe Hawk), Cmd Msg)
+test : HawkParameters -> (Model, List Hawk, Cmd Msg) -> (Model, List Hawk, Cmd Msg)
+test params full =
+  let
+    (model, hawk, cmd) = full
+    (model', hawk', cmd') = buildHawkRequest model params
+  in
+    ( model', hawk ++ hawk', Cmd.batch [ cmd, cmd'] )
+
+
+update : Msg -> Model -> (Model, List Hawk, Cmd Msg)
 update msg model =
   case msg of
     Login url ->
-      ( model, Nothing, redirect url )
+      ( model, [], redirect url )
 
     LoggingIn user ->
-      ( model, Nothing, localstorage_set { name = "shipit-credentials"
-                                , value = Just user
-                                }
+      (
+        model, [], localstorage_set {
+          name = "shipit-credentials",
+          value = Just user
+        }
       )
+
     LoggedIn user ->
       -- Check bugzilla auth
       -- when a new user logs in
       -- Also save new user !
       let
         model' = { model | user = user }
-        url = model.backend_dashboard_url ++ "/bugzilla/auth"
-        l = Debug.log "Check bugzilla" url
+        params = {
+          method = "GET",
+          url = model.backend_dashboard_url ++ "/bugzilla/auth",
+          body = Nothing,
+          requestType = GetBugzillaAuth
+        }
       in
-        buildHawkRequest model' "GET" url GetBugzillaAuth
+        --buildHawkRequest model' params
+        List.foldr test (model', [], Cmd.none) ( params :: model.skipped_requests )
 
     LocalUser ->
       -- Fetch local user from localstorage
-      ( model, Nothing, localstorage_load True )
+      ( model, [], localstorage_load True )
 
     Logout ->
-      ( model, Nothing, localstorage_remove True )
+      ( model, [], localstorage_remove True )
 
-    InitHawkRequest method url requestType ->
+    InitHawkRequest params ->
       -- Start a new request
-      buildHawkRequest model method url requestType 
+      buildHawkRequest model params
 
     BuiltHawkHeader response ->
       case response of
         Just response' -> 
           saveHawkHeader model response'
         Nothing ->
-          ( model, Nothing, Cmd.none)
+          ( model, [], Cmd.none)
 
     ProcessWorkflow workflow ->
       -- Process task from workflow
@@ -154,13 +189,36 @@ update msg model =
         cmd = case workflow.requestType of
           GetBugzillaAuth ->
             processBugzillaAuth workflow
+          UpdateBugzillaAuth ->
+            processBugzillaAuth workflow
           _ ->
             Cmd.none
       in
-        (model, Nothing, cmd)
+        (model, [], cmd)
 
     FetchedBugzillaAuth auth ->
-      ( { model | bugzilla_auth = auth }, Nothing, Cmd.none )
+      ( { model | bugzilla_auth = auth }, [], Cmd.none )
+
+    ReceivedBugzillaCreds creds ->
+      -- Do not store credentials, send them to backend
+      case creds of
+        Just creds' ->
+          let
+            credsJson = JsonEncode.encode 0 (JsonEncode.object [
+              ("login", JsonEncode.string creds'.login),
+              ("token", JsonEncode.string creds'.token)
+            ])
+            params = {
+              method = "POST",
+              url = model.backend_dashboard_url ++ "/bugzilla/auth",
+              body = Just credsJson,    
+              requestType = UpdateBugzillaAuth
+            }
+          in
+            buildHawkRequest model params
+
+        Nothing ->
+          ( model, [], Cmd.none )
 
 decodeCertificate : String -> Result String Certificate
 decodeCertificate text =
@@ -188,8 +246,22 @@ convertUrlQueryToUser query =
                  Nothing -> Nothing
     }
 
-buildHawkRequest: Model -> String -> String -> HawkRequestType -> (Model, (Maybe Hawk), Cmd Msg)
-buildHawkRequest model method url requestType =
+convertUrlQueryToBugzillaCreds : Dict String String -> Maybe (BugzillaCredentials)
+convertUrlQueryToBugzillaCreds query =
+    let
+      login = Dict.get "client_api_login" query
+      token = Dict.get "client_api_token" query
+    in
+      
+      login `Maybe.andThen` (\login' -> case token of
+        Just token' -> Just {
+          login = login',
+          token = token'
+        }
+        Nothing -> Nothing)
+
+buildHawkRequest: Model -> HawkParameters -> (Model, List Hawk, Cmd Msg)
+buildHawkRequest model params =
   -- Build a new hawk request towards a backend
   case model.user of
     Just user ->
@@ -203,14 +275,15 @@ buildHawkRequest model method url requestType =
           workflowId = wid,
           key = user.accessToken,
           certificate = user.certificate,
-          url = url,
-          method = method
+          url = params.url,
+          method = params.method,
+          body = params.body
         }
 
         -- Init hawk workflow
         workflow = {
           request = request,
-          requestType = requestType,
+          requestType = params.requestType,
           header = Nothing,
           task = Nothing
         }
@@ -220,14 +293,18 @@ buildHawkRequest model method url requestType =
       in
         (
           { model | workflows = workflows, workflow_id = wid },
-          Just workflow,
+          [ workflow ],
           hawk_build workflow.request
         )
 
     Nothing ->
-      ( model, Nothing, Cmd.none )
+      -- Store skipped requests for later use
+      let
+        l = Debug.log "Skipping request" params
+      in        
+        ( { model | skipped_requests = params :: model.skipped_requests }, [], Cmd.none )
 
-saveHawkHeader: Model -> HawkResponse -> (Model, (Maybe Hawk), Cmd Msg)
+saveHawkHeader: Model -> HawkResponse -> (Model, List Hawk, Cmd Msg)
 saveHawkHeader model response =
   -- Find matching worfkow for response
   let
@@ -248,25 +325,30 @@ saveHawkHeader model response =
         in
           (
             { model | workflows = workflows },
-            Just workflow',
+            [ workflow' ],
              Cmd.none
           )
 
       Nothing ->
-          ( model, Nothing, Cmd.none )
+          ( model, [], Cmd.none )
 
 buildHttpTask: HawkRequest -> String -> Task Http.RawError Http.Response
 buildHttpTask request header =
   -- Build Http request task
-  Http.send Http.defaultSettings {
-    url = request.url,
-    verb = request.method,
-    headers = [
-      ( "Authorization", header ),
-      ( "Accept", "application/json" )
-    ],
-    body = Http.empty
-  }
+  let
+    body = case request.body of
+      Just body' -> Http.string body'
+      Nothing -> Http.empty
+  in
+    Http.send Http.defaultSettings {
+      url = request.url,
+      verb = request.method,
+      headers = [
+        ( "Authorization", header ),
+        ( "Accept", "application/json" )
+      ],
+      body = body
+    }
 
 
 processBugzillaAuth: Hawk -> Cmd Msg

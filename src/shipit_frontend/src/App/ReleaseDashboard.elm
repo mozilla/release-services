@@ -137,8 +137,13 @@ fetchAllAnalysis : Model -> User.Model -> (Model, User.Model, Cmd Msg)
 fetchAllAnalysis model user =
   -- Fetch all analysis summary
   let 
-    url = model.backend_dashboard_url ++ "/analysis"
-    (user', workflow, userCmd) = User.update (User.InitHawkRequest "GET" url User.AllAnalysis) user
+    params = {
+      method = "GET",
+      url = model.backend_dashboard_url ++ "/analysis",
+      body = Nothing,
+      requestType = User.AllAnalysis
+    }
+    (user', workflow, userCmd) = User.update (User.InitHawkRequest params) user
   in
     (
       model,
@@ -162,8 +167,13 @@ fetchAnalysis : Model -> User.Model -> Int -> (Model, User.Model, Cmd Msg)
 fetchAnalysis model user analysis_id =
   -- Fetch a specific analysis with details
   let 
-    url = model.backend_dashboard_url ++ "/analysis/" ++ (toString analysis_id)
-    (user', workflow, userCmd) = User.update (User.InitHawkRequest "GET" url User.Analysis) user
+    params = {
+      method = "GET",
+      url = model.backend_dashboard_url ++ "/analysis/" ++ (toString analysis_id),
+      body = Nothing,
+      requestType = User.Analysis
+    }
+    (user', workflow, userCmd) = User.update (User.InitHawkRequest params) user
   in
     (
       model,

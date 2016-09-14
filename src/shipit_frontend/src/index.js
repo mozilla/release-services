@@ -68,16 +68,16 @@ app.ports.hawk_build.subscribe(function(request){
 app.ports.redirect.subscribe(function(redirect) {
    var redirect_url = url.parse(redirect.url);
    if (redirect.target !== null) {
+     var query = {};
+     query[redirect.targetName] = url.format({
+       protocol: window.location.protocol,
+       host: window.location.host,
+       port: window.location.port,
+       pathname: redirect.target[0]
+     });
+     query['description'] = redirect.target[1];
      redirect_url = url.format(window.$.extend({}, redirect_url, {
-       query: {
-         target: url.format({
-             protocol: window.location.protocol,
-             host: window.location.host,
-             port: window.location.port,
-             pathname: redirect.target[0]
-         }),
-         description: redirect.target[1]
-       }
+      query: query,
      }));
    } else {
      redirect_url = url.format(redirect_url)

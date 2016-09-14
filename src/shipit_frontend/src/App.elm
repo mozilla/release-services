@@ -87,6 +87,14 @@ location2messages' builder =
                               |> UserMsg
                         , ShowPage Home
                         ]
+                    "bugzilla" ->
+                        [ 
+                          Builder.query builder
+                              |> User.convertUrlQueryToBugzillaCreds
+                              |> User.ReceivedBugzillaCreds
+                              |> UserMsg
+                        , ShowPage Home
+                        ]
                     "release-dashboard" ->
                         [ ShowPage ReleaseDashboard ]
 
@@ -148,13 +156,15 @@ update msg model =
                 )
 
         UserMsg usermsg -> 
-          let
-              -- Update current user
-              (newUser, workflow, userCmd) = User.update usermsg model.current_user
+          case usermsg of
+            User.LoggedIn _ -> 
+              let
+                -- Update current user
+                (newUser, _, userCmd) = User.update usermsg model.current_user
 
-              -- Reload all analysis on an user update
-              (newDashboard, newUser', newCmd) = ReleaseDashboard.update ReleaseDashboard.FetchAllAnalysis model.release_dashboard newUser
-            in
+                -- Reload all analysis on an user update
+                (newDashboard, newUser', newCmd) = ReleaseDashboard.update ReleaseDashboard.FetchAllAnalysis model.release_dashboard newUser
+              in
                 (
                   { model | current_user = newUser', release_dashboard = newDashboard },
                   Cmd.batch [
@@ -163,33 +173,40 @@ update msg model =
                   ]
                 )
 
+            _ ->
+              let
+                -- Just Update current user
+                (newUser, _, userCmd) = User.update usermsg model.current_user
+              in
+                (
+                  { model | current_user = newUser },
+                  Cmd.map UserMsg userCmd
+                )
+
         HawkMsg usermsg -> 
             let
               -- Update current user
-              (newUser, workflow, userCmd) = User.update usermsg model.current_user
+              (newUser, workflows, userCmd) = User.update usermsg model.current_user
             in
+              List.foldr test ({model | current_user = newUser}, Cmd.map UserMsg userCmd) workflows
 
-              case workflow of
-                Just workflow' ->
-                  -- Send message to sub parts to process requests
-                  let
-                    (dashboard, newUser', dashboardCmd) = ReleaseDashboard.update (ReleaseDashboard.ProcessWorkflow workflow') model.release_dashboard newUser
-                    (newUser'', workflow, userCmd') = User.update (User.ProcessWorkflow workflow') newUser'
-                  in
-                    (
-                      { model | current_user = newUser'', release_dashboard = dashboard },
-                      Cmd.batch [
-                        Cmd.map UserMsg userCmd',
-                        Cmd.map ReleaseDashboardMsg dashboardCmd
-                      ]
-                    )
-
-                Nothing ->
-                  -- Just run user update.
-                  (
-                    { model | current_user = newUser },
-                    Cmd.map UserMsg userCmd
-                  )
+test : User.Hawk -> (Model, Cmd Msg) -> (Model, Cmd Msg)
+test workflow full =
+  let
+    (model, cmd) = full
+    -- Send message to sub parts to process requests
+    (dashboard, newUser, dashboardCmd) = ReleaseDashboard.update (ReleaseDashboard.ProcessWorkflow workflow) model.release_dashboard model.current_user
+    (newUser', _, userCmd) = User.update (User.ProcessWorkflow workflow) newUser
+  in
+    (
+      { model | current_user = newUser', release_dashboard = dashboard },
+      Cmd.batch [
+        cmd,
+        Cmd.map UserMsg userCmd,
+        Cmd.map ReleaseDashboardMsg dashboardCmd
+      ]
+    )
+    
 
 viewPage model =
     case model.current_page of
@@ -224,10 +241,27 @@ viewLogin =
       loginUrl =
           { url = "https://login.taskcluster.net"
           , target = loginTarget
+          , targetName = "target"
           }
       loginMsg = UserMsg <| User.Login loginUrl
   in
       [ eventLink loginMsg [ class "nav-link" ] [ text "Login" ]
+      ]
+
+viewLoginBugzilla =
+  let
+      loginTarget =
+          Just ( "/bugzilla"
+               , "RelengAPI is a collection of Release Engineering services"
+               )
+      loginUrl =
+          { url = "https://bugzilla.mozilla.org/auth.cgi"
+          , target = loginTarget
+          , targetName = "callback"
+          }
+      loginMsg = UserMsg <| User.Login loginUrl
+  in
+      [ eventLink loginMsg [ class "nav-link" ] [ text "Login Bugzilla" ]
       ]
 
 viewUser model =
@@ -305,14 +339,20 @@ viewBugzillaAuth user =
       p [class "alert alert-info"] [text "Loading bugzilla auth."]
 
     Failure err ->
-      p [class "alert alert-error"] [text ("Error while loading bugzilla auth: " ++ toString err)]
+      p [class "alert alert-danger"] [
+        span [] [text ("Error while loading bugzilla auth: " ++ toString err)],
+        span []  viewLoginBugzilla
+      ]  
 
     Success auth -> 
       if auth.authenticated then
         p [class "alert alert-success"] [text "Authenticated on bugzilla !"]
 
       else
-        p [class "alert alert-error"] [text ("Error with your bugzilla auth: " ++ auth.message)]
+        p [class "alert alert-danger"] [
+          span [] [text ("Error with your bugzilla auth: " ++ auth.message)],
+          span [] viewLoginBugzilla
+        ] 
 
 viewFooter =
     [ hr [] []
