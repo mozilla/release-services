@@ -10,8 +10,24 @@ from sqlalchemy.orm.exc import NoResultFound
 from flask_login import login_required, current_user
 from flask import abort, request
 from datetime import datetime, timedelta
+import requests
 
 BUGZILLA_SECRET = 'garbage/shipit/bugzilla'
+
+def check_bugzilla_auth(login, token):
+    """
+    Check the bugzilla auth is working
+    """
+    # TODO: do a patch to libmozdata upstream
+    url = 'https://bugzilla.mozilla.org/rest/valid_login'
+    params = {
+        'login' : login,
+    }
+    headers = {
+        'X-Bugzilla-Api-Key' : token,
+    }
+    resp = requests.get(url, params=params, headers=headers)
+    return resp.ok and resp.content == b'true'
 
 @login_required
 def list_analysis():
@@ -46,10 +62,17 @@ def get_bugzilla_auth():
     secrets = current_user.taskcluster_secrets()
     auth_secret = secrets.get(BUGZILLA_SECRET)
     if auth_secret:
-        # TODO : Check the auth is still valid
+        # Check the auth is still valid
+        auth = auth_secret['secret']
+        if not check_bugzilla_auth(auth['login'], auth['token']):
+            return {
+                'authenticated': False,
+                'message' : 'Invalid bugzilla auth',
+            }
+
         return {
             'authenticated': True,
-            'message' : 'Valid authentication for {}'.format(auth_secret['secret']['login']),
+            'message' : 'Valid authentication for {}'.format(auth['login']),
         }
 
     return {
@@ -66,9 +89,11 @@ def update_bugzilla_auth():
     token = request.json.get('token')
     login = request.json.get('login')
     if not (token and login):
-      raise Exception('Missing token and login')
+        raise Exception('Missing token and login')
 
-    # TODO : Check the auth is still valid
+    # Check the auth is still valid
+    if not check_bugzilla_auth(login, token):
+        raise Exception('Invalid bugzilla auth')
 
     # Store the auth in secret
     payload = {
@@ -79,8 +104,7 @@ def update_bugzilla_auth():
         'expires' : datetime.now() + timedelta(days=365)
     }
     secrets = current_user.taskcluster_secrets()
-    resp = secrets.set(BUGZILLA_SECRET, payload)
-    print(resp)
+    secrets.set(BUGZILLA_SECRET, payload)
 
     return {
         'authenticated': True,
