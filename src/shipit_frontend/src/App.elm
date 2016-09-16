@@ -188,10 +188,10 @@ update msg model =
               -- Update current user
               (newUser, workflows, userCmd) = User.update usermsg model.current_user
             in
-              List.foldr test ({model | current_user = newUser}, Cmd.map UserMsg userCmd) workflows
+              List.foldr mapHawkToMessages ({model | current_user = newUser}, Cmd.map UserMsg userCmd) workflows
 
-test : User.Hawk -> (Model, Cmd Msg) -> (Model, Cmd Msg)
-test workflow full =
+mapHawkToMessages : User.Hawk -> (Model, Cmd Msg) -> (Model, Cmd Msg)
+mapHawkToMessages workflow full =
   let
     (model, cmd) = full
     -- Send message to sub parts to process requests
@@ -327,9 +327,9 @@ viewNavAnalysis analysis =
       analysisLink analysis [class "nav-link"] [
         span [] [text (analysis.name ++ " ")],
         if analysis.count > 0 then
-          span [class "label label-primary"] [text (toString analysis.count)]
+          span [class "label label-pill label-primary"] [text (toString analysis.count)]
         else
-          span [class "label label-success"] [text (toString analysis.count)]
+          span [class "label label-pill label-success"] [text (toString analysis.count)]
       ]
     ]
 

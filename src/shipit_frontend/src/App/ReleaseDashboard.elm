@@ -2,6 +2,7 @@ module App.ReleaseDashboard exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 import String
 import Dict
 import Json.Decode as Json exposing (Decoder, (:=))
@@ -42,7 +43,10 @@ type alias Bug = {
   uplift_request: Maybe UpliftRequest,
 
   -- Stats
-  changes: Int
+  changes: Int,
+
+  -- Actions on bug
+  editing: Bool
 }
 
 type alias Analysis = {
@@ -68,6 +72,7 @@ type Msg
    | FetchedAnalysis (WebData Analysis)
    | FetchAllAnalysis
    | FetchAnalysis Analysis
+   | EditBug Bug
    | ProcessWorkflow Hawk
    | UserMsg User.Msg
 
@@ -132,6 +137,25 @@ update msg model user =
         (newUser, workflow, userCmd) = User.update msg user
       in
         ( model, user, Cmd.map UserMsg userCmd)
+
+    EditBug bug ->
+      -- Mark a bug as being edited
+      case model.current_analysis of
+        Success analysis ->
+          let
+
+            -- Rebuild bugs list
+            bugs = List.map (\b -> if b == bug then { b | editing = True } else b) analysis.bugs
+            l = Debug.log "bugs" bugs
+
+            -- Rebuild analysis
+            analysis' = { analysis | bugs = bugs }
+
+          in
+            ({ model | current_analysis = Success analysis' }, user, Cmd.none)
+
+        _ ->
+          (model, user, Cmd.none)
 
 
 fetchAllAnalysis : Model -> User.Model -> (Model, User.Model, Cmd Msg)
@@ -226,6 +250,7 @@ decodeBug =
     |: ("reviewers" := (Json.list decodeContributor))
     |: (Json.maybe ("uplift" := decodeUpliftRequest))
     |: ("changes_size" := Json.int)
+    |: (Json.succeed False) -- not editing at first
     
 
 decodeContributor : Decoder Contributor
@@ -288,8 +313,10 @@ viewBug bug =
         viewUpliftRequest bug.uplift_request
       ],
       div [class "col-xs-4"] [
-        viewStats bug,
-        viewFlags bug
+        if bug.editing then
+          viewEditor bug
+        else
+          viewBugDetails bug
       ]
     ],
     div [class "text-muted"] [
@@ -325,15 +352,20 @@ viewUpliftRequest maybe =
     Just request -> 
       div [class "uplift-request", id (toString request.bugzilla_id)] [
         viewContributor request.author "Uplift request",
-        div [class "comment"] (List.map viewUpliftText (String.split "\n" request.text))
+        div [class "comment"] (List.map (\x -> p [] [text x]) (String.split "\n" request.text))
       ]
     Nothing -> 
       div [class "alert alert-warning"] [text "No uplift request."]
 
-
-viewUpliftText: String -> Html Msg
-viewUpliftText upliftText =
-  p [] [text upliftText]
+viewBugDetails: Bug -> Html Msg
+viewBugDetails bug =
+  div [class "details"] [
+    viewStats bug,
+    viewFlags bug,
+  
+    -- Start editing
+    button [class "btn btn-primary", onClick (EditBug bug)] [text "Edit this bug"]
+  ]
 
 viewStats: Bug -> Html Msg
 viewStats bug =
@@ -365,33 +397,61 @@ viewFlags bug =
         ul [] (List.map viewTrackingFlag (Dict.toList flags_tracking))
     ]
 
-viewStatusFlag tuple =
+viewStatusFlag (key, value) =
+  li [] [
+    strong [] [text key],
+    case value of
+      "affected" -> span [class "label label-danger"] [text value]
+      "verified" -> span [class "label label-info"] [text value]
+      "fixed" -> span [class "label label-success"] [text value]
+      "wontfix" -> span [class "label label-warning"] [text value]
+      _ -> span [class "label label-default"] [text value]
+  ]
+
+editStatusFlag (key, flag_value) =
   let
-    (key, value) = tuple
+    possible_values = ["affected", "verified", "fixed", "wontfix", "---"]
   in
-    li [] [
-      strong [] [text key],
-      case value of
-        "affected" -> span [class "label label-danger"] [text value]
-        "verified" -> span [class "label label-info"] [text value]
-        "fixed" -> span [class "label label-success"] [text value]
-        "wontfix" -> span [class "label label-warning"] [text value]
-        _ -> span [class "label label-default"] [text value]
-      
+    div [class "form-group row"] [
+      label [class "col-sm-3 col-form-label"] [text ("Status: " ++ key)],
+      div [class "col-sm-9"] [
+        select [class "form-control form-control-sm"]
+          (List.map (\x -> option [ selected (x == flag_value)] [text x]) possible_values)
+      ]
     ]
 
-viewTrackingFlag tuple =
+viewTrackingFlag (key, value) =
+  li [] [
+    strong [] [text key],
+    case value of
+      "+" -> span [class "label label-success"] [text value]
+      "-" -> span [class "label label-danger"] [text value]
+      "?" -> span [class "label label-info"] [text value]
+      _ -> span [class "label label-default"] [text value]
+  ]
+
+editTrackingFlag (key, flag_value) =
   let
-    (key, value) = tuple
+    possible_values = ["+", "-", "?", "---"]
   in
-    li [] [
-      strong [] [text key],
-      case value of
-        "+" -> span [class "label label-success"] [text value]
-        "-" -> span [class "label label-danger"] [text value]
-        "?" -> span [class "label label-info"] [text value]
-        _ -> span [class "label label-default"] [text value]
+    div [class "form-group row"] [
+      label [class "col-sm-3 col-form-label"] [text ("Tracking: " ++ key)],
+      div [class "col-sm-9"] [
+        select [class "form-control form-control-sm"]
+          (List.map (\x -> option [ selected (x == flag_value)] [text x]) possible_values)
+      ]
     ]
+
+viewEditor: Bug -> Html Msg
+viewEditor bug =
+  Html.form [class "editor"] [
+    div [class "form-group"] [
+      textarea [class "form-control", placeholder "Your comment"] []
+    ],
+    div [] (List.map editStatusFlag (Dict.toList bug.flags_status)),
+    div [] (List.map editTrackingFlag (Dict.toList bug.flags_tracking)),
+    button [class "btn btn-success"] [text "Update bug"]
+  ]
 
 viewKeyword: String -> Html Msg
 viewKeyword keyword =
