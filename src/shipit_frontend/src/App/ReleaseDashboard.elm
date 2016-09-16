@@ -254,10 +254,10 @@ view : Model -> Html Msg
 view model =
   case model.current_analysis of
     NotAsked ->
-      div [class "alert alert-info"] [text "Initialising ..."]
+      div [class "alert alert-info"] [text "Please select an analysis in the navbar above."]
 
     Loading ->
-      div [class "alert alert-info"] [text "Loading ..."]
+      div [class "alert alert-info"] [text "Loading your bugs..."]
 
     Failure err ->
       div [class "alert alert-danger"] [text ("Error: " ++ toString err)]
@@ -356,7 +356,7 @@ viewFlags bug =
       if Dict.isEmpty flags_status then
         p [class "text-warning"] [text "No status flags set."]
       else
-        ul [] (List.map viewFlag (Dict.toList flags_status)),
+        ul [] (List.map viewStatusFlag (Dict.toList flags_status)),
 
       h5 [] [text "Tracking flags"],
       if Dict.isEmpty flags_tracking then

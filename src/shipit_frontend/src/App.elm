@@ -218,7 +218,7 @@ viewPage model =
 
 viewDropdown title pages =
     [ div [ class "dropdown" ]
-          [ a [ class "nav-link dropdown-toggle"
+          [ a [ class "nav-link dropdown-toggle btn btn-primary"
               , id ("dropdown" ++ title)
               , href "#"
               , attribute "data-toggle" "dropdown"
@@ -245,7 +245,7 @@ viewLogin =
           }
       loginMsg = UserMsg <| User.Login loginUrl
   in
-      [ eventLink loginMsg [ class "nav-link" ] [ text "Login" ]
+      [ eventLink loginMsg [ class "nav-link" ] [ text "Login TaskCluster" ]
       ]
 
 viewLoginBugzilla =
@@ -265,20 +265,24 @@ viewLoginBugzilla =
       ]
 
 viewUser model =
-    case model.current_user.user of
-      Just user ->
-        viewDropdown user.clientId
-                [ a [ class "dropdown-item"
-                    , href "https://tools.taskcluster.net/credentials"
-                    , target "_blank"
-                    ]
-                    [ text "Manage credentials" ]
-                , eventLink (UserMsg User.Logout)
-                            [ class "dropdown-item" ]
-                            [ text "Logout" ]
-              ]
+  case model.current_user.user of
+    Just user ->
+      viewDropdown user.clientId [
+        -- Link to TC manager
+        a [ class "dropdown-item",
+            href "https://tools.taskcluster.net/credentials",
+            target "_blank"
+        ] [ text "Manage credentials" ],
 
-      Nothing -> viewLogin
+        -- Display bugzilla status
+        viewBugzillaAuth model.current_user,
+
+        -- Logout from TC
+        div [class "dropdown-divider"] [],
+        eventLink (UserMsg User.Logout) [ class "dropdown-item" ] [ text "Logout" ]
+      ]
+
+    Nothing -> viewLogin
 
 
 viewNavBar model =
@@ -288,14 +292,14 @@ viewNavBar model =
              , attribute "data-target" ".navbar-collapse"
              , attribute "aria-controls" "navbar-header"
              ]
-             [ text "&#9776;" ]
+             [ text "Menu" ]
     , pageLink Home [ class "navbar-brand" ]
                     [ text "RelengAPI" ]
     , div [ class "collapse navbar-toggleable-sm navbar-collapse navbar-right" ]
           [ ul [ class "nav navbar-nav" ]
               (List.concat [
                   (viewNavDashboard model.release_dashboard),
-                  [li [ class "nav-item" ] ( viewUser model )]
+                  [li [ class "nav-item pull-xs-right" ] ( viewUser model )]
               ])
           ]
     ]
@@ -304,12 +308,10 @@ viewNavDashboard: ReleaseDashboard.Model -> List (Html Msg)
 viewNavDashboard dashboard = 
 
   case dashboard.all_analysis of
-    NotAsked -> [
-      li [class "nav-item text-info"] [text "Initialising ..."]
-    ]
+    NotAsked -> []
 
     Loading -> [
-      li [class "nav-item text-info"] [text "Loading ..."]
+      li [class "nav-item text-info"] [text "Loading Bugs analysis..."] 
     ]
 
     Failure err -> [
@@ -322,9 +324,12 @@ viewNavDashboard dashboard =
 viewNavAnalysis: ReleaseDashboard.Analysis -> Html Msg
 viewNavAnalysis analysis =
     li [class "nav-item"] [
-      analysisLink analysis [class "btn btn-secondary"] [
+      analysisLink analysis [class "nav-link"] [
         span [] [text (analysis.name ++ " ")],
-        span [class "label label-primary"] [text (toString analysis.count)]
+        if analysis.count > 0 then
+          span [class "label label-primary"] [text (toString analysis.count)]
+        else
+          span [class "label label-success"] [text (toString analysis.count)]
       ]
     ]
 
@@ -333,46 +338,44 @@ viewBugzillaAuth user =
 
   case user.bugzilla_auth of
     NotAsked ->
-      p [class "alert alert-info"] [text "Initializing auth..."]
+      a [class "dropdown-item text-info disabled"] [text "Init. Bugzilla auth"]
 
     Loading ->
-      p [class "alert alert-info"] [text "Loading bugzilla auth."]
+      a [class "dropdown-item text-info disabled"] [text "Loading Bugzilla auth."]
 
     Failure err ->
-      p [class "alert alert-danger"] [
+      a [class "dropdown-item text-danger"] [
         span [] [text ("Error while loading bugzilla auth: " ++ toString err)],
         span []  viewLoginBugzilla
       ]  
 
     Success auth -> 
       if auth.authenticated then
-        p [class "alert alert-success"] [text "Authenticated on bugzilla !"]
+        a [class "dropdown-item text-success disabled"] [text ("Bugzilla: " ++ auth.message)]
 
       else
-        p [class "alert alert-danger"] [
+        a [class "dropdown-item text-danger"] [
           span [] [text ("Error with your bugzilla auth: " ++ auth.message)],
           span [] viewLoginBugzilla
         ] 
 
 viewFooter =
-    [ hr [] []
-    , ul [] 
-         [ li [] [ a [ href "#" ] [ text "Github" ]]
-         , li [] [ a [ href "#" ] [ text "Contribute" ]]
-         , li [] [ a [ href "#" ] [ text "Contact" ]]
-         -- TODO: add version / revision
-         ]
-
+  footer [] [
+    ul [] [
+      li [] [ a [ href "https://github.com/mozilla-releng/services" ] [ text "Github" ]],
+      li [] [ a [ href "#" ] [ text "Contribute" ]],
+      li [] [ a [ href "#" ] [ text "Contact" ]]
+      -- TODO: add version / revision
     ]
+  ]
 
 view : Model -> Html Msg
 view model =
   div [] [
-    nav [ id "navbar", class "navbar navbar-full navbar-light" ] [
-      div [ class "container" ] ( viewNavBar model )
+    nav [ id "navbar", class "navbar navbar-full navbar-dark bg-inverse" ] [
+      div [ class "container-fluid" ] ( viewNavBar model )
     ],
     div [ id "content" ] [
-      viewBugzillaAuth model.current_user,
       case model.current_user.user of
         Just user ->
           div [class "container-fluid" ] [ viewPage model ]
@@ -382,8 +385,8 @@ view model =
               text "Please login first."
             ]
           ]
-    ]
-    , footer [ class "container" ] viewFooter
+    ],
+    viewFooter
   ]
 
 
