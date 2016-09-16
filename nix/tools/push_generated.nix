@@ -10,10 +10,11 @@ self: {
 
   "push" = python.mkDerivation {
     name = "push-0.0.1";
-    src = pkgs.fetchurl {
-      url = "https://github.com/garbas/push/archive/ffb8d5c1e9d9b06dd948efb2ddb8d7dbbe7960ca.tar.gz";
-      sha256 = "b8f17fe25a6adf9aa4d42fd1c6430b0a7649f5e7234298b8630b0a73d007e351";
-    };
+    src = ./../../push;
+    #src = pkgs.fetchurl {
+    #  url = "https://github.com/garbas/push/archive/ffb8d5c1e9d9b06dd948efb2ddb8d7dbbe7960ca.tar.gz";
+    #  sha256 = "b8f17fe25a6adf9aa4d42fd1c6430b0a7649f5e7234298b8630b0a73d007e351";
+    #};
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [

@@ -226,6 +226,9 @@ taskcluster: nix
 	cp -f ./result-taskcluster .taskcluster.yml
 
 
+taskcluster-hooks: nix
+	nix-build nix/taskcluster_hooks.nix -o result-taskcluster-hooks --fallback
+
 
 # --- helpers
 

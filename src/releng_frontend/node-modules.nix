@@ -10,7 +10,7 @@ let
     nodejs = pkgs."nodejs-6_x";
   };
 in
-import ./node-packages.nix {
+import ./node-modules-generated.nix {
   inherit (pkgs) fetchurl fetchgit;
   inherit nodeEnv;
 }
