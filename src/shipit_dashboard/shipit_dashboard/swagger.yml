@@ -97,6 +97,7 @@ definitions:
       - summary
       - keywords
       - flags_status
+      - flags_tracking
       - changes_size
       - creator
       - assignee
@@ -113,6 +114,10 @@ definitions:
         items:
           type: string
       flags_status:
+        type: object
+        additionalProperties:
+          type: string
+      flags_tracking:
         type: object
         additionalProperties:
           type: string

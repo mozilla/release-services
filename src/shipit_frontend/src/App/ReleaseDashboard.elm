@@ -32,6 +32,7 @@ type alias Bug = {
   summary: String,
   keywords: List String,
   flags_status : Dict.Dict String String,
+  flags_tracking : Dict.Dict String String,
 
   -- Users
   creator: Contributor,
@@ -219,6 +220,7 @@ decodeBug =
     |: ("summary" := Json.string)
     |: ("keywords" := Json.list Json.string)
     |: ("flags_status" := Json.dict Json.string)
+    |: ("flags_tracking" := Json.dict Json.string)
     |: ("creator" := decodeContributor)
     |: ("assignee" := decodeContributor)
     |: ("reviewers" := (Json.list decodeContributor))
@@ -346,14 +348,24 @@ viewStats bug =
 viewFlags: Bug -> Html Msg
 viewFlags bug =
   let
-    useful_flags = Dict.filter (\k v -> not (v == "---")) bug.flags_status
+    flags_status = Dict.filter (\k v -> not (v == "---")) bug.flags_status
+    flags_tracking = Dict.filter (\k v -> not (v == "---")) bug.flags_tracking
   in 
     div [class "flags"] [
-      h5 [] [text "Tracking flags - status"],
-      ul [] (List.map viewFlag (Dict.toList useful_flags))
+      h5 [] [text "Status flags"],
+      if Dict.isEmpty flags_status then
+        p [class "text-warning"] [text "No status flags set."]
+      else
+        ul [] (List.map viewFlag (Dict.toList flags_status)),
+
+      h5 [] [text "Tracking flags"],
+      if Dict.isEmpty flags_tracking then
+        p [class "text-warning"] [text "No tracking flags set."]
+      else
+        ul [] (List.map viewTrackingFlag (Dict.toList flags_tracking))
     ]
 
-viewFlag tuple =
+viewStatusFlag tuple =
   let
     (key, value) = tuple
   in
@@ -366,6 +378,19 @@ viewFlag tuple =
         "wontfix" -> span [class "label label-warning"] [text value]
         _ -> span [class "label label-default"] [text value]
       
+    ]
+
+viewTrackingFlag tuple =
+  let
+    (key, value) = tuple
+  in
+    li [] [
+      strong [] [text key],
+      case value of
+        "+" -> span [class "label label-success"] [text value]
+        "-" -> span [class "label label-danger"] [text value]
+        "?" -> span [class "label label-info"] [text value]
+        _ -> span [class "label label-default"] [text value]
     ]
 
 viewKeyword: String -> Html Msg
