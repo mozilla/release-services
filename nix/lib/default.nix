@@ -106,13 +106,20 @@ in rec {
       { inherit image features command; };
 
     mkTaskclusterTask =
-      { provisionerId ? "aws-provisioner-v1"
-      , workerType ? "releng-task"
-      , scopes ? []
-      , payload ? {}
+      { extra ? {}
       , metadata ? {}
+      , payload ? {}
+      , priority ? "normal"
+      , provisionerId ? "aws-provisioner-v1"
+      , retries ? 5
+      , routes ? []
+      , schedulerId ? "-"
+      , scopes ? []
+      , tags ? {}
+      , workerType ? "releng-task"
       }:
-      { inherit provisionerId workerType scopes;
+      { inherit extra priority provisionerId retries routes schedulerId scopes
+           tags workerType;
         payload = mkTaskclusterTaskPayload payload;
         metadata = mkTaskclusterTaskMetadata metadata;
       };
@@ -121,6 +128,7 @@ in rec {
       { name
       , description ? ""
       , owner
+      , emailOnError ? true
       , schedule ? []
       , expires ? "3 months"
       , deadline ? "1 day"
@@ -129,7 +137,7 @@ in rec {
       , task ? {}
       }:
       { inherit schedule expires deadline;
-        metadata = { inherit name description owner; };
+        metadata = { inherit name description owner emailOnError; };
         task = mkTaskclusterTask ({
           metadata = { inherit name description owner; };
           payload = {

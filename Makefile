@@ -226,8 +226,20 @@ taskcluster: nix
 	cp -f ./result-taskcluster .taskcluster.yml
 
 
-taskcluster-hooks: nix
-	nix-build nix/taskcluster_hooks.nix -o result-taskcluster-hooks --fallback
+taskcluster-hooks: require-DOCKER require-HOOKS nix build-tool-push build-tool-taskcluster-hooks
+	@nix-build nix/taskcluster_hooks.nix -o result-taskcluster-hooks --fallback
+	@./result-tool-taskcluster-hooks/bin/taskcluster-hooks \
+		--hooks=./result-taskcluster-hooks \
+        --hooks-group=project-releng \
+        --hooks-prefix=services- \
+        --hooks-client-id=$(HOOKS_CLIENT_ID) \
+        --hooks-access-token=$(HOOKS_ACCESS_TOKEN) \
+        --docker-push=./result-tool-push/bin/push \
+		--docker-registry=https://index.docker.io \
+        --docker-repo=garbas/releng-services \
+        --docker-username=$(DOCKER_USERNAME) \
+        --docker-password=$(DOCKER_PASSWORD)
+
 
 
 # --- helpers
@@ -305,6 +317,27 @@ require-CACHE_BUCKET:
 		echo ""; \
 		exit 1; \
 	fi
+
+require-DOCKER:
+	@if [[ -z "$(DOCKER_USERNAME)" ]] || \
+	    [[ -z "$(DOCKER_PASSWORD)" ]]; then \
+		echo ""; \
+		echo "You need to specify DOCKER_USERNAME and DOCKER_PASSWORD."; \
+		echo ""; \
+		echo ""; \
+		exit 1; \
+	fi
+
+require-HOOKS:
+	@if [[ -z "$(HOOKS_CLIENT_ID)" ]] || \
+	    [[ -z "$(HOOKS_ACCESS_TOKEN)" ]]; then \
+		echo ""; \
+		echo "You need to specify HOOKS_CLIENT_ID and HOOKS_ACCESS_TOKEN."; \
+		echo ""; \
+		echo ""; \
+		exit 1; \
+	fi
+
 
 
 all: build-apps build-tools
