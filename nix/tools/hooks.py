@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import json
 import click
@@ -46,7 +47,7 @@ def push_docker_image(image, push, registry, repo, username, password):
 
         # TODO: check if image (tag) is already uploaded
         returncode, output = cmd(
-            '%s %s %s -u "%s" -p "%s" -N "%s" -T "%s"" % (
+            '%s %s %s -u "%s" -p "%s" -N "%s" -T "%s"' % (
                 push, image_path, registry, username, password, repo, tag))
 
         import ipdb
