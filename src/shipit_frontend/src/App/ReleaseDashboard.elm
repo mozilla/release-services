@@ -491,8 +491,8 @@ editStatusFlag bug (key, flag_value) =
     possible_values = ["affected", "verified", "fixed", "wontfix", "---"]
   in
     div [class "form-group row"] [
-      label [class "col-sm-3 col-form-label"] [text ("Status: " ++ key)],
-      div [class "col-sm-9"] [
+      label [class "col-sm-6 col-form-label"] [text key],
+      div [class "col-sm-6"] [
         select [class "form-control form-control-sm", onChange (EditBug bug ("status_" ++ key))]
           (List.map (\x -> option [ selected (x == flag_value)] [text x]) possible_values)
       ]
@@ -514,8 +514,8 @@ editTrackingFlag bug (key, flag_value) =
     possible_values = ["+", "-", "?", "---"]
   in
     div [class "form-group row"] [
-      label [class "col-sm-3 col-form-label"] [text ("Tracking: " ++ key)],
-      div [class "col-sm-9"] [
+      label [class "col-sm-6 col-form-label"] [text key],
+      div [class "col-sm-6"] [
         select [class "form-control form-control-sm", onChange (EditBug bug ("tracking_" ++ key))]
           (List.map (\x -> option [ selected (x == flag_value)] [text x]) possible_values)
       ]
@@ -524,11 +524,13 @@ editTrackingFlag bug (key, flag_value) =
 viewEditor: Bug -> Html Msg
 viewEditor bug =
   Html.form [class "editor", onSubmit (SaveBugEdit bug)] [
+    div [class "col-xs-12 col-sm-6"]
+      ([h4 [] [text "Status"] ] ++ (List.map (\x -> editStatusFlag bug x) (Dict.toList bug.flags_status))),
+    div [class "col-xs-12 col-sm-6"]
+      ([h4 [] [text "Tracking"] ] ++ (List.map (\x -> editTrackingFlag bug x) (Dict.toList bug.flags_tracking))),
     div [class "form-group"] [
       textarea [class "form-control", placeholder "Your comment", onInput (EditBug bug "comment")] []
     ],
-    div [] (List.map (\x -> editStatusFlag bug x) (Dict.toList bug.flags_status)),
-    div [] (List.map (\x -> editTrackingFlag bug x) (Dict.toList bug.flags_tracking)),
     button [class "btn btn-success"] [text "Update bug"]
   ]
 
