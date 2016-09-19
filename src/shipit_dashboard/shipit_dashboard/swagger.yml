@@ -155,10 +155,13 @@ definitions:
     required:
       - email
       - real_name
+      - avatar
     properties:
       email:
         type: string
       real_name:
+        type: string
+      avatar:
         type: string
 
   UpliftRequest:

@@ -62,11 +62,28 @@ div.bugs {
     padding-top: 15px;
     border-bottom: 1px solid #EEE;
 
+    h4 {
+      font-weight: bold;
+    }
+
     div.uplift-request {
       div.comment {
         p {
           margin-bottom: 1px;
         }
+      }
+    }
+    
+    div.user {
+      margin-bottom: 4px;
+
+      img.avatar {
+        box-shadow: 2px 2px 3px 0px #656565;
+      }
+
+      p {
+        margin-bottom: 0;
+
       }
     }
   }

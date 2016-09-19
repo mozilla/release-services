@@ -20,7 +20,8 @@ import App.Utils exposing (onChange)
 
 type alias Contributor = {
   email: String,
-  name: String
+  name: String,
+  avatar: String
 }
 
 type alias UpliftRequest = {
@@ -332,9 +333,10 @@ decodeBug =
 
 decodeContributor : Decoder Contributor
 decodeContributor = 
-  Json.object2 Contributor
+  Json.object3 Contributor
     ("email" := Json.string)
     ("real_name" := Json.string)
+    ("avatar" := Json.string)
 
 decodeUpliftRequest : Decoder UpliftRequest
 decodeUpliftRequest  =
@@ -381,11 +383,10 @@ viewBug bug =
   div [class "bug"] [
     h4 [] [text bug.summary],
     div [class "row"] [
-      div [class "col-xs-4"] [
+      div [class "col-xs-4"] ([
         viewContributor bug.creator "Creator",
-        viewContributor bug.assignee "Assignee",
-        viewReviewers bug.reviewers
-      ],
+        viewContributor bug.assignee "Assignee"
+      ] ++ (List.map (\x -> viewContributor x "Reviewer") bug.reviewers)),
       div [class "col-xs-4"] [
         viewUpliftRequest bug.uplift_request
       ],
@@ -404,23 +405,19 @@ viewBug bug =
 
 viewContributor: Contributor -> String -> Html Msg
 viewContributor user title = 
-  div [class "user"] [
-    strong [] [text (title ++ ": ")],
-    a [href ("mailto:" ++ user.email)] [text user.name]
-  ]
-
-  
-viewReviewers: (List Contributor) -> Html Msg
-viewReviewers users =
-  div [] [
-    strong [] [text "Reviewers:"],
-    ul [class "users"] (List.map viewReviewer users)
-  ]
-
-viewReviewer: Contributor -> Html Msg
-viewReviewer user =
-  li [class "user"] [
-    a [href ("mailto:" ++ user.email)] [text user.name]
+  div [class "user row"] [
+    div [class "col-xs-4 col-sm-1"] [
+      img [class "avatar img-fluid img-rounded", src user.avatar] []
+    ],
+    div [class "col-xs-8 col-sm-11"] [
+      p [class "lead"] [text user.name],
+      p [] [
+        a [href ("mailto:" ++ user.email)] [text user.email]
+      ],
+      p [] [
+        span [class "label label-default"] [text title]
+      ]
+    ]
   ]
 
 viewUpliftRequest: Maybe UpliftRequest -> Html Msg

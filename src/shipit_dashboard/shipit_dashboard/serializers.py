@@ -1,3 +1,27 @@
+import hashlib
+
+
+def serialize_user(user):
+    """
+    Helper to serialize a user
+    and adding a gravatar url
+    """
+    if isinstance(user, dict):
+        out = user
+        if 'email' not in out:
+            out['email'] = out['name'] # weird case of uplift authors
+    else:
+        out = {
+            'email' : user,
+            'real_name' : user,
+        }
+
+    # Add gravatar
+    email = out['email'].strip().lower()
+    h = hashlib.md5(email.encode('utf-8'))
+    out['avatar'] = 'https://www.gravatar.com/avatar/{}'.format(h.hexdigest())
+
+    return out
 
 def serialize_bug(bug):
     """
@@ -18,10 +42,7 @@ def serialize_bug(bug):
         comment = analysis['uplift_comment']
         uplift = {
             'id' : comment['id'],
-            'author' : {
-                'email' : author['name'], # weird :/
-                'real_name' : author['real_name'],
-            },
+            'author' : serialize_user(author),
             'comment' : comment['raw_text'],
         }
 
@@ -37,14 +58,10 @@ def serialize_bug(bug):
         'flags_status' : dict([(k.replace(status_base_flag, '', 1) ,v) for k,v in bug_data.items() if k.startswith(status_base_flag)]),
         'flags_tracking' : dict([(k.replace(tracking_base_flag, '', 1) ,v) for k,v in bug_data.items() if k.startswith(tracking_base_flag)]),
 
-
         # Contributor structures
-        'creator' : analysis['users']['creator'],
-        'assignee' : analysis['users']['assignee'],
-        'reviewers' : [{
-            'email' : r,
-            'real_name' : r,
-        } for r in analysis['users']['reviewers']],
+        'creator' : serialize_user(analysis['users']['creator']),
+        'assignee' : serialize_user(analysis['users']['assignee']),
+        'reviewers' : [serialize_user(r) for r in analysis['users']['reviewers']],
 
         # Stats
         'changes_size' : analysis.get('changes_size', 0),
