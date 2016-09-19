@@ -28,6 +28,8 @@ paths:
       responses:
         200:
           description: A specific analysis
+          #schema:
+          #  $ref: '#/definitions/Analysis'
 
   /bugzilla/auth:
     get:
@@ -55,6 +57,20 @@ paths:
           schema:
             $ref: '#/definitions/BugzillaAuth'
 
+  /bugs/{bug_id}:
+    put:
+      operationId: "shipit_dashboard.api.update_bug"
+      parameters:
+      - name: bug_id
+        in: path
+        description: ID of the Bug to update
+        required: true
+        type: integer
+      responses:
+        200:
+          description: A specific Bug
+          schema:
+            $ref: '#/definitions/Bug'
 
 definitions:
 

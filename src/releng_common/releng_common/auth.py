@@ -1,5 +1,5 @@
 from flask_login import LoginManager
-from flask import request
+from flask import request, abort
 import logging
 import taskcluster
 
@@ -87,6 +87,16 @@ class TaskclusterUser(BaseUser):
         }
         return taskcluster.Secrets(options)
 
+    def get_secret(self, name):
+        """
+        Helper to read a Taskcluster secret
+        """
+        secrets = self.taskcluster_secrets()
+        secret = secrets.get(name)
+        if not secret:
+            raise Exception('Missing TC secret {}'.format(name))
+        return secret['secret']
+
 class Auth(object):
 
     def __init__(self, login_manager):
@@ -126,9 +136,13 @@ def init_app(app):
 
         # Auth with taskcluster
         auth = taskcluster.Auth()
-        resp = auth.authenticateHawk(payload)
-        if not resp.get('status') == 'auth-success':
-            raise Exception('Taskcluster rejected the authentication')
+        try:
+            resp = auth.authenticateHawk(payload)
+            if not resp.get('status') == 'auth-success':
+                raise Exception('Taskcluster rejected the authentication')
+        except Exception as e:
+            logger.error('TC auth error: {}'.format(e))
+            abort(401) # Unauthorized
 
         return TaskclusterUser(resp)
 

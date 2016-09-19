@@ -1,10 +1,11 @@
 port module App exposing (..)
 
 import Dict exposing ( Dict )
-import Html exposing ( Html, div, nav, button, text, a, ul, li, footer, hr, span, strong, p )
+import Html exposing ( Html, div, nav, button, text, a, ul, li, footer, hr, span, strong, p, h4 )
 import Html.App
 import Html.Attributes exposing ( attribute, id, class, type', href, target )
 import Html.Events as Events
+import Http
 import Json.Decode as JsonDecode exposing ( (:=) )
 import Navigation exposing ( Location )
 import RouteUrl exposing ( UrlChange )
@@ -315,11 +316,45 @@ viewNavDashboard dashboard =
     ]
 
     Failure err -> [
-      li [class "nav-item text-danger"] [text ("Error: " ++ toString err)]
+      li [class "nav-item text-danger"] [text "No analysis available."]
     ]
 
     Success allAnalysis -> 
       (List.map viewNavAnalysis allAnalysis)
+
+viewDashboardStatus: ReleaseDashboard.Model -> Html Msg
+viewDashboardStatus dashboard = 
+  -- Display explicit error messages
+  case dashboard.all_analysis of
+    Failure err -> 
+      div [class "alert alert-danger"] [
+        h4 [] [text "Error while loading analysis"],
+
+        case err of
+          Http.Timeout ->
+            span [] [text "A timeout occured during the request."]
+
+          Http.NetworkError -> 
+            span [] [text "A network error occuring during the request, check your internet connectivity."]
+
+          Http.UnexpectedPayload data ->
+            let
+              l = Debug.log "Unexpected payload: " data
+            in
+              span [] [text "An unexpected payload was received, check your browser logs"]
+
+          Http.BadResponse code message ->
+            case code of
+              401 ->
+                p [] ([
+                  p [] [text "You are not authenticated: please login again."]
+                ] ++ viewLogin)
+
+              _ ->
+                span [] [text ("The backend produced an error " ++ (toString code) ++ " : " ++ message)]
+        ]
+
+    _ -> div [] []
 
 viewNavAnalysis: ReleaseDashboard.Analysis -> Html Msg
 viewNavAnalysis analysis =
@@ -378,7 +413,10 @@ view model =
     div [ id "content" ] [
       case model.current_user.user of
         Just user ->
-          div [class "container-fluid" ] [ viewPage model ]
+          div [class "container-fluid" ] [
+            viewDashboardStatus model.release_dashboard,
+            viewPage model
+          ]
         Nothing ->
           div [class "container"] [
             div [class "alert alert-warning"] [

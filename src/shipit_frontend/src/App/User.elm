@@ -98,7 +98,7 @@ type HawkRequestType = Empty
   | Analysis
   | GetBugzillaAuth
   | UpdateBugzillaAuth
-
+  | BugEdits
 
 fromJust : Maybe a -> a
 fromJust x = case x of

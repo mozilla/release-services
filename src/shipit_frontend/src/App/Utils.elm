@@ -14,6 +14,10 @@ onClick msg =
         (Events.Options False True)
         (JsonDecode.succeed msg)
 
+onChange : (String -> msg) -> Attribute msg
+onChange handler = 
+  Events.on "change" <| JsonDecode.map handler <| JsonDecode.at ["target", "value"] JsonDecode.string
+
 
 eventLink msg attributes =
     a ([ onClick <| msg, href "#"  ] ++ attributes)

@@ -1,5 +1,5 @@
 
-def _serialize_bug(bug):
+def serialize_bug(bug):
     """
     Helper to serialize a bug from its payload
     """
@@ -65,7 +65,7 @@ def serialize_analysis(analysis, full=True):
 
     if full:
         # Add bugs
-        out['bugs'] = [_serialize_bug(b) for b in analysis.bugs if b.payload]
+        out['bugs'] = [serialize_bug(b) for b in analysis.bugs if b.payload]
     else:
         out['bugs'] = []
 

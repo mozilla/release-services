@@ -2,17 +2,19 @@ module App.ReleaseDashboard exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onInput, onSubmit)
 import String
 import Dict
 import Json.Decode as Json exposing (Decoder, (:=))
 import Json.Decode.Extra as JsonExtra exposing ((|:))
+import Json.Encode as JsonEncode
 import RemoteData as RemoteData exposing ( WebData, RemoteData(Loading, Success, NotAsked, Failure) )
 import Http
 import Task exposing (Task)
 import Basics exposing (Never)
 
 import App.User as User exposing (Hawk)
+import App.Utils exposing (onChange)
 
 -- Models
 
@@ -46,7 +48,8 @@ type alias Bug = {
   changes: Int,
 
   -- Actions on bug
-  editing: Bool
+  editing: Bool,
+  edits : Dict.Dict String String
 }
 
 type alias Analysis = {
@@ -70,9 +73,12 @@ type alias Model = {
 type Msg
    = FetchedAllAnalysis (WebData (List Analysis))
    | FetchedAnalysis (WebData Analysis)
+   | FetchedBug (WebData Bug)
    | FetchAllAnalysis
    | FetchAnalysis Analysis
-   | EditBug Bug
+   | StartBugEditor Bug
+   | EditBug Bug String String
+   | SaveBugEdit Bug
    | ProcessWorkflow Hawk
    | UserMsg User.Msg
 
@@ -125,11 +131,12 @@ update msg model user =
             processAllAnalysis workflow
           User.Analysis ->
             processAnalysis workflow
+          User.BugEdits -> 
+            processBugEdits workflow
           _ ->
             Cmd.none
       in
         (model, user, cmd)
-        
 
     UserMsg msg ->
       -- Process messages for user
@@ -138,25 +145,53 @@ update msg model user =
       in
         ( model, user, Cmd.map UserMsg userCmd)
 
-    EditBug bug ->
+    StartBugEditor bug ->
       -- Mark a bug as being edited
-      case model.current_analysis of
-        Success analysis ->
-          let
+      let
+        model' = updateBug model bug.id (\b -> { b | editing = True })
+      in
+        (model', user, Cmd.none)
 
-            -- Rebuild bugs list
-            bugs = List.map (\b -> if b == bug then { b | editing = True } else b) analysis.bugs
-            l = Debug.log "bugs" bugs
+    EditBug bug key value ->
+      -- Store a bug edit
+      let
+        edits = Dict.insert key value bug.edits
+        model' = updateBug model bug.id (\b -> { b | edits = edits })
+      in
+        (model', user, Cmd.none)
 
-            -- Rebuild analysis
-            analysis' = { analysis | bugs = bugs }
+    SaveBugEdit bug ->
+      -- Send edits to backend
+      publishBugEdits model user bug
 
-          in
-            ({ model | current_analysis = Success analysis' }, user, Cmd.none)
+    FetchedBug bug ->
+      -- Store updated bug - post edits
+      let
+        model' = case bug of
+          Success bug' -> updateBug model bug'.id (\b -> bug')
+          _ -> model
+      in
+        (model', user, Cmd.none)
+      
 
-        _ ->
-          (model, user, Cmd.none)
+updateBug: Model -> Int -> (Bug -> Bug) -> Model
+updateBug model bugId callback =
+  -- Update a bug in current analysis
+  -- using a callback
+  case model.current_analysis of
+    Success analysis ->
+      let
 
+        -- Rebuild bugs list
+        bugs = List.map (\b -> if b.id == bugId then (callback b) else b) analysis.bugs
+
+        -- Rebuild analysis
+        analysis' = { analysis | bugs = bugs }
+
+      in
+        { model | current_analysis = Success analysis' }
+
+    _ -> model
 
 fetchAllAnalysis : Model -> User.Model -> (Model, User.Model, Cmd Msg)
 fetchAllAnalysis model user =
@@ -224,6 +259,47 @@ processAnalysis workflow =
     Nothing ->
         Cmd.none
 
+publishBugEdits: Model -> User.Model -> Bug -> (Model, User.Model, Cmd Msg)
+publishBugEdits model user bug =
+  -- Publish all bug edits to backend
+  let 
+    editsJson = JsonEncode.encode 0 (
+      -- Encode needs a list of String/json value
+      JsonEncode.object (List.map (\(x,y)->(x, JsonEncode.string y)) (Dict.toList bug.edits))
+    )
+    params = {
+      backend = {
+        method = "PUT",
+        url = model.backend_dashboard_url ++ "/bugs/" ++ (toString bug.id)
+      },
+      target = Just {
+        -- Backend will retrieve the secret
+        method = "GET",
+        url = "https://secrets.taskcluster.net/v1/secret/garbage%2Fshipit%2Fbugzilla"
+      },
+      body = Just editsJson,
+      requestType = User.BugEdits
+    }
+    (user', workflow, userCmd) = User.update (User.InitHawkRequest params) user
+  in
+    (
+      model,
+      user',
+      Cmd.map UserMsg userCmd
+    )
+
+processBugEdits : Hawk -> Cmd Msg
+processBugEdits workflow =
+  -- Decode and save a single analysis
+  case workflow.task of
+    Just task ->
+      (Http.fromJson decodeBug task)
+      |> RemoteData.asCmd
+      |> Cmd.map FetchedBug
+
+    Nothing ->
+        Cmd.none
+
 decodeAllAnalysis : Decoder (List Analysis)
 decodeAllAnalysis =
   Json.list decodeAnalysis
@@ -251,6 +327,7 @@ decodeBug =
     |: (Json.maybe ("uplift" := decodeUpliftRequest))
     |: ("changes_size" := Json.int)
     |: (Json.succeed False) -- not editing at first
+    |: (Json.succeed Dict.empty) -- not editing at first
     
 
 decodeContributor : Decoder Contributor
@@ -364,7 +441,7 @@ viewBugDetails bug =
     viewFlags bug,
   
     -- Start editing
-    button [class "btn btn-primary", onClick (EditBug bug)] [text "Edit this bug"]
+    button [class "btn btn-primary", onClick (StartBugEditor bug)] [text "Edit this bug"]
   ]
 
 viewStats: Bug -> Html Msg
@@ -408,14 +485,15 @@ viewStatusFlag (key, value) =
       _ -> span [class "label label-default"] [text value]
   ]
 
-editStatusFlag (key, flag_value) =
+editStatusFlag: Bug -> (String, String) -> Html Msg
+editStatusFlag bug (key, flag_value) =
   let
     possible_values = ["affected", "verified", "fixed", "wontfix", "---"]
   in
     div [class "form-group row"] [
       label [class "col-sm-3 col-form-label"] [text ("Status: " ++ key)],
       div [class "col-sm-9"] [
-        select [class "form-control form-control-sm"]
+        select [class "form-control form-control-sm", onChange (EditBug bug ("status_" ++ key))]
           (List.map (\x -> option [ selected (x == flag_value)] [text x]) possible_values)
       ]
     ]
@@ -430,26 +508,27 @@ viewTrackingFlag (key, value) =
       _ -> span [class "label label-default"] [text value]
   ]
 
-editTrackingFlag (key, flag_value) =
+editTrackingFlag: Bug -> (String, String) -> Html Msg
+editTrackingFlag bug (key, flag_value) =
   let
     possible_values = ["+", "-", "?", "---"]
   in
     div [class "form-group row"] [
       label [class "col-sm-3 col-form-label"] [text ("Tracking: " ++ key)],
       div [class "col-sm-9"] [
-        select [class "form-control form-control-sm"]
+        select [class "form-control form-control-sm", onChange (EditBug bug ("tracking_" ++ key))]
           (List.map (\x -> option [ selected (x == flag_value)] [text x]) possible_values)
       ]
     ]
 
 viewEditor: Bug -> Html Msg
 viewEditor bug =
-  Html.form [class "editor"] [
+  Html.form [class "editor", onSubmit (SaveBugEdit bug)] [
     div [class "form-group"] [
-      textarea [class "form-control", placeholder "Your comment"] []
+      textarea [class "form-control", placeholder "Your comment", onInput (EditBug bug "comment")] []
     ],
-    div [] (List.map editStatusFlag (Dict.toList bug.flags_status)),
-    div [] (List.map editTrackingFlag (Dict.toList bug.flags_tracking)),
+    div [] (List.map (\x -> editStatusFlag bug x) (Dict.toList bug.flags_status)),
+    div [] (List.map (\x -> editTrackingFlag bug x) (Dict.toList bug.flags_tracking)),
     button [class "btn btn-success"] [text "Update bug"]
   ]
 
