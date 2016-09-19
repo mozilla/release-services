@@ -45,7 +45,25 @@ APP_PRODUCTION_S3_shipit_frontend=shipit-production-frontend
 
 
 help:
-	@echo "TODO: need to write help for commands"
+	@echo ""
+	@echo "To enter a shell to develop application do:"
+	@echo "  $$ make develop APP=<application>"
+	@echo ""
+	@echo "To run a developing application do:"
+	@echo "  $$ make develop-run APP=<application>"
+	@echo ""
+	@echo "To run tests for specific application do:"
+	@echo "  $$ make build-app APP=<application>"
+	@echo ""
+	@if [[ -z "$(APP)" ]]; then \
+		echo "Available APPs are: "; \
+		for app in $(APPS); do \
+			echo " - $$app"; \
+		done; \
+		echo ""; \
+	fi
+	@echo ""
+	@echo "For more information look at: https://docs.mozilla-releng.net"
 
 
 nix:
