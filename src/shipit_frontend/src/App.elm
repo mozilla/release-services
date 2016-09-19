@@ -12,6 +12,7 @@ import RouteUrl exposing ( UrlChange )
 import RouteUrl.Builder as Builder exposing ( Builder, builder, replacePath )
 import Result exposing ( Result(Ok, Err))
 import RemoteData as RemoteData exposing ( RemoteData(Loading, Success, NotAsked, Failure) )
+import String
 
 import App.Home as Home 
 import App.User as User
@@ -59,8 +60,13 @@ delta2url' : Model -> Model -> Maybe Builder
 delta2url' previous current =
     case current.current_page of
         ReleaseDashboard ->
+          let
+            path = case current.release_dashboard.current_analysis of
+              Success analysis -> [ "release-dashboard", (toString analysis.id) ]
+              _ -> [ "release-dashboard" ]
+          in
             Maybe.map
-                (Builder.prependToPath ["release-dashboard"])
+                (Builder.prependToPath path)
                 (Just builder)
         _ ->
             Maybe.map
@@ -77,6 +83,7 @@ location2messages' builder =
     case Builder.path builder of
         first :: rest ->
             let
+                l = Debug.log "ROUTE" (Builder.path builder)
                 builder' = Builder.replacePath rest builder
             in
                 case first of
@@ -97,7 +104,21 @@ location2messages' builder =
                         , ShowPage Home
                         ]
                     "release-dashboard" ->
-                        [ ShowPage ReleaseDashboard ]
+                      let
+                        messages = if List.length rest == 1 then
+                          case List.head rest of
+                            Just analysisId -> 
+                              case String.toInt analysisId |> Result.toMaybe of
+                                Just analysisId' ->
+                                  -- Load specified analysis 
+                                  [ ReleaseDashboardMsg (ReleaseDashboard.FetchAnalysis analysisId') ]
+                                Nothing -> [] -- not a string
+                            Nothing -> [] -- empty string
+                        else
+                          [] -- No sub query parts
+                      in
+                        -- Finish by showing the page
+                        messages ++ [ShowPage ReleaseDashboard]
 
                     -- TODO: This should redirect to NotFound
                     _ ->
@@ -140,7 +161,7 @@ update msg model =
 
         FetchAnalysis analysis ->
             let
-                (newModel, newUser, newCmd) = ReleaseDashboard.update (ReleaseDashboard.FetchAnalysis analysis) model.release_dashboard model.current_user
+                (newModel, newUser, newCmd) = ReleaseDashboard.update (ReleaseDashboard.FetchAnalysis analysis.id) model.release_dashboard model.current_user
             in
                 (
                   { model | release_dashboard = newModel, current_page = ReleaseDashboard, current_user = newUser },

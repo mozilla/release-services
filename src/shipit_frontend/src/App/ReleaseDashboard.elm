@@ -75,7 +75,7 @@ type Msg
    | FetchedAnalysis (WebData Analysis)
    | FetchedBug (WebData Bug)
    | FetchAllAnalysis
-   | FetchAnalysis Analysis
+   | FetchAnalysis Int
    | StartBugEditor Bug
    | EditBug Bug String String
    | SaveBugEdit Bug
@@ -103,11 +103,11 @@ update msg model user =
       in
         fetchAllAnalysis newModel user
 
-    FetchAnalysis analysis ->
+    FetchAnalysis analysisId ->
       let
         newModel = { model | current_analysis = Loading }
       in
-        fetchAnalysis newModel user analysis.id
+        fetchAnalysis newModel user analysisId
 
     FetchedAllAnalysis allAnalysis ->
       (
