@@ -1,5 +1,5 @@
 from flask_login import LoginManager
-from flask import request
+from flask import request, abort
 import logging
 import taskcluster
 
@@ -71,6 +71,31 @@ class TaskclusterUser(BaseUser):
     def get_permissions(self):
         return self.scopes
 
+    def taskcluster_secrets(self):
+        """
+        Configure the TaskCluster Secrets client
+        with optional target HAWK header
+        """
+        target_header = request.environ.get('HTTP_X_AUTHORIZATION_TARGET')
+        if not target_header:
+            raise Exception('Missing X-AUTHORIZATION-TARGET header')
+
+        options = {
+            'credentials' : {
+                'hawkHeader' : target_header
+            }
+        }
+        return taskcluster.Secrets(options)
+
+    def get_secret(self, name):
+        """
+        Helper to read a Taskcluster secret
+        """
+        secrets = self.taskcluster_secrets()
+        secret = secrets.get(name)
+        if not secret:
+            raise Exception('Missing TC secret {}'.format(name))
+        return secret['secret']
 
 class Auth(object):
 
@@ -111,9 +136,13 @@ def init_app(app):
 
         # Auth with taskcluster
         auth = taskcluster.Auth()
-        resp = auth.authenticateHawk(payload)
-        if not resp.get('status') == 'auth-success':
-            raise Exception('Taskcluster rejected the authentication')
+        try:
+            resp = auth.authenticateHawk(payload)
+            if not resp.get('status') == 'auth-success':
+                raise Exception('Taskcluster rejected the authentication')
+        except Exception as e:
+            logger.error('TC auth error: {}'.format(e))
+            abort(401) # Unauthorized
 
         return TaskclusterUser(resp)
 

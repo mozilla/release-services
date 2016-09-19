@@ -2,17 +2,19 @@ module App.ReleaseDashboard exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick, onInput, onSubmit)
 import String
 import Dict
 import Json.Decode as Json exposing (Decoder, (:=))
 import Json.Decode.Extra as JsonExtra exposing ((|:))
+import Json.Encode as JsonEncode
 import RemoteData as RemoteData exposing ( WebData, RemoteData(Loading, Success, NotAsked, Failure) )
 import Http
 import Task exposing (Task)
 import Basics exposing (Never)
 
-import App.User as User
-import App.Hawk as Hawk
+import App.User as User exposing (Hawk)
+import App.Utils exposing (onChange)
 
 -- Models
 
@@ -33,6 +35,7 @@ type alias Bug = {
   summary: String,
   keywords: List String,
   flags_status : Dict.Dict String String,
+  flags_tracking : Dict.Dict String String,
 
   -- Users
   creator: Contributor,
@@ -42,7 +45,11 @@ type alias Bug = {
   uplift_request: Maybe UpliftRequest,
 
   -- Stats
-  changes: Int
+  changes: Int,
+
+  -- Actions on bug
+  editing: Bool,
+  edits : Dict.Dict String String
 }
 
 type alias Analysis = {
@@ -56,14 +63,8 @@ type alias Model = {
   -- All analysis in use
   all_analysis : WebData (List Analysis),
 
-  -- Current connected user
-  current_user : Maybe User.Model,
-
   -- Current Analysis used
   current_analysis : WebData (Analysis),
-
-  -- Hawk request
-  hawk : Hawk.Model,
 
   -- Backend base endpoint
   backend_dashboard_url : String
@@ -72,132 +73,232 @@ type alias Model = {
 type Msg
    = FetchedAllAnalysis (WebData (List Analysis))
    | FetchedAnalysis (WebData Analysis)
-   | SelectAnalysis Analysis
-   | UserUpdate (Maybe User.Model)
-   | HawkMsg Hawk.Msg
+   | FetchedBug (WebData Bug)
+   | FetchAllAnalysis
+   | FetchAnalysis Int
+   | StartBugEditor Bug
+   | EditBug Bug String String
+   | SaveBugEdit Bug
+   | ProcessWorkflow Hawk
+   | UserMsg User.Msg
 
 
 init : String -> (Model, Cmd Msg)
 init backend_dashboard_url =
   -- Init empty model
-  let
-    (hawk, hawkCmd) = Hawk.init
-  in
-    ({
-      all_analysis = NotAsked,
-      current_analysis = NotAsked,
-      current_user = Nothing,
-      hawk = hawk,
-      backend_dashboard_url = backend_dashboard_url
-    }, Cmd.map HawkMsg hawkCmd)
+  ({
+    all_analysis = NotAsked,
+    current_analysis = NotAsked,
+    backend_dashboard_url = backend_dashboard_url
+  }, Cmd.none)
 
 -- Update
 
-update : Msg -> Model -> (Model, Cmd Msg)
-update msg model =
+update : Msg -> Model -> User.Model -> (Model, User.Model, Cmd Msg)
+update msg model user =
   case msg of
+    FetchAllAnalysis ->
+      let
+        newModel = { model | all_analysis = Loading }
+      in
+        fetchAllAnalysis newModel user
+
+    FetchAnalysis analysisId ->
+      let
+        newModel = { model | current_analysis = Loading }
+      in
+        fetchAnalysis newModel user analysisId
+
     FetchedAllAnalysis allAnalysis ->
       (
         { model | all_analysis = allAnalysis },
+        user,
         Cmd.none
       )
 
     FetchedAnalysis analysis ->
       (
         { model | current_analysis = analysis },
+        user,
         Cmd.none
       )
-  
-    SelectAnalysis analysis ->
-      let
-        newModel = { model | current_analysis = Loading }
-      in
-        fetchAnalysis model analysis.id
 
-    UserUpdate user ->
+    ProcessWorkflow workflow ->
+      -- Process task from workflow
       let
-        newModel = { model | current_user = user }
-      in
-        -- Reload all analysis
-        fetchAllAnalysis newModel
-
-    HawkMsg msg ->
-      -- Forward messages to hawk
-      let
-        (hawk, newCmd) = Hawk.update msg model.hawk
-        newModel = { model | hawk = hawk }
-      in
-        -- Process awaiting tasks from HAWK
-        case hawk.requestType of
-          Hawk.AllAnalysis ->
-            processAllAnalysis newModel
-          Hawk.Analysis ->
-            processAnalysis newModel
+        cmd = case workflow.requestType of
+          User.AllAnalysis ->
+            processAllAnalysis workflow
+          User.Analysis ->
+            processAnalysis workflow
+          User.BugEdits -> 
+            processBugEdits workflow
           _ ->
-            (newModel, Cmd.map HawkMsg newCmd )
+            Cmd.none
+      in
+        (model, user, cmd)
 
+    UserMsg msg ->
+      -- Process messages for user
+      let
+        (newUser, workflow, userCmd) = User.update msg user
+      in
+        ( model, user, Cmd.map UserMsg userCmd)
 
-fetchAllAnalysis : Model -> (Model, Cmd Msg)
-fetchAllAnalysis model =
+    StartBugEditor bug ->
+      -- Mark a bug as being edited
+      let
+        model' = updateBug model bug.id (\b -> { b | editing = True })
+      in
+        (model', user, Cmd.none)
+
+    EditBug bug key value ->
+      -- Store a bug edit
+      let
+        edits = Dict.insert key value bug.edits
+        model' = updateBug model bug.id (\b -> { b | edits = edits })
+      in
+        (model', user, Cmd.none)
+
+    SaveBugEdit bug ->
+      -- Send edits to backend
+      publishBugEdits model user bug
+
+    FetchedBug bug ->
+      -- Store updated bug - post edits
+      let
+        model' = case bug of
+          Success bug' -> updateBug model bug'.id (\b -> bug')
+          _ -> model
+      in
+        (model', user, Cmd.none)
+      
+
+updateBug: Model -> Int -> (Bug -> Bug) -> Model
+updateBug model bugId callback =
+  -- Update a bug in current analysis
+  -- using a callback
+  case model.current_analysis of
+    Success analysis ->
+      let
+
+        -- Rebuild bugs list
+        bugs = List.map (\b -> if b.id == bugId then (callback b) else b) analysis.bugs
+
+        -- Rebuild analysis
+        analysis' = { analysis | bugs = bugs }
+
+      in
+        { model | current_analysis = Success analysis' }
+
+    _ -> model
+
+fetchAllAnalysis : Model -> User.Model -> (Model, User.Model, Cmd Msg)
+fetchAllAnalysis model user =
   -- Fetch all analysis summary
-  case model.current_user of
-    Just user ->
-      let 
+  let 
+    params = {
+      backend = {
+        method = "GET",
         url = model.backend_dashboard_url ++ "/analysis"
-        (hawk, cmd) = Hawk.update (Hawk.InitRequest user "GET" url Hawk.AllAnalysis) model.hawk
-      in
-        (
-          { model | hawk = hawk },
-          Cmd.map HawkMsg cmd
-        )
+      },
+      target = Nothing,
+      body = Nothing,
+      requestType = User.AllAnalysis
+    }
+    (user', workflow, userCmd) = User.update (User.InitHawkRequest params) user
+  in
+    (
+      model,
+      user',
+      Cmd.map UserMsg userCmd
+    )
 
-    Nothing ->
-      (model, Cmd.none) -- no credentials 
-
-processAllAnalysis : Model -> (Model, Cmd Msg)
-processAllAnalysis model =
+processAllAnalysis : Hawk -> Cmd Msg
+processAllAnalysis workflow =
   -- Decode and save all analysis
-  case model.hawk.task of
+  case workflow.task of
     Just task ->
-      (
-        model,
-        (Http.fromJson decodeAllAnalysis task)
-        |> RemoteData.asCmd
-        |> Cmd.map FetchedAllAnalysis
-      )
-    Nothing ->
-        ( model, Cmd.none )
+      (Http.fromJson decodeAllAnalysis task)
+      |> RemoteData.asCmd
+      |> Cmd.map FetchedAllAnalysis
 
-fetchAnalysis : Model -> Int -> (Model, Cmd Msg)
-fetchAnalysis model analysis_id =
+    Nothing ->
+        Cmd.none
+
+fetchAnalysis : Model -> User.Model -> Int -> (Model, User.Model, Cmd Msg)
+fetchAnalysis model user analysis_id =
   -- Fetch a specific analysis with details
-  case model.current_user of
-    Just user ->
-      let 
+  let 
+    params = {
+      backend = {
+        method = "GET",
         url = model.backend_dashboard_url ++ "/analysis/" ++ (toString analysis_id)
-        (hawk, cmd) = Hawk.update (Hawk.InitRequest user "GET" url Hawk.Analysis) model.hawk
-      in
-        (
-          { model | hawk = hawk },
-          Cmd.map HawkMsg cmd
-        )
+      },
+      target = Nothing,
+      body = Nothing,
+      requestType = User.Analysis
+    }
+    (user', workflow, userCmd) = User.update (User.InitHawkRequest params) user
+  in
+    (
+      model,
+      user',
+      Cmd.map UserMsg userCmd
+    )
 
-    Nothing ->
-      (model, Cmd.none) -- no credentials 
-
-processAnalysis : Model -> (Model, Cmd Msg)
-processAnalysis model =
+processAnalysis : Hawk -> Cmd Msg
+processAnalysis workflow =
   -- Decode and save a single analysis
-  case model.hawk.task of
+  case workflow.task of
     Just task ->
-      (
-        model,
-        (Http.fromJson decodeAnalysis task)
-        |> RemoteData.asCmd
-        |> Cmd.map FetchedAnalysis
-      )
+      (Http.fromJson decodeAnalysis task)
+      |> RemoteData.asCmd
+      |> Cmd.map FetchedAnalysis
+
     Nothing ->
-        ( model, Cmd.none )
+        Cmd.none
+
+publishBugEdits: Model -> User.Model -> Bug -> (Model, User.Model, Cmd Msg)
+publishBugEdits model user bug =
+  -- Publish all bug edits to backend
+  let 
+    editsJson = JsonEncode.encode 0 (
+      -- Encode needs a list of String/json value
+      JsonEncode.object (List.map (\(x,y)->(x, JsonEncode.string y)) (Dict.toList bug.edits))
+    )
+    params = {
+      backend = {
+        method = "PUT",
+        url = model.backend_dashboard_url ++ "/bugs/" ++ (toString bug.id)
+      },
+      target = Just {
+        -- Backend will retrieve the secret
+        method = "GET",
+        url = "https://secrets.taskcluster.net/v1/secret/garbage%2Fshipit%2Fbugzilla"
+      },
+      body = Just editsJson,
+      requestType = User.BugEdits
+    }
+    (user', workflow, userCmd) = User.update (User.InitHawkRequest params) user
+  in
+    (
+      model,
+      user',
+      Cmd.map UserMsg userCmd
+    )
+
+processBugEdits : Hawk -> Cmd Msg
+processBugEdits workflow =
+  -- Decode and save a single analysis
+  case workflow.task of
+    Just task ->
+      (Http.fromJson decodeBug task)
+      |> RemoteData.asCmd
+      |> Cmd.map FetchedBug
+
+    Nothing ->
+        Cmd.none
 
 decodeAllAnalysis : Decoder (List Analysis)
 decodeAllAnalysis =
@@ -219,11 +320,14 @@ decodeBug =
     |: ("summary" := Json.string)
     |: ("keywords" := Json.list Json.string)
     |: ("flags_status" := Json.dict Json.string)
+    |: ("flags_tracking" := Json.dict Json.string)
     |: ("creator" := decodeContributor)
     |: ("assignee" := decodeContributor)
     |: ("reviewers" := (Json.list decodeContributor))
     |: (Json.maybe ("uplift" := decodeUpliftRequest))
     |: ("changes_size" := Json.int)
+    |: (Json.succeed False) -- not editing at first
+    |: (Json.succeed Dict.empty) -- not editing at first
     
 
 decodeContributor : Decoder Contributor
@@ -252,10 +356,10 @@ view : Model -> Html Msg
 view model =
   case model.current_analysis of
     NotAsked ->
-      div [class "alert alert-info"] [text "Initialising ..."]
+      div [class "alert alert-info"] [text "Please select an analysis in the navbar above."]
 
     Loading ->
-      div [class "alert alert-info"] [text "Loading ..."]
+      div [class "alert alert-info"] [text "Loading your bugs..."]
 
     Failure err ->
       div [class "alert alert-danger"] [text ("Error: " ++ toString err)]
@@ -286,8 +390,10 @@ viewBug bug =
         viewUpliftRequest bug.uplift_request
       ],
       div [class "col-xs-4"] [
-        viewStats bug,
-        viewFlags bug
+        if bug.editing then
+          viewEditor bug
+        else
+          viewBugDetails bug
       ]
     ],
     div [class "text-muted"] [
@@ -323,15 +429,20 @@ viewUpliftRequest maybe =
     Just request -> 
       div [class "uplift-request", id (toString request.bugzilla_id)] [
         viewContributor request.author "Uplift request",
-        div [class "comment"] (List.map viewUpliftText (String.split "\n" request.text))
+        div [class "comment"] (List.map (\x -> p [] [text x]) (String.split "\n" request.text))
       ]
     Nothing -> 
       div [class "alert alert-warning"] [text "No uplift request."]
 
-
-viewUpliftText: String -> Html Msg
-viewUpliftText upliftText =
-  p [] [text upliftText]
+viewBugDetails: Bug -> Html Msg
+viewBugDetails bug =
+  div [class "details"] [
+    viewStats bug,
+    viewFlags bug,
+  
+    -- Start editing
+    button [class "btn btn-primary", onClick (StartBugEditor bug)] [text "Edit this bug"]
+  ]
 
 viewStats: Bug -> Html Msg
 viewStats bug =
@@ -346,27 +457,80 @@ viewStats bug =
 viewFlags: Bug -> Html Msg
 viewFlags bug =
   let
-    useful_flags = Dict.filter (\k v -> not (v == "---")) bug.flags_status
+    flags_status = Dict.filter (\k v -> not (v == "---")) bug.flags_status
+    flags_tracking = Dict.filter (\k v -> not (v == "---")) bug.flags_tracking
   in 
     div [class "flags"] [
-      h5 [] [text "Tracking flags - status"],
-      ul [] (List.map viewFlag (Dict.toList useful_flags))
+      h5 [] [text "Status flags"],
+      if Dict.isEmpty flags_status then
+        p [class "text-warning"] [text "No status flags set."]
+      else
+        ul [] (List.map viewStatusFlag (Dict.toList flags_status)),
+
+      h5 [] [text "Tracking flags"],
+      if Dict.isEmpty flags_tracking then
+        p [class "text-warning"] [text "No tracking flags set."]
+      else
+        ul [] (List.map viewTrackingFlag (Dict.toList flags_tracking))
     ]
 
-viewFlag tuple =
+viewStatusFlag (key, value) =
+  li [] [
+    strong [] [text key],
+    case value of
+      "affected" -> span [class "label label-danger"] [text value]
+      "verified" -> span [class "label label-info"] [text value]
+      "fixed" -> span [class "label label-success"] [text value]
+      "wontfix" -> span [class "label label-warning"] [text value]
+      _ -> span [class "label label-default"] [text value]
+  ]
+
+editStatusFlag: Bug -> (String, String) -> Html Msg
+editStatusFlag bug (key, flag_value) =
   let
-    (key, value) = tuple
+    possible_values = ["affected", "verified", "fixed", "wontfix", "---"]
   in
-    li [] [
-      strong [] [text key],
-      case value of
-        "affected" -> span [class "label label-danger"] [text value]
-        "verified" -> span [class "label label-info"] [text value]
-        "fixed" -> span [class "label label-success"] [text value]
-        "wontfix" -> span [class "label label-warning"] [text value]
-        _ -> span [class "label label-default"] [text value]
-      
+    div [class "form-group row"] [
+      label [class "col-sm-3 col-form-label"] [text ("Status: " ++ key)],
+      div [class "col-sm-9"] [
+        select [class "form-control form-control-sm", onChange (EditBug bug ("status_" ++ key))]
+          (List.map (\x -> option [ selected (x == flag_value)] [text x]) possible_values)
+      ]
     ]
+
+viewTrackingFlag (key, value) =
+  li [] [
+    strong [] [text key],
+    case value of
+      "+" -> span [class "label label-success"] [text value]
+      "-" -> span [class "label label-danger"] [text value]
+      "?" -> span [class "label label-info"] [text value]
+      _ -> span [class "label label-default"] [text value]
+  ]
+
+editTrackingFlag: Bug -> (String, String) -> Html Msg
+editTrackingFlag bug (key, flag_value) =
+  let
+    possible_values = ["+", "-", "?", "---"]
+  in
+    div [class "form-group row"] [
+      label [class "col-sm-3 col-form-label"] [text ("Tracking: " ++ key)],
+      div [class "col-sm-9"] [
+        select [class "form-control form-control-sm", onChange (EditBug bug ("tracking_" ++ key))]
+          (List.map (\x -> option [ selected (x == flag_value)] [text x]) possible_values)
+      ]
+    ]
+
+viewEditor: Bug -> Html Msg
+viewEditor bug =
+  Html.form [class "editor", onSubmit (SaveBugEdit bug)] [
+    div [class "form-group"] [
+      textarea [class "form-control", placeholder "Your comment", onInput (EditBug bug "comment")] []
+    ],
+    div [] (List.map (\x -> editStatusFlag bug x) (Dict.toList bug.flags_status)),
+    div [] (List.map (\x -> editTrackingFlag bug x) (Dict.toList bug.flags_tracking)),
+    button [class "btn btn-success"] [text "Update bug"]
+  ]
 
 viewKeyword: String -> Html Msg
 viewKeyword keyword =

@@ -28,6 +28,49 @@ paths:
       responses:
         200:
           description: A specific analysis
+          #schema:
+          #  $ref: '#/definitions/Analysis'
+
+  /bugzilla/auth:
+    get:
+      operationId: "shipit_dashboard.api.get_bugzilla_auth"
+      responses:
+        200:
+          description: Check Bugzilla credentials status
+          schema:
+            $ref: '#/definitions/BugzillaAuth'
+
+    post:
+      operationId: "shipit_dashboard.api.update_bugzilla_auth"
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/BugzillaCredentials'
+      responses:
+        200:
+          description: Update Bugzilla credentials
+          schema:
+            $ref: '#/definitions/BugzillaAuth'
+
+  /bugs/{bug_id}:
+    put:
+      operationId: "shipit_dashboard.api.update_bug"
+      parameters:
+      - name: bug_id
+        in: path
+        description: ID of the Bug to update
+        required: true
+        type: integer
+      responses:
+        200:
+          description: A specific Bug
+          schema:
+            $ref: '#/definitions/Bug'
 
 definitions:
 
@@ -70,6 +113,7 @@ definitions:
       - summary
       - keywords
       - flags_status
+      - flags_tracking
       - changes_size
       - creator
       - assignee
@@ -86,6 +130,10 @@ definitions:
         items:
           type: string
       flags_status:
+        type: object
+        additionalProperties:
+          type: string
+      flags_tracking:
         type: object
         additionalProperties:
           type: string
@@ -125,4 +173,23 @@ definitions:
       author:
         $ref: '#/definitions/Contributor'
       comment:
+        type: string
+
+  BugzillaAuth:
+    type: object
+    required:
+      - authenticated
+      - message
+    properties:
+      authenticated:
+        type: boolean
+      message:
+        type: string
+
+  BugzillaCredentials:
+    type: object
+    properties:
+      login:
+        type: string 
+      token:
         type: string

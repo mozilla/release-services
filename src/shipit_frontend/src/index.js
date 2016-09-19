@@ -48,33 +48,43 @@ app.ports.hawk_build.subscribe(function(request){
   if(request.certificate)
     extData = new Buffer(JSON.stringify({certificate: request.certificate})).toString('base64');
 
-  // Build hawk header
-  var header = Hawk.client.header(request.url, request.method, {
+  // Generic payload for both headers
+  var payload = {
     credentials: {
       id: request.id,
       key: request.key,
       algorithm: 'sha256'
     },
     ext: extData,
-  });
+  };
 
-  // Send back header
-  app.ports.hawk_get.send(header.field);
+  // Build backend & target (optional) headers
+  var backend = Hawk.client.header(request.backend.url, request.backend.method, payload);
+  var target = null;
+  if(request.target)
+    target = Hawk.client.header(request.target.url, request.target.method, payload);
+
+  // Send back headers
+  app.ports.hawk_get.send({
+    workflowId : request.workflowId,
+    header_backend : backend.field,
+    header_target : target ? target.field : null,
+  });
 });
 
 app.ports.redirect.subscribe(function(redirect) {
    var redirect_url = url.parse(redirect.url);
    if (redirect.target !== null) {
+     var query = {};
+     query[redirect.targetName] = url.format({
+       protocol: window.location.protocol,
+       host: window.location.host,
+       port: window.location.port,
+       pathname: redirect.target[0]
+     });
+     query['description'] = redirect.target[1];
      redirect_url = url.format(window.$.extend({}, redirect_url, {
-       query: {
-         target: url.format({
-             protocol: window.location.protocol,
-             host: window.location.host,
-             port: window.location.port,
-             pathname: redirect.target[0]
-         }),
-         description: redirect.target[1]
-       }
+      query: query,
      }));
    } else {
      redirect_url = url.format(redirect_url)

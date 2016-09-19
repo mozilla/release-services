@@ -89,4 +89,15 @@ let
       popd
     '';
    };
+
+# Update the database with bugs analysis
+# CACHE_TYPE=filesystem \
+# CACHE_DIR=$PWD/src/shipit_dashboard/cache \
+# DATABASE_URL=engine://XXXXX \
+# FLASK_APP=shipit_dashboard \
+# APP_SETTINGS=$PWD/src/shipit_dashboard/settings.py \
+#   nix-shell nix/default.nix -A shipit_dashboard \
+#    --run "flask run_workflow_local"
+
+
 in self

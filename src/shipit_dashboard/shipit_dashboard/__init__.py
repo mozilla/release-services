@@ -7,7 +7,7 @@ from __future__ import absolute_import
 import os
 
 from releng_common import auth, db, create_app
-from shipit_dashboard.workflow import run_workflow
+from shipit_dashboard.workflow import run_workflow, run_workflow_local
 from shipit_dashboard.encoder import ShipitJSONEncoder
 
 
@@ -19,6 +19,7 @@ def init_app(app):
 
     # Register extra commands
     app.cli.add_command(run_workflow)
+    app.cli.add_command(run_workflow_local)
 
     # Use custom json encoder
     # XXX: why do we need custom encoder

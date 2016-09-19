@@ -28,4 +28,8 @@ self: super: {
     buildInputs = old.buildInputs ++ [ self."setuptools-scm" ];
   });
 
+  "taskcluster" = python.overrideDerivation super."taskcluster" (old: {
+    patches = [ (pkgs.fetchurl { url = "https://github.com/taskcluster/taskcluster-client.py/pull/56.patch"; sha256 = "0g5z4gkkkz58p1gcq5ym9aw9rgcmidgs64mil22sxr9y7iq6mj4m"; }) ];
+  });
+
 }
