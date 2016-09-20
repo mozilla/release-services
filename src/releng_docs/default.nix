@@ -3,7 +3,9 @@
 let
 
   inherit (builtins) readFile concatStringsSep;
-  inherit (releng_pkgs.lib) fromRequirementsFile;
+  inherit (releng_pkgs.lib) fromRequirementsFile mkTaskclusterGithubTask;
+  inherit (releng_pkgs.tools) pypi2nix;
+  inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) removeSuffix;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
 
@@ -16,23 +18,32 @@ let
   self = mkDerivation {
     name = "${name}-${version}";
     src = ./.;
+
     buildInputs = fromRequirementsFile [ ./requirements.txt ] python.packages;
+
     buildPhase = ''
       make html RELENG_DOCS_VERSION=${version}
     '';
+
     installPhase = ''
       mkdir -p $out
       cp -R build/html/* $out/
     '';
+
     shellHook = ''
       export RELENG_DOCS_VERSION=${version}
     '';
-    passthru.updateSrc = releng_pkgs.pkgs.writeScriptBin "update" ''
+
+    passthru.taskclusterGithubTasks =
+      map (branch: mkTaskclusterGithubTask { inherit name branch; }) [ "master" "staging" "production" ];
+
+    passthru.update  = writeScript "update-${name}" ''
       pushd src/${name}
-      ${releng_pkgs.tools.pypi2nix}/bin/pypi2nix -v \
+      ${pypi2nix}/bin/pypi2nix -v \
         -V 3.5 \
         -r requirements.txt
       popd
     '';
+
    };
 in self

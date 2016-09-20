@@ -1,14 +1,4 @@
 {
-  "name": "releng_frontend",
-  "version": "0.1.0",
-  "description": "releng frontend",
-  "main": "src/index.js",
-  "author": "Rok Garbas <rok@garbas.si>",
-  "repository": "https://github.com/garbas/mozilla-releng",
-  "license": "MPL-2.0",
-  "engines": {
-    "node": ">=6.0.0"
-  },
   "config": {
     "entry": "src/index.js",
     "html": {
@@ -17,25 +7,5 @@
       "author": "Mozilla RelEng Team",
       "head": "<link href=\"https://fonts.googleapis.com/css?family=Fira+Sans:400,300,500\" rel=\"stylesheet\" type=\"text/css\"\\>"
     }
-  },
-  "scripts": {
-    "build": "neo build --config webpack.config.js",
-    "dev": "neo start --port 5500 --config webpack.config.js",
-    "test": "neo test --config webpack.config.js"
-  },
-  "keywords": [
-    "mozilla",
-    "releng"
-  ],
-  "dependencies": {
-    "bootstrap": "4.0.0-alpha.2",
-    "elm-webpack-loader": "3.0.3",
-    "expose-loader": "0.7.1",
-    "jquery": "3.1.0",
-    "mozilla-neo": "*",
-    "react": "*",
-    "tether": "1.3.4",
-    "url": "0.11.0"
-  },
-  "devDependencies": {}
+  }
 }
