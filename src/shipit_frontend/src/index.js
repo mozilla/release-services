@@ -6,7 +6,7 @@ require('bootstrap');
 var Hawk = require('hawk');
 require("./index.scss");
 
-var backend_dashboard_url = process.env.NEO_DASHBOARD_URL || "http://localhost:5000";
+var backend_dashboard_url = process.env.NEO_DASHBOARD_URL || "REAL_DASHBOARD_URL";
 
 var storage_key = 'shipit-credentials';
 
@@ -24,7 +24,7 @@ app.ports.localstorage_load.subscribe(function(){
     user = JSON.parse(window.localStorage.getItem(storage_key));
     user = user.value || user;
   } catch (e) {
-    console.warn('Loading user failed', e);
+    user = null;
   }
   app.ports.localstorage_get.send(user);
 });
