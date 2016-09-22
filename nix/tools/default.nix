@@ -4,7 +4,7 @@ let
   inherit (releng_pkgs.pkgs) writeScript stdenv makeWrapper;
 in {
 
-  inherit (releng_pkgs.pkgs) jq;
+  inherit (releng_pkgs.pkgs) jq gnused coreutils;
 
   pypi2nix = import ./pypi2nix.nix { inherit releng_pkgs; } // {
     update = releng_pkgs.lib.updateFromGitHub {

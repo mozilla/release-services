@@ -11,12 +11,16 @@ APPS=\
 TOOL=
 TOOLS=\
 	awscli \
+	coreutils \
 	createcert \
+	gnused \
+	jq \
 	mysql2pgsql \
 	mysql2sqlite \
 	node2nix \
 	push \
-	pypi2nix
+	pypi2nix \
+	taskcluster-hooks
 
 
 APP_DEV_PORT_releng_frontend=8001
@@ -35,9 +39,9 @@ APP_STAGING_S3_releng_docs=releng-staging-docs
 APP_STAGING_S3_releng_frontend=releng-staging-frontend
 APP_STAGING_S3_shipit_frontend=shipit-staging-frontend
 APP_STAGING_ENV_releng_frontend=\
-	'backend_url="https:\/\/backend\.releng\.staging\.mozilla-releng\.net\"'
+	'clobberer-url="https:\/\/clobberer\.staging\.mozilla-releng\.net\"'
 APP_STAGING_ENV_shipit_frontend=\
-  'dashboard-url="https:\/\/dashboard\.shipit\.staging\.mozilla-releng\.net\"'
+	'dashboard-url="https:\/\/dashboard\.shipit\.staging\.mozilla-releng\.net\"'
 
 APP_PRODUCTION_HEROKU_releng_clobberer=releng-production-clobberer
 APP_PRODUCTION_HEROKU_shipit_dashboard=shipit-production-dashboard
@@ -46,9 +50,9 @@ APP_PRODUCTION_S3_releng_docs=releng-production-docs
 APP_PRODUCTION_S3_releng_frontend=releng-production-frontend
 APP_PRODUCTION_S3_shipit_frontend=shipit-production-frontend
 APP_PRODUCTION_ENV_releng_frontend=\
-	'backend_url="https:\/\/backend\.releng\.mozilla-releng\.net\"'
+	'clobberer-url="https:\/\/clobberer\.mozilla-releng\.net\"'
 APP_PRODUCTION_ENV_shipit_frontend=\
-  'dashboard-url="https:\/\/dashboard\.shipit\.mozilla-releng\.net\"'
+	'dashboard-url="https:\/\/dashboard\.shipit\.mozilla-releng\.net\"'
 
 
 help:
@@ -127,20 +131,6 @@ build-app: require-APP build-app-$(APP)
 build-app-%: nix
 	nix-build nix/default.nix -A $(subst build-app-,,$@) -o result-$(subst build-app-,,$@) --fallback
 
-copy-app-%:
-	$(eval APP_TMP := $(shell mktemp -d --tmpdir=$$PWD/tmp $(APP).XXXXX))
-	cp -rf result-$(APP)/* $(APP_TMP)
-
-configure-staging-%: copy-app-$(APP)
-	@for v in $(APP_STAGING_ENV_$(APP)) ; do \
-		sed -i "/<div id=\"root\"/ s/>/ data-$$v>/" $(APP_TMP)/index.html ; \
-	done
-
-
-configure-production-%: copy-app-$(APP)
-	@for v in $(APP_PRODUCTION_ENV_$(APP)) ; do \
-		sed -i "/<div id=\"root\"/ s/>/ data-$$v>/" $(APP_TMP)/index.html ; \
-	done
 
 build-docker: require-APP build-docker-$(APP)
 
@@ -161,13 +151,23 @@ deploy-staging-HEROKU: require-APP require-HEROKU build-tool-push build-docker-$
 		-N $(APP_STAGING_HEROKU_$(APP))/web \
 		-T latest
 
-deploy-staging-S3: require-AWS require-APP build-tool-awscli build-app-$(APP) configure-staging-$(APP)
+deploy-staging-S3: \
+			require-AWS \
+			require-APP \
+			build-tool-coreutils \
+			build-tool-gnused \
+			build-tool-awscli \
+			build-app-$(APP)
+	$(eval APP_TMP := $(shell ./result-tool-coreutils/bin/mktemp -d --tmpdir=$$PWD/tmp $(APP).XXXXX))
+	./result-tool-coreutils/bin/cp -rf result-$(APP)/* $(APP_TMP)
+	@for v in $(APP_STAGING_ENV_$(APP)) ; do \
+		./result-tool-gnused/bin/sed -i "s|<body|<body data-$$v|" $(APP_TMP)/index.html ; \
+	done
 	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read  \
 		$(APP_TMP) \
 		s3://$(APP_STAGING_S3_$(APP))
-	rm -rf $(APP_TMP)
 
 deploy-staging-releng_docs: deploy-staging-S3
 deploy-staging-releng_frontend: deploy-staging-S3
@@ -192,13 +192,23 @@ deploy-production-HEROKU: require-APP require-HEROKU build-tool-push build-docke
 		-N $(APP_PRODUCTION_HEROKU_$(APP))/web \
 		-T latest
 
-deploy-production-S3: require-AWS require-APP build-tool-awscli build-app-$(APP) configure-production-$(APP)
+deploy-production-S3: \
+			require-AWS \
+			require-APP \
+			build-tool-coreutils \
+			build-tool-gnused \
+			build-tool-awscli \
+			build-app-$(APP)
+	$(eval APP_TMP := $(shell ./result-tool-coreutils/bin/mktemp -d --tmpdir=$$PWD/tmp $(APP).XXXXX))
+	./result-tool-coreutils/bin/cp -rf result-$(APP)/* $(APP_TMP)
+	@for v in $(APP_PRODUCTION_ENV_$(APP)) ; do \
+		./result-tool-gnused/bin/sed -i "s|<body|<body data-$$v|" $(APP_TMP)/index.html ; \
+	done
 	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read  \
 		$(APP_TMP) \
 		s3://$(APP_PRODUCTION_S3_$(APP))
-	rm -rf $(APP_TMP)
 
 deploy-production-releng_docs: deploy-production-S3
 deploy-production-releng_frontend: deploy-production-S3

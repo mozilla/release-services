@@ -7,10 +7,10 @@ var Hawk = require('hawk');
 require("./index.scss");
 
 // Load backend url from process (dev) or html element (staging/prod)
-var backend_dashboard_url = process.env.NEO_DASHBOARD_URL;
-var root = document.getElementById('root');
-if(!backend_dashboard_url && root)
-  backend_dashboard_url = root.getAttribute('data-dashboard-url');
+var backend_dashboard_url = document.body.getAttribute('data-dashboard-url');
+if (backend_dashboard_url === null) {
+  backend_dashboard_url = process.env.NEO_DASHBOARD_URL || "You need to set NEO_DASHBOARD_URL variable or data-dashboard-url";
+}
 
 var storage_key = 'shipit-credentials';
 
