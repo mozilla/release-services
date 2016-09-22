@@ -3,25 +3,11 @@ Service: Clobberer
 
 TODO: explain purpose of clobberer
 
-
-Start development
------------------
-
-To start developing clobberer api application run:
-
-.. code-block:: bash
-
-    % make develop-run APP=releng_clobberer
+Read :ref:`Quickstart guide <quickstart>` how to develop, test, deploy and
+document clobberer service.
 
 
-To start developing frontend application for clobberer run:
 
-.. code-block:: bash
-
-    % make develop-run APP=releng_frontend
-
-
-Application will get restarted on every save you do in the source code.
 
 More
 details how to enter development shell, how to run tests and how to build

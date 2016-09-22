@@ -10,8 +10,8 @@ let
   packages =
     if pkg == null
       then 
-        ((releng_pkgs.lib.packagesToUpdate releng_pkgs) ++
-         (releng_pkgs.lib.packagesToUpdate releng_pkgs.tools))
+        ((releng_pkgs.lib.packagesWith "update" releng_pkgs) ++
+         (releng_pkgs.lib.packagesWith "update" releng_pkgs.tools))
     else if (builtins.substring 0 6 pkg) == "tools."
       then [(builtins.getAttr (builtins.substring 6 100 pkg) releng_pkgs.tools)]
     else
@@ -30,7 +30,7 @@ in pkgs.stdenv.mkDerivation {
     export HOME=$PWD
     echo "Updating packages ..."
     ${builtins.concatStringsSep "\n\n" (
-        map (pkg: "echo ' - ${(builtins.parseDrvName pkg.name).name}';${pkg.updateSrc}/bin/update") packages)}
+        map (pkg: "echo ' - ${(builtins.parseDrvName pkg.name).name}'; ${pkg.update}") packages)}
     echo "" 
     echo "Packages updated!"
     exit

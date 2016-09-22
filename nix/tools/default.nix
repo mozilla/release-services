@@ -1,13 +1,13 @@
 { releng_pkgs }:
 
 let
-  inherit (releng_pkgs.pkgs) writeScriptBin;
+  inherit (releng_pkgs.pkgs) writeScript stdenv makeWrapper;
 in {
 
   inherit (releng_pkgs.pkgs) jq;
 
   pypi2nix = import ./pypi2nix.nix { inherit releng_pkgs; } // {
-    updateSrc = releng_pkgs.lib.updateFromGitHub {
+    update = releng_pkgs.lib.updateFromGitHub {
       owner = "garbas";
       repo = "pypi2nix";
       branch = "master";
@@ -16,15 +16,41 @@ in {
   };
 
   awscli = (import ./awscli.nix { inherit (releng_pkgs) pkgs; }).packages."awscli" // {
-    updateSrc = writeScriptBin "update" ''
+    update = writeScript "update-tools-awscli" ''
       pushd nix/tools
       ${releng_pkgs.tools.pypi2nix}/bin/pypi2nix --basename "awscli" -V "3.5" -e awscli -v
       popd
     '';
   };
 
+  taskcluster-hooks = 
+    let
+      python = import ./hooks.nix { inherit (releng_pkgs) pkgs; };
+      python_path =
+        "${python.__old.python}/${python.__old.python.sitePackages}:" +
+        (builtins.concatStringsSep ":"
+          (map (pkg: "${pkg}/${python.__old.python.sitePackages}")
+               (builtins.attrValues python.packages)
+          )
+        );
+    in stdenv.mkDerivation {
+      name = "taskcluster-hooks";
+      buildInputs = [ makeWrapper ];
+      buildCommand = ''
+        mkdir -p $out/bin
+        cp ${./hooks.py} $out/bin/taskcluster-hooks
+        chmod +x $out/bin/taskcluster-hooks
+        wrapProgram $out/bin/taskcluster-hooks --set PYTHONPATH  "${python_path}"
+      '';
+      passthru.update = writeScript "update-tools-taskcluster-hooks" ''
+        pushd nix/tools
+        ${releng_pkgs.tools.pypi2nix}/bin/pypi2nix --basename "hooks" -V "3.5" -r hooks.txt -v
+        popd
+      '';
+    };
+
   push = (import ./push.nix { inherit (releng_pkgs) pkgs; }).packages."push" // {
-    updateSrc = writeScriptBin "update" ''
+    update = writeScript "update-tools-push" ''
       pushd nix/tools
       ${releng_pkgs.tools.pypi2nix}/bin/pypi2nix --basename "push" -V "3.5" -r push.txt -v
       popd
@@ -32,7 +58,7 @@ in {
   };
 
   node2nix = import ./node2nix.nix { inherit releng_pkgs; } // {
-    updateSrc = releng_pkgs.lib.updateFromGitHub {
+    update = releng_pkgs.lib.updateFromGitHub {
       owner = "svanderburg";
       repo = "node2nix";
       branch = "master";
@@ -43,7 +69,7 @@ in {
   elm2nix = import ./elm2nix.nix { inherit releng_pkgs; };
 
   mysql2sqlite = import ./mysql2sqlite.nix { inherit releng_pkgs; } // {
-    updateSrc = releng_pkgs.lib.updateFromGitHub {
+    update = releng_pkgs.lib.updateFromGitHub {
       owner = "dumblob";
       repo = "mysql2sqlite";
       branch = "master";
@@ -52,7 +78,7 @@ in {
   };
 
   mysql2pgsql = (import ./mysql2pgsql.nix { inherit (releng_pkgs) pkgs; }).packages."py-mysql2pgsql" // {
-    updateSrc = writeScriptBin "update" ''
+    update = writeScript "update-tools-mysql2pgsql" ''
       pushd nix/tools
       ${releng_pkgs.tools.pypi2nix}/bin/pypi2nix --basename "mysql2pgsql" -V "2.7" -e py-mysql2pgsql -E "postgresql mysql.lib" -v
       popd

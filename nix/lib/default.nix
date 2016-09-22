@@ -3,19 +3,36 @@
 let
 
   inherit (releng_pkgs.pkgs)
+    busybox
     cacert
     coreutils
     curl
+    dockerTools
     gnugrep
     gnused
     jq
+    makeWrapper
     nix-prefetch-scripts
-    writeScriptBin;
+    stdenv
+    writeScript;
+
   inherit (releng_pkgs.pkgs.lib)
     flatten
+    inNixShell
+    optionalAttrs
+    optionals
     removeSuffix
     splitString
     unique;
+
+  inherit (releng_pkgs)
+    elmPackages
+    mkTaskclusterGithubTask;
+
+  inherit (releng_pkgs.tools)
+    pypi2nix
+    elm2nix
+    node2nix;
 
   ignoreRequirementsLines = specs:
     builtins.filter
@@ -53,12 +70,120 @@ let
     in
       map removeVersion specs;
 
-in {
+in rec {
 
-  packagesToUpdate = pkgs':
+  packagesWith = attrName: pkgs':
     builtins.filter
-      (pkg: builtins.hasAttr "updateSrc" pkg)
+      (pkg: builtins.hasAttr "name" pkg && builtins.hasAttr attrName pkg)
       (builtins.attrValues pkgs');
+
+  mkDocker =
+    { name
+    , version
+    , config ? {}
+    , contents ? []
+    }:
+    dockerTools.buildImage {
+      name = name;
+      tag = version;
+      fromImage = null;
+      inherit contents config;
+    };
+
+    mkTaskclusterTaskMetadata =
+      { name
+      , description ? ""
+      , owner
+      , source ? "https://github.com/mozilla-releng/services"
+      }:
+      { inherit name description owner source; };
+
+    mkTaskclusterTaskPayload =
+      { image
+      , command
+      , features ? { taskclusterProxy = true; }
+      }:
+      { inherit image features command; };
+
+    mkTaskclusterTask =
+      { extra ? {}
+      , metadata ? {}
+      , payload ? {}
+      , priority ? "normal"
+      , provisionerId ? "aws-provisioner-v1"
+      , retries ? 5
+      , routes ? []
+      , schedulerId ? "-"
+      , scopes ? []
+      , tags ? {}
+      , workerType ? "releng-task"
+      }:
+      { inherit extra priority provisionerId retries routes schedulerId scopes
+           tags workerType;
+        payload = mkTaskclusterTaskPayload payload;
+        metadata = mkTaskclusterTaskMetadata metadata;
+      };
+
+    mkTaskclusterHook =
+      { name
+      , description ? ""
+      , owner
+      , emailOnError ? true
+      , schedule ? []
+      , expires ? "3 months"
+      , deadline ? "1 day"
+      , taskImage
+      , taskCommand
+      , task ? {}
+      }:
+      { inherit schedule expires deadline;
+        metadata = { inherit name description owner emailOnError; };
+        task = mkTaskclusterTask ({
+          metadata = { inherit name description owner; };
+          payload = {
+            image = taskImage;
+            command = taskCommand;
+          };
+        } // task);
+      };
+
+  mkTaskclusterGithubTask =
+    { name
+    , branch
+    , secrets ? "garbage/garbas/temp-releng-services-${branch}"
+    }:
+    ''
+    - metadata:
+        name: "${name}"
+        description: "Test, build and deploy ${name}"
+        owner: "{{ event.head.user.email }}"
+        source: "https://github.com/mozilla-releng/services/tree/${branch}/src/${name}"
+      scopes:
+        - secrets:get:${secrets}
+      extra:
+        github:
+          env: true
+          events:
+            ${if branch == "staging" || branch == "production"
+              then "- push"
+              else "- pull_request.*\n        - push"}
+          branches:
+            - ${branch}
+      provisionerId: "{{ taskcluster.docker.provisionerId }}"
+      workerType: "{{ taskcluster.docker.workerType }}"
+      payload:
+        maxRunTime: 7200 # seconds (i.e. two hours)
+        image: "nixos/nix:latest"
+        features:
+          taskclusterProxy: true
+        env:
+          APP: "${name}"
+          TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/${secrets}"
+        command:
+          - "/bin/bash"
+          - "-c"
+          - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+  '';
 
   fromRequirementsFile = files: pkgs':
     let
@@ -81,8 +206,145 @@ in {
           )
         );
 
+  mkFrontend =
+    { name
+    , version
+    , src
+    , node_modules
+    , elm_packages
+    }:
+    let
+      self = stdenv.mkDerivation {
+        name = "${name}-${version}";
+        src = builtins.filterSource
+          (path: type: baseNameOf path != "elm-stuff"
+                    && baseNameOf path != "node_modules"
+                    )
+          src;
+        buildInputs = [ elmPackages.elm ] ++ (builtins.attrValues node_modules);
+        configurePhase = ''
+          rm -rf node_modules
+          rm -rf elm-stuff
+        '' + (elmPackages.lib.makeElmStuff elm_packages) + ''
+          mkdir node_modules
+          for item in ${builtins.concatStringsSep " " (builtins.attrValues node_modules)}; do
+            ln -s $item/lib/node_modules/* ./node_modules
+          done
+        '';
+        buildPhase = ''
+          neo build --config webpack.config.js
+        '';
+        installPhase = ''
+          mkdir $out
+          cp build/* $out/ -R
+        '';
+        shellHook = ''
+          cd src/${name}
+        '' + self.configurePhase;
+
+        passthru.taskclusterGithubTasks =
+          map (branch: mkTaskclusterGithubTask { inherit name branch; }) [ "master" "staging" "production" ];
+
+        passthru.update = writeScript "update-${name}" ''
+          export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
+          pushd src/${name}
+          ${node2nix}/bin/node2nix \
+            --composition node-modules.nix \
+            --input node-modules.json \
+            --output node-modules-generated.nix \
+            --node-env node-env.nix \
+            --flatten \
+            --pkg-name nodejs-6_x
+          rm -rf elm-stuff
+          ${elmPackages.elm}/bin/elm-package install -y
+          ${elm2nix}/bin/elm2nix elm-packages.nix
+          popd
+        '';
+      };
+    in self;
+
+  mkBackend =
+    { name
+    , version
+    , src
+    , srcs
+    , python
+    , buildRequirements ? []
+    , propagatedRequirements ? []
+    , passthru ? {}
+    }:
+    let
+      self = python.mkDerivation {
+        namePrefix = "";
+        name = "${name}-${version}";
+        srcs = if inNixShell then null else (map (x: src + ("/" + x)) srcs);
+        sourceRoot = ".";
+        buildInputs = [ makeWrapper ] ++
+          fromRequirementsFile buildRequirements python.packages;
+        propagatedBuildInputs =
+          fromRequirementsFile propagatedRequirements python.packages;
+        postInstall = ''
+          mkdir -p $out/bin $out/etc
+
+          ln -s ${python.interpreter.interpreter} $out/bin
+          ln -s ${python.packages."Flask"}/bin/flask $out/bin
+          ln -s ${python.packages."gunicorn"}/bin/gunicorn $out/bin
+          ln -s ${python.packages."newrelic"}/bin/newrelic-admin $out/bin
+       
+          cp ./src-*-${name}/settings.py $out/etc
+
+          for i in $out/bin/*; do
+            wrapProgram $i --set PYTHONPATH $PYTHONPATH
+          done
+        '';
+        checkPhase = ''
+          flake8 settings.py setup.py ${name}/
+          # TODO: pytest ${name}/
+        '';
+        shellHook = ''
+          export CACHE_DEFAULT_TIMEOUT=3600
+          export CACHE_TYPE=filesystem
+          export CACHE_DIR=$PWD/cache
+          export DATABASE_URL=sqlite:///$PWD/app.db
+
+          for i in ${builtins.concatStringsSep " " srcs}; do
+            if test -e src/''${i:5}/setup.py; then
+              echo "Setting \"''${i:5}\" in development mode ..."
+              pushd src/''${i:5} >> /dev/null
+              tmp_path=$(mktemp -d)
+              export PATH="$tmp_path/bin:$PATH"
+              export PYTHONPATH="$tmp_path/${python.__old.python.sitePackages}:$PYTHONPATH"
+              mkdir -p $tmp_path/${python.__old.python.sitePackages}
+              ${python.__old.bootstrapped-pip}/bin/pip install -q -e . --prefix $tmp_path
+              popd >> /dev/null
+            fi
+          done
+        '';
+
+        passthru = {
+          taskclusterGithubTasks =
+            map (branch: mkTaskclusterGithubTask { inherit name branch; })
+                [ "master" "staging" "production" ];
+          docker = mkDocker {
+            inherit name version;
+            contents = [ busybox self ];
+            config = {
+              Env = [
+                "PATH=/bin"
+                "APP_SETTINGS=${self}/etc/settings.py"
+                "FLASK_APP=${name}:app"
+              ];
+              Cmd = [
+                "newrelic-admin" "run-program" "gunicorn" "$FLASK_APP" "--log-file" "-"
+              ];
+            };
+          };
+        } // passthru;
+      };
+    in self;
+
   updateFromGitHub = { owner, repo, path, branch }:
-    writeScriptBin "update" ''
+    writeScript "update-from-github-${owner}-${repo}-${branch}" ''
       export SSL_CERT_FILE=${cacert}/etc/ssl/certs/ca-bundle.crt
 
       github_rev() {

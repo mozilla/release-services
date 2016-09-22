@@ -1,26 +1,59 @@
 Mozilla Release Engineering Services
 ====================================
 
+A highlevel goal of *Release Engineering Services* is to **converge efforts**
+to develop, test, maintain and *most importantly* document services that
+*Release Engineering Team* is providing.
 
-A repository to converge development of different projects. Currently setup
-offers:
+Currently supported platform is **Linux**. In the future we could think of also
+supporting OSX (Darwin) as development platform, but initial efforts are on
+purpose kept as small as possible.
 
-- Flask + OpenAPI (Swagger) based framework to easily create JSON APIs
-- Continuous integration with taskcluster
-- Running tests for all your projects (python) dependencies
-- Automatically updating requirements.txt (if all tests pass ofcourse)
-- Building docker images for you projects
-- Deployments to heroku / s3
-- (Build) reproducible environements
-- Binary cache (no more waiting for things to compile)
-- (PLANNED) Automatically checking your project for potential vulnerabilities
-  (CVE)
+TODO: explain why we want to converge efforts?
+TODO: why mono-repository approach?
+TODO: why a single version? why not semver?
 
-Currently supported platform is Linux. We could think of also supporting OSX
-(Darwin), but that would require some effort, but it is possible.
+:code: https://github.com/mozilla-releng/services
+:issues: https://github.com/mozilla-releng/services/issues
 
 
-:code: https://github.com/garbas/mozilla-releng
+Repository structure
+--------------------
+
+- ``CONTRIBUTE.rst`` A contribution guide used by github.
+- ``LICENSE.txt`` license of code (Mozilla Public License Version 2.0).
+- ``Makefile`` Few helper commands (gnumake required).
+- ``README.rst`` A short description of the project (eg. quickstart).
+- ``VERSION`` A version of all projects
+- ``contribute.json`` A JSON schema for open-source project contribution data. https://www.contributejson.org/
+- ``src/`` A folder where all projects are placed, described bellow.
+- ``nix/`` A build (Nix) related tools, scripts, etc... :ref:`more <build-process>`
+
+
+.. _build-process
+
+Build process
+-------------
+
+TODO: find better title
+
+
+
+
+
+
+
+
+Replace ``<project>`` with one of folder names from ``./src``. 
+
+
+To run tests and build a project::
+
+    nix-build nix/default.nix -A <project>
+
+To enter development mode::
+
+    nix-shell nix/default.nix -A <project>
 
 
 .. toctree::
