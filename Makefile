@@ -1,5 +1,3 @@
-SHELL := /bin/bash
-
 .PHONY: *
 
 APP=
@@ -37,9 +35,9 @@ APP_STAGING_S3_releng_docs=releng-staging-docs
 APP_STAGING_S3_releng_frontend=releng-staging-frontend
 APP_STAGING_S3_shipit_frontend=shipit-staging-frontend
 APP_STAGING_ENV_releng_frontend=\
-	BACKEND_URL=https://backend.releng.staging.mozilla-releng.net
+	'backend_url="https:\/\/backend\.releng\.staging\.mozilla-releng\.net\"'
 APP_STAGING_ENV_shipit_frontend=\
-	REAL_DASHBOARD_URL=https://dashboard.shipit.staging.mozilla-releng.net
+  'dashboard-url="https:\/\/dashboard\.shipit\.staging\.mozilla-releng\.net\"'
 
 APP_PRODUCTION_HEROKU_releng_clobberer=releng-production-clobberer
 APP_PRODUCTION_HEROKU_shipit_dashboard=shipit-production-dashboard
@@ -48,9 +46,9 @@ APP_PRODUCTION_S3_releng_docs=releng-production-docs
 APP_PRODUCTION_S3_releng_frontend=releng-production-frontend
 APP_PRODUCTION_S3_shipit_frontend=shipit-production-frontend
 APP_PRODUCTION_ENV_releng_frontend=\
-	BACKEND_URL=https://backend.releng.mozilla-releng.net
+	'backend_url="https:\/\/backend\.releng\.mozilla-releng\.net\"'
 APP_PRODUCTION_ENV_shipit_frontend=\
-	REAL_DASHBOARD_URL=https://dashboard.shipit.mozilla-releng.net
+  'dashboard-url="https:\/\/dashboard\.shipit\.mozilla-releng\.net\"'
 
 
 help:
@@ -135,12 +133,13 @@ copy-app-%:
 
 configure-staging-%: copy-app-$(APP)
 	@for v in $(APP_STAGING_ENV_$(APP)) ; do \
-		sed -i -e "s,$${v/\=/,},g" $(APP_TMP)/bundle.js ; \
+		sed -i "/<div id=\"root\"/ s/>/ data-$$v>/" $(APP_TMP)/index.html ; \
 	done
+
 
 configure-production-%: copy-app-$(APP)
 	@for v in $(APP_PRODUCTION_ENV_$(APP)) ; do \
-		sed -i -e "s,$${v/\=/,},g" $(APP_TMP)/bundle.js ; \
+		sed -i "/<div id=\"root\"/ s/>/ data-$$v>/" $(APP_TMP)/index.html ; \
 	done
 
 build-docker: require-APP build-docker-$(APP)
@@ -168,7 +167,6 @@ deploy-staging-S3: require-AWS require-APP build-tool-awscli build-app-$(APP) co
 		--acl public-read  \
 		$(APP_TMP) \
 		s3://$(APP_STAGING_S3_$(APP))
-
 	rm -rf $(APP_TMP)
 
 deploy-staging-releng_docs: deploy-staging-S3
@@ -198,8 +196,9 @@ deploy-production-S3: require-AWS require-APP build-tool-awscli build-app-$(APP)
 	./result-tool-awscli/bin/aws s3 sync \
 		--delete \
 		--acl public-read  \
-		result-$(APP)/ \
+		$(APP_TMP) \
 		s3://$(APP_PRODUCTION_S3_$(APP))
+	rm -rf $(APP_TMP)
 
 deploy-production-releng_docs: deploy-production-S3
 deploy-production-releng_frontend: deploy-production-S3
