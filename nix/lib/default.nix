@@ -150,7 +150,7 @@ in rec {
   mkTaskclusterGithubTask =
     { name
     , branch
-    , secrets ? "project/releng/services/${branch}"
+    , secrets ? "repo:github.com/mozilla-releng/services:branch:${branch}"
     }:
     ''
     - metadata:

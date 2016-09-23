@@ -12,7 +12,7 @@ tasks:
       owner: "{{ event.head.user.email }}"
       source: "https://github.com/mozilla-releng/services/tree/master/src/releng_clobberer"
     scopes:
-      - secrets:get:project/releng/services/master
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:master
     extra:
       github:
         env: true
@@ -30,7 +30,7 @@ tasks:
         taskclusterProxy: true
       env:
         APP: "releng_clobberer"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/project/releng/services/master"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:master"
       command:
         - "/bin/bash"
         - "-c"
@@ -43,7 +43,7 @@ tasks:
       owner: "{{ event.head.user.email }}"
       source: "https://github.com/mozilla-releng/services/tree/staging/src/releng_clobberer"
     scopes:
-      - secrets:get:project/releng/services/staging
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
     extra:
       github:
         env: true
@@ -60,7 +60,7 @@ tasks:
         taskclusterProxy: true
       env:
         APP: "releng_clobberer"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/project/releng/services/staging"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:staging"
       command:
         - "/bin/bash"
         - "-c"
@@ -73,7 +73,7 @@ tasks:
       owner: "{{ event.head.user.email }}"
       source: "https://github.com/mozilla-releng/services/tree/production/src/releng_clobberer"
     scopes:
-      - secrets:get:project/releng/services/production
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:production
     extra:
       github:
         env: true
@@ -90,7 +90,7 @@ tasks:
         taskclusterProxy: true
       env:
         APP: "releng_clobberer"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/project/releng/services/production"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:production"
       command:
         - "/bin/bash"
         - "-c"
@@ -103,7 +103,7 @@ tasks:
       owner: "{{ event.head.user.email }}"
       source: "https://github.com/mozilla-releng/services/tree/master/src/releng_docs"
     scopes:
-      - secrets:get:project/releng/services/master
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:master
     extra:
       github:
         env: true
@@ -121,7 +121,7 @@ tasks:
         taskclusterProxy: true
       env:
         APP: "releng_docs"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/project/releng/services/master"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:master"
       command:
         - "/bin/bash"
         - "-c"
@@ -134,7 +134,7 @@ tasks:
       owner: "{{ event.head.user.email }}"
       source: "https://github.com/mozilla-releng/services/tree/staging/src/releng_docs"
     scopes:
-      - secrets:get:project/releng/services/staging
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
     extra:
       github:
         env: true
@@ -151,7 +151,7 @@ tasks:
         taskclusterProxy: true
       env:
         APP: "releng_docs"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/project/releng/services/staging"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:staging"
       command:
         - "/bin/bash"
         - "-c"
@@ -164,7 +164,7 @@ tasks:
       owner: "{{ event.head.user.email }}"
       source: "https://github.com/mozilla-releng/services/tree/production/src/releng_docs"
     scopes:
-      - secrets:get:project/releng/services/production
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:production
     extra:
       github:
         env: true
@@ -181,7 +181,7 @@ tasks:
         taskclusterProxy: true
       env:
         APP: "releng_docs"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/project/releng/services/production"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:production"
       command:
         - "/bin/bash"
         - "-c"
@@ -194,7 +194,7 @@ tasks:
       owner: "{{ event.head.user.email }}"
       source: "https://github.com/mozilla-releng/services/tree/master/src/releng_frontend"
     scopes:
-      - secrets:get:project/releng/services/master
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:master
     extra:
       github:
         env: true
@@ -212,7 +212,7 @@ tasks:
         taskclusterProxy: true
       env:
         APP: "releng_frontend"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/project/releng/services/master"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:master"
       command:
         - "/bin/bash"
         - "-c"
@@ -225,7 +225,7 @@ tasks:
       owner: "{{ event.head.user.email }}"
       source: "https://github.com/mozilla-releng/services/tree/staging/src/releng_frontend"
     scopes:
-      - secrets:get:project/releng/services/staging
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
     extra:
       github:
         env: true
@@ -242,7 +242,7 @@ tasks:
         taskclusterProxy: true
       env:
         APP: "releng_frontend"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/project/releng/services/staging"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:staging"
       command:
         - "/bin/bash"
         - "-c"
@@ -255,7 +255,7 @@ tasks:
       owner: "{{ event.head.user.email }}"
       source: "https://github.com/mozilla-releng/services/tree/production/src/releng_frontend"
     scopes:
-      - secrets:get:project/releng/services/production
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:production
     extra:
       github:
         env: true
@@ -272,7 +272,7 @@ tasks:
         taskclusterProxy: true
       env:
         APP: "releng_frontend"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/project/releng/services/production"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:production"
       command:
         - "/bin/bash"
         - "-c"
@@ -280,12 +280,12 @@ tasks:
   
   
   - metadata:
-      name: "releng_clobberer"
-      description: "Test, build and deploy releng_clobberer"
+      name: "shipit_dashboard"
+      description: "Test, build and deploy shipit_dashboard"
       owner: "{{ event.head.user.email }}"
-      source: "https://github.com/mozilla-releng/services/tree/master/src/releng_clobberer"
+      source: "https://github.com/mozilla-releng/services/tree/master/src/shipit_dashboard"
     scopes:
-      - secrets:get:project/releng/services/master
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:master
     extra:
       github:
         env: true
@@ -302,8 +302,8 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_clobberer"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/project/releng/services/master"
+        APP: "shipit_dashboard"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:master"
       command:
         - "/bin/bash"
         - "-c"
@@ -311,12 +311,12 @@ tasks:
   
   
   - metadata:
-      name: "releng_clobberer"
-      description: "Test, build and deploy releng_clobberer"
+      name: "shipit_dashboard"
+      description: "Test, build and deploy shipit_dashboard"
       owner: "{{ event.head.user.email }}"
-      source: "https://github.com/mozilla-releng/services/tree/staging/src/releng_clobberer"
+      source: "https://github.com/mozilla-releng/services/tree/staging/src/shipit_dashboard"
     scopes:
-      - secrets:get:project/releng/services/staging
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
     extra:
       github:
         env: true
@@ -332,8 +332,8 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_clobberer"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/project/releng/services/staging"
+        APP: "shipit_dashboard"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:staging"
       command:
         - "/bin/bash"
         - "-c"
@@ -341,12 +341,12 @@ tasks:
   
   
   - metadata:
-      name: "releng_clobberer"
-      description: "Test, build and deploy releng_clobberer"
+      name: "shipit_dashboard"
+      description: "Test, build and deploy shipit_dashboard"
       owner: "{{ event.head.user.email }}"
-      source: "https://github.com/mozilla-releng/services/tree/production/src/releng_clobberer"
+      source: "https://github.com/mozilla-releng/services/tree/production/src/shipit_dashboard"
     scopes:
-      - secrets:get:project/releng/services/production
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:production
     extra:
       github:
         env: true
@@ -362,8 +362,8 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "releng_clobberer"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/project/releng/services/production"
+        APP: "shipit_dashboard"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:production"
       command:
         - "/bin/bash"
         - "-c"
@@ -376,7 +376,7 @@ tasks:
       owner: "{{ event.head.user.email }}"
       source: "https://github.com/mozilla-releng/services/tree/master/src/shipit_frontend"
     scopes:
-      - secrets:get:project/releng/services/master
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:master
     extra:
       github:
         env: true
@@ -394,7 +394,7 @@ tasks:
         taskclusterProxy: true
       env:
         APP: "shipit_frontend"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/project/releng/services/master"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:master"
       command:
         - "/bin/bash"
         - "-c"
@@ -407,7 +407,7 @@ tasks:
       owner: "{{ event.head.user.email }}"
       source: "https://github.com/mozilla-releng/services/tree/staging/src/shipit_frontend"
     scopes:
-      - secrets:get:project/releng/services/staging
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
     extra:
       github:
         env: true
@@ -424,7 +424,7 @@ tasks:
         taskclusterProxy: true
       env:
         APP: "shipit_frontend"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/project/releng/services/staging"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:staging"
       command:
         - "/bin/bash"
         - "-c"
@@ -437,7 +437,7 @@ tasks:
       owner: "{{ event.head.user.email }}"
       source: "https://github.com/mozilla-releng/services/tree/production/src/shipit_frontend"
     scopes:
-      - secrets:get:project/releng/services/production
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:production
     extra:
       github:
         env: true
@@ -454,7 +454,7 @@ tasks:
         taskclusterProxy: true
       env:
         APP: "shipit_frontend"
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/project/releng/services/production"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:production"
       command:
         - "/bin/bash"
         - "-c"
