@@ -9,7 +9,7 @@ let
   inherit (releng_pkgs.tools) pypi2nix;
 
 in mkBackend rec {
-  name = "releng_clobberer";
+  name = "shipit_dashboard";
   version = removeSuffix "\n" (builtins.readFile ./../../VERSION);
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   src = ./.;
@@ -27,6 +27,15 @@ in mkBackend rec {
       ./requirements-prod.txt
     ];
   passthru = {
+    taskclusterHooks = {
+      taskcluster_analysis = mkTaskclusterHook {
+        name = "update bugzilla analysis";
+        owner = "bastien@nextcairn.com";
+        schedule = [ "0 */2 * * * *" ];
+        taskImage = self.docker;
+        taskCommand = [ "flask" "run_workflow_local" ];
+      };
+    };
     update = writeScript "update-${name}" ''
       pushd src/${name}
       ${pypi2nix}/bin/pypi2nix -v \
