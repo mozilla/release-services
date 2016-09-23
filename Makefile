@@ -98,6 +98,7 @@ develop-run-BACKEND: build-certs nix require-APP
 	CACHE_DIR=$$PWD/src/$(APP)/cache \
 	DATABASE_URL=sqlite:///$$PWD/app.db \
 	APP_SETTINGS=$$PWD/src/$(APP)/settings.py \
+	CORS_ORIGINS="*" \
 		nix-shell nix/default.nix -A $(APP) \
 		--run "gunicorn $(APP):app --bind 'localhost:$(APP_DEV_PORT_$(APP))' --ca-certs=$$PWD/tmp/ca.crt --certfile=$$PWD/tmp/server.crt --keyfile=$$PWD/tmp/server.key --workers 2 --timeout 3600 --reload --log-file -"
 

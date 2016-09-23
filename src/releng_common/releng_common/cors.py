@@ -5,11 +5,13 @@
 from __future__ import absolute_import
 
 from flask_cors import CORS
-
-
-cors = CORS()
+import os
 
 
 def init_app(app):
+    # Allow specific origins
+    origins = os.environ.get('CORS_ORIGINS', '*')
+
+    cors = CORS(origins=origins)
     cors.init_app(app)
     return cors
