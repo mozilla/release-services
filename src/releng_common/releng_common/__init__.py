@@ -46,7 +46,7 @@ def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
             os.path.join(os.path.dirname(__file__), 'templates'))
 
     base_extensions = [log, api]
-    if app.debug is True:
+    if 'CORS_ORIGINS' in os.environ:
         base_extensions.append(cors)
 
     for extension in base_extensions + extensions:
