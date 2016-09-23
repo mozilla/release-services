@@ -335,7 +335,7 @@ in rec {
                 "FLASK_APP=${name}:app"
               ];
               Cmd = [
-                "newrelic-admin" "run-program" "gunicorn" "$FLASK_APP" "--log-file" "-"
+                "newrelic-admin" "run-program" "gunicorn" "${name}:app" "--log-file" "-"
               ];
             };
           };
