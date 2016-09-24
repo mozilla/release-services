@@ -18,7 +18,7 @@ let
 
   profile = pkgs.buildEnv {
     name = "docker-environment";
-    paths = with pkgs; [ git nix busybox ];
+    paths = with pkgs; [ git nix busybox glibcLocales ];
   };
 
   profile_closure = pkgs.runCommand "profile-closure"
@@ -35,7 +35,7 @@ in pkgs.dockerTools.buildImage {
   name = "releng-services-init";
   tag = pkgsSrc.rev;
   fromImage = null;
-  #contents = with pkgs; [ busybox gnumake nix.out cacert ];
+  #contents = with pkgs; [ busybox gnumake glibcLocales nix.out cacert ];
   extraCommands = ''
     mkdir -p etc var tmp root/.nix-defexpr nix/var/nix/profiles/per-user/root nix/store
 

@@ -8,6 +8,7 @@ let
     coreutils
     curl
     dockerTools
+    glibcLocales
     gnugrep
     gnused
     jq
@@ -327,12 +328,14 @@ in rec {
                 [ "master" "staging" "production" ];
           docker = mkDocker {
             inherit name version;
-            contents = [ busybox self ];
+            contents = [ glibcLocales busybox self ];
             config = {
               Env = [
                 "PATH=/bin"
                 "APP_SETTINGS=${self}/etc/settings.py"
                 "FLASK_APP=${name}:app"
+                "LANG=en_US.UTF-8"
+                "LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive"
               ];
               Cmd = [
                 "newrelic-admin" "run-program" "gunicorn" "${name}:app" "--log-file" "-"
