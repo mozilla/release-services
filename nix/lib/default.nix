@@ -280,7 +280,7 @@ in rec {
         name = "${name}-${version}";
         srcs = if inNixShell then null else (map (x: src + ("/" + x)) srcs);
         sourceRoot = ".";
-        buildInputs = [ makeWrapper ] ++
+        buildInputs = [ makeWrapper glibcLocales ] ++
           fromRequirementsFile buildRequirements python.packages;
         propagatedBuildInputs =
           fromRequirementsFile propagatedRequirements python.packages;
@@ -299,6 +299,8 @@ in rec {
           done
         '';
         checkPhase = ''
+          export LANG=en_US.UTF-8
+          export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
           flake8 settings.py setup.py ${name}/
           # TODO: pytest ${name}/
         '';
@@ -307,6 +309,8 @@ in rec {
           export CACHE_TYPE=filesystem
           export CACHE_DIR=$PWD/cache
           export DATABASE_URL=sqlite:///$PWD/app.db
+          export LANG=en_US.UTF-8
+          export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 
           for i in ${builtins.concatStringsSep " " srcs}; do
             if test -e src/''${i:5}/setup.py; then
@@ -328,7 +332,7 @@ in rec {
                 [ "master" "staging" "production" ];
           docker = mkDocker {
             inherit name version;
-            contents = [ glibcLocales busybox self ];
+            contents = [ busybox self ];
             config = {
               Env = [
                 "PATH=/bin"
