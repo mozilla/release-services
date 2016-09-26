@@ -5,10 +5,10 @@
 from __future__ import absolute_import
 
 import os
+import json
 
 from releng_common import auth, db, create_app
 from shipit_dashboard.workflow import run_workflow, run_workflow_local
-from shipit_dashboard.encoder import ShipitJSONEncoder
 
 
 DEBUG = os.environ.get('DEBUG') == 'true' or __name__ == '__main__'
@@ -21,19 +21,29 @@ def init_app(app):
     app.cli.add_command(run_workflow)
     app.cli.add_command(run_workflow_local)
 
-    # Use custom json encoder
-    # XXX: why do we need custom encoder
-    app.json_encoder = ShipitJSONEncoder
-
     # Register swagger api
     return app.api.register(
         os.path.join(os.path.dirname(__file__), 'swagger.yml'))
 
 
-# XXX: we shouuld move this to create_app
-if DEBUG and not os.environ.get('DATABASE_URL'):
-    os.environ['DATABASE_URL'] = 'sqlite:///%s' % (
-        os.path.abspath(os.path.join(HERE, '..', 'app.db')))
+def init_analysis(app):
+    """
+    Load initial analysis
+    """
+    from shipit_dashboard.models import BugAnalysis
+    all_analysis = json.load(open(os.path.join(HERE, 'analysis.json'), 'r'))
+    with app.app_context():
+        existing = [a.name for a in BugAnalysis.query.all()]
+        for name, parameters in all_analysis.items():
+            if name in existing:
+                continue
+
+            # Create new analysis
+            analysis = BugAnalysis(name)
+            analysis.parameters = parameters
+            app.db.session.add(analysis)
+            app.db.session.commit()
+
 
 if not os.environ.get('APP_SETTINGS') and \
        os.path.isfile(APP_SETTINGS):
@@ -46,6 +56,9 @@ app = create_app(
     debug=DEBUG,
     debug_src=HERE,
 )
+
+# Init analysis, post app creation
+init_analysis(app)
 
 if __name__ == "__main__":
     app.run(**app.run_options())
