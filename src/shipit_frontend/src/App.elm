@@ -317,7 +317,7 @@ viewNavBar model =
              [ text "Menu" ]
     , pageLink Home [ class "navbar-brand" ]
                     [ text "RelengAPI" ]
-    , div [ class "collapse navbar-toggleable-sm navbar-collapse navbar-right" ]
+    , div [ class "user collapse navbar-toggleable-sm navbar-collapse navbar-right" ]
           [ ul [ class "nav navbar-nav" ]
               (List.concat [
                   (viewNavDashboard model.release_dashboard),

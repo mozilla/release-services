@@ -55,6 +55,16 @@ html {
   }
 }
 
+nav {
+  .user {
+    // Bugzilla erroneous login link
+    .dropdown-item.text-danger .nav-link {
+      color: #d9534f;
+      font-weight: bold;
+    }
+  }
+}
+
 // Uplift requests
 div.bugs {
   div.bug {

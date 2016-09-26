@@ -276,7 +276,7 @@ publishBugEdits model user bug =
       target = Just {
         -- Backend will retrieve the secret
         method = "GET",
-        url = "https://secrets.taskcluster.net/v1/secret/garbage%2Fshipit%2Fbugzilla"
+        url = User.getSecretUrl user
       },
       body = Just editsJson,
       requestType = User.BugEdits

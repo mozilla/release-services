@@ -133,11 +133,24 @@ init backend_dashboard_url =
     -- Load user from local storage
     ( model, localstorage_load True )
 
-test : HawkParameters -> (Model, List Hawk, Cmd Msg) -> (Model, List Hawk, Cmd Msg)
-test params full =
+runRequest: HawkParameters -> (Model, List Hawk, Cmd Msg) -> (Model, List Hawk, Cmd Msg)
+runRequest params (model, hawk, cmd) =
   let
-    (model, hawk, cmd) = full
-    (model', hawk', cmd') = buildHawkRequest model params
+    -- Patch empty secret url
+    params' = case params.target of
+      Just target ->
+        if target.url == "SECRET_HERE" then
+          { params | target = Just {
+            method = target.method,
+            url = getSecretUrl model
+          }}    
+        else
+          params    
+
+      Nothing ->
+        params
+
+    (model', hawk', cmd') = buildHawkRequest model params'
   in
     ( model', hawk ++ hawk', Cmd.batch [ cmd, cmd'] )
 
@@ -170,14 +183,14 @@ update msg model =
           target = Just {
             -- Backend will check the secret
             method = "GET",
-            url = "https://secrets.taskcluster.net/v1/secret/garbage%2Fshipit%2Fbugzilla"
+            url = getSecretUrl model
           },
           body = Nothing,
           requestType = GetBugzillaAuth
         }
       in
         --buildHawkRequest model' params
-        List.foldr test (model', [], Cmd.none) ( params :: model.skipped_requests )
+        List.foldr runRequest (model', [], Cmd.none) ( params :: model.skipped_requests )
 
     LocalUser ->
       -- Fetch local user from localstorage
@@ -229,7 +242,7 @@ update msg model =
               },
               target = Just {
                 method = "PUT",
-                url = "https://secrets.taskcluster.net/v1/secret/garbage%2Fshipit%2Fbugzilla"
+                url = getSecretUrl model
               },
               body = Just credsJson,    
               requestType = UpdateBugzillaAuth
@@ -398,6 +411,15 @@ decodeBugzillaAuth =
   JsonDecode.object2 BugzillaAuth
     ("authenticated" := JsonDecode.bool)
     ("message" := JsonDecode.string)
+
+getSecretUrl : Model -> String
+getSecretUrl model =
+  case model.user of
+    Just user ->
+      "https://secrets.taskcluster.net/v1/secret/" ++ (Http.uriEncode ("project:shipit/" ++ user.clientId ++ "/bugzilla"))
+    Nothing ->
+      -- will be updated when user is ready
+      "SECRET_HERE"
 
 -- PORTS
 

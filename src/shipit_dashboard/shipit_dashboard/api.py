@@ -12,7 +12,7 @@ from flask import abort, request
 from datetime import datetime, timedelta
 import requests
 
-BUGZILLA_SECRET = 'garbage/shipit/bugzilla'
+BUGZILLA_SECRET = 'project:shipit/{}/bugzilla'
 
 def check_bugzilla_auth(login, token):
     """
@@ -60,7 +60,8 @@ def get_bugzilla_auth():
     stored in Taskcluster secrets
     """
     try:
-        auth = current_user.get_secret(BUGZILLA_SECRET)
+        secret_name = BUGZILLA_SECRET.format(current_user.get_id())
+        auth = current_user.get_secret(secret_name)
 
         # Check the auth is still valid
         if not check_bugzilla_auth(auth['login'], auth['token']):
@@ -103,7 +104,8 @@ def update_bugzilla_auth():
         'expires' : datetime.now() + timedelta(days=365)
     }
     secrets = current_user.taskcluster_secrets()
-    secrets.set(BUGZILLA_SECRET, payload)
+    secret_name = BUGZILLA_SECRET.format(current_user.get_id())
+    secrets.set(secret_name, payload)
 
     return {
         'authenticated': True,
