@@ -31,7 +31,7 @@ APP_DEV_PORT_shipit_dashboard=8004
 APP_DEV_SSL=SSL_CACERT=$$PWD/tmp/ca.crt SSL_CERT=$$PWD/tmp/server.crt SSL_KEY=$$PWD/tmp/server.key
 APP_DEV_ENV_releng_frontend=NEO_CLOBBERER_URL=https://localhost:$(APP_DEV_PORT_releng_clobberer)
 APP_DEV_ENV_shipit_frontend=NEO_DASHBOARD_URL=https://localhost:$(APP_DEV_PORT_shipit_dashboard) $(APP_DEV_SSL)
-	
+
 APP_STAGING_HEROKU_releng_clobberer=releng-staging-clobberer
 APP_STAGING_HEROKU_shipit_dashboard=shipit-staging-dashboard
 
@@ -66,7 +66,7 @@ help:
 	@echo "To run tests for specific application do:"
 	@echo "  $$ make build-app APP=<application>"
 	@echo ""
-	@if [[ -z "$(APP)" ]]; then \
+	@if [ -z "$(APP)" ]; then \
 		echo "Available APPs are: "; \
 		for app in $(APPS); do \
 			echo " - $$app"; \
@@ -78,9 +78,19 @@ help:
 
 
 nix:
-	@if [[ -z "`which nix-build`" ]]; then \
-		curl https://nixos.org/nix/install | sh; \
-		source $HOME/.nix-profile/etc/profile.d/nix.sh; \
+	@if [ -z "`which nix-build`" ]; then \
+		echo ""; \
+		echo "This Makefile uses Nix packages to run commands in an isolated environment."; \
+		echo ""; \
+		echo "To install Nix please follow instructions on https://nixos.org/nix/"; \
+		echo ""; \
+		echo "For inpatients, run the following curl-bash"; \
+		echo ""; \
+		echo "$$ curl https://nixos.org/nix/install | sh; . \$$HOME/.nix-profile/etc/profile.d/nix.sh"; \
+		echo ""; \
+		echo "and rerun the same command again"; \
+		echo ""; \
+		exit 1; \
 	fi
 
 
@@ -92,7 +102,7 @@ develop: nix require-APP
 
 develop-run: require-APP develop-run-$(APP)
 
-develop-run-BACKEND: build-certs nix require-APP 
+develop-run-BACKEND: build-certs nix require-APP
 	DEBUG=true \
 	CACHE_TYPE=filesystem \
 	CACHE_DIR=$$PWD/src/$(APP)/cache \
@@ -248,11 +258,11 @@ build-tool-%: nix
 
 
 build-certs: tmpdir build-tool-createcert
-	@if [[ ! -e "$$PWD/tmp/ca.crt" ]] && \
-	   [[ ! -e "$$PWD/tmp/ca.key" ]] && \
-	   [[ ! -e "$$PWD/tmp/ca.srl" ]] && \
-	   [[ ! -e "$$PWD/tmp/server.crt" ]] && \
-	   [[ ! -e "$$PWD/tmp/server.key" ]]; then \
+	@if [ ! -e "$$PWD/tmp/ca.crt" ] && \
+	   [ ! -e "$$PWD/tmp/ca.key" ] && \
+	   [ ! -e "$$PWD/tmp/ca.srl" ] && \
+	   [ ! -e "$$PWD/tmp/server.crt" ] && \
+	   [ ! -e "$$PWD/tmp/server.key" ]; then \
 	  ./result-tool-createcert/bin/createcert $$PWD/tmp; \
 	fi
 
@@ -297,9 +307,9 @@ taskcluster-hooks: require-DOCKER require-HOOKS nix build-tool-push build-tool-t
 tmpdir:
 	@mkdir -p $$PWD/tmp
 
-	
+
 require-TOOL:
-	@if [[ -z "$(TOOL)" ]]; then \
+	@if [ -z "$(TOOL)" ]; then \
 		echo ""; \
 		echo "You need to specify which TOOL to build, eg:"; \
 		echo "  make build-tool TOOL=awscli"; \
@@ -314,7 +324,7 @@ require-TOOL:
 	fi
 
 require-APP:
-	@if [[ -z "$(APP)" ]]; then \
+	@if [ -z "$(APP)" ]; then \
 		echo ""; \
 		echo "You need to specify which APP, eg:"; \
 		echo "  make develop APP=releng_clobberer"; \
@@ -331,8 +341,8 @@ require-APP:
 
 
 require-AWS:
-	@if [[ -z "$$AWS_ACCESS_KEY_ID" ]] || \
-		[[ -z "$$AWS_SECRET_ACCESS_KEY" ]]; then \
+	@if [ -z "$$AWS_ACCESS_KEY_ID" ] || \
+		[ -z "$$AWS_SECRET_ACCESS_KEY" ]; then \
 		echo ""; \
 		echo "You need to specify AWS credentials, eg:"; \
 		echo "  make deploy-production-releng_frontend \\"; \
@@ -344,8 +354,8 @@ require-AWS:
 	fi
 
 require-HEROKU:
-	@if [[ -z "$$HEROKU_USERNAME" ]] || \
-		[[ -z "$$HEROKU_PASSWORD" ]]; then \
+	@if [ -z "$$HEROKU_USERNAME" ] || \
+		[ -z "$$HEROKU_PASSWORD" ]; then \
 		echo ""; \
 		echo "You need to specify HEROKU credentials, eg:"; \
 		echo "  make deploy-production-releng_clobberer \\"; \
@@ -357,7 +367,7 @@ require-HEROKU:
 	fi
 
 require-CACHE_BUCKET:
-	@if [[ -z "$$CACHE_BUCKET" ]]; then \
+	@if [ -z "$$CACHE_BUCKET" ]; then \
 		echo ""; \
 		echo "You need to specify CACHE_BUCKET variable, eg:"; \
 		echo "  make deploy-cache \\"; \
@@ -368,8 +378,8 @@ require-CACHE_BUCKET:
 	fi
 
 require-DOCKER:
-	@if [[ -z "$(DOCKER_USERNAME)" ]] || \
-	    [[ -z "$(DOCKER_PASSWORD)" ]]; then \
+	@if [ -z "$(DOCKER_USERNAME)" ] || \
+	    [ -z "$(DOCKER_PASSWORD)" ]; then \
 		echo ""; \
 		echo "You need to specify DOCKER_USERNAME and DOCKER_PASSWORD."; \
 		echo ""; \
@@ -378,8 +388,8 @@ require-DOCKER:
 	fi
 
 require-HOOKS:
-	@if [[ -z "$(HOOKS_CLIENT_ID)" ]] || \
-	    [[ -z "$(HOOKS_ACCESS_TOKEN)" ]]; then \
+	@if [ -z "$(HOOKS_CLIENT_ID)" ] || \
+	    [ -z "$(HOOKS_ACCESS_TOKEN)" ]; then \
 		echo ""; \
 		echo "You need to specify HOOKS_CLIENT_ID and HOOKS_ACCESS_TOKEN."; \
 		echo ""; \
