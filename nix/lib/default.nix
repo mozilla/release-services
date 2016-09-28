@@ -213,6 +213,7 @@ in rec {
     , src
     , node_modules
     , elm_packages
+    , postInstall ? ""
     }:
     let
       self = stdenv.mkDerivation {
@@ -238,7 +239,9 @@ in rec {
         installPhase = ''
           mkdir $out
           cp build/* $out/ -R
+          runHook postInstall
         '';
+        inherit postInstall;
         shellHook = ''
           cd src/${name}
         '' + self.configurePhase;
