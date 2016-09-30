@@ -124,7 +124,10 @@ def init_app(app):
         if ':' in request.host:
             host, port = request.host.split(':')
         else:
-            host, port = request.host, request.scheme == 'https' and 443 or 80
+            host = request.host
+            port = request.environ.get('HTTP_X_FORWARDED_PORT')
+            if port is None:
+                request.scheme == 'https' and 443 or 80
         method = request.method.lower()
         resource = request.path
 
@@ -145,6 +148,7 @@ def init_app(app):
                 raise Exception('Taskcluster rejected the authentication')
         except Exception as e:
             logger.error('TC auth error: {}'.format(e))
+            logger.error('TC auth details: {}'.format(payload))
             abort(401) # Unauthorized
 
         return TaskclusterUser(resp)
