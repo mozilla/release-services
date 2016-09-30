@@ -40,7 +40,7 @@ let
         pushd src/${name}
         ${pypi2nix}/bin/pypi2nix -v \
          -V 3.5 \
-         -E "postgresql libffi openssl" \
+         -E "postgresql libffi openssl pkgconfig freetype.dev" \
          -r requirements.txt \
          -r requirements-setup.txt \
          -r requirements-dev.txt \

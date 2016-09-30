@@ -1,3 +1,6 @@
 -e ../releng_common
 
+# libmozdata, but without scipy
+# https://github.com/La0/libmozdata/archive/master.tar.gz#egg=libmozdata
+# After update-app, we need the real name in here
 libmozdata
