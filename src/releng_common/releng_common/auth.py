@@ -121,7 +121,10 @@ def init_app(app):
     def user_loader(auth_header):
 
         # Get Endpoint configuration
-        host, port = request.host.split(':')
+        if ':' in request.host:
+            host, port = request.host.split(':')
+        else:
+            host, port = request.host, request.scheme == 'https' and 443 or 80
         method = request.method.lower()
         resource = request.path
 
