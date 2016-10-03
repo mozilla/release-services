@@ -7,12 +7,18 @@ from __future__ import absolute_import
 from shipit_dashboard.models import BugAnalysis, BugResult
 from shipit_dashboard.serializers import serialize_analysis, serialize_bug
 from sqlalchemy.orm.exc import NoResultFound
-from flask_login import login_required, current_user
+from flask_login import current_user
+from releng_common.auth import scopes_required
 from flask import abort, request
 from datetime import datetime, timedelta
 import requests
 
 BUGZILLA_SECRET = 'project:shipit/{}/bugzilla'
+
+# Tasckcluster scopes
+SCOPE_BASE = 'project:shipit:user'
+SCOPE_ANALYSIS = 'project:shipit:analysis'
+SCOPE_BUGZILLA = 'project:shipit:bugzilla'
 
 def check_bugzilla_auth(login, token):
     """
@@ -29,7 +35,7 @@ def check_bugzilla_auth(login, token):
     resp = requests.get(url, params=params, headers=headers)
     return resp.ok and resp.content == b'true'
 
-@login_required
+@scopes_required([SCOPE_BASE, SCOPE_ANALYSIS])
 def list_analysis():
     """
     List all available analysis
@@ -37,7 +43,7 @@ def list_analysis():
     all_analysis = BugAnalysis.query.all()
     return [serialize_analysis(analysis, False) for analysis in all_analysis]
 
-@login_required
+@scopes_required([SCOPE_BASE, SCOPE_ANALYSIS])
 def get_analysis(analysis_id):
     """
     Fetch an analysis and all its bugs
@@ -52,7 +58,7 @@ def get_analysis(analysis_id):
     # Build JSON output
     return serialize_analysis(analysis)
 
-@login_required
+@scopes_required([SCOPE_BASE, SCOPE_BUGZILLA])
 def get_bugzilla_auth():
     """
     Checks if current user has an available
@@ -80,7 +86,7 @@ def get_bugzilla_auth():
             'message' : 'No authentication stored.',
         }
 
-@login_required
+@scopes_required([SCOPE_BASE, SCOPE_BUGZILLA])
 def update_bugzilla_auth():
     """
     Update bugzilla token & login
@@ -112,7 +118,7 @@ def update_bugzilla_auth():
         'message' : 'Valid authentication for {}.'.format(login),
     }
 
-@login_required
+@scopes_required([SCOPE_BASE, SCOPE_BUGZILLA, SCOPE_ANALYSIS])
 def update_bug(bug_id):
     """
     Update a bug with new comment & flags values

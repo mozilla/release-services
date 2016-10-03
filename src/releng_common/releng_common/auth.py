@@ -1,7 +1,10 @@
-from flask_login import LoginManager
-from flask import request, abort
+from flask_login import LoginManager, login_required, current_user
+from flask import request, abort, current_app
+from taskcluster.utils import scope_match
+from functools import wraps
 import logging
 import taskcluster
+
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +72,41 @@ class TaskclusterUser(BaseUser):
         return self.clientId
 
     def get_permissions(self):
-        return self.scopes
+        """
+        Load all scopes from Taskcluster
+        by fetching all the expansions
+        from assume:* roles
+        """
+        auth = taskcluster.Auth({'maxRetries' : 0}) # no header here
+
+        expanded = []
+
+        def _expand(scopes):
+            for s in scopes:
+                if s in expanded or not s.startswith('assume:'):
+                    continue
+
+                # Skip useless roles
+                if s.startswith('assume:assume:') \
+                    or s.startswith('assume:hook-id:') \
+                    or s in (
+                        'assume:project:taskcluster:tutorial',
+                    ):
+                    continue
+
+                # Solve assume: role
+                try:
+                    role = auth.role(s)
+                    expanded.append(s)
+                    scopes += _expand(role.get('scopes', []))
+                    scopes += _expand(role.get('expandedScopes', []))
+                except Exception as e:
+                    logger.warning('Failed to expand role {} : {}'.format(s, e))
+                    expanded.append(s)
+
+            return scopes
+
+        return _expand(self.scopes)
 
     def taskcluster_secrets(self):
         """
@@ -111,6 +148,33 @@ class Auth(object):
         import pdb
         pdb.set_trace()
 
+def scopes_required(scopes):
+    """
+    Decorator for Flask views to require
+    some Taskcluster scopes for the current user
+    """
+    assert isinstance(scopes, list)
+
+    def decorator(method):
+        @wraps(method)
+        def decorated_function(*args, **kwargs):
+
+            with current_app.app_context():
+                # Check login
+                if not current_user.is_authenticated:
+                    logger.error('Invalid authentication')
+                    return abort(401)
+
+                # Check scopes, using TC implementation
+                user_scopes = current_user.get_permissions()
+                if not scope_match(user_scopes, [ scopes ]):
+                    diff = set(scopes).difference(current_user.scopes)
+                    logger.error('User {} misses some scopes: {}'.format(current_user.get_id(), ', '.join(diff)))
+                    return abort(401)
+
+            return method(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 def init_app(app):
 
@@ -156,4 +220,3 @@ def init_app(app):
     login_manager.init_app(app)
 
     return Auth(login_manager)
-
