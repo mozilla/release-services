@@ -5,7 +5,7 @@ Taskcluster integration
 1. Running tests
 ----------------
 
-First we check that all projects build sucessfully. This includes linting,
+First we check that all projects build successfully. This includes linting,
 tests, etc...::
 
     % make build-all

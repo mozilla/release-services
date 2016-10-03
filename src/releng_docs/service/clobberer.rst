@@ -23,11 +23,11 @@ Development
 ^^^^^^^^^^^
 
 - **Frontend**:
-  https://develop.mozilla-releng.org/clobberer
+  https://develop.mozilla-releng.net/clobberer
 - **Api**:
-  https://clobberer.develop.mozilla-releng.org
-- **Api documentation**: https://clobberer.develop.mozilla-releng.org/docs
-- **Documentation**: https://docs.develop.mozilla-releng.org/service/clobberer.html
+  https://clobberer.develop.mozilla-releng.net
+- **Api documentation**: https://clobberer.develop.mozilla-releng.net/docs
+- **Documentation**: https://docs.develop.mozilla-releng.net/service/clobberer.html
 - **Source for Api**: https://github.com/garbas/mozilla-releng/tree/master/src/releng_clobberer
 - **Source for Frontent**: https://github.com/garbas/mozilla-releng/blob/master/src/releng_frontend/src/App/Clobberer.elm
 - **Source for Documentation**: https://github.com/garbas/mozilla-releng/blob/master/docs/service/clobberer.rst
@@ -36,11 +36,11 @@ Development
 Staging
 ^^^^^^^
 
-- **Frontend**: https://staging.mozilla-releng.org/clobberer
-- **Api**: https://clobberer.staging.mozilla-releng.org
-- **Api documentation**: https://clobberer.staging.mozilla-releng.org/docs
+- **Frontend**: https://staging.mozilla-releng.net/clobberer
+- **Api**: https://clobberer.staging.mozilla-releng.net
+- **Api documentation**: https://clobberer.staging.mozilla-releng.net/docs
 - **Api Heroku app**: https://dashboard.heroku.com/apps/releng-staging-clobberer
-- **Documentation**: https://docs.staging.mozilla-releng.org/service/clobberer.html
+- **Documentation**: https://docs.staging.mozilla-releng.net/service/clobberer.html
 - **Source for Api**: https://github.com/garbas/mozilla-releng/tree/staging/src/releng_clobberer
 - **Source for Frontent**: https://github.com/garbas/mozilla-releng/blob/staging/src/releng_frontend/src/App/Clobberer.elm
 - **Source for Documentation**: https://github.com/garbas/mozilla-releng/blob/staging/docs/service/clobberer.rst
@@ -49,10 +49,10 @@ Staging
 Production
 ^^^^^^^^^^
 
-- **Frontend**: https://mozilla-releng.org/clobberer
-- **Api**: https://clobberer.mozilla-releng.org
-- **Api documentation**: https://clobberer.mozilla-releng.org/docs
-- **Documentation**: https://docs.mozilla-releng.org/service/clobberer.html
+- **Frontend**: https://mozilla-releng.net/clobberer
+- **Api**: https://clobberer.mozilla-releng.net
+- **Api documentation**: https://clobberer.mozilla-releng.net/docs
+- **Documentation**: https://docs.mozilla-releng.net/service/clobberer.html
 - **Source for Api**: https://github.com/garbas/mozilla-releng/tree/production/src/releng_clobberer
 - **Source for Frontent**: https://github.com/garbas/mozilla-releng/blob/production/src/releng_frontend/src/App/Clobberer.elm
 - **Source for Documentation**: https://github.com/garbas/mozilla-releng/blob/production/docs/service/clobberer.rst

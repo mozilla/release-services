@@ -20,40 +20,26 @@ TODO: why a single version? why not semver?
 Repository structure
 --------------------
 
-- ``CONTRIBUTE.rst`` A contribution guide used by github.
-- ``LICENSE.txt`` license of code (Mozilla Public License Version 2.0).
-- ``Makefile`` Few helper commands (gnumake required).
-- ``README.rst`` A short description of the project (eg. quickstart).
-- ``VERSION`` A version of all projects
+- ``CONTRIBUTE.rst``: Contribution guide used by github.
+- ``LICENSE.txt``: Mozilla Public License Version 2.0.
+- ``Makefile``: Few helper commands (gnumake required). Run ``make`` to see all supported targets.
+- ``README.rst``: A short description of the project (eg. quickstart).
 - ``contribute.json`` A JSON schema for open-source project contribution data. https://www.contributejson.org/
-- ``src/`` A folder where all projects are placed, described bellow.
-- ``nix/`` A build (Nix) related tools, scripts, etc... :ref:`more <build-process>`
+- ``src/`` A folder where all projects are placed.
+- ``nix/`` Nix related expressions, tools, scripts, etc...
 
 
-.. _build-process
 
 Build process
 -------------
 
 TODO: find better title
 
-
-
-
-
-
-
-
-Replace ``<project>`` with one of folder names from ``./src``. 
-
-
-To run tests and build a project::
-
-    nix-build nix/default.nix -A <project>
+Replace ``<project>`` with one of folder names from ``./src``.
 
 To enter development mode::
 
-    nix-shell nix/default.nix -A <project>
+    make develop APP=<project>
 
 
 .. toctree::

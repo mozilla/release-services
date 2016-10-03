@@ -5,7 +5,7 @@ Quick overview of all releng services with short description.
 
 .. todo:: add diagram how everything fits together
 
-.. todo:: add a note how to manage mozilla-releng.org domain
+.. todo:: add a note how to manage mozilla-releng.net domain
 
 .. todo:: who to bug for heroku admin rights
 
@@ -17,13 +17,13 @@ releng_frontend
 
 Staging:
 
-- Url: https://staging.mozilla-releng.org
+- Url: https://staging.mozilla-releng.net
 - S3: https://console.aws.amazon.com/s3/home?region=us-west-2&bucket=releng-staging-frontend
 - CloudFront: https://console.aws.amazon.com/cloudfront/home?region=us-west-2#distribution-settings:E21OUD0VFT2UQ6
 
 Production:
 
-- Url: https://mozilla-releng.org
+- Url: https://mozilla-releng.net
 - S3: https://console.aws.amazon.com/s3/home?region=us-west-2&bucket=releng-production-frontend
 - CloudFront: https://console.aws.amazon.com/cloudfront/home?region=us-west-2#distribution-settings:E7SMSK9P6UW3N
 
@@ -36,12 +36,12 @@ releng_clobberer
 
 Staging:
 
-- Url: https://clobberer.staging.mozilla-releng.org
+- Url: https://clobberer.staging.mozilla-releng.net
 - Heroku: https://dashboard.heroku.com/apps/releng-staging-clobberer
 
 Production:
 
-- Url: https://clobberer.mozilla-releng.org
+- Url: https://clobberer.mozilla-releng.net
 - Heroku: https://dashboard.heroku.com/apps/releng-production-clobberer
 
 
@@ -72,12 +72,12 @@ Written in Sphinx_.
 
 Staging:
 
-- Url: https://docs.staging.mozilla-releng.org
+- Url: https://docs.staging.mozilla-releng.net
 - S3: https://console.aws.amazon.com/s3/home?region=us-west-2&bucket=releng-staging-docs
 - CloudFront: https://console.aws.amazon.com/cloudfront/home?region=us-west-2#distribution-settings:E1LW0QJF456NUG
 
 Production:
 
-- Url: https://docs.mozilla-releng.org
+- Url: https://docs.mozilla-releng.net
 - S3: https://console.aws.amazon.com/s3/home?region=us-west-2&bucket=releng-production-docs
 - CloudFront: https://console.aws.amazon.com/cloudfront/home?region=us-west-2#distribution-settings:EPUEJ5MNC6OE

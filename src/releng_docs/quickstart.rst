@@ -16,7 +16,7 @@ To get code you need to clone `services`_ repository.
 
 .. code-block:: bash
 
-    % git clone git@github.com:mozilla-releng/services.git
+    % git clone https://github.com/mozilla-releng/services/
     % cd services/
     % git branch --list -r
     origin/master
@@ -26,18 +26,18 @@ To get code you need to clone `services`_ repository.
 In above command we also listed all remote branches. To describe what each
 branch is for:
 
-- ``master``: A main development branch.
-- ``staging``: A staging (eg. before production) branch, where all services are
+- ``master``: The main development branch.
+- ``staging``: The staging (eg. before production) branch, where all services are
   automatically deployed and are accessible under
-  <service>.staging.mozilla-releng.org
-- ``production``: A production branch, where all services are also
-  automatically deployed and are accessible under <service>.mozilla-releng.org.
+  <service>.staging.mozilla-releng.net
+- ``production``: The production branch, where all services are also
+  automatically deployed and are accessible under <service>.mozilla-releng.net.
 
 For more details of deployments, please look at specific service documentation
 (eg: documentation for :ref:`Clobberer service <service-clobberer>`).
 
 When submitting a **pull request** a build job for each service is being ran to
-ensure that all tests accross services are passing before you consider merging
+ensure that all tests across services are passing before you consider merging
 it.
 
 
@@ -59,7 +59,7 @@ To run a application in development mode do:
 
 Application will get restarted on every save you do in the source code.
 
-A list of avaiable applications you can find by running:
+A list of available applications you can find by running:
 
 .. code-block:: bash
 
