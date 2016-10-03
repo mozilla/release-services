@@ -20,21 +20,6 @@ SCOPE_BASE = 'project:shipit:user'
 SCOPE_ANALYSIS = 'project:shipit:analysis'
 SCOPE_BUGZILLA = 'project:shipit:bugzilla'
 
-def check_bugzilla_auth(login, token):
-    """
-    Check the bugzilla auth is working
-    """
-    # TODO: do a patch to libmozdata upstream
-    url = 'https://bugzilla.mozilla.org/rest/valid_login'
-    params = {
-        'login' : login,
-    }
-    headers = {
-        'X-Bugzilla-Api-Key' : token,
-    }
-    resp = requests.get(url, params=params, headers=headers)
-    return resp.ok and resp.content == b'true'
-
 @scopes_required([SCOPE_BASE, SCOPE_ANALYSIS])
 def list_analysis():
     """
@@ -58,66 +43,6 @@ def get_analysis(analysis_id):
     # Build JSON output
     return serialize_analysis(analysis)
 
-@scopes_required([SCOPE_BASE, SCOPE_BUGZILLA])
-def get_bugzilla_auth():
-    """
-    Checks if current user has an available
-    and valid bugzilla auth token
-    stored in Taskcluster secrets
-    """
-    try:
-        secret_name = BUGZILLA_SECRET.format(current_user.get_id())
-        auth = current_user.get_secret(secret_name)
-
-        # Check the auth is still valid
-        if not check_bugzilla_auth(auth['login'], auth['token']):
-            return {
-                'authenticated': False,
-                'message' : 'Invalid bugzilla auth',
-            }
-
-        return {
-            'authenticated': True,
-            'message' : 'Valid authentication for {}'.format(auth['login']),
-        }
-    except:
-        return {
-            'authenticated': False,
-            'message' : 'No authentication stored.',
-        }
-
-@scopes_required([SCOPE_BASE, SCOPE_BUGZILLA])
-def update_bugzilla_auth():
-    """
-    Update bugzilla token & login
-    in Taskcluster secrets
-    """
-    token = request.json.get('token')
-    login = request.json.get('login')
-    if not (token and login):
-        raise Exception('Missing token and login')
-
-    # Check the auth is still valid
-    if not check_bugzilla_auth(login, token):
-        raise Exception('Invalid bugzilla auth')
-
-    # Store the auth in secret
-    payload = {
-        'secret': {
-            'token' : token,
-            'login' : login,
-        },
-        'expires' : datetime.now() + timedelta(days=365)
-    }
-    secrets = current_user.taskcluster_secrets()
-    secret_name = BUGZILLA_SECRET.format(current_user.get_id())
-    secrets.set(secret_name, payload)
-
-    return {
-        'authenticated': True,
-        'message' : 'Valid authentication for {}.'.format(login),
-    }
-
 @scopes_required([SCOPE_BASE, SCOPE_BUGZILLA, SCOPE_ANALYSIS])
 def update_bug(bug_id):
     """
@@ -129,44 +54,7 @@ def update_bug(bug_id):
     except:
         raise Exception('Missing bug {}'.format(bug_id))
 
-    # Check mandatory input
-    if 'comment' not in request.json:
-        raise Exception('Missing comment')
-
-    # Load bugzilla auth
-    auth = current_user.get_secret(BUGZILLA_SECRET)
-
-    # Build bugzilla request
-    data = {
-        'comment' : {
-            'body' : request.json['comment'],
-            'is_private' : False,
-            'is_markdown' : False,
-        },
-        'comment_tags' :  ['shipit', ],
-        'flags' : [],
-    }
-
-    # Add flags
-    for k,v in request.json.items():
-        if not (k.startswith('status') or k.startswith('tracking')):
-            continue
-        data['flags'].append({
-            'name' : k,
-            'status' : v,
-        })
-
-    # Send data to bugzilla
-    print('DATA to update bug', data)
-    url = 'https://bugzilla.mozilla.org/rest/bugs/{}'.format(bug.bugzilla_id)
-    headers = {
-        'X-Bugzilla-Api-Key' : auth['token'],
-    }
-    resp = requests.put(url, json=data, headers=headers)
-    if not resp.ok:
-        raise Exception('Invalid bugzilla response: {}'.format(resp.content))
-
-    # TODO: update local version ?
+    # TODO: update bug in database to mark it as updated
 
     # Send back the bug
     return serialize_bug(bug)

@@ -297,7 +297,7 @@ viewUser model =
         ] [ text "Manage credentials" ],
 
         -- Display bugzilla status
-        viewBugzillaAuth model.current_user,
+        viewBugzillaCreds model.current_user,
 
         -- Logout from TC
         div [class "dropdown-divider"] [],
@@ -389,12 +389,14 @@ viewNavAnalysis analysis =
       ]
     ]
 
-viewBugzillaAuth: User.Model -> Html Msg
-viewBugzillaAuth user = 
-
-  case user.bugzilla_auth of
+viewBugzillaCreds: User.Model -> Html Msg
+viewBugzillaCreds user = 
+  case user.bugzilla_check of
     NotAsked ->
-      a [class "dropdown-item text-info disabled"] [text "Init. Bugzilla auth"]
+      a [class "dropdown-item text-info"] [
+        span [] [text "No bugzilla auth"],
+        span [] viewLoginBugzilla
+      ] 
 
     Loading ->
       a [class "dropdown-item text-info disabled"] [text "Loading Bugzilla auth."]
@@ -405,13 +407,13 @@ viewBugzillaAuth user =
         span []  viewLoginBugzilla
       ]  
 
-    Success auth -> 
-      if auth.authenticated then
-        a [class "dropdown-item text-success disabled"] [text ("Bugzilla: " ++ auth.message)]
+    Success valid -> 
+      if valid then
+        a [class "dropdown-item text-success disabled"] [text "Valid bugzilla auth"]
 
       else
         a [class "dropdown-item text-danger"] [
-          span [] [text ("Error with your bugzilla auth: " ++ auth.message)],
+          span [] [text "Invalid bugzilla auth"],
           span [] viewLoginBugzilla
         ] 
 

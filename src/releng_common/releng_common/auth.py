@@ -106,6 +106,7 @@ class TaskclusterUser(BaseUser):
 
             return scopes
 
+        return self.scopes # should work without expand now
         return _expand(self.scopes)
 
     def taskcluster_secrets(self):

@@ -20,17 +20,21 @@ var app = require('./Main.elm').Main.fullscreen({
   backend_dashboard_url: backend_dashboard_url
 });
 
+// Load credentials from local storage
+function get_credentials(){
+  try {
+    return JSON.parse(window.localStorage.getItem(storage_key));
+  } catch (e) {
+    return {
+      user : null,
+      bugzilla : null,
+    };
+  }
+}
+
 // Local storage ports
 app.ports.localstorage_load.subscribe(function(){
-  // Load credentials from local storage
-  var user = null;
-  try {
-    user = JSON.parse(window.localStorage.getItem(storage_key));
-    user = user.value || user;
-  } catch (e) {
-    user = null;
-  }
-  app.ports.localstorage_get.send(user);
+  app.ports.localstorage_get.send(get_credentials());
 });
 
 app.ports.localstorage_remove.subscribe(function() {
@@ -38,10 +42,15 @@ app.ports.localstorage_remove.subscribe(function() {
   app.ports.localstorage_get.send(null);
 });
 
-app.ports.localstorage_set.subscribe(function(user) {
-  user = user ? user.value : null;
-  window.localStorage.setItem(storage_key, JSON.stringify(user));
-  app.ports.localstorage_get.send(user);
+app.ports.localstorage_set.subscribe(function(creds) {
+  // Update local creds without erasing
+  var local_creds = get_credentials();
+  if(creds.user)
+    local_creds.user = creds.user;
+  if(creds.bugzilla)
+    local_creds.bugzilla = creds.bugzilla;
+  window.localStorage.setItem(storage_key, JSON.stringify(local_creds));
+  app.ports.localstorage_get.send(creds);
 });
 
 // HAWK auth

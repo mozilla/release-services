@@ -70,11 +70,6 @@ type alias User = {
   certificate : Maybe Certificate
 }
 
-type alias BugzillaAuth = {
-  authenticated : Bool,
-  message : String
-}
-
 type alias BugzillaCredentials = {
   login: String,
   token: String
@@ -90,7 +85,13 @@ type alias Model = {
   skipped_requests : List HawkParameters,
 
   -- Bugzilla auth
-  bugzilla_auth : WebData (BugzillaAuth)
+  bugzilla : Maybe BugzillaCredentials,
+  bugzilla_check : WebData Bool
+}
+
+type alias LocalStorage = {
+  user : Maybe User,
+  bugzilla : Maybe BugzillaCredentials
 }
 
 type HawkRequestType = Empty
@@ -108,14 +109,14 @@ fromJust x = case x of
 type Msg
   = Login LoginUrl
   | LoggingIn User
-  | LoggedIn (Maybe User)
+  | LoggedIn (Maybe LocalStorage)
   | LocalUser
   | Logout 
   | ProcessWorkflow Hawk
   | InitHawkRequest HawkParameters
   | BuiltHawkHeader (Maybe HawkResponse)
-  | FetchedBugzillaAuth (WebData BugzillaAuth)
   | ReceivedBugzillaCreds (Maybe BugzillaCredentials)
+  | CheckedBugzillaCreds (WebData Bool)
 
 init : String -> (Model, Cmd Msg)
 init backend_dashboard_url =
@@ -124,7 +125,8 @@ init backend_dashboard_url =
     model = {
       backend_dashboard_url = backend_dashboard_url, 
       user = Nothing,
-      bugzilla_auth = NotAsked,
+      bugzilla = Nothing,
+      bugzilla_check = NotAsked,
       workflows = Dict.empty,
       workflow_id = 0,
       skipped_requests = []
@@ -136,24 +138,9 @@ init backend_dashboard_url =
 runRequest: HawkParameters -> (Model, List Hawk, Cmd Msg) -> (Model, List Hawk, Cmd Msg)
 runRequest params (model, hawk, cmd) =
   let
-    -- Patch empty secret url
-    params' = case params.target of
-      Just target ->
-        if target.url == "SECRET_HERE" then
-          { params | target = Just {
-            method = target.method,
-            url = getSecretUrl model
-          }}    
-        else
-          params    
-
-      Nothing ->
-        params
-
-    (model', hawk', cmd') = buildHawkRequest model params'
+    (model', hawk', cmd') = buildHawkRequest model params
   in
     ( model', hawk ++ hawk', Cmd.batch [ cmd, cmd'] )
-
 
 update : Msg -> Model -> (Model, List Hawk, Cmd Msg)
 update msg model =
@@ -164,33 +151,25 @@ update msg model =
     LoggingIn user ->
       (
         model, [], localstorage_set {
-          name = "shipit-credentials",
-          value = Just user
+          user = Just user,
+          bugzilla = model.bugzilla
         }
       )
 
-    LoggedIn user ->
+    LoggedIn storage ->
       -- Check bugzilla auth
       -- when a new user logs in
       -- Also save new user !
-      let
-        model' = { model | user = user }
-        params = {
-          backend = {
-            method = "GET",
-            url = model.backend_dashboard_url ++ "/bugzilla/auth"
-          },
-          target = Just {
-            -- Backend will check the secret
-            method = "GET",
-            url = getSecretUrl model
-          },
-          body = Nothing,
-          requestType = GetBugzillaAuth
-        }
-      in
-        --buildHawkRequest model' params
-        List.foldr runRequest (model', [], Cmd.none) ( params :: model.skipped_requests )
+      case storage of
+        Just storage' ->
+          (
+            { model | user = storage'.user, bugzilla = storage'.bugzilla },
+            [],
+            checkBugzillaAuth storage'.bugzilla
+          )
+
+        Nothing ->
+          (model, [], Cmd.none)
 
     LocalUser ->
       -- Fetch local user from localstorage
@@ -214,44 +193,26 @@ update msg model =
       -- Process task from workflow
       let
         cmd = case workflow.requestType of
-          GetBugzillaAuth ->
-            processBugzillaAuth workflow
-          UpdateBugzillaAuth ->
-            processBugzillaAuth workflow
+          --GetBugzillaAuth ->
+          --  processBugzillaAuth workflow
           _ ->
             Cmd.none
       in
         (model, [], cmd)
 
-    FetchedBugzillaAuth auth ->
-      ( { model | bugzilla_auth = auth }, [], Cmd.none )
-
     ReceivedBugzillaCreds creds ->
-      -- Do not store credentials, send them to backend
-      case creds of
-        Just creds' ->
-          let
-            credsJson = JsonEncode.encode 0 (JsonEncode.object [
-              ("login", JsonEncode.string creds'.login),
-              ("token", JsonEncode.string creds'.token)
-            ])
-            params = {
-              backend = {
-                method = "POST",
-                url = model.backend_dashboard_url ++ "/bugzilla/auth"
-              },
-              target = Just {
-                method = "PUT",
-                url = getSecretUrl model
-              },
-              body = Just credsJson,    
-              requestType = UpdateBugzillaAuth
-            }
-          in
-            buildHawkRequest model params
+      -- Store creds in local storage
+      (model, [], localstorage_set {
+        user = model.user,
+        bugzilla = creds
+      })
 
-        Nothing ->
-          ( model, [], Cmd.none )
+    CheckedBugzillaCreds check ->
+      (
+        { model | bugzilla_check = check },
+        [],
+        Cmd.none
+      )
 
 decodeCertificate : String -> Result String Certificate
 decodeCertificate text =
@@ -265,7 +226,6 @@ decodeCertificate text =
             ( "signature"   := JsonDecode.string )
             ( "issuer"      := JsonDecode.string )
         ) text
-
 
 convertUrlQueryToUser : Dict String String -> User
 convertUrlQueryToUser query =
@@ -292,6 +252,26 @@ convertUrlQueryToBugzillaCreds query =
           token = token'
         }
         Nothing -> Nothing)
+
+checkBugzillaAuth : Maybe BugzillaCredentials -> Cmd Msg
+checkBugzillaAuth creds =
+  -- Check bugzilla auth is still valid
+  case creds of
+    Just bugzilla ->
+      let
+        task = buildBugzillaTask bugzilla {
+          method = "GET",
+          url = Http.url "/valid_login" [
+            ("login", bugzilla.login)
+          ]
+        } Nothing -- no body
+      in
+        (Http.fromJson JsonDecode.bool task)
+        |> RemoteData.asCmd
+        |> Cmd.map CheckedBugzillaCreds
+
+    Nothing ->
+      Cmd.none
 
 buildHawkRequest: Model -> HawkParameters -> (Model, List Hawk, Cmd Msg)
 buildHawkRequest model params =
@@ -352,7 +332,7 @@ saveHawkHeader model response =
           workflow' = { workflow |
             header_backend = Just response.header_backend,
             header_target = response.header_target,
-            task = Just (buildHttpTask workflow.request response.header_backend response.header_target)
+            task = Just (buildTCTask workflow.request response.header_backend response.header_target)
           }
 
           -- Update existing workflow
@@ -367,9 +347,9 @@ saveHawkHeader model response =
       Nothing ->
           ( model, [], Cmd.none )
 
-buildHttpTask: HawkRequest -> String -> Maybe String -> Task Http.RawError Http.Response
-buildHttpTask request header_backend header_target =
-  -- Build Http request task
+buildTCTask: HawkRequest -> String -> Maybe String -> Task Http.RawError Http.Response
+buildTCTask request header_backend header_target =
+  -- Build Taskcluster Http request task
   let
     body = case request.body of
       Just body' -> Http.string body'
@@ -393,44 +373,33 @@ buildHttpTask request header_backend header_target =
       body = body
     }
 
+buildBugzillaTask: BugzillaCredentials -> UrlMethod -> Maybe String -> Task Http.RawError Http.Response
+buildBugzillaTask creds url_method body =
+  let
+    body' = case body of
+      Just b -> Http.string b
+      Nothing -> Http.empty
 
-processBugzillaAuth: Hawk -> Cmd Msg
-processBugzillaAuth workflow =
-  -- Decode and save all analysis
-  case workflow.task of
-    Just task ->
-      (Http.fromJson decodeBugzillaAuth task)
-      |> RemoteData.asCmd
-      |> Cmd.map FetchedBugzillaAuth
-
-    Nothing ->
-        Cmd.none
-
-decodeBugzillaAuth : Decoder BugzillaAuth
-decodeBugzillaAuth =
-  JsonDecode.object2 BugzillaAuth
-    ("authenticated" := JsonDecode.bool)
-    ("message" := JsonDecode.string)
-
-getSecretUrl : Model -> String
-getSecretUrl model =
-  case model.user of
-    Just user ->
-      "https://secrets.taskcluster.net/v1/secret/" ++ (Http.uriEncode ("project:shipit/" ++ user.clientId ++ "/bugzilla"))
-    Nothing ->
-      -- will be updated when user is ready
-      "SECRET_HERE"
+    headers = [
+      -- Use bugzilla token
+      ( "x-bugzilla-api-key", creds.token ),
+      ( "Accept", "application/json" ),
+      ( "Content-Type", "application/json" )
+    ]
+  in
+    -- Always send to Mozilla Bugzilla
+    Http.send Http.defaultSettings {
+      url = "https://bugzilla.mozilla.org/rest" ++ url_method.url,
+      verb = url_method.method,
+      headers = headers,
+      body = body'
+    }
 
 -- PORTS
 
 -- XXX: until https://github.com/elm-lang/local-storage is ready
 
-type alias LocalStorage =
-    { name : String
-    , value : Maybe User
-    }
-
-port localstorage_get : (Maybe User -> msg) -> Sub msg
+port localstorage_get : (Maybe LocalStorage -> msg) -> Sub msg
 port localstorage_load : Bool -> Cmd msg
 port localstorage_remove : Bool -> Cmd msg
 port localstorage_set : LocalStorage -> Cmd msg

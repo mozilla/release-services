@@ -80,6 +80,7 @@ type Msg
    | StartBugEditor Bug
    | EditBug Bug String String
    | SaveBugEdit Bug
+   | SavedBugEdit Bug (WebData (List Int))
    | ProcessWorkflow Hawk
    | UserMsg User.Msg
 
@@ -173,6 +174,13 @@ update msg model user =
           _ -> model
       in
         (model', user, Cmd.none)
+
+    SavedBugEdit bug edits ->
+      let
+        -- TODO: mark bug as edited & display to user
+        l = Debug.log "Saved bug edit !" edits
+      in
+        (model, user, Cmd.none)
       
 
 updateBug: Model -> Int -> (Bug -> Bug) -> Model
@@ -260,34 +268,50 @@ processAnalysis workflow =
     Nothing ->
         Cmd.none
 
+encodeBugzillaFlag : (String, String) -> JsonEncode.Value
+encodeBugzillaFlag (key, value) = 
+  JsonEncode.object [
+    ("name", JsonEncode.string key),
+    ("value", JsonEncode.string value)
+  ]
+
 publishBugEdits: Model -> User.Model -> Bug -> (Model, User.Model, Cmd Msg)
 publishBugEdits model user bug =
-  -- Publish all bug edits to backend
-  let 
-    editsJson = JsonEncode.encode 0 (
-      -- Encode needs a list of String/json value
-      JsonEncode.object (List.map (\(x,y)->(x, JsonEncode.string y)) (Dict.toList bug.edits))
-    )
-    params = {
-      backend = {
-        method = "PUT",
-        url = model.backend_dashboard_url ++ "/bugs/" ++ (toString bug.id)
-      },
-      target = Just {
-        -- Backend will retrieve the secret
-        method = "GET",
-        url = User.getSecretUrl user
-      },
-      body = Just editsJson,
-      requestType = User.BugEdits
-    }
-    (user', workflow, userCmd) = User.update (User.InitHawkRequest params) user
-  in
-    (
-      model,
-      user',
-      Cmd.map UserMsg userCmd
-    )
+  -- Publish all bug edits directly to Bugzilla
+  case user.bugzilla of
+    Just bugzilla ->
+      let
+        comment = Dict.get "comment" bug.edits |> Maybe.withDefault "Modified from Shipit."
+
+        -- Build payload for bugzilla
+        payload = JsonEncode.encode 0 (
+          JsonEncode.object [
+            ("comment", JsonEncode.string comment),
+            ("flags", JsonEncode.list (List.map encodeBugzillaFlag (Dict.toList bug.edits)))
+          ]
+        )
+        l = Debug.log "Bugzilla payload" payload
+
+        task = User.buildBugzillaTask bugzilla {
+          method = "PUT",
+          url = "/bug/" ++ (toString bug.bugzilla_id)
+        } (Just payload)
+
+        cmd = (Http.fromJson decodeBugEdits task)
+          |> RemoteData.asCmd
+          |> Cmd.map (SavedBugEdit bug)
+      in
+        (model, user, cmd)
+
+    Nothing ->
+      -- No credentials !
+      (model, user, Cmd.none)
+
+decodeBugEdits : Decoder (List Int)
+decodeBugEdits =
+  Json.at ["bugs"] (Json.list (
+    Json.at ["id"] Json.int
+  ))
 
 processBugEdits : Hawk -> Cmd Msg
 processBugEdits workflow =
