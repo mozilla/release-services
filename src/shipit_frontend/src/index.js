@@ -22,14 +22,18 @@ var app = require('./Main.elm').Main.fullscreen({
 
 // Load credentials from local storage
 function get_credentials(){
+  var out = null;
   try {
-    return JSON.parse(window.localStorage.getItem(storage_key));
+    out = JSON.parse(window.localStorage.getItem(storage_key));
+    if(!out.user && !out.bugzilla)
+      throw "Invalid structure";
   } catch (e) {
-    return {
+    out = {
       user : null,
       bugzilla : null,
     };
   }
+  return out;
 }
 
 // Local storage ports
@@ -50,7 +54,7 @@ app.ports.localstorage_set.subscribe(function(creds) {
   if(creds.bugzilla)
     local_creds.bugzilla = creds.bugzilla;
   window.localStorage.setItem(storage_key, JSON.stringify(local_creds));
-  app.ports.localstorage_get.send(creds);
+  app.ports.localstorage_get.send(local_creds);
 });
 
 // HAWK auth
