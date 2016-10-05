@@ -92,6 +92,7 @@ definitions:
       - creator
       - assignee
       - reviewers
+      - patches
     properties:
       id:
         type: integer
@@ -123,6 +124,13 @@ definitions:
           $ref: '#/definitions/Contributor'
       uplift:
         $ref: '#/definitions/UpliftRequest'
+      patches:
+        type: object
+        properties:
+          default:
+            $ref: '#/definitions/Patch'
+        additionalProperties:
+          $ref: '#/definitions/Patch'
 
   Contributor:
     type: object
@@ -151,3 +159,18 @@ definitions:
         $ref: '#/definitions/Contributor'
       comment:
         type: string
+
+  Patch:
+    type: object
+    required:
+      - source
+      - url
+      - changes_size
+    properties:
+      source:
+        type: string
+      url:
+        type: string
+      changes_size:
+        type: integer
+

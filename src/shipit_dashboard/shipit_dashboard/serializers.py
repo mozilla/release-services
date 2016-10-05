@@ -43,7 +43,7 @@ def serialize_bug(bug):
         uplift = {
             'id' : comment['id'],
             'author' : serialize_user(author),
-            'comment' : comment['raw_text'],
+            'comment' : comment['text'],
         }
 
     status_base_flag = 'cf_status_'
@@ -68,6 +68,9 @@ def serialize_bug(bug):
 
         # Uplift request
         'uplift' : uplift,
+
+        # Patches
+        'patches' : analysis['patches'],
     }
 
 def serialize_analysis(analysis, full=True):

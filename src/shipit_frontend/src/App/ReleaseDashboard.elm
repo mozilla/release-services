@@ -30,6 +30,12 @@ type alias UpliftRequest = {
   text: String
 }
 
+type alias Patch = {
+  source: String,
+  changes: Int,
+  url: String
+}
+
 type alias Bug = {
   id: Int,
   bugzilla_id: Int,
@@ -45,8 +51,8 @@ type alias Bug = {
 
   uplift_request: Maybe UpliftRequest,
 
-  -- Stats
-  changes: Int,
+  -- Patches
+  patches: Dict.Dict String Patch,
 
   -- Actions on bug
   editing: Bool,
@@ -350,10 +356,16 @@ decodeBug =
     |: ("assignee" := decodeContributor)
     |: ("reviewers" := (Json.list decodeContributor))
     |: (Json.maybe ("uplift" := decodeUpliftRequest))
-    |: ("changes_size" := Json.int)
+    |: ("patches" := (Json.dict decodePatch))
     |: (Json.succeed False) -- not editing at first
     |: (Json.succeed Dict.empty) -- not editing at first
-    
+ 
+decodePatch : Decoder Patch
+decodePatch =
+  Json.object3 Patch
+    ("source" := Json.string)
+    ("changes_size" := Json.int)
+    ("url" := Json.string)
 
 decodeContributor : Decoder Contributor
 decodeContributor = 
@@ -406,6 +418,9 @@ viewBug: Bug -> Html Msg
 viewBug bug =
   div [class "bug"] [
     h4 [] [text bug.summary],
+    p [class "summary"] ([
+      span [class "text-muted monospace"] [text ("#" ++ (toString bug.bugzilla_id))]
+    ] ++ (List.map (\k -> span [class "label label-default"] [text k]) bug.keywords)),
     div [class "row"] [
       div [class "col-xs-4"] ([
         viewContributor bug.creator "Creator",
@@ -420,10 +435,6 @@ viewBug bug =
         else
           viewBugDetails bug
       ]
-    ],
-    div [class "text-muted"] [
-      span [] [text ("#" ++ (toString bug.bugzilla_id))],
-      a [href ("https://bugzilla.mozilla.org/show_bug.cgi?id=" ++ (toString bug.bugzilla_id)), target "_blank"] [text "View on bugzilla"]
     ]
   ]
 
@@ -458,21 +469,23 @@ viewUpliftRequest maybe =
 viewBugDetails: Bug -> Html Msg
 viewBugDetails bug =
   div [class "details"] [
-    viewStats bug,
+    h5 [] [text "Patches"],
+    div [class "patches"] (List.map viewPatch (Dict.toList bug.patches)),
+
     viewFlags bug,
   
     -- Start editing
-    button [class "btn btn-primary", onClick (StartBugEditor bug)] [text "Edit this bug"]
+    p [class "actions"] [
+      button [class "btn btn-primary", onClick (StartBugEditor bug)] [text "Edit this bug"],
+      a [class "btn btn-success", href ("https://bugzil.la/" ++ (toString bug.bugzilla_id))] [text "View on Bugzilla"]
+    ]
   ]
 
-viewStats: Bug -> Html Msg
-viewStats bug =
-  div [class "stats"] [
-    p [] (List.map viewKeyword bug.keywords),
-    p [] [
-      span [class "label label-info"] [text "Changes"],
-      span [] [text (toString bug.changes)]
-    ]
+viewPatch: (String, Patch) -> Html Msg
+viewPatch (patchId, patch) =
+  div [class "patch"] [
+    span [class "label label-info -pill", title "Changes size"] [text (toString patch.changes)],
+    a [href patch.url, target "_blank", title ("On " ++ patch.source)] [text ("Patch #" ++ patchId)]
   ]
 
 viewFlags: Bug -> Html Msg
@@ -554,7 +567,3 @@ viewEditor bug =
     ],
     button [class "btn btn-success"] [text "Update bug"]
   ]
-
-viewKeyword: String -> Html Msg
-viewKeyword keyword =
-  span [class "label label-default"] [text keyword]

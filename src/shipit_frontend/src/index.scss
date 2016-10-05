@@ -74,10 +74,18 @@ div.bugs {
   div.bug {
     margin-bottom: 8px;
     padding-top: 15px;
+    padding-bottom: 8px;
     border-bottom: 1px solid #EEE;
 
     h4 {
       font-weight: bold;
+    }
+
+    p.summary, p.actions {
+      * {
+        margin-right: 3px;
+        display: inline-block;
+      }
     }
 
     div.uplift-request {
@@ -99,6 +107,10 @@ div.bugs {
         margin-bottom: 0;
 
       }
+    }
+
+    div.patches {
+      margin-bottom: 8px;
     }
   }
 }
