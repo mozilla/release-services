@@ -45,5 +45,6 @@ To enter development mode::
 .. toctree::
     :maxdepth: 2
 
+    quickstart
     service/clobberer 
 
