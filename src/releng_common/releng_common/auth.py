@@ -1,4 +1,4 @@
-from flask_login import LoginManager, login_required, current_user
+from flask_login import LoginManager, current_user
 from flask import request, abort, current_app
 from taskcluster.utils import scope_match
 from functools import wraps
@@ -159,7 +159,6 @@ def scopes_required(scopes):
     def decorator(method):
         @wraps(method)
         def decorated_function(*args, **kwargs):
-
             with current_app.app_context():
                 # Check login
                 if not current_user.is_authenticated:
@@ -168,9 +167,9 @@ def scopes_required(scopes):
 
                 # Check scopes, using TC implementation
                 user_scopes = current_user.get_permissions()
-                if not scope_match(user_scopes, [ scopes ]):
-                    diff = set(scopes).difference(current_user.scopes)
-                    logger.error('User {} misses some scopes: {}'.format(current_user.get_id(), ', '.join(diff)))
+                if not scope_match(user_scopes, scopes):
+                    diffs = [', '.join(set(s).difference(user_scopes)) for s in scopes]
+                    logger.error('User {} misses some scopes: {}'.format(current_user.get_id(), ' OR '.join(diffs)))
                     return abort(401)
 
             return method(*args, **kwargs)

@@ -54,6 +54,8 @@ APP_PRODUCTION_ENV_releng_frontend=\
 APP_PRODUCTION_ENV_shipit_frontend=\
 	'dashboard-url="https:\/\/dashboard\.shipit\.mozilla-releng\.net\"'
 
+FLASK_CMD ?= shell # default value for flask command to run
+
 
 help:
 	@echo ""
@@ -122,7 +124,6 @@ develop-run-releng_frontend: develop-run-FRONTEND
 develop-run-shipit_dashboard: develop-run-BACKEND
 develop-run-shipit_frontend: develop-run-FRONTEND
 
-
 develop-flask-shell: nix require-APP
 	DEBUG=true \
 	CACHE_TYPE=filesystem \
@@ -131,7 +132,7 @@ develop-flask-shell: nix require-APP
   FLASK_APP=$(APP) \
 	APP_SETTINGS=$$PWD/src/$(APP)/settings.py \
 		nix-shell nix/default.nix -A $(APP) \
-    --run "flask shell"
+    --run "flask $(FLASK_CMD)"
 
 
 

@@ -31,6 +31,16 @@ paths:
           #schema:
           #  $ref: '#/definitions/Analysis'
 
+  /bugs:
+    post:
+      operationId: "shipit_dashboard.api.create_bug"
+      responses:
+        200:
+          description: A specific Bug
+          schema:
+            $ref: '#/definitions/Bug'
+
+
   /bugs/{bug_id}:
     put:
       operationId: "shipit_dashboard.api.update_bug"
@@ -45,6 +55,11 @@ paths:
           description: A specific Bug
           schema:
             $ref: '#/definitions/Bug'
+
+definitions:
+
+  Success:
+    type: string 
 
 definitions:
 
@@ -67,6 +82,7 @@ definitions:
       - id
       - name
       - count
+      - parameters
     properties:
       id:
         type: integer
@@ -74,6 +90,8 @@ definitions:
         type: string
       count:
         type: integer
+      parameters:
+        type: string
       bugs:
         type: array
         items:

@@ -81,6 +81,7 @@ def serialize_analysis(analysis, full=True):
         'id': analysis.id,
         'name': analysis.name,
         'count' : len(analysis.bugs),
+        'parameters' : analysis.parameters,
     }
 
     if full:
