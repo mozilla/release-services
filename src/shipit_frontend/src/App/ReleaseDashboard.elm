@@ -119,7 +119,7 @@ update msg model user =
 
     FetchedAllAnalysis allAnalysis ->
       (
-        { model | all_analysis = allAnalysis },
+        { model | all_analysis = allAnalysis, current_analysis = NotAsked },
         user,
         Cmd.none
       )
@@ -441,10 +441,10 @@ viewBug bug =
 viewContributor: Contributor -> String -> Html Msg
 viewContributor user title = 
   div [class "user row"] [
-    div [class "col-xs-4 col-sm-1"] [
+    div [class "pull-sm-left hidden-xs"] [
       img [class "avatar img-fluid img-rounded", src user.avatar] []
     ],
-    div [class "col-xs-8 col-sm-11"] [
+    div [class "col-xs-8 col-sm-10"] [
       p [class "lead"] [text user.name],
       p [] [
         a [href ("mailto:" ++ user.email)] [text user.email]

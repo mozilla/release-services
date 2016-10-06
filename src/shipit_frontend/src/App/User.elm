@@ -115,8 +115,7 @@ type Msg
   | ProcessWorkflow Hawk
   | InitHawkRequest HawkParameters
   | BuiltHawkHeader (Maybe HawkResponse)
-  | ReceivedBugzillaCreds (Maybe BugzillaCredentials)
-  | CheckedBugzillaCreds (WebData Bool)
+  | CheckedBugzillaCreds Bool (WebData Bool) 
 
 init : String -> (Model, Cmd Msg)
 init backend_dashboard_url =
@@ -165,7 +164,7 @@ update msg model =
           (
             { model | user = storage'.user, bugzilla = storage'.bugzilla },
             [],
-            checkBugzillaAuth storage'.bugzilla
+            checkBugzillaAuth storage'.bugzilla False
           )
 
         Nothing ->
@@ -200,18 +199,20 @@ update msg model =
       in
         (model, [], cmd)
 
-    ReceivedBugzillaCreds creds ->
-      -- Store creds in local storage
-      (model, [], localstorage_set {
-        user = model.user,
-        bugzilla = creds
-      })
-
-    CheckedBugzillaCreds check ->
+    CheckedBugzillaCreds save check ->
       (
         { model | bugzilla_check = check },
         [],
-        Cmd.none
+
+        -- Save credentials stored in model when valid
+        case check of
+          Success check' ->
+            if check' && save then
+              storeCredentials model.user model.bugzilla
+            else
+              Cmd.none
+          _ ->
+            Cmd.none
       )
 
 decodeCertificate : String -> Result String Certificate
@@ -239,22 +240,8 @@ convertUrlQueryToUser query =
                  Nothing -> Nothing
     }
 
-convertUrlQueryToBugzillaCreds : Dict String String -> Maybe (BugzillaCredentials)
-convertUrlQueryToBugzillaCreds query =
-    let
-      login = Dict.get "client_api_login" query
-      token = Dict.get "client_api_token" query
-    in
-      
-      login `Maybe.andThen` (\login' -> case token of
-        Just token' -> Just {
-          login = login',
-          token = token'
-        }
-        Nothing -> Nothing)
-
-checkBugzillaAuth : Maybe BugzillaCredentials -> Cmd Msg
-checkBugzillaAuth creds =
+checkBugzillaAuth : Maybe BugzillaCredentials -> Bool -> Cmd Msg
+checkBugzillaAuth creds save =
   -- Check bugzilla auth is still valid
   case creds of
     Just bugzilla ->
@@ -268,10 +255,18 @@ checkBugzillaAuth creds =
       in
         (Http.fromJson JsonDecode.bool task)
         |> RemoteData.asCmd
-        |> Cmd.map CheckedBugzillaCreds
+        |> Cmd.map (CheckedBugzillaCreds save)
 
     Nothing ->
       Cmd.none
+
+storeCredentials : Maybe User -> Maybe BugzillaCredentials -> Cmd msg
+storeCredentials user creds =
+  -- Helper to store credentials structure
+  localstorage_set {
+      user = user,
+      bugzilla = creds
+    }
 
 buildHawkRequest: Model -> HawkParameters -> (Model, List Hawk, Cmd Msg)
 buildHawkRequest model params =

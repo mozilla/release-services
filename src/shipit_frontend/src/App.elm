@@ -15,6 +15,7 @@ import RemoteData as RemoteData exposing ( RemoteData(Loading, Success, NotAsked
 import String
 
 import App.Home as Home 
+import App.Bugzilla as Bugzilla 
 import App.User as User
 import App.ReleaseDashboard as ReleaseDashboard
 import App.Utils exposing ( eventLink )
@@ -29,6 +30,7 @@ import App.Utils exposing ( eventLink )
 type Page
     = Home
     | ReleaseDashboard
+    | Bugzilla
 
 
 type alias Model = {
@@ -43,6 +45,7 @@ type Msg
     | UserMsg User.Msg -- triggers fetch all analysis
     | HawkMsg User.Msg -- update current hawk header
     | ReleaseDashboardMsg ReleaseDashboard.Msg
+    | BugzillaMsg Bugzilla.Msg
     | FetchAnalysis ReleaseDashboard.Analysis
 
 type alias Flags = {
@@ -68,6 +71,10 @@ delta2url' previous current =
             Maybe.map
                 (Builder.prependToPath path)
                 (Just builder)
+        Bugzilla ->
+            Maybe.map
+                (Builder.prependToPath ["bugzilla"])
+                (Just builder)
         _ ->
             Maybe.map
                 (Builder.prependToPath [])
@@ -83,7 +90,6 @@ location2messages' builder =
     case Builder.path builder of
         first :: rest ->
             let
-                l = Debug.log "ROUTE" (Builder.path builder)
                 builder' = Builder.replacePath rest builder
             in
                 case first of
@@ -97,11 +103,7 @@ location2messages' builder =
                         ]
                     "bugzilla" ->
                         [ 
-                          Builder.query builder
-                              |> User.convertUrlQueryToBugzillaCreds
-                              |> User.ReceivedBugzillaCreds
-                              |> UserMsg
-                        , ShowPage Home
+                          ShowPage Bugzilla
                         ]
                     "release-dashboard" ->
                       let
@@ -177,6 +179,15 @@ update msg model =
                   Cmd.map ReleaseDashboardMsg newCmd
                 )
 
+        BugzillaMsg msg' ->
+            let
+                (newUser, userCmd) = Bugzilla.update msg' model.current_user
+            in
+                (
+                  { model | current_user = newUser },
+                  Cmd.map UserMsg userCmd
+                )
+
         UserMsg usermsg -> 
           case usermsg of
             User.LoggedIn _ -> 
@@ -234,6 +245,8 @@ viewPage model =
     case model.current_page of
         Home ->
             Home.view model
+        Bugzilla ->
+            Html.App.map BugzillaMsg (Bugzilla.view model.current_user)
         ReleaseDashboard ->
             Html.App.map ReleaseDashboardMsg (ReleaseDashboard.view model.release_dashboard)
 
@@ -271,20 +284,9 @@ viewLogin =
       ]
 
 viewLoginBugzilla =
-  let
-      loginTarget =
-          Just ( "/bugzilla"
-               , "RelengAPI is a collection of Release Engineering services"
-               )
-      loginUrl =
-          { url = "https://bugzilla.mozilla.org/auth.cgi"
-          , target = loginTarget
-          , targetName = "callback"
-          }
-      loginMsg = UserMsg <| User.Login loginUrl
-  in
-      [ eventLink loginMsg [ class "nav-link" ] [ text "Login Bugzilla" ]
-      ]
+  [ 
+    eventLink (ShowPage Bugzilla) [ class "nav-link" ] [ text "Login Bugzilla" ]
+  ]
 
 viewUser model =
   case model.current_user.user of
