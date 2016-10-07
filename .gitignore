@@ -3,8 +3,16 @@
 *.swp
 .-rplugin~
 
+/.cache
+/.elm
 /.floo
 /docs/build/
+/lib/**/*.egg-info/
+/lib/**/.coverage
+/lib/**/.coverage-html
+/lib/**/build
+/lib/**/elm-stuff/
+/lib/**/node_modules/
 /result*
 /src/**/*.egg-info/
 /src/**/.coverage
@@ -13,5 +21,3 @@
 /src/**/elm-stuff/
 /src/**/node_modules/
 /tmp
-.cache
-.elm

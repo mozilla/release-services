@@ -15,7 +15,7 @@ with open(os.path.join(here, 'requirements.txt')) as f:
     install_requires = filter(
         lambda x: not x.startswith('-r'),
         map(
-            lambda x: x.startswith('-e ../') and x[6:] or x,
+            lambda x: x.startswith('-e ../../lib/') and x[13:] or x,
             f.read().strip().split('\n')
         )
     )

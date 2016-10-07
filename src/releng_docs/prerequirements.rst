@@ -1,4 +1,4 @@
-.. _pre-requirements
+.. _pre-requirements:
 
 Pre-requirements
 ================
