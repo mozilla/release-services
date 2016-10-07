@@ -1,23 +1,10 @@
+.. _service-clobberer:
+
 Service: Clobberer
 ==================
 
-TODO: explain purpose of clobberer
-
-Read :ref:`Quickstart guide <quickstart>` how to develop, test, deploy and
-document clobberer service.
-
-
-
-
-More
-details how to enter development shell, how to run tests and how to build
-docker images please read in :features: section.
-
-
-
 Useful Links
 ------------
-
 
 Development
 ^^^^^^^^^^^
