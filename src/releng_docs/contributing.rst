@@ -1,17 +1,19 @@
-Sources / Branches
-------------------
+Contributing
+============
 
-To get code you need to clone `services`_ repository.
+Make sure you read the :ref:`pre-requirement` document.
+
+To get code you need to clone `mozilla-releng/services`_ repository.
 
 .. code-block:: bash
 
     % git clone https://github.com/mozilla-releng/services/
     % cd services/
-    % git branch --list -r
-    origin/master
-    origin/production
-    origin/staging
-    
+
+
+Branching policy
+----------------
+
 In above command we also listed all remote branches. To describe what each
 branch is for:
 
@@ -25,9 +27,20 @@ branch is for:
 For more details of deployments, please look at specific service documentation
 (eg: documentation for :ref:`Clobberer service <service-clobberer>`).
 
+
+Pull Requests
+-------------
+
 When submitting a **pull request** a build job for each service is being ran to
 ensure that all tests across services are passing before you consider merging
 it.
 
 
+Commit style
+------------
 
+Prepend with service/library you are working on, eg. ``relegn_docs: more
+details about clobberer service ...``
+
+
+.. _`mozilla-releng/services`: https://github.com/mozilla-releng/services

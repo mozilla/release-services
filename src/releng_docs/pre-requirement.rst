@@ -1,7 +1,7 @@
-.. _pre-requirements:
+.. _pre-requirement:
 
-Pre-requirements
-================
+Pre-requirement
+===============
 
 To start working with ``mozilla-releng/services`` there is only one tools that
 is required to be installed on your system: Nix_.

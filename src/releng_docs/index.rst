@@ -30,7 +30,7 @@ Repository structure
 Quickstart
 ----------
 
-Read :ref:`pre-requirements`.
+Read :ref:`pre-requirement`.
 
 Get code:
 
@@ -68,7 +68,8 @@ Contents
 .. toctree::
     :maxdepth: 2
 
-    prerequirements
-    contributing
     service/clobberer 
-
+    pre-requirement
+    taskcluster
+    contributing
+    defending
