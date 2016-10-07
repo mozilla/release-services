@@ -14,7 +14,7 @@ let
     python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
     src = ./.;
     srcs = [
-      "./../releng_common"
+      "./../../lib/releng_common"
       "./../${name}"
     ];
     buildRequirements =
@@ -22,7 +22,7 @@ let
         ./requirements-setup.txt
       ];
     propagatedRequirements =
-      [ ./../releng_common/requirements.txt
+      [ ./../../lib/releng_common/requirements.txt
         ./requirements.txt
         ./requirements-prod.txt
       ];

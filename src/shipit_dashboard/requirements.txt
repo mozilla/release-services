@@ -1,4 +1,4 @@
--e ../releng_common
+-e ../../lib/releng_common
 
 # libmozdata, but without scipy
 # https://github.com/La0/libmozdata/archive/31366ff33c274d7cb19aa0a2530ac8a791c1387c.tar.gz#egg=libmozdata
