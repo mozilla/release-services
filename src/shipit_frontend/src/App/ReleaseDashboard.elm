@@ -419,7 +419,7 @@ viewBug bug =
   div [class "bug"] [
     h4 [] [text bug.summary],
     p [class "summary"] ([
-      span [class "text-muted monospace"] [text ("#" ++ (toString bug.bugzilla_id))]
+      a [class "text-muted monospace", href ("https://bugzil.la/" ++ toString bug.bugzilla_id), target "_blank"] [text ("#" ++ (toString bug.bugzilla_id))]
     ] ++ (List.map (\k -> span [class "label label-default"] [text k]) bug.keywords)),
     div [class "row"] [
       div [class "col-xs-4"] ([
