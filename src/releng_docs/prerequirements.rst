@@ -115,8 +115,8 @@ running in chroot).
     EOF
 
     % mkdir -p /nix/var/nix/daemon-socket
-    % systemctl enable nix
-    % systemctl start nix
+    % systemctl enable nix-daemon
+    % systemctl start nix-daemon
 
 
 6. Nix multi user profile script
@@ -225,6 +225,7 @@ As ``$USER`` run:
 
     % sudo chown $USER:$USER /nix/var/nix/profiles/per-user/$USER
     % echo "source /etc/nix/nix-profile.sh" >> ~/.bashrc
+    % nix-channel --remove nixpkgs
 
 Last command might vary depending which shell are you using.
 
