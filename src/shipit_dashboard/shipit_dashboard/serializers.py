@@ -49,14 +49,18 @@ def serialize_bug(bug):
     status_base_flag = 'cf_status_'
     tracking_base_flag = 'cf_tracking_'
 
+    def _filter_flags(base):
+        out = [(k.replace(base, '', 1), v) for k,v in bug_data.items() if k.startswith(base + 'firefox')]
+        return dict(out)
+
     return {
         # Base
         'id': bug.id,
         'bugzilla_id': bug.bugzilla_id,
         'summary' : bug_data['summary'],
         'keywords' : bug_data['keywords'],
-        'flags_status' : dict([(k.replace(status_base_flag, '', 1) ,v) for k,v in bug_data.items() if k.startswith(status_base_flag)]),
-        'flags_tracking' : dict([(k.replace(tracking_base_flag, '', 1) ,v) for k,v in bug_data.items() if k.startswith(tracking_base_flag)]),
+        'flags_status' : _filter_flags(status_base_flag),
+        'flags_tracking' : _filter_flags(tracking_base_flag),
 
         # Contributor structures
         'creator' : serialize_user(analysis['users']['creator']),
