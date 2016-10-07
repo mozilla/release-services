@@ -141,13 +141,13 @@ build-apps: $(foreach app, $(APPS), build-app-$(app))
 build-app: require-APP build-app-$(APP)
 
 build-app-%: nix
-	nix-build nix/default.nix -A $(subst build-app-,,$@) -o result-$(subst build-app-,,$@) --fallback
+	@nix-build nix/default.nix -A $(subst build-app-,,$@) -o result-$(subst build-app-,,$@) --fallback
 
 
 build-docker: require-APP build-docker-$(APP)
 
 build-docker-%: nix
-	nix-build nix/docker.nix -A $(subst build-docker-,,$@) -o result-docker-$(subst build-docker-,,$@) --fallback
+	@nix-build nix/docker.nix -A $(subst build-docker-,,$@) -o result-docker-$(subst build-docker-,,$@) --fallback
 
 
 deploy-staging-all: $(foreach app, $(APPS), deploy-staging-$(app))
@@ -254,7 +254,7 @@ build-tools: $(foreach tool, $(TOOLS), build-tool-$(tool))
 build-tool: require-TOOL build-tool-$(TOOL)
 
 build-tool-%: nix
-	nix-build nix/default.nix -A tools.$(subst build-tool-,,$@) -o result-tool-$(subst build-tool-,,$@) --fallback
+	@nix-build nix/default.nix -A tools.$(subst build-tool-,,$@) -o result-tool-$(subst build-tool-,,$@) --fallback
 
 
 
@@ -282,16 +282,29 @@ deploy-cache: require-AWS require-CACHE_BUCKET build-tool-awscli build-cache
 
 
 taskcluster: nix
-	nix-build nix/taskcluster.nix -o result-taskcluster --fallback
-	cp -f ./result-taskcluster .taskcluster.yml
+	@nix-build nix/taskcluster.nix -o result-taskcluster --fallback
+	@cp -f ./result-taskcluster .taskcluster.yml
 
 
-taskcluster-hooks: require-DOCKER require-HOOKS nix build-tool-push build-tool-taskcluster-hooks
-	@nix-build nix/taskcluster_hooks.nix -o result-taskcluster-hooks --fallback
+taskcluster-hooks: require-BRANCH require-DOCKER require-HOOKS_URL nix build-tool-push build-tool-taskcluster-hooks
+	@nix-build nix/taskcluster_hooks.nix --argstr branch "$(BRANCH)" -o result-taskcluster-hooks --fallback
 	@./result-tool-taskcluster-hooks/bin/taskcluster-hooks \
 		--hooks=./result-taskcluster-hooks \
         --hooks-group=project-releng \
-        --hooks-prefix=services- \
+        --hooks-prefix=services-$(BRANCH)- \
+        --hooks-url=$(HOOKS_URL) \
+        --docker-push=./result-tool-push/bin/push \
+		--docker-registry=https://index.docker.io \
+        --docker-repo=garbas/releng-services \
+        --docker-username=$(DOCKER_USERNAME) \
+        --docker-password=$(DOCKER_PASSWORD)
+
+taskcluster-hooks-manual: require-BRANCH require-DOCKER require-HOOKS_CREDS nix build-tool-push build-tool-taskcluster-hooks
+	@nix-build nix/taskcluster_hooks.nix --argstr branch "$(BRANCH)" -o result-taskcluster-hooks --fallback
+	@./result-tool-taskcluster-hooks/bin/taskcluster-hooks \
+		--hooks=./result-taskcluster-hooks \
+        --hooks-group=project-releng \
+        --hooks-prefix=services-$(BRANCH)- \
         --hooks-client-id=$(HOOKS_CLIENT_ID) \
         --hooks-access-token=$(HOOKS_ACCESS_TOKEN) \
         --docker-push=./result-tool-push/bin/push \
@@ -388,11 +401,30 @@ require-DOCKER:
 		exit 1; \
 	fi
 
-require-HOOKS:
-	@if [ -z "$(HOOKS_CLIENT_ID)" ] || \
-	    [ -z "$(HOOKS_ACCESS_TOKEN)" ]; then \
+require-HOOKS_CREDS:
+	@if [[ -z "$(HOOKS_CLIENT_ID)" ]] || \
+	    [[ -z "$(HOOKS_ACCESS_TOKEN)" ]]; then \
 		echo ""; \
 		echo "You need to specify HOOKS_CLIENT_ID and HOOKS_ACCESS_TOKEN."; \
+		echo ""; \
+		echo ""; \
+		exit 1; \
+	fi
+
+require-HOOKS_URL:
+	@if [[ -z "$(HOOKS_URL)" ]]; then \
+		echo ""; \
+		echo "You need to specify HOOKS_URL."; \
+		echo ""; \
+		echo ""; \
+		exit 1; \
+	fi
+
+
+require-BRANCH:
+	@if [[ -z "$(BRANCH)" ]]; then \
+		echo ""; \
+		echo "You need to specify BRANCH."; \
 		echo ""; \
 		echo ""; \
 		exit 1; \

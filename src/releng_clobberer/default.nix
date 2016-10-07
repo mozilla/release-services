@@ -44,6 +44,15 @@ let
       mysql2sqlite = migrate.mysql2sqlite { inherit name beforeSQL afterSQL; };
       mysql2postgresql = migrate.mysql2postgresql { inherit name beforeSQL afterSQL; };
       taskclusterHooks = {
+        master = {
+          taskcluster_cache = mkTaskclusterHook {
+            name = "create taskcluster cache";
+            owner = "rgarbas@mozilla.com";
+            schedule = [ "*/15 * * * * *" ];
+            taskImage = self.docker;
+            taskCommand = [ "flask" "taskcluster_workertypes" ">" "/taskcluster_cache.json" ];
+          };
+        };
         #update = mkTaskclusterHook {
         #  name = "Updating sources";
         #  owner = "rgarbas@mozilla.com";
@@ -51,13 +60,6 @@ let
         #  taskImage = self.docker;
         #  taskCommand = [ "echo" "'Hello World!'" ];
         #};
-        taskcluster_cache = mkTaskclusterHook {
-          name = "create taskcluster cache";
-          owner = "rgarbas@mozilla.com";
-          schedule = [ "*/15 * * * * *" ];
-          taskImage = self.docker;
-          taskCommand = [ "flask" "taskcluster_workertypes" ">" "/taskcluster_cache.json" ];
-        };
       };
       update = writeScript "update-${name}" ''
         pushd src/${name}

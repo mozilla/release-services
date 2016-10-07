@@ -50,6 +50,7 @@ def push_docker_image(image, push, registry, repo, username, password):
     if image.startswith('/nix/store'):
         image_path = image
         image = nix_to_tag(repo, image_path)
+        tag = image[image.find(':', 1) + 1:]
 
         click.echo(' - ' + image)
         returncode, output = cmd(
@@ -94,17 +95,18 @@ def diff_hooks(all, existing, prefix, repo):
 @click.option('--hooks', required=True, type=click.File())
 @click.option('--hooks-group', required=True)
 @click.option('--hooks-prefix', required=True, default="services-")
-@click.option('--hooks-client-id', required=True)
-@click.option('--hooks-access-token', required=True)
+@click.option('--hooks-url', default=None, required=False)
+@click.option('--hooks-client-id', default=None, required=False)
+@click.option('--hooks-access-token', default=None, required=False)
 @click.option('--docker-push', required=True, type=click.Path(resolve_path=True))
 @click.option('--docker-registry', required=True, default="https://index.docker.com")  # noqa
 @click.option('--docker-repo', required=True)
 @click.option('--docker-username', required=True)
 @click.option('--docker-password', required=True)
 @click.option('--debug', is_flag=True)
-def main(hooks, hooks_group, hooks_prefix, hooks_client_id, hooks_access_token,
-         docker_push, docker_registry, docker_repo, docker_username,
-         docker_password, debug):
+def main(hooks, hooks_group, hooks_prefix, hooks_url, hooks_client_id,
+         hooks_access_token, docker_push, docker_registry, docker_repo,
+         docker_username, docker_password, debug):
     """ A tool for creating / updating taskcluster hooks (also creating and
         pushing docker images.
     """
@@ -112,27 +114,42 @@ def main(hooks, hooks_group, hooks_prefix, hooks_client_id, hooks_access_token,
     if debug:
         logging.basicConfig(level=logging.DEBUG)
 
+    taskcluster_hooks = None
 
-    taskcluster_hooks = taskcluster.Hooks(
-        options=dict(
-            credentials=dict(
-                clientId=hooks_client_id,
-                accessToken=hooks_access_token,
+    if hooks_client_id is not None and hooks_access_token is not None:
+        taskcluster_hooks = taskcluster.Hooks(
+            options=dict(
+                credentials=dict(
+                    clientId=hooks_client_id,
+                    accessToken=hooks_access_token,
+                )
             )
         )
-    )
+
+    if hooks_url:
+        taskcluster_hooks = taskcluster.Hooks(
+            options=dict(
+                baseUrl=hooks_url
+            )
+        )
+
+    if taskcluster_hooks is None:
+        raise ClickException(
+            "You either need to provide `--hooks-url` or both "
+            "`--hooks-client-id` and `--hooks-access-token`."
+        )
 
     hooks_all = json.load(hooks)
-    log.debug("Expected hooks:%s" % "\n - ".join([""] + list(hooks_all.keys())))
+    click.echo("Expected hooks:%s" % "\n - ".join([""] + list(hooks_all.keys())))
 
-    click.echo("Gathering existing hooks for group `%s`. Might take some time ..." % hooks_group)
+    log.debug("Gathering existing hooks for group `%s`. Might take some time ..." % hooks_group)
     hooks_existing = {
         hook['hookId']: hook
         for hook in taskcluster_hooks.listHooks(hooks_group).get('hooks', [])
         if hook.get('hookId', '').startswith(hooks_prefix)
     }
 
-    log.debug("Existing hooks: %s" % "\n - ".join([""] + list(hooks_existing.keys())))  # noqa
+    click.echo("Existing hooks: %s" % "\n - ".join([""] + list(hooks_existing.keys())))
 
     hooks_create, hooks_update, hooks_remove = diff_hooks(hooks_all,
                                                           hooks_existing,

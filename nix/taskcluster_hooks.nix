@@ -1,6 +1,7 @@
 let pkgs' = import <nixpkgs> {}; in
 { pkgs ? import (pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs.json))) {}
 , prefix ? "services-"
+, branch
 }:
 
 let
@@ -11,12 +12,19 @@ let
   inherit (releng_pkgs.pkgs.lib) flatten;
 
 in pkgs.writeText "taskcluster_hooks.json"
-  ( builtins.toJSON ( builtins.listToAttrs ( flatten
-    ( map (pkg: map (hookId: { name = "${prefix}${(builtins.parseDrvName pkg.name).name}-${hookId}";
-                               value = builtins.getAttr hookId pkg.taskclusterHooks;
-                             })
-                    (builtins.attrNames pkg.taskclusterHooks)
+   (builtins.toJSON (builtins.listToAttrs (flatten
+     (map (pkg: let
+                  hooks' = pkg.taskclusterHooks;
+                  hooks = if builtins.hasAttr branch pkg.taskclusterHooks
+                          then builtins.getAttr branch pkg.taskclusterHooks
+                          else {};
+                in
+                  map (hookId: { name = "${prefix}${branch}-${(builtins.parseDrvName pkg.name).name}-${hookId}";
+                                 value = builtins.getAttr hookId (builtins.getAttr branch pkg.taskclusterHooks);
+                               }
+                      )
+                      (builtins.attrNames hooks)
           )
           (packagesWith "taskclusterHooks" releng_pkgs)
-    )
-  )))
+     )
+   )))
