@@ -58,8 +58,12 @@ Run **tests**:
 
     % make build-app APP=<service>
 
+Services get automatically **deployed** when code gets merged into ``staging``
+or ``production``.
 
 
+Contents
+--------
 
 .. toctree::
     :maxdepth: 2
