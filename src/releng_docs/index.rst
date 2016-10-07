@@ -1,50 +1,70 @@
 Mozilla Release Engineering Services
 ====================================
 
-A highlevel goal of *Release Engineering Services* is to **converge efforts**
-to develop, test, maintain and *most importantly* document services that
-*Release Engineering Team* is providing.
+A goal of *Release Engineering Services* is to *converge efforts* to
+**develop**, **test**, **deploy**, **maintain**, and most importantly
+**document** all services that *Release Engineering Team* is providing or
+supporting.
 
-Currently supported platform is **Linux**. In the future we could think of also
-supporting OSX (Darwin) as development platform, but initial efforts are on
-purpose kept as small as possible.
+    Currently supported platform is **Linux**.
 
-TODO: explain why we want to converge efforts?
-TODO: why mono-repository approach?
-TODO: why a single version? why not semver?
 
-:code: https://github.com/mozilla-releng/services
-:issues: https://github.com/mozilla-releng/services/issues
+Useful links
+------------
+
+:Code: https://github.com/mozilla-releng/services
+:Issues: https://github.com/mozilla-releng/services/issues
+:Documentation: https://docs.mozilla-releng.net
 
 
 Repository structure
 --------------------
 
-- ``CONTRIBUTE.rst``: Contribution guide used by github.
-- ``LICENSE.txt``: Mozilla Public License Version 2.0.
-- ``Makefile``: Few helper commands (gnumake required). Run ``make`` to see all supported targets.
-- ``README.rst``: A short description of the project (eg. quickstart).
-- ``contribute.json`` A JSON schema for open-source project contribution data. https://www.contributejson.org/
-- ``src/`` A folder where all projects are placed.
-- ``nix/`` Nix related expressions, tools, scripts, etc...
+- **src/**: folder with all the services
+- **src/<service>**: folder with a <service> sources
+- **lib/**: sources of libraries to help build services in **src/**
+- **nix/**: all nix related
+- **Makefile**: helper utilities
 
 
+Quickstart
+----------
 
-Build process
--------------
+Read :ref:`pre-requirements`.
 
-TODO: find better title
+Get code:
 
-Replace ``<project>`` with one of folder names from ``./src``.
+.. code-block:: bash
 
-To enter development mode::
+    % git clone https://github.com/mozilla-releng/services
+    % cd services/
+    % make  # will diplay help
 
-    make develop APP=<project>
+Start **developing** a service:
+
+.. code-block:: bash
+
+    % make develop APP=<service>
+
+Running service in **develop** mode (eg. restarting when source files changes):
+
+.. code-block:: bash
+
+    % make develop-run APP=<service>
+
+Run **tests**:
+
+.. code-block:: bash
+
+    % make build-app APP=<service>
+
+
 
 
 .. toctree::
     :maxdepth: 2
 
-    quickstart
+    prerequirements
+    contributing
     service/clobberer 
 
