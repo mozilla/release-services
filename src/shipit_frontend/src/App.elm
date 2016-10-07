@@ -271,7 +271,7 @@ viewLogin =
   let
       loginTarget =
           Just ( "/login"
-               , "RelengAPI is a collection of Release Engineering services"
+               , "Uplift dashboard helps Mozilla Release Management team in their workflow."
                )
       loginUrl =
           { url = "https://login.taskcluster.net"
@@ -318,7 +318,7 @@ viewNavBar model =
              ]
              [ text "Menu" ]
     , pageLink Home [ class "navbar-brand" ]
-                    [ text "RelengAPI" ]
+                    [ text "Uplift Dashboard" ]
     , div [ class "user collapse navbar-toggleable-sm navbar-collapse navbar-right" ]
           [ ul [ class "nav navbar-nav" ]
               (List.concat [
