@@ -287,6 +287,14 @@ in rec {
           fromRequirementsFile buildRequirements python.packages;
         propagatedBuildInputs =
           fromRequirementsFile propagatedRequirements python.packages;
+        patchPhase = ''
+          for i in src-*; do
+            if test -L $i/VERSION; then
+              rm $i/VERSION
+              echo ${version} > $i/VERSION
+            fi
+          done
+        '';
         postInstall = ''
           mkdir -p $out/bin $out/etc
 
