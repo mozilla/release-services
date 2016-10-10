@@ -1,9 +1,9 @@
 Welcome to releng services
 ==========================
 
-This repository contains various Mozilla Releng applications used in our CI and
-release automation.
+This repository contains various Mozilla *Release Engineering Services* used in
+our Continous Integration and Release Automation.
 
-- Documentation, repository structure: https://docs.mozilla-releng.net
-- Issues: https://gitub.com/garbas/mozilla-releng/issues
-- Code: https://gitub.com/garbas/mozilla-releng
+:Documentation: https://docs.mozilla-releng.net
+:Issues: https://gitub.com/mozilla-releng/services/issues
+:Code: https://gitub.com/mozilla-releng/services
