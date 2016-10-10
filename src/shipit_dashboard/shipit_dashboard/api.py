@@ -102,3 +102,17 @@ def create_bug():
 
     # Send back the bug
     return serialize_bug(bug)
+
+@scopes_required([SCOPES_BOT])
+def delete_bug(bugzilla_id):
+    """
+    Delete a bug when it's not in Bugzilla analysis
+    """
+    # Load bug
+    try:
+        bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
+    except:
+        raise Exception('Missing bug {}'.format(bugzilla_id))
+
+    db.session.delete(bug)
+    db.session.commit()

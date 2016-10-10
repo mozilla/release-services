@@ -30,6 +30,12 @@ type alias UpliftRequest = {
   text: String
 }
 
+type alias UpliftVersion = {
+  name: String,
+  status: String,
+  attachments: List String
+}
+
 type alias Patch = {
   source: String,
   changes: Int,
@@ -55,7 +61,9 @@ type alias Bug = {
   assignee: Contributor,
   reviewers: List Contributor,
 
+  -- Uplift
   uplift_request: Maybe UpliftRequest,
+  uplift_versions: Dict.Dict String UpliftVersion,
 
   -- Patches
   patches: Dict.Dict String Patch,
@@ -351,6 +359,7 @@ decodeBug =
     |: ("assignee" := decodeContributor)
     |: ("reviewers" := (Json.list decodeContributor))
     |: (Json.maybe ("uplift" := decodeUpliftRequest))
+    |: ("versions" := (Json.dict decodeVersion))
     |: ("patches" := (Json.dict decodePatch))
     |: (Json.succeed False) -- not editing at first
     |: (Json.succeed Dict.empty) -- not editing at first
@@ -362,6 +371,13 @@ decodePatch =
     ("source" := Json.string)
     ("changes_size" := Json.int)
     ("url" := Json.string)
+
+decodeVersion : Decoder UpliftVersion
+decodeVersion =
+  Json.object3 UpliftVersion
+    ("name" := Json.string)
+    ("status" := Json.string)
+    ("attachments" := Json.list Json.string)
 
 decodeContributor : Decoder Contributor
 decodeContributor = 
@@ -414,9 +430,13 @@ viewBug: Bug -> Html Msg
 viewBug bug =
   div [class "bug"] [
     h4 [] [text bug.summary],
-    p [class "summary"] ([
-      a [class "text-muted monospace", href bug.url, target "_blank"] [text ("#" ++ (toString bug.bugzilla_id))]
-    ] ++ (List.map (\k -> span [class "label label-default"] [text k]) bug.keywords)),
+    p [class "summary"] (
+      [
+        a [class "text-muted monospace", href bug.url, target "_blank"] [text ("#" ++ (toString bug.bugzilla_id))]
+      ]
+      ++ (List.map viewVersionTag (Dict.toList bug.uplift_versions))
+      ++ (List.map (\k -> span [class "label label-default"] [text k]) bug.keywords)
+    ),
     div [class "row"] [
       div [class "col-xs-4"] ([
         viewContributor bug.creator "Creator",
@@ -433,6 +453,14 @@ viewBug bug =
       ]
     ]
   ]
+
+viewVersionTag: (String, UpliftVersion) -> Html Msg
+viewVersionTag (name, version) =
+  case version.status of
+    "?" -> span [class "label label-info"] [text (name ++ " ?")]
+    "+" -> span [class "label label-success"] [text (name ++ " +")]
+    "-" -> span [class "label label-danger"] [text (name ++ " -")]
+    _ ->  span [class "label label-default"] [text (name ++ " " ++ version.status)]
 
 viewContributor: Contributor -> String -> Html Msg
 viewContributor user title = 

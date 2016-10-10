@@ -41,20 +41,18 @@ paths:
             $ref: '#/definitions/Bug'
 
 
-  /bugs/{bug_id}:
-    put:
-      operationId: "shipit_dashboard.api.update_bug"
+  /bugs/{bugzilla_id}:
+    delete:
+      operationId: "shipit_dashboard.api.delete_bug"
       parameters:
-      - name: bug_id
+      - name: bugzilla_id
         in: path
-        description: ID of the Bug to update
+        description: Bugzilla ID of the Bug to delete
         required: true
         type: integer
       responses:
         200:
-          description: A specific Bug
-          schema:
-            $ref: '#/definitions/Bug'
+          description: Empty
 
 definitions:
 

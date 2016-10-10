@@ -4,7 +4,7 @@ from shipit_dashboard.models import BugAnalysis, BugResult
 from shipit_dashboard.helpers import compute_dict_hash
 from shipit_dashboard.encoder import ShipitJSONEncoder
 from libmozdata.patchanalysis import bug_analysis
-from libmozdata import config, bugzilla
+from libmozdata import bugzilla
 from sqlalchemy.orm.exc import NoResultFound
 from flask.cli import with_appcontext
 from flask import current_app
@@ -18,6 +18,16 @@ import os
 
 logger = logging.getLogger(__name__)
 
+class BugSync(object):
+    """
+    Helper class to sync bugs between
+    Bugzilla & remote server
+    """
+    def __init__(self, bugzilla_id):
+        self.bugzilla_id = bugzilla_id
+        self.on_remote = []
+        self.on_bugzilla = []
+        self.raw = None
 
 class Workflow(object):
     """
@@ -43,12 +53,22 @@ class Workflow(object):
         List all the bugs from a Bugzilla query
         """
         def _bughandler(bug, data):
-            data[bug['id']] = bug
+            bugid = bug['id']
+            data[bugid] = bug
 
-        bugs = {}
+        def _attachmenthandler(attachments, bugid, data):
+            data[int(bugid)] = attachments
 
-        bz = bugzilla.Bugzilla(query, bughandler=_bughandler, bugdata=bugs)
+        bugs, attachments = {}, {}
+
+        bz = bugzilla.Bugzilla(query, bughandler=_bughandler, attachmenthandler=_attachmenthandler, bugdata=bugs, attachmentdata=attachments)
         bz.get_data().wait()
+
+        # Map attachments on bugs
+        for bugid, _attachments in attachments.items():
+            if bugid not in bugs:
+                continue
+            bugs[bugid]['attachments'] = _attachments
 
         return bugs
 
@@ -148,6 +168,7 @@ class WorkflowRemote(Workflow):
           'key' : access_token,
           'algorithm' : 'sha256',
         }
+        self.sync = {} # init
 
     def make_request(self, method, url, data=''):
         """
@@ -172,6 +193,14 @@ class WorkflowRemote(Workflow):
 
         return response.json()
 
+    def get_bug_sync(self, bugzilla_id):
+        if bugzilla_id not in self.sync:
+            # Init new bug sync
+            bug = BugSync(bugzilla_id)
+            self.sync[bugzilla_id] = bug
+
+        return self.sync[bugzilla_id]
+
     def run(self):
         """
         Build bug analysis for a specified Bugzilla query
@@ -184,26 +213,48 @@ class WorkflowRemote(Workflow):
         # Load all analysis
         all_analysis = self.make_request('get', '/analysis')
         for analysis in all_analysis:
-            logger.info('List bugs for {}'.format(analysis['name']))
 
-            # Get bugs from bugzilla, for each analysis
+            # Mark bugs already in analysis
+            logger.info('List remote bugs for {}'.format(analysis['name']))
+            analysis_details = self.make_request('get', '/analysis/{}'.format(analysis['id']))
+            syncs = map(self.get_bug_sync, [b['bugzilla_id'] for b in analysis_details['bugs']])
+            for sync in syncs:
+                sync.on_remote.append(analysis['id'])
+
+            # Get bugs from bugzilla for this analysis
+            logger.info('List bugzilla bugs for {}'.format(analysis['name']))
             raw_bugs = self.list_bugs(analysis['parameters'])
+            for bugzilla_id, raw in raw_bugs.items():
+                sync = self.get_bug_sync(bugzilla_id)
+                if sync.raw is None:
+                    sync.raw = raw
+                sync.on_bugzilla.append(analysis['id'])
 
-            for raw_bug in raw_bugs.values():
+        for bugzilla_id, sync in self.sync.items():
+
+            if len(sync.on_bugzilla) > 0:
                 # Do patch analysis on bugs
-                bug = self.update_bug(raw_bug, use_db=False)
+                bug = self.update_bug(sync.raw, use_db=False)
                 if not bug:
                     continue
                 payload = {
                     'bugzilla_id' : bug.bugzilla_id,
-                    'analysis' : [ analysis['id'] ], # TODO: detect multiple analysis
+                    'analysis' : sync.on_bugzilla,
                     'payload' : bug.payload,
                     'payload_hash' : bug.payload_hash,
                 }
 
                 # Send payload to server
-                self.make_request('post', '/bugs', json.dumps(payload))
+                try:
+                    self.make_request('post', '/bugs', json.dumps(payload))
+                    logger.info('Added bug #{} on analysis {}'.format(bugzilla_id, ', '.join(map(str, sync.on_bugzilla))))
+                except Exception as e:
+                    logger.error('Failed to add bug #{} : {}'.format(bugzilla_id, e))
 
+            elif len(sync.on_remote) > 0:
+                # Remove bugs from remote server
+                self.make_request('delete', '/bugs/{}'.format(bugzilla_id))
+                logger.info('Deleted bug #{} from analysis {}'.format(bugzilla_id, ', '.join(map(str, sync.on_remote))))
 
 @click.command('run_workflow_local', short_help='Update all analysis & related bugs, using local database.')
 @with_appcontext

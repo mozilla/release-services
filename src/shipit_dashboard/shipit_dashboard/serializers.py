@@ -46,6 +46,24 @@ def serialize_bug(bug):
             'comment' : comment['text'],
         }
 
+    # Build versions
+    # TODO: check structure with sylvestre
+    approval_base_flag = 'approval-mozilla-'
+    versions = {}
+    for a in bug_data.get('attachments', []):
+        for flag in a['flags']:
+            if not flag['name'].startswith(approval_base_flag):
+                continue
+            name = flag['name'].replace(approval_base_flag, '')
+            if name not in versions:
+                versions[name] = {
+                    'name' : flag['name'],
+                    'attachments' : [],
+                    'status' : flag['status'],
+                }
+            versions[name]['attachments'].append(str(a['id']))
+
+    # Build flags
     status_base_flag = 'cf_status_'
     tracking_base_flag = 'cf_tracking_'
 
@@ -76,6 +94,9 @@ def serialize_bug(bug):
 
         # Patches
         'patches' : analysis['patches'],
+
+        # Versions
+        'versions' : versions,
     }
 
 def serialize_analysis(analysis, full=True):
