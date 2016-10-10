@@ -4,9 +4,20 @@ Pre-requirement
 ===============
 
 To start working with ``mozilla-releng/services`` there is only one tools that
-is required to be installed on your system: Nix_.
+is required to be installed on your system: Nix_. Nix (package manager) works
+alongside any other package manager and can be used with any Linux
+distribution. Many developers confuse Nix_ (the package manager) with NixOS_ (Linux
+distribution).
 
-Bellow instructions should work on any recent Linux distribution.
+Bellow instructions should work on any recent enough Linux distribution.
+
+It is important to know that Nix_ can be safely uninstalled by removing
+following folders:
+
+.. code-back:: bash
+
+    % sudo rm -rf /nix /etc/nix /home/$USER/.nix*
+
 
 While installing Nix_ as in a *single user mode* is completly sufficient if you
 want use Nix as packages manager. In case of ``mozilla-releng/services`` we
@@ -244,3 +255,4 @@ Now ``git`` and ``make`` commands are in your ``$PATH``.
 
 
 .. _Nix: https://nixos.org/nix
+.. _NixOS: https://nixos.org
