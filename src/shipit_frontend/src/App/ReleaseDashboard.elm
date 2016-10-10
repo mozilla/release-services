@@ -90,7 +90,7 @@ type Msg
    | FetchedBug (WebData Bug)
    | FetchAllAnalysis
    | FetchAnalysis Int
-   | StartBugEditor Bug
+   | ShowBugEditor Bug Bool
    | EditBug Bug String String
    | SaveBugEdit Bug
    | SavedBugEdit Bug (WebData BugUpdate)
@@ -158,10 +158,10 @@ update msg model user =
       in
         ( model, user, Cmd.map UserMsg userCmd)
 
-    StartBugEditor bug ->
+    ShowBugEditor bug show ->
       -- Mark a bug as being edited
       let
-        model' = updateBug model bug.id (\b -> { b | editing = True })
+        model' = updateBug model bug.id (\b -> { b | editing = show })
       in
         (model', user, Cmd.none)
 
@@ -493,7 +493,7 @@ viewBugDetails bug =
   
     -- Start editing
     p [class "actions"] [
-      button [class "btn btn-primary", onClick (StartBugEditor bug)] [text "Edit this bug"],
+      button [class "btn btn-primary", onClick (ShowBugEditor bug True)] [text "Edit this bug"],
       a [class "btn btn-success", href bug.url, target "_blank"] [text "View on Bugzilla"]
     ]
   ]
@@ -583,5 +583,8 @@ viewEditor bug =
     div [class "form-group"] [
       textarea [class "form-control", placeholder "Your comment", onInput (EditBug bug "comment")] []
     ],
-    button [class "btn btn-success"] [text "Update bug"]
-      ]
+    p [class "actions"] [
+      button [class "btn btn-success"] [text "Update bug"],
+      span [class "btn btn-secondary", onClick (ShowBugEditor bug False)] [text "Cancel"]
+    ]
+  ]
