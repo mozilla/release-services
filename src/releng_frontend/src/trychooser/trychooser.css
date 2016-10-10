@@ -1,7 +1,7 @@
 body {
     margin: 0 auto;
     width: 100%;
-    background: url(../build/background.jpg) no-repeat;
+    background: url(background.jpg) no-repeat;
     font-size: 85%;
 }
 
