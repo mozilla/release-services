@@ -1,5 +1,5 @@
-Welcome to releng services
-==========================
+Welcome to Release Engineering Services
+=======================================
 
 This repository contains various Mozilla *Release Engineering Services* used in
 our Continous Integration and Release Automation.
