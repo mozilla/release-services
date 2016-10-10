@@ -6,10 +6,14 @@ require('bootstrap');
 var Hawk = require('hawk');
 require("./index.scss");
 
-// Load backend url from process (dev) or html element (staging/prod)
+// Load backends url from process (dev) or html element (staging/prod)
 var backend_dashboard_url = document.body.getAttribute('data-dashboard-url');
 if (backend_dashboard_url === null) {
   backend_dashboard_url = process.env.NEO_DASHBOARD_URL || "You need to set NEO_DASHBOARD_URL variable or data-dashboard-url";
+}
+var bugzilla_url = document.body.getAttribute('data-bugzilla-url');
+if (bugzilla_url === null) {
+  bugzilla_url = process.env.NEO_BUGZILLA_URL || "You need to set NEO_BUGZILLA_URL variable or data-bugzilla-url";
 }
 
 var storage_key = 'shipit-credentials';
@@ -17,7 +21,8 @@ var storage_key = 'shipit-credentials';
 // Start the ELM application
 var url = require('url');
 var app = require('./Main.elm').Main.fullscreen({
-  backend_dashboard_url: backend_dashboard_url
+  backend_dashboard_url: backend_dashboard_url,
+  bugzilla_url: bugzilla_url
 });
 
 // Load credentials from local storage

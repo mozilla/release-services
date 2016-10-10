@@ -30,7 +30,7 @@ APP_DEV_PORT_shipit_dashboard=8004
 
 APP_DEV_SSL=SSL_CACERT=$$PWD/tmp/ca.crt SSL_CERT=$$PWD/tmp/server.crt SSL_KEY=$$PWD/tmp/server.key
 APP_DEV_ENV_releng_frontend=NEO_CLOBBERER_URL=https://localhost:$(APP_DEV_PORT_releng_clobberer)
-APP_DEV_ENV_shipit_frontend=NEO_DASHBOARD_URL=https://localhost:$(APP_DEV_PORT_shipit_dashboard) $(APP_DEV_SSL)
+APP_DEV_ENV_shipit_frontend=NEO_DASHBOARD_URL=https://localhost:$(APP_DEV_PORT_shipit_dashboard) $(APP_DEV_SSL) NEO_BUGZILLA_URL=https://bugzilla-dev.allizom.org
 
 APP_STAGING_HEROKU_releng_clobberer=releng-staging-clobberer
 APP_STAGING_HEROKU_shipit_dashboard=shipit-staging-dashboard
@@ -41,7 +41,7 @@ APP_STAGING_S3_shipit_frontend=shipit-staging-frontend
 APP_STAGING_ENV_releng_frontend=\
 	'clobberer-url="https:\/\/clobberer\.staging\.mozilla-releng\.net\"'
 APP_STAGING_ENV_shipit_frontend=\
-	'dashboard-url="https:\/\/dashboard\.shipit\.staging\.mozilla-releng\.net\"'
+	'dashboard-url="https:\/\/dashboard\.shipit\.staging\.mozilla-releng\.net\" bugzilla-url="https:\/\/bugzilla\.mozilla\.org"'
 
 APP_PRODUCTION_HEROKU_releng_clobberer=releng-production-clobberer
 APP_PRODUCTION_HEROKU_shipit_dashboard=shipit-production-dashboard

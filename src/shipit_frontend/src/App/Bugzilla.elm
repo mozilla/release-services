@@ -19,7 +19,7 @@ update msg user =
       let
         newCreds = case user.bugzilla of
           Just creds -> { creds | login = login }
-          Nothing -> { login = login, token = ""}
+          Nothing -> { login = login, token = "", url = user.bugzilla_url}
       in
         ({ user | bugzilla = Just newCreds}, Cmd.none)
       
@@ -27,7 +27,7 @@ update msg user =
       let
         newCreds = case user.bugzilla of
           Just creds -> { creds | token = token }
-          Nothing -> { login = "" , token = token}
+          Nothing -> { login = "" , token = token, url = user.bugzilla_url}
       in
         ({ user | bugzilla = Just newCreds}, Cmd.none)
       

@@ -3,8 +3,8 @@ from releng_common.db import db
 from shipit_dashboard.models import BugAnalysis, BugResult
 from shipit_dashboard.helpers import compute_dict_hash
 from shipit_dashboard.encoder import ShipitJSONEncoder
-from libmozdata.bugzilla import Bugzilla
 from libmozdata.patchanalysis import bug_analysis
+from libmozdata import config, bugzilla
 from sqlalchemy.orm.exc import NoResultFound
 from flask.cli import with_appcontext
 from flask import current_app
@@ -23,8 +23,17 @@ class Workflow(object):
     """
     Update all analysis data
     """
-    def __init__(self):
+    def __init__(self, bugzilla_url):
         self.bugs = {}
+        self.bugzilla_url = bugzilla_url
+
+        # Patch libmozdata configuration
+        # TODO: Fix config calls in libmozdata
+        #os.environ['LIBMOZDATA_CFG_BUGZILLA_URL'] = self.bugzilla_url
+        #set_config(ConfigEnv())
+        bugzilla.Bugzilla.URL = self.bugzilla_url
+        bugzilla.Bugzilla.API_URL = self.bugzilla_url + '/rest/bug'
+        logger.info('Use bugzilla server {}'.format(self.bugzilla_url))
 
     def run(self):
         raise NotImplementedError
@@ -37,7 +46,8 @@ class Workflow(object):
             data[bug['id']] = bug
 
         bugs = {}
-        bz = Bugzilla(query, bughandler=_bughandler, bugdata=bugs)
+
+        bz = bugzilla.Bugzilla(query, bughandler=_bughandler, bugdata=bugs)
         bz.get_data().wait()
 
         return bugs
@@ -83,6 +93,7 @@ class Workflow(object):
             return
 
         payload = {
+            'url' : '{}/{}'.format(self.bugzilla_url, bug['id']),
             'bug': bug,
             'analysis': analysis,
         }
@@ -129,8 +140,8 @@ class WorkflowRemote(Workflow):
     Use a distant shipit api server
     to store processed analysis
     """
-    def __init__(self, api_url, client_id, access_token, *args, **kwargs):
-        super(WorkflowRemote, self).__init__(*args, **kwargs)
+    def __init__(self, bugzilla_url, api_url, client_id, access_token):
+        super(WorkflowRemote, self).__init__(bugzilla_url)
         self.api_url = api_url
         self.credentials = {
           'id' : client_id,
@@ -200,7 +211,9 @@ def run_workflow_local():
     """
     Run the full bug update workflow
     """
-    workflow = WorkflowLocal()
+    bugzilla_url = os.environ.get('BUGZILLA_URL', 'https://bugzilla.mozilla.org')
+
+    workflow = WorkflowLocal(bugzilla_url)
     workflow.run()
 
 
@@ -218,5 +231,7 @@ def run_workflow():
             raise Exception('Missing env {}'.format(key))
         return v
 
-    workflow = WorkflowRemote(*map(_check, keys))
+    bugzilla_url = os.environ.get('BUGZILLA_URL', 'https://bugzilla.mozilla.org')
+
+    workflow = WorkflowRemote(bugzilla_url, *map(_check, keys))
     workflow.run()

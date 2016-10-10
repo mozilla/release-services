@@ -36,9 +36,15 @@ type alias Patch = {
   url: String
 }
 
+type alias BugUpdate = {
+  error : Bool,
+  message : String
+}
+
 type alias Bug = {
   id: Int,
   bugzilla_id: Int,
+  url: String,
   summary: String,
   keywords: List String,
   flags_status : Dict.Dict String String,
@@ -56,7 +62,8 @@ type alias Bug = {
 
   -- Actions on bug
   editing: Bool,
-  edits : Dict.Dict String String
+  edits : Dict.Dict String String,
+  update : (WebData BugUpdate)
 }
 
 type alias Analysis = {
@@ -86,7 +93,7 @@ type Msg
    | StartBugEditor Bug
    | EditBug Bug String String
    | SaveBugEdit Bug
-   | SavedBugEdit Bug (WebData (List Int))
+   | SavedBugEdit Bug (WebData BugUpdate)
    | ProcessWorkflow Hawk
    | UserMsg User.Msg
 
@@ -139,8 +146,6 @@ update msg model user =
             processAllAnalysis workflow
           User.Analysis ->
             processAnalysis workflow
-          User.BugEdits -> 
-            processBugEdits workflow
           _ ->
             Cmd.none
       in
@@ -181,12 +186,12 @@ update msg model user =
       in
         (model', user, Cmd.none)
 
-    SavedBugEdit bug edits ->
+    SavedBugEdit bug update ->
+      -- Store bug update from bugzilla
       let
-        -- TODO: mark bug as edited & display to user
-        l = Debug.log "Saved bug edit !" edits
+        model' = updateBug model bug.id (\b -> { b | update = update, editing = False})
       in
-        (model, user, Cmd.none)
+        (model', user, Cmd.none)
       
 
 updateBug: Model -> Int -> (Bug -> Bug) -> Model
@@ -274,13 +279,6 @@ processAnalysis workflow =
     Nothing ->
         Cmd.none
 
-encodeBugzillaFlag : (String, String) -> JsonEncode.Value
-encodeBugzillaFlag (key, value) = 
-  JsonEncode.object [
-    ("name", JsonEncode.string key),
-    ("value", JsonEncode.string value)
-  ]
-
 publishBugEdits: Model -> User.Model -> Bug -> (Model, User.Model, Cmd Msg)
 publishBugEdits model user bug =
   -- Publish all bug edits directly to Bugzilla
@@ -288,13 +286,18 @@ publishBugEdits model user bug =
     Just bugzilla ->
       let
         comment = Dict.get "comment" bug.edits |> Maybe.withDefault "Modified from Shipit."
+        edits = Dict.filter (\k v -> not (k == "comment")) bug.edits
+
+        flags = List.map (\(k,v) -> ("cf_" ++ k, JsonEncode.string v)) (Dict.toList edits)
 
         -- Build payload for bugzilla
         payload = JsonEncode.encode 0 (
-          JsonEncode.object [
-            ("comment", JsonEncode.string comment),
-            ("flags", JsonEncode.list (List.map encodeBugzillaFlag (Dict.toList bug.edits)))
-          ]
+          JsonEncode.object ([
+            ("comment", JsonEncode.object [
+              ("body", JsonEncode.string comment),
+              ("is_markdown", JsonEncode.bool True)
+            ])
+          ] ++ flags )
         )
         l = Debug.log "Bugzilla payload" payload
 
@@ -303,7 +306,7 @@ publishBugEdits model user bug =
           url = "/bug/" ++ (toString bug.bugzilla_id)
         } (Just payload)
 
-        cmd = (Http.fromJson decodeBugEdits task)
+        cmd = (Http.fromJson decodeBugUpdate task)
           |> RemoteData.asCmd
           |> Cmd.map (SavedBugEdit bug)
       in
@@ -313,23 +316,14 @@ publishBugEdits model user bug =
       -- No credentials !
       (model, user, Cmd.none)
 
-decodeBugEdits : Decoder (List Int)
-decodeBugEdits =
-  Json.at ["bugs"] (Json.list (
-    Json.at ["id"] Json.int
-  ))
-
-processBugEdits : Hawk -> Cmd Msg
-processBugEdits workflow =
-  -- Decode and save a single analysis
-  case workflow.task of
-    Just task ->
-      (Http.fromJson decodeBug task)
-      |> RemoteData.asCmd
-      |> Cmd.map FetchedBug
-
-    Nothing ->
-        Cmd.none
+decodeBugUpdate : Decoder BugUpdate
+decodeBugUpdate =
+--  Json.at ["bugs"] (Json.list (
+--    Json.at ["id"] Json.int
+--  ))
+  Json.object2 BugUpdate
+    ("error" := Json.bool)
+    ("message" := Json.string)
 
 decodeAllAnalysis : Decoder (List Analysis)
 decodeAllAnalysis =
@@ -348,6 +342,7 @@ decodeBug =
   Json.succeed Bug
     |: ("id" := Json.int)
     |: ("bugzilla_id" := Json.int)
+    |: ("url" := Json.string)
     |: ("summary" := Json.string)
     |: ("keywords" := Json.list Json.string)
     |: ("flags_status" := Json.dict Json.string)
@@ -359,6 +354,7 @@ decodeBug =
     |: ("patches" := (Json.dict decodePatch))
     |: (Json.succeed False) -- not editing at first
     |: (Json.succeed Dict.empty) -- not editing at first
+    |: (Json.succeed NotAsked) -- no updates at first
  
 decodePatch : Decoder Patch
 decodePatch =
@@ -419,7 +415,7 @@ viewBug bug =
   div [class "bug"] [
     h4 [] [text bug.summary],
     p [class "summary"] ([
-      a [class "text-muted monospace", href ("https://bugzil.la/" ++ toString bug.bugzilla_id), target "_blank"] [text ("#" ++ (toString bug.bugzilla_id))]
+      a [class "text-muted monospace", href bug.url, target "_blank"] [text ("#" ++ (toString bug.bugzilla_id))]
     ] ++ (List.map (\k -> span [class "label label-default"] [text k]) bug.keywords)),
     div [class "row"] [
       div [class "col-xs-4"] ([
@@ -469,6 +465,27 @@ viewUpliftRequest maybe =
 viewBugDetails: Bug -> Html Msg
 viewBugDetails bug =
   div [class "details"] [
+
+    case bug.update of
+      Success update ->
+        if update.error then
+          div [class "alert alert-danger"] [
+            h4 [] [text "Error during the update"],
+            p [] [text update.message]
+          ]
+
+        else
+          div [class "alert alert-success"] [
+            h4 [] [text "Bug updated !"],
+            p [] [text update.message]
+          ]
+      Failure err ->
+        div [class "alert alert-danger"] [
+          h4 [] [text "Error"],
+          p [] [text ("An error occurred during the update: " ++ (toString err))]
+        ]
+      _ ->
+        span [] [],
     h5 [] [text "Patches"],
     div [class "patches"] (List.map viewPatch (Dict.toList bug.patches)),
 
@@ -477,7 +494,7 @@ viewBugDetails bug =
     -- Start editing
     p [class "actions"] [
       button [class "btn btn-primary", onClick (StartBugEditor bug)] [text "Edit this bug"],
-      a [class "btn btn-success", href ("https://bugzil.la/" ++ (toString bug.bugzilla_id))] [text "View on Bugzilla"]
+      a [class "btn btn-success", href bug.url, target "_blank"] [text "View on Bugzilla"]
     ]
   ]
 
@@ -557,6 +574,7 @@ editTrackingFlag bug (key, flag_value) =
 
 viewEditor: Bug -> Html Msg
 viewEditor bug =
+  -- Show the form
   Html.form [class "editor", onSubmit (SaveBugEdit bug)] [
     div [class "col-xs-12 col-sm-6"]
       ([h4 [] [text "Status"] ] ++ (List.map (\x -> editStatusFlag bug x) (Dict.toList bug.flags_status))),
@@ -566,4 +584,4 @@ viewEditor bug =
       textarea [class "form-control", placeholder "Your comment", onInput (EditBug bug "comment")] []
     ],
     button [class "btn btn-success"] [text "Update bug"]
-  ]
+      ]

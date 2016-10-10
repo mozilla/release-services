@@ -37,7 +37,8 @@ type alias Model = {
   release_dashboard : ReleaseDashboard.Model,
   current_page : Page,
   current_user : User.Model,
-  backend_dashboard_url: String
+  backend_dashboard_url: String,
+  bugzilla_url: String
 }
 
 type Msg
@@ -49,7 +50,8 @@ type Msg
     | FetchAnalysis ReleaseDashboard.Analysis
 
 type alias Flags = {
-    backend_dashboard_url : String
+  backend_dashboard_url: String,
+  bugzilla_url: String
 }
 
 pageLink page attributes =
@@ -138,14 +140,15 @@ init : Flags -> (Model, Cmd Msg)
 init flags =
     let
         (dashboard, newCmd) = ReleaseDashboard.init flags.backend_dashboard_url
-        (user, userCmd) = User.init flags.backend_dashboard_url
+        (user, userCmd) = User.init flags.backend_dashboard_url flags.bugzilla_url
     in
     (
       {
          release_dashboard = dashboard,
          current_page = Home,
          current_user = user,
-         backend_dashboard_url = flags.backend_dashboard_url
+         backend_dashboard_url = flags.backend_dashboard_url,
+         bugzilla_url = flags.bugzilla_url
       },
       -- Follow through with sub parts init
       Cmd.batch [

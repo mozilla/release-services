@@ -57,6 +57,7 @@ def serialize_bug(bug):
         # Base
         'id': bug.id,
         'bugzilla_id': bug.bugzilla_id,
+        'url': payload['url'],
         'summary' : bug_data['summary'],
         'keywords' : bug_data['keywords'],
         'flags_status' : _filter_flags(status_base_flag),

@@ -71,6 +71,7 @@ type alias User = {
 }
 
 type alias BugzillaCredentials = {
+  url: String, -- Bugzilla server
   login: String,
   token: String
 }
@@ -86,6 +87,7 @@ type alias Model = {
 
   -- Bugzilla auth
   bugzilla : Maybe BugzillaCredentials,
+  bugzilla_url : String,
   bugzilla_check : WebData Bool
 }
 
@@ -99,7 +101,6 @@ type HawkRequestType = Empty
   | Analysis
   | GetBugzillaAuth
   | UpdateBugzillaAuth
-  | BugEdits
 
 fromJust : Maybe a -> a
 fromJust x = case x of
@@ -117,14 +118,15 @@ type Msg
   | BuiltHawkHeader (Maybe HawkResponse)
   | CheckedBugzillaCreds Bool (WebData Bool) 
 
-init : String -> (Model, Cmd Msg)
-init backend_dashboard_url =
+init : String -> String -> (Model, Cmd Msg)
+init backend_dashboard_url bugzilla_url =
   -- Init empty model
   let
     model = {
       backend_dashboard_url = backend_dashboard_url, 
       user = Nothing,
       bugzilla = Nothing,
+      bugzilla_url = bugzilla_url, 
       bugzilla_check = NotAsked,
       workflows = Dict.empty,
       workflow_id = 0,
@@ -384,7 +386,7 @@ buildBugzillaTask creds url_method body =
   in
     -- Always send to Mozilla Bugzilla
     Http.send Http.defaultSettings {
-      url = "https://bugzilla.mozilla.org/rest" ++ url_method.url,
+      url = creds.url ++ "/rest" ++ url_method.url,
       verb = url_method.method,
       headers = headers,
       body = body'
