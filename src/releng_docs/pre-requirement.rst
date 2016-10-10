@@ -14,7 +14,7 @@ Bellow instructions should work on any recent enough Linux distribution.
 It is important to know that Nix_ can be safely uninstalled by removing
 following folders:
 
-.. code-back:: bash
+.. code-block:: bash
 
     % sudo rm -rf /nix /etc/nix /home/$USER/.nix*
 
@@ -94,10 +94,10 @@ Run as ``$USER``:
     % rm -r $HOME/.nix-defexpr
     % cp -r /nix/var/nix/profiles/default-*-link /nix/var/nix/profiles/per-user/$USER/profile-1-link
 
-If default-*-link doesn't exist it's safe to skip that stage. It's only
+If default-\*-link doesn't exist it's safe to skip that stage. It's only
 necessary to keep any software already installed using nix.
 
-If there are multiple matches for default-*-link then use the numerically
+If there are multiple matches for default-\*-link then use the numerically
 highest one.
 
 
