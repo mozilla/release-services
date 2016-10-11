@@ -114,5 +114,6 @@ def delete_bug(bugzilla_id):
     except:
         raise Exception('Missing bug {}'.format(bugzilla_id))
 
+    bug.analysis = [] # clear m2m
     db.session.delete(bug)
     db.session.commit()
