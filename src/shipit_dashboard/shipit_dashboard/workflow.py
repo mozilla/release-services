@@ -3,7 +3,7 @@ from releng_common.db import db
 from shipit_dashboard.models import BugAnalysis, BugResult
 from shipit_dashboard.helpers import compute_dict_hash
 from shipit_dashboard.encoder import ShipitJSONEncoder
-from libmozdata.patchanalysis import bug_analysis
+from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
 from libmozdata import bugzilla
 from sqlalchemy.orm.exc import NoResultFound
 from flask.cli import with_appcontext
@@ -111,6 +111,10 @@ class Workflow(object):
         except Exception as e:
             logger.error('Patch analysis failed on {} : {}'.format(bug_id, e))
             return
+
+        # Build html version of uplift comment
+        if analysis['uplift_comment']:
+            analysis['uplift_comment']['html'] = parse_uplift_comment(analysis['uplift_comment']['text'], bug_id)
 
         payload = {
             'url' : '{}/{}'.format(self.bugzilla_url, bug['id']),
@@ -237,6 +241,7 @@ class WorkflowRemote(Workflow):
                 bug = self.update_bug(sync.raw, use_db=False)
                 if not bug:
                     continue
+
                 payload = {
                     'bugzilla_id' : bug.bugzilla_id,
                     'analysis' : sync.on_bugzilla,

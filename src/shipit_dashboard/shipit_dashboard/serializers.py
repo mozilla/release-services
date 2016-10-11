@@ -43,7 +43,7 @@ def serialize_bug(bug):
         uplift = {
             'id' : comment['id'],
             'author' : serialize_user(author),
-            'comment' : comment['text'],
+            'comment' : comment['html'].replace('&', '&amp;'),
         }
 
     # Build versions
