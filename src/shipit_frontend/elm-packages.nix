@@ -19,6 +19,14 @@
     version = "3.0.1";
     sha256 = "0bw8ppazywjljbdbph7319fnlcr8qnxdpd8556b50fzhy57a4bjq";
   };
+  "jinjor/elm-html-parser" = {
+    version = "1.1.1";
+    sha256 = "0g3z383xx499i7lfnx04h2639rikcg2k4li4b52xccwxnkdlqzic";
+  };
+  "elm-lang/lazy" = {
+    version = "1.0.0";
+    sha256 = "04mh0dsd6j5pc32wskpkkr2533cdzdk0v65n971a5pzjg8vj7zvw";
+  };
   "elm-lang/dom" = {
     version = "1.1.0";
     sha256 = "1l8yn7g2ikpxc0qylzmv18hpiafgyip77nz886fjm77qpys7ibbw";
@@ -32,8 +40,16 @@
     sha256 = "1qafhfzp55z8lzldcxm0ydlp7znp9rj6pcdv6qlvpgm2ds1217xn";
   };
   "elm-community/json-extra" = {
-    version = "1.0.0";
-    sha256 = "1sanh3qdw91dbdrkbsp3n0wdz6ixaq16842k4ml4f0b59ggf47hy";
+    version = "1.1.0";
+    sha256 = "11gv541nrlnh8cp19hjlmrqvg33fdmiczav3a7xqxzzj0raa7b7y";
+  };
+  "elm-lang/svg" = {
+    version = "1.1.1";
+    sha256 = "0xzc0fq2kg797km0nq2f52w6xdffrl9l0y5zbkpa72w163zpxkkn";
+  };
+  "Bogdanp/elm-combine" = {
+    version = "2.2.1";
+    sha256 = "0icmgspgnfvjzp3bii6l3bhn3ybahgwsibg8gng5hm927hq5jcji";
   };
   "evancz/focus" = {
     version = "2.0.1";

@@ -90,8 +90,23 @@ div.bugs {
 
     div.uplift-request {
       div.comment {
-        p {
-          margin-bottom: 1px;
+        h1 {
+          font-size: 1.1em;
+          margin-bottom: 0;
+        }
+
+        div {
+          margin-bottom: 10px;
+          &.header {
+            border-left: 2px solid #EEE;
+            padding-left: 3px;
+            margin-left: 2px;
+          }
+
+          &.no-header {
+            color: #888;
+            display: none;
+          }
         }
       }
     }

@@ -3,6 +3,8 @@ module App.ReleaseDashboard exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput, onSubmit)
+import HtmlParser exposing (parse)
+import HtmlParser.Util exposing (toVirtualDom)
 import String
 import Dict
 import Json.Decode as Json exposing (Decoder, (:=))
@@ -27,7 +29,7 @@ type alias Contributor = {
 type alias UpliftRequest = {
   bugzilla_id: Int,
   author: Contributor,
-  text: String
+  comment: String
 }
 
 type alias UpliftVersion = {
@@ -485,7 +487,7 @@ viewUpliftRequest maybe =
     Just request -> 
       div [class "uplift-request", id (toString request.bugzilla_id)] [
         viewContributor request.author "Uplift request",
-        div [class "comment"] (List.map (\x -> p [] [text x]) (String.split "\n" request.text))
+        div [class "comment"] (toVirtualDom (parse request.comment))
       ]
     Nothing -> 
       div [class "alert alert-warning"] [text "No uplift request."]
