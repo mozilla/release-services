@@ -457,10 +457,10 @@ viewBug bug =
 viewVersionTag: (String, UpliftVersion) -> Html Msg
 viewVersionTag (name, version) =
   case version.status of
-    "?" -> span [class "label label-info"] [text (name ++ " ?")]
-    "+" -> span [class "label label-success"] [text (name ++ " +")]
-    "-" -> span [class "label label-danger"] [text (name ++ " -")]
-    _ ->  span [class "label label-default"] [text (name ++ " " ++ version.status)]
+    "?" -> span [class "label label-info"] [text name]
+    "+" -> span [class "label label-success"] [text name]
+    "-" -> span [class "label label-danger"] [text name]
+    _ ->  span [class "label label-default"] [text name]
 
 viewContributor: Contributor -> String -> Html Msg
 viewContributor user title = 

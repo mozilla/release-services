@@ -54,7 +54,8 @@ def serialize_bug(bug):
         for flag in a['flags']:
             if not flag['name'].startswith(approval_base_flag):
                 continue
-            name = flag['name'].replace(approval_base_flag, '')
+            base_name = flag['name'].replace(approval_base_flag, '')
+            name = '{} {}'.format(base_name, flag['status'])
             if name not in versions:
                 versions[name] = {
                     'name' : flag['name'],
