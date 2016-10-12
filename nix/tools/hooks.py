@@ -15,7 +15,7 @@ log = logging.getLogger('hooks')
 
 def cmd(command):
 
-    if isinstance(command, basestring):
+    if isinstance(command, str):
         command = shlex.split(command)
 
     log.debug('COMMAND: ' + ' '.join(command))
