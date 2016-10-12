@@ -41,8 +41,8 @@ app = releng_common.create_app(
 
 
 @app.cli.command()
-def taskcluster_workertypes():
-    workertypes = releng_clobberer.cli.taskcluster_workertypes()
+def taskcluster_cache():
+    workertypes = releng_clobberer.cli.taskcluster_cache()
     click.echo(json.dumps(workertypes, indent=2, sort_keys=True))
 
 
