@@ -6,8 +6,8 @@ Pre-requirement
 To start working with ``mozilla-releng/services`` there is only one tools that
 is required to be installed on your system: Nix_. Nix (package manager) works
 alongside any other package manager and can be used with any Linux
-distribution. Many developers confuse Nix_ (the package manager) with NixOS_ (Linux
-distribution).
+distribution. Many developers confuse Nix_ (the package manager) with NixOS_
+(Linux distribution).
 
 Bellow instructions should work on any recent enough Linux distribution.
 
