@@ -39,8 +39,4 @@ self: super: {
     patches = [ (pkgs.fetchurl { url = "https://github.com/taskcluster/taskcluster-client.py/pull/56.patch"; sha256 = "1k29primpv3fa62b1wq52shwvjamcja1m6ph66vykxab5ywmfkfw"; }) ];
   });
 
-  "libmozdata" = python.overrideDerivation super."libmozdata" (old: {
-    patches = [ (pkgs.fetchurl { url = "https://github.com/mozilla/libmozdata/pull/54.patch"; sha256 = "1yvjwgj4srp9zg9yblgvhnsg0dhbfk03bd4r6nidc1mva80rv959"; }) ];
-  });
-
 }
