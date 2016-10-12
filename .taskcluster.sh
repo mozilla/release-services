@@ -53,3 +53,6 @@ make deploy-cache \
     AWS_SECRET_ACCESS_KEY=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.AWS_SECRET_ACCESS_KEY'`
 RETVAL=$?
 [ $RETVAL -ne 0 ] && exit $RETVAL
+
+echo "Success!"
+exit 0
