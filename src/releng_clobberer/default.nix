@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend mkTaskclusterHook;
+  inherit (releng_pkgs.lib) mkBackend mkTaskclusterHook filterSource;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) removeSuffix;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -26,7 +26,22 @@ let
     name = "releng_clobberer";
     version = removeSuffix "\n" (builtins.readFile ./../../VERSION);
     python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-    src = ./.;
+    src = filterSource ./. {
+      exclude = [
+        "/${name}.egg-info"
+        "/releng_common.egg-info"
+      ];
+      include = [
+        "/VERSION"
+        "/${name}"
+        "/releng_common"
+        "/tests"
+        "/MANIFEST.in"
+        "/settings.py"
+        "/setup.py"
+        "/requirements.txt"
+      ];
+    };
     srcs = [
       "./../../lib/releng_common"
       "./../${name}"
@@ -44,6 +59,28 @@ let
       mysql2sqlite = migrate.mysql2sqlite { inherit name beforeSQL afterSQL; };
       mysql2postgresql = migrate.mysql2postgresql { inherit name beforeSQL afterSQL; };
       taskclusterHooks = {
+        master = {
+          taskcluster_cache = mkTaskclusterHook {
+            name = "create taskcluster cache";
+            owner = "rgarbas@mozilla.com";
+            schedule = [ "0 */20 * * * *" ];  # every 20 min
+            taskImage = self.docker;
+            taskEnv = {
+              DATABASE_URL = "sqlite://";
+            };
+            taskCommand = [
+              "/bin/sh"
+              "-c"
+              "/bin/flask taskcluster_cache > /taskcluster_cache.json"
+            ];
+            taskArtifacts = {
+              "taskcluster_cache.json" = {
+                type = "file";
+                path = "/taskcluster_cache.json";
+              };
+            };
+          };
+        };
         #update = mkTaskclusterHook {
         #  name = "Updating sources";
         #  owner = "rgarbas@mozilla.com";
@@ -51,13 +88,6 @@ let
         #  taskImage = self.docker;
         #  taskCommand = [ "echo" "'Hello World!'" ];
         #};
-        taskcluster_cache = mkTaskclusterHook {
-          name = "create taskcluster cache";
-          owner = "rgarbas@mozilla.com";
-          schedule = [ "*/15 * * * * *" ];
-          taskImage = self.docker;
-          taskCommand = [ "flask" "taskcluster_workertypes" ">" "/taskcluster_cache.json" ];
-        };
       };
       update = writeScript "update-${name}" ''
         pushd src/${name}

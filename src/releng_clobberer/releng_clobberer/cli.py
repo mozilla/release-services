@@ -11,9 +11,9 @@ import taskcluster
 logger = logging.getLogger('releng_clobberer.cli')
 
 
-def taskcluster_workertypes(namespace='gecko.v2',
-                            decision_task_namespace='latest.firefox.decision',
-                            ):
+def taskcluster_cache(namespace='gecko.v2',
+                      decision_task_namespace='latest.firefox.decision',
+                      ):
     """ TODO: add description
     """
 

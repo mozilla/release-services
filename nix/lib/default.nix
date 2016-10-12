@@ -102,9 +102,12 @@ in rec {
     mkTaskclusterTaskPayload =
       { image
       , command
+      , maxRunTime ? 3600
       , features ? { taskclusterProxy = true; }
+      , artifacts ? {}
+      , env ? {}
       }:
-      { inherit image features command; };
+      { inherit env image features maxRunTime command artifacts; };
 
     mkTaskclusterTask =
       { extra ? {}
@@ -131,21 +134,24 @@ in rec {
       , owner
       , emailOnError ? true
       , schedule ? []
-      , expires ? "3 months"
-      , deadline ? "1 day"
+      , expires ? "1 month"
+      , deadline ? "1 hour"
       , taskImage
       , taskCommand
-      , task ? {}
+      , taskArtifacts ? {}
+      , taskEnv ? {}
       }:
       { inherit schedule expires deadline;
         metadata = { inherit name description owner emailOnError; };
         task = mkTaskclusterTask ({
           metadata = { inherit name description owner; };
-          payload = {
+          payload = mkTaskclusterTaskPayload {
             image = taskImage;
             command = taskCommand;
+            artifacts = taskArtifacts;
+            env = taskEnv;
           };
-        } // task);
+        });
       };
 
   mkTaskclusterGithubTask =
@@ -267,6 +273,21 @@ in rec {
       };
     in self;
 
+  filterSource = src_tmp: { include ? [ "/" ], exclude ? [] }: src_x:
+    let
+      startsWith = s: x: builtins.substring 0 (builtins.stringLength x) s == x;
+      src = src_tmp + ("/" + src_x);
+      relativePath = path:
+        builtins.substring (builtins.stringLength (builtins.toString src))
+                           (builtins.stringLength path)
+                           path;
+    in
+      builtins.filterSource (path: type: 
+        if builtins.any (x: x) (builtins.map (startsWith (relativePath path)) exclude) then false
+        else if builtins.any (x: x) (builtins.map (startsWith (relativePath path)) include) then true
+        else false
+      ) src;
+
   mkBackend =
     { name
     , version
@@ -278,10 +299,14 @@ in rec {
     , passthru ? {}
     }:
     let
+      getSrc = x:
+        if builtins.typeOf src == "path"
+        then src + ("/" + x)
+        else src x;
       self = python.mkDerivation {
         namePrefix = "";
         name = "${name}-${version}";
-        srcs = if inNixShell then null else (map (x: src + ("/" + x)) srcs);
+        srcs = if inNixShell then null else (builtins.map getSrc srcs);
         sourceRoot = ".";
         buildInputs = [ makeWrapper glibcLocales ] ++
           fromRequirementsFile buildRequirements python.packages;
@@ -308,6 +333,14 @@ in rec {
           for i in $out/bin/*; do
             wrapProgram $i --set PYTHONPATH $PYTHONPATH
           done
+
+          for i in $out/${python.__old.python.sitePackages}/*; do
+            if test -e $i/__pycache__; then
+              rm -rf $i/__pycache__
+            fi
+            ${python.__old.python.executable} -m compileall -f $i
+          done
+
         '';
         checkPhase = ''
           export LANG=en_US.UTF-8
