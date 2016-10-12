@@ -37,7 +37,7 @@ if [[ "$GITHUB_BASE_BRANCH" = "staging" ]] ||
 fi
 
 if [[ "$GITHUB_PULL_REQUEST" = "" ]]; then
-    make taskcluster-hooks-manual \
+    make taskcluster-hooks \
         APP=$APP \
         BRANCH=$GITHUB_BASE_BRANCH \
         HOOKS_URL=taskcluster/hooks/v1 \
