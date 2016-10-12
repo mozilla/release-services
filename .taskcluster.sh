@@ -40,7 +40,7 @@ if [[ "$GITHUB_PULL_REQUEST" = "" ]]; then
     make taskcluster-hooks \
         APP=$APP \
         BRANCH=$GITHUB_BASE_BRANCH \
-        HOOKS_URL=taskcluster/hooks/v1 \
+        HOOKS_URL=http://taskcluster/hooks/v1 \
         DOCKER_USERNAME=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.DOCKER_USERNAME'` \
         DOCKER_PASSWORD=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.DOCKER_PASSWORD'`
     RETVAL=$?
