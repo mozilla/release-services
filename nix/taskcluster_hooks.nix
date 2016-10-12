@@ -1,6 +1,6 @@
 let pkgs' = import <nixpkgs> {}; in
 { pkgs ? import (pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs.json))) {}
-, prefix ? "services-"
+, prefix ? "services"
 , branch
 , app
 }:
@@ -16,15 +16,13 @@ let
         then builtins.getAttr app releng_pkgs 
         else null;
 
-  pkg_name = (builtins.parseDrvName pkg.name).name;
-
   hooks = if pkg == null || ! builtins.hasAttr "taskclusterHooks" pkg then {}
           else if builtins.hasAttr branch pkg.taskclusterHooks
           then builtins.getAttr branch pkg.taskclusterHooks
           else {};
 
   hooks_json = builtins.listToAttrs
-    (map (hookId: { name = "${prefix}${branch}-${app}-${pkg_name}-${hookId}";
+    (map (hookId: { name = "${prefix}-${branch}-${app}-${hookId}";
                     value = builtins.getAttr hookId (builtins.getAttr branch pkg.taskclusterHooks);
                   }
          )

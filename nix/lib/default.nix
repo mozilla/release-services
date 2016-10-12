@@ -168,6 +168,7 @@ in rec {
       scopes:
         - secrets:get:${secrets}
         - hooks:modify-hook:project-releng/services-${branch}-${name}-*
+        - assume:hook-id:project-releng/services-${branch}-${name}-*
       extra:
         github:
           env: true
