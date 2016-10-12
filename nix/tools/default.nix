@@ -35,11 +35,13 @@ in {
         );
     in stdenv.mkDerivation {
       name = "taskcluster-hooks";
-      buildInputs = [ makeWrapper ];
+      buildInputs = [ makeWrapper python.__old.python ];
       buildCommand = ''
         mkdir -p $out/bin
         cp ${./hooks.py} $out/bin/taskcluster-hooks
         chmod +x $out/bin/taskcluster-hooks
+        echo "${python.__old.python}"
+        patchShebangs $out/bin/taskcluster-hooks
         wrapProgram $out/bin/taskcluster-hooks --set PYTHONPATH  "${python_path}"
       '';
       passthru.update = writeScript "update-tools-taskcluster-hooks" ''
