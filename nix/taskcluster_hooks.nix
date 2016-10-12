@@ -18,7 +18,7 @@ let
 
   pkg_name = (builtins.parseDrvName pkg.name).name;
 
-  hooks = if pkg == null then {}
+  hooks = if pkg == null || ! builtins.hasAttr "taskclusterHooks" pkg then {}
           else if builtins.hasAttr branch pkg.taskclusterHooks
           then builtins.getAttr branch pkg.taskclusterHooks
           else {};
