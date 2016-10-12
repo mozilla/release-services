@@ -42,7 +42,10 @@ in {
         chmod +x $out/bin/taskcluster-hooks
         echo "${python.__old.python}"
         patchShebangs $out/bin/taskcluster-hooks
-        wrapProgram $out/bin/taskcluster-hooks --set PYTHONPATH  "${python_path}"
+        wrapProgram $out/bin/taskcluster-hooks \
+          --set PYTHONPATH "${python_path}" \
+          --set LANG "en_US.UTF-8" \
+          --set LOCALE_ARCHIVE ${releng_pkgs.pkgs.glibcLocales}/lib/locale/locale-archive
       '';
       passthru.update = writeScript "update-tools-taskcluster-hooks" ''
         pushd nix/tools
