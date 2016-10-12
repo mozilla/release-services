@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend mkTaskclusterHook;
+  inherit (releng_pkgs.lib) mkBackend mkTaskclusterHook filterSource;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) removeSuffix;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -12,7 +12,22 @@ let
     name = "shipit_dashboard";
     version = removeSuffix "\n" (builtins.readFile ./../../VERSION);
     python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-    src = ./.;
+    src = filterSource ./. {
+      exclude = [
+        "/${name}.egg-info"
+        "/releng_common.egg-info"
+      ];
+      include = [
+        "/VERSION"
+        "/${name}"
+        "/releng_common"
+        "/tests"
+        "/MANIFEST.in"
+        "/settings.py"
+        "/setup.py"
+        "/requirements.txt"
+      ];
+    };
     srcs = [
       "./../../lib/releng_common"
       "./../${name}"
