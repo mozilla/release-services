@@ -36,15 +36,16 @@ if [[ "$GITHUB_BASE_BRANCH" = "staging" ]] ||
     [ $RETVAL -ne 0 ] && exit $RETVAL
 fi
 
-make taskcluster-hooks \
-    BRANCH=$GITHUB_BASE_BRANCH \
-    DOCKER_USERNAME=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.DOCKER_USERNAME'` \
-    DOCKER_PASSWORD=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.DOCKER_PASSWORD'`
-HOOKS_CLIENT_ID
-HOOKS_ACCESS_TOKEN
-
-RETVAL=$?
-[ $RETVAL -ne 0 ] && exit $RETVAL
+if [[ "$GITHUB_PULL_REQUEST" = "" ]]; then
+    make taskcluster-hooks-manual \
+        APP=$APP \
+        BRANCH=$GITHUB_BASE_BRANCH \
+        HOOKS_URL=taskcluster/hooks/v1 \
+        DOCKER_USERNAME=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.DOCKER_USERNAME'` \
+        DOCKER_PASSWORD=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.DOCKER_PASSWORD'`
+    RETVAL=$?
+    [ $RETVAL -ne 0 ] && exit $RETVAL
+fi
 
 make deploy-cache \
     CACHE_BUCKET=`cat tmp/taskcluster_secrets | ./result-tool-jq/bin/jq -r '.secret.CACHE_BUCKET'` \

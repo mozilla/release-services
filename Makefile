@@ -286,12 +286,17 @@ taskcluster: nix
 	@cp -f ./result-taskcluster .taskcluster.yml
 
 
-taskcluster-hooks: require-BRANCH require-DOCKER require-HOOKS_URL nix build-tool-push build-tool-taskcluster-hooks
-	@nix-build nix/taskcluster_hooks.nix --argstr branch "$(BRANCH)" -o result-taskcluster-hooks --fallback
+taskcluster-hooks.json: require-APP require-BRANCH nix
+	@nix-build nix/taskcluster_hooks.nix \
+		--argstr app "$(APP)" \
+		--argstr branch "$(BRANCH)" \
+		-o result-taskcluster-hooks.json --fallback
+
+taskcluster-hooks: taskcluster-hooks.json require-APP require-BRANCH require-DOCKER require-HOOKS_URL build-tool-push build-tool-taskcluster-hooks
 	@./result-tool-taskcluster-hooks/bin/taskcluster-hooks \
-		--hooks=./result-taskcluster-hooks \
+		--hooks=./result-taskcluster-hooks.json \
         --hooks-group=project-releng \
-        --hooks-prefix=services-$(BRANCH)- \
+        --hooks-prefix=services-$(BRANCH)-$(APP)- \
         --hooks-url=$(HOOKS_URL) \
         --docker-push=./result-tool-push/bin/push \
 		--docker-registry=https://index.docker.io \
@@ -299,12 +304,11 @@ taskcluster-hooks: require-BRANCH require-DOCKER require-HOOKS_URL nix build-too
         --docker-username=$(DOCKER_USERNAME) \
         --docker-password=$(DOCKER_PASSWORD)
 
-taskcluster-hooks-manual: require-BRANCH require-DOCKER require-HOOKS_CREDS nix build-tool-push build-tool-taskcluster-hooks
-	@nix-build nix/taskcluster_hooks.nix --argstr branch "$(BRANCH)" -o result-taskcluster-hooks --fallback
+taskcluster-hooks-manual: taskcluster-hooks.json require-APP require-BRANCH require-DOCKER require-HOOKS_CREDS build-tool-push build-tool-taskcluster-hooks
 	@./result-tool-taskcluster-hooks/bin/taskcluster-hooks \
-		--hooks=./result-taskcluster-hooks \
+		--hooks=./result-taskcluster-hooks.json \
         --hooks-group=project-releng \
-        --hooks-prefix=services-$(BRANCH)- \
+        --hooks-prefix=services-$(BRANCH)-$(APP)- \
         --hooks-client-id=$(HOOKS_CLIENT_ID) \
         --hooks-access-token=$(HOOKS_ACCESS_TOKEN) \
         --docker-push=./result-tool-push/bin/push \
