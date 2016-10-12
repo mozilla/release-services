@@ -32,7 +32,7 @@ class BugAnalysis(db.Model):
     parameters = sa.Column(sa.Text())
     created = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
 
-    bugs = db.relationship('BugResult', secondary=bugs)
+    bugs = db.relationship('BugResult', secondary=bugs, backref=db.backref('analysis', lazy='dynamic'))
 
     def __init__(self, name):
         self.name = name
