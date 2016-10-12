@@ -167,6 +167,7 @@ in rec {
         source: "https://github.com/mozilla-releng/services/tree/${branch}/src/${name}"
       scopes:
         - secrets:get:${secrets}
+        - hooks:modify-hook:project-releng/services-${branch}-${name}-*
       extra:
         github:
           env: true

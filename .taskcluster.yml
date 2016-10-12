@@ -13,6 +13,7 @@ tasks:
       source: "https://github.com/mozilla-releng/services/tree/master/src/releng_clobberer"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - hooks:modify-hook:project-releng/services-master-releng_clobberer-*
     extra:
       github:
         env: true
@@ -44,6 +45,7 @@ tasks:
       source: "https://github.com/mozilla-releng/services/tree/staging/src/releng_clobberer"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
+      - hooks:modify-hook:project-releng/services-staging-releng_clobberer-*
     extra:
       github:
         env: true
@@ -74,6 +76,7 @@ tasks:
       source: "https://github.com/mozilla-releng/services/tree/production/src/releng_clobberer"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:production
+      - hooks:modify-hook:project-releng/services-production-releng_clobberer-*
     extra:
       github:
         env: true
@@ -104,6 +107,7 @@ tasks:
       source: "https://github.com/mozilla-releng/services/tree/master/src/releng_docs"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - hooks:modify-hook:project-releng/services-master-releng_docs-*
     extra:
       github:
         env: true
@@ -135,6 +139,7 @@ tasks:
       source: "https://github.com/mozilla-releng/services/tree/staging/src/releng_docs"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
+      - hooks:modify-hook:project-releng/services-staging-releng_docs-*
     extra:
       github:
         env: true
@@ -165,6 +170,7 @@ tasks:
       source: "https://github.com/mozilla-releng/services/tree/production/src/releng_docs"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:production
+      - hooks:modify-hook:project-releng/services-production-releng_docs-*
     extra:
       github:
         env: true
@@ -195,6 +201,7 @@ tasks:
       source: "https://github.com/mozilla-releng/services/tree/master/src/releng_frontend"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - hooks:modify-hook:project-releng/services-master-releng_frontend-*
     extra:
       github:
         env: true
@@ -226,6 +233,7 @@ tasks:
       source: "https://github.com/mozilla-releng/services/tree/staging/src/releng_frontend"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
+      - hooks:modify-hook:project-releng/services-staging-releng_frontend-*
     extra:
       github:
         env: true
@@ -256,6 +264,7 @@ tasks:
       source: "https://github.com/mozilla-releng/services/tree/production/src/releng_frontend"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:production
+      - hooks:modify-hook:project-releng/services-production-releng_frontend-*
     extra:
       github:
         env: true
@@ -286,6 +295,7 @@ tasks:
       source: "https://github.com/mozilla-releng/services/tree/master/src/shipit_dashboard"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - hooks:modify-hook:project-releng/services-master-shipit_dashboard-*
     extra:
       github:
         env: true
@@ -317,6 +327,7 @@ tasks:
       source: "https://github.com/mozilla-releng/services/tree/staging/src/shipit_dashboard"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
+      - hooks:modify-hook:project-releng/services-staging-shipit_dashboard-*
     extra:
       github:
         env: true
@@ -347,6 +358,7 @@ tasks:
       source: "https://github.com/mozilla-releng/services/tree/production/src/shipit_dashboard"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:production
+      - hooks:modify-hook:project-releng/services-production-shipit_dashboard-*
     extra:
       github:
         env: true
@@ -377,6 +389,7 @@ tasks:
       source: "https://github.com/mozilla-releng/services/tree/master/src/shipit_frontend"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - hooks:modify-hook:project-releng/services-master-shipit_frontend-*
     extra:
       github:
         env: true
@@ -408,6 +421,7 @@ tasks:
       source: "https://github.com/mozilla-releng/services/tree/staging/src/shipit_frontend"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
+      - hooks:modify-hook:project-releng/services-staging-shipit_frontend-*
     extra:
       github:
         env: true
@@ -438,6 +452,7 @@ tasks:
       source: "https://github.com/mozilla-releng/services/tree/production/src/shipit_frontend"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:production
+      - hooks:modify-hook:project-releng/services-production-shipit_frontend-*
     extra:
       github:
         env: true
