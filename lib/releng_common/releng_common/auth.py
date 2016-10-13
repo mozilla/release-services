@@ -62,52 +62,13 @@ class TaskclusterUser(BaseUser):
         assert isinstance(credentials['scopes'], list)
         self.credentials = credentials
 
-        # Extract infos
-        self.clientId = self.credentials['clientId']
-        self.scopes = self.credentials['scopes']
-
-        logger.info('Init user {}'.format(self.clientId))
+        logger.info('Init user {}'.format(self.get_id()))
 
     def get_id(self):
-        return self.clientId
+        return self.credentials['clientId']
 
     def get_permissions(self):
-        """
-        Load all scopes from Taskcluster
-        by fetching all the expansions
-        from assume:* roles
-        """
-        auth = taskcluster.Auth({'maxRetries' : 0}) # no header here
-
-        expanded = []
-
-        def _expand(scopes):
-            for s in scopes:
-                if s in expanded or not s.startswith('assume:'):
-                    continue
-
-                # Skip useless roles
-                if s.startswith('assume:assume:') \
-                    or s.startswith('assume:hook-id:') \
-                    or s in (
-                        'assume:project:taskcluster:tutorial',
-                    ):
-                    continue
-
-                # Solve assume: role
-                try:
-                    role = auth.role(s)
-                    expanded.append(s)
-                    scopes += _expand(role.get('scopes', []))
-                    scopes += _expand(role.get('expandedScopes', []))
-                except Exception as e:
-                    logger.warning('Failed to expand role {} : {}'.format(s, e))
-                    expanded.append(s)
-
-            return scopes
-
-        return self.scopes # should work without expand now
-        return _expand(self.scopes)
+        return self.credentials['scopes']
 
     def taskcluster_secrets(self):
         """
@@ -135,6 +96,7 @@ class TaskclusterUser(BaseUser):
             raise Exception('Missing TC secret {}'.format(name))
         return secret['secret']
 
+
 class Auth(object):
 
     def __init__(self, login_manager):
@@ -148,6 +110,7 @@ class Auth(object):
     def require_login(self):
         import pdb
         pdb.set_trace()
+
 
 def scopes_required(scopes):
     """
