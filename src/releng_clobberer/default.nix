@@ -22,6 +22,27 @@ let
   # TODO: move this migrate scripts to releng_pkgs.tools
   migrate = import ./migrate.nix { inherit releng_pkgs; };
 
+  taskcluster_cache = mkTaskclusterHook {
+    name = "create taskcluster cache";
+    owner = "rgarbas@mozilla.com";
+    schedule = [ "0 */20 * * * *" ];  # every 20 min
+    taskImage = self.docker;
+    taskEnv = {
+      DATABASE_URL = "sqlite://";
+    };
+    taskCommand = [
+      "/bin/sh"
+      "-c"
+      "/bin/flask taskcluster_cache > /taskcluster_cache.json"
+    ];
+    taskArtifacts = {
+      "taskcluster_cache.json" = {
+        type = "file";
+        path = "/taskcluster_cache.json";
+      };
+    };
+  };
+
   self = mkBackend rec {
     name = "releng_clobberer";
     version = removeSuffix "\n" (builtins.readFile ./../../VERSION);
@@ -60,34 +81,13 @@ let
       mysql2postgresql = migrate.mysql2postgresql { inherit name beforeSQL afterSQL; };
       taskclusterHooks = {
         master = {
-          taskcluster_cache = mkTaskclusterHook {
-            name = "create taskcluster cache";
-            owner = "rgarbas@mozilla.com";
-            schedule = [ "0 */20 * * * *" ];  # every 20 min
-            taskImage = self.docker;
-            taskEnv = {
-              DATABASE_URL = "sqlite://";
-            };
-            taskCommand = [
-              "/bin/sh"
-              "-c"
-              "/bin/flask taskcluster_cache > /taskcluster_cache.json"
-            ];
-            taskArtifacts = {
-              "taskcluster_cache.json" = {
-                type = "file";
-                path = "/taskcluster_cache.json";
-              };
-            };
-          };
         };
-        #update = mkTaskclusterHook {
-        #  name = "Updating sources";
-        #  owner = "rgarbas@mozilla.com";
-        #  schedule = [];
-        #  taskImage = self.docker;
-        #  taskCommand = [ "echo" "'Hello World!'" ];
-        #};
+        staging = {
+          inherit taskcluster_cache;
+        };
+        production = {
+          inherit taskcluster_cache;
+        };
       };
       update = writeScript "update-${name}" ''
         pushd src/${name}

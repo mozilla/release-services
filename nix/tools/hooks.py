@@ -87,7 +87,7 @@ def diff_hooks(all, existing, prefix, repo):
         if hookId in all.keys():
             tmp_hook = copy.deepcopy(all[hookId])
             tmp_hook['task']['payload']['image'] = nix_to_tag(repo, tmp_hook['task']['payload']['image'])  # noqa
-            if cmp(tmp_hook, hook):
+            if not cmp(tmp_hook, hook):
                 update[hookId] = all[hookId]
         else:
             remove[hookId] = hook
