@@ -4,13 +4,13 @@
 
 from __future__ import absolute_import
 
+from flask import abort, request
+from releng_common.auth import auth
+from releng_common.db import db
 from shipit_dashboard.models import BugAnalysis, BugResult
 from shipit_dashboard.serializers import serialize_analysis, serialize_bug
-from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import text
-from releng_common.auth import scopes_required
-from releng_common.db import db
-from flask import abort, request
+from sqlalchemy.orm.exc import NoResultFound
 import pickle
 
 # Tasckcluster scopes
@@ -24,7 +24,7 @@ SCOPES_BOT = [
     'project:shipit:analysis/manage',
 ]
 
-@scopes_required([SCOPES_USER, SCOPES_BOT])
+@auth.require_scopes([SCOPES_USER, SCOPES_BOT])
 def list_analysis():
     """
     List all available analysis
@@ -32,7 +32,7 @@ def list_analysis():
     all_analysis = BugAnalysis.query.all()
     return [serialize_analysis(analysis, False) for analysis in all_analysis]
 
-@scopes_required([SCOPES_USER, SCOPES_BOT])
+@auth.require_scopes([SCOPES_USER, SCOPES_BOT])
 def get_analysis(analysis_id):
     """
     Fetch an analysis and all its bugs
@@ -47,7 +47,7 @@ def get_analysis(analysis_id):
     # Build JSON output
     return serialize_analysis(analysis)
 
-@scopes_required([SCOPES_USER])
+@auth.require_scopes(SCOPES_USER)
 def update_bug(bugzilla_id):
     """
     Update a bug after modifications on Bugzilla
@@ -95,7 +95,7 @@ def update_bug(bugzilla_id):
     # Send back the bug
     return serialize_bug(bug)
 
-@scopes_required([SCOPES_BOT])
+@auth.require_scopes(SCOPES_BOT)
 def create_bug():
     """
     Create a new bug, or update its payload
@@ -135,7 +135,7 @@ def create_bug():
     # Send back the bug
     return serialize_bug(bug)
 
-@scopes_required([SCOPES_BOT])
+@auth.require_scopes(SCOPES_BOT)
 def delete_bug(bugzilla_id):
     """
     Delete a bug when it's not in Bugzilla analysis

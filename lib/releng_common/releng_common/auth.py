@@ -60,8 +60,8 @@ class TaskclusterUser(BaseUser):
         assert 'clientId' in credentials
         assert 'scopes' in credentials
         assert isinstance(credentials['scopes'], list)
-        self.credentials = credentials
 
+        self.credentials = credentials
         logger.info('Init user {}'.format(self.get_id()))
 
     def get_id(self):
@@ -69,6 +69,8 @@ class TaskclusterUser(BaseUser):
 
     def get_permissions(self):
         return self.credentials['scopes']
+
+    # XXX: this should not be here
 
     def taskcluster_secrets(self):
         """
@@ -97,89 +99,119 @@ class TaskclusterUser(BaseUser):
         return secret['secret']
 
 
+def taskcluster_user_loader(auth_header):
+
+    # Get Endpoint configuration
+    if ':' in request.host:
+        host, port = request.host.split(':')
+    else:
+        host = request.host
+        port = request.environ.get('HTTP_X_FORWARDED_PORT')
+        if port is None:
+            request.scheme == 'https' and 443 or 80
+    method = request.method.lower()
+    resource = request.path
+
+    # Build taskcluster payload
+    payload = {
+        'resource' : resource,
+        'method' : method,
+        'host' : host,
+        'port' : int(port),
+        'authorization' : auth_header,
+    }
+
+    # Auth with taskcluster
+    auth = taskcluster.Auth()
+    try:
+        resp = auth.authenticateHawk(payload)
+        if not resp.get('status') == 'auth-success':
+            raise Exception('Taskcluster rejected the authentication')
+    except Exception as e:
+        logger.error('TC auth error: {}'.format(e))
+        logger.error('TC auth details: {}'.format(payload))
+        abort(401) # Unauthorized
+
+    return TaskclusterUser(resp)
+
+
 class Auth(object):
 
-    def __init__(self, login_manager):
-        self.login_manager = login_manager
+    def __init__(self, anonymous_user=AnonymousUser):
+        self.login_manager = LoginManager()
+        self.login_manager.anonymous_user = anonymous_user
+        self.login_manager.header_loader(user_loader)()
+        self.app = None
 
-    def require_scope(self, scope):
-        self.require_login()
-        import pdb
-        pdb.set_trace()
-
-    def require_login(self):
-        import pdb
-        pdb.set_trace()
+    def init_app(self, app):
+        self.app = app
+        self.login_manager.init_app(app)
 
 
-def scopes_required(scopes):
-    """
-    Decorator for Flask views to require
-    some Taskcluster scopes for the current user
-    """
-    assert isinstance(scopes, list)
+    def _require_scopes(self, scopes):
+        response = self._require_login()
+        if resource is not None:
+            return response
 
-    def decorator(method):
+        with current_app.app_context():
+            user_scopes = current_user.get_permissions()
+            if not scope_match(user_scopes, scopes):
+                diffs = [', '.join(set(s).difference(user_scopes)) for s in scopes]
+                logger.error('User {} misses some scopes: {}'.format(current_user.get_id(), ' OR '.join(diffs)))
+                return abort(401)
+
+    def _require_login(self):
+        with current_app.app_context():
+            if not current_user.is_authenticated:
+                logger.error('Invalid authentication')
+                return abort(401)
+
+    def require_login(self, method):
+        """Decorator to check if user is authenticated
+        """
+
         @wraps(method)
-        def decorated_function(*args, **kwargs):
-            with current_app.app_context():
-                # Check login
-                if not current_user.is_authenticated:
-                    logger.error('Invalid authentication')
-                    return abort(401)
-
-                # Check scopes, using TC implementation
-                user_scopes = current_user.get_permissions()
-                if not scope_match(user_scopes, scopes):
-                    diffs = [', '.join(set(s).difference(user_scopes)) for s in scopes]
-                    logger.error('User {} misses some scopes: {}'.format(current_user.get_id(), ' OR '.join(diffs)))
-                    return abort(401)
-
+        def wrapper(*args, **kwargs):
+            response = self._require_login()
+            if resource is not None:
+                return response
             return method(*args, **kwargs)
-        return decorated_function
-    return decorator
+        return wrapper
+
+    def require_scopes(self, scopes):
+        """Decorator to check if user has required scopes or set of scopes
+        """
+
+        assert isinstance(scopes, (tuple, list))
+
+        if len(scopes) > 0 and not isinstance(scopes[0], (tuple, list)):
+            scopes = [scopes]
+
+        def decorator(method):
+            @wraps(method)
+            def wrapper(*args, **kwargs):
+                with current_app.app_context():
+                    # Check login
+                    response = self._require_login()
+                    if resource is not None:
+                        return response
+                    # Check scopes, using TC implementation
+                    user_scopes = current_user.get_permissions()
+                    if not scope_match(user_scopes, scopes):
+                        diffs = [', '.join(set(s).difference(user_scopes)) for s in scopes]
+                        logger.error('User {} misses some scopes: {}'.format(current_user.get_id(), ' OR '.join(diffs)))
+                        return abort(401)
+                return method(*args, **kwargs)
+            return wrapper
+        return decorator
+
+        if not current_user.is_authenticated:
+            logger.error('Invalid authentication')
+            return abort(401)
+
+
+auth = Auth(user_loader=taskcluster_user_loader)
 
 def init_app(app):
-
-    login_manager = LoginManager()
-    login_manager.anonymous_user = AnonymousUser
-
-    @login_manager.header_loader
-    def user_loader(auth_header):
-
-        # Get Endpoint configuration
-        if ':' in request.host:
-            host, port = request.host.split(':')
-        else:
-            host = request.host
-            port = request.environ.get('HTTP_X_FORWARDED_PORT')
-            if port is None:
-                request.scheme == 'https' and 443 or 80
-        method = request.method.lower()
-        resource = request.path
-
-        # Build taskcluster payload
-        payload = {
-            'resource' : resource,
-            'method' : method,
-            'host' : host,
-            'port' : int(port),
-            'authorization' : auth_header,
-        }
-
-        # Auth with taskcluster
-        auth = taskcluster.Auth()
-        try:
-            resp = auth.authenticateHawk(payload)
-            if not resp.get('status') == 'auth-success':
-                raise Exception('Taskcluster rejected the authentication')
-        except Exception as e:
-            logger.error('TC auth error: {}'.format(e))
-            logger.error('TC auth details: {}'.format(payload))
-            abort(401) # Unauthorized
-
-        return TaskclusterUser(resp)
-
-    login_manager.init_app(app)
-
-    return Auth(login_manager)
+    auth.init_app(app)
+    return auth
