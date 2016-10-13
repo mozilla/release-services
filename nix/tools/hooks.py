@@ -14,7 +14,7 @@ log = logging.getLogger('hooks')
 
 
 def cmp(a, b):
-    return ((a > b) - (a < b))
+    return json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
 
 
 def cmd(command):
@@ -87,7 +87,7 @@ def diff_hooks(all, existing, prefix, repo):
         if hookId in all.keys():
             tmp_hook = copy.deepcopy(all[hookId])
             tmp_hook['task']['payload']['image'] = nix_to_tag(repo, tmp_hook['task']['payload']['image'])  # noqa
-            if cmp(tmp_hook, hook) != 0:
+            if cmp(tmp_hook, hook):
                 update[hookId] = all[hookId]
         else:
             remove[hookId] = hook
