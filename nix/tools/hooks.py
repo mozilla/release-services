@@ -13,6 +13,10 @@ import taskcluster
 log = logging.getLogger('hooks')
 
 
+def cmp(a, b):
+    return ((a > b) - (a < b))
+
+
 def cmd(command):
 
     if isinstance(command, str):
