@@ -7,6 +7,7 @@ from __future__ import absolute_import
 from shipit_dashboard.models import BugAnalysis, BugResult
 from shipit_dashboard.serializers import serialize_analysis, serialize_bug
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import text
 from releng_common.auth import scopes_required
 from releng_common.db import db
 from flask import abort, request
@@ -114,7 +115,9 @@ def delete_bug(bugzilla_id):
     except:
         raise Exception('Missing bug {}'.format(bugzilla_id))
 
-    for analysis in bug.analysis.all():
-        analysis.bugs.remove(bug)
+    # Delete links, avoid StaleDataError
+    db.engine.execute(text('delete from analysis_bugs where bug_id = :bug_id'), bug_id=bug.id)
+
+    # Delete the bug
     db.session.delete(bug)
     db.session.commit()

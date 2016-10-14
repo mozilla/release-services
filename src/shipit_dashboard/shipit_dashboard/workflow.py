@@ -258,8 +258,11 @@ class WorkflowRemote(Workflow):
 
             elif len(sync.on_remote) > 0:
                 # Remove bugs from remote server
-                self.make_request('delete', '/bugs/{}'.format(bugzilla_id))
-                logger.info('Deleted bug #{} from analysis {}'.format(bugzilla_id, ', '.join(map(str, sync.on_remote))))
+                try:
+                    self.make_request('delete', '/bugs/{}'.format(bugzilla_id))
+                    logger.info('Deleted bug #{} from analysis {}'.format(bugzilla_id, ', '.join(map(str, sync.on_remote))))
+                except Exception as e:
+                    logger.warning('Failed to delete bug #{} : {}'.format(bugzilla_id, e))
 
 @click.command('run_workflow_local', short_help='Update all analysis & related bugs, using local database.')
 @with_appcontext
