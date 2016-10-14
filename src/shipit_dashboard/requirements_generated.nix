@@ -700,8 +700,8 @@ self: {
   "libmozdata" = python.mkDerivation {
     name = "libmozdata-0.1.12";
     src = pkgs.fetchurl {
-      url = "https://github.com/mozilla/libmozdata/archive/c9d293bf95621b7eb2c3059bc63a2095221227c5.tar.gz";
-      sha256 = "1yilf0rvwmrxiv78csqgrxn0i9i1bciws10bfyzxid1ijp3yw6qv";
+      url = "https://github.com/mozilla/libmozdata/archive/efa30aee8f5d25ad50190e16f9f4634f1d97d327.tar.gz";
+      sha256 = "1s6yxdhryhhqgzj4223j4l4y7hc5ad1xbi3qf643320pz6prlav2";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;

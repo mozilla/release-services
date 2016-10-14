@@ -40,6 +40,8 @@ type alias UpliftVersion = {
 
 type alias Patch = {
   source: String,
+  additions: Int,
+  deletions: Int,
   changes: Int,
   url: String
 }
@@ -369,8 +371,10 @@ decodeBug =
  
 decodePatch : Decoder Patch
 decodePatch =
-  Json.object3 Patch
+  Json.object5 Patch
     ("source" := Json.string)
+    ("changes_add" := Json.int)
+    ("changes_del" := Json.int)
     ("changes_size" := Json.int)
     ("url" := Json.string)
 
@@ -531,8 +535,12 @@ viewBugDetails bug =
 viewPatch: (String, Patch) -> Html Msg
 viewPatch (patchId, patch) =
   div [class "patch"] [
-    span [class "label label-info -pill", title "Changes size"] [text (toString patch.changes)],
-    a [href patch.url, target "_blank", title ("On " ++ patch.source)] [text ("Patch #" ++ patchId)]
+    --span [class "label label-info -pill", title "Changes size"] [text (toString patch.changes)],
+    a [href patch.url, target "_blank", title ("On " ++ patch.source)] [text ((if patch.changes > 0 then "Patch" else "Test") ++ " " ++ patchId)],
+    span [class "changes"] [text "("],
+    span [class "changes additions"] [text ("+" ++ (toString patch.additions))],
+    span [class "changes deletions"] [text ("-" ++ (toString patch.deletions))],
+    span [class "changes"] [text ")"]
   ]
 
 viewFlags: Bug -> Html Msg
