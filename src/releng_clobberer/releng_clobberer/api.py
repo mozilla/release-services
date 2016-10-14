@@ -4,8 +4,11 @@
 
 from __future__ import absolute_import
 
+import taskcluster
+
 from flask import g, current_app
 from releng_clobberer import models
+
 
 
 def get_buildbot():
@@ -49,9 +52,24 @@ def post_buildbot(body):
     return result
 
 
-def get_taskcluster():
-    caches_to_skip = current_app.config.get('TASKCLUSTER_CACHES_TO_SKIP', [])
-    return models.taskcluster_branches(caches_to_skip)
+def get_taskcluster(branch='staging'):
+    """
+    """
+
+    hooks = taskcluster.Hooks()
+    queue = taskcluster.Queue()
+
+    response = hooks.getHookStatus(
+        'project-releng',
+        'services-%s-releng_clobberer-taskcluster_cache' % branch
+    )
+    if response.get('lastFire', {}).get('result', '') != 'success':
+        return {}
+
+    return queue.getLatestArtifact(
+        response['lastFire']['taskId'],
+        'taskcluster_cache.json',
+    )
 
 
 def post_taskcluster():

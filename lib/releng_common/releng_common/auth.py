@@ -72,7 +72,7 @@ class TaskclusterUser(BaseUser):
 
     # XXX: this should not be here
 
-    def taskcluster_secrets(self):
+    def taskcluster_options(self):
         """
         Configure the TaskCluster Secrets client
         with optional target HAWK header
@@ -80,67 +80,28 @@ class TaskclusterUser(BaseUser):
         target_header = request.environ.get('HTTP_X_AUTHORIZATION_TARGET')
         if not target_header:
             raise Exception('Missing X-AUTHORIZATION-TARGET header')
-
-        options = {
+        return {
             'credentials' : {
                 'hawkHeader' : target_header
             }
         }
-        return taskcluster.Secrets(options)
 
     def get_secret(self, name):
         """
         Helper to read a Taskcluster secret
         """
-        secrets = self.taskcluster_secrets()
+        secrets = taskcluster.Secrets(self.taskcluster_options())
         secret = secrets.get(name)
         if not secret:
             raise Exception('Missing TC secret {}'.format(name))
         return secret['secret']
 
 
-def taskcluster_user_loader(auth_header):
-
-    # Get Endpoint configuration
-    if ':' in request.host:
-        host, port = request.host.split(':')
-    else:
-        host = request.host
-        port = request.environ.get('HTTP_X_FORWARDED_PORT')
-        if port is None:
-            request.scheme == 'https' and 443 or 80
-    method = request.method.lower()
-    resource = request.path
-
-    # Build taskcluster payload
-    payload = {
-        'resource' : resource,
-        'method' : method,
-        'host' : host,
-        'port' : int(port),
-        'authorization' : auth_header,
-    }
-
-    # Auth with taskcluster
-    auth = taskcluster.Auth()
-    try:
-        resp = auth.authenticateHawk(payload)
-        if not resp.get('status') == 'auth-success':
-            raise Exception('Taskcluster rejected the authentication')
-    except Exception as e:
-        logger.error('TC auth error: {}'.format(e))
-        logger.error('TC auth details: {}'.format(payload))
-        abort(401) # Unauthorized
-
-    return TaskclusterUser(resp)
-
-
 class Auth(object):
 
-    def __init__(self, anonymous_user=AnonymousUser):
+    def __init__(self, anonymous_user):
         self.login_manager = LoginManager()
         self.login_manager.anonymous_user = anonymous_user
-        self.login_manager.header_loader(user_loader)()
         self.app = None
 
     def init_app(self, app):
@@ -210,7 +171,47 @@ class Auth(object):
             return abort(401)
 
 
-auth = Auth(user_loader=taskcluster_user_loader)
+auth = Auth(
+    anonymous_user=AnonymousUser,
+)
+
+
+@auth.login_manager.header_loader
+def taskcluster_user_loader(auth_header):
+
+    # Get Endpoint configuration
+    if ':' in request.host:
+        host, port = request.host.split(':')
+    else:
+        host = request.host
+        port = request.environ.get('HTTP_X_FORWARDED_PORT')
+        if port is None:
+            request.scheme == 'https' and 443 or 80
+    method = request.method.lower()
+    resource = request.path
+
+    # Build taskcluster payload
+    payload = {
+        'resource' : resource,
+        'method' : method,
+        'host' : host,
+        'port' : int(port),
+        'authorization' : auth_header,
+    }
+
+    # Auth with taskcluster
+    auth = taskcluster.Auth()
+    try:
+        resp = auth.authenticateHawk(payload)
+        if not resp.get('status') == 'auth-success':
+            raise Exception('Taskcluster rejected the authentication')
+    except Exception as e:
+        logger.error('TC auth error: {}'.format(e))
+        logger.error('TC auth details: {}'.format(payload))
+        abort(401) # Unauthorized
+
+    return TaskclusterUser(resp)
+
 
 def init_app(app):
     auth.init_app(app)
