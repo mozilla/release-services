@@ -23,14 +23,14 @@ Repository structure
 - **src/**: folder with all the services
 - **src/<service>**: folder with a <service> sources
 - **lib/**: sources of libraries to help build services in **src/**
-- **nix/**: all nix related
+- **nix/**: all nix related tools
 - **Makefile**: helper utilities
 
 
 Quickstart
 ----------
 
-Read :ref:`pre-requirement`.
+Read :ref:`prerequirements`
 
 Get code:
 
@@ -69,7 +69,7 @@ Contents
     :maxdepth: 2
 
     service/clobberer 
-    pre-requirement
+    prerequirements
     taskcluster
     contributing
     defending
