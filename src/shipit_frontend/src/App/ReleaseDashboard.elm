@@ -20,6 +20,8 @@ import App.Utils exposing (onChange)
 
 -- Models
 
+type BugEditor = FlagsEditor | ApprovalEditor | NoEditor
+
 type alias Contributor = {
   email: String,
   name: String,
@@ -73,8 +75,9 @@ type alias Bug = {
   patches: Dict.Dict String Patch,
 
   -- Actions on bug
-  editing: Bool,
+  editor: BugEditor,
   edits : Dict.Dict String String,
+  attachments : Dict.Dict String (Dict.Dict String String), -- uplift approval
   update : (WebData BugUpdate)
 }
 
@@ -93,7 +96,10 @@ type alias Model = {
   current_analysis : WebData (Analysis),
 
   -- Backend base endpoint
-  backend_dashboard_url : String
+  backend_dashboard_url : String,
+
+  -- Can we publish any update to bugzilla 
+  bugzilla_available : Bool
 }
 
 type Msg
@@ -102,9 +108,10 @@ type Msg
    | FetchedBug (WebData Bug)
    | FetchAllAnalysis
    | FetchAnalysis Int
-   | ShowBugEditor Bug Bool
+   | ShowBugEditor Bug BugEditor
    | EditBug Bug String String
-   | SaveBugEdit Bug
+   | EditUplift Bug UpliftVersion String
+   | PublishEdits Bug
    | SavedBugEdit Bug (WebData BugUpdate)
    | ProcessWorkflow Hawk
    | UserMsg User.Msg
@@ -116,7 +123,8 @@ init backend_dashboard_url =
   ({
     all_analysis = NotAsked,
     current_analysis = NotAsked,
-    backend_dashboard_url = backend_dashboard_url
+    backend_dashboard_url = backend_dashboard_url,
+    bugzilla_available = False
   }, Cmd.none)
 
 -- Update
@@ -171,11 +179,17 @@ update msg model user =
         ( model, user, Cmd.map UserMsg userCmd)
 
     ShowBugEditor bug show ->
-      -- Mark a bug as being edited
       let
-        model' = updateBug model bug.id (\b -> { b | editing = show })
+        -- Mark a bug as being edited
+        model' = updateBug model bug.id (\b -> { b | editor = show, edits = Dict.empty, attachments = Dict.empty })
+
+        -- Check current bugzilla status
+        bz_auth = case user.bugzilla_check of
+          Success auth -> auth
+          _ -> False
+        model'' = { model' | bugzilla_available = bz_auth }
       in
-        (model', user, Cmd.none)
+        (model'', user, Cmd.none)
 
     EditBug bug key value ->
       -- Store a bug edit
@@ -185,9 +199,26 @@ update msg model user =
       in
         (model', user, Cmd.none)
 
-    SaveBugEdit bug ->
+    EditUplift bug version status ->
+      -- Store an uplift approval
+      -- Inverse data : we must send updates on attachments !
+      let
+        attachments = List.map (\a -> (a, Dict.singleton version.name status)) version.attachments 
+              |> Dict.fromList
+              |> Dict.foldl mergeAttachments bug.attachments
+        model' = updateBug model bug.id (\b -> { b | attachments = attachments })
+      in
+        (model', user, Cmd.none)
+
+    PublishEdits bug ->
       -- Send edits to backend
-      publishBugEdits model user bug
+      case bug.editor of
+        FlagsEditor ->
+          publishBugEdits model user bug
+        ApprovalEditor ->
+          publishApproval model user bug
+        NoEditor ->
+          (model, user, Cmd.none)
 
     FetchedBug bug ->
       -- Store updated bug - post edits
@@ -201,10 +232,21 @@ update msg model user =
     SavedBugEdit bug update ->
       -- Store bug update from bugzilla
       let
-        model' = updateBug model bug.id (\b -> { b | update = update, editing = False})
+        model' = updateBug model bug.id (\b -> { b | update = update, editor = NoEditor })
       in
         (model', user, Cmd.none)
-      
+
+mergeAttachments: String -> Dict.Dict String String
+  -> Dict.Dict String (Dict.Dict String String)
+  -> Dict.Dict String (Dict.Dict String String)
+mergeAttachments aId versions attachments =
+  -- Like Dict.union on 2 levels
+  let
+    out = case Dict.get aId attachments of
+      Just attachment -> Dict.union versions attachment 
+      Nothing -> versions
+  in
+    Dict.insert aId out attachments
 
 updateBug: Model -> Int -> (Bug -> Bug) -> Model
 updateBug model bugId callback =
@@ -297,7 +339,7 @@ publishBugEdits model user bug =
   case user.bugzilla of
     Just bugzilla ->
       let
-        comment = Dict.get "comment" bug.edits |> Maybe.withDefault "Modified from Shipit."
+        comment = Dict.get "comment" bug.edits |> Maybe.withDefault "Modified from Uplift Dashboard."
         edits = Dict.filter (\k v -> not (k == "comment")) bug.edits
 
         flags = List.map (\(k,v) -> ("cf_" ++ k, JsonEncode.string v)) (Dict.toList edits)
@@ -328,11 +370,57 @@ publishBugEdits model user bug =
       -- No credentials !
       (model, user, Cmd.none)
 
+publishApproval: Model -> User.Model -> Bug -> (Model, User.Model, Cmd Msg)
+publishApproval model user bug =
+  case user.bugzilla of
+    Just bugzilla ->
+      let
+        -- Make a request per updated attachment
+        comment = Dict.get "comment" bug.edits |> Maybe.withDefault "Modified from Uplift Dashboard."
+        commands = List.map (updateAttachment bug bugzilla comment) (Dict.toList bug.attachments)
+      in
+        (model, user, Cmd.batch commands)
+    Nothing ->
+      -- No credentials !
+      (model, user, Cmd.none)
+
+updateAttachment: Bug -> User.BugzillaCredentials -> String -> (String, Dict.Dict String String) -> Cmd Msg
+updateAttachment bug bugzilla comment (attachment_id, versions) =
+  -- Build payload for bugzilla
+  -- to update an atachment
+  let
+
+    flags = List.map encodeFlag (Dict.toList versions)
+
+    payload = JsonEncode.encode 0 (
+      JsonEncode.object [
+        ("comment", JsonEncode.string comment),
+        ("is_markdown", JsonEncode.bool True),
+        ("flags", JsonEncode.list flags)
+      ]
+    )
+    l = Debug.log "Bugzilla payload" payload
+
+    task = User.buildBugzillaTask bugzilla {
+      method = "PUT",
+      url = "/bug/attachment/" ++ attachment_id
+    } (Just payload)
+
+  in   
+    (Http.fromJson decodeBugUpdate task)
+      |> RemoteData.asCmd
+      |> Cmd.map (SavedBugEdit bug)
+
+encodeFlag: (String, String) -> JsonEncode.Value
+encodeFlag (name, status) =
+  -- Json encode an attachment flag
+  JsonEncode.object [
+    ("name", JsonEncode.string name),
+    ("status", JsonEncode.string status)
+  ]
+
 decodeBugUpdate : Decoder BugUpdate
 decodeBugUpdate =
---  Json.at ["bugs"] (Json.list (
---    Json.at ["id"] Json.int
---  ))
   Json.object2 BugUpdate
     ("error" := Json.bool)
     ("message" := Json.string)
@@ -365,7 +453,8 @@ decodeBug =
     |: (Json.maybe ("uplift" := decodeUpliftRequest))
     |: ("versions" := (Json.dict decodeVersion))
     |: ("patches" := (Json.dict decodePatch))
-    |: (Json.succeed False) -- not editing at first
+    |: (Json.succeed NoEditor) -- not editing at first
+    |: (Json.succeed Dict.empty) -- not editing at first
     |: (Json.succeed Dict.empty) -- not editing at first
     |: (Json.succeed NotAsked) -- no updates at first
  
@@ -421,19 +510,19 @@ view model =
       div [class "alert alert-danger"] [text ("Error: " ++ toString err)]
 
     Success analysis ->
-      viewAnalysis analysis
+      viewAnalysis model analysis
 
 
-viewAnalysis: Analysis -> Html Msg
-viewAnalysis analysis =
+viewAnalysis: Model -> Analysis -> Html Msg
+viewAnalysis model analysis =
   div []
     [ h1 [] [text ("Analysis: " ++ analysis.name)]
-    , div [class "bugs"] (List.map viewBug analysis.bugs)
+    , div [class "bugs"] (List.map (viewBug model) analysis.bugs)
     ]
 
 
-viewBug: Bug -> Html Msg
-viewBug bug =
+viewBug: Model -> Bug -> Html Msg
+viewBug model bug =
   div [class "bug"] [
     h4 [] [text bug.summary],
     p [class "summary"] (
@@ -452,10 +541,10 @@ viewBug bug =
         viewUpliftRequest bug.uplift_request
       ],
       div [class "col-xs-4"] [
-        if bug.editing then
-          viewEditor bug
-        else
-          viewBugDetails bug
+        case bug.editor of
+          FlagsEditor -> viewFlagsEditor model bug
+          ApprovalEditor -> viewApprovalEditor model bug
+          NoEditor -> viewBugDetails bug
       ]
     ]
   ]
@@ -526,9 +615,11 @@ viewBugDetails bug =
     viewFlags bug,
   
     -- Start editing
+    h5 [] [text "Actions"],
     p [class "actions"] [
-      button [class "btn btn-primary", onClick (ShowBugEditor bug True)] [text "Edit this bug"],
-      a [class "btn btn-success", href bug.url, target "_blank"] [text "View on Bugzilla"]
+      button [class "btn btn-sm btn-primary", onClick (ShowBugEditor bug ApprovalEditor)] [text "Approve uplift"],
+      button [class "btn btn-sm btn-secondary", onClick (ShowBugEditor bug FlagsEditor)] [text "Edit flags"],
+      a [class "btn btn-sm btn-success", href bug.url, target "_blank"] [text "View on Bugzilla"]
     ]
   ]
 
@@ -610,10 +701,10 @@ editTrackingFlag bug (key, flag_value) =
       ]
     ]
 
-viewEditor: Bug -> Html Msg
-viewEditor bug =
-  -- Show the form
-  Html.form [class "editor", onSubmit (SaveBugEdit bug)] [
+viewFlagsEditor: Model -> Bug -> Html Msg
+viewFlagsEditor model bug =
+  -- Show the form to edit flags
+  Html.form [class "editor", onSubmit (PublishEdits bug)] [
     div [class "col-xs-12 col-sm-6"]
       ([h4 [] [text "Status"] ] ++ (List.map (\x -> editStatusFlag bug x) (Dict.toList bug.flags_status))),
     div [class "col-xs-12 col-sm-6"]
@@ -621,8 +712,38 @@ viewEditor bug =
     div [class "form-group"] [
       textarea [class "form-control", placeholder "Your comment", onInput (EditBug bug "comment")] []
     ],
+    p [class "text-warning", hidden model.bugzilla_available] [text "You need to setup your Bugzilla account on the uplift dashboard before using this action."],
     p [class "actions"] [
-      button [class "btn btn-success"] [text "Update bug"],
-      span [class "btn btn-secondary", onClick (ShowBugEditor bug False)] [text "Cancel"]
+      button [class "btn btn-success", disabled (not model.bugzilla_available)] [text "Update bug"],
+      span [class "btn btn-secondary", onClick (ShowBugEditor bug NoEditor)] [text "Cancel"]
+    ]
+  ]
+
+editApproval: Bug -> (String, UpliftVersion) -> Html Msg
+editApproval bug (name, version) =
+  let
+    possible_values = ["+", "-", "?"]
+  in
+    div [class "form-group row"] [
+      label [class "col-sm-6 col-form-label"] [text version.name],
+      div [class "col-sm-6"] [
+        select [class "form-control form-control-sm", onChange (EditUplift bug version)]
+          (List.map (\x -> option [ selected (x == version.status)] [text x]) possible_values)
+      ]
+    ]
+
+viewApprovalEditor: Model -> Bug -> Html Msg
+viewApprovalEditor model bug =
+  -- Show the form to approve the uplift request
+  Html.form [class "editor", onSubmit (PublishEdits bug)] [
+    div [class "col-xs-12"]
+      ([h4 [] [text "Approve uplift"] ] ++ (List.map (\x -> editApproval bug x) (Dict.toList bug.uplift_versions))),
+    div [class "form-group"] [
+      textarea [class "form-control", placeholder "Your comment", onInput (EditBug bug "comment")] []
+    ],
+    p [class "text-warning", hidden model.bugzilla_available] [text "You need to setup your Bugzilla account on the uplift dashboard before using this action."],
+    p [class "actions"] [
+      button [class "btn btn-success", disabled (not model.bugzilla_available)] [text "Approve uplift"],
+      span [class "btn btn-secondary", onClick (ShowBugEditor bug NoEditor)] [text "Cancel"]
     ]
   ]
