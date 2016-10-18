@@ -15,3 +15,17 @@ better overview of what is running, and how is it running, will be provided for
 management team to do better decidions going forward.
 
 
+Why OpenAPI (Swagger) is used to declare JSON api?
+--------------------------------------------------
+
+TODO
+
+Why Elm is used instead of any other Javascript frameworks? 
+------------------------------------------------------------
+
+TODO
+
+Why Nix is used as a building tool?
+-----------------------------------
+
+TODO

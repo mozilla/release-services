@@ -1,7 +1,7 @@
 Contributing
 ============
 
-Make sure you read the :ref:`pre-requirement` document.
+Make sure you read the :ref:`prerequirements` document.
 
 To get code you need to clone `mozilla-releng/services`_ repository.
 
@@ -18,9 +18,11 @@ In above command we also listed all remote branches. To describe what each
 branch is for:
 
 - ``master``: The main development branch.
+
 - ``staging``: The staging (eg. before production) branch, where all services
   are automatically deployed and are accessible under
   <service>.staging.mozilla-releng.net
+
 - ``production``: The production branch, where all services are also
   automatically deployed and are accessible under <service>.mozilla-releng.net.
 

@@ -1,6 +1,6 @@
-.. _pre-requirement:
+.. _prerequirements:
 
-Pre-requirement
+Prerequirements
 ===============
 
 To start working with ``mozilla-releng/services`` there is only one tools that
