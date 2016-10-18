@@ -68,8 +68,11 @@ Contents
 .. toctree::
     :maxdepth: 2
 
-    service/clobberer 
     prerequirements
-    taskcluster
+    developing
+    continuous-integration
+    deploying
     contributing
+    services_releng
+    services_shipit
     defending
