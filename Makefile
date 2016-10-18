@@ -41,7 +41,8 @@ APP_STAGING_S3_shipit_frontend=shipit-staging-frontend
 APP_STAGING_ENV_releng_frontend=\
 	'clobberer-url="https:\/\/clobberer\.staging\.mozilla-releng\.net\"'
 APP_STAGING_ENV_shipit_frontend=\
-	'dashboard-url="https:\/\/dashboard\.shipit\.staging\.mozilla-releng\.net\" bugzilla-url="https:\/\/bugzilla\.mozilla\.org"'
+	'dashboard-url="https:\/\/dashboard\.shipit\.staging\.mozilla-releng\.net\"' \
+	'bugzilla-url="https:\/\/bugzilla\.mozilla\.org"'
 
 APP_PRODUCTION_HEROKU_releng_clobberer=releng-production-clobberer
 APP_PRODUCTION_HEROKU_shipit_dashboard=shipit-production-dashboard
