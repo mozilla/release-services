@@ -282,7 +282,7 @@ deploy-cache: require-AWS require-CACHE_BUCKET build-tool-awscli build-cache
 		s3://$(CACHE_BUCKET)
 
 
-taskcluster: nix
+taskcluster.yml: nix
 	@nix-build nix/taskcluster.nix -o result-taskcluster --fallback
 	@cp -f ./result-taskcluster .taskcluster.yml
 
