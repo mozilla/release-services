@@ -41,7 +41,7 @@ def serialize_bug(bug):
         author = analysis['uplift_author']
         comment = analysis['uplift_comment']
         if 'html' in comment:
-            comment_html = comment['html']
+            comment_html = comment['html'].replace('&', '&amp;')
         else:
             comment_html = comment.get('text', 'No comment.')
         uplift = {

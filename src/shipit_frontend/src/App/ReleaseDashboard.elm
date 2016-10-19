@@ -251,8 +251,14 @@ mergeAttachments aId versions attachments =
     out = case Dict.get aId attachments of
       Just attachment -> Dict.union versions attachment 
       Nothing -> versions
+
+    -- Remove useless versions
+    out' = Dict.filter (\k v -> (not (v == "?"))) out 
   in
-    Dict.insert aId out attachments
+    if out' == Dict.empty then
+      Dict.remove aId attachments
+    else
+      Dict.insert aId out' attachments
 
 updateBug: Model -> Int -> (Bug -> Bug) -> Model
 updateBug model bugId callback =
@@ -612,10 +618,7 @@ viewBugDetails bug =
           ]
 
         else
-          div [class "alert alert-success"] [
-            h4 [] [text "Bug updated !"],
-            p [] [text update.message]
-          ]
+          div [class "alert alert-success"] [text "Bug updated !"]
       Failure err ->
         div [class "alert alert-danger"] [
           h4 [] [text "Error"],
@@ -763,11 +766,12 @@ viewApprovalEditor model bug =
         textarea [class "form-control", placeholder "Your comment", onInput (EditBug bug "comment")] []
       ],
       p [class "text-warning", hidden model.bugzilla_available] [text "You need to setup your Bugzilla account on the uplift dashboard before using this action."],
+      p [class "text-warning", hidden (not (Dict.empty == bug.attachments))] [text "You need to pick at least one version."],
       p [class "actions"] [
         if bug.editor == ApprovalEditor then
-          button [class "btn btn-success", disabled (not model.bugzilla_available)] [text "Approve uplift"]
+          button [class "btn btn-success", disabled (not model.bugzilla_available || Dict.empty == bug.attachments)] [text "Approve uplift"]
         else
-          button [class "btn btn-danger", disabled (not model.bugzilla_available)] [text "Reject uplift"],
+          button [class "btn btn-danger", disabled (not model.bugzilla_available || Dict.empty == bug.attachments)] [text "Reject uplift"],
         span [class "btn btn-secondary", onClick (ShowBugEditor bug NoEditor)] [text "Cancel"]
       ]
     ]
