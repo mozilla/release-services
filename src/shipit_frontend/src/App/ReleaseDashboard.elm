@@ -523,7 +523,7 @@ view model =
 viewAnalysis: Model -> Analysis -> Html Msg
 viewAnalysis model analysis =
   div []
-    [ h1 [] [text ("Analysis: " ++ analysis.name)]
+    [ h1 [] [text ("Listing all " ++ analysis.name ++ " uplifts for review:")]
     , div [class "bugs"] (List.map (viewBug model) analysis.bugs)
     ]
 
