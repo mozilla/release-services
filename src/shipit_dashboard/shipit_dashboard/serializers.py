@@ -41,9 +41,7 @@ def serialize_bug(bug):
         author = analysis['uplift_author']
         comment = analysis['uplift_comment']
         if 'html' in comment:
-            # Weird bug in elm-html-parser
-            # does not support direct &
-            comment_html = comment['html'].replace('&', '&amp;')
+            comment_html = comment['html']
         else:
             comment_html = comment.get('text', 'No comment.')
         uplift = {
