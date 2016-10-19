@@ -2,7 +2,7 @@ module App.ReleaseDashboard exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput, onSubmit)
+import Html.Events exposing (onClick, onInput, onSubmit, onCheck)
 import HtmlParser exposing (parse)
 import HtmlParser.Util exposing (toVirtualDom)
 import String
@@ -20,7 +20,7 @@ import App.Utils exposing (onChange)
 
 -- Models
 
-type BugEditor = FlagsEditor | ApprovalEditor | NoEditor
+type BugEditor = FlagsEditor | ApprovalEditor | RejectEditor | NoEditor
 
 type alias Contributor = {
   email: String,
@@ -110,7 +110,7 @@ type Msg
    | FetchAnalysis Int
    | ShowBugEditor Bug BugEditor
    | EditBug Bug String String
-   | EditUplift Bug UpliftVersion String
+   | EditUplift Bug UpliftVersion Bool
    | PublishEdits Bug
    | SavedBugEdit Bug (WebData BugUpdate)
    | ProcessWorkflow Hawk
@@ -199,10 +199,14 @@ update msg model user =
       in
         (model', user, Cmd.none)
 
-    EditUplift bug version status ->
+    EditUplift bug version checked ->
       -- Store an uplift approval
       -- Inverse data : we must send updates on attachments !
       let
+        status = case bug.editor of
+          ApprovalEditor -> if checked then "+" else version.status
+          RejectEditor -> if checked then "-" else version.status
+          _ -> "?"
         attachments = List.map (\a -> (a, Dict.singleton version.name status)) version.attachments 
               |> Dict.fromList
               |> Dict.foldl mergeAttachments bug.attachments
@@ -216,6 +220,8 @@ update msg model user =
         FlagsEditor ->
           publishBugEdits model user bug
         ApprovalEditor ->
+          publishApproval model user bug
+        RejectEditor ->
           publishApproval model user bug
         NoEditor ->
           (model, user, Cmd.none)
@@ -551,6 +557,7 @@ viewBug model bug =
         case bug.editor of
           FlagsEditor -> viewFlagsEditor model bug
           ApprovalEditor -> viewApprovalEditor model bug
+          RejectEditor -> viewApprovalEditor model bug
           NoEditor -> viewBugDetails bug
       ]
     ]
@@ -622,11 +629,11 @@ viewBugDetails bug =
     viewFlags bug,
   
     -- Start editing
-    h5 [] [text "Actions"],
-    p [class "actions"] [
-      button [class "btn btn-sm btn-primary", onClick (ShowBugEditor bug ApprovalEditor)] [text "Approve uplift"],
-      button [class "btn btn-sm btn-secondary", onClick (ShowBugEditor bug FlagsEditor)] [text "Edit flags"],
-      a [class "btn btn-sm btn-success", href bug.url, target "_blank"] [text "View on Bugzilla"]
+    div [class "actions list-group"] [
+      button [class "list-group-item list-group-item-action list-group-item-success", onClick (ShowBugEditor bug ApprovalEditor)] [text "Approve uplift"],
+      button [class "list-group-item list-group-item-action list-group-item-danger", onClick (ShowBugEditor bug RejectEditor)] [text "Reject uplift"],
+      button [class "list-group-item list-group-item-action", onClick (ShowBugEditor bug FlagsEditor)] [text "Edit flags"],
+      a [class "list-group-item list-group-item-action", href bug.url, target "_blank"] [text "View on Bugzilla"]
     ]
   ]
 
@@ -647,20 +654,22 @@ viewFlags bug =
     flags_status = Dict.filter (\k v -> not (v == "---")) bug.flags_status
     flags_tracking = Dict.filter (\k v -> not (v == "---")) bug.flags_tracking
   in 
-    div [class "flags"] [
-      h5 [] [text "Status flags"],
-      if Dict.isEmpty flags_status then
-        p [class "text-warning"] [text "No status flags set."]
-      else
-        ul [] (List.map viewStatusFlag (Dict.toList flags_status)),
-
-      h5 [] [text "Tracking flags"],
-      if Dict.isEmpty flags_tracking then
-        p [class "text-warning"] [text "No tracking flags set."]
-      else
-        ul [] (List.map viewTrackingFlag (Dict.toList flags_tracking))
+    div [class "row flags"] [
+      div [class "col-xs-12 col-sm-6"] [
+        h5 [] [text "Status flags"],
+        if Dict.isEmpty flags_status then
+          p [class "text-warning"] [text "No status flags set."]
+        else
+          ul [] (List.map viewStatusFlag (Dict.toList flags_status))
+      ],
+      div [class "col-xs-12 col-sm-6"] [
+        h5 [] [text "Tracking flags"],
+        if Dict.isEmpty flags_tracking then
+          p [class "text-warning"] [text "No tracking flags set."]
+        else
+          ul [] (List.map viewTrackingFlag (Dict.toList flags_tracking))
+      ]
     ]
-
 viewStatusFlag (key, value) =
   li [] [
     strong [] [text key],
@@ -728,29 +737,37 @@ viewFlagsEditor model bug =
 
 editApproval: Bug -> (String, UpliftVersion) -> Html Msg
 editApproval bug (name, version) =
-  let
-    possible_values = ["+", "-", "?"]
-  in
-    div [class "form-group row"] [
-      label [class "col-sm-6 col-form-label"] [text version.name],
-      div [class "col-sm-6"] [
-        select [class "form-control form-control-sm", onChange (EditUplift bug version)]
-          (List.map (\x -> option [ selected (x == version.status)] [text x]) possible_values)
+  div [class "row"] [
+    div [class "col-xs-12"] [
+      label [class "checkbox"] [
+        input [type' "checkbox", onCheck (EditUplift bug version)] [],
+        text version.name
       ]
     ]
+  ]
 
 viewApprovalEditor: Model -> Bug -> Html Msg
 viewApprovalEditor model bug =
   -- Show the form to approve the uplift request
-  Html.form [class "editor", onSubmit (PublishEdits bug)] [
-    div [class "col-xs-12"]
-      ([h4 [] [text "Approve uplift"] ] ++ (List.map (\x -> editApproval bug x) (Dict.toList bug.uplift_versions))),
-    div [class "form-group"] [
-      textarea [class "form-control", placeholder "Your comment", onInput (EditBug bug "comment")] []
-    ],
-    p [class "text-warning", hidden model.bugzilla_available] [text "You need to setup your Bugzilla account on the uplift dashboard before using this action."],
-    p [class "actions"] [
-      button [class "btn btn-success", disabled (not model.bugzilla_available)] [text "Approve uplift"],
-      span [class "btn btn-secondary", onClick (ShowBugEditor bug NoEditor)] [text "Cancel"]
+  let
+    -- Only show non processed versions
+    versions = Dict.filter (\k v -> v.status == "?") bug.uplift_versions
+  in
+    Html.form [class "editor", onSubmit (PublishEdits bug)] [
+      div [class "col-xs-12"] (
+        [
+          h4 [] [text (if bug.editor == ApprovalEditor then "Approve uplift" else "Reject uplift")]
+        ] ++ (List.map (\x -> editApproval bug x) (Dict.toList versions))
+      ),
+      div [class "form-group"] [
+        textarea [class "form-control", placeholder "Your comment", onInput (EditBug bug "comment")] []
+      ],
+      p [class "text-warning", hidden model.bugzilla_available] [text "You need to setup your Bugzilla account on the uplift dashboard before using this action."],
+      p [class "actions"] [
+        if bug.editor == ApprovalEditor then
+          button [class "btn btn-success", disabled (not model.bugzilla_available)] [text "Approve uplift"]
+        else
+          button [class "btn btn-danger", disabled (not model.bugzilla_available)] [text "Reject uplift"],
+        span [class "btn btn-secondary", onClick (ShowBugEditor bug NoEditor)] [text "Cancel"]
+      ]
     ]
-  ]
