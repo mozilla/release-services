@@ -395,7 +395,6 @@ updateAttachment bug bugzilla comment (attachment_id, versions) =
     payload = JsonEncode.encode 0 (
       JsonEncode.object [
         ("comment", JsonEncode.string comment),
-        ("is_markdown", JsonEncode.bool True),
         ("flags", JsonEncode.list flags)
       ]
     )
@@ -421,9 +420,17 @@ encodeFlag (name, status) =
 
 decodeBugUpdate : Decoder BugUpdate
 decodeBugUpdate =
-  Json.object2 BugUpdate
-    ("error" := Json.bool)
-    ("message" := Json.string)
+  Json.oneOf [
+    -- Error decoder
+    Json.object2 BugUpdate
+      ("error" := Json.bool)
+      ("message" := Json.string),
+
+    -- Success decoder
+    Json.object2 BugUpdate
+      (Json.succeed False) -- no error
+      (Json.succeed "")
+  ]
 
 decodeAllAnalysis : Decoder (List Analysis)
 decodeAllAnalysis =
