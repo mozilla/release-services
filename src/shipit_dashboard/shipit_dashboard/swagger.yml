@@ -42,6 +42,20 @@ paths:
 
 
   /bugs/{bugzilla_id}:
+    put:
+      operationId: "shipit_dashboard.api.update_bug"
+      parameters:
+      - name: bugzilla_id
+        in: path
+        description: Bugzilla ID of the Bug to delete
+        required: true
+        type: integer
+      responses:
+        200:
+          description: A specific Bug
+          schema:
+            $ref: '#/definitions/Bug'
+
     delete:
       operationId: "shipit_dashboard.api.delete_bug"
       parameters:

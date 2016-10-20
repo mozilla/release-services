@@ -48,18 +48,49 @@ def get_analysis(analysis_id):
     return serialize_analysis(analysis)
 
 @scopes_required([SCOPES_USER])
-def update_bug(bug_id):
+def update_bug(bugzilla_id):
     """
-    Update a bug after modified on Bugzilla
-    NOT USED ATM
+    Update a bug after modifications on Bugzilla
     """
     # Load bug
     try:
-        bug = BugResult.query.filter_by(id=bug_id).one()
+        bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
     except:
-        raise Exception('Missing bug {}'.format(bug_id))
+        raise Exception('Missing bug {}'.format(bugzilla_id))
 
-    # TODO: update bug in database to mark it as updated
+    # Browse changes
+    payload = bug.payload_data
+    for update in request.json:
+
+        if update['target'] == 'bug':
+            # Update bug flags
+            if update['bugzilla_id'] != bug.bugzilla_id:
+                raise Exception('Invalid bugzilla_id in changes list') # should never happen
+            for flag_name, actions in update['changes'].items():
+                payload['bug'][flag_name] = actions.get('added')
+
+        elif update['target'] == 'attachment':
+            # Build flags map
+            source = update['changes']['flagtypes.name']
+            removed, added = source['removed'].split(', '), source['added'].split(', ')
+            flags_map = dict(zip(removed, added))
+
+            # Update attachment flag status
+            for a in payload['bug']['attachments']:
+                if a['id'] != update['bugzilla_id']:
+                    continue
+                for flag in a['flags']:
+                    name = flag['name'] + flag['status']
+                    if name in flags_map:
+                        flag['status'] = flags_map[name][len(flag['name']):]
+
+        else:
+            raise Exception('Invalid update target {}'.format(update['target']))
+
+    # Save changes
+    bug.payload = pickle.dumps(payload, 2)
+    db.session.add(bug)
+    db.session.commit()
 
     # Send back the bug
     return serialize_bug(bug)

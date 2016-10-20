@@ -22,6 +22,20 @@ import App.Utils exposing (onChange)
 
 type BugEditor = FlagsEditor | ApprovalEditor | RejectEditor | NoEditor
 
+
+type alias Changes = {
+  bugzilla_id : Int,
+  changes : Dict.Dict String {
+    removed: String,
+    added: String
+  }
+}
+
+type BugUpdate = 
+  UpdateFailed String
+  | UpdatedBug (List Changes)
+  | UpdatedAttachment (List Changes)
+
 type alias Contributor = {
   email: String,
   name: String,
@@ -46,11 +60,6 @@ type alias Patch = {
   deletions: Int,
   changes: Int,
   url: String
-}
-
-type alias BugUpdate = {
-  error : Bool,
-  message : String
 }
 
 type alias Bug = {
@@ -166,6 +175,8 @@ update msg model user =
             processAllAnalysis workflow
           User.Analysis ->
             processAnalysis workflow
+          User.BugUpdate ->
+            processBugUpdate workflow
           _ ->
             Cmd.none
       in
@@ -236,11 +247,17 @@ update msg model user =
         (model', user, Cmd.none)
 
     SavedBugEdit bug update ->
-      -- Store bug update from bugzilla
       let
+        -- Store bug update from bugzilla
         model' = updateBug model bug.id (\b -> { b | update = update, editor = NoEditor })
       in
-        (model', user, Cmd.none)
+        -- Forward update to backend
+        case update of
+          Success up ->
+            sendBugUpdate model' user bug up
+          _ ->
+            (model', user, Cmd.none)
+            
 
 mergeAttachments: String -> Dict.Dict String String
   -> Dict.Dict String (Dict.Dict String String)
@@ -410,7 +427,6 @@ updateAttachment bug bugzilla comment (attachment_id, versions) =
         ("flags", JsonEncode.list flags)
       ]
     )
-    l = Debug.log "Bugzilla payload" payload
 
     task = User.buildBugzillaTask bugzilla {
       method = "PUT",
@@ -421,6 +437,64 @@ updateAttachment bug bugzilla comment (attachment_id, versions) =
     (Http.fromJson decodeBugUpdate task)
       |> RemoteData.asCmd
       |> Cmd.map (SavedBugEdit bug)
+
+encodeChanges : String -> List Changes -> String
+encodeChanges target changes =
+  -- Encode bug changes
+  JsonEncode.encode 0 (
+    JsonEncode.list 
+      (List.map (\u -> JsonEncode.object [
+        ("bugzilla_id", JsonEncode.int u.bugzilla_id),
+        ("target", JsonEncode.string target),
+        ("changes", JsonEncode.object (
+          -- There is no JsonEncode.dict :/
+          Dict.toList u.changes
+          |> List.map (\(k,v) -> (k, JsonEncode.object [
+            ("added", JsonEncode.string v.added),
+            ("removed", JsonEncode.string v.removed)
+          ])) 
+        ))
+      ]) changes)
+  )
+
+sendBugUpdate : Model -> User.Model -> Bug -> BugUpdate -> (Model, User.Model, Cmd Msg)
+sendBugUpdate model user bug update =
+  -- Send a bug update to the backend
+  -- so it can update the bug payload
+  let 
+    payload = case update of
+      UpdatedBug changes -> encodeChanges "bug" changes
+      UpdatedAttachment changes -> encodeChanges "attachment" changes
+      _ -> ""
+
+    params = {
+      backend = {
+        method = "PUT",
+        url = model.backend_dashboard_url ++ "/bugs/" ++ (toString bug.bugzilla_id)
+      },
+      target = Nothing,
+      body = Just payload,
+      requestType = User.BugUpdate
+    }
+    (user', workflow, userCmd) = User.update (User.InitHawkRequest params) user
+  in
+    (
+      model,
+      user',
+      Cmd.map UserMsg userCmd
+    )
+
+processBugUpdate : Hawk -> Cmd Msg
+processBugUpdate workflow =
+  -- Decode and save a single analysis
+  case workflow.task of
+    Just task ->
+      (Http.fromJson decodeBug task)
+      |> RemoteData.asCmd
+      |> Cmd.map FetchedBug
+
+    Nothing ->
+        Cmd.none
 
 encodeFlag: (String, String) -> JsonEncode.Value
 encodeFlag (name, status) =
@@ -433,16 +507,29 @@ encodeFlag (name, status) =
 decodeBugUpdate : Decoder BugUpdate
 decodeBugUpdate =
   Json.oneOf [
-    -- Error decoder
-    Json.object2 BugUpdate
-      ("error" := Json.bool)
-      ("message" := Json.string),
+    -- Success decoder after bug update
+    Json.object1 UpdatedBug
+       ("bugs" := Json.list decodeUpdatedBug),
 
-    -- Success decoder
-    Json.object2 BugUpdate
-      (Json.succeed False) -- no error
-      (Json.succeed "")
+    -- Success decoder after attachment update
+    Json.object1 UpdatedAttachment
+       ("attachments" := Json.list decodeUpdatedBug),
+
+    -- Error decoder
+    Json.object1 UpdateFailed
+      ("message" := Json.string)
   ]
+
+decodeUpdatedBug: Decoder Changes
+decodeUpdatedBug =
+  Json.object2 Changes
+    ("id" := Json.int)
+    ("changes" := Json.dict (
+      Json.object2 
+        (\r a -> {removed = r, added = a})
+        ("removed" := Json.string)
+        ("added" := Json.string )
+    ))
 
 decodeAllAnalysis : Decoder (List Analysis)
 decodeAllAnalysis =
@@ -611,14 +698,16 @@ viewBugDetails bug =
 
     case bug.update of
       Success update ->
-        if update.error then
-          div [class "alert alert-danger"] [
-            h4 [] [text "Error during the update"],
-            p [] [text update.message]
-          ]
+        case update of
+          UpdateFailed error ->
+            div [class "alert alert-danger"] [
+              h4 [] [text "Error during the update"],
+              p [] [text error]
+            ]
 
-        else
-          div [class "alert alert-success"] [text "Bug updated !"]
+          _ ->
+            div [class "alert alert-success"] [text "Bug updated !"]
+
       Failure err ->
         div [class "alert alert-danger"] [
           h4 [] [text "Error"],
@@ -673,6 +762,7 @@ viewFlags bug =
           ul [] (List.map viewTrackingFlag (Dict.toList flags_tracking))
       ]
     ]
+
 viewStatusFlag (key, value) =
   li [] [
     strong [] [text key],
