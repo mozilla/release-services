@@ -392,8 +392,11 @@ publishBugEdits model user bug =
         cmd = (Http.fromJson decodeBugUpdate task)
           |> RemoteData.asCmd
           |> Cmd.map (SavedBugEdit bug)
+
+        -- Mark bug as being updatedo
+        model' = updateBug model bug.id (\b -> { b | update = Loading })
       in
-        (model, user, cmd)
+        (model', user, cmd)
 
     Nothing ->
       -- No credentials !
@@ -407,8 +410,11 @@ publishApproval model user bug =
         -- Make a request per updated attachment
         comment = Dict.get "comment" bug.edits |> Maybe.withDefault "Modified from Uplift Dashboard."
         commands = List.map (updateAttachment bug bugzilla comment) (Dict.toList bug.attachments)
+
+        -- Mark bug as being updatedo
+        model' = updateBug model bug.id (\b -> { b | update = Loading })
       in
-        (model, user, Cmd.batch commands)
+        (model', user, Cmd.batch commands)
     Nothing ->
       -- No credentials !
       (model, user, Cmd.none)
@@ -694,40 +700,43 @@ viewUpliftRequest maybe =
 
 viewBugDetails: Bug -> Html Msg
 viewBugDetails bug =
-  div [class "details"] [
+  let
+    uplift_hidden = (Dict.filter (\k v -> v.status == "?") bug.uplift_versions) == Dict.empty
+  in
+    div [class "details"] [
 
-    case bug.update of
-      Success update ->
-        case update of
-          UpdateFailed error ->
-            div [class "alert alert-danger"] [
-              h4 [] [text "Error during the update"],
-              p [] [text error]
-            ]
+      case bug.update of
+        Success update ->
+          case update of
+            UpdateFailed error ->
+              div [class "alert alert-danger"] [
+                h4 [] [text "Error during the update"],
+                p [] [text error]
+              ]
 
-          _ ->
-            div [class "alert alert-success"] [text "Bug updated !"]
+            _ ->
+              div [class "alert alert-success"] [text "Bug updated !"]
 
-      Failure err ->
-        div [class "alert alert-danger"] [
-          h4 [] [text "Error"],
-          p [] [text ("An error occurred during the update: " ++ (toString err))]
-        ]
-      _ ->
-        span [] [],
-    h5 [] [text "Patches"],
-    div [class "patches"] (List.map viewPatch (Dict.toList bug.patches)),
+        Failure err ->
+          div [class "alert alert-danger"] [
+            h4 [] [text "Error"],
+            p [] [text ("An error occurred during the update: " ++ (toString err))]
+          ]
+        _ ->
+          span [] [],
+      h5 [] [text "Patches"],
+      div [class "patches"] (List.map viewPatch (Dict.toList bug.patches)),
 
-    viewFlags bug,
-  
-    -- Start editing
-    div [class "actions list-group"] [
-      button [class "list-group-item list-group-item-action list-group-item-success", onClick (ShowBugEditor bug ApprovalEditor)] [text "Approve uplift"],
-      button [class "list-group-item list-group-item-action list-group-item-danger", onClick (ShowBugEditor bug RejectEditor)] [text "Reject uplift"],
-      button [class "list-group-item list-group-item-action", onClick (ShowBugEditor bug FlagsEditor)] [text "Edit flags"],
-      a [class "list-group-item list-group-item-action", href bug.url, target "_blank"] [text "View on Bugzilla"]
+      viewFlags bug,
+    
+      -- Start editing
+      div [class "actions list-group"] [
+        button [hidden uplift_hidden, class "list-group-item list-group-item-action list-group-item-success", onClick (ShowBugEditor bug ApprovalEditor)] [text "Approve uplift"],
+        button [hidden uplift_hidden, class "list-group-item list-group-item-action list-group-item-danger", onClick (ShowBugEditor bug RejectEditor)] [text "Reject uplift"],
+        button [class "list-group-item list-group-item-action", onClick (ShowBugEditor bug FlagsEditor)] [text "Edit flags"],
+        a [class "list-group-item list-group-item-action", href bug.url, target "_blank"] [text "View on Bugzilla"]
+      ]
     ]
-  ]
 
 viewPatch: (String, Patch) -> Html Msg
 viewPatch (patchId, patch) =
@@ -823,7 +832,7 @@ viewFlagsEditor model bug =
     ],
     p [class "text-warning", hidden model.bugzilla_available] [text "You need to setup your Bugzilla account on the uplift dashboard before using this action."],
     p [class "actions"] [
-      button [class "btn btn-success", disabled (not model.bugzilla_available)] [text "Update bug"],
+      button [class "btn btn-success", disabled (not model.bugzilla_available || bug.update == Loading)] [text (if bug.update == Loading then "Loading..." else "Update bug")],
       span [class "btn btn-secondary", onClick (ShowBugEditor bug NoEditor)] [text "Cancel"]
     ]
   ]
@@ -845,6 +854,8 @@ viewApprovalEditor model bug =
   let
     -- Only show non processed versions
     versions = Dict.filter (\k v -> v.status == "?") bug.uplift_versions
+
+    btn_disabled = not model.bugzilla_available || Dict.empty == bug.attachments || bug.update == Loading
   in
     Html.form [class "editor", onSubmit (PublishEdits bug)] [
       div [class "col-xs-12"] (
@@ -859,9 +870,9 @@ viewApprovalEditor model bug =
       p [class "text-warning", hidden (not (Dict.empty == bug.attachments))] [text "You need to pick at least one version."],
       p [class "actions"] [
         if bug.editor == ApprovalEditor then
-          button [class "btn btn-success", disabled (not model.bugzilla_available || Dict.empty == bug.attachments)] [text "Approve uplift"]
+          button [class "btn btn-success", disabled btn_disabled] [text (if bug.update == Loading then "Loading..." else "Approve uplift")]
         else
-          button [class "btn btn-danger", disabled (not model.bugzilla_available || Dict.empty == bug.attachments)] [text "Reject uplift"],
+          button [class "btn btn-danger", disabled btn_disabled] [text (if bug.update == Loading then "Loading..." else "Reject uplift")],
         span [class "btn btn-secondary", onClick (ShowBugEditor bug NoEditor)] [text "Cancel"]
       ]
     ]

@@ -71,7 +71,7 @@ def update_bug(bugzilla_id):
 
         elif update['target'] == 'attachment':
             # Build flags map
-            source = update['changes']['flagtypes.name']
+            source = update['changes'].get('flagtypes.name', {})
             removed, added = source['removed'].split(', '), source['added'].split(', ')
             flags_map = dict(zip(removed, added))
 
