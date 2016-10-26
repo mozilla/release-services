@@ -7,6 +7,7 @@ import HtmlParser exposing (parse)
 import HtmlParser.Util exposing (toVirtualDom)
 import String
 import Dict
+import Date
 import Json.Decode as Json exposing (Decoder, (:=))
 import Json.Decode.Extra as JsonExtra exposing ((|:))
 import Json.Encode as JsonEncode
@@ -82,6 +83,7 @@ type alias Bug = {
 
   -- Patches
   patches: Dict.Dict String Patch,
+  landings: Dict.Dict String Date.Date,
 
   -- Actions on bug
   editor: BugEditor,
@@ -565,6 +567,7 @@ decodeBug =
     |: (Json.maybe ("uplift" := decodeUpliftRequest))
     |: ("versions" := (Json.dict decodeVersion))
     |: ("patches" := (Json.dict decodePatch))
+    |: ("landings" := (Json.dict JsonExtra.date))
     |: (Json.succeed NoEditor) -- not editing at first
     |: (Json.succeed Dict.empty) -- not editing at first
     |: (Json.succeed Dict.empty) -- not editing at first
@@ -769,8 +772,25 @@ viewFlags bug =
           p [class "text-warning"] [text "No tracking flags set."]
         else
           ul [] (List.map viewTrackingFlag (Dict.toList flags_tracking))
+      ],
+      div [class "col-xs-12"] [
+        h5 [] [text "Landing dates"],
+        if Dict.isEmpty bug.landings then
+          p [class "text-warning"] [text "No landing dates available."]
+        else
+          ul [] (List.map viewLandingDate (Dict.toList bug.landings))
       ]
     ]
+
+viewLandingDate (key, date) =
+  li [] [
+    strong [] [text key],
+    span [] [text (
+      (date |> Date.day |> toString) ++ " "
+      ++ (date |> Date.month |> toString) ++ " "
+      ++ (date |> Date.year |> toString)
+    )]
+  ]
 
 viewStatusFlag (key, value) =
   li [] [

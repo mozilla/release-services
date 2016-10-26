@@ -99,6 +99,7 @@ def serialize_bug(bug):
 
         # Patches
         'patches' : analysis['patches'],
+        'landings' : {k:v for k,v in analysis.get('landings', {}).items() if v is not None},
 
         # Versions
         'versions' : versions,

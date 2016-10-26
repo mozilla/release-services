@@ -97,16 +97,16 @@ div.bugs {
 
         div {
           margin-bottom: 10px;
-          &.header {
-            border-left: 2px solid #EEE;
-            padding-left: 3px;
-            margin-left: 2px;
-          }
 
           &.no-header {
             color: #888;
             display: none;
           }
+
+        }
+
+        .risky {
+          color: $state-danger-text;
         }
       }
     }
@@ -140,6 +140,16 @@ div.bugs {
         }
         &.deletions {
           color: $state-danger-text;
+        }
+      }
+    }
+
+    div.flags {
+      ul {
+        li {
+          * {
+            margin-right: 4px;
+          }
         }
       }
     }
