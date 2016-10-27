@@ -3,13 +3,10 @@
 Prerequirements
 ===============
 
-To start working with ``mozilla-releng/services`` there is only one tools that
+To start working with ``mozilla-releng/services`` there is only one tool that
 is required to be installed on your system: Nix_. Nix (package manager) works
 alongside any other package manager and can be used with any Linux
-distribution. Many developers confuse Nix_ (the package manager) with NixOS_
-(Linux distribution).
-
-Bellow instructions should work on any recent enough Linux distribution.
+distribution.
 
 It is important to know that Nix_ can be safely uninstalled by removing
 following folders:
@@ -18,16 +15,11 @@ following folders:
 
     % sudo rm -rf /nix /etc/nix /home/$USER/.nix*
 
+Many developers confuse Nix_ (the package manager) with NixOS_ (Linux
+distribution). In this case we will *only* install Nix, the package manager.
 
-While installing Nix_ as in a *single user mode* is completly sufficient if you
-want use Nix as packages manager. In case of ``mozilla-releng/services`` we
-need to install Nix in *multi user mode* for build isolation reasons. This
-means that builds will be perfomed in an isolated chroot environment and thus
-giving us better *reproducablity* accross different machines.
-
-All of the bellow steps could be done in one script, but for the purpose of
-understanding what is happening during setup all steps are described in
-details.
+Bellow instructions should work on any recent enough Linux distribution
+(we only tested below setup with latest distributions).
 
 
 1. Installing Nix as single user mode
@@ -40,6 +32,10 @@ As ``$USER`` run:
     % sudo mkdir -m 0755 /nix
     % chown $USER /nix
     % curl https://nixos.org/nix/install | sh
+
+Above script will install Nix_ undex ``/nix`` and add ``~/.nix-profile/bin`` to
+your ``$PATH``. You need to relogin to your terminal to be able to use
+``nix-*`` commands.
 
 
 2. Add custom binary cache
@@ -70,9 +66,7 @@ And configure Nix to use above create group:
 
 .. code-block:: bash
 
-    % mkdir /etc/nix
     % echo "build-users-group = nixbld" >> /etc/nix/nix.conf
-
 
 Give the nix store to ``root:nixbld`` ownership:
 
@@ -101,7 +95,30 @@ If there are multiple matches for default-\*-link then use the numerically
 highest one.
 
 
-5. Add ``nix-daemon`` systemd service
+5. Enabling sandbox mode
+------------------------
+
+Builds will be performed in a sandboxed environment, i.e., they’re isolated
+from the normal file system hierarchy and will only see their dependencies in
+the Nix store, the temporary build directory, private versions of ``/proc``,
+``/dev``, ``/dev/shm`` and ``/dev/pts`` (on Linux), and the paths configured
+with the ``build-sandbox-paths`` option. This is useful to prevent undeclared
+dependencies on files in directories such as ``/usr/bin``. In addition, on
+Linux, builds run in private PID, mount, network, IPC and UTS namespaces to
+isolate them from other processes in the system (except that fixed-output
+derivations do not run in private network namespace to ensure they can access
+the network).
+
+
+.. code-block:: bash
+
+    % echo "build-use-sandbox = true" >> /etc/nix/nix.conf
+    % mkdir -p /nix/var/nix/profiles
+    % nix-env -iA nixpkgs.bash -p /nix/var/nix/profiles/sandbox
+    % echo "build-sandbox-paths = /bin/sh=`realpath /nix/var/nix/profiles/sandbox/bin/bash` `nix-store -qR \`realpath /nix/var/nix/profiles/sandbox/bin/bash\` | tr '\n' ' '`" >> /etc/nix/nix.conf
+
+
+6. Add ``nix-daemon`` systemd service
 -------------------------------------
 
 ``nix-daemon`` serves as a service which schedules all the builds when
@@ -130,7 +147,7 @@ running in chroot).
     % systemctl start nix-daemon
 
 
-6. Nix multi user profile script
+7. Nix multi user profile script
 --------------------------------
 
 To hook Nix with create the following script (as ``root`` user):
@@ -205,7 +222,7 @@ To hook Nix with create the following script (as ``root`` user):
     EOF
 
 
-7. Set up the new default (root) profile
+8. Set up the new default (root) profile
 ----------------------------------------
 
 As ``root`` user run:
@@ -227,7 +244,7 @@ We must also ensure that at every shell login we run ``source
     % echo "source /etc/nix/nix-profile.sh" >> /root/.bashrc
 
 
-8. Set up the user profile
+9. Set up the user profile
 --------------------------
 
 As ``$USER`` run:
@@ -241,8 +258,8 @@ As ``$USER`` run:
 Last command might vary depending which shell are you using.
 
 
-9. Installing git and gnumake as user
--------------------------------------
+10. Installing git and gnumake as user
+--------------------------------------
 
 As ``$USER`` run:
 
