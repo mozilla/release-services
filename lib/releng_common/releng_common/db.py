@@ -6,13 +6,18 @@ from __future__ import absolute_import
 
 from flask import g
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+import os
 
 
 db = SQLAlchemy()
 
 def init_app(app):
     db.init_app(app)
-    db.create_all(app=app)
+
+    # Setup migrations
+    migrations_dir = os.path.abspath(os.path.join(app.root_path, '..', 'migrations'))
+    Migrate(app, db, directory=migrations_dir)
 
     @app.before_request
     def setup_request():
