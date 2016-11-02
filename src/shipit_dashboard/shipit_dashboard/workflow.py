@@ -145,8 +145,8 @@ class WorkflowLocal(Workflow):
             raw_bugs = self.list_bugs(analysis.parameters)
 
             # Empty m2m relation
-            analysis.bugs[:] = []
-            db.session.commit()
+            for bug in analysis.bugs:
+                bug.delete()
 
             # Do patch analysis on bugs
             for raw_bug in raw_bugs.values():
