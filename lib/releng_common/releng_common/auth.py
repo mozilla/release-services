@@ -111,7 +111,7 @@ class Auth(object):
 
     def _require_scopes(self, scopes):
         response = self._require_login()
-        if resource is not None:
+        if request.path is not None:
             return response
 
         with current_app.app_context():
@@ -134,7 +134,7 @@ class Auth(object):
         @wraps(method)
         def wrapper(*args, **kwargs):
             response = self._require_login()
-            if resource is not None:
+            if request.path is not None:
                 return response
             return method(*args, **kwargs)
         return wrapper
@@ -154,7 +154,7 @@ class Auth(object):
                 with current_app.app_context():
                     # Check login
                     response = self._require_login()
-                    if resource is not None:
+                    if request.path is not None:
                         return response
                     # Check scopes, using TC implementation
                     user_scopes = current_user.get_permissions()
@@ -188,11 +188,10 @@ def taskcluster_user_loader(auth_header):
         if port is None:
             request.scheme == 'https' and 443 or 80
     method = request.method.lower()
-    resource = request.path
 
     # Build taskcluster payload
     payload = {
-        'resource' : resource,
+        'resource' : request.path,
         'method' : method,
         'host' : host,
         'port' : int(port),
