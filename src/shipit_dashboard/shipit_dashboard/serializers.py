@@ -1,32 +1,24 @@
-import hashlib
+from shipit_dashboard.models import BugResult, BugContributor, BugAnalysis
 
-
-def serialize_user(user):
+def serialize_contributor(contrib):
     """
-    Helper to serialize a user
-    and adding a gravatar url
+    Helper to serialize a contributor
     """
-    if isinstance(user, dict):
-        out = user
-        if 'email' not in out:
-            out['email'] = out['name'] # weird case of uplift authors
-    else:
-        out = {
-            'email' : user,
-            'real_name' : user,
-        }
+    assert isinstance(contrib, BugContributor)
 
-    # Add gravatar
-    email = out['email'].strip().lower()
-    h = hashlib.md5(email.encode('utf-8'))
-    out['avatar'] = 'https://www.gravatar.com/avatar/{}'.format(h.hexdigest())
-
-    return out
+    return {
+        'email' : contrib.contributor.email,
+        'name' : contrib.contributor.name,
+        'avatar' : contrib.contributor.avatar_url,
+        'roles' : contrib.roles.split(','),
+    }
 
 def serialize_bug(bug):
     """
     Helper to serialize a bug from its payload
     """
+    assert isinstance(bug, BugResult)
+
     payload = bug.payload_data
     if not payload:
         raise Exception('Missing payload')
@@ -38,7 +30,6 @@ def serialize_bug(bug):
     # Build uplift
     uplift = None
     if analysis.get('uplift_comment') and analysis.get('uplift_author'):
-        author = analysis['uplift_author']
         comment = analysis['uplift_comment']
         if 'html' in comment:
             comment_html = comment['html'].replace('&', '&amp;')
@@ -46,7 +37,6 @@ def serialize_bug(bug):
             comment_html = comment.get('text', 'No comment.')
         uplift = {
             'id' : comment['id'],
-            'author' : serialize_user(author),
             'comment' : comment_html,
         }
 
@@ -86,10 +76,8 @@ def serialize_bug(bug):
         'flags_status' : _filter_flags(status_base_flag),
         'flags_tracking' : _filter_flags(tracking_base_flag),
 
-        # Contributor structures
-        'creator' : serialize_user(analysis['users']['creator']),
-        'assignee' : serialize_user(analysis['users']['assignee']),
-        'reviewers' : [serialize_user(r) for r in analysis['users']['reviewers']],
+        # Contributor
+        'contributors' : [serialize_contributor(c) for c in bug.contributors],
 
         # Stats
         'changes_size' : analysis.get('changes_size', 0),
@@ -109,6 +97,8 @@ def serialize_analysis(analysis, full=True):
     """
     Helper to serialize an analysis
     """
+    assert isinstance(analysis, BugAnalysis)
+
     out = {
         'id': analysis.id,
         'name': analysis.name,
@@ -123,4 +113,3 @@ def serialize_analysis(analysis, full=True):
         out['bugs'] = []
 
     return out
-

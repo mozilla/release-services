@@ -7,10 +7,10 @@ from __future__ import absolute_import
 from flask import abort, request
 from releng_common.auth import auth
 from releng_common.db import db
-from shipit_dashboard.models import BugAnalysis, BugResult
+from shipit_dashboard.models import BugAnalysis, BugResult, Contributor, BugContributor
 from shipit_dashboard.serializers import serialize_analysis, serialize_bug
-from sqlalchemy import text
 from sqlalchemy.orm.exc import NoResultFound
+from shipit_dashboard.helpers import gravatar
 import pickle
 
 # Tasckcluster scopes
@@ -123,13 +123,37 @@ def create_bug():
     bug.payload = pickle.dumps(payload, 2)
     bug.payload_hash = payload_hash
 
-
     # Attach bug to its analysis
     for a in analysis:
         a.bugs.append(bug)
 
     # Save all changes
     db.session.add(bug)
+
+    # Load users
+    for user in payload.get('users', []):
+
+        # Get or create user in db
+        try:
+            contrib = Contributor.query.filter_by(bugzilla_id=user['id']).one()
+        except:
+            contrib = Contributor(bugzilla_id=user['id'])
+            contrib.name = user.get('real_name', user['name'])
+            contrib.email = user['email']
+            contrib.avatar_url = gravatar(user['email'])
+            db.session.add(contrib)
+
+        # Link contributor to bug
+        try:
+            link = BugContributor.query.filter_by(bug_id=bug.id, contributor_id=contrib.id).one()
+        except Exception:
+            link = BugContributor(bug=bug, contributor=contrib)
+        link.roles = ','.join(user['roles'])
+        db.session.add(link)
+
+        print('Contrib', contrib)
+
+    # Commit all those changes
     db.session.commit()
 
     # Send back the bug

@@ -40,12 +40,12 @@ type BugUpdate =
 type alias Contributor = {
   email: String,
   name: String,
-  avatar: String
+  avatar: String,
+  roles: List String
 }
 
 type alias UpliftRequest = {
   bugzilla_id: Int,
-  author: Contributor,
   comment: String
 }
 
@@ -72,10 +72,8 @@ type alias Bug = {
   flags_status : Dict.Dict String String,
   flags_tracking : Dict.Dict String String,
 
-  -- Users
-  creator: Contributor,
-  assignee: Contributor,
-  reviewers: List Contributor,
+  -- Contributors
+  contributors: List Contributor,
 
   -- Uplift
   uplift_request: Maybe UpliftRequest,
@@ -561,9 +559,7 @@ decodeBug =
     |: ("keywords" := Json.list Json.string)
     |: ("flags_status" := Json.dict Json.string)
     |: ("flags_tracking" := Json.dict Json.string)
-    |: ("creator" := decodeContributor)
-    |: ("assignee" := decodeContributor)
-    |: ("reviewers" := (Json.list decodeContributor))
+    |: ("contributors" := (Json.list decodeContributor))
     |: (Json.maybe ("uplift" := decodeUpliftRequest))
     |: ("versions" := (Json.dict decodeVersion))
     |: ("patches" := (Json.dict decodePatch))
@@ -591,16 +587,16 @@ decodeVersion =
 
 decodeContributor : Decoder Contributor
 decodeContributor = 
-  Json.object3 Contributor
+  Json.object4 Contributor
     ("email" := Json.string)
-    ("real_name" := Json.string)
+    ("name" := Json.string)
     ("avatar" := Json.string)
+    ("roles" := Json.list Json.string)
 
 decodeUpliftRequest : Decoder UpliftRequest
 decodeUpliftRequest  =
-  Json.object3 UpliftRequest
+  Json.object2 UpliftRequest
     ("id" := Json.int)
-    ("author" := decodeContributor)
     ("comment" := Json.string)
 
 -- Subscriptions
@@ -648,10 +644,8 @@ viewBug model bug =
       ++ (List.map (\k -> span [class "label label-default"] [text k]) bug.keywords)
     ),
     div [class "row"] [
-      div [class "col-xs-4"] ([
-        viewContributor bug.creator "Creator",
-        viewContributor bug.assignee "Assignee"
-      ] ++ (List.map (\x -> viewContributor x "Reviewer") bug.reviewers)),
+      div [class "col-xs-4"] 
+        (List.map viewContributor bug.contributors),
       div [class "col-xs-4"] [
         viewUpliftRequest bug.uplift_request
       ],
@@ -673,8 +667,8 @@ viewVersionTag (name, version) =
     "-" -> span [class "label label-danger"] [text name]
     _ ->  span [class "label label-default"] [text name]
 
-viewContributor: Contributor -> String -> Html Msg
-viewContributor user title = 
+viewContributor: Contributor -> Html Msg
+viewContributor user = 
   div [class "user row"] [
     div [class "pull-sm-left hidden-xs"] [
       img [class "avatar img-fluid img-rounded", src user.avatar] []
@@ -684,9 +678,13 @@ viewContributor user title =
       p [] [
         a [href ("mailto:" ++ user.email)] [text user.email]
       ],
-      p [] [
-        span [class "label label-default"] [text title]
-      ]
+      p [] (List.map (\role -> case role of
+        "creator" -> span [class "label label-success"] [text "Bug author"]
+        "reviewer" -> span [class "label label-info"] [text "Reviewer"]
+        "assignee" -> span [class "label label-danger"] [text "Assignee"]
+        "uplift_author" -> span [class "label label-warning"] [text "Uplift author"]
+        _ -> span [class "label label-default"] [text role]
+      ) user.roles)
     ]
   ]
 
@@ -695,7 +693,6 @@ viewUpliftRequest maybe =
   case maybe of
     Just request -> 
       div [class "uplift-request", id (toString request.bugzilla_id)] [
-        viewContributor request.author "Uplift request",
         div [class "comment"] (toVirtualDom (parse request.comment))
       ]
     Nothing -> 
