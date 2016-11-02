@@ -1,6 +1,9 @@
 -e ../../lib/releng_common
 
+# Use flask migration
+Flask-Migrate
+
 # libmozdata, but without scipy - not released yet
-# https://github.com/mozilla/libmozdata/archive/c9d293bf95621b7eb2c3059bc63a2095221227c5.tar.gz#egg=libmozdata
+# https://github.com/mozilla/libmozdata/archive/423380cd24e49a9185a5019482a0709c723ce2cf.tar.gz#egg=libmozdata
 # After update-app, we need the real name in here
 libmozdata
