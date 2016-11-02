@@ -65,3 +65,14 @@ class BugResult(db.Model):
         if not self.payload:
             return None
         return pickle.loads(self.payload)
+
+    def delete(self):
+        """
+        Delete bug and its dependencies
+        """
+        # Delete links, avoid StaleDataError
+        db.engine.execute(sa.text('delete from analysis_bugs where bug_id = :bug_id'), bug_id=self.id)
+
+        # Delete the bug
+        db.session.delete(self)
+        db.session.commit()

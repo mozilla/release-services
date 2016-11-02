@@ -146,9 +146,4 @@ def delete_bug(bugzilla_id):
     except:
         raise Exception('Missing bug {}'.format(bugzilla_id))
 
-    # Delete links, avoid StaleDataError
-    db.engine.execute(text('delete from analysis_bugs where bug_id = :bug_id'), bug_id=bug.id)
-
-    # Delete the bug
-    db.session.delete(bug)
-    db.session.commit()
+    bug.delete()
