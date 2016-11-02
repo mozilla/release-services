@@ -120,9 +120,7 @@ definitions:
       - flags_status
       - flags_tracking
       - changes_size
-      - creator
-      - assignee
-      - reviewers
+      - contributors
       - patches
     properties:
       id:
@@ -147,11 +145,7 @@ definitions:
           type: string
       changes_size:
         type: integer
-      creator:
-        $ref: '#/definitions/Contributor'
-      assignee:
-        $ref: '#/definitions/Contributor'
-      reviewers:
+      contributors:
         type: array
         items:
           $ref: '#/definitions/Contributor'
@@ -169,27 +163,29 @@ definitions:
     type: object
     required:
       - email
-      - real_name
+      - name
       - avatar
+      - roles
     properties:
       email:
         type: string
-      real_name:
+      name:
         type: string
       avatar:
         type: string
+      roles:
+        type: array
+        items:
+          type: string
 
   UpliftRequest:
     type: object
     required:
       - id
-      - author
       - comment
     properties:
       id: 
         type: integer
-      author:
-        $ref: '#/definitions/Contributor'
       comment:
         type: string
 

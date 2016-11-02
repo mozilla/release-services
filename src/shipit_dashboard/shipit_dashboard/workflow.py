@@ -33,7 +33,7 @@ class Workflow(object):
     """
     Update all analysis data
     """
-    def __init__(self, bugzilla_url):
+    def __init__(self, bugzilla_url, bugzilla_token=None):
         self.bugs = {}
         self.bugzilla_url = bugzilla_url
 
@@ -43,6 +43,12 @@ class Workflow(object):
         #set_config(ConfigEnv())
         bugzilla.Bugzilla.URL = self.bugzilla_url
         bugzilla.Bugzilla.API_URL = self.bugzilla_url + '/rest/bug'
+        bugzilla.BugzillaUser.URL = self.bugzilla_url
+        bugzilla.BugzillaUser.API_URL = self.bugzilla_url + '/rest/user'
+        if bugzilla_token is not None:
+            bugzilla.Bugzilla.TOKEN = bugzilla_token
+            bugzilla.BugzillaUser.TOKEN = bugzilla_token
+
         logger.info('Use bugzilla server {}'.format(self.bugzilla_url))
 
     def run(self):
@@ -120,6 +126,7 @@ class Workflow(object):
             'url' : '{}/{}'.format(self.bugzilla_url, bug['id']),
             'bug': bug,
             'analysis': analysis,
+            'users' : self.load_users(analysis),
         }
         br.payload = use_db and pickle.dumps(payload, 2) or payload
         br.payload_hash = bug_hash
@@ -129,6 +136,49 @@ class Workflow(object):
         self.bugs[bug_id] = br
 
         return br
+
+    def load_users(self, analysis):
+        """
+        Load users linked through roles to an analysis
+        """
+        roles = {}
+        def _extract_user(user_data, role):
+            # Support multiple input structures
+            if user_data is None:
+                return
+            elif isinstance(user_data, dict):
+                if 'id' in user_data:
+                    key = user_data['id']
+                elif 'email' in user_data:
+                    key = user_data['email']
+                else:
+                    raise Exception('Invalid user data : no id or email')
+
+            elif isinstance(user_data, str):
+                key = user_data
+            else:
+                raise Exception('Invalid user data : unsupported format')
+
+            if key not in roles:
+                roles[key] = []
+            roles[key].append(role)
+
+        # Extract users keys & roles
+        _extract_user(analysis['users'].get('creator'), 'creator')
+        _extract_user(analysis['users'].get('assignee'), 'assignee')
+        for r in analysis['users']['reviewers']:
+            _extract_user(r, 'reviewer')
+        _extract_user(analysis['uplift_author'], 'uplift_author')
+
+        def _handler(user, data):
+            # Store users with their roles
+            user['roles'] = roles.get(user['id'], roles.get(user['email'], []))
+            data.append(user)
+
+        # Finally fetch clean users data through Bugzilla
+        out = []
+        bugzilla.BugzillaUser(user_names=roles.keys(), user_handler=_handler, user_data=out).wait()
+        return out
 
 class WorkflowLocal(Workflow):
     """
@@ -164,8 +214,8 @@ class WorkflowRemote(Workflow):
     Use a distant shipit api server
     to store processed analysis
     """
-    def __init__(self, bugzilla_url, api_url, client_id, access_token):
-        super(WorkflowRemote, self).__init__(bugzilla_url)
+    def __init__(self, bugzilla_url, bugzilla_token, api_url, client_id, access_token):
+        super(WorkflowRemote, self).__init__(bugzilla_url, bugzilla_token)
         self.api_url = api_url
         self.credentials = {
           'id' : client_id,
@@ -271,8 +321,9 @@ def run_workflow_local():
     Run the full bug update workflow
     """
     bugzilla_url = os.environ.get('BUGZILLA_URL', 'https://bugzilla.mozilla.org')
+    bugzilla_token = os.environ.get('BUGZILLA_TOKEN')
 
-    workflow = WorkflowLocal(bugzilla_url)
+    workflow = WorkflowLocal(bugzilla_url, bugzilla_token)
     workflow.run()
 
 
@@ -291,6 +342,7 @@ def run_workflow():
         return v
 
     bugzilla_url = os.environ.get('BUGZILLA_URL', 'https://bugzilla.mozilla.org')
+    bugzilla_token = os.environ.get('BUGZILLA_TOKEN')
 
-    workflow = WorkflowRemote(bugzilla_url, *map(_check, keys))
+    workflow = WorkflowRemote(bugzilla_url, bugzilla_token, *map(_check, keys))
     workflow.run()

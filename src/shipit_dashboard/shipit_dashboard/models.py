@@ -18,7 +18,6 @@ bugs = db.Table(
     sa.Column('bug_id', sa.Integer, sa.ForeignKey('shipit_bug_result.id'))
 )
 
-
 class BugAnalysis(db.Model):
     """
     A template to build some cached analysis
@@ -76,3 +75,32 @@ class BugResult(db.Model):
         # Delete the bug
         db.session.delete(self)
         db.session.commit()
+
+class Contributor(db.Model):
+    """
+    An active Mozilla contributor
+    """
+    __tablename__ = 'shipit_contributor'
+    id = sa.Column(sa.Integer, primary_key=True)
+    bugzilla_id = sa.Column(sa.Integer, unique=True)
+    name = sa.Column(sa.String(250))
+    email = sa.Column(sa.String(250))
+    avatar_url = sa.Column(sa.String(250))
+
+
+class BugContributor(db.Model):
+    """
+    M2M link between contributor & bug
+    """
+    __tablename__ = 'shipit_contributor_bugs'
+    __table_args__ = (
+	sa.UniqueConstraint('contributor_id', 'bug_id', name='uniq_contrib_bug'),
+    )
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    contributor_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_contributor.id'))
+    bug_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_bug_result.id'))
+    roles = sa.Column(sa.String(250))
+
+    bug = db.relationship(BugResult, backref="contributors")
+    contributor = db.relationship(Contributor, backref="bugs")
