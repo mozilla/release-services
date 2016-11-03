@@ -5,112 +5,290 @@ info:
   title: "ToolTool"
 paths:
 
-  /buildbot:
-
+  /upload:
     get:
-      operationId: "releng_clobberer.api.get_buildbot"
+      operationId: "releng_tooltool.api.search_batches"
+      description: Search upload batches.
+      parameters:
+        - name: query
+          in: query
+          description: |
+            Query parameter can match a substring of an authors email or a
+            batch message.
+          required: true
       responses:
         200:
-          description: An array of branches
+          description: An array of upload batches.
           schema:
             type: array
             items:
-              $ref: '#/definitions/Branch'
-
+              $ref: '#/definitions/UploadBatch'
     post:
-      operationId: "releng_clobberer.api.post_buildbot"
+      operationId: "releng_tooltool.api.upload_batch"
+      description: |
+        Create a new upload batch.  The response object will contain
+        a ``put_url`` for each file which needs to be uploaded -- which may not
+        be all!  The caller is then responsible for uploading to those URLs.
+        The resulting signed URLs are valid for one hour, so uploads should
+        begin within that timeframe.  Consider using Amazon MD5-verification
+        capabilities to ensure that the uploaded files are transferred
+        correctly, although the tooltool server will verify the integrity
+        anyway.  The upload must have the header ``Content-Type:
+        application/octet-stream``.
+
+        The returned URLs are only valid for 60 seconds, so all upload requests
+        must begin within that timeframe.  Clients should therefore perform all
+        uploads in parallel, rather than sequentially.  This limitation is in
+        place to prevent malicious modification of files after they have been
+        verified.
       parameters:
         - name: body
           in: body
-          description: List of Builds to clobber.
+          description: Upload batch.
+          required: true
+          schema:
+            $ref: '#/definitions/UploadBatch'
+        - name: region
+          in: query
+          description: |
+            The region query argument ``region=us-west-1`` indicates a
+            preference for URLs in that region, although if the region is not
+            available then URLs in other regions may be returned.
+      responses:
+        200:
+          description: Upload batch.
+          schema:
+            $ref: '#/definitions/UploadBatch'
+
+  /upload/{id}:
+    get:
+      operationId: "releng_tooltool.api.get_batch"
+      description: Get a specific upload batch by id.
+      parameters:
+        - name: id
+          in: path
+          description: Upload batch id.
+          required: true
+      responses:
+        200:
+          description: Upload batch.
+          schema:
+            $ref: '#/definitions/UploadBatch'
+
+  /upload/complete/sha512/{digest}:
+    get:
+      operationId: "releng_tooltool.api.upload_complete"
+      description: |
+        Signal that a file has been uploaded and the server should begin
+        validating it.  This is merely an optimization: the server also polls
+        occasionally for uploads and validates them when they appear.
+
+        Uploads cannot be safely validated until the upload URL has expired,
+        which occurs a short time after the URL is generated (currently 60
+        seconds but subject to change).
+
+        If the upload URL has expired, then the response is an HTTP 202
+        indicating that the signal has been accepted.  If the URL has not
+        expired, then the response is an HTTP 409, and the ``X-Retry-After``
+        header gives a time, in seconds, that the client should wait before
+        trying again.
+      parameters:
+        - name: digest
+          in: path
+          required: true
+      responses:
+        202:
+          schema:
+            type: string
+
+  /file:
+    get:
+      operationId: "releng_tooltool.api.search_files"
+      description: Search for files matching the query.
+      parameters:
+        - name: query
+          in: query
+          description: |
+            The query matches against prefixes of hashes (at least 8
+            characters) or against filenames.
+          required: true
+      responses:
+        200:
+          description: File
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/File'
+
+
+  /file/sha512/{digest}:
+    get:
+      operationId: "releng_tooltool.api.get_file"
+      description: |
+        Get a single file, by its digest.  Filenames are associated with upload
+        batches, not directly with files, so use ``GET /uploads`` to find files
+        by filename.
+
+        The returned File instance contains an ``instances`` attribute showing
+        the regions in which the file exists.
+      parameters:
+        - name: digest
+          in: path
+          required: true
+      responses:
+        200:
+          description: File
+          schema:
+            $ref: '#/definitions/File'
+
+  /sha512/{digest}:
+    get:
+      operationId: "releng_tooltool.api.download_file"
+      description: Fetch a link to the file with the given sha512 digest.
+      parameters:
+        - name: digest
+          in: path
+          required: true
+        - name: region
+          in: query
+          description: |
+            The query argument ``region=us-west-1`` indicates a preference for
+            a URL in that region, although if the file is not available in tht
+            region then a URL from another region may be returned.
+      responses:
+        302:
+          description: Redirect to a signed download URL.
+          headers:
+            Location:
+              description: Download URL.
+    patch:
+      operationId: "releng_tooltool.api.patch_file"
+      description: |
+        Make administrative changes to an existing file.  The body is a list of
+        changes to apply, each represented by a JSON object.
+
+        The object ``{"op": "delete_instances"}`` will cause all instances of
+        the file to be deleted.  The file record itself will not be deleted,
+        as it is still a part of one or more upload batches, but until and
+        unless someone uploads a new copy, the content will not be available
+        for download.
+
+        If the change has op ``"set_visibility"``, then the files visibility
+        will be set to the value given by the changes ``visibility`` attribute.
+        For example, ``{"op": "set_visibility", "visibility": "internal"}``
+        will mark a file as "internal" after someone has accidentally uploaded
+        it with public visibility.
+
+        The returned File instance contains an ``instances`` attribute showing
+        any changes.
+      parameters:
+        - name: digest
+          in: path
+          required: true
+        - name: body
+          in: body
+          description: Upload batch.
           required: true
           schema:
             type: array
             items:
               type: object
-              properties:
-                branch:
-                  type: string
-                builddir:
-                  type: string
-                slave:
-                  type: string
+              additionalProperties:
+                type: string
       responses:
         200:
-          description: Builders clobbered
+          description: File
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/Message'
-        500:
-          description: Something went wrong when clobbering builders
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Message'
+            $ref: '#/definitions/File'
 
-  /taskcluster:
-
-    get:
-      operationId: "releng_clobberer.api.get_taskcluster"
-      responses:
-        200:
-          description: An array of branches
-
-    post:
-      operationId: "releng_clobberer.api.post_taskcluster"
-      responses:
-        200:
-          description: Branches clobbered
 
 definitions:
 
-  Message:
+  UploadBatch:
+    description: |
+      An upload batch describes a collection of related files that are uploaded
+      together -- similar to a version-control commit.  The message and files
+      list must be non-empty.
     required:
-      - title
+      - id
       - message
+      - files
     properties:
-      title:
+      id:
+        type: integer
+        description: Identifier for this batch
+      uploaded:
+        type: dateTime
+        description: |
+         The date and time when this upload occurred.  This will be added by
+         the server and need not be specified when making a new upload.
+      author:
         type: string
+        description: |
+          The author (uploader) of the batch.  Do not include this when
+          submitting a batch for upload; it will be filled in based on the
+          request authentication.
       message:
         type: string
-      extra:
-        type: string
+        description: |
+          The message for the batch.  Format this like a version-control
+          message.
+      files:
+        type: object
+        description: |
+          The collection of files in this batch, keyed by filename.  Note that
+          filenames containing path separators (``\`` and ``/``) will be
+          rejected the tooltool client.
+        additionalProperties:
+          $ref: '#/definitions/File'
 
-
-  Branch:
-    type: object
+  File:
     required:
-      - name
-      - builders
+      - visibility
     properties:
-      name:
-        type: string
-      builders:
-        type: array
-        description: Builders per branch
-        items:
-          $ref: '#/definitions/Builder'
-
-  Builder:
-    type: object
-    required:
-      - name
-      - branch
-      - builddir
-      - slave
-      - lastclobber
-      - who
-    properties:
-      name:
-        type: string
-      branch:
-        type: string
-      builddir:
-        type: string
-      slave:
-        type: string
-      lastclobber:
+      size:
         type: integer
-      who:
+        description: The size of the file, in bytes
+
+    digest:
         type: string
+        description: The sha512 digest of the file contents.
+
+    algorithm:
+      type: unicode
+      description: |
+        The digest algorithm (reserved for future expansion; must always be
+        sha512).
+
+    visibility:
+      type: string
+      description: |
+        The visibility level of this file.  When making an upload, the uploader
+        is (legally) responsible for selecting the correct visibility level.
+      default: public
+      enum:
+        - public
+        - private
+
+    has_instances:
+      type: bool
+      description: |
+        Boolean to determine whether the file is available to download.
+
+    instances:
+      type: array
+      description: |
+        The regions containing an instance of this file.  This field is
+        generally omitted except where specified.
+      items:
+        type: string
+
+    get_url:
+      type: string
+      description: The URL from which this file can be downlaoded via HTTP GET.
+
+    put_url:
+      type: string
+      description: |
+        The URL to which this file can be uploaded via HTTP PUT. The URL
+        requires the request content-type to be ``application/octet-stream``.
