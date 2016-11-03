@@ -10,7 +10,7 @@ from flask_migrate import Migrate, init as migrations_init, upgrade as migration
 import os
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('releng_common.db')
 
 
 db = SQLAlchemy()
