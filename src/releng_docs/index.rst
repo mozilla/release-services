@@ -76,3 +76,4 @@ Contents
     services_releng
     services_shipit
     defending
+    database_migrations
