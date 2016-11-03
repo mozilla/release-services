@@ -1,7 +1,7 @@
 # generated using pypi2nix tool (version: 1.5.0.dev0)
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql -r requirements.txt -r requirements-setup.txt -r requirements-dev.txt -r requirements-prod.txt
+#   pypi2nix -v -V 3.5 -E postgresql libffi openssl -r requirements.txt -r requirements-setup.txt -r requirements-dev.txt -r requirements-prod.txt
 #
 
 { pkgs, python, commonBuildInputs ? [], commonDoCheck ? false }:
@@ -52,10 +52,10 @@ self: {
 
 
   "Flask-Cors" = python.mkDerivation {
-    name = "Flask-Cors-3.0.0";
+    name = "Flask-Cors-3.0.2";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/b9/0f/b67770a6aaad19aefce1aea7d4ae7c199eccecdec91448c44996d798e2c2/Flask-Cors-3.0.0.tar.gz";
-      sha256 = "dd1e27226594e18a710a70d08fb9522dfa3d9ec6d4fc4168480edc60d0897050";
+      url = "https://pypi.python.org/packages/1d/ea/86765a4ae667b4517dc16ef0fc8dd632ca3ea56ef419c4a6de31e715324e/Flask-Cors-3.0.2.tar.gz";
+      sha256 = "0a09f3559ded4759387dfa2a355de59bc161f67269a1f4b7b0712a64b1f7dad6";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -73,10 +73,10 @@ self: {
 
 
   "Flask-Login" = python.mkDerivation {
-    name = "Flask-Login-0.3.2";
+    name = "Flask-Login-0.4.0";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/06/e6/61ed90ed8ce6752b745ed13fac3ba407dc9db95dfa2906edc8dd55dde454/Flask-Login-0.3.2.tar.gz";
-      sha256 = "e72eff5c35e5a31db1aeca1db5d2501be702674ea88e8f223b5d2b11644beee6";
+      url = "https://pypi.python.org/packages/70/96/20cae731ef27084dcb183f3a6e3073d0232f10c1fd7be76729bd7bd4b994/Flask-Login-0.4.0.tar.gz";
+      sha256 = "d25e356b14a59f52da0ab30c31c2ad285fa23a840f0f6971df7ed247c77082a7";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -87,6 +87,29 @@ self: {
       homepage = "";
       license = licenses.mit;
       description = "User session management for Flask";
+    };
+  };
+
+
+
+  "Flask-Migrate" = python.mkDerivation {
+    name = "Flask-Migrate-2.0.0";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/d4/42/9e1bab5b15495e7acd25cb6b164a050b90da20af7e801aa2a7b1f74efdfa/Flask-Migrate-2.0.0.tar.gz";
+      sha256 = "c621f5ea230bdef22bed47f4905bd8979446e1c7f9d61ec1668b2c49549787d7";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."Flask"
+      self."Flask-SQLAlchemy"
+      self."Flask-Script"
+      self."alembic"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "SQLAlchemy database migrations for Flask applications using Alembic";
     };
   };
 
@@ -108,6 +131,26 @@ self: {
       homepage = "";
       license = licenses.bsdOriginal;
       description = "Adds SQLAlchemy support to your Flask application";
+    };
+  };
+
+
+
+  "Flask-Script" = python.mkDerivation {
+    name = "Flask-Script-2.0.5";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/66/e9/2b3c7c548a6bad0b59da21e2050613da43aae4da617fb98847efa3e09a43/Flask-Script-2.0.5.tar.gz";
+      sha256 = "cef76eac751396355429a14c38967bb14d4973c53e07dec94af5cc8fb017107f";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."Flask"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "Scripting support for Flask";
     };
   };
 
@@ -155,6 +198,26 @@ self: {
 
 
 
+  "Mako" = python.mkDerivation {
+    name = "Mako-1.0.5";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/20/ce/296b1037ed9b7803ed4e738b83ae244d2834e97e4ea24d52a6d46c12a884/Mako-1.0.5.tar.gz";
+      sha256 = "e3e27cdd7abfd78337f33bd455f756c823c2d6224ad440a88f14bbd53a5ebc93";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."MarkupSafe"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "A super-fast templating language that borrows the  best ideas from the existing templating languages.";
+    };
+  };
+
+
+
   "MarkupSafe" = python.mkDerivation {
     name = "MarkupSafe-0.23";
     src = pkgs.fetchurl {
@@ -174,10 +237,10 @@ self: {
 
 
   "PyYAML" = python.mkDerivation {
-    name = "PyYAML-3.11";
+    name = "PyYAML-3.12";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/75/5e/b84feba55e20f8da46ead76f14a3943c8cb722d40360702b2365b91dec00/PyYAML-3.11.tar.gz";
-      sha256 = "c36c938a872e5ff494938b33b14aaa156cb439ec67548fcab3535bb78b0846e8";
+      url = "https://pypi.python.org/packages/4a/85/db5a2df477072b2902b0eb892feb37d88ac635d36245a72a6a69b23b383a/PyYAML-3.12.tar.gz";
+      sha256 = "592766c6303207a20efc445587778322d7f73b161bd994f227adaa341ba212ab";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -210,14 +273,16 @@ self: {
 
 
   "SQLAlchemy" = python.mkDerivation {
-    name = "SQLAlchemy-1.0.14";
+    name = "SQLAlchemy-1.1.3";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/aa/cb/e3990b9da48facbe48b80a281a51fb925ff84aaaca44d368d658b0160fcf/SQLAlchemy-1.0.14.tar.gz";
-      sha256 = "da4d1a39c1e99c7fecc2aaa3a050094b6aa7134de7d89f77e6216e7abd1705b3";
+      url = "https://pypi.python.org/packages/84/83/322a268e3187c088aa2867c2560869227da5fc7b9a697c5e382df811bd3c/SQLAlchemy-1.1.3.tar.gz";
+      sha256 = "8b0ed90292a294e17d24482c9328abe69eb8e3143e2bd7103b6fadae2562638f";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
-    propagatedBuildInputs = [ ];
+    propagatedBuildInputs = [
+      self."psycopg2"
+    ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
       license = licenses.mit;
@@ -228,10 +293,10 @@ self: {
 
 
   "Werkzeug" = python.mkDerivation {
-    name = "Werkzeug-0.11.10";
+    name = "Werkzeug-0.11.11";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/b7/7f/44d3cfe5a12ba002b253f6985a4477edfa66da53787a2a838a40f6415263/Werkzeug-0.11.10.tar.gz";
-      sha256 = "cc64dafbacc716cdd42503cf6c44cb5a35576443d82f29f6829e5c49264aeeee";
+      url = "https://pypi.python.org/packages/43/2e/d822b4a4216804519ace92e0368dcfc4b0b2887462d852fdd476b253ecc9/Werkzeug-0.11.11.tar.gz";
+      sha256 = "e72c46bc14405cba7a26bd2ce28df734471bc9016bc8b4cb69466c2c14c2f7e5";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -246,14 +311,15 @@ self: {
 
 
   "aiohttp" = python.mkDerivation {
-    name = "aiohttp-0.22.5";
+    name = "aiohttp-1.0.5";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/55/9d/38fb3cb174f4723b50a3f0593e18a51418c9a73a7857fdcaee46b83ff1c4/aiohttp-0.22.5.tar.gz";
-      sha256 = "9c51af030c866f91e18a219614e39d345db4483ed9860389d0536d74d04b0d3b";
+      url = "https://pypi.python.org/packages/09/5a/7b81ea8729d41f44c6fe6a116e466c8fb884950a0061aa3768dbd6bee2f8/aiohttp-1.0.5.tar.gz";
+      sha256 = "c3e1897726f97d40e067e8b658b2dbdfe216f32b801c5c589212e1b1f9aa8388";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
+      self."async-timeout"
       self."chardet"
       self."multidict"
     ];
@@ -261,6 +327,46 @@ self: {
       homepage = "";
       license = licenses.asl20;
       description = "http client/server for asyncio";
+    };
+  };
+
+
+
+  "alembic" = python.mkDerivation {
+    name = "alembic-0.8.8";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/93/16/d3a04f576a666582da368de60ba09a33e6711377775fd330d0a43bebacc5/alembic-0.8.8.tar.gz";
+      sha256 = "cd6f2192ca2307bfe2a2a61f8a261420addc59a09a6379a6550e0a15693b0b8a";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."Mako"
+      self."SQLAlchemy"
+      self."python-editor"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "A database migration tool for SQLAlchemy.";
+    };
+  };
+
+
+
+  "async-timeout" = python.mkDerivation {
+    name = "async-timeout-1.1.0";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/29/f6/eeac39dfadd3a7610bb33842cf611a1f09fcd2e445ab76e4c951efde0c2b/async-timeout-1.1.0.tar.gz";
+      sha256 = "b88bd1fe001b800ec23c7bf27a81b32819e2a56668e9fba5646a7f3618143081";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.asl20;
+      description = "Timeout context manager for asyncio programs";
     };
   };
 
@@ -302,17 +408,39 @@ self: {
 
 
 
-  "connexion" = python.mkDerivation {
-    name = "connexion-1.0.109";
+  "clickclick" = python.mkDerivation {
+    name = "clickclick-1.2.1";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/7e/cf/818a9784400c6eaf9e8f6b81b875b9ed0394f2b2e96f0e48ced4574a93ed/connexion-1.0.109.tar.gz";
-      sha256 = "b6d2b320020258fbc3adf21c7ecec25431bd6e93c4f085081fab4b37e821066a";
+      url = "https://pypi.python.org/packages/6f/46/28462eb039bbce3651084d5260c50ab83dc3af0724626e6a81c93d950b2c/clickclick-1.2.1.tar.gz";
+      sha256 = "22eedfce2499d7a8c5b8c868fc93a495eb74bf7b753a6cb9ed2aa6a32a3ddd05";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."PyYAML"
+      self."click"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.asl20;
+      description = "Click utility functions";
+    };
+  };
+
+
+
+  "connexion" = python.mkDerivation {
+    name = "connexion-1.0.129";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/ca/b1/1b40f5ba85b275bfc1878d030722809281e4a6f05c62b75abba3861be9f7/connexion-1.0.129.tar.gz";
+      sha256 = "dbee8e66c66c09e0db3083bd40f6c2c1a6ae193e06bb57c48202642429da70ad";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
       self."Flask"
       self."PyYAML"
+      self."clickclick"
       self."jsonschema"
       self."requests"
       self."six"
@@ -528,10 +656,10 @@ self: {
 
 
   "multidict" = python.mkDerivation {
-    name = "multidict-1.2.2";
+    name = "multidict-2.1.2";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/fd/5b/3dd32b8e53703ff7a27a72e9a118e7f78c14a171554ec8c99dd4759c4018/multidict-1.2.2.tar.gz";
-      sha256 = "2fc5fab0dd14d4b8193bfc003b33aa14e0d0cbc97d51ba58aa5fd52b1cb9a6a3";
+      url = "https://pypi.python.org/packages/8b/99/a32210e82198db00d071aa207432b898ddd8061000d00d3841a63a734d31/multidict-2.1.2.tar.gz";
+      sha256 = "d90367472d55de953d4b8d99029067026418d213a88f43e8b0554d7408188576";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -546,10 +674,10 @@ self: {
 
 
   "newrelic" = python.mkDerivation {
-    name = "newrelic-2.68.0.50";
+    name = "newrelic-2.72.1.53";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/a0/54/c241f39e4919faa7d7afdf85fd9364d92df6282b3384762020d8a547ca1f/newrelic-2.68.0.50.tar.gz";
-      sha256 = "3ac02183910fe41ab75485d05474164890b993d082dca5847b0e6d24cf166f89";
+      url = "https://pypi.python.org/packages/43/29/64dc109cc4de2cbb93eb26ffaca38dc8485960d437dfa0efe7d2ac5ee963/newrelic-2.72.1.53.tar.gz";
+      sha256 = "3f601b32d850d8d56c24756706033ca5e3e3c83520151f5cab37d8a07acaaba2";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -602,10 +730,10 @@ self: {
 
 
   "prompt-toolkit" = python.mkDerivation {
-    name = "prompt-toolkit-1.0.7";
+    name = "prompt-toolkit-1.0.8";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/dd/55/2fb4883d2b21d072204fd21ca5e6040faa253135554590d0b67380669176/prompt_toolkit-1.0.7.tar.gz";
-      sha256 = "ef0b8188179fe7d052161ed274b43e18f5a680ff84d01462293b327e1668d2ef";
+      url = "https://pypi.python.org/packages/7f/72/845e3e5678ebe016fe2cff2ffaf91fc9615b9b1a630134f34cf394aa3927/prompt_toolkit-1.0.8.tar.gz";
+      sha256 = "b686ff216fc016dcbdf9ddf18d0ded480457213886ed4cda9fbc21002d18be54";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -712,6 +840,24 @@ self: {
 
 
 
+  "python-editor" = python.mkDerivation {
+    name = "python-editor-1.0.1";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/2b/c0/df7b87d5cf016f82eab3b05cd35f53287c1178ad8c42bfb6fa61b89b22f6/python-editor-1.0.1.tar.gz";
+      sha256 = "8672e9a44a7957741453dd35e842299f6c29f0a88dc9e4316b0fa5935abb9186";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = "License :: OSI Approved :: Apache Software License";
+      description = "Programmatically open an editor, capture the result.";
+    };
+  };
+
+
+
   "redis" = python.mkDerivation {
     name = "redis-2.10.5";
     src = pkgs.fetchurl {
@@ -749,10 +895,10 @@ self: {
 
 
   "setuptools-scm" = python.mkDerivation {
-    name = "setuptools-scm-1.11.1";
+    name = "setuptools-scm-1.15.0";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/84/aa/c693b5d41da513fed3f0ee27f1bf02a303caa75bbdfa5c8cc233a1d778c4/setuptools_scm-1.11.1.tar.gz";
-      sha256 = "8c45f738a23410c5276b0ed9294af607f491e4260589f1eb90df8312e23819bf";
+      url = "https://pypi.python.org/packages/80/b7/31b6ae5fcb188e37f7e31abe75f9be90490a5456a72860fa6e643f8a3cbc/setuptools_scm-1.15.0.tar.gz";
+      sha256 = "daf12d05aa2155a46aa357453757ffdc47d87f839e62114f042bceac6a619e2f";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -904,16 +1050,17 @@ self: {
 
 
   "traitlets" = python.mkDerivation {
-    name = "traitlets-4.2.2";
+    name = "traitlets-4.3.1";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/a4/07/9b7636322c152ab1dacae9d38131067523d6ce5ca926a656586f6f947e77/traitlets-4.2.2.tar.gz";
-      sha256 = "7d7e3070484b2fe490fa55e0acf7023afc5ed9ddabec57405f25c355158e152a";
+      url = "https://pypi.python.org/packages/b1/d6/5b5aa6d5c474691909b91493da1e8972e309c9f01ecfe4aeafd272eb3234/traitlets-4.3.1.tar.gz";
+      sha256 = "ba8c94323ccbe8fd792e45d8efe8c95d3e0744cc8c085295b607552ab573724c";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
       self."decorator"
       self."ipython-genutils"
+      self."six"
     ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
