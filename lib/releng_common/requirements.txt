@@ -3,6 +3,7 @@ Flask-Cache
 Flask-Cors
 Flask-Login
 Flask-SQLAlchemy
+Flask-Migrate
 Logbook
 connexion
 structlog
