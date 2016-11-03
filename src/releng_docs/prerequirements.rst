@@ -21,6 +21,19 @@ distribution). In this case we will *only* install Nix, the package manager.
 Bellow instructions should work on any recent enough Linux distribution
 (we only tested below setup with latest distributions).
 
+0. Optional - Use LVM for Nix
+-----------------------------
+
+If you already use LVM on your Linux computer, you can create a separate Logical Volume just for the nix installation:
+
+.. code-block:: bash
+
+    % VG_NAME=$(vgdisplay | grep "VG Name" | awk '{print $3}')
+    % lvcreate -L 15G -n nix $VG_NAME
+    % mkfs.ext4 /dev/$VG_NAME/nix
+    % echo "/dev/mapper/$VG_NAME/nix   ext4    defaults,noatime        0       2" >> /etc/fstab
+    % mount -a
+
 
 1. Installing Nix as single user mode
 -------------------------------------
@@ -30,7 +43,7 @@ As ``$USER`` run:
 .. code-block:: bash
 
     % sudo mkdir -m 0755 /nix
-    % chown $USER /nix
+    % sudo chown $USER /nix
     % curl https://nixos.org/nix/install | sh
 
 Above script will install Nix_ undex ``/nix`` and add ``~/.nix-profile/bin`` to
@@ -43,6 +56,8 @@ your ``$PATH``. You need to relogin to your terminal to be able to use
 
 During our build process we also generate binaries which can be also used
 locally to speed up building times locally.
+
+As ``root`` user run:
 
 .. code-block:: bash
 
@@ -77,25 +92,7 @@ Give the nix store to ``root:nixbld`` ownership:
     % mkdir -m 1777 -p /nix/var/nix/gcroots/per-user
 
 
-4. Migrating from single user to multi user mode
-------------------------------------------------
-
-Run as ``$USER``:
-
-.. code-block:: bash
-
-    % rm $HOME/.nix-profile
-    % rm -r $HOME/.nix-defexpr
-    % cp -r /nix/var/nix/profiles/default-*-link /nix/var/nix/profiles/per-user/$USER/profile-1-link
-
-If default-\*-link doesn't exist it's safe to skip that stage. It's only
-necessary to keep any software already installed using nix.
-
-If there are multiple matches for default-\*-link then use the numerically
-highest one.
-
-
-5. Enabling sandbox mode
+4. Enabling sandbox mode
 ------------------------
 
 Builds will be performed in a sandboxed environment, i.e., they’re isolated
@@ -109,6 +106,7 @@ isolate them from other processes in the system (except that fixed-output
 derivations do not run in private network namespace to ensure they can access
 the network).
 
+As ``root`` user run:
 
 .. code-block:: bash
 
@@ -118,13 +116,33 @@ the network).
     % echo "build-sandbox-paths = /bin/sh=`realpath /nix/var/nix/profiles/sandbox/bin/bash` `nix-store -qR \`realpath /nix/var/nix/profiles/sandbox/bin/bash\` | tr '\n' ' '`" >> /etc/nix/nix.conf
 
 
-6. Add ``nix-daemon`` systemd service
--------------------------------------
+5. Migrating from single user to multi user mode
+------------------------------------------------
+
+Run as ``$USER``:
+
+.. code-block:: bash
+
+    % rm $HOME/.nix-profile
+    % rm -r $HOME/.nix-defexpr
+    % sudo cp -r /nix/var/nix/profiles/default-*-link /nix/var/nix/profiles/per-user/$USER/profile-1-link
+
+If default-\*-link doesn't exist it's safe to skip that stage. It's only
+necessary to keep any software already installed using nix.
+
+If there are multiple matches for default-\*-link then use the numerically
+highest one.
+
+
+6. Add ``nix-daemon`` service
+-----------------------------
 
 ``nix-daemon`` serves as a service which schedules all the builds when
 ``nix-build`` or ``nix-shell`` command are invoked. Builds are run as
 unpriviliged ``nixbld`` users which creates extra isolations (appart from
 running in chroot).
+
+For systemd:
 
 .. code-block:: bash
 
@@ -146,9 +164,25 @@ running in chroot).
     % systemctl enable nix-daemon
     % systemctl start nix-daemon
 
+For upstart:
+
+.. code-block:: bash
+
+    % cat <<"EOF" > /etc/init/nix-daemon.conf
+    description "Nix Daemon"
+    start on filesystem
+    stop on shutdown
+    respawn
+    env SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt
+    exec /nix/var/nix/profiles/default/bin/nix-daemon $EXTRA_OPTS
+    EOF
+    % chmod 644 /etc/init/nix-daemon.conf
+    % initctl reload-configuration
+    % service nix-daemon start
+
 
 7. Nix multi user profile script
---------------------------------
+
 
 To hook Nix with create the following script (as ``root`` user):
 
@@ -251,7 +285,8 @@ As ``$USER`` run:
 
 .. code-block:: bash
 
-    % sudo chown $USER:$USER /nix/var/nix/profiles/per-user/$USER
+    % sudo mkdir /nix/var/nix/gcroots/per-user/$USER
+    % sudo chown -R $USER:$USER /nix/var/nix/profiles/per-user/$USER /nix/var/nix/gcroots/per-user/$USER
     % echo "source /etc/nix/nix-profile.sh" >> ~/.bashrc
     % nix-channel --remove nixpkgs
 
