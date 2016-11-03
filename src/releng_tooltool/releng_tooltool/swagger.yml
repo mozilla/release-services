@@ -16,6 +16,7 @@ paths:
             Query parameter can match a substring of an authors email or a
             batch message.
           required: true
+          type: string
       responses:
         200:
           description: An array of upload batches.
@@ -54,6 +55,8 @@ paths:
             The region query argument ``region=us-west-1`` indicates a
             preference for URLs in that region, although if the region is not
             available then URLs in other regions may be returned.
+          required: true
+          type: string
       responses:
         200:
           description: Upload batch.
@@ -69,6 +72,7 @@ paths:
           in: path
           description: Upload batch id.
           required: true
+          type: integer
       responses:
         200:
           description: Upload batch.
@@ -87,17 +91,19 @@ paths:
         which occurs a short time after the URL is generated (currently 60
         seconds but subject to change).
 
-        If the upload URL has expired, then the response is an HTTP 202
-        indicating that the signal has been accepted.  If the URL has not
-        expired, then the response is an HTTP 409, and the ``X-Retry-After``
-        header gives a time, in seconds, that the client should wait before
-        trying again.
       parameters:
         - name: digest
           in: path
           required: true
+          type: string
       responses:
         202:
+          description: |
+            If the upload URL has expired, then the response is an HTTP 202
+            indicating that the signal has been accepted.  If the URL has not
+            expired, then the response is an HTTP 409, and the
+            ``X-Retry-After`` header gives a time, in seconds, that the client
+            should wait before trying again.
           schema:
             type: string
 
@@ -112,6 +118,7 @@ paths:
             The query matches against prefixes of hashes (at least 8
             characters) or against filenames.
           required: true
+          type: string
       responses:
         200:
           description: File
@@ -135,6 +142,7 @@ paths:
         - name: digest
           in: path
           required: true
+          type: string
       responses:
         200:
           description: File
@@ -149,18 +157,21 @@ paths:
         - name: digest
           in: path
           required: true
+          type: string
         - name: region
           in: query
           description: |
             The query argument ``region=us-west-1`` indicates a preference for
             a URL in that region, although if the file is not available in tht
             region then a URL from another region may be returned.
+          type: string
       responses:
         302:
           description: Redirect to a signed download URL.
           headers:
             Location:
               description: Download URL.
+              type: string
     patch:
       operationId: "releng_tooltool.api.patch_file"
       description: |
@@ -185,6 +196,7 @@ paths:
         - name: digest
           in: path
           required: true
+          type: string
         - name: body
           in: body
           description: Upload batch.
@@ -205,6 +217,7 @@ paths:
 definitions:
 
   UploadBatch:
+    type: object
     description: |
       An upload batch describes a collection of related files that are uploaded
       together -- similar to a version-control commit.  The message and files
@@ -218,7 +231,7 @@ definitions:
         type: integer
         description: Identifier for this batch
       uploaded:
-        type: dateTime
+        type: string  # TODO: dateTime
         description: |
          The date and time when this upload occurred.  This will be added by
          the server and need not be specified when making a new upload.
@@ -243,52 +256,50 @@ definitions:
           $ref: '#/definitions/File'
 
   File:
+    type: object
+    description: |
+      A representation of a single file, identified by its contents rather than
+      its filename.  Depending on context, this may contain URLs to download or
+      upload the file.
     required:
       - visibility
     properties:
       size:
         type: integer
         description: The size of the file, in bytes
-
-    digest:
+      digest:
         type: string
         description: The sha512 digest of the file contents.
-
-    algorithm:
-      type: unicode
-      description: |
-        The digest algorithm (reserved for future expansion; must always be
-        sha512).
-
-    visibility:
-      type: string
-      description: |
-        The visibility level of this file.  When making an upload, the uploader
-        is (legally) responsible for selecting the correct visibility level.
-      default: public
-      enum:
-        - public
-        - private
-
-    has_instances:
-      type: bool
-      description: |
-        Boolean to determine whether the file is available to download.
-
-    instances:
-      type: array
-      description: |
-        The regions containing an instance of this file.  This field is
-        generally omitted except where specified.
-      items:
+      algorithm:
         type: string
-
-    get_url:
-      type: string
-      description: The URL from which this file can be downlaoded via HTTP GET.
-
-    put_url:
-      type: string
-      description: |
-        The URL to which this file can be uploaded via HTTP PUT. The URL
-        requires the request content-type to be ``application/octet-stream``.
+        description: |
+          The digest algorithm (reserved for future expansion; must always be
+          sha512).
+      visibility:
+        type: string
+        description: |
+          The visibility level of this file.  When making an upload, the uploader
+          is (legally) responsible for selecting the correct visibility level.
+        default: public
+        enum:
+           - public
+           - private
+      has_instances:
+        type: boolean
+        description: |
+          Boolean to determine whether the file is available to download.
+      instances:
+        type: array
+        description: |
+          The regions containing an instance of this file.  This field is
+          generally omitted except where specified.
+        items:
+          type: string
+      get_url:
+        type: string
+        description: The URL from which this file can be downlaoded via HTTP GET.
+      put_url:
+        type: string
+        description: |
+          The URL to which this file can be uploaded via HTTP PUT. The URL
+          requires the request content-type to be ``application/octet-stream``.
