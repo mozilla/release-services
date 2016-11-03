@@ -1,0 +1,116 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "ToolTool"
+paths:
+
+  /buildbot:
+
+    get:
+      operationId: "releng_clobberer.api.get_buildbot"
+      responses:
+        200:
+          description: An array of branches
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Branch'
+
+    post:
+      operationId: "releng_clobberer.api.post_buildbot"
+      parameters:
+        - name: body
+          in: body
+          description: List of Builds to clobber.
+          required: true
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                branch:
+                  type: string
+                builddir:
+                  type: string
+                slave:
+                  type: string
+      responses:
+        200:
+          description: Builders clobbered
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Message'
+        500:
+          description: Something went wrong when clobbering builders
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Message'
+
+  /taskcluster:
+
+    get:
+      operationId: "releng_clobberer.api.get_taskcluster"
+      responses:
+        200:
+          description: An array of branches
+
+    post:
+      operationId: "releng_clobberer.api.post_taskcluster"
+      responses:
+        200:
+          description: Branches clobbered
+
+definitions:
+
+  Message:
+    required:
+      - title
+      - message
+    properties:
+      title:
+        type: string
+      message:
+        type: string
+      extra:
+        type: string
+
+
+  Branch:
+    type: object
+    required:
+      - name
+      - builders
+    properties:
+      name:
+        type: string
+      builders:
+        type: array
+        description: Builders per branch
+        items:
+          $ref: '#/definitions/Builder'
+
+  Builder:
+    type: object
+    required:
+      - name
+      - branch
+      - builddir
+      - slave
+      - lastclobber
+      - who
+    properties:
+      name:
+        type: string
+      branch:
+        type: string
+      builddir:
+        type: string
+      slave:
+        type: string
+      lastclobber:
+        type: integer
+      who:
+        type: string

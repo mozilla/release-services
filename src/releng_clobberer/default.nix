@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend mkTaskclusterHook filterSource;
+  inherit (releng_pkgs.lib) mkBackend mkTaskclusterHook filterSource mysql2sqlite mysql2postgresql;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) removeSuffix;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -18,9 +18,6 @@ let
     ALTER TABLE builds        RENAME TO clobberer_builds;
     ALTER TABLE clobber_times RENAME TO clobberer_times;
   '';
-
-  # TODO: move this migrate scripts to releng_pkgs.tools
-  migrate = import ./migrate.nix { inherit releng_pkgs; };
 
   taskcluster_cache = mkTaskclusterHook {
     name = "create taskcluster cache";
@@ -77,8 +74,8 @@ let
         ./requirements-prod.txt
       ];
     passthru = {
-      mysql2sqlite = migrate.mysql2sqlite { inherit name beforeSQL afterSQL; };
-      mysql2postgresql = migrate.mysql2postgresql { inherit name beforeSQL afterSQL; };
+      mysql2sqlite = mysql2sqlite { inherit name beforeSQL afterSQL; };
+      mysql2postgresql = mysql2postgresql { inherit name beforeSQL afterSQL; };
       taskclusterHooks = {
         master = {
         };

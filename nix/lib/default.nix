@@ -71,7 +71,11 @@ let
     in
       map removeVersion specs;
 
+  migrate = import ./migrate.nix { inherit releng_pkgs; };
+
 in rec {
+
+  inherit (migrate) mysql2sqlite mysql2postgresql;
 
   packagesWith = attrName: pkgs':
     builtins.filter
