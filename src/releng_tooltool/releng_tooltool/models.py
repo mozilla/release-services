@@ -12,10 +12,10 @@ from releng_common.db import db
 ALLOWED_REGIONS = ('us-east-1', 'us-west-1', 'us-west-2')
 
 
-class File(db.declarative_base('relengapi')):
-
+class File(db.Model):
     """An file, identified by size and digest.  The server may have zero
-    or many copies of a file."""
+       or many copies of a file.
+    """
 
     __tablename__ = 'tooltool_files'
 
@@ -45,7 +45,7 @@ class File(db.declarative_base('relengapi')):
         return json.dumps(file)
 
 
-class FileInstance(db.declarative_base('relengapi')):
+class FileInstance(db.Model):
 
     """A verified instance of a file in a single region."""
 
@@ -55,7 +55,7 @@ class FileInstance(db.declarative_base('relengapi')):
     region = sa.Column(sa.Enum(*ALLOWED_REGIONS), primary_key=True)
 
 
-class BatchFile(db.declarative_base('relengapi')):
+class BatchFile(db.Model):
 
     """An association of upload batches to files, with filenames"""
 
