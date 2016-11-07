@@ -4,34 +4,34 @@
 
 from __future__ import absolute_import
 
-from flask import g
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate, init as migrations_init, upgrade as migrations_upgrade
-import os
 import logging
+import os
+import flask
+import flask_migrate
+import flask_sqlalchemy
 
 logger = logging.getLogger('releng_common.db')
+db = flask_sqlalchemy.SQLAlchemy()
 
-
-db = SQLAlchemy()
 
 def init_app(app):
     db.init_app(app)
 
     # Setup migrations
-    migrations_dir = os.path.abspath(os.path.join(app.root_path, '..', 'migrations'))
-    Migrate(app, db, directory=migrations_dir)
+    migrations_dir = os.path.abspath(
+        os.path.join(app.root_path, '..', 'migrations'))
+    flask_migrate.Migrate(app, db, directory=migrations_dir)
     with app.app_context():
         if os.path.isdir(migrations_dir):
             try:
-                migrations_upgrade()
+                flask_migrate.upgrade()
             except Exception as e:
                 logger.error('Migrations failure: {}'.format(e))
         else:
-            migrations_init()
+            flask_migrate.init()
 
     @app.before_request
     def setup_request():
-        g.db = app.db
+        flask.g.db = app.db
 
     return db

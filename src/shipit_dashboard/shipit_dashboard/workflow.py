@@ -1,22 +1,30 @@
 # coding=utf-8
-from releng_common.db import db
-from shipit_dashboard.models import BugAnalysis, BugResult
-from shipit_dashboard.helpers import compute_dict_hash
-from shipit_dashboard.encoder import ShipitJSONEncoder
-from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
-from libmozdata import bugzilla
-from sqlalchemy.orm.exc import NoResultFound
-from flask.cli import with_appcontext
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+import click
+import logging
+import mohawk
+import os
+import pickle
+import requests
+
 from flask import current_app
 from flask import json
-import logging
-import requests
-import mohawk
-import pickle
-import click
-import os
+from flask.cli import with_appcontext
+from libmozdata import bugzilla
+from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
+from sqlalchemy.orm.exc import NoResultFound
+
+from releng_common.db import db
+from shipit_dashboard.encoder import ShipitJSONEncoder
+from shipit_dashboard.helpers import compute_dict_hash
+from shipit_dashboard.models import BugAnalysis, BugResult
+
 
 logger = logging.getLogger(__name__)
+
 
 class BugSync(object):
     """
@@ -29,6 +37,7 @@ class BugSync(object):
         self.on_bugzilla = []
         self.raw = None
 
+
 class Workflow(object):
     """
     Update all analysis data
@@ -39,8 +48,8 @@ class Workflow(object):
 
         # Patch libmozdata configuration
         # TODO: Fix config calls in libmozdata
-        #os.environ['LIBMOZDATA_CFG_BUGZILLA_URL'] = self.bugzilla_url
-        #set_config(ConfigEnv())
+        # os.environ['LIBMOZDATA_CFG_BUGZILLA_URL'] = self.bugzilla_url
+        # set_config(ConfigEnv())
         bugzilla.Bugzilla.URL = self.bugzilla_url
         bugzilla.Bugzilla.API_URL = self.bugzilla_url + '/rest/bug'
         bugzilla.BugzillaUser.URL = self.bugzilla_url
@@ -67,7 +76,11 @@ class Workflow(object):
 
         bugs, attachments = {}, {}
 
-        bz = bugzilla.Bugzilla(query, bughandler=_bughandler, attachmenthandler=_attachmenthandler, bugdata=bugs, attachmentdata=attachments)
+        bz = bugzilla.Bugzilla(query,
+                               bughandler=_bughandler,
+                               attachmenthandler=_attachmenthandler,
+                               bugdata=bugs,
+                               attachmentdata=attachments)
         bz.get_data().wait()
 
         # Map attachments on bugs
@@ -100,7 +113,7 @@ class Workflow(object):
 
                 # Check the bug has changed since last update
                 if br.payload_hash == bug_hash:
-                    logger.info('Same bug hash, skip bug analysis {}'.format(br))
+                    logger.info('Same bug hash, skip bug analysis {}'.format(br))  # noqa
                     return br
 
             except NoResultFound:
@@ -120,13 +133,14 @@ class Workflow(object):
 
         # Build html version of uplift comment
         if analysis['uplift_comment']:
-            analysis['uplift_comment']['html'] = parse_uplift_comment(analysis['uplift_comment']['text'], bug_id)
+            analysis['uplift_comment']['html'] = parse_uplift_comment(
+                analysis['uplift_comment']['text'], bug_id)
 
         payload = {
-            'url' : '{}/{}'.format(self.bugzilla_url, bug['id']),
+            'url': '{}/{}'.format(self.bugzilla_url, bug['id']),
             'bug': bug,
             'analysis': analysis,
-            'users' : self.load_users(analysis),
+            'users': self.load_users(analysis),
         }
         br.payload = use_db and pickle.dumps(payload, 2) or payload
         br.payload_hash = bug_hash
@@ -142,6 +156,7 @@ class Workflow(object):
         Load users linked through roles to an analysis
         """
         roles = {}
+
         def _extract_user(user_data, role):
             # Support multiple input structures
             if user_data is None:
@@ -177,8 +192,11 @@ class Workflow(object):
 
         # Finally fetch clean users data through Bugzilla
         out = []
-        bugzilla.BugzillaUser(user_names=roles.keys(), user_handler=_handler, user_data=out).wait()
+        bugzilla.BugzillaUser(user_names=roles.keys(),
+                              user_handler=_handler,
+                              user_data=out).wait()
         return out
+
 
 class WorkflowLocal(Workflow):
     """
@@ -209,20 +227,21 @@ class WorkflowLocal(Workflow):
                     db.session.add(analysis)
                     db.session.commit()
 
+
 class WorkflowRemote(Workflow):
     """
     Use a distant shipit api server
     to store processed analysis
     """
-    def __init__(self, bugzilla_url, bugzilla_token, api_url, client_id, access_token):
+    def __init__(self, bugzilla_url, bugzilla_token, api_url, client_id, access_token):  # noqa
         super(WorkflowRemote, self).__init__(bugzilla_url, bugzilla_token)
         self.api_url = api_url
         self.credentials = {
-          'id' : client_id,
-          'key' : access_token,
-          'algorithm' : 'sha256',
+          'id': client_id,
+          'key': access_token,
+          'algorithm': 'sha256',
         }
-        self.sync = {} # init
+        self.sync = {}  # init
 
     def make_request(self, method, url, data=''):
         """
@@ -234,16 +253,21 @@ class WorkflowRemote(Workflow):
 
         # Build HAWK token
         url = self.api_url + url
-        hawk = mohawk.Sender(self.credentials, url, method, content=data, content_type='application/json')
+        hawk = mohawk.Sender(self.credentials,
+                             url,
+                             method,
+                             content=data,
+                             content_type='application/json')
 
         # Send request
         headers = {
-            'Authorization' : hawk.request_header,
-            'Content-Type' : 'application/json',
+            'Authorization': hawk.request_header,
+            'Content-Type': 'application/json',
         }
         response = request(url, data=data, headers=headers, verify=False)
         if not response.ok:
-            raise Exception('Invalid response from {} {} : {}'.format(method, url, response.content))
+            raise Exception('Invalid response from {} {} : {}'.format(
+                method, url, response.content))
 
         return response.json()
 
@@ -270,8 +294,8 @@ class WorkflowRemote(Workflow):
 
             # Mark bugs already in analysis
             logger.info('List remote bugs for {}'.format(analysis['name']))
-            analysis_details = self.make_request('get', '/analysis/{}'.format(analysis['id']))
-            syncs = map(self.get_bug_sync, [b['bugzilla_id'] for b in analysis_details['bugs']])
+            analysis_details = self.make_request('get', '/analysis/{}'.format(analysis['id']))  # noqa
+            syncs = map(self.get_bug_sync, [b['bugzilla_id'] for b in analysis_details['bugs']])  # noqa
             for sync in syncs:
                 sync.on_remote.append(analysis['id'])
 
@@ -293,41 +317,49 @@ class WorkflowRemote(Workflow):
                     continue
 
                 payload = {
-                    'bugzilla_id' : bug.bugzilla_id,
-                    'analysis' : sync.on_bugzilla,
-                    'payload' : bug.payload,
-                    'payload_hash' : bug.payload_hash,
+                    'bugzilla_id': bug.bugzilla_id,
+                    'analysis': sync.on_bugzilla,
+                    'payload': bug.payload,
+                    'payload_hash': bug.payload_hash,
                 }
 
                 # Send payload to server
                 try:
                     self.make_request('post', '/bugs', json.dumps(payload))
-                    logger.info('Added bug #{} on analysis {}'.format(bugzilla_id, ', '.join(map(str, sync.on_bugzilla))))
+                    logger.info('Added bug #{} on analysis {}'.format(
+                        bugzilla_id, ', '.join(map(str, sync.on_bugzilla))))
                 except Exception as e:
-                    logger.error('Failed to add bug #{} : {}'.format(bugzilla_id, e))
+                    logger.error('Failed to add bug #{} : {}'.format(bugzilla_id, e))  # noqa
 
             elif len(sync.on_remote) > 0:
                 # Remove bugs from remote server
                 try:
                     self.make_request('delete', '/bugs/{}'.format(bugzilla_id))
-                    logger.info('Deleted bug #{} from analysis {}'.format(bugzilla_id, ', '.join(map(str, sync.on_remote))))
+                    logger.info('Deleted bug #{} from analysis {}'.format(
+                        bugzilla_id, ', '.join(map(str, sync.on_remote))))
                 except Exception as e:
-                    logger.warning('Failed to delete bug #{} : {}'.format(bugzilla_id, e))
+                    logger.warning(
+                        'Failed to delete bug #{} : {}'.format(bugzilla_id, e))
 
-@click.command('run_workflow_local', short_help='Update all analysis & related bugs, using local database.')
+
+@click.command(
+    'run_workflow_local',
+    short_help='Update all analysis & related bugs, using local database.')
 @with_appcontext
 def run_workflow_local():
     """
     Run the full bug update workflow
     """
-    bugzilla_url = os.environ.get('BUGZILLA_URL', 'https://bugzilla.mozilla.org')
+    bugzilla_url = os.environ.get('BUGZILLA_URL', 'https://bugzilla.mozilla.org')  # noqa
     bugzilla_token = os.environ.get('BUGZILLA_TOKEN')
 
     workflow = WorkflowLocal(bugzilla_url, bugzilla_token)
     workflow.run()
 
 
-@click.command('run_workflow', short_help='Run all analysis from a remote server. Stores on server')
+@click.command(
+    'run_workflow',
+    short_help='Run all analysis from a remote server. Stores on server')
 @with_appcontext
 def run_workflow():
     """
@@ -341,7 +373,7 @@ def run_workflow():
             raise Exception('Missing env {}'.format(key))
         return v
 
-    bugzilla_url = os.environ.get('BUGZILLA_URL', 'https://bugzilla.mozilla.org')
+    bugzilla_url = os.environ.get('BUGZILLA_URL', 'https://bugzilla.mozilla.org')  # noqa
     bugzilla_token = os.environ.get('BUGZILLA_TOKEN')
 
     workflow = WorkflowRemote(bugzilla_url, bugzilla_token, *map(_check, keys))

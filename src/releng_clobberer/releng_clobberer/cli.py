@@ -24,7 +24,6 @@ def taskcluster_cache(namespace='gecko.v2',
     index = taskcluster.Index()
     queue = taskcluster.Queue()
 
-
     branches = dict()
     for branch in index.listNamespaces(namespace, dict(limit=1000))\
                        .get('namespaces', []):

@@ -9,7 +9,7 @@ import logging
 import os
 import sys
 
-from flask import Flask, send_from_directory
+from flask import Flask
 
 from releng_common import api, log, cors
 
@@ -81,7 +81,7 @@ def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
         return dict(
             host=os.environ.get('HOST', 'localhost'),
             port=int(os.environ.get('PORT', '5000')),
-            debug=DEBUG,
+            debug=debug,
             use_reloader=debug,
             use_debugger=debug,
             use_evalex=debug,
