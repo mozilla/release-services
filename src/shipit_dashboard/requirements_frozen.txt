@@ -6,6 +6,7 @@ chardet==2.3.0
 click==6.6
 clickclick==1.2.1
 connexion==1.0.129
+cookies==2.2.1
 cryptography==1.5.3
 cycler==0.10.0
 decorator==4.0.10
@@ -61,6 +62,7 @@ pytz==2016.7
 PyYAML==3.12
 requests==2.11.1
 requests-futures==0.9.7
+responses==0.5.1
 rsa==3.4.2
 setuptools-scm==1.15.0
 simplegeneric==0.8.1

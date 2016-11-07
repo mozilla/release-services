@@ -462,6 +462,24 @@ self: {
 
 
 
+  "cookies" = python.mkDerivation {
+    name = "cookies-2.2.1";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/f3/95/b66a0ca09c5ec9509d8729e0510e4b078d2451c5e33f47bd6fc33c01517c/cookies-2.2.1.tar.gz";
+      sha256 = "d6b698788cae4cfa4e62ef8643a9ca332b79bd96cb314294b864ae8d7eb3ee8e";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "Friendlier RFC 6265-compliant cookie parser/renderer";
+    };
+  };
+
+
+
   "cycler" = python.mkDerivation {
     name = "cycler-0.10.0";
     src = pkgs.fetchurl {
@@ -1314,6 +1332,28 @@ self: {
     };
   };
 
+
+  "responses" = python.mkDerivation {
+    name = "responses-0.5.1";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/09/e4/ae639e37d9d35903fdeda416d7f9c9e3a0331895d574b4fe6632a27c9190/responses-0.5.1.tar.gz";
+      sha256 = "8cad64c45959a651ceaf0023484bd26180c927fea64a81e63d334ddf6377ecea";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."cookies"
+      self."flake8"
+      self."pytest"
+      self."requests"
+      self."six"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.asl20;
+      description = "A utility library for mocking out the `requests` Python library.";
+    };
+  };
 
 
   "rsa" = python.mkDerivation {

@@ -1,4 +1,5 @@
-from releng_common.auth import Auth, AnonymousUser, TaskclusterUser
+from releng_common.auth import AnonymousUser, TaskclusterUser
+import responses
 import pytest
 
 
@@ -15,6 +16,7 @@ def test_anonymous():
     assert user.permissions == set()
     assert not user.is_active
     assert user.is_anonymous
+
 
 def test_taskcluster_user():
     """
@@ -38,4 +40,25 @@ def test_taskcluster_user():
     with pytest.raises(AssertionError):
         user = TaskclusterUser({})
     with pytest.raises(AssertionError):
-        user = TaskclusterUser({'clientId' : '', 'scopes' : None})
+        user = TaskclusterUser({'clientId': '', 'scopes': None})
+
+
+@responses.activate
+def test_auth(app, client):
+    """
+    Test the Taskcluster authentication
+    """
+    assert app.debug
+
+    # Test non authenticated endpoint
+    resp = client.get('/')
+    assert resp.status_code == 200
+    assert b'OK' in resp.data
+
+    # Test authenticated endpoint
+    resp = client.get('/test-login')
+    assert resp.status_code == 401
+    # TODO: use a real hawk header
+    resp = client.get('/test-login', headers=[('Authorization', 'Hawk plop')])
+    assert resp.status_code == 200
+    assert resp.data == b'Authenticated'

@@ -151,17 +151,9 @@ class Auth(object):
         def decorator(method):
             @wraps(method)
             def wrapper(*args, **kwargs):
-                with current_app.app_context():
-                    # Check login
-                    response = self._require_login()
-                    if response is not None:
-                        return response
-                    # Check scopes, using TC implementation
-                    user_scopes = current_user.get_permissions()
-                    if not scope_match(user_scopes, scopes):
-                        diffs = [', '.join(set(s).difference(user_scopes)) for s in scopes]  # noqa
-                        logger.error('User {} misses some scopes: {}'.format(current_user.get_id(), ' OR '.join(diffs)))  # noqa
-                        return abort(401)
+                response = self._require_scopes()
+                if response is not None:
+                    return response
                 return method(*args, **kwargs)
             return wrapper
         return decorator
@@ -186,7 +178,7 @@ def taskcluster_user_loader(auth_header):
         host = request.host
         port = request.environ.get('HTTP_X_FORWARDED_PORT')
         if port is None:
-            request.scheme == 'https' and 443 or 80
+            port = request.scheme == 'https' and 443 or 80
     method = request.method.lower()
 
     # Build taskcluster payload
