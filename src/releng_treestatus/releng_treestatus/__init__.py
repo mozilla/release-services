@@ -17,7 +17,7 @@ APP_SETTINGS = os.path.abspath(os.path.join(HERE, '..', 'settings.py'))
 
 def init_app(app):
     return app.api.register(
-        os.path.join(os.path.dirname(__file__), 'swagger.yml'))
+        os.path.join(os.path.dirname(__file__), 'api.yml'))
 
 
 if DEBUG and not os.environ.get('DATABASE_URL'):
