@@ -23,7 +23,7 @@ def init_app(app):
 
     # Register swagger api
     return app.api.register(
-        os.path.join(os.path.dirname(__file__), 'swagger.yml'))
+        os.path.join(os.path.dirname(__file__), 'api.yml'))
 
 if not os.environ.get('APP_SETTINGS') and \
        os.path.isfile(APP_SETTINGS):
