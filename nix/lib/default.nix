@@ -351,8 +351,12 @@ in rec {
         checkPhase = ''
           export LANG=en_US.UTF-8
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
-          flake8 settings.py setup.py ${name}/
-          # TODO: pytest ${name}/
+          for i in src-*; do
+            pushd $i
+            flake8 --exclude=nix_run_setup.py --exclude=build/*
+            # TODO: py.test
+            popd >> /dev/null
+          done
         '';
         shellHook = ''
           export CACHE_DEFAULT_TIMEOUT=3600

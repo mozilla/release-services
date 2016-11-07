@@ -4,14 +4,19 @@
 
 from __future__ import absolute_import
 
+import pickle
+
 from flask import abort, request
+from sqlalchemy.orm.exc import NoResultFound
+
 from releng_common.auth import auth
 from releng_common.db import db
-from shipit_dashboard.models import BugAnalysis, BugResult, Contributor, BugContributor
-from shipit_dashboard.serializers import serialize_analysis, serialize_bug
-from sqlalchemy.orm.exc import NoResultFound
 from shipit_dashboard.helpers import gravatar
-import pickle
+from shipit_dashboard.models import (
+    BugAnalysis, BugResult, Contributor, BugContributor
+)
+from shipit_dashboard.serializers import serialize_analysis, serialize_bug
+
 
 # Tasckcluster scopes
 SCOPES_USER = [
@@ -24,6 +29,7 @@ SCOPES_BOT = [
     'project:shipit:analysis/manage',
 ]
 
+
 @auth.require_scopes([SCOPES_USER, SCOPES_BOT])
 def list_analysis():
     """
@@ -31,6 +37,7 @@ def list_analysis():
     """
     all_analysis = BugAnalysis.query.all()
     return [serialize_analysis(analysis, False) for analysis in all_analysis]
+
 
 @auth.require_scopes([SCOPES_USER, SCOPES_BOT])
 def get_analysis(analysis_id):
@@ -46,6 +53,7 @@ def get_analysis(analysis_id):
 
     # Build JSON output
     return serialize_analysis(analysis)
+
 
 @auth.require_scopes(SCOPES_USER)
 def update_bug(bugzilla_id):
@@ -65,14 +73,15 @@ def update_bug(bugzilla_id):
         if update['target'] == 'bug':
             # Update bug flags
             if update['bugzilla_id'] != bug.bugzilla_id:
-                raise Exception('Invalid bugzilla_id in changes list') # should never happen
+                # should never happen
+                raise Exception('Invalid bugzilla_id in changes list')
             for flag_name, actions in update['changes'].items():
                 payload['bug'][flag_name] = actions.get('added')
 
         elif update['target'] == 'attachment':
             # Build flags map
             source = update['changes'].get('flagtypes.name', {})
-            removed, added = source['removed'].split(', '), source['added'].split(', ')
+            removed, added = source['removed'].split(', '), source['added'].split(', ')  # noqa
             flags_map = dict(zip(removed, added))
 
             # Update attachment flag status
@@ -85,7 +94,7 @@ def update_bug(bugzilla_id):
                         flag['status'] = flags_map[name][len(flag['name']):]
 
         else:
-            raise Exception('Invalid update target {}'.format(update['target']))
+            raise Exception('Invalid update target {}'.format(update['target']))  # noqa
 
     # Save changes
     bug.payload = pickle.dumps(payload, 2)
@@ -94,6 +103,7 @@ def update_bug(bugzilla_id):
 
     # Send back the bug
     return serialize_bug(bug)
+
 
 @auth.require_scopes(SCOPES_BOT)
 def create_bug():
@@ -145,7 +155,10 @@ def create_bug():
 
         # Link contributor to bug
         try:
-            link = BugContributor.query.filter_by(bug_id=bug.id, contributor_id=contrib.id).one()
+            link = BugContributor.query.filter_by(
+                bug_id=bug.id,
+                contributor_id=contrib.id
+            ).one()
         except Exception:
             link = BugContributor(bug=bug, contributor=contrib)
         link.roles = ','.join(user['roles'])
@@ -158,6 +171,7 @@ def create_bug():
 
     # Send back the bug
     return serialize_bug(bug)
+
 
 @auth.require_scopes(SCOPES_BOT)
 def delete_bug(bugzilla_id):

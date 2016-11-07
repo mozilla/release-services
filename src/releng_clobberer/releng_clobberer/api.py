@@ -7,24 +7,25 @@ from __future__ import absolute_import
 import taskcluster
 
 from flask import g, current_app
-from releng_clobberer import models
+from flask_login import current_user
 
+from releng_clobberer import models
 
 
 def get_buildbot():
     return models.buildbot_branches(g.db.session)
 
 
-## TODO: this will change with tc authentication, it should be passed
-#try:
-#    who = current_user.authenticated_email
-#except AttributeError:
-#    if current_user.anonymous:
-#        who = 'anonymous'
-#    else:
-#        # TokenUser doesn't show up as anonymous; but also has no
-#        # authenticated_email
-#        who = 'automation'
+# TODO: this will change with tc authentication, it should be passed
+# try:
+#     who = current_user.authenticated_email
+# except AttributeError:
+#     if current_user.anonymous:
+#         who = 'anonymous'
+#     else:
+#         # TokenUser doesn't show up as anonymous; but also has no
+#         # authenticated_email
+#         who = 'automation'
 
 # TODO: require scopes
 # releng_common.auth.auth.require_scope('releng???/api/clobberer/buildbot/post)
@@ -72,7 +73,7 @@ def get_taskcluster(branch='staging'):
     )
 
 
-def post_taskcluster():
+def post_taskcluster(body):
     # TODO: need to make this route work
     credentials = []
 

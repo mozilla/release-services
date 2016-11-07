@@ -4,9 +4,7 @@
 
 from __future__ import absolute_import
 
-import logging
 import structlog
-import sys
 
 
 class UnstructuredRenderer(structlog.processors.KeyValueRenderer):

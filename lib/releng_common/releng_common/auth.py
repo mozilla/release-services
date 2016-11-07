@@ -8,6 +8,7 @@ import taskcluster
 
 logger = logging.getLogger(__name__)
 
+
 class BaseUser(object):
 
     anonymous = False
@@ -81,8 +82,8 @@ class TaskclusterUser(BaseUser):
         if not target_header:
             raise Exception('Missing X-AUTHORIZATION-TARGET header')
         return {
-            'credentials' : {
-                'hawkHeader' : target_header
+            'credentials': {
+                'hawkHeader': target_header
             }
         }
 
@@ -108,7 +109,6 @@ class Auth(object):
         self.app = app
         self.login_manager.init_app(app)
 
-
     def _require_scopes(self, scopes):
         response = self._require_login()
         if response is not None:
@@ -117,8 +117,8 @@ class Auth(object):
         with current_app.app_context():
             user_scopes = current_user.get_permissions()
             if not scope_match(user_scopes, scopes):
-                diffs = [', '.join(set(s).difference(user_scopes)) for s in scopes]
-                logger.error('User {} misses some scopes: {}'.format(current_user.get_id(), ' OR '.join(diffs)))
+                diffs = [', '.join(set(s).difference(user_scopes)) for s in scopes]  # noqa
+                logger.error('User {} misses some scopes: {}'.format(current_user.get_id(), ' OR '.join(diffs)))  # noqa
                 return abort(401)
 
     def _require_login(self):
@@ -159,8 +159,8 @@ class Auth(object):
                     # Check scopes, using TC implementation
                     user_scopes = current_user.get_permissions()
                     if not scope_match(user_scopes, scopes):
-                        diffs = [', '.join(set(s).difference(user_scopes)) for s in scopes]
-                        logger.error('User {} misses some scopes: {}'.format(current_user.get_id(), ' OR '.join(diffs)))
+                        diffs = [', '.join(set(s).difference(user_scopes)) for s in scopes]  # noqa
+                        logger.error('User {} misses some scopes: {}'.format(current_user.get_id(), ' OR '.join(diffs)))  # noqa
                         return abort(401)
                 return method(*args, **kwargs)
             return wrapper
@@ -191,11 +191,11 @@ def taskcluster_user_loader(auth_header):
 
     # Build taskcluster payload
     payload = {
-        'resource' : request.path,
-        'method' : method,
-        'host' : host,
-        'port' : int(port),
-        'authorization' : auth_header,
+        'resource': request.path,
+        'method': method,
+        'host': host,
+        'port': int(port),
+        'authorization': auth_header,
     }
 
     # Auth with taskcluster
@@ -207,7 +207,7 @@ def taskcluster_user_loader(auth_header):
     except Exception as e:
         logger.error('TC auth error: {}'.format(e))
         logger.error('TC auth details: {}'.format(payload))
-        abort(401) # Unauthorized
+        abort(401)  # Unauthorized
 
     return TaskclusterUser(resp)
 

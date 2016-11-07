@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import
 
-
+import re
 import sqlalchemy as sa
 import time
 
@@ -93,7 +93,6 @@ def buildbot_branches(db_session):
     ).order_by(
         Build.branch
     ).distinct()
-
 
     return [
         dict(
@@ -194,7 +193,6 @@ def clobber_buildbot(db_session, who, branch=None, slave=None, builddir=None,
             log.debug('Clobbered builder: {}'.format(builder))
 
         return clobberer_time
-
 
     if log:
         log.debug('Skipping clobbering of builder: {}'.format(builder))
