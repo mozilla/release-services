@@ -364,6 +364,8 @@ in rec {
           export CACHE_DIR=$PWD/cache
           export DATABASE_URL=sqlite:///$PWD/app.db
           export LANG=en_US.UTF-8
+          export FLASK_APP=${name}
+          export DEBUG=1
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 
           for i in ${builtins.concatStringsSep " " srcs}; do
