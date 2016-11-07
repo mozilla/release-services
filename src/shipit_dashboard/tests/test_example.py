@@ -1,3 +1,6 @@
 
+
 def test_example():
-    assert True
+    import shipit_dashboard
+    assert shipit_dashboard
+
