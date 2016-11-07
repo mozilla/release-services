@@ -10,11 +10,12 @@ import logging
 import os
 import sys
 
+from flask import Flask, redirect
+
 __APP = dict()
+__BASE_EXTENSIONS = []
 
 logger = logging.getLogger('releng_common')
-
-__BASE_EXTENSIONS = []
 
 try:
     from releng_common import log
@@ -37,7 +38,7 @@ if 'CORS_ORIGINS' in os.environ:
 
 
 def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
-               **kw):
+               redirect_root_to_api=True, **kw):
     global __APP
     if __APP and name in __APP:
         return __APP[name]
@@ -84,7 +85,12 @@ def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
         if hasattr(app, 'log'):
             app.log.debug('extension `%s` configured.' % extension_name)
 
-    def get_run_options():
+    if redirect_root_to_api:
+        app.add_url_rule("/",
+                         "root",
+                         lambda: redirect(app.api._Api__api.swagger_url))
+
+    def run_options():
         extra_files = []
         if debug_src:
             for base, dirs, files in os.walk(debug_src):
@@ -102,5 +108,5 @@ def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
             extra_files=extra_files,
         )
 
-    app.get_run_options = get_run_options
+    app.run_options = run_options
     return app
