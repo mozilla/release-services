@@ -174,6 +174,11 @@ build-docker: require-APP build-docker-$(APP)
 build-docker-%: nix
 	@nix-build nix/docker.nix -A $(subst build-docker-,,$@) -o result-docker-$(subst build-docker-,,$@) --fallback
 
+test: require-APP
+	nix-shell nix/default.nix -A $(APP) \
+	--run "pytest lib/releng_common/tests src/$(APP)/tests"
+	
+
 
 deploy-staging-all: $(foreach app, $(APPS), deploy-staging-$(app))
 
