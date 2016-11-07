@@ -23,6 +23,13 @@ self: super: {
     buildInputs = old.buildInputs ++ [ self."pytest-runner" ];
   });
 
+  "async-timeout" = python.overrideDerivation super."async-timeout" (old: {
+    buildInputs = old.buildInputs ++ [ self."pytest-runner" ];
+  });
+
+  "clickclick" = python.overrideDerivation super."clickclick" (old: {
+    buildInputs = old.buildInputs ++ [ self."flake8" self."six" ];
+  });
 
   "pytest-runner" = python.overrideDerivation super."pytest-runner" (old: {
     buildInputs = old.buildInputs ++ [ self."setuptools-scm" ];
