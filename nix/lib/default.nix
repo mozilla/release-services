@@ -279,53 +279,61 @@ in rec {
       };
     in self;
 
-  filterSource = src_tmp: { include ? [ "/" ], exclude ? [] }: src_x:
-    let
-      startsWith = s: x: builtins.substring 0 (builtins.stringLength x) s == x;
-      src = src_tmp + ("/" + src_x);
-      relativePath = path:
-        builtins.substring (builtins.stringLength (builtins.toString src))
-                           (builtins.stringLength path)
-                           path;
-    in
-      builtins.filterSource (path: type: 
-        if builtins.any (x: x) (builtins.map (startsWith (relativePath path)) exclude) then false
-        else if builtins.any (x: x) (builtins.map (startsWith (relativePath path)) include) then true
-        else false
-      ) src;
+  filterSource = src:
+    { name ? null
+    , include ? [ "/" ]
+    , exclude ? []
+    }:
+      assert name == null -> include != null;
+      assert name == null -> exclude != null;
+      let
+        _include= if include == null then [
+          "/VERSION"
+          "/${name}"
+          "/tests"
+          "/MANIFEST.in"
+          "/settings.py"
+          "/setup.py"
+        ] else include;
+        _exclude = if exclude == null then [
+            "/${name}.egg-info"
+        ] else exclude;
+        startsWith = s: x: builtins.substring 0 (builtins.stringLength x) s == x;
+        relativePath = path:
+          builtins.substring (builtins.stringLength (builtins.toString src))
+                             (builtins.stringLength path)
+                             path;
+      in
+        builtins.filterSource (path: type: 
+          if builtins.any (x: x) (builtins.map (startsWith (relativePath path)) _exclude) then false
+          else if builtins.any (x: x) (builtins.map (startsWith (relativePath path)) _include) then true
+          else false
+        ) src;
 
   mkBackend =
     { name
     , version
     , src
-    , srcs
     , python
-    , buildRequirements ? []
-    , propagatedRequirements ? []
+    , buildInputs ? []
+    , propagatedBuildInputs ? []
     , passthru ? {}
     }:
     let
-      getSrc = x:
-        if builtins.typeOf src == "path"
-        then src + ("/" + x)
-        else src x;
       self = python.mkDerivation {
         namePrefix = "";
         name = "${name}-${version}";
-        srcs = if inNixShell then null else (builtins.map getSrc srcs);
-        sourceRoot = ".";
-        buildInputs = [ makeWrapper glibcLocales ] ++
-          fromRequirementsFile buildRequirements python.packages;
-        propagatedBuildInputs =
-          fromRequirementsFile propagatedRequirements python.packages;
+
+        inherit src;
+
+        buildInputs = [ makeWrapper glibcLocales ] ++ buildInputs;
+        propagatedBuildInputs = [] ++ propagatedBuildInputs;
+
         patchPhase = ''
-          for i in src-*; do
-            if test -L $i/VERSION; then
-              rm $i/VERSION
-              echo ${version} > $i/VERSION
-            fi
-          done
+          rm VERSION
+          echo ${version} > VERSION
         '';
+
         postInstall = ''
           mkdir -p $out/bin $out/etc
 
@@ -334,7 +342,7 @@ in rec {
           ln -s ${python.packages."gunicorn"}/bin/gunicorn $out/bin
           ln -s ${python.packages."newrelic"}/bin/newrelic-admin $out/bin
        
-          cp ./src-*-${name}/settings.py $out/etc
+          cp ./settings.py $out/etc
 
           for i in $out/bin/*; do
             wrapProgram $i --set PYTHONPATH $PYTHONPATH
@@ -348,16 +356,15 @@ in rec {
           done
 
         '';
+
         checkPhase = ''
           export LANG=en_US.UTF-8
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
-          for i in src-*; do
-            pushd $i
-            flake8 --exclude=nix_run_setup.py --exclude=build/*
-            # TODO: py.test
-            popd >> /dev/null
-          done
+
+          flake8 --exclude=nix_run_setup.py,migrations/,build/
+          # TODO: py.test
         '';
+
         shellHook = ''
           export CACHE_DEFAULT_TIMEOUT=3600
           export CACHE_TYPE=filesystem
@@ -367,18 +374,11 @@ in rec {
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
           export FLASK_APP=${name}:app
 
-          for i in ${builtins.concatStringsSep " " srcs}; do
-            if test -e src/''${i:5}/setup.py; then
-              echo "Setting \"''${i:5}\" in development mode ..."
-              pushd src/''${i:5} >> /dev/null
-              tmp_path=$(mktemp -d)
-              export PATH="$tmp_path/bin:$PATH"
-              export PYTHONPATH="$tmp_path/${python.__old.python.sitePackages}:$PYTHONPATH"
-              mkdir -p $tmp_path/${python.__old.python.sitePackages}
-              ${python.__old.bootstrapped-pip}/bin/pip install -q -e . --prefix $tmp_path
-              popd >> /dev/null
-            fi
-          done
+          tmp_path=$(mktemp -d)
+          export PATH="$tmp_path/bin:$PATH"
+          export PYTHONPATH="$tmp_path/${python.__old.python.sitePackages}:$PYTHONPATH"
+          mkdir -p $tmp_path/${python.__old.python.sitePackages}
+          ${python.__old.bootstrapped-pip}/bin/pip install -q -e . --prefix $tmp_path
         '';
 
         passthru = {
