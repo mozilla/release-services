@@ -4,18 +4,36 @@
 
 from __future__ import absolute_import
 
+import flask
 import jinja2
 import logging
 import os
 import sys
 
-from flask import Flask
-
-from releng_common import api, log, cors
-
 __APP = dict()
 
 logger = logging.getLogger('releng_common')
+
+__BASE_EXTENSIONS = []
+
+try:
+    from releng_common import log
+    __BASE_EXTENSIONS.append(log)
+except:
+    pass
+
+try:
+    from releng_common import api
+    __BASE_EXTENSIONS.append(api)
+except:
+    pass
+
+if 'CORS_ORIGINS' in os.environ:
+    try:
+        from releng_common import cors
+        __BASE_EXTENSIONS.append(cors)
+    except:
+        pass
 
 
 def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
@@ -29,7 +47,7 @@ def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
 
     logger.debug('Initializing app: {}'.format(name))
 
-    app = __APP[name] = Flask(name, **kw)
+    app = __APP[name] = flask.Flask(name, **kw)
     app.debug = debug
 
     # load config (settings.py)
@@ -45,11 +63,7 @@ def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
     app.jinja_loader = jinja2.loaders.FileSystemLoader(
             os.path.join(os.path.dirname(__file__), 'templates'))
 
-    base_extensions = [log, api]
-    if 'CORS_ORIGINS' in os.environ:
-        base_extensions.append(cors)
-
-    for extension in base_extensions + extensions:
+    for extension in __BASE_EXTENSIONS + extensions:
 
         if type(extension) is tuple:
             extension_name, extension_init = extension
