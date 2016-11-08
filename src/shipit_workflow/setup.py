@@ -11,23 +11,16 @@ from setuptools import setup
 
 here = os.path.dirname(__file__)
 
-with open(os.path.join(here, 'requirements.txt')) as f:
-    install_requires = filter(
-        lambda x: not x.startswith('-r'),
-        map(
-            lambda x: x.startswith('-e ../../lib/') and x[13:] or x,
-            f.read().strip().split('\n')
-        )
-    )
-
 setup(
     name='shipit_workflow',
     version=open(os.path.join(here, 'VERSION')).read().strip(),
-    description='The code behind https://shipit.mozilla-releng.net/',
+    description='The code behind https://workflow.shipit.mozilla-releng.net/',
     author='Rok Garbas',
     author_email='garbas@mozilla.com',
-    url='https://shipit.mozilla-releng.net',
-    install_requires=install_requires,
+    url='https://workflow.shipit.mozilla-releng.net',
+    install_requires=[
+        'releng_common[log,api,cors,auth,db]',
+    ],
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
