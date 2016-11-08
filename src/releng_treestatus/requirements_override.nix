@@ -18,6 +18,10 @@ self: super: {
     buildInputs = old.buildInputs ++ [ self."pytest-runner" ];
   });
 
+  "yarl" = python.overrideDerivation super."yarl" (old: {
+    buildInputs = old.buildInputs ++ [ self."pytest-runner" ];
+  });
+
   "jsonschema" = python.overrideDerivation super."jsonschema" (old: {
     buildInputs = old.buildInputs ++ [ self."vcversioner" ];
   });

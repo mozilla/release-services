@@ -31,7 +31,7 @@ if not os.environ.get('APP_SETTINGS') and \
 
 app = releng_common.create_app(
     "releng_treestatus",
-    extensions=[init_app, releng_common.db],
+    extensions=[init_app, releng_common.db, releng_common.memcached],
     debug=DEBUG,
     debug_src=HERE,
 )
