@@ -3,40 +3,29 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend filterSource mysql2sqlite mysql2postgresql;
+  inherit (releng_pkgs.lib) mkBackend filterSource;
   inherit (releng_pkgs.pkgs) writeScript;
-  inherit (releng_pkgs.pkgs.lib) removeSuffix;
+  inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
 
+  python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  releng_common = import ./../../lib/releng_common {
+    inherit releng_pkgs python;
+    extras = ["api" "auth" "cors" "log" "db"];
+  };
+
   self = mkBackend rec {
+    inherit python;
     name = "releng_tooltool";
-    version = removeSuffix "\n" (builtins.readFile ./../../VERSION);
-    python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-    src = filterSource ./. {
-      exclude = [
-        "/${name}.egg-info"
-        "/releng_common.egg-info"
+    version = fileContents ./../../VERSION;
+    src = filterSource ./. { inherit name; };
+    buildInputs =
+      [ python.packages."flake8"
       ];
-      include = [
-        "/VERSION"
-        "/${name}"
-        "/releng_common"
-        "/tests"
-        "/MANIFEST.in"
-        "/settings.py"
-        "/setup.py"
-        "/requirements.txt"
+    propagatedBuildInputs =
+      [ releng_common
       ];
-    };
-    srcs = [
-      "./../../lib/releng_common"
-      "./../${name}"
-    ];
-    buildRequirements = [ ./requirements-dev.txt ];
-    propagatedRequirements = [ ./../../lib/releng_common/requirements.txt ./requirements.txt ./requirements-prod.txt ];
     passthru = {
-      mysql2sqlite = mysql2sqlite { inherit name; };
-      mysql2postgresql = mysql2postgresql { inherit name; };
       update = writeScript "update-${name}" ''
         pushd src/${name}
         ${pypi2nix}/bin/pypi2nix -v \
