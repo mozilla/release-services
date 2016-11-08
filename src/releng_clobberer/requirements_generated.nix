@@ -1,4 +1,4 @@
-# generated using pypi2nix tool (version: 1.5.0.dev0)
+# generated using pypi2nix tool (version: 1.6.0)
 #
 # COMMAND:
 #   pypi2nix -v -V 3.5 -E postgresql libffi openssl -r requirements.txt -r requirements-setup.txt -r requirements-dev.txt -r requirements-prod.txt
@@ -26,26 +26,6 @@ self: {
       homepage = "";
       license = licenses.bsdOriginal;
       description = "A microframework based on Werkzeug, Jinja2 and good intentions";
-    };
-  };
-
-
-
-  "Flask-Cache" = python.mkDerivation {
-    name = "Flask-Cache-0.13.1";
-    src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/91/c4/f71095437bd4b691c63f240e72a20c57e2c216085cbc271f79665885d3da/Flask-Cache-0.13.1.tar.gz";
-      sha256 = "90126ca9bc063854ef8ee276e95d38b2b4ec8e45fd77d5751d37971ee27c7ef4";
-    };
-    doCheck = commonDoCheck;
-    buildInputs = commonBuildInputs;
-    propagatedBuildInputs = [
-      self."Flask"
-    ];
-    meta = with pkgs.stdenv.lib; {
-      homepage = "";
-      license = licenses.bsdOriginal;
-      description = "Adds cache support to your Flask application";
     };
   };
 
@@ -176,28 +156,6 @@ self: {
 
 
 
-  "Logbook" = python.mkDerivation {
-    name = "Logbook-1.0.0";
-    src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/34/e8/6419c217bbf464fe8a902418120cccaf476201bd03b50958db24d6e90f65/Logbook-1.0.0.tar.gz";
-      sha256 = "87da2515a6b3db866283cb9d4e5a6ec44e52a1d556ebb2ea3b6e7e704b5f1872";
-    };
-    doCheck = commonDoCheck;
-    buildInputs = commonBuildInputs;
-    propagatedBuildInputs = [
-      self."Jinja2"
-      self."SQLAlchemy"
-      self."redis"
-    ];
-    meta = with pkgs.stdenv.lib; {
-      homepage = "";
-      license = licenses.bsdOriginal;
-      description = "A logging replacement for Python";
-    };
-  };
-
-
-
   "Mako" = python.mkDerivation {
     name = "Mako-1.0.5";
     src = pkgs.fetchurl {
@@ -311,10 +269,10 @@ self: {
 
 
   "aiohttp" = python.mkDerivation {
-    name = "aiohttp-1.0.5";
+    name = "aiohttp-1.1.1";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/09/5a/7b81ea8729d41f44c6fe6a116e466c8fb884950a0061aa3768dbd6bee2f8/aiohttp-1.0.5.tar.gz";
-      sha256 = "c3e1897726f97d40e067e8b658b2dbdfe216f32b801c5c589212e1b1f9aa8388";
+      url = "https://pypi.python.org/packages/2e/22/ecfe0a6620294e6c7554ce9e5c216d68b816aaa9f6ec62e8a0081f3d091c/aiohttp-1.1.1.tar.gz";
+      sha256 = "15d440616c6211099d7c3d08fea20fe2c775a75261c218a4051041e104019ee5";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -322,6 +280,7 @@ self: {
       self."async-timeout"
       self."chardet"
       self."multidict"
+      self."yarl"
     ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
@@ -730,10 +689,10 @@ self: {
 
 
   "prompt-toolkit" = python.mkDerivation {
-    name = "prompt-toolkit-1.0.8";
+    name = "prompt-toolkit-1.0.9";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/7f/72/845e3e5678ebe016fe2cff2ffaf91fc9615b9b1a630134f34cf394aa3927/prompt_toolkit-1.0.8.tar.gz";
-      sha256 = "b686ff216fc016dcbdf9ddf18d0ded480457213886ed4cda9fbc21002d18be54";
+      url = "https://pypi.python.org/packages/83/14/5ac258da6c530eca02852ee25c7a9ff3ca78287bb4c198d0d0055845d856/prompt_toolkit-1.0.9.tar.gz";
+      sha256 = "cd6523b36adc174cc10d54b1193eb626b4268609ff6ea92c15bcf1996609599c";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -853,24 +812,6 @@ self: {
       homepage = "";
       license = "License :: OSI Approved :: Apache Software License";
       description = "Programmatically open an editor, capture the result.";
-    };
-  };
-
-
-
-  "redis" = python.mkDerivation {
-    name = "redis-2.10.5";
-    src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/68/44/5efe9e98ad83ef5b742ce62a15bea609ed5a0d1caf35b79257ddb324031a/redis-2.10.5.tar.gz";
-      sha256 = "5dfbae6acfc54edf0a7a415b99e0b21c0a3c27a7f787b292eea727b1facc5533";
-    };
-    doCheck = commonDoCheck;
-    buildInputs = commonBuildInputs;
-    propagatedBuildInputs = [ ];
-    meta = with pkgs.stdenv.lib; {
-      homepage = "";
-      license = licenses.mit;
-      description = "Python client for Redis key-value store";
     };
   };
 
@@ -1102,6 +1043,26 @@ self: {
       homepage = "";
       license = licenses.mit;
       description = "Measures number of Terminal column cells of wide-character codes";
+    };
+  };
+
+
+
+  "yarl" = python.mkDerivation {
+    name = "yarl-0.7.0";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/6a/09/c7213413ea440e489d13aa53c6ffc80b532070d28a0a75cf56691eaf522e/yarl-0.7.0.tar.gz";
+      sha256 = "43222e76b17d62e23c2ff62dde7b6d3cd64453be7529876b4967ec5c3e0fa3fd";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."multidict"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.asl20;
+      description = "Yet another URL library";
     };
   };
 
