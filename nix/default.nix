@@ -10,10 +10,11 @@ let
   releng_pkgs = {
 
     pkgs = pkgs // {
+      name = "nixpkgs";
       update = releng_pkgs.lib.updateFromGitHub {
-        owner = "garbas";
-        repo = "nixpkgs";
-        branch = "python-srcs";
+        owner = "NixOS";
+        repo = "nixpkgs-channels";
+        branch = "nixos-unstable";
         path = "nix/nixpkgs.json";
       };
     };
