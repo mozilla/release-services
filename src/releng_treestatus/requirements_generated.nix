@@ -92,6 +92,29 @@ self: {
 
 
 
+  "Flask-Migrate" = python.mkDerivation {
+    name = "Flask-Migrate-2.0.0";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/d4/42/9e1bab5b15495e7acd25cb6b164a050b90da20af7e801aa2a7b1f74efdfa/Flask-Migrate-2.0.0.tar.gz";
+      sha256 = "c621f5ea230bdef22bed47f4905bd8979446e1c7f9d61ec1668b2c49549787d7";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."Flask"
+      self."Flask-SQLAlchemy"
+      self."Flask-Script"
+      self."alembic"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "SQLAlchemy database migrations for Flask applications using Alembic";
+    };
+  };
+
+
+
   "Flask-SQLAlchemy" = python.mkDerivation {
     name = "Flask-SQLAlchemy-2.1";
     src = pkgs.fetchurl {
@@ -108,6 +131,26 @@ self: {
       homepage = "";
       license = licenses.bsdOriginal;
       description = "Adds SQLAlchemy support to your Flask application";
+    };
+  };
+
+
+
+  "Flask-Script" = python.mkDerivation {
+    name = "Flask-Script-2.0.5";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/66/e9/2b3c7c548a6bad0b59da21e2050613da43aae4da617fb98847efa3e09a43/Flask-Script-2.0.5.tar.gz";
+      sha256 = "cef76eac751396355429a14c38967bb14d4973c53e07dec94af5cc8fb017107f";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."Flask"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "Scripting support for Flask";
     };
   };
 
@@ -133,22 +176,21 @@ self: {
 
 
 
-  "Logbook" = python.mkDerivation {
-    name = "Logbook-1.0.0";
+  "Mako" = python.mkDerivation {
+    name = "Mako-1.0.5";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/34/e8/6419c217bbf464fe8a902418120cccaf476201bd03b50958db24d6e90f65/Logbook-1.0.0.tar.gz";
-      sha256 = "87da2515a6b3db866283cb9d4e5a6ec44e52a1d556ebb2ea3b6e7e704b5f1872";
+      url = "https://pypi.python.org/packages/20/ce/296b1037ed9b7803ed4e738b83ae244d2834e97e4ea24d52a6d46c12a884/Mako-1.0.5.tar.gz";
+      sha256 = "e3e27cdd7abfd78337f33bd455f756c823c2d6224ad440a88f14bbd53a5ebc93";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
-      self."Jinja2"
-      self."SQLAlchemy"
+      self."MarkupSafe"
     ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
-      license = licenses.bsdOriginal;
-      description = "A logging replacement for Python";
+      license = licenses.mit;
+      description = "A super-fast templating language that borrows the  best ideas from the existing templating languages.";
     };
   };
 
@@ -229,10 +271,10 @@ self: {
 
 
   "aiohttp" = python.mkDerivation {
-    name = "aiohttp-1.0.5";
+    name = "aiohttp-1.1.1";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/09/5a/7b81ea8729d41f44c6fe6a116e466c8fb884950a0061aa3768dbd6bee2f8/aiohttp-1.0.5.tar.gz";
-      sha256 = "c3e1897726f97d40e067e8b658b2dbdfe216f32b801c5c589212e1b1f9aa8388";
+      url = "https://pypi.python.org/packages/2e/22/ecfe0a6620294e6c7554ce9e5c216d68b816aaa9f6ec62e8a0081f3d091c/aiohttp-1.1.1.tar.gz";
+      sha256 = "15d440616c6211099d7c3d08fea20fe2c775a75261c218a4051041e104019ee5";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -240,11 +282,34 @@ self: {
       self."async-timeout"
       self."chardet"
       self."multidict"
+      self."yarl"
     ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
       license = licenses.asl20;
       description = "http client/server for asyncio";
+    };
+  };
+
+
+
+  "alembic" = python.mkDerivation {
+    name = "alembic-0.8.8";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/93/16/d3a04f576a666582da368de60ba09a33e6711377775fd330d0a43bebacc5/alembic-0.8.8.tar.gz";
+      sha256 = "cd6f2192ca2307bfe2a2a61f8a261420addc59a09a6379a6550e0a15693b0b8a";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."Mako"
+      self."SQLAlchemy"
+      self."python-editor"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "A database migration tool for SQLAlchemy.";
     };
   };
 
@@ -576,6 +641,24 @@ self: {
 
 
 
+  "python-editor" = python.mkDerivation {
+    name = "python-editor-1.0.1";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/2b/c0/df7b87d5cf016f82eab3b05cd35f53287c1178ad8c42bfb6fa61b89b22f6/python-editor-1.0.1.tar.gz";
+      sha256 = "8672e9a44a7957741453dd35e842299f6c29f0a88dc9e4316b0fa5935abb9186";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = "License :: OSI Approved :: Apache Software License";
+      description = "Programmatically open an editor, capture the result.";
+    };
+  };
+
+
+
   "requests" = python.mkDerivation {
     name = "requests-2.11.1";
     src = pkgs.fetchurl {
@@ -744,6 +827,26 @@ self: {
       homepage = "";
       license = licenses.isc;
       description = "Use version control tags to discover version numbers";
+    };
+  };
+
+
+
+  "yarl" = python.mkDerivation {
+    name = "yarl-0.7.0";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/6a/09/c7213413ea440e489d13aa53c6ffc80b532070d28a0a75cf56691eaf522e/yarl-0.7.0.tar.gz";
+      sha256 = "43222e76b17d62e23c2ff62dde7b6d3cd64453be7529876b4967ec5c3e0fa3fd";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."multidict"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.asl20;
+      description = "Yet another URL library";
     };
   };
 
