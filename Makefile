@@ -268,12 +268,12 @@ update-apps: $(foreach app, $(APPS), update-app-$(app))
 
 update-app: require-APP update-app-$(APP)
 update-app-%: tmpdir nix
-	TMPDIR=$$PWD/tmp nix-shell nix/update.nix --argstr pkg $(subst update-app-,,$@)
+	nix-shell nix/update.nix --argstr pkg $(subst update-app-,,$@)
 
 
 update-tool: require-TOOL update-tool-$(TOOL)
 update-tool-%: tmpdir nix
-	TMPDIR=$$PWD/tmp nix-shell nix/update.nix --argstr pkg tools.$(subst update-tool-,,$@)
+	nix-shell nix/update.nix --argstr pkg tools.$(subst update-tool-,,$@)
 
 
 
