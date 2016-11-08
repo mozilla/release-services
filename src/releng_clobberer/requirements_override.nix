@@ -15,6 +15,10 @@ self: super: {
     buildInputs = old.buildInputs ++ [ self."vcversioner" ];
   });
 
+  "yarl" = python.overrideDerivation super."yarl" (old: {
+    buildInputs = old.buildInputs ++ [ self."pytest-runner" ];
+  });
+
   "flake8" = python.overrideDerivation super."flake8" (old: {
     buildInputs = old.buildInputs ++ [ self."pytest-runner" ];
   });
