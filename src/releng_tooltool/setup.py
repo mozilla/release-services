@@ -11,15 +11,6 @@ from setuptools import setup
 
 here = os.path.dirname(__file__)
 
-with open(os.path.join(here, 'requirements.txt')) as f:
-    install_requires = filter(
-        lambda x: not x.startswith('-r'),
-        map(
-            lambda x: x.startswith('-e ../../lib/') and x[13:] or x,
-            f.read().strip().split('\n')
-        )
-    )
-
 setup(
     name='releng_tooltool',
     version=open(os.path.join(here, 'VERSION')).read().strip(),
@@ -27,7 +18,9 @@ setup(
     author='Rok Garbas',
     author_email='garbas@mozilla.com',
     url='https://mozilla-releng.net/tooltool',
-    install_requires=install_requires,
+    install_requires=[
+        'releng_common[api,auth,cors,log,db]'
+    ],
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
