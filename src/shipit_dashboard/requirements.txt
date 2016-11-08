@@ -1,6 +1,6 @@
--e ../../lib/releng_common
+-e ../../lib/releng_common[api,auth,cors,log,db]
 
-# libmozdata, but without scipy - not released yet
-# https://github.com/mozilla/libmozdata/archive/423380cd24e49a9185a5019482a0709c723ce2cf.tar.gz#egg=libmozdata
-# After update-app, we need the real name in here
-libmozdata
+-e .
+
+# because of libmozdata
+requests[security]>=2.7.0
