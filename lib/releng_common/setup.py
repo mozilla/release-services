@@ -14,10 +14,6 @@ here = os.path.dirname(__file__)
 with open(os.path.join(here, 'VERSION')) as f:
     version = f.read().strip()
 
-with open(os.path.join(here, 'requirements.txt')) as f:
-    install_requires = f.read().strip().split('\n')
-
-
 setup(
     name='releng_common',
     version=version,
@@ -25,7 +21,18 @@ setup(
     author='Mozilla Release Engineering',
     author_email='release@mozilla.com',
     url='https://github.com/garbas/mozilla-releng',
-    install_requires=install_requires,
+    install_requires=[
+        'Flask',
+        'Jinja2',
+    ],
+    extras_require=dict(
+        cache=['Flask-Cache'],
+        db=['Flask-SQLAlchemy', 'Flask-Migrate'],
+        auth=['Flask-Login', 'taskcluster'],
+        api=['connexion'],
+        log=['structlog'],
+        cors=['Flask-Cors'],
+    ),
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
