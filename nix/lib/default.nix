@@ -361,7 +361,12 @@ in rec {
 
         inherit src;
 
-        buildInputs = [ makeWrapper glibcLocales ] ++ buildInputs;
+        buildInputs = [
+          makeWrapper
+          glibcLocales
+          python.packages."flake8"
+          python.packages."gunicorn"
+        ] ++ buildInputs;
         propagatedBuildInputs = [] ++ propagatedBuildInputs;
 
         patchPhase = ''

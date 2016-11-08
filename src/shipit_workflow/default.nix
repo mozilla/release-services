@@ -19,9 +19,6 @@ let
     name = "shipit_workflow";
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
-    buildInputs =
-      [ python.packages."flake8"
-      ];
     propagatedBuildInputs =
       [ releng_common
       ];
