@@ -1,1 +1,1 @@
--e ../../lib/releng_common
+-e ../../lib/releng_common[log,api,cors,auth,db]
