@@ -219,6 +219,41 @@ in rec {
           )
         );
 
+  makeElmStuff = deps:
+    let 
+        inherit (releng_pkgs.pkgs) lib fetchurl;
+        json = builtins.toJSON (lib.mapAttrs (name: info: info.version) deps);
+        cmds = lib.mapAttrsToList (name: info: let
+                 pkg = stdenv.mkDerivation {
+
+                   name = lib.replaceChars ["/"] ["-"] name + "-${info.version}";
+
+                   src = fetchurl {
+                     url = "https://github.com/${name}/archive/${info.version}.tar.gz";
+                     meta.homepage = "https://github.com/${name}/";
+                     inherit (info) sha256;
+                   };
+
+                   phases = [ "unpackPhase" "installPhase" ];
+
+                   installPhase = ''
+                     mkdir -p $out
+                     cp -r * $out
+                   '';
+
+                 };
+               in ''
+                 mkdir -p elm-stuff/packages/${name}
+                 ln -s ${pkg} elm-stuff/packages/${name}/${info.version}
+               '') deps;
+    in ''
+      export HOME=/tmp
+      mkdir elm-stuff
+      cat > elm-stuff/exact-dependencies.json <<EOF
+      ${json}
+      EOF
+    '' + lib.concatStrings cmds;
+
   mkFrontend =
     { name
     , version
@@ -239,7 +274,7 @@ in rec {
         configurePhase = ''
           rm -rf node_modules
           rm -rf elm-stuff
-        '' + (elmPackages.lib.makeElmStuff elm_packages) + ''
+        '' + (makeElmStuff elm_packages) + ''
           mkdir node_modules
           for item in ${builtins.concatStringsSep " " (builtins.attrValues node_modules)}; do
             ln -s $item/lib/node_modules/* ./node_modules
