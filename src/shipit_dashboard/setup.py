@@ -11,23 +11,22 @@ from setuptools import setup
 
 here = os.path.dirname(__file__)
 
-with open(os.path.join(here, 'requirements.txt')) as f:
-    install_requires = filter(
-        lambda x: not x.startswith('-r') and not x.startswith('#') and x != '',
-        map(
-            lambda x: x.startswith('-e ../../lib/') and x[13:] or x,
-            f.read().strip().split('\n')
-        )
-    )
+with open(os.path.join(here, 'VERSION')) as f:
+    version = f.read().strip()
 
 setup(
     name='shipit_dashboard',
-    version=open(os.path.join(here, 'VERSION')).read().strip(),
+    version=version,
     description='The code behind https://dashboard.shipit.mozilla-releng.net',
     author='Mozilla Release Engineering',
     author_email='release@mozilla.com',
     url='https://dashboard.shipit.mozilla-releng.net',
-    install_requires=install_requires,
+    install_requires=[
+        'releng_common[log,api,cors,auth,db]',
+        # need to pin libmozdata due to
+        # https://github.com/mozilla/libmozdata/commit/e0862e52fa77e38366d64c7068f908362d0535be
+        'libmozdata==0.1.16',
+    ],
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,

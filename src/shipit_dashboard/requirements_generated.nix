@@ -1,4 +1,4 @@
-# generated using pypi2nix tool (version: 1.5.0.dev0)
+# generated using pypi2nix tool (version: 1.6.0)
 #
 # COMMAND:
 #   pypi2nix -v -V 3.5 -E postgresql libffi openssl pkgconfig freetype.dev -r requirements.txt -r requirements-setup.txt -r requirements-dev.txt -r requirements-prod.txt
@@ -26,26 +26,6 @@ self: {
       homepage = "";
       license = licenses.bsdOriginal;
       description = "A microframework based on Werkzeug, Jinja2 and good intentions";
-    };
-  };
-
-
-
-  "Flask-Cache" = python.mkDerivation {
-    name = "Flask-Cache-0.13.1";
-    src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/91/c4/f71095437bd4b691c63f240e72a20c57e2c216085cbc271f79665885d3da/Flask-Cache-0.13.1.tar.gz";
-      sha256 = "90126ca9bc063854ef8ee276e95d38b2b4ec8e45fd77d5751d37971ee27c7ef4";
-    };
-    doCheck = commonDoCheck;
-    buildInputs = commonBuildInputs;
-    propagatedBuildInputs = [
-      self."Flask"
-    ];
-    meta = with pkgs.stdenv.lib; {
-      homepage = "";
-      license = licenses.bsdOriginal;
-      description = "Adds cache support to your Flask application";
     };
   };
 
@@ -176,33 +156,11 @@ self: {
 
 
 
-  "Logbook" = python.mkDerivation {
-    name = "Logbook-1.0.0";
-    src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/34/e8/6419c217bbf464fe8a902418120cccaf476201bd03b50958db24d6e90f65/Logbook-1.0.0.tar.gz";
-      sha256 = "87da2515a6b3db866283cb9d4e5a6ec44e52a1d556ebb2ea3b6e7e704b5f1872";
-    };
-    doCheck = commonDoCheck;
-    buildInputs = commonBuildInputs;
-    propagatedBuildInputs = [
-      self."Jinja2"
-      self."SQLAlchemy"
-      self."redis"
-    ];
-    meta = with pkgs.stdenv.lib; {
-      homepage = "";
-      license = licenses.bsdOriginal;
-      description = "A logging replacement for Python";
-    };
-  };
-
-
-
   "Mako" = python.mkDerivation {
-    name = "Mako-1.0.4";
+    name = "Mako-1.0.5";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/7a/ae/925434246ee90b42e8ef57d3b30a0ab7caf9a2de3e449b876c56dcb48155/Mako-1.0.4.tar.gz";
-      sha256 = "fed99dbe4d0ddb27a33ee4910d8708aca9ef1fe854e668387a9ab9a90cbf9059";
+      url = "https://pypi.python.org/packages/20/ce/296b1037ed9b7803ed4e738b83ae244d2834e97e4ea24d52a6d46c12a884/Mako-1.0.5.tar.gz";
+      sha256 = "e3e27cdd7abfd78337f33bd455f756c823c2d6224ad440a88f14bbd53a5ebc93";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -311,10 +269,10 @@ self: {
 
 
   "aiohttp" = python.mkDerivation {
-    name = "aiohttp-1.0.5";
+    name = "aiohttp-1.1.1";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/09/5a/7b81ea8729d41f44c6fe6a116e466c8fb884950a0061aa3768dbd6bee2f8/aiohttp-1.0.5.tar.gz";
-      sha256 = "c3e1897726f97d40e067e8b658b2dbdfe216f32b801c5c589212e1b1f9aa8388";
+      url = "https://pypi.python.org/packages/2e/22/ecfe0a6620294e6c7554ce9e5c216d68b816aaa9f6ec62e8a0081f3d091c/aiohttp-1.1.1.tar.gz";
+      sha256 = "15d440616c6211099d7c3d08fea20fe2c775a75261c218a4051041e104019ee5";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -322,6 +280,7 @@ self: {
       self."async-timeout"
       self."chardet"
       self."multidict"
+      self."yarl"
     ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
@@ -477,10 +436,10 @@ self: {
 
 
   "cryptography" = python.mkDerivation {
-    name = "cryptography-1.5.2";
+    name = "cryptography-1.5.3";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/03/1a/60984cb85cc38c4ebdfca27b32a6df6f1914959d8790f5a349608c78be61/cryptography-1.5.2.tar.gz";
-      sha256 = "eb8875736734e8e870b09be43b17f40472dc189b1c422a952fa8580768204832";
+      url = "https://pypi.python.org/packages/6c/c5/7fc1f8384443abd2d71631ead026eb59863a58cad0149b94b89f08c8002f/cryptography-1.5.3.tar.gz";
+      sha256 = "cf82ddac919b587f5e44247579b433224cc2e03332d2ea4d89aa70d7e6b64ae5";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -541,10 +500,10 @@ self: {
 
 
   "elasticsearch" = python.mkDerivation {
-    name = "elasticsearch-5.0.0";
+    name = "elasticsearch-5.0.1";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/8b/27/80eda8f6da37fc44d67ee687d0ddcb8d44428624241c849c546c9e3b9b2d/elasticsearch-5.0.0.tar.gz";
-      sha256 = "cec197b1556b74747eb0f74854c0ef2fab30467d0eb1fb5594cfc548e633ba1f";
+      url = "https://pypi.python.org/packages/37/f5/9612f792b972024b358708824599307ae8a35aeb41b0d53bf4685c7f6589/elasticsearch-5.0.1.tar.gz";
+      sha256 = "bebb51b1bc312f2a305b49a2c0900bbfcbdfd9f23e93ff1fc05f4132f2a3d1ed";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -785,10 +744,10 @@ self: {
 
 
   "libmozdata" = python.mkDerivation {
-    name = "libmozdata-0.1.14";
+    name = "libmozdata-0.1.16";
     src = pkgs.fetchurl {
-      url = "https://github.com/mozilla/libmozdata/archive/423380cd24e49a9185a5019482a0709c723ce2cf.tar.gz";
-      sha256 = "790407f8d6c69fadc076394c18fc8b0ed070312c627058a5068648f0a2c0e3db";
+      url = "https://pypi.python.org/packages/da/54/f7f95a0771e219e37df770bb52a2c58d33ea593b80655ef42bc4d4e1e9fe/libmozdata-0.1.16.tar.gz";
+      sha256 = "3aa2fc00ecc95987fa97f9048aca46fa49dc10a974558adfeef083cd78863a28";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -1015,10 +974,10 @@ self: {
 
 
   "prompt-toolkit" = python.mkDerivation {
-    name = "prompt-toolkit-1.0.8";
+    name = "prompt-toolkit-1.0.9";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/7f/72/845e3e5678ebe016fe2cff2ffaf91fc9615b9b1a630134f34cf394aa3927/prompt_toolkit-1.0.8.tar.gz";
-      sha256 = "b686ff216fc016dcbdf9ddf18d0ded480457213886ed4cda9fbc21002d18be54";
+      url = "https://pypi.python.org/packages/83/14/5ac258da6c530eca02852ee25c7a9ff3ca78287bb4c198d0d0055845d856/prompt_toolkit-1.0.9.tar.gz";
+      sha256 = "cd6523b36adc174cc10d54b1193eb626b4268609ff6ea92c15bcf1996609599c";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -1552,10 +1511,10 @@ self: {
 
 
   "urllib3" = python.mkDerivation {
-    name = "urllib3-1.18.1";
+    name = "urllib3-1.19";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/d8/1f/7e5e7e7d36fa82c179085ef06c32abe2a1f8a25067e1724921f7e871da1a/urllib3-1.18.1.tar.gz";
-      sha256 = "5555ecc5254681618d1706037f82e8cec0e18c6113ed5c95807f8f822d5668f1";
+      url = "https://pypi.python.org/packages/08/37/48b443a36af9eda6274f673b70a9140c13e2409edb2ef20b2d8a620efef5/urllib3-1.19.tar.gz";
+      sha256 = "87f362d061184191d07ced0b947d8526f3e1884f21b0fe97fab313dedcb895be";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -1622,6 +1581,26 @@ self: {
       homepage = "";
       license = licenses.mit;
       description = "A patch parsing library.";
+    };
+  };
+
+
+
+  "yarl" = python.mkDerivation {
+    name = "yarl-0.7.0";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/6a/09/c7213413ea440e489d13aa53c6ffc80b532070d28a0a75cf56691eaf522e/yarl-0.7.0.tar.gz";
+      sha256 = "43222e76b17d62e23c2ff62dde7b6d3cd64453be7529876b4967ec5c3e0fa3fd";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."multidict"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.asl20;
+      description = "Yet another URL library";
     };
   };
 

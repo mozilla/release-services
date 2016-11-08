@@ -19,6 +19,10 @@ self: super: {
     buildInputs = old.buildInputs ++ [ self."pytest-runner" ];
   });
 
+  "yarl" = python.overrideDerivation super."yarl" (old: {
+    buildInputs = old.buildInputs ++ [ self."pytest-runner" ];
+  });
+
   "mccabe" = python.overrideDerivation super."mccabe" (old: {
     buildInputs = old.buildInputs ++ [ self."pytest-runner" ];
   });
