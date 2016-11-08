@@ -409,11 +409,14 @@ in rec {
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
           export FLASK_APP=${name}:app
 
+          pushd src/${name}
           tmp_path=$(mktemp -d)
           export PATH="$tmp_path/bin:$PATH"
           export PYTHONPATH="$tmp_path/${python.__old.python.sitePackages}:$PYTHONPATH"
           mkdir -p $tmp_path/${python.__old.python.sitePackages}
           ${python.__old.bootstrapped-pip}/bin/pip install -q -e . --prefix $tmp_path
+          ${python.__old.bootstrapped-pip}/bin/pip install -q -e ../../lib/releng_common --prefix $tmp_path
+          popd >> /dev/null
         '';
 
         passthru = {
