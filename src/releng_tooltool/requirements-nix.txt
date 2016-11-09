@@ -1,4 +1,4 @@
-flake8
 pytest-runner
 setuptools-scm
 vcversioner
+six

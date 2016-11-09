@@ -19,6 +19,11 @@ let
     name = "releng_tooltool";
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
+    buildInputs =
+      [ python.packages."flake8"
+        python.packages."pytest"
+        python.packages."ipdb"
+      ];
     propagatedBuildInputs =
       [ releng_common
       ];
@@ -30,7 +35,7 @@ let
          -E "postgresql" \
          -r requirements.txt \
          -r requirements-dev.txt \
-         -r requirements-prod.txt 
+         -r requirements-nix.txt 
         popd
       '';
     };

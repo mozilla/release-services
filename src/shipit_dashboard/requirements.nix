@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql libffi openssl pkgconfig freetype.dev -r requirements.txt -r requirements-setup.txt -r requirements-dev.txt -r requirements-prod.txt
+#   pypi2nix -v -V 3.5 -E postgresql libffi openssl pkgconfig freetype.dev -r requirements.txt -r requirements-dev.txt -r requirements-nix.txt
 #
 
 { pkgs ? import <nixpkgs> {}

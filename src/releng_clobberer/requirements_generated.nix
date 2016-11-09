@@ -1,7 +1,7 @@
 # generated using pypi2nix tool (version: 1.6.0)
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql libffi openssl -r requirements.txt -r requirements-setup.txt -r requirements-dev.txt -r requirements-prod.txt
+#   pypi2nix -v -V 3.5 -E postgresql libffi openssl -r requirements.txt -r requirements-dev.txt -r requirements-nix.txt
 #
 
 { pkgs, python, commonBuildInputs ? [], commonDoCheck ? false }:
@@ -269,10 +269,10 @@ self: {
 
 
   "aiohttp" = python.mkDerivation {
-    name = "aiohttp-1.1.1";
+    name = "aiohttp-1.1.2";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/2e/22/ecfe0a6620294e6c7554ce9e5c216d68b816aaa9f6ec62e8a0081f3d091c/aiohttp-1.1.1.tar.gz";
-      sha256 = "15d440616c6211099d7c3d08fea20fe2c775a75261c218a4051041e104019ee5";
+      url = "https://pypi.python.org/packages/cc/5e/1eb03bc43c482f0987b2c533488e98e007284d15098f97b326dcb739bcff/aiohttp-1.1.2.tar.gz";
+      sha256 = "16f16dc5ddb1d5676452f35abb58190ff034198d4e97770e0f59b99ca6d76c2d";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -745,6 +745,24 @@ self: {
 
 
 
+  "py" = python.mkDerivation {
+    name = "py-1.4.31";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/f4/9a/8dfda23f36600dd701c6722316ba8a3ab4b990261f83e7d3ffc6dfedf7ef/py-1.4.31.tar.gz";
+      sha256 = "a6501963c725fc2554dabfece8ae9a8fb5e149c0ac0a42fd2b02c5c1c57fc114";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "library with cross-python path, ini-parsing, io, code, log facilities";
+    };
+  };
+
+
+
   "pycodestyle" = python.mkDerivation {
     name = "pycodestyle-2.0.0";
     src = pkgs.fetchurl {
@@ -776,6 +794,26 @@ self: {
       homepage = "";
       license = licenses.mit;
       description = "passive checker of Python programs";
+    };
+  };
+
+
+
+  "pytest" = python.mkDerivation {
+    name = "pytest-3.0.3";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/a0/2f/076c816e2402c4911ccee4b93ba0475145b7cffd0320ca8efa0add7c469c/pytest-3.0.3.tar.gz";
+      sha256 = "f213500a356800a483e8a146ff971ae14a8df3f2c0ae4145181aad96996abee7";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."py"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "pytest: simple powerful testing with Python";
     };
   };
 
@@ -1001,6 +1039,7 @@ self: {
     propagatedBuildInputs = [
       self."decorator"
       self."ipython-genutils"
+      self."pytest"
       self."six"
     ];
     meta = with pkgs.stdenv.lib; {

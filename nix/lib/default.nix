@@ -402,7 +402,7 @@ in rec {
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 
           flake8 --exclude=nix_run_setup.py,migrations/,build/
-          # TODO: py.test
+          pytest tests/
         '';
 
         shellHook = ''
