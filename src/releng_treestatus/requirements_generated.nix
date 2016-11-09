@@ -1,7 +1,7 @@
 # generated using pypi2nix tool (version: 1.6.0)
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql -r requirements.txt -r requirements-dev.txt -r requirements-prod.txt
+#   pypi2nix -v -V 3.5 -E postgresql -r requirements.txt -r requirements-dev.txt -r requirements-nix.txt
 #
 
 { pkgs, python, commonBuildInputs ? [], commonDoCheck ? false }:
@@ -232,6 +232,24 @@ self: {
 
 
 
+  "Pygments" = python.mkDerivation {
+    name = "Pygments-2.1.3";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/b8/67/ab177979be1c81bc99c8d0592ef22d547e70bb4c6815c383286ed5dec504/Pygments-2.1.3.tar.gz";
+      sha256 = "88e4c8a91b2af5962bfa5ea2447ec6dd357018e86e94c7d14bd8cacbc5b55d81";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "Pygments is a syntax highlighting package written in Python.";
+    };
+  };
+
+
+
   "SQLAlchemy" = python.mkDerivation {
     name = "SQLAlchemy-1.1.3";
     src = pkgs.fetchurl {
@@ -271,10 +289,10 @@ self: {
 
 
   "aiohttp" = python.mkDerivation {
-    name = "aiohttp-1.1.1";
+    name = "aiohttp-1.1.2";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/2e/22/ecfe0a6620294e6c7554ce9e5c216d68b816aaa9f6ec62e8a0081f3d091c/aiohttp-1.1.1.tar.gz";
-      sha256 = "15d440616c6211099d7c3d08fea20fe2c775a75261c218a4051041e104019ee5";
+      url = "https://pypi.python.org/packages/cc/5e/1eb03bc43c482f0987b2c533488e98e007284d15098f97b326dcb739bcff/aiohttp-1.1.2.tar.gz";
+      sha256 = "16f16dc5ddb1d5676452f35abb58190ff034198d4e97770e0f59b99ca6d76c2d";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -417,6 +435,24 @@ self: {
 
 
 
+  "decorator" = python.mkDerivation {
+    name = "decorator-4.0.10";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/13/8a/4eed41e338e8dcc13ca41c94b142d4d20c0de684ee5065523fee406ce76f/decorator-4.0.10.tar.gz";
+      sha256 = "9c6e98edcb33499881b86ede07d9968c81ab7c769e28e9af24075f0a5379f070";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "Better living through Python with decorators";
+    };
+  };
+
+
+
   "flake8" = python.mkDerivation {
     name = "flake8-3.0.4";
     src = pkgs.fetchurl {
@@ -452,6 +488,71 @@ self: {
       homepage = "";
       license = licenses.mit;
       description = "WSGI HTTP Server for UNIX";
+    };
+  };
+
+
+
+  "ipdb" = python.mkDerivation {
+    name = "ipdb-0.10.1";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/eb/0a/0a37dc19572580336ad3813792c0d18c8d7117c2d66fc63c501f13a7a8f8/ipdb-0.10.1.tar.gz";
+      sha256 = "bb2948e726dbfb2687f4a582088b3f170b2556ba8e54ae1231c783c97e99ec87";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."ipython"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "IPython-enabled pdb";
+    };
+  };
+
+
+
+  "ipython" = python.mkDerivation {
+    name = "ipython-5.1.0";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/89/63/a9292f7cd9d0090a0f995e1167f3f17d5889dcbc9a175261719c513b9848/ipython-5.1.0.tar.gz";
+      sha256 = "7ef4694e1345913182126b219aaa4a0047e191af414256da6772cf249571b961";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."Pygments"
+      self."decorator"
+      self."pexpect"
+      self."pickleshare"
+      self."prompt-toolkit"
+      self."requests"
+      self."simplegeneric"
+      self."traitlets"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "IPython: Productive Interactive Computing";
+    };
+  };
+
+
+
+  "ipython-genutils" = python.mkDerivation {
+    name = "ipython-genutils-0.1.0";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/71/b7/a64c71578521606edbbce15151358598f3dfb72a3431763edc2baf19e71f/ipython_genutils-0.1.0.tar.gz";
+      sha256 = "3a0624a251a26463c9dfa0ffa635ec51c4265380980d9a50d65611c3c2bd82a6";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "Vestigial utilities from IPython";
     };
   };
 
@@ -569,6 +670,65 @@ self: {
 
 
 
+  "pexpect" = python.mkDerivation {
+    name = "pexpect-4.2.1";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/e8/13/d0b0599099d6cd23663043a2a0bb7c61e58c6ba359b2656e6fb000ef5b98/pexpect-4.2.1.tar.gz";
+      sha256 = "3d132465a75b57aa818341c6521392a06cc660feb3988d7f1074f39bd23c9a92";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."ptyprocess"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.isc;
+      description = "Pexpect allows easy control of interactive console applications.";
+    };
+  };
+
+
+
+  "pickleshare" = python.mkDerivation {
+    name = "pickleshare-0.7.4";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/69/fe/dd137d84daa0fd13a709e448138e310d9ea93070620c9db5454e234af525/pickleshare-0.7.4.tar.gz";
+      sha256 = "84a9257227dfdd6fe1b4be1319096c20eb85ff1e82c7932f36efccfe1b09737b";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "Tiny 'shelve'-like database with concurrency support";
+    };
+  };
+
+
+
+  "prompt-toolkit" = python.mkDerivation {
+    name = "prompt-toolkit-1.0.9";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/83/14/5ac258da6c530eca02852ee25c7a9ff3ca78287bb4c198d0d0055845d856/prompt_toolkit-1.0.9.tar.gz";
+      sha256 = "cd6523b36adc174cc10d54b1193eb626b4268609ff6ea92c15bcf1996609599c";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."six"
+      self."wcwidth"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "Library for building powerful interactive command lines in Python";
+    };
+  };
+
+
+
   "psycopg2" = python.mkDerivation {
     name = "psycopg2-2.6.2";
     src = pkgs.fetchurl {
@@ -582,6 +742,42 @@ self: {
       homepage = "";
       license = licenses.lgpl2;
       description = "psycopg2 - Python-PostgreSQL Database Adapter";
+    };
+  };
+
+
+
+  "ptyprocess" = python.mkDerivation {
+    name = "ptyprocess-0.5.1";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/db/d7/b465161910f3d1cef593c5e002bff67e0384898f597f1a7fdc8db4c02bf6/ptyprocess-0.5.1.tar.gz";
+      sha256 = "0530ce63a9295bfae7bd06edc02b6aa935619f486f0f1dc0972f516265ee81a6";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = "";
+      description = "Run a subprocess in a pseudo terminal";
+    };
+  };
+
+
+
+  "py" = python.mkDerivation {
+    name = "py-1.4.31";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/f4/9a/8dfda23f36600dd701c6722316ba8a3ab4b990261f83e7d3ffc6dfedf7ef/py-1.4.31.tar.gz";
+      sha256 = "a6501963c725fc2554dabfece8ae9a8fb5e149c0ac0a42fd2b02c5c1c57fc114";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "library with cross-python path, ini-parsing, io, code, log facilities";
     };
   };
 
@@ -618,6 +814,26 @@ self: {
       homepage = "";
       license = licenses.mit;
       description = "passive checker of Python programs";
+    };
+  };
+
+
+
+  "pytest" = python.mkDerivation {
+    name = "pytest-3.0.3";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/a0/2f/076c816e2402c4911ccee4b93ba0475145b7cffd0320ca8efa0add7c469c/pytest-3.0.3.tar.gz";
+      sha256 = "f213500a356800a483e8a146ff971ae14a8df3f2c0ae4145181aad96996abee7";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."py"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "pytest: simple powerful testing with Python";
     };
   };
 
@@ -690,6 +906,24 @@ self: {
       homepage = "";
       license = licenses.mit;
       description = "the blessed package to manage your versions by scm tags";
+    };
+  };
+
+
+
+  "simplegeneric" = python.mkDerivation {
+    name = "simplegeneric-0.8.1";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/3d/57/4d9c9e3ae9a255cd4e1106bb57e24056d3d0709fc01b2e3e345898e49d5b/simplegeneric-0.8.1.zip";
+      sha256 = "dc972e06094b9af5b855b3df4a646395e43d1c9d0d39ed345b7393560d0b9173";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.zpt21;
+      description = "Simple generic functions (similar to Python's own len(), pickle.dump(), etc.)";
     };
   };
 
@@ -814,6 +1048,29 @@ self: {
 
 
 
+  "traitlets" = python.mkDerivation {
+    name = "traitlets-4.3.1";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/b1/d6/5b5aa6d5c474691909b91493da1e8972e309c9f01ecfe4aeafd272eb3234/traitlets-4.3.1.tar.gz";
+      sha256 = "ba8c94323ccbe8fd792e45d8efe8c95d3e0744cc8c085295b607552ab573724c";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."decorator"
+      self."ipython-genutils"
+      self."pytest"
+      self."six"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "Traitlets Python config system";
+    };
+  };
+
+
+
   "vcversioner" = python.mkDerivation {
     name = "vcversioner-2.16.0.0";
     src = pkgs.fetchurl {
@@ -827,6 +1084,24 @@ self: {
       homepage = "";
       license = licenses.isc;
       description = "Use version control tags to discover version numbers";
+    };
+  };
+
+
+
+  "wcwidth" = python.mkDerivation {
+    name = "wcwidth-0.1.7";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/55/11/e4a2bb08bb450fdbd42cc709dd40de4ed2c472cf0ccb9e64af22279c5495/wcwidth-0.1.7.tar.gz";
+      sha256 = "3df37372226d6e63e1b1e1eda15c594bca98a22d33a23832a90998faa96bc65e";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "Measures number of Terminal column cells of wide-character codes";
     };
   };
 

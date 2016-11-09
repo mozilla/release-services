@@ -51,6 +51,11 @@ let
     name = "releng_clobberer";
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
+    buildInputs =
+      [ python.packages."flake8"
+        python.packages."pytest"
+        python.packages."ipdb"
+      ];
     propagatedBuildInputs =
       [ releng_common
       ];
@@ -73,9 +78,8 @@ let
          -V 3.5 \
          -E "postgresql libffi openssl" \
          -r requirements.txt \
-         -r requirements-setup.txt \
          -r requirements-dev.txt \
-         -r requirements-prod.txt 
+         -r requirements-nix.txt
         popd
       '';
     };

@@ -1,7 +1,7 @@
 # generated using pypi2nix tool (version: 1.6.0)
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql libffi openssl pkgconfig freetype.dev -r requirements.txt -r requirements-setup.txt -r requirements-dev.txt -r requirements-prod.txt
+#   pypi2nix -v -V 3.5 -E postgresql libffi openssl pkgconfig freetype.dev -r requirements.txt -r requirements-dev.txt -r requirements-nix.txt
 #
 
 { pkgs, python, commonBuildInputs ? [], commonDoCheck ? false }:
@@ -269,10 +269,10 @@ self: {
 
 
   "aiohttp" = python.mkDerivation {
-    name = "aiohttp-1.1.1";
+    name = "aiohttp-1.1.2";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/2e/22/ecfe0a6620294e6c7554ce9e5c216d68b816aaa9f6ec62e8a0081f3d091c/aiohttp-1.1.1.tar.gz";
-      sha256 = "15d440616c6211099d7c3d08fea20fe2c775a75261c218a4051041e104019ee5";
+      url = "https://pypi.python.org/packages/cc/5e/1eb03bc43c482f0987b2c533488e98e007284d15098f97b326dcb739bcff/aiohttp-1.1.2.tar.gz";
+      sha256 = "16f16dc5ddb1d5676452f35abb58190ff034198d4e97770e0f59b99ca6d76c2d";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -449,6 +449,7 @@ self: {
       self."idna"
       self."pyasn1"
       self."pyasn1-modules"
+      self."pytest"
       self."pytz"
       self."six"
     ];
@@ -1030,6 +1031,24 @@ self: {
 
 
 
+  "py" = python.mkDerivation {
+    name = "py-1.4.31";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/f4/9a/8dfda23f36600dd701c6722316ba8a3ab4b990261f83e7d3ffc6dfedf7ef/py-1.4.31.tar.gz";
+      sha256 = "a6501963c725fc2554dabfece8ae9a8fb5e149c0ac0a42fd2b02c5c1c57fc114";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "library with cross-python path, ini-parsing, io, code, log facilities";
+    };
+  };
+
+
+
   "pyOpenSSL" = python.mkDerivation {
     name = "pyOpenSSL-16.2.0";
     src = pkgs.fetchurl {
@@ -1161,6 +1180,26 @@ self: {
 
 
 
+  "pytest" = python.mkDerivation {
+    name = "pytest-3.0.3";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/a0/2f/076c816e2402c4911ccee4b93ba0475145b7cffd0320ca8efa0add7c469c/pytest-3.0.3.tar.gz";
+      sha256 = "f213500a356800a483e8a146ff971ae14a8df3f2c0ae4145181aad96996abee7";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."py"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "pytest: simple powerful testing with Python";
+    };
+  };
+
+
+
   "pytest-runner" = python.mkDerivation {
     name = "pytest-runner-2.9";
     src = pkgs.fetchurl {
@@ -1180,10 +1219,10 @@ self: {
 
 
   "python-dateutil" = python.mkDerivation {
-    name = "python-dateutil-2.5.3";
+    name = "python-dateutil-2.6.0";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/3e/f5/aad82824b369332a676a90a8c0d1e608b17e740bbb6aeeebca726f17b902/python-dateutil-2.5.3.tar.gz";
-      sha256 = "1408fdb07c6a1fa9997567ce3fcee6a337b39a503d80699e0f213de4aa4b32ed";
+      url = "https://pypi.python.org/packages/51/fc/39a3fbde6864942e8bb24c93663734b74e281b984d1b8c4f95d64b0c21f6/python-dateutil-2.6.0.tar.gz";
+      sha256 = "62a2f8df3d66f878373fd0072eacf4ee52194ba302e00082828e0d263b0418d2";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -1230,24 +1269,6 @@ self: {
       homepage = "";
       license = licenses.mit;
       description = "World timezone definitions, modern and historical";
-    };
-  };
-
-
-
-  "redis" = python.mkDerivation {
-    name = "redis-2.10.5";
-    src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/68/44/5efe9e98ad83ef5b742ce62a15bea609ed5a0d1caf35b79257ddb324031a/redis-2.10.5.tar.gz";
-      sha256 = "5dfbae6acfc54edf0a7a415b99e0b21c0a3c27a7f787b292eea727b1facc5533";
-    };
-    doCheck = commonDoCheck;
-    buildInputs = commonBuildInputs;
-    propagatedBuildInputs = [ ];
-    meta = with pkgs.stdenv.lib; {
-      homepage = "";
-      license = licenses.mit;
-      description = "Python client for Redis key-value store";
     };
   };
 
@@ -1481,6 +1502,7 @@ self: {
     propagatedBuildInputs = [
       self."decorator"
       self."ipython-genutils"
+      self."pytest"
       self."six"
     ];
     meta = with pkgs.stdenv.lib; {

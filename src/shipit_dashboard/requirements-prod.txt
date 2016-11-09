@@ -1,4 +1,0 @@
-gunicorn
-psycopg2
-newrelic
-redis

@@ -19,6 +19,11 @@ let
     name = "shipit_dashboard";
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
+    buildInputs =
+      [ python.packages."flake8"
+        python.packages."pytest"
+        python.packages."ipdb"
+      ];
     propagatedBuildInputs =
       [ releng_common
         python.packages."libmozdata"
@@ -39,9 +44,8 @@ let
          -V 3.5 \
          -E "postgresql libffi openssl pkgconfig freetype.dev" \
          -r requirements.txt \
-         -r requirements-setup.txt \
          -r requirements-dev.txt \
-         -r requirements-prod.txt 
+         -r requirements-nix.txt
         popd
       '';
     };
