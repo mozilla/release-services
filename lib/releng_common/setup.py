@@ -24,10 +24,12 @@ setup(
     install_requires=[
         'Flask',
         'Jinja2',
+        'gunicorn',
+        'newrelic',
     ],
     extras_require=dict(
         cache=['Flask-Cache'],
-        db=['Flask-SQLAlchemy', 'Flask-Migrate'],
+        db=['psycopg2', 'Flask-SQLAlchemy', 'Flask-Migrate'],
         auth=['Flask-Login', 'taskcluster'],
         api=['connexion'],
         log=['structlog'],
