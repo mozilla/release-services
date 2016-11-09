@@ -322,11 +322,11 @@ viewNavBar model =
              [ text "Menu" ]
     , pageLink Home [ class "navbar-brand" ]
                     [ text "Uplift Dashboard" ]
-    , div [ class "user collapse navbar-toggleable-sm navbar-collapse navbar-right" ]
+    , div [ class "user collapse navbar-toggleable-sm navbar-collapse" ]
           [ ul [ class "nav navbar-nav" ]
               (List.concat [
                   (viewNavDashboard model.release_dashboard),
-                  [li [ class "nav-item pull-xs-right" ] ( viewUser model )]
+                  [li [ class "nav-item float-xs-right" ] ( viewUser model )]
               ])
           ]
     ]
@@ -388,9 +388,9 @@ viewNavAnalysis analysis =
       analysisLink analysis [class "nav-link"] [
         span [] [text (analysis.name ++ " ")],
         if analysis.count > 0 then
-          span [class "label label-pill label-primary"] [text (toString analysis.count)]
+          span [class "tag tag-pill tag-primary"] [text (toString analysis.count)]
         else
-          span [class "label label-pill label-success"] [text (toString analysis.count)]
+          span [class "tag tag-pill tag-success"] [text (toString analysis.count)]
       ]
     ]
 
