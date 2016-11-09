@@ -23,9 +23,7 @@ setup(
     url='https://dashboard.shipit.mozilla-releng.net',
     install_requires=[
         'releng_common[log,api,cors,auth,db]',
-        # need to pin libmozdata due to
-        # https://github.com/mozilla/libmozdata/commit/e0862e52fa77e38366d64c7068f908362d0535be
-        'libmozdata==0.1.16',
+        'libmozdata',
     ],
     packages=find_packages(),
     include_package_data=True,
