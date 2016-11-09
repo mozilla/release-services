@@ -14,6 +14,7 @@ import Result exposing ( Result(Ok, Err))
 import App.User as User
 import App.Home as Home
 import App.Clobberer as Clobberer
+import App.TreeStatus as TreeStatus
 import App.Utils exposing ( eventLink )
 
 
@@ -25,6 +26,7 @@ import App.Utils exposing ( eventLink )
 type Page
     = Home
     | Clobberer
+    | TreeStatus
 
 
 pageLink page = eventLink (ShowPage page)
@@ -36,6 +38,10 @@ delta2url' previous current =
         Clobberer ->
             Maybe.map
                 (Builder.prependToPath ["clobberer"])
+                (Just builder)
+        TreeStatus ->
+            Maybe.map
+                (Builder.prependToPath ["treestatus"])
                 (Just builder)
         Home ->
             Maybe.map
@@ -73,6 +79,8 @@ location2messages' builder =
                         ]
                     "clobberer" ->
                         [ ShowPage Clobberer ]
+                    "treestatus" ->
+                        [ ShowPage TreeStatus ]
                     -- TODO: This should redirect to NotFound
                     _ ->
                         [ ShowPage Home ]
@@ -94,11 +102,14 @@ type alias Model =
     , currentUser : Maybe User.Model
     , clobberer : Clobberer.Model
     , clobbererUrl : String
+    , treestatus : TreeStatus.Model
+    , treestatusUrl : String
     }
 
 type alias Flags =
     { user : Maybe User.Model
     , clobbererUrl : String
+    , treestatusUrl: String
     }
 
 
@@ -106,6 +117,8 @@ init : Flags -> (Model, Cmd Msg)
 init flags =
     ( { clobberer = Clobberer.init
       , clobbererUrl = flags.clobbererUrl
+      , treestatus = TreeStatus.init
+      , treestatusUrl = flags.treestatusUrl
       , currentPage = Home
       , currentUser = flags.user
       }
@@ -120,6 +133,7 @@ type Msg
     = ShowPage Page
     | UserMsg User.Msg
     | ClobbererMsg Clobberer.Msg
+    | TreeStatusMsg TreeStatus.Msg
 
 
 updatePage model page =
@@ -133,6 +147,16 @@ updatePage model page =
                           , clobberer = fst clobberer
                   }
                 , Cmd.map ClobbererMsg <| snd clobberer
+                )
+        TreeStatus ->
+            let
+                treestatus = TreeStatus.initPage
+                    model.treestatusUrl model.treestatus
+            in
+                ( { model | currentPage = page
+                          , treestatus = fst treestatus
+                  }
+                , Cmd.map TreeStatusMsg <| snd treestatus
                 )
         _ ->
             ( { model | currentPage = page }, Cmd.none )
@@ -148,6 +172,13 @@ update msg' model =
             in
                 ( { model | clobberer = newModel }
                 , Cmd.map ClobbererMsg newCmd
+                )
+        TreeStatusMsg msg ->
+            let
+                (newModel, newCmd) = TreeStatus.update msg model.treestatus
+            in
+                ( { model | treestatus = newModel }
+                , Cmd.map TreeStatusMsg newCmd
                 )
         UserMsg msg -> 
             let
@@ -166,6 +197,9 @@ services =
     [ { page = Clobberer
       , title = "Clobberer"
       }
+    , { page = TreeStatus
+      , title = "Tree Status"
+      }
     ]
 
 
@@ -175,6 +209,8 @@ viewPage model =
             Home.view model
         Clobberer ->
             Html.App.map ClobbererMsg (Clobberer.view model.clobberer)
+        TreeStatus ->
+            Html.App.map TreeStatusMsg (TreeStatus.view model.treestatus)
 
 
 viewDropdown title pages =
