@@ -8,6 +8,7 @@ import os
 
 import releng_common
 import releng_common.db
+import releng_common.cache
 
 
 DEBUG = bool(os.environ.get('DEBUG', __name__ == '__main__'))
@@ -31,7 +32,7 @@ if not os.environ.get('APP_SETTINGS') and \
 
 app = releng_common.create_app(
     "releng_treestatus",
-    extensions=[init_app, releng_common.db, releng_common.memcached],
+    extensions=[init_app, releng_common.db, releng_common.cache],
     debug=DEBUG,
     debug_src=HERE,
 )

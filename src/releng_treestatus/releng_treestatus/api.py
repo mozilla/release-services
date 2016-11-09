@@ -14,6 +14,7 @@ from flask import current_app
 from flask_login import current_user
 from werkzeug.exceptions import NotFound, BadRequest
 
+from releng_common.cache import cache
 from releng_treestatus.models import (
     Tree, StatusChange, StatusChangeTree, Log
 )
@@ -33,42 +34,6 @@ def _is_unset(item, field):
 
 def _now():
     return datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
-
-
-@contextmanager
-def _memcached():
-    config = current_app.config.get('RELENG_TREESTATUS_CACHE')
-    if not config:
-        yield None
-    else:
-        # TODO: need to implement memcached extention
-        with current_app.memcached.cache(config) as cache:
-            yield cache
-
-
-def _tree_cache_invalidate(tree):
-    with _memcached() as m:
-        if not m:
-            return None
-        m.delete(tree.encode('utf-8'))
-
-
-def _tree_cache_get(tree):
-    with _memcached() as m:
-        if not m:
-            return None
-        data = m.get(tree.encode('utf-8'))
-        if not data:
-            return
-        return json.loads(data.decode('utf-8'))
-
-
-def _tree_cache_set(tree, data):
-    with _memcached() as m:
-        if not m:
-            return None
-        m.set(tree.encode('utf-8'),
-              json.dumps(data).encode('utf-8'))
 
 
 def _update_tree_status(session, tree, status=None, reason=None, tags=[],
@@ -97,7 +62,15 @@ def _update_tree_status(session, tree, status=None, reason=None, tags=[],
                 tags=tags)
         session.add(l)
 
-    _tree_cache_invalidate(tree.tree)
+    cache.delete_memoized(get_tree, tree.tree)
+
+
+@cache.memoize()
+def get_tree(tree):
+    t = current_app.db.session.query(Tree).get(tree)
+    if not t:
+        raise NotFound("No such tree")
+    return t.to_json()
 
 
 def get_trees():
@@ -150,18 +123,6 @@ def update_trees(body):
     return None, 204
 
 
-def get_tree(tree):
-    r = _tree_cache_get(tree)
-    if r:
-        return r
-    t = current_app.db.session.query(Tree).get(tree)
-    if not t:
-        raise NotFound("No such tree")
-    j = t.to_json()
-    _tree_cache_set(tree, j)
-    return j
-
-
 def make_tree(tree_name, body):
     session = current_app.db.session
     if body['tree'] != tree_name:
@@ -189,7 +150,7 @@ def kill_tree(tree):
     Log.query.filter_by(tree=tree).delete()
     StatusChangeTree.query.filter_by(tree=tree).delete()
     session.commit()
-    _tree_cache_invalidate(tree)
+    cache.delete_memoized(get_tree, tree)
     return None, 204
 
 
