@@ -37,7 +37,7 @@ class UTCDateTime(types.TypeDecorator):
             return value.replace(tzinfo=pytz.UTC)
 
 
-class Tree(db.declarative_base('relengapi')):
+class Tree(db.Model):
 
     __tablename__ = 'treestatus_trees'
 
@@ -46,8 +46,8 @@ class Tree(db.declarative_base('relengapi')):
     reason = sa.Column(sa.Text, default="", nullable=False)
     message_of_the_day = sa.Column(sa.Text, default="", nullable=False)
 
-    def to_json(self):
-        return json.dumps(
+    def to_dict(self):
+        return dict(
             tree=self.tree,
             status=self.status,
             reason=self.reason,
@@ -76,8 +76,8 @@ class Log(db.Model):
     def tags(self):
         return json.loads(self._tags)
 
-    def to_json(self):
-        return json.dumps(
+    def to_dict(self):
+        return dict(
             tree=self.tree,
             when=self.when,
             who=self.who,
@@ -97,8 +97,8 @@ class StatusChange(db.Model):
     when = sa.Column(UTCDateTime, nullable=False, index=True)
     status = sa.Column(sa.String(64), nullable=False)
 
-    def to_json(self):
-        return json.dumps(
+    def to_dict(self):
+        return dict(
             trees=[t.tree for t in self.trees],
             status=self.status,
             when=self.when,

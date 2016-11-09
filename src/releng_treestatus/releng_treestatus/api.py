@@ -9,7 +9,6 @@ import json
 import pytz
 import sqlalchemy as sa
 
-from contextlib import contextmanager
 from flask import current_app
 from flask_login import current_user
 from werkzeug.exceptions import NotFound, BadRequest
@@ -70,12 +69,12 @@ def get_tree(tree):
     t = current_app.db.session.query(Tree).get(tree)
     if not t:
         raise NotFound("No such tree")
-    return t.to_json()
+    return t.to_dict()
 
 
 def get_trees():
     session = current_app.db.session
-    return {t.tree: t.to_json() for t in session.query(Tree)}
+    return {t.tree: t.to_dict() for t in session.query(Tree)}
 
 
 def update_trees(body):
@@ -168,7 +167,7 @@ def get_logs(tree, all=0):
     if not all:
         q = q.limit(TREE_SUMMARY_LOG_LIMIT)
 
-    logs = [l.to_json() for l in q]
+    logs = [l.to_dict() for l in q]
     return logs
 
 
@@ -182,7 +181,7 @@ def v0_get_tree(tree):
 
 def get_stack():
     return [
-        i.to_json()
+        i.to_dict()
         for i in StatusChange.query.order_by(StatusChange.when.desc())
     ]
 

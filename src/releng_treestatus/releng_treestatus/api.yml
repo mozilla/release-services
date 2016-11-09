@@ -50,7 +50,7 @@ paths:
       parameters:
         - name: tree
           in: path
-          description: Tree
+          description: Tree name
           required: true
           type: string
       responses:
