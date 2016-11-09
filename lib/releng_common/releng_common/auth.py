@@ -151,7 +151,7 @@ class Auth(object):
         def decorator(method):
             @wraps(method)
             def wrapper(*args, **kwargs):
-                response = self._require_scopes()
+                response = self._require_scopes(scopes)
                 if response is not None:
                     return response
                 return method(*args, **kwargs)
