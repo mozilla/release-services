@@ -298,6 +298,200 @@ tasks:
   
   
   - metadata:
+      name: "releng_tooltool"
+      description: "Test, build and deploy releng_tooltool"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/master/src/releng_tooltool"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - hooks:modify-hook:project-releng/services-master-releng_tooltool-*
+      - assume:hook-id:project-releng/services-master-releng_tooltool-*
+    extra:
+      github:
+        env: true
+        events:
+          - pull_request.*
+          - push
+        branches:
+          - master
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "releng_tooltool"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:master"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+  
+  
+  - metadata:
+      name: "releng_tooltool"
+      description: "Test, build and deploy releng_tooltool"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/staging/src/releng_tooltool"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
+      - hooks:modify-hook:project-releng/services-staging-releng_tooltool-*
+      - assume:hook-id:project-releng/services-staging-releng_tooltool-*
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - staging
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "releng_tooltool"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:staging"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+  
+  
+  - metadata:
+      name: "releng_tooltool"
+      description: "Test, build and deploy releng_tooltool"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/production/src/releng_tooltool"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:production
+      - hooks:modify-hook:project-releng/services-production-releng_tooltool-*
+      - assume:hook-id:project-releng/services-production-releng_tooltool-*
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - production
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "releng_tooltool"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:production"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+  
+  
+  - metadata:
+      name: "releng_treestatus"
+      description: "Test, build and deploy releng_treestatus"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/master/src/releng_treestatus"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - hooks:modify-hook:project-releng/services-master-releng_treestatus-*
+      - assume:hook-id:project-releng/services-master-releng_treestatus-*
+    extra:
+      github:
+        env: true
+        events:
+          - pull_request.*
+          - push
+        branches:
+          - master
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "releng_treestatus"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:master"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+  
+  
+  - metadata:
+      name: "releng_treestatus"
+      description: "Test, build and deploy releng_treestatus"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/staging/src/releng_treestatus"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
+      - hooks:modify-hook:project-releng/services-staging-releng_treestatus-*
+      - assume:hook-id:project-releng/services-staging-releng_treestatus-*
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - staging
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "releng_treestatus"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:staging"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+  
+  
+  - metadata:
+      name: "releng_treestatus"
+      description: "Test, build and deploy releng_treestatus"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/production/src/releng_treestatus"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:production
+      - hooks:modify-hook:project-releng/services-production-releng_treestatus-*
+      - assume:hook-id:project-releng/services-production-releng_treestatus-*
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - production
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "releng_treestatus"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:production"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+  
+  
+  - metadata:
       name: "shipit_dashboard"
       description: "Test, build and deploy shipit_dashboard"
       owner: "{{ event.head.user.email }}"
@@ -484,6 +678,103 @@ tasks:
         taskclusterProxy: true
       env:
         APP: "shipit_frontend"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:production"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+  
+  
+  - metadata:
+      name: "shipit_workflow"
+      description: "Test, build and deploy shipit_workflow"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/master/src/shipit_workflow"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - hooks:modify-hook:project-releng/services-master-shipit_workflow-*
+      - assume:hook-id:project-releng/services-master-shipit_workflow-*
+    extra:
+      github:
+        env: true
+        events:
+          - pull_request.*
+          - push
+        branches:
+          - master
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "shipit_workflow"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:master"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+  
+  
+  - metadata:
+      name: "shipit_workflow"
+      description: "Test, build and deploy shipit_workflow"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/staging/src/shipit_workflow"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
+      - hooks:modify-hook:project-releng/services-staging-shipit_workflow-*
+      - assume:hook-id:project-releng/services-staging-shipit_workflow-*
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - staging
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "shipit_workflow"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:staging"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+  
+  
+  - metadata:
+      name: "shipit_workflow"
+      description: "Test, build and deploy shipit_workflow"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/production/src/shipit_workflow"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:production
+      - hooks:modify-hook:project-releng/services-production-shipit_workflow-*
+      - assume:hook-id:project-releng/services-production-shipit_workflow-*
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - production
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "shipit_workflow"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:production"
       command:
         - "/bin/bash"
