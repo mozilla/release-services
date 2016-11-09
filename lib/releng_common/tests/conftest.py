@@ -1,30 +1,7 @@
 import pytest
-from releng_common import create_app, auth
-import json
-import responses
-
-
-def taskcluster_auth_mock(request):
-    """
-    Mock the hawk header validation from Taskcluster
-    """
-    # TODO: analyse the payload
-    # payload = json.loads(request.body)
-    body = {
-        'status': 'auth-success',
-        'scopes': [],
-        'scheme': 'hawk',
-        'clientId': 'test/test@mozilla.com',
-        'expires': '2017-01-01T00:00:00',
-    }
-    headers = {}
-    return (200, headers, json.dumps(body))
-
-responses.add_callback(
-    responses.POST, 'https://auth.taskcluster.net/v1/authenticate-hawk',
-    callback=taskcluster_auth_mock,
-    content_type='application/json',
-)
+from flask_login import current_user
+from flask import jsonify
+from releng_common import create_app, auth, mocks
 
 
 @pytest.fixture(scope='module')
@@ -46,7 +23,20 @@ def app():
     @app.route('/test-login')
     @auth.auth.require_login
     def logged_in():
-        return app.response_class('Authenticated')
+        data = {
+            'auth': True,
+            'user': current_user.get_id(),
+            'scopes': current_user.permissions,
+        }
+        return jsonify(data)
+
+    @app.route('/test-scopes')
+    @auth.auth.require_scopes([
+        ['project/test/A', 'project/test/B'],
+        ['project/test-admin/*'],
+    ])
+    def scopes():
+        return app.response_class('Your scopes are ok.')
 
     return app
 
@@ -57,4 +47,5 @@ def client(app):
     A Flask test client.
     """
     with app.test_client() as client:
-        yield client
+        with mocks.apply_mockups():
+            yield client

@@ -176,7 +176,7 @@ build-docker-%: nix
 
 test: require-APP
 	nix-shell nix/default.nix -A $(APP) \
-	--run "pytest lib/releng_common/tests src/$(APP)/tests"
+	--run "pytest -s lib/releng_common/tests src/$(APP)/tests"
 	
 
 
