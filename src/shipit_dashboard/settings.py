@@ -8,7 +8,7 @@ import os
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
 CACHE = {x: os.environ.get(x) for x in os.environ.keys() if x.startswith('CACHE_')}   # noqa
-SWAGGER_BASE_URL = os.environ.get('SWAGGER_BASE_URL', None)
+SWAGGER_BASE_URL = os.environ.get('SWAGGER_BASE_URL')
 
 
 if 'CACHE_DEFAULT_TIMEOUT' not in CACHE:
