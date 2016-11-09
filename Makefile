@@ -32,11 +32,15 @@ APP_DEV_PORT_releng_treestatus=8003
 APP_DEV_PORT_shipit_frontend=8010
 APP_DEV_PORT_shipit_dashboard=8011
 
-APP_DEV_SSL=SSL_CACERT=$$PWD/tmp/ca.crt SSL_CERT=$$PWD/tmp/server.crt SSL_KEY=$$PWD/tmp/server.key
+APP_DEV_SSL=\
+	SSL_CACERT=$$PWD/tmp/ca.crt \
+	SSL_CERT=$$PWD/tmp/server.crt \
+	SSL_KEY=$$PWD/tmp/server.key
 APP_DEV_ENV_releng_frontend=\
 	NEO_CLOBBERER_URL=https://localhost:$(APP_DEV_PORT_releng_clobberer) \
 	NEO_TOOLTOOL_URL=https://localhost:$(APP_DEV_PORT_releng_tooltool) \
-	NEO_TOOLTOOL_URL=https://localhost:$(APP_DEV_PORT_releng_treestatus)
+	NEO_TREESTATUS=https://localhost:$(APP_DEV_PORT_releng_treestatus) \
+	$(APP_DEV_SSL)
 APP_DEV_ENV_shipit_frontend=\
 	NEO_DASHBOARD_URL=https://localhost:$(APP_DEV_PORT_shipit_dashboard) \
 	NEO_BUGZILLA_URL=https://bugzilla-dev.allizom.org \

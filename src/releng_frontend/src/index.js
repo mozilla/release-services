@@ -19,9 +19,21 @@ if (clobbererUrl === null) {
   clobbererUrl = process.env.NEO_CLOBBERER_URL || "You need to set NEO_CLOBBERER_URL variable or data-clobberer-url";
 }
 
+var tooltoolUrl = document.body.getAttribute('data-tooltool-url');
+if (tooltoolUrl=== null) {
+  tooltoolUrl = process.env.NEO_TOOLTOOL_URL || "You need to set NEO_TOOLTOOL_URL variable or data-tooltool-url";
+}
+
+var treestatusUrl = document.body.getAttribute('data-treestatus-url');
+if (treestatusUrl === null) {
+  treestatusUrl = process.env.NEO_TREESTATUS_URL || "You need to set NEO_TREESTATUS_URL variable or data-treestatus-url";
+}
+
 var app = require('./Main.elm').Main.fullscreen({
   user: user,
-  clobbererUrl: clobbererUrl
+  clobbererUrl: clobbererUrl,
+  tooltoolUrl: tooltoolUrl,
+  treestatusUrl: treestatusUrl 
 });
     
 
