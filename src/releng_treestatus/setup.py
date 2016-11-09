@@ -19,7 +19,12 @@ setup(
     author_email='garbas@mozilla.com',
     url='https://mozilla-releng.net/treestatus',
     install_requires=[
-        'releng_common[api,auth,cors,log,db,cache]'
+        'releng_common[api,auth,cors,log,db,cache]',
+        'pytz',
+        'SQLAlchemy',
+        'Flask',
+        'Flask-Login',
+        'Werkzeug',
     ],
     packages=find_packages(),
     include_package_data=True,

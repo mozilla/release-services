@@ -1,3 +1,9 @@
 -e ../../lib/releng_common[api,auth,cors,log,db,cache]
 
 -e .
+
+pytz
+SQLAlchemy
+Flask
+Flask-Login
+Werkzeug

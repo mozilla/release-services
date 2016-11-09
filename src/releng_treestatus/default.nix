@@ -26,6 +26,11 @@ let
       ];
     propagatedBuildInputs =
       [ releng_common
+        python.packages."pytz"
+        python.packages."SQLAlchemy"
+        python.packages."Flask"
+        python.packages."Flask-Login"
+        python.packages."Werkzeug"
       ];
     passthru = {
       mysql2sqlite = mysql2sqlite { inherit name; };

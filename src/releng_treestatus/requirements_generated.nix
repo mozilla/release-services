@@ -875,6 +875,24 @@ self: {
 
 
 
+  "pytz" = python.mkDerivation {
+    name = "pytz-2016.7";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/53/35/6376f58fb82ce69e2c113ca0ebe5c0f69b20f006e184bcc238a6007f4bdb/pytz-2016.7.tar.bz2";
+      sha256 = "6eab31709e3a4aea748457707da45e805b650cbb352583805d2417de2a1dd71e";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "World timezone definitions, modern and historical";
+    };
+  };
+
+
+
   "requests" = python.mkDerivation {
     name = "requests-2.11.1";
     src = pkgs.fetchurl {
