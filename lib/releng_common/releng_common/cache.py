@@ -7,7 +7,10 @@ from __future__ import absolute_import
 from flask_cache import Cache
 
 
+cache = Cache()
+
+
 def init_app(app):
     cache_config = app.config.get('CACHE', {'CACHE_TYPE': 'simple'})
-    cache = Cache(app, config=cache_config)
+    cache.init_app(app, config=cache_config)
     return cache
