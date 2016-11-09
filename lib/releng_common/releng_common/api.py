@@ -117,6 +117,7 @@ class Api:
         if base_url is None:
             base_url = app.config.get('SWAGGER_BASE_URL')
 
+        self.swagger_url = swagger_url
         self.__api = connexion.api.Api(
             swagger_yaml_path=pathlib.Path(swagger_file),
             base_url=base_url,
