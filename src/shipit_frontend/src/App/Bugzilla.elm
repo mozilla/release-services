@@ -76,16 +76,16 @@ viewStatus: User.Model -> Html Msg
 viewStatus user =
   case user.bugzilla_check of
     NotAsked ->
-      span [class "label label-warning"] [text "No credentials set"]
+      span [class "tag tag-warning"] [text "No credentials set"]
 
     Loading -> 
-      span [class "label label-info"] [text "Checking credentials"]
+      span [class "tag tag-info"] [text "Checking credentials"]
 
     Failure err ->
-      span [class "label label-danger"] [text (toString err)]
+      span [class "tag tag-danger"] [text (toString err)]
 
     Success check -> 
       if check then
-        span [class "label label-success"] [text "Valid credentials"]
+        span [class "tag tag-success"] [text "Valid credentials"]
       else
-        span [class "label label-danger"] [text "Invalid credentials"]
+        span [class "tag tag-danger"] [text "Invalid credentials"]

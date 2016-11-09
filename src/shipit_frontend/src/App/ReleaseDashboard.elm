@@ -641,7 +641,7 @@ viewBug model bug =
         a [class "text-muted monospace", href bug.url, target "_blank"] [text ("#" ++ (toString bug.bugzilla_id))]
       ]
       ++ (List.map viewVersionTag (Dict.toList bug.uplift_versions))
-      ++ (List.map (\k -> span [class "label label-default"] [text k]) bug.keywords)
+      ++ (List.map (\k -> span [class "tag tag-default"] [text k]) bug.keywords)
     ),
     div [class "row"] [
       div [class "col-xs-4"] 
@@ -662,15 +662,15 @@ viewBug model bug =
 viewVersionTag: (String, UpliftVersion) -> Html Msg
 viewVersionTag (name, version) =
   case version.status of
-    "?" -> span [class "label label-info"] [text name]
-    "+" -> span [class "label label-success"] [text name]
-    "-" -> span [class "label label-danger"] [text name]
-    _ ->  span [class "label label-default"] [text name]
+    "?" -> span [class "tag tag-info"] [text name]
+    "+" -> span [class "tag tag-success"] [text name]
+    "-" -> span [class "tag tag-danger"] [text name]
+    _ ->  span [class "tag tag-default"] [text name]
 
 viewContributor: Contributor -> Html Msg
 viewContributor user = 
   div [class "user row"] [
-    div [class "pull-sm-left hidden-xs"] [
+    div [class "pull-sm-left col-sm-2 hidden-xs"] [
       img [class "avatar img-fluid img-rounded", src user.avatar] []
     ],
     div [class "col-xs-8 col-sm-10"] [
@@ -679,11 +679,11 @@ viewContributor user =
         a [href ("mailto:" ++ user.email)] [text user.email]
       ],
       p [] (List.map (\role -> case role of
-        "creator" -> span [class "label label-success"] [text "Bug author"]
-        "reviewer" -> span [class "label label-info"] [text "Reviewer"]
-        "assignee" -> span [class "label label-danger"] [text "Assignee"]
-        "uplift_author" -> span [class "label label-warning"] [text "Uplift author"]
-        _ -> span [class "label label-default"] [text role]
+        "creator" -> span [class "tag tag-success"] [text "Bug author"]
+        "reviewer" -> span [class "tag tag-info"] [text "Reviewer"]
+        "assignee" -> span [class "tag tag-danger"] [text "Assignee"]
+        "uplift_author" -> span [class "tag tag-warning"] [text "Uplift author"]
+        _ -> span [class "tag tag-default"] [text role]
       ) user.roles)
     ]
   ]
@@ -741,7 +741,7 @@ viewBugDetails bug =
 viewPatch: (String, Patch) -> Html Msg
 viewPatch (patchId, patch) =
   div [class "patch"] [
-    --span [class "label label-info -pill", title "Changes size"] [text (toString patch.changes)],
+    --span [class "tag tag-info -pill", title "Changes size"] [text (toString patch.changes)],
     a [href patch.url, target "_blank", title ("On " ++ patch.source)] [text ((if patch.changes > 0 then "Patch" else "Test") ++ " " ++ patchId)],
     span [class "changes"] [text "("],
     span [class "changes additions"] [text ("+" ++ (toString patch.additions))],
@@ -793,11 +793,11 @@ viewStatusFlag (key, value) =
   li [] [
     strong [] [text key],
     case value of
-      "affected" -> span [class "label label-danger"] [text value]
-      "verified" -> span [class "label label-info"] [text value]
-      "fixed" -> span [class "label label-success"] [text value]
-      "wontfix" -> span [class "label label-warning"] [text value]
-      _ -> span [class "label label-default"] [text value]
+      "affected" -> span [class "tag tag-danger"] [text value]
+      "verified" -> span [class "tag tag-info"] [text value]
+      "fixed" -> span [class "tag tag-success"] [text value]
+      "wontfix" -> span [class "tag tag-warning"] [text value]
+      _ -> span [class "tag tag-default"] [text value]
   ]
 
 editStatusFlag: Bug -> (String, String) -> Html Msg
@@ -817,10 +817,10 @@ viewTrackingFlag (key, value) =
   li [] [
     strong [] [text key],
     case value of
-      "+" -> span [class "label label-success"] [text value]
-      "-" -> span [class "label label-danger"] [text value]
-      "?" -> span [class "label label-info"] [text value]
-      _ -> span [class "label label-default"] [text value]
+      "+" -> span [class "tag tag-success"] [text value]
+      "-" -> span [class "tag tag-danger"] [text value]
+      "?" -> span [class "tag tag-info"] [text value]
+      _ -> span [class "tag tag-default"] [text value]
   ]
 
 editTrackingFlag: Bug -> (String, String) -> Html Msg
