@@ -23,6 +23,7 @@ let
       [ python.packages."flake8"
         python.packages."pytest"
         python.packages."ipdb"
+        python.packages."responses"
       ];
     propagatedBuildInputs =
       [ releng_common
