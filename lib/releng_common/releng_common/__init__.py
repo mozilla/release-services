@@ -10,8 +10,6 @@ import logging
 import os
 import sys
 
-from flask import Flask, redirect
-
 __APP = dict()
 __BASE_EXTENSIONS = []
 
@@ -88,7 +86,7 @@ def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
     if redirect_root_to_api:
         app.add_url_rule("/",
                          "root",
-                         lambda: redirect(app.api._Api__api.swagger_url))
+                         lambda: flask.redirect(app.api.swagger_url))
 
     def run_options():
         extra_files = []
