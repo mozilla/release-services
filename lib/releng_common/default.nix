@@ -14,6 +14,7 @@ in python.mkDerivation {
   buildInputs =
     [ python.packages."flake8"
       python.packages."pytest"
+      python.packages."responses"
     ];
   propagatedBuildInputs =
     [ python.packages."Flask"
