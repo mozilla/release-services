@@ -50,8 +50,7 @@ def test_auth(client):
     """
     # Test non authenticated endpoint
     resp = client.get('/')
-    assert resp.status_code == 200
-    assert b'OK' in resp.data
+    assert resp.status_code in (200, 302)
 
     # Test authenticated endpoint without header
     resp = client.get('/test-login')

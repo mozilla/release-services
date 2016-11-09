@@ -38,6 +38,9 @@ def app():
     def scopes():
         return app.response_class('Your scopes are ok.')
 
+    # Add fake swagger url, used by redirect
+    app.api.swagger_url = '/'
+
     return app
 
 
