@@ -20,8 +20,8 @@
     sha256 = "0bw8ppazywjljbdbph7319fnlcr8qnxdpd8556b50fzhy57a4bjq";
   };
   "jinjor/elm-html-parser" = {
-    version = "1.1.1";
-    sha256 = "0g3z383xx499i7lfnx04h2639rikcg2k4li4b52xccwxnkdlqzic";
+    version = "1.1.2";
+    sha256 = "0yad51v7c62j1d3sz6g93w5qzg6q9xsgizhbihq7fz8s0572597v";
   };
   "elm-lang/lazy" = {
     version = "1.0.0";
