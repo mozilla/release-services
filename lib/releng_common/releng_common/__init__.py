@@ -49,6 +49,16 @@ def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
     app = __APP[name] = flask.Flask(name, **kw)
     app.debug = debug
 
+    # Support test mode
+    if os.environ.get('APP_TESTING') == name:
+        config = {
+            'DEBUG': True,
+            'TESTING': True,
+            'DATABASE_URL': 'sqlite://',  # in memory db
+            'SQLALCHEMY_DATABASE_URI': 'sqlite://',
+            'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        }
+
     # load config (settings.py)
     if config:
         app.config.update(**config)

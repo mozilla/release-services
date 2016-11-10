@@ -56,7 +56,12 @@ def upgrade():
     ### end Alembic commands ###
 
     # Empty analysis
-    op.execute("TRUNCATE TABLE shipit_bug_analysis CASCADE")
+    try:
+        # Postgresql
+        op.execute("TRUNCATE TABLE shipit_bug_analysis CASCADE")
+    except:
+        # Sqlite
+        op.execute("DELETE FROM shipit_bug_analysis")
 
     # Setup initial analysis
     all_analysis = json.load(open(os.path.join(HERE, 'analysis.json'), 'r'))
