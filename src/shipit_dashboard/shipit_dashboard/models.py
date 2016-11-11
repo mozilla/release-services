@@ -32,7 +32,7 @@ class BugAnalysis(db.Model):
     parameters = sa.Column(sa.Text())
     created = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
 
-    bugs = db.relationship('BugResult', secondary=bugs, backref=db.backref('analysis', lazy='dynamic'))  # noqa
+    bugs = db.relationship('BugResult', secondary=bugs, backref=db.backref('analysis', lazy='dynamic'), order_by='BugResult.bugzilla_id')  # noqa
 
     def __init__(self, name):
         self.name = name
