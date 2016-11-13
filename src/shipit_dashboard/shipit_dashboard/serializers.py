@@ -34,7 +34,7 @@ def serialize_bug(bug):
 
     # Build uplift
     uplift = None
-    if analysis.get('uplift_comment') and analysis.get('uplift_author'):
+    if analysis.get('uplift_comment'):
         comment = analysis['uplift_comment']
         if 'html' in comment:
             comment_html = comment['html'].replace('&', '&amp;')
