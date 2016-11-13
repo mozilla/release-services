@@ -164,8 +164,6 @@ def create_bug():
         link.roles = ','.join(user['roles'])
         db.session.add(link)
 
-        print('Contrib', contrib)
-
     # Commit all those changes
     db.session.commit()
 
