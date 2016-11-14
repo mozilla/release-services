@@ -31,7 +31,8 @@ If you already use LVM on your Linux computer, you can create a separate Logical
     % VG_NAME=$(vgdisplay | grep "VG Name" | awk '{print $3}')
     % lvcreate -L 15G -n nix $VG_NAME
     % mkfs.ext4 /dev/$VG_NAME/nix
-    % echo "/dev/mapper/$VG_NAME/nix   ext4    defaults,noatime        0       2" >> /etc/fstab
+    % mkdir /nix
+    % echo "/dev/mapper/$VG_NAME/nix  /nix  ext4    defaults,noatime        0       2" >> /etc/fstab
     % mount -a
 
 
