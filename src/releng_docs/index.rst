@@ -73,6 +73,7 @@ Contents
     continuous-integration
     deploying
     contributing
+    authentication
     services_releng
     services_shipit
     defending
