@@ -13,9 +13,9 @@ from releng_common.db import db
 
 # M2M link between analysis & bug
 bugs = db.Table(
-    'analysis_bugs',
-    sa.Column('analysis_id', sa.Integer, sa.ForeignKey('shipit_bug_analysis.id')),  # noqa
-    sa.Column('bug_id', sa.Integer, sa.ForeignKey('shipit_bug_result.id'))
+    'shipit_dashboard_analysis_bugs',
+    sa.Column('analysis_id', sa.Integer, sa.ForeignKey('shipit_dashboard_analysis.id')),  # noqa
+    sa.Column('bug_id', sa.Integer, sa.ForeignKey('shipit_dashboard_bug.id'))
 )
 
 
@@ -25,7 +25,7 @@ class BugAnalysis(db.Model):
     by listing several bugs from Bugzilla, with
     their analysus
     """
-    __tablename__ = 'shipit_bug_analysis'
+    __tablename__ = 'shipit_dashboard_analysis'
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String(80))
@@ -45,7 +45,7 @@ class BugResult(db.Model):
     """
     The cached result of an analysis run
     """
-    __tablename__ = 'shipit_bug_result'
+    __tablename__ = 'shipit_dashboard_bug'
 
     id = sa.Column(sa.Integer, primary_key=True)
     bugzilla_id = sa.Column(sa.Integer, unique=True)
@@ -71,7 +71,7 @@ class BugResult(db.Model):
         Delete bug and its dependencies
         """
         # Delete links, avoid StaleDataError
-        db.engine.execute(sa.text('delete from analysis_bugs where bug_id = :bug_id'), bug_id=self.id)  # noqa
+        db.engine.execute(sa.text('delete from shipit_dashboard_analysis_bugs where bug_id = :bug_id'), bug_id=self.id)  # noqa
 
         # Delete the bug
         db.session.delete(self)
@@ -82,7 +82,7 @@ class Contributor(db.Model):
     """
     An active Mozilla contributor
     """
-    __tablename__ = 'shipit_contributor'
+    __tablename__ = 'shipit_dashboard_contributor'
     id = sa.Column(sa.Integer, primary_key=True)
     bugzilla_id = sa.Column(sa.Integer, unique=True)
     name = sa.Column(sa.String(250))
@@ -94,14 +94,14 @@ class BugContributor(db.Model):
     """
     M2M link between contributor & bug
     """
-    __tablename__ = 'shipit_contributor_bugs'
+    __tablename__ = 'shipit_dashboard_contributor_bugs'
     __table_args__ = (
         sa.UniqueConstraint('contributor_id', 'bug_id', name='uniq_contrib_bug'),  # noqa
     )
 
     id = sa.Column(sa.Integer, primary_key=True)
-    contributor_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_contributor.id'))  # noqa
-    bug_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_bug_result.id'))
+    contributor_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_dashboard_contributor.id'))  # noqa
+    bug_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_dashboard_bug.id'))  # noqa
     roles = sa.Column(sa.String(250))
 
     bug = db.relationship(BugResult, backref="contributors")
