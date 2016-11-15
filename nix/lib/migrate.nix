@@ -9,6 +9,7 @@ let
     bash
     coreutils
     gnused
+    gnugrep
     mysql
     openssh
     postgresql
@@ -21,6 +22,7 @@ in {
     { name
     , beforeSQL ? ""
     , afterSQL ? ""
+    , config ? ""
     }:
     writeScriptBin "migrate" ''
       #${bash}/bin/bash -e
@@ -159,6 +161,7 @@ in {
           username: $POSTGRESQL_USER
           password: $POSTGRESQL_PASSWORD
           database: $POSTGRESQL_DATABASE
+      ${config}
       EOL
       echo "====================================================="
       cat $MYSQL2PGSQL_YML
@@ -231,9 +234,7 @@ in {
       fi
 
 
-
       ## helper functions 
-
       parse_url() {
         eval $(echo "$2" | ${gnused}/bin/sed -e "s#^\(\(.*\)://\)\?\(\([^:@]*\)\(:\(.*\)\)\?@\)\?\([^/?]*\)\(/\(.*\)\)\?#$1SCHEME='\2' $1USER='\4' $1PASSWORD='\6' $1HOST='\7' $1DATABASE='\9'#")
         host=$1HOST
@@ -245,11 +246,8 @@ in {
       }
 
 
-
       ## parse & validate $CLI_SERVER variable
-
       parse_url "SERVER_" "$CLI_SERVER"
-
       if [[ -z "$SERVER_USER" ]] ||
          [[ -z "$SERVER_HOST" ]]; then
          echo "ERROR"
@@ -265,13 +263,9 @@ in {
       fi
 
 
-
       ## parse & validate $CLI_MYSQL variable
-
       parse_url "MYSQL_" "$CLI_MYSQL"
-
       if [[ -z "$MYSQL_PORT" ]]; then MYSQL_PORT=3306; fi
-
       if [[ "$MYSQL_SCHEME" != "mysql" ]] ||
          [[ -z "$MYSQL_USER" ]] ||
          [[ -z "$MYSQL_PASSWORD" ]] ||
@@ -292,32 +286,24 @@ in {
 
 
       ## parse & validate $CLI_SQLITE variable
-
       SQLITE_FILE=`${coreutils}/bin/realpath $CLI_SQLITE`
 
 
-
-
       ## create temporary directory and random mysql port on localhost
-
       MYSQL2SQLITE_TMPDIR=`${coreutils}/bin/mktemp -d -t "migrate-${name}-XXXXX"`
       MYSQL2SQLITE_DUMP=$MYSQL2SQLITE_TMPDIR/mysqldump.sql
+      MYSQL2SQLITE_DB=$MYSQL2SQLITE_TMPDIR/db.sqlite
       MYSQL_LOCAL_PORT=`${coreutils}/bin/shuf -i 10000-65000 -n 1`
 
 
-
       ## open (automatically closing) shh tunnel
-
       ${openssh}/bin/ssh -f \
           -o ExitOnForwardFailure=yes \
           -L $MYSQL_LOCAL_PORT:$MYSQL_HOST:$MYSQL_PORT $SERVER_USER@$SERVER_HOST \
           sleep 10
 
 
-
-
-      ## TODO: dump mysql database and copy it over
-
+      ## dump mysql database and copy it over
       ${coreutils}/bin/rm -f $MYSQL2SQLITE_DUMP
       ${mysql}/bin/mysqldump \
         --skip-extended-insert --compact \
@@ -326,27 +312,28 @@ in {
         $MYSQL_DATABASE > $MYSQL2SQLITE_DUMP
 
 
-
       ## run beforeSQL query on sqlite
-
-      ${sqlite.bin}/bin/sqlite3 $SQLITE_FILE "${beforeSQL}"
-
+      echo "${beforeSQL}" | ${sqlite.bin}/bin/sqlite3 $SQLITE_FILE
 
 
-      ## load mysql dump into sqlite
-
-      ${mysql2sqlite}/bin/mysql2sqlite $MYSQL2SQLITE_DUMP | ${sqlite.bin}/bin/sqlite3 $SQLITE_FILE
-
+      ## load mysql dump into a tmp sqlite db
+      ${mysql2sqlite}/bin/mysql2sqlite $MYSQL2SQLITE_DUMP | ${sqlite.bin}/bin/sqlite3 $MYSQL2SQLITE_DB
 
 
-      ## run afterSQL query on postgresql
+      ## run afterSQL query on it
+      echo "${afterSQL}" | ${sqlite.bin}/bin/sqlite3 $MYSQL2SQLITE_DB
 
-      ${sqlite.bin}/bin/sqlite3 $SQLITE_FILE "${afterSQL}"
+
+      ## then dump the db
+      ${sqlite.bin}/bin/sqlite3 $MYSQL2SQLITE_DB .dump   > $MYSQL2SQLITE_TMPDIR/dump.sql
+
+
+      ## import them to sqlit db
+      ${coreutils}/bin/cat $MYSQL2SQLITE_TMPDIR/dump.sql | ${sqlite.bin}/bin/sqlite3 $SQLITE_FILE
 
 
       ## remove temporary folder
-
-      rm -rf $MIGRATE_TMPDIR
+      ${coreutils}/bin/rm -rf $MIGRATE_TMPDIR
     '';
 
 }
