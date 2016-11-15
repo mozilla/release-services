@@ -39,7 +39,7 @@ class UTCDateTime(types.TypeDecorator):
 
 class Tree(db.Model):
 
-    __tablename__ = 'treestatus_trees'
+    __tablename__ = 'releng_treestatus_trees'
 
     tree = sa.Column(sa.String(32), primary_key=True)
     status = sa.Column(sa.String(64), default="open", nullable=False)
@@ -57,7 +57,7 @@ class Tree(db.Model):
 
 class Log(db.Model):
 
-    __tablename__ = 'treestatus_log'
+    __tablename__ = 'releng_treestatus_log'
 
     id = sa.Column(sa.Integer, primary_key=True)
     tree = sa.Column(sa.String(32), nullable=False, index=True)
@@ -89,7 +89,7 @@ class Log(db.Model):
 
 class StatusChange(db.Model):
 
-    __tablename__ = 'treestatus_changes'
+    __tablename__ = 'releng_treestatus_changes'
 
     id = sa.Column(sa.Integer, primary_key=True)
     who = sa.Column(sa.Text, nullable=False)
@@ -110,7 +110,7 @@ class StatusChange(db.Model):
 
 class StatusChangeTree(db.Model):
 
-    __tablename__ = 'treestatus_change_trees'
+    __tablename__ = 'releng_treestatus_change_trees'
 
     id = sa.Column(sa.Integer, primary_key=True)
     stack_id = sa.Column(sa.Integer,
