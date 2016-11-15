@@ -12,16 +12,22 @@ import flask_sqlalchemy
 
 logger = logging.getLogger('releng_common.db')
 db = flask_sqlalchemy.SQLAlchemy()
+migrate = flask_migrate.Migrate(db=db)
 
 
 def init_app(app):
     db.init_app(app)
 
-    # Setup migrations
     migrations_dir = os.path.abspath(
         os.path.join(app.root_path, '..', 'migrations'))
-    flask_migrate.Migrate(app, db, directory=migrations_dir)
+
+    # Setup migrations
     with app.app_context():
+        options = {
+            # Use a separate alembic_version table per app
+            'version_table': '{}_alembic_version'.format(app.name),
+        }
+        migrate.init_app(app, directory=migrations_dir, **options)
         if os.path.isdir(migrations_dir):
             try:
                 flask_migrate.upgrade()
