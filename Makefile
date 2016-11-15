@@ -6,6 +6,8 @@ APPS=\
 	releng_clobberer \
 	releng_tooltool \
 	releng_treestatus \
+	releng_mapper \
+	releng_archiver \
 	releng_frontend \
 	shipit_dashboard \
 	shipit_workflow \
@@ -30,6 +32,8 @@ APP_DEV_PORT_releng_frontend=8000
 APP_DEV_PORT_releng_clobberer=8001
 APP_DEV_PORT_releng_tooltool=8002
 APP_DEV_PORT_releng_treestatus=8003
+APP_DEV_PORT_releng_mapper=8004
+APP_DEV_PORT_releng_archiver=8005
 APP_DEV_PORT_shipit_frontend=8010
 APP_DEV_PORT_shipit_dashboard=8011
 APP_DEV_PORT_shipit_workflow=8012
@@ -43,7 +47,9 @@ APP_DEV_SSL=\
 APP_DEV_ENV_releng_frontend=\
 	NEO_CLOBBERER_URL=https://localhost:$(APP_DEV_PORT_releng_clobberer) \
 	NEO_TOOLTOOL_URL=https://localhost:$(APP_DEV_PORT_releng_tooltool) \
-	NEO_TREESTATUS=https://localhost:$(APP_DEV_PORT_releng_treestatus) \
+	NEO_TREESTATUS_URL=https://localhost:$(APP_DEV_PORT_releng_treestatus) \
+	NEO_MAPPER_URL=https://localhost:$(APP_DEV_PORT_releng_mapper) \
+	NEO_ARCHIVER_URL=https://localhost:$(APP_DEV_PORT_releng_archiver) \
 	$(APP_DEV_SSL)
 APP_DEV_ENV_shipit_frontend=\
 	NEO_DASHBOARD_URL=https://localhost:$(APP_DEV_PORT_shipit_dashboard) \
@@ -54,6 +60,8 @@ APP_DEV_ENV_shipit_frontend=\
 APP_STAGING_HEROKU_releng_clobberer=releng-staging-clobberer
 APP_STAGING_HEROKU_releng_tooltool=releng-staging-tooltool
 APP_STAGING_HEROKU_releng_treestatus=releng-staging-treestatus
+APP_STAGING_HEROKU_releng_mapper=releng-staging-mapper
+APP_STAGING_HEROKU_releng_archiver=releng-staging-archiver
 APP_STAGING_HEROKU_shipit_dashboard=shipit-staging-dashboard
 APP_STAGING_HEROKU_shipit_workflow=shipit-staging-workflow
 
@@ -63,11 +71,15 @@ APP_STAGING_S3_shipit_frontend=shipit-staging-frontend
 APP_STAGING_ENV_releng_frontend=\
 	'clobberer-url="https:\/\/clobberer\.staging\.mozilla-releng\.net\"' \
 	'tooltool-url="https:\/\/tooltool\.staging\.mozilla-releng\.net\"' \
-	'treestatus-url="https:\/\/treestatus\.staging\.mozilla-releng\.net\"'
+	'treestatus-url="https:\/\/treestatus\.staging\.mozilla-releng\.net\"' \
+	'mapper-url="https:\/\/mapper\.staging\.mozilla-releng\.net\"' \
+	'archiver-url="https:\/\/archiver\.staging\.mozilla-releng\.net\"'
 APP_STAGING_ENV_releng_frontend=\
 	'clobberer-url="https:\/\/clobberer\.staging\.mozilla-releng\.net\"' \
 	'tooltool-url="https:\/\/tooltool\.staging\.mozilla-releng\.net\"' \
-	'treestatus-url="https:\/\/treestatus\.staging\.mozilla-releng\.net\"'
+	'treestatus-url="https:\/\/treestatus\.staging\.mozilla-releng\.net\"' \
+	'mapper-url="https:\/\/mapper\.staging\.mozilla-releng\.net\"' \
+	'archiver-url="https:\/\/archiver\.staging\.mozilla-releng\.net\"'
 APP_STAGING_ENV_shipit_frontend=\
 	'dashboard-url="https:\/\/dashboard\.shipit\.staging\.mozilla-releng\.net\"' \
 	'bugzilla-url="https:\/\/bugzilla\.mozilla\.org"'
@@ -75,6 +87,8 @@ APP_STAGING_ENV_shipit_frontend=\
 APP_PRODUCTION_HEROKU_releng_clobberer=releng-production-clobberer
 APP_PRODUCTION_HEROKU_releng_tooltool=releng-production-tooltool
 APP_PRODUCTION_HEROKU_releng_treestatus=releng-production-treestatus
+APP_PRODUCTION_HEROKU_releng_mapper=releng-production-mapper
+APP_PRODUCTION_HEROKU_releng_archiver=releng-production-archiver
 APP_PRODUCTION_HEROKU_shipit_dashboard=shipit-production-dashboard
 APP_PRODUCTION_HEROKU_shipit_workflow=shipit-production-workflow
 
@@ -84,7 +98,9 @@ APP_PRODUCTION_S3_shipit_frontend=shipit-production-frontend
 APP_PRODUCTION_ENV_releng_frontend=\
 	'clobberer-url="https:\/\/clobberer\.mozilla-releng\.net\"' \
 	'tooltool-url="https:\/\/tooltool\.mozilla-releng\.net\"' \
-	'treestatus-url="https:\/\/treestatus\.mozilla-releng\.net\"'
+	'treestatus-url="https:\/\/treestatus\.mozilla-releng\.net\"' \
+	'mapper-url="https:\/\/mapper\.mozilla-releng\.net\"' \
+	'archiver-url="https:\/\/archiver\.mozilla-releng\.net\"'
 APP_PRODUCTION_ENV_shipit_frontend=\
 	'dashboard-url="https:\/\/dashboard\.shipit\.mozilla-releng\.net\"'
 
@@ -154,6 +170,8 @@ develop-run-FRONTEND: build-certs nix require-APP
 develop-run-releng_clobberer: require-sqlite develop-run-BACKEND
 develop-run-releng_tooltool: require-sqlite develop-run-BACKEND
 develop-run-releng_treestatus: require-sqlite develop-run-BACKEND
+develop-run-releng_mapper: require-sqlite develop-run-BACKEND
+develop-run-releng_archiver: require-sqlite develop-run-BACKEND
 develop-run-releng_frontend: develop-run-FRONTEND
 
 develop-run-shipit_frontend: develop-run-FRONTEND
@@ -224,6 +242,8 @@ deploy-staging-releng_frontend: deploy-staging-S3
 deploy-staging-releng_clobberer: deploy-staging-HEROKU
 deploy-staging-releng_tooltool: deploy-staging-HEROKU
 deploy-staging-releng_treestatus: deploy-staging-HEROKU
+deploy-staging-releng_mapper: deploy-staging-HEROKU
+deploy-staging-releng_archiver: deploy-staging-HEROKU
 
 deploy-staging-shipit_frontend: deploy-staging-S3
 deploy-staging-shipit_dashboard: deploy-staging-HEROKU
@@ -268,7 +288,8 @@ deploy-production-releng_frontend: deploy-production-S3
 deploy-production-releng_clobberer: deploy-production-HEROKU
 deploy-production-releng_tooltool: deploy-production-HEROKU
 deploy-production-releng_treestatus: deploy-production-HEROKU
-
+deploy-production-releng_mapper: deploy-production-HEROKU
+deploy-production-releng_archiver: deploy-production-HEROKU
 deploy-production-shipit_frontend: deploy-production-S3
 deploy-production-shipit_workflow: # deploy-production-HEROKU
 
