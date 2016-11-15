@@ -16,7 +16,7 @@ let
 
   self = mkBackend rec {
     inherit python;
-    name = "shipit_workflow";
+    name = "shipit_pipeline";
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
