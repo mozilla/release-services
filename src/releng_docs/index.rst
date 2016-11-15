@@ -38,7 +38,7 @@ Get code:
 
     % git clone https://github.com/mozilla-releng/services
     % cd services/
-    % make  # will diplay help
+    % make  # will display help
 
 Start **developing** a service:
 
