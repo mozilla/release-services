@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS clobberer_builds;
-DROP TABLE IF EXISTS clobberer_times;
+DROP TABLE IF EXISTS releng_clobberer_builds;
+DROP TABLE IF EXISTS releng_clobberer_times;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `builds` (
@@ -9510,5 +9510,5 @@ INSERT INTO `clobber_times` VALUES (29649786,NULL,'fx-team','fx-team_w32_sm-plai
 INSERT INTO `clobber_times` VALUES (29649788,NULL,'fx-team','fx-team-w64-000000000000000000',NULL,1470340476,'wkocher@mozilla.com');
 INSERT INTO `clobber_times` VALUES (29649790,NULL,'fx-team','fx-team-w64-d-0000000000000000',NULL,1470340476,'wkocher@mozilla.com');
 INSERT INTO `clobber_times` VALUES (29649792,NULL,'fx-team','fx-team-w64-pgo-00000000000000',NULL,1470340476,'wkocher@mozilla.com');
-RENAME TABLE builds TO clobberer_builds;
-RENAME TABLE clober_times TO clobberer_times;
+RENAME TABLE builds TO releng_clobberer_builds;
+RENAME TABLE clober_times TO releng_clobberer_times;
