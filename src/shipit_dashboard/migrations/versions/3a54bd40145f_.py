@@ -50,7 +50,7 @@ def upgrade():
     op.create_table('shipit_dashboard_analysis_bugs',
     sa.Column('analysis_id', sa.Integer(), nullable=True),
     sa.Column('bug_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['analysis_id'], ['shipit_dashboard_bug_analysis.id'], ),
+    sa.ForeignKeyConstraint(['analysis_id'], ['shipit_dashboard_analysis.id'], ),
     sa.ForeignKeyConstraint(['bug_id'], ['shipit_dashboard_bug.id'], )
     )
     ### end Alembic commands ###
