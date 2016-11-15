@@ -14,6 +14,7 @@ from flask_login import current_user
 from werkzeug.exceptions import NotFound, BadRequest
 
 from releng_common.cache import cache
+from releng_common.auth import auth
 from releng_treestatus.models import (
     Tree, StatusChange, StatusChangeTree, Log
 )
@@ -21,6 +22,14 @@ from releng_treestatus.models import (
 
 UNSET = object()
 TREE_SUMMARY_LOG_LIMIT = 5
+SHERRIF = [
+    'project:releng:treestatus/update_trees',
+    'project:releng:treestatus/revert_change',
+]
+ADMIN = [
+    'project:releng:treestatus/make_tree',
+    'project:releng:treestatus/kill_tree',
+] + SHERRIF
 
 
 def _get(item, field, default=UNSET):
@@ -77,6 +86,7 @@ def get_trees():
     return {t.tree: t.to_dict() for t in session.query(Tree)}
 
 
+@auth.require_scopes(SHERRIF)
 def update_trees(body):
     session = current_app.db.session
     trees = [session.query(Tree).get(t) for t in body['trees']]
@@ -122,7 +132,8 @@ def update_trees(body):
     return None, 204
 
 
-def make_tree(tree_name, body):
+@auth.require_scopes(ADMIN)
+def make_tree(tree):
     session = current_app.db.session
     if body['tree'] != tree_name:
         raise BadRequest("Tree names must match")
@@ -139,6 +150,7 @@ def make_tree(tree_name, body):
     return None, 204
 
 
+@auth.require_scopes(ADMIN)
 def kill_tree(tree):
     session = current_app.db.session
     t = session.query(Tree).get(tree)
@@ -186,6 +198,7 @@ def get_stack():
     ]
 
 
+@auth.require_scopes(SHERRIF)
 def revert_change(id, revert=None):
     if revert not in (0, 1, None):
         raise BadRequest("Unexpected value for 'revert'")
