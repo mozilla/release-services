@@ -13,37 +13,29 @@ import Result exposing ( Result(Ok, Err))
 
 import App.User as User
 import App.Home as Home
-import App.Clobberer as Clobberer
 import App.TreeStatus as TreeStatus
 import App.Utils exposing ( eventLink )
-
-
 
 
 -- ROUTING
 
 
-type Page
-    = Home
-    | Clobberer
-    | TreeStatus
+type Route
+    = HomeRoute
+    | TreeStatusRoute
 
 
-pageLink page = eventLink (ShowPage page)
+pageLink route = eventLink (NavigateTo route)
 
 
 delta2url' : Model -> Model -> Maybe Builder
 delta2url' previous current =
-    case current.currentPage of
-        Clobberer ->
-            Maybe.map
-                (Builder.prependToPath ["clobberer"])
-                (Just builder)
-        TreeStatus ->
+    case current.route of
+        TreeStatusRoute ->
             Maybe.map
                 (Builder.prependToPath ["treestatus"])
                 (Just builder)
-        Home ->
+        HomeRoute ->
             Maybe.map
                 (Builder.prependToPath [])
                 (Just builder)
@@ -75,17 +67,15 @@ location2messages' builder =
                               |> User.convertUrlQueryToModel
                               |> User.LoggingIn
                               |> UserMsg
-                        , ShowPage Home
+                        , NavigateTo HomeRoute
                         ]
-                    "clobberer" ->
-                        [ ShowPage Clobberer ]
                     "treestatus" ->
-                        [ ShowPage TreeStatus ]
+                        [ NavigateTo TreeStatusRoute ]
                     -- TODO: This should redirect to NotFound
                     _ ->
-                        [ ShowPage Home ]
+                        [ NavigateTo HomeRoute ]
         _ ->
-            [ ShowPage Home ]
+            [ NavigateTo HomeRoute ]
 
 location2messages : Location -> List Msg
 location2messages location =
@@ -98,29 +88,22 @@ location2messages location =
 
 
 type alias Model =
-    { currentPage : Page
-    , currentUser : Maybe User.Model
-    , clobberer : Clobberer.Model
-    , clobbererUrl : String
+    { route : Route
+    , user : Maybe User.Model
     , treestatus : TreeStatus.Model
-    , treestatusUrl : String
     }
 
 type alias Flags =
     { user : Maybe User.Model
-    , clobbererUrl : String
     , treestatusUrl: String
     }
 
 
 init : Flags -> (Model, Cmd Msg)
 init flags =
-    ( { clobberer = Clobberer.init
-      , clobbererUrl = flags.clobbererUrl
-      , treestatus = TreeStatus.init
-      , treestatusUrl = flags.treestatusUrl
-      , currentPage = Home
-      , currentUser = flags.user
+    ( { treestatus = TreeStatus.init flags.treestatusUrl
+      , route = HomeRoute
+      , user = flags.user
       }
     , Cmd.none
     )
@@ -130,49 +113,32 @@ init flags =
 
 
 type Msg
-    = ShowPage Page
+    = NavigateTo Route
     | UserMsg User.Msg
-    | ClobbererMsg Clobberer.Msg
     | TreeStatusMsg TreeStatus.Msg
-
-
-updatePage model page =
-    case page of
-        Clobberer ->
-            let
-                clobberer = Clobberer.initPage
-                    model.clobbererUrl model.clobberer
-            in
-                ( { model | currentPage = page
-                          , clobberer = fst clobberer
-                  }
-                , Cmd.map ClobbererMsg <| snd clobberer
-                )
-        TreeStatus ->
-            let
-                treestatus = TreeStatus.initPage
-                    model.treestatusUrl model.treestatus
-            in
-                ( { model | currentPage = page
-                          , treestatus = fst treestatus
-                  }
-                , Cmd.map TreeStatusMsg <| snd treestatus
-                )
-        _ ->
-            ( { model | currentPage = page }, Cmd.none )
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg' model =
     case msg' of
-        ShowPage page -> updatePage model page
-        ClobbererMsg msg ->
-            let
-                (newModel, newCmd) = Clobberer.update msg model.clobberer
-            in
-                ( { model | clobberer = newModel }
-                , Cmd.map ClobbererMsg newCmd
-                )
+        NavigateTo route ->
+            case route of
+                HomeRoute ->
+                    ( { model | route = route
+                              , treestatus = TreeStatus.init model.treestatus.baseUrl
+                              }
+                    , Cmd.none
+                    )
+
+                TreeStatusRoute ->
+                    let
+                        treestatus = TreeStatus.load model.treestatus
+                    in
+                        ( { model | route = route 
+                                  , treestatus = fst treestatus
+                          }
+                        , Cmd.map TreeStatusMsg <| snd treestatus
+                        )
         TreeStatusMsg msg ->
             let
                 (newModel, newCmd) = TreeStatus.update msg model.treestatus
@@ -182,9 +148,9 @@ update msg' model =
                 )
         UserMsg msg -> 
             let
-                (newModel, newCmd) = User.update msg model.currentUser
+                (newModel, newCmd) = User.update msg model.user
             in
-                ( { model | currentUser = newModel }
+                ( { model | user = newModel }
                 , Cmd.map UserMsg newCmd
                 )
 
@@ -194,22 +160,17 @@ update msg' model =
 
 
 services =
-    [ { page = Clobberer
-      , title = "Clobberer"
-      }
-    , { page = TreeStatus
+    [ { page = TreeStatusRoute
       , title = "Tree Status"
       }
     ]
 
 
 viewPage model =
-    case model.currentPage of
-        Home ->
+    case model.route of
+        HomeRoute ->
             Home.view model
-        Clobberer ->
-            Html.App.map ClobbererMsg (Clobberer.view model.clobberer)
-        TreeStatus ->
+        TreeStatusRoute ->
             Html.App.map TreeStatusMsg (TreeStatus.view model.treestatus)
 
 
@@ -230,7 +191,7 @@ viewDropdown title pages =
     ]
 
 viewUser model =
-    case model.currentUser of
+    case model.user of
         Just user ->
             viewDropdown (Maybe.withDefault "UNKNOWN" user.clientId )
                     [ a [ class "dropdown-item"
@@ -251,6 +212,7 @@ viewUser model =
                 loginUrl =
                     { url = "https://login.taskcluster.net"
                     , target = loginTarget
+                    , targetName = "target"
                     }
                 loginMsg = UserMsg <| User.Login loginUrl
             in
@@ -266,8 +228,8 @@ viewNavBar model =
              , attribute "aria-controls" "navbar-header"
              ]
              [ text "&#9776;" ]
-    , pageLink Home [ class "navbar-brand" ]
-                    [ text "RelengAPI" ]
+    , pageLink HomeRoute [ class "navbar-brand" ]
+                         [ text "RelengAPI" ]
     , div [ class "collapse navbar-toggleable-sm navbar-collapse pull-right" ]
           [ ul [ class "nav navbar-nav" ]
                [ li [ class "nav-item" ]
@@ -306,5 +268,5 @@ view model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-    [ Sub.map UserMsg (User.localstorage_get (User.LoggedIn))
-    ]
+        [ Sub.map UserMsg (User.user_get (User.LoggedIn))
+        ]
