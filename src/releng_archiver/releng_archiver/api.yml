@@ -1,0 +1,14 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "RelEng Archiver"
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+
+  /example:
+    get:
+      operationId: "releng_archiver.api.example"
