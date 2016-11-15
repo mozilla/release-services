@@ -33,7 +33,7 @@ let
 
     shipit_frontend = import ./../src/shipit_frontend { inherit releng_pkgs; };
     shipit_dashboard = import ./../src/shipit_dashboard { inherit releng_pkgs; };
-    shipit_workflow = import ./../src/shipit_workflow { inherit releng_pkgs; };
+    shipit_pipeline = import ./../src/shipit_pipeline { inherit releng_pkgs; };
 
   };
 

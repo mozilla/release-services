@@ -10,7 +10,7 @@ APPS=\
 	releng_archiver \
 	releng_frontend \
 	shipit_dashboard \
-	shipit_workflow \
+	shipit_dashboard \
 	shipit_frontend
 
 TOOL=
@@ -36,7 +36,7 @@ APP_DEV_PORT_releng_mapper=8004
 APP_DEV_PORT_releng_archiver=8005
 APP_DEV_PORT_shipit_frontend=8010
 APP_DEV_PORT_shipit_dashboard=8011
-APP_DEV_PORT_shipit_workflow=8012
+APP_DEV_PORT_shipit_dashboard=8012
 
 APP_DEV_POSTGRES_PORT=9000
 
@@ -53,7 +53,7 @@ APP_DEV_ENV_releng_frontend=\
 	$(APP_DEV_SSL)
 APP_DEV_ENV_shipit_frontend=\
 	NEO_DASHBOARD_URL=https://localhost:$(APP_DEV_PORT_shipit_dashboard) \
-	NEO_WORKFLOW_URL=https://localhost:$(APP_DEV_PORT_shipit_workflow) \
+	NEO_PIPELINE_URL=https://localhost:$(APP_DEV_PORT_shipit_dashboard) \
 	NEO_BUGZILLA_URL=https://bugzilla-dev.allizom.org \
 	$(APP_DEV_SSL)
 
@@ -63,7 +63,7 @@ APP_STAGING_HEROKU_releng_treestatus=releng-staging-treestatus
 APP_STAGING_HEROKU_releng_mapper=releng-staging-mapper
 APP_STAGING_HEROKU_releng_archiver=releng-staging-archiver
 APP_STAGING_HEROKU_shipit_dashboard=shipit-staging-dashboard
-APP_STAGING_HEROKU_shipit_workflow=shipit-staging-workflow
+APP_STAGING_HEROKU_shipit_dashboard=shipit-staging-workflow
 
 APP_STAGING_S3_releng_docs=releng-staging-docs
 APP_STAGING_S3_releng_frontend=releng-staging-frontend
@@ -90,7 +90,7 @@ APP_PRODUCTION_HEROKU_releng_treestatus=releng-production-treestatus
 APP_PRODUCTION_HEROKU_releng_mapper=releng-production-mapper
 APP_PRODUCTION_HEROKU_releng_archiver=releng-production-archiver
 APP_PRODUCTION_HEROKU_shipit_dashboard=shipit-production-dashboard
-APP_PRODUCTION_HEROKU_shipit_workflow=shipit-production-workflow
+APP_PRODUCTION_HEROKU_shipit_dashboard=shipit-production-workflow
 
 APP_PRODUCTION_S3_releng_docs=releng-production-docs
 APP_PRODUCTION_S3_releng_frontend=releng-production-frontend
@@ -176,7 +176,7 @@ develop-run-releng_frontend: develop-run-FRONTEND
 
 develop-run-shipit_frontend: develop-run-FRONTEND
 develop-run-shipit_dashboard: require-postgres develop-run-BACKEND
-develop-run-shipit_workflow: require-sqlite develop-run-BACKEND 
+develop-run-shipit_pipeline: require-sqlite develop-run-BACKEND 
 
 develop-flask-shell: nix require-APP
 	DEBUG=true \
@@ -247,7 +247,7 @@ deploy-staging-releng_archiver: deploy-staging-HEROKU
 
 deploy-staging-shipit_frontend: deploy-staging-S3
 deploy-staging-shipit_dashboard: deploy-staging-HEROKU
-deploy-staging-shipit_workflow: # deploy-staging-HEROKU
+deploy-staging-shipit_dashboard: # deploy-staging-HEROKU
 
 
 
@@ -291,7 +291,7 @@ deploy-production-releng_treestatus: deploy-production-HEROKU
 deploy-production-releng_mapper: deploy-production-HEROKU
 deploy-production-releng_archiver: deploy-production-HEROKU
 deploy-production-shipit_frontend: deploy-production-S3
-deploy-production-shipit_workflow: # deploy-production-HEROKU
+deploy-production-shipit_dashboard: # deploy-production-HEROKU
 
 
 

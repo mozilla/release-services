@@ -12,12 +12,12 @@ from setuptools import setup
 here = os.path.dirname(__file__)
 
 setup(
-    name='shipit_workflow',
+    name='shipit_pipeline',
     version=open(os.path.join(here, 'VERSION')).read().strip(),
-    description='The code behind https://workflow.shipit.mozilla-releng.net/',
+    description='The code behind https://pipeline.shipit.mozilla-releng.net/',
     author='Rok Garbas',
     author_email='garbas@mozilla.com',
-    url='https://workflow.shipit.mozilla-releng.net',
+    url='https://pipeline.shipit.mozilla-releng.net',
     install_requires=[
         'releng_common[log,api,cors,auth,db]',
     ],

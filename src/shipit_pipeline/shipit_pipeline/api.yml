@@ -11,4 +11,4 @@ paths:
 
   /example:
     get:
-      operationId: "shipit_workflow.api.example"
+      operationId: "shipit_pipline.api.example"

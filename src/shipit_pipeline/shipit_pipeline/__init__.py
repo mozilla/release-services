@@ -8,6 +8,7 @@ import os
 
 import releng_common
 import releng_common.db
+import releng_commona.auth
 
 
 DEBUG = bool(os.environ.get('DEBUG', __name__ == '__main__'))
@@ -30,8 +31,12 @@ if not os.environ.get('APP_SETTINGS') and \
 
 
 app = releng_common.create_app(
-    "shipit_workflow",
-    extensions=[init_app, releng_common.db],
+    "shipit_pipeline",
+    extensions=[
+        init_app,
+        releng_common.auth,
+        releng_common.db,
+    ],
     debug=DEBUG,
     debug_src=HERE,
 )
