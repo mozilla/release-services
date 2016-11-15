@@ -20,7 +20,7 @@ class Build(db.Model):
     A clobberable builds.
     """
 
-    __tablename__ = 'clobberer_builds'
+    __tablename__ = 'releng_clobberer_builds'
 
     id = sa.Column(sa.Integer, primary_key=True)
     branch = sa.Column(sa.String(50), index=True)
@@ -48,7 +48,7 @@ class Build(db.Model):
 
 class ClobberTime(db.Model):
 
-    __tablename__ = 'clobberer_times'
+    __tablename__ = 'releng_clobberer_times'
     __table_args__ = (
         # Index to speed up lastclobber lookups
         sa.Index('ix_get_clobberer_times', 'slave', 'builddir', 'branch'),

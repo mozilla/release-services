@@ -15,14 +15,14 @@ let
   };
 
   beforeSQL = ''
-    DROP TABLE IF EXISTS clobberer_builds;
-    DROP TABLE IF EXISTS clobberer_times;
+    DROP TABLE IF EXISTS releng_clobberer_builds;
+    DROP TABLE IF EXISTS releng_clobberer_times;
     DROP TABLE IF EXISTS builds;
     DROP TABLE IF EXISTS clobber_times;
   '';
   afterSQL = ''
-    ALTER TABLE builds        RENAME TO clobberer_builds;
-    ALTER TABLE clobber_times RENAME TO clobberer_times;
+    ALTER TABLE builds        RENAME TO releng_clobberer_builds;
+    ALTER TABLE clobber_times RENAME TO releng_clobberer_times;
   '';
 
   taskcluster_cache = mkTaskclusterHook {
