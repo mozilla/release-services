@@ -18,6 +18,12 @@ migrate = flask_migrate.Migrate(db=db)
 def init_app(app):
     db.init_app(app)
 
+    # Check every table starts with app_name
+    for table_name in db.metadata.tables.keys():
+        if not table_name.startswith(app.name):
+            raise Exception('DB table {} should start with {}'.format(table_name, app.name))  # noqa
+
+    # Setup migrations
     migrations_dir = os.path.abspath(
         os.path.join(app.root_path, '..', 'migrations'))
 
