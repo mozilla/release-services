@@ -133,12 +133,12 @@ def update_trees(body):
 
 
 @auth.require_scopes(ADMIN)
-def make_tree(tree):
+def make_tree(tree, body):
     session = current_app.db.session
-    if body['tree'] != tree_name:
+    if body['tree'] != tree:
         raise BadRequest("Tree names must match")
     t = Tree(
-        tree=tree_name,
+        tree=tree,
         status=body['status'],
         reason=body['reason'],
         message_of_the_day=body['message_of_the_day'])
