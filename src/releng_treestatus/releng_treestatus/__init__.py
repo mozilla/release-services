@@ -7,8 +7,9 @@ from __future__ import absolute_import
 import os
 
 import releng_common
-import releng_common.db
+import releng_common.auth
 import releng_common.cache
+import releng_common.db
 
 
 DEBUG = bool(os.environ.get('DEBUG', __name__ == '__main__'))
@@ -17,8 +18,8 @@ APP_SETTINGS = os.path.abspath(os.path.join(HERE, '..', 'settings.py'))
 
 
 def init_app(app):
-    return app.api.register(
-        os.path.join(os.path.dirname(__file__), 'api.yml'))
+    app.api.register(os.path.join(os.path.dirname(__file__), 'api1.yml'))
+    app.api.register(os.path.join(os.path.dirname(__file__), 'api2.yml'))
 
 
 if DEBUG and not os.environ.get('DATABASE_URL'):
@@ -32,7 +33,12 @@ if not os.environ.get('APP_SETTINGS') and \
 
 app = releng_common.create_app(
     "releng_treestatus",
-    extensions=[init_app, releng_common.db, releng_common.cache],
+    extensions=[
+        init_app,
+        releng_common.auth,
+        releng_common.db,
+        releng_common.cache,
+    ],
     debug=DEBUG,
     debug_src=HERE,
 )
