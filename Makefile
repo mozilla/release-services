@@ -8,6 +8,7 @@ APPS=\
 	releng_treestatus \
 	releng_frontend \
 	shipit_dashboard \
+	shipit_workflow \
 	shipit_frontend
 
 TOOL=
@@ -31,6 +32,7 @@ APP_DEV_PORT_releng_tooltool=8002
 APP_DEV_PORT_releng_treestatus=8003
 APP_DEV_PORT_shipit_frontend=8010
 APP_DEV_PORT_shipit_dashboard=8011
+APP_DEV_PORT_shipit_workflow=8012
 
 APP_DEV_SSL=\
 	SSL_CACERT=$$PWD/tmp/ca.crt \
@@ -43,6 +45,7 @@ APP_DEV_ENV_releng_frontend=\
 	$(APP_DEV_SSL)
 APP_DEV_ENV_shipit_frontend=\
 	NEO_DASHBOARD_URL=https://localhost:$(APP_DEV_PORT_shipit_dashboard) \
+	NEO_WORKFLOW_URL=https://localhost:$(APP_DEV_PORT_shipit_workflow) \
 	NEO_BUGZILLA_URL=https://bugzilla-dev.allizom.org \
 	$(APP_DEV_SSL)
 
@@ -50,6 +53,7 @@ APP_STAGING_HEROKU_releng_clobberer=releng-staging-clobberer
 APP_STAGING_HEROKU_releng_tooltool=releng-staging-tooltool
 APP_STAGING_HEROKU_releng_treestatus=releng-staging-treestatus
 APP_STAGING_HEROKU_shipit_dashboard=shipit-staging-dashboard
+APP_STAGING_HEROKU_shipit_workflow=shipit-staging-workflow
 
 APP_STAGING_S3_releng_docs=releng-staging-docs
 APP_STAGING_S3_releng_frontend=releng-staging-frontend
@@ -70,6 +74,7 @@ APP_PRODUCTION_HEROKU_releng_clobberer=releng-production-clobberer
 APP_PRODUCTION_HEROKU_releng_tooltool=releng-production-tooltool
 APP_PRODUCTION_HEROKU_releng_treestatus=releng-production-treestatus
 APP_PRODUCTION_HEROKU_shipit_dashboard=shipit-production-dashboard
+APP_PRODUCTION_HEROKU_shipit_workflow=shipit-production-workflow
 
 APP_PRODUCTION_S3_releng_docs=releng-production-docs
 APP_PRODUCTION_S3_releng_frontend=releng-production-frontend
@@ -150,8 +155,9 @@ develop-run-releng_tooltool: develop-run-BACKEND
 develop-run-releng_treestatus: develop-run-BACKEND
 develop-run-releng_frontend: develop-run-FRONTEND
 
-develop-run-shipit_dashboard: develop-run-BACKEND
 develop-run-shipit_frontend: develop-run-FRONTEND
+develop-run-shipit_dashboard: develop-run-BACKEND
+develop-run-shipit_workflow: develop-run-BACKEND
 
 develop-flask-shell: nix require-APP
 	DEBUG=true \
@@ -219,6 +225,7 @@ deploy-staging-releng_treestatus: deploy-staging-HEROKU
 
 deploy-staging-shipit_frontend: deploy-staging-S3
 deploy-staging-shipit_dashboard: deploy-staging-HEROKU
+deploy-staging-shipit_workflow: # deploy-staging-HEROKU
 
 
 
@@ -261,7 +268,7 @@ deploy-production-releng_tooltool: deploy-production-HEROKU
 deploy-production-releng_treestatus: deploy-production-HEROKU
 
 deploy-production-shipit_frontend: deploy-production-S3
-deploy-production-shipit_dashboard: deploy-production-HEROKU
+deploy-production-shipit_workflow: # deploy-production-HEROKU
 
 
 
