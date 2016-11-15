@@ -28,6 +28,7 @@ type alias Model =
 type alias LoginUrl =
     { url : String
     , target : Maybe (String, String)
+    , targetName : String
     }
 
 
@@ -44,14 +45,11 @@ update msg model =
         Login url ->
             ( model, redirect url )
         LoggingIn user ->
-            ( model, localstorage_set { name = "credentials"
-                                      , value = Just user
-                                      }
-            )
+            ( model, user_set user )
         LoggedIn user ->
             ( user, Cmd.none )
         Logout ->
-            ( model, localstorage_remove "credentials")
+            ( model, user_remove True )
 
 
 decodeCertificate : String -> Result String Certificate
@@ -84,14 +82,10 @@ convertUrlQueryToModel query =
 
 -- XXX: until https://github.com/elm-lang/local-storage is ready
 
-type alias LocalStorage =
-    { name : String
-    , value : Maybe Model 
-    }
-
-port localstorage_get : (Maybe Model -> msg) -> Sub msg
-port localstorage_remove : String -> Cmd msg
-port localstorage_set : LocalStorage -> Cmd msg
+port user_get : (Maybe Model -> msg) -> Sub msg
+port user_load : Bool -> Cmd msg
+port user_remove : Bool -> Cmd msg
+port user_set : Model -> Cmd msg
 
 -- XXX: we need to find elm implementation for redirect
 
