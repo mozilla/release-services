@@ -17,7 +17,7 @@ class File(db.Model):
        or many copies of a file.
     """
 
-    __tablename__ = 'tooltool_files'
+    __tablename__ = 'releng_tooltool_files'
 
     id = sa.Column(sa.Integer, primary_key=True)
     size = sa.Column(sa.Integer, nullable=False)
@@ -49,7 +49,7 @@ class FileInstance(db.Model):
 
     """A verified instance of a file in a single region."""
 
-    __tablename__ = 'tooltool_file_instances'
+    __tablename__ = 'releng_tooltool_file_instances'
 
     file_id = sa.Column(sa.Integer, sa.ForeignKey('tooltool_files.id'), primary_key=True)  # noqa
     region = sa.Column(sa.Enum(*ALLOWED_REGIONS), primary_key=True)
@@ -59,7 +59,7 @@ class BatchFile(db.Model):
 
     """An association of upload batches to files, with filenames"""
 
-    __tablename__ = 'tooltool_batch_files'
+    __tablename__ = 'releng_tooltool_batch_files'
 
     file_id = sa.Column(sa.Integer, sa.ForeignKey('tooltool_files.id'), primary_key=True)  # noqa
     file = sa.orm.relationship("File", backref="_batches")
@@ -72,7 +72,7 @@ class Batch(db.Model):
     """Upload batches, with batch metadata, linked to the uploaded files.
     """
 
-    __tablename__ = 'tooltool_batches'
+    __tablename__ = 'releng_tooltool_batches'
 
     id = sa.Column(sa.Integer, primary_key=True)
     uploaded = sa.Column(db.UTCDateTime, index=True, nullable=False)
@@ -108,7 +108,7 @@ class PendingUpload(db.Model):
        URL.
     """
 
-    __tablename__ = 'tooltool_pending_upload'
+    __tablename__ = 'releng_tooltool_pending_upload'
 
     file_id = sa.Column(
         sa.Integer, sa.ForeignKey('tooltool_files.id'),
