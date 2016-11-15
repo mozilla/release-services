@@ -18,8 +18,7 @@ APP_SETTINGS = os.path.abspath(os.path.join(HERE, '..', 'settings.py'))
 
 
 def init_app(app):
-    app.api.register(os.path.join(os.path.dirname(__file__), 'api1.yml'))
-    app.api.register(os.path.join(os.path.dirname(__file__), 'api2.yml'))
+    app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
 
 
 if DEBUG and not os.environ.get('DATABASE_URL'):

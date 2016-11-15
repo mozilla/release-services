@@ -86,6 +86,10 @@ def get_trees():
     return {t.tree: t.to_dict() for t in session.query(Tree)}
 
 
+def get_trees2():
+    return [i for i in get_trees().values()]
+
+
 @auth.require_scopes(SHERRIF)
 def update_trees(body):
     session = current_app.db.session
