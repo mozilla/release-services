@@ -1,4 +1,4 @@
-aiohttp==1.1.4
+aiohttp==1.1.5
 alembic==0.8.8
 async-timeout==1.1.0
 chardet==2.3.0
@@ -21,6 +21,7 @@ ipython-genutils==0.1.0
 itsdangerous==0.24
 Jinja2==2.8
 jsonschema==2.5.1
+Logbook==1.0.0
 Mako==1.0.6
 MarkupSafe==0.23
 mccabe==0.5.2
