@@ -2,14 +2,12 @@
 swagger: "2.0"
 info:
   version: "1.0.0"
-  title: "ShipIt Workflow"
+  title: "Signoff service"
 consumes:
   - application/json
 produces:
   - application/json
 paths:
-
-# generic for every step
 
   /:
 
@@ -25,6 +23,8 @@ paths:
     get:
       operationId: "shipit_signoff.api.get_step"
       description: Step definition
+      parameters:
+          - $ref: '#/parameters/uid'
       responses:
         200:
           description: Definition of step
@@ -37,22 +37,20 @@ paths:
     get:
       operationId: "shipit_signoff.api.get_step_status"
       description: Status of a step
+      parameters:
+        - $ref: "#/parameters/uid"
       responses:
         200:
           description: Status of a step
           schema:
             $ref: '#/definitions/StepResult'
 
+  /{uid}:
     put:
       operationId: "shipit_signoff.api.create_step"
       description: Create new step
       parameters:
-        - name: body
-          in: body
-          description: Tree update
-          required: true
-          schema:
-            $ref: '#/definitions/Step'
+        - $ref: "#/parameters/uid"
       responses:
         200:
           description: Returns nothing
@@ -60,9 +58,22 @@ paths:
     delete:
       operationId: "shipit_signoff.api.delete_step"
       description: Remove a step
+      parameters:
+        - $ref: '#/parameters/uid'
       responses:
         200:
           description: Removal of step
+
+  # Signoff specific
+  /{uid}/signoff:
+    put:
+      operationId: "shipit_signoff.api.signoff"
+      description: "Sign off"
+      parameters:
+        - $ref: '#/parameters/uid'
+      responses:
+        200:
+          description: signed off
 
 definitions:
 
@@ -85,7 +96,7 @@ definitions:
         description: More elaborate description of state for humans.
       output:
         $ref: '#/definitions/Ouput'
-        
+
   Step:
     type: object
     required:
@@ -100,11 +111,6 @@ definitions:
       parameters:
         $ref: '#/definitions/Parameters'
 
-
-# --- step specific --------- (different file)
-
-definitions:
-
   Parameters:
     type: object
 
@@ -114,89 +120,10 @@ definitions:
   Ouput:
     type: object
 
-
-# --- signoff -----------------------------------------------
-#
-
-{
-  data: {
-    product: "firefox",
-    channel: "beta",
-    version: "50",
-    build: "2"
-  },
-  steps: [
-    { uid: 1,
-      schema: "https://signoff.mozilla-releng.net/swagger.json",
-      description: "QE signoff CDN",
-      parameters: {
-        signoffs: [
-          # TODO:
-          # requirements of signoff:
-          #  - 2 relman and 1 qa
-          #  - (1 qa or relman) and 1 releng
-        ]
-      },
-      requires: [
-      ]
-    },
-    { uid: 2
-      schema: "https://signoff.mozilla-releng.net/swagger.json"
-      description: "QE Func signoff"
-      parameters: {
-        signoffs: [
-          # TODO:
-          # requirements of signoff:
-          #  - 2 relman and 1 qa
-          #  - (1 qa or relman) and 1 releng
-      ]
-      requires: [
-      ]
-    },
-    { uid: 3
-      schema: "https://taskcluster.mozilla-releng.net/swagger.json"
-      description: "Publish release in Balrog"
-      requires: [
-        1,
-        2
-      ]
-    },
-    { uid: "4"
-      schema: "https://taskcluster.mozilla-releng.net/swagger.json"
-      description: "Bouncer aliases"
-      requires: [
-        1,
-        2
-      ]
-    },
-    { uid: 5
-      schema: "https://taskcluster.mozilla-releng.net/swagger.json"
-      description: "Bump hg version"
-      requires: [
-        1,
-        2
-      ]
-    },
-    { uid: 6
-      schema: "https://signoff.mozilla-releng.net/swagger.json"
-      description: "QE beta Signoff"
-      requires: [
-        3
-      ]
-    },
-    { uid: 7
-      schema: "https://taskcluster.mozilla-releng.net/swagger.json"
-      description: "Mark as shipped"
-      requires: [
-        4,
-        5
-        6,
-      ]
-    },
-  ]
-}
-
-
-
-
-
+parameters:
+    uid:
+        name: uid
+        in: path
+        description: Step UID
+        required: true
+        type: string
