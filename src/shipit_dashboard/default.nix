@@ -44,6 +44,7 @@ let
         ${pypi2nix}/bin/pypi2nix -v \
          -V 3.5 \
          -E "postgresql libffi openssl pkgconfig freetype.dev" \
+         -r ../../lib/releng_common/requirements-dev.txt \
          -r requirements.txt \
          -r requirements-dev.txt \
          -r requirements-nix.txt
