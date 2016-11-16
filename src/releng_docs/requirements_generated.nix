@@ -1,7 +1,7 @@
-# generated using pypi2nix tool (version: 1.5.0.dev0)
+# generated using pypi2nix tool (version: 1.6.0)
 #
 # COMMAND:
-#   pypi2nix -V 3.5 -r requirements.txt -v
+#   pypi2nix -v -V 3.5 -r requirements.txt
 #
 
 { pkgs, python, commonBuildInputs ? [], commonDoCheck ? false }:
@@ -86,10 +86,10 @@ self: {
 
 
   "Sphinx" = python.mkDerivation {
-    name = "Sphinx-1.4.6";
+    name = "Sphinx-1.4.8";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/55/77/75d85633ae923006d6942cc16cf11ba2cbd6c3bd3cac5de029c46aa04afe/Sphinx-1.4.6.tar.gz";
-      sha256 = "9e43430aa9b491ecd86302a1320edb8977da624f63422d494257eab2541a79d3";
+      url = "https://pypi.python.org/packages/1f/f6/e54a7aad73e35232356103771ae76306dadd8546b024c646fbe75135571c/Sphinx-1.4.8.tar.gz";
+      sha256 = "41af978f653ef862eb4bb3776dabd8ff13afed17e431907310fe990a3947707f";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -167,10 +167,10 @@ self: {
 
 
   "pytz" = python.mkDerivation {
-    name = "pytz-2016.6.1";
+    name = "pytz-2016.7";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/f7/c7/08e54702c74baf9d8f92d0bc331ecabf6d66a56f6d36370f0a672fc6a535/pytz-2016.6.1.tar.bz2";
-      sha256 = "b5aff44126cf828537581e534cc94299b223b945a2bb3b5434d37bf8c7f3a10c";
+      url = "https://pypi.python.org/packages/53/35/6376f58fb82ce69e2c113ca0ebe5c0f69b20f006e184bcc238a6007f4bdb/pytz-2016.7.tar.bz2";
+      sha256 = "6eab31709e3a4aea748457707da45e805b650cbb352583805d2417de2a1dd71e";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
