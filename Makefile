@@ -514,6 +514,8 @@ require-sqlite: nix require-APP
 	@echo "Using sqlite dev database $(DATABASE_URL)"
 
 require-postgres: nix require-APP
+	nix-shell nix/default.nix -A $(APP) \
+		--run "createdb -p $(APP_DEV_POSTGRES_PORT) $(APP)"; true
 	$(eval export DATABASE_URL=postgres://localhost:$(APP_DEV_POSTGRES_PORT)/$(APP))
 	@echo "Using postgresql dev database $(DATABASE_URL)"
 
