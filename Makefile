@@ -247,7 +247,7 @@ deploy-staging-releng_archiver: deploy-staging-HEROKU
 
 deploy-staging-shipit_frontend: deploy-staging-S3
 deploy-staging-shipit_dashboard: deploy-staging-HEROKU
-deploy-staging-shipit_dashboard: # deploy-staging-HEROKU
+deploy-staging-shipit_pipeline: # deploy-staging-HEROKU
 
 
 
