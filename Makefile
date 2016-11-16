@@ -34,6 +34,8 @@ APP_DEV_PORT_shipit_frontend=8010
 APP_DEV_PORT_shipit_dashboard=8011
 APP_DEV_PORT_shipit_workflow=8012
 
+APP_DEV_POSTGRES_PORT=9000
+
 APP_DEV_SSL=\
 	SSL_CACERT=$$PWD/tmp/ca.crt \
 	SSL_CERT=$$PWD/tmp/server.crt \
@@ -140,7 +142,6 @@ develop-run-BACKEND: build-certs nix require-APP
 	DEBUG=true \
 	CACHE_TYPE=filesystem \
 	CACHE_DIR=$$PWD/src/$(APP)/cache \
-	DATABASE_URL=sqlite:///$$PWD/app.db \
 	APP_SETTINGS=$$PWD/src/$(APP)/settings.py \
 	CORS_ORIGINS="*" \
 		nix-shell nix/default.nix -A $(APP) \
@@ -150,26 +151,27 @@ develop-run-FRONTEND: build-certs nix require-APP
 	nix-shell nix/default.nix --pure -A $(APP) \
 		--run "$(APP_DEV_ENV_$(APP)) neo start --port $(APP_DEV_PORT_$(APP)) --config webpack.config.js"
 
-develop-run-releng_clobberer: develop-run-BACKEND
-develop-run-releng_tooltool: develop-run-BACKEND
-develop-run-releng_treestatus: develop-run-BACKEND
+develop-run-releng_clobberer: require-sqlite develop-run-BACKEND
+develop-run-releng_tooltool: require-sqlite develop-run-BACKEND
+develop-run-releng_treestatus: require-sqlite develop-run-BACKEND
 develop-run-releng_frontend: develop-run-FRONTEND
 
 develop-run-shipit_frontend: develop-run-FRONTEND
-develop-run-shipit_dashboard: develop-run-BACKEND
-develop-run-shipit_workflow: develop-run-BACKEND
+develop-run-shipit_dashboard: require-postgres develop-run-BACKEND
+develop-run-shipit_workflow: require-sqlite develop-run-BACKEND 
 
 develop-flask-shell: nix require-APP
 	DEBUG=true \
 	CACHE_TYPE=filesystem \
 	CACHE_DIR=$$PWD/src/$(APP)/cache \
-	DATABASE_URL=sqlite:///$$PWD/app.db \
   FLASK_APP=$(APP) \
 	APP_SETTINGS=$$PWD/src/$(APP)/settings.py \
 		nix-shell nix/default.nix -A $(APP) \
     --run "flask $(FLASK_CMD)"
 
-
+develop-run-postgres: nix require-APP require-initdb
+	nix-shell nix/default.nix -A $(APP) \
+		--run "postgres -D $(PWD)/tmp/postgres -h localhost -p $(APP_DEV_POSTGRES_PORT)"
 
 build-apps: $(foreach app, $(APPS), build-app-$(app))
 
@@ -474,6 +476,21 @@ require-BRANCH:
 		echo ""; \
 		exit 1; \
 	fi
+
+require-initdb: nix require-APP
+	$(eval PG_DATA := $(PWD)/tmp/postgres)
+	@if [ ! -d $(PG_DATA) ]; then \
+		nix-shell nix/default.nix -A $(APP) \
+			--run "initdb -D $(PG_DATA) --auth=trust"; \
+	fi
+
+require-sqlite: nix require-APP
+	$(eval export DATABASE_URL=sqlite:///$(PWD)/app.db)
+	@echo "Using sqlite dev database $(DATABASE_URL)"
+
+require-postgres: nix require-APP
+	$(eval export DATABASE_URL=postgresql://localhost:$(APP_DEV_POSTGRES_PORT)/$(APP))
+	@echo "Using postgresql dev database $(DATABASE_URL)"
 
 
 
