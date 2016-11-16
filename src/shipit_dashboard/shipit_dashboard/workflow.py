@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import click
-import logging
+from releng_common import log
 import mohawk
 import os
 import pickle
@@ -23,7 +23,7 @@ from shipit_dashboard.helpers import compute_dict_hash
 from shipit_dashboard.models import BugAnalysis, BugResult
 
 
-logger = logging.getLogger(__name__)
+logger = log.get_logger('shipit_dashboard.workflow')
 
 
 class BugSync(object):

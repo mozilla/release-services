@@ -5,6 +5,7 @@
 from __future__ import absolute_import
 
 import structlog
+import logbook
 
 
 class UnstructuredRenderer(structlog.processors.KeyValueRenderer):
@@ -22,16 +23,27 @@ class UnstructuredRenderer(structlog.processors.KeyValueRenderer):
 
 
 def init_app(app):
-    mozdef = app.config.get('MOZDEF_TARGET', None)
 
+    # Output logs on stderr
+    fmt = '{record.channel}: {record.message}'
+    stderr = logbook.StderrHandler(format_string=fmt)
+    stderr.push_application()
+
+    def logbook_factory(*args, **kwargs):
+        # Logger given to structlog
+        level = app.debug and logbook.DEBUG or logbook.INFO
+        return logbook.Logger(level=level, *args, **kwargs)
+
+    # Setup structlog over logbook
     processors = [
-        structlog.stdlib.filter_by_level,
+        # structlog.stdlib.filter_by_level,
         structlog.stdlib.PositionalArgumentsFormatter(),
         structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
+        # structlog.processors.format_exc_info,
     ]
 
     # send to mozdef before formatting into a string
+    mozdef = app.config.get('MOZDEF_TARGET', None)
     if mozdef:
         processors.append(mozdef)
 
@@ -40,9 +52,11 @@ def init_app(app):
     structlog.configure(
         context_class=structlog.threadlocal.wrap_dict(dict),
         processors=processors,
-        logger_factory=structlog.stdlib.LoggerFactory(),
+        logger_factory=logbook_factory,
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )
 
-    return structlog.get_logger()
+
+def get_logger(*args, **kwargs):
+    return structlog.get_logger(*args, **kwargs)
