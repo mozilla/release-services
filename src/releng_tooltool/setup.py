@@ -18,6 +18,10 @@ setup(
     author='Rok Garbas',
     author_email='garbas@mozilla.com',
     url='https://mozilla-releng.net/tooltool',
+    tests_require=[
+        'flake8',
+        'pytest',
+    ],
     install_requires=[
         'releng_common[api,auth,cors,log,db]'
     ],
