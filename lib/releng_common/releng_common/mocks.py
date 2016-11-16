@@ -115,6 +115,7 @@ def apply_mockups():
 
         yield mock
 
+
 if __name__ == '__main__':
     h = build_header('test@test.com', {'ok': 42})
     print(h)

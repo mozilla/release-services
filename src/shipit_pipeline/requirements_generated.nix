@@ -874,10 +874,10 @@ self: {
 
 
   "requests" = python.mkDerivation {
-    name = "requests-2.12.0";
+    name = "requests-2.12.1";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/6a/97/7b856a8c8a0efebebb0bbba70c7ee879ee3f9654f28928665b64026ef09a/requests-2.12.0.tar.gz";
-      sha256 = "57b6c314a2c5f014dce634a0e1eeeb1707741b2e30bc7fee9c5b01fa216d57a3";
+      url = "https://pypi.python.org/packages/6e/40/7434b2d9fe24107ada25ec90a1fc646e97f346130a2c51aa6a2b1aba28de/requests-2.12.1.tar.gz";
+      sha256 = "2109ecea94df90980be040490ff1d879971b024861539abb00054062388b612e";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
