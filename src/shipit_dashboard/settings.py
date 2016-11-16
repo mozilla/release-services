@@ -21,6 +21,8 @@ if 'REDIS_URL' in os.environ:
 
 if not DATABASE_URL:
     raise Exception("You need to specify DATABASE_URL variable.")
+if not DATABASE_URL.startswith('postgresql://'):
+    raise Exception('Shipit dashboard needs a postgresql:// DATABASE_URL')
 
 if not CACHE:
     raise Exception("You need to specify CACHE variable.")

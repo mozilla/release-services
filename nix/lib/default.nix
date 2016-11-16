@@ -409,7 +409,6 @@ in rec {
           export CACHE_DEFAULT_TIMEOUT=3600
           export CACHE_TYPE=filesystem
           export CACHE_DIR=$PWD/cache
-          export DATABASE_URL=sqlite:///$PWD/app.db
           export LANG=en_US.UTF-8
           export FLASK_APP=${name}
           export DEBUG=1
