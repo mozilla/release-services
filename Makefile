@@ -10,7 +10,8 @@ APPS=\
 	releng_archiver \
 	releng_frontend \
 	shipit_dashboard \
-	shipit_dashboard \
+	shipit_pipeline \
+	shipit_signoff \
 	shipit_frontend
 
 TOOL=
