@@ -1,4 +1,5 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
+
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
@@ -26,13 +27,14 @@ setup(
         'Jinja2',
         'gunicorn',
         'newrelic',
+        'responses',
     ],
     extras_require=dict(
         cache=['Flask-Cache'],
         db=['psycopg2', 'Flask-SQLAlchemy', 'Flask-Migrate'],
         auth=['Flask-Login', 'taskcluster'],
         api=['connexion'],
-        log=['structlog'],
+        log=['structlog', 'Logbook'],
         cors=['Flask-Cors'],
     ),
     packages=find_packages(),

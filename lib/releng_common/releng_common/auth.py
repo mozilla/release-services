@@ -2,11 +2,11 @@ from flask_login import LoginManager, current_user
 from flask import request, abort, current_app
 from taskcluster.utils import scope_match
 from functools import wraps
-import logging
+import structlog
 import taskcluster
 
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 class BaseUser(object):

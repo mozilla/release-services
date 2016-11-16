@@ -4,13 +4,13 @@
 
 from __future__ import absolute_import
 
-import logging
+import structlog
 import os
 import flask
 import flask_migrate
 import flask_sqlalchemy
 
-logger = logging.getLogger('releng_common.db')
+logger = structlog.get_logger('releng_common.db')
 db = flask_sqlalchemy.SQLAlchemy()
 migrate = flask_migrate.Migrate(db=db)
 
@@ -34,11 +34,13 @@ def init_app(app):
             'version_table': '{}_alembic_version'.format(app.name),
         }
         migrate.init_app(app, directory=migrations_dir, **options)
+        logger.info('Starting migrations', app=app.name)
         if os.path.isdir(migrations_dir):
             try:
                 flask_migrate.upgrade()
+                logger.info('Completed migrations', app=app.name)
             except Exception as e:
-                logger.error('Migrations failure: {}'.format(e))
+                logger.error('Migrations failure', app=app.name, error=e)
         else:
             flask_migrate.init()
 

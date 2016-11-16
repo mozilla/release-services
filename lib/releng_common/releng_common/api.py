@@ -5,12 +5,12 @@
 from __future__ import absolute_import
 
 import connexion
-import logging
+import structlog
 import pathlib
 import werkzeug.exceptions
 
 
-logger = logging.getLogger('releng_common.api')
+logger = structlog.get_logger()
 
 
 def common_error_handler(exception):

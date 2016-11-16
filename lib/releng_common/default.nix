@@ -24,7 +24,10 @@ in python.mkDerivation {
     ] ++ optionals (builtins.elem "cache" extras) [ python.packages."Flask-Cache" ]
       ++ optionals (builtins.elem "auth" extras) [ python.packages."Flask-Login" python.packages."taskcluster" ]
       ++ optionals (builtins.elem "api" extras) [ python.packages."connexion" ]
-      ++ optionals (builtins.elem "log" extras) [ python.packages."structlog" ]
+      ++ optionals (builtins.elem "log" extras) [
+        python.packages."structlog"
+        python.packages."Logbook"
+      ]
       ++ optionals (builtins.elem "cors" extras) [ python.packages."Flask-Cors" ]
       ++ optionals (builtins.elem "db" extras) [
         python.packages."psycopg2"

@@ -6,14 +6,14 @@ from __future__ import absolute_import
 
 import flask
 import jinja2
-import logging
+import structlog
 import os
 import sys
 
 __APP = dict()
 __BASE_EXTENSIONS = []
 
-logger = logging.getLogger('releng_common')
+logger = structlog.get_logger()
 
 try:
     from releng_common import log
@@ -41,10 +41,7 @@ def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
     if __APP and name in __APP:
         return __APP[name]
 
-    if debug:
-        logging.basicConfig(level=logging.DEBUG)
-
-    logger.debug('Initializing app: {}'.format(name))
+    logger.debug('Initializing', app=name)
 
     app = __APP[name] = flask.Flask(name, **kw)
     app.debug = debug
@@ -83,15 +80,17 @@ def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
             extension_name = extension.__name__.split('.')[-1]
             extension_init = extension.init_app
 
-        logger.debug('Initializing extension "{}" for ""'.format(
-            extension_name or str(extension_init), name))
+        logger.debug('Initializing',
+                     extension=extension_name or str(extension_init),
+                     app=name)
 
         _app = extension_init(app)
         if _app and extension_name is not None:
             setattr(app, extension_name, _app)
 
-        if hasattr(app, 'log'):
-            app.log.debug('extension `%s` configured.' % extension_name)
+        logger.debug('Configured',
+                     extension=extension_name or str(extension_init),
+                     app=name)
 
     if redirect_root_to_api:
         app.add_url_rule("/",
