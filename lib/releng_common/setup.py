@@ -22,12 +22,16 @@ setup(
     author='Mozilla Release Engineering',
     author_email='release@mozilla.com',
     url='https://github.com/garbas/mozilla-releng',
+    tests_require=[
+        'flake8',
+        'pytest',
+        'responses',
+    ],
     install_requires=[
         'Flask',
         'Jinja2',
         'gunicorn',
         'newrelic',
-        'responses',
     ],
     extras_require=dict(
         cache=['Flask-Cache'],
