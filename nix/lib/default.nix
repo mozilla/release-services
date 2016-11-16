@@ -299,6 +299,15 @@ in rec {
         passthru.update = writeScript "update-${name}" ''
           export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
           pushd src/${name}
+          ${node2nix}/bin/node2nix \
+            --composition node-modules.nix \
+            --input node-modules.json \
+            --output node-modules-generated.nix \
+            --node-env node-env.nix \
+            --flatten \
+            --pkg-name nodejs-6_x
+          rm -rf elm-stuff
+          ${elmPackages.elm}/bin/elm-package install -y
           ${elm2nix}/bin/elm2nix elm-packages.nix
           popd
         '';
