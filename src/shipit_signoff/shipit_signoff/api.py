@@ -4,6 +4,39 @@
 
 from __future__ import absolute_import
 
+STEPS = {}
+SIGNOFFS = {}
 
-def example():
-    return {}
+
+def list_steps():
+    return list(STEPS.keys())
+
+
+def get_step(uid):
+    if uid not in STEPS:
+        return None, 404
+    return dict(uid=uid, input={}, parameters={})
+
+
+def get_step_status(uid):
+    return dict(
+        state=STEPS[uid]
+    )
+
+
+def create_step(uid):
+    STEPS[uid] = 'running'
+    SIGNOFFS[uid] = False
+    return None
+
+
+def delete_step(uid):
+    del STEPS[uid]
+    del SIGNOFFS[uid]
+    return None
+
+
+def signoff(uid):
+    SIGNOFFS[uid] = True
+    STEPS[uid] = 'completed'
+    return None
