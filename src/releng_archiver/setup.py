@@ -18,6 +18,10 @@ setup(
     author='Rok Garbas',
     author_email='garbas@mozilla.com',
     url='https://archiver.mozilla-releng.net',
+    tests_require=[
+        'flake8',
+        'pytest',
+    ],
     install_requires=[
         'releng_common[log,api,cors,auth,db]',
     ],
