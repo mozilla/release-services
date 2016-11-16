@@ -37,6 +37,7 @@ APP_DEV_PORT_releng_archiver=8005
 APP_DEV_PORT_shipit_frontend=8010
 APP_DEV_PORT_shipit_dashboard=8011
 APP_DEV_PORT_shipit_pipeline=8012
+APP_DEV_PORT_shipit_signoff=8013
 
 APP_DEV_POSTGRES_PORT=9000
 
@@ -53,7 +54,7 @@ APP_DEV_ENV_releng_frontend=\
 	$(APP_DEV_SSL)
 APP_DEV_ENV_shipit_frontend=\
 	NEO_DASHBOARD_URL=https://localhost:$(APP_DEV_PORT_shipit_dashboard) \
-	NEO_PIPELINE_URL=https://localhost:$(APP_DEV_PORT_shipit_dashboard) \
+	NEO_PIPELINE_URL=https://localhost:$(APP_DEV_PORT_shipit_pipeline) \
 	NEO_BUGZILLA_URL=https://bugzilla-dev.allizom.org \
 	$(APP_DEV_SSL)
 
@@ -176,7 +177,8 @@ develop-run-releng_frontend: develop-run-FRONTEND
 
 develop-run-shipit_frontend: develop-run-FRONTEND
 develop-run-shipit_dashboard: require-postgres develop-run-BACKEND
-develop-run-shipit_pipeline: require-sqlite develop-run-BACKEND 
+develop-run-shipit_pipeline: require-sqlite develop-run-BACKEND
+develop-run-shipit_signoff: require-sqlite develop-run-BACKEND
 
 develop-flask-shell: nix require-APP
 	DEBUG=true \
@@ -248,6 +250,7 @@ deploy-staging-releng_archiver: deploy-staging-HEROKU
 deploy-staging-shipit_frontend: deploy-staging-S3
 deploy-staging-shipit_dashboard: deploy-staging-HEROKU
 deploy-staging-shipit_pipeline: # deploy-staging-HEROKU
+deploy-staging-shipit_signoff: # deploy-staging-HEROKU
 
 
 
