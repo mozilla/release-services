@@ -1,7 +1,7 @@
 # generated using pypi2nix tool (version: 1.6.0)
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql -r requirements.txt -r requirements-dev.txt -r requirements-nix.txt
+#   pypi2nix -v -V 3.5 -E postgresql -r ../../lib/releng_common/requirements-dev.txt -r requirements.txt -r requirements-dev.txt -r requirements-nix.txt
 #
 
 { pkgs, python, commonBuildInputs ? [], commonDoCheck ? false }:
@@ -73,10 +73,10 @@ self: {
 
 
   "Flask-Migrate" = python.mkDerivation {
-    name = "Flask-Migrate-2.0.0";
+    name = "Flask-Migrate-2.0.1";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/d4/42/9e1bab5b15495e7acd25cb6b164a050b90da20af7e801aa2a7b1f74efdfa/Flask-Migrate-2.0.0.tar.gz";
-      sha256 = "c621f5ea230bdef22bed47f4905bd8979446e1c7f9d61ec1668b2c49549787d7";
+      url = "https://pypi.python.org/packages/17/ec/df4f78462fe855d079a2939ff1f18fba5199351dcaeb1a493c06e4be07ed/Flask-Migrate-2.0.1.tar.gz";
+      sha256 = "5ef14ba72ffbcd5acad6416269a22449e47fb8731998ecdbefa1b9c4072143db";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -156,11 +156,33 @@ self: {
 
 
 
-  "Mako" = python.mkDerivation {
-    name = "Mako-1.0.5";
+  "Logbook" = python.mkDerivation {
+    name = "Logbook-1.0.0";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/20/ce/296b1037ed9b7803ed4e738b83ae244d2834e97e4ea24d52a6d46c12a884/Mako-1.0.5.tar.gz";
-      sha256 = "e3e27cdd7abfd78337f33bd455f756c823c2d6224ad440a88f14bbd53a5ebc93";
+      url = "https://pypi.python.org/packages/34/e8/6419c217bbf464fe8a902418120cccaf476201bd03b50958db24d6e90f65/Logbook-1.0.0.tar.gz";
+      sha256 = "87da2515a6b3db866283cb9d4e5a6ec44e52a1d556ebb2ea3b6e7e704b5f1872";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."Jinja2"
+      self."SQLAlchemy"
+      self."pytest"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "A logging replacement for Python";
+    };
+  };
+
+
+
+  "Mako" = python.mkDerivation {
+    name = "Mako-1.0.6";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/56/4b/cb75836863a6382199aefb3d3809937e21fa4cb0db15a4f4ba0ecc2e7e8e/Mako-1.0.6.tar.gz";
+      sha256 = "48559ebd872a8e77f92005884b3d88ffae552812cdf17db6768e5c3be5ebbe0d";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -231,10 +253,10 @@ self: {
 
 
   "SQLAlchemy" = python.mkDerivation {
-    name = "SQLAlchemy-1.1.3";
+    name = "SQLAlchemy-1.1.4";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/84/83/322a268e3187c088aa2867c2560869227da5fc7b9a697c5e382df811bd3c/SQLAlchemy-1.1.3.tar.gz";
-      sha256 = "8b0ed90292a294e17d24482c9328abe69eb8e3143e2bd7103b6fadae2562638f";
+      url = "https://pypi.python.org/packages/ca/ca/c2436fdb7bb75d772d9fa17ba60c4cfded6284eed053a7274b2beb96596a/SQLAlchemy-1.1.4.tar.gz";
+      sha256 = "701b57d628b9fa1cfb82f10665e7214d5d2db23251ca6f23b91c5f56fcdbdeb5";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -269,10 +291,10 @@ self: {
 
 
   "aiohttp" = python.mkDerivation {
-    name = "aiohttp-1.1.2";
+    name = "aiohttp-1.1.5";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/cc/5e/1eb03bc43c482f0987b2c533488e98e007284d15098f97b326dcb739bcff/aiohttp-1.1.2.tar.gz";
-      sha256 = "16f16dc5ddb1d5676452f35abb58190ff034198d4e97770e0f59b99ca6d76c2d";
+      url = "https://pypi.python.org/packages/5f/60/afb29b5712ade524efdce339e2a6a0cb69c44115804ab5d4e976bf3f1983/aiohttp-1.1.5.tar.gz";
+      sha256 = "e6c5a8008ab8bbdb706034bedc91835ed820cdc2367ddea9142697612908df84";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -452,10 +474,10 @@ self: {
 
 
   "flake8" = python.mkDerivation {
-    name = "flake8-3.0.4";
+    name = "flake8-3.2.0";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/b0/56/48727b2a6c92b7e632180cf2c1411a0de7cf4f636b4f844c6c46f7edc86b/flake8-3.0.4.tar.gz";
-      sha256 = "b4c210c998f07d6ff24325dd91fbc011f2c37bcd6bf576b188de01d8656e970d";
+      url = "https://pypi.python.org/packages/ba/a5/992980fcaa280e74f80d8aa415cbe43a687b6b8a2d31280acbe2b27f1fdd/flake8-3.2.0.tar.gz";
+      sha256 = "f4c3c0aeb8018319993b2c47a2491fb7ea8b3a51c7a86cba38301ae1561b364e";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -651,10 +673,10 @@ self: {
 
 
   "newrelic" = python.mkDerivation {
-    name = "newrelic-2.72.1.53";
+    name = "newrelic-2.74.0.54";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/43/29/64dc109cc4de2cbb93eb26ffaca38dc8485960d437dfa0efe7d2ac5ee963/newrelic-2.72.1.53.tar.gz";
-      sha256 = "3f601b32d850d8d56c24756706033ca5e3e3c83520151f5cab37d8a07acaaba2";
+      url = "https://pypi.python.org/packages/10/27/ad14040129551f7f8cba72a26480fc12c6a7b5418cc8a153060523de8f90/newrelic-2.74.0.54.tar.gz";
+      sha256 = "7d060e49ce8769f48a8acf00925de03bdc3024e433c710717d76f619c869c002";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -782,10 +804,10 @@ self: {
 
 
   "pycodestyle" = python.mkDerivation {
-    name = "pycodestyle-2.0.0";
+    name = "pycodestyle-2.2.0";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/db/b1/9f798e745a4602ab40bf6a9174e1409dcdde6928cf800d3aab96a65b1bbf/pycodestyle-2.0.0.tar.gz";
-      sha256 = "37f0420b14630b0eaaf452978f3a6ea4816d787c3e6dcbba6fb255030adae2e7";
+      url = "https://pypi.python.org/packages/43/9f/56e824b197398582b0c1aaaa2272560bc51f395fe3e45e1dd88de4bb24dc/pycodestyle-2.2.0.tar.gz";
+      sha256 = "df81dc3293e0123e2e8d1f2aaf819600e4ae287d8b3af8b72181af50257e5d9a";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -800,10 +822,10 @@ self: {
 
 
   "pyflakes" = python.mkDerivation {
-    name = "pyflakes-1.2.3";
+    name = "pyflakes-1.3.0";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/54/80/6a641f832eb6c6a8f7e151e7087aff7a7c04dd8b4aa6134817942cdda1b6/pyflakes-1.2.3.tar.gz";
-      sha256 = "2e4a1b636d8809d8f0a69f341acf15b2e401a3221ede11be439911d23ce2139e";
+      url = "https://pypi.python.org/packages/9f/48/927b1bf3e15d3dadfcfafb505177a62cdabcb78cf7eac4f31f180d5b1e26/pyflakes-1.3.0.tar.gz";
+      sha256 = "a4f93317c97a9d9ed71d6ecfe08b68e3de9fea3f4d94dcd1d9d83ccbf929bc31";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -818,10 +840,10 @@ self: {
 
 
   "pytest" = python.mkDerivation {
-    name = "pytest-3.0.3";
+    name = "pytest-3.0.4";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/a0/2f/076c816e2402c4911ccee4b93ba0475145b7cffd0320ca8efa0add7c469c/pytest-3.0.3.tar.gz";
-      sha256 = "f213500a356800a483e8a146ff971ae14a8df3f2c0ae4145181aad96996abee7";
+      url = "https://pypi.python.org/packages/2f/03/0c636d7191255e1737012e5f9c42368f11b55463aeea46fb1955892cab0d/pytest-3.0.4.tar.gz";
+      sha256 = "879fee2c1fdbaacd1bf2c0047677c6dd4aee05b9c1e64330b34d130a584fa40d";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -874,10 +896,10 @@ self: {
 
 
   "requests" = python.mkDerivation {
-    name = "requests-2.11.1";
+    name = "requests-2.12.1";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/2e/ad/e627446492cc374c284e82381215dcd9a0a87c4f6e90e9789afefe6da0ad/requests-2.11.1.tar.gz";
-      sha256 = "5acf980358283faba0b897c73959cecf8b841205bb4b2ad3ef545f46eae1a133";
+      url = "https://pypi.python.org/packages/6e/40/7434b2d9fe24107ada25ec90a1fc646e97f346130a2c51aa6a2b1aba28de/requests-2.12.1.tar.gz";
+      sha256 = "2109ecea94df90980be040490ff1d879971b024861539abb00054062388b612e";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
