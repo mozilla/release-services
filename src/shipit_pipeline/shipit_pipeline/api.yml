@@ -9,6 +9,194 @@ produces:
   - application/json
 paths:
 
-  /example:
+# generic for every step
+
+  /:
+
     get:
-      operationId: "shipit_pipline.api.example"
+      operationId: "shipit_signoff.api.list_steps"
+      description: List all steps with status
+      responses:
+        200:
+          description: List of all steps
+
+  /{uid}/definition:
+
+    get:
+      operationId: "shipit_signoff.api.get_step"
+      description: Step definition
+      responses:
+        200:
+          description: Definition of step
+          schema:
+            $ref: '#/definitions/Step'
+
+
+  /{uid}/status:
+
+    get:
+      operationId: "shipit_signoff.api.get_step_status"
+      description: Status of a step
+      responses:
+        200:
+          description: Status of a step
+          schema:
+            $ref: '#/definitions/StepResult'
+
+    put:
+      operationId: "shipit_signoff.api.create_step"
+      description: Create new step
+      parameters:
+        - name: body
+          in: body
+          description: Tree update
+          required: true
+          schema:
+            $ref: '#/definitions/Step'
+      responses:
+        200:
+          description: Returns nothing
+
+    delete:
+      operationId: "shipit_signoff.api.delete_step"
+      description: Remove a step
+      responses:
+        200:
+          description: Removal of step
+
+definitions:
+
+  StepResult:
+    type: object
+    required:
+      - state
+    properties:
+      state:
+        type: string
+        enum:
+          - starting # / pending
+          - running
+          - stopping
+          - exception
+          - completed #/ success
+          - failed
+      message:
+        type: string
+        description: More elaborate description of state for humans.
+      output:
+        $ref: '#/definitions/Ouput'
+        
+  Step:
+    type: object
+    required:
+      - uid
+      - input
+      - parameters
+    properties:
+      uid:
+        type: string
+      input:
+        $ref: '#/definitions/Input'
+      parameters:
+        $ref: '#/definitions/Parameters'
+
+
+# --- step specific --------- (different file)
+
+definitions:
+
+  Parameters:
+    type: object
+
+  Input:
+    type: object
+
+  Ouput:
+    type: object
+
+
+# --- pipeline -----------------------------------------------
+#
+
+{
+  data: {
+    product: "firefox",
+    channel: "beta",
+    version: "50",
+    build: "2"
+  },
+  steps: [
+    { uid: 1,
+      schema: "https://signoff.mozilla-releng.net/swagger.json",
+      description: "QE signoff CDN",
+      parameters: {
+        signoffs: [
+          # TODO:
+          # requirements of signoff:
+          #  - 2 relman and 1 qa
+          #  - (1 qa or relman) and 1 releng
+        ]
+      },
+      requires: [
+      ]
+    },
+    { uid: 2
+      schema: "https://signoff.mozilla-releng.net/swagger.json"
+      description: "QE Func signoff"
+      parameters: {
+        signoffs: [
+          # TODO:
+          # requirements of signoff:
+          #  - 2 relman and 1 qa
+          #  - (1 qa or relman) and 1 releng
+      ]
+      requires: [
+      ]
+    },
+    { uid: 3
+      schema: "https://taskcluster.mozilla-releng.net/swagger.json"
+      description: "Publish release in Balrog"
+      requires: [
+        1,
+        2
+      ]
+    },
+    { uid: "4"
+      schema: "https://taskcluster.mozilla-releng.net/swagger.json"
+      description: "Bouncer aliases"
+      requires: [
+        1,
+        2
+      ]
+    },
+    { uid: 5
+      schema: "https://taskcluster.mozilla-releng.net/swagger.json"
+      description: "Bump hg version"
+      requires: [
+        1,
+        2
+      ]
+    },
+    { uid: 6
+      schema: "https://signoff.mozilla-releng.net/swagger.json"
+      description: "QE beta Signoff"
+      requires: [
+        3
+      ]
+    },
+    { uid: 7
+      schema: "https://taskcluster.mozilla-releng.net/swagger.json"
+      description: "Mark as shipped"
+      requires: [
+        4,
+        5
+        6,
+      ]
+    },
+  ]
+}
+
+
+
+
+

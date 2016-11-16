@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend mkTaskclusterHook filterSource mysql2sqlite mysql2postgresql;
+  inherit (releng_pkgs.lib) mkBackend filterSource mysql2sqlite mysql2postgresql;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;

@@ -348,6 +348,7 @@ deploy-cache: require-AWS require-CACHE_BUCKET build-tool-awscli build-cache
 taskcluster.yml: nix
 	@nix-build nix/taskcluster.nix -o result-taskcluster --fallback
 	@cp -f ./result-taskcluster .taskcluster.yml
+	@sed -i -e "s,COMMAND,nix-env -iA nixpkgs.gnumake nixpkgs.curl \&\& mkdir /src \&\& cd /src \&\& curl -L https://github.com/mozilla-releng/services/archive/\$$GITHUB_HEAD_SHA.tar.gz -o \$$GITHUB_HEAD_SHA.tar.gz \&\& tar zxf \$$GITHUB_HEAD_SHA.tar.gz \&\& cd services-\$$GITHUB_HEAD_SHA \&\& ./.taskcluster.sh," .taskcluster.yml
 
 
 taskcluster-hooks.json: require-APP require-BRANCH nix

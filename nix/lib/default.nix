@@ -27,8 +27,7 @@ let
     unique;
 
   inherit (releng_pkgs)
-    elmPackages
-    mkTaskclusterGithubTask;
+    elmPackages;
 
   inherit (releng_pkgs.tools)
     pypi2nix
@@ -195,8 +194,8 @@ in rec {
         command:
           - "/bin/bash"
           - "-c"
-          - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  '';
+          - "COMMAND"
+    '';
 
   fromRequirementsFile = files: pkgs':
     let
@@ -295,8 +294,8 @@ in rec {
         '' + self.configurePhase;
 
         passthru.taskclusterGithubTasks =
-          map (branch: mkTaskclusterGithubTask { inherit name branch; }) [ "master" "staging" "production" ];
-
+          map (branch: mkTaskclusterGithubTask { inherit name branch; })
+            [ "master" "staging" "production" ];
         passthru.update = writeScript "update-${name}" ''
           export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
           pushd src/${name}
