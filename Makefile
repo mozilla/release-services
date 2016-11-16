@@ -36,7 +36,7 @@ APP_DEV_PORT_releng_mapper=8004
 APP_DEV_PORT_releng_archiver=8005
 APP_DEV_PORT_shipit_frontend=8010
 APP_DEV_PORT_shipit_dashboard=8011
-APP_DEV_PORT_shipit_dashboard=8012
+APP_DEV_PORT_shipit_pipeline=8012
 
 APP_DEV_POSTGRES_PORT=9000
 
