@@ -1,8 +1,8 @@
-# generated using pypi2nix tool (version: 1.5.0.dev0)
+# generated using pypi2nix tool (version: 1.6.0)
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -V 3.5 -r requirements.txt -v
+#   pypi2nix -v -V 3.5 -r requirements.txt
 #
 
 { pkgs ? import <nixpkgs> {}
