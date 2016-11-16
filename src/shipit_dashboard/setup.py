@@ -21,6 +21,10 @@ setup(
     author='Mozilla Release Engineering',
     author_email='release@mozilla.com',
     url='https://dashboard.shipit.mozilla-releng.net',
+    tests_require=[
+        'flake8',
+        'pytest',
+    ],
     install_requires=[
         'releng_common[log,api,cors,auth,db]',
         'libmozdata',

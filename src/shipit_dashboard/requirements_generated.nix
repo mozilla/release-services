@@ -1,7 +1,7 @@
 # generated using pypi2nix tool (version: 1.6.0)
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql libffi openssl pkgconfig freetype.dev -r requirements.txt -r requirements-dev.txt -r requirements-nix.txt
+#   pypi2nix -v -V 3.5 -E postgresql libffi openssl pkgconfig freetype.dev -r ../../lib/releng_common/requirements-dev.txt -r requirements.txt -r requirements-dev.txt -r requirements-nix.txt
 #
 
 { pkgs, python, commonBuildInputs ? [], commonDoCheck ? false }:
@@ -291,10 +291,10 @@ self: {
 
 
   "aiohttp" = python.mkDerivation {
-    name = "aiohttp-1.1.4";
+    name = "aiohttp-1.1.5";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/cf/bc/eaf04ca05c42fa2716a46bcac5e4b0dcadf2032f6c6bd3a36418e14aede7/aiohttp-1.1.4.tar.gz";
-      sha256 = "11397e2dfdda688d98d9a22f822234c1f2b2071f661f4a8b261ca346e2103eaf";
+      url = "https://pypi.python.org/packages/5f/60/afb29b5712ade524efdce339e2a6a0cb69c44115804ab5d4e976bf3f1983/aiohttp-1.1.5.tar.gz";
+      sha256 = "e6c5a8008ab8bbdb706034bedc91835ed820cdc2367ddea9142697612908df84";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
