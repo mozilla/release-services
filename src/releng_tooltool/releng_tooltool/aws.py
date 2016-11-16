@@ -9,12 +9,12 @@ import boto.s3
 import boto.sqs
 import importlib
 import json
-import structlog
+from releng_common import log
 import threading
 import time
 
 
-logger = structlog.get_logger()
+logger = log.get_logger()
 
 
 class StopListening(Exception):

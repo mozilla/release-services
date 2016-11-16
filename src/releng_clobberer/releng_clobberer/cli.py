@@ -4,11 +4,11 @@
 
 from __future__ import absolute_import
 
-import logging
+from releng_common import log
 import taskcluster
 
 
-logger = logging.getLogger('releng_clobberer.cli')
+logger = log.get_logger()
 
 
 def taskcluster_cache(namespace='gecko.v2',

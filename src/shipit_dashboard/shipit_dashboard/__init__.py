@@ -25,6 +25,7 @@ def init_app(app):
     return app.api.register(
         os.path.join(os.path.dirname(__file__), 'api.yml'))
 
+
 if not os.environ.get('APP_SETTINGS') and \
        os.path.isfile(APP_SETTINGS):
     os.environ['APP_SETTINGS'] = APP_SETTINGS
