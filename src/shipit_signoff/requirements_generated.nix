@@ -156,6 +156,28 @@ self: {
 
 
 
+  "Logbook" = python.mkDerivation {
+    name = "Logbook-1.0.0";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/34/e8/6419c217bbf464fe8a902418120cccaf476201bd03b50958db24d6e90f65/Logbook-1.0.0.tar.gz";
+      sha256 = "87da2515a6b3db866283cb9d4e5a6ec44e52a1d556ebb2ea3b6e7e704b5f1872";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."Jinja2"
+      self."SQLAlchemy"
+      self."pytest"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "A logging replacement for Python";
+    };
+  };
+
+
+
   "Mako" = python.mkDerivation {
     name = "Mako-1.0.6";
     src = pkgs.fetchurl {
@@ -269,10 +291,10 @@ self: {
 
 
   "aiohttp" = python.mkDerivation {
-    name = "aiohttp-1.1.4";
+    name = "aiohttp-1.1.5";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/cf/bc/eaf04ca05c42fa2716a46bcac5e4b0dcadf2032f6c6bd3a36418e14aede7/aiohttp-1.1.4.tar.gz";
-      sha256 = "11397e2dfdda688d98d9a22f822234c1f2b2071f661f4a8b261ca346e2103eaf";
+      url = "https://pypi.python.org/packages/5f/60/afb29b5712ade524efdce339e2a6a0cb69c44115804ab5d4e976bf3f1983/aiohttp-1.1.5.tar.gz";
+      sha256 = "e6c5a8008ab8bbdb706034bedc91835ed820cdc2367ddea9142697612908df84";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
