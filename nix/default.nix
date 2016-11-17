@@ -7,6 +7,8 @@ in
 
 let
 
+  postgresql = pkgs.postgresql95;
+
   releng_pkgs = {
 
     pkgs = pkgs // {

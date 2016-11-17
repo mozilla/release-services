@@ -317,8 +317,6 @@ deploy-production-shipit_signoff: # deploy-staging-HEROKU
 
 
 
-
-
 update-all: update-tools update-apps
 update-tools: $(foreach tool, $(TOOLS), update-tool-$(tool))
 update-apps: $(foreach app, $(APPS), update-app-$(app))
@@ -535,7 +533,7 @@ require-postgres: build-postgresql
 	$(eval export DATABASE_URL=postgres://localhost:$(APP_DEV_POSTGRES_PORT)/services)
 	@echo "Using postgresql dev database $(DATABASE_URL)"
 
-require-sqlite: nix require-APP
+require-sqlite:
 	$(eval export DATABASE_URL=sqlite:///$(PWD)/app.db)
 	@echo "Using sqlite dev database $(DATABASE_URL)"
 
