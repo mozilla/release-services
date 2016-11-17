@@ -47,7 +47,7 @@ let
   };
 
   self = mkBackend rec {
-    inherit python;
+    inherit python releng_common;
     name = "releng_clobberer";
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
@@ -57,8 +57,7 @@ let
         python.packages."ipdb"
       ];
     propagatedBuildInputs =
-      [ releng_common
-      ];
+      [];
     passthru = {
       mysql2sqlite = mysql2sqlite { inherit name beforeSQL afterSQL; };
       mysql2postgresql = mysql2postgresql { inherit name beforeSQL afterSQL; };

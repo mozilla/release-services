@@ -15,7 +15,7 @@ let
   };
 
   self = mkBackend rec {
-    inherit python;
+    inherit python releng_common;
     name = "shipit_dashboard";
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
@@ -26,7 +26,7 @@ let
         python.packages."responses"
       ];
     propagatedBuildInputs =
-      [ releng_common
+      [ 
         python.packages."libmozdata"
       ];
     passthru = {
