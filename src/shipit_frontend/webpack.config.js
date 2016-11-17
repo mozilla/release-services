@@ -3,6 +3,11 @@ const config_type = process.argv.indexOf('start') !== -1 ? 'dev' : 'prod';
 const config = require('mozilla-neo/config/webpack.' + config_type);
 const ELM_EXT = /\.elm$/;
 
+// Remove react-hot from config
+config.module.loaders = config.module.loaders.filter(function(loader){
+  return !(loader['loaders'] && loader['loaders'].includes('react-hot'));
+});
+
 config.module.loaders.push({
   test: ELM_EXT,
   exclude: /(node_modules|elm-stuff)/,
