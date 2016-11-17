@@ -33,7 +33,6 @@ in python.mkDerivation {
         python.packages."psycopg2"
         python.packages."Flask-SQLAlchemy"
         python.packages."Flask-Migrate"
-        releng_pkgs.pkgs.postgresql95
       ];
   checkPhase = ''
     flake8 --exclude=nix_run_setup.py,migrations/,build/
@@ -43,4 +42,5 @@ in python.mkDerivation {
     rm VERSION
     echo ${version} > VERSION
   '';
+  passthru.extras = extras;
 }
