@@ -105,7 +105,7 @@ def test_get_runnable_steps_many_many_downstream_deps_run(pipeline_steps):
 
 
 def test_refresh_pipeline_steps(pipeline_steps, monkeypatch):
-    def mock_get_request(url):
+    def mock_get_request(url, verify):
         get_response = MagicMock()
         get_response.json.return_value = {'state': 'completed'} if 'signoff1' in url else {'state': 'busted'}
         return get_response
@@ -115,5 +115,5 @@ def test_refresh_pipeline_steps(pipeline_steps, monkeypatch):
     pipeline_steps[0].state = 'running'
     pipeline_steps = refresh_pipeline_steps(pipeline_steps)
     assert pipeline_steps[0].state == 'completed'
-    assert pipeline_steps[1].state is None
-    assert pipeline_steps[2].state is None
+    assert pipeline_steps[1].state == 'pending'
+    assert pipeline_steps[2].state == 'pending'
