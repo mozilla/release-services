@@ -370,24 +370,8 @@ in rec {
         propagatedBuildInputs = [] ++ propagatedBuildInputs;
 
         patchPhase = ''
-          rm -f VERSION
+          rm VERSION
           echo ${version} > VERSION
-          rm -f MANIFEST.in
-          cat > MANIFEST.in <<EOF
-          recursive-include ${name}/*
-
-          include VERSION
-          include ${name}/*.ini
-          include ${name}/*.json
-          include ${name}/*.mako
-          include ${name}/*.yml
-
-          recursive-exclude * __pycache__
-          recursive-exclude * *.py[co]
-          EOF
-          cat MANIFEST.in
-          ls -la
-          pwd
         '';
 
         postInstall = ''
@@ -404,15 +388,12 @@ in rec {
             wrapProgram $i --set PYTHONPATH $PYTHONPATH
           done
 
-          for i in $out/${python.__old.python.sitePackages}/*; do
-            if test -e $i/__pycache__; then
-              rm -rf $i/__pycache__
-            fi
-            ${python.__old.python.executable} -m compileall -f $i
-          done
+          if [ -d ./migrations ]; then
+            mv ./migrations $out/${python.__old.python.sitePackages}
+          fi
 
-          exit 123
-
+          find $out -type d -name "__pycache__" -exec 'rm -r "{}"' \;
+          find $out -type d -name "*.py" -exec '${python.__old.python.executable} -m compileall -f "{}"' \;
         '';
 
         checkPhase = ''
