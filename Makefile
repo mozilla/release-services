@@ -1,3 +1,7 @@
+ifneq ($(shell uname), Linux)
+$(error Only Linux is supported now. PRs are welcome!)
+endif
+
 .PHONY: *
 
 APP=
