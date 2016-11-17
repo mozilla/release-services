@@ -370,14 +370,30 @@ in rec {
         propagatedBuildInputs = [] ++ propagatedBuildInputs;
 
         patchPhase = ''
-          rm VERSION
+          rm -f VERSION
           echo ${version} > VERSION
+          rm -f MANIFEST.in
+          cat > MANIFEST.in <<EOF
+          recursive-include ${name}/*
+
+          include VERSION
+          include ${name}/*.ini
+          include ${name}/*.json
+          include ${name}/*.mako
+          include ${name}/*.yml
+
+          recursive-exclude * __pycache__
+          recursive-exclude * *.py[co]
+          EOF
+          cat MANIFEST.in
+          ls -la
+          pwd
         '';
 
         postInstall = ''
           mkdir -p $out/bin $out/etc
 
-          ln -s ${python.interpreter.interpreter} $out/bin
+          ln -s ${python.__old.python.interpreter} $out/bin
           ln -s ${python.packages."Flask"}/bin/flask $out/bin
           ln -s ${python.packages."gunicorn"}/bin/gunicorn $out/bin
           ln -s ${python.packages."newrelic"}/bin/newrelic-admin $out/bin
@@ -394,6 +410,8 @@ in rec {
             fi
             ${python.__old.python.executable} -m compileall -f $i
           done
+
+          exit 123
 
         '';
 
