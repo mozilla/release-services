@@ -9,7 +9,7 @@ import requests
 
 
 class PipelineStep:
-    def __init__(self, uid, url, params, requires, state=None):
+    def __init__(self, uid, url, params, requires, state='pending'):
         self.uid = uid
         self.url = url
         self.params = params
@@ -35,28 +35,47 @@ class PipelineStep:
         return new
 
     def get_state(self):
-        return requests.get(self.url).json()['state']
+        return requests.get('{}/status'.format(self.full_url), verify=False).json()['state']
 
-    def get_next_steps(self, pipeline):
-        return [step for step in pipeline if self.uid in step.requires]
+    def get_next_steps(self, steps):
+        return [step for step in steps if self.uid in step.requires]
 
     @property
-    def is_runnable(self):
-        return self.state is None
+    def full_url(self):
+        return '{}/{}'.format(self.url, self.uid)
+
+    @property
+    def is_pending(self):
+        return self.state == 'pending'
+
+    @property
+    def is_running(self):
+        return self.state in ('starting', 'running')
 
 
-def refresh_pipeline_steps(pipeline):
+def refresh_pipeline_steps(steps):
     retval = []
-    for step in pipeline:
-        state = step.state
-        if state in ('running',):
+    for step in steps:
+        if step.is_running:
             step = step.update_state()
 
         retval.append(step)
     return retval
 
 
-def get_runnable_steps(pipeline):
-    states = {step.uid: step.state for step in pipeline}
+def get_runnable_steps(steps):
+    states = {step.uid: step.state for step in steps}
+    return [step for step in steps if all(states[r] == 'completed' for r in step.requires) and step.is_pending]
 
-    return [step for step in pipeline if all(states[r] == 'completed' for r in step.requires) and step.is_runnable]
+
+def get_running_steps(steps):
+    return [step for step in steps if step.is_running]
+
+
+def start_steps(steps):
+    for step in steps:
+        response = requests.put(step.full_url, data=step.params, verify=False)
+        response.raise_for_status()
+        # TODO: Find a better name for step.update_state
+        # TODO handle errors
+        step.state = 'starting'
