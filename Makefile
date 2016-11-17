@@ -153,7 +153,7 @@ nix:
 
 
 develop: nix require-APP
-	nix-shell nix/default.nix -A $(APP) --run $$SHELL
+	nix-shell nix/default.nix -A $(APP)
 
 
 

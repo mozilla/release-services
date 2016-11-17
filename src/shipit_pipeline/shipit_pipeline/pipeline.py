@@ -9,7 +9,7 @@ import requests
 
 
 class PipelineStep:
-    def __init__(self, uid, url, params, requires, state):
+    def __init__(self, uid, url, params, requires, state=None):
         self.uid = uid
         self.url = url
         self.params = params
@@ -21,20 +21,28 @@ class PipelineStep:
                              requires=self.requires, state=self.state)
         return new
 
+    def __repr__(self):
+        return str(self.__dict__)
+
     @classmethod
-    def update_state(cls, step):
-        new = copy(step)
-        new.state = step.get_state()
+    def from_dict(cls, dict_):
+        # TODO validate params against schema?
+        return cls(uid=dict_['uid'], url=dict_['api_url'], params=dict_['parameters'], requires=dict_['requires'])
+
+    def update_state(self):
+        new = copy(self)
+        new.state = self.get_state()
         return new
 
     def get_state(self):
-        return requests.get(self.url).json()
+        return requests.get(self.url).json()['state']
 
     def get_next_steps(self, pipeline):
         return [step for step in pipeline if self.uid in step.requires]
 
-# e.g.
-# s1 = PipelineStep.update_state(s0)
+    @property
+    def is_runnable(self):
+        return self.state is None
 
 
 def refresh_pipeline_steps(pipeline):
@@ -42,17 +50,13 @@ def refresh_pipeline_steps(pipeline):
     for step in pipeline:
         state = step.state
         if state in ('running',):
-            state = step.get_state()
-        retval.append(PipelineStep(step.uid, step.url, step.params,
-                                   step.requires, state))
+            step = step.update_state()
+
+        retval.append(step)
     return retval
 
 
 def get_runnable_steps(pipeline):
     states = {step.uid: step.state for step in pipeline}
 
-    retval = []
-    for step in pipeline:
-        if all(states[r.uid] == 'completed' for r in step.requires):
-            retval.append(step)
-    return retval
+    return [step for step in pipeline if all(states[r] == 'completed' for r in step.requires) and step.is_runnable]
