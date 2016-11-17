@@ -8,37 +8,37 @@ import logging
 
 log = logging.getLogger(__name__)
 
-STEPS = {}
+PIPELINES = {}
 
 
-def list_steps():
-    log.info('listing steps')
-    return list(STEPS.keys())
+def list_pipelines():
+    log.info('listing pipelines')
+    return list(PIPELINES.keys())
 
 
-def get_step(uid):
-    log.info('getting step %s', uid)
-    if uid not in STEPS:
+def get_pipeline(uid):
+    log.info('getting pipeline %s', uid)
+    if uid not in PIPELINES:
         return None, 404
     return dict(uid=uid, input={}, parameters={})
 
 
-def get_step_status(uid):
-    log.info('getting step status %s', uid)
+def get_pipeline_status(uid):
+    log.info('getting pipeline status %s', uid)
     return dict(
-        state=STEPS[uid]
+        state=PIPELINES[uid]
     )
 
 
-def create_step(uid):
-    log.info('creating step %s', uid)
-    STEPS[uid] = 'running'
+def create_pipeline(uid):
+    log.info('creating pipeline %s', uid)
+    PIPELINES[uid] = 'running'
     return None
 
 
-def delete_step(uid):
-    log.info('deleting step %s', uid)
-    del STEPS[uid]
+def delete_pipeline(uid):
+    log.info('deleting pipeline %s', uid)
+    del PIPELINES[uid]
     return None
 
 
