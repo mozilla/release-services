@@ -1,60 +1,93 @@
 port module Hawk exposing (..)
 
-{-}
-
-Depends on:
- - User.elm
- - evancz/elm-http
- - elm-lang/core
-
-To be able to make hawk enabled requests
-
--}
 import Http
-import User
-
-type alias Request =
-    { user : User.Model
-    , verb : String
-    , headers : List (String, String)
-    , url : String
-    , body : Http.Body
-    }
-
-type alias Header = String
-
-type Msg
-    = BuildHeader Request
-    | HeaderBuilt Header Request 
+import Task exposing (Task)
+import TaskclusterLogin
+import Json.Encode as JsonEncode
+import Json.Decode as JsonDecode
 
 
-update : Msg -> model -> (model, Cmd Msg)
+type Msg error success
+    = AddHeader Http.Request TaskclusterLogin.Model
+    | SendRequest String
+    | Failure error
+    | Success success
+
+
+init =
+  {}
+
+subscriptions =
+  [
+    (hawk_send_request (SendRequest))
+  ]
+
+-- update : Msg -> model -> (model, Cmd Msg)
 update msg model = 
     case msg of
-        BuildHeader request ->
-            ( model, hawk_build request )
-        HeaderBuilt header request ->
-            ( model
-            , Http.send Http.defaultSettings
-                { request | headers = request.headers ++
-                               [ ( "Authorization", header),
-                                 ( "Accept", "application/json" ),
-                                 ( "Content-Type", "application/json" )
-                               ]
-                }
+        AddHeader request user ->
+          let
+            requestJson = requestEncoder request
+          in
+            ( model, hawk_add_header (requestJson, user) )
 
-            )
+        SendRequest requestJson ->
+            ( model, sendRequest requestJson )
+
+        _ -> (model, Cmd.none)
 
 
-send : Request -> Cmd Msg
-send request =
-    Cmd.map <| BuildHeader request
+requestEncoder : Http.Request -> String
+requestEncoder request =
+  JsonEncode.encode 0 <|
+    JsonEncode.object [
+      ("verb", JsonEncode.string request.verb),
+      ("headers", JsonEncode.list (List.map requestHeadersEncoder request.headers)),
+      ("url", JsonEncode.string request.url)
+      --("body", JsonEncode.string request.body)
+    ]
+
+requestHeadersEncoder : (String, String) -> JsonEncode.Value
+requestHeadersEncoder (key, value) =
+  JsonEncode.list [
+    JsonEncode.string key, 
+    JsonEncode.string value
+  ]
 
 
--- TODO: implement getStrin/get/post aka HIGH-LEVEL REQUESTS from
--- evancz/elm-http
+-- sendRequest : Http.Request -> Cmd msg
+sendRequest requestJson =
+  let
+    -- TODO: use request decoder
+    request = Http.Request "GET" [] "https://hijacked.net" Http.empty
+  in
+    Http.send Http.defaultSettings request 
+    |> Task.perform Failure Success
 
+--requestBodyToValue: Http.Body -> JsonEncode.Value
+--requestBodyToValue body =
+--  case body of
+--    Empty -> JsonEncode.object [
+--      ("type", JsonEncode.string "Empty"),
+--      ("value", JsonEncode.null)
+--    ]
+--    BodyString x -> JsonEncode.object [
+--      ("type", JsonEncode.string "BodyString"),
+--      ("value", JsonEncode.string x)
+--    ]
+--    ArrayBuffer -> JsonEncode.object [
+--      ("type", JsonEncode.string "ArrayBuffer"),
+--      ("value", JsonEncode.null)
+--    ]
+--    BodyFormData -> JsonEncode.object [
+--      ("type", JsonEncode.string "BodyFormData"),
+--      ("value", JsonEncode.null)
+--    ]
+--    BodyBlob -> JsonEncode.object [
+--      ("type", JsonEncode.string "BodyBlob"),
+--      ("value", JsonEncode.null)
+--    ]
+    
 
-
-port hawk_get_header : (Maybe Response -> msg) -> Sub msg
-port hawk_build_header : Request -> Cmd msg
+port hawk_send_request:  (String -> msg) -> Sub msg
+port hawk_add_header: (String, TaskclusterLogin.Model) -> Cmd msg
