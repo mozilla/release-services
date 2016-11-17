@@ -372,6 +372,19 @@ in rec {
         patchPhase = ''
           rm VERSION
           echo ${version} > VERSION
+          rm -f MANIFEST.in
+          cat > MANIFEST.in <<EOF
+          recursive-include ${name}/*
+
+          include VERSION
+          include ${name}/*.ini
+          include ${name}/*.json
+          include ${name}/*.mako
+          include ${name}/*.yml
+
+          recursive-exclude * __pycache__
+          recursive-exclude * *.py[co]
+          EOF
         '';
 
         postInstall = ''
