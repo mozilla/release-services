@@ -16,7 +16,8 @@ import Http
 import Task exposing (Task)
 import Basics exposing (Never)
 
-import App.User as User exposing (Hawk)
+import TaskclusterLogin
+import Hawk
 import App.Utils exposing (onChange)
 
 -- Models
