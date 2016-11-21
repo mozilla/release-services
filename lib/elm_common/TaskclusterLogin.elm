@@ -1,6 +1,10 @@
 port module TaskclusterLogin exposing (..)
 
+import Html exposing (..)
+import Html.Attributes exposing (..)
 import Dict exposing (Dict)
+import Utils exposing (eventLink)
+import Json.Decode as JsonDecode exposing ((:=))
 import Redirect
 import Maybe
 
@@ -26,16 +30,19 @@ type alias Model = {
 
 type Msg
   = Login Redirect.Model
-  | Logging Model
-  | Logged (Maybe Model)
+  | Logging Credentials
+  | Logged (Maybe Credentials)
   | Logout
 
-init = {}
-
-subscriptions = 
-  [
-    (taskclusterlogin_get (Logged))
-  ]
+init : (Model, Cmd Msg)
+init = 
+  (
+    {
+      credentials = Nothing
+    },
+    -- Initial credentials loading
+    taskclusterlogin_load True
+  )
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -43,12 +50,12 @@ update msg model =
     Login url ->
       ( model, Redirect.redirect url )
 
-    Logging user ->
-      ( model, taskclusterlogin_set user )
+    Logging creds ->
+      ( model, taskclusterlogin_set creds )
 
-    Logged newModel ->
+    Logged creds ->
       (
-        Maybe.withDefault model newModel,
+        { model | credentials = creds },
         Cmd.none
       )
 
@@ -73,7 +80,7 @@ fromJust x = case x of
     Just y -> y
     Nothing -> Debug.crash "error: fromJust Nothing"
 
-convertUrlQueryToUser : Dict String String -> Model
+convertUrlQueryToUser : Dict String String -> Credentials
 convertUrlQueryToUser query =
     -- TODO: handle more nicely clientId/Token
     { clientId = fromJust (Dict.get "clientId" query)
@@ -85,9 +92,38 @@ convertUrlQueryToUser query =
                  Nothing -> Nothing
     }
 
+-- Views
+view model =
+  case model.credentials of
+    Just user ->
+      div [] [text "Logged in !"]
+    Nothing ->
+      div [] (viewLogin)
+
+viewLogin =
+  let
+    loginTarget =
+        Just ( "/login"
+             , "Uplift dashboard helps Mozilla Release Management team in their workflow."
+             )
+    loginUrl =
+        { url = "https://login.taskcluster.net"
+        , target = loginTarget
+        , targetName = "target"
+        }
+    loginMsg = Login loginUrl
+  in
+    [
+      eventLink loginMsg [ class "nav-link" ] [ text "Login TaskCluster" ]
+    ]
+
 -- Ports
 
-port taskclusterlogin_get : (Maybe Model -> msg) -> Sub msg
+port taskclusterlogin_get : (Maybe Credentials -> msg) -> Sub msg
 port taskclusterlogin_load : Bool -> Cmd msg
 port taskclusterlogin_remove : Bool -> Cmd msg
-port taskclusterlogin_set : Model -> Cmd msg
+port taskclusterlogin_set : Credentials -> Cmd msg
+
+-- subscriptions = [
+--    Sub.map TaskclusterLoginMsg (TaskclusterLogin.taskclusterlogin_get (TaskclusterLogin.Logged))
+--   ]
