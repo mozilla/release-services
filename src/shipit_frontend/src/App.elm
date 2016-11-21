@@ -15,11 +15,12 @@ import RemoteData as RemoteData exposing ( RemoteData(Loading, Success, NotAsked
 import String
 
 import App.Home as Home 
-import App.Bugzilla as Bugzilla 
-import App.User as User
 import App.ReleaseDashboard as ReleaseDashboard
 import App.Utils exposing ( eventLink )
 
+import TaskclusterLogin as User
+import BugzillaLogin as Bugzilla
+import Hawk
 
 
 -- TODO:
@@ -36,7 +37,7 @@ type Page
 type alias Model = {
   release_dashboard : ReleaseDashboard.Model,
   current_page : Page,
-  current_user : User.Model,
+  current_user : Maybe User.Model,
   backend_dashboard_url: String,
   bugzilla_url: String
 }
@@ -44,7 +45,7 @@ type alias Model = {
 type Msg
     = ShowPage Page
     | UserMsg User.Msg -- triggers fetch all analysis
-    | HawkMsg User.Msg -- update current hawk header
+    | HawkMsg Hawk.Msg -- update current hawk header
     | ReleaseDashboardMsg ReleaseDashboard.Msg
     | BugzillaMsg Bugzilla.Msg
     | FetchAnalysis ReleaseDashboard.Analysis

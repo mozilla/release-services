@@ -1,7 +1,10 @@
 module Main exposing (..)
 
-import App
 import RouteUrl
+
+-- TODO: restore FULL app
+--import App 
+import AppTest as App
 
 
 main : Program App.Flags
