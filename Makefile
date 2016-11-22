@@ -6,6 +6,7 @@ endif
 
 APP=
 APPS=\
+	elm_common_example \
 	releng_docs \
 	releng_clobberer \
 	releng_tooltool \
@@ -35,6 +36,7 @@ TOOLS=\
 
 APP_DEV_HOST=localhost
 
+APP_DEV_PORT_elm_common_example=7000
 APP_DEV_PORT_releng_frontend=8000
 APP_DEV_PORT_releng_clobberer=8001
 APP_DEV_PORT_releng_tooltool=8002
@@ -52,6 +54,8 @@ APP_DEV_SSL=\
 	SSL_CACERT=$$PWD/tmp/ca.crt \
 	SSL_CERT=$$PWD/tmp/server.crt \
 	SSL_KEY=$$PWD/tmp/server.key
+APP_DEV_ENV_elm_common_example=\
+	$(APP_DEV_SSL)
 APP_DEV_ENV_releng_frontend=\
 	NEO_CLOBBERER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_clobberer) \
 	NEO_TOOLTOOL_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_tooltool) \
@@ -154,7 +158,7 @@ nix:
 
 
 develop: nix require-APP
-	nix-shell nix/default.nix -A $(APP)
+	@nix-shell nix/default.nix -A $(APP)
 
 
 
@@ -173,6 +177,8 @@ develop-run-BACKEND: build-certs nix require-APP
 develop-run-FRONTEND: build-certs nix require-APP
 	nix-shell nix/default.nix --pure -A $(APP) \
 		--run "$(APP_DEV_ENV_$(APP)) neo start --port $(APP_DEV_PORT_$(APP)) --config webpack.config.js"
+
+develop-run-elm_common_example: develop-run-FRONTEND
 
 develop-run-releng_clobberer: require-sqlite develop-run-BACKEND
 develop-run-releng_tooltool: require-sqlite develop-run-BACKEND

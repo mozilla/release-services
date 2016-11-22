@@ -161,6 +161,7 @@ in rec {
   mkTaskclusterGithubTask =
     { name
     , branch
+    , src_path
     , secrets ? "repo:github.com/mozilla-releng/services:branch:${branch}"
     }:
     ''
@@ -168,7 +169,7 @@ in rec {
         name: "${name}"
         description: "Test, build and deploy ${name}"
         owner: "{{ event.head.user.email }}"
-        source: "https://github.com/mozilla-releng/services/tree/${branch}/src/${name}"
+        source: "https://github.com/mozilla-releng/services/tree/${branch}/${src_path}"
       scopes:
         - secrets:get:${secrets}
         - hooks:modify-hook:project-releng/services-${branch}-${name}-*
@@ -258,6 +259,7 @@ in rec {
     { name
     , version
     , src
+    , src_path ? "src/${name}"
     , node_modules
     , elm_packages
     , patchPhase ? null
@@ -291,7 +293,7 @@ in rec {
         '';
         inherit postInstall patchPhase;
         shellHook = ''
-          cd src/${name}
+          cd ${src_path}
         '' + self.configurePhase;
 
         passthru.taskclusterGithubTasks =
@@ -299,7 +301,7 @@ in rec {
             [ "master" "staging" "production" ];
         passthru.update = writeScript "update-${name}" ''
           export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
-          pushd src/${name}
+          pushd ${src_path} >> /dev/null
           ${node2nix}/bin/node2nix \
             --composition node-modules.nix \
             --input node-modules.json \
@@ -350,6 +352,7 @@ in rec {
     { name
     , version
     , src
+    , src_path ? "src/${name}"
     , python
     , releng_common
     , buildInputs ? []
@@ -430,7 +433,7 @@ in rec {
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
           export FLASK_APP=${name}:app
 
-          pushd src/${name}
+          pushd ${src_path} >> /dev/null
           tmp_path=$(mktemp -d)
           export PATH="$tmp_path/bin:$PATH"
           export PYTHONPATH="$tmp_path/${python.__old.python.sitePackages}:$PYTHONPATH"
@@ -438,11 +441,13 @@ in rec {
           ${python.__old.bootstrapped-pip}/bin/pip install -q -e . --prefix $tmp_path
           ${python.__old.bootstrapped-pip}/bin/pip install -q -e ../../lib/releng_common --prefix $tmp_path
           popd >> /dev/null
+
+          cd ${src_path}
         '';
 
         passthru = {
           taskclusterGithubTasks =
-            map (branch: mkTaskclusterGithubTask { inherit name branch; })
+            map (branch: mkTaskclusterGithubTask { inherit name src_path branch; })
                 [ "master" "staging" "production" ];
           docker = mkDocker {
             inherit name version;
