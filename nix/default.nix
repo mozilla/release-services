@@ -24,6 +24,9 @@ let
     elmPackages = pkgs.elmPackages.override { nodejs = pkgs."nodejs-6_x"; };
     postgresql = pkgs.postgresql95;
 
+    # TODO: releng_common_example = import ./../lib/releng_common/example { inherit releng_pkgs; };
+    elm_common_example = import ./../lib/elm_common/example { inherit releng_pkgs; };
+
     releng_docs = import ./../src/releng_docs { inherit releng_pkgs; };
     releng_frontend = import ./../src/releng_frontend { inherit releng_pkgs; };
     releng_clobberer = import ./../src/releng_clobberer { inherit releng_pkgs; };
