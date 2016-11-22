@@ -22,6 +22,7 @@ let
     lib = import ./lib/default.nix { inherit releng_pkgs; };
     tools = import ./tools/default.nix { inherit releng_pkgs; };
     elmPackages = pkgs.elmPackages.override { nodejs = pkgs."nodejs-6_x"; };
+    postgresql = pkgs.postgresql95;
 
     releng_docs = import ./../src/releng_docs { inherit releng_pkgs; };
     releng_frontend = import ./../src/releng_frontend { inherit releng_pkgs; };
