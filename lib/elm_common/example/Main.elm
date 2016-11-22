@@ -4,9 +4,9 @@ import RouteUrl
 import Example as App
 
 
-main : Program App.Flags
+main : Program Never
 main =
-    RouteUrl.programWithFlags
+    RouteUrl.program
         { delta2url = App.delta2url
         , location2messages = App.location2messages
         , init = App.init

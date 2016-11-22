@@ -110,34 +110,13 @@ convertUrlQueryToUser query =
 -- Views
 
 
-view model =
-    case model.credentials of
-        Just user ->
-            div [] [ text ("Logged in as " ++ user.clientId) ]
-
-        Nothing ->
-            div [] (viewLogin)
-
-
-viewLogin =
-    let
-        loginTarget =
-            Just
-                ( "/login"
-                , "Uplift dashboard helps Mozilla Release Management team in their workflow."
-                )
-
-        loginUrl =
-            { url = "https://login.taskcluster.net"
-            , target = loginTarget
-            , targetName = "target"
-            }
-
-        loginMsg =
-            Login loginUrl
-    in
-        [ eventLink loginMsg [ class "nav-link" ] [ text "Login TaskCluster" ]
-        ]
+redirectToLogin outMsg returnRoute description =
+    { url = "https://login.taskcluster.net"
+    , target = Just ( returnRoute, description )
+    , targetName = "target"
+    }
+        |> Login
+        |> outMsg
 
 
 
