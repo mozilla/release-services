@@ -2,49 +2,58 @@ port module Hawk exposing (..)
 
 import Http
 import Task exposing (Task)
-import TaskclusterLogin
+import TaskclusterLogin as User
 import Json.Encode as JsonEncode
-import Json.Decode as JsonDecode
+import Json.Decode as JsonDecode exposing ((:=))
+import RemoteData as RemoteData exposing ( WebData, RemoteData(Loading, Success, NotAsked, Failure) )
 
 
-type Msg error success
-    = AddHeader Http.Request TaskclusterLogin.Model
+type Msg
+    = AddHeader Http.Request User.Credentials
     | SendRequest String
-    | Failure error
-    | Success success
 
+update : JsonDecode.Decoder a -> Msg -> (Cmd Msg, Cmd (RemoteData Http.Error a))
+update decoder msg = 
+  case msg of
+    AddHeader request credentials ->
+      (add_header request credentials, Cmd.none)
 
-init =
-  {}
+    SendRequest requestJson ->
+      case requestDecoder requestJson of
+        Ok request ->
+          (Cmd.none, sendRequest decoder request)
 
-subscriptions =
-  [
-    (hawk_send_request (SendRequest))
-  ]
-
--- update : Msg -> model -> (model, Cmd Msg)
-update msg model = 
-    case msg of
-        AddHeader request user ->
+        Err error ->
           let
-            requestJson = requestEncoder request
+            l = Debug.log "Request decoding error" error
           in
-            ( model, hawk_add_header (requestJson, user) )
+            (Cmd.none, Cmd.none)
 
-        SendRequest requestJson ->
-            ( model, sendRequest requestJson )
+-- Encode Http request in json to pass it through ports
+add_header: Http.Request -> User.Credentials -> Cmd Msg
+add_header request credentials =
+  let
+    requestJson = requestEncoder request
+  in
+    hawk_add_header (requestJson, credentials)
 
-        _ -> (model, Cmd.none)
+-- Transform http request in a remote data Cmd
+-- It must be ran from the app update cycle
+sendRequest : JsonDecode.Decoder obj -> Http.Request -> Cmd (RemoteData Http.Error obj)
+sendRequest decoder request =
+  Http.send Http.defaultSettings request 
+  |> Http.fromJson decoder
+  |> RemoteData.asCmd
 
-
+-- Json Encoders & Decoders
 requestEncoder : Http.Request -> String
 requestEncoder request =
   JsonEncode.encode 0 <|
     JsonEncode.object [
       ("verb", JsonEncode.string request.verb),
       ("headers", JsonEncode.list (List.map requestHeadersEncoder request.headers)),
-      ("url", JsonEncode.string request.url)
-      --("body", JsonEncode.string request.body)
+      ("url", JsonEncode.string request.url),
+      ("body", JsonEncode.null) -- TODO: support text body
     ]
 
 requestHeadersEncoder : (String, String) -> JsonEncode.Value
@@ -54,15 +63,19 @@ requestHeadersEncoder (key, value) =
     JsonEncode.string value
   ]
 
+requestDecoder : String -> Result String Http.Request
+requestDecoder text =
+  JsonDecode.decodeString
+    (JsonDecode.object4 Http.Request
+      ("verb" := JsonDecode.string)
+      ("headers" := JsonDecode.list
+        (JsonDecode.tuple2 (,) JsonDecode.string JsonDecode.string)
+      )
+      ("url" := JsonDecode.string)
+      ("body" := JsonDecode.succeed Http.empty) -- TODO
+    ) text
 
--- sendRequest : Http.Request -> Cmd msg
-sendRequest requestJson =
-  let
-    -- TODO: use request decoder
-    request = Http.Request "GET" [] "https://hijacked.net" Http.empty
-  in
-    Http.send Http.defaultSettings request 
-    |> Task.perform Failure Success
+
 
 --requestBodyToValue: Http.Body -> JsonEncode.Value
 --requestBodyToValue body =
@@ -90,4 +103,9 @@ sendRequest requestJson =
     
 
 port hawk_send_request:  (String -> msg) -> Sub msg
-port hawk_add_header: (String, TaskclusterLogin.Model) -> Cmd msg
+port hawk_add_header: (String, User.Credentials) -> Cmd msg
+
+-- Add this subscription in main App
+-- subscriptions = [
+-- TODO: doc
+--   ]
