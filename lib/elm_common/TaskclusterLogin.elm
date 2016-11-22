@@ -96,7 +96,7 @@ convertUrlQueryToUser query =
 view model =
   case model.credentials of
     Just user ->
-      div [] [text "Logged in !"]
+      div [] [text ("Logged in as " ++ user.clientId)]
     Nothing ->
       div [] (viewLogin)
 
@@ -124,6 +124,7 @@ port taskclusterlogin_load : Bool -> Cmd msg
 port taskclusterlogin_remove : Bool -> Cmd msg
 port taskclusterlogin_set : Credentials -> Cmd msg
 
+-- Add this subscription in main App
 -- subscriptions = [
 --    Sub.map TaskclusterLoginMsg (TaskclusterLogin.taskclusterlogin_get (TaskclusterLogin.Logged))
 --   ]
