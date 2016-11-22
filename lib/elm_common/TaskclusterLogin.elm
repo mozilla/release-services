@@ -8,6 +8,7 @@ import Json.Decode as JsonDecode exposing ((:=))
 import Redirect
 import Maybe
 
+
 type alias Certificate =
     { version : Int
     , scopes : List String
@@ -18,67 +19,77 @@ type alias Certificate =
     , issuer : String
     }
 
-type alias Credentials = {
-  clientId : String,
-  accessToken : String,
-  certificate : Maybe Certificate
-}
 
-type alias Model = {
-  credentials : Maybe Credentials
-}
+type alias Credentials =
+    { clientId : String
+    , accessToken : String
+    , certificate : Maybe Certificate
+    }
+
+
+type alias Model =
+    { credentials : Maybe Credentials
+    }
+
 
 type Msg
-  = Login Redirect.Model
-  | Logging Credentials
-  | Logged (Maybe Credentials)
-  | Logout
+    = Login Redirect.Model
+    | Logging Credentials
+    | Logged (Maybe Credentials)
+    | Logout
 
-init : (Model, Cmd Msg)
-init = 
-  (
-    {
-      credentials = Nothing
-    },
-    -- Initial credentials loading
-    taskclusterlogin_load True
-  )
 
-update : Msg -> Model -> (Model, Cmd Msg)
+init : ( Model, Cmd Msg )
+init =
+    ( { credentials = Nothing
+      }
+    , -- Initial credentials loading
+      taskclusterlogin_load True
+    )
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-  case msg of
-    Login url ->
-      ( model, Redirect.redirect url )
+    case msg of
+        Login url ->
+            ( model, Redirect.redirect url )
 
-    Logging creds ->
-      ( model, taskclusterlogin_set creds )
+        Logging creds ->
+            ( model, taskclusterlogin_set creds )
 
-    Logged creds ->
-      (
-        { model | credentials = creds },
-        Cmd.none
-      )
+        Logged creds ->
+            ( { model | credentials = creds }
+            , Cmd.none
+            )
 
-    Logout ->
-      ( model, taskclusterlogin_remove True )
+        Logout ->
+            ( model, taskclusterlogin_remove True )
+
 
 decodeCertificate : String -> Result String Certificate
 decodeCertificate text =
     JsonDecode.decodeString
         (JsonDecode.object7 Certificate
-            ( "version"     := JsonDecode.int )
-            ( "scopes"      := JsonDecode.list JsonDecode.string )
-            ( "start"       := JsonDecode.int )
-            ( "expiry"      := JsonDecode.int )
-            ( "seed"        := JsonDecode.string )
-            ( "signature"   := JsonDecode.string )
-            ( "issuer"      := JsonDecode.string )
-        ) text
+            ("version" := JsonDecode.int)
+            ("scopes" := JsonDecode.list JsonDecode.string)
+            ("start" := JsonDecode.int)
+            ("expiry" := JsonDecode.int)
+            ("seed" := JsonDecode.string)
+            ("signature" := JsonDecode.string)
+            ("issuer" := JsonDecode.string)
+        )
+        text
+
 
 fromJust : Maybe a -> a
-fromJust x = case x of
-    Just y -> y
-    Nothing -> Debug.crash "error: fromJust Nothing"
+fromJust x =
+    case x of
+        Just y ->
+            y
+
+        Nothing ->
+            Debug.crash "error: fromJust Nothing"
+
 
 convertUrlQueryToUser : Dict String String -> Credentials
 convertUrlQueryToUser query =
@@ -86,43 +97,65 @@ convertUrlQueryToUser query =
     { clientId = fromJust (Dict.get "clientId" query)
     , accessToken = fromJust (Dict.get "accessToken" query)
     , certificate =
-             case Dict.get "certificate" query of
-                 Just certificate ->
-                     Result.toMaybe <| decodeCertificate certificate
-                 Nothing -> Nothing
+        case Dict.get "certificate" query of
+            Just certificate ->
+                Result.toMaybe <| decodeCertificate certificate
+
+            Nothing ->
+                Nothing
     }
 
+
+
 -- Views
+
+
 view model =
-  case model.credentials of
-    Just user ->
-      div [] [text ("Logged in as " ++ user.clientId)]
-    Nothing ->
-      div [] (viewLogin)
+    case model.credentials of
+        Just user ->
+            div [] [ text ("Logged in as " ++ user.clientId) ]
+
+        Nothing ->
+            div [] (viewLogin)
+
 
 viewLogin =
-  let
-    loginTarget =
-        Just ( "/login"
-             , "Uplift dashboard helps Mozilla Release Management team in their workflow."
-             )
-    loginUrl =
-        { url = "https://login.taskcluster.net"
-        , target = loginTarget
-        , targetName = "target"
-        }
-    loginMsg = Login loginUrl
-  in
-    [
-      eventLink loginMsg [ class "nav-link" ] [ text "Login TaskCluster" ]
-    ]
+    let
+        loginTarget =
+            Just
+                ( "/login"
+                , "Uplift dashboard helps Mozilla Release Management team in their workflow."
+                )
+
+        loginUrl =
+            { url = "https://login.taskcluster.net"
+            , target = loginTarget
+            , targetName = "target"
+            }
+
+        loginMsg =
+            Login loginUrl
+    in
+        [ eventLink loginMsg [ class "nav-link" ] [ text "Login TaskCluster" ]
+        ]
+
+
 
 -- Ports
 
+
 port taskclusterlogin_get : (Maybe Credentials -> msg) -> Sub msg
+
+
 port taskclusterlogin_load : Bool -> Cmd msg
+
+
 port taskclusterlogin_remove : Bool -> Cmd msg
+
+
 port taskclusterlogin_set : Credentials -> Cmd msg
+
+
 
 -- Add this subscription in main App
 -- subscriptions = [
