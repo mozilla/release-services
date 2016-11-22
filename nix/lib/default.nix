@@ -248,12 +248,16 @@ in rec {
                  ln -s ${pkg} elm-stuff/packages/${name}/${info.version}
                '') deps;
     in ''
-      export HOME=/tmp
+      home_old=$HOME
+      HOME=/tmp
       mkdir elm-stuff
       cat > elm-stuff/exact-dependencies.json <<EOF
       ${json}
       EOF
-    '' + lib.concatStrings cmds;
+    '' + lib.concatStrings cmds + ''
+      HOME=$home_old
+    '';
+       
 
   mkFrontend =
     { name
