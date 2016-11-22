@@ -1,0 +1,30 @@
+{
+  "name": "elm-common-example",
+  "version": "1.0.0",
+  "description": "Usage demonstration of Mozilla RelEng elm-common",
+  "main": "index.js",
+  "scripts": {
+    "start": "neo start --port 8000 --config webpack.config.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "elm-webpack-loader": "^3.0.6",
+    "mozilla-neo": "^2.7.0",
+    "webpack": "^1.13.3"
+  },
+  "config": {
+    "entry": "index.js",
+    "html": {
+      "title": "Elm Common Example",
+      "description": "Usage demonstration of Mozilla RelEng elm-common",
+      "author": "Mozilla RelEng Team",
+      "head": "<link href=\"https://fonts.googleapis.com/css?family=Fira+Sans:400,300,500\" rel=\"stylesheet\" type=\"text/css\"\\>"
+    }
+  },
+  "dependencies": {
+    "bootstrap": "^3.3.7",
+    "hawk": "^6.0.0",
+    "jquery": "^3.1.1"
+  }
+}
