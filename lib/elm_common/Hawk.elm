@@ -12,8 +12,8 @@ type Msg
     = AddHeader Http.Request User.Credentials
     | SendRequest String
 
-update : JsonDecode.Decoder a -> Msg -> (Cmd Msg, Cmd (RemoteData Http.Error a))
-update decoder msg = 
+update : Msg -> (Cmd Msg, Cmd (RemoteData Http.RawError Http.Response))
+update msg = 
   case msg of
     AddHeader request credentials ->
       (add_header request credentials, Cmd.none)
@@ -21,7 +21,7 @@ update decoder msg =
     SendRequest requestJson ->
       case requestDecoder requestJson of
         Ok request ->
-          (Cmd.none, sendRequest decoder request)
+          (Cmd.none, sendRequest request)
 
         Err error ->
           let
@@ -39,10 +39,9 @@ add_header request credentials =
 
 -- Transform http request in a remote data Cmd
 -- It must be ran from the app update cycle
-sendRequest : JsonDecode.Decoder obj -> Http.Request -> Cmd (RemoteData Http.Error obj)
-sendRequest decoder request =
+sendRequest : Http.Request -> Cmd (RemoteData Http.RawError Http.Response)
+sendRequest request =
   Http.send Http.defaultSettings request 
-  |> Http.fromJson decoder
   |> RemoteData.asCmd
 
 -- Json Encoders & Decoders
@@ -74,6 +73,25 @@ requestDecoder text =
       ("url" := JsonDecode.string)
       ("body" := JsonDecode.succeed Http.empty) -- TODO
     ) text
+
+-- Used by apps to apply multiple Json decoders
+applyDecoders: model -> List(model -> String -> model) -> Http.Response -> model
+applyDecoders initialModel decoders response =
+  -- Apply every decoders in list on response+model
+  -- Folding to an only final model instance
+  if 200 <= response.status && response.status < 300 then
+    case response.value of
+      Http.Text responseText ->
+        List.foldl
+          (\decoder m -> decoder m responseText)
+          initialModel 
+          decoders
+
+      _ ->
+        initialModel
+
+  else
+    initialModel
 
 
 
@@ -107,5 +125,5 @@ port hawk_add_header: (String, User.Credentials) -> Cmd msg
 
 -- Add this subscription in main App
 -- subscriptions = [
--- TODO: doc
+--    Sub.map HawkRequest (Hawk.hawk_send_request (Hawk.SendRequest))
 --   ]

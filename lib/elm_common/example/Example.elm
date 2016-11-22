@@ -13,18 +13,26 @@ import Navigation exposing ( Location )
 
 import BugzillaLogin as Bugzilla
 import TaskclusterLogin as User
+
 import Hawk
 
 type Msg = BugzillaMsg Bugzilla.Msg
   | UserMsg User.Msg
-  | HawkMsg Hawk.Msg
+  | HawkRequest Hawk.Msg
+  | HawkResponse (RemoteData Http.RawError Http.Response)
   | LoadScopes
-  | FetchedScopes (WebData (List String))
+  | LoadRoles
+
+type alias Role = {
+  roleId : String,
+  scopes : List String
+}
 
 type alias Model = {
   user : User.Model,
   bugzilla : Bugzilla.Model,
-  scopes : WebData (List String)
+  scopes : List String,
+  roles : List Role
 }
 
 type alias Flags = {
@@ -33,22 +41,23 @@ type alias Flags = {
 
 init : Flags -> (Model, Cmd Msg)
 init flags =
-    let
-        (bz, bzCmd) = Bugzilla.init flags.bugzilla_url
-        (user, userCmd) = User.init
-    in
-    (
-      {
-        bugzilla = bz,
-        user = user,
-        scopes = NotAsked
-      },
-      -- Follow through with sub parts init
-      Cmd.batch [
-        Cmd.map BugzillaMsg bzCmd,
-        Cmd.map UserMsg userCmd
-      ]
-    )
+  let
+    (bz, bzCmd) = Bugzilla.init flags.bugzilla_url
+    (user, userCmd) = User.init
+  in
+  (
+    {
+      bugzilla = bz,
+      user = user,
+      scopes = [],
+      roles = []
+    },
+    -- Follow through with sub parts init
+    Cmd.batch [
+      Cmd.map BugzillaMsg bzCmd,
+      Cmd.map UserMsg userCmd
+    ]
+  )
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -81,30 +90,80 @@ update msg model =
           in
             (
               model,
-              Cmd.map HawkMsg (Hawk.add_header request credentials)
+              Cmd.map HawkRequest (Hawk.add_header request credentials)
             )
         Nothing ->
             (model, Cmd.none)
 
-    FetchedScopes scopes ->
-      -- Save scopes on model
-      ( { model | scopes = scopes }, Cmd.none)
+    LoadRoles ->
+      case model.user.credentials of
+        Just credentials ->
+          let
+            -- Build Taskcluster http request
+            url = "https://auth.taskcluster.net/v1/roles"
+            request = Http.Request "GET" [] url Http.empty
+          in
+            (
+              model,
+              Cmd.map HawkRequest (Hawk.add_header request credentials)
+            )
+        Nothing ->
+            (model, Cmd.none)
 
-    HawkMsg hawkMsg ->
+    HawkRequest hawkMsg ->
       let
-
-        -- TODO: support multiple decoders
-        decoder = JsonDecode.at ["scopes"] (JsonDecode.list JsonDecode.string)
-
-        (hawkCmd, responses) = Hawk.update decoder hawkMsg
+        (cmd, response) = Hawk.update hawkMsg
       in
         (
           model,
           Cmd.batch [
-            Cmd.map HawkMsg hawkCmd,
-            Cmd.map FetchedScopes responses 
+            Cmd.map HawkRequest cmd,
+            Cmd.map HawkResponse response
           ]
         )
+
+    HawkResponse response ->
+      case response of
+        Success response_ ->
+          -- Apply successive decoders on response
+          (
+            Hawk.applyDecoders model [
+              decodeScopes,
+              decodeRoles
+            ] response_,
+            Cmd.none
+          )
+
+        _ ->
+          ( model, Cmd.none)
+
+
+decodeScopes: Model -> String -> Model
+decodeScopes model response =
+  let 
+    decoder = JsonDecode.at ["scopes"] (JsonDecode.list JsonDecode.string)
+  in
+    case JsonDecode.decodeString decoder response of
+      Ok scopes ->
+        {model | scopes = scopes }
+      Err _ ->
+        model
+
+decodeRoles: Model -> String -> Model
+decodeRoles model response =
+  let 
+    decoder = JsonDecode.list 
+      (JsonDecode.object2 Role
+        ("roleId" := JsonDecode.string)
+        ("scopes" := JsonDecode.list JsonDecode.string)
+      )
+  in
+    case JsonDecode.decodeString decoder response of
+      Ok roles ->
+        {model | roles = roles }
+      Err _ ->
+        model
+    
 
 -- Demo view
 view model =
@@ -121,18 +180,25 @@ viewHawk model =
   div [] [
     case model.user.credentials of
       Just credentials ->
-        button [onClick LoadScopes] [text "Request Taskcluster scopes"]
+        p [] [
+          button [onClick LoadScopes] [text "Request Taskcluster scopes"],
+          button [onClick LoadRoles] [text "Request Taskcluster roles"]
+        ]
       Nothing ->
         span [class "text-warning"] [text "Login on Taskcluster first."]
-    , case model.scopes of
-      Success scopes ->
-        ul [] (List.map (\s -> li [] [text s]) scopes)
-      Failure err ->
-        p [class "text-danger"] [text ("Error: "++(toString err))]
-      Loading ->
-        p [class "text-info"] [text "Loading scopes..."]
-      NotAsked ->
-        p [class "text-info"] [text "Scopes not fetched yet."]
+    , div [] [
+      viewScopes model.scopes,
+      div [] (List.map viewRole model.roles)
+    ]
+  ]
+
+viewScopes scopes =
+  ul [] (List.map (\s -> li [] [text s]) scopes)
+
+viewRole role =
+  div [] [
+    h5 [] [text ("Role: "++role.roleId)],
+    viewScopes role.scopes
   ]
 
 -- Empty Routing
@@ -164,5 +230,5 @@ subscriptions model =
   Sub.batch [
     Sub.map BugzillaMsg (Bugzilla.bugzillalogin_get (Bugzilla.Logged)),
     Sub.map UserMsg (User.taskclusterlogin_get (User.Logged)),
-    Sub.map HawkMsg (Hawk.hawk_send_request (Hawk.SendRequest))
+    Sub.map HawkRequest (Hawk.hawk_send_request (Hawk.SendRequest))
   ]
