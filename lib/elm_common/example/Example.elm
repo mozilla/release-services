@@ -125,7 +125,8 @@ update msg model =
                         , -- Extensions integration
                           -- This is how we do a request using Hawk
                           Cmd.map HawkRequest
-                            (Hawk.send "LoadScopes" request credentials)
+                            --TODO: (Hawk.send "LoadScopes" request credentials)
+                            (Hawk.send request credentials)
                         )
 
                 Nothing ->
@@ -147,7 +148,8 @@ update msg model =
                         , -- Extensions integration
                           -- This is how we do a request using Hawk
                           Cmd.map HawkRequest
-                            (Hawk.send "LoadRoles" request credentials)
+                            --(Hawk.send "LoadRoles" request credentials)
+                            (Hawk.send request credentials)
                         )
 
                 Nothing ->
@@ -156,18 +158,19 @@ update msg model =
         -- App specific
         ProcessResponse response ->
             case response of
-                Success ( requestId, response_ ) ->
+                Success response_ ->
                     let
-                        newModel =
-                            case requestId of
-                                "LoadRoles" ->
-                                    decodeRoles model response_
+                        newModel = model
+                            --TODO
+                            --case requestId of
+                            --    "LoadRoles" ->
+                            --        decodeRoles model response_
 
-                                "LoadScopes" ->
-                                    decodeScopes model response_
+                            --    "LoadScopes" ->
+                            --        decodeScopes model response_
 
-                                _ ->
-                                    model
+                            --    _ ->
+                            --        model
                     in
                         ( newModel, Cmd.none )
 
@@ -214,11 +217,8 @@ decodeRoles model response =
 view model =
     div []
         [ h1 [] [ text "Taskcluster" ]
-        , viewLogin model
-            --Html.App.map UserMsg (User.view model.user),
-            h1
-            []
-            [ text "Hawk" ]
+        , viewLogin model.user
+        , h1 [] [ text "Hawk" ]
         , viewHawk model
         , h1 [] [ text "Bugzilla" ]
         , Html.App.map BugzillaMsg (Bugzilla.view model.bugzilla)
@@ -233,8 +233,12 @@ viewLogin model =
         Nothing ->
             div []
                 [ a
-                    [ onClick (User.navigateToLogin UserMsg)
-                      -- or some similar name
+                    [ onClick
+                        (User.redirectToLogin
+                            UserMsg
+                            "/login"
+                            "Uplift dashboard helps Mozilla Release Management team in their workflow."
+                        )
                     , class "nav-link"
                     ]
                     [ text "Login TaskCluster" ]

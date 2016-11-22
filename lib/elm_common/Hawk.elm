@@ -17,7 +17,7 @@ update : Msg -> ( Cmd Msg, Cmd (RemoteData Http.RawError Http.Response) )
 update msg =
     case msg of
         AddHeader request credentials ->
-            ( add_header request credentials, Cmd.none )
+            ( send request credentials, Cmd.none )
 
         SendRequest requestJson ->
             case requestDecoder requestJson of
@@ -36,8 +36,8 @@ update msg =
 -- Encode Http request in json to pass it through ports
 
 
-add_header : Http.Request -> User.Credentials -> Cmd Msg
-add_header request credentials =
+send : Http.Request -> User.Credentials -> Cmd Msg
+send request credentials =
     let
         requestJson =
             requestEncoder request
