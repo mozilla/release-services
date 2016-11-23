@@ -298,7 +298,9 @@ deploy-production-releng_treestatus: deploy-production-HEROKU
 deploy-production-releng_mapper: deploy-production-HEROKU
 deploy-production-releng_archiver: deploy-production-HEROKU
 deploy-production-shipit_frontend: deploy-production-S3
-deploy-production-shipit_dashboard: # deploy-production-HEROKU
+deploy-production-shipit_dashboard: deploy-production-HEROKU
+deploy-production-shipit_pipeline: # deploy-staging-HEROKU
+deploy-production-shipit_signoff: # deploy-staging-HEROKU
 
 
 
