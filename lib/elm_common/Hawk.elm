@@ -8,26 +8,28 @@ import Json.Decode as JsonDecode exposing ((:=))
 import RemoteData as RemoteData exposing (WebData, RemoteData(Loading, Success, NotAsked, Failure))
 
 
-type alias RequestID = String
+type alias RequestID =
+    String
+
 
 type Msg
     = SendRequest String
 
 
-update : Msg -> ( Maybe RequestID
-                , Cmd Msg
-                , Cmd (RemoteData Http.RawError Http.Response)
-                )
+update :
+    Msg
+    -> ( Maybe RequestID, Cmd Msg, Cmd (RemoteData Http.RawError Http.Response) )
 update msg =
     case msg of
         SendRequest text ->
             case JsonDecode.decodeString portDecoder text of
-                Ok (requestId, request) ->
+                Ok ( requestId, request ) ->
                     ( Just requestId, Cmd.none, sendRequest request )
 
                 Err error ->
-                    let 
-                        _ = Debug.log "Request decoding error" error
+                    let
+                        _ =
+                            Debug.log "Request decoding error" error
                     in
                         ( Nothing, Cmd.none, Cmd.none )
 
@@ -80,7 +82,7 @@ requestHeadersEncoder ( key, value ) =
         ]
 
 
-requestDecoder: JsonDecode.Decoder Http.Request
+requestDecoder : JsonDecode.Decoder Http.Request
 requestDecoder =
     JsonDecode.object4 Http.Request
         ("verb" := JsonDecode.string)
@@ -91,9 +93,11 @@ requestDecoder =
         ("url" := JsonDecode.string)
         ("body" := JsonDecode.succeed Http.empty)
 
-portDecoder : JsonDecode.Decoder (RequestID, Http.Request)
+
+portDecoder : JsonDecode.Decoder ( RequestID, Http.Request )
 portDecoder =
     JsonDecode.tuple2 (,) JsonDecode.string requestDecoder
+
 
 
 -- Used by apps to apply multiple Json decoders
@@ -144,4 +148,6 @@ applyDecoders initialModel decoders response =
 
 
 port hawk_send_request : (String -> msg) -> Sub msg
-port hawk_add_header : (RequestID, String, User.Credentials) -> Cmd msg
+
+
+port hawk_add_header : ( RequestID, String, User.Credentials ) -> Cmd msg

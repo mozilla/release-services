@@ -22,7 +22,7 @@ type
     = BugzillaMsg Bugzilla.Msg
     | UserMsg User.Msg
     | HawkRequest Hawk.Msg
-    -- App code
+      -- App code
     | SetScopes (RemoteData Http.RawError Http.Response)
     | LoadScopes
     | SetRoles (RemoteData Http.RawError Http.Response)
@@ -99,17 +99,24 @@ update msg model =
 
         HawkRequest hawkMsg ->
             let
-                ( requestId, cmd, response ) = Hawk.update hawkMsg
+                ( requestId, cmd, response ) =
+                    Hawk.update hawkMsg
+
                 routeHawkRequest route =
                     case route of
-                        "LoadScopes" -> Cmd.map SetScopes response
-                        "LoadRoles" -> Cmd.map SetRoles response
-                        _ -> Cmd.none
+                        "LoadScopes" ->
+                            Cmd.map SetScopes response
+
+                        "LoadRoles" ->
+                            Cmd.map SetRoles response
+
+                        _ ->
+                            Cmd.none
+
                 appCmd =
                     requestId
-                    |> Maybe.map routeHawkRequest
-                    |> Maybe.withDefault Cmd.none
-
+                        |> Maybe.map routeHawkRequest
+                        |> Maybe.withDefault Cmd.none
             in
                 ( model
                 , Cmd.batch
@@ -121,17 +128,17 @@ update msg model =
         -- App specific
         SetScopes response ->
             ( response
-                  |> RemoteData.map
-                      (\r -> { model | scopes = Utils.decodeResponse scopesDecoder [] r })
-                  |> RemoteData.withDefault model 
+                |> RemoteData.map
+                    (\r -> { model | scopes = Utils.decodeResponse scopesDecoder [] r })
+                |> RemoteData.withDefault model
             , Cmd.none
             )
 
         SetRoles response ->
             ( response
-                  |> RemoteData.map
-                      (\r -> { model | roles = Utils.decodeResponse rolesDecoder [] r })
-                  |> RemoteData.withDefault model 
+                |> RemoteData.map
+                    (\r -> { model | roles = Utils.decodeResponse rolesDecoder [] r })
+                |> RemoteData.withDefault model
             , Cmd.none
             )
 
@@ -182,12 +189,14 @@ update msg model =
 scopesDecoder =
     JsonDecode.at [ "scopes" ] (JsonDecode.list JsonDecode.string)
 
+
 rolesDecoder =
     JsonDecode.list
         (JsonDecode.object2 Role
             ("roleId" := JsonDecode.string)
             ("scopes" := JsonDecode.list JsonDecode.string)
         )
+
 
 
 -- Demo view
