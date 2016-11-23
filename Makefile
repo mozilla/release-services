@@ -33,6 +33,7 @@ TOOLS=\
 	pypi2nix \
 	taskcluster-hooks
 
+APP_DEV_DBNAME=services
 
 APP_DEV_HOST=localhost
 
@@ -527,15 +528,16 @@ require-initdb: build-postgresql
 		./result-tool-postgresql/bin/initdb -D $(PG_DATA) --auth=trust; \
 	fi
 
+require-postgres: build-postgresql
+	if [ "`./result-tool-postgresql/bin/psql -lqt -p $(APP_DEV_POSTGRES_PORT) | cut -d \| -f 1 | grep $(APP_DEV_DBNAME)| wc -l`" != "1" ]; then \
+		./result-tool-postgresql/bin/createdb -p $(APP_DEV_POSTGRES_PORT) $(APP_DEV_DBNAME); \
+	fi
+	$(eval export DATABASE_URL=postgres://localhost:$(APP_DEV_POSTGRES_PORT)/services)
+	@echo "Using postgresql dev database $(DATABASE_URL)"
+
 require-sqlite: nix require-APP
 	$(eval export DATABASE_URL=sqlite:///$(PWD)/app.db)
 	@echo "Using sqlite dev database $(DATABASE_URL)"
-
-require-postgres: nix require-APP
-	nix-shell nix/default.nix -A $(APP) \
-		--run "createdb -p $(APP_DEV_POSTGRES_PORT) $(APP)"; true
-	$(eval export DATABASE_URL=postgresql://$(APP_DEV_HOST):$(APP_DEV_POSTGRES_PORT)/$(APP))
-	@echo "Using postgresql dev database $(DATABASE_URL)"
 
 
 

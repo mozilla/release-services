@@ -13,6 +13,16 @@ let
     drop table if exists treestatus_changes;
     drop table if exists treestatus_log;
     drop table if exists treestatus_trees;
+    drop table if exists releng_treestatus_change_trees;
+    drop table if exists releng_treestatus_changes;
+    drop table if exists releng_treestatus_log;
+    drop table if exists releng_treestatus_trees;
+  '';
+  afterSQL = ''
+    alter table treestatus_change_trees rename to releng_treestatus_change_trees;
+    alter table treestatus_changes rename to releng_treestatus_changes;
+    alter table treestatus_log rename to releng_treestatus_log;
+    alter table treestatus_trees rename to releng_treestatus_trees;
   '';
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
@@ -39,34 +49,8 @@ let
         python.packages."Werkzeug"
       ];
     passthru = {
-      mysql2sqlite = mysql2sqlite {
-        inherit name beforeSQL;
-        afterSQL = ''
-          drop table if exists archiver_tasks;
-          drop table if exists auth_tokens;
-          drop table if exists badpenny_jobs;
-          drop table if exists badpenny_job_logs;
-          drop table if exists badpenny_tasks;
-          drop table if exists celery_taskmeta;
-          drop table if exists celery_tasksetmeta;
-          drop table if exists oauth2_clients;
-          drop table if exists oauth2_grants;
-          drop table if exists oauth2_tokens;
-          drop table if exists relengapi_version;
-          drop table if exists slaveloan_history;
-          drop table if exists slaveloan_humans;
-          drop table if exists slaveloan_loans;
-          drop table if exists slaveloan_machines;
-          drop table if exists slaveloan_manualactions;
-          drop table if exists tooltool_batch_files;
-          drop table if exists tooltool_batches;
-          drop table if exists tooltool_file_instances;
-          drop table if exists tooltool_files;
-          drop table if exists tooltool_pending_upload;
-        '';
-      };
       mysql2postgresql = mysql2postgresql {
-        inherit name beforeSQL;
+        inherit name beforeSQL afterSQL;
         config = ''
           only_tables:
            - treestatus_change_trees
