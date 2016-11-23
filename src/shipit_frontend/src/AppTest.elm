@@ -2,12 +2,14 @@ port module AppTest exposing (..)
 
 import Html exposing (..)
 import Html.App
+import Html.Attributes exposing (..)
+import Navigation exposing ( Location )
 import RouteUrl exposing ( UrlChange )
 import RouteUrl.Builder as Builder exposing ( Builder, builder, replacePath )
-import Navigation exposing ( Location )
 
 import BugzillaLogin as Bugzilla
 import TaskclusterLogin as User
+import Utils
 
 type Msg = BugzillaMsg Bugzilla.Msg
   | UserMsg User.Msg
@@ -65,10 +67,30 @@ update msg model =
 view model =
     div [] [ 
       h1 [] [text "Taskcluster"],
-      Html.App.map UserMsg (User.view model.user),
+      viewLogin model.user,
       h1 [] [text "Bugzilla"],
       Html.App.map BugzillaMsg (Bugzilla.view model.bugzilla)
     ]
+
+viewLogin model =
+    case model.credentials of
+        Just user ->
+            div [] [ text ("Logged in as " ++ user.clientId) ]
+
+        Nothing ->
+            div []
+                [ a
+                    [ Utils.onClick
+                        (User.redirectToLogin
+                            UserMsg
+                            "/login"
+                            "Uplift dashboard helps Mozilla Release Management team in their workflow."
+                        )
+                    , href "#"
+                    , class "nav-link"
+                    ]
+                    [ text "Login TaskCluster" ]
+                ]
 
 -- Empty Routing
 location2messages : Location -> List Msg
