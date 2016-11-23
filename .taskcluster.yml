@@ -6,6 +6,111 @@ metadata:
   source: "{{ event.head.repo.url }}"
 tasks:
 
+# --- elm_common_example (master) ---
+
+  - metadata:
+      name: "elm_common_example"
+      description: "Test, build and deploy elm_common_example"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/master/lib/elm_common/example"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - hooks:modify-hook:project-releng/services-master-elm_common_example-*
+      - assume:hook-id:project-releng/services-master-elm_common_example-*
+    extra:
+      github:
+        env: true
+        events:
+          - pull_request.*
+          - push
+        branches:
+          - master
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "elm_common_example"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:master"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+
+
+# --- elm_common_example (staging) ---
+
+  - metadata:
+      name: "elm_common_example"
+      description: "Test, build and deploy elm_common_example"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/staging/lib/elm_common/example"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
+      - hooks:modify-hook:project-releng/services-staging-elm_common_example-*
+      - assume:hook-id:project-releng/services-staging-elm_common_example-*
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - staging
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "elm_common_example"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:staging"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+
+
+# --- elm_common_example (production) ---
+
+  - metadata:
+      name: "elm_common_example"
+      description: "Test, build and deploy elm_common_example"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/production/lib/elm_common/example"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:production
+      - hooks:modify-hook:project-releng/services-production-elm_common_example-*
+      - assume:hook-id:project-releng/services-production-elm_common_example-*
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - production
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "elm_common_example"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:production"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+
+
+# --- releng_archiver (master) ---
+
   - metadata:
       name: "releng_archiver"
       description: "Test, build and deploy releng_archiver"
@@ -37,8 +142,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_archiver (staging) ---
+
   - metadata:
       name: "releng_archiver"
       description: "Test, build and deploy releng_archiver"
@@ -69,8 +176,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_archiver (production) ---
+
   - metadata:
       name: "releng_archiver"
       description: "Test, build and deploy releng_archiver"
@@ -101,8 +210,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_clobberer (master) ---
+
   - metadata:
       name: "releng_clobberer"
       description: "Test, build and deploy releng_clobberer"
@@ -134,8 +245,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_clobberer (staging) ---
+
   - metadata:
       name: "releng_clobberer"
       description: "Test, build and deploy releng_clobberer"
@@ -166,8 +279,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_clobberer (production) ---
+
   - metadata:
       name: "releng_clobberer"
       description: "Test, build and deploy releng_clobberer"
@@ -198,8 +313,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_docs (master) ---
+
   - metadata:
       name: "releng_docs"
       description: "Test, build and deploy releng_docs"
@@ -231,8 +348,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_docs (staging) ---
+
   - metadata:
       name: "releng_docs"
       description: "Test, build and deploy releng_docs"
@@ -263,8 +382,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_docs (production) ---
+
   - metadata:
       name: "releng_docs"
       description: "Test, build and deploy releng_docs"
@@ -295,8 +416,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_frontend (master) ---
+
   - metadata:
       name: "releng_frontend"
       description: "Test, build and deploy releng_frontend"
@@ -328,8 +451,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_frontend (staging) ---
+
   - metadata:
       name: "releng_frontend"
       description: "Test, build and deploy releng_frontend"
@@ -360,8 +485,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_frontend (production) ---
+
   - metadata:
       name: "releng_frontend"
       description: "Test, build and deploy releng_frontend"
@@ -392,8 +519,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_mapper (master) ---
+
   - metadata:
       name: "releng_mapper"
       description: "Test, build and deploy releng_mapper"
@@ -425,8 +554,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_mapper (staging) ---
+
   - metadata:
       name: "releng_mapper"
       description: "Test, build and deploy releng_mapper"
@@ -457,8 +588,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_mapper (production) ---
+
   - metadata:
       name: "releng_mapper"
       description: "Test, build and deploy releng_mapper"
@@ -489,8 +622,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_tooltool (master) ---
+
   - metadata:
       name: "releng_tooltool"
       description: "Test, build and deploy releng_tooltool"
@@ -522,8 +657,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_tooltool (staging) ---
+
   - metadata:
       name: "releng_tooltool"
       description: "Test, build and deploy releng_tooltool"
@@ -554,8 +691,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_tooltool (production) ---
+
   - metadata:
       name: "releng_tooltool"
       description: "Test, build and deploy releng_tooltool"
@@ -586,8 +725,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_treestatus (master) ---
+
   - metadata:
       name: "releng_treestatus"
       description: "Test, build and deploy releng_treestatus"
@@ -619,8 +760,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_treestatus (staging) ---
+
   - metadata:
       name: "releng_treestatus"
       description: "Test, build and deploy releng_treestatus"
@@ -651,8 +794,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- releng_treestatus (production) ---
+
   - metadata:
       name: "releng_treestatus"
       description: "Test, build and deploy releng_treestatus"
@@ -683,8 +828,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- shipit_dashboard (master) ---
+
   - metadata:
       name: "shipit_dashboard"
       description: "Test, build and deploy shipit_dashboard"
@@ -716,8 +863,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- shipit_dashboard (staging) ---
+
   - metadata:
       name: "shipit_dashboard"
       description: "Test, build and deploy shipit_dashboard"
@@ -748,8 +897,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- shipit_dashboard (production) ---
+
   - metadata:
       name: "shipit_dashboard"
       description: "Test, build and deploy shipit_dashboard"
@@ -780,8 +931,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- shipit_frontend (master) ---
+
   - metadata:
       name: "shipit_frontend"
       description: "Test, build and deploy shipit_frontend"
@@ -813,8 +966,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- shipit_frontend (staging) ---
+
   - metadata:
       name: "shipit_frontend"
       description: "Test, build and deploy shipit_frontend"
@@ -845,8 +1000,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- shipit_frontend (production) ---
+
   - metadata:
       name: "shipit_frontend"
       description: "Test, build and deploy shipit_frontend"
@@ -877,8 +1034,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- shipit_pipeline (master) ---
+
   - metadata:
       name: "shipit_pipeline"
       description: "Test, build and deploy shipit_pipeline"
@@ -910,8 +1069,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- shipit_pipeline (staging) ---
+
   - metadata:
       name: "shipit_pipeline"
       description: "Test, build and deploy shipit_pipeline"
@@ -942,8 +1103,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- shipit_pipeline (production) ---
+
   - metadata:
       name: "shipit_pipeline"
       description: "Test, build and deploy shipit_pipeline"
@@ -974,8 +1137,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- shipit_signoff (master) ---
+
   - metadata:
       name: "shipit_signoff"
       description: "Test, build and deploy shipit_signoff"
@@ -1007,8 +1172,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- shipit_signoff (staging) ---
+
   - metadata:
       name: "shipit_signoff"
       description: "Test, build and deploy shipit_signoff"
@@ -1039,8 +1206,10 @@ tasks:
         - "/bin/bash"
         - "-c"
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
-  
-  
+
+
+# --- shipit_signoff (production) ---
+
   - metadata:
       name: "shipit_signoff"
       description: "Test, build and deploy shipit_signoff"

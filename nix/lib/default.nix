@@ -165,38 +165,40 @@ in rec {
     , secrets ? "repo:github.com/mozilla-releng/services:branch:${branch}"
     }:
     ''
-    - metadata:
-        name: "${name}"
-        description: "Test, build and deploy ${name}"
-        owner: "{{ event.head.user.email }}"
-        source: "https://github.com/mozilla-releng/services/tree/${branch}/${src_path}"
-      scopes:
-        - secrets:get:${secrets}
-        - hooks:modify-hook:project-releng/services-${branch}-${name}-*
-        - assume:hook-id:project-releng/services-${branch}-${name}-*
-      extra:
-        github:
-          env: true
-          events:
-            ${if branch == "staging" || branch == "production"
-              then "- push"
-              else "- pull_request.*\n        - push"}
-          branches:
-            - ${branch}
-      provisionerId: "{{ taskcluster.docker.provisionerId }}"
-      workerType: "{{ taskcluster.docker.workerType }}"
-      payload:
-        maxRunTime: 7200 # seconds (i.e. two hours)
-        image: "nixos/nix:latest"
-        features:
-          taskclusterProxy: true
-        env:
-          APP: "${name}"
-          TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/${secrets}"
-        command:
-          - "/bin/bash"
-          - "-c"
-          - "COMMAND"
+    # --- ${name} (${branch}) ---
+
+      - metadata:
+          name: "${name}"
+          description: "Test, build and deploy ${name}"
+          owner: "{{ event.head.user.email }}"
+          source: "https://github.com/mozilla-releng/services/tree/${branch}/${src_path}"
+        scopes:
+          - secrets:get:${secrets}
+          - hooks:modify-hook:project-releng/services-${branch}-${name}-*
+          - assume:hook-id:project-releng/services-${branch}-${name}-*
+        extra:
+          github:
+            env: true
+            events:
+              ${if branch == "staging" || branch == "production"
+                then "- push"
+                else "- pull_request.*\n          - push"}
+            branches:
+              - ${branch}
+        provisionerId: "{{ taskcluster.docker.provisionerId }}"
+        workerType: "{{ taskcluster.docker.workerType }}"
+        payload:
+          maxRunTime: 7200 # seconds (i.e. two hours)
+          image: "nixos/nix:latest"
+          features:
+            taskclusterProxy: true
+          env:
+            APP: "${name}"
+            TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/${secrets}"
+          command:
+            - "/bin/bash"
+            - "-c"
+            - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
     '';
 
   fromRequirementsFile = files: pkgs':
@@ -301,7 +303,7 @@ in rec {
         '' + self.configurePhase;
 
         passthru.taskclusterGithubTasks =
-          map (branch: mkTaskclusterGithubTask { inherit name branch; })
+          map (branch: mkTaskclusterGithubTask { inherit name src_path branch; })
             [ "master" "staging" "production" ];
         passthru.update = writeScript "update-${name}" ''
           export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"

@@ -10,8 +10,8 @@ let
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
 
   name = "releng_docs";
-
   version = removeSuffix "\n" (readFile ./../../VERSION);
+  src_path = "src/${name}";
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
 
@@ -35,7 +35,7 @@ let
     '';
 
     passthru.taskclusterGithubTasks =
-      map (branch: mkTaskclusterGithubTask { inherit name branch; }) [ "master" "staging" "production" ];
+      map (branch: mkTaskclusterGithubTask { inherit name src_path branch; }) [ "master" "staging" "production" ];
 
     passthru.update  = writeScript "update-${name}" ''
       pushd src/${name}
