@@ -157,7 +157,7 @@ update msg model =
                         , -- Extensions integration
                           -- This is how we do a request using Hawk
                           Cmd.map HawkRequest
-                            (Hawk.send "LoadScopes" request user )
+                            (Hawk.send "LoadScopes" request user)
                         )
 
                 Nothing ->
@@ -179,7 +179,7 @@ update msg model =
                         , -- Extensions integration
                           -- This is how we do a request using Hawk
                           Cmd.map HawkRequest
-                            (Hawk.send "LoadRoles" request user )
+                            (Hawk.send "LoadRoles" request user)
                         )
 
                 Nothing ->
