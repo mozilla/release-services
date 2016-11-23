@@ -7,7 +7,6 @@ let
 in mkFrontend {
   name = "releng_frontend";
   version = fileContents ./../../VERSION;
-  srcCommon = ./../../lib/elm_common;
   src = ./.;
   src_elm_common = ./../../lib/elm_common;
   node_modules = import ./node-modules.nix { inherit (releng_pkgs) pkgs; };
