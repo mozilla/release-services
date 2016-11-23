@@ -1,1 +1,0 @@
-../../../lib/elm_common/redirect.js
