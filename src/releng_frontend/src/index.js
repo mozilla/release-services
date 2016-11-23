@@ -11,7 +11,7 @@ var hawk = require('./hawk');
 
 var url;
 var getUrl = function(name, _default) {
-  url = document.body.getAttribute('data-treestatus-url');
+  url = document.body.getAttribute('data-' + name + '-url');
   if (url === null) {
     url = _default || 'You need to set NEO_' + name.toUperCase() + '_URL variable or data-' + name + '-url';
   }
