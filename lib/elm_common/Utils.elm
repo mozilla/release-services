@@ -4,6 +4,7 @@ import Html
 import Html.Events
 import Http
 import Json.Decode as JsonDecode
+import RemoteData exposing (WebData, RemoteData(..))
 
 
 onClick : msg -> Html.Attribute msg
@@ -34,8 +35,27 @@ handleResponse handle default response =
         default
 
 
+decodeResponse : JsonDecode.Decoder a -> a -> Http.Response -> a
 decodeResponse decoder default response =
     handleResponse
         (\x -> JsonDecode.decodeString decoder x |> Result.withDefault default)
         default
         response
+
+
+decodeWebResponse : JsonDecode.Decoder a -> Http.Response -> WebData a
+decodeWebResponse decoder response =
+    if 200 <= response.status && response.status < 300 then
+        case response.value of
+            Http.Text str ->
+                case JsonDecode.decodeString decoder str of
+                    Ok obj ->
+                        Success obj
+
+                    Err err ->
+                        Failure (Http.UnexpectedPayload err)
+
+            _ ->
+                Failure (Http.UnexpectedPayload "Response body is a blob, expecting a string.")
+    else
+        Failure (Http.BadResponse response.status response.statusText)
