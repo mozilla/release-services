@@ -48,10 +48,11 @@ type alias Model =
     , roles : List Role
     }
 
-type alias Flags = {
-  taskcluster: Maybe (User.Credentials),
-  bugzilla : Maybe (Bugzilla.Credentials)
-}
+
+type alias Flags =
+    { taskcluster : Maybe (User.Credentials)
+    , bugzilla : Maybe (Bugzilla.Credentials)
+    }
 
 
 init : Flags -> ( Model, Cmd Msg )
