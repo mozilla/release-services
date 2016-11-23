@@ -107,17 +107,14 @@ checkCredentials model save =
     case model.credentials of
         Just creds_ ->
             let
-                task =
-                    buildRequest creds_
-                        model.url
-                        "GET"
-                        (Http.url "/valid_login"
-                            [ ( "login", creds_.login )
-                            ]
-                        )
-                        Nothing
+                url =
+                    Http.url "/valid_login" [ ( "login", creds_.login ) ]
 
-                -- no body
+                request =
+                    Http.Request "GET" [] url Http.empty
+
+                task =
+                    send request model
             in
                 (Http.fromJson JsonDecode.bool task)
                     |> RemoteData.asCmd
@@ -127,31 +124,27 @@ checkCredentials model save =
             Cmd.none
 
 
-buildRequest : Credentials -> String -> String -> String -> Maybe String -> Task Http.RawError Http.Response
-buildRequest creds url verb method body =
-    let
-        body' =
-            case body of
-                Just b ->
-                    Http.string b
+send : Http.Request -> Model -> Task Http.RawError Http.Response
+send request model =
+    -- Add Bugzilla token and url to an api request
+    case model.credentials of
+        Just credentials ->
+            let
+                headers =
+                    [ ( "x-bugzilla-api-key", credentials.token )
+                    , ( "Accept", "application/json" )
+                    , ( "Content-Type", "application/json" )
+                    ]
+            in
+                Http.send Http.defaultSettings
+                    { url = model.url ++ "/rest" ++ request.url
+                    , verb = request.verb
+                    , headers = List.append request.headers headers
+                    , body = request.body
+                    }
 
-                Nothing ->
-                    Http.empty
-
-        headers =
-            [ -- Use bugzilla token
-              ( "x-bugzilla-api-key", creds.token )
-            , ( "Accept", "application/json" )
-            , ( "Content-Type", "application/json" )
-            ]
-    in
-        -- Always send to Mozilla Bugzilla
-        Http.send Http.defaultSettings
-            { url = url ++ "/rest" ++ method
-            , verb = verb
-            , headers = headers
-            , body = body'
-            }
+        Nothing ->
+            Task.fail Http.RawNetworkError
 
 
 view : Model -> Html Msg
