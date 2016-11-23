@@ -9,8 +9,6 @@ import RouteUrl exposing (UrlChange)
 import RouteUrl.Builder as Builder exposing (Builder, builder, replacePath)
 import Result exposing (Result(Ok, Err))
 import App.Utils exposing (eventLink)
-
-
 import App.TreeStatus
 import App.Home
 import Hawk
@@ -23,7 +21,10 @@ import TaskclusterLogin as User
 type Route
     = HomeRoute
     | TreeStatusRoute
-    -- TODO: add NotFoundRoute
+
+
+
+-- TODO: add NotFoundRoute
 
 
 pageLink route =
@@ -66,12 +67,16 @@ location2messages location =
                             |> User.Logging
                             |> UserMsg
                         ]
+
                     "treestatus" ->
                         [ NavigateTo TreeStatusRoute ]
+
                     _ ->
                         []
+
             _ ->
                 []
+
 
 
 -- MODEL / INIT
@@ -108,9 +113,8 @@ type Msg
     = UserMsg User.Msg
     | HawkRequest Hawk.Msg
     | NavigateTo Route
-    --TODO: | App.HomeMsg App.Home.Msg
+      --TODO: | App.HomeMsg App.Home.Msg
     | TreeStatusMsg App.TreeStatus.Msg
-
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -135,7 +139,6 @@ update msg model =
                         --TOD:
                         --"LoadScopes" ->
                         --    Cmd.map SetScopes response
-
                         _ ->
                             Cmd.none
 
@@ -175,12 +178,13 @@ update msg model =
 
         TreeStatusMsg treestatusMsg ->
             let
-                ( newModel, newCmd) =
+                ( newModel, newCmd ) =
                     App.TreeStatus.update treestatusMsg model.treestatus
             in
                 ( { model | treestatus = newModel }
                 , Cmd.map TreeStatusMsg newCmd
                 )
+
 
 
 -- VIEW
@@ -305,9 +309,9 @@ view : Model -> Html Msg
 view model =
     div []
         [ nav [ id "navbar", class "navbar navbar-full navbar-light" ] []
-            --[ div [ class "container" ] (viewNavBar model) ]
+          --[ div [ class "container" ] (viewNavBar model) ]
         , div [ id "content" ] []
-            --[ div [ class "container" ] [ viewPage model ] ]
+          --[ div [ class "container" ] [ viewPage model ] ]
         , footer [ class "container" ] viewFooter
         ]
 

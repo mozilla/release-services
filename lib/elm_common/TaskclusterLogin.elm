@@ -26,7 +26,8 @@ type alias Credentials =
     }
 
 
-type alias Model = Maybe Credentials
+type alias Model =
+    Maybe Credentials
 
 
 type Msg
@@ -51,7 +52,7 @@ update msg model =
             ( model, taskclusterlogin_set credentials )
 
         Logged model ->
-            ( model , Cmd.none )
+            ( model, Cmd.none )
 
         Logout ->
             ( model, taskclusterlogin_remove True )
