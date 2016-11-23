@@ -48,16 +48,21 @@ type alias Model =
     , roles : List Role
     }
 
+type alias Flags = {
+  taskcluster: Maybe (User.Credentials),
+  bugzilla : Maybe (Bugzilla.Credentials)
+}
 
-init : ( Model, Cmd Msg )
-init =
+
+init : Flags -> ( Model, Cmd Msg )
+init flags =
     let
         -- Extensions integration
         ( bz, bzCmd ) =
-            Bugzilla.init "https://bugzilla-dev.allizom.org"
+            Bugzilla.init "https://bugzilla-dev.allizom.org" flags.bugzilla
 
         ( user, userCmd ) =
-            User.init
+            User.init flags.taskcluster
     in
         ( { -- Extensions integration
             bugzilla = bz

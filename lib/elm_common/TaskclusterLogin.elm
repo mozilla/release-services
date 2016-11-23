@@ -37,9 +37,9 @@ type Msg
     | Logout
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( Nothing, Cmd.none )
+init : Maybe Credentials -> ( Model, Cmd Msg )
+init credentials =
+    (credentials, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
