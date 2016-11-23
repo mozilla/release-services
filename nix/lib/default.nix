@@ -265,10 +265,11 @@ in rec {
     { name
     , version
     , src
+    , src_elm_common
     , src_path ? "src/${name}"
     , node_modules
     , elm_packages
-    , patchPhase ? null
+    , patchPhase ? ""
     , postInstall ? null
     }:
     let
@@ -280,6 +281,22 @@ in rec {
                     )
           src;
         buildInputs = [ elmPackages.elm ] ++ (builtins.attrValues node_modules);
+        patchPhase = ''
+          for item in ./*; do
+            if [ -h $item ]; then
+              rm -f $item
+              cp ${src_elm_common}/`basename $item` ./
+            fi
+          done
+          if [ -d src ]; then
+            for item in ./src/*; do
+              if [ -h $item ]; then
+                rm -f $item
+                cp ${src_elm_common}/`basename $item` ./src/
+              fi
+            done
+          fi
+        '' + patchPhase;
         configurePhase = ''
           rm -rf node_modules
           rm -rf elm-stuff
@@ -297,7 +314,7 @@ in rec {
           cp build/* $out/ -R
           runHook postInstall
         '';
-        inherit postInstall patchPhase;
+        inherit postInstall;
         shellHook = ''
           cd ${src_path}
         '' + self.configurePhase;
