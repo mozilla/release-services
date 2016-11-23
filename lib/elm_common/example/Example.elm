@@ -13,6 +13,7 @@ import Navigation exposing (Location)
 import BugzillaLogin as Bugzilla
 import TaskclusterLogin as User
 import Hawk
+import Utils
 
 
 type
@@ -21,10 +22,10 @@ type
     = BugzillaMsg Bugzilla.Msg
     | UserMsg User.Msg
     | HawkRequest Hawk.Msg
-      -- App code
-    | ProcessResponse (RemoteData Http.RawError Http.Response)
+    -- App code
+    | SetScopes (RemoteData Http.RawError Http.Response)
     | LoadScopes
-      -- triggers HawkRequest
+    | SetRoles (RemoteData Http.RawError Http.Response)
     | LoadRoles
 
 
@@ -98,18 +99,42 @@ update msg model =
 
         HawkRequest hawkMsg ->
             let
-                ( cmd, response ) =
-                    Hawk.update hawkMsg
+                ( requestId, cmd, response ) = Hawk.update hawkMsg
+                routeHawkRequest route =
+                    case route of
+                        "LoadScopes" -> Cmd.map SetScopes response
+                        "LoadRoles" -> Cmd.map SetRoles response
+                        _ -> Cmd.none
+                appCmd =
+                    requestId
+                    |> Maybe.map routeHawkRequest
+                    |> Maybe.withDefault Cmd.none
+
             in
                 ( model
                 , Cmd.batch
                     [ Cmd.map HawkRequest cmd
-                    , -- App specific
-                      Cmd.map ProcessResponse response
+                    , appCmd
                     ]
                 )
 
         -- App specific
+        SetScopes response ->
+            ( response
+                  |> RemoteData.map
+                      (\r -> { model | scopes = Utils.decodeResponse scopesDecoder [] r })
+                  |> RemoteData.withDefault model 
+            , Cmd.none
+            )
+
+        SetRoles response ->
+            ( response
+                  |> RemoteData.map
+                      (\r -> { model | roles = Utils.decodeResponse rolesDecoder [] r })
+                  |> RemoteData.withDefault model 
+            , Cmd.none
+            )
+
         LoadScopes ->
             case model.user.credentials of
                 Just credentials ->
@@ -125,8 +150,7 @@ update msg model =
                         , -- Extensions integration
                           -- This is how we do a request using Hawk
                           Cmd.map HawkRequest
-                            --TODO: (Hawk.send "LoadScopes" request credentials)
-                            (Hawk.send request credentials)
+                            (Hawk.send "LoadScopes" request credentials)
                         )
 
                 Nothing ->
@@ -148,67 +172,22 @@ update msg model =
                         , -- Extensions integration
                           -- This is how we do a request using Hawk
                           Cmd.map HawkRequest
-                            --(Hawk.send "LoadRoles" request credentials)
-                            (Hawk.send request credentials)
+                            (Hawk.send "LoadRoles" request credentials)
                         )
 
                 Nothing ->
                     ( model, Cmd.none )
 
-        -- App specific
-        ProcessResponse response ->
-            case response of
-                Success response_ ->
-                    let
-                        newModel = model
-                            --TODO
-                            --case requestId of
-                            --    "LoadRoles" ->
-                            --        decodeRoles model response_
 
-                            --    "LoadScopes" ->
-                            --        decodeScopes model response_
+scopesDecoder =
+    JsonDecode.at [ "scopes" ] (JsonDecode.list JsonDecode.string)
 
-                            --    _ ->
-                            --        model
-                    in
-                        ( newModel, Cmd.none )
-
-                _ ->
-                    ( model, Cmd.none )
-
-
-decodeScopes : Model -> String -> Model
-decodeScopes model response =
-    let
-        decoder =
-            JsonDecode.at [ "scopes" ] (JsonDecode.list JsonDecode.string)
-    in
-        case JsonDecode.decodeString decoder response of
-            Ok scopes ->
-                { model | scopes = scopes }
-
-            Err _ ->
-                model
-
-
-decodeRoles : Model -> String -> Model
-decodeRoles model response =
-    let
-        decoder =
-            JsonDecode.list
-                (JsonDecode.object2 Role
-                    ("roleId" := JsonDecode.string)
-                    ("scopes" := JsonDecode.list JsonDecode.string)
-                )
-    in
-        case JsonDecode.decodeString decoder response of
-            Ok roles ->
-                { model | roles = roles }
-
-            Err _ ->
-                model
-
+rolesDecoder =
+    JsonDecode.list
+        (JsonDecode.object2 Role
+            ("roleId" := JsonDecode.string)
+            ("scopes" := JsonDecode.list JsonDecode.string)
+        )
 
 
 -- Demo view
@@ -233,12 +212,13 @@ viewLogin model =
         Nothing ->
             div []
                 [ a
-                    [ onClick
+                    [ Utils.onClick
                         (User.redirectToLogin
                             UserMsg
                             "/login"
                             "Uplift dashboard helps Mozilla Release Management team in their workflow."
                         )
+                    , href "#"
                     , class "nav-link"
                     ]
                     [ text "Login TaskCluster" ]

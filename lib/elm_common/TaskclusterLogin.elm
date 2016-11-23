@@ -3,7 +3,6 @@ port module TaskclusterLogin exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Dict exposing (Dict)
-import Utils exposing (eventLink)
 import Json.Decode as JsonDecode exposing ((:=))
 import Redirect
 import Maybe
