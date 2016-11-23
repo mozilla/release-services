@@ -230,7 +230,7 @@ viewDropdown title pages =
 viewUser model =
     case model.user of
         Just user ->
-            viewDropdown (Maybe.withDefault "UNKNOWN" user.clientId)
+            viewDropdown user.clientId
                 [ a
                     [ class "dropdown-item"
                     , href "https://tools.taskcluster.net/credentials"
@@ -308,10 +308,13 @@ viewFooter =
 view : Model -> Html Msg
 view model =
     div []
-        [ nav [ id "navbar", class "navbar navbar-full navbar-light" ] []
-          --[ div [ class "container" ] (viewNavBar model) ]
-        , div [ id "content" ] []
-          --[ div [ class "container" ] [ viewPage model ] ]
+        [ nav
+            [ id "navbar"
+            , class "navbar navbar-full navbar-light"
+            ]
+            [ div [ class "container" ] (viewNavBar model) ]
+        , div [ id "content" ]
+            [ div [ class "container" ] [ viewPage model ] ]
         , footer [ class "container" ] viewFooter
         ]
 
