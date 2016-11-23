@@ -18,14 +18,23 @@ var getUrl = function(name, _default) {
   return url;
 };
 
+var KEY = 'taskclusterlogin';  // do not change this key
+var user = null;
+try {
+  user = JSON.parse(window.localStorage.getItem(KEY));
+} catch (e) {
+  // pass
+}
+
 // Start the ELM application
 var app = require('./Main.elm').Main.fullscreen({
+  user: user,
   backend_dashboard_url: getUrl('dashboard', process.env.NEO_DASHBOARD_URL),
   bugzilla_url: getUrl('bugzilla', process.env.NEO_BUGZILLA_URL)
 });
 
 // Setup ports
 localstorage(app, 'bugzillalogin');
-localstorage(app, 'taskclusterlogin');
+localstorage(app, KEY);
 hawk(app);
 redirect(app)

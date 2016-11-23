@@ -1,6 +1,5 @@
 module App exposing (..)
 
-import Dict exposing (Dict)
 import Html exposing (..)
 import Html.App
 import Html.Attributes exposing (..)
@@ -9,10 +8,13 @@ import Navigation exposing (Location)
 import RouteUrl exposing (UrlChange)
 import RouteUrl.Builder as Builder exposing (Builder, builder, replacePath)
 import Result exposing (Result(Ok, Err))
-import App.User as User
-import App.Home as Home
-import App.TreeStatus as TreeStatus
 import App.Utils exposing (eventLink)
+
+
+import App.TreeStatus
+import App.Home
+import Hawk
+import TaskclusterLogin as User
 
 
 -- ROUTING
@@ -21,73 +23,55 @@ import App.Utils exposing (eventLink)
 type Route
     = HomeRoute
     | TreeStatusRoute
+    -- TODO: add NotFoundRoute
 
 
 pageLink route =
     eventLink (NavigateTo route)
 
 
-delta2url' : Model -> Model -> Maybe Builder
-delta2url' previous current =
-    case current.route of
-        TreeStatusRoute ->
-            Maybe.map
-                (Builder.prependToPath [ "treestatus" ])
-                (Just builder)
-
+delta2url' : Model -> Maybe Builder
+delta2url' model =
+    case model.route of
         HomeRoute ->
             Maybe.map
                 (Builder.prependToPath [])
                 (Just builder)
 
-
-
--- TODO: we currently redirect to Home but we should redirect to
---       notfound page
---NotFound ->
---    Maybe.map
---        (Builder.prependToPath ["404"])
---        (Just builder)
+        TreeStatusRoute ->
+            Maybe.map
+                (Builder.prependToPath [ "treestatus" ])
+                (Just builder)
 
 
 delta2url : Model -> Model -> Maybe UrlChange
 delta2url previous current =
-    Maybe.map Builder.toUrlChange <| delta2url' previous current
-
-
-location2messages' : Builder -> List Msg
-location2messages' builder =
-    case Builder.path builder of
-        first :: rest ->
-            let
-                builder' =
-                    Builder.replacePath rest builder
-            in
-                case first of
-                    "login" ->
-                        [ Builder.query builder
-                            |> User.convertUrlQueryToModel
-                            |> User.LoggingIn
-                            |> UserMsg
-                        , NavigateTo HomeRoute
-                        ]
-
-                    "treestatus" ->
-                        [ NavigateTo TreeStatusRoute ]
-
-                    -- TODO: This should redirect to NotFound
-                    _ ->
-                        [ NavigateTo HomeRoute ]
-
-        _ ->
-            [ NavigateTo HomeRoute ]
+    delta2url' current
+        |> Maybe.map Builder.toUrlChange
 
 
 location2messages : Location -> List Msg
 location2messages location =
-    location2messages' <|
-        Builder.fromUrl location.href
-
+    let
+        builder =
+            Builder.fromUrl location.href
+    in
+        case Builder.path builder of
+            first :: rest ->
+                -- Extensions integration
+                case first of
+                    "login" ->
+                        [ Builder.query builder
+                            |> User.convertUrlQueryToUser
+                            |> User.Logging
+                            |> UserMsg
+                        ]
+                    "treestatus" ->
+                        [ NavigateTo TreeStatusRoute ]
+                    _ ->
+                        []
+            _ ->
+                []
 
 
 -- MODEL / INIT
@@ -95,22 +79,22 @@ location2messages location =
 
 type alias Model =
     { route : Route
-    , user : Maybe User.Model
-    , treestatus : TreeStatus.Model
+    , user : User.Model
+    , treestatus : App.TreeStatus.Model
     }
 
 
 type alias Flags =
-    { user : Maybe User.Model
+    { user : User.Model
     , treestatusUrl : String
     }
 
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( { treestatus = TreeStatus.init flags.treestatusUrl
+    ( { user = flags.user
       , route = HomeRoute
-      , user = flags.user
+      , treestatus = App.TreeStatus.init flags.treestatusUrl
       }
     , Cmd.none
     )
@@ -121,20 +105,58 @@ init flags =
 
 
 type Msg
-    = NavigateTo Route
-    | UserMsg User.Msg
-    | TreeStatusMsg TreeStatus.Msg
+    = UserMsg User.Msg
+    | HawkRequest Hawk.Msg
+    | NavigateTo Route
+    --TODO: | App.HomeMsg App.Home.Msg
+    | TreeStatusMsg App.TreeStatus.Msg
+
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg' model =
-    case msg' of
+update msg model =
+    case msg of
+        UserMsg userMsg ->
+            let
+                ( newUser, userCmd ) =
+                    User.update userMsg model.user
+            in
+                ( { model | user = newUser }
+                , Cmd.map UserMsg userCmd
+                )
+
+        HawkRequest hawkMsg ->
+            let
+                ( requestId, cmd, response ) =
+                    Hawk.update hawkMsg
+
+                routeHawkRequest route =
+                    case route of
+                        --TOD:
+                        --"LoadScopes" ->
+                        --    Cmd.map SetScopes response
+
+                        _ ->
+                            Cmd.none
+
+                appCmd =
+                    requestId
+                        |> Maybe.map routeHawkRequest
+                        |> Maybe.withDefault Cmd.none
+            in
+                ( model
+                , Cmd.batch
+                    [ Cmd.map HawkRequest cmd
+                    , appCmd
+                    ]
+                )
+
         NavigateTo route ->
             case route of
                 HomeRoute ->
                     ( { model
                         | route = route
-                        , treestatus = TreeStatus.init model.treestatus.baseUrl
+                        , treestatus = App.TreeStatus.init model.treestatus.baseUrl
                       }
                     , Cmd.none
                     )
@@ -142,7 +164,7 @@ update msg' model =
                 TreeStatusRoute ->
                     let
                         treestatus =
-                            TreeStatus.load model.treestatus
+                            App.TreeStatus.load model.treestatus
                     in
                         ( { model
                             | route = route
@@ -151,28 +173,17 @@ update msg' model =
                         , Cmd.map TreeStatusMsg <| snd treestatus
                         )
 
-        TreeStatusMsg msg ->
+        TreeStatusMsg treestatusMsg ->
             let
-                ( newModel, newCmd ) =
-                    TreeStatus.update msg model.treestatus
+                ( newModel, newCmd) =
+                    App.TreeStatus.update treestatusMsg model.treestatus
             in
                 ( { model | treestatus = newModel }
                 , Cmd.map TreeStatusMsg newCmd
                 )
 
-        UserMsg msg ->
-            let
-                ( newModel, newCmd ) =
-                    User.update msg model.user
-            in
-                ( { model | user = newModel }
-                , Cmd.map UserMsg newCmd
-                )
-
-
 
 -- VIEW
--- XXX: maybe we want to have this in separate file (eg. App/Layout.elm)
 
 
 services =
@@ -185,10 +196,11 @@ services =
 viewPage model =
     case model.route of
         HomeRoute ->
-            Home.view model
+            --TODO: Html.App.map App.HomeMsg (App.Home.view model)
+            App.Home.view model
 
         TreeStatusRoute ->
-            Html.App.map TreeStatusMsg (TreeStatus.view model.treestatus)
+            Html.App.map TreeStatusMsg (App.TreeStatus.view model.treestatus)
 
 
 viewDropdown title pages =
@@ -292,10 +304,10 @@ viewFooter =
 view : Model -> Html Msg
 view model =
     div []
-        [ nav [ id "navbar", class "navbar navbar-full navbar-light" ]
-            [ div [ class "container" ] (viewNavBar model) ]
-        , div [ id "content" ]
-            [ div [ class "container" ] [ viewPage model ] ]
+        [ nav [ id "navbar", class "navbar navbar-full navbar-light" ] []
+            --[ div [ class "container" ] (viewNavBar model) ]
+        , div [ id "content" ] []
+            --[ div [ class "container" ] [ viewPage model ] ]
         , footer [ class "container" ] viewFooter
         ]
 
@@ -307,5 +319,6 @@ view model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Sub.map UserMsg (User.user_get (User.LoggedIn))
+        [ Sub.map UserMsg (User.taskclusterlogin_get (User.Logged))
+        , Sub.map HawkRequest (Hawk.hawk_send_request (Hawk.SendRequest))
         ]

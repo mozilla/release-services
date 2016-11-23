@@ -25,6 +25,7 @@ type alias Model =
 type alias Flags =
     { backend_dashboard_url : String
     , bugzilla_url : String
+    , user : User.Model
     }
 
 
@@ -33,17 +34,13 @@ init flags =
     let
         ( bz, bzCmd ) =
             Bugzilla.init flags.bugzilla_url
-
-        ( user, userCmd ) =
-            User.init
     in
         ( { bugzilla = bz
-          , user = user
+          , user = flags.user
           }
         , -- Follow through with sub parts init
           Cmd.batch
             [ Cmd.map BugzillaMsg bzCmd
-            , Cmd.map UserMsg userCmd
             ]
         )
 
@@ -77,14 +74,14 @@ update msg model =
 view model =
     div []
         [ h1 [] [ text "Taskcluster" ]
-        , viewLogin model.user
+        , viewLogin model
         , h1 [] [ text "Bugzilla" ]
         , Html.App.map BugzillaMsg (Bugzilla.view model.bugzilla)
         ]
 
 
 viewLogin model =
-    case model.credentials of
+    case model.user of
         Just user ->
             div [] [ text ("Logged in as " ++ user.clientId) ]
 
