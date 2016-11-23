@@ -260,86 +260,6 @@ in rec {
       HOME=$home_old
     '';
        
-
-  mkFrontend =
-    { name
-    , version
-    , src
-    , src_elm_common
-    , src_path ? "src/${name}"
-    , node_modules
-    , elm_packages
-    , patchPhase ? ""
-    , postInstall ? null
-    }:
-    let
-      self = stdenv.mkDerivation {
-        name = "${name}-${version}";
-        src = builtins.filterSource
-          (path: type: baseNameOf path != "elm-stuff"
-                    && baseNameOf path != "node_modules"
-                    )
-          src;
-        buildInputs = [ elmPackages.elm ] ++ (builtins.attrValues node_modules);
-        patchPhase = ''
-          for item in ./*; do
-            if [ -h $item ]; then
-              rm -f $item
-              cp ${src_elm_common}/`basename $item` ./
-            fi
-          done
-          if [ -d src ]; then
-            for item in ./src/*; do
-              if [ -h $item ]; then
-                rm -f $item
-                cp ${src_elm_common}/`basename $item` ./src/
-              fi
-            done
-          fi
-        '' + patchPhase;
-        configurePhase = ''
-          rm -rf node_modules
-          rm -rf elm-stuff
-        '' + (makeElmStuff elm_packages) + ''
-          mkdir node_modules
-          for item in ${builtins.concatStringsSep " " (builtins.attrValues node_modules)}; do
-            ln -s $item/lib/node_modules/* ./node_modules
-          done
-        '';
-        buildPhase = ''
-          neo build --config webpack.config.js
-        '';
-        installPhase = ''
-          mkdir $out
-          cp build/* $out/ -R
-          runHook postInstall
-        '';
-        inherit postInstall;
-        shellHook = ''
-          cd ${src_path}
-        '' + self.configurePhase;
-
-        passthru.taskclusterGithubTasks =
-          map (branch: mkTaskclusterGithubTask { inherit name src_path branch; })
-            [ "master" "staging" "production" ];
-        passthru.update = writeScript "update-${name}" ''
-          export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
-          pushd ${src_path} >> /dev/null
-          ${node2nix}/bin/node2nix \
-            --composition node-modules.nix \
-            --input node-modules.json \
-            --output node-modules-generated.nix \
-            --node-env node-env.nix \
-            --flatten \
-            --pkg-name nodejs-6_x
-          rm -rf elm-stuff
-          ${elmPackages.elm}/bin/elm-package install -y
-          ${elm2nix}/bin/elm2nix elm-packages.nix
-          popd
-        '';
-      };
-    in self;
-
   filterSource = src:
     { name ? null
     , include ? [ "/" ]
@@ -370,6 +290,105 @@ in rec {
           else if builtins.any (x: x) (builtins.map (startsWith (relativePath path)) _include) then true
           else false
         ) src;
+
+  mkFrontend =
+    { name
+    , version
+    , src
+    , src_elm_common
+    , src_path ? "src/${name}"
+    , node_modules
+    , elm_packages
+    , patchPhase ? ""
+    , postInstall ? null
+    }:
+    let
+      self = stdenv.mkDerivation {
+        name = "${name}-${version}";
+
+        src = builtins.filterSource
+          (path: type: baseNameOf path != "elm-stuff"
+                    && baseNameOf path != "node_modules"
+                    )
+          src;
+
+        buildInputs = [ elmPackages.elm ] ++ (builtins.attrValues node_modules);
+
+        patchPhase = ''
+          for item in ./*; do
+            if [ -h $item ]; then
+              rm -f $item
+              cp ${src_elm_common}/`basename $item` ./
+            fi
+          done
+          if [ -d src ]; then
+            for item in ./src/*; do
+              if [ -h $item ]; then
+                rm -f $item
+                cp ${src_elm_common}/`basename $item` ./src/
+              fi
+            done
+          fi
+        '' + patchPhase;
+
+        configurePhase = ''
+          rm -rf node_modules
+          rm -rf elm-stuff
+        '' + (makeElmStuff elm_packages) + ''
+          mkdir node_modules
+          for item in ${builtins.concatStringsSep " " (builtins.attrValues node_modules)}; do
+            ln -s $item/lib/node_modules/* ./node_modules
+          done
+        '';
+
+        buildPhase = ''
+          neo build --config webpack.config.js
+        '';
+
+        doCheck = true;
+
+        checkPhase = ''
+          echo "----------------------------------------------------------"
+          echo "---  Running ... elm-format-0.17 src/ --validate  --------"
+          echo "----------------------------------------------------------"
+          elm-format-0.17 src/ --validate
+          echo "----------------------------------------------------------"
+          # TODO: neo start
+        '';
+
+        installPhase = ''
+          mkdir $out
+          cp build/* $out/ -R
+          runHook postInstall
+        '';
+
+        inherit postInstall;
+
+        shellHook = ''
+          cd ${src_path}
+        '' + self.configurePhase;
+
+        passthru.taskclusterGithubTasks =
+          map (branch: mkTaskclusterGithubTask { inherit name src_path branch; })
+            [ "master" "staging" "production" ];
+
+        passthru.update = writeScript "update-${name}" ''
+          export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
+          pushd ${src_path} >> /dev/null
+          ${node2nix}/bin/node2nix \
+            --composition node-modules.nix \
+            --input node-modules.json \
+            --output node-modules-generated.nix \
+            --node-env node-env.nix \
+            --flatten \
+            --pkg-name nodejs-6_x
+          rm -rf elm-stuff
+          ${elmPackages.elm}/bin/elm-package install -y
+          ${elm2nix}/bin/elm2nix elm-packages.nix
+          popd
+        '';
+      };
+    in self;
 
   mkBackend =
     { name
@@ -437,6 +456,8 @@ in rec {
           find $out -type d -name "__pycache__" -exec 'rm -r "{}"' \;
           find $out -type d -name "*.py" -exec '${python.__old.python.executable} -m compileall -f "{}"' \;
         '';
+
+        doCheck = true;
 
         checkPhase = ''
           export LANG=en_US.UTF-8
