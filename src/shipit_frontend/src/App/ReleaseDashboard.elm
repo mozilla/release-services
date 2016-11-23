@@ -11,12 +11,14 @@ import Date
 import Json.Decode as Json exposing (Decoder, (:=))
 import Json.Decode.Extra as JsonExtra exposing ((|:))
 import Json.Encode as JsonEncode
-import RemoteData as RemoteData exposing (WebData, RemoteData(Loading, Success, NotAsked, Failure))
+import RemoteData as RemoteData exposing (WebData, RemoteData(Loading, Success, NotAsked, Failure), isSuccess)
 import Http
 import Task exposing (Task)
 import Basics exposing (Never)
-import App.User as User exposing (Hawk)
-import App.Utils exposing (onChange)
+import Utils exposing (onChange)
+import TaskclusterLogin as User
+import BugzillaLogin as Bugzilla
+import Hawk
 
 
 -- Models
@@ -115,24 +117,27 @@ type alias Model =
       current_analysis : WebData (Analysis)
     , -- Backend base endpoint
       backend_dashboard_url : String
-    , -- Can we publish any update to bugzilla
-      bugzilla_available : Bool
     }
 
 
-type Msg
-    = FetchedAllAnalysis (WebData (List Analysis))
-    | FetchedAnalysis (WebData Analysis)
-    | FetchedBug (WebData Bug)
-    | FetchAllAnalysis
+type
+    Msg
+    -- List available analysis
+    = FetchAllAnalysis
+    | FetchedAllAnalysis (RemoteData Http.RawError Http.Response)
+      -- Retrieve detailed analysis
     | FetchAnalysis Int
+    | FetchedAnalysis (RemoteData Http.RawError Http.Response)
+      -- Edit a bug
     | ShowBugEditor Bug BugEditor
     | EditBug Bug String String
     | EditUplift Bug UpliftVersion Bool
+    | FetchedBug (RemoteData Http.RawError Http.Response)
+      -- Save bug edits
     | PublishEdits Bug
     | SavedBugEdit Bug (WebData BugUpdate)
-    | ProcessWorkflow Hawk
-    | UserMsg User.Msg
+      -- Hawk Extension
+    | HawkRequest Hawk.Msg
 
 
 init : String -> ( Model, Cmd Msg )
@@ -141,7 +146,6 @@ init backend_dashboard_url =
     ( { all_analysis = NotAsked
       , current_analysis = NotAsked
       , backend_dashboard_url = backend_dashboard_url
-      , bugzilla_available = False
       }
     , Cmd.none
     )
@@ -151,81 +155,71 @@ init backend_dashboard_url =
 -- Update
 
 
-update : Msg -> Model -> User.Model -> ( Model, User.Model, Cmd Msg )
-update msg model user =
+routeHawkRequest response route =
+    case route of
+        "AllAnalysis" ->
+            Cmd.map FetchedAllAnalysis response
+
+        "Analysis" ->
+            Cmd.map FetchedAnalysis response
+
+        "BugUpdate" ->
+            Cmd.map FetchedBug response
+
+        _ ->
+            Cmd.none
+
+
+update : Msg -> Model -> User.Model -> Bugzilla.Model -> ( Model, Cmd Msg )
+update msg model user bugzilla =
     case msg of
+        HawkRequest hawkMsg ->
+            let
+                l =
+                    Debug.log "hawk msg" hawkMsg
+            in
+                ( model, Cmd.none )
+
+        -- Load all Analysis
         FetchAllAnalysis ->
-            let
-                newModel =
-                    { model | all_analysis = Loading }
-            in
-                fetchAllAnalysis newModel user
+            ( { model | all_analysis = Loading }
+            , fetchAllAnalysis model user
+            )
 
+        FetchedAllAnalysis response ->
+            ( response
+                |> RemoteData.map
+                    (\r ->
+                        { model
+                            | all_analysis = Utils.decodeWebResponse decodeAllAnalysis r
+                            , current_analysis = NotAsked
+                        }
+                    )
+                |> RemoteData.withDefault model
+            , Cmd.none
+            )
+
+        -- Load a detailed analysis
         FetchAnalysis analysisId ->
-            let
-                newModel =
-                    { model | current_analysis = Loading }
-            in
-                fetchAnalysis newModel user analysisId
-
-        FetchedAllAnalysis allAnalysis ->
-            ( { model | all_analysis = allAnalysis, current_analysis = NotAsked }
-            , user
-            , Cmd.none
+            ( { model | current_analysis = Loading }
+            , fetchAnalysis model user analysisId
             )
 
-        FetchedAnalysis analysis ->
-            ( { model | current_analysis = analysis }
-            , user
+        FetchedAnalysis response ->
+            ( response
+                |> RemoteData.map
+                    (\r -> { model | current_analysis = Utils.decodeWebResponse decodeAnalysis r })
+                |> RemoteData.withDefault model
             , Cmd.none
             )
-
-        ProcessWorkflow workflow ->
-            -- Process task from workflow
-            let
-                cmd =
-                    case workflow.requestType of
-                        User.AllAnalysis ->
-                            processAllAnalysis workflow
-
-                        User.Analysis ->
-                            processAnalysis workflow
-
-                        User.BugUpdate ->
-                            processBugUpdate workflow
-
-                        _ ->
-                            Cmd.none
-            in
-                ( model, user, cmd )
-
-        UserMsg msg ->
-            -- Process messages for user
-            let
-                ( newUser, workflow, userCmd ) =
-                    User.update msg user
-            in
-                ( model, user, Cmd.map UserMsg userCmd )
 
         ShowBugEditor bug show ->
             let
                 -- Mark a bug as being edited
                 model' =
                     updateBug model bug.id (\b -> { b | editor = show, edits = Dict.empty, attachments = Dict.empty })
-
-                -- Check current bugzilla status
-                bz_auth =
-                    case user.bugzilla_check of
-                        Success auth ->
-                            auth
-
-                        _ ->
-                            False
-
-                model'' =
-                    { model' | bugzilla_available = bz_auth }
             in
-                ( model'', user, Cmd.none )
+                ( model', Cmd.none )
 
         EditBug bug key value ->
             -- Store a bug edit
@@ -236,7 +230,7 @@ update msg model user =
                 model' =
                     updateBug model bug.id (\b -> { b | edits = edits })
             in
-                ( model', user, Cmd.none )
+                ( model', Cmd.none )
 
         EditUplift bug version checked ->
             -- Store an uplift approval
@@ -267,36 +261,37 @@ update msg model user =
                 model' =
                     updateBug model bug.id (\b -> { b | attachments = attachments })
             in
-                ( model', user, Cmd.none )
+                ( model', Cmd.none )
 
         PublishEdits bug ->
             -- Send edits to backend
             case bug.editor of
                 FlagsEditor ->
-                    publishBugEdits model user bug
+                    publishBugEdits model bugzilla bug
 
                 ApprovalEditor ->
-                    publishApproval model user bug
+                    publishApproval model bugzilla bug
 
                 RejectEditor ->
-                    publishApproval model user bug
+                    publishApproval model bugzilla bug
 
                 NoEditor ->
-                    ( model, user, Cmd.none )
+                    ( model, Cmd.none )
 
         FetchedBug bug ->
-            -- Store updated bug - post edits
-            let
-                model' =
-                    case bug of
-                        Success bug' ->
-                            updateBug model bug'.id (\b -> bug')
+            ( model, Cmd.none )
 
-                        _ ->
-                            model
-            in
-                ( model', user, Cmd.none )
-
+        --            -- Store updated bug - post edits
+        --            let
+        --                model' =
+        --                    case bug of
+        --                        Success bug' ->
+        --                            updateBug model bug'.id (\b -> bug')
+        --
+        --                        _ ->
+        --                            model
+        --            in
+        --                ( model', Cmd.none )
         SavedBugEdit bug update ->
             let
                 -- Store bug update from bugzilla
@@ -309,7 +304,7 @@ update msg model user =
                         sendBugUpdate model' user bug up
 
                     _ ->
-                        ( model', user, Cmd.none )
+                        ( model', Cmd.none )
 
 
 mergeAttachments :
@@ -366,83 +361,53 @@ updateBug model bugId callback =
             model
 
 
-fetchAllAnalysis : Model -> User.Model -> ( Model, User.Model, Cmd Msg )
+fetchAllAnalysis : Model -> User.Model -> Cmd Msg
 fetchAllAnalysis model user =
     -- Fetch all analysis summary
-    let
-        params =
-            { backend =
-                { method = "GET"
-                , url = model.backend_dashboard_url ++ "/analysis"
-                }
-            , target = Nothing
-            , body = Nothing
-            , requestType = User.AllAnalysis
-            }
+    case user of
+        Just credentials ->
+            let
+                -- Build Taskcluster http request
+                url =
+                    model.backend_dashboard_url ++ "/analysis"
 
-        ( user', workflow, userCmd ) =
-            User.update (User.InitHawkRequest params) user
-    in
-        ( model
-        , user'
-        , Cmd.map UserMsg userCmd
-        )
-
-
-processAllAnalysis : Hawk -> Cmd Msg
-processAllAnalysis workflow =
-    -- Decode and save all analysis
-    case workflow.task of
-        Just task ->
-            (Http.fromJson decodeAllAnalysis task)
-                |> RemoteData.asCmd
-                |> Cmd.map FetchedAllAnalysis
+                request =
+                    Http.Request "GET" [] url Http.empty
+            in
+                Cmd.map HawkRequest
+                    (Hawk.send "AllAnalysis" request credentials)
 
         Nothing ->
+            -- No credentials
             Cmd.none
 
 
-fetchAnalysis : Model -> User.Model -> Int -> ( Model, User.Model, Cmd Msg )
+fetchAnalysis : Model -> User.Model -> Int -> Cmd Msg
 fetchAnalysis model user analysis_id =
     -- Fetch a specific analysis with details
-    let
-        params =
-            { backend =
-                { method = "GET"
-                , url = model.backend_dashboard_url ++ "/analysis/" ++ (toString analysis_id)
-                }
-            , target = Nothing
-            , body = Nothing
-            , requestType = User.Analysis
-            }
+    case user of
+        Just credentials ->
+            let
+                -- Build Taskcluster http request
+                url =
+                    model.backend_dashboard_url ++ "/analysis/" ++ (toString analysis_id)
 
-        ( user', workflow, userCmd ) =
-            User.update (User.InitHawkRequest params) user
-    in
-        ( model
-        , user'
-        , Cmd.map UserMsg userCmd
-        )
-
-
-processAnalysis : Hawk -> Cmd Msg
-processAnalysis workflow =
-    -- Decode and save a single analysis
-    case workflow.task of
-        Just task ->
-            (Http.fromJson decodeAnalysis task)
-                |> RemoteData.asCmd
-                |> Cmd.map FetchedAnalysis
+                request =
+                    Http.Request "GET" [] url Http.empty
+            in
+                Cmd.map HawkRequest
+                    (Hawk.send "Analysis" request credentials)
 
         Nothing ->
+            -- No credentials
             Cmd.none
 
 
-publishBugEdits : Model -> User.Model -> Bug -> ( Model, User.Model, Cmd Msg )
-publishBugEdits model user bug =
+publishBugEdits : Model -> Bugzilla.Model -> Bug -> ( Model, Cmd Msg )
+publishBugEdits model bugzilla bug =
     -- Publish all bug edits directly to Bugzilla
-    case user.bugzilla of
-        Just bugzilla ->
+    case bugzilla.check of
+        Success check ->
             let
                 comment =
                     Dict.get "comment" bug.edits |> Maybe.withDefault "Modified from Uplift Dashboard."
@@ -471,12 +436,11 @@ publishBugEdits model user bug =
                 l =
                     Debug.log "Bugzilla payload" payload
 
+                request =
+                    Http.Request "PUT" [] ("/bug/" ++ (toString bug.bugzilla_id)) (Http.string payload)
+
                 task =
-                    User.buildBugzillaTask bugzilla
-                        { method = "PUT"
-                        , url = "/bug/" ++ (toString bug.bugzilla_id)
-                        }
-                        (Just payload)
+                    Bugzilla.send request bugzilla
 
                 cmd =
                     (Http.fromJson decodeBugUpdate task)
@@ -487,17 +451,17 @@ publishBugEdits model user bug =
                 model' =
                     updateBug model bug.id (\b -> { b | update = Loading })
             in
-                ( model', user, cmd )
+                ( model', cmd )
 
-        Nothing ->
+        _ ->
             -- No credentials !
-            ( model, user, Cmd.none )
+            ( model, Cmd.none )
 
 
-publishApproval : Model -> User.Model -> Bug -> ( Model, User.Model, Cmd Msg )
-publishApproval model user bug =
-    case user.bugzilla of
-        Just bugzilla ->
+publishApproval : Model -> Bugzilla.Model -> Bug -> ( Model, Cmd Msg )
+publishApproval model bugzilla bug =
+    case bugzilla.check of
+        Success check ->
             let
                 -- Make a request per updated attachment
                 comment =
@@ -510,14 +474,14 @@ publishApproval model user bug =
                 model' =
                     updateBug model bug.id (\b -> { b | update = Loading })
             in
-                ( model', user, Cmd.batch commands )
+                ( model', Cmd.batch commands )
 
-        Nothing ->
+        _ ->
             -- No credentials !
-            ( model, user, Cmd.none )
+            ( model, Cmd.none )
 
 
-updateAttachment : Bug -> User.BugzillaCredentials -> String -> ( String, Dict.Dict String String ) -> Cmd Msg
+updateAttachment : Bug -> Bugzilla.Model -> String -> ( String, Dict.Dict String String ) -> Cmd Msg
 updateAttachment bug bugzilla comment ( attachment_id, versions ) =
     -- Build payload for bugzilla
     -- to update an atachment
@@ -533,12 +497,11 @@ updateAttachment bug bugzilla comment ( attachment_id, versions ) =
                     ]
                 )
 
+        request =
+            Http.Request "PUT" [] ("/bug/attachment/" ++ attachment_id) (Http.string payload)
+
         task =
-            User.buildBugzillaTask bugzilla
-                { method = "PUT"
-                , url = "/bug/attachment/" ++ attachment_id
-                }
-                (Just payload)
+            Bugzilla.send request bugzilla
     in
         (Http.fromJson decodeBugUpdate task)
             |> RemoteData.asCmd
@@ -577,52 +540,38 @@ encodeChanges target changes =
         )
 
 
-sendBugUpdate : Model -> User.Model -> Bug -> BugUpdate -> ( Model, User.Model, Cmd Msg )
+sendBugUpdate : Model -> User.Model -> Bug -> BugUpdate -> ( Model, Cmd Msg )
 sendBugUpdate model user bug update =
     -- Send a bug update to the backend
     -- so it can update the bug payload
-    let
-        payload =
-            case update of
-                UpdatedBug changes ->
-                    encodeChanges "bug" changes
+    case user of
+        Just credentials ->
+            let
+                payload =
+                    case update of
+                        UpdatedBug changes ->
+                            encodeChanges "bug" changes
 
-                UpdatedAttachment changes ->
-                    encodeChanges "attachment" changes
+                        UpdatedAttachment changes ->
+                            encodeChanges "attachment" changes
 
-                _ ->
-                    ""
+                        _ ->
+                            ""
 
-        params =
-            { backend =
-                { method = "PUT"
-                , url = model.backend_dashboard_url ++ "/bugs/" ++ (toString bug.bugzilla_id)
-                }
-            , target = Nothing
-            , body = Just payload
-            , requestType = User.BugUpdate
-            }
+                -- Build Taskcluster http request
+                url =
+                    model.backend_dashboard_url ++ "/bugs/" ++ (toString bug.bugzilla_id)
 
-        ( user', workflow, userCmd ) =
-            User.update (User.InitHawkRequest params) user
-    in
-        ( model
-        , user'
-        , Cmd.map UserMsg userCmd
-        )
-
-
-processBugUpdate : Hawk -> Cmd Msg
-processBugUpdate workflow =
-    -- Decode and save a single analysis
-    case workflow.task of
-        Just task ->
-            (Http.fromJson decodeBug task)
-                |> RemoteData.asCmd
-                |> Cmd.map FetchedBug
+                request =
+                    Http.Request "PUT" [] url (Http.string payload)
+            in
+                ( model
+                , Cmd.map HawkRequest
+                    (Hawk.send "BugUpdate" request credentials)
+                )
 
         Nothing ->
-            Cmd.none
+            ( model, Cmd.none )
 
 
 encodeFlag : ( String, String ) -> JsonEncode.Value
@@ -755,8 +704,8 @@ subscriptions analysis =
 -- Views
 
 
-view : Model -> Html Msg
-view model =
+view : Model -> Bugzilla.Model -> Html Msg
+view model bugzilla =
     case model.current_analysis of
         NotAsked ->
             div [ class "alert alert-info" ] [ text "Please select an analysis in the navbar above." ]
@@ -768,19 +717,19 @@ view model =
             div [ class "alert alert-danger" ] [ text ("Error: " ++ toString err) ]
 
         Success analysis ->
-            viewAnalysis model analysis
+            viewAnalysis bugzilla analysis
 
 
-viewAnalysis : Model -> Analysis -> Html Msg
-viewAnalysis model analysis =
+viewAnalysis : Bugzilla.Model -> Analysis -> Html Msg
+viewAnalysis bugzilla analysis =
     div []
         [ h1 [] [ text ("Listing all " ++ analysis.name ++ " uplifts for review:") ]
-        , div [ class "bugs" ] (List.map (viewBug model) analysis.bugs)
+        , div [ class "bugs" ] (List.map (viewBug bugzilla) analysis.bugs)
         ]
 
 
-viewBug : Model -> Bug -> Html Msg
-viewBug model bug =
+viewBug : Bugzilla.Model -> Bug -> Html Msg
+viewBug bugzilla bug =
     div [ class "bug" ]
         [ h4 [] [ text bug.summary ]
         , p [ class "summary" ]
@@ -798,13 +747,13 @@ viewBug model bug =
             , div [ class "col-xs-4" ]
                 [ case bug.editor of
                     FlagsEditor ->
-                        viewFlagsEditor model bug
+                        viewFlagsEditor bugzilla bug
 
                     ApprovalEditor ->
-                        viewApprovalEditor model bug
+                        viewApprovalEditor bugzilla bug
 
                     RejectEditor ->
-                        viewApprovalEditor model bug
+                        viewApprovalEditor bugzilla bug
 
                     NoEditor ->
                         viewBugDetails bug
@@ -1057,8 +1006,8 @@ editTrackingFlag bug ( key, flag_value ) =
             ]
 
 
-viewFlagsEditor : Model -> Bug -> Html Msg
-viewFlagsEditor model bug =
+viewFlagsEditor : Bugzilla.Model -> Bug -> Html Msg
+viewFlagsEditor bugzilla bug =
     -- Show the form to edit flags
     Html.form [ class "editor", onSubmit (PublishEdits bug) ]
         [ div [ class "col-xs-12 col-sm-6" ]
@@ -1068,9 +1017,9 @@ viewFlagsEditor model bug =
         , div [ class "form-group" ]
             [ textarea [ class "form-control", placeholder "Your comment", onInput (EditBug bug "comment") ] []
             ]
-        , p [ class "text-warning", hidden model.bugzilla_available ] [ text "You need to setup your Bugzilla account on the uplift dashboard before using this action." ]
+        , p [ class "text-warning", hidden (isSuccess bugzilla.check) ] [ text "You need to setup your Bugzilla account on the uplift dashboard before using this action." ]
         , p [ class "actions" ]
-            [ button [ class "btn btn-success", disabled (not model.bugzilla_available || bug.update == Loading) ]
+            [ button [ class "btn btn-success", disabled (not (isSuccess bugzilla.check) || bug.update == Loading) ]
                 [ text
                     (if bug.update == Loading then
                         "Loading..."
@@ -1095,8 +1044,8 @@ editApproval bug ( name, version ) =
         ]
 
 
-viewApprovalEditor : Model -> Bug -> Html Msg
-viewApprovalEditor model bug =
+viewApprovalEditor : Bugzilla.Model -> Bug -> Html Msg
+viewApprovalEditor bugzilla bug =
     -- Show the form to approve the uplift request
     let
         -- Only show non processed versions
@@ -1104,7 +1053,7 @@ viewApprovalEditor model bug =
             Dict.filter (\k v -> v.status == "?") bug.uplift_versions
 
         btn_disabled =
-            not model.bugzilla_available || Dict.empty == bug.attachments || bug.update == Loading
+            not (isSuccess bugzilla.check) || Dict.empty == bug.attachments || bug.update == Loading
     in
         Html.form [ class "editor", onSubmit (PublishEdits bug) ]
             [ div [ class "col-xs-12" ]
@@ -1122,7 +1071,7 @@ viewApprovalEditor model bug =
             , div [ class "form-group" ]
                 [ textarea [ class "form-control", placeholder "Your comment", onInput (EditBug bug "comment") ] []
                 ]
-            , p [ class "text-warning", hidden model.bugzilla_available ] [ text "You need to setup your Bugzilla account on the uplift dashboard before using this action." ]
+            , p [ class "text-warning", hidden (isSuccess bugzilla.check) ] [ text "You need to setup your Bugzilla account on the uplift dashboard before using this action." ]
             , p [ class "text-warning", hidden (not (Dict.empty == bug.attachments)) ] [ text "You need to pick at least one version." ]
             , p [ class "actions" ]
                 [ if bug.editor == ApprovalEditor then
