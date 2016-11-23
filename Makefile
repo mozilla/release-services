@@ -33,6 +33,8 @@ TOOLS=\
 	taskcluster-hooks
 
 
+APP_DEV_HOST=localhost
+
 APP_DEV_PORT_releng_frontend=8000
 APP_DEV_PORT_releng_clobberer=8001
 APP_DEV_PORT_releng_tooltool=8002
@@ -51,15 +53,15 @@ APP_DEV_SSL=\
 	SSL_CERT=$$PWD/tmp/server.crt \
 	SSL_KEY=$$PWD/tmp/server.key
 APP_DEV_ENV_releng_frontend=\
-	NEO_CLOBBERER_URL=https://localhost:$(APP_DEV_PORT_releng_clobberer) \
-	NEO_TOOLTOOL_URL=https://localhost:$(APP_DEV_PORT_releng_tooltool) \
-	NEO_TREESTATUS_URL=https://localhost:$(APP_DEV_PORT_releng_treestatus) \
-	NEO_MAPPER_URL=https://localhost:$(APP_DEV_PORT_releng_mapper) \
-	NEO_ARCHIVER_URL=https://localhost:$(APP_DEV_PORT_releng_archiver) \
+	NEO_CLOBBERER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_clobberer) \
+	NEO_TOOLTOOL_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_tooltool) \
+	NEO_TREESTATUS_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_treestatus) \
+	NEO_MAPPER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_mapper) \
+	NEO_ARCHIVER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_archiver) \
 	$(APP_DEV_SSL)
 APP_DEV_ENV_shipit_frontend=\
-	NEO_DASHBOARD_URL=https://localhost:$(APP_DEV_PORT_shipit_dashboard) \
-	NEO_PIPELINE_URL=https://localhost:$(APP_DEV_PORT_shipit_pipeline) \
+	NEO_DASHBOARD_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit_dashboard) \
+	NEO_PIPELINE_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit_pipeline) \
 	NEO_BUGZILLA_URL=https://bugzilla-dev.allizom.org \
 	$(APP_DEV_SSL)
 
@@ -166,7 +168,7 @@ develop-run-BACKEND: build-certs nix require-APP
 	APP_SETTINGS=$$PWD/src/$(APP)/settings.py \
 	CORS_ORIGINS="*" \
 		nix-shell nix/default.nix -A $(APP) \
-		--run "gunicorn $(APP):app --bind 'localhost:$(APP_DEV_PORT_$(APP))' --ca-certs=$$PWD/tmp/ca.crt --certfile=$$PWD/tmp/server.crt --keyfile=$$PWD/tmp/server.key --workers 1 --timeout 3600 --reload --log-file -"
+		--run "gunicorn $(APP):app --bind '$(APP_DEV_HOST):$(APP_DEV_PORT_$(APP))' --ca-certs=$$PWD/tmp/ca.crt --certfile=$$PWD/tmp/server.crt --keyfile=$$PWD/tmp/server.key --workers 1 --timeout 3600 --reload --log-file -"
 
 develop-run-FRONTEND: build-certs nix require-APP
 	nix-shell nix/default.nix --pure -A $(APP) \
@@ -195,7 +197,7 @@ develop-flask-shell: nix require-APP
 
 develop-run-postgres: nix require-APP require-initdb
 	nix-shell nix/default.nix -A $(APP) \
-		--run "postgres -D $(PWD)/tmp/postgres -h localhost -p $(APP_DEV_POSTGRES_PORT)"
+		--run "postgres -D $(PWD)/tmp/postgres -h $(APP_DEV_HOST) -p $(APP_DEV_POSTGRES_PORT)"
 
 build-apps: $(foreach app, $(APPS), build-app-$(app))
 
@@ -522,7 +524,7 @@ require-sqlite: nix require-APP
 require-postgres: nix require-APP
 	nix-shell nix/default.nix -A $(APP) \
 		--run "createdb -p $(APP_DEV_POSTGRES_PORT) $(APP)"; true
-	$(eval export DATABASE_URL=postgres://localhost:$(APP_DEV_POSTGRES_PORT)/$(APP))
+	$(eval export DATABASE_URL=postgresql://$(APP_DEV_HOST):$(APP_DEV_POSTGRES_PORT)/$(APP))
 	@echo "Using postgresql dev database $(DATABASE_URL)"
 
 
