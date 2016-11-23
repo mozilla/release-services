@@ -31,7 +31,7 @@ let
     releng_frontend = import ./../src/releng_frontend { inherit releng_pkgs; };
     releng_clobberer = import ./../src/releng_clobberer { inherit releng_pkgs; };
     releng_tooltool = import ./../src/releng_tooltool { inherit releng_pkgs; };
-    releng_treestatus= import ./../src/releng_treestatus { inherit releng_pkgs; };
+    releng_treestatus = import ./../src/releng_treestatus { inherit releng_pkgs; };
     releng_mapper = import ./../src/releng_mapper { inherit releng_pkgs; };
     releng_archiver = import ./../src/releng_archiver { inherit releng_pkgs; };
 

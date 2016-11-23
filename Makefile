@@ -180,12 +180,12 @@ develop-run-FRONTEND: build-certs nix require-APP
 
 develop-run-elm_common_example: develop-run-FRONTEND
 
+develop-run-releng_frontend: develop-run-FRONTEND
 develop-run-releng_clobberer: require-sqlite develop-run-BACKEND
 develop-run-releng_tooltool: require-sqlite develop-run-BACKEND
 develop-run-releng_treestatus: require-sqlite develop-run-BACKEND
 develop-run-releng_mapper: require-sqlite develop-run-BACKEND
 develop-run-releng_archiver: require-sqlite develop-run-BACKEND
-develop-run-releng_frontend: develop-run-FRONTEND
 
 develop-run-shipit_frontend: develop-run-FRONTEND
 develop-run-shipit_dashboard: require-postgres develop-run-BACKEND
@@ -251,8 +251,10 @@ deploy-staging-S3: \
 		$(APP_TMP) \
 		s3://$(APP_STAGING_S3_$(APP))
 
-deploy-staging-releng_docs: deploy-staging-S3
+deploy-staging-elm_common_example: # no deployment
+
 deploy-staging-releng_frontend: deploy-staging-S3
+deploy-staging-releng_docs: deploy-staging-S3
 deploy-staging-releng_clobberer: deploy-staging-HEROKU
 deploy-staging-releng_tooltool: deploy-staging-HEROKU
 deploy-staging-releng_treestatus: deploy-staging-HEROKU
@@ -298,13 +300,16 @@ deploy-production-S3: \
 		$(APP_TMP) \
 		s3://$(APP_PRODUCTION_S3_$(APP))
 
-deploy-production-releng_docs: deploy-production-S3
+deploy-production-elm_common_example: # no deployment
+
 deploy-production-releng_frontend: deploy-production-S3
+deploy-production-releng_docs: deploy-production-S3
 deploy-production-releng_clobberer: deploy-production-HEROKU
 deploy-production-releng_tooltool: deploy-production-HEROKU
 deploy-production-releng_treestatus: deploy-production-HEROKU
 deploy-production-releng_mapper: deploy-production-HEROKU
 deploy-production-releng_archiver: deploy-production-HEROKU
+
 deploy-production-shipit_frontend: deploy-production-S3
 deploy-production-shipit_dashboard: deploy-production-HEROKU
 deploy-production-shipit_pipeline: # deploy-staging-HEROKU
@@ -365,7 +370,6 @@ deploy-cache: require-AWS require-CACHE_BUCKET build-tool-awscli build-cache
 taskcluster.yml: nix
 	@nix-build nix/taskcluster.nix -o result-taskcluster --fallback
 	@cp -f ./result-taskcluster .taskcluster.yml
-	@sed -i -e "s,COMMAND,nix-env -iA nixpkgs.gnumake nixpkgs.curl \&\& mkdir /src \&\& cd /src \&\& curl -L https://github.com/mozilla-releng/services/archive/\$$GITHUB_HEAD_SHA.tar.gz -o \$$GITHUB_HEAD_SHA.tar.gz \&\& tar zxf \$$GITHUB_HEAD_SHA.tar.gz \&\& cd services-\$$GITHUB_HEAD_SHA \&\& ./.taskcluster.sh," .taskcluster.yml
 
 
 taskcluster-hooks.json: require-APP require-BRANCH nix
