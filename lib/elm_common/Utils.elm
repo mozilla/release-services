@@ -1,22 +1,41 @@
 module Utils exposing (..)
 
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events as Events
+import Html
+import Html.Events
+import Http
 import Json.Decode as JsonDecode
 
 
+onClick : msg -> Html.Attribute msg
 onClick msg =
-    Events.onWithOptions
+    Html.Events.onWithOptions
         "click"
-        (Events.Options False True)
+        (Html.Events.Options False True)
         (JsonDecode.succeed msg)
 
 
-onChange : (String -> msg) -> Attribute msg
+onChange : (String -> msg) -> Html.Attribute msg
 onChange handler =
-    Events.on "change" <| JsonDecode.map handler <| JsonDecode.at [ "target", "value" ] JsonDecode.string
+    JsonDecode.at [ "target", "value" ] JsonDecode.string
+        |> JsonDecode.map handler
+        |> Html.Events.on "change"
 
 
-eventLink msg attributes =
-    a ([ onClick <| msg, href "#" ] ++ attributes)
+handleResponse : (String -> a) -> a -> Http.Response -> a
+handleResponse handle default response =
+    if 200 <= response.status && response.status < 300 then
+        case response.value of
+            Http.Text text ->
+                handle text
+            _ ->
+                default
+    else
+        default
+
+
+decodeResponse decoder default response =
+    handleResponse
+        (\x -> JsonDecode.decodeString decoder x |> Result.withDefault default)
+        default
+        response
+

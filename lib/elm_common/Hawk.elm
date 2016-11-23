@@ -8,41 +8,41 @@ import Json.Decode as JsonDecode exposing ((:=))
 import RemoteData as RemoteData exposing (WebData, RemoteData(Loading, Success, NotAsked, Failure))
 
 
+type alias RequestID = String
+
 type Msg
-    = AddHeader Http.Request User.Credentials
-    | SendRequest String
+    = SendRequest String
 
 
-update : Msg -> ( Cmd Msg, Cmd (RemoteData Http.RawError Http.Response) )
+update : Msg -> ( Maybe RequestID
+                , Cmd Msg
+                , Cmd (RemoteData Http.RawError Http.Response)
+                )
 update msg =
     case msg of
-        AddHeader request credentials ->
-            ( send request credentials, Cmd.none )
-
-        SendRequest requestJson ->
-            case requestDecoder requestJson of
-                Ok request ->
-                    ( Cmd.none, sendRequest request )
+        SendRequest text ->
+            case JsonDecode.decodeString portDecoder text of
+                Ok (requestId, request) ->
+                    ( Just requestId, Cmd.none, sendRequest request )
 
                 Err error ->
-                    let
-                        l =
-                            Debug.log "Request decoding error" error
+                    let 
+                        _ = Debug.log "Request decoding error" error
                     in
-                        ( Cmd.none, Cmd.none )
+                        ( Nothing, Cmd.none, Cmd.none )
 
 
 
 -- Encode Http request in json to pass it through ports
 
 
-send : Http.Request -> User.Credentials -> Cmd Msg
-send request credentials =
+send : RequestID -> Http.Request -> User.Credentials -> Cmd Msg
+send requestId request credentials =
     let
         requestJson =
             requestEncoder request
     in
-        hawk_add_header ( requestJson, credentials )
+        hawk_add_header ( requestId, requestJson, credentials )
 
 
 
@@ -80,21 +80,20 @@ requestHeadersEncoder ( key, value ) =
         ]
 
 
-requestDecoder : String -> Result String Http.Request
-requestDecoder text =
-    JsonDecode.decodeString
-        (JsonDecode.object4 Http.Request
-            ("verb" := JsonDecode.string)
-            ("headers"
-                := JsonDecode.list
-                    (JsonDecode.tuple2 (,) JsonDecode.string JsonDecode.string)
-            )
-            ("url" := JsonDecode.string)
-            ("body" := JsonDecode.succeed Http.empty)
-         -- TODO
+requestDecoder: JsonDecode.Decoder Http.Request
+requestDecoder =
+    JsonDecode.object4 Http.Request
+        ("verb" := JsonDecode.string)
+        ("headers"
+            := JsonDecode.list
+                (JsonDecode.tuple2 (,) JsonDecode.string JsonDecode.string)
         )
-        text
+        ("url" := JsonDecode.string)
+        ("body" := JsonDecode.succeed Http.empty)
 
+portDecoder : JsonDecode.Decoder (RequestID, Http.Request)
+portDecoder =
+    JsonDecode.tuple2 (,) JsonDecode.string requestDecoder
 
 
 -- Used by apps to apply multiple Json decoders
@@ -145,13 +144,4 @@ applyDecoders initialModel decoders response =
 
 
 port hawk_send_request : (String -> msg) -> Sub msg
-
-
-port hawk_add_header : ( String, User.Credentials ) -> Cmd msg
-
-
-
--- Add this subscription in main App
--- subscriptions = [
---    Sub.map HawkRequest (Hawk.hawk_send_request (Hawk.SendRequest))
---   ]
+port hawk_add_header : (RequestID, String, User.Credentials) -> Cmd msg
