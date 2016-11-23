@@ -39,7 +39,7 @@ type Msg
 
 init : Maybe Credentials -> ( Model, Cmd Msg )
 init credentials =
-    (credentials, Cmd.none )
+    ( credentials, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
