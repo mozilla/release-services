@@ -7,8 +7,9 @@ let
 in mkFrontend {
   name = "elm_common_example";
   version = fileContents ./../../../VERSION;
-  src_path = "lib/elm_common/example";
   src = ./.;
+  src_elm_common = ./..;
+  src_path = "lib/elm_common/example";
   node_modules = import ./node-modules.nix { inherit (releng_pkgs) pkgs; };
   elm_packages = import ./elm-packages.nix;
 }
