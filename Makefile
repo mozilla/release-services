@@ -183,7 +183,7 @@ develop-run-elm_common_example: develop-run-FRONTEND
 develop-run-releng_frontend: develop-run-FRONTEND
 develop-run-releng_clobberer: require-sqlite develop-run-BACKEND
 develop-run-releng_tooltool: require-sqlite develop-run-BACKEND
-develop-run-releng_treestatus: require-sqlite develop-run-BACKEND
+develop-run-releng_treestatus: require-postgres develop-run-BACKEND
 develop-run-releng_mapper: require-sqlite develop-run-BACKEND
 develop-run-releng_archiver: require-sqlite develop-run-BACKEND
 
@@ -191,6 +191,9 @@ develop-run-shipit_frontend: develop-run-FRONTEND
 develop-run-shipit_dashboard: require-postgres develop-run-BACKEND
 develop-run-shipit_pipeline: require-sqlite develop-run-BACKEND
 develop-run-shipit_signoff: require-sqlite develop-run-BACKEND
+
+develop-run-postgres: build-postgresql require-initdb
+	./result-tool-postgresql/bin/postgres -D $(PWD)/tmp/postgres -h localhost -p $(APP_DEV_POSTGRES_PORT)
 
 develop-flask-shell: nix require-APP
 	DEBUG=true \
@@ -200,10 +203,6 @@ develop-flask-shell: nix require-APP
 	APP_SETTINGS=$$PWD/src/$(APP)/settings.py \
 		nix-shell nix/default.nix -A $(APP) \
     --run "flask $(FLASK_CMD)"
-
-develop-run-postgres: nix require-APP require-initdb
-	nix-shell nix/default.nix -A $(APP) \
-		--run "postgres -D $(PWD)/tmp/postgres -h $(APP_DEV_HOST) -p $(APP_DEV_POSTGRES_PORT)"
 
 build-apps: $(foreach app, $(APPS), build-app-$(app))
 
@@ -342,6 +341,8 @@ build-tool: require-TOOL build-tool-$(TOOL)
 build-tool-%: nix
 	@nix-build nix/default.nix -A tools.$(subst build-tool-,,$@) -o result-tool-$(subst build-tool-,,$@) --fallback
 
+build-postgresql: nix
+	@nix-build nix/default.nix -A postgresql -o result-tool-postgresql --fallback
 
 
 build-certs: tmpdir build-tool-createcert
@@ -520,11 +521,10 @@ require-BRANCH:
 		exit 1; \
 	fi
 
-require-initdb: nix require-APP
+require-initdb: build-postgresql
 	$(eval PG_DATA := $(PWD)/tmp/postgres)
 	@if [ ! -d $(PG_DATA) ]; then \
-		nix-shell nix/default.nix -A $(APP) \
-			--run "initdb -D $(PG_DATA) --auth=trust"; \
+		./result-tool-postgresql/bin/initdb -D $(PG_DATA) --auth=trust; \
 	fi
 
 require-sqlite: nix require-APP
