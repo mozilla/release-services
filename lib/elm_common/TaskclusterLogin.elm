@@ -26,25 +26,19 @@ type alias Credentials =
     }
 
 
-type alias Model =
-    { credentials : Maybe Credentials
-    }
+type alias Model = Maybe Credentials
 
 
 type Msg
     = Login Redirect.Model
     | Logging Credentials
-    | Logged (Maybe Credentials)
+    | Logged Model
     | Logout
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { credentials = Nothing
-      }
-    , -- Initial credentials loading
-      taskclusterlogin_load True
-    )
+    ( Nothing, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -53,13 +47,11 @@ update msg model =
         Login url ->
             ( model, Redirect.redirect url )
 
-        Logging creds ->
-            ( model, taskclusterlogin_set creds )
+        Logging credentials ->
+            ( model, taskclusterlogin_set credentials )
 
-        Logged creds ->
-            ( { model | credentials = creds }
-            , Cmd.none
-            )
+        Logged model ->
+            ( model , Cmd.none )
 
         Logout ->
             ( model, taskclusterlogin_remove True )

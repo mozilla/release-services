@@ -143,8 +143,8 @@ update msg model =
             )
 
         LoadScopes ->
-            case model.user.credentials of
-                Just credentials ->
+            case model.user of
+                Just user ->
                     let
                         -- Build Taskcluster http request
                         url =
@@ -157,7 +157,7 @@ update msg model =
                         , -- Extensions integration
                           -- This is how we do a request using Hawk
                           Cmd.map HawkRequest
-                            (Hawk.send "LoadScopes" request credentials)
+                            (Hawk.send "LoadScopes" request user )
                         )
 
                 Nothing ->
@@ -165,8 +165,8 @@ update msg model =
 
         -- App specific
         LoadRoles ->
-            case model.user.credentials of
-                Just credentials ->
+            case model.user of
+                Just user ->
                     let
                         -- Build Taskcluster http request
                         url =
@@ -179,7 +179,7 @@ update msg model =
                         , -- Extensions integration
                           -- This is how we do a request using Hawk
                           Cmd.map HawkRequest
-                            (Hawk.send "LoadRoles" request credentials)
+                            (Hawk.send "LoadRoles" request user )
                         )
 
                 Nothing ->
@@ -205,7 +205,7 @@ rolesDecoder =
 view model =
     div []
         [ h1 [] [ text "Taskcluster" ]
-        , viewLogin model.user
+        , viewLogin model
         , h1 [] [ text "Hawk" ]
         , viewHawk model
         , h1 [] [ text "Bugzilla" ]
@@ -214,7 +214,7 @@ view model =
 
 
 viewLogin model =
-    case model.credentials of
+    case model.user of
         Just user ->
             div [] [ text ("Logged in as " ++ user.clientId) ]
 
@@ -236,8 +236,8 @@ viewLogin model =
 
 viewHawk model =
     div []
-        [ case model.user.credentials of
-            Just credentials ->
+        [ case model.user of
+            Just user ->
                 p []
                     [ button [ onClick LoadScopes ] [ text "Request Taskcluster scopes" ]
                     , button [ onClick LoadRoles ] [ text "Request Taskcluster roles" ]
