@@ -27,6 +27,7 @@ handleResponse handle default response =
         case response.value of
             Http.Text text ->
                 handle text
+
             _ ->
                 default
     else
@@ -38,4 +39,3 @@ decodeResponse decoder default response =
         (\x -> JsonDecode.decodeString decoder x |> Result.withDefault default)
         default
         response
-
