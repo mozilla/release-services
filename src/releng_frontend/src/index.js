@@ -3,27 +3,36 @@
 require('expose?$!expose?jQuery!jquery');
 require('expose?Tether!tether');
 require('bootstrap');
-require("./index.scss");
-require('./user');
+require('./index.scss');
 
-var KEY = 'taskcluster-login';
+var redirect = require('./redirect');
+var localstorage = require('./localstorage');
+var hawk = require('./hawk');
+
+var url;
+var getUrl = function(name, _default) {
+  url = document.body.getAttribute('data-treestatus-url');
+  if (url === null) {
+    url = _default || 'You need to set NEO_' + name.toUperCase() + '_URL variable or data-' + name + '-url';
+  }
+  return url;
+};
+
+var KEY = 'taskclusterlogin';  // do not change this key
 var user = null;
-
 try {
   user = JSON.parse(window.localStorage.getItem(KEY));
 } catch (e) {
   // pass
 }
 
-var treestatusUrl = document.body.getAttribute('data-treestatus-url');
-if (treestatusUrl === null) {
-  treestatusUrl = process.env.NEO_TREESTATUS_URL || "You need to set NEO_TREESTATUS_URL variable or data-treestatus-url";
-}
-
+// Start the ELM application
 var app = require('./Main.elm').Main.fullscreen({
   user: user,
-  treestatusUrl: treestatusUrl 
+  treestatusUrl: getUrl('treestatus', process.env.NEO_TREESTATUS_URL)
 });
-    
 
-window.app_user(app, KEY);
+// Setup ports
+localstorage(app, KEY);
+hawk(app);
+redirect(app);
