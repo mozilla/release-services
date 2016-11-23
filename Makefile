@@ -68,8 +68,8 @@ APP_STAGING_HEROKU_releng_tooltool=releng-staging-tooltool
 APP_STAGING_HEROKU_releng_treestatus=releng-staging-treestatus
 APP_STAGING_HEROKU_releng_mapper=releng-staging-mapper
 APP_STAGING_HEROKU_releng_archiver=releng-staging-archiver
+
 APP_STAGING_HEROKU_shipit_dashboard=shipit-staging-dashboard
-APP_STAGING_HEROKU_shipit_dashboard=shipit-staging-workflow
 
 APP_STAGING_S3_releng_docs=releng-staging-docs
 APP_STAGING_S3_releng_frontend=releng-staging-frontend
@@ -96,7 +96,6 @@ APP_PRODUCTION_HEROKU_releng_treestatus=releng-production-treestatus
 APP_PRODUCTION_HEROKU_releng_mapper=releng-production-mapper
 APP_PRODUCTION_HEROKU_releng_archiver=releng-production-archiver
 APP_PRODUCTION_HEROKU_shipit_dashboard=shipit-production-dashboard
-APP_PRODUCTION_HEROKU_shipit_dashboard=shipit-production-workflow
 
 APP_PRODUCTION_S3_releng_docs=releng-production-docs
 APP_PRODUCTION_S3_releng_frontend=releng-production-frontend
