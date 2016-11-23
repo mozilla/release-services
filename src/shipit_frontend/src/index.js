@@ -26,6 +26,6 @@ var app = require('./Main.elm').Main.fullscreen({
 
 // Setup ports
 localstorage(app, 'bugzillalogin');
-localstorage(app, KEY);
+localstorage(app, 'taskclusterlogin');
 hawk(app);
 redirect(app)
