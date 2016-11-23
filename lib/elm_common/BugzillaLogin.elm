@@ -31,11 +31,11 @@ type alias Model =
     }
 
 
-init : String -> ( Model, Cmd Msg )
-init url =
+init : String -> Maybe Credentials -> ( Model, Cmd Msg )
+init url credentials =
     ( { url = url
       , check = NotAsked
-      , credentials = Nothing
+      , credentials = credentials
       }
     , -- Initial credentials loading
       bugzillalogin_load True
