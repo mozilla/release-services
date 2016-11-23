@@ -348,12 +348,21 @@ in rec {
         doCheck = true;
 
         checkPhase = ''
+          if [ -d src/ ]; then
+            echo "----------------------------------------------------------"
+            echo "---  Running ... elm-format-0.17 src/ --validate  --------"
+            echo "----------------------------------------------------------"
+            elm-format-0.17 src/ --validate
+          fi
+          if [ -e Main.elm ]; then
+            echo "----------------------------------------------------------"
+            echo "---  Running ... elm-format-0.17 ./*.elm --validate  -----"
+            echo "----------------------------------------------------------"
+            elm-format-0.17 ./*.elm --validate
+          fi
+          echo "Everything OK!"
           echo "----------------------------------------------------------"
-          echo "---  Running ... elm-format-0.17 src/ --validate  --------"
-          echo "----------------------------------------------------------"
-          elm-format-0.17 src/ --validate
-          echo "----------------------------------------------------------"
-          # TODO: neo start
+          # TODO: neo test
         '';
 
         installPhase = ''
