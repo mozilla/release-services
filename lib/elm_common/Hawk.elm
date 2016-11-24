@@ -69,8 +69,9 @@ requestEncoder request =
             [ ( "verb", JsonEncode.string request.verb )
             , ( "headers", JsonEncode.list (List.map requestHeadersEncoder request.headers) )
             , ( "url", JsonEncode.string request.url )
-            , ( "body", JsonEncode.null )
-              -- TODO: support text body
+              -- We can't access the internal type of the body
+              -- so we are forced to send its representation
+            , ( "body", JsonEncode.string (toString request.body) )
             ]
 
 
@@ -91,60 +92,22 @@ requestDecoder =
                 (JsonDecode.tuple2 (,) JsonDecode.string JsonDecode.string)
         )
         ("url" := JsonDecode.string)
-        ("body" := JsonDecode.succeed Http.empty)
+        ("body" := requestBodyDecoder)
+
+
+requestBodyDecoder : JsonDecode.Decoder Http.Body
+requestBodyDecoder =
+    JsonDecode.oneOf
+        [ -- From string to BodyString
+          JsonDecode.map Http.string JsonDecode.string
+        , -- From null to Empty
+          JsonDecode.null Http.empty
+        ]
 
 
 portDecoder : JsonDecode.Decoder ( RequestID, Http.Request )
 portDecoder =
     JsonDecode.tuple2 (,) JsonDecode.string requestDecoder
-
-
-
--- Used by apps to apply multiple Json decoders
-
-
-applyDecoders : model -> List (model -> String -> model) -> Http.Response -> model
-applyDecoders initialModel decoders response =
-    -- Apply every decoders in list on response+model
-    -- Folding to an only final model instance
-    if 200 <= response.status && response.status < 300 then
-        case response.value of
-            Http.Text responseText ->
-                List.foldl
-                    (\decoder m -> decoder m responseText)
-                    initialModel
-                    decoders
-
-            _ ->
-                initialModel
-    else
-        initialModel
-
-
-
---requestBodyToValue: Http.Body -> JsonEncode.Value
---requestBodyToValue body =
---  case body of
---    Empty -> JsonEncode.object [
---      ("type", JsonEncode.string "Empty"),
---      ("value", JsonEncode.null)
---    ]
---    BodyString x -> JsonEncode.object [
---      ("type", JsonEncode.string "BodyString"),
---      ("value", JsonEncode.string x)
---    ]
---    ArrayBuffer -> JsonEncode.object [
---      ("type", JsonEncode.string "ArrayBuffer"),
---      ("value", JsonEncode.null)
---    ]
---    BodyFormData -> JsonEncode.object [
---      ("type", JsonEncode.string "BodyFormData"),
---      ("value", JsonEncode.null)
---    ]
---    BodyBlob -> JsonEncode.object [
---      ("type", JsonEncode.string "BodyBlob"),
---      ("value", JsonEncode.null)
---    ]
 
 
 port hawk_send_request : (String -> msg) -> Sub msg

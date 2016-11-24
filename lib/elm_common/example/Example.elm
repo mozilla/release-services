@@ -5,6 +5,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Html.App
 import Http
+import Json.Encode as JsonEncode
 import Json.Decode as JsonDecode exposing ((:=))
 import RouteUrl exposing (UrlChange)
 import RouteUrl.Builder as Builder exposing (Builder, builder, replacePath)
@@ -27,6 +28,8 @@ type
     | LoadScopes
     | SetRoles (RemoteData Http.RawError Http.Response)
     | LoadRoles
+    | SetSecret (RemoteData Http.RawError Http.Response)
+    | WriteSecret
 
 
 
@@ -116,6 +119,9 @@ update msg model =
                         "LoadRoles" ->
                             Cmd.map SetRoles response
 
+                        "WriteSecret" ->
+                            Cmd.map SetSecret response
+
                         _ ->
                             Cmd.none
 
@@ -148,6 +154,13 @@ update msg model =
             , Cmd.none
             )
 
+        SetSecret response ->
+            let
+                l =
+                    Debug.log "Set secret !" response
+            in
+                ( model, Cmd.none )
+
         LoadScopes ->
             case model.user of
                 Just user ->
@@ -169,7 +182,6 @@ update msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
-        -- App specific
         LoadRoles ->
             case model.user of
                 Just user ->
@@ -186,6 +198,44 @@ update msg model =
                           -- This is how we do a request using Hawk
                           Cmd.map HawkRequest
                             (Hawk.send "LoadRoles" request user)
+                        )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        WriteSecret ->
+            case model.user of
+                Just user ->
+                    let
+                        -- Build Taskcluster http request
+                        url =
+                            "https://secrets.taskcluster.net/v1/secret/garbage/testElmCommon"
+
+                        payload =
+                            JsonEncode.encode 0
+                                (JsonEncode.object
+                                    [ ( "secret"
+                                      , JsonEncode.object
+                                            [ ( "secretKey", JsonEncode.string "secretValue" )
+                                            , ( "test", JsonEncode.int 42 )
+                                            ]
+                                      )
+                                    , ( "expires", JsonEncode.string "0" )
+                                    ]
+                                )
+
+                        headers =
+                            [ ( "Content-Type", "application/json" )
+                            ]
+
+                        request =
+                            Http.Request "PUT" headers url (Http.string payload)
+                    in
+                        ( model
+                        , -- Extensions integration
+                          -- This is how we do a request using Hawk
+                          Cmd.map HawkRequest
+                            (Hawk.send "WriteSecret" request user)
                         )
 
                 Nothing ->
@@ -247,6 +297,7 @@ viewHawk model =
                 p []
                     [ button [ onClick LoadScopes ] [ text "Request Taskcluster scopes" ]
                     , button [ onClick LoadRoles ] [ text "Request Taskcluster roles" ]
+                    , button [ onClick WriteSecret ] [ text "Set Taskcluster secret garbage/testElmCommon" ]
                     ]
 
             Nothing ->
