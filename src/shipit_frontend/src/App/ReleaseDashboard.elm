@@ -174,11 +174,7 @@ update : Msg -> Model -> User.Model -> Bugzilla.Model -> ( Model, Cmd Msg )
 update msg model user bugzilla =
     case msg of
         HawkRequest hawkMsg ->
-            let
-                l =
-                    Debug.log "hawk msg" hawkMsg
-            in
-                ( model, Cmd.none )
+            ( model, Cmd.none )
 
         -- Load all Analysis
         FetchAllAnalysis ->
@@ -278,20 +274,21 @@ update msg model user bugzilla =
                 NoEditor ->
                     ( model, Cmd.none )
 
-        FetchedBug bug ->
-            ( model, Cmd.none )
+        FetchedBug response ->
+            ( response
+                |> RemoteData.map
+                    (\r ->
+                        case Utils.decodeWebResponse decodeBug r of
+                            Success bug ->
+                                updateBug model bug.id (\b -> bug)
 
-        --            -- Store updated bug - post edits
-        --            let
-        --                model' =
-        --                    case bug of
-        --                        Success bug' ->
-        --                            updateBug model bug'.id (\b -> bug')
-        --
-        --                        _ ->
-        --                            model
-        --            in
-        --                ( model', Cmd.none )
+                            _ ->
+                                model
+                    )
+                |> RemoteData.withDefault model
+            , Cmd.none
+            )
+
         SavedBugEdit bug update ->
             let
                 -- Store bug update from bugzilla
@@ -433,11 +430,12 @@ publishBugEdits model bugzilla bug =
                             )
                         )
 
-                l =
-                    Debug.log "Bugzilla payload" payload
+                headers =
+                    [ ( "Content-Type", "application/json" )
+                    ]
 
                 request =
-                    Http.Request "PUT" [] ("/bug/" ++ (toString bug.bugzilla_id)) (Http.string payload)
+                    Http.Request "PUT" headers ("/bug/" ++ (toString bug.bugzilla_id)) (Http.string payload)
 
                 task =
                     Bugzilla.send request bugzilla
@@ -447,7 +445,7 @@ publishBugEdits model bugzilla bug =
                         |> RemoteData.asCmd
                         |> Cmd.map (SavedBugEdit bug)
 
-                -- Mark bug as being updatedo
+                -- Mark bug as being updated
                 model' =
                     updateBug model bug.id (\b -> { b | update = Loading })
             in
@@ -562,8 +560,12 @@ sendBugUpdate model user bug update =
                 url =
                     model.backend_dashboard_url ++ "/bugs/" ++ (toString bug.bugzilla_id)
 
+                headers =
+                    [ ( "Content-Type", "application/json" )
+                    ]
+
                 request =
-                    Http.Request "PUT" [] url (Http.string payload)
+                    Http.Request "PUT" headers url (Http.string payload)
             in
                 ( model
                 , Cmd.map HawkRequest
