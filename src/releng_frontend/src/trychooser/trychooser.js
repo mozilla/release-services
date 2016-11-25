@@ -220,6 +220,10 @@ $(document).ready(function() {
             args.push('--rebuild-talos 5');
         }
 
+    if ($('.artifact-build').is(':checked')) {
+        args.push('--artifact');
+    }
+
         var tag = $('#tags').val();
         if (tag) {
             args.push('--tag ' + tag);
