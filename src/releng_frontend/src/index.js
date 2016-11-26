@@ -10,10 +10,10 @@ var localstorage = require('./localstorage');
 var hawk = require('./hawk');
 
 var url;
-var getUrl = function(name, _default) {
-  url = document.body.getAttribute('data-' + name + '-url');
+var getData = function(name, _default) {
+  url = document.body.getAttribute('data-' + name);
   if (url === null) {
-    url = _default || 'You need to set NEO_' + name.toUpperCase() + '_URL variable or data-' + name + '-url';
+    url = _default || 'You need to set NEO_' + name.replace('-', '_').toUpperCase() + ' variable or data-' + name;
   }
   return url;
 };
@@ -23,7 +23,8 @@ var getUrl = function(name, _default) {
 var KEY = 'taskclusterlogin';  // do not change this key
 var app = require('./Main.elm').Main.fullscreen({
   user: localstorage.load_item(KEY),
-  treestatusUrl: getUrl('treestatus', process.env.NEO_TREESTATUS_URL)
+  treestatusUrl: getData('treestatus-url', process.env.NEO_TREESTATUS_URL),
+  version: getData('version', process.env.NEO_VERSION)
 });
 
 // Setup ports

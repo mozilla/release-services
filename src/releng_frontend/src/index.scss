@@ -94,18 +94,9 @@ $headings-font-weight: 300;
     }
 }
 
-.linked-card {
-    color: #373a3c;
-}
-.linked-card:hover {
-    color: $white;
-    text-decoration: none;
-    .card {
-        background-color: $developer-blue;
-    }
-}
 
 footer {
+    color: $charcoal;
     font-size: 12px;
     line-height: 1.6em;
     margin: 2em 0;
@@ -116,6 +107,14 @@ footer {
     }
     ul {
         list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    div a {
+      color: $charcoal;
+      &:hover {
+        text-decoration: none;
+      }
     }
 }
 

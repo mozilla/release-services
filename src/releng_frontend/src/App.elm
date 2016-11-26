@@ -82,12 +82,14 @@ type alias Model =
     { route : Route
     , user : User.Model
     , treestatus : App.TreeStatus.Model
+    , version : String
     }
 
 
 type alias Flags =
     { user : User.Model
     , treestatusUrl : String
+    , version : String
     }
 
 
@@ -96,6 +98,7 @@ init flags =
     ( { user = flags.user
       , route = HomeRoute
       , treestatus = App.TreeStatus.init flags.treestatusUrl
+      , version = flags.version
       }
     , Cmd.none
     )
@@ -307,13 +310,17 @@ viewNavBar model =
     ]
 
 
-viewFooter =
+viewFooter model =
     [ hr [] []
     , ul []
         [ li [] [ a [ href "#" ] [ text "Github" ] ]
         , li [] [ a [ href "#" ] [ text "Contribute" ] ]
         , li [] [ a [ href "#" ] [ text "Contact" ] ]
-          -- TODO: add version / revision
+        ]
+    , div []
+        [ text "version: "
+        , a [ href ("https://github.com/mozilla-releng/services/releases/tag/" ++ model.version) ]
+            [ text model.version ]
         ]
     ]
 
@@ -328,7 +335,7 @@ view model =
             [ div [ class "container" ] (viewNavBar model) ]
         , div [ id "content" ]
             [ div [ class "container" ] [ viewPage model ] ]
-        , footer [ class "container" ] viewFooter
+        , footer [ class "container" ] (viewFooter model)
         ]
 
 
