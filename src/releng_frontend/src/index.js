@@ -24,6 +24,7 @@ var KEY = 'taskclusterlogin';  // do not change this key
 var app = require('./Main.elm').Main.fullscreen({
   user: localstorage.load_item(KEY),
   treestatusUrl: getData('treestatus-url', process.env.NEO_TREESTATUS_URL),
+  docsUrl: getData('docs-url', process.env.NEO_DOCS_URL),
   version: getData('version', process.env.NEO_VERSION)
 });
 

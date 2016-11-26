@@ -82,6 +82,7 @@ type alias Model =
     { route : Route
     , user : User.Model
     , treestatus : App.TreeStatus.Model
+    , docsUrl : String
     , version : String
     }
 
@@ -89,6 +90,7 @@ type alias Model =
 type alias Flags =
     { user : User.Model
     , treestatusUrl : String
+    , docsUrl : String
     , version : String
     }
 
@@ -98,6 +100,7 @@ init flags =
     ( { user = flags.user
       , route = HomeRoute
       , treestatus = App.TreeStatus.init flags.treestatusUrl
+      , docsUrl = flags.docsUrl
       , version = flags.version
       }
     , Cmd.none
@@ -255,7 +258,7 @@ viewUser model =
                 loginTarget =
                     Just
                         ( "/login"
-                        , "RelengAPI is a collection of Release Engineering services"
+                        , "Release Engineering services"
                         )
 
                 loginUrl =
@@ -282,29 +285,10 @@ viewNavBar model =
         [ text "&#9776;" ]
     , eventLink (NavigateTo HomeRoute)
         [ class "navbar-brand" ]
-        [ text "RelengAPI" ]
-    , div [ class "collapse navbar-toggleable-sm navbar-collapse pull-right" ]
+        [ text "Release Engineering" ]
+    , div [ class "collapse navbar-toggleable-sm navbar-collapse" ]
         [ ul [ class "nav navbar-nav" ]
-            [ li [ class "nav-item" ]
-                (viewDropdown "Services"
-                    [ a
-                        [ href "/trychooser"
-                        , class "dropdown-item"
-                        ]
-                        [ text "TryChooser" ]
-                    ]
-                )
-              --(viewDropdown "Services"
-              --    (List.map
-              --        (\x ->
-              --            eventLink (NavigateTo x.page)
-              --                [ class "dropdown-item" ]
-              --                [ text x.title ]
-              --        )
-              --        services
-              --    )
-              --)
-            , li [ class "nav-item" ] (viewUser model)
+            [ li [ class "nav-item" ] (viewUser model)
             ]
         ]
     ]
@@ -313,9 +297,18 @@ viewNavBar model =
 viewFooter model =
     [ hr [] []
     , ul []
-        [ li [] [ a [ href "#" ] [ text "Github" ] ]
-        , li [] [ a [ href "#" ] [ text "Contribute" ] ]
-        , li [] [ a [ href "#" ] [ text "Contact" ] ]
+        [ li []
+            [ a [ href model.docsUrl ]
+                [ text "Documentation" ]
+            ]
+        , li []
+            [ a [ href "https://github.com/mozilla-releng/services/blob/master/CONTRIBUTING.rst" ]
+                [ text "Contribute" ]
+            ]
+        , li []
+            [ a [ href "https://github.com/mozilla-releng/services/issues/new" ]
+                [ text "Contact" ]
+            ]
         ]
     , div []
         [ text "version: "
