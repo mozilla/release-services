@@ -86,10 +86,10 @@ self: {
 
 
   "Sphinx" = python.mkDerivation {
-    name = "Sphinx-1.4.8";
+    name = "Sphinx-1.4.9";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/1f/f6/e54a7aad73e35232356103771ae76306dadd8546b024c646fbe75135571c/Sphinx-1.4.8.tar.gz";
-      sha256 = "41af978f653ef862eb4bb3776dabd8ff13afed17e431907310fe990a3947707f";
+      url = "https://pypi.python.org/packages/c5/21/ccd4567e5918e7fd61bce03421ae6ff6912b84e11728c1fd02a1cf85c17d/Sphinx-1.4.9.tar.gz";
+      sha256 = "82cd2728c906be96e307b81352d3fd9fb731869234c6b835cc25e9a3dfb4b7e4";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -166,6 +166,27 @@ self: {
 
 
 
+  "livereload" = python.mkDerivation {
+    name = "livereload-2.5.0";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/ba/71/2660028c74cb3289d4b9fd06632aa277b4edbe0747b7219cd92307fa19ba/livereload-2.5.0.tar.gz";
+      sha256 = "bc708b46e22dff243c02e709c636ffeb8a64cdd019c95a215304e6ce183c4859";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."six"
+      self."tornado"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "Python LiveReload is an awesome tool for web developers";
+    };
+  };
+
+
+
   "pytz" = python.mkDerivation {
     name = "pytz-2016.7";
     src = pkgs.fetchurl {
@@ -215,6 +236,24 @@ self: {
       homepage = "";
       license = licenses.bsdOriginal;
       description = "This package provides 16 stemmer algorithms (15 + Poerter English stemmer) generated from Snowball algorithms.";
+    };
+  };
+
+
+
+  "tornado" = python.mkDerivation {
+    name = "tornado-4.4.2";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/1e/7c/ea047f7bbd1ff22a7f69fe55e7561040e3e54d6f31da6267ef9748321f98/tornado-4.4.2.tar.gz";
+      sha256 = "2898f992f898cd41eeb8d53b6df75495f2f423b6672890aadaf196ea1448edcc";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = "License :: OSI Approved :: Apache Software License";
+      description = "Tornado is a Python web framework and asynchronous networking library, originally developed at FriendFeed.";
     };
   };
 

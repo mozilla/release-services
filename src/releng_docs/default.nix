@@ -32,6 +32,7 @@ let
 
     shellHook = ''
       export RELENG_DOCS_VERSION=${version}
+      cd src/${name}
     '';
 
     passthru.taskclusterGithubTasks =

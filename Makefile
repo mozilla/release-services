@@ -38,13 +38,16 @@ APP_DEV_DBNAME=services
 
 APP_DEV_HOST=localhost
 
-APP_DEV_PORT_elm_common_example=7000
+APP_DEV_PORT_releng_docs=7000
+APP_DEV_PORT_elm_common_example=7001
+
 APP_DEV_PORT_releng_frontend=8000
 APP_DEV_PORT_releng_clobberer=8001
 APP_DEV_PORT_releng_tooltool=8002
 APP_DEV_PORT_releng_treestatus=8003
 APP_DEV_PORT_releng_mapper=8004
 APP_DEV_PORT_releng_archiver=8005
+
 APP_DEV_PORT_shipit_frontend=8010
 APP_DEV_PORT_shipit_dashboard=8011
 APP_DEV_PORT_shipit_pipeline=8012
@@ -52,25 +55,26 @@ APP_DEV_PORT_shipit_signoff=8013
 
 APP_DEV_POSTGRES_PORT=9000
 
-APP_DEV_SSL=\
-	NEO_VERSION='v$(VERSION) - developing' \
+APP_DEV=\
+	NEO_VERSION='v$(VERSION) (devel)' \
+	NEO_DOCS_URL='http://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_docs)' \
 	SSL_CACERT=$$PWD/tmp/ca.crt \
 	SSL_CERT=$$PWD/tmp/server.crt \
 	SSL_KEY=$$PWD/tmp/server.key
 APP_DEV_ENV_elm_common_example=\
-	$(APP_DEV_SSL)
+	$(APP_DEV)
 APP_DEV_ENV_releng_frontend=\
 	NEO_CLOBBERER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_clobberer) \
 	NEO_TOOLTOOL_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_tooltool) \
 	NEO_TREESTATUS_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_treestatus) \
 	NEO_MAPPER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_mapper) \
 	NEO_ARCHIVER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_archiver) \
-	$(APP_DEV_SSL)
+	$(APP_DEV)
 APP_DEV_ENV_shipit_frontend=\
 	NEO_DASHBOARD_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit_dashboard) \
 	NEO_PIPELINE_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit_pipeline) \
 	NEO_BUGZILLA_URL=https://bugzilla-dev.allizom.org \
-	$(APP_DEV_SSL)
+	$(APP_DEV)
 
 APP_STAGING_HEROKU_releng_clobberer=releng-staging-clobberer
 APP_STAGING_HEROKU_releng_tooltool=releng-staging-tooltool
@@ -166,6 +170,9 @@ develop: nix require-APP
 
 develop-run: require-APP develop-run-$(APP)
 
+develop-run-SPHINX : nix require-APP
+	nix-shell nix/default.nix -A releng_docs --run "HOST=$(APP_DEV_HOST) PORT=$(APP_DEV_PORT_$(APP)) python run.py"
+
 develop-run-BACKEND: build-certs nix require-APP
 	DEBUG=true \
 	CACHE_TYPE=filesystem \
@@ -179,6 +186,7 @@ develop-run-FRONTEND: build-certs nix require-APP
 	nix-shell nix/default.nix --pure -A $(APP) \
 		--run "$(APP_DEV_ENV_$(APP)) neo start --port $(APP_DEV_PORT_$(APP)) --config webpack.config.js"
 
+develop-run-releng_docs: develop-run-SPHINX
 develop-run-elm_common_example: develop-run-FRONTEND
 
 develop-run-releng_frontend: develop-run-FRONTEND
