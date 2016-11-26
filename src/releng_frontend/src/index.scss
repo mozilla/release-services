@@ -188,3 +188,16 @@ footer {
       }
     }
 }
+
+#page-home .card {
+    &:hover {
+        text-decoration: none;
+    }
+    .card-title {
+        color: #333;
+        font-weight: bold;
+    }
+    .card-text {
+        color: #333;
+    }
+}

@@ -5,8 +5,8 @@ import Html.Attributes exposing (..)
 
 
 view model =
-    div [ class "row" ]
-        [ div [ class "col-sm-3" ]
+    div [ class "row", id "page-home" ]
+        [ div [ class "col-sm-6" ]
               [ a [ class "card card-block"
                   , href "/trychooser"
                   ]
