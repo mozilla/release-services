@@ -201,7 +201,7 @@ viewPage model =
     case model.route of
         HomeRoute ->
             --TODO: Html.App.map App.HomeMsg (App.Home.view model)
-            App.Home.view model
+            App.Home.view model 
 
         TreeStatusRoute ->
             Html.App.map TreeStatusMsg (App.TreeStatus.view model.treestatus)
@@ -278,16 +278,22 @@ viewNavBar model =
     , div [ class "collapse navbar-toggleable-sm navbar-collapse pull-right" ]
         [ ul [ class "nav navbar-nav" ]
             [ li [ class "nav-item" ]
-                (viewDropdown "Services"
-                    (List.map
-                        (\x ->
-                            pageLink x.page
-                                [ class "dropdown-item" ]
-                                [ text x.title ]
-                        )
-                        services
-                    )
-                )
+                 ( viewDropdown "Services" [ a [ href "/trychooser"
+                                               , class "dropdown-item"
+                                               ]
+                                               [ text "TryChooser" ]
+                                           ]
+                 )
+                --(viewDropdown "Services"
+                --    (List.map
+                --        (\x ->
+                --            pageLink x.page
+                --                [ class "dropdown-item" ]
+                --                [ text x.title ]
+                --        )
+                --        services
+                --    )
+                --)
             , li [ class "nav-item" ] (viewUser model)
             ]
         ]
