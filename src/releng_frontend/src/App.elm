@@ -19,36 +19,32 @@ import TaskclusterLogin as User
 
 
 type Route
-    = HomeRoute
+    = NotFoundRoute
+    | HomeRoute
     | TreeStatusRoute
 
 
 
--- TODO: add NotFoundRoute
-
-
-pageLink route =
-    eventLink (NavigateTo route)
-
-
-delta2url' : Model -> Maybe Builder
-delta2url' model =
-    case model.route of
-        HomeRoute ->
-            Maybe.map
-                (Builder.prependToPath [])
-                (Just builder)
-
-        TreeStatusRoute ->
-            Maybe.map
-                (Builder.prependToPath [ "treestatus" ])
-                (Just builder)
-
-
 delta2url : Model -> Model -> Maybe UrlChange
 delta2url previous current =
-    delta2url' current
-        |> Maybe.map Builder.toUrlChange
+    let
+        url = case current.route of
+            HomeRoute ->
+                Maybe.map
+                    (Builder.prependToPath [])
+                    (Just builder)
+
+            TreeStatusRoute ->
+                Maybe.map
+                    (Builder.prependToPath [ "treestatus" ])
+                    (Just builder)
+
+            NotFoundRoute ->
+                Maybe.map
+                    (Builder.prependToPath [ "404" ])
+                    (Just builder)
+    in
+        Maybe.map Builder.toUrlChange url
 
 
 location2messages : Location -> List Msg
@@ -72,10 +68,10 @@ location2messages location =
                         [ NavigateTo TreeStatusRoute ]
 
                     _ ->
-                        []
+                        [ NavigateTo NotFoundRoute ]
 
             _ ->
-                []
+                [ NavigateTo HomeRoute ]
 
 
 
@@ -175,6 +171,10 @@ update msg model =
                           }
                         , Cmd.map TreeStatusMsg <| snd treestatus
                         )
+                _ ->
+                    ( { model | route = route }
+                    , Cmd.none
+                    )
 
         TreeStatusMsg treestatusMsg ->
             let
@@ -199,12 +199,17 @@ services =
 
 viewPage model =
     case model.route of
+        NotFoundRoute ->
+            div [ class "hero-unit" ]
+                [ h1 [] [ text "Page Not Found" ] ]
+
         HomeRoute ->
             --TODO: Html.App.map App.HomeMsg (App.Home.view model)
             App.Home.view model 
 
         TreeStatusRoute ->
             Html.App.map TreeStatusMsg (App.TreeStatus.view model.treestatus)
+
 
 
 viewDropdown title pages =
@@ -272,7 +277,7 @@ viewNavBar model =
         , attribute "aria-controls" "navbar-header"
         ]
         [ text "&#9776;" ]
-    , pageLink HomeRoute
+    , eventLink (NavigateTo HomeRoute)
         [ class "navbar-brand" ]
         [ text "RelengAPI" ]
     , div [ class "collapse navbar-toggleable-sm navbar-collapse pull-right" ]
@@ -284,16 +289,16 @@ viewNavBar model =
                                                [ text "TryChooser" ]
                                            ]
                  )
-                --(viewDropdown "Services"
-                --    (List.map
-                --        (\x ->
-                --            pageLink x.page
-                --                [ class "dropdown-item" ]
-                --                [ text x.title ]
-                --        )
-                --        services
-                --    )
-                --)
+                 --(viewDropdown "Services"
+                 --    (List.map
+                 --        (\x ->
+                 --            eventLink (NavigateTo x.page)
+                 --                [ class "dropdown-item" ]
+                 --                [ text x.title ]
+                 --        )
+                 --        services
+                 --    )
+                 --)
             , li [ class "nav-item" ] (viewUser model)
             ]
         ]
