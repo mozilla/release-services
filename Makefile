@@ -32,6 +32,7 @@ TOOLS=\
 	push \
 	pypi2nix \
 	taskcluster-hooks
+VERSION=$(shell cat VERSION)
 
 APP_DEV_DBNAME=services
 
@@ -52,6 +53,7 @@ APP_DEV_PORT_shipit_signoff=8013
 APP_DEV_POSTGRES_PORT=9000
 
 APP_DEV_SSL=\
+	NEO_VERSION='v$(VERSION) - developing' \
 	SSL_CACERT=$$PWD/tmp/ca.crt \
 	SSL_CERT=$$PWD/tmp/server.crt \
 	SSL_KEY=$$PWD/tmp/server.key
@@ -82,18 +84,14 @@ APP_STAGING_S3_releng_docs=releng-staging-docs
 APP_STAGING_S3_releng_frontend=releng-staging-frontend
 APP_STAGING_S3_shipit_frontend=shipit-staging-frontend
 APP_STAGING_ENV_releng_frontend=\
-	'clobberer-url="https:\/\/clobberer\.staging\.mozilla-releng\.net\"' \
-	'tooltool-url="https:\/\/tooltool\.staging\.mozilla-releng\.net\"' \
-	'treestatus-url="https:\/\/treestatus\.staging\.mozilla-releng\.net\"' \
-	'mapper-url="https:\/\/mapper\.staging\.mozilla-releng\.net\"' \
-	'archiver-url="https:\/\/archiver\.staging\.mozilla-releng\.net\"'
-APP_STAGING_ENV_releng_frontend=\
+	'version="v$(VERSION)"' \
 	'clobberer-url="https:\/\/clobberer\.staging\.mozilla-releng\.net\"' \
 	'tooltool-url="https:\/\/tooltool\.staging\.mozilla-releng\.net\"' \
 	'treestatus-url="https:\/\/treestatus\.staging\.mozilla-releng\.net\"' \
 	'mapper-url="https:\/\/mapper\.staging\.mozilla-releng\.net\"' \
 	'archiver-url="https:\/\/archiver\.staging\.mozilla-releng\.net\"'
 APP_STAGING_ENV_shipit_frontend=\
+	'version="v$(VERSION)"' \
 	'dashboard-url="https:\/\/dashboard\.shipit\.staging\.mozilla-releng\.net\"' \
 	'bugzilla-url="https:\/\/bugzilla\.mozilla\.org"'
 
@@ -108,12 +106,14 @@ APP_PRODUCTION_S3_releng_docs=releng-production-docs
 APP_PRODUCTION_S3_releng_frontend=releng-production-frontend
 APP_PRODUCTION_S3_shipit_frontend=shipit-production-frontend
 APP_PRODUCTION_ENV_releng_frontend=\
+	'version="v$(VERSION)"' \
 	'clobberer-url="https:\/\/clobberer\.mozilla-releng\.net\"' \
 	'tooltool-url="https:\/\/tooltool\.mozilla-releng\.net\"' \
 	'treestatus-url="https:\/\/treestatus\.mozilla-releng\.net\"' \
 	'mapper-url="https:\/\/mapper\.mozilla-releng\.net\"' \
 	'archiver-url="https:\/\/archiver\.mozilla-releng\.net\"'
 APP_PRODUCTION_ENV_shipit_frontend=\
+	'version="$(VERSION)"' \
 	'dashboard-url="https:\/\/dashboard\.shipit\.mozilla-releng\.net\"'
 
 FLASK_CMD ?= shell # default value for flask command to run
@@ -300,20 +300,20 @@ deploy-production-S3: \
 		$(APP_TMP) \
 		s3://$(APP_PRODUCTION_S3_$(APP))
 
-deploy-production-elm_common_example: # no deployment
+deploy-production-elm_common_example:  # no deployment
 
-deploy-production-releng_frontend: deploy-production-S3
-deploy-production-releng_docs: deploy-production-S3
-deploy-production-releng_clobberer: deploy-production-HEROKU
-deploy-production-releng_tooltool: deploy-production-HEROKU
-deploy-production-releng_treestatus: deploy-production-HEROKU
-deploy-production-releng_mapper: deploy-production-HEROKU
-deploy-production-releng_archiver: deploy-production-HEROKU
+deploy-production-releng_frontend:     deploy-production-S3
+deploy-production-releng_docs:         deploy-production-S3
+deploy-production-releng_clobberer:    # deploy-production-HEROKU
+deploy-production-releng_tooltool:     # deploy-production-HEROKU
+deploy-production-releng_treestatus:   # deploy-production-HEROKU
+deploy-production-releng_mapper:       # deploy-production-HEROKU
+deploy-production-releng_archiver:     # deploy-production-HEROKU
 
-deploy-production-shipit_frontend: deploy-production-S3
-deploy-production-shipit_dashboard: deploy-production-HEROKU
-deploy-production-shipit_pipeline: # deploy-staging-HEROKU
-deploy-production-shipit_signoff: # deploy-staging-HEROKU
+deploy-production-shipit_frontend:     # deploy-production-S3
+deploy-production-shipit_dashboard:    # deploy-production-HEROKU
+deploy-production-shipit_pipeline:     # deploy-staging-HEROKU
+deploy-production-shipit_signoff:      # deploy-staging-HEROKU
 
 
 
