@@ -18,21 +18,15 @@ var getUrl = function(name, _default) {
   return url;
 };
 
-var KEY = 'taskclusterlogin';  // do not change this key
-var user = null;
-try {
-  user = JSON.parse(window.localStorage.getItem(KEY));
-} catch (e) {
-  // pass
-}
 
 // Start the ELM application
+var KEY = 'taskclusterlogin';  // do not change this key
 var app = require('./Main.elm').Main.fullscreen({
-  user: user,
+  user: localstorage.load_item(KEY),
   treestatusUrl: getUrl('treestatus', process.env.NEO_TREESTATUS_URL)
 });
 
 // Setup ports
-localstorage(app, KEY);
+localstorage.init(app, KEY);
 hawk(app);
 redirect(app);
