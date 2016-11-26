@@ -24,25 +24,25 @@ type Route
     | TreeStatusRoute
 
 
-
 delta2url : Model -> Model -> Maybe UrlChange
 delta2url previous current =
     let
-        url = case current.route of
-            HomeRoute ->
-                Maybe.map
-                    (Builder.prependToPath [])
-                    (Just builder)
+        url =
+            case current.route of
+                HomeRoute ->
+                    Maybe.map
+                        (Builder.prependToPath [])
+                        (Just builder)
 
-            TreeStatusRoute ->
-                Maybe.map
-                    (Builder.prependToPath [ "treestatus" ])
-                    (Just builder)
+                TreeStatusRoute ->
+                    Maybe.map
+                        (Builder.prependToPath [ "treestatus" ])
+                        (Just builder)
 
-            NotFoundRoute ->
-                Maybe.map
-                    (Builder.prependToPath [ "404" ])
-                    (Just builder)
+                NotFoundRoute ->
+                    Maybe.map
+                        (Builder.prependToPath [ "404" ])
+                        (Just builder)
     in
         Maybe.map Builder.toUrlChange url
 
@@ -171,6 +171,7 @@ update msg model =
                           }
                         , Cmd.map TreeStatusMsg <| snd treestatus
                         )
+
                 _ ->
                     ( { model | route = route }
                     , Cmd.none
@@ -205,11 +206,10 @@ viewPage model =
 
         HomeRoute ->
             --TODO: Html.App.map App.HomeMsg (App.Home.view model)
-            App.Home.view model 
+            App.Home.view model
 
         TreeStatusRoute ->
             Html.App.map TreeStatusMsg (App.TreeStatus.view model.treestatus)
-
 
 
 viewDropdown title pages =
@@ -283,22 +283,24 @@ viewNavBar model =
     , div [ class "collapse navbar-toggleable-sm navbar-collapse pull-right" ]
         [ ul [ class "nav navbar-nav" ]
             [ li [ class "nav-item" ]
-                 ( viewDropdown "Services" [ a [ href "/trychooser"
-                                               , class "dropdown-item"
-                                               ]
-                                               [ text "TryChooser" ]
-                                           ]
-                 )
-                 --(viewDropdown "Services"
-                 --    (List.map
-                 --        (\x ->
-                 --            eventLink (NavigateTo x.page)
-                 --                [ class "dropdown-item" ]
-                 --                [ text x.title ]
-                 --        )
-                 --        services
-                 --    )
-                 --)
+                (viewDropdown "Services"
+                    [ a
+                        [ href "/trychooser"
+                        , class "dropdown-item"
+                        ]
+                        [ text "TryChooser" ]
+                    ]
+                )
+              --(viewDropdown "Services"
+              --    (List.map
+              --        (\x ->
+              --            eventLink (NavigateTo x.page)
+              --                [ class "dropdown-item" ]
+              --                [ text x.title ]
+              --        )
+              --        services
+              --    )
+              --)
             , li [ class "nav-item" ] (viewUser model)
             ]
         ]
