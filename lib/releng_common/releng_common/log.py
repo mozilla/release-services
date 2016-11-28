@@ -32,6 +32,7 @@ def init_app(app):
     def logbook_factory(*args, **kwargs):
         # Logger given to structlog
         level = app.debug and logbook.DEBUG or logbook.INFO
+        logbook.compat.redirect_logging()
         return logbook.Logger(level=level, *args, **kwargs)
 
     # Setup structlog over logbook
