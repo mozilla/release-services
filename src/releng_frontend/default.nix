@@ -15,4 +15,5 @@ in mkFrontend {
     mkdir -p $out/trychooser
     cp src/trychooser/* $out/trychooser/
   '';
+  production = true;
 }

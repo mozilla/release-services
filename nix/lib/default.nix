@@ -301,6 +301,8 @@ in rec {
     , elm_packages
     , patchPhase ? ""
     , postInstall ? null
+    , staging ? true
+    , production ? false
     }:
     let
       self = stdenv.mkDerivation {
@@ -379,7 +381,9 @@ in rec {
 
         passthru.taskclusterGithubTasks =
           map (branch: mkTaskclusterGithubTask { inherit name src_path branch; })
-            [ "master" "staging" "production" ];
+              ([ "master" ] ++ optional staging "staging"
+                            ++ optional production "production"
+              );
 
         passthru.update = writeScript "update-${name}" ''
           export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
@@ -409,6 +413,8 @@ in rec {
     , buildInputs ? []
     , propagatedBuildInputs ? []
     , passthru ? {}
+    , staging ? true
+    , production ? false
     }:
     let
       self = python.mkDerivation {
@@ -501,7 +507,9 @@ in rec {
         passthru = {
           taskclusterGithubTasks =
             map (branch: mkTaskclusterGithubTask { inherit name src_path branch; })
-                [ "master" "staging" "production" ];
+                ([ "master" ] ++ optional staging "staging"
+                              ++ optional production "production"
+                );
           docker = mkDocker {
             inherit name version;
             contents = [ busybox self ];
