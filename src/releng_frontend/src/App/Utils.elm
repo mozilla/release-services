@@ -4,20 +4,10 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events as Events
 import Json.Decode as JsonDecode
+import Utils
 
 
 -- TODO: add types
-
-
-onClick msg =
-    Events.onWithOptions
-        "click"
-        (Events.Options False True)
-        (JsonDecode.succeed msg)
-
-
-eventLink msg attributes =
-    a ([ onClick <| msg, href "#" ] ++ attributes)
 
 
 dropdown event items selected =
@@ -40,8 +30,17 @@ dropdown event items selected =
             ]
             [ span [ class "sr-only" ] [ text "Toggle Dropdown" ]
             ]
-        , div [ class "dropdown-menu" ] <|
-            List.map (\x -> eventLink (event x.name) [ class "dropdown-item" ] [ text x.name ]) items
+        , div [ class "dropdown-menu" ]
+            (List.map
+                (\x ->
+                    a
+                        [ Utils.onClick (event x.name)
+                        , class "dropdown-item"
+                        ]
+                        [ text x.name ]
+                )
+                items
+            )
         ]
 
 
@@ -64,7 +63,9 @@ error event message =
         ]
         [ strong [] [ text "Error: " ]
         , span [] [ text message ]
-        , eventLink event
-            [ class "alert-link" ]
+        , a
+            [ Utils.onClick event
+            , class "alert-link"
+            ]
             [ text " Click to retry." ]
         ]

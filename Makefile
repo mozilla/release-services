@@ -538,7 +538,7 @@ require-postgres: build-postgresql
 	if [ "`./result-tool-postgresql/bin/psql -lqt -p $(APP_DEV_POSTGRES_PORT) | cut -d \| -f 1 | grep $(APP_DEV_DBNAME)| wc -l`" != "1" ]; then \
 		./result-tool-postgresql/bin/createdb -p $(APP_DEV_POSTGRES_PORT) $(APP_DEV_DBNAME); \
 	fi
-	$(eval export DATABASE_URL=postgres://localhost:$(APP_DEV_POSTGRES_PORT)/services)
+	$(eval export DATABASE_URL=postgresql://localhost:$(APP_DEV_POSTGRES_PORT)/services)
 	@echo "Using postgresql dev database $(DATABASE_URL)"
 
 require-sqlite:

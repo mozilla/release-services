@@ -4,18 +4,12 @@ import Html exposing (..)
 import Html.App
 import Html.Attributes exposing (..)
 import Json.Decode as JsonDecode exposing ((:=))
-import Navigation exposing (Location)
 import RouteUrl exposing (UrlChange)
 import RouteUrl.Builder as Builder exposing (Builder, builder, replacePath)
 import Result exposing (Result(Ok, Err))
-import App.Utils exposing (eventLink)
 import App.TreeStatus
-import App.Home
 import Hawk
-import TaskclusterLogin as User
-
-
--- ROUTING
+import TaskclusterLogin
 
 
 type Route
@@ -24,63 +18,9 @@ type Route
     | TreeStatusRoute
 
 
-delta2url : Model -> Model -> Maybe UrlChange
-delta2url previous current =
-    let
-        url =
-            case current.route of
-                HomeRoute ->
-                    Maybe.map
-                        (Builder.prependToPath [])
-                        (Just builder)
-
-                TreeStatusRoute ->
-                    Maybe.map
-                        (Builder.prependToPath [ "treestatus" ])
-                        (Just builder)
-
-                NotFoundRoute ->
-                    Maybe.map
-                        (Builder.prependToPath [ "404" ])
-                        (Just builder)
-    in
-        Maybe.map Builder.toUrlChange url
-
-
-location2messages : Location -> List Msg
-location2messages location =
-    let
-        builder =
-            Builder.fromUrl location.href
-    in
-        case Builder.path builder of
-            first :: rest ->
-                -- Extensions integration
-                case first of
-                    "login" ->
-                        [ Builder.query builder
-                            |> User.convertUrlQueryToUser
-                            |> User.Logging
-                            |> UserMsg
-                        ]
-
-                    "treestatus" ->
-                        [ NavigateTo TreeStatusRoute ]
-
-                    _ ->
-                        [ NavigateTo NotFoundRoute ]
-
-            _ ->
-                [ NavigateTo HomeRoute ]
-
-
-
--- MODEL / INIT
-
-
 type alias Model =
     { route : Route
-    , user : User.Model
+    , user : TaskclusterLogin.Model
     , treestatus : App.TreeStatus.Model
     , docsUrl : String
     , version : String
@@ -88,257 +28,15 @@ type alias Model =
 
 
 type alias Flags =
-    { user : User.Model
+    { user : TaskclusterLogin.Model
     , treestatusUrl : String
     , docsUrl : String
     , version : String
     }
 
 
-init : Flags -> ( Model, Cmd Msg )
-init flags =
-    ( { user = flags.user
-      , route = HomeRoute
-      , treestatus = App.TreeStatus.init flags.treestatusUrl
-      , docsUrl = flags.docsUrl
-      , version = flags.version
-      }
-    , Cmd.none
-    )
-
-
-
--- UPDATE
-
-
 type Msg
-    = UserMsg User.Msg
-    | HawkRequest Hawk.Msg
+    = TaskclusterLoginMsg TaskclusterLogin.Msg
+    | HawkMsg Hawk.Msg
     | NavigateTo Route
-      --TODO: | App.HomeMsg App.Home.Msg
     | TreeStatusMsg App.TreeStatus.Msg
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        UserMsg userMsg ->
-            let
-                ( newUser, userCmd ) =
-                    User.update userMsg model.user
-            in
-                ( { model | user = newUser }
-                , Cmd.map UserMsg userCmd
-                )
-
-        HawkRequest hawkMsg ->
-            let
-                ( requestId, cmd, response ) =
-                    Hawk.update hawkMsg
-
-                routeHawkRequest route =
-                    case route of
-                        --TOD:
-                        --"LoadScopes" ->
-                        --    Cmd.map SetScopes response
-                        _ ->
-                            Cmd.none
-
-                appCmd =
-                    requestId
-                        |> Maybe.map routeHawkRequest
-                        |> Maybe.withDefault Cmd.none
-            in
-                ( model
-                , Cmd.batch
-                    [ Cmd.map HawkRequest cmd
-                    , appCmd
-                    ]
-                )
-
-        NavigateTo route ->
-            case route of
-                HomeRoute ->
-                    ( { model
-                        | route = route
-                        , treestatus = App.TreeStatus.init model.treestatus.baseUrl
-                      }
-                    , Cmd.none
-                    )
-
-                TreeStatusRoute ->
-                    let
-                        treestatus =
-                            App.TreeStatus.load model.treestatus
-                    in
-                        ( { model
-                            | route = route
-                            , treestatus = fst treestatus
-                          }
-                        , Cmd.map TreeStatusMsg <| snd treestatus
-                        )
-
-                _ ->
-                    ( { model | route = route }
-                    , Cmd.none
-                    )
-
-        TreeStatusMsg treestatusMsg ->
-            let
-                ( newModel, newCmd ) =
-                    App.TreeStatus.update treestatusMsg model.treestatus
-            in
-                ( { model | treestatus = newModel }
-                , Cmd.map TreeStatusMsg newCmd
-                )
-
-
-
--- VIEW
-
-
-services =
-    [ { page = TreeStatusRoute
-      , title = "Tree Status"
-      }
-    ]
-
-
-viewPage model =
-    case model.route of
-        NotFoundRoute ->
-            div [ class "hero-unit" ]
-                [ h1 [] [ text "Page Not Found" ] ]
-
-        HomeRoute ->
-            --TODO: Html.App.map App.HomeMsg (App.Home.view model)
-            App.Home.view model
-
-        TreeStatusRoute ->
-            Html.App.map TreeStatusMsg (App.TreeStatus.view model.treestatus)
-
-
-viewDropdown title pages =
-    [ div [ class "dropdown" ]
-        [ a
-            [ class "nav-link dropdown-toggle"
-            , id ("dropdown" ++ title)
-            , href "#"
-            , attribute "data-toggle" "dropdown"
-            , attribute "aria-haspopup" "true"
-            , attribute "aria-expanded" "false"
-            ]
-            [ text title ]
-        , div
-            [ class "dropdown-menu dropdown-menu-right"
-            , attribute "aria-labelledby" "dropdownServices"
-            ]
-            pages
-        ]
-    ]
-
-
-viewUser model =
-    case model.user of
-        Just user ->
-            viewDropdown user.clientId
-                [ a
-                    [ class "dropdown-item"
-                    , href "https://tools.taskcluster.net/credentials"
-                    , target "_blank"
-                    ]
-                    [ text "Manage credentials" ]
-                , eventLink (UserMsg User.Logout)
-                    [ class "dropdown-item" ]
-                    [ text "Logout" ]
-                ]
-
-        Nothing ->
-            let
-                loginTarget =
-                    Just
-                        ( "/login"
-                        , "Release Engineering services"
-                        )
-
-                loginUrl =
-                    { url = "https://login.taskcluster.net"
-                    , target = loginTarget
-                    , targetName = "target"
-                    }
-
-                loginMsg =
-                    UserMsg <| User.Login loginUrl
-            in
-                [ eventLink loginMsg [ class "nav-link" ] [ text "Login" ]
-                ]
-
-
-viewNavBar model =
-    [ button
-        [ class "navbar-toggler hidden-md-up"
-        , type' "button"
-        , attribute "data-toggle" "collapse"
-        , attribute "data-target" ".navbar-collapse"
-        , attribute "aria-controls" "navbar-header"
-        ]
-        [ text "&#9776;" ]
-    , eventLink (NavigateTo HomeRoute)
-        [ class "navbar-brand" ]
-        [ text "Release Engineering" ]
-    , div [ class "collapse navbar-toggleable-sm navbar-collapse" ]
-        [ ul [ class "nav navbar-nav" ]
-            [ li [ class "nav-item" ] (viewUser model)
-            ]
-        ]
-    ]
-
-
-viewFooter model =
-    [ hr [] []
-    , ul []
-        [ li []
-            [ a [ href model.docsUrl ]
-                [ text "Documentation" ]
-            ]
-        , li []
-            [ a [ href "https://github.com/mozilla-releng/services/blob/master/CONTRIBUTING.rst" ]
-                [ text "Contribute" ]
-            ]
-        , li []
-            [ a [ href "https://github.com/mozilla-releng/services/issues/new" ]
-                [ text "Contact" ]
-            ]
-        ]
-    , div []
-        [ text "version: "
-        , a [ href ("https://github.com/mozilla-releng/services/releases/tag/" ++ model.version) ]
-            [ text model.version ]
-        ]
-    ]
-
-
-view : Model -> Html Msg
-view model =
-    div []
-        [ nav
-            [ id "navbar"
-            , class "navbar navbar-full navbar-light"
-            ]
-            [ div [ class "container" ] (viewNavBar model) ]
-        , div [ id "content" ]
-            [ div [ class "container" ] [ viewPage model ] ]
-        , footer [ class "container" ] (viewFooter model)
-        ]
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.batch
-        [ Sub.map UserMsg (User.taskclusterlogin_get (User.Logged))
-        , Sub.map HawkRequest (Hawk.hawk_send_request (Hawk.SendRequest))
-        ]
