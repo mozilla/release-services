@@ -7,6 +7,7 @@ import Http
 import Json.Decode as JsonDecode exposing ((:=))
 import RemoteData
 import String
+import Utils
 
 
 type alias Tree =
@@ -241,7 +242,7 @@ viewTreeLogs treeLogs tree more =
             [ p [ style [ ( "text-align", "center" ) ] ]
                 [ a
                     [ href "#"
-                    , App.Utils.onClick ShowTrees
+                    , Utils.onClick ShowTrees
                     ]
                     [ text "Back to all trees ..." ]
                 ]
@@ -260,7 +261,7 @@ viewTreeLogs treeLogs tree more =
             , div [ style [ ( "text-align", "center" ) ] ]
                 [ a
                     [ href "#"
-                    , App.Utils.onClick (ShowTree tree True)
+                    , Utils.onClick (ShowTree tree True)
                     ]
                     [ text "More ..." ]
                 ]
@@ -291,14 +292,11 @@ viewTrees trees' =
                 RemoteData.Success trees ->
                     List.map
                         (\tree ->
-                            tr []
+                            tr
+                                [ Utils.onClick <| ShowTree tree.tree False
+                                ]
                                 [ td []
-                                    [ a
-                                        [ href "#"
-                                        , App.Utils.onClick <| ShowTree tree.tree False
-                                        ]
-                                        [ text tree.tree ]
-                                    ]
+                                    [ text tree.tree ]
                                 , td
                                     [ class <| statusColor tree.status
                                     , style [ ( "text-transform", "uppercase" ) ]

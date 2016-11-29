@@ -1,19 +1,35 @@
 module App.Home exposing (..)
 
+import App
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Utils
+
+
+viewCard title description href =
+    div [ class "col-sm-6" ]
+        [ a
+            [ class "card card-block"
+            , href
+            ]
+            [ h4 [ class "card-title" ]
+                [ text title ]
+            , p [ class "card-text" ]
+                [ text description ]
+            ]
+        ]
 
 
 view model =
     div [ class "row", id "page-home" ]
         [ div [ class "col-sm-6" ]
-            [ a
-                [ class "card card-block"
-                , href "/trychooser"
-                ]
-                [ h4 [ class "card-title" ] [ text "TryChooser" ]
-                , p [ class "card-text" ]
-                    [ text "Generate parts of try syntax and restrict tests to certain directories." ]
-                ]
+            [ viewCard
+                "TryChooser"
+                "Generate parts of try syntax and restrict tests to certain directories."
+                (href "/trychooser")
+            , viewCard
+                "TreeStatus"
+                "Current status of Mozilla's version-control repositories."
+                (Utils.onClick <| App.NavigateTo App.TreeStatusRoute)
             ]
         ]
