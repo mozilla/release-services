@@ -33,6 +33,7 @@ let
 
   self = mkBackend rec {
     inherit python releng_common;
+    production = true;
     name = "releng_treestatus";
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
