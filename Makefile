@@ -314,7 +314,7 @@ deploy-production-releng_frontend:     deploy-production-S3
 deploy-production-releng_docs:         deploy-production-S3
 deploy-production-releng_clobberer:    # deploy-production-HEROKU
 deploy-production-releng_tooltool:     # deploy-production-HEROKU
-deploy-production-releng_treestatus:   # deploy-production-HEROKU
+deploy-production-releng_treestatus:   deploy-production-HEROKU
 deploy-production-releng_mapper:       # deploy-production-HEROKU
 deploy-production-releng_archiver:     # deploy-production-HEROKU
 
