@@ -5,17 +5,19 @@
 from __future__ import absolute_import
 
 import pickle
-
 from flask import abort, request
 from sqlalchemy.orm.exc import NoResultFound
-
 from releng_common.auth import auth
 from releng_common.db import db
+from releng_common import log
 from shipit_dashboard.helpers import gravatar
 from shipit_dashboard.models import (
     BugAnalysis, BugResult, Contributor, BugContributor
 )
 from shipit_dashboard.serializers import serialize_analysis, serialize_bug
+
+
+logger = log.get_logger('shipit_dashboard.api')
 
 
 # Tasckcluster scopes
@@ -30,12 +32,22 @@ SCOPES_BOT = [
 ]
 
 
+def ping():
+    """
+    Test service availability
+    """
+    logger.info('Got ping request. Sending pong...')
+    return 'pong'
+
+
 @auth.require_scopes([SCOPES_USER, SCOPES_BOT])
 def list_analysis():
     """
     List all available analysis
     """
+    logger.info('Query all analysis...')
     all_analysis = BugAnalysis.query.all()
+    logger.info('Fetched analysis from db', all_analysis=all_analysis)
     return [serialize_analysis(analysis, False) for analysis in all_analysis]
 
 
@@ -44,12 +56,15 @@ def get_analysis(analysis_id):
     """
     Fetch an analysis and all its bugs
     """
+    logger.info('Query analysis', analysis=analysis_id)
 
     # Get bug analysis
     try:
         analysis = BugAnalysis.query.filter_by(id=analysis_id).one()
     except NoResultFound:
         abort(404)
+
+    logger.info('Fetched analysis from db', analysis=analysis)
 
     # Build JSON output
     return serialize_analysis(analysis)
