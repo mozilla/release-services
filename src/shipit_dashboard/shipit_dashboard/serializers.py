@@ -2,19 +2,26 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from shipit_dashboard.models import BugResult, BugContributor, BugAnalysis
+from shipit_dashboard.models import (
+    BugResult, BugContributor, BugAnalysis, Contributor
+)
+from releng_common import log
 
 
-def serialize_contributor(contrib):
+logger = log.get_logger('shipit_dashboard.serializers')
+
+
+def serialize_contributor(contributor, link):
     """
-    Helper to serialize a contributor
+    Helper to serialize a contributor & its role
     """
-    assert isinstance(contrib, BugContributor)
+    assert isinstance(contributor, Contributor)
+    assert isinstance(link, BugContributor)
     return {
-        'email': contrib.contributor.email,
-        'name': contrib.contributor.name,
-        'avatar': contrib.contributor.avatar_url,
-        'roles': contrib.roles.split(','),
+        'email': contributor.email,
+        'name': contributor.name,
+        'avatar': contributor.avatar_url,
+        'roles': link.roles.split(','),
     }
 
 
@@ -82,7 +89,10 @@ def serialize_bug(bug):
         'flags_tracking': _filter_flags(tracking_base_flag),
 
         # Contributor
-        'contributors': [serialize_contributor(c) for c in bug.contributors],
+        'contributors': [
+            serialize_contributor(contrib, link)
+            for contrib, link in bug.list_contributors()
+        ],
 
         # Stats
         'changes_size': analysis.get('changes_size', 0),
@@ -99,22 +109,25 @@ def serialize_bug(bug):
     }
 
 
-def serialize_analysis(analysis, full=True):
+def serialize_analysis(analysis, bugs_nb, full=True):
     """
     Helper to serialize an analysis
     """
     assert isinstance(analysis, BugAnalysis)
+    assert isinstance(bugs_nb, int)
+
+    logger.info('Serializing analysis', analysis=analysis, bugs_nb=bugs_nb, full=full)  # noqa
 
     out = {
         'id': analysis.id,
         'name': analysis.name,
-        'count': len(analysis.bugs),
+        'count': bugs_nb,
         'parameters': analysis.parameters,
     }
 
     if full:
         # Add bugs
-        out['bugs'] = [serialize_bug(b) for b in analysis.bugs if b.payload]
+        out['bugs'] = [serialize_bug(b) for b in analysis.bugs]
     else:
         out['bugs'] = []
 

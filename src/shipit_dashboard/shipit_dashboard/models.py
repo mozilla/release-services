@@ -40,6 +40,21 @@ class BugAnalysis(db.Model):
     def __repr__(self):
         return 'AnalysisTemplate {}'.format(self.name)
 
+    @staticmethod
+    def with_bugs():
+        """
+        List all analysis with bugs count
+        Uses a single sql request
+        """
+        return \
+            db.session \
+            .query(
+                 BugAnalysis,
+                 sa.func.count(bugs.c.bug_id.distinct())
+             ) \
+            .join(bugs) \
+            .group_by(BugAnalysis)
+
 
 class BugResult(db.Model):
     """
@@ -65,6 +80,17 @@ class BugResult(db.Model):
         if not self.payload:
             return None
         return pickle.loads(self.payload)
+
+    def list_contributors(self):
+        """
+        List contributors with roles in one SQL query
+        """
+        return \
+            db.session \
+            .query(Contributor, BugContributor) \
+            .join(BugContributor) \
+            .filter_by(bug_id=self.id) \
+            .all()
 
     def delete(self):
         """
