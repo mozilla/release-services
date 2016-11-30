@@ -9,6 +9,15 @@ produces:
  - application/json
 paths:
 
+  /ping:
+    get:
+      operationId: "shipit_dashboard.api.ping"
+      responses:
+        200:
+          description: a pong
+          schema:
+            type: string
+
   /analysis:
     get:
       operationId: "shipit_dashboard.api.list_analysis"
