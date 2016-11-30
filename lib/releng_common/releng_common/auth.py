@@ -151,9 +151,11 @@ class Auth(object):
         def decorator(method):
             @wraps(method)
             def wrapper(*args, **kwargs):
+                logger.info('Checking scopes', scopes=scopes)
                 response = self._require_scopes(scopes)
                 if response is not None:
                     return response
+                logger.info('Validated scopes, processing api request')
                 return method(*args, **kwargs)
             return wrapper
         return decorator
