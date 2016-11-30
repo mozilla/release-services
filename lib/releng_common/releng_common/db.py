@@ -9,6 +9,8 @@ import os
 import flask
 import flask_migrate
 import flask_sqlalchemy
+import logging  # for sql alchemy
+
 
 logger = structlog.get_logger('releng_common.db')
 db = flask_sqlalchemy.SQLAlchemy()
@@ -51,6 +53,9 @@ def init_app(app):
     for table_name in db.metadata.tables.keys():
         if not table_name.startswith(app.name):
             raise Exception('DB table {} should start with {}'.format(table_name, app.name))  # noqa
+
+    # Log queries
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
     # Try to run migrations on the app
     # or direct db creation

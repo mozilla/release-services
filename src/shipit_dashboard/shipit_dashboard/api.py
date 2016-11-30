@@ -45,10 +45,12 @@ def list_analysis():
     """
     List all available analysis
     """
-    logger.info('Query all analysis...')
-    all_analysis = BugAnalysis.query.all()
-    logger.info('Fetched analysis from db', all_analysis=all_analysis)
-    return [serialize_analysis(analysis, False) for analysis in all_analysis]
+    all_analysis = BugAnalysis.with_bugs().all()
+    logger.info('Fetched all analysis from db', all_analysis=all_analysis)
+    return [
+        serialize_analysis(analysis, nb, False)
+        for analysis, nb in all_analysis
+    ]
 
 
 @auth.require_scopes([SCOPES_USER, SCOPES_BOT])
@@ -56,18 +58,20 @@ def get_analysis(analysis_id):
     """
     Fetch an analysis and all its bugs
     """
-    logger.info('Query analysis', analysis=analysis_id)
 
     # Get bug analysis
     try:
-        analysis = BugAnalysis.query.filter_by(id=analysis_id).one()
+        analysis, bugs_nb = BugAnalysis.with_bugs() \
+            .join(BugResult) \
+            .filter(BugAnalysis.id == analysis_id) \
+            .one()
     except NoResultFound:
         abort(404)
 
     logger.info('Fetched analysis from db', analysis=analysis)
 
     # Build JSON output
-    return serialize_analysis(analysis)
+    return serialize_analysis(analysis, bugs_nb)
 
 
 @auth.require_scopes(SCOPES_USER)
