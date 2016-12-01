@@ -62,7 +62,7 @@ def get_analysis(analysis_id):
     # Get bug analysis
     try:
         analysis, bugs_nb = BugAnalysis.with_bugs() \
-            .join(BugResult) \
+            .join(BugResult, isouter=True) \
             .filter(BugAnalysis.id == analysis_id) \
             .one()
     except NoResultFound:
