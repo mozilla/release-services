@@ -15,7 +15,8 @@ from releng_common.db import db
 bugs = db.Table(
     'shipit_dashboard_analysis_bugs',
     sa.Column('analysis_id', sa.Integer, sa.ForeignKey('shipit_dashboard_analysis.id')),  # noqa
-    sa.Column('bug_id', sa.Integer, sa.ForeignKey('shipit_dashboard_bug.id'))
+    sa.Column('bug_id', sa.Integer, sa.ForeignKey('shipit_dashboard_bug.id')),
+    sa.UniqueConstraint('analysis_id', 'bug_id', name='shipit_dashboard_uniq_ba')  # noqa
 )
 
 
@@ -52,7 +53,7 @@ class BugAnalysis(db.Model):
                  BugAnalysis,
                  sa.func.count(bugs.c.bug_id.distinct())
              ) \
-            .join(bugs) \
+            .join(bugs, isouter=True) \
             .group_by(BugAnalysis)
 
 
