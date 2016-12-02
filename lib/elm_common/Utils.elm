@@ -5,6 +5,15 @@ import Html.Events
 import Http
 import Json.Decode as JsonDecode
 import RemoteData exposing (WebData, RemoteData(..))
+import Task
+
+
+performMsg : a -> Cmd a
+performMsg msg =
+    Task.perform
+        (\x -> msg)
+        (\x -> msg)
+        (Task.succeed ())
 
 
 onClick : msg -> Html.Attribute msg
@@ -13,6 +22,19 @@ onClick msg =
         "click"
         (Html.Events.Options False True)
         (JsonDecode.succeed msg)
+
+
+andThen :
+    (msg -> model -> ( model, Cmd msg ))
+    -> msg
+    -> ( model, Cmd msg )
+    -> ( model, Cmd msg )
+andThen update msg ( model, cmd ) =
+    let
+        ( model_, cmd_ ) =
+            update msg model
+    in
+        ( model_, Cmd.batch [ cmd, cmd_ ] )
 
 
 onChange : (String -> msg) -> Html.Attribute msg
