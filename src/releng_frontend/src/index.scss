@@ -191,6 +191,7 @@ footer {
 #page-home .card {
     &:hover {
         text-decoration: none;
+        cursor: pointer;
     }
     .card-title {
         color: #333;
@@ -199,4 +200,8 @@ footer {
     .card-text {
         color: #333;
     }
+}
+
+#page-treestatus table tr:hover {
+    cursor: pointer;
 }
