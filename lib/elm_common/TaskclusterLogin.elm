@@ -99,7 +99,7 @@ convertUrlQueryToUser query =
 
 
 
--- Views
+-- VIEWS
 
 
 redirectToLogin outMsg returnRoute description =
@@ -112,7 +112,17 @@ redirectToLogin outMsg returnRoute description =
 
 
 
--- Ports
+-- SUBSCRIPTIONS
+
+
+subscriptions : (Msg -> a) -> Sub a
+subscriptions outMsg =
+    taskclusterlogin_get Logged
+        |> Sub.map outMsg
+
+
+
+-- PORTS
 
 
 port taskclusterlogin_get : (Maybe Credentials -> msg) -> Sub msg
@@ -125,10 +135,3 @@ port taskclusterlogin_remove : Bool -> Cmd msg
 
 
 port taskclusterlogin_set : Credentials -> Cmd msg
-
-
-
--- Add this subscription in main App
--- subscriptions = [
---    Sub.map TaskclusterLoginMsg (TaskclusterLogin.taskclusterlogin_get (TaskclusterLogin.Logged))
---   ]
