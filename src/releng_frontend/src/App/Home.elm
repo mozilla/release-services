@@ -22,14 +22,12 @@ viewCard title description href =
 
 view model =
     div [ class "row", id "page-home" ]
-        [ div [ class "col-sm-6" ]
-            [ viewCard
-                "TryChooser"
-                "Generate parts of try syntax and restrict tests to certain directories."
-                (href "/trychooser")
-            , viewCard
-                "TreeStatus"
-                "Current status of Mozilla's version-control repositories."
-                (Utils.onClick <| App.NavigateTo App.TreeStatusRoute)
-            ]
+        [ viewCard
+            "TryChooser"
+            "Generate parts of try syntax and restrict tests to certain directories."
+            (href "/trychooser")
+        , viewCard
+            "TreeStatus"
+            "Current status of Mozilla's version-control repositories."
+            (Utils.onClick <| App.NavigateTo App.TreeStatusRoute)
         ]

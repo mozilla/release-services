@@ -4,74 +4,32 @@ import App
 import App.Home
 import App.Layout
 import App.TreeStatus
+import App.TryChooser
 import Hawk
+import Hop
+import Hop.Types
+import Html
 import Html
 import Html.App
 import Navigation
-import RouteUrl
-import RouteUrl.Builder
+import Task
 import TaskclusterLogin
+import Utils
 
 
-delta2url : App.Model -> App.Model -> Maybe RouteUrl.UrlChange
-delta2url previous current =
-    let
-        url =
-            case current.route of
-                App.HomeRoute ->
-                    Maybe.map
-                        (RouteUrl.Builder.prependToPath [])
-                        (Just RouteUrl.Builder.builder)
-
-                App.TreeStatusRoute ->
-                    Maybe.map
-                        (RouteUrl.Builder.prependToPath [ "treestatus" ])
-                        (Just RouteUrl.Builder.builder)
-
-                App.NotFoundRoute ->
-                    Maybe.map
-                        (RouteUrl.Builder.prependToPath [ "404" ])
-                        (Just RouteUrl.Builder.builder)
-    in
-        Maybe.map RouteUrl.Builder.toUrlChange url
-
-
-location2messages : Navigation.Location -> List App.Msg
-location2messages location =
-    let
-        builder =
-            RouteUrl.Builder.fromUrl location.href
-    in
-        case RouteUrl.Builder.path RouteUrl.Builder.builder of
-            first :: rest ->
-                -- Extensions integration
-                case Debug.log "URL" first of
-                    "login" ->
-                        [ RouteUrl.Builder.query RouteUrl.Builder.builder
-                            |> TaskclusterLogin.convertUrlQueryToUser
-                            |> TaskclusterLogin.Logging
-                            |> App.TaskclusterLoginMsg
-                        ]
-
-                    "treestatus" ->
-                        [ App.NavigateTo App.TreeStatusRoute ]
-
-                    _ ->
-                        [ App.NavigateTo App.NotFoundRoute ]
-
-            _ ->
-                [ App.NavigateTo App.HomeRoute ]
-
-
-init : App.Flags -> ( App.Model, Cmd App.Msg )
-init flags =
-    ( { user = flags.user
-      , route = App.HomeRoute
-      , treestatus = App.TreeStatus.init flags.treestatusUrl
+init : App.Flags -> ( App.Route, Hop.Types.Address ) -> ( App.Model, Cmd App.Msg )
+init flags ( route, address ) =
+    ( { route = route
+      , address = address
       , docsUrl = flags.docsUrl
       , version = flags.version
+      , user = flags.user
+      , trychooser = App.TryChooser.init
+      , treestatus = App.TreeStatus.init flags.treestatusUrl
       }
-    , Cmd.none
+      -- XXX: weird way to trigger a Msg from init, there must be a nicer way
+      -- triggering (App.NavigateTo route) ensures that .load function is called
+    , Utils.performMsg (App.NavigateTo route)
     )
 
 
@@ -94,7 +52,7 @@ update msg model =
 
                 routeHawkMsg route =
                     case route of
-                        --TOD:
+                        --TODO:
                         --"LoadScopes" ->
                         --    Cmd.map SetScopes response
                         _ ->
@@ -113,43 +71,70 @@ update msg model =
                 )
 
         App.NavigateTo route ->
-            case route of
-                App.HomeRoute ->
-                    ( { model
-                        | route = route
-                        , treestatus = App.TreeStatus.init model.treestatus.baseUrl
-                      }
-                    , Cmd.none
-                    )
+            let
+                newCmd =
+                    Hop.outputFromPath App.hopConfig (App.pathFromRoute route)
+                        |> Navigation.newUrl
 
-                App.TreeStatusRoute ->
-                    let
-                        treestatus =
-                            App.TreeStatus.load model.treestatus
-                    in
+                goHome =
+                    App.NavigateTo App.HomeRoute
+
+                login =
+                    model.address.query
+                        |> TaskclusterLogin.convertUrlQueryToUser
+                        |> Maybe.map
+                            (\x ->
+                                x
+                                    |> TaskclusterLogin.Logging
+                                    |> App.TaskclusterLoginMsg
+                            )
+                        |> Maybe.withDefault goHome
+
+                logout =
+                    App.TaskclusterLoginMsg TaskclusterLogin.Logout
+            in
+                case route of
+                    App.NotFoundRoute ->
+                        ( model, newCmd )
+
+                    App.HomeRoute ->
                         ( { model
-                            | route = route
-                            , treestatus = fst treestatus
+                            | trychooser = App.TryChooser.init
+                            , treestatus =
+                                App.TreeStatus.init model.treestatus.baseUrl
                           }
-                        , Cmd.map App.TreeStatusMsg <| snd treestatus
+                        , newCmd
                         )
 
-                _ ->
-                    ( { model | route = route }
-                    , Cmd.none
-                    )
+                    App.LoginRoute ->
+                        model
+                            ! []
+                            |> Utils.andThen update login
+                            |> Utils.andThen update goHome
 
-        App.TreeStatusMsg treestatusMsg ->
-            let
-                ( newModel, newCmd ) =
-                    App.TreeStatus.update treestatusMsg model.treestatus
-            in
-                ( { model | treestatus = newModel }
-                , Cmd.map App.TreeStatusMsg newCmd
-                )
+                    App.LogoutRoute ->
+                        model
+                            ! []
+                            |> Utils.andThen update logout
+                            |> Utils.andThen update goHome
+
+                    App.TreeStatusRoute ->
+                        App.TreeStatus.load App.TreeStatusMsg newCmd model
+
+                    App.TryChooserRoute ->
+                        App.TryChooser.load App.TryChooserMsg newCmd model
+
+        App.TreeStatusMsg msg2 ->
+            App.TreeStatus.update App.TreeStatusMsg msg2 model
+
+        App.TryChooserMsg msg2 ->
+            App.TryChooser.update App.TryChooserMsg msg2 model
 
 
-viewRoute : App.Model -> Html.Html App.Msg
+
+--viewRoute : App.Model -> Html.Html App.Msg
+
+
 viewRoute model =
     case model.route of
         App.NotFoundRoute ->
@@ -158,6 +143,17 @@ viewRoute model =
         App.HomeRoute ->
             App.Home.view model
 
+        App.LoginRoute ->
+            -- TODO: this should be already a view on TaskclusterLogin
+            Html.text "Logging you in ..."
+
+        App.LogoutRoute ->
+            -- TODO: this should be already a view on TaskclusterLogin
+            Html.text "Logging you out ..."
+
+        App.TryChooserRoute ->
+            Html.App.map App.TryChooserMsg (App.TryChooser.view model.trychooser)
+
         App.TreeStatusRoute ->
             Html.App.map App.TreeStatusMsg (App.TreeStatus.view model.treestatus)
 
@@ -165,20 +161,17 @@ viewRoute model =
 subscriptions : App.Model -> Sub App.Msg
 subscriptions model =
     Sub.batch
-        [ Sub.map App.TaskclusterLoginMsg <|
-            TaskclusterLogin.taskclusterlogin_get TaskclusterLogin.Logged
-        , Sub.map App.HawkMsg <|
-            Hawk.hawk_send_request Hawk.SendRequest
+        [ TaskclusterLogin.subscriptions App.TaskclusterLoginMsg
+        , Hawk.subscriptions App.HawkMsg
         ]
 
 
 main : Program App.Flags
 main =
-    RouteUrl.programWithFlags
-        { delta2url = delta2url
-        , location2messages = location2messages
-        , init = init
-        , update = update
+    Navigation.programWithFlags App.urlParser
+        { init = init
         , view = App.Layout.view viewRoute
+        , update = update
+        , urlUpdate = App.urlUpdate
         , subscriptions = subscriptions
         }

@@ -63,10 +63,18 @@ init url =
     }
 
 
-load : Model -> ( Model, Cmd Msg )
-load model =
+load :
+    (Msg -> a)
+    -> Cmd a
+    -> { b | treestatus : Model }
+    -> ( { b | treestatus : Model }, Cmd a )
+load outMsg newCmd model =
     ( model
-    , fetchTrees model.baseUrl
+    , Cmd.batch
+        [ newCmd
+        , fetchTrees model.treestatus.baseUrl
+            |> Cmd.map outMsg
+        ]
     )
 
 
@@ -139,8 +147,23 @@ fetchTreeLogs url tree all =
             decodeTreeLogs
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update :
+    (Msg -> a)
+    -> Msg
+    -> { b | treestatus : Model }
+    -> ( { b | treestatus : Model }, Cmd a )
+update outMsg msg model =
+    let
+        ( newModel, newCmd ) =
+            update2 msg model.treestatus
+    in
+        ( { model | treestatus = newModel }
+        , Cmd.map outMsg newCmd
+        )
+
+
+update2 : Msg -> Model -> ( Model, Cmd Msg )
+update2 msg model =
     case msg of
         FetchedTrees trees ->
             ( { model | trees = trees }, Cmd.none )
@@ -179,7 +202,7 @@ view model =
                 _ ->
                     viewTrees model.trees
     in
-        div []
+        div [ id "page-treestatus" ]
             [ h1 [] [ text "TreeStatus" ]
             , content
             ]

@@ -38,7 +38,7 @@ viewUser model =
                     ]
                     [ text "Manage credentials" ]
                 , a
-                    [ Utils.onClick (App.TaskclusterLoginMsg TaskclusterLogin.Logout)
+                    [ Utils.onClick (App.NavigateTo App.LogoutRoute)
                     , href "#"
                     , class "dropdown-item"
                     ]
