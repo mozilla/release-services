@@ -110,6 +110,20 @@ portDecoder =
     JsonDecode.tuple2 (,) JsonDecode.string requestDecoder
 
 
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : (Msg -> a) -> Sub a
+subscriptions outMsg =
+    hawk_send_request SendRequest
+        |> Sub.map outMsg
+
+
+
+-- PORTS
+
+
 port hawk_send_request : (String -> msg) -> Sub msg
 
 
