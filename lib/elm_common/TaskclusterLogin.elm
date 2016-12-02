@@ -73,29 +73,36 @@ decodeCertificate text =
         text
 
 
-fromJust : Maybe a -> a
-fromJust x =
-    case x of
-        Just y ->
-            y
-
-        Nothing ->
-            Debug.crash "error: fromJust Nothing"
-
-
-convertUrlQueryToUser : Dict String String -> Credentials
+convertUrlQueryToUser : Dict String String -> Maybe Credentials
 convertUrlQueryToUser query =
-    -- TODO: handle more nicely clientId/Token
-    { clientId = fromJust (Dict.get "clientId" query)
-    , accessToken = fromJust (Dict.get "accessToken" query)
-    , certificate =
-        case Dict.get "certificate" query of
-            Just certificate ->
-                Result.toMaybe <| decodeCertificate certificate
+    let
+        clientId =
+            Dict.get "clientId" query
 
-            Nothing ->
+        accessToken =
+            Dict.get "accessToken" query
+
+        certificate2 =
+            Dict.get "certificate" query
+
+        certificate =
+            case certificate2 of
+                Just text ->
+                    Result.toMaybe (decodeCertificate text)
+
+                Nothing ->
+                    Nothing
+    in
+        case ( clientId, accessToken ) of
+            ( Just value1, Just value2 ) ->
+                Just
+                    { clientId = value1
+                    , accessToken = value2
+                    , certificate = certificate
+                    }
+
+            _ ->
                 Nothing
-    }
 
 
 
