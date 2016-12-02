@@ -259,20 +259,20 @@ deploy-staging-S3: \
 		$(APP_TMP) \
 		s3://$(APP_STAGING_S3_$(APP))
 
-deploy-staging-elm_common_example: # no deployment
+deploy-staging-elm_common_example:     # no deployment
 
-deploy-staging-releng_frontend: deploy-staging-S3
-deploy-staging-releng_docs: deploy-staging-S3
-deploy-staging-releng_clobberer: deploy-staging-HEROKU
-deploy-staging-releng_tooltool: deploy-staging-HEROKU
-deploy-staging-releng_treestatus: deploy-staging-HEROKU
-deploy-staging-releng_mapper: deploy-staging-HEROKU
-deploy-staging-releng_archiver: deploy-staging-HEROKU
+deploy-staging-releng_frontend:        deploy-staging-S3
+deploy-staging-releng_docs:            deploy-staging-S3
+deploy-staging-releng_clobberer:       deploy-staging-HEROKU
+deploy-staging-releng_tooltool:        deploy-staging-HEROKU
+deploy-staging-releng_treestatus:      deploy-staging-HEROKU
+deploy-staging-releng_mapper:          deploy-staging-HEROKU
+deploy-staging-releng_archiver:        deploy-staging-HEROKU
 
-deploy-staging-shipit_frontend: deploy-staging-S3
-deploy-staging-shipit_dashboard: deploy-staging-HEROKU
-deploy-staging-shipit_pipeline: # deploy-staging-HEROKU
-deploy-staging-shipit_signoff: # deploy-staging-HEROKU
+deploy-staging-shipit_frontend:        deploy-staging-S3
+deploy-staging-shipit_dashboard:       deploy-staging-HEROKU
+deploy-staging-shipit_pipeline:        # deploy-staging-HEROKU
+deploy-staging-shipit_signoff:         # deploy-staging-HEROKU
 
 
 
@@ -318,8 +318,8 @@ deploy-production-releng_treestatus:   deploy-production-HEROKU
 deploy-production-releng_mapper:       # deploy-production-HEROKU
 deploy-production-releng_archiver:     # deploy-production-HEROKU
 
-deploy-production-shipit_frontend:     # deploy-production-S3
-deploy-production-shipit_dashboard:    # deploy-production-HEROKU
+deploy-production-shipit_frontend:     deploy-production-S3
+deploy-production-shipit_dashboard:    deploy-production-HEROKU
 deploy-production-shipit_pipeline:     # deploy-staging-HEROKU
 deploy-production-shipit_signoff:      # deploy-staging-HEROKU
 
