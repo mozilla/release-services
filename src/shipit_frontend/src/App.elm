@@ -441,8 +441,13 @@ location2messages location =
                     "login" ->
                         [ Builder.query builder
                             |> User.convertUrlQueryToUser
-                            |> User.Logging
-                            |> UserMsg
+                            |> Maybe.map
+                                (\x ->
+                                    x
+                                        |> User.Logging
+                                        |> UserMsg
+                                )
+                            |> Maybe.withDefault (ShowPage Home)
                         , ShowPage Home
                         ]
 
