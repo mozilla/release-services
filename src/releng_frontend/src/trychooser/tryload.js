@@ -1,5 +1,5 @@
-var TRY_BUILD_LOAD_URL =  "http://builddata.pub.build.mozilla.org/reports/pending/pending_compile_try.txt";
-var TEST_LOAD_URL =  "http://builddata.pub.build.mozilla.org/reports/pending/pending_test_all.txt";
+var TRY_BUILD_LOAD_URL =  "https://builddata.pub.build.mozilla.org/reports/pending/pending_compile_try.txt";
+var TEST_LOAD_URL =  "https://builddata.pub.build.mozilla.org/reports/pending/pending_test_all.txt";
 
 /* Initialize the things which appear in the right-hand side of assignments in getTryLoads with the names
    used in the URLs above. */
