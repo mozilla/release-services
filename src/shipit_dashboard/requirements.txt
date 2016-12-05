@@ -4,6 +4,5 @@
 
 # i wonder why libmozdata doesn't require this already
 requests[security]>=2.7.0
-# need to pin libmozdata due to
-# https://github.com/mozilla/libmozdata/commit/e0862e52fa77e38366d64c7068f908362d0535be
-libmozdata==0.1.16
+
+libmozdata

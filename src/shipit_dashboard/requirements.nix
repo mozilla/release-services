@@ -35,7 +35,9 @@ let
           for dep in ${builtins.concatStringsSep " " (builtins.attrValues pkgs)}; do
             if [ -d "$dep/bin" ]; then
               for prog in "$dep/bin/"*; do
-                ln -s $prog $out/bin/`basename $prog`
+                if [ -f $prog ]; then
+                  ln -s $prog $out/bin/`basename $prog`
+                fi
               done
             fi
           done
