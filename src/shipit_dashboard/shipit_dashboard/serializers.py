@@ -6,6 +6,7 @@ from shipit_dashboard.models import (
     BugResult, BugContributor, BugAnalysis, Contributor
 )
 from releng_common import log
+import html
 
 
 logger = log.get_logger('shipit_dashboard.serializers')
@@ -44,7 +45,7 @@ def serialize_bug(bug):
     if analysis.get('uplift_comment'):
         comment = analysis['uplift_comment']
         if 'html' in comment:
-            comment_html = comment['html'].replace('&', '&amp;')
+            comment_html = html.unescape(comment['html'])
         else:
             comment_html = comment.get('text', 'No comment.')
         uplift = {
@@ -53,7 +54,6 @@ def serialize_bug(bug):
         }
 
     # Build versions
-    # TODO: check structure with sylvestre
     approval_base_flag = 'approval-mozilla-'
     versions = {}
     for a in bug_data.get('attachments', []):
