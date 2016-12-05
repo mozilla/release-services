@@ -44,11 +44,17 @@ self: super: {
   });
 
   "libmozdata" = python.overrideDerivation super."libmozdata" (old: {
-		# Remove useless depencies
+		# Remove useless dependencies
     preConfigure = ''
       sed -i -e "s|mercurial>=3.9.1; python_version < '3.0'||" requirements.txt
       sed -i -e "s|setuptools>=28.6.1||" requirements.txt
     '';
+
+		# Add temporary patch until next release
+    patches = [ (pkgs.fetchurl {
+			url = "https://github.com/La0/libmozdata/commit/582e41af1c220ab680b2d72caef78be23394a18b.patch";
+			sha256 = "04cwg30iwi5j2mdpbk67s0km0vlarac2fwyiqwx0cn5fa7ma9zvz";
+		}) ];
   });
 
 }
