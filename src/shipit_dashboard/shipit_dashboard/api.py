@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 import pickle
 from flask import abort, request
+import sqlalchemy as sa
 from sqlalchemy.orm.exc import NoResultFound
 from releng_common.auth import auth
 from releng_common.db import db
@@ -138,12 +139,6 @@ def create_bug():
     except:
         bug = BugResult(bugzilla_id=bugzilla_id)
 
-    # Load all analysis
-    analysis_ids = request.json.get('analysis', [])
-    analysis = BugAnalysis.query.filter(BugAnalysis.id.in_(analysis_ids)).all()
-    if not analysis:
-        raise Exception('No analysis found for {}'.format(analysis_ids))
-
     # Update bug payload
     payload = request.json.get('payload')
     payload_hash = request.json.get('payload_hash')
@@ -153,6 +148,13 @@ def create_bug():
     bug.payload_hash = payload_hash
 
     # Attach bug to its analysis
+    # Load all analysis
+    analysis_needed = request.json.get('analysis', [])
+    analysis_existing = bug.analysis.values('analysis_id')
+    analysis = BugAnalysis.query \
+        .filter(BugAnalysis.id.in_(analysis_needed)) \
+        .filter(sa.not_(BugAnalysis.id.in_(analysis_existing))) \
+        .all()
     for a in analysis:
         a.bugs.append(bug)
 
