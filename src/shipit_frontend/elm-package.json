@@ -14,7 +14,7 @@
         "elm-lang/navigation": "1.0.0 <= v < 2.0.0",
         "evancz/elm-http": "3.0.1 <= v < 4.0.0",
         "evancz/focus": "2.0.1 <= v < 3.0.0",
-        "jinjor/elm-html-parser": "1.1.1 <= v < 2.0.0",
+        "jinjor/elm-html-parser": "1.1.3 <= v < 2.0.0",
         "krisajenkins/remotedata": "1.0.0 <= v < 2.0.0",
         "rgrempel/elm-route-url": "2.0.1 <= v < 3.0.0"
     },
