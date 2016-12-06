@@ -74,6 +74,7 @@ type alias Patch =
     , deletions : Int
     , changes : Int
     , url : String
+    , languages : List String
     }
 
 
@@ -661,12 +662,13 @@ decodeBug =
 
 decodePatch : Decoder Patch
 decodePatch =
-    Json.object5 Patch
+    Json.object6 Patch
         ("source" := Json.string)
         ("changes_add" := Json.int)
         ("changes_del" := Json.int)
         ("changes_size" := Json.int)
         ("url" := Json.string)
+        ("languages" := Json.list (Json.string))
 
 
 decodeVersion : Decoder UpliftVersion
@@ -871,8 +873,7 @@ viewBugDetails bug =
 viewPatch : ( String, Patch ) -> Html Msg
 viewPatch ( patchId, patch ) =
     div [ class "patch" ]
-        [ --span [class "tag tag-info -pill", title "Changes size"] [text (toString patch.changes)],
-          a [ href patch.url, target "_blank", title ("On " ++ patch.source) ]
+        ([ a [ href patch.url, target "_blank", title ("On " ++ patch.source) ]
             [ text
                 ((if patch.changes > 0 then
                     "Patch"
@@ -883,11 +884,21 @@ viewPatch ( patchId, patch ) =
                     ++ patchId
                 )
             ]
-        , span [ class "changes" ] [ text "(" ]
-        , span [ class "changes additions" ] [ text ("+" ++ (toString patch.additions)) ]
-        , span [ class "changes deletions" ] [ text ("-" ++ (toString patch.deletions)) ]
-        , span [ class "changes" ] [ text ")" ]
-        ]
+         , span [ class "changes" ] [ text "(" ]
+         , span [ class "changes additions" ] [ text ("+" ++ (toString patch.additions)) ]
+         , span [ class "changes deletions" ] [ text ("-" ++ (toString patch.deletions)) ]
+         ]
+            ++ (List.map
+                    (\l ->
+                        span []
+                            [ span [ class "changes" ] [ text "/" ]
+                            , span [ class "text-info" ] [ text l ]
+                            ]
+                    )
+                    patch.languages
+               )
+            ++ [ span [ class "changes" ] [ text ")" ] ]
+        )
 
 
 viewFlags : Bug -> Html Msg
