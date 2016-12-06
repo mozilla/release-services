@@ -22,6 +22,9 @@
                 "code_churn_overall": 7,
                 "developer_familiarity_last_3_releases": 1,
                 "developer_familiarity_overall": 1,
+                "languages": [
+                    "C++"
+                ],
                 "modules_num": 1,
                 "reviewer_familiarity_last_3_releases": 0,
                 "reviewer_familiarity_overall": 0,
@@ -37,6 +40,9 @@
                 "code_churn_overall": 10,
                 "developer_familiarity_last_3_releases": 4,
                 "developer_familiarity_overall": 4,
+                "languages": [
+                    "C++"
+                ],
                 "modules_num": 1,
                 "reviewer_familiarity_last_3_releases": 0,
                 "reviewer_familiarity_overall": 0,
@@ -52,6 +58,9 @@
                 "code_churn_overall": 18,
                 "developer_familiarity_last_3_releases": 1,
                 "developer_familiarity_overall": 1,
+                "languages": [
+                    "Html"
+                ],
                 "modules_num": 1,
                 "reviewer_familiarity_last_3_releases": 0,
                 "reviewer_familiarity_overall": 0,
@@ -67,6 +76,9 @@
                 "code_churn_overall": 12,
                 "developer_familiarity_last_3_releases": 6,
                 "developer_familiarity_overall": 6,
+                "languages": [
+                    "C++"
+                ],
                 "modules_num": 1,
                 "reviewer_familiarity_last_3_releases": 0,
                 "reviewer_familiarity_overall": 0,
@@ -82,6 +94,9 @@
                 "code_churn_overall": 6,
                 "developer_familiarity_last_3_releases": 0,
                 "developer_familiarity_overall": 0,
+                "languages": [
+                    "C++"
+                ],
                 "modules_num": 1,
                 "reviewer_familiarity_last_3_releases": 0,
                 "reviewer_familiarity_overall": 0,
@@ -97,6 +112,7 @@
                 "code_churn_overall": 14,
                 "developer_familiarity_last_3_releases": 0,
                 "developer_familiarity_overall": 0,
+                "languages": [],
                 "modules_num": 1,
                 "reviewer_familiarity_last_3_releases": 0,
                 "reviewer_familiarity_overall": 0,
