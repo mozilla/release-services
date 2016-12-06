@@ -136,8 +136,10 @@ def create_bug():
         raise Exception('Missing bugzilla id')
     try:
         bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
+        analysis_existing = bug.analysis.values('analysis_id')
     except:
         bug = BugResult(bugzilla_id=bugzilla_id)
+        analysis_existing = []
 
     # Update bug payload
     payload = request.json.get('payload')
@@ -150,7 +152,6 @@ def create_bug():
     # Attach bug to its analysis
     # Load all analysis
     analysis_needed = request.json.get('analysis', [])
-    analysis_existing = bug.analysis.values('analysis_id')
     analysis = BugAnalysis.query \
         .filter(BugAnalysis.id.in_(analysis_needed)) \
         .filter(sa.not_(BugAnalysis.id.in_(analysis_existing))) \
