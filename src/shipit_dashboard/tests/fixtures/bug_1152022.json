@@ -22,6 +22,9 @@
                 "code_churn_overall": 18,
                 "developer_familiarity_last_3_releases": 4,
                 "developer_familiarity_overall": 4,
+                "languages": [
+                    "Javascript"
+                ],
                 "modules_num": 1,
                 "reviewer_familiarity_last_3_releases": 0,
                 "reviewer_familiarity_overall": 0,

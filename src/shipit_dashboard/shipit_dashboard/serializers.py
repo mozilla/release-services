@@ -26,6 +26,21 @@ def serialize_contributor(contributor, link):
     }
 
 
+def serialize_patch(patch):
+    """
+    Helper to serialize a Patch
+    """
+    assert isinstance(patch, dict)
+    return {
+        'source': patch['source'],
+        'changes_add': patch['changes_add'],
+        'changes_del': patch['changes_del'],
+        'changes_size': patch['changes_size'],
+        'url': patch['url'],
+        'languages': patch.get('languages', []),
+    }
+
+
 def serialize_bug(bug):
     """
     Helper to serialize a bug from its payload
@@ -101,7 +116,10 @@ def serialize_bug(bug):
         'uplift': uplift,
 
         # Patches
-        'patches': analysis['patches'],
+        'patches': dict([
+            (patch_id, serialize_patch(patch))
+            for patch_id, patch in analysis['patches'].items()
+        ]),
         'landings': {k: v for k, v in analysis.get('landings', {}).items() if v is not None},  # noqa
 
         # Versions

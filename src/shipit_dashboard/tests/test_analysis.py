@@ -138,16 +138,9 @@ def test_create_bug(client, bugs):
                         "changes_add": 51,
                         "changes_del": 9,
                         "changes_size": 162,
-                        "code_churn_last_3_releases": 6,
-                        "code_churn_overall": 6,
-                        "developer_familiarity_last_3_releases": 3,
-                        "developer_familiarity_overall": 3,
-                        "modules_num": 1,
-                        "reviewer_familiarity_last_3_releases": 0,
-                        "reviewer_familiarity_overall": 0,
                         "source": "mercurial",
-                        "test_changes_size": 0,
-                        "url": "https://hg.mozilla.org/mozilla-central/rev/41a0c9bc40df"  # noqa
+                        "url": "https://hg.mozilla.org/mozilla-central/rev/41a0c9bc40df",  # noqa
+                        "languages": ["Python"],
                     }
                 },
                 "uplift_accepted": False,
@@ -241,58 +234,42 @@ def test_create_bug(client, bugs):
     assert bug_created == {
         'bugzilla_id': 12345,
         'changes_size': 0,
-        'contributors': [{
-            'avatar': 'https://www.gravatar.com/avatar/fa60148022a230fe1bacc441549b1c66',  # noqa
-            'email': 'adw@mozilla.com',
-            'name': 'Drew Willcoxon :adw',
-            'roles': ['creator', 'assignee', 'uplift_author']
-        }],
-        'flags_status': {
-            'firefox37': '---',
-            'firefox38': 'affected',
-            'firefox39': 'fixed',
-            'firefox40': 'fixed',
-            'firefox_esr31': '---',
-            'firefox_esr38': '---'
-        },
-        'flags_tracking': {
-            'firefox37': '---',
-            'firefox38': '---',
-            'firefox39': '---',
-            'firefox40': '---',
-            'firefox_esr31': '---',
-            'firefox_esr38': '---',
-            'firefox_relnote': '---'
-        },
+        'contributors': [
+            {
+                'avatar': 'https://www.gravatar.com/avatar/fa60148022a230fe1bacc441549b1c66',  # noqa
+                'email': 'adw@mozilla.com',
+                'name': 'Drew Willcoxon :adw',
+                'roles': ['creator', 'assignee', 'uplift_author']
+            }
+        ],
+        'flags_status': {'firefox37': '---',
+                         'firefox38': 'affected',
+                         'firefox39': 'fixed',
+                         'firefox40': 'fixed',
+                         'firefox_esr31': '---',
+                         'firefox_esr38': '---'},
+        'flags_tracking': {'firefox37': '---',
+                           'firefox38': '---',
+                           'firefox39': '---',
+                           'firefox40': '---',
+                           'firefox_esr31': '---',
+                           'firefox_esr38': '---',
+                           'firefox_relnote': '---'},
         'id': 4,
         'keywords': ['test'],
         'landings': {'aurora': 'Fri, 10 Apr 2015 17:06:41 GMT',
-        'nightly': 'Wed, 08 Apr 2015 16:43:32 GMT'},
-        'patches': {
-            '41a0c9bc40df': {
-                'changes_add': 51,
-                'changes_del': 9,
-                'changes_size': 162,
-                'code_churn_last_3_releases': 6,
-                'code_churn_overall': 6,
-                'developer_familiarity_last_3_releases': 3,
-                'developer_familiarity_overall': 3,
-                'modules_num': 1,
-                'reviewer_familiarity_last_3_releases': 0,
-                'reviewer_familiarity_overall': 0,
-                'source': 'mercurial',
-                'test_changes_size': 0,
-                'url': 'https://hg.mozilla.org/mozilla-central/rev/41a0c9bc40df'  # noqa
-            }
-        },
-        'summary': 'Desktop reading list sync module should batch its POST /batch requests',  # noqa
-        'uplift': {
-            'comment': '<div>Comment</div>',
-            'id': 10138846
-        },
+                     'nightly': 'Wed, 08 Apr 2015 16:43:32 GMT'},
+        'patches': {'41a0c9bc40df': {'changes_add': 51,
+                                     'changes_del': 9,
+                                     'changes_size': 162,
+                                     'languages': ['Python'],
+                                     'source': 'mercurial',
+                                     'url': 'https://hg.mozilla.org/mozilla-central/rev/41a0c9bc40df'}},  # noqa
+        'summary': 'Desktop reading list sync module should batch its POST /batch '  # noqa
+                   'requests',
+        'uplift': {'comment': '<div>Comment</div>', 'id': 10138846},
         'url': 'https://bugzilla-dev.allizom.org/1151077',
-        'versions': {}
-    }
+        'versions': {}}
 
     # Check we now have 4 bugs
     resp = client.get('/analysis/1', headers=[
