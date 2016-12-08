@@ -1,11 +1,23 @@
 {
+  "etaque/elm-response" = {
+    version = "2.0.0";
+    sha256 = "12lb06hzxmkx7xgnnghbmm2xk4rg66j9rzx1afhswywhicp7cljs";
+  };
   "krisajenkins/remotedata" = {
     version = "1.0.1";
     sha256 = "1qdpyah75l2nmkh5yk0415i2d5la8mdgxz2j2g0pmp65liv3w1wa";
   };
+  "krisajenkins/elm-dialog" = {
+    version = "4.0.1";
+    sha256 = "0s4w2kl1n8wbhpnngjvgmpw7gxijsib4asfl0b3xl03fli7k74k0";
+  };
   "elm-community/elm-test" = {
     version = "1.1.0";
     sha256 = "0rf0k1s3pvqk1hfpqrfbahlrpvbxzyyp5h6n8w6pcm4za1sql45p";
+  };
+  "krisajenkins/elm-exts" = {
+    version = "25.13.0";
+    sha256 = "0gw1jz5rdiffrbzadmns0yq1miipwqnrsq12qq2c3imnqksna28r";
   };
   "elm-lang/navigation" = {
     version = "1.0.0";
@@ -58,6 +70,10 @@
   "sporto/erl" = {
     version = "9.0.1";
     sha256 = "0a6vs559qhf12acdhdjm6qxwq0qfvpi2630pdw24aiikbrvv29kn";
+  };
+  "elm-lang/trampoline" = {
+    version = "1.0.0";
+    sha256 = "07srdzlncvnr7scbiqs1b1g0w4163r5fzn1w50lhrvwimw9135sj";
   };
   "elm-lang/core" = {
     version = "4.0.5";
