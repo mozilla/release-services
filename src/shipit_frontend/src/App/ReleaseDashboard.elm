@@ -1,6 +1,7 @@
 module App.ReleaseDashboard exposing (..)
 
 import Html exposing (..)
+import Html.App
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput, onSubmit, onCheck)
 import HtmlParser exposing (parse)
@@ -19,6 +20,7 @@ import Utils exposing (onChange)
 import TaskclusterLogin as User
 import BugzillaLogin as Bugzilla
 import Hawk
+import App.Contributor as ContribEditor exposing (Contributor, decodeContributor, viewContributor)
 
 
 -- Models
@@ -45,14 +47,6 @@ type BugUpdate
     = UpdateFailed String
     | UpdatedBug (List Changes)
     | UpdatedAttachment (List Changes)
-
-
-type alias Contributor =
-    { email : String
-    , name : String
-    , avatar : String
-    , roles : List String
-    }
 
 
 type alias UpliftRequest =
@@ -118,6 +112,7 @@ type alias Model =
       current_analysis : WebData (Analysis)
     , -- Backend base endpoint
       backend_dashboard_url : String
+    , contrib_editor : ContribEditor.Model
     }
 
 
@@ -139,17 +134,26 @@ type
     | SavedBugEdit Bug (WebData BugUpdate)
       -- Hawk Extension
     | HawkRequest Hawk.Msg
+      -- Contributor editor extension
+    | ContribEditorMsg ContribEditor.Msg
 
 
 init : String -> ( Model, Cmd Msg )
 init backend_dashboard_url =
     -- Init empty model
-    ( { all_analysis = NotAsked
-      , current_analysis = NotAsked
-      , backend_dashboard_url = backend_dashboard_url
-      }
-    , Cmd.none
-    )
+    let
+        ( contrib_editor, cmd ) =
+            ContribEditor.init
+    in
+        ( { all_analysis = NotAsked
+          , current_analysis = NotAsked
+          , backend_dashboard_url = backend_dashboard_url
+          , contrib_editor = contrib_editor
+          }
+        , Cmd.batch
+            [ Cmd.map ContribEditorMsg cmd
+            ]
+        )
 
 
 
@@ -304,6 +308,24 @@ update msg model user bugzilla =
                     _ ->
                         ( model', Cmd.none )
 
+        ContribEditorMsg editorMsg ->
+            let
+                ( editor, cmd ) =
+                    ContribEditor.update editorMsg model.contrib_editor
+
+                -- Update contributor in every bug referencing him
+                newModel =
+                    case editor.contributor of
+                        Just contributor ->
+                            updateContributor model contributor
+
+                        Nothing ->
+                            model
+            in
+                ( { newModel | contrib_editor = editor }
+                , Cmd.map ContribEditorMsg cmd
+                )
+
 
 mergeAttachments :
     String
@@ -331,23 +353,15 @@ mergeAttachments aId versions attachments =
             Dict.insert aId out' attachments
 
 
-updateBug : Model -> Int -> (Bug -> Bug) -> Model
-updateBug model bugId callback =
-    -- Update a bug in current analysis
-    -- using a callback
+updateBugs : Model -> (Bug -> Bug) -> Model
+updateBugs model callback =
+    -- Run a callback on every bugs
     case model.current_analysis of
         Success analysis ->
             let
                 -- Rebuild bugs list
                 bugs =
-                    List.map
-                        (\b ->
-                            if b.id == bugId then
-                                (callback b)
-                            else
-                                b
-                        )
-                        analysis.bugs
+                    List.map callback analysis.bugs
 
                 -- Rebuild analysis
                 analysis' =
@@ -357,6 +371,38 @@ updateBug model bugId callback =
 
         _ ->
             model
+
+
+updateBug : Model -> Int -> (Bug -> Bug) -> Model
+updateBug model bugId callback =
+    -- Update a specific bug in current analysis
+    -- using a callback
+    updateBugs model
+        (\b ->
+            if b.id == bugId then
+                (callback b)
+            else
+                b
+        )
+
+
+updateContributor : Model -> Contributor -> Model
+updateContributor model contributor =
+    -- Update a contributor in every bugs
+    updateBugs model
+        (\bug ->
+            { bug
+                | contributors =
+                    List.map
+                        (\c ->
+                            if c.email == contributor.email then
+                                contributor
+                            else
+                                c
+                        )
+                        bug.contributors
+            }
+        )
 
 
 fetchAllAnalysis : Model -> User.Model -> Cmd Msg
@@ -679,15 +725,6 @@ decodeVersion =
         ("attachments" := Json.list Json.string)
 
 
-decodeContributor : Decoder Contributor
-decodeContributor =
-    Json.object4 Contributor
-        ("email" := Json.string)
-        ("name" := Json.string)
-        ("avatar" := Json.string)
-        ("roles" := Json.list Json.string)
-
-
 decodeUpliftRequest : Decoder UpliftRequest
 decodeUpliftRequest =
     Json.object2 UpliftRequest
@@ -721,19 +758,20 @@ view model bugzilla =
             div [ class "alert alert-danger" ] [ text ("Error: " ++ toString err) ]
 
         Success analysis ->
-            viewAnalysis bugzilla analysis
+            viewAnalysis model.contrib_editor bugzilla analysis
 
 
-viewAnalysis : Bugzilla.Model -> Analysis -> Html Msg
-viewAnalysis bugzilla analysis =
+viewAnalysis : ContribEditor.Model -> Bugzilla.Model -> Analysis -> Html Msg
+viewAnalysis editor bugzilla analysis =
     div []
-        [ h1 [] [ text ("Listing all " ++ analysis.name ++ " uplifts for review:") ]
-        , div [ class "bugs" ] (List.map (viewBug bugzilla) analysis.bugs)
+        [ Html.App.map ContribEditorMsg (ContribEditor.viewModal editor)
+        , h1 [] [ text ("Listing all " ++ analysis.name ++ " uplifts for review:") ]
+        , div [ class "bugs" ] (List.map (viewBug editor bugzilla) analysis.bugs)
         ]
 
 
-viewBug : Bugzilla.Model -> Bug -> Html Msg
-viewBug bugzilla bug =
+viewBug : ContribEditor.Model -> Bugzilla.Model -> Bug -> Html Msg
+viewBug editor bugzilla bug =
     div [ class "bug" ]
         [ h4 [] [ text bug.summary ]
         , p [ class "summary" ]
@@ -744,7 +782,7 @@ viewBug bugzilla bug =
             )
         , div [ class "row" ]
             [ div [ class "col-xs-4" ]
-                (List.map viewContributor bug.contributors)
+                (List.map (\c -> Html.App.map ContribEditorMsg (viewContributor editor c)) bug.contributors)
             , div [ class "col-xs-4" ]
                 [ viewUpliftRequest bug.uplift_request
                 ]
@@ -780,42 +818,6 @@ viewVersionTag ( name, version ) =
 
         _ ->
             span [ class "tag tag-default" ] [ text name ]
-
-
-viewContributor : Contributor -> Html Msg
-viewContributor user =
-    div [ class "user row" ]
-        [ div [ class "pull-sm-left col-sm-2 hidden-xs" ]
-            [ img [ class "avatar img-fluid img-rounded", src user.avatar ] []
-            ]
-        , div [ class "col-xs-8 col-sm-10" ]
-            [ p [ class "lead" ] [ text user.name ]
-            , p []
-                [ a [ href ("mailto:" ++ user.email) ] [ text user.email ]
-                ]
-            , p []
-                (List.map
-                    (\role ->
-                        case role of
-                            "creator" ->
-                                span [ class "tag tag-success" ] [ text "Bug author" ]
-
-                            "reviewer" ->
-                                span [ class "tag tag-info" ] [ text "Reviewer" ]
-
-                            "assignee" ->
-                                span [ class "tag tag-danger" ] [ text "Assignee" ]
-
-                            "uplift_author" ->
-                                span [ class "tag tag-warning" ] [ text "Uplift author" ]
-
-                            _ ->
-                                span [ class "tag tag-default" ] [ text role ]
-                    )
-                    user.roles
-                )
-            ]
-        ]
 
 
 viewUpliftRequest : Maybe UpliftRequest -> Html Msg
