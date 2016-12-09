@@ -12,18 +12,28 @@ import html
 logger = log.get_logger('shipit_dashboard.serializers')
 
 
-def serialize_contributor(contributor, link):
+def serialize_contributor(contributor, link=None):
     """
     Helper to serialize a contributor & its role
     """
     assert isinstance(contributor, Contributor)
-    assert isinstance(link, BugContributor)
-    return {
+
+    out = {
+        'id': contributor.id,
         'email': contributor.email,
         'name': contributor.name,
         'avatar': contributor.avatar_url,
-        'roles': link.roles.split(','),
+        'karma': contributor.karma or 0,
+        # TODO : check user scopes for private comment
+        'comment_private': contributor.comment_private or '',
+        'comment_public': contributor.comment_public or '',
     }
+
+    if link is not None:
+        assert isinstance(link, BugContributor)
+        out['roles'] = link.roles.split(',')
+
+    return out
 
 
 def serialize_patch(patch):
