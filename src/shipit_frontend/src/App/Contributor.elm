@@ -317,20 +317,24 @@ viewForm contributor =
 
 viewContributor : Model -> Contributor -> Html Msg
 viewContributor model contributor =
-    div [ class "user row" ]
+    div [ class "contributor row" ]
         [ div [ class "pull-sm-left col-sm-2 hidden-xs" ]
             [ img [ class "avatar img-fluid img-rounded", src contributor.avatar ] []
             ]
         , div [ class "col-xs-8 col-sm-10" ]
-            [ p [ class "lead" ] [ text contributor.name ]
+            [ p [ class "lead" ]
+                [ (if contributor.karma < 0 then
+                    span [ class "karma negative", title contributor.comment_public ] [ text "●" ]
+                   else if contributor.karma > 0 then
+                    span [ class "karma positive", title contributor.comment_public ] [ text "●" ]
+                   else
+                    span [ class "karma neutral", title contributor.comment_public ] [ text "●" ]
+                  )
+                , span [] [ text contributor.name ]
+                , button [ class "btn btn-link btn-sm", onClick (Edit contributor) ] [ text "Edit" ]
+                ]
             , p []
                 [ a [ href ("mailto:" ++ contributor.email) ] [ text contributor.email ] ]
-            , p []
-                [ strong [ title contributor.comment_public ] [ text "Karma: " ]
-                , span [] [ text (toString contributor.karma) ]
-                , button [ class "btn btn-outline-danger btn-sm", onClick (Edit contributor) ]
-                    [ text "Edit" ]
-                ]
             , p []
                 (List.map
                     (\role ->
