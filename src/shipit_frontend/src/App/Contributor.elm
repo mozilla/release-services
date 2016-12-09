@@ -2,17 +2,26 @@ module App.Contributor exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Json.Decode as Json exposing (Decoder, (:=))
+import Http
 import Html.Events exposing (onClick, onInput, onSubmit)
-import Utils exposing (onChange)
+import Json.Decode as Json exposing (Decoder, (:=))
+import Json.Encode as JsonEncode
+import Utils exposing (onChange, decodeWebResponse)
 import String
 import Dialog
+import Hawk
+import RemoteData as RemoteData exposing (WebData, RemoteData(Loading, Success, NotAsked, Failure), isSuccess)
+import TaskclusterLogin as User
 
 
 type Msg
     = Edit Contributor
     | Cancel
     | SetValue FormValue String
+    | UpdateContributor
+    | UpdatedContributor (RemoteData Http.RawError Http.Response)
+      -- Hawk Extension
+    | HawkRequest Hawk.Msg
 
 
 type FormValue
@@ -22,13 +31,15 @@ type FormValue
 
 
 type alias Model =
-    -- TODO: skip dictionnary
     { contributor : Maybe Contributor
+    , update : WebData (Contributor)
+    , backend_dashboard_url : String
     }
 
 
 type alias Contributor =
-    { email : String
+    { id : Int
+    , email : String
     , name : String
     , avatar : String
     , roles : List String
@@ -38,24 +49,29 @@ type alias Contributor =
     }
 
 
-init : ( Model, Cmd Msg )
-init =
+init : String -> ( Model, Cmd Msg )
+init backend_dashboard_url =
     ( { contributor = Nothing
+      , update = NotAsked
+      , backend_dashboard_url = backend_dashboard_url
       }
     , Cmd.none
     )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Msg -> Model -> User.Model -> ( Model, Cmd Msg )
+update msg model user =
     case msg of
+        HawkRequest hawkMsg ->
+            ( model, Cmd.none )
+
         Edit contributor ->
-            ( { model | contributor = Just contributor }
+            ( { model | contributor = Just contributor, update = NotAsked }
             , Cmd.none
             )
 
         Cancel ->
-            ( { model | contributor = Nothing }
+            ( { model | contributor = Nothing, update = NotAsked }
             , Cmd.none
             )
 
@@ -86,6 +102,69 @@ update msg model =
                 , Cmd.none
                 )
 
+        UpdateContributor ->
+            ( model
+            , sendUpdate model user
+            )
+
+        UpdatedContributor response ->
+            let
+                newModel =
+                    case response of
+                        Success r ->
+                            { model | update = decodeWebResponse decodeContributor r }
+
+                        Failure rawError ->
+                            -- Promote error
+                            { model
+                                | contributor = Nothing
+                                , update =
+                                    Failure
+                                        (case rawError of
+                                            Http.RawTimeout ->
+                                                Http.Timeout
+
+                                            Http.RawNetworkError ->
+                                                Http.NetworkError
+                                        )
+                            }
+
+                        _ ->
+                            { model | update = Loading }
+            in
+                ( newModel, Cmd.none )
+
+
+sendUpdate : Model -> User.Model -> Cmd Msg
+sendUpdate model user =
+    -- Send updated contributor to backend
+    case user of
+        Just credentials ->
+            case model.contributor of
+                Just contributor ->
+                    let
+                        url =
+                            model.backend_dashboard_url ++ "/contributor/" ++ (toString contributor.id)
+
+                        request =
+                            Http.Request "PUT"
+                                [ ( "Content-Type", "application/json" ) ]
+                                url
+                                (contributor
+                                    |> encodeContributor
+                                    |> Http.string
+                                )
+                    in
+                        Cmd.map HawkRequest
+                            (Hawk.send "Contributor" request credentials)
+
+                Nothing ->
+                    Cmd.none
+
+        Nothing ->
+            -- No credentials
+            Cmd.none
+
 
 
 -- Decode from json api
@@ -93,15 +172,33 @@ update msg model =
 
 decodeContributor : Decoder Contributor
 decodeContributor =
-    Json.object7 Contributor
+    Json.object8 Contributor
+        ("id" := Json.int)
         ("email" := Json.string)
         ("name" := Json.string)
         ("avatar" := Json.string)
-        ("roles" := Json.list Json.string)
-        -- TODO: use api data
-        (Json.succeed 0)
-        (Json.succeed "")
-        (Json.succeed "")
+        (Json.oneOf
+            [ ("roles" := Json.list Json.string)
+            , Json.succeed []
+              -- no roles on updates
+            ]
+        )
+        ("karma" := Json.int)
+        ("comment_private" := Json.string)
+        ("comment_public" := Json.string)
+
+
+encodeContributor : Contributor -> String
+encodeContributor contributor =
+    -- Only send karma related data
+    JsonEncode.encode 0
+        (JsonEncode.object
+            [ ( "id", JsonEncode.int contributor.id )
+            , ( "karma", JsonEncode.int contributor.karma )
+            , ( "comment_private", JsonEncode.string contributor.comment_private )
+            , ( "comment_public", JsonEncode.string contributor.comment_public )
+            ]
+        )
 
 
 
@@ -113,7 +210,7 @@ viewModal model =
     Dialog.view
         (case model.contributor of
             Just contributor ->
-                Just (dialogConfig contributor)
+                Just (dialogConfig contributor model.update)
 
             Nothing ->
                 Nothing
@@ -124,12 +221,18 @@ viewModal model =
 -- Modal configuration to edit a contributor
 
 
-dialogConfig : Contributor -> Dialog.Config Msg
-dialogConfig contributor =
+dialogConfig : Contributor -> WebData Contributor -> Dialog.Config Msg
+dialogConfig contributor update =
     { closeMessage = Just Cancel
     , containerClass = Nothing
-    , header = Just (h3 [] [ text ("Update " ++ contributor.name) ])
-    , body = Just (viewForm contributor)
+    , header = Just (h3 [] [ text "Update Contributor" ])
+    , body =
+        Just
+            (div []
+                [ viewUpdateStatus update
+                , viewForm contributor
+                ]
+            )
     , footer =
         Just
             (div []
@@ -139,11 +242,31 @@ dialogConfig contributor =
                     ]
                     [ text "Cancel" ]
                 , button
-                    [ class "btn btn-primary" ]
+                    [ class "btn btn-primary", onClick UpdateContributor ]
                     [ text "Update Contributor" ]
                 ]
             )
     }
+
+
+viewUpdateStatus : WebData Contributor -> Html Msg
+viewUpdateStatus update =
+    div [ class "row" ]
+        [ div [ class "col-xs-12" ]
+            [ case update of
+                NotAsked ->
+                    span [] []
+
+                Loading ->
+                    div [ class "alert alert-info" ] [ text "Loading..." ]
+
+                Failure f ->
+                    div [ class "alert alert-danger" ] [ text ("Failure: " ++ (toString f)) ]
+
+                Success c ->
+                    div [ class "alert alert-success" ] [ text "Successful update !" ]
+            ]
+        ]
 
 
 
@@ -159,8 +282,14 @@ viewForm contributor =
             , ( "1", "Positive" )
             ]
     in
-        Html.form [ class "form" ]
-            [ div [ class "form-group row" ]
+        Html.form [ class "form", onSubmit UpdateContributor ]
+            [ div [ class "row" ]
+                [ div [ class "col-sm-2 hidden-xs" ]
+                    [ img [ class "avatar img-fluid img-rounded", src contributor.avatar ] [] ]
+                , div [ class "col-xs-8 col-sm-10" ]
+                    [ text contributor.name ]
+                ]
+            , div [ class "form-group row" ]
                 [ label [ class "col-sm-4 col-form-label" ] [ text "Karma" ]
                 , div [ class "col-sm-8" ]
                     [ select [ class "form-control form-control-sm", onChange (SetValue Karma) ]

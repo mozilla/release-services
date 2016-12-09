@@ -115,6 +115,9 @@ class Contributor(db.Model):
     name = sa.Column(sa.String(250))
     email = sa.Column(sa.String(250))
     avatar_url = sa.Column(sa.String(250))
+    karma = sa.Column(sa.Integer, default=0)
+    comment_private = sa.Column(sa.Text, default='')
+    comment_public = sa.Column(sa.Text, default='')
 
 
 class BugContributor(db.Model):

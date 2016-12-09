@@ -15,7 +15,9 @@ from shipit_dashboard.helpers import gravatar
 from shipit_dashboard.models import (
     BugAnalysis, BugResult, Contributor, BugContributor
 )
-from shipit_dashboard.serializers import serialize_analysis, serialize_bug
+from shipit_dashboard.serializers import (
+    serialize_analysis, serialize_bug, serialize_contributor
+)
 
 
 logger = log.get_logger('shipit_dashboard.api')
@@ -205,3 +207,30 @@ def delete_bug(bugzilla_id):
         raise Exception('Missing bug {}'.format(bugzilla_id))
 
     bug.delete()
+
+
+# TODO: use another scope for admin
+@auth.require_scopes(SCOPES_USER)
+def update_contributor(contributor_id):
+    """
+    Update a contributor after modifications on frontend
+    """
+    # Load contributor
+    try:
+        contributor = Contributor.query.filter_by(id=contributor_id).one()
+    except:
+        raise Exception('Missing contributor {}'.format(contributor_id))
+
+    # Update karma & comment
+    if 'karma' in request.json:
+        contributor.karma = request.json['karma']
+    if 'comment_private' in request.json:
+        contributor.comment_private = request.json['comment_private']
+    if 'comment_public' in request.json:
+        contributor.comment_public = request.json['comment_public']
+
+    # Commit changes
+    db.session.add(contributor)
+    db.session.commit()
+
+    return serialize_contributor(contributor)
