@@ -81,6 +81,22 @@ paths:
         200:
           description: Empty
 
+  /contributor/{contributor_id}:
+    put:
+      operationId: "shipit_dashboard.api.update_contributor"
+      parameters:
+      - name: contributor_id
+        in: path
+        description: Contributor ID of the contributor to update
+        required: true
+        type: integer
+      responses:
+        200:
+          description: A specific Contributor
+          schema:
+            $ref: '#/definitions/Contributor'
+
+
 definitions:
 
   Success:
@@ -178,13 +194,21 @@ definitions:
       - email
       - name
       - avatar
-      - roles
+      - karma
+      - comment_private
+      - comment_public
     properties:
       email:
         type: string
       name:
         type: string
       avatar:
+        type: string
+      karma:
+        type: integer
+      comment_private:
+        type: string
+      comment_public:
         type: string
       roles:
         type: array

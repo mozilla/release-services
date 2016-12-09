@@ -143,7 +143,7 @@ init backend_dashboard_url =
     -- Init empty model
     let
         ( contrib_editor, cmd ) =
-            ContribEditor.init
+            ContribEditor.init backend_dashboard_url
     in
         ( { all_analysis = NotAsked
           , current_analysis = NotAsked
@@ -170,6 +170,9 @@ routeHawkRequest response route =
 
         "BugUpdate" ->
             Cmd.map FetchedBug response
+
+        "Contributor" ->
+            Cmd.map ContribEditorMsg (Cmd.map ContribEditor.UpdatedContributor response)
 
         _ ->
             Cmd.none
@@ -311,15 +314,15 @@ update msg model user bugzilla =
         ContribEditorMsg editorMsg ->
             let
                 ( editor, cmd ) =
-                    ContribEditor.update editorMsg model.contrib_editor
+                    ContribEditor.update editorMsg model.contrib_editor user
 
                 -- Update contributor in every bug referencing him
                 newModel =
-                    case editor.contributor of
-                        Just contributor ->
+                    case editor.update of
+                        Success contributor ->
                             updateContributor model contributor
 
-                        Nothing ->
+                        _ ->
                             model
             in
                 ( { newModel | contrib_editor = editor }
@@ -389,14 +392,15 @@ updateBug model bugId callback =
 updateContributor : Model -> Contributor -> Model
 updateContributor model contributor =
     -- Update a contributor in every bugs
+    -- Only update karma & comments
     updateBugs model
         (\bug ->
             { bug
                 | contributors =
                     List.map
                         (\c ->
-                            if c.email == contributor.email then
-                                contributor
+                            if c.id == contributor.id then
+                                { c | karma = contributor.karma, comment_private = contributor.comment_private, comment_public = contributor.comment_public }
                             else
                                 c
                         )
