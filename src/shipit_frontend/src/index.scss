@@ -111,7 +111,7 @@ div.bugs {
       }
     }
     
-    div.user {
+    div.contributor {
       margin-bottom: 4px;
 
       img.avatar {
@@ -122,6 +122,32 @@ div.bugs {
 
       p {
         margin-bottom: 0;
+
+        &.lead {
+          * {
+            display: inline-block;
+            margin-right: 2px;
+          }
+
+          .karma {
+            font-size: 1.1em !important;
+            vertical-align: bottom;
+            cursor: context-menu;
+
+            &.positive {
+              color: $brand-success;
+            }
+            &.neutral {
+              color: $gray-light;
+            }
+            &.negative {
+              color: $brand-danger;
+            }
+          }
+          button {
+            padding-left: 0 !important;
+          }
+        }
 
         .tag {
           margin-right: 4px;
