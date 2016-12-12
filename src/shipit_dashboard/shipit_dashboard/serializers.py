@@ -5,6 +5,8 @@
 from shipit_dashboard.models import (
     BugResult, BugContributor, BugAnalysis, Contributor
 )
+from shipit_dashboard import SCOPES_ADMIN
+from flask_login import current_user
 from releng_common import log
 import html
 
@@ -24,10 +26,11 @@ def serialize_contributor(contributor, link=None):
         'name': contributor.name,
         'avatar': contributor.avatar_url,
         'karma': contributor.karma or 0,
-        # TODO : check user scopes for private comment
-        'comment_private': contributor.comment_private or '',
         'comment_public': contributor.comment_public or '',
     }
+    if current_user.has_permissions(SCOPES_ADMIN):
+        # Only admins can see/edit the private comment
+        out['comment_private'] = contributor.comment_private or ''
 
     if link is not None:
         assert isinstance(link, BugContributor)

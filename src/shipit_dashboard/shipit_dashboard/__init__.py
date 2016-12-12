@@ -14,6 +14,20 @@ DEBUG = os.environ.get('DEBUG') == 'true' or __name__ == '__main__'
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_SETTINGS = os.path.abspath(os.path.join(HERE, '..', 'settings.py'))
 
+# Tasckcluster scopes
+SCOPES_USER = [
+    'project:shipit:user',
+    'project:shipit:analysis/use',
+    'project:shipit:bugzilla'
+]
+SCOPES_ADMIN = SCOPES_USER + [
+    'project:shipit:admin',
+]
+SCOPES_BOT = [
+    'project:shipit:bot',
+    'project:shipit:analysis/manage',
+]
+
 
 def init_app(app):
 
