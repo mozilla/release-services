@@ -71,6 +71,17 @@ class TaskclusterUser(BaseUser):
     def get_permissions(self):
         return self.credentials['scopes']
 
+    def has_permissions(self, required_permissions):
+        """
+        Check user has some required permissions
+        Using Taskcluster comparison algorithm
+        """
+        if len(required_permissions) > 0 \
+           and not isinstance(required_permissions[0], (tuple, list)):
+                required_permissions = [required_permissions]
+
+        return scope_match(self.get_permissions(), required_permissions)
+
     # XXX: this should not be here
 
     def taskcluster_options(self):
