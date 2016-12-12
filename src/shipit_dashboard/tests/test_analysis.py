@@ -1,28 +1,4 @@
-from releng_common.mocks import build_header
 import json
-
-
-def _header(mode):
-    """"
-    Helper to build an Hawk header
-    for a Shipit dashboard user OR bot
-    """
-    client_id = 'test/shipit-user@mozilla.com'
-    scopes = {
-        'user': [
-            'project:shipit:user',
-            'project:shipit:analysis/use',
-            'project:shipit:bugzilla',
-        ],
-        'bot': [
-            'project:shipit:bot',
-            'project:shipit:analysis/manage',
-        ],
-    }
-    ext_data = {
-        'scopes': scopes[mode],
-    }
-    return build_header(client_id, ext_data)
 
 
 def test_list_analysis_invalid(client):
@@ -35,12 +11,12 @@ def test_list_analysis_invalid(client):
     assert resp.status_code == 401
 
 
-def test_list_analysis_valid(client, bugs):
+def test_list_analysis_valid(client, bugs, header_user):
     """
     List available analysis through api
     """
     resp = client.get('/analysis', headers=[
-        ('Authorization', _header('user')),
+        ('Authorization', header_user),
     ])
     assert resp.status_code == 200
     data = json.loads(resp.data.decode('utf-8'))
@@ -52,12 +28,12 @@ def test_list_analysis_valid(client, bugs):
     assert analysis['bugs'] == []
 
 
-def test_fetch_analysis(client, bugs):
+def test_fetch_analysis(client, bugs, header_user):
     """
     Fetch detailled analysis, with bugs
     """
     resp = client.get('/analysis/1', headers=[
-        ('Authorization', _header('user')),
+        ('Authorization', header_user),
     ])
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
@@ -107,13 +83,13 @@ def test_fetch_analysis(client, bugs):
     }
 
 
-def test_create_bug(client, bugs):
+def test_create_bug(client, bugs, header_bot):
     """
     Create a new bug in analysis
     """
     # Check we have 3 bugs
     resp = client.get('/analysis/1', headers=[
-        ('Authorization', _header('bot')),
+        ('Authorization', header_bot),
     ])
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
@@ -227,7 +203,7 @@ def test_create_bug(client, bugs):
     }
     resp = client.post('/bugs', data=json.dumps(data), headers=[
         ('Content-Type', 'application/json'),
-        ('Authorization', _header('bot')),
+        ('Authorization', header_bot),
     ])
     assert resp.status_code == 200
     bug_created = json.loads(resp.data.decode('utf-8'))
@@ -236,10 +212,13 @@ def test_create_bug(client, bugs):
         'changes_size': 0,
         'contributors': [
             {
+                'id': 4,
                 'avatar': 'https://www.gravatar.com/avatar/fa60148022a230fe1bacc441549b1c66',  # noqa
                 'email': 'adw@mozilla.com',
                 'name': 'Drew Willcoxon :adw',
-                'roles': ['creator', 'assignee', 'uplift_author']
+                'roles': ['creator', 'assignee', 'uplift_author'],
+                'karma': 0,
+                'comment_public': '',
             }
         ],
         'flags_status': {'firefox37': '---',
@@ -273,20 +252,20 @@ def test_create_bug(client, bugs):
 
     # Check we now have 4 bugs
     resp = client.get('/analysis/1', headers=[
-        ('Authorization', _header('bot')),
+        ('Authorization', header_bot),
     ])
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
     assert len(analysis['bugs']) == 4
 
 
-def test_delete_bug(client, bugs):
+def test_delete_bug(client, bugs, header_bot):
     """
     Delete a bug in an analysis
     """
     # Check we have 4 bugs
     resp = client.get('/analysis/1', headers=[
-        ('Authorization', _header('bot')),
+        ('Authorization', header_bot),
     ])
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
@@ -294,13 +273,13 @@ def test_delete_bug(client, bugs):
 
     # Delete created bug 12345
     resp = client.delete('/bugs/12345', headers=[
-        ('Authorization', _header('bot')),
+        ('Authorization', header_bot),
     ])
     assert resp.status_code == 200
 
     # Check we now have 3 bugs
     resp = client.get('/analysis/1', headers=[
-        ('Authorization', _header('bot')),
+        ('Authorization', header_bot),
     ])
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
@@ -310,7 +289,7 @@ def test_delete_bug(client, bugs):
     assert 12345 not in [b['bugzilla_id'] for b in analysis['bugs']]
 
 
-def test_update_bug_flags(client, bugs):
+def test_update_bug_flags(client, bugs, header_user):
     """
     Update tracking flags for a bug
     """
@@ -330,7 +309,7 @@ def test_update_bug_flags(client, bugs):
     }]
     resp = client.put('/bugs/1139560', data=json.dumps(data), headers=[
         ('Content-Type', 'application/json'),
-        ('Authorization', _header('user')),
+        ('Authorization', header_user),
     ])
     assert resp.status_code == 200
     bug = json.loads(resp.data.decode('utf-8'))
@@ -353,7 +332,7 @@ def test_update_bug_flags(client, bugs):
     }
 
 
-def test_update_bug_attachment(client, bugs):
+def test_update_bug_attachment(client, bugs, header_user):
     """
     Update attachment for a bug
     """
@@ -369,7 +348,7 @@ def test_update_bug_attachment(client, bugs):
     }]
     resp = client.put('/bugs/1139560', data=json.dumps(data), headers=[
         ('Content-Type', 'application/json'),
-        ('Authorization', _header('user')),
+        ('Authorization', header_user),
     ])
     assert resp.status_code == 200
     bug = json.loads(resp.data.decode('utf-8'))
