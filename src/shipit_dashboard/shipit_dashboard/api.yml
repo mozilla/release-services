@@ -195,7 +195,6 @@ definitions:
       - name
       - avatar
       - karma
-      - comment_private
       - comment_public
     properties:
       email:

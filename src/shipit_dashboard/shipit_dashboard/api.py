@@ -18,21 +18,10 @@ from shipit_dashboard.models import (
 from shipit_dashboard.serializers import (
     serialize_analysis, serialize_bug, serialize_contributor
 )
+from shipit_dashboard import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
 
 
 logger = log.get_logger('shipit_dashboard.api')
-
-
-# Tasckcluster scopes
-SCOPES_USER = [
-    'project:shipit:user',
-    'project:shipit:analysis/use',
-    'project:shipit:bugzilla'
-]
-SCOPES_BOT = [
-    'project:shipit:bot',
-    'project:shipit:analysis/manage',
-]
 
 
 def ping():
@@ -209,8 +198,7 @@ def delete_bug(bugzilla_id):
     bug.delete()
 
 
-# TODO: use another scope for admin
-@auth.require_scopes(SCOPES_USER)
+@auth.require_scopes(SCOPES_ADMIN)
 def update_contributor(contributor_id):
     """
     Update a contributor after modifications on frontend
