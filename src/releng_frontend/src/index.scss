@@ -18,7 +18,8 @@ $bikeshed-magenta: #e14164;
 // my colors
 $border-color: #adadad;
 
-// Font
+// Fonts
+@import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css);
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic,600,600italic,700,700italic,800,800italic);
 
 $font-family-sans-serif: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -204,4 +205,67 @@ footer {
 
 #page-treestatus table tr:hover {
     cursor: pointer;
+}
+
+
+.timeline {
+    position: relative;
+    padding: 2em 0;
+    margin-top: 2em;
+    margin-bottom: 2em;
+    margin-left: 1em;
+
+    &::before {
+      /* this is the vertical line */
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 9px;
+      height: 100%;
+      width: 2px;
+      background: $border-color;
+    }
+
+}
+
+.timeline-item {
+    position: relative;
+    margin: 2em 0;
+
+    &::first-child {
+        margin-top: 0;
+    }
+    &::last-child {
+        margin-bottom: 0;
+    }
+
+    &::before {
+        content: "";
+        display: table;
+        clear: both;
+    }
+}
+
+.timeline-badge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px white;
+}
+
+.timeline-panel {
+    position: relative;
+    margin-left: 2em;
+    .tag { margin-right: 0.5em; }
+}
+
+.timeline-time {
+    font-weight: bold;
+}
+
+.timeline-more {
+    margin-bottom: -1em;
 }

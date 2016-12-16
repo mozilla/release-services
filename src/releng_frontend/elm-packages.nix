@@ -3,6 +3,10 @@
     version = "1.0.1";
     sha256 = "1qdpyah75l2nmkh5yk0415i2d5la8mdgxz2j2g0pmp65liv3w1wa";
   };
+  "etaque/elm-simple-form" = {
+    version = "5.0.1";
+    sha256 = "188b9bz91ivdkpyqlpmbnbgjz8v75r1llavw2l4fbj0ymdaky42h";
+  };
   "elm-community/elm-test" = {
     version = "1.1.0";
     sha256 = "0rf0k1s3pvqk1hfpqrfbahlrpvbxzyyp5h6n8w6pcm4za1sql45p";
