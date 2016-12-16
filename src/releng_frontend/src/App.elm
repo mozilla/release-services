@@ -2,107 +2,78 @@ module App exposing (..)
 
 import App.TreeStatus
 import App.TryChooser
+import App.Types
 import Hawk
 import Hop
 import Hop.Types
 import Navigation
 import TaskclusterLogin
 import UrlParser
+import UrlParser exposing ((</>))
 import Utils
 
 
 type Route
     = NotFoundRoute
     | HomeRoute
-    | TryChooserRoute
     | LoginRoute
     | LogoutRoute
-    | TreeStatusRoute
+    | TryChooserRoute
+    | TreeStatusRoute App.TreeStatus.Route
 
 
-hopConfig : Hop.Types.Config
-hopConfig =
-    { hash = False
-    , basePath = ""
-    }
-
-
-type alias Page =
-    { title : String
-    , description : String
-    , route : Route
-    , path : String
-    }
-
-
-pages : List Page
+pages : List (App.Types.Page Route b)
 pages =
-    [ { title = "TryChooser"
-      , description =
-            "Generate parts of try syntax and restrict tests to certain directories."
-      , route = TryChooserRoute
-      , path = "trychooser"
-      }
-    , { title = "TreeStatus"
-      , description = "??? TODO ???"
-      , route = TreeStatusRoute
-      , path = "treestatus"
-      }
+    [ App.TryChooser.page TryChooserRoute
+    , App.TreeStatus.page TreeStatusRoute
     ]
 
 
-
---routes : List { route : Route, path : String }
-
-
+routes : UrlParser.Parser (Route -> a) a
 routes =
     pages
-        |> List.map
-            (\x ->
-                { route = x.route
-                , path = x.path
-                }
-            )
+        |> List.map (\x -> x.matcher)
         |> List.append
-            [ { route = HomeRoute
-              , path = ""
-              }
-            , { route = NotFoundRoute
-              , path = "404"
-              }
-            , { route = LoginRoute
-              , path = "login"
-              }
-            , { route = LogoutRoute
-              , path = "logout"
-              }
+            [ UrlParser.format HomeRoute (UrlParser.s "")
+            , UrlParser.format NotFoundRoute (UrlParser.s "404")
+            , UrlParser.format LoginRoute (UrlParser.s "login")
+            , UrlParser.format LogoutRoute (UrlParser.s "logout")
             ]
+        |> UrlParser.oneOf
 
 
-pathFromRoute : Route -> String
-pathFromRoute route =
-    routes
-        |> List.filter (\x -> x.route == route)
-        |> List.map (\x -> x.path)
-        |> List.head
-        |> Maybe.withDefault "404"
+reverse : Route -> String
+reverse route =
+    case route of
+        NotFoundRoute ->
+            "/404"
+
+        HomeRoute ->
+            "/"
+
+        LoginRoute ->
+            "/login"
+
+        LogoutRoute ->
+            "/logout"
+
+        TryChooserRoute ->
+            "/trychooser"
+
+        TreeStatusRoute route ->
+            App.TreeStatus.reverse route
 
 
 urlParser : Navigation.Parser ( Route, Hop.Types.Address )
 urlParser =
     let
-        routes2 =
-            routes
-                |> List.map (\x -> UrlParser.format x.route (UrlParser.s x.path))
-                |> UrlParser.oneOf
-
         parse address =
             address
-                |> UrlParser.parse identity routes2
+                |> UrlParser.parse identity routes
                 |> Result.withDefault NotFoundRoute
 
         resolver =
-            Hop.makeResolver hopConfig parse
+            Hop.makeResolver App.Types.hopConfig parse
     in
         Navigation.makeParser (.href >> resolver)
 

@@ -1,6 +1,7 @@
 module App.Home exposing (..)
 
 import App
+import App.TreeStatus
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Utils
@@ -21,7 +22,7 @@ viewCard title description href =
 
 
 view model =
-    div [ class "row", id "page-home" ]
+    div [ class "row" ]
         [ viewCard
             "TryChooser"
             "Generate parts of try syntax and restrict tests to certain directories."
@@ -29,5 +30,5 @@ view model =
         , viewCard
             "TreeStatus"
             "Current status of Mozilla's version-control repositories."
-            (Utils.onClick <| App.NavigateTo App.TreeStatusRoute)
+            (Utils.onClick <| App.NavigateTo (App.TreeStatusRoute App.TreeStatus.TreesRoute))
         ]

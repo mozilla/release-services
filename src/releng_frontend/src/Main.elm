@@ -5,11 +5,12 @@ import App.Home
 import App.Layout
 import App.TreeStatus
 import App.TryChooser
+import App.Types
 import Hawk
 import Hop
 import Hop.Types
-import Html
-import Html
+import Html exposing (..)
+import Html.Attributes exposing (..)
 import Html.App
 import Navigation
 import Task
@@ -73,7 +74,7 @@ update msg model =
         App.NavigateTo route ->
             let
                 newCmd =
-                    Hop.outputFromPath App.hopConfig (App.pathFromRoute route)
+                    Hop.outputFromPath App.Types.hopConfig (App.reverse route)
                         |> Navigation.newUrl
 
                 goHome =
@@ -118,21 +119,21 @@ update msg model =
                             |> Utils.andThen update logout
                             |> Utils.andThen update goHome
 
-                    App.TreeStatusRoute ->
-                        App.TreeStatus.load App.TreeStatusMsg newCmd model
-
                     App.TryChooserRoute ->
                         App.TryChooser.load App.TryChooserMsg newCmd model
 
-        App.TreeStatusMsg msg2 ->
-            App.TreeStatus.update App.TreeStatusMsg msg2 model
+                    App.TreeStatusRoute route ->
+                        App.TreeStatus.load route App.TreeStatusMsg newCmd model
 
         App.TryChooserMsg msg2 ->
             App.TryChooser.update App.TryChooserMsg msg2 model
 
+        App.TreeStatusMsg msg2 ->
+            App.TreeStatus.update App.TreeStatusMsg msg2 model
 
 
---viewRoute : App.Model -> Html.Html App.Msg
+
+--viewRoute : App.Model -> Html App.Msg
 
 
 viewRoute model =
@@ -145,17 +146,20 @@ viewRoute model =
 
         App.LoginRoute ->
             -- TODO: this should be already a view on TaskclusterLogin
-            Html.text "Logging you in ..."
+            text "Logging you in ..."
 
         App.LogoutRoute ->
             -- TODO: this should be already a view on TaskclusterLogin
-            Html.text "Logging you out ..."
+            text "Logging you out ..."
 
         App.TryChooserRoute ->
             Html.App.map App.TryChooserMsg (App.TryChooser.view model.trychooser)
 
-        App.TreeStatusRoute ->
-            Html.App.map App.TreeStatusMsg (App.TreeStatus.view model.treestatus)
+        App.TreeStatusRoute route ->
+            App.TreeStatus.view
+                route
+                model.treestatus
+                |> Html.App.map App.TreeStatusMsg
 
 
 subscriptions : App.Model -> Sub App.Msg
