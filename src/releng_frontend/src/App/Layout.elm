@@ -3,6 +3,7 @@ module App.Layout exposing (..)
 import App
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import String
 import TaskclusterLogin
 import Utils
 
@@ -126,13 +127,20 @@ viewNotFound model =
 
 view : (App.Model -> Html.Html App.Msg) -> App.Model -> Html.Html App.Msg
 view viewRoute model =
-    div []
-        [ nav
-            [ id "navbar"
-            , class "navbar navbar-full navbar-light"
+    let
+        routeName =
+            model.route
+                |> toString
+                |> String.toLower
+                |> String.dropRight (String.length "Route")
+    in
+        div [ id ("page-" ++ routeName) ]
+            [ nav
+                [ id "navbar"
+                , class "navbar navbar-full navbar-light"
+                ]
+                [ div [ class "container" ] (viewNavBar model) ]
+            , div [ id "content" ]
+                [ div [ class "container" ] [ viewRoute model ] ]
+            , footer [ class "container" ] (viewFooter model)
             ]
-            [ div [ class "container" ] (viewNavBar model) ]
-        , div [ id "content" ]
-            [ div [ class "container" ] [ viewRoute model ] ]
-        , footer [ class "container" ] (viewFooter model)
-        ]
