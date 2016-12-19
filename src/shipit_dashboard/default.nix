@@ -16,6 +16,7 @@ let
 
   self = mkBackend rec {
     inherit python releng_common;
+    production = true;
     name = "shipit_dashboard";
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
