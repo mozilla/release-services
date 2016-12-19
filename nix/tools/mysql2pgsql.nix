@@ -13,10 +13,11 @@ let
   inherit (pkgs) makeWrapper;
   inherit (pkgs.stdenv.lib) fix' extends inNixShell;
 
+  python27Full = pkgs.python27.override { x11Support=true; };
   pythonPackages = import "${toString pkgs.path}/pkgs/top-level/python-packages.nix" {
     inherit pkgs;
     inherit (pkgs) stdenv;
-    python = pkgs.python27Full;
+    python = python27Full;
     self = pythonPackages;
   };
 
