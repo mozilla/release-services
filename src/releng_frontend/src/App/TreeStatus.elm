@@ -1,10 +1,9 @@
 module App.TreeStatus exposing (..)
 
+import App.TreeStatus.Form
 import App.Types
 import App.Utils
 import Form
-import Form.Input
-import Form.Validate
 import Hop
 import Hop.Types
 import Html exposing (..)
@@ -12,8 +11,8 @@ import Html.App
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
-import Json.Encode as JsonEncode
 import Json.Decode as JsonDecode exposing ((:=))
+import Json.Encode as JsonEncode
 import Navigation
 import RemoteData
 import String
@@ -24,15 +23,9 @@ import Utils
 
 
 -- TODO:
---  * [x] change from table to list-group / indicate status with tag
---  * [x] use sub route to show logs
---  * [x] each route gets unique id at the top of the dom
---  * [ ] show status of the tree / description / status
---  * [ ] create add tree form with input group button addons
 --  * [ ] add from should be on the right side if a person is logged in
 --  * [ ] create update trees form on the right side below add tree form
 --  * [ ] only show forms if user has enough scopes, scopes should be cached for 5min
---  * [ ] add description below title
 --  * [ ] create update Tree form
 
 
@@ -96,10 +89,6 @@ type alias TreeLogs =
     List TreeLog
 
 
-type alias FormAddTree =
-    { name : String }
-
-
 encoderTree tree =
     JsonEncode.object
         [ ("tree", JsonEncode.string tree.name)
@@ -116,7 +105,7 @@ type alias Model =
     , treeLogs : RemoteData.WebData TreeLogs
     , treeLogsAll : RemoteData.WebData TreeLogs
     , showMoreTreeLogs : Bool
-    , formAddTree : Form.Form () FormAddTree
+    , formAddTree : Form.Form () App.TreeStatus.Form.AddTree
     }
 
 
@@ -139,14 +128,8 @@ init url =
     , treeLogs = RemoteData.NotAsked
     , treeLogsAll = RemoteData.NotAsked
     , showMoreTreeLogs = False
-    , formAddTree = Form.initial [] validateAddTree
+    , formAddTree = Form.initial [] App.TreeStatus.Form.validateAddTree
     }
-
-
-validateAddTree : Form.Validate.Validation () FormAddTree
-validateAddTree =
-    Form.Validate.form1 FormAddTree
-        (Form.Validate.get "name" Form.Validate.string)
 
 
 load :
@@ -560,8 +543,11 @@ view route model =
                 [ h1 [] [ text "TreeStatus" ]
                 , p [ class "lead" ]
                     [ text "Current status of Mozilla's version-control repositories." ]
-                -- TODO: only show when correct scope is there
-                , Html.App.map FormAddTreeMsg (viewAddTree model.formAddTree)
+                , div [ class "list-group" ] 
+                      -- TODO: only show when correct scope is there
+                      [ App.TreeStatus.Form.viewAddTree model.formAddTree
+                          |> Html.App.map FormAddTreeMsg
+                      ]
                 , div [ class "list-group" ] (viewTrees model.trees)
                 ]
 
@@ -575,45 +561,3 @@ view route model =
                     []
             in
                 div [] (List.append treeStatus updateForm)
-
-
-viewAddTree : Form.Form () FormAddTree -> Html Form.Msg
-viewAddTree form =
-    let
-        name =
-            Form.getFieldAsString "name" form
-
-        ( nameClass, nameError ) =
-            case name.liveError of
-                Just error ->
-                    ( "input-group has-danger"
-                    , div [ class "has-danger" ]
-                        [ span [ class "form-control-feedback" ]
-                            [ text (toString error) ]
-                        ]
-                    )
-
-                Nothing ->
-                    ( "input-group", text "" )
-    in
-        div [ class "list-group-item" ]
-            [ h3 [] [ text "Add new tree" ]
-            , Html.form
-                []
-                [ div [ class nameClass ]
-                    [ Form.Input.textInput name
-                        [ class "form-control"
-                        , placeholder "Tree name ..."
-                        ]
-                    , span [ class "input-group-btn" ]
-                        [ button
-                            [ type' "submit"
-                            , class "btn btn-secondary"
-                            , Utils.onClick Form.Submit
-                            ]
-                            [ text "Add" ]
-                        ]
-                    ]
-                , nameError
-                ]
-            ]
