@@ -10,9 +10,11 @@ import Hawk
 import Hop
 import Hop.Types
 import Html exposing (..)
-import Html.Attributes exposing (..)
 import Html.App
+import Html.Attributes exposing (..)
+import Http
 import Navigation
+import String
 import Task
 import TaskclusterLogin
 import Utils
@@ -52,12 +54,14 @@ update msg model =
                     Hawk.update hawkMsg
 
                 routeHawkMsg route =
-                    case route of
-                        --TODO:
-                        --"LoadScopes" ->
-                        --    Cmd.map SetScopes response
-                        _ ->
-                            Cmd.none
+                    if String.startsWith "TreeStatus" route
+                    then
+                        route
+                            |> String.dropLeft (String.length "TreeStatus")
+                            |> App.TreeStatus.hawkResponse response
+                            |> Cmd.map App.TreeStatusMsg
+                    else
+                        Cmd.none
 
                 appCmd =
                     requestId
@@ -129,13 +133,35 @@ update msg model =
             App.TryChooser.update App.TryChooserMsg msg2 model
 
         App.TreeStatusMsg msg2 ->
-            App.TreeStatus.update App.TreeStatusMsg msg2 model
+            let
+                ( treestatus, cmd, hawkRequest ) =
+                    App.TreeStatus.update msg2 model.treestatus
+            in
+                ( { model | treestatus = treestatus }
+                , hawkRequest
+                    |> Maybe.map (\x -> [hawkSend model.user "TreeStatus" x.route x.request])
+                    |> Maybe.withDefault []
+                    |> List.append [Cmd.map App.TreeStatusMsg cmd]
+                    |> Cmd.batch
+                )
 
 
+hawkSend :
+    TaskclusterLogin.Model
+    -> String
+    -> String
+    -> Http.Request
+    -> Cmd App.Msg
+hawkSend user page route request =
+    case user of
+        Nothing ->
+            Utils.performMsg (App.NavigateTo App.LoginRoute)
+        Just user2 ->
+                Hawk.send (page ++ route) request user2
+                    |> Cmd.map App.HawkMsg
 
---viewRoute : App.Model -> Html App.Msg
 
-
+viewRoute : App.Model -> Html App.Msg
 viewRoute model =
     case model.route of
         App.NotFoundRoute ->
