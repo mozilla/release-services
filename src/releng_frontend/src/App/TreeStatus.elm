@@ -23,21 +23,20 @@ import Utils
 
 
 -- TODO:
+--  * [ ] add missing types on functions
+--  * [ ] bring back update_ and remove return triplet from current update
 --  * [ ] add from should be on the right side if a person is logged in
 --  * [ ] create update trees form on the right side below add tree form
 --  * [ ] only show forms if user has enough scopes, scopes should be cached for 5min
 --  * [ ] create update Tree form
 
 
-type alias TreeName =
-    String
-
-
 type Route
     = TreesRoute
-    | TreeRoute TreeName
+    | TreeRoute String
 
 
+routes : UrlParser.Parser (Route -> a) a
 routes =
     UrlParser.oneOf
         [ UrlParser.format TreesRoute (UrlParser.s "")
@@ -117,7 +116,7 @@ type Msg
     | FetchedTreeLogsAll (RemoteData.WebData TreeLogs)
     | FetchTreeLogs String Bool
     | FormAddTreeMsg Form.Msg
-    | FormAddTreeResponse (RemoteData.RemoteData Http.RawError Http.Response)
+    | FormAddTreeResult (RemoteData.RemoteData Http.RawError Http.Response)
 
 
 init : String -> Model
@@ -222,14 +221,14 @@ fetchTrees url =
         decodeTrees
 
 
-fetchTree : String -> TreeName -> Cmd Msg
+fetchTree : String -> String -> Cmd Msg
 fetchTree url name =
     get FetchedTree
         (url ++ "/trees/" ++ name)
         decodeTree
 
 
-fetchTreeLogs : String -> TreeName -> Bool -> Cmd Msg
+fetchTreeLogs : String -> String -> Bool -> Cmd Msg
 fetchTreeLogs url name all =
     case all of
         True ->
@@ -247,12 +246,32 @@ fetchTreeLogs url name all =
 hawkResponse response route =
     case route of
         "AddTree" ->
-            Cmd.map FormAddTreeResponse response
+            Cmd.map FormAddTreeResult response
         _ ->
             Cmd.none
 
 
 update :
+    (Msg -> b)
+    -> Msg
+    -> { c | treestatus : Model }
+    -> (String -> Http.Request -> Cmd b)
+    -> ( { c | treestatus : Model }, Cmd b )
+update outMsg msg model hawkSend =
+    let
+        ( treestatus, cmd, hawkRequest ) =
+            update_ msg model.treestatus
+    in
+        ( { model | treestatus = treestatus }
+        , hawkRequest
+            |> Maybe.map (\x -> [hawkSend x.route x.request])
+            |> Maybe.withDefault []
+            |> List.append [Cmd.map outMsg cmd]
+            |> Cmd.batch
+        )
+
+
+update_ :
     Msg
     -> Model
     -> ( Model
@@ -261,7 +280,7 @@ update :
                , route : String
                }
    )
-update msg model =
+update_ msg model =
     case msg of
         NavigateTo route ->
             let
@@ -326,7 +345,7 @@ update msg model =
                 , hawkRequest
                 )
 
-        FormAddTreeResponse tree ->
+        FormAddTreeResult tree ->
             let
                 _ = Debug.log "TREE" tree
             in
@@ -387,7 +406,7 @@ viewTrees trees_ =
             []
 
 
-viewTree : TreeName -> RemoteData.WebData Tree -> List (Html Msg)
+viewTree : String -> RemoteData.WebData Tree -> List (Html Msg)
 viewTree name tree_ =
     let
         title =
@@ -543,8 +562,10 @@ view route model =
                 [ h1 [] [ text "TreeStatus" ]
                 , p [ class "lead" ]
                     [ text "Current status of Mozilla's version-control repositories." ]
-                , div [ class "list-group" ] 
-                      -- TODO: only show when correct scope is there
+                -- TODO: only show forms when user has a needed scope 
+                , div [ id "treestatus-forms"
+                      , class "list-group"
+                      ] 
                       [ App.TreeStatus.Form.viewAddTree model.formAddTree
                           |> Html.App.map FormAddTreeMsg
                       ]
