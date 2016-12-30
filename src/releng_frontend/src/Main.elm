@@ -4,6 +4,7 @@ import App
 import App.Home
 import App.Layout
 import App.TreeStatus
+import App.TreeStatus.Api
 import App.TryChooser
 import App.Types
 import Hawk
@@ -58,7 +59,7 @@ update msg model =
                     then
                         route
                             |> String.dropLeft (String.length "TreeStatus")
-                            |> App.TreeStatus.hawkResponse response
+                            |> App.TreeStatus.Api.hawkResponse response
                             |> Cmd.map App.TreeStatusMsg
                     else
                         Cmd.none
