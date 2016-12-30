@@ -23,12 +23,15 @@ import Utils
 
 
 -- TODO:
---  * [ ] add missing types on functions
---  * [ ] bring back update_ and remove return triplet from current update
---  * [ ] add from should be on the right side if a person is logged in
---  * [ ] create update trees form on the right side below add tree form
---  * [ ] only show forms if user has enough scopes, scopes should be cached for 5min
---  * [ ] create update Tree form
+--  * add from should be on the right side if a person is logged in
+--  * create update trees form on the right side below add tree form
+--  * only show forms if user has enough scopes, scopes should be cached for 5min
+--  * create update Tree form
+
+
+-- 
+-- ROUTING
+--
 
 
 type Route
@@ -60,6 +63,12 @@ page outRoute =
     , description = "Current status of Mozilla's version-control repositories."
     , matcher = UrlParser.format outRoute (UrlParser.s "treestatus" </> routes)
     }
+
+
+
+--
+-- MODEL
+--
 
 
 type alias Tree =
@@ -110,11 +119,11 @@ type alias Model =
 
 type Msg
     = NavigateTo Route
-    | FetchedTrees (RemoteData.WebData Trees)
-    | FetchedTree (RemoteData.WebData Tree)
-    | FetchedTreeLogs (RemoteData.WebData TreeLogs)
-    | FetchedTreeLogsAll (RemoteData.WebData TreeLogs)
-    | FetchTreeLogs String Bool
+    | GetTreesResult (RemoteData.WebData Trees)
+    | GetTreeResult (RemoteData.WebData Tree)
+    | GetTreeLogs String Bool
+    | GetTreeLogsResult (RemoteData.WebData TreeLogs)
+    | GetTreeLogsAllResult (RemoteData.WebData TreeLogs)
     | FormAddTreeMsg Form.Msg
     | FormAddTreeResult (RemoteData.RemoteData Http.RawError Http.Response)
 
@@ -216,14 +225,14 @@ get msg url decoder =
 
 fetchTrees : String -> Cmd Msg
 fetchTrees url =
-    get FetchedTrees
+    get GetTreesResult
         (url ++ "/trees2")
         decodeTrees
 
 
 fetchTree : String -> String -> Cmd Msg
 fetchTree url name =
-    get FetchedTree
+    get GetTreeResult
         (url ++ "/trees/" ++ name)
         decodeTree
 
@@ -232,12 +241,12 @@ fetchTreeLogs : String -> String -> Bool -> Cmd Msg
 fetchTreeLogs url name all =
     case all of
         True ->
-            get FetchedTreeLogsAll
+            get GetTreeLogsAllResult
                 (url ++ "/trees/" ++ name ++ "/logs?all=1")
                 decodeTreeLogs
 
         False ->
-            get FetchedTreeLogs
+            get GetTreeLogsResult
                 (url ++ "/trees/" ++ name ++ "/logs?all=0")
                 decodeTreeLogs
 
@@ -296,19 +305,19 @@ update_ msg model =
                 , Nothing
                 )
 
-        FetchedTrees trees ->
+        GetTreesResult trees ->
             ( { model | trees = trees }, Cmd.none, Nothing )
 
-        FetchedTree tree ->
+        GetTreeResult tree ->
             ( { model | tree = tree }, Cmd.none, Nothing )
 
-        FetchedTreeLogs logs ->
+        GetTreeLogsResult logs ->
             ( { model | treeLogs = logs }, Cmd.none, Nothing )
 
-        FetchedTreeLogsAll logs ->
+        GetTreeLogsAllResult logs ->
             ( { model | treeLogsAll = logs }, Cmd.none, Nothing )
 
-        FetchTreeLogs name all ->
+        GetTreeLogs name all ->
             ( model
             , fetchTreeLogs model.baseUrl name True
             , Nothing
@@ -511,7 +520,7 @@ viewTreeLogs name treeLogs_ treeLogsAll_ =
                 RemoteData.Loading ->
                     ( [ button
                             [ class "btn btn-secondary"
-                            , Utils.onClick <| FetchTreeLogs name True
+                            , Utils.onClick <| GetTreeLogs name True
                             ]
                             [ text "Loading"
                             , i [ class "fa fa-circle-o-notch fa-spin" ] []
@@ -523,7 +532,7 @@ viewTreeLogs name treeLogs_ treeLogsAll_ =
                 RemoteData.NotAsked ->
                     ( [ button
                             [ class "btn btn-secondary"
-                            , Utils.onClick <| FetchTreeLogs name True
+                            , Utils.onClick <| GetTreeLogs name True
                             ]
                             [ text "Load more" ]
                       ]
