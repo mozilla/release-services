@@ -1,6 +1,7 @@
 module App exposing (..)
 
 import App.TreeStatus
+import App.TreeStatus.Types
 import App.TryChooser
 import App.Types
 import Hawk
@@ -19,7 +20,7 @@ type Route
     | LoginRoute
     | LogoutRoute
     | TryChooserRoute
-    | TreeStatusRoute App.TreeStatus.Route
+    | TreeStatusRoute App.TreeStatus.Types.Route
 
 
 pages : List (App.Types.Page Route b)
@@ -93,7 +94,7 @@ type alias Model =
     , address : Hop.Types.Address
     , user : TaskclusterLogin.Model
     , trychooser : App.TryChooser.Model
-    , treestatus : App.TreeStatus.Model
+    , treestatus : App.TreeStatus.Types.Model
     , docsUrl : String
     , version : String
     }
@@ -104,7 +105,7 @@ type Msg
     | HawkMsg Hawk.Msg
     | NavigateTo Route
     | TryChooserMsg App.TryChooser.Msg
-    | TreeStatusMsg App.TreeStatus.Msg
+    | TreeStatusMsg App.TreeStatus.Types.Msg
 
 
 type alias Flags =
