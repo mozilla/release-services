@@ -1,10 +1,11 @@
 module App.TreeStatus.Form exposing (..)
 
+import Form
+import Form.Field
+import Form.Input
+import Form.Validate
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Form
-import Form.Validate
-import Form.Input
 import Utils
 
 
@@ -12,11 +13,14 @@ type alias AddTree =
     { name : String }
 
 
-
 validateAddTree : Form.Validate.Validation () AddTree
 validateAddTree =
     Form.Validate.form1 AddTree
         (Form.Validate.get "name" Form.Validate.string)
+
+initAddTree : List ( String, Form.Field.Field ) -> Form.Form () AddTree
+initAddTree data =
+    Form.initial data validateAddTree
 
 
 viewAddTree : Form.Form () AddTree -> Html Form.Msg
