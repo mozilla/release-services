@@ -17,13 +17,13 @@ encoderTree tree =
         ]
 
 
-decodeTrees : JsonDecode.Decoder App.TreeStatus.Types.Trees
-decodeTrees =
-    JsonDecode.list decodeTree
+decoderTrees : JsonDecode.Decoder App.TreeStatus.Types.Trees
+decoderTrees =
+    JsonDecode.list decoderTree
 
 
-decodeTree : JsonDecode.Decoder App.TreeStatus.Types.Tree
-decodeTree =
+decoderTree : JsonDecode.Decoder App.TreeStatus.Types.Tree
+decoderTree =
     JsonDecode.object4 App.TreeStatus.Types.Tree
         ("tree" := JsonDecode.string)
         ("status" := JsonDecode.string)
@@ -31,13 +31,13 @@ decodeTree =
         ("message_of_the_day" := JsonDecode.string)
 
 
-decodeTreeLogs : JsonDecode.Decoder App.TreeStatus.Types.TreeLogs
-decodeTreeLogs =
-    JsonDecode.list decodeTreeLog
+decoderTreeLogs : JsonDecode.Decoder App.TreeStatus.Types.TreeLogs
+decoderTreeLogs =
+    JsonDecode.list decoderTreeLog
 
 
-decodeTreeLog : JsonDecode.Decoder App.TreeStatus.Types.TreeLog
-decodeTreeLog =
+decoderTreeLog : JsonDecode.Decoder App.TreeStatus.Types.TreeLog
+decoderTreeLog =
     JsonDecode.object6 App.TreeStatus.Types.TreeLog
         ("tree" := JsonDecode.string)
         ("when" := JsonDecode.string)
@@ -65,7 +65,7 @@ fetchTrees :
 fetchTrees url =
     get App.TreeStatus.Types.GetTreesResult
         (url ++ "/trees2")
-        decodeTrees
+        decoderTrees
 
 
 fetchTree :
@@ -75,7 +75,7 @@ fetchTree :
 fetchTree url name =
     get App.TreeStatus.Types.GetTreeResult
         (url ++ "/trees/" ++ name)
-        decodeTree
+        decoderTree
 
 
 fetchTreeLogs :
@@ -88,12 +88,12 @@ fetchTreeLogs url name all =
         True ->
             get App.TreeStatus.Types.GetTreeLogsAllResult
                 (url ++ "/trees/" ++ name ++ "/logs?all=1")
-                decodeTreeLogs
+                decoderTreeLogs
 
         False ->
             get App.TreeStatus.Types.GetTreeLogsResult
                 (url ++ "/trees/" ++ name ++ "/logs?all=0")
-                decodeTreeLogs
+                decoderTreeLogs
 
 
 hawkResponse :
