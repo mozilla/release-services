@@ -133,17 +133,8 @@ update msg model =
             App.TryChooser.update App.TryChooserMsg msg2 model
 
         App.TreeStatusMsg msg2 ->
-            let
-                ( treestatus, cmd, hawkRequest ) =
-                    App.TreeStatus.update msg2 model.treestatus
-            in
-                ( { model | treestatus = treestatus }
-                , hawkRequest
-                    |> Maybe.map (\x -> [hawkSend model.user "TreeStatus" x.route x.request])
-                    |> Maybe.withDefault []
-                    |> List.append [Cmd.map App.TreeStatusMsg cmd]
-                    |> Cmd.batch
-                )
+            App.TreeStatus.update App.TreeStatusMsg msg2 model
+                (hawkSend model.user "TreeStatus")
 
 
 hawkSend :
