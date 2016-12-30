@@ -2,6 +2,7 @@ module App.Home exposing (..)
 
 import App
 import App.TreeStatus
+import App.TreeStatus.Types
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Utils
@@ -30,5 +31,5 @@ view model =
         , viewCard
             "TreeStatus"
             "Current status of Mozilla's version-control repositories."
-            (Utils.onClick <| App.NavigateTo (App.TreeStatusRoute App.TreeStatus.TreesRoute))
+            (Utils.onClick <| App.NavigateTo (App.TreeStatusRoute App.TreeStatus.Types.TreesRoute))
         ]

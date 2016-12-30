@@ -1,6 +1,7 @@
 module App.TreeStatus exposing (..)
 
 import App.TreeStatus.Form
+import App.TreeStatus.Types
 import App.Types
 import App.Utils
 import Form
@@ -34,30 +35,27 @@ import Utils
 --
 
 
-type Route
-    = TreesRoute
-    | TreeRoute String
 
 
-routes : UrlParser.Parser (Route -> a) a
+routes : UrlParser.Parser (App.TreeStatus.Types.Route -> a) a
 routes =
     UrlParser.oneOf
-        [ UrlParser.format TreesRoute (UrlParser.s "")
-        , UrlParser.format TreeRoute (UrlParser.string)
+        [ UrlParser.format App.TreeStatus.Types.TreesRoute (UrlParser.s "")
+        , UrlParser.format App.TreeStatus.Types.TreeRoute (UrlParser.string)
         ]
 
 
-reverse : Route -> String
+reverse : App.TreeStatus.Types.Route -> String
 reverse route =
     case route of
-        TreesRoute ->
+        App.TreeStatus.Types.TreesRoute ->
             "/treestatus"
 
-        TreeRoute name ->
+        App.TreeStatus.Types.TreeRoute name ->
             "/treestatus/" ++ name
 
 
-page : (Route -> a) -> App.Types.Page a b
+page : (App.TreeStatus.Types.Route -> a) -> App.Types.Page a b
 page outRoute =
     { title = "TreeStatus"
     , description = "Current status of Mozilla's version-control repositories."
@@ -65,70 +63,12 @@ page outRoute =
     }
 
 
-
 --
--- MODEL
+-- UPDATE
 --
 
 
-type alias Tree =
-    { name : String
-    , status : String
-    , reason : String
-    , message_of_the_day : String
-    }
-
-
-type alias Trees =
-    List Tree
-
-
-type alias TreeLog =
-    { name : String
-    , when : String
-    , who : String
-    , status : String
-    , reason : String
-    , tags : List String
-    }
-
-
-type alias TreeLogs =
-    List TreeLog
-
-
-encoderTree tree =
-    JsonEncode.object
-        [ ("tree", JsonEncode.string tree.name)
-        , ("status", JsonEncode.string tree.status)
-        , ("reason", JsonEncode.string tree.reason)
-        , ("message_of_the_day", JsonEncode.string tree.message_of_the_day)
-        ]
-
-
-type alias Model =
-    { baseUrl : String
-    , trees : RemoteData.WebData Trees
-    , tree : RemoteData.WebData Tree
-    , treeLogs : RemoteData.WebData TreeLogs
-    , treeLogsAll : RemoteData.WebData TreeLogs
-    , showMoreTreeLogs : Bool
-    , formAddTree : Form.Form () App.TreeStatus.Form.AddTree
-    }
-
-
-type Msg
-    = NavigateTo Route
-    | GetTreesResult (RemoteData.WebData Trees)
-    | GetTreeResult (RemoteData.WebData Tree)
-    | GetTreeLogs String Bool
-    | GetTreeLogsResult (RemoteData.WebData TreeLogs)
-    | GetTreeLogsAllResult (RemoteData.WebData TreeLogs)
-    | FormAddTreeMsg Form.Msg
-    | FormAddTreeResult (RemoteData.RemoteData Http.RawError Http.Response)
-
-
-init : String -> Model
+init : String -> App.TreeStatus.Types.Model
 init url =
     { baseUrl = url
     , trees = RemoteData.NotAsked
@@ -141,11 +81,11 @@ init url =
 
 
 load :
-    Route
-    -> (Msg -> a)
+    App.TreeStatus.Types.Route
+    -> (App.TreeStatus.Types.Msg -> a)
     -> Cmd a
-    -> { b | treestatus : Model }
-    -> ( { b | treestatus : Model }, Cmd a )
+    -> { b | treestatus : App.TreeStatus.Types.Model }
+    -> ( { b | treestatus : App.TreeStatus.Types.Model }, Cmd a )
 load route outMsg outCmd model =
     let
         ( newModel, newCmd ) =
@@ -159,17 +99,22 @@ load route outMsg outCmd model =
         )
 
 
-load_ : Route -> Model -> ( Model, Cmd Msg )
+load_ :
+    App.TreeStatus.Types.Route
+    -> App.TreeStatus.Types.Model
+    -> ( App.TreeStatus.Types.Model
+       , Cmd App.TreeStatus.Types.Msg
+       )
 load_ route model =
     case route of
-        TreesRoute ->
+        App.TreeStatus.Types.TreesRoute ->
             ( { model | trees = RemoteData.Loading }
             , Cmd.batch
                 [ fetchTrees model.baseUrl
                 ]
             )
 
-        TreeRoute name ->
+        App.TreeStatus.Types.TreeRoute name ->
             ( { model
                 | tree = RemoteData.Loading
                 , treeLogs = RemoteData.Loading
@@ -181,28 +126,38 @@ load_ route model =
             )
 
 
-decodeTrees : JsonDecode.Decoder Trees
+encoderTree : App.TreeStatus.Types.Tree -> JsonEncode.Value
+encoderTree tree =
+    JsonEncode.object
+        [ ("tree", JsonEncode.string tree.name)
+        , ("status", JsonEncode.string tree.status)
+        , ("reason", JsonEncode.string tree.reason)
+        , ("message_of_the_day", JsonEncode.string tree.message_of_the_day)
+        ]
+
+
+decodeTrees : JsonDecode.Decoder App.TreeStatus.Types.Trees
 decodeTrees =
     JsonDecode.list decodeTree
 
 
-decodeTree : JsonDecode.Decoder Tree
+decodeTree : JsonDecode.Decoder App.TreeStatus.Types.Tree
 decodeTree =
-    JsonDecode.object4 Tree
+    JsonDecode.object4 App.TreeStatus.Types.Tree
         ("tree" := JsonDecode.string)
         ("status" := JsonDecode.string)
         ("reason" := JsonDecode.string)
         ("message_of_the_day" := JsonDecode.string)
 
 
-decodeTreeLogs : JsonDecode.Decoder TreeLogs
+decodeTreeLogs : JsonDecode.Decoder App.TreeStatus.Types.TreeLogs
 decodeTreeLogs =
     JsonDecode.list decodeTreeLog
 
 
-decodeTreeLog : JsonDecode.Decoder TreeLog
+decodeTreeLog : JsonDecode.Decoder App.TreeStatus.Types.TreeLog
 decodeTreeLog =
-    JsonDecode.object6 TreeLog
+    JsonDecode.object6 App.TreeStatus.Types.TreeLog
         ("tree" := JsonDecode.string)
         ("when" := JsonDecode.string)
         ("who" := JsonDecode.string)
@@ -223,49 +178,61 @@ get msg url decoder =
 
 
 
-fetchTrees : String -> Cmd Msg
+fetchTrees :
+    String
+    -> Cmd App.TreeStatus.Types.Msg
 fetchTrees url =
-    get GetTreesResult
+    get App.TreeStatus.Types.GetTreesResult
         (url ++ "/trees2")
         decodeTrees
 
 
-fetchTree : String -> String -> Cmd Msg
+fetchTree :
+    String
+    -> String
+    -> Cmd App.TreeStatus.Types.Msg
 fetchTree url name =
-    get GetTreeResult
+    get App.TreeStatus.Types.GetTreeResult
         (url ++ "/trees/" ++ name)
         decodeTree
 
 
-fetchTreeLogs : String -> String -> Bool -> Cmd Msg
+fetchTreeLogs :
+    String
+    -> String
+    -> Bool
+    -> Cmd App.TreeStatus.Types.Msg
 fetchTreeLogs url name all =
     case all of
         True ->
-            get GetTreeLogsAllResult
+            get App.TreeStatus.Types.GetTreeLogsAllResult
                 (url ++ "/trees/" ++ name ++ "/logs?all=1")
                 decodeTreeLogs
 
         False ->
-            get GetTreeLogsResult
+            get App.TreeStatus.Types.GetTreeLogsResult
                 (url ++ "/trees/" ++ name ++ "/logs?all=0")
                 decodeTreeLogs
 
 
---hawkResponse : Cmd (RemoteData.WebData Tree) -> String -> Cmd Msg
+hawkResponse :
+    Cmd (RemoteData.RemoteData Http.RawError Http.Response)
+    -> String
+    -> Cmd App.TreeStatus.Types.Msg
 hawkResponse response route =
     case route of
         "AddTree" ->
-            Cmd.map FormAddTreeResult response
+            Cmd.map App.TreeStatus.Types.FormAddTreeResult response
         _ ->
             Cmd.none
 
 
 update :
-    (Msg -> b)
-    -> Msg
-    -> { c | treestatus : Model }
+    (App.TreeStatus.Types.Msg -> b)
+    -> App.TreeStatus.Types.Msg
+    -> { c | treestatus : App.TreeStatus.Types.Model }
     -> (String -> Http.Request -> Cmd b)
-    -> ( { c | treestatus : Model }, Cmd b )
+    -> ( { c | treestatus : App.TreeStatus.Types.Model }, Cmd b )
 update outMsg msg model hawkSend =
     let
         ( treestatus, cmd, hawkRequest ) =
@@ -281,17 +248,17 @@ update outMsg msg model hawkSend =
 
 
 update_ :
-    Msg
-    -> Model
-    -> ( Model
-       , Cmd Msg
+    App.TreeStatus.Types.Msg
+    -> App.TreeStatus.Types.Model
+    -> ( App.TreeStatus.Types.Model
+       , Cmd App.TreeStatus.Types.Msg
        , Maybe { request : Http.Request
                , route : String
                }
    )
 update_ msg model =
     case msg of
-        NavigateTo route ->
+        App.TreeStatus.Types.NavigateTo route ->
             let
                 ( newModel, newCmd ) =
                     load_ route model
@@ -305,28 +272,28 @@ update_ msg model =
                 , Nothing
                 )
 
-        GetTreesResult trees ->
+        App.TreeStatus.Types.GetTreesResult trees ->
             ( { model | trees = trees }, Cmd.none, Nothing )
 
-        GetTreeResult tree ->
+        App.TreeStatus.Types.GetTreeResult tree ->
             ( { model | tree = tree }, Cmd.none, Nothing )
 
-        GetTreeLogsResult logs ->
+        App.TreeStatus.Types.GetTreeLogsResult logs ->
             ( { model | treeLogs = logs }, Cmd.none, Nothing )
 
-        GetTreeLogsAllResult logs ->
+        App.TreeStatus.Types.GetTreeLogsAllResult logs ->
             ( { model | treeLogsAll = logs }, Cmd.none, Nothing )
 
-        GetTreeLogs name all ->
+        App.TreeStatus.Types.GetTreeLogs name all ->
             ( model
             , fetchTreeLogs model.baseUrl name True
             , Nothing
             )
 
-        FormAddTreeMsg formMsg ->
+        App.TreeStatus.Types.FormAddTreeMsg formMsg ->
             let
                 form = Form.update formMsg model.formAddTree
-                tree name =Tree name "closed" "new tree" ""
+                tree name = App.TreeStatus.Types.Tree name "closed" "new tree" ""
                 treeStr name = JsonEncode.encode 0 (encoderTree (tree name))
                 newTreeRequest name =
                     Http.Request
@@ -354,7 +321,7 @@ update_ msg model =
                 , hawkRequest
                 )
 
-        FormAddTreeResult tree ->
+        App.TreeStatus.Types.FormAddTreeResult tree ->
             let
                 _ = Debug.log "TREE" tree
             in
@@ -379,7 +346,9 @@ treeStatus status =
             "default"
 
 
-viewTrees : RemoteData.WebData Trees -> List (Html Msg)
+viewTrees :
+    RemoteData.WebData App.TreeStatus.Types.Trees
+    -> List (Html App.TreeStatus.Types.Msg)
 viewTrees trees_ =
     case trees_ of
         RemoteData.Success trees ->
@@ -388,7 +357,9 @@ viewTrees trees_ =
                     a
                         [ href "#"
                         , class "list-group-item list-group-item-action"
-                        , NavigateTo (TreeRoute tree.name) |> Utils.onClick
+                        , App.TreeStatus.Types.TreeRoute tree.name
+                            |> App.TreeStatus.Types.NavigateTo
+                            |> Utils.onClick
                         ]
                         [ h5 [ class "list-group-item-heading" ]
                             [ text tree.name
@@ -404,7 +375,7 @@ viewTrees trees_ =
 
         RemoteData.Failure message ->
             [ App.Utils.error
-                (NavigateTo TreesRoute)
+                (App.TreeStatus.Types.NavigateTo App.TreeStatus.Types.TreesRoute)
                 (toString message)
             ]
 
@@ -415,7 +386,10 @@ viewTrees trees_ =
             []
 
 
-viewTree : String -> RemoteData.WebData Tree -> List (Html Msg)
+viewTree :
+    String
+    -> RemoteData.WebData App.TreeStatus.Types.Tree
+    -> List (Html App.TreeStatus.Types.Msg)
 viewTree name tree_ =
     let
         title =
@@ -423,7 +397,7 @@ viewTree name tree_ =
                 [ a
                     [ href "#"
                     , class "float-xs-left"
-                    , Utils.onClick (NavigateTo TreesRoute)
+                    , Utils.onClick (App.TreeStatus.Types.NavigateTo App.TreeStatus.Types.TreesRoute)
                     ]
                     [ text "TreeStatus" ]
                 , span
@@ -440,7 +414,7 @@ viewTree name tree_ =
                     [ a
                         [ href "#"
                         , class "float-xs-left"
-                        , Utils.onClick (NavigateTo TreesRoute)
+                        , Utils.onClick (App.TreeStatus.Types.NavigateTo App.TreeStatus.Types.TreesRoute)
                         ]
                         [ text "TreeStatus" ]
                     , span
@@ -456,7 +430,7 @@ viewTree name tree_ =
 
             RemoteData.Failure message ->
                 [ title
-                , App.Utils.error (NavigateTo TreesRoute) (toString message)
+                , App.Utils.error (App.TreeStatus.Types.NavigateTo App.TreeStatus.Types.TreesRoute) (toString message)
                 ]
 
             RemoteData.Loading ->
@@ -468,7 +442,9 @@ viewTree name tree_ =
                 [ title ]
 
 
-viewTreeLog : TreeLog -> Html Msg
+viewTreeLog :
+    App.TreeStatus.Types.TreeLog
+    -> Html App.TreeStatus.Types.Msg
 viewTreeLog log =
     let
         who2 =
@@ -500,9 +476,9 @@ viewTreeLog log =
 
 viewTreeLogs :
     String
-    -> RemoteData.WebData TreeLogs
-    -> RemoteData.WebData TreeLogs
-    -> List (Html Msg)
+    -> RemoteData.WebData App.TreeStatus.Types.TreeLogs
+    -> RemoteData.WebData App.TreeStatus.Types.TreeLogs
+    -> List (Html App.TreeStatus.Types.Msg)
 viewTreeLogs name treeLogs_ treeLogsAll_ =
     let
         ( moreButton, treeLogsAll ) =
@@ -513,14 +489,14 @@ viewTreeLogs name treeLogs_ treeLogsAll_ =
                     )
 
                 RemoteData.Failure message ->
-                    ( [ App.Utils.error (NavigateTo TreesRoute) (toString message) ]
+                    ( [ App.Utils.error (App.TreeStatus.Types.NavigateTo App.TreeStatus.Types.TreesRoute) (toString message) ]
                     , []
                     )
 
                 RemoteData.Loading ->
                     ( [ button
                             [ class "btn btn-secondary"
-                            , Utils.onClick <| GetTreeLogs name True
+                            , Utils.onClick <| App.TreeStatus.Types.GetTreeLogs name True
                             ]
                             [ text "Loading"
                             , i [ class "fa fa-circle-o-notch fa-spin" ] []
@@ -532,7 +508,7 @@ viewTreeLogs name treeLogs_ treeLogsAll_ =
                 RemoteData.NotAsked ->
                     ( [ button
                             [ class "btn btn-secondary"
-                            , Utils.onClick <| GetTreeLogs name True
+                            , Utils.onClick <| App.TreeStatus.Types.GetTreeLogs name True
                             ]
                             [ text "Load more" ]
                       ]
@@ -554,7 +530,7 @@ viewTreeLogs name treeLogs_ treeLogsAll_ =
                 ]
 
             RemoteData.Failure message ->
-                [ App.Utils.error (NavigateTo TreesRoute) (toString message) ]
+                [ App.Utils.error (App.TreeStatus.Types.NavigateTo App.TreeStatus.Types.TreesRoute) (toString message) ]
 
             RemoteData.Loading ->
                 [ App.Utils.loading ]
@@ -563,10 +539,13 @@ viewTreeLogs name treeLogs_ treeLogsAll_ =
                 []
 
 
-view : Route -> Model -> Html Msg
+view :
+    App.TreeStatus.Types.Route
+    -> App.TreeStatus.Types.Model
+    -> Html App.TreeStatus.Types.Msg
 view route model =
     case route of
-        TreesRoute ->
+        App.TreeStatus.Types.TreesRoute ->
             div [ class "container" ]
                 [ h1 [] [ text "TreeStatus" ]
                 , p [ class "lead" ]
@@ -576,12 +555,12 @@ view route model =
                       , class "list-group"
                       ] 
                       [ App.TreeStatus.Form.viewAddTree model.formAddTree
-                          |> Html.App.map FormAddTreeMsg
+                          |> Html.App.map App.TreeStatus.Types.FormAddTreeMsg
                       ]
                 , div [ class "list-group" ] (viewTrees model.trees)
                 ]
 
-        TreeRoute name ->
+        App.TreeStatus.Types.TreeRoute name ->
             let
                 treeStatus =
                     viewTreeLogs name model.treeLogs model.treeLogsAll
