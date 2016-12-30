@@ -128,7 +128,7 @@ init url =
     , treeLogs = RemoteData.NotAsked
     , treeLogsAll = RemoteData.NotAsked
     , showMoreTreeLogs = False
-    , formAddTree = Form.initial [] App.TreeStatus.Form.validateAddTree
+    , formAddTree = App.TreeStatus.Form.initAddTree []
     }
 
 
