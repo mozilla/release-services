@@ -5,11 +5,14 @@ import Html.Attributes exposing (..)
 import Html.Events as Events
 import Json.Decode as JsonDecode
 import Utils
+import VirtualDom
 
 
--- TODO: add types
-
-
+dropdown :
+    (String -> a)
+    -> List { b | name : String }
+    -> Maybe String
+    -> Html a
 dropdown event items selected =
     div [ class "btn-group btn-dropdown" ]
         [ span
@@ -44,6 +47,7 @@ dropdown event items selected =
         ]
 
 
+loading : VirtualDom.Node a
 loading =
     div [ class "progress-wrapper" ]
         [ progress
@@ -56,6 +60,7 @@ loading =
         ]
 
 
+error : a -> String -> Html a
 error event message =
     div
         [ class "alert alert-danger"
