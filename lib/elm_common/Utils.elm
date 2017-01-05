@@ -50,6 +50,7 @@ handleResponse handle response =
         case response.value of
             Http.Text text ->
                 handle text
+
             _ ->
                 Failure (Http.UnexpectedPayload "Response body is a blob, expecting a string.")
     else
@@ -67,4 +68,4 @@ decodeWebResponse decoder response =
                 Err error ->
                     Failure (Http.UnexpectedPayload error)
     in
-       handleResponse decode response
+        handleResponse decode response

@@ -65,5 +65,3 @@ type Msg
     | GetTreeLogsAllResult (RemoteData.WebData TreeLogs)
     | FormAddTreeMsg Form.Msg
     | FormAddTreeResult (RemoteData.RemoteData Http.RawError Http.Response)
-
-

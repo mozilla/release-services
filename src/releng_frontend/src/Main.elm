@@ -55,8 +55,7 @@ update msg model =
                     Hawk.update hawkMsg
 
                 routeHawkMsg route =
-                    if String.startsWith "TreeStatus" route
-                    then
+                    if String.startsWith "TreeStatus" route then
                         route
                             |> String.dropLeft (String.length "TreeStatus")
                             |> App.TreeStatus.Api.hawkResponse response
@@ -134,7 +133,9 @@ update msg model =
             App.TryChooser.update App.TryChooserMsg msg2 model
 
         App.TreeStatusMsg msg2 ->
-            App.TreeStatus.update App.TreeStatusMsg msg2 model
+            App.TreeStatus.update App.TreeStatusMsg
+                msg2
+                model
                 (hawkSend model.user "TreeStatus")
 
 
@@ -148,9 +149,10 @@ hawkSend user page route request =
     case user of
         Nothing ->
             Utils.performMsg (App.NavigateTo App.LoginRoute)
+
         Just user2 ->
-                Hawk.send (page ++ route) request user2
-                    |> Cmd.map App.HawkMsg
+            Hawk.send (page ++ route) request user2
+                |> Cmd.map App.HawkMsg
 
 
 viewRoute : App.Model -> Html App.Msg
