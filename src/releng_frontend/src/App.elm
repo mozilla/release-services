@@ -2,6 +2,7 @@ module App exposing (..)
 
 import App.TreeStatus
 import App.TreeStatus.Types
+import App.TreeStatus.Form
 import App.TryChooser
 import App.Types
 import Hawk
@@ -94,7 +95,7 @@ type alias Model =
     , address : Hop.Types.Address
     , user : TaskclusterLogin.Model
     , trychooser : App.TryChooser.Model
-    , treestatus : App.TreeStatus.Types.Model
+    , treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
     , docsUrl : String
     , version : String
     }
