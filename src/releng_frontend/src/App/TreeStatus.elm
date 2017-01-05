@@ -27,8 +27,6 @@ import Utils
 --  * create update trees form on the right side below add tree form
 --  * only show forms if user has enough scopes, scopes should be cached for 5min
 --  * create update Tree form
-
-
 --
 -- ROUTING
 --
@@ -58,6 +56,7 @@ page outRoute =
     , description = "Current status of Mozilla's version-control repositories."
     , matcher = UrlParser.format outRoute (UrlParser.s "treestatus" </> routes)
     }
+
 
 
 --
@@ -100,9 +99,7 @@ load route outMsg outCmd model =
 load_ :
     App.TreeStatus.Types.Route
     -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
-    -> ( App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
-       , Cmd App.TreeStatus.Types.Msg
-       )
+    -> ( App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree, Cmd App.TreeStatus.Types.Msg )
 load_ route model =
     case route of
         App.TreeStatus.Types.TreesRoute ->
@@ -137,9 +134,9 @@ update outMsg msg model hawkSend =
     in
         ( { model | treestatus = treestatus }
         , hawkRequest
-            |> Maybe.map (\x -> [hawkSend x.route x.request])
+            |> Maybe.map (\x -> [ hawkSend x.route x.request ])
             |> Maybe.withDefault []
-            |> List.append [Cmd.map outMsg cmd]
+            |> List.append [ Cmd.map outMsg cmd ]
             |> Cmd.batch
         )
 
@@ -149,10 +146,11 @@ update_ :
     -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
     -> ( App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
        , Cmd App.TreeStatus.Types.Msg
-       , Maybe { request : Http.Request
-               , route : String
-               }
-   )
+       , Maybe
+            { request : Http.Request
+            , route : String
+            }
+       )
 update_ msg model =
     case msg of
         App.TreeStatus.Types.NavigateTo route ->
@@ -207,11 +205,13 @@ update_ msg model =
                                 ("detail" := JsonDecode.string)
                                 ("status" := JsonDecode.int)
                                 ("title" := JsonDecode.string)
+
                         error =
                             if 200 <= response.status && response.status < 300 then
                                 case response.value of
                                     Http.Text text ->
                                         Nothing
+
                                     _ ->
                                         Just "Response body is a blob, expecting a string."
                             else
@@ -220,11 +220,15 @@ update_ msg model =
                                         case JsonDecode.decodeString decoderError text of
                                             Ok obj ->
                                                 Just obj.detail
+
                                             Err error ->
                                                 Just text
+
                                     r ->
                                         Just response.statusText
-                        _ = Debug.log "ERROR" error
+
+                        _ =
+                            Debug.log "ERROR" error
                     in
                         ( { model | formAddTreeError = error }
                         , Cmd.batch
@@ -233,18 +237,16 @@ update_ msg model =
                                 |> Cmd.map App.TreeStatus.Types.FormAddTreeMsg
                             ]
                         )
+
                 ( newModel, newCmd ) =
                     result
                         |> RemoteData.map handleResponse
                         |> RemoteData.withDefault ( model, Cmd.none )
-
             in
                 ( newModel
                 , newCmd
                 , Nothing
                 )
-
-
 
 
 viewTrees :
@@ -451,13 +453,14 @@ view route model =
                 [ h1 [] [ text "TreeStatus" ]
                 , p [ class "lead" ]
                     [ text "Current status of Mozilla's version-control repositories." ]
-                -- TODO: only show forms when user has a needed scope
-                , div [ id "treestatus-forms"
-                      , class "list-group"
-                      ]
-                      [ App.TreeStatus.Form.viewAddTree model.formAddTree model.formAddTreeError
-                          |> Html.App.map App.TreeStatus.Types.FormAddTreeMsg
-                      ]
+                  -- TODO: only show forms when user has a needed scope
+                , div
+                    [ id "treestatus-forms"
+                    , class "list-group"
+                    ]
+                    [ App.TreeStatus.Form.viewAddTree model.formAddTree model.formAddTreeError
+                        |> Html.App.map App.TreeStatus.Types.FormAddTreeMsg
+                    ]
                 , div [ class "list-group" ] (viewTrees model.trees)
                 ]
 

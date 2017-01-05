@@ -10,10 +10,10 @@ import RemoteData
 encoderTree : App.TreeStatus.Types.Tree -> JsonEncode.Value
 encoderTree tree =
     JsonEncode.object
-        [ ("tree", JsonEncode.string tree.name)
-        , ("status", JsonEncode.string tree.status)
-        , ("reason", JsonEncode.string tree.reason)
-        , ("message_of_the_day", JsonEncode.string tree.message_of_the_day)
+        [ ( "tree", JsonEncode.string tree.name )
+        , ( "status", JsonEncode.string tree.status )
+        , ( "reason", JsonEncode.string tree.reason )
+        , ( "message_of_the_day", JsonEncode.string tree.message_of_the_day )
         ]
 
 
@@ -56,7 +56,6 @@ get msg url decoder =
     Http.get decoder url
         |> RemoteData.asCmd
         |> Cmd.map msg
-
 
 
 fetchTrees :
@@ -104,5 +103,6 @@ hawkResponse response route =
     case route of
         "AddTree" ->
             Cmd.map App.TreeStatus.Types.FormAddTreeResult response
+
         _ ->
             Cmd.none
