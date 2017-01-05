@@ -729,6 +729,40 @@ tasks:
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
 
 
+# --- shipit_dashboard (production) ---
+
+  - metadata:
+      name: "shipit_dashboard"
+      description: "Test, build and deploy shipit_dashboard"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/production/src/shipit_dashboard"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:production
+      - hooks:modify-hook:project-releng/services-production-shipit_dashboard-*
+      - assume:hook-id:project-releng/services-production-shipit_dashboard-*
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - production
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "shipit_dashboard"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:production"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+
+
 # --- shipit_frontend (master) ---
 
   - metadata:
@@ -792,6 +826,40 @@ tasks:
       env:
         APP: "shipit_frontend"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:staging"
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "nix-env -iA nixpkgs.gnumake nixpkgs.curl && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+
+
+# --- shipit_frontend (production) ---
+
+  - metadata:
+      name: "shipit_frontend"
+      description: "Test, build and deploy shipit_frontend"
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/production/src/shipit_frontend"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:production
+      - hooks:modify-hook:project-releng/services-production-shipit_frontend-*
+      - assume:hook-id:project-releng/services-production-shipit_frontend-*
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - production
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 7200 # seconds (i.e. two hours)
+      image: "nixos/nix:latest"
+      features:
+        taskclusterProxy: true
+      env:
+        APP: "shipit_frontend"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:production"
       command:
         - "/bin/bash"
         - "-c"
