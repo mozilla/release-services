@@ -44,40 +44,27 @@ onChange handler =
         |> Html.Events.on "change"
 
 
-handleResponse : (String -> a) -> a -> Http.Response -> a
-handleResponse handle default response =
+handleResponse : (String -> RemoteData Http.Error a) -> Http.Response -> WebData a
+handleResponse handle response =
     if 200 <= response.status && response.status < 300 then
         case response.value of
             Http.Text text ->
                 handle text
-
-            _ ->
-                default
-    else
-        default
-
-
-decodeResponse : JsonDecode.Decoder a -> a -> Http.Response -> a
-decodeResponse decoder default response =
-    handleResponse
-        (\x -> JsonDecode.decodeString decoder x |> Result.withDefault default)
-        default
-        response
-
-
-decodeWebResponse : JsonDecode.Decoder a -> Http.Response -> WebData a
-decodeWebResponse decoder response =
-    if 200 <= response.status && response.status < 300 then
-        case response.value of
-            Http.Text str ->
-                case JsonDecode.decodeString decoder str of
-                    Ok obj ->
-                        Success obj
-
-                    Err err ->
-                        Failure (Http.UnexpectedPayload err)
-
             _ ->
                 Failure (Http.UnexpectedPayload "Response body is a blob, expecting a string.")
     else
         Failure (Http.BadResponse response.status response.statusText)
+
+
+decodeWebResponse : JsonDecode.Decoder a -> Http.Response -> WebData a
+decodeWebResponse decoder response =
+    let
+        decode text =
+            case JsonDecode.decodeString decoder text of
+                Ok obj ->
+                    Success obj
+
+                Err error ->
+                    Failure (Http.UnexpectedPayload error)
+    in
+       handleResponse decode response
