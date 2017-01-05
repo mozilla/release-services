@@ -1,6 +1,5 @@
 module App.TreeStatus.Types exposing (..)
 
-import App.TreeStatus.Form
 import Form
 import RemoteData
 import Http
@@ -9,6 +8,14 @@ import Http
 type Route
     = TreesRoute
     | TreeRoute String
+
+
+type alias Error =
+    { type_ : String
+    , detail : String
+    , status : Int
+    , title : String
+    }
 
 
 type alias Tree =
@@ -37,14 +44,15 @@ type alias TreeLogs =
     List TreeLog
 
 
-type alias Model =
+type alias Model addForm =
     { baseUrl : String
     , trees : RemoteData.WebData Trees
     , tree : RemoteData.WebData Tree
     , treeLogs : RemoteData.WebData TreeLogs
     , treeLogsAll : RemoteData.WebData TreeLogs
     , showMoreTreeLogs : Bool
-    , formAddTree : Form.Form () App.TreeStatus.Form.AddTree
+    , formAddTree : Form.Form () addForm
+    , formAddTreeError : Maybe String
     }
 
 

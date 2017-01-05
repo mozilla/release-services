@@ -6,12 +6,14 @@ import App.TreeStatus.Types
 import App.Types
 import App.Utils
 import Form
+import Form.Error
 import Hop
 import Html exposing (..)
 import Html.App
 import Html.Attributes exposing (..)
 import Http
 import Json.Encode as JsonEncode
+import Json.Decode as JsonDecode exposing ((:=))
 import Navigation
 import RemoteData
 import String
@@ -27,11 +29,9 @@ import Utils
 --  * create update Tree form
 
 
--- 
+--
 -- ROUTING
 --
-
-
 
 
 routes : UrlParser.Parser (App.TreeStatus.Types.Route -> a) a
@@ -65,7 +65,7 @@ page outRoute =
 --
 
 
-init : String -> App.TreeStatus.Types.Model
+init : String -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
 init url =
     { baseUrl = url
     , trees = RemoteData.NotAsked
@@ -73,7 +73,8 @@ init url =
     , treeLogs = RemoteData.NotAsked
     , treeLogsAll = RemoteData.NotAsked
     , showMoreTreeLogs = False
-    , formAddTree = App.TreeStatus.Form.initAddTree []
+    , formAddTree = App.TreeStatus.Form.initAddTree
+    , formAddTreeError = Nothing
     }
 
 
@@ -81,8 +82,8 @@ load :
     App.TreeStatus.Types.Route
     -> (App.TreeStatus.Types.Msg -> a)
     -> Cmd a
-    -> { b | treestatus : App.TreeStatus.Types.Model }
-    -> ( { b | treestatus : App.TreeStatus.Types.Model }, Cmd a )
+    -> { b | treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree }
+    -> ( { b | treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree }, Cmd a )
 load route outMsg outCmd model =
     let
         ( newModel, newCmd ) =
@@ -98,8 +99,8 @@ load route outMsg outCmd model =
 
 load_ :
     App.TreeStatus.Types.Route
-    -> App.TreeStatus.Types.Model
-    -> ( App.TreeStatus.Types.Model
+    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
+    -> ( App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
        , Cmd App.TreeStatus.Types.Msg
        )
 load_ route model =
@@ -126,9 +127,9 @@ load_ route model =
 update :
     (App.TreeStatus.Types.Msg -> b)
     -> App.TreeStatus.Types.Msg
-    -> { c | treestatus : App.TreeStatus.Types.Model }
+    -> { c | treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree }
     -> (String -> Http.Request -> Cmd b)
-    -> ( { c | treestatus : App.TreeStatus.Types.Model }, Cmd b )
+    -> ( { c | treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree }, Cmd b )
 update outMsg msg model hawkSend =
     let
         ( treestatus, cmd, hawkRequest ) =
@@ -145,8 +146,8 @@ update outMsg msg model hawkSend =
 
 update_ :
     App.TreeStatus.Types.Msg
-    -> App.TreeStatus.Types.Model
-    -> ( App.TreeStatus.Types.Model
+    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
+    -> ( App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
        , Cmd App.TreeStatus.Types.Msg
        , Maybe { request : Http.Request
                , route : String
@@ -188,40 +189,60 @@ update_ msg model =
 
         App.TreeStatus.Types.FormAddTreeMsg formMsg ->
             let
-                form = Form.update formMsg model.formAddTree
-                tree name = App.TreeStatus.Types.Tree name "closed" "new tree" ""
-                treeStr name = JsonEncode.encode 0 (App.TreeStatus.Api.encoderTree (tree name))
-                newTreeRequest name =
-                    Http.Request
-                        "PUT"
-                        -- probably this should be in Hawk.elm
-                        [ ("Accept",       "application/json")
-                        , ("Content-Type", "application/json")
-                        ]
-                        (model.baseUrl ++ "/trees/" ++ name)
-                        (Http.string (treeStr name))
-                hawkRequest =
-                    case formMsg of
-                        Form.Submit ->
-                            if Form.getErrors form /= []
-                               then
-                                   Nothing
-                               else
-                                   Form.getOutput form
-                                       |> Maybe.map (\x -> { route = "AddTree", request = newTreeRequest x.name })
-                        _ ->
-                            Nothing
+                ( newModel, hawkRequest ) =
+                    App.TreeStatus.Form.updateAddTree model formMsg
             in
-                ( { model | formAddTree = form }
+                ( newModel
                 , Cmd.none
                 , hawkRequest
                 )
 
-        App.TreeStatus.Types.FormAddTreeResult tree ->
+        App.TreeStatus.Types.FormAddTreeResult result ->
             let
-                _ = Debug.log "TREE" tree
+                handleResponse response =
+                    let
+                        decoderError =
+                            JsonDecode.object4 App.TreeStatus.Types.Error
+                                ("type" := JsonDecode.string)
+                                ("detail" := JsonDecode.string)
+                                ("status" := JsonDecode.int)
+                                ("title" := JsonDecode.string)
+                        error =
+                            if 200 <= response.status && response.status < 300 then
+                                case response.value of
+                                    Http.Text text ->
+                                        Nothing
+                                    _ ->
+                                        Just "Response body is a blob, expecting a string."
+                            else
+                                case response.value of
+                                    Http.Text text ->
+                                        case JsonDecode.decodeString decoderError text of
+                                            Ok obj ->
+                                                Just obj.detail
+                                            Err error ->
+                                                Just text
+                                    r ->
+                                        Just response.statusText
+                        _ = Debug.log "ERROR" error
+                    in
+                        ( { model | formAddTreeError = error }
+                        , Cmd.batch
+                            [ App.TreeStatus.Api.fetchTrees model.baseUrl
+                            , Utils.performMsg App.TreeStatus.Form.resetAddTree
+                                |> Cmd.map App.TreeStatus.Types.FormAddTreeMsg
+                            ]
+                        )
+                ( newModel, newCmd ) =
+                    result
+                        |> RemoteData.map handleResponse
+                        |> RemoteData.withDefault ( model, Cmd.none )
+
             in
-            ( model, Cmd.none, Nothing )
+                ( newModel
+                , newCmd
+                , Nothing
+                )
 
 
 
@@ -421,7 +442,7 @@ viewTreeLogs name treeLogs_ treeLogsAll_ =
 
 view :
     App.TreeStatus.Types.Route
-    -> App.TreeStatus.Types.Model
+    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
     -> Html App.TreeStatus.Types.Msg
 view route model =
     case route of
@@ -430,11 +451,11 @@ view route model =
                 [ h1 [] [ text "TreeStatus" ]
                 , p [ class "lead" ]
                     [ text "Current status of Mozilla's version-control repositories." ]
-                -- TODO: only show forms when user has a needed scope 
+                -- TODO: only show forms when user has a needed scope
                 , div [ id "treestatus-forms"
                       , class "list-group"
-                      ] 
-                      [ App.TreeStatus.Form.viewAddTree model.formAddTree
+                      ]
+                      [ App.TreeStatus.Form.viewAddTree model.formAddTree model.formAddTreeError
                           |> Html.App.map App.TreeStatus.Types.FormAddTreeMsg
                       ]
                 , div [ class "list-group" ] (viewTrees model.trees)
