@@ -64,36 +64,36 @@ updateAddTree model formMsg =
                 (model.baseUrl ++ "/trees/" ++ name)
                 (Http.string (treeStr name))
 
-        ( trees, error, hawkRequest ) =
+        ( trees, alerts, hawkRequest ) =
             case formMsg of
                 Form.Submit ->
                     if Form.getErrors form /= [] then
-                        ( model.trees, Nothing, Nothing )
+                        ( model.trees, [], Nothing )
                     else
                         -- opurtonistic update
                         ( Form.getOutput form
                             |> Maybe.map (\x -> [ tree x.name ])
                             |> Maybe.withDefault []
                             |> (\y -> RemoteData.map (\x -> List.append x y) model.trees)
-                        , Nothing
+                        , []
                         , Form.getOutput form
                             |> Maybe.map (\x -> { route = "AddTree", request = newTreeRequest x.name })
                         )
 
                 _ ->
-                    ( model.trees, model.formAddTreeError, Nothing )
+                    ( model.trees, model.alerts, Nothing )
     in
         ( { model
             | formAddTree = form
-            , formAddTreeError = error
+            , alerts = alerts
             , trees = trees
           }
         , hawkRequest
         )
 
 
-viewAddTree : Form.Form () AddTree -> Maybe String -> Html Form.Msg
-viewAddTree form error =
+viewAddTree : Form.Form () AddTree -> Html Form.Msg
+viewAddTree form =
     let
         name =
             Form.getFieldAsString "name" form
@@ -111,18 +111,9 @@ viewAddTree form error =
                 Nothing ->
                     ( "input-group", text "" )
 
-        errorNode =
-            error
-                |> Maybe.map
-                    (\x ->
-                        div [ class "alert alert-danger" ]
-                            [ text x ]
-                    )
-                |> Maybe.withDefault (div [] [])
     in
         div [ class "list-group-item" ]
             [ h3 [] [ text "Add new tree" ]
-            , errorNode
             , Html.form
                 []
                 [ div [ class nameClass ]

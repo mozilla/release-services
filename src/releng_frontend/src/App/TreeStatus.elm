@@ -23,10 +23,16 @@ import Utils
 
 
 -- TODO:
+--  * first fetch scopes of the user when making requests, expire them in 15 minutes
+--  * mark optimistic updates with different color
+--  * don do optimistinc update if we already have a duplicate
+--  * show spinner over the grayed form when form gets submitted
+--
 --  * add from should be on the right side if a person is logged in
 --  * create update trees form on the right side below add tree form
 --  * only show forms if user has enough scopes, scopes should be cached for 5min
 --  * create update Tree form
+
 --
 -- ROUTING
 --
@@ -67,13 +73,13 @@ page outRoute =
 init : String -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
 init url =
     { baseUrl = url
+    , alerts = []
     , trees = RemoteData.NotAsked
     , tree = RemoteData.NotAsked
     , treeLogs = RemoteData.NotAsked
     , treeLogsAll = RemoteData.NotAsked
     , showMoreTreeLogs = False
     , formAddTree = App.TreeStatus.Form.initAddTree
-    , formAddTreeError = Nothing
     }
 
 
@@ -206,31 +212,37 @@ update_ msg model =
                                 ("status" := JsonDecode.int)
                                 ("title" := JsonDecode.string)
 
-                        error =
+                        alerts =
                             if 200 <= response.status && response.status < 300 then
                                 case response.value of
                                     Http.Text text ->
-                                        Nothing
+                                        []
 
                                     _ ->
-                                        Just "Response body is a blob, expecting a string."
+                                        [ App.TreeStatus.Types.Alert
+                                            App.TreeStatus.Types.AlertDanger
+                                            "Error!"
+                                            "Response body is a blob, expecting a string."
+                                        ]
                             else
-                                case response.value of
-                                    Http.Text text ->
-                                        case JsonDecode.decodeString decoderError text of
-                                            Ok obj ->
-                                                Just obj.detail
+                                [ App.TreeStatus.Types.Alert
+                                    App.TreeStatus.Types.AlertDanger
+                                    "Error!"
+                                    ( case response.value of
+                                        Http.Text text ->
+                                            case JsonDecode.decodeString decoderError text of
+                                                Ok obj ->
+                                                    obj.detail
 
-                                            Err error ->
-                                                Just text
+                                                Err error ->
+                                                    text
 
-                                    r ->
-                                        Just response.statusText
-
-                        _ =
-                            Debug.log "ERROR" error
+                                        r ->
+                                            response.statusText
+                                    )
+                                ]
                     in
-                        ( { model | formAddTreeError = error }
+                        ( { model | alerts = alerts }
                         , Cmd.batch
                             [ App.TreeStatus.Api.fetchTrees model.baseUrl
                             , Utils.performMsg App.TreeStatus.Form.resetAddTree
@@ -442,6 +454,36 @@ viewTreeLogs name treeLogs_ treeLogsAll_ =
                 []
 
 
+viewAlerts :
+    List App.TreeStatus.Types.Alert
+    -> Html App.TreeStatus.Types.Msg
+viewAlerts alerts =
+    let
+        getAlertTypeAsString alert =
+            case alert.type_ of
+                App.TreeStatus.Types.AlertSuccess ->
+                    "success"
+
+                App.TreeStatus.Types.AlertInfo ->
+                    "info"
+
+                App.TreeStatus.Types.AlertWarning ->
+                    "warning"
+
+                App.TreeStatus.Types.AlertDanger ->
+                    "danger"
+
+        createAlert alert =
+            div [ class ("alert alert-" ++ (getAlertTypeAsString alert)) ]
+                [ strong [] [ text alert.title ]
+                , text alert.text
+                ]
+    in
+        alerts
+            |> List.map createAlert
+            |> div []
+
+
 view :
     App.TreeStatus.Types.Route
     -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
@@ -453,12 +495,13 @@ view route model =
                 [ h1 [] [ text "TreeStatus" ]
                 , p [ class "lead" ]
                     [ text "Current status of Mozilla's version-control repositories." ]
+                , viewAlerts model.alerts
                   -- TODO: only show forms when user has a needed scope
                 , div
                     [ id "treestatus-forms"
                     , class "list-group"
                     ]
-                    [ App.TreeStatus.Form.viewAddTree model.formAddTree model.formAddTreeError
+                    [ App.TreeStatus.Form.viewAddTree model.formAddTree
                         |> Html.App.map App.TreeStatus.Types.FormAddTreeMsg
                     ]
                 , div [ class "list-group" ] (viewTrees model.trees)
