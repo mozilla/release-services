@@ -44,15 +44,29 @@ type alias TreeLogs =
     List TreeLog
 
 
+type AlertType
+    = AlertSuccess
+    | AlertInfo
+    | AlertWarning
+    | AlertDanger
+
+
+type alias Alert =
+    { type_ : AlertType
+    , title : String
+    , text : String
+    }
+
+
 type alias Model addForm =
     { baseUrl : String
+    , alerts : List Alert
     , trees : RemoteData.WebData Trees
     , tree : RemoteData.WebData Tree
     , treeLogs : RemoteData.WebData TreeLogs
     , treeLogsAll : RemoteData.WebData TreeLogs
     , showMoreTreeLogs : Bool
     , formAddTree : Form.Form () addForm
-    , formAddTreeError : Maybe String
     }
 
 
