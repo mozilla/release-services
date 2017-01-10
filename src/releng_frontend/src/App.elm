@@ -1,10 +1,11 @@
 module App exposing (..)
 
 import App.TreeStatus
-import App.TreeStatus.Types
 import App.TreeStatus.Form
+import App.TreeStatus.Types
 import App.TryChooser
 import App.Types
+import App.UserScopes
 import Hawk
 import Hop
 import Hop.Types
@@ -94,6 +95,7 @@ type alias Model =
     { route : Route
     , address : Hop.Types.Address
     , user : TaskclusterLogin.Model
+    , userScopes : App.UserScopes.Model
     , trychooser : App.TryChooser.Model
     , treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
     , docsUrl : String
@@ -105,6 +107,7 @@ type Msg
     = TaskclusterLoginMsg TaskclusterLogin.Msg
     | HawkMsg Hawk.Msg
     | NavigateTo Route
+    | UserScopesMsg App.UserScopes.Msg
     | TryChooserMsg App.TryChooser.Msg
     | TreeStatusMsg App.TreeStatus.Types.Msg
 

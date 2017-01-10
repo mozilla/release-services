@@ -11,7 +11,7 @@ type alias Model =
 
 
 type Msg
-    = NothingIsYetHappening
+    = Load
 
 
 page : a -> App.Types.Page a b
@@ -28,18 +28,11 @@ init =
     {}
 
 
-load :
-    (Msg -> a)
-    -> Cmd a
-    -> { b | trychooser : Model }
-    -> ( { b | trychooser : Model }, Cmd a )
-load outMsg newCmd model =
-    ( model, newCmd )
-
-
-update : (Msg -> a) -> Msg -> b -> ( b, Cmd a )
-update outMsg msg model =
-    ( model, Cmd.none )
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        Load ->
+            ( model, Cmd.none )
 
 
 view : Model -> Html Msg
