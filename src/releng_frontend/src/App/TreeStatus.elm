@@ -4,6 +4,7 @@ import App.TreeStatus.Api
 import App.TreeStatus.Form
 import App.TreeStatus.Types
 import App.Types
+import App.UserScopes
 import App.Utils
 import Form
 import Form.Error
@@ -32,6 +33,7 @@ import Utils
 --  * create update trees form on the right side below add tree form
 --  * only show forms if user has enough scopes, scopes should be cached for 5min
 --  * create update Tree form
+--  * get rid of performMsg (call update on itself)
 
 --
 -- ROUTING
@@ -83,71 +85,7 @@ init url =
     }
 
 
-load :
-    App.TreeStatus.Types.Route
-    -> (App.TreeStatus.Types.Msg -> a)
-    -> Cmd a
-    -> { b | treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree }
-    -> ( { b | treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree }, Cmd a )
-load route outMsg outCmd model =
-    let
-        ( newModel, newCmd ) =
-            load_ route model.treestatus
-    in
-        ( { model | treestatus = newModel }
-        , Cmd.batch
-            [ outCmd
-            , Cmd.map outMsg newCmd
-            ]
-        )
-
-
-load_ :
-    App.TreeStatus.Types.Route
-    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
-    -> ( App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree, Cmd App.TreeStatus.Types.Msg )
-load_ route model =
-    case route of
-        App.TreeStatus.Types.TreesRoute ->
-            ( { model | trees = RemoteData.Loading }
-            , Cmd.batch
-                [ App.TreeStatus.Api.fetchTrees model.baseUrl
-                ]
-            )
-
-        App.TreeStatus.Types.TreeRoute name ->
-            ( { model
-                | tree = RemoteData.Loading
-                , treeLogs = RemoteData.Loading
-              }
-            , Cmd.batch
-                [ App.TreeStatus.Api.fetchTree model.baseUrl name
-                , App.TreeStatus.Api.fetchTreeLogs model.baseUrl name False
-                ]
-            )
-
-
 update :
-    (App.TreeStatus.Types.Msg -> b)
-    -> App.TreeStatus.Types.Msg
-    -> { c | treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree }
-    -> (String -> Http.Request -> Cmd b)
-    -> ( { c | treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree }, Cmd b )
-update outMsg msg model hawkSend =
-    let
-        ( treestatus, cmd, hawkRequest ) =
-            update_ msg model.treestatus
-    in
-        ( { model | treestatus = treestatus }
-        , hawkRequest
-            |> Maybe.map (\x -> [ hawkSend x.route x.request ])
-            |> Maybe.withDefault []
-            |> List.append [ Cmd.map outMsg cmd ]
-            |> Cmd.batch
-        )
-
-
-update_ :
     App.TreeStatus.Types.Msg
     -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
     -> ( App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
@@ -157,12 +95,29 @@ update_ :
             , route : String
             }
        )
-update_ msg model =
+update msg model =
     case msg of
         App.TreeStatus.Types.NavigateTo route ->
             let
                 ( newModel, newCmd ) =
-                    load_ route model
+                    case route of
+                        App.TreeStatus.Types.TreesRoute ->
+                            ( { model | trees = RemoteData.Loading }
+                            , Cmd.batch
+                                [ App.TreeStatus.Api.fetchTrees model.baseUrl
+                                ]
+                            )
+
+                        App.TreeStatus.Types.TreeRoute name ->
+                            ( { model
+                                | tree = RemoteData.Loading
+                                , treeLogs = RemoteData.Loading
+                              }
+                            , Cmd.batch
+                                [ App.TreeStatus.Api.fetchTree model.baseUrl name
+                                , App.TreeStatus.Api.fetchTreeLogs model.baseUrl name False
+                                ]
+                            )
             in
                 ( newModel
                 , Cmd.batch
@@ -486,9 +441,10 @@ viewAlerts alerts =
 
 view :
     App.TreeStatus.Types.Route
+    -> List String
     -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
     -> Html App.TreeStatus.Types.Msg
-view route model =
+view route scopes model =
     case route of
         App.TreeStatus.Types.TreesRoute ->
             div [ class "container" ]

@@ -5,8 +5,10 @@ import App.Home
 import App.Layout
 import App.TreeStatus
 import App.TreeStatus.Api
+import App.TreeStatus.Types
 import App.TryChooser
 import App.Types
+import App.UserScopes
 import Hawk
 import Hop
 import Hop.Types
@@ -28,6 +30,7 @@ init flags ( route, address ) =
       , docsUrl = flags.docsUrl
       , version = flags.version
       , user = flags.user
+      , userScopes = App.UserScopes.init
       , trychooser = App.TryChooser.init
       , treestatus = App.TreeStatus.init flags.treestatusUrl
       }
@@ -60,6 +63,11 @@ update msg model =
                             |> String.dropLeft (String.length "TreeStatus")
                             |> App.TreeStatus.Api.hawkResponse response
                             |> Cmd.map App.TreeStatusMsg
+                    else if String.startsWith "UserScopes" route then
+                        route
+                            |> String.dropLeft (String.length "UserScopes")
+                            |> App.UserScopes.hawkResponse response
+                            |> Cmd.map App.UserScopesMsg
                     else
                         Cmd.none
 
@@ -97,19 +105,23 @@ update msg model =
 
                 logout =
                     App.TaskclusterLoginMsg TaskclusterLogin.Logout
+
+                fetchUserScopes =
+                    App.UserScopesMsg App.UserScopes.FetchScopes
+
+
             in
                 case route of
                     App.NotFoundRoute ->
                         ( model, newCmd )
 
                     App.HomeRoute ->
-                        ( { model
+                        { model
                             | trychooser = App.TryChooser.init
                             , treestatus =
                                 App.TreeStatus.init model.treestatus.baseUrl
-                          }
-                        , newCmd
-                        )
+                        } ! [ newCmd ]
+                            |> Utils.andThen update fetchUserScopes
 
                     App.LoginRoute ->
                         model
@@ -124,19 +136,48 @@ update msg model =
                             |> Utils.andThen update goHome
 
                     App.TryChooserRoute ->
-                        App.TryChooser.load App.TryChooserMsg newCmd model
+                        update (App.TryChooserMsg App.TryChooser.Load) model
+                            |> Utils.andThen update fetchUserScopes
 
                     App.TreeStatusRoute route ->
-                        App.TreeStatus.load route App.TreeStatusMsg newCmd model
+                        update (App.TreeStatusMsg (App.TreeStatus.Types.NavigateTo route)) model
+                            |> Utils.andThen update fetchUserScopes
+
+        App.UserScopesMsg msg2 ->
+            let
+                ( newModel, newCmd, hawkCmd ) =
+                    App.UserScopes.update msg2 model.userScopes
+                
+            in
+                ( { model | userScopes = newModel }
+                , hawkCmd
+                    |> Maybe.map (\x -> [ hawkSend model.user "UserScopes" x.route x.request ])
+                    |> Maybe.withDefault []
+                    |> List.append [ Cmd.map App.UserScopesMsg newCmd ]
+                    |> Cmd.batch
+                )
 
         App.TryChooserMsg msg2 ->
-            App.TryChooser.update App.TryChooserMsg msg2 model
+            let
+                ( newModel, newCmd ) =
+                    App.TryChooser.update msg2 model.trychooser
+            in
+                ( { model | trychooser = newModel }
+                , Cmd.map App.TryChooserMsg newCmd
+                )
 
         App.TreeStatusMsg msg2 ->
-            App.TreeStatus.update App.TreeStatusMsg
-                msg2
-                model
-                (hawkSend model.user "TreeStatus")
+            let
+                ( newModel, newCmd, hawkCmd ) =
+                    App.TreeStatus.update msg2 model.treestatus
+            in
+                ( { model | treestatus = newModel }
+                , hawkCmd
+                    |> Maybe.map (\x -> [ hawkSend model.user "TreeStatus" x.route x.request ])
+                    |> Maybe.withDefault []
+                    |> List.append [ Cmd.map App.TreeStatusMsg newCmd ]
+                    |> Cmd.batch
+                )
 
 
 hawkSend :
@@ -178,6 +219,7 @@ viewRoute model =
         App.TreeStatusRoute route ->
             App.TreeStatus.view
                 route
+                model.userScopes.scopes
                 model.treestatus
                 |> Html.App.map App.TreeStatusMsg
 
