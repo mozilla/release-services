@@ -12,6 +12,7 @@ import Hop
 import Html exposing (..)
 import Html.App
 import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 import Http
 import Json.Encode as JsonEncode
 import Json.Decode as JsonDecode exposing ((:=))
@@ -77,6 +78,7 @@ init url =
     { baseUrl = url
     , alerts = []
     , trees = RemoteData.NotAsked
+    , treesSelected = []
     , tree = RemoteData.NotAsked
     , treeLogs = RemoteData.NotAsked
     , treeLogsAll = RemoteData.NotAsked
@@ -102,7 +104,9 @@ update msg model =
                 ( newModel, newCmd ) =
                     case route of
                         App.TreeStatus.Types.TreesRoute ->
-                            ( { model | trees = RemoteData.Loading }
+                            ( { model | trees = RemoteData.Loading
+                                      , treesSelected = []
+                              }
                             , Cmd.batch
                                 [ App.TreeStatus.Api.fetchTrees model.baseUrl
                                 ]
@@ -216,32 +220,97 @@ update msg model =
                 )
 
 
-viewTrees :
-    RemoteData.WebData App.TreeStatus.Types.Trees
-    -> List (Html App.TreeStatus.Types.Msg)
-viewTrees trees_ =
-    case trees_ of
-        RemoteData.Success trees ->
-            List.map
-                (\tree ->
-                    a
-                        [ href "#"
-                        , class "list-group-item list-group-item-action"
-                        , App.TreeStatus.Types.TreeRoute tree.name
-                            |> App.TreeStatus.Types.NavigateTo
-                            |> Utils.onClick
-                        ]
-                        [ h5 [ class "list-group-item-heading" ]
-                            [ text tree.name
-                            , span [ class <| "float-xs-right tag tag-" ++ treeStatus tree.status ]
-                                [ text tree.status ]
-                            ]
-                        , p [ class "list-group-item-text" ]
-                            [ text tree.reason ]
-                        ]
+        App.TreeStatus.Types.SelectTree name ->
+            let
+                treesSelected =
+                    if List.member name model.treesSelected
+                       then model.treesSelected
+                       else name :: model.treesSelected
+            in
+                ( { model | treesSelected = treesSelected }
+                , Cmd.none
+                , Nothing
                 )
-            <|
-                List.sortBy .name trees
+
+        App.TreeStatus.Types.UnselectTree name ->
+            let
+                treesSelected =
+                    List.filter (\x -> x /= name) model.treesSelected
+            in
+                ( { model | treesSelected = treesSelected }
+                , Cmd.none
+                , Nothing
+                )
+
+
+viewTrees :
+    App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
+    -> List String
+    -> List (Html App.TreeStatus.Types.Msg)
+viewTrees model scopes =
+    case model.trees of
+        RemoteData.Success trees ->
+            trees
+                |> List.sortBy .name
+                |> List.map 
+                    (\tree ->
+                        let
+                            isChecked =
+                                List.member tree.name model.treesSelected
+
+                            checking checked =
+                                case checked of
+                                    True ->
+                                        App.TreeStatus.Types.SelectTree tree.name
+                                    False ->
+                                        App.TreeStatus.Types.UnselectTree tree.name
+
+                            openTree =
+                                App.TreeStatus.Types.TreeRoute tree.name
+                                  |> App.TreeStatus.Types.NavigateTo
+
+                            treeTagClass = 
+                                "float-xs-right tag tag-" ++ (treeStatus tree.status)
+
+                            hasScope =
+                                App.UserScopes.hasScope scopes
+
+                            hasScopes =
+                                hasScope "project:releng:treestatus/update_trees" ||
+                                hasScope "project:releng:treestatus/kill_tree"
+
+                            checkboxItem =
+                                if hasScopes
+                                   then [ input [ type' "checkbox"
+                                                , checked isChecked
+                                                , onCheck checking
+                                                ]
+                                                []
+                                        ]
+                                   else  []
+
+                            itemClass = 
+                                if hasScopes
+                                   then "list-group-item list-group-item-with-checkbox"
+                                   else "list-group-item"
+
+                            treeItem =
+                                a [ href "#"
+                                  , class "list-group-item-action"
+                                  , Utils.onClick openTree
+                                  ]
+                                  [ h5 [ class "list-group-item-heading" ]
+                                      [ text tree.name
+                                      , span [ class treeTagClass ]
+                                          [ text tree.status ]
+                                      ]
+                                  , p [ class "list-group-item-text" ]
+                                      [ text tree.reason ]
+                                  ]
+                        in
+                            div [ class itemClass ]
+                                (List.append checkboxItem [ treeItem ])
+                    )
 
         RemoteData.Failure message ->
             [ App.Utils.error
@@ -445,34 +514,40 @@ view :
     -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
     -> Html App.TreeStatus.Types.Msg
 view route scopes model =
-    case route of
-        App.TreeStatus.Types.TreesRoute ->
-            div [ class "container" ]
-                [ h1 [] [ text "TreeStatus" ]
-                , p [ class "lead" ]
-                    [ text "Current status of Mozilla's version-control repositories." ]
-                , viewAlerts model.alerts
-                  -- TODO: only show forms when user has a needed scope
-                , div
-                    [ id "treestatus-forms"
-                    , class "list-group"
-                    ]
-                    [ App.TreeStatus.Form.viewAddTree model.formAddTree
-                        |> Html.App.map App.TreeStatus.Types.FormAddTreeMsg
-                    ]
-                , div [ class "list-group" ] (viewTrees model.trees)
-                ]
+    let
+        treeStatus name =
+            viewTreeLogs name model.treeLogs model.treeLogsAll
+                |> List.append (viewTree name model.tree)
 
-        App.TreeStatus.Types.TreeRoute name ->
-            let
-                treeStatus =
-                    viewTreeLogs name model.treeLogs model.treeLogsAll
-                        |> List.append (viewTree name model.tree)
+        addForm =
+            App.TreeStatus.Form.viewAddTree model.formAddTree
+                |> Html.App.map App.TreeStatus.Types.FormAddTreeMsg
 
-                updateForm =
-                    []
-            in
-                div [] (List.append treeStatus updateForm)
+        appendForm scope form nodes =
+            if App.UserScopes.hasScope scopes scope
+               then List.append nodes [ form ]
+               else nodes
+
+    in
+        case route of
+            App.TreeStatus.Types.TreesRoute ->
+                div [ class "container" ]
+                    [ h1 [] [ text "TreeStatus" ]
+                    , p [ class "lead" ]
+                        [ text "Current status of Mozilla's version-control repositories." ]
+                    , viewAlerts model.alerts
+                    , div
+                        [ id "treestatus-forms" ]
+                        ([] |> appendForm "project:releng:treestatus/make_tree" addForm
+                        )
+                    , div [ id "treestatus-trees"
+                          , class "list-group"
+                          ]
+                          (viewTrees model scopes)
+                    ]
+
+            App.TreeStatus.Types.TreeRoute name ->
+                div [] []
 
 
 treeStatus : String -> String

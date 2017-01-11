@@ -86,8 +86,6 @@ update msg model =
                     result
                         |> RemoteData.map handleResponse
                         |> RemoteData.withDefault []
-                _ = Debug.log "SCOPES" scopes
-
             in
                 ( { model | scopes = scopes }
                 , Cmd.none

@@ -188,12 +188,12 @@ hawkSend :
     -> Cmd App.Msg
 hawkSend user page route request =
     case user of
-        Nothing ->
-            Utils.performMsg (App.NavigateTo App.LoginRoute)
-
         Just user2 ->
             Hawk.send (page ++ route) request user2
                 |> Cmd.map App.HawkMsg
+
+        Nothing ->
+            Cmd.none
 
 
 viewRoute : App.Model -> Html App.Msg

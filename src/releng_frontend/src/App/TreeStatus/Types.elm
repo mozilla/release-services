@@ -62,6 +62,7 @@ type alias Model addForm =
     { baseUrl : String
     , alerts : List Alert
     , trees : RemoteData.WebData Trees
+    , treesSelected : List String
     , tree : RemoteData.WebData Tree
     , treeLogs : RemoteData.WebData TreeLogs
     , treeLogsAll : RemoteData.WebData TreeLogs
@@ -79,3 +80,5 @@ type Msg
     | GetTreeLogsAllResult (RemoteData.WebData TreeLogs)
     | FormAddTreeMsg Form.Msg
     | FormAddTreeResult (RemoteData.RemoteData Http.RawError Http.Response)
+    | SelectTree String
+    | UnselectTree String

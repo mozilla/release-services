@@ -273,3 +273,18 @@ footer {
 #treestatus-forms {
     margin-bottom: 1em;
 }
+
+#treestatus-trees .list-group-item {
+    position: relative;
+}
+
+#treestatus-trees .list-group-item-with-checkbox {
+    padding-left: 3em;
+}
+
+#treestatus-trees input {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 1em;
+}
