@@ -7,7 +7,6 @@ from __future__ import absolute_import
 import os
 
 from releng_common import auth, db, create_app
-from shipit_dashboard.workflow import run_workflow, run_workflow_local
 
 
 DEBUG = os.environ.get('DEBUG') == 'true' or __name__ == '__main__'
@@ -30,10 +29,6 @@ SCOPES_BOT = [
 
 
 def init_app(app):
-
-    # Register extra commands
-    app.cli.add_command(run_workflow)
-    app.cli.add_command(run_workflow_local)
 
     # Register swagger api
     return app.api.register(
