@@ -112,25 +112,27 @@ viewAddTree form =
                     ( "input-group", text "" )
 
     in
-        div [ class "list-group-item" ]
-            [ h3 [] [ text "Add new tree" ]
-            , Html.form
-                []
-                [ div [ class nameClass ]
-                    [ Form.Input.textInput name
-                        [ class "form-control"
-                        , placeholder "Tree name ..."
-                        , value (Maybe.withDefault "" name.value)
-                        ]
-                    , span [ class "input-group-btn" ]
-                        [ button
-                            [ type' "submit"
-                            , class "btn btn-primary"
-                            , Utils.onClick Form.Submit
+        div [ class "list-group" ]
+            [ div [ class "list-group-item" ]
+                [ h3 [] [ text "Add new tree" ]
+                , Html.form
+                    []
+                    [ div [ class nameClass ]
+                        [ Form.Input.textInput name
+                            [ class "form-control"
+                            , placeholder "Tree name ..."
+                            , value (Maybe.withDefault "" name.value)
                             ]
-                            [ text "Add" ]
+                        , span [ class "input-group-btn" ]
+                            [ button
+                                [ type' "submit"
+                                , class "btn btn-primary"
+                                , Utils.onClick Form.Submit
+                                ]
+                                [ text "Add" ]
+                            ]
                         ]
+                    , nameError
                     ]
-                , nameError
                 ]
             ]
