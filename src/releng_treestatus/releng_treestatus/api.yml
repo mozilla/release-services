@@ -20,6 +20,23 @@ paths:
             type: array
             additionalProperties:
               $ref: '#/definitions/Tree'
+    delete:
+      operationId: "releng_treestatus.api.kill_trees"
+      description: Delete trees.
+      parameters:
+        - name: trees
+          in: body
+          description: Trees to delete
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        200:
+          description: None
+          schema:
+            type: string
 
   /trees:
     get:

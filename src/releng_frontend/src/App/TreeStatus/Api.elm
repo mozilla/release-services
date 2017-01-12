@@ -16,6 +16,10 @@ encoderTree tree =
         , ( "message_of_the_day", JsonEncode.string tree.message_of_the_day )
         ]
 
+encoderTreeNames : App.TreeStatus.Types.Trees -> JsonEncode.Value
+encoderTreeNames trees =
+    JsonEncode.list (List.map  (\x -> JsonEncode.string x.name) trees)
+
 
 decoderTrees : JsonDecode.Decoder App.TreeStatus.Types.Trees
 decoderTrees =
@@ -103,6 +107,9 @@ hawkResponse response route =
     case route of
         "AddTree" ->
             Cmd.map App.TreeStatus.Types.FormAddTreeResult response
+
+        "DeleteTrees" ->
+            Cmd.map App.TreeStatus.Types.DeleteTreesResult response
 
         _ ->
             Cmd.none

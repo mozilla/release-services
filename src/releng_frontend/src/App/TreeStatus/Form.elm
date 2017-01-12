@@ -114,7 +114,7 @@ viewAddTree form =
     in
         div [ class "list-group" ]
             [ div [ class "list-group-item" ]
-                [ h3 [] [ text "Add new tree" ]
+                [ h3 [] [ text "Would you like to create new tree?" ]
                 , Html.form
                     []
                     [ div [ class nameClass ]
@@ -126,7 +126,7 @@ viewAddTree form =
                         , span [ class "input-group-btn" ]
                             [ button
                                 [ type' "submit"
-                                , class "btn btn-primary"
+                                , class "btn btn-outline-primary"
                                 , Utils.onClick Form.Submit
                                 ]
                                 [ text "Add" ]
