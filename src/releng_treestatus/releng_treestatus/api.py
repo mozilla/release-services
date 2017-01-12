@@ -146,8 +146,7 @@ def make_tree(tree, body):
     return None, 204
 
 
-@auth.require_scopes(['project:releng:treestatus/kill_tree'])
-def kill_tree(tree):
+def _kill_tree(tree):
     session = current_app.db.session
     t = session.query(Tree).get(tree)
     if not t:
@@ -158,6 +157,18 @@ def kill_tree(tree):
     StatusChangeTree.query.filter_by(tree=tree).delete()
     session.commit()
     cache.delete_memoized(get_tree, tree)
+
+
+@auth.require_scopes(['project:releng:treestatus/kill_tree'])
+def kill_tree(tree):
+    _kill_tree(tree)
+    return None, 204
+
+
+@auth.require_scopes(['project:releng:treestatus/kill_trees'])
+def kill_trees(trees):
+    for tree in trees:
+        _kill_tree(tree)
     return None, 204
 
 

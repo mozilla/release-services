@@ -25,16 +25,11 @@ import Utils
 
 
 -- TODO:
---  * first fetch scopes of the user when making requests, expire them in 15 minutes
 --  * mark optimistic updates with different color
 --  * don do optimistinc update if we already have a duplicate
 --  * show spinner over the grayed form when form gets submitted
---
---  * add from should be on the right side if a person is logged in
---  * create update trees form on the right side below add tree form
---  * only show forms if user has enough scopes, scopes should be cached for 5min
---  * create update Tree form
 --  * get rid of performMsg (call update on itself)
+
 
 --
 -- ROUTING
@@ -239,6 +234,96 @@ update msg model =
             in
                 ( { model | treesSelected = treesSelected }
                 , Cmd.none
+                , Nothing
+                )
+
+        App.TreeStatus.Types.DeleteTrees ->
+            let
+                filterOutTrees =
+                    List.filter
+                        (\x -> Basics.not (List.member x.name model.treesSelected))
+                filterTrees =
+                    List.filter
+                        (\x -> List.member x.name model.treesSelected)
+                treesToDelete =
+                    model.trees
+                        |> RemoteData.map filterTrees
+                        |> RemoteData.withDefault []
+                request =
+                    Http.Request
+                        "DELETE"
+                        [ ( "Accept", "application/json" )
+                        , ( "Content-Type", "application/json" )
+                        ]
+                        (model.baseUrl ++ "/trees2")
+                        (treesToDelete
+                            |> App.TreeStatus.Api.encoderTreeNames
+                            |> JsonEncode.encode 0
+                            |> Http.string
+                        )
+            in
+                ( { model | treesSelected = []
+                          , trees = RemoteData.map filterOutTrees model.trees
+                  }
+                , Cmd.none
+                , Just { route = "DeleteTrees", request = request }
+                )
+
+
+        App.TreeStatus.Types.DeleteTreesResult result ->
+            let
+                handleResponse response =
+                    let
+                        decoderError =
+                            JsonDecode.object4 App.TreeStatus.Types.Error
+                                ("type" := JsonDecode.string)
+                                ("detail" := JsonDecode.string)
+                                ("status" := JsonDecode.int)
+                                ("title" := JsonDecode.string)
+
+                        alerts =
+                            if 200 <= response.status && response.status < 300 then
+                                case response.value of
+                                    Http.Text text ->
+                                        []
+
+                                    _ ->
+                                        [ App.TreeStatus.Types.Alert
+                                            App.TreeStatus.Types.AlertDanger
+                                            "Error!"
+                                            "Response body is a blob, expecting a string."
+                                        ]
+                            else
+                                [ App.TreeStatus.Types.Alert
+                                    App.TreeStatus.Types.AlertDanger
+                                    "Error!"
+                                    ( case response.value of
+                                        Http.Text text ->
+                                            case JsonDecode.decodeString decoderError text of
+                                                Ok obj ->
+                                                    obj.detail
+
+                                                Err error ->
+                                                    text
+
+                                        r ->
+                                            response.statusText
+                                    )
+                                ]
+                    in
+                        ( { model | alerts = alerts }
+                        , Cmd.batch
+                            [ App.TreeStatus.Api.fetchTrees model.baseUrl
+                            ]
+                        )
+
+                ( newModel, newCmd ) =
+                    result
+                        |> RemoteData.map handleResponse
+                        |> RemoteData.withDefault ( model, Cmd.none )
+            in
+                ( newModel
+                , newCmd
                 , Nothing
                 )
 
@@ -523,10 +608,39 @@ view route scopes model =
             App.TreeStatus.Form.viewAddTree model.formAddTree
                 |> Html.App.map App.TreeStatus.Types.FormAddTreeMsg
 
+        selectedItems =
+            model.treesSelected
+                |> List.length
+                |> toString
+
+        deleteForm =
+            div [ class "list-group" ]
+                [ div [ class "list-group-item" ]
+                      [ h3 [] [ text ("Would you like to delete (" ++ selectedItems ++ ") selected items?") ]
+                      , button [ class "btn btn-outline-danger"
+                               , Utils.onClick App.TreeStatus.Types.DeleteTrees
+                               ]
+                               [ text "Yes, please delete them." ]
+                      ]
+                ]
+
+        updateForm =
+            div [ class "list-group" ]
+                [ div [ class "list-group-item" ]
+                      [ h3 [] [ text ("Would you like to update (" ++ selectedItems ++ ") selected items?") ]
+                      ]
+                ]
+
         appendForm scope form nodes =
-            if App.UserScopes.hasScope scopes scope
+            if App.UserScopes.hasScope scopes ("project:releng:treestatus/" ++ scope)
                then List.append nodes [ form ]
                else nodes
+
+        ifNotEmpty appendForm2 nodes =
+            if List.isEmpty model.treesSelected
+               then nodes
+               else appendForm2 nodes
+
 
     in
         case route of
@@ -538,7 +652,10 @@ view route scopes model =
                     , viewAlerts model.alerts
                     , div
                         [ id "treestatus-forms" ]
-                        ([] |> appendForm "project:releng:treestatus/make_tree" addForm
+                        ([]
+                            |> appendForm "make_tree" addForm
+                            |> ifNotEmpty (appendForm "kill_tree" deleteForm)
+                            |> ifNotEmpty (appendForm "update_trees" updateForm)
                         )
                     , div [ id "treestatus-trees"
                           , class "list-group"

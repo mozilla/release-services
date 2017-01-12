@@ -82,3 +82,5 @@ type Msg
     | FormAddTreeResult (RemoteData.RemoteData Http.RawError Http.Response)
     | SelectTree String
     | UnselectTree String
+    | DeleteTrees
+    | DeleteTreesResult (RemoteData.RemoteData Http.RawError Http.Response)
