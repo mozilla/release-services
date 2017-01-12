@@ -33,4 +33,9 @@ setup(
     include_package_data=True,
     zip_safe=False,
     license='MPL2',
+    entry_points={
+        'console_scripts': [
+            'shipit-bot= shipit_bot.cli:main',
+        ]
+    },
 )
