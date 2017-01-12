@@ -5,8 +5,6 @@
 import hashlib
 
 
-
-
 def gravatar(email):
     """
     Build a gravatar url from an email address

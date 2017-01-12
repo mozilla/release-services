@@ -144,6 +144,7 @@ in rec {
       , taskCommand
       , taskArtifacts ? {}
       , taskEnv ? {}
+      , scopes ? []
       }:
       { inherit schedule expires deadline;
         metadata = { inherit name description owner emailOnError; };
@@ -155,6 +156,7 @@ in rec {
             artifacts = taskArtifacts;
             env = taskEnv;
           };
+          scopes = scopes;
         });
       };
 

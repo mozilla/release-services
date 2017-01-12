@@ -9,7 +9,7 @@ import requests
 import taskcluster
 import json
 
-from shipit_bot.helpers  import compute_dict_hash, ShipitJSONEncoder
+from shipit_bot.helpers import compute_dict_hash, ShipitJSONEncoder
 from libmozdata import bugzilla
 from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
 
@@ -46,7 +46,7 @@ class BugSync(object):
         try:
             analysis = bug_analysis(self.bugzilla_id)
         except Exception as e:
-            logger.error('Patch analysis failed on {} : {}'.format(self.bugzilla_id, e))
+            logger.error('Patch analysis failed on {} : {}'.format(self.bugzilla_id, e))  # noqa
             return False
 
         # Build html version of uplift comment
@@ -207,21 +207,21 @@ class BotRemote(Bot):
                     'accessToken': access_token,
                 }
             })
-            secrets = tc.get(secrets_path)
 
         else:
             # Load secrets from TC task context
-            resp = requests.get('taskcluster/secrets/v1/secret/{}'.format(secrets_path))
-            if not resp.ok:
-                raise Exception('Failed to fetch TC secrets without credentials')
-            secrets = resp.json()
+            # with taskclusterProxy
+            tc = taskcluster.Secrets({
+                'baseUrl': 'http://taskcluster/secrets/v1'
+            })
 
         # Check mandatory keys in secrets
+        secrets = tc.get(secrets_path)
         secrets = secrets['secret']
         required = ('bugzilla_url', 'bugzilla_token', 'api_url')
         for req in required:
             if req not in secrets:
-                raise Exception('Missing value {} in Taskcluster secret value {}'.format(req, secrets_path))
+                raise Exception('Missing value {} in Taskcluster secret value {}'.format(req, secrets_path))  # noqa
 
         return secrets
 

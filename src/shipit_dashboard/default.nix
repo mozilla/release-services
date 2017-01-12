@@ -14,6 +14,21 @@ let
     extras = ["api" "auth" "cors" "log" "db" ];
   };
 
+  bot = mkTaskclusterHook {
+    name = "Shipit bot updating bug analysis";
+    owner = "babadie@mozilla.com";
+    schedule = [ "0 */30 * * * *" ];  # every 30 min
+    taskImage = self.docker;
+    scopes = ["secrets:get:project/shipit/bot/staging"]; # used by taskclusterProxy
+    taskCommand = [
+      "/bin/sh"
+      "-c"
+      "/bin/shipit-bot"
+      "--secrets"
+      "project/shipit/bot/staging"
+    ];
+  };
+
   self = mkBackend rec {
     inherit python releng_common;
     production = true;
@@ -32,12 +47,12 @@ let
       ];
     passthru = {
       taskclusterHooks = {
-        taskcluster_analysis = mkTaskclusterHook {
-          name = "update bugzilla analysis";
-          owner = "bastien@nextcairn.com";
-          schedule = [ "0 */2 * * * *" ];
-          taskImage = self.docker;
-          taskCommand = [ "flask" "run_workflow_local" ];
+        master = {
+        };
+        staging = {
+          inherit bot;
+        };
+        production = {
         };
       };
       update = writeScript "update-${name}" ''
@@ -55,12 +70,3 @@ let
   };
 
 in self
-
-# Update the database with bugs analysis
-# CACHE_TYPE=filesystem \
-# CACHE_DIR=$PWD/src/shipit_dashboard/cache \
-# DATABASE_URL=engine://XXXXX \
-# FLASK_APP=shipit_dashboard \
-# APP_SETTINGS=$PWD/src/shipit_dashboard/settings.py \
-#   nix-shell nix/default.nix -A shipit_dashboard \
-#    --run "flask run_workflow_local"
