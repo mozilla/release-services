@@ -1,9 +1,11 @@
 module App.Utils exposing (..)
 
+import App.Types
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events as Events
-import Json.Decode as JsonDecode
+import Http
+import Json.Decode as JsonDecode exposing ((:=))
 import Utils
 import VirtualDom
 
@@ -74,3 +76,72 @@ error event message =
             ]
             [ text " Click to retry." ]
         ]
+
+
+handleResponse response =
+    let
+        decoderError =
+            JsonDecode.object4 App.Types.ResponseError
+                ("type" := JsonDecode.string)
+                ("detail" := JsonDecode.string)
+                ("status" := JsonDecode.int)
+                ("title" := JsonDecode.string)
+    in
+        if 200 <= response.status && response.status < 300 then
+            case response.value of
+                Http.Text text ->
+                    []
+
+                _ ->
+                    [ App.Types.Alert
+                        App.Types.AlertDanger
+                        "Error!"
+                        "Response body is a blob, expecting a string."
+                    ]
+        else
+            [ App.Types.Alert
+                App.Types.AlertDanger
+                "Error!"
+                ( case response.value of
+                    Http.Text text ->
+                        case JsonDecode.decodeString decoderError text of
+                            Ok obj ->
+                                obj.detail
+
+                            Err error ->
+                                text
+
+                    r ->
+                        response.statusText
+                )
+            ]
+
+
+viewAlerts :
+    List App.Types.Alert
+    -> Html a
+viewAlerts alerts =
+    let
+        getAlertTypeAsString alert =
+            case alert.type_ of
+                App.Types.AlertSuccess ->
+                    "success"
+
+                App.Types.AlertInfo ->
+                    "info"
+
+                App.Types.AlertWarning ->
+                    "warning"
+
+                App.Types.AlertDanger ->
+                    "danger"
+
+        createAlert alert =
+            div [ class ("alert alert-" ++ (getAlertTypeAsString alert)) ]
+                [ strong [] [ text alert.title ]
+                , text alert.text
+                ]
+    in
+        alerts
+            |> List.map createAlert
+            |> div []
