@@ -3,6 +3,7 @@ module App.TreeStatus.Form exposing (..)
 import App.TreeStatus.Api
 import App.TreeStatus.Types
 import Form
+import Form.Error
 import Form.Field
 import Form.Input
 import Form.Validate
@@ -18,10 +19,35 @@ type alias AddTree =
     { name : String }
 
 
+type alias UpdateTree =
+    { name : String
+    , status : String
+    , reason : String
+    , message_of_the_day : String
+    }
+
+
 validateAddTree : Form.Validate.Validation () AddTree
 validateAddTree =
     Form.Validate.form1 AddTree
         (Form.Validate.get "name" Form.Validate.string)
+
+validateTreeStatus : Form.Field.Field -> Result (Form.Error.Error a) String
+validateTreeStatus =
+    Form.Validate.string
+        `Form.Validate.andThen` Form.Validate.includedIn [ "open"
+                                                          , "approval required"
+                                                          , "closed"
+                                                          ]
+
+
+validateUpdateTree : Form.Validate.Validation () UpdateTree
+validateUpdateTree =
+    Form.Validate.form4 UpdateTree
+        (Form.Validate.get "name" Form.Validate.string)
+        (Form.Validate.get "status" Form.Validate.string)
+        (Form.Validate.get "reason" Form.Validate.string)
+        (Form.Validate.get "message_of_the_day" Form.Validate.string)
 
 
 initAddTreeFields : List ( String, Form.Field.Field )
@@ -29,9 +55,23 @@ initAddTreeFields =
     [ ( "name", Form.Field.Text "" ) ]
 
 
+initUpdateTreeFields : List ( String, Form.Field.Field )
+initUpdateTreeFields =
+    [ ( "name", Form.Field.Text "" )
+    , ( "status", Form.Field.Text "" )
+    , ( "reason", Form.Field.Text "" )
+    , ( "message_of_the_day", Form.Field.Text "" )
+    ]
+
+
 initAddTree : Form.Form () AddTree
 initAddTree =
     Form.initial initAddTreeFields validateAddTree
+
+
+initUpdateTree : Form.Form () UpdateTree
+initUpdateTree =
+    Form.initial initUpdateTreeFields validateUpdateTree
 
 
 resetAddTree : Form.Msg
@@ -39,10 +79,15 @@ resetAddTree =
     Form.Reset initAddTreeFields
 
 
+resetUpdateTree : Form.Msg
+resetUpdateTree =
+    Form.Reset initUpdateTreeFields
+
+
 updateAddTree :
-    App.TreeStatus.Types.Model AddTree
+    App.TreeStatus.Types.Model AddTree UpdateTree
     -> Form.Msg
-    -> ( App.TreeStatus.Types.Model AddTree, Maybe { request : Http.Request, route : String } )
+    -> ( App.TreeStatus.Types.Model AddTree UpdateTree, Maybe { request : Http.Request, route : String } )
 updateAddTree model formMsg =
     let
         form =
@@ -92,6 +137,16 @@ updateAddTree model formMsg =
         )
 
 
+updateUpdateTree :
+    App.TreeStatus.Types.Model AddTree UpdateTree
+    -> Form.Msg
+    -> ( App.TreeStatus.Types.Model AddTree UpdateTree, Maybe { request : Http.Request, route : String } )
+updateUpdateTree model formMsg =
+    ( model
+    , Nothing
+    )
+
+
 viewAddTree : Form.Form () AddTree -> Html Form.Msg
 viewAddTree form =
     let
@@ -136,3 +191,12 @@ viewAddTree form =
                     ]
                 ]
             ]
+
+
+viewUpdateTree : Form.Form () UpdateTree -> Html Form.Msg
+viewUpdateTree form =
+    div [ class "list-group" ]
+        [ div [ class "list-group-item" ]
+              [ h3 [] [ text ("Would you like to update (???) selected trees?") ]
+              ]
+        ]

@@ -97,7 +97,7 @@ type alias Model =
     , user : TaskclusterLogin.Model
     , userScopes : App.UserScopes.Model
     , trychooser : App.TryChooser.Model
-    , treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
+    , treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
     , docsUrl : String
     , version : String
     }

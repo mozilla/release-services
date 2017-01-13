@@ -1,21 +1,14 @@
 module App.TreeStatus.Types exposing (..)
 
+import App.Types
 import Form
-import RemoteData
 import Http
+import RemoteData
 
 
 type Route
     = TreesRoute
     | TreeRoute String
-
-
-type alias Error =
-    { type_ : String
-    , detail : String
-    , status : Int
-    , title : String
-    }
 
 
 type alias Tree =
@@ -44,23 +37,9 @@ type alias TreeLogs =
     List TreeLog
 
 
-type AlertType
-    = AlertSuccess
-    | AlertInfo
-    | AlertWarning
-    | AlertDanger
-
-
-type alias Alert =
-    { type_ : AlertType
-    , title : String
-    , text : String
-    }
-
-
-type alias Model addForm =
+type alias Model addForm updateForm =
     { baseUrl : String
-    , alerts : List Alert
+    , alerts : List App.Types.Alert
     , trees : RemoteData.WebData Trees
     , treesSelected : List String
     , tree : RemoteData.WebData Tree
@@ -68,6 +47,7 @@ type alias Model addForm =
     , treeLogsAll : RemoteData.WebData TreeLogs
     , showMoreTreeLogs : Bool
     , formAddTree : Form.Form () addForm
+    , formUpdateTree : Form.Form () updateForm
     }
 
 
@@ -80,6 +60,8 @@ type Msg
     | GetTreeLogsAllResult (RemoteData.WebData TreeLogs)
     | FormAddTreeMsg Form.Msg
     | FormAddTreeResult (RemoteData.RemoteData Http.RawError Http.Response)
+    | FormUpdateTreeMsg Form.Msg
+    | FormUpdateTreeResult (RemoteData.RemoteData Http.RawError Http.Response)
     | SelectTree String
     | UnselectTree String
     | DeleteTrees

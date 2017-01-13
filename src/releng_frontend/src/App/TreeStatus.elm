@@ -15,7 +15,6 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
 import Json.Encode as JsonEncode
-import Json.Decode as JsonDecode exposing ((:=))
 import Navigation
 import RemoteData
 import String
@@ -25,11 +24,7 @@ import Utils
 
 
 -- TODO:
---  * mark optimistic updates with different color
---  * don do optimistinc update if we already have a duplicate
---  * show spinner over the grayed form when form gets submitted
 --  * get rid of performMsg (call update on itself)
-
 
 --
 -- ROUTING
@@ -68,7 +63,7 @@ page outRoute =
 --
 
 
-init : String -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
+init : String -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
 init url =
     { baseUrl = url
     , alerts = []
@@ -79,13 +74,14 @@ init url =
     , treeLogsAll = RemoteData.NotAsked
     , showMoreTreeLogs = False
     , formAddTree = App.TreeStatus.Form.initAddTree
+    , formUpdateTree = App.TreeStatus.Form.initUpdateTree
     }
 
 
 update :
     App.TreeStatus.Types.Msg
-    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
-    -> ( App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
+    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
+    -> ( App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
        , Cmd App.TreeStatus.Types.Msg
        , Maybe
             { request : Http.Request
@@ -157,63 +153,44 @@ update msg model =
 
         App.TreeStatus.Types.FormAddTreeResult result ->
             let
-                handleResponse response =
-                    let
-                        decoderError =
-                            JsonDecode.object4 App.TreeStatus.Types.Error
-                                ("type" := JsonDecode.string)
-                                ("detail" := JsonDecode.string)
-                                ("status" := JsonDecode.int)
-                                ("title" := JsonDecode.string)
-
-                        alerts =
-                            if 200 <= response.status && response.status < 300 then
-                                case response.value of
-                                    Http.Text text ->
-                                        []
-
-                                    _ ->
-                                        [ App.TreeStatus.Types.Alert
-                                            App.TreeStatus.Types.AlertDanger
-                                            "Error!"
-                                            "Response body is a blob, expecting a string."
-                                        ]
-                            else
-                                [ App.TreeStatus.Types.Alert
-                                    App.TreeStatus.Types.AlertDanger
-                                    "Error!"
-                                    ( case response.value of
-                                        Http.Text text ->
-                                            case JsonDecode.decodeString decoderError text of
-                                                Ok obj ->
-                                                    obj.detail
-
-                                                Err error ->
-                                                    text
-
-                                        r ->
-                                            response.statusText
-                                    )
-                                ]
-                    in
-                        ( { model | alerts = alerts }
-                        , Cmd.batch
-                            [ App.TreeStatus.Api.fetchTrees model.baseUrl
-                            , Utils.performMsg App.TreeStatus.Form.resetAddTree
-                                |> Cmd.map App.TreeStatus.Types.FormAddTreeMsg
-                            ]
-                        )
-
-                ( newModel, newCmd ) =
+                alerts =
                     result
-                        |> RemoteData.map handleResponse
-                        |> RemoteData.withDefault ( model, Cmd.none )
+                        |> RemoteData.map App.Utils.handleResponse
+                        |> RemoteData.withDefault []
             in
-                ( newModel
-                , newCmd
+                ( { model | alerts = alerts }
+                , Cmd.batch
+                    [ App.TreeStatus.Api.fetchTrees model.baseUrl
+                    , Utils.performMsg App.TreeStatus.Form.resetAddTree
+                        |> Cmd.map App.TreeStatus.Types.FormAddTreeMsg
+                    ]
                 , Nothing
                 )
 
+        App.TreeStatus.Types.FormUpdateTreeMsg formMsg ->
+            let
+                ( newModel, hawkRequest ) =
+                    App.TreeStatus.Form.updateUpdateTree model formMsg
+            in
+                ( newModel
+                , Cmd.none
+                , hawkRequest
+                )
+
+        App.TreeStatus.Types.FormUpdateTreeResult result ->
+            let
+                alerts =
+                    result
+                        |> RemoteData.map App.Utils.handleResponse
+                        |> RemoteData.withDefault []
+            in
+                ( { model | alerts = alerts }
+                , Cmd.batch
+                    [ Utils.performMsg App.TreeStatus.Form.resetUpdateTree
+                        |> Cmd.map App.TreeStatus.Types.FormUpdateTreeMsg
+                    ]
+                , Nothing
+                )
 
         App.TreeStatus.Types.SelectTree name ->
             let
@@ -272,64 +249,19 @@ update msg model =
 
         App.TreeStatus.Types.DeleteTreesResult result ->
             let
-                handleResponse response =
-                    let
-                        decoderError =
-                            JsonDecode.object4 App.TreeStatus.Types.Error
-                                ("type" := JsonDecode.string)
-                                ("detail" := JsonDecode.string)
-                                ("status" := JsonDecode.int)
-                                ("title" := JsonDecode.string)
-
-                        alerts =
-                            if 200 <= response.status && response.status < 300 then
-                                case response.value of
-                                    Http.Text text ->
-                                        []
-
-                                    _ ->
-                                        [ App.TreeStatus.Types.Alert
-                                            App.TreeStatus.Types.AlertDanger
-                                            "Error!"
-                                            "Response body is a blob, expecting a string."
-                                        ]
-                            else
-                                [ App.TreeStatus.Types.Alert
-                                    App.TreeStatus.Types.AlertDanger
-                                    "Error!"
-                                    ( case response.value of
-                                        Http.Text text ->
-                                            case JsonDecode.decodeString decoderError text of
-                                                Ok obj ->
-                                                    obj.detail
-
-                                                Err error ->
-                                                    text
-
-                                        r ->
-                                            response.statusText
-                                    )
-                                ]
-                    in
-                        ( { model | alerts = alerts }
-                        , Cmd.batch
-                            [ App.TreeStatus.Api.fetchTrees model.baseUrl
-                            ]
-                        )
-
-                ( newModel, newCmd ) =
+                alerts =
                     result
-                        |> RemoteData.map handleResponse
-                        |> RemoteData.withDefault ( model, Cmd.none )
+                        |> RemoteData.map App.Utils.handleResponse
+                        |> RemoteData.withDefault []
             in
-                ( newModel
-                , newCmd
+                ( { model | alerts = alerts }
+                , App.TreeStatus.Api.fetchTrees model.baseUrl
                 , Nothing
                 )
 
 
 viewTrees :
-    App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
+    App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
     -> List String
     -> List (Html App.TreeStatus.Types.Msg)
 viewTrees model scopes =
@@ -337,7 +269,7 @@ viewTrees model scopes =
         RemoteData.Success trees ->
             trees
                 |> List.sortBy .name
-                |> List.map 
+                |> List.map
                     (\tree ->
                         let
                             isChecked =
@@ -354,7 +286,7 @@ viewTrees model scopes =
                                 App.TreeStatus.Types.TreeRoute tree.name
                                   |> App.TreeStatus.Types.NavigateTo
 
-                            treeTagClass = 
+                            treeTagClass =
                                 "float-xs-right tag tag-" ++ (treeStatus tree.status)
 
                             hasScope =
@@ -374,7 +306,7 @@ viewTrees model scopes =
                                         ]
                                    else  []
 
-                            itemClass = 
+                            itemClass =
                                 if hasScopes
                                    then "list-group-item list-group-item-with-checkbox"
                                    else "list-group-item"
@@ -563,47 +495,13 @@ viewTreeLogs name treeLogs_ treeLogsAll_ =
                 []
 
 
-viewAlerts :
-    List App.TreeStatus.Types.Alert
-    -> Html App.TreeStatus.Types.Msg
-viewAlerts alerts =
-    let
-        getAlertTypeAsString alert =
-            case alert.type_ of
-                App.TreeStatus.Types.AlertSuccess ->
-                    "success"
-
-                App.TreeStatus.Types.AlertInfo ->
-                    "info"
-
-                App.TreeStatus.Types.AlertWarning ->
-                    "warning"
-
-                App.TreeStatus.Types.AlertDanger ->
-                    "danger"
-
-        createAlert alert =
-            div [ class ("alert alert-" ++ (getAlertTypeAsString alert)) ]
-                [ strong [] [ text alert.title ]
-                , text alert.text
-                ]
-    in
-        alerts
-            |> List.map createAlert
-            |> div []
-
-
 view :
     App.TreeStatus.Types.Route
     -> List String
-    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree
+    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
     -> Html App.TreeStatus.Types.Msg
 view route scopes model =
     let
-        treeStatus name =
-            viewTreeLogs name model.treeLogs model.treeLogsAll
-                |> List.append (viewTree name model.tree)
-
         addForm =
             App.TreeStatus.Form.viewAddTree model.formAddTree
                 |> Html.App.map App.TreeStatus.Types.FormAddTreeMsg
@@ -616,7 +514,7 @@ view route scopes model =
         deleteForm =
             div [ class "list-group" ]
                 [ div [ class "list-group-item" ]
-                      [ h3 [] [ text ("Would you like to delete (" ++ selectedItems ++ ") selected items?") ]
+                      [ h3 [] [ text ("Would you like to delete (" ++ selectedItems ++ ") selected trees?") ]
                       , button [ class "btn btn-outline-danger"
                                , Utils.onClick App.TreeStatus.Types.DeleteTrees
                                ]
@@ -625,11 +523,8 @@ view route scopes model =
                 ]
 
         updateForm =
-            div [ class "list-group" ]
-                [ div [ class "list-group-item" ]
-                      [ h3 [] [ text ("Would you like to update (" ++ selectedItems ++ ") selected items?") ]
-                      ]
-                ]
+            App.TreeStatus.Form.viewUpdateTree model.formUpdateTree
+                |> Html.App.map App.TreeStatus.Types.FormUpdateTreeMsg
 
         appendForm scope form nodes =
             if App.UserScopes.hasScope scopes ("project:releng:treestatus/" ++ scope)
@@ -641,7 +536,6 @@ view route scopes model =
                then nodes
                else appendForm2 nodes
 
-
     in
         case route of
             App.TreeStatus.Types.TreesRoute ->
@@ -649,7 +543,7 @@ view route scopes model =
                     [ h1 [] [ text "TreeStatus" ]
                     , p [ class "lead" ]
                         [ text "Current status of Mozilla's version-control repositories." ]
-                    , viewAlerts model.alerts
+                    , App.Utils.viewAlerts model.alerts
                     , div
                         [ id "treestatus-forms" ]
                         ([]
@@ -664,7 +558,13 @@ view route scopes model =
                     ]
 
             App.TreeStatus.Types.TreeRoute name ->
-                div [] []
+                div [ class "container" ]
+                    (List.append
+                        (viewTree name model.tree)
+                        (viewTreeLogs name model.treeLogs model.treeLogsAll)
+                    )
+
+
 
 
 treeStatus : String -> String
