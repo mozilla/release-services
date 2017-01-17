@@ -168,8 +168,14 @@ update msg model =
 
         App.TreeStatusMsg msg2 ->
             let
+                route =
+                    case model.route of
+                        App.TreeStatusRoute x ->
+                            x
+                        _ ->
+                            App.TreeStatus.Types.TreesRoute
                 ( newModel, newCmd, hawkCmd ) =
-                    App.TreeStatus.update msg2 model.treestatus
+                    App.TreeStatus.update route msg2 model.treestatus
             in
                 ( { model | treestatus = newModel }
                 , hawkCmd

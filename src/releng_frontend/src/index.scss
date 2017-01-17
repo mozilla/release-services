@@ -270,8 +270,25 @@ footer {
     margin-bottom: -1em;
 }
 
-#treestatus-forms .list-group {
+#treestatus-forms {
     margin-bottom: 1em;
+}
+#treestatus-forms .tab-pane {
+    padding: 2em 1em 1em 1em;
+    border: 1px solid #ddd;
+    border-top: 0;
+    border-bottom-right-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
+}
+
+#treestatus-forms .form-group .custom-control-description {
+    font-size: 0.9em;
+}
+
+#treestatus-forms .form-group .custom-control,
+#treestatus-forms .form-group .custom-control + .custom-control {
+    margin-left: 0;
+    margin-right: 1em;
 }
 
 #treestatus-trees .list-group-item {
@@ -282,9 +299,11 @@ footer {
     padding-left: 3em;
 }
 
-#treestatus-trees input {
+#treestatus-trees .custom-checkbox {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     left: 1em;
+    height: 1em;
 }
+
