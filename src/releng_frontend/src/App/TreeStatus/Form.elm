@@ -35,7 +35,7 @@ type alias UpdateTree =
     { status : String
     , reason : String
     , message_of_the_day : String
-    , tags: UpadateTreeTags
+    , tags : UpadateTreeTags
     , remember : Bool
     }
 
@@ -47,7 +47,6 @@ validateAddTree =
 
 
 validateUpdateTreeTags : Form.Field.Field -> Result (Form.Error.Error a) UpadateTreeTags
-
 validateUpdateTreeTags =
     Form.Validate.form6 UpadateTreeTags
         (Form.Validate.get "checkin_compilation" Form.Validate.bool)
@@ -84,8 +83,8 @@ initUpdateTreeFields =
     , ( "message_of_the_day", Form.Field.Text "" )
     , ( "tags"
       , App.TreeStatus.Types.possibleTreeTags
-          |> List.map (\(_, x, _) -> ( x,  Form.Field.Check False ))
-          |> Form.Field.group
+            |> List.map (\( _, x, _ ) -> ( x, Form.Field.Check False ))
+            |> Form.Field.group
       )
     , ( "remember", Form.Field.Check True )
     ]
@@ -176,13 +175,18 @@ updateUpdateTree route model formMsg =
 
         tagsToList tags =
             List.filterMap
-                (\(x, y) -> if y then Just x else Nothing)
+                (\( x, y ) ->
+                    if y then
+                        Just x
+                    else
+                        Nothing
+                )
                 [ ( "checkin-compilation", tags.checkin_compilation )
-                , ( "checkin-test"       , tags.checkin_test        )
-                , ( "infra"              , tags.infra               )
-                , ( "backlog"            , tags.backlog             )
-                , ( "planned"            , tags.planned             )
-                , ( "other"              , tags.other               )
+                , ( "checkin-test", tags.checkin_test )
+                , ( "infra", tags.infra )
+                , ( "backlog", tags.backlog )
+                , ( "planned", tags.planned )
+                , ( "other", tags.other )
                 ]
 
         createRequest data =
@@ -192,27 +196,29 @@ updateUpdateTree route model formMsg =
                 , ( "Content-Type", "application/json" )
                 ]
                 (model.baseUrl ++ "/trees")
-                ((if List.length model.treesSelected /= 1
-                      then ({ trees = model.treesSelected
-                            , status = data.status
-                            , reason = data.reason
-                            , tags = tagsToList data.tags
-                            , remember = data.remember
-                            } |> App.TreeStatus.Api.encoderUpdateTrees
-                           )
-                      else ({ trees = model.treesSelected
-                            , status = data.status
-                            , reason = data.reason
-                            , tags = tagsToList data.tags
-                            , message_of_the_day = data.message_of_the_day
-                            , remember = data.remember
-                            } |> App.TreeStatus.Api.encoderUpdateTree
-                           )
-                 ) |> JsonEncode.encode 0
-                   |> Http.string
+                ((if List.length model.treesSelected /= 1 then
+                    ({ trees = model.treesSelected
+                     , status = data.status
+                     , reason = data.reason
+                     , tags = tagsToList data.tags
+                     , remember = data.remember
+                     }
+                        |> App.TreeStatus.Api.encoderUpdateTrees
+                    )
+                  else
+                    ({ trees = model.treesSelected
+                     , status = data.status
+                     , reason = data.reason
+                     , tags = tagsToList data.tags
+                     , message_of_the_day = data.message_of_the_day
+                     , remember = data.remember
+                     }
+                        |> App.TreeStatus.Api.encoderUpdateTree
+                    )
+                 )
+                    |> JsonEncode.encode 0
+                    |> Http.string
                 )
-
-
 
         ( alerts, hawkRequest ) =
             case formMsg of
@@ -223,14 +229,16 @@ updateUpdateTree route model formMsg =
                         ( []
                         , Form.getOutput form
                             |> Maybe.map
-                                (\x -> { route =
-                                            case route of
-                                                App.TreeStatus.Types.TreesRoute ->
-                                                     "UpdateTrees"
-                                                App.TreeStatus.Types.TreeRoute _ ->
-                                                     "UpdateTree"
-                                       , request = createRequest x
-                                       }
+                                (\x ->
+                                    { route =
+                                        case route of
+                                            App.TreeStatus.Types.TreesRoute ->
+                                                "UpdateTrees"
+
+                                            App.TreeStatus.Types.TreeRoute _ ->
+                                                "UpdateTree"
+                                    , request = createRequest x
+                                    }
                                 )
                         )
 
@@ -251,19 +259,22 @@ getUpdateTreeErrors form =
             let
                 status =
                     Form.getFieldAsString "status" form
+
                 reason =
                     Form.getFieldAsString "reason" form
-                _ = Debug.log "ERROR - STATUS" (Maybe.withDefault "" status.value)
-                _ = Debug.log "ERROR - REASON" (reason.value)
             in
-                if Maybe.withDefault "" status.value == "closed" &&
-                   Maybe.withDefault "" reason.value == ""
-                    then [ ( "reason", Form.Error.Empty ) ]
-                    else []
+                if
+                    Maybe.withDefault "" status.value
+                        == "closed"
+                        && Maybe.withDefault "" reason.value
+                        == ""
+                then
+                    [ ( "reason", Form.Error.Empty ) ]
+                else
+                    []
     in
         Form.getErrors form
             |> List.append (validateReason form)
-            |> Debug.log "ERROR"
 
 
 fieldClass : { b | liveError : Maybe a } -> String
@@ -271,6 +282,7 @@ fieldClass field =
     case field.liveError of
         Just error ->
             "input-group has-danger"
+
         Nothing ->
             "input-group "
 
@@ -280,9 +292,10 @@ fieldError field =
     case field.liveError of
         Just error ->
             div [ class "has-danger" ]
-              [ span [ class "form-control-feedback" ]
-                  [ text (toString error) ]
-              ]
+                [ span [ class "form-control-feedback" ]
+                    [ text (toString error) ]
+                ]
+
         Nothing ->
             text ""
 
@@ -296,15 +309,15 @@ viewAddTree form =
         Html.form
             []
             [ App.Form.viewField
-                  state.liveError
-                  Nothing
-                  []
-                  (Form.Input.textInput state
-                      [ class "form-control"
-                      , value (Maybe.withDefault "" state.value)
-                      , placeholder "New tree name ..."
-                      ]
-                  )
+                state.liveError
+                Nothing
+                []
+                (Form.Input.textInput state
+                    [ class "form-control"
+                    , value (Maybe.withDefault "" state.value)
+                    , placeholder "New tree name ..."
+                    ]
+                )
             , App.Form.viewButton
                 "Add"
                 [ Utils.onClick Form.Submit
@@ -318,51 +331,55 @@ viewUpdateTree treesSelected form =
     Html.form
         []
         [ App.Form.viewSelectInput
-              (Form.getFieldAsString "status" form)
-              "Status"
-              []
-              (App.TreeStatus.Types.possibleTreeStatuses
-                  |> List.append [("", "")]
-              )
-              []
+            (Form.getFieldAsString "status" form)
+            "Status"
+            []
+            (App.TreeStatus.Types.possibleTreeStatuses
+                |> List.append [ ( "", "" ) ]
+            )
+            []
         , div
             [ class "form-group" ]
             [ label [ class "control-label" ] [ text "Tags" ]
             , div
                 []
                 (List.map
-                    (\(_, x, y) ->
+                    (\( _, x, y ) ->
                         App.Form.viewCheckboxInput
-                            (Form.getFieldAsBool ("tags." ++ x) form) y
+                            (Form.getFieldAsBool ("tags." ++ x) form)
+                            y
                     )
                     App.TreeStatus.Types.possibleTreeTags
                 )
             ]
         , App.Form.viewTextInput
-              (Form.getFieldAsString "reason" form)
-              (if (Form.getFieldAsString "status" form).value == Just "closed"
-                  then
-                      "Reason (required to close)"
-                  else
-                      "Reason"
-              )
-              [ small
-                  [ class "form-text text-muted" ]
-                  [ ul []
-                      [ li [] [ text ("Please indicate the reason for " ++
-                                      "closure, preferably with a bug link."
-                                     )
-                              ]
-                      , li [] [ text ("Please indicate conditions for " ++
-                                      "reopening, especially if you might " ++
-                                      "disappear before reopening the " ++
-                                      "tree yourself."
-                                     )
-                              ]
-                      ]
-                  ]
-              ]
-              [ placeholder "(no reason)" ]
+            (Form.getFieldAsString "reason" form)
+            (if (Form.getFieldAsString "status" form).value == Just "closed" then
+                "Reason (required to close)"
+             else
+                "Reason"
+            )
+            [ small
+                [ class "form-text text-muted" ]
+                [ ul []
+                    [ li []
+                        [ text
+                            ("Please indicate the reason for "
+                                ++ "closure, preferably with a bug link."
+                            )
+                        ]
+                    , li []
+                        [ text
+                            ("Please indicate conditions for "
+                                ++ "reopening, especially if you might "
+                                ++ "disappear before reopening the "
+                                ++ "tree yourself."
+                            )
+                        ]
+                    ]
+                ]
+            ]
+            [ placeholder "(no reason)" ]
         , div
             [ class "form-group" ]
             [ label [ class "control-label" ] [ text "Remember change" ]
@@ -373,17 +390,19 @@ viewUpdateTree treesSelected form =
                     "Remember this change to undo later"
                 ]
             ]
-        , (if List.length treesSelected /= 1
-               then text ""
-               else hr [] []
+        , (if List.length treesSelected /= 1 then
+            text ""
+           else
+            hr [] []
           )
-        , (if List.length treesSelected /= 1
-               then text ""
-               else App.Form.viewTextInput
-                        (Form.getFieldAsString "message_of_the_day" form)
-                        "Message of the day"
-                        []
-                        [ placeholder "(no change)" ]
+        , (if List.length treesSelected /= 1 then
+            text ""
+           else
+            App.Form.viewTextInput
+                (Form.getFieldAsString "message_of_the_day" form)
+                "Message of the day"
+                []
+                [ placeholder "(no change)" ]
           )
         , App.Form.viewButton
             "Update"

@@ -1,6 +1,5 @@
 module App.Form exposing (..)
 
-
 import Form
 import Form.Error
 import Form.Input
@@ -10,32 +9,38 @@ import VirtualDom
 
 
 maybeAppend : Maybe a -> (a -> b) -> List b -> List b
-maybeAppend maybeValue f = 
+maybeAppend maybeValue f =
     maybeValue
-        |> Maybe.map (\x -> [f x])
+        |> Maybe.map (\x -> [ f x ])
         |> Maybe.withDefault []
         |> List.append
 
 
 maybeAppendError : Maybe a -> List (Html b) -> List (Html b)
 maybeAppendError maybeError =
-    maybeAppend maybeError (\x -> div [ class "form-control-feedback" ]
-                                      [ text (toString x) ]
-                           )
+    maybeAppend maybeError
+        (\x ->
+            div [ class "form-control-feedback" ]
+                [ text (toString x) ]
+        )
 
 
 maybeAppendHelp : Maybe String -> List (Html a) -> List (Html a)
 maybeAppendHelp maybeHelp =
-    maybeAppend maybeHelp (\x -> small [ class "form-text text-muted" ]
-                                       [ text x ]
-                          )
+    maybeAppend maybeHelp
+        (\x ->
+            small [ class "form-text text-muted" ]
+                [ text x ]
+        )
 
 
 maybeAppendLabel : Maybe String -> List (Html a) -> List (Html a)
 maybeAppendLabel maybeLabel =
-    maybeAppend maybeLabel (\x -> label [ class "control-label" ]
-                                        [ text x ]
-                           )
+    maybeAppend maybeLabel
+        (\x ->
+            label [ class "control-label" ]
+                [ text x ]
+        )
 
 
 errorClass : Maybe error -> String
@@ -55,7 +60,7 @@ viewField maybeError maybeLabel helpNodes inputNode =
     div
         [ class ("form-group " ++ (errorClass maybeError)) ]
         ([]
-            |> maybeAppendError maybeError 
+            |> maybeAppendError maybeError
             |> List.append [ inputNode ]
             |> List.append helpNodes
             |> maybeAppendLabel maybeLabel
@@ -75,9 +80,10 @@ viewTextInput state labelText helpNodes attributes =
         helpNodes
         (Form.Input.textInput state
             (attributes
-                |> List.append [ class "form-control"
-                               , value (Maybe.withDefault "" state.value)
-                               ]
+                |> List.append
+                    [ class "form-control"
+                    , value (Maybe.withDefault "" state.value)
+                    ]
             )
         )
 
@@ -120,8 +126,10 @@ viewCheckboxInput state labelText =
 
 viewButton labelText attributes =
     button
-        (attributes |> List.append [ type' "submit"
-                                   , class "btn btn-outline-primary"
-                                   ]
+        (attributes
+            |> List.append
+                [ type' "submit"
+                , class "btn btn-outline-primary"
+                ]
         )
         [ text labelText ]
