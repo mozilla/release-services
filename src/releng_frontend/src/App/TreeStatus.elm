@@ -18,6 +18,7 @@ import Json.Encode as JsonEncode
 import Navigation
 import RemoteData
 import String
+import TaskclusterLogin
 import UrlParser
 import UrlParser exposing ((</>))
 import Utils
@@ -25,7 +26,6 @@ import Utils
 
 -- TODO:
 --  * get rid of performMsg (call update on itself)
-
 --
 -- ROUTING
 --
@@ -75,6 +75,7 @@ init url =
     , showMoreTreeLogs = False
     , formAddTree = App.TreeStatus.Form.initAddTree
     , formUpdateTree = App.TreeStatus.Form.initUpdateTree
+    , recentChanges = RemoteData.NotAsked
     }
 
 
@@ -96,11 +97,13 @@ update route msg model =
                 ( newModel, newCmd ) =
                     case route of
                         App.TreeStatus.Types.TreesRoute ->
-                            ( { model | trees = RemoteData.Loading
-                                      , treesSelected = []
+                            ( { model
+                                | trees = RemoteData.Loading
+                                , treesSelected = []
                               }
                             , Cmd.batch
                                 [ App.TreeStatus.Api.fetchTrees model.baseUrl
+                                , App.TreeStatus.Api.fetchRecentChanges model.baseUrl
                                 ]
                             )
 
@@ -136,6 +139,9 @@ update route msg model =
 
         App.TreeStatus.Types.GetTreeLogsAllResult logs ->
             ( { model | treeLogsAll = logs }, Cmd.none, Nothing )
+
+        App.TreeStatus.Types.GetRecentChangesResult recentChanges ->
+            ( { model | recentChanges = recentChanges }, Cmd.none, Nothing )
 
         App.TreeStatus.Types.GetTreeLogs name all ->
             ( model
@@ -185,6 +191,7 @@ update route msg model =
                     result
                         |> RemoteData.map App.Utils.handleResponse
                         |> RemoteData.withDefault []
+
                 resetCmd =
                     Utils.performMsg App.TreeStatus.Form.resetUpdateTree
                         |> Cmd.map App.TreeStatus.Types.FormUpdateTreeMsg
@@ -197,6 +204,7 @@ update route msg model =
                                 [ App.TreeStatus.Api.fetchTree model.baseUrl treeName
                                 , App.TreeStatus.Api.fetchTreeLogs model.baseUrl treeName False
                                 ]
+
                             Nothing ->
                                 []
                         )
@@ -211,8 +219,9 @@ update route msg model =
                         |> RemoteData.map App.Utils.handleResponse
                         |> RemoteData.withDefault []
             in
-                ( { model | alerts = alerts
-                          , treesSelected = []
+                ( { model
+                    | alerts = alerts
+                    , treesSelected = []
                   }
                 , Cmd.batch
                     [ App.TreeStatus.Api.fetchTrees model.baseUrl
@@ -225,9 +234,10 @@ update route msg model =
         App.TreeStatus.Types.SelectTree name ->
             let
                 treesSelected =
-                    if List.member name model.treesSelected
-                       then model.treesSelected
-                       else name :: model.treesSelected
+                    if List.member name model.treesSelected then
+                        model.treesSelected
+                    else
+                        name :: model.treesSelected
             in
                 ( { model | treesSelected = treesSelected }
                 , Cmd.none
@@ -249,13 +259,16 @@ update route msg model =
                 filterOutTrees =
                     List.filter
                         (\x -> Basics.not (List.member x.name model.treesSelected))
+
                 filterTrees =
                     List.filter
                         (\x -> List.member x.name model.treesSelected)
+
                 treesToDelete =
                     model.trees
                         |> RemoteData.map filterTrees
                         |> RemoteData.withDefault []
+
                 request =
                     Http.Request
                         "DELETE"
@@ -269,13 +282,13 @@ update route msg model =
                             |> Http.string
                         )
             in
-                ( { model | treesSelected = []
-                          , trees = RemoteData.map filterOutTrees model.trees
+                ( { model
+                    | treesSelected = []
+                    , trees = RemoteData.map filterOutTrees model.trees
                   }
                 , Cmd.none
                 , Just { route = "DeleteTrees", request = request }
                 )
-
 
         App.TreeStatus.Types.DeleteTreesResult result ->
             let
@@ -286,6 +299,50 @@ update route msg model =
             in
                 ( { model | alerts = alerts }
                 , App.TreeStatus.Api.fetchTrees model.baseUrl
+                , Nothing
+                )
+
+        App.TreeStatus.Types.RevertChange stack ->
+            ( { model | alerts = [] }
+            , Cmd.none
+            , Just
+                { route = "RevertChange"
+                , request =
+                    Http.Request
+                        "DELETE"
+                        [ ( "Accept", "application/json" )
+                        , ( "Content-Type", "application/json" )
+                        ]
+                        (model.baseUrl ++ "/stack/" ++ (toString stack) ++ "?revert=1")
+                        Http.empty
+                }
+            )
+
+        App.TreeStatus.Types.DiscardChange stack ->
+            ( { model | alerts = [] }
+            , Cmd.none
+            , Just
+                { route = "DiscardChange"
+                , request =
+                    Http.Request
+                        "DELETE"
+                        [ ( "Accept", "application/json" )
+                        , ( "Content-Type", "application/json" )
+                        ]
+                        (model.baseUrl ++ "/stack/" ++ (toString stack) ++ "?revert=0")
+                        Http.empty
+                }
+            )
+
+        App.TreeStatus.Types.RecentChangeResult result ->
+            let
+                alerts =
+                    result
+                        |> RemoteData.map App.Utils.handleResponse
+                        |> RemoteData.withDefault []
+            in
+                ( { model | alerts = alerts }
+                , App.TreeStatus.Api.fetchRecentChanges model.baseUrl
                 , Nothing
                 )
 
@@ -309,12 +366,13 @@ viewTrees model scopes =
                                 case checked of
                                     True ->
                                         App.TreeStatus.Types.SelectTree tree.name
+
                                     False ->
                                         App.TreeStatus.Types.UnselectTree tree.name
 
                             openTree =
                                 App.TreeStatus.Types.TreeRoute tree.name
-                                  |> App.TreeStatus.Types.NavigateTo
+                                    |> App.TreeStatus.Types.NavigateTo
 
                             treeTagClass =
                                 "float-xs-right tag tag-" ++ (treeStatus tree.status)
@@ -323,45 +381,48 @@ viewTrees model scopes =
                                 App.UserScopes.hasScope scopes
 
                             hasScopes =
-                                hasScope "project:releng:treestatus/update_trees" ||
-                                hasScope "project:releng:treestatus/kill_tree"
+                                hasScope "project:releng:treestatus/update_trees"
+                                    || hasScope "project:releng:treestatus/kill_tree"
 
                             checkboxItem =
-                                if hasScopes
-                                   then [ label
-                                            [ class "custom-control custom-checkbox" ]
-                                            [ input
-                                                [ type' "checkbox"
-                                                , class "custom-control-input"
-                                                , checked isChecked
-                                                , onCheck checking
-                                                ]
-                                                []
-                                            , span
-                                                [ class "custom-control-indicator" ]
-                                                []
+                                if hasScopes then
+                                    [ label
+                                        [ class "custom-control custom-checkbox" ]
+                                        [ input
+                                            [ type' "checkbox"
+                                            , class "custom-control-input"
+                                            , checked isChecked
+                                            , onCheck checking
                                             ]
+                                            []
+                                        , span
+                                            [ class "custom-control-indicator" ]
+                                            []
                                         ]
-                                   else  []
+                                    ]
+                                else
+                                    []
 
                             itemClass =
-                                if hasScopes
-                                   then "list-group-item list-group-item-with-checkbox"
-                                   else "list-group-item"
+                                if hasScopes then
+                                    "list-group-item list-group-item-with-checkbox"
+                                else
+                                    "list-group-item"
 
                             treeItem =
-                                a [ href "#"
-                                  , class "list-group-item-action"
-                                  , Utils.onClick openTree
-                                  ]
-                                  [ h5 [ class "list-group-item-heading" ]
-                                      [ text tree.name
-                                      , span [ class treeTagClass ]
-                                          [ text tree.status ]
-                                      ]
-                                  , p [ class "list-group-item-text" ]
-                                      [ text tree.reason ]
-                                  ]
+                                a
+                                    [ href "#"
+                                    , class "list-group-item-action"
+                                    , Utils.onClick openTree
+                                    ]
+                                    [ h5 [ class "list-group-item-heading" ]
+                                        [ text tree.name
+                                        , span [ class treeTagClass ]
+                                            [ text tree.status ]
+                                        ]
+                                    , p [ class "list-group-item-text" ]
+                                        [ text tree.reason ]
+                                    ]
                         in
                             div [ class itemClass ]
                                 (List.append checkboxItem [ treeItem ])
@@ -389,12 +450,13 @@ viewTree name tree_ =
         withTitle nodes =
             h2
                 [ class "clearfix" ]
-                (List.append 
+                (List.append
                     [ span
                         [ class "float-xs-left"
                         , style [ ( "margin-right", "0.3em" ) ]
                         ]
-                        [ text "Tree:" ] ]
+                        [ text "Tree:" ]
+                    ]
                     nodes
                 )
 
@@ -465,13 +527,19 @@ viewTreeLog log =
                     (List.map
                         (\tag ->
                             span
-                            [ class "tag tag-default" ]
-                            [ App.TreeStatus.Types.possibleTreeTags
-                                |> List.filterMap (\(x, _, y) -> if x == tag then Just y else Nothing)
-                                |> List.head
-                                |> Maybe.withDefault tag
-                                |> text
-                            ]
+                                [ class "tag tag-default" ]
+                                [ App.TreeStatus.Types.possibleTreeTags
+                                    |> List.filterMap
+                                        (\( x, _, y ) ->
+                                            if x == tag then
+                                                Just y
+                                            else
+                                                Nothing
+                                        )
+                                    |> List.head
+                                    |> Maybe.withDefault tag
+                                    |> text
+                                ]
                         )
                         log.tags
                     )
@@ -544,6 +612,53 @@ viewTreeLogs name treeLogs_ treeLogsAll_ =
                 []
 
 
+viewRecentChange recentChange plural =
+    let
+        treeLabel =
+            if plural then
+                "trees"
+            else
+                "tree"
+    in
+        div
+            [ class "list-group-item" ]
+            [ div
+                [ class "float-xs-right btn-group" ]
+                [ button
+                    [ type' "button"
+                    , class "btn btn-sm btn-outline-success"
+                    , Utils.onClick (App.TreeStatus.Types.RevertChange recentChange.id)
+                    ]
+                    [ text "Restore" ]
+                , button
+                    [ type' "button"
+                    , class "btn btn-sm btn-outline-warning"
+                    , Utils.onClick (App.TreeStatus.Types.DiscardChange recentChange.id)
+                    ]
+                    [ text "Discard" ]
+                ]
+            , div
+                []
+                [ text "At "
+                , text recentChange.when
+                , text " UTC, "
+                , text (TaskclusterLogin.shortUsername recentChange.who)
+                , text " changed "
+                , text treeLabel
+                , em [] [ text (String.join ", " recentChange.trees) ]
+                , text " to "
+                , span
+                    [ class ("tag tag-" ++ (treeStatus recentChange.status)) ]
+                    [ text recentChange.status ]
+                , if recentChange.reason == "" then
+                    text ""
+                  else
+                    text (" with reason: " ++ recentChange.reason)
+                , text "."
+                ]
+            ]
+
+
 view :
     App.TreeStatus.Types.Route
     -> List String
@@ -551,7 +666,6 @@ view :
     -> Html App.TreeStatus.Types.Msg
 view route scopes model =
     let
-
         hasScope scope =
             App.UserScopes.hasScope scopes ("project:releng:treestatus/" ++ scope)
 
@@ -567,49 +681,54 @@ view route scopes model =
                         |> Maybe.withDefault ""
 
                 addClass condition className =
-                    if condition
-                       then " " ++ className
-                       else ""
+                    if condition then
+                        " " ++ className
+                    else
+                        ""
 
                 viewTab form =
                     li
-                      [ class "nav-item" ]
-                      [ a
-                          [ class ("nav-link" ++
-                                   (addClass (form.id == activeFormId) "active") ++
-                                   (addClass form.disabled "disabled")
-                                  )
-                          , attribute "data-toggle" "tab"
-                          , href ("#" ++ form.id)
-                          , disabled form.disabled
-                          , attribute "role" "tab"
-                          ]
-                          [ text form.label ]
-                      ]
+                        [ class "nav-item" ]
+                        [ a
+                            [ class
+                                ("nav-link"
+                                    ++ (addClass (form.id == activeFormId) "active")
+                                    ++ (addClass form.disabled "disabled")
+                                )
+                            , attribute "data-toggle" "tab"
+                            , href ("#" ++ form.id)
+                            , disabled form.disabled
+                            , attribute "role" "tab"
+                            ]
+                            [ text form.label ]
+                        ]
 
                 viewForm form =
                     div
-                      [ class ("tab-pane" ++
-                               (addClass (form.id == activeFormId) "active")
-                              )
-                      , id form.id
-                      , attribute "role" "tabpanel"
-                      ]
-                      [ form.form ]
+                        [ class
+                            ("tab-pane"
+                                ++ (addClass (form.id == activeFormId) "active")
+                            )
+                        , id form.id
+                        , attribute "role" "tabpanel"
+                        ]
+                        [ form.form ]
             in
-                if List.isEmpty formsInScope
-                    then text ""
-                    else div
-                             [ id "treestatus-forms" ]
-                             [ ul
-                                 [ class "nav nav-tabs"
-                                 , attribute "role" "tablist"
-                                 ]
-                                 (List.map (viewTab) forms)
-                             , div
-                                 [ class "tab-content" ]
-                                 (List.map viewForm forms)
-                             ]
+                if List.isEmpty formsInScope then
+                    text ""
+                else
+                    div
+                        [ id "treestatus-forms" ]
+                        [ ul
+                            [ class "nav nav-tabs"
+                            , attribute "role" "tablist"
+                            ]
+                            (List.map (viewTab) forms)
+                        , div
+                            [ class "tab-content" ]
+                            (List.map viewForm forms)
+                        ]
+
         viewSelected labelText form =
             div
                 []
@@ -625,47 +744,71 @@ view route scopes model =
                 App.TreeStatus.Types.TreesRoute ->
                     [ App.Utils.viewAlerts model.alerts
                     , viewForms
-                        [ { id = "add-tree"
+                        [ { id = "recent-changes"
+                          , label = "Recent Changes"
+                          , scope = "recent_changes/revert"
+                          , disabled =
+                                case model.recentChanges of
+                                    RemoteData.Success data ->
+                                        List.isEmpty data
+
+                                    _ ->
+                                        True
+                          , form =
+                                case model.recentChanges of
+                                    RemoteData.Success recentChanges ->
+                                        div
+                                            [ class "list-group" ]
+                                            (List.map
+                                                (\x -> viewRecentChange x (List.length recentChanges > 1))
+                                                recentChanges
+                                            )
+
+                                    _ ->
+                                        text ""
+                          }
+                        , { id = "add-tree"
                           , label = "Add Tree"
-                          , scope = "make_tree"
+                          , scope = "trees/create"
                           , disabled = False
                           , form =
-                              App.TreeStatus.Form.viewAddTree model.formAddTree
-                                  |> Html.App.map App.TreeStatus.Types.FormAddTreeMsg
+                                App.TreeStatus.Form.viewAddTree model.formAddTree
+                                    |> Html.App.map App.TreeStatus.Types.FormAddTreeMsg
                           }
                         , { id = "delete-trees"
                           , label = "Delete Trees"
-                          , scope = "kill_tree"
+                          , scope = "trees/delete"
                           , disabled = List.isEmpty model.treesSelected
                           , form =
-                              viewSelected
-                                  "Trees to delete:"
-                                  (button
-                                      [ class "btn btn-outline-danger"
-                                      , Utils.onClick App.TreeStatus.Types.DeleteTrees
-                                      , disabled (List.isEmpty model.treesSelected)
-                                      ]
-                                      [ text "Delete" ]
-                                  )
+                                viewSelected
+                                    "Trees to delete:"
+                                    (button
+                                        [ class "btn btn-outline-danger"
+                                        , Utils.onClick App.TreeStatus.Types.DeleteTrees
+                                        , disabled (List.isEmpty model.treesSelected)
+                                        ]
+                                        [ text "Delete" ]
+                                    )
                           }
                         , { id = "update-trees"
                           , label = "Update Trees"
-                          , scope = "update_trees"
+                          , scope = "trees/change"
                           , disabled = List.isEmpty model.treesSelected
                           , form =
-                              viewSelected
-                                  "Trees to update:"
-                                  (App.TreeStatus.Form.viewUpdateTree
-                                      model.treesSelected
-                                      model.formUpdateTree
-                                          |> Html.App.map App.TreeStatus.Types.FormUpdateTreeMsg
-                                  )
+                                viewSelected
+                                    "Trees to update:"
+                                    (App.TreeStatus.Form.viewUpdateTree
+                                        model.treesSelected
+                                        model.formUpdateTree
+                                        |> Html.App.map App.TreeStatus.Types.FormUpdateTreeMsg
+                                    )
                           }
                         ]
-                    , div [ id "treestatus-trees"
-                          , class "list-group"
-                          ]
-                          (viewTrees model scopes)
+                    , div
+                        [ id "treestatus-trees"
+                        , class "list-group"
+                        ]
+                        (viewTrees model scopes)
                     ]
 
                 App.TreeStatus.Types.TreeRoute name ->
@@ -675,34 +818,36 @@ view route scopes model =
                           , scope = "update_trees"
                           , disabled = List.isEmpty model.treesSelected
                           , form =
-                              App.TreeStatus.Form.viewUpdateTree
-                                  model.treesSelected
-                                  model.formUpdateTree
-                                      |> Html.App.map App.TreeStatus.Types.FormUpdateTreeMsg
+                                App.TreeStatus.Form.viewUpdateTree
+                                    model.treesSelected
+                                    model.formUpdateTree
+                                    |> Html.App.map App.TreeStatus.Types.FormUpdateTreeMsg
                           }
                         ]
-                     ]
+                    ]
                         |> List.append [ App.Utils.viewAlerts model.alerts ]
                         |> List.append (viewTreeLogs name model.treeLogs model.treeLogsAll)
                         |> List.append (viewTree name model.tree)
-                        |> List.append [ div
-                                            [ class "clearfix" ]
-                                            [ a
-                                                [ href "#"
-                                                , Utils.onClick
-                                                    (App.TreeStatus.Types.NavigateTo App.TreeStatus.Types.TreesRoute)
-                                                ]
-                                                [ text "Back to all trees" ]
-                                            ]
-                                       , hr [ ] []
-                                       ]
+                        |> List.append
+                            [ div
+                                [ class "clearfix" ]
+                                [ a
+                                    [ href "#"
+                                    , Utils.onClick
+                                        (App.TreeStatus.Types.NavigateTo App.TreeStatus.Types.TreesRoute)
+                                    ]
+                                    [ text "Back to all trees" ]
+                                ]
+                            , hr [] []
+                            ]
     in
         div [ class "container" ]
             (subRoute
-                |> List.append [ h1 [] [ text "TreeStatus" ]
-                               , p [ class "lead" ]
-                                   [ text "Current status of Mozilla's version-control repositories." ]
-                               ]
+                |> List.append
+                    [ h1 [] [ text "TreeStatus" ]
+                    , p [ class "lead" ]
+                        [ text "Current status of Mozilla's version-control repositories." ]
+                    ]
             )
 
 

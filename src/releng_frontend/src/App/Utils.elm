@@ -102,7 +102,7 @@ handleResponse response =
             [ App.Types.Alert
                 App.Types.AlertDanger
                 "Error!"
-                ( case response.value of
+                (case response.value of
                     Http.Text text ->
                         case JsonDecode.decodeString decoderError text of
                             Ok obj ->

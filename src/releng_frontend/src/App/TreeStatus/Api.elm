@@ -14,7 +14,7 @@ encoderUpdateTree :
         , remember : Bool
         , status : String
         , trees : List String
-        , tags: List String
+        , tags : List String
     }
     -> JsonEncode.Value
 encoderUpdateTree data =
@@ -34,7 +34,7 @@ encoderUpdateTrees :
         , remember : Bool
         , status : String
         , trees : List String
-        , tags: List String
+        , tags : List String
     }
     -> JsonEncode.Value
 encoderUpdateTrees data =
@@ -59,7 +59,7 @@ encoderTree tree =
 
 encoderTreeNames : App.TreeStatus.Types.Trees -> JsonEncode.Value
 encoderTreeNames trees =
-    JsonEncode.list (List.map  (\x -> JsonEncode.string x.name) trees)
+    JsonEncode.list (List.map (\x -> JsonEncode.string x.name) trees)
 
 
 decoderTrees : JsonDecode.Decoder App.TreeStatus.Types.Trees
@@ -90,6 +90,22 @@ decoderTreeLog =
         ("status" := JsonDecode.string)
         ("reason" := JsonDecode.string)
         ("tags" := JsonDecode.list JsonDecode.string)
+
+
+decoderRecentChanges : JsonDecode.Decoder (List App.TreeStatus.Types.RecentChange)
+decoderRecentChanges =
+    JsonDecode.list decoderRecentChange
+
+
+decoderRecentChange : JsonDecode.Decoder App.TreeStatus.Types.RecentChange
+decoderRecentChange =
+    JsonDecode.object6 App.TreeStatus.Types.RecentChange
+        ("id" := JsonDecode.int)
+        ("trees" := JsonDecode.list JsonDecode.string)
+        ("when" := JsonDecode.string)
+        ("who" := JsonDecode.string)
+        ("status" := JsonDecode.string)
+        ("reason" := JsonDecode.string)
 
 
 get :
@@ -140,6 +156,15 @@ fetchTreeLogs url name all =
                 decoderTreeLogs
 
 
+fetchRecentChanges :
+    String
+    -> Cmd App.TreeStatus.Types.Msg
+fetchRecentChanges url =
+    get App.TreeStatus.Types.GetRecentChangesResult
+        (url ++ "/stack")
+        decoderRecentChanges
+
+
 hawkResponse :
     Cmd (RemoteData.RemoteData Http.RawError Http.Response)
     -> String
@@ -157,6 +182,12 @@ hawkResponse response route =
 
         "UpdateTrees" ->
             Cmd.map App.TreeStatus.Types.FormUpdateTreesResult response
+
+        "RevertChange" ->
+            Cmd.map App.TreeStatus.Types.RecentChangeResult response
+
+        "DiscardChange" ->
+            Cmd.map App.TreeStatus.Types.RecentChangeResult response
 
         _ ->
             Cmd.none

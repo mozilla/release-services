@@ -108,8 +108,6 @@ update msg model =
 
                 fetchUserScopes =
                     App.UserScopesMsg App.UserScopes.FetchScopes
-
-
             in
                 case route of
                     App.NotFoundRoute ->
@@ -120,7 +118,8 @@ update msg model =
                             | trychooser = App.TryChooser.init
                             , treestatus =
                                 App.TreeStatus.init model.treestatus.baseUrl
-                        } ! [ newCmd ]
+                        }
+                            ! [ newCmd ]
                             |> Utils.andThen update fetchUserScopes
 
                     App.LoginRoute ->
@@ -147,7 +146,6 @@ update msg model =
             let
                 ( newModel, newCmd, hawkCmd ) =
                     App.UserScopes.update msg2 model.userScopes
-                
             in
                 ( { model | userScopes = newModel }
                 , hawkCmd
@@ -172,8 +170,10 @@ update msg model =
                     case model.route of
                         App.TreeStatusRoute x ->
                             x
+
                         _ ->
                             App.TreeStatus.Types.TreesRoute
+
                 ( newModel, newCmd, hawkCmd ) =
                     App.TreeStatus.update route msg2 model.treestatus
             in

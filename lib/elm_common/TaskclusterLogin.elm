@@ -1,11 +1,12 @@
 port module TaskclusterLogin exposing (..)
 
+import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Dict exposing (Dict)
 import Json.Decode as JsonDecode exposing ((:=))
-import Redirect
 import Maybe
+import Redirect
+import String
 
 
 type alias Certificate =
@@ -116,6 +117,24 @@ redirectToLogin outMsg returnRoute description =
     }
         |> Login
         |> outMsg
+
+
+
+-- UTILS
+
+
+shortUsername username =
+    let
+        parts =
+            String.split "/" username
+    in
+        if List.length parts == 2 then
+            parts
+                |> List.reverse
+                |> List.head
+                |> Maybe.withDefault username
+        else
+            username
 
 
 

@@ -24,7 +24,7 @@ type Msg
 
 decoderScopes : JsonDecode.Decoder (List String)
 decoderScopes =
-    JsonDecode.at ["scopes"] (JsonDecode.list JsonDecode.string)
+    JsonDecode.at [ "scopes" ] (JsonDecode.list JsonDecode.string)
 
 
 init : Model
@@ -37,7 +37,7 @@ init =
 update :
     Msg
     -> Model
-    -> (Model, Cmd Msg, Maybe ({ route : String, request: Http.Request }))
+    -> ( Model, Cmd Msg, Maybe { route : String, request : Http.Request } )
 update msg model =
     case msg of
         FetchScopes ->
@@ -59,18 +59,19 @@ update msg model =
                         ]
                         "https://auth.taskcluster.net/v1/scopes/current"
                         Http.empty
+
                 ( newModel, hawkCmd ) =
-                    if (model.timestamp + 15000) > currentTime
-                       then
-                           ( model, Nothing )
-                       else
-                           ( { model | scopes = [] }
-                           , Just { route = "FetchedScopes"
-                                  , request = request
-                                  }
-                           )
+                    if (model.timestamp + 15000) > currentTime then
+                        ( model, Nothing )
+                    else
+                        ( { model | scopes = [] }
+                        , Just
+                            { route = "FetchedScopes"
+                            , request = request
+                            }
+                        )
             in
-                (newModel, Cmd.none, hawkCmd)
+                ( newModel, Cmd.none, hawkCmd )
 
         FetchedScopes result ->
             let
@@ -79,6 +80,7 @@ update msg model =
                         Http.Text text ->
                             JsonDecode.decodeString decoderScopes text
                                 |> Result.withDefault []
+
                         _ ->
                             []
 
@@ -91,6 +93,7 @@ update msg model =
                 , Cmd.none
                 , Nothing
                 )
+
 
 hawkResponse :
     Cmd (RemoteData.RemoteData Http.RawError Http.Response)
@@ -108,10 +111,13 @@ hawkResponse response route =
 hasScope : List String -> String -> Bool
 hasScope existing scope =
     existing
-        |> List.map (\x -> if String.endsWith "*" x
-                               then String.startsWith (String.dropRight 1 x) scope
-                               else scope == x
-                    )
+        |> List.map
+            (\x ->
+                if String.endsWith "*" x then
+                    String.startsWith (String.dropRight 1 x) scope
+                else
+                    scope == x
+            )
         |> List.any Basics.identity
 
 

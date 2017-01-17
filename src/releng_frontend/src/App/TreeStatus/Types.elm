@@ -37,6 +37,16 @@ type alias TreeLogs =
     List TreeLog
 
 
+type alias RecentChange =
+    { id : Int
+    , trees : List String
+    , when : String
+    , who : String
+    , status : String
+    , reason : String
+    }
+
+
 type alias Model addForm updateForm =
     { baseUrl : String
     , alerts : List App.Types.Alert
@@ -48,6 +58,7 @@ type alias Model addForm updateForm =
     , showMoreTreeLogs : Bool
     , formAddTree : Form.Form () addForm
     , formUpdateTree : Form.Form () updateForm
+    , recentChanges : RemoteData.WebData (List RecentChange)
     }
 
 
@@ -58,6 +69,7 @@ type Msg
     | GetTreeLogs String Bool
     | GetTreeLogsResult (RemoteData.WebData TreeLogs)
     | GetTreeLogsAllResult (RemoteData.WebData TreeLogs)
+    | GetRecentChangesResult (RemoteData.WebData (List RecentChange))
     | FormAddTreeMsg Form.Msg
     | FormAddTreeResult (RemoteData.RemoteData Http.RawError Http.Response)
     | FormUpdateTreeMsg Form.Msg
@@ -67,24 +79,25 @@ type Msg
     | UnselectTree String
     | DeleteTrees
     | DeleteTreesResult (RemoteData.RemoteData Http.RawError Http.Response)
+    | RevertChange Int
+    | DiscardChange Int
+    | RecentChangeResult (RemoteData.RemoteData Http.RawError Http.Response)
 
 
-possibleTreeStatuses : List (String, String)
+possibleTreeStatuses : List ( String, String )
 possibleTreeStatuses =
-    [ ( "open"              , "Open"              )
-    , ( "approval required" , "Approval required" )
-    , ( "closed"            , "Closed"            )
+    [ ( "open", "Open" )
+    , ( "approval required", "Approval required" )
+    , ( "closed", "Closed" )
     ]
 
 
-possibleTreeTags : List (String, String, String)
+possibleTreeTags : List ( String, String, String )
 possibleTreeTags =
     [ ( "checkin-compilation", "checkin_compilation", "Check-in compilation failure" )
-    , ( "checkin-test"       , "checkin_test"       , "Check-in test failure"        )
-    , ( "infra"              , "infra"              , "Infrastructure related"       )
-    , ( "backlog"            , "backlog"            , "Job backlog"                  )
-    , ( "planned"            , "planned"            , "Planned closure"              )
-    , ( "other"              , "other"              , "Other"                        )
+    , ( "checkin-test", "checkin_test", "Check-in test failure" )
+    , ( "infra", "infra", "Infrastructure related" )
+    , ( "backlog", "backlog", "Job backlog" )
+    , ( "planned", "planned", "Planned closure" )
+    , ( "other", "other", "Other" )
     ]
-
-

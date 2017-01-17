@@ -82,7 +82,7 @@ def get_trees2():
     return [i for i in get_trees().values()]
 
 
-@auth.require_scopes(['project:releng:treestatus/update_trees'])
+@auth.require_scopes(['project:releng:treestatus/trees/change'])
 def update_trees(body):
     session = current_app.db.session
     trees = [session.query(Tree).get(t) for t in body['trees']]
@@ -128,7 +128,7 @@ def update_trees(body):
     return None, 204
 
 
-@auth.require_scopes(['project:releng:treestatus/make_tree'])
+@auth.require_scopes(['project:releng:treestatus/trees/create'])
 def make_tree(tree, body):
     session = current_app.db.session
     if body['tree'] != tree:
@@ -159,13 +159,13 @@ def _kill_tree(tree):
     cache.delete_memoized(get_tree, tree)
 
 
-@auth.require_scopes(['project:releng:treestatus/kill_tree'])
+@auth.require_scopes(['project:releng:treestatus/trees/delete'])
 def kill_tree(tree):
     _kill_tree(tree)
     return None, 204
 
 
-@auth.require_scopes(['project:releng:treestatus/kill_trees'])
+@auth.require_scopes(['project:releng:treestatus/trees/delete'])
 def kill_trees(trees):
     for tree in trees:
         _kill_tree(tree)
@@ -205,7 +205,7 @@ def get_stack():
     ]
 
 
-@auth.require_scopes(['project:releng:treestatus/revert_change'])
+@auth.require_scopes(['project:releng:treestatus/recent_changes/revert'])
 def revert_change(id, revert=None):
     if revert not in (0, 1, None):
         raise BadRequest("Unexpected value for 'revert'")
