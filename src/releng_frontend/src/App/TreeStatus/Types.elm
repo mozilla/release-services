@@ -62,7 +62,29 @@ type Msg
     | FormAddTreeResult (RemoteData.RemoteData Http.RawError Http.Response)
     | FormUpdateTreeMsg Form.Msg
     | FormUpdateTreeResult (RemoteData.RemoteData Http.RawError Http.Response)
+    | FormUpdateTreesResult (RemoteData.RemoteData Http.RawError Http.Response)
     | SelectTree String
     | UnselectTree String
     | DeleteTrees
     | DeleteTreesResult (RemoteData.RemoteData Http.RawError Http.Response)
+
+
+possibleTreeStatuses : List (String, String)
+possibleTreeStatuses =
+    [ ( "open"              , "Open"              )
+    , ( "approval required" , "Approval required" )
+    , ( "closed"            , "Closed"            )
+    ]
+
+
+possibleTreeTags : List (String, String, String)
+possibleTreeTags =
+    [ ( "checkin-compilation", "checkin_compilation", "Check-in compilation failure" )
+    , ( "checkin-test"       , "checkin_test"       , "Check-in test failure"        )
+    , ( "infra"              , "infra"              , "Infrastructure related"       )
+    , ( "backlog"            , "backlog"            , "Job backlog"                  )
+    , ( "planned"            , "planned"            , "Planned closure"              )
+    , ( "other"              , "other"              , "Other"                        )
+    ]
+
+

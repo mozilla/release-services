@@ -7,6 +7,46 @@ import Json.Encode as JsonEncode
 import RemoteData
 
 
+encoderUpdateTree :
+    { a
+        | message_of_the_day : String
+        , reason : String
+        , remember : Bool
+        , status : String
+        , trees : List String
+        , tags: List String
+    }
+    -> JsonEncode.Value
+encoderUpdateTree data =
+    JsonEncode.object
+        [ ( "trees", JsonEncode.list (List.map JsonEncode.string data.trees) )
+        , ( "status", JsonEncode.string data.status )
+        , ( "reason", JsonEncode.string data.reason )
+        , ( "tags", JsonEncode.list (List.map JsonEncode.string data.tags) )
+        , ( "message_of_the_day", JsonEncode.string data.message_of_the_day )
+        , ( "remember", JsonEncode.bool data.remember )
+        ]
+
+
+encoderUpdateTrees :
+    { a
+        | reason : String
+        , remember : Bool
+        , status : String
+        , trees : List String
+        , tags: List String
+    }
+    -> JsonEncode.Value
+encoderUpdateTrees data =
+    JsonEncode.object
+        [ ( "trees", JsonEncode.list (List.map JsonEncode.string data.trees) )
+        , ( "status", JsonEncode.string data.status )
+        , ( "reason", JsonEncode.string data.reason )
+        , ( "tags", JsonEncode.list (List.map JsonEncode.string data.tags) )
+        , ( "remember", JsonEncode.bool data.remember )
+        ]
+
+
 encoderTree : App.TreeStatus.Types.Tree -> JsonEncode.Value
 encoderTree tree =
     JsonEncode.object
@@ -15,6 +55,7 @@ encoderTree tree =
         , ( "reason", JsonEncode.string tree.reason )
         , ( "message_of_the_day", JsonEncode.string tree.message_of_the_day )
         ]
+
 
 encoderTreeNames : App.TreeStatus.Types.Trees -> JsonEncode.Value
 encoderTreeNames trees =
@@ -110,6 +151,12 @@ hawkResponse response route =
 
         "DeleteTrees" ->
             Cmd.map App.TreeStatus.Types.DeleteTreesResult response
+
+        "UpdateTree" ->
+            Cmd.map App.TreeStatus.Types.FormUpdateTreeResult response
+
+        "UpdateTrees" ->
+            Cmd.map App.TreeStatus.Types.FormUpdateTreesResult response
 
         _ ->
             Cmd.none
