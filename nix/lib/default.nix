@@ -432,7 +432,10 @@ in rec {
           python.packages."gunicorn"
         ] ++ buildInputs 
           ++ optional (builtins.elem "db" releng_common.extras) releng_pkgs.postgresql;
-        propagatedBuildInputs = [releng_common] ++ propagatedBuildInputs;
+        propagatedBuildInputs = [
+          releng_common
+          releng_pkgs.pkgs.cacert
+        ] ++ propagatedBuildInputs;
 
         patchPhase = ''
           rm VERSION
@@ -522,6 +525,7 @@ in rec {
                 "FLASK_APP=${name}:app"
                 "LANG=en_US.UTF-8"
                 "LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive"
+                "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
               ];
               Cmd = [
                 "newrelic-admin" "run-program" "gunicorn" "${name}:app" "--log-file" "-"
