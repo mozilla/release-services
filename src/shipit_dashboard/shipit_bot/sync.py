@@ -9,7 +9,9 @@ import requests
 import taskcluster
 import json
 
-from shipit_bot.helpers import compute_dict_hash, ShipitJSONEncoder
+from shipit_bot.helpers import (
+    compute_dict_hash, ShipitJSONEncoder, read_hosts
+)
 from libmozdata import bugzilla
 from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
 
@@ -180,6 +182,13 @@ class BotRemote(Bot):
         # Start by loading secrets from Taskcluster
         secrets = self.load_secrets(secrets_path, client_id, access_token)
 
+        # Setup credentials for Shipit api
+        self.credentials = {
+          'id': secrets['client_id'],
+          'key': secrets['access_token'],
+          'algorithm': 'sha256',
+        }
+
         super(BotRemote, self).__init__(
             secrets['bugzilla_url'],
             secrets['bugzilla_token']
@@ -192,13 +201,6 @@ class BotRemote(Bot):
         Load Taskcluster secrets
         """
 
-        # Setup credentials for Shipit api
-        self.credentials = {
-          'id': client_id,
-          'key': access_token,
-          'algorithm': 'sha256',
-        }
-
         if client_id and access_token:
             # Use provided credentials
             tc = taskcluster.Secrets({
@@ -209,10 +211,18 @@ class BotRemote(Bot):
             })
 
         else:
+            # Get taskcluster proxy host
+            # as /etc/hosts is not used in the Nix image (?)
+            hosts = read_hosts()
+            if 'taskcluster' not in hosts:
+                raise Exception('Missing taskcluster in /etc/hosts')
+
             # Load secrets from TC task context
             # with taskclusterProxy
+            base_url = 'http://{}/secrets/v1'.format(hosts['taskcluster'])
+            logger.info('Taskcluster Proxy enabled', url=base_url)
             tc = taskcluster.Secrets({
-                'baseUrl': 'http://taskcluster/secrets/v1'
+                'baseUrl': base_url
             })
 
         # Check mandatory keys in secrets
@@ -222,6 +232,12 @@ class BotRemote(Bot):
         for req in required:
             if req not in secrets:
                 raise Exception('Missing value {} in Taskcluster secret value {}'.format(req, secrets_path))  # noqa
+
+        # Add credentials too
+        if 'client_id' not in secrets:
+            secrets['client_id'] = client_id
+        if 'access_token' not in secrets:
+            secrets['access_token'] = access_token
 
         return secrets
 
