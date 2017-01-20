@@ -229,6 +229,40 @@ paths:
           schema:
             type: string
 
+  /stack2/restore/{id}:
+    delete:
+      operationId: "releng_treestatus.api.restore_change"
+      description: |
+        Remove the given change from the undo stack that were present before
+        the change to the affected trees.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+      responses:
+        200:
+          description: Status
+          schema:
+            type: string
+
+  /stack2/discard/{id}:
+    delete:
+      operationId: "releng_treestatus.api.discard_change"
+      description: |
+        Removes the change from the stack without changing the settings on the
+        tree.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+      responses:
+        200:
+          description: Status
+          schema:
+            type: string
+
 definitions:
 
   Tree:

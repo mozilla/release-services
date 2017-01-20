@@ -205,8 +205,7 @@ def get_stack():
     ]
 
 
-@auth.require_scopes(['project:releng:treestatus/recent_changes/revert'])
-def revert_change(id, revert=None):
+def _revert_change(id, revert=None):
     if revert not in (0, 1, None):
         raise BadRequest("Unexpected value for 'revert'")
 
@@ -230,3 +229,18 @@ def revert_change(id, revert=None):
     session.delete(ch)
     session.commit()
     return None, 204
+
+
+@auth.require_scopes(['project:releng:treestatus/recent_changes/revert'])
+def revert_change(id, revert=None):
+    return _revert_change(id, revert)
+
+
+@auth.require_scopes(['project:releng:treestatus/recent_changes/revert'])
+def restore_change(id):
+    return _revert_change(id, 1)
+
+
+@auth.require_scopes(['project:releng:treestatus/recent_changes/revert'])
+def discard_change(id):
+    return _revert_change(id, 0)

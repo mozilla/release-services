@@ -313,7 +313,7 @@ update route msg model =
                         [ ( "Accept", "application/json" )
                         , ( "Content-Type", "application/json" )
                         ]
-                        (model.baseUrl ++ "/stack/" ++ (toString stack) ++ "?revert=1")
+                        (model.baseUrl ++ "/stack2/restore/" ++ (toString stack))
                         Http.empty
                 }
             )
@@ -329,7 +329,7 @@ update route msg model =
                         [ ( "Accept", "application/json" )
                         , ( "Content-Type", "application/json" )
                         ]
-                        (model.baseUrl ++ "/stack/" ++ (toString stack) ++ "?revert=0")
+                        (model.baseUrl ++ "/stack2/discard/" ++ (toString stack))
                         Http.empty
                 }
             )
