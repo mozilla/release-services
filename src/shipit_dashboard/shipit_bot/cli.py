@@ -1,31 +1,23 @@
-import argparse
+import click
+import os.path
+import tempfile
 from shipit_bot.sync import BotRemote
 
 
-def main():
+DEFAULT_CACHE = os.path.join(tempfile.gettempdir(), 'shipit_bot_cache')
+
+
+@click.command()
+@click.option('--secrets', required=True, help='Taskcluster Secrets path')
+@click.option('--client-id', help='Taskcluster Client ID')
+@click.option('--client-token', help='Taskcluster Client token')
+@click.option('--cache-root', default=DEFAULT_CACHE, help='Cache for repository clones.')  # noqa
+def main(secrets, client_id, client_token, cache_root):
     """
     Run bot to sync bug & analysis on a remote server
     """
-    parser = argparse.ArgumentParser(description='Sync bug & analysis')
-    parser.add_argument(
-        '--secrets',
-        type=str,
-        dest='secrets',
-        default='project/shipit/bot/staging',
-        help='Taskcluster Secrets path')
-    parser.add_argument(
-        '--client-id',
-        type=str,
-        dest='client_id',
-        help='Taskcluster Client ID')
-    parser.add_argument(
-        '--client-token',
-        type=str,
-        dest='client_token',
-        help='Taskcluster Client token')
-    args = parser.parse_args()
-
-    bot = BotRemote(args.secrets, args.client_id, args.client_token)
+    bot = BotRemote(secrets, client_id, client_token)
+    bot.use_cache(cache_root)
     bot.run()
 
 

@@ -19,13 +19,25 @@ let
     owner = "babadie@mozilla.com";
     schedule = [ "0 */30 * * * *" ];  # every 30 min
     taskImage = self.docker;
-    scopes = ["secrets:get:project/shipit/bot/staging"]; # used by taskclusterProxy
+    scopes = [
+			# Used by taskclusterProxy
+			"secrets:get:project/shipit/bot/staging"
+
+			# Used by cache
+			"docker-worker:cache:shipit-bot-staging"
+		];
+		cache = {
+			"shipit-bot-staging" = "/cache";
+		};
+    taskEnv = {
+      "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+    };
     taskCommand = [
-      "/bin/sh"
-      "-c"
-      "/bin/shipit-bot"
+      "/bin/shipit-dashboard-bot"
       "--secrets"
       "project/shipit/bot/staging"
+			"--cache-root"
+      "/cache"
     ];
   };
 
@@ -44,6 +56,8 @@ let
     propagatedBuildInputs =
       [ 
         python.packages."libmozdata"
+        python.packages."python-hglib"
+				releng_pkgs.pkgs.mercurial
       ];
     passthru = {
       taskclusterHooks = {

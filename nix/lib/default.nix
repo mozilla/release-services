@@ -110,8 +110,9 @@ in rec {
       , features ? { taskclusterProxy = true; }
       , artifacts ? {}
       , env ? {}
+      , cache ? {}
       }:
-      { inherit env image features maxRunTime command artifacts; };
+      { inherit env image features maxRunTime command artifacts cache; };
 
     mkTaskclusterTask =
       { extra ? {}
@@ -145,6 +146,7 @@ in rec {
       , taskArtifacts ? {}
       , taskEnv ? {}
       , scopes ? []
+      , cache ? {}
       }:
       { inherit schedule expires deadline;
         metadata = { inherit name description owner emailOnError; };
@@ -155,6 +157,7 @@ in rec {
             command = taskCommand;
             artifacts = taskArtifacts;
             env = taskEnv;
+            cache = cache;
           };
           scopes = scopes;
         });
