@@ -8,15 +8,20 @@ import mohawk
 import requests
 import taskcluster
 import json
+import os
 
 from shipit_bot.helpers import (
     compute_dict_hash, ShipitJSONEncoder, read_hosts
 )
+from shipit_bot.mercurial import Repository
 from libmozdata import bugzilla
 from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
 
 
 logger = log.get_logger('shipit_bot')
+
+# TODO: should come from backend
+VERSIONS = [b'aurora', b'beta', b'release', b'esr45']
 
 
 class BugSync(object):
@@ -30,6 +35,7 @@ class BugSync(object):
         self.on_bugzilla = []
         self.bug_data = None
         self.payload = None
+        self.patches = []
 
     def update(self, bugzilla_url):
         """
@@ -56,6 +62,13 @@ class BugSync(object):
             analysis['uplift_comment']['html'] = parse_uplift_comment(
                 analysis['uplift_comment']['text'], self.bugzilla_id)
 
+        # Extract patches
+        for branch in self.on_bugzilla:
+            for revision in analysis['patches'].keys():
+                self.patches.append(
+                    (VERSIONS[branch - 1], revision.encode('utf-8'))
+                )
+
         # Build internal payload
         self.payload = {
             'bugzilla_id': self.bugzilla_id,
@@ -71,6 +84,20 @@ class BugSync(object):
         logger.info('Updated payload of {}'.format(self.bugzilla_id))
 
         return True
+
+    def set_merge_status(self, branch, revision, status):
+        """
+        Update payload with merge status
+        """
+        patches = self.payload['payload']['analysis'].get('patches', {})
+        if revision not in patches:
+            return
+        patch = patches[revision]
+
+        if 'merge' not in patch:
+            patch['merge'] = {}
+        patch['merge'][branch] = status
+        self.payload['payload']['analysis']['patches'][revision] = patch
 
     def load_users(self, analysis):
         """
@@ -125,6 +152,7 @@ class Bot(object):
     """
     def __init__(self, bugzilla_url, bugzilla_token=None):
         self.bugs = {}
+        self.repository = None
         self.bugzilla_url = bugzilla_url
 
         # Patch libmozdata configuration
@@ -139,10 +167,29 @@ class Bot(object):
             bugzilla.Bugzilla.TOKEN = bugzilla_token
             bugzilla.BugzillaUser.TOKEN = bugzilla_token
 
-        logger.info('Use bugzilla server {}'.format(self.bugzilla_url))
+        logger.info('Use bugzilla server', url=self.bugzilla_url)
 
     def run(self):
         raise NotImplementedError
+
+    def use_cache(self, cache_root):
+        """
+        Setup cache directory
+        User to clone Mercurial repository for merge checks
+        """
+
+        # Check cache directory
+        assert os.path.isdir(cache_root), \
+            'Missing cache root {}'.format(cache_root)
+        assert os.access(cache_root, os.W_OK | os.X_OK), \
+            'Cache root {} is not writable'.format(cache_root)
+        logger.info('Using cache', root=cache_root)
+
+        # Init local copy of mozilla-unified
+        self.repository = Repository(
+            'https://hg.mozilla.org/mozilla-unified',
+            os.path.join(cache_root, 'mozilla-unified')
+        )
 
     def list_bugs(self, query):
         """
@@ -282,20 +329,25 @@ class BotRemote(Bot):
         Build bug analysis for a specified Bugzilla query
         Used by taskcluster - no db interaction
         """
+        assert self.repository is not None, \
+            'Missing mozilla repository'
+
+        # First update local repository
+        self.repository.update()
 
         # Load all analysis
         all_analysis = self.make_request('get', '/analysis')
         for analysis in all_analysis:
 
             # Mark bugs already in analysis
-            logger.info('List remote bugs for {}'.format(analysis['name']))
+            logger.info('List remote bugs', name=analysis['name'])
             analysis_details = self.make_request('get', '/analysis/{}'.format(analysis['id']))  # noqa
             syncs = map(self.get_bug_sync, [b['bugzilla_id'] for b in analysis_details['bugs']])  # noqa
             for sync in syncs:
                 sync.on_remote.append(analysis['id'])
 
             # Get bugs from bugzilla for this analysis
-            logger.info('List bugzilla bugs for {}'.format(analysis['name']))
+            logger.info('List bugzilla bugs', name=analysis['name'])
             raw_bugs = self.list_bugs(analysis['parameters'])
             for bugzilla_id, bug_data in raw_bugs.items():
                 sync = self.get_bug_sync(bugzilla_id)
@@ -309,6 +361,14 @@ class BotRemote(Bot):
                 # Do patch analysis on bugs
                 if not sync.update(self.bugzilla_url):
                     continue
+
+                # Check patches merge on repository
+                for branch, revision in sync.patches:
+                    sync.set_merge_status(
+                        branch,
+                        revision,
+                        self.repository.is_mergeable(revision, branch)
+                    )
 
                 # Send payload to server
                 try:

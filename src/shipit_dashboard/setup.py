@@ -35,7 +35,7 @@ setup(
     license='MPL2',
     entry_points={
         'console_scripts': [
-            'shipit-bot= shipit_bot.cli:main',
+            'shipit-dashboard-bot= shipit_bot.cli:main',
         ]
     },
 )

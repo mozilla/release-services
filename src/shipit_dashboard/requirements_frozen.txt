@@ -61,13 +61,11 @@ python-editor==1.0.3
 python-hglib==2.3
 pytz==2016.10
 PyYAML==3.12
-releng-common==4
 requests==2.12.5
 requests-futures==0.9.7
 responses==0.5.1
 rsa==3.4.2
 setuptools-scm==1.15.0
-shipit-dashboard==4
 simplegeneric==0.8.1
 six==1.10.0
 slugid==1.0.7
