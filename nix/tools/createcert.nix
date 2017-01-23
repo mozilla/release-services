@@ -8,7 +8,7 @@ in writeScriptBin "createcert" ''
   DIR=$1
 
   if [[ -z "$DIR" ]]; then
-    ${coreutils}/bin/echo "You need to provide direcotry where to create certificates."
+    ${coreutils}/bin/echo "You need to provide directory where to create certificates."
     exit 1
   fi
 
@@ -49,14 +49,25 @@ in writeScriptBin "createcert" ''
     # Build a private key
     ${openssl.bin}/bin/openssl genrsa -out $KEY 2048
 
-    # Build csr
-    ${openssl.bin}/bin/openssl req -sha256 -new -key $KEY -out $CSR -subj "/C=FR/ST=France/L=Paris/O=Mozilla/OU=Dev/CN=localhost"
+    # Build csr with mandatory subjectAltName
+    ${openssl.bin}/bin/openssl req -sha256 -new -key $KEY -out $CSR \
+      -subj "/C=FR/ST=France/L=Paris/O=Mozilla/OU=Dev/CN=localhost" \
+      -reqexts SAN \
+      -config <(cat ${openssl.out}/etc/ssl/openssl.cnf \
+        <(printf "[SAN]\nsubjectAltName=DNS:localhost,DNS:127.0.0.1"))
 
-    # Sign  with CA
-    ${openssl.bin}/bin/openssl x509 -req -in $CSR -CA $CA_CERT -CAkey $CA_KEY -CAcreateserial -out $CERT -days 500
+    # Sign with CA
+    ${openssl.bin}/bin/openssl x509 -req -in $CSR \
+      -CA $CA_CERT -CAkey $CA_KEY -CAcreateserial -out $CERT -days 500 \
+      -extensions SAN \
+      -extfile <(cat ${openssl.out}/etc/ssl/openssl.cnf \
+        <(printf "[SAN]\nsubjectAltName=DNS:localhost,DNS:127.0.0.1"))
 
     # Cleanup csr
     ${coreutils}/bin/rm $CSR
+
+    # Hash cert directory
+    ${openssl.bin}/bin/c_rehash $DIR
   }
 
   build_ca

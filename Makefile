@@ -163,7 +163,7 @@ nix:
 
 
 develop: nix require-APP
-	@nix-shell nix/default.nix -A $(APP)
+	@SSL_DEV_CA=$$PWD/tmp nix-shell nix/default.nix -A $(APP)
 
 
 
