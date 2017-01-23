@@ -93,16 +93,28 @@ def update_bug(bugzilla_id):
             # Build flags map
             source = update['changes'].get('flagtypes.name', {})
             removed, added = source['removed'].split(', '), source['added'].split(', ')  # noqa
-            flags_map = dict(zip(removed, added))
+            flags_map = zip(removed, added)
 
-            # Update attachment flag status
-            for a in payload['bug']['attachments']:
-                if a['id'] != update['bugzilla_id']:
-                    continue
-                for flag in a['flags']:
-                    name = flag['name'] + flag['status']
-                    if name in flags_map:
-                        flag['status'] = flags_map[name][len(flag['name']):]
+            def _split(fullkey):
+                # From 'approval-mozilla-beta+' to
+                # ('beta +', 'approval-mozilla-beta', '+')
+                assert fullkey.startswith('approval-mozilla-'), \
+                    '{} is not approval-mozilla-XXX'.format(fullkey)
+                out = fullkey[17:]
+                return out[:-1] + ' ' + out[-1], fullkey[:-1], fullkey[-1]
+
+            # Update versions directly
+            versions = payload.get('versions', {})
+            for before, after in flags_map:
+                before, _, _ = _split(before)
+                after, name, status = _split(after)
+                if before in versions:
+                    versions[after] = versions[before]
+                    versions[after].update({
+                        'name': name,
+                        'status': status,
+                    })
+                    del versions[before]
 
         else:
             raise Exception('Invalid update target {}'.format(update['target']))  # noqa

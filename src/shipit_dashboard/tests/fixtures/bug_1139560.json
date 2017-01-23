@@ -680,5 +680,17 @@
                 "creator"
             ]
         }
-    ]
+    ],
+    "versions": {
+        "aurora +": {
+            "attachments": ["8590815"],
+            "name": "approval-mozilla-aurora",
+            "status": "+"
+        },
+        "beta ?": {
+            "attachments": ["8590815"],
+            "name": "approval-mozilla-beta",
+            "status": "?"
+        }
+    }
 }

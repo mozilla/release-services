@@ -53,9 +53,9 @@ class BugSync(object):
 
         # Check the versions contain current analysis
         versions = self.list_versions()
-        version_pending = '{} ?'.format(VERSIONS[analysis['id'] - 1].decode('utf-8'))
+        version_pending = '{} ?'.format(VERSIONS[analysis['id'] - 1].decode('utf-8'))  # noqa
         if version_pending not in versions:
-            logger.warn('Skipping bugzilla', bz_id=self.bugzilla_id, version=version_pending, versions=versions.keys())
+            logger.warn('Skipping bugzilla', bz_id=self.bugzilla_id, version=version_pending, versions=versions.keys())  # noqa
             return
 
         self.on_bugzilla.append(analysis['id'])
@@ -93,8 +93,8 @@ class BugSync(object):
         """
         assert self.analysis is not None, \
             'Missing bug analysis'
-        return [(revision.encode('utf-8'), VERSIONS[branch - 1]) \
-                for revision in self.analysis['patches'].keys() \
+        return [(revision.encode('utf-8'), VERSIONS[branch - 1])
+                for revision in self.analysis['patches'].keys()
                 for branch in self.on_bugzilla]
 
     def build_payload(self, bugzilla_url):
@@ -147,6 +147,7 @@ class BugSync(object):
             'Missing bug analysis'
 
         roles = {}
+
         def _extract_user(user_data, role):
             # Support multiple input structures
             if user_data is None:
