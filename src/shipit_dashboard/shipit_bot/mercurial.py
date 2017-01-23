@@ -41,11 +41,12 @@ class Repository(object):
         except Exception:
             # Initial clone, with a manual command to support ca certs
             logger.info('No local repository found in cache, cloning...')
+            clone_cfg = cacert and 'web.cacerts={}'.format(cacert) or None
             cmd = hglib.util.cmdbuilder('clone',
                                         self.url,
                                         self.directory,
                                         uncompressed=True,
-                                        config='web.cacerts={}'.format(cacert))
+                                        config=clone_cfg)
             cmd.insert(0, hglib.HGPATH)
             proc = hglib.util.popen(cmd)
             out, err = proc.communicate()
