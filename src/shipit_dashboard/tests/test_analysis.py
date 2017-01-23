@@ -117,6 +117,10 @@ def test_create_bug(client, bugs, header_bot):
                         "source": "mercurial",
                         "url": "https://hg.mozilla.org/mozilla-central/rev/41a0c9bc40df",  # noqa
                         "languages": ["Python"],
+                        "merge": {
+                           "aurora": True,
+                           "beta": False
+                        }
                     }
                 },
                 "uplift_accepted": False,
@@ -198,7 +202,8 @@ def test_create_bug(client, bugs, header_bot):
                         "uplift_author"
                     ]
                 }
-            ]
+            ],
+            "versions": {}
         }
     }
     resp = client.post('/bugs', data=json.dumps(data), headers=[
@@ -242,6 +247,10 @@ def test_create_bug(client, bugs, header_bot):
                                      'changes_del': 9,
                                      'changes_size': 162,
                                      'languages': ['Python'],
+                                     'merge': {
+                                        'aurora': True,
+                                        'beta': False,
+                                     },
                                      'source': 'mercurial',
                                      'url': 'https://hg.mozilla.org/mozilla-central/rev/41a0c9bc40df'}},  # noqa
         'summary': 'Desktop reading list sync module should batch its POST /batch '  # noqa
