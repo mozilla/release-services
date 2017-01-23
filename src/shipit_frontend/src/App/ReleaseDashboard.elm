@@ -69,6 +69,7 @@ type alias Patch =
     , changes : Int
     , url : String
     , languages : List String
+    , merge : Dict.Dict String Bool
     }
 
 
@@ -712,13 +713,14 @@ decodeBug =
 
 decodePatch : Decoder Patch
 decodePatch =
-    Json.object6 Patch
+    Json.object7 Patch
         ("source" := Json.string)
         ("changes_add" := Json.int)
         ("changes_del" := Json.int)
         ("changes_size" := Json.int)
         ("url" := Json.string)
         ("languages" := Json.list (Json.string))
+        ("merge" := Json.dict Json.bool)
 
 
 decodeVersion : Decoder UpliftVersion
@@ -904,6 +906,15 @@ viewPatch ( patchId, patch ) =
                     patch.languages
                )
             ++ [ span [ class "changes" ] [ text ")" ] ]
+            ++ (List.map
+                    (\( version, status ) ->
+                        if status then
+                            span [ class "merge tag tag-success", title ("Merge successful on " ++ version) ] [ text version ]
+                        else
+                            span [ class "merge tag tag-danger", title ("Merge failed on " ++ version) ] [ text version ]
+                    )
+                    (Dict.toList patch.merge)
+               )
         )
 
 

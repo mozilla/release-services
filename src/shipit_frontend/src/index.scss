@@ -171,6 +171,10 @@ div.bugs {
           color: $state-danger-text;
         }
       }
+
+      span.merge {
+        margin-right: 4px;
+      }
     }
 
     div.flags {
