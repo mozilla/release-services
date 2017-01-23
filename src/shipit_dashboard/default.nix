@@ -57,6 +57,7 @@ let
       [ 
         python.packages."libmozdata"
         python.packages."python-hglib"
+        python.packages.certifi
 				releng_pkgs.pkgs.mercurial
       ];
     passthru = {

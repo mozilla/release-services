@@ -4,6 +4,7 @@
 
 # i wonder why libmozdata doesn't require this already
 requests[security]>=2.7.0
+certifi
 
 libmozdata
 python-hglib
