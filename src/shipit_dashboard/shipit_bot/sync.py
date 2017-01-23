@@ -34,77 +34,119 @@ class BugSync(object):
         self.on_remote = []
         self.on_bugzilla = []
         self.bug_data = None
-        self.payload = None
-        self.patches = []
+        self.analysis = None
 
-    def update(self, bugzilla_url):
+    def setup_remote(self, analysis):
+        """
+        Bug is on remote (backend)
+        """
+        self.on_remote.append(analysis['id'])
+        logger.debug('On remote', bz_id=self.bugzilla_id)
+
+    def setup_bugzilla(self, analysis, bug_data):
+        """
+        Bug is on Bugzilla, store data
+        Only when the uplift is pending (tag '?' on attachment)
+        """
+        if self.bug_data is None:
+            self.bug_data = bug_data
+
+        # Check the versions contain current analysis
+        versions = self.list_versions()
+        version_pending = '{} ?'.format(VERSIONS[analysis['id'] - 1].decode('utf-8'))
+        if version_pending not in versions:
+            logger.warn('Skipping bugzilla', bz_id=self.bugzilla_id, version=version_pending, versions=versions.keys())
+            return
+
+        self.on_bugzilla.append(analysis['id'])
+        logger.debug('On bugzilla', bz_id=self.bugzilla_id)
+
+    def update(self):
         """
         Update bug used in this sync
         """
 
         # Skip when it's already processed in instance
-        if self.payload is not None:
+        if self.analysis is not None:
             logger.warn('Bug {} already processed.'.format(self.bugzilla_id))
             return True
 
-        # Compute the hash of the new bug
-        bug_hash = compute_dict_hash(self.bug_data)
-
         # Do patch analysis
         try:
-            analysis = bug_analysis(self.bugzilla_id)
+            self.analysis = bug_analysis(self.bugzilla_id)
         except Exception as e:
             logger.error('Patch analysis failed on {} : {}'.format(self.bugzilla_id, e))  # noqa
             return False
 
         # Build html version of uplift comment
-        if analysis['uplift_comment']:
-            analysis['uplift_comment']['html'] = parse_uplift_comment(
-                analysis['uplift_comment']['text'], self.bugzilla_id)
+        if self.analysis['uplift_comment']:
+            self.analysis['uplift_comment']['html'] = parse_uplift_comment(
+                self.analysis['uplift_comment']['text'], self.bugzilla_id)
 
-        # Extract patches
-        for branch in self.on_bugzilla:
-            for revision in analysis['patches'].keys():
-                self.patches.append(
-                    (VERSIONS[branch - 1], revision.encode('utf-8'))
-                )
+        return True
+
+    @property
+    def patches(self):
+        """
+        List all patches in current analysis
+        as (revision, branch) tuples
+        """
+        assert self.analysis is not None, \
+            'Missing bug analysis'
+        return [(revision.encode('utf-8'), VERSIONS[branch - 1]) \
+                for revision in self.analysis['patches'].keys() \
+                for branch in self.on_bugzilla]
+
+    def build_payload(self, bugzilla_url):
+        """
+        Build final paylaod, sent to remote server
+        """
+        # Compute the hash of the new bug
+        bug_hash = compute_dict_hash(self.bug_data)
 
         # Build internal payload
-        self.payload = {
+        return {
             'bugzilla_id': self.bugzilla_id,
             'analysis': self.on_bugzilla,
             'payload': {
                 'url': '{}/{}'.format(bugzilla_url, self.bugzilla_id),
                 'bug': self.bug_data,
-                'analysis': analysis,
-                'users': self.load_users(analysis),
+                'analysis': self.analysis,
+                'users': self.load_users(),
+                'versions': self.list_versions(),
             },
             'payload_hash': bug_hash,
         }
-        logger.info('Updated payload of {}'.format(self.bugzilla_id))
 
-        return True
+    def set_merge_status(self, revision, branch, status):
+        """
+        Update analysis with merge status
+        """
+        assert isinstance(revision, bytes)
+        assert isinstance(branch, bytes)
+        assert isinstance(status, bool)
+        revision = revision.decode('utf-8')
+        branch = branch.decode('utf-8')
 
-    def set_merge_status(self, branch, revision, status):
-        """
-        Update payload with merge status
-        """
-        patches = self.payload['payload']['analysis'].get('patches', {})
+        patches = self.analysis.get('patches', {})
         if revision not in patches:
+            logger.warn('Failed to save merge status', rev=revision, branch=branch)  # noqa
             return
-        patch = patches[revision]
 
+        patch = patches[revision]
         if 'merge' not in patch:
             patch['merge'] = {}
         patch['merge'][branch] = status
-        self.payload['payload']['analysis']['patches'][revision] = patch
+        self.analysis['patches'][revision] = patch
 
-    def load_users(self, analysis):
+    def load_users(self):
         """
         Load users linked through roles to an analysis
         """
-        roles = {}
+        assert self.analysis is not None, \
+            'Missing bug analysis'
 
+        roles = {}
         def _extract_user(user_data, role):
             # Support multiple input structures
             if user_data is None:
@@ -127,11 +169,11 @@ class BugSync(object):
             roles[key].append(role)
 
         # Extract users keys & roles
-        _extract_user(analysis['users'].get('creator'), 'creator')
-        _extract_user(analysis['users'].get('assignee'), 'assignee')
-        for r in analysis['users']['reviewers']:
+        _extract_user(self.analysis['users'].get('creator'), 'creator')
+        _extract_user(self.analysis['users'].get('assignee'), 'assignee')
+        for r in self.analysis['users']['reviewers']:
             _extract_user(r, 'reviewer')
-        _extract_user(analysis['uplift_author'], 'uplift_author')
+        _extract_user(self.analysis['uplift_author'], 'uplift_author')
 
         def _handler(user, data):
             # Store users with their roles
@@ -144,6 +186,28 @@ class BugSync(object):
                               user_handler=_handler,
                               user_data=out).wait()
         return out
+
+    def list_versions(self):
+        """
+        Extract versions from bug attachments
+        """
+        approval_base_flag = 'approval-mozilla-'
+        versions = {}
+        for a in self.bug_data.get('attachments', []):
+            for flag in a['flags']:
+                if not flag['name'].startswith(approval_base_flag):
+                    continue
+                base_name = flag['name'].replace(approval_base_flag, '')
+                name = '{} {}'.format(base_name, flag['status'])
+                if name not in versions:
+                    versions[name] = {
+                        'name': flag['name'],
+                        'attachments': [],
+                        'status': flag['status'],
+                    }
+                versions[name]['attachments'].append(str(a['id']))
+
+        return versions
 
 
 class Bot(object):
@@ -304,12 +368,18 @@ class BotRemote(Bot):
                              content=data,
                              content_type='application/json')
 
-        # Send request
+        # Support dev ssl ca cert
+        ssl_dev_ca = os.environ.get('SSL_DEV_CA')
+        if ssl_dev_ca is not None:
+            assert os.path.isdir(ssl_dev_ca), \
+                'SSL_DEV_CA must be a dir with hashed dev ca certs'
+
+        # Send request, using optional dev ca
         headers = {
             'Authorization': hawk.request_header,
             'Content-Type': 'application/json',
         }
-        response = request(url, data=data, headers=headers, verify=False)
+        response = request(url, data=data, headers=headers, verify=ssl_dev_ca)
         if not response.ok:
             raise Exception('Invalid response from {} {} : {}'.format(
                 method, url, response.content))
@@ -341,38 +411,38 @@ class BotRemote(Bot):
 
             # Mark bugs already in analysis
             logger.info('List remote bugs', name=analysis['name'])
-            analysis_details = self.make_request('get', '/analysis/{}'.format(analysis['id']))  # noqa
-            syncs = map(self.get_bug_sync, [b['bugzilla_id'] for b in analysis_details['bugs']])  # noqa
-            for sync in syncs:
-                sync.on_remote.append(analysis['id'])
+            url = '/analysis/{}'.format(analysis['id'])
+            analysis_details = self.make_request('get', url)
+            for bug in analysis_details['bugs']:
+                sync = self.get_bug_sync(bug['bugzilla_id'])
+                sync.setup_remote(analysis)
 
             # Get bugs from bugzilla for this analysis
             logger.info('List bugzilla bugs', name=analysis['name'])
             raw_bugs = self.list_bugs(analysis['parameters'])
             for bugzilla_id, bug_data in raw_bugs.items():
                 sync = self.get_bug_sync(bugzilla_id)
-                if sync.bug_data is None:
-                    sync.bug_data = bug_data
-                sync.on_bugzilla.append(analysis['id'])
+                sync.setup_bugzilla(analysis, bug_data)
 
         for bugzilla_id, sync in self.sync.items():
 
             if len(sync.on_bugzilla) > 0:
                 # Do patch analysis on bugs
-                if not sync.update(self.bugzilla_url):
+                if not sync.update():
                     continue
 
                 # Check patches merge on repository
-                for branch, revision in sync.patches:
+                for revision, branch in sync.patches:
                     sync.set_merge_status(
-                        branch,
                         revision,
+                        branch,
                         self.repository.is_mergeable(revision, branch)
                     )
 
                 # Send payload to server
                 try:
-                    data = json.dumps(sync.payload, cls=ShipitJSONEncoder)
+                    payload = sync.build_payload(self.bugzilla_url)
+                    data = json.dumps(payload, cls=ShipitJSONEncoder)
                     self.make_request('post', '/bugs', data)
                     logger.info('Added bug #{} on analysis {}'.format(
                         bugzilla_id, ', '.join(map(str, sync.on_bugzilla))))

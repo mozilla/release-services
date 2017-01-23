@@ -51,6 +51,7 @@ def serialize_patch(patch):
         'changes_size': patch['changes_size'],
         'url': patch['url'],
         'languages': patch.get('languages', []),
+        'merge': patch.get('merge', {}),
     }
 
 
@@ -80,23 +81,6 @@ def serialize_bug(bug):
             'id': comment['id'],
             'comment': comment_html,
         }
-
-    # Build versions
-    approval_base_flag = 'approval-mozilla-'
-    versions = {}
-    for a in bug_data.get('attachments', []):
-        for flag in a['flags']:
-            if not flag['name'].startswith(approval_base_flag):
-                continue
-            base_name = flag['name'].replace(approval_base_flag, '')
-            name = '{} {}'.format(base_name, flag['status'])
-            if name not in versions:
-                versions[name] = {
-                    'name': flag['name'],
-                    'attachments': [],
-                    'status': flag['status'],
-                }
-            versions[name]['attachments'].append(str(a['id']))
 
     # Build flags
     status_base_flag = 'cf_status_'
@@ -136,7 +120,7 @@ def serialize_bug(bug):
         'landings': {k: v for k, v in analysis.get('landings', {}).items() if v is not None},  # noqa
 
         # Versions
-        'versions': versions,
+        'versions': payload.get('versions', {}),
     }
 
 
