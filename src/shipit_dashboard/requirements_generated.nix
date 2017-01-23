@@ -302,6 +302,21 @@ self: {
 
 
 
+  "certifi" = python.mkDerivation {
+    name = "certifi-2016.9.26";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/4f/75/e1bc6e363a2c76f8d7e754c27c437dbe4086414e1d6d2f6b2a3e7846f22b/certifi-2016.9.26.tar.gz"; sha256 = "8275aef1bbeaf05c53715bfc5d8569bd1e04ca1e8e69608cc52bcaac2604eb19"; };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = "ISC";
+      description = "Python package for providing Mozilla's CA Bundle.";
+    };
+  };
+
+
+
   "cffi" = python.mkDerivation {
     name = "cffi-1.9.1";
     src = pkgs.fetchurl { url = "https://pypi.python.org/packages/a1/32/e3d6c3a8b5461b903651dd6ce958ed03c093d2e00128e3f33ea69f1d7965/cffi-1.9.1.tar.gz"; sha256 = "563e0bd53fda03c151573217b3a49b3abad8813de9dd0632e10090f6190fdaf8"; };

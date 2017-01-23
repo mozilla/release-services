@@ -1,6 +1,7 @@
 aiohttp==1.2.0
 alembic==0.8.10
 async-timeout==1.1.0
+certifi==2016.9.26
 cffi==1.9.1
 chardet==2.3.0
 click==6.7
