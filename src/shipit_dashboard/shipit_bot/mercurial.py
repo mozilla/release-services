@@ -63,6 +63,11 @@ class Repository(object):
         """
         Test if a revision is mergeable on a branch
         """
+        # Use revision in bytes (needed by hglib)
+        if isinstance(revision, int):
+            revision = str(revision).encode('utf-8')
+        assert isinstance(revision, bytes)
+
         logger.info('Merge test', revision=revision, branch=branch)
 
         # Switch branch
@@ -87,7 +92,7 @@ class Repository(object):
             logger.info('Merge success', revision=revision, branch=branch)
 
             # TODO: rollback ?
-        except hglib.error.CommandError as e:
+        except (hglib.error.CommandError, hglib.error.ResponseError) as e:
             logger.warning('Auto merge failed for {} on {}'.format(revision, branch), error=e)  # noqa
 
             # Clean your mess
