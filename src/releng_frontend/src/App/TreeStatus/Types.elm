@@ -75,7 +75,9 @@ type Msg
     | FormUpdateTreeMsg Form.Msg
     | FormUpdateTreeResult (RemoteData.RemoteData Http.RawError Http.Response)
     | FormUpdateTreesResult (RemoteData.RemoteData Http.RawError Http.Response)
+    | SelectAllTrees
     | SelectTree String
+    | UnselectAllTrees
     | UnselectTree String
     | DeleteTrees
     | DeleteTreesResult (RemoteData.RemoteData Http.RawError Http.Response)
