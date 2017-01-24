@@ -14,32 +14,37 @@ let
     extras = ["api" "auth" "cors" "log" "db" ];
   };
 
-  bot = mkTaskclusterHook {
-    name = "Shipit bot updating bug analysis";
-    owner = "babadie@mozilla.com";
-    schedule = [ "0 */30 * * * *" ];  # every 30 min
-    taskImage = self.docker;
-    scopes = [
-			# Used by taskclusterProxy
-			"secrets:get:project/shipit/bot/staging"
+  mkBot = branch :
+    let
+      cacheKey = "shipit-bot-" + branch;
+      secretsKey = "project/shipit/bot/" + branch;
+    in
+      mkTaskclusterHook {
+        name = "Shipit bot updating bug analysis";
+        owner = "babadie@mozilla.com";
+        schedule = [ "0 */30 * * * *" ];  # every 30 min
+        taskImage = self.docker;
+        scopes = [
+          # Used by taskclusterProxy
+          ("secrets:get:" + secretsKey)
 
-			# Used by cache
-			"docker-worker:cache:shipit-bot-staging"
-		];
-		cache = {
-			"shipit-bot-staging" = "/cache";
-		};
-    taskEnv = {
-      "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
-    };
-    taskCommand = [
-      "/bin/shipit-dashboard-bot"
-      "--secrets"
-      "project/shipit/bot/staging"
-			"--cache-root"
-      "/cache"
-    ];
-  };
+          # Used by cache
+          ("docker-worker:cache:" + cacheKey)
+        ];
+        cache = {
+          "${cacheKey}" = "/cache";
+        };
+        taskEnv = {
+          "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+        };
+        taskCommand = [
+          "/bin/shipit-dashboard-bot"
+          "--secrets"
+          secretsKey
+          "--cache-root"
+          "/cache"
+        ];
+      };
 
   self = mkBackend rec {
     inherit python releng_common;
@@ -65,9 +70,10 @@ let
         master = {
         };
         staging = {
-          inherit bot;
+          bot = mkBot "staging";
         };
         production = {
+          bot = mkBot "production";
         };
       };
       update = writeScript "update-${name}" ''
