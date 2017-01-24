@@ -619,6 +619,31 @@ viewRecentChange recentChange plural =
                 "trees"
             else
                 "tree"
+
+        recentChangeReason =
+            let
+                words =
+                    String.words "Something Bug 123 something else." --recentChange.reason
+
+                previousWords =
+                    Nothing :: (List.map Just words)
+
+                wordsWithLinks =
+                    List.map2 (\x y -> (x, y)) previousWords words
+                        |> List.filter (\(x, y) -> y /= "Bug")
+                        |> List.map
+                            (\(x, y) ->
+                                if x == Just "Bug"
+                                   then a [ href ("https://bugzilla.mozilla.org/show_bug.cgi?id=" ++ y) ]
+                                          [ text ("Bug " ++ y) ]
+                                   else text (" " ++ y ++ " ")
+                            )
+
+            in
+                if List.isEmpty words
+                    then []
+                    else (text " with reason: ") :: wordsWithLinks
+
     in
         div
             [ class "list-group-item" ]
@@ -639,23 +664,21 @@ viewRecentChange recentChange plural =
                 ]
             , div
                 []
-                [ text "At "
-                , text recentChange.when
-                , text " UTC, "
-                , text (TaskclusterLogin.shortUsername recentChange.who)
-                , text " changed "
-                , text treeLabel
-                , em [] [ text (String.join ", " recentChange.trees) ]
-                , text " to "
-                , span
-                    [ class ("tag tag-" ++ (treeStatus recentChange.status)) ]
-                    [ text recentChange.status ]
-                , if recentChange.reason == "" then
-                    text ""
-                  else
-                    text (" with reason: " ++ recentChange.reason)
-                , text "."
-                ]
+                (List.append
+                    [ text "At "
+                    , text recentChange.when
+                    , text " UTC, "
+                    , text (TaskclusterLogin.shortUsername recentChange.who)
+                    , text " changed "
+                    , text treeLabel
+                    , em [] [ text (String.join ", " recentChange.trees) ]
+                    , text " to "
+                    , span
+                        [ class ("tag tag-" ++ (treeStatus recentChange.status)) ]
+                        [ text recentChange.status ]
+                    ]
+                    recentChangeReason
+                )
             ]
 
 
@@ -667,7 +690,8 @@ view :
 view route scopes model =
     let
         hasScope scope =
-            App.UserScopes.hasScope scopes ("project:releng:treestatus/" ++ scope)
+            True
+            --App.UserScopes.hasScope scopes ("project:releng:treestatus/" ++ scope)
 
         viewForms forms =
             let
