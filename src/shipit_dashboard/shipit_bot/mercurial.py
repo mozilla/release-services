@@ -59,6 +59,18 @@ class Repository(object):
         assert (b'extensions', b'purge', b'') in self.client.config(), \
             'Missing mercurial purge extension'
 
+        # Setup callback prompt
+        def _cb(max_length, data):
+            logger.info('Received data from HG', data=data)
+
+            # Use new file when it exists
+            if b'(c)hanged' in data:
+                return b'c\n'
+
+            # Send unresolved
+            return b'u\n'
+        self.client.setcbprompt(_cb)
+
     def is_mergeable(self, revision, branch):
         """
         Test if a revision is mergeable on a branch
@@ -90,16 +102,25 @@ class Repository(object):
         try:
             self.client.rawcommand(cmd)
             logger.info('Merge success', revision=revision, branch=branch)
-
-            # TODO: rollback ?
-        except (hglib.error.CommandError, hglib.error.ResponseError) as e:
-            logger.warning('Auto merge failed for {} on {}'.format(revision, branch), error=e)  # noqa
-
-            # Clean your mess
-            self.client.rawcommand([b'update', b'--clean'])
-            self.client.rawcommand([b'purge'])
-
+            self.cleanup()
+        except hglib.error.CommandError as e:
+            logger.warning('Auto merge failed', revision=revision, branch=branch, error=e)  # noqa
+            self.cleanup()
             return False
 
         # If `hg graft` exits code 0, there are no merge conflicts.
         return True
+
+    def cleanup(self):
+        """
+        Cleanup repository
+        """
+        try:
+            self.client.rawcommand([b'update', b'--clean'])
+        except Exception as e:
+            logger.debug('Cleanup update failure', error=e)
+
+        try:
+            self.client.rawcommand([b'purge'])
+        except Exception as e:
+            logger.debug('Cleanup purge failure', error=e)
