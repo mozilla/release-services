@@ -231,6 +231,20 @@ update route msg model =
                 , Nothing
                 )
 
+        App.TreeStatus.Types.SelectAllTrees ->
+            let
+                treesSelected =
+                    case model.trees of
+                        RemoteData.Success trees ->
+                            List.map .name trees
+                        _ ->
+                            []
+            in
+                ( { model | treesSelected = treesSelected }
+                , Cmd.none
+                , Nothing
+                )
+
         App.TreeStatus.Types.SelectTree name ->
             let
                 treesSelected =
@@ -243,6 +257,12 @@ update route msg model =
                 , Cmd.none
                 , Nothing
                 )
+
+        App.TreeStatus.Types.UnselectAllTrees ->
+            ( { model | treesSelected = [] }
+            , Cmd.none
+            , Nothing
+            )
 
         App.TreeStatus.Types.UnselectTree name ->
             let
@@ -377,8 +397,8 @@ viewTrees model scopes =
                             treeTagClass =
                                 "float-xs-right tag tag-" ++ (treeStatus tree.status)
 
-                            hasScope =
-                                App.UserScopes.hasScope scopes
+                            hasScope scope =
+                                App.UserScopes.hasScope scopes scope
 
                             hasScopes =
                                 hasScope "project:releng:treestatus/update_trees"
@@ -623,7 +643,7 @@ viewRecentChange recentChange plural =
         recentChangeReason =
             let
                 words =
-                    String.words "Something Bug 123 something else." --recentChange.reason
+                    String.words recentChange.reason
 
                 previousWords =
                     Nothing :: (List.map Just words)
@@ -690,8 +710,7 @@ view :
 view route scopes model =
     let
         hasScope scope =
-            True
-            --App.UserScopes.hasScope scopes ("project:releng:treestatus/" ++ scope)
+            App.UserScopes.hasScope scopes ("project:releng:treestatus/" ++ scope)
 
         viewForms forms =
             let
@@ -763,6 +782,10 @@ view route scopes model =
                 , form
                 ]
 
+        allSelected =
+            List.length (RemoteData.withDefault [] model.trees) ==
+                List.length model.treesSelected
+
         subRoute =
             case route of
                 App.TreeStatus.Types.TreesRoute ->
@@ -827,6 +850,19 @@ view route scopes model =
                                         |> Html.App.map App.TreeStatus.Types.FormUpdateTreeMsg
                                     )
                           }
+                        ]
+                    , a [ href "#"
+                        , Utils.onClick
+                            (if allSelected
+                                then App.TreeStatus.Types.UnselectAllTrees
+                                else App.TreeStatus.Types.SelectAllTrees
+                            )
+                        ]
+                        [ text
+                            (if allSelected
+                                then "Unselect all trees"
+                                else "Select all trees"
+                            )
                         ]
                     , div
                         [ id "treestatus-trees"
