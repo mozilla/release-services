@@ -93,7 +93,11 @@ class BugSync(object):
         """
         assert self.analysis is not None, \
             'Missing bug analysis'
-        return [(revision.encode('utf-8'), VERSIONS[branch - 1])
+
+        def _rev(r):
+            return isinstance(r, int) and r or r.encode('utf-8')
+
+        return [(_rev(revision), VERSIONS[branch - 1])
                 for revision in self.analysis['patches'].keys()
                 for branch in self.on_bugzilla]
 
@@ -122,10 +126,11 @@ class BugSync(object):
         """
         Update analysis with merge status
         """
-        assert isinstance(revision, bytes)
+        assert isinstance(revision, bytes) or isinstance(revision, int)
         assert isinstance(branch, bytes)
         assert isinstance(status, bool)
-        revision = revision.decode('utf-8')
+        revision = isinstance(revision, int) and revision \
+            or revision.decode('utf-8')
         branch = branch.decode('utf-8')
 
         patches = self.analysis.get('patches', {})
@@ -395,7 +400,7 @@ class BotRemote(Bot):
 
         return self.sync[bugzilla_id]
 
-    def run(self):
+    def run(self, only=None):
         """
         Build bug analysis for a specified Bugzilla query
         Used by taskcluster - no db interaction
@@ -425,37 +430,54 @@ class BotRemote(Bot):
                 sync = self.get_bug_sync(bugzilla_id)
                 sync.setup_bugzilla(analysis, bug_data)
 
-        for bugzilla_id, sync in self.sync.items():
+        for sync in self.sync.values():
+            # Filter bugs when 'only' is filled
+            if only is not None and sync.bugzilla_id not in only:
+                logger.debug('Skip', bz_id=sync.bugzilla_id)
+                continue
 
             if len(sync.on_bugzilla) > 0:
-                # Do patch analysis on bugs
-                if not sync.update():
-                    continue
-
-                # Check patches merge on repository
-                for revision, branch in sync.patches:
-                    sync.set_merge_status(
-                        revision,
-                        branch,
-                        self.repository.is_mergeable(revision, branch)
-                    )
-
-                # Send payload to server
-                try:
-                    payload = sync.build_payload(self.bugzilla_url)
-                    data = json.dumps(payload, cls=ShipitJSONEncoder)
-                    self.make_request('post', '/bugs', data)
-                    logger.info('Added bug #{} on analysis {}'.format(
-                        bugzilla_id, ', '.join(map(str, sync.on_bugzilla))))
-                except Exception as e:
-                    logger.error('Failed to add bug #{} : {}'.format(bugzilla_id, e))  # noqa
+                self.update_bug(sync)
 
             elif len(sync.on_remote) > 0:
-                # Remove bugs from remote server
-                try:
-                    self.make_request('delete', '/bugs/{}'.format(bugzilla_id))
-                    logger.info('Deleted bug #{} from analysis {}'.format(
-                        bugzilla_id, ', '.join(map(str, sync.on_remote))))
-                except Exception as e:
-                    logger.warning(
-                        'Failed to delete bug #{} : {}'.format(bugzilla_id, e))
+                self.delete_bug(sync)
+
+    def update_bug(self, sync):
+        """
+        Update specific bug
+        """
+        assert isinstance(sync, BugSync), \
+            'Use BugSync instance'
+
+        # Do patch analysis on bugs
+        if not sync.update():
+            return
+
+        # Check patches merge on repository
+        for revision, branch in sync.patches:
+            sync.set_merge_status(
+                revision,
+                branch,
+                self.repository.is_mergeable(revision, branch)
+            )
+
+        # Send payload to server
+        try:
+            payload = sync.build_payload(self.bugzilla_url)
+            data = json.dumps(payload, cls=ShipitJSONEncoder)
+            self.make_request('post', '/bugs', data)
+            logger.info('Added bug', bz_id=sync.bugzilla_id, analysis=sync.on_bugzilla)  # noqa
+        except Exception as e:
+            logger.error('Failed to add bug #{} : {}'.format(sync.bugzilla_id, e))  # noqa
+
+    def delete_bug(self, sync):
+        """
+        Remove bugs from remote server
+        """
+        assert isinstance(sync, BugSync), \
+            'Use BugSync instance'
+        try:
+            self.make_request('delete', '/bugs/{}'.format(sync.bugzilla_id))
+            logger.info('Deleted bug', bz_id=sync.bugzilla_id, analysis=sync.on_remote)  # noqa
+        except Exception as e:
+            logger.warning('Failed to delete bug #{} : {}'.format(sync.bugzilla_id, e))  # noqa
