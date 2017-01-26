@@ -27,15 +27,9 @@ setup(
     ],
     install_requires=[
         'releng_common[log,api,cors,auth,db]',
-        'libmozdata',
     ],
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
     license='MPL2',
-    entry_points={
-        'console_scripts': [
-            'shipit-dashboard-bot= shipit_bot.cli:main',
-        ]
-    },
 )
