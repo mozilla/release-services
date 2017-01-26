@@ -31,5 +31,5 @@ view model =
         , viewCard
             "TreeStatus"
             "Current status of Mozilla's version-control repositories."
-            (Utils.onClick <| App.NavigateTo (App.TreeStatusRoute App.TreeStatus.Types.TreesRoute))
+            (Utils.onClick <| App.NavigateTo (App.TreeStatusRoute App.TreeStatus.Types.ShowTreesRoute))
         ]

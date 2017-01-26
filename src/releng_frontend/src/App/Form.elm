@@ -60,9 +60,9 @@ viewField maybeError maybeLabel helpNodes inputNode =
     div
         [ class ("form-group " ++ (errorClass maybeError)) ]
         ([]
+            |> List.append helpNodes
             |> maybeAppendError maybeError
             |> List.append [ inputNode ]
-            |> List.append helpNodes
             |> maybeAppendLabel maybeLabel
         )
 
@@ -75,7 +75,7 @@ viewTextInput :
     -> Html Form.Msg
 viewTextInput state labelText helpNodes attributes =
     viewField
-        state.liveError
+        state.error
         (Just labelText)
         helpNodes
         (Form.Input.textInput state

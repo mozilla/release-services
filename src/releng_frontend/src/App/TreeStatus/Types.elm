@@ -7,8 +7,11 @@ import RemoteData
 
 
 type Route
-    = TreesRoute
-    | TreeRoute String
+    = AddTreeRoute
+    | UpdateTreesRoute
+    | DeleteTreesRoute
+    | ShowTreesRoute
+    | ShowTreeRoute String
 
 
 type alias Tree =
@@ -49,7 +52,7 @@ type alias RecentChange =
 
 type alias Model addForm updateForm =
     { baseUrl : String
-    , alerts : List App.Types.Alert
+    , treesAlerts : List App.Types.Alert
     , trees : RemoteData.WebData Trees
     , treesSelected : List String
     , tree : RemoteData.WebData Tree
@@ -58,7 +61,10 @@ type alias Model addForm updateForm =
     , showMoreTreeLogs : Bool
     , formAddTree : Form.Form () addForm
     , formUpdateTree : Form.Form () updateForm
+    , recentChangesAlerts : List App.Types.Alert
     , recentChanges : RemoteData.WebData (List RecentChange)
+    , deleteTreesConfirm : Bool
+    , deleteError : Maybe String
     }
 
 
@@ -72,14 +78,14 @@ type Msg
     | GetRecentChangesResult (RemoteData.WebData (List RecentChange))
     | FormAddTreeMsg Form.Msg
     | FormAddTreeResult (RemoteData.RemoteData Http.RawError Http.Response)
-    | FormUpdateTreeMsg Form.Msg
-    | FormUpdateTreeResult (RemoteData.RemoteData Http.RawError Http.Response)
+    | FormUpdateTreesMsg Form.Msg
     | FormUpdateTreesResult (RemoteData.RemoteData Http.RawError Http.Response)
     | SelectAllTrees
     | SelectTree String
     | UnselectAllTrees
     | UnselectTree String
     | DeleteTrees
+    | DeleteTreesConfirmToggle
     | DeleteTreesResult (RemoteData.RemoteData Http.RawError Http.Response)
     | RevertChange Int
     | DiscardChange Int

@@ -177,9 +177,6 @@ hawkResponse response route =
         "DeleteTrees" ->
             Cmd.map App.TreeStatus.Types.DeleteTreesResult response
 
-        "UpdateTree" ->
-            Cmd.map App.TreeStatus.Types.FormUpdateTreeResult response
-
         "UpdateTrees" ->
             Cmd.map App.TreeStatus.Types.FormUpdateTreesResult response
 

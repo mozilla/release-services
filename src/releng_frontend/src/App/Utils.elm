@@ -145,3 +145,11 @@ viewAlerts alerts =
         alerts
             |> List.map createAlert
             |> div []
+
+
+appendItem item items =
+    List.append items [ item ]
+
+
+appendItems items1 items2 =
+    List.append items2 items1
