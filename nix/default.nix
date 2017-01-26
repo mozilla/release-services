@@ -39,6 +39,7 @@ let
 
     shipit_frontend = import ./../src/shipit_frontend { inherit releng_pkgs; };
     shipit_dashboard = import ./../src/shipit_dashboard { inherit releng_pkgs; };
+    shipit_bot_uplift = import ./../src/shipit_bot_uplift { inherit releng_pkgs; };
     shipit_pipeline = import ./../src/shipit_pipeline { inherit releng_pkgs; };
     shipit_signoff = import ./../src/shipit_signoff { inherit releng_pkgs; };
 
