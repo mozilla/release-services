@@ -172,7 +172,7 @@ update msg model =
                             x
 
                         _ ->
-                            App.TreeStatus.Types.TreesRoute
+                            App.TreeStatus.Types.ShowTreesRoute
 
                 ( newModel, newCmd, hawkCmd ) =
                     App.TreeStatus.update route msg2 model.treestatus

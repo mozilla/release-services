@@ -113,8 +113,10 @@ footer {
     }
     div a {
       color: $charcoal;
+      border-bottom: 1px dotted $charcoal;
       &:hover {
-        text-decoration: none;
+          text-decoration: none;
+          border-bottom: 1px dotted $charcoal;
       }
     }
 }
@@ -270,25 +272,32 @@ footer {
     margin-bottom: -1em;
 }
 
-#treestatus-forms {
-    margin-bottom: 1em;
-}
-#treestatus-forms .tab-pane {
-    padding: 2em 1em 1em 1em;
-    border: 1px solid #ddd;
-    border-top: 0;
-    border-bottom-right-radius: 0.25rem;
-    border-bottom-left-radius: 0.25rem;
+
+
+
+.tooltip2 {
+    position: relative;
 }
 
-#treestatus-forms .form-group .custom-control-description {
-    font-size: 0.9em;
+.tooltip2:hover:after{
+    background: rgba(0,0,0,.8);
+    border-radius: 4px;
+    bottom: -2.5em;
+    color: #fff;
+    content: attr(title);
+    right: 0;
+    padding: 0.5em;
+    position: absolute;
+    z-index: 98;
 }
 
-#treestatus-forms .form-group .custom-control,
-#treestatus-forms .form-group .custom-control + .custom-control {
-    margin-left: 0;
-    margin-right: 1em;
+
+#treestatus > h2 {
+    margin-top: 1em;
+}
+
+#treestatus-trees {
+    clear: both;
 }
 
 #treestatus-trees .list-group-item {
@@ -305,5 +314,68 @@ footer {
     transform: translateY(-50%);
     left: 1em;
     height: 1em;
+    margin: 0;
+    padding: 0;
 }
 
+#treestatus-trees .custom-checkbox input {
+    margin: 0;
+    padding: 0;
+    height: 1.6em;
+    width: 1.6em;
+    margin-left: -0.3em;
+}
+
+#treestatus-trees-buttons {
+    float: right;
+    margin-top: 0.3em;
+    margin-left: 1em;
+    margin-bottom: 0.5em;
+}
+
+#treestatus-recentchanges {
+    margin-bottom: 2em;
+}
+
+#treestatus-recentchanges .btn-group {
+    margin-left: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+#treestatus-form {
+    padding: 2em 1em 1em 1em;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+    clear: both;
+}
+
+#treestatus-form button {
+    float: right;
+}
+
+#treestatus-form label {
+    font-weight: bold;
+}
+
+#treestatus-form label.custom-checkbox {
+    font-weight: normal;
+    margin: 0 1em 0 0;
+}
+
+#treestatus-form small p {
+    margin: 0;
+}
+
+
+
+#treestatus-tree-details {
+    text-align: center;
+}
+
+#treestatus-tree-details span:first-child {
+    font-weight: bold;
+}
+
+#treestatus-tree-details p {
+    margin-top: 1em;
+}

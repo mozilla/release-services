@@ -3,6 +3,7 @@ module App.TreeStatus.Form exposing (..)
 import App.TreeStatus.Api
 import App.TreeStatus.Types
 import App.Form
+import App.Utils
 import Form
 import Form.Error
 import Form.Field
@@ -152,11 +153,11 @@ updateAddTree model formMsg =
                         )
 
                 _ ->
-                    ( model.trees, model.alerts, Nothing )
+                    ( model.trees, model.treesAlerts, Nothing )
     in
         ( { model
             | formAddTree = form
-            , alerts = alerts
+            , treesAlerts = alerts
             , trees = trees
           }
         , hawkRequest
@@ -230,26 +231,20 @@ updateUpdateTree route model formMsg =
                         , Form.getOutput form
                             |> Maybe.map
                                 (\x ->
-                                    { route =
-                                        case route of
-                                            App.TreeStatus.Types.TreesRoute ->
-                                                "UpdateTrees"
-
-                                            App.TreeStatus.Types.TreeRoute _ ->
-                                                "UpdateTree"
+                                    { route = "UpdateTrees"
                                     , request = createRequest x
                                     }
                                 )
                         )
 
                 _ ->
-                    ( model.alerts, Nothing )
+                    ( model.treesAlerts, Nothing )
     in
         ( { model
             | formUpdateTree = form
-            , alerts = alerts
+            , treesAlerts = alerts
           }
-        , hawkRequest
+        , Debug.log "HAWK REQUEST" hawkRequest
         )
 
 
@@ -277,9 +272,9 @@ getUpdateTreeErrors form =
             |> List.append (validateReason form)
 
 
-fieldClass : { b | liveError : Maybe a } -> String
+fieldClass : { b | error : Maybe a } -> String
 fieldClass field =
-    case field.liveError of
+    case field.error of
         Just error ->
             "input-group has-danger"
 
@@ -287,9 +282,9 @@ fieldClass field =
             "input-group "
 
 
-fieldError : { b | liveError : Maybe a } -> Html c
+fieldError : { b | error : Maybe a } -> Html c
 fieldError field =
-    case field.liveError of
+    case field.error of
         Just error ->
             div [ class "has-danger" ]
                 [ span [ class "form-control-feedback" ]
@@ -306,69 +301,92 @@ viewAddTree form =
         state =
             Form.getFieldAsString "name" form
     in
-        Html.form
-            []
-            [ App.Form.viewField
-                state.liveError
-                Nothing
+        div
+            [ id "treestatus-form" ]
+            [ Html.form
                 []
-                (Form.Input.textInput state
-                    [ class "form-control"
-                    , value (Maybe.withDefault "" state.value)
-                    , placeholder "New tree name ..."
+                [ App.Form.viewField
+                    (if Form.isSubmitted form then
+                        state.error
+                     else
+                        Nothing
+                    )
+                    (Just "Tree name")
+                    []
+                    (Form.Input.textInput state
+                        [ class "form-control"
+                        , value (Maybe.withDefault "" state.value)
+                        , placeholder "New tree name ..."
+                        ]
+                    )
+                , App.Form.viewButton
+                    "Add"
+                    [ Utils.onClick Form.Submit
                     ]
-                )
-            , App.Form.viewButton
-                "Add"
-                [ Utils.onClick Form.Submit
-                , disabled (Form.getErrors form /= [])
+                , div [ class "clearfix" ] []
                 ]
             ]
 
 
-viewUpdateTree : List String -> Form.Form () UpdateTree -> Html Form.Msg
-viewUpdateTree treesSelected form =
-    Html.form
-        []
-        [ App.Form.viewSelectInput
-            (Form.getFieldAsString "status" form)
-            "Status"
+viewUpdateTree :
+    List String
+    -> RemoteData.WebData App.TreeStatus.Types.Trees
+    -> Form.Form () UpdateTree
+    -> Html Form.Msg
+viewUpdateTree treesSelected trees form =
+    div [ id "treestatus-form" ]
+        [ div
             []
-            (App.TreeStatus.Types.possibleTreeStatuses
-                |> List.append [ ( "", "" ) ]
-            )
-            []
-        , div
-            [ class "form-group" ]
-            [ label [ class "control-label" ] [ text "Tags" ]
-            , div
-                []
-                (List.map
-                    (\( _, x, y ) ->
-                        App.Form.viewCheckboxInput
-                            (Form.getFieldAsBool ("tags." ++ x) form)
-                            y
+            ([]
+                |> App.Utils.appendItem
+                    (text "You are about to update the following trees:")
+                |> App.Utils.appendItem
+                    (treesSelected
+                        |> List.map (\x -> li [] [ text x ])
+                        |> ul []
                     )
-                    App.TreeStatus.Types.possibleTreeTags
-                )
-            ]
-        , App.Form.viewTextInput
-            (Form.getFieldAsString "reason" form)
-            (if (Form.getFieldAsString "status" form).value == Just "closed" then
-                "Reason (required to close)"
-             else
-                "Reason"
             )
-            [ small
-                [ class "form-text text-muted" ]
-                [ ul []
-                    [ li []
+        , hr [] []
+        , Html.form
+            []
+            [ App.Form.viewSelectInput
+                (Form.getFieldAsString "status" form)
+                "Status"
+                []
+                (App.TreeStatus.Types.possibleTreeStatuses
+                    |> List.append [ ( "", "" ) ]
+                )
+                []
+            , div
+                [ class "form-group" ]
+                [ label [ class "control-label" ] [ text "Tags" ]
+                , div
+                    []
+                    (List.map
+                        (\( _, x, y ) ->
+                            App.Form.viewCheckboxInput
+                                (Form.getFieldAsBool ("tags." ++ x) form)
+                                y
+                        )
+                        App.TreeStatus.Types.possibleTreeTags
+                    )
+                ]
+            , App.Form.viewTextInput
+                (Form.getFieldAsString "reason" form)
+                (if (Form.getFieldAsString "status" form).value == Just "closed" then
+                    "Reason (required to close)"
+                 else
+                    "Reason"
+                )
+                [ small
+                    [ class "form-text text-muted" ]
+                    [ p []
                         [ text
                             ("Please indicate the reason for "
                                 ++ "closure, preferably with a bug link."
                             )
                         ]
-                    , li []
+                    , p []
                         [ text
                             ("Please indicate conditions for "
                                 ++ "reopening, especially if you might "
@@ -378,35 +396,37 @@ viewUpdateTree treesSelected form =
                         ]
                     ]
                 ]
-            ]
-            [ placeholder "(no reason)" ]
-        , div
-            [ class "form-group" ]
-            [ label [ class "control-label" ] [ text "Remember change" ]
+                [ placeholder "(no reason)" ]
             , div
-                []
-                [ App.Form.viewCheckboxInput
-                    (Form.getFieldAsBool "remember" form)
-                    "Remember this change to undo later"
+                [ class "form-group" ]
+                [ label [ class "control-label" ] [ text "Remember change" ]
+                , div
+                    []
+                    [ App.Form.viewCheckboxInput
+                        (Form.getFieldAsBool "remember" form)
+                        "Remember this change to undo later"
+                    ]
                 ]
-            ]
-        , (if List.length treesSelected /= 1 then
-            text ""
-           else
-            hr [] []
-          )
-        , (if List.length treesSelected /= 1 then
-            text ""
-           else
-            App.Form.viewTextInput
-                (Form.getFieldAsString "message_of_the_day" form)
-                "Message of the day"
-                []
-                [ placeholder "(no change)" ]
-          )
-        , App.Form.viewButton
-            "Update"
-            [ Utils.onClick Form.Submit
-            , disabled (getUpdateTreeErrors form /= [])
+            , (if List.length treesSelected /= 1 then
+                text ""
+               else
+                hr [] []
+              )
+            , (if List.length treesSelected /= 1 then
+                text ""
+               else
+                App.Form.viewTextInput
+                    (Form.getFieldAsString "message_of_the_day" form)
+                    "Message of the day"
+                    []
+                    [ placeholder "(no change)" ]
+              )
+            , hr [] []
+            , App.Form.viewButton
+                "Update"
+                [ Utils.onClick Form.Submit
+                , disabled (getUpdateTreeErrors form /= [])
+                ]
+            , div [ class "clearfix" ] []
             ]
         ]
