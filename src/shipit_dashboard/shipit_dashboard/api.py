@@ -6,7 +6,6 @@ from __future__ import absolute_import
 
 import pickle
 from flask import abort, request
-import sqlalchemy as sa
 from sqlalchemy.orm.exc import NoResultFound
 from releng_common.auth import auth
 from releng_common.db import db
@@ -139,8 +138,8 @@ def create_bug():
         raise Exception('Missing bugzilla id')
     try:
         bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
-        analysis_existing = bug.analysis.values('analysis_id')
-    except:
+        analysis_existing = [a[0] for a in bug.analysis.values('analysis_id')]
+    except Exception:
         bug = BugResult(bugzilla_id=bugzilla_id)
         analysis_existing = []
 
@@ -152,15 +151,25 @@ def create_bug():
     bug.payload = pickle.dumps(payload, 2)
     bug.payload_hash = payload_hash
 
-    # Attach bug to its analysis
-    # Load all analysis
+    # Sync analysis in both ways:
+    # * adding new bugs
+    # * removing deprecated bugs
     analysis_needed = request.json.get('analysis', [])
+    add = set(analysis_needed).difference(analysis_existing)
     analysis = BugAnalysis.query \
-        .filter(BugAnalysis.id.in_(analysis_needed)) \
-        .filter(sa.not_(BugAnalysis.id.in_(analysis_existing))) \
+        .filter(BugAnalysis.id.in_(add)) \
         .all()
     for a in analysis:
+        logger.debug('Adding new bug', analysis=a.id, bug=bug.bugzilla_id)
         a.bugs.append(bug)
+
+    rm = set(analysis_existing).difference(analysis_needed)
+    analysis = BugAnalysis.query \
+        .filter(BugAnalysis.id.in_(rm)) \
+        .all()
+    for a in analysis:
+        logger.debug('Removing old bug', analysis=a.id, bug=bug.bugzilla_id)
+        a.bugs.remove(bug)
 
     # Save all changes
     db.session.add(bug)

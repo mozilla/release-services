@@ -1,0 +1,109 @@
+{
+    "analysis": {
+        "landings": {
+            "aurora": "Fri, 10 Apr 2015 17:06:41 GMT",
+            "beta": null,
+            "esr": null,
+            "nightly": "Wed, 08 Apr 2015 16:43:32 GMT",
+            "release": null
+        },
+        "patches": {
+            "41a0c9bc40df": {
+                "changes_add": 51,
+                "changes_del": 9,
+                "changes_size": 162,
+                "languages": [
+                    "Python"
+                ],
+                "merge": {
+                    "aurora": true,
+                    "beta": false
+                },
+                "source": "mercurial",
+                "url": "https://hg.mozilla.org/mozilla-central/rev/41a0c9bc40df"
+            }
+        },
+        "uplift_accepted": false,
+        "uplift_comment": {
+            "author": "adw@mozilla.com",
+            "html": "<div>Comment</div>",
+            "id": 10138846,
+            "text": "Comment",
+            "time": "2015-04-09T22:04:10Z"
+        }
+    },
+    "bug": {
+        "assigned_to": "adw@mozilla.com",
+        "assigned_to_detail": {
+            "email": "adw@mozilla.com",
+            "id": 334927,
+            "name": "adw@mozilla.com",
+            "real_name": "Drew Willcoxon :adw"
+        },
+        "cc": [
+            "mhammond@mozilla.com"
+        ],
+        "cf_status_firefox37": "---",
+        "cf_status_firefox38": "affected",
+        "cf_status_firefox39": "fixed",
+        "cf_status_firefox40": "fixed",
+        "cf_status_firefox_esr31": "---",
+        "cf_status_firefox_esr38": "---",
+        "cf_tracking_e10s": "---",
+        "cf_tracking_firefox37": "---",
+        "cf_tracking_firefox38": "---",
+        "cf_tracking_firefox39": "---",
+        "cf_tracking_firefox40": "---",
+        "cf_tracking_firefox_esr31": "---",
+        "cf_tracking_firefox_esr38": "---",
+        "cf_tracking_firefox_relnote": "---",
+        "component": "Reading List",
+        "creation_time": "2015-04-03T21:35:10Z",
+        "flags": [
+            {
+                "creation_date": "2015-04-07T00:02:11Z",
+                "id": 1140307,
+                "modification_date": "2015-04-07T00:02:11Z",
+                "name": "firefox-backlog",
+                "setter": "mhammond@mozilla.com",
+                "status": "+",
+                "type_id": 846
+            }
+        ],
+        "id": 1151077,
+        "is_confirmed": true,
+        "is_creator_accessible": true,
+        "is_open": false,
+        "keywords": [
+            "test"
+        ],
+        "last_change_time": "2015-04-10T17:06:41Z",
+        "platform": "All",
+        "priority": "P1",
+        "product": "Firefox",
+        "resolution": "FIXED",
+        "severity": "normal",
+        "status": "RESOLVED",
+        "summary": "Desktop reading list sync module should batch its POST /batch requests",
+        "target_milestone": "Firefox 40"
+    },
+    "url": "https://bugzilla-dev.allizom.org/1151077",
+    "users": [
+        {
+            "can_login": true,
+            "email": "adw@mozilla.com",
+            "groups": [],
+            "id": 334927,
+            "is_new": false,
+            "last_activity": "2015-04-09T22:58:39Z",
+            "name": "adw@mozilla.com",
+            "real_name": "Drew Willcoxon :adw",
+            "roles": [
+                "creator",
+                "assignee",
+                "uplift_author"
+            ]
+        }
+    ],
+    "versions": {}
+}

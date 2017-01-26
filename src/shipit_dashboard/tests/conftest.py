@@ -52,10 +52,13 @@ def bugs(app):
     )
     from releng_common.db import db
 
-    # Add an analysis
-    analysis = BugAnalysis(name='Analysis Test A')
-    analysis.parameters = 'bugzilla=test'  # dummy params.
-    db.session.add(analysis)
+    # Add 2 analysis
+    analysis = []
+    for i in ('A', 'B'):
+        a = BugAnalysis(name='Analysis Test {}'.format(i))
+        a.parameters = 'bugzilla=test'  # dummy params.
+        db.session.add(a)
+        analysis.append(a)
 
     # Add bugs with real payload
     paths = glob.glob(os.path.join(FIXTURES_DIR, 'bug_*.json'))
@@ -64,7 +67,7 @@ def bugs(app):
         payload = json.load(open(path))
         bug = BugResult(bugzilla_id=payload['bug']['id'])
         bug.payload = pickle.dumps(payload, 2)
-        analysis.bugs.append(bug)
+        analysis[0].bugs.append(bug)
         db.session.add(bug)
 
         # Add creator & link to bug
