@@ -20,7 +20,7 @@ def test_list_analysis_valid(client, bugs, header_user):
     ])
     assert resp.status_code == 200
     data = json.loads(resp.data.decode('utf-8'))
-    assert len(data) == 1
+    assert len(data) == 2
     analysis = data[0]
     assert analysis['id'] == 1
     assert analysis['name'] == 'Analysis Test A'
@@ -98,113 +98,9 @@ def test_create_bug(client, bugs, header_bot):
     # Create a new bug
     data = {
         'bugzilla_id': 12345,
-        'analysis': [1, ],
+        'analysis': [1, 2, ],
         'payload_hash': 'deadbeef12345',
-        'payload': {
-            "analysis": {
-                "landings": {
-                    "aurora": "Fri, 10 Apr 2015 17:06:41 GMT",
-                    "beta": None,
-                    "esr": None,
-                    "nightly": "Wed, 08 Apr 2015 16:43:32 GMT",
-                    "release": None
-                },
-                "patches": {
-                    "41a0c9bc40df": {
-                        "changes_add": 51,
-                        "changes_del": 9,
-                        "changes_size": 162,
-                        "source": "mercurial",
-                        "url": "https://hg.mozilla.org/mozilla-central/rev/41a0c9bc40df",  # noqa
-                        "languages": ["Python"],
-                        "merge": {
-                           "aurora": True,
-                           "beta": False
-                        }
-                    }
-                },
-                "uplift_accepted": False,
-                "uplift_comment": {
-                    "author": "adw@mozilla.com",
-                    "html": "<div>Comment</div>",
-                    "id": 10138846,
-                    "text": "Comment",
-                    "time": "2015-04-09T22:04:10Z"
-                }
-            },
-            "bug": {
-                "assigned_to": "adw@mozilla.com",
-                "assigned_to_detail": {
-                    "email": "adw@mozilla.com",
-                    "id": 334927,
-                    "name": "adw@mozilla.com",
-                    "real_name": "Drew Willcoxon :adw"
-                },
-                "cc": [
-                    "mhammond@mozilla.com",
-                ],
-                "cf_status_firefox37": "---",
-                "cf_status_firefox38": "affected",
-                "cf_status_firefox39": "fixed",
-                "cf_status_firefox40": "fixed",
-                "cf_status_firefox_esr31": "---",
-                "cf_status_firefox_esr38": "---",
-                "cf_tracking_e10s": "---",
-                "cf_tracking_firefox37": "---",
-                "cf_tracking_firefox38": "---",
-                "cf_tracking_firefox39": "---",
-                "cf_tracking_firefox40": "---",
-                "cf_tracking_firefox_esr31": "---",
-                "cf_tracking_firefox_esr38": "---",
-                "cf_tracking_firefox_relnote": "---",
-                "component": "Reading List",
-                "creation_time": "2015-04-03T21:35:10Z",
-                "flags": [
-                    {
-                        "creation_date": "2015-04-07T00:02:11Z",
-                        "id": 1140307,
-                        "modification_date": "2015-04-07T00:02:11Z",
-                        "name": "firefox-backlog",
-                        "setter": "mhammond@mozilla.com",
-                        "status": "+",
-                        "type_id": 846
-                    },
-                ],
-                "id": 1151077,
-                "is_confirmed": True,
-                "is_creator_accessible": True,
-                "is_open": False,
-                "keywords": ["test", ],
-                "last_change_time": "2015-04-10T17:06:41Z",
-                "platform": "All",
-                "priority": "P1",
-                "product": "Firefox",
-                "resolution": "FIXED",
-                "severity": "normal",
-                "status": "RESOLVED",
-                "summary": "Desktop reading list sync module should batch its POST /batch requests",  # noqa
-                "target_milestone": "Firefox 40",
-            },
-            "url": "https://bugzilla-dev.allizom.org/1151077",
-            "users": [
-                {
-                    "can_login": True,
-                    "email": "adw@mozilla.com",
-                    "groups": [],
-                    "id": 334927,
-                    "is_new": False,
-                    "last_activity": "2015-04-09T22:58:39Z",
-                    "name": "adw@mozilla.com",
-                    "real_name": "Drew Willcoxon :adw",
-                    "roles": [
-                        "creator",
-                        "assignee",
-                        "uplift_author"
-                    ]
-                }
-            ],
-            "versions": {}
-        }
+        'payload': json.load(open('tests/fixtures/payload_12345.json')),
     }
     resp = client.post('/bugs', data=json.dumps(data), headers=[
         ('Content-Type', 'application/json'),
@@ -266,6 +162,43 @@ def test_create_bug(client, bugs, header_bot):
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
     assert len(analysis['bugs']) == 4
+
+
+def test_deprecating_bug(client, bugs, header_bot):
+    """
+    Deprecate a bug from an analysis
+    """
+    def in_analysis(bugzilla_id, analysis_id):
+        # Check a bug is in an analysis
+        url = '/analysis/{}'.format(analysis_id)
+        resp = client.get(url, headers=[
+            ('Authorization', header_bot),
+        ])
+        assert resp.status_code == 200
+        analysis = json.loads(resp.data.decode('utf-8'))
+        return bugzilla_id in [b['bugzilla_id'] for b in analysis['bugs']]
+
+    # We should have bug 12345 on analysis 1 & 2
+    assert in_analysis(12345, 1)
+    assert in_analysis(12345, 2)
+
+    # Remove bug from analysis 2
+    data = {
+        'bugzilla_id': 12345,
+        'analysis': [1, ],
+        'payload_hash': 'deadbeef12345',
+        'payload': json.load(open('tests/fixtures/payload_12345.json')),
+        'versions': {},
+    }
+    resp = client.post('/bugs', data=json.dumps(data), headers=[
+        ('Content-Type', 'application/json'),
+        ('Authorization', header_bot),
+    ])
+    assert resp.status_code == 200
+
+    # We should have bug 12345 in analysis 1 only
+    assert in_analysis(12345, 1)
+    assert not in_analysis(12345, 2)
 
 
 def test_delete_bug(client, bugs, header_bot):
