@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql libffi openssl pkgconfig freetype.dev -r ../../lib/releng_common/requirements-dev.txt -r requirements.txt -r requirements-dev.txt -r requirements-nix.txt
+#   pypi2nix -v -V 3.5 -E postgresql -s six packaging appdirs -r ../../lib/releng_common/requirements-dev.txt -r requirements.txt -r requirements-dev.txt -r requirements-nix.txt
 #
 
 { pkgs ? import <nixpkgs> {}
@@ -20,7 +20,7 @@ let
     self = pythonPackages;
   };
 
-  commonBuildInputs = with pkgs; [ postgresql libffi openssl pkgconfig freetype.dev ];
+  commonBuildInputs = with pkgs; [ postgresql ];
   commonDoCheck = false;
 
   withPackages = pkgs':
@@ -35,9 +35,7 @@ let
           for dep in ${builtins.concatStringsSep " " (builtins.attrValues pkgs)}; do
             if [ -d "$dep/bin" ]; then
               for prog in "$dep/bin/"*; do
-                if [ -f $prog ]; then
-                  ln -s $prog $out/bin/`basename $prog`
-                fi
+                ln -s $prog $out/bin/`basename $prog`
               done
             fi
           done
