@@ -163,34 +163,32 @@ viewTreesItem scopes treesSelected tree =
         treeTagClass =
             "float-xs-right tag tag-" ++ (treeStatusLevel tree.status)
 
-        hasScopes =
-            hasScope "update_trees" scopes
-                || hasScope "kill_tree" scopes
-
         checkboxItem =
-            if hasScopes then
-                [ label
-                    [ class "custom-control custom-checkbox" ]
-                    [ input
-                        [ type' "checkbox"
-                        , class "custom-control-input"
-                        , checked isChecked
-                        , onCheck checking
+            if hasScope "trees/update" scopes || hasScope "trees/delete" scopes
+                then
+                    [ label
+                        [ class "custom-control custom-checkbox" ]
+                        [ input
+                            [ type' "checkbox"
+                            , class "custom-control-input"
+                            , checked isChecked
+                            , onCheck checking
+                            ]
+                            []
+                        , span
+                            [ class "custom-control-indicator" ]
+                            []
                         ]
-                        []
-                    , span
-                        [ class "custom-control-indicator" ]
-                        []
                     ]
-                ]
-            else
-                []
+                else
+                    []
 
         itemClass =
-            if hasScopes then
-                "list-group-item list-group-item-with-checkbox"
-            else
-                "list-group-item"
+            if hasScope "trees/update" scopes || hasScope "trees/delete" scopes
+                then
+                    "list-group-item list-group-item-with-checkbox"
+                else
+                    "list-group-item"
 
         treeItem =
             a
@@ -313,7 +311,7 @@ viewButtons route scopes model =
                     )
                 |> appendIf
                     ((route == App.TreeStatus.Types.ShowTreesRoute || treeRoute /= Nothing)
-                        && hasScope "trees/change" scopes
+                        && hasScope "trees/update" scopes
                     )
                     (button
                         (if List.isEmpty model.treesSelected then
