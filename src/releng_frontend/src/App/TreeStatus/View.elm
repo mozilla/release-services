@@ -164,31 +164,29 @@ viewTreesItem scopes treesSelected tree =
             "float-xs-right tag tag-" ++ (treeStatusLevel tree.status)
 
         checkboxItem =
-            if hasScope "trees/update" scopes || hasScope "trees/delete" scopes
-                then
-                    [ label
-                        [ class "custom-control custom-checkbox" ]
-                        [ input
-                            [ type' "checkbox"
-                            , class "custom-control-input"
-                            , checked isChecked
-                            , onCheck checking
-                            ]
-                            []
-                        , span
-                            [ class "custom-control-indicator" ]
-                            []
+            if hasScope "trees/update" scopes || hasScope "trees/delete" scopes then
+                [ label
+                    [ class "custom-control custom-checkbox" ]
+                    [ input
+                        [ type' "checkbox"
+                        , class "custom-control-input"
+                        , checked isChecked
+                        , onCheck checking
                         ]
+                        []
+                    , span
+                        [ class "custom-control-indicator" ]
+                        []
                     ]
-                else
-                    []
+                ]
+            else
+                []
 
         itemClass =
-            if hasScope "trees/update" scopes || hasScope "trees/delete" scopes
-                then
-                    "list-group-item list-group-item-with-checkbox"
-                else
-                    "list-group-item"
+            if hasScope "trees/update" scopes || hasScope "trees/delete" scopes then
+                "list-group-item list-group-item-with-checkbox"
+            else
+                "list-group-item"
 
         treeItem =
             a

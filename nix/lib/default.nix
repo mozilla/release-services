@@ -302,6 +302,7 @@ in rec {
     , src
     , src_elm_common
     , src_path ? "src/${name}"
+    , csp ? "default-src 'none'; img-src 'self' data:; script-src 'self'; style-src 'self'; font-src 'self';"
     , node_modules
     , elm_packages
     , patchPhase ? ""
@@ -349,7 +350,7 @@ in rec {
         '';
 
         buildPhase = ''
-          neo build --config webpack.config.js
+          NODE_PATH=$PWD/node_modules/mozilla-neo/node_modules ./node_modules/mozilla-neo/bin/neo build --config webpack.config.js
         '';
 
         doCheck = true;
@@ -375,6 +376,7 @@ in rec {
         installPhase = ''
           mkdir $out
           cp build/* $out/ -R
+          sed -i -e "s|<head>|<head>\n  <meta http-equiv=\"Content-Security-Policy\" content=\"${csp}\">|" $out/index.html
           runHook postInstall
         '';
 

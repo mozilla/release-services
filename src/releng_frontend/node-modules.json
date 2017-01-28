@@ -1,6 +1,7 @@
 [
   { "bootstrap": "4.0.0-alpha.5" },
-  { "elm-webpack-loader": "*" },
+  { "elm-webpack-loader": "3.0.6" },
+  { "extract-text-webpack-plugin": "*" },
   { "expose-loader": "*" },
   { "hawk": "*" },
   { "jquery": "*" },
