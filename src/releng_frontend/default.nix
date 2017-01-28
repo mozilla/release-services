@@ -13,7 +13,7 @@ in mkFrontend {
   elm_packages = import ./elm-packages.nix;
   postInstall = ''
     mkdir -p $out/trychooser
-    cp src/trychooser/* $out/trychooser/
+    cp -R src/static/* $out/
   '';
   production = true;
 }
