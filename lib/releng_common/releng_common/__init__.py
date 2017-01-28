@@ -22,6 +22,12 @@ except:
     pass
 
 try:
+    from releng_common import security
+    __BASE_EXTENSIONS.append(security)
+except:
+    pass
+
+try:
     from releng_common import api
     __BASE_EXTENSIONS.append(api)
 except:

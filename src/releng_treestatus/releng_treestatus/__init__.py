@@ -10,6 +10,7 @@ import releng_common
 import releng_common.auth
 import releng_common.cache
 import releng_common.db
+import releng_common.security
 
 
 DEBUG = bool(os.environ.get('DEBUG', __name__ == '__main__'))

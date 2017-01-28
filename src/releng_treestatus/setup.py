@@ -23,7 +23,7 @@ setup(
         'pytest',
     ],
     install_requires=[
-        'releng_common[api,auth,cors,log,db,cache]',
+        'releng_common[api,auth,cors,log,db,cache,security]',
         'pytz',
         'SQLAlchemy',
         'Flask',

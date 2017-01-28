@@ -28,7 +28,7 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   releng_common = import ./../../lib/releng_common {
     inherit releng_pkgs python;
-    extras = ["api" "auth" "cors" "log" "db" "cache"];
+    extras = ["api" "auth" "cors" "log" "db" "cache" "security"];
   };
 
   self = mkBackend rec {
@@ -41,6 +41,7 @@ let
       [ python.packages."flake8"
         python.packages."pytest"
         python.packages."ipdb"
+        python.packages."responses"
       ];
     propagatedBuildInputs =
       [ python.packages."pytz"
@@ -65,6 +66,7 @@ let
         ${pypi2nix}/bin/pypi2nix -v \
          -V 3.5 \
          -E "postgresql" \
+         --setup-requires "six packaging appdirs" \
          -r ../../lib/releng_common/requirements-dev.txt \
          -r requirements.txt \
          -r requirements-dev.txt \

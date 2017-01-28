@@ -1,7 +1,7 @@
 # generated using pypi2nix tool (version: 1.6.0)
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql -r ../../lib/releng_common/requirements-dev.txt -r requirements.txt -r requirements-dev.txt -r requirements-nix.txt
+#   pypi2nix -v -V 3.5 -E postgresql --setup-requires six packaging appdirs -r ../../lib/releng_common/requirements-dev.txt -r requirements.txt -r requirements-dev.txt -r requirements-nix.txt
 #
 
 { pkgs, python, commonBuildInputs ? [], commonDoCheck ? false }:
@@ -9,10 +9,10 @@
 self: {
 
   "Flask" = python.mkDerivation {
-    name = "Flask-0.11.1";
+    name = "Flask-0.12";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/55/8a/78e165d30f0c8bb5d57c429a30ee5749825ed461ad6c959688872643ffb3/Flask-0.11.1.tar.gz";
-      sha256 = "b4713f2bfb9ebc2966b8a49903ae0d3984781d5c878591cf2f7b484d28756b0e";
+      url = "https://pypi.python.org/packages/4b/3a/4c20183df155dd2e39168e35d53a388efb384a512ca6c73001d8292c094a/Flask-0.12.tar.gz";
+      sha256 = "93e803cdbe326a61ebd5c5d353959397c85f829bec610d59cb635c9f97d7ca8b";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -93,10 +93,10 @@ self: {
 
 
   "Flask-Migrate" = python.mkDerivation {
-    name = "Flask-Migrate-2.0.1";
+    name = "Flask-Migrate-2.0.2";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/17/ec/df4f78462fe855d079a2939ff1f18fba5199351dcaeb1a493c06e4be07ed/Flask-Migrate-2.0.1.tar.gz";
-      sha256 = "5ef14ba72ffbcd5acad6416269a22449e47fb8731998ecdbefa1b9c4072143db";
+      url = "https://pypi.python.org/packages/f8/ba/827214fb932fb1de1fac7d992f0958c799bfc50ea471b0b8792d5e72daa6/Flask-Migrate-2.0.2.tar.gz";
+      sha256 = "c77272b936ec94209d5c709f9ec43947f4a25513c1b12cc25241586abdfa84b1";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -157,10 +157,10 @@ self: {
 
 
   "Jinja2" = python.mkDerivation {
-    name = "Jinja2-2.8";
+    name = "Jinja2-2.9.4";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/f2/2f/0b98b06a345a761bec91a079ccae392d282690c2d8272e708f4d10829e22/Jinja2-2.8.tar.gz";
-      sha256 = "bc1ff2ff88dbfacefde4ddde471d1417d3b304e8df103a7a9437d47269201bf4";
+      url = "https://pypi.python.org/packages/f4/3f/28387a5bbc6883082c16784c6135440b94f9d5938fb156ff579798e18eda/Jinja2-2.9.4.tar.gz";
+      sha256 = "aab8d8ca9f45624f1e77f2844bf3c144d180e97da8824c2a6d7552ad039b5442";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -255,10 +255,10 @@ self: {
 
 
   "Pygments" = python.mkDerivation {
-    name = "Pygments-2.1.3";
+    name = "Pygments-2.2.0";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/b8/67/ab177979be1c81bc99c8d0592ef22d547e70bb4c6815c383286ed5dec504/Pygments-2.1.3.tar.gz";
-      sha256 = "88e4c8a91b2af5962bfa5ea2447ec6dd357018e86e94c7d14bd8cacbc5b55d81";
+      url = "https://pypi.python.org/packages/71/2a/2e4e77803a8bd6408a2903340ac498cb0a2181811af7c9ec92cb70b0308a/Pygments-2.2.0.tar.gz";
+      sha256 = "dbae1046def0efb574852fab9e90209b23f556367b5a320c0bcb871c77c3e8cc";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -273,10 +273,10 @@ self: {
 
 
   "SQLAlchemy" = python.mkDerivation {
-    name = "SQLAlchemy-1.1.4";
+    name = "SQLAlchemy-1.1.5";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/ca/ca/c2436fdb7bb75d772d9fa17ba60c4cfded6284eed053a7274b2beb96596a/SQLAlchemy-1.1.4.tar.gz";
-      sha256 = "701b57d628b9fa1cfb82f10665e7214d5d2db23251ca6f23b91c5f56fcdbdeb5";
+      url = "https://pypi.python.org/packages/da/04/8048a5075d6e29235bbd6f1ea092a38dbe2630c670e73d4aa923a4e5521c/SQLAlchemy-1.1.5.tar.gz";
+      sha256 = "68fb40049690e567ebda7b270176f5abf0d53d9fbd515fec4e43326f601119b6";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -293,10 +293,10 @@ self: {
 
 
   "Werkzeug" = python.mkDerivation {
-    name = "Werkzeug-0.11.11";
+    name = "Werkzeug-0.11.15";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/43/2e/d822b4a4216804519ace92e0368dcfc4b0b2887462d852fdd476b253ecc9/Werkzeug-0.11.11.tar.gz";
-      sha256 = "e72c46bc14405cba7a26bd2ce28df734471bc9016bc8b4cb69466c2c14c2f7e5";
+      url = "https://pypi.python.org/packages/fe/7f/6d70f765ce5484e07576313897793cb49333dd34e462488ee818d17244af/Werkzeug-0.11.15.tar.gz";
+      sha256 = "455d7798ac263266dbd38d4841f7534dd35ca9c3da4a8df303f8488f38f3bcc0";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -311,10 +311,10 @@ self: {
 
 
   "aiohttp" = python.mkDerivation {
-    name = "aiohttp-1.1.5";
+    name = "aiohttp-1.2.0";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/5f/60/afb29b5712ade524efdce339e2a6a0cb69c44115804ab5d4e976bf3f1983/aiohttp-1.1.5.tar.gz";
-      sha256 = "e6c5a8008ab8bbdb706034bedc91835ed820cdc2367ddea9142697612908df84";
+      url = "https://pypi.python.org/packages/e5/a5/ade96691f6423c56f7911a42a51ecd5454619efd6d5026df7e08a556a36a/aiohttp-1.2.0.tar.gz";
+      sha256 = "8ce0ab4301bf38db2ae13e4921bdb3841507919c9121373405a43c7bd0a07f78";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -334,10 +334,10 @@ self: {
 
 
   "alembic" = python.mkDerivation {
-    name = "alembic-0.8.8";
+    name = "alembic-0.8.10";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/93/16/d3a04f576a666582da368de60ba09a33e6711377775fd330d0a43bebacc5/alembic-0.8.8.tar.gz";
-      sha256 = "cd6f2192ca2307bfe2a2a61f8a261420addc59a09a6379a6550e0a15693b0b8a";
+      url = "https://pypi.python.org/packages/f0/7d/7fcda63887d9726e0145e98802baf374ec8cf889325e469194cd7926c98e/alembic-0.8.10.tar.gz";
+      sha256 = "0e3b50e96218283ec7443fb661199f5a81f5879f766967a8a2d25e8f9d4e7919";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -350,6 +350,24 @@ self: {
       homepage = "";
       license = licenses.mit;
       description = "A database migration tool for SQLAlchemy.";
+    };
+  };
+
+
+
+  "appdirs" = python.mkDerivation {
+    name = "appdirs-1.4.0";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/bd/66/0a7f48a0f3fb1d3a4072bceb5bbd78b1a6de4d801fb7135578e7c7b1f563/appdirs-1.4.0.tar.gz";
+      sha256 = "8fc245efb4387a4e3e0ac8ebcc704582df7d72ff6a42a53f5600bbb18fdaadc5";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "A small Python module for determining appropriate \" +         \"platform-specific dirs, e.g. a \"user data dir\".";
     };
   };
 
@@ -392,10 +410,10 @@ self: {
 
 
   "click" = python.mkDerivation {
-    name = "click-6.6";
+    name = "click-6.7";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/7a/00/c14926d8232b36b08218067bcd5853caefb4737cda3f0a47437151344792/click-6.6.tar.gz";
-      sha256 = "cc6a19da8ebff6e7074f731447ef7e112bd23adf3de5c597cf9989f2fd8defe9";
+      url = "https://pypi.python.org/packages/95/d9/c3336b6b5711c3ab9d1d3a80f1a3e2afeb9d8c02a7166462f6cc96570897/click-6.7.tar.gz";
+      sha256 = "f15516df478d5a56180fbf80e68f206010e6d160fc39fa508b65e035fd75130b";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -476,10 +494,10 @@ self: {
 
 
   "decorator" = python.mkDerivation {
-    name = "decorator-4.0.10";
+    name = "decorator-4.0.11";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/13/8a/4eed41e338e8dcc13ca41c94b142d4d20c0de684ee5065523fee406ce76f/decorator-4.0.10.tar.gz";
-      sha256 = "9c6e98edcb33499881b86ede07d9968c81ab7c769e28e9af24075f0a5379f070";
+      url = "https://pypi.python.org/packages/cc/ac/5a16f1fc0506ff72fcc8fd4e858e3a1c231f224ab79bb7c4c9b2094cc570/decorator-4.0.11.tar.gz";
+      sha256 = "953d6bf082b100f43229cf547f4f97f97e970f5ad645ee7601d55ff87afdfe76";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -494,10 +512,10 @@ self: {
 
 
   "flake8" = python.mkDerivation {
-    name = "flake8-3.2.0";
+    name = "flake8-3.2.1";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/ba/a5/992980fcaa280e74f80d8aa415cbe43a687b6b8a2d31280acbe2b27f1fdd/flake8-3.2.0.tar.gz";
-      sha256 = "f4c3c0aeb8018319993b2c47a2491fb7ea8b3a51c7a86cba38301ae1561b364e";
+      url = "https://pypi.python.org/packages/51/70/af1b3130cd051f2f79854b14079b3bcbad84b8bac31a7dffc63ef57f8a7a/flake8-3.2.1.tar.gz";
+      sha256 = "c7c460b5aff3a2063c798a77af18ec70af3941d35a22e2e76965e3c0e0b36055";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -510,6 +528,26 @@ self: {
       homepage = "";
       license = licenses.mit;
       description = "the modular source code checker: pep8, pyflakes and co";
+    };
+  };
+
+
+
+  "flask-talisman" = python.mkDerivation {
+    name = "flask-talisman-0.2.1";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/46/4b/1e523f46e0a29b9f0f05f19c6d18c3872ba5c128a39a00c4d1b1d46f9178/flask-talisman-0.2.1.tar.gz";
+      sha256 = "9fb9aa9e9b905bc511f2346c579cd824bf7fc8562225ff20e8e7a142d883c754";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."six"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = "License :: OSI Approved :: Apache Software License";
+      description = "HTTP security headers for Flask.";
     };
   };
 
@@ -534,10 +572,10 @@ self: {
 
 
   "ipdb" = python.mkDerivation {
-    name = "ipdb-0.10.1";
+    name = "ipdb-0.10.2";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/eb/0a/0a37dc19572580336ad3813792c0d18c8d7117c2d66fc63c501f13a7a8f8/ipdb-0.10.1.tar.gz";
-      sha256 = "bb2948e726dbfb2687f4a582088b3f170b2556ba8e54ae1231c783c97e99ec87";
+      url = "https://pypi.python.org/packages/e1/fa/446cc6443c0dd5bcce55af12b73e1a561b330913a3792d4037f4aa654ed2/ipdb-0.10.2.tar.gz";
+      sha256 = "fffc45b615e46eb75becbd88a30c69c75e7164ecd0122f2c78579b4dfa41b8c9";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -637,10 +675,10 @@ self: {
 
 
   "mccabe" = python.mkDerivation {
-    name = "mccabe-0.5.2";
+    name = "mccabe-0.5.3";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/f1/b7/ff36d1a163079688633a776e1717b5459caccbb68973afab2aa8345ac40f/mccabe-0.5.2.tar.gz";
-      sha256 = "3473f06c8b757bbb5cdf295099bf64032e5f7d6fe0ec2f97ee9b23cb0a435aff";
+      url = "https://pypi.python.org/packages/c9/0b/b66016d49fc1b24864743e388bc4fa7dcbb83c29553b867404fad5b5855d/mccabe-0.5.3.tar.gz";
+      sha256 = "16293af41e7242031afd73896fef6458f4cad38201d21e28f344fff50ae1c25e";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -655,10 +693,10 @@ self: {
 
 
   "mohawk" = python.mkDerivation {
-    name = "mohawk-0.3.3";
+    name = "mohawk-0.3.4";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/6e/c0/fef11cfffdc7729f4dc3dfff70468de0d604c3e2bdcf3170c76b90a7ae1e/mohawk-0.3.3.tar.gz";
-      sha256 = "ed68517c20c909abe64bbceb89137b97c1df8c55d95be1c53dfd6c9264003ad0";
+      url = "https://pypi.python.org/packages/19/22/10f696548a8d41ad41b92ab6c848c60c669e18c8681c179265ce4d048b03/mohawk-0.3.4.tar.gz";
+      sha256 = "e98b331d9fa9ece7b8be26094cbe2d57613ae882133cc755167268a984bc0ab3";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -675,10 +713,10 @@ self: {
 
 
   "multidict" = python.mkDerivation {
-    name = "multidict-2.1.2";
+    name = "multidict-2.1.4";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/8b/99/a32210e82198db00d071aa207432b898ddd8061000d00d3841a63a734d31/multidict-2.1.2.tar.gz";
-      sha256 = "d90367472d55de953d4b8d99029067026418d213a88f43e8b0554d7408188576";
+      url = "https://pypi.python.org/packages/2a/df/eaea73e46a58fd780c35ecc304ca42364fa3c1f4cd03568ed33b9d2c7547/multidict-2.1.4.tar.gz";
+      sha256 = "a77aa8c9f68846c3b5db43ff8ed2a7a884dbe845d01f55113a3fba78518c4cd7";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -693,10 +731,10 @@ self: {
 
 
   "newrelic" = python.mkDerivation {
-    name = "newrelic-2.74.0.54";
+    name = "newrelic-2.78.0.57";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/10/27/ad14040129551f7f8cba72a26480fc12c6a7b5418cc8a153060523de8f90/newrelic-2.74.0.54.tar.gz";
-      sha256 = "7d060e49ce8769f48a8acf00925de03bdc3024e433c710717d76f619c869c002";
+      url = "https://pypi.python.org/packages/fa/58/ec86f921560cb2fda82c0ee5db5565481978b665998bb32b9c8b077017c0/newrelic-2.78.0.57.tar.gz";
+      sha256 = "2191b7699e14a07efa5d9221270eb29bdf6cce643aa56cff08546ecb3f729be6";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -705,6 +743,27 @@ self: {
       homepage = "";
       license = "License :: Other/Proprietary License";
       description = "New Relic Python Agent";
+    };
+  };
+
+
+
+  "packaging" = python.mkDerivation {
+    name = "packaging-16.8";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/c6/70/bb32913de251017e266c5114d0a645f262fb10ebc9bf6de894966d124e35/packaging-16.8.tar.gz";
+      sha256 = "5d50835fdf0a7edf0b55e311b7c887786504efea1177abd7e69329a8e5ea619e";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."pyparsing"
+      self."six"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "Core utilities for Python packages";
     };
   };
 
@@ -806,10 +865,10 @@ self: {
 
 
   "py" = python.mkDerivation {
-    name = "py-1.4.31";
+    name = "py-1.4.32";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/f4/9a/8dfda23f36600dd701c6722316ba8a3ab4b990261f83e7d3ffc6dfedf7ef/py-1.4.31.tar.gz";
-      sha256 = "a6501963c725fc2554dabfece8ae9a8fb5e149c0ac0a42fd2b02c5c1c57fc114";
+      url = "https://pypi.python.org/packages/93/bd/8a90834a287e0c1682eab8e20ada672e4f4cf7d5b99f2833ddbf31ed1a6d/py-1.4.32.tar.gz";
+      sha256 = "c4b89fd1ff1162375115608d01f77c38cca1d0f28f37fd718005e19b28be41a7";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -859,11 +918,29 @@ self: {
 
 
 
-  "pytest" = python.mkDerivation {
-    name = "pytest-3.0.4";
+  "pyparsing" = python.mkDerivation {
+    name = "pyparsing-2.1.10";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/2f/03/0c636d7191255e1737012e5f9c42368f11b55463aeea46fb1955892cab0d/pytest-3.0.4.tar.gz";
-      sha256 = "879fee2c1fdbaacd1bf2c0047677c6dd4aee05b9c1e64330b34d130a584fa40d";
+      url = "https://pypi.python.org/packages/38/bb/bf325351dd8ab6eb3c3b7c07c3978f38b2103e2ab48d59726916907cd6fb/pyparsing-2.1.10.tar.gz";
+      sha256 = "811c3e7b0031021137fc83e051795025fcb98674d07eb8fe922ba4de53d39188";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "Python parsing module";
+    };
+  };
+
+
+
+  "pytest" = python.mkDerivation {
+    name = "pytest-3.0.6";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/68/9c/c06dc051b39b817efd31e4c589df7780f7b287d96fab67e90be1f614fc0a/pytest-3.0.6.tar.gz";
+      sha256 = "643434a9f1a188271da35e20064cb8b6c5440976c5bb541dc7b5b0e3cf75d940";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -880,10 +957,10 @@ self: {
 
 
   "pytest-runner" = python.mkDerivation {
-    name = "pytest-runner-2.9";
+    name = "pytest-runner-2.10.1";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/11/d4/c335ddf94463e451109e3494e909765c3e5205787b772e3b25ee8601b86a/pytest-runner-2.9.tar.gz";
-      sha256 = "50378de59b02f51f64796d3904dfe71b9dc6f06d88fc6bfbd5c8e8366ae1d131";
+      url = "https://pypi.python.org/packages/3d/dd/e491ac188a79b4d18628b1f9aa5df3603be72c3a02ae3e1dd5e081cb7ccc/pytest-runner-2.10.1.tar.gz";
+      sha256 = "ecc9549ed1ce9bbfc9e7c9bad33d3f9fa91da2334632070a191a35aa96f0be35";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -898,10 +975,10 @@ self: {
 
 
   "python-editor" = python.mkDerivation {
-    name = "python-editor-1.0.1";
+    name = "python-editor-1.0.3";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/2b/c0/df7b87d5cf016f82eab3b05cd35f53287c1178ad8c42bfb6fa61b89b22f6/python-editor-1.0.1.tar.gz";
-      sha256 = "8672e9a44a7957741453dd35e842299f6c29f0a88dc9e4316b0fa5935abb9186";
+      url = "https://pypi.python.org/packages/65/1e/adf6e000ea5dc909aa420352d6ba37f16434c8a3c2fa030445411a1ed545/python-editor-1.0.3.tar.gz";
+      sha256 = "a3c066acee22a1c94f63938341d4fb374e3fdd69366ed6603d7b24bed1efc565";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -916,10 +993,10 @@ self: {
 
 
   "pytz" = python.mkDerivation {
-    name = "pytz-2016.7";
+    name = "pytz-2016.10";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/53/35/6376f58fb82ce69e2c113ca0ebe5c0f69b20f006e184bcc238a6007f4bdb/pytz-2016.7.tar.bz2";
-      sha256 = "6eab31709e3a4aea748457707da45e805b650cbb352583805d2417de2a1dd71e";
+      url = "https://pypi.python.org/packages/d0/e1/aca6ef73a7bd322a7fc73fd99631ee3454d4fc67dc2bee463e2adf6bb3d3/pytz-2016.10.tar.bz2";
+      sha256 = "7016b2c4fa075c564b81c37a252a5fccf60d8964aa31b7f5eae59aeb594ae02b";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -934,10 +1011,10 @@ self: {
 
 
   "requests" = python.mkDerivation {
-    name = "requests-2.12.1";
+    name = "requests-2.13.0";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/6e/40/7434b2d9fe24107ada25ec90a1fc646e97f346130a2c51aa6a2b1aba28de/requests-2.12.1.tar.gz";
-      sha256 = "2109ecea94df90980be040490ff1d879971b024861539abb00054062388b612e";
+      url = "https://pypi.python.org/packages/16/09/37b69de7c924d318e51ece1c4ceb679bf93be9d05973bb30c35babd596e2/requests-2.13.0.tar.gz";
+      sha256 = "5722cd09762faa01276230270ff16af7acf7c5c45d623868d9ba116f15791ce8";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -1190,10 +1267,10 @@ self: {
 
 
   "yarl" = python.mkDerivation {
-    name = "yarl-0.7.0";
+    name = "yarl-0.8.1";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/6a/09/c7213413ea440e489d13aa53c6ffc80b532070d28a0a75cf56691eaf522e/yarl-0.7.0.tar.gz";
-      sha256 = "43222e76b17d62e23c2ff62dde7b6d3cd64453be7529876b4967ec5c3e0fa3fd";
+      url = "https://pypi.python.org/packages/10/1b/be30529bde22c85c2975a4e21cf7f13edbcb291350fbbde8bc13938620c8/yarl-0.8.1.tar.gz";
+      sha256 = "9f0397ae540124bf16a8a5b89bc3ea1c07f8ae70c3e44231a40a9edd254d5712";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
