@@ -2,10 +2,9 @@
   "config": {
     "entry": "src/index.js",
     "html": {
-      "title": "RelengAPI Tools",
-      "description": "Collection of Mozilla Release Engineering Tools",
-      "author": "Mozilla RelEng Team",
-      "head": "<link href=\"https://fonts.googleapis.com/css?family=Fira+Sans:400,300,500\" rel=\"stylesheet\" type=\"text/css\"\\>"
+      "title": "Releng Services",
+      "description": "Collection of Mozilla Release Engineering Services",
+      "author": "Mozilla RelEng Team"
     }
   }
 }
