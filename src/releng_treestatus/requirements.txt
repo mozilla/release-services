@@ -1,4 +1,4 @@
--e ../../lib/releng_common[api,auth,cors,log,db,cache]
+-e ../../lib/releng_common[api,auth,cors,log,db,cache,security]
 
 -e .
 

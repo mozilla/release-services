@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql -r ../../lib/releng_common/requirements-dev.txt -r requirements.txt -r requirements-dev.txt -r requirements-nix.txt
+#   pypi2nix -v -V 3.5 -E postgresql --setup-requires six packaging appdirs -r ../../lib/releng_common/requirements-dev.txt -r requirements.txt -r requirements-dev.txt -r requirements-nix.txt
 #
 
 { pkgs ? import <nixpkgs> {}
