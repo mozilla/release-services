@@ -1,0 +1,28 @@
+{
+    "name": "Mozilla RelEng Services Frontend",
+    "description": "Code for",
+    "repository": {
+      "url": "https://github.com/mozilla-releng/services",
+      "license": "MPL2"
+    },
+    "bugs": {
+      "open": "https://github.com/mozilla-releng/services/issues?q=is%3Aissue+is%3Aopen+label%3A%224.app%3A+releng_frontend%22",
+      "good-first-bug": "https://github.com/mozilla-releng/services/issues?q=is%3Aissue+is%3Aopen+label%3A%224.app%3A+releng_frontend%22"
+    },
+    "urls": {
+        "production": "https://mozilla-releng.net",
+        "staging": "https://staging.mozilla-releng.net"
+    },
+    "participate": {
+        "docs": "https://docs.mozilla-releng.net",
+        "irc": "#releng",
+        "irc-contacts": [ "garbas" ]
+
+    },
+    "keywords": [
+        "Bootstrap",
+        "Font-Awesome",
+        "Fira",
+        "Elm"
+    ]
+}
