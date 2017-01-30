@@ -383,10 +383,7 @@ in rec {
           runHook postInstall
         '';
 
-        postInstall = ''
-          mkdir -p $out/bin
-          ln -s ./node_modules/mozilla-neo/bin/neo $out/bin/neo
-        '' + postInstall;
+        inherit postInstall;
 
         shellHook = ''
           cd ${src_path}
