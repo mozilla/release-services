@@ -94,7 +94,6 @@ viewRecentChange plural recentChange =
                 |> String.split "."
                 |> List.head
                 |> Maybe.withDefault timestamp
-
     in
         div
             [ class "list-group-item" ]
@@ -140,9 +139,10 @@ viewRecentChanges recentChanges =
         RemoteData.Success data ->
             let
                 title =
-                    if List.isEmpty data
-                       then []
-                       else [ h2 [] [ text "Recent Changes" ] ]
+                    if List.isEmpty data then
+                        []
+                    else
+                        [ h2 [] [ text "Recent Changes" ] ]
             in
                 []
                     |> App.Utils.appendItems title
