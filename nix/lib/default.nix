@@ -306,7 +306,8 @@ in rec {
     , node_modules
     , elm_packages
     , patchPhase ? ""
-    , postInstall ? null
+    , postInstall ? ""
+    , shellHook ? ""
     , staging ? true
     , production ? false
     }:
@@ -347,10 +348,12 @@ in rec {
           for item in ${builtins.concatStringsSep " " (builtins.attrValues node_modules)}; do
             ln -s $item/lib/node_modules/* ./node_modules
           done
+          export PATH=./node_modules/mozilla-neo/bin/:$PATH
+          export NODE_PATH=$PWD/node_modules/mozilla-neo/node_modules:$NODE_PATH
         '';
 
         buildPhase = ''
-          NODE_PATH=$PWD/node_modules/mozilla-neo/node_modules ./node_modules/mozilla-neo/bin/neo build --config webpack.config.js
+           neo build --config webpack.config.js
         '';
 
         doCheck = true;
@@ -380,11 +383,14 @@ in rec {
           runHook postInstall
         '';
 
-        inherit postInstall;
+        postInstall = ''
+          mkdir -p $out/bin
+          ln -s ./node_modules/mozilla-neo/bin/neo $out/bin/neo
+        '' + postInstall;
 
         shellHook = ''
           cd ${src_path}
-        '' + self.configurePhase;
+        '' + self.configurePhase + shellHook;
 
         passthru.taskclusterGithubTasks =
           map (branch: mkTaskclusterGithubTask { inherit name src_path branch; })
