@@ -413,7 +413,10 @@ update currentRoute msg model =
                         |> RemoteData.withDefault []
             in
                 ( { model | recentChangesAlerts = alerts }
-                , App.TreeStatus.Api.fetchRecentChanges model.baseUrl
+                , Cmd.batch
+                    [ App.TreeStatus.Api.fetchRecentChanges model.baseUrl
+                    , App.TreeStatus.Api.fetchTrees model.baseUrl
+                    ]
                 , Nothing
                 )
 
