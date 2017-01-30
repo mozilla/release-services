@@ -45,20 +45,6 @@ routes =
         |> UrlParser.oneOf
 
 
-getPageTitle : Route -> String -> String
-getPageTitle route default =
-    let
-        _ =
-            pages
-                |> Debug.log "XXX"
-                --|> List.filter (\(p, r) -> r == route)
-                --|> List.map (\(p, r) -> p.title)
-                --|> List.head
-                --|> Maybe.withDefault default
-    in
-    default
-
-
 reverse : Route -> String
 reverse route =
     case route of
