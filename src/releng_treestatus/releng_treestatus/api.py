@@ -93,7 +93,7 @@ def update_trees(body):
             and _get(body, 'status') == 'closed':
         raise BadRequest("tags are required when closing a tree")
 
-    if not _is_unset(body, 'remember'):
+    if not _is_unset(body, 'remember') and body['remember'] is True:
         if _is_unset(body, 'status') or _is_unset(body, 'reason'):
             raise BadRequest(
                 "must specify status and reason to remember the change")

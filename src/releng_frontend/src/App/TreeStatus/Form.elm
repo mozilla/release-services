@@ -244,7 +244,7 @@ updateUpdateTree route model formMsg =
             | formUpdateTree = form
             , treesAlerts = alerts
           }
-        , Debug.log "HAWK REQUEST" hawkRequest
+        , hawkRequest
         )
 
 
