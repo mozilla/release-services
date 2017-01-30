@@ -17,47 +17,31 @@ class Repository(object):
         self.client = None
         logger.info('Mercurial repository', url=self.url, directory=self.directory)  # noqa
 
-    def update(self):
+    def checkout(self, branch):
         """
-        Initially clone the repository
-        or try to update it
+        Robust Checkout of the repository
+        using configured mercurial client with extensions
         """
-        config = [
-            # Use purge extension
-            b'extensions.purge=',
-        ]
+        # Build command line
+        repo_dir = os.path.join(self.directory, 'repo')
+        shared_dir = os.path.join(self.directory, 'shared')
+        logger.info('Updating repo', dir=repo_dir, branch=branch)
+        cmd = hglib.util.cmdbuilder('robustcheckout',
+                                    self.url,
+                                    repo_dir,
+                                    purge=True,
+                                    sharebase=shared_dir,
+                                    branch=branch)
+        cmd.insert(0, hglib.HGPATH)
 
-        # Use CA certs from OS env (docker)
-        cacert = os.environ.get('SSL_CERT_FILE')
-        if cacert:
-            config.append('web.cacerts={}'.format(cacert).encode('utf-8'))
-            logger.debug('Using cacert', path=cacert)
+        # Run Command
+        proc = hglib.util.popen(cmd)
+        out, err = proc.communicate()
+        if proc.returncode:
+            raise hglib.error.CommandError(cmd, proc.returncode, out, err)
 
-        try:
-            # Update local copy
-            self.client = hglib.open(self.directory, configs=config)
-            logger.info('Updating existing local repository...')
-            self.client.update()
-        except Exception:
-            # Initial clone, with a manual command to support ca certs
-            logger.info('No local repository found in cache, cloning...')
-            clone_cfg = cacert and 'web.cacerts={}'.format(cacert) or None
-            cmd = hglib.util.cmdbuilder('clone',
-                                        self.url,
-                                        self.directory,
-                                        uncompressed=True,
-                                        config=clone_cfg)
-            cmd.insert(0, hglib.HGPATH)
-            proc = hglib.util.popen(cmd)
-            out, err = proc.communicate()
-            if proc.returncode:
-                raise hglib.error.CommandError(cmd, proc.returncode, out, err)
-
-            self.client = hglib.open(self.directory, configs=config)
-
-        # Make sure purge extension is available
-        assert (b'extensions', b'purge', b'') in self.client.config(), \
-            'Missing mercurial purge extension'
+        # Use new high level mercurial client
+        self.client = hglib.open(repo_dir)
 
         # Setup callback prompt
         def _cb(max_length, data):
@@ -82,16 +66,8 @@ class Repository(object):
 
         logger.info('Merge test', revision=revision, branch=branch)
 
-        # Switch branch
-        # 1) `hg pull` the destination changeset
-        # and the changeset(s) you wish to test
-        self.client.update(branch)
-
-        # 2) `hg purge --all --dirs`
-        self.client.rawcommand([b'purge', b'--all', b'--dirs'])
-
-        # 3) `hg update --clean DESTREV`
-        self.client.rawcommand([b'update', b'--clean'])
+        # Switch to branch
+        self.checkout(branch)
 
         # 4) `hg graft --tool :merge REV [REV ...]`
         cmd = [
@@ -102,25 +78,18 @@ class Repository(object):
         try:
             self.client.rawcommand(cmd)
             logger.info('Merge success', revision=revision, branch=branch)
-            self.cleanup()
         except hglib.error.CommandError as e:
             logger.warning('Auto merge failed', revision=revision, branch=branch, error=e)  # noqa
-            self.cleanup()
             return False
 
         # If `hg graft` exits code 0, there are no merge conflicts.
         return True
 
-    def cleanup(self):
-        """
-        Cleanup repository
-        """
-        try:
-            self.client.rawcommand([b'update', b'--clean'])
-        except Exception as e:
-            logger.debug('Cleanup update failure', error=e)
 
-        try:
-            self.client.rawcommand([b'purge'])
-        except Exception as e:
-            logger.debug('Cleanup purge failure', error=e)
+if __name__ == '__main__':
+    import tempfile
+    repo = Repository(
+        'https://hg.mozilla.org/mozilla-unified',
+        os.path.join(tempfile.gettempdir(), 'mozilla-unified')
+    )
+    repo.checkout('beta')

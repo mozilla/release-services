@@ -169,7 +169,8 @@ let
         python.packages.click
         python.packages.mohawk
         python.packages.taskcluster
-				releng_pkgs.pkgs.mercurial
+        python.packages.robustcheckout
+        python.packages.mercurial
       ];
     passthru = {
       taskclusterHooks = {
