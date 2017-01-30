@@ -22,6 +22,8 @@ if 'REDIS_URL' in os.environ:
 
 if 'CACHE_DEFAULT_TIMEOUT' not in CACHE:
     CACHE['CACHE_DEFAULT_TIMEOUT'] = 60 * 5
+else:
+    CACHE['CACHE_DEFAULT_TIMEOUT'] = float(CACHE['CACHE_DEFAULT_TIMEOUT'])
 
 if 'CACHE_KEY_PREFIX' not in CACHE:
     CACHE['CACHE_KEY_PREFIX'] = "releng_treestatus-"
