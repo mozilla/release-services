@@ -353,7 +353,7 @@ in rec {
         '';
 
         buildPhase = ''
-           neo build --config webpack.config.js
+          ./node_modules/mozilla-neo/bin/neo build --config webpack.config.js
         '';
 
         doCheck = true;
