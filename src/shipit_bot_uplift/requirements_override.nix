@@ -27,10 +27,44 @@ self: super: {
   });
 
   "libmozdata" = python.overrideDerivation super."libmozdata" (old: {
-		# Remove useless dependencies
+    # Remove useless dependencies
     preConfigure = ''
       sed -i -e "s|mercurial>=3.9.1; python_version < '3.0'||" requirements.txt
       sed -i -e "s|setuptools>=28.6.1||" requirements.txt
+    '';
+  });
+
+  "robustcheckout" = pkgs.stdenv.mkDerivation {
+    name = "robustcheckout";
+    src = pkgs.fetchurl { 
+      url = "https://hg.mozilla.org/hgcustom/version-control-tools/archive/1a8415be17e8.tar.bz2";
+      sha256 = "005n7ar8cn7162s1qx970x1aabv263zp7mxm38byxc23nzym37kn";
+    };
+    installPhase = ''
+      mkdir -p $out
+      cp -rf hgext/robustcheckout $out
+    '';
+    doCheck = false;
+    buildInputs = [];
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "https://hg.mozilla.org/hgcustom/version-control-tools";
+      license = licenses.mit;
+      description = "Mozilla Version Control Tools: robustcheckout";
+    };
+  };
+
+  "mercurial" = pkgs.stdenv.lib.overrideDerivation pkgs.mercurial (old: {
+    buildInputs = old.buildInputs ++ [ ];
+    postInstall = old.postInstall + ''
+      cat > $out/etc/mercurial/hgrc <<EOF
+      [web]
+      cacerts = ${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
+
+      [extensions]
+      purge =
+      robustcheckout = ${self.robustcheckout}/robustcheckout/__init__.py
+      EOF
     '';
   });
 

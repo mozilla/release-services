@@ -258,7 +258,7 @@ class Bot(object):
         # Init local copy of mozilla-unified
         self.repository = Repository(
             'https://hg.mozilla.org/mozilla-unified',
-            os.path.join(cache_root, 'mozilla-unified')
+            cache_root,
         )
 
     def list_bugs(self, query):
@@ -409,7 +409,7 @@ class BotRemote(Bot):
             'Missing mozilla repository'
 
         # First update local repository
-        self.repository.update()
+        self.repository.checkout('release')
 
         # Load all analysis
         all_analysis = self.make_request('get', '/analysis')
@@ -450,6 +450,7 @@ class BotRemote(Bot):
             'Use BugSync instance'
 
         # Do patch analysis on bugs
+        logger.info('Started bug analysis', bz_id=sync.bugzilla_id)
         if not sync.update():
             return
 
