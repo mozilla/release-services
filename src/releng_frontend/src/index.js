@@ -8,6 +8,7 @@ require('./scss/index.scss');
 var redirect = require('./redirect');
 var localstorage = require('./localstorage');
 var hawk = require('./hawk');
+var title = require('./title');
 
 var url;
 var getData = function(name, _default) {
@@ -32,3 +33,4 @@ var app = require('./Main.elm').Main.fullscreen({
 localstorage.init(app, KEY);
 hawk(app);
 redirect(app);
+title(app);
