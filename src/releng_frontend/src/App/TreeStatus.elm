@@ -20,6 +20,7 @@ import Navigation
 import RemoteData
 import String
 import TaskclusterLogin
+import Title
 import UrlParser
 import UrlParser exposing ((</>))
 import Utils
@@ -122,7 +123,8 @@ update currentRoute msg model =
                 showAllTrees =
                     ( { model | trees = RemoteData.Loading }
                     , Cmd.batch
-                        [ App.TreeStatus.Api.fetchTrees model.baseUrl
+                        [ Title.set_title "TreeStatus"
+                        , App.TreeStatus.Api.fetchTrees model.baseUrl
                         , App.TreeStatus.Api.fetchRecentChanges model.baseUrl
                         ]
                     )

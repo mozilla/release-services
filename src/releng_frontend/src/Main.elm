@@ -108,6 +108,7 @@ update msg model =
 
                 fetchUserScopes =
                     App.UserScopesMsg App.UserScopes.FetchScopes
+
             in
                 case route of
                     App.NotFoundRoute ->
