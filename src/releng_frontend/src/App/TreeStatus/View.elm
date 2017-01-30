@@ -66,9 +66,9 @@ viewRecentChange plural recentChange =
     let
         treeLabel =
             if plural then
-                "trees"
+                "trees "
             else
-                "tree"
+                "tree "
 
         recentChangeReason =
             let
