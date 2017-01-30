@@ -12,7 +12,6 @@ in mkFrontend {
   node_modules = import ./node-modules.nix { inherit (releng_pkgs) pkgs; };
   elm_packages = import ./elm-packages.nix;
   postInstall = ''
-    mkdir -p $out/trychooser
     cp -R src/static/* $out/
   '';
   production = true;

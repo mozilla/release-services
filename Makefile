@@ -65,6 +65,7 @@ APP_DEV=\
 APP_DEV_ENV_elm_common_example=\
 	$(APP_DEV)
 APP_DEV_ENV_releng_frontend=\
+	NEO_DOCS_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_docs) \
 	NEO_CLOBBERER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_clobberer) \
 	NEO_TOOLTOOL_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_tooltool) \
 	NEO_TREESTATUS_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_treestatus) \
@@ -91,6 +92,7 @@ APP_STAGING_S3_shipit_frontend=shipit-staging-frontend
 APP_STAGING_CSP_releng_frontend=https://auth.taskcluster.net https://clobberer.staging.mozilla-releng.net https://tooltool.staging.mozilla-releng.net https://treestatus.staging.mozilla-releng.net https://mapper.staging.mozilla-releng.net https://archiver.staging.mozilla-releng.net
 APP_STAGING_ENV_releng_frontend=\
 	'version="v$(VERSION)"' \
+	'docs-url="https:\/\/docs\.staging\.mozilla-releng\.net\"' \
 	'clobberer-url="https:\/\/clobberer\.staging\.mozilla-releng\.net\"' \
 	'tooltool-url="https:\/\/tooltool\.staging\.mozilla-releng\.net\"' \
 	'treestatus-url="https:\/\/treestatus\.staging\.mozilla-releng\.net\"' \
@@ -115,6 +117,7 @@ APP_PRODUCTION_S3_shipit_frontend=shipit-production-frontend
 APP_PRODUCTION_CSP_releng_frontend=https://auth.taskcluster.net https://clobberer.mozilla-releng.net https://tooltool.mozilla-releng.net https://treestatus.mozilla-releng.net https://mapper.mozilla-releng.net https://archiver.mozilla-releng.net
 APP_PRODUCTION_ENV_releng_frontend=\
 	'version="v$(VERSION)"' \
+	'docs-url="https:\/\/docs\.mozilla-releng\.net\"' \
 	'clobberer-url="https:\/\/clobberer\.mozilla-releng\.net\"' \
 	'tooltool-url="https:\/\/tooltool\.mozilla-releng\.net\"' \
 	'treestatus-url="https:\/\/treestatus\.mozilla-releng\.net\"' \
@@ -213,10 +216,10 @@ develop-flask-shell: nix require-APP
 	DEBUG=true \
 	CACHE_TYPE=filesystem \
 	CACHE_DIR=$$PWD/src/$(APP)/cache \
-  FLASK_APP=$(APP) \
+	FLASK_APP=$(APP) \
 	APP_SETTINGS=$$PWD/src/$(APP)/settings.py \
 		nix-shell nix/default.nix -A $(APP) \
-    --run "flask $(FLASK_CMD)"
+		--run "flask $(FLASK_CMD)"
 
 build-apps: $(foreach app, $(APPS), build-app-$(app))
 
