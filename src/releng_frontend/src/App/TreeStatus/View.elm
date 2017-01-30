@@ -138,21 +138,27 @@ viewRecentChanges :
 viewRecentChanges recentChanges =
     case recentChanges of
         RemoteData.Success data ->
-            []
-                |> App.Utils.appendItem (h2 [] [ text "Recent Changes" ])
-                |> App.Utils.appendItems
-                    (List.map
-                        (viewRecentChange (List.length data > 1))
-                        data
-                    )
-                |> (\x ->
-                        [ div
-                            [ id "treestatus-recentchanges"
-                            , class "list-group"
+            let
+                title =
+                    if List.isEmpty data
+                       then []
+                       else [ h2 [] [ text "Recent Changes" ] ]
+            in
+                []
+                    |> App.Utils.appendItems title
+                    |> App.Utils.appendItems
+                        (List.map
+                            (viewRecentChange (List.length data > 1))
+                            data
+                        )
+                    |> (\x ->
+                            [ div
+                                [ id "treestatus-recentchanges"
+                                , class "list-group"
+                                ]
+                                x
                             ]
-                            x
-                        ]
-                   )
+                       )
 
         _ ->
             []
