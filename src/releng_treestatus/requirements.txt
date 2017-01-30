@@ -7,3 +7,4 @@ SQLAlchemy
 Flask
 Flask-Login
 Werkzeug
+redis

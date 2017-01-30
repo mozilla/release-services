@@ -93,10 +93,10 @@ self: {
 
 
   "Flask-Migrate" = python.mkDerivation {
-    name = "Flask-Migrate-2.0.2";
+    name = "Flask-Migrate-2.0.3";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/f8/ba/827214fb932fb1de1fac7d992f0958c799bfc50ea471b0b8792d5e72daa6/Flask-Migrate-2.0.2.tar.gz";
-      sha256 = "c77272b936ec94209d5c709f9ec43947f4a25513c1b12cc25241586abdfa84b1";
+      url = "https://pypi.python.org/packages/a9/fe/559c313679b08f67efb9fba6f01debbc9ea3a488539d03a5a38371351456/Flask-Migrate-2.0.3.tar.gz";
+      sha256 = "331f1facf93712b6a3067eac382e645b1ef09e9a6d34da447acb6a3c293afd80";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -157,10 +157,10 @@ self: {
 
 
   "Jinja2" = python.mkDerivation {
-    name = "Jinja2-2.9.4";
+    name = "Jinja2-2.9.5";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/f4/3f/28387a5bbc6883082c16784c6135440b94f9d5938fb156ff579798e18eda/Jinja2-2.9.4.tar.gz";
-      sha256 = "aab8d8ca9f45624f1e77f2844bf3c144d180e97da8824c2a6d7552ad039b5442";
+      url = "https://pypi.python.org/packages/71/59/d7423bd5e7ddaf3a1ce299ab4490e9044e8dfd195420fc83a24de9e60726/Jinja2-2.9.5.tar.gz";
+      sha256 = "702a24d992f856fa8d5a7a36db6128198d0c21e1da34448ca236c42e92384825";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -188,6 +188,7 @@ self: {
       self."Jinja2"
       self."SQLAlchemy"
       self."pytest"
+      self."redis"
     ];
     meta = with pkgs.stdenv.lib; {
       homepage = "";
@@ -592,10 +593,10 @@ self: {
 
 
   "ipython" = python.mkDerivation {
-    name = "ipython-5.1.0";
+    name = "ipython-5.2.0";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/89/63/a9292f7cd9d0090a0f995e1167f3f17d5889dcbc9a175261719c513b9848/ipython-5.1.0.tar.gz";
-      sha256 = "7ef4694e1345913182126b219aaa4a0047e191af414256da6772cf249571b961";
+      url = "https://pypi.python.org/packages/df/44/0eee6ed339641d88e2be32ddfd695a39c954b66e5a10ba701629ce3454e9/ipython-5.2.0.tar.gz";
+      sha256 = "d043ac22f360a329b9f1e1ce68905339b76460d373579224c071ee52b6120231";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -1005,6 +1006,24 @@ self: {
       homepage = "";
       license = licenses.mit;
       description = "World timezone definitions, modern and historical";
+    };
+  };
+
+
+
+  "redis" = python.mkDerivation {
+    name = "redis-2.10.5";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/68/44/5efe9e98ad83ef5b742ce62a15bea609ed5a0d1caf35b79257ddb324031a/redis-2.10.5.tar.gz";
+      sha256 = "5dfbae6acfc54edf0a7a415b99e0b21c0a3c27a7f787b292eea727b1facc5533";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.mit;
+      description = "Python client for Redis key-value store";
     };
   };
 

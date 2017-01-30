@@ -49,6 +49,7 @@ let
         python.packages."Flask"
         python.packages."Flask-Login"
         python.packages."Werkzeug"
+        python.packages."redis"
       ];
     passthru = {
       mysql2postgresql = mysql2postgresql {
