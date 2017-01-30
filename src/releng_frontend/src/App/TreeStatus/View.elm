@@ -79,6 +79,22 @@ viewRecentChange plural recentChange =
                     []
                 else
                     (text " with reason: ") :: words
+
+        parseTimestamp timestamp =
+            timestamp
+                |> String.split "T"
+                |> List.drop 1
+                |> List.take 1
+                |> List.append
+                    (timestamp
+                        |> String.split "T"
+                        |> List.take 1
+                    )
+                |> String.join " "
+                |> String.split "."
+                |> List.head
+                |> Maybe.withDefault timestamp
+
     in
         div
             [ class "list-group-item" ]
@@ -101,9 +117,8 @@ viewRecentChange plural recentChange =
                 []
                 (List.append
                     [ text "At "
-                    , text recentChange.when
-                    , text " UTC, "
-                    , text (TaskclusterLogin.shortUsername recentChange.who)
+                    , text (parseTimestamp recentChange.when)
+                    , text (" " ++ (TaskclusterLogin.shortUsername recentChange.who))
                     , text " changed "
                     , text treeLabel
                     , em [] [ text (String.join ", " recentChange.trees) ]
