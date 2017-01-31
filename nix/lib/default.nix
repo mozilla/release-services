@@ -325,16 +325,20 @@ in rec {
         buildInputs = [ elmPackages.elm ] ++ (builtins.attrValues node_modules);
 
         patchPhase = ''
-          rm \
-            webpack.config.js \
-            src/scss/fira \
-            src/scss/font-awesome \
-            src/scss/fonts.scss
+          if [ -e webpack.config.js ]; then
+            rm webpack.config.js
+            ln -s ${scss_common}/webpack.config.js ./
+          fi
 
-          ln -s ${scss_common}/webpack.config.js ./
-          ln -s ${scss_common}/fira              ./src/scss/
-          ln -s ${scss_common}/font-awesome      ./src/scss/
-          ln -s ${scss_common}/fonts.scss        ./src/scss/
+          if [ -e src/scss ]; then
+            rm \
+              src/scss/fira \
+              src/scss/font-awesome \
+              src/scss/fonts.scss
+            ln -s ${scss_common}/fira         ./src/scss/
+            ln -s ${scss_common}/font-awesome ./src/scss/
+            ln -s ${scss_common}/fonts.scss   ./src/scss/
+          fi
 
           for item in ./*; do
             if [ -h $item ]; then
