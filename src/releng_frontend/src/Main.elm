@@ -20,6 +20,7 @@ import Navigation
 import String
 import Task
 import TaskclusterLogin
+import Time
 import Utils
 
 
@@ -43,6 +44,29 @@ init flags ( route, address ) =
 update : App.Msg -> App.Model -> ( App.Model, Cmd App.Msg )
 update msg model =
     case msg of
+        App.Tick newTime ->
+            case model.user of
+                Just user ->
+                    case user.certificate of
+                        Just certificate ->
+                            let
+                                expired =
+                                    newTime > (toFloat certificate.expiry)
+
+                                logout =
+                                    App.TaskclusterLoginMsg TaskclusterLogin.Logout
+                            in
+                                if expired then
+                                    update logout model
+                                else
+                                    ( model, Cmd.none )
+
+                        Nothing ->
+                            ( model, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
         App.TaskclusterLoginMsg userMsg ->
             let
                 ( newUser, userCmd ) =
@@ -235,6 +259,7 @@ subscriptions model =
     Sub.batch
         [ TaskclusterLogin.subscriptions App.TaskclusterLoginMsg
         , Hawk.subscriptions App.HawkMsg
+        , Time.every Time.second App.Tick
         ]
 
 

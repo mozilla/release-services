@@ -11,6 +11,7 @@ import Hop
 import Hop.Types
 import Navigation
 import TaskclusterLogin
+import Time
 import UrlParser
 import UrlParser exposing ((</>))
 import Utils
@@ -104,7 +105,8 @@ type alias Model =
 
 
 type Msg
-    = TaskclusterLoginMsg TaskclusterLogin.Msg
+    = Tick Time.Time
+    | TaskclusterLoginMsg TaskclusterLogin.Msg
     | HawkMsg Hawk.Msg
     | NavigateTo Route
     | UserScopesMsg App.UserScopes.Msg
