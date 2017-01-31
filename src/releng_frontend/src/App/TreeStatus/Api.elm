@@ -64,11 +64,12 @@ encoderTreeNames trees =
 
 decoderTrees : JsonDecode.Decoder App.TreeStatus.Types.Trees
 decoderTrees =
-    JsonDecode.list decoderTree
+    JsonDecode.list decoderTree2
+        |> JsonDecode.at [ "result" ]
 
 
-decoderTree : JsonDecode.Decoder App.TreeStatus.Types.Tree
-decoderTree =
+decoderTree2 : JsonDecode.Decoder App.TreeStatus.Types.Tree
+decoderTree2 =
     JsonDecode.object4 App.TreeStatus.Types.Tree
         ("tree" := JsonDecode.string)
         ("status" := JsonDecode.string)
@@ -76,9 +77,15 @@ decoderTree =
         ("message_of_the_day" := JsonDecode.string)
 
 
+decoderTree : JsonDecode.Decoder App.TreeStatus.Types.Tree
+decoderTree =
+    JsonDecode.at [ "result" ] decoderTree2
+
+
 decoderTreeLogs : JsonDecode.Decoder App.TreeStatus.Types.TreeLogs
 decoderTreeLogs =
     JsonDecode.list decoderTreeLog
+        |> JsonDecode.at [ "result" ]
 
 
 decoderTreeLog : JsonDecode.Decoder App.TreeStatus.Types.TreeLog
@@ -95,6 +102,7 @@ decoderTreeLog =
 decoderRecentChanges : JsonDecode.Decoder (List App.TreeStatus.Types.RecentChange)
 decoderRecentChanges =
     JsonDecode.list decoderRecentChange
+        |> JsonDecode.at [ "result" ]
 
 
 decoderRecentChange : JsonDecode.Decoder App.TreeStatus.Types.RecentChange
