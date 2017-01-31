@@ -277,6 +277,7 @@ in rec {
           "/VERSION"
           "/${name}"
           "/tests"
+          "/build"
           "/MANIFEST.in"
           "/settings.py"
           "/setup.py"
