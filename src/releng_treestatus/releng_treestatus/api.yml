@@ -9,32 +9,82 @@ info:
   title: "TreeStatus"
 paths:
 
-  /trees2:
+  /stack:
     get:
-      operationId: "releng_treestatus.api.get_trees2"
-      description: Get the status of all trees.
+      operationId: "releng_treestatus.api.get_stack"
+      description: |
+        Get the `undo stack` of changes to trees, most recent first.
       responses:
         200:
-          description: Trees
+          description: List of state changes.
           schema:
-            type: array
-            additionalProperties:
-              $ref: '#/definitions/Tree'
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                type: array
+                items:
+                  $ref: '#/definitions/StateChange'
+
+  /stack/{id}:
     delete:
-      operationId: "releng_treestatus.api.kill_trees"
-      description: Delete trees.
+      operationId: "releng_treestatus.api.revert_change"
+      description: |
+        Remove the given change from the undo stack.
+
+        With ``?revert=1`` This applies the settings that were
+        present before the change to the affected trees.
+
+        With ``?revert=0`` or omitting the revert keyword, it merely removes
+        the change from the stack without changing the settings on the tree.
       parameters:
-        - name: trees
-          in: body
-          description: Trees to delete
+        - name: id
+          in: path
           required: true
-          schema:
-            type: array
-            items:
-              type: string
+          type: integer
+        - name: revert
+          in: query
+          required: true
+          default: 0
+          type: integer
       responses:
         200:
-          description: None
+          description: Status
+          schema:
+            type: string
+
+  /stack2/discard/{id}:
+    delete:
+      operationId: "releng_treestatus.api.discard_change"
+      description: |
+        Removes the change from the stack without changing the settings on the
+        tree.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+      responses:
+        200:
+          description: Status
+          schema:
+            type: string
+
+  /stack2/restore/{id}:
+    delete:
+      operationId: "releng_treestatus.api.restore_change"
+      description: |
+        Remove the given change from the undo stack that were present before
+        the change to the affected trees.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+      responses:
+        200:
+          description: Status
           schema:
             type: string
 
@@ -47,8 +97,13 @@ paths:
           description: Trees
           schema:
             type: object
-            additionalProperties:
-              $ref: '#/definitions/Tree'
+            required:
+              - result
+            properties:
+              result:
+                type: object
+                additionalProperties:
+                  $ref: '#/definitions/Tree'
     patch:
       operationId: "releng_treestatus.api.update_trees"
       description: |
@@ -90,7 +145,12 @@ paths:
         200:
           description: Tree
           schema:
-            $ref: '#/definitions/Tree'
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                $ref: '#/definitions/Tree'
     put:
       operationId: "releng_treestatus.api.make_tree"
       description: Make a new tree.
@@ -147,9 +207,48 @@ paths:
         200:
           description: Tree
           schema:
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                type: array
+                items:
+                  $ref: '#/definitions/TreeLog'
+
+  /trees2:
+    get:
+      operationId: "releng_treestatus.api.get_trees2"
+      description: Get the status of all trees.
+      responses:
+        200:
+          description: Trees
+          schema:
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                type: array
+                additionalProperties:
+                  $ref: '#/definitions/Tree'
+    delete:
+      operationId: "releng_treestatus.api.kill_trees"
+      description: Delete trees.
+      parameters:
+        - name: trees
+          in: body
+          description: Trees to delete
+          required: true
+          schema:
             type: array
             items:
-              $ref: '#/definitions/TreeLog'
+              type: string
+      responses:
+        200:
+          description: None
+          schema:
+            type: string
 
   /v0/trees:
     get:
@@ -188,80 +287,6 @@ paths:
           description: Tree
           schema:
             $ref: '#/definitions/Tree'
-
-  /stack:
-    get:
-      operationId: "releng_treestatus.api.get_stack"
-      description: |
-        Get the `undo stack` of changes to trees, most recent first.
-      responses:
-        200:
-          description: List of state changes.
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/StateChange'
-
-  /stack/{id}:
-    delete:
-      operationId: "releng_treestatus.api.revert_change"
-      description: |
-        Remove the given change from the undo stack.
-
-        With ``?revert=1`` This applies the settings that were
-        present before the change to the affected trees.
-
-        With ``?revert=0`` or omitting the revert keyword, it merely removes
-        the change from the stack without changing the settings on the tree.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: integer
-        - name: revert
-          in: query
-          required: true
-          default: 0
-          type: integer
-      responses:
-        200:
-          description: Status
-          schema:
-            type: string
-
-  /stack2/restore/{id}:
-    delete:
-      operationId: "releng_treestatus.api.restore_change"
-      description: |
-        Remove the given change from the undo stack that were present before
-        the change to the affected trees.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: integer
-      responses:
-        200:
-          description: Status
-          schema:
-            type: string
-
-  /stack2/discard/{id}:
-    delete:
-      operationId: "releng_treestatus.api.discard_change"
-      description: |
-        Removes the change from the stack without changing the settings on the
-        tree.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: integer
-      responses:
-        200:
-          description: Status
-          schema:
-            type: string
 
 definitions:
 

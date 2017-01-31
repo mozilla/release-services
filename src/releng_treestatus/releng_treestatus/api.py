@@ -62,11 +62,11 @@ def _update_tree_status(session, tree, status=None, reason=None, tags=[],
                 tags=tags)
         session.add(l)
 
-    cache.delete_memoized(get_tree, tree.tree)
+    cache.delete_memoized(v0_get_tree, tree.tree)
 
 
 @cache.memoize()
-def get_tree(tree):
+def v0_get_tree(tree):
     t = current_app.db.session.query(Tree).get(tree)
     if not t:
         raise NotFound("No such tree")
@@ -75,11 +75,11 @@ def get_tree(tree):
 
 def get_trees():
     session = current_app.db.session
-    return {t.tree: t.to_dict() for t in session.query(Tree)}
+    return dict(result={t.tree: t.to_dict() for t in session.query(Tree)})
 
 
 def get_trees2():
-    return [i for i in get_trees().values()]
+    return dict(result=[i for i in get_trees()['result'].values()])
 
 
 @auth.require_scopes(['project:releng:treestatus/trees/update'])
@@ -156,7 +156,7 @@ def _kill_tree(tree):
     Log.query.filter_by(tree=tree).delete()
     StatusChangeTree.query.filter_by(tree=tree).delete()
     session.commit()
-    cache.delete_memoized(get_tree, tree)
+    cache.delete_memoized(v0_get_tree, tree)
 
 
 @auth.require_scopes(['project:releng:treestatus/trees/delete'])
@@ -187,22 +187,24 @@ def get_logs(tree, all=0):
         q = q.limit(TREE_SUMMARY_LOG_LIMIT)
 
     logs = [l.to_dict() for l in q]
-    return logs
+    return dict(result=logs)
 
 
 def v0_get_trees():
     return get_trees()
 
 
-def v0_get_tree(tree):
-    return get_tree(tree)
+def get_tree(tree):
+    return dict(result=v0_get_tree(tree))
 
 
 def get_stack():
-    return [
-        i.to_dict()
-        for i in StatusChange.query.order_by(StatusChange.when.desc())
-    ]
+    return dict(
+        result=[
+            i.to_dict()
+            for i in StatusChange.query.order_by(StatusChange.when.desc())
+        ]
+    )
 
 
 def _revert_change(id, revert=None):
