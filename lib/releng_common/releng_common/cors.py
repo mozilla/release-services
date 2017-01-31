@@ -8,10 +8,11 @@ from flask_cors import CORS
 import os
 
 
+cors = CORS()
+
+
 def init_app(app):
     # Allow specific origins
     origins = os.environ.get('CORS_ORIGINS', '*')
-
-    cors = CORS(origins=origins)
-    cors.init_app(app)
+    cors.init_app(app, origins=origins.split(' '))
     return cors
