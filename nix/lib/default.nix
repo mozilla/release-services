@@ -325,11 +325,6 @@ in rec {
         buildInputs = [ elmPackages.elm ] ++ (builtins.attrValues node_modules);
 
         patchPhase = ''
-          if [ -e webpack.config.js ]; then
-            rm webpack.config.js
-            ln -s ${scss_common}/webpack.config.js ./
-          fi
-
           if [ -e src/scss ]; then
             rm \
               src/scss/fira \
