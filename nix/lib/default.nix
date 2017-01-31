@@ -277,13 +277,13 @@ in rec {
           "/VERSION"
           "/${name}"
           "/tests"
-          "/build"
           "/MANIFEST.in"
           "/settings.py"
           "/setup.py"
         ] else include;
         _exclude = if exclude == null then [
-            "/${name}.egg-info"
+          "/${name}.egg-info"
+          "/build"
         ] else exclude;
         startsWith = s: x: builtins.substring 0 (builtins.stringLength x) s == x;
         relativePath = path:
