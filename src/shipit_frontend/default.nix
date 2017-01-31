@@ -8,7 +8,6 @@ in mkFrontend {
   name = "shipit_frontend";
   version = fileContents ./../../VERSION;
   src = ./.;
-  src_elm_common = ./../../lib/elm_common;
   node_modules = import ./node-modules.nix { inherit (releng_pkgs) pkgs; };
   elm_packages = import ./elm-packages.nix;
   production = true;
