@@ -356,6 +356,26 @@ self: {
 
 
 
+  "amqp" = python.mkDerivation {
+    name = "amqp-2.1.4";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/23/39/06bb8bd31e78962675f696498f7821f5dbd11aa0919c5a811d83a0e02609/amqp-2.1.4.tar.gz";
+      sha256 = "1378cc14afeb6c2850404f322d03dec0082d11d04bdcb0360e1b10d4e6e77ef9";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."vine"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "Low-level AMQP client for Python (fork of amqplib).";
+    };
+  };
+
+
+
   "appdirs" = python.mkDerivation {
     name = "appdirs-1.4.0";
     src = pkgs.fetchurl {
@@ -593,10 +613,10 @@ self: {
 
 
   "ipython" = python.mkDerivation {
-    name = "ipython-5.2.0";
+    name = "ipython-5.2.1";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/df/44/0eee6ed339641d88e2be32ddfd695a39c954b66e5a10ba701629ce3454e9/ipython-5.2.0.tar.gz";
-      sha256 = "d043ac22f360a329b9f1e1ce68905339b76460d373579224c071ee52b6120231";
+      url = "https://pypi.python.org/packages/e7/75/7c981d2d7f25754ef64f955b595c2d80e2fec1aa47e52bd55ab35dbc8ccf/ipython-5.2.1.tar.gz";
+      sha256 = "04dafc37c8876e10e797264302e4333dbcd2854ef6d16bb57cc12ce26515bfdb";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -670,6 +690,28 @@ self: {
       homepage = "";
       license = licenses.mit;
       description = "An implementation of JSON Schema validation for Python";
+    };
+  };
+
+
+
+  "kombu" = python.mkDerivation {
+    name = "kombu-4.0.2";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/c7/76/58c655a80bf08b703478ce673ed4e3029297105951863b73030d45b06b42/kombu-4.0.2.tar.gz";
+      sha256 = "d0fc6f2a36610a308f838db4b832dad79a681b516ac1d1a1f9d42edb58cc11a2";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."PyYAML"
+      self."amqp"
+      self."redis"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "Messaging library for Python.";
     };
   };
 
@@ -809,10 +851,10 @@ self: {
 
 
   "prompt-toolkit" = python.mkDerivation {
-    name = "prompt-toolkit-1.0.9";
+    name = "prompt-toolkit-1.0.10";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/83/14/5ac258da6c530eca02852ee25c7a9ff3ca78287bb4c198d0d0055845d856/prompt_toolkit-1.0.9.tar.gz";
-      sha256 = "cd6523b36adc174cc10d54b1193eb626b4268609ff6ea92c15bcf1996609599c";
+      url = "https://pypi.python.org/packages/3e/e9/bc909966f2091e0a00952402c59cc6590c96de71fb97cc2d502b0d5916c5/prompt_toolkit-1.0.10.tar.gz";
+      sha256 = "dcc056c506e977e3679dc4d53bc66223111d16e09b506b4336f60ea6b530a670";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -958,10 +1000,10 @@ self: {
 
 
   "pytest-runner" = python.mkDerivation {
-    name = "pytest-runner-2.10.1";
+    name = "pytest-runner-2.11";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/3d/dd/e491ac188a79b4d18628b1f9aa5df3603be72c3a02ae3e1dd5e081cb7ccc/pytest-runner-2.10.1.tar.gz";
-      sha256 = "ecc9549ed1ce9bbfc9e7c9bad33d3f9fa91da2334632070a191a35aa96f0be35";
+      url = "https://pypi.python.org/packages/f8/f9/d740d06d15c1bce86ff7a0502e3da116944efecc61a5cfffedd356f19675/pytest-runner-2.11.tar.gz";
+      sha256 = "bd4cae2efe03495955197983695cc170b5060766f9245994a8cda1ffc7fd3123";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -1203,15 +1245,16 @@ self: {
 
 
   "taskcluster" = python.mkDerivation {
-    name = "taskcluster-0.3.4";
+    name = "taskcluster-1.0.2";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/3e/50/bb7659d5cf396f5c78013bb35ac92931c852b0ae3fa738bbd9224b6192ef/taskcluster-0.3.4.tar.gz";
-      sha256 = "d4fe5e2a44fe27e195b92830ece0a6eb9eb7ad9dc556a0cb16f6f2a6429f1b65";
+      url = "https://pypi.python.org/packages/d8/00/aac389ae5f2db76b029d55d36d394e272486894d155073369c4e0b272619/taskcluster-1.0.2.tar.gz";
+      sha256 = "11cfd462a333e0a084f94c9ce55e349036dbcf04656767f9773da7d148aa5115";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
       self."aiohttp"
+      self."async-timeout"
       self."mohawk"
       self."requests"
       self."six"
@@ -1262,6 +1305,24 @@ self: {
       homepage = "";
       license = licenses.isc;
       description = "Use version control tags to discover version numbers";
+    };
+  };
+
+
+
+  "vine" = python.mkDerivation {
+    name = "vine-1.1.3";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/35/21/308904b027636f13c3970ed7caf2c53fca77fa160122ae3ac392d9eb6307/vine-1.1.3.tar.gz";
+      sha256 = "87b95da19249373430a8fafca36f1aecb7aa0f1cc78545877857afc46aea2441";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [ ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = licenses.bsdOriginal;
+      description = "Promises, promises, promises.";
     };
   };
 
