@@ -44,11 +44,12 @@ let
         python.packages."responses"
       ];
     propagatedBuildInputs =
-      [ python.packages."pytz"
-        python.packages."SQLAlchemy"
-        python.packages."Flask"
+      [ python.packages."Flask"
         python.packages."Flask-Login"
+        python.packages."SQLAlchemy"
         python.packages."Werkzeug"
+        python.packages."kombu"
+        python.packages."pytz"
         python.packages."redis"
       ];
     passthru = {
