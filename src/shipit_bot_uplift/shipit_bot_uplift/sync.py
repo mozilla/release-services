@@ -301,16 +301,16 @@ class BotRemote(Bot):
 
         # Setup credentials for Shipit api
         self.credentials = {
-          'id': secrets['client_id'],
-          'key': secrets['access_token'],
+          'id': secrets['TASKCLUSTER_CLIENT_ID'],
+          'key': secrets['TASKCLUSTER_ACCESS_TOKEN'],
           'algorithm': 'sha256',
         }
 
         super(BotRemote, self).__init__(
-            secrets['bugzilla_url'],
-            secrets['bugzilla_token']
+            secrets['BUGZILLA_URL'],
+            secrets['BUGZILLA_TOKEN']
         )
-        self.api_url = secrets['api_url']
+        self.api_url = secrets['API_URL']
         self.sync = {}  # init
 
     def load_secrets(self, secrets_path, client_id=None, access_token=None):
@@ -345,16 +345,16 @@ class BotRemote(Bot):
         # Check mandatory keys in secrets
         secrets = tc.get(secrets_path)
         secrets = secrets['secret']
-        required = ('bugzilla_url', 'bugzilla_token', 'api_url')
+        required = ('BUGZILLA_URL', 'BUGZILLA_TOKEN', 'API_URL')
         for req in required:
             if req not in secrets:
                 raise Exception('Missing value {} in Taskcluster secret value {}'.format(req, secrets_path))  # noqa
 
         # Add credentials too
-        if 'client_id' not in secrets:
-            secrets['client_id'] = client_id
-        if 'access_token' not in secrets:
-            secrets['access_token'] = access_token
+        if 'TASKCLUSTER_CLIENT_ID' not in secrets:
+            secrets['TASKCLUSTER_CLIENT_ID'] = client_id
+        if 'TASKCLUSTER_ACCESS_TOKEN' not in secrets:
+            secrets['TASKCLUSTER_ACCESS_TOKEN'] = access_token
 
         return secrets
 

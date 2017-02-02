@@ -119,7 +119,7 @@ let
   mkBot = branch :
     let
       cacheKey = "shipit-bot-" + branch;
-      secretsKey = "project/shipit/bot/" + branch;
+      secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
     in
       mkTaskclusterHook {
         name = "Shipit bot updating bug analysis";
