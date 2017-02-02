@@ -26,7 +26,7 @@ setup(
         'pytest',
     ],
     install_requires=[
-        'releng_common[log,api,cors,auth,db]',
+        'releng_common[log,api,cors,auth,db,security]',
     ],
     packages=find_packages(),
     include_package_data=True,
