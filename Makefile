@@ -280,6 +280,7 @@ deploy-staging-releng_archiver:        deploy-staging-HEROKU
 
 deploy-staging-shipit_frontend:        deploy-staging-S3
 deploy-staging-shipit_dashboard:       deploy-staging-HEROKU
+deploy-staging-shipit_bot_uplift:   	 # There is no service running, just a hook
 deploy-staging-shipit_pipeline:        # deploy-staging-HEROKU
 deploy-staging-shipit_signoff:         # deploy-staging-HEROKU
 
@@ -330,6 +331,7 @@ deploy-production-releng_archiver:     # deploy-production-HEROKU
 
 deploy-production-shipit_frontend:     deploy-production-S3
 deploy-production-shipit_dashboard:    deploy-production-HEROKU
+deploy-production-shipit_bot_uplift:   # There is no service running, just a hook
 deploy-production-shipit_pipeline:     # deploy-staging-HEROKU
 deploy-production-shipit_signoff:      # deploy-staging-HEROKU
 
