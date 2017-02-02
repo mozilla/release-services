@@ -73,10 +73,10 @@ self: {
 
 
   "Flask-Migrate" = python.mkDerivation {
-    name = "Flask-Migrate-2.0.2";
+    name = "Flask-Migrate-2.0.3";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/f8/ba/827214fb932fb1de1fac7d992f0958c799bfc50ea471b0b8792d5e72daa6/Flask-Migrate-2.0.2.tar.gz";
-      sha256 = "c77272b936ec94209d5c709f9ec43947f4a25513c1b12cc25241586abdfa84b1";
+      url = "https://pypi.python.org/packages/a9/fe/559c313679b08f67efb9fba6f01debbc9ea3a488539d03a5a38371351456/Flask-Migrate-2.0.3.tar.gz";
+      sha256 = "331f1facf93712b6a3067eac382e645b1ef09e9a6d34da447acb6a3c293afd80";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -137,10 +137,10 @@ self: {
 
 
   "Jinja2" = python.mkDerivation {
-    name = "Jinja2-2.9.4";
+    name = "Jinja2-2.9.5";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/f4/3f/28387a5bbc6883082c16784c6135440b94f9d5938fb156ff579798e18eda/Jinja2-2.9.4.tar.gz";
-      sha256 = "aab8d8ca9f45624f1e77f2844bf3c144d180e97da8824c2a6d7552ad039b5442";
+      url = "https://pypi.python.org/packages/71/59/d7423bd5e7ddaf3a1ce299ab4490e9044e8dfd195420fc83a24de9e60726/Jinja2-2.9.5.tar.gz";
+      sha256 = "702a24d992f856fa8d5a7a36db6128198d0c21e1da34448ca236c42e92384825";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -430,7 +430,10 @@ self: {
 
   "connexion" = python.mkDerivation {
     name = "connexion-1.0.129";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/ca/b1/1b40f5ba85b275bfc1878d030722809281e4a6f05c62b75abba3861be9f7/connexion-1.0.129.tar.gz"; sha256 = "dbee8e66c66c09e0db3083bd40f6c2c1a6ae193e06bb57c48202642429da70ad"; };
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/ca/b1/1b40f5ba85b275bfc1878d030722809281e4a6f05c62b75abba3861be9f7/connexion-1.0.129.tar.gz";
+      sha256 = "dbee8e66c66c09e0db3083bd40f6c2c1a6ae193e06bb57c48202642429da70ad";
+    };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
@@ -510,6 +513,26 @@ self: {
 
 
 
+  "flask-talisman" = python.mkDerivation {
+    name = "flask-talisman-0.2.1";
+    src = pkgs.fetchurl {
+      url = "https://pypi.python.org/packages/46/4b/1e523f46e0a29b9f0f05f19c6d18c3872ba5c128a39a00c4d1b1d46f9178/flask-talisman-0.2.1.tar.gz";
+      sha256 = "9fb9aa9e9b905bc511f2346c579cd824bf7fc8562225ff20e8e7a142d883c754";
+    };
+    doCheck = commonDoCheck;
+    buildInputs = commonBuildInputs;
+    propagatedBuildInputs = [
+      self."six"
+    ];
+    meta = with pkgs.stdenv.lib; {
+      homepage = "";
+      license = "License :: OSI Approved :: Apache Software License";
+      description = "HTTP security headers for Flask.";
+    };
+  };
+
+
+
   "gunicorn" = python.mkDerivation {
     name = "gunicorn-19.6.0";
     src = pkgs.fetchurl {
@@ -549,10 +572,10 @@ self: {
 
 
   "ipython" = python.mkDerivation {
-    name = "ipython-5.1.0";
+    name = "ipython-5.2.1";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/89/63/a9292f7cd9d0090a0f995e1167f3f17d5889dcbc9a175261719c513b9848/ipython-5.1.0.tar.gz";
-      sha256 = "7ef4694e1345913182126b219aaa4a0047e191af414256da6772cf249571b961";
+      url = "https://pypi.python.org/packages/e7/75/7c981d2d7f25754ef64f955b595c2d80e2fec1aa47e52bd55ab35dbc8ccf/ipython-5.2.1.tar.gz";
+      sha256 = "04dafc37c8876e10e797264302e4333dbcd2854ef6d16bb57cc12ce26515bfdb";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -765,10 +788,10 @@ self: {
 
 
   "prompt-toolkit" = python.mkDerivation {
-    name = "prompt-toolkit-1.0.9";
+    name = "prompt-toolkit-1.0.10";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/83/14/5ac258da6c530eca02852ee25c7a9ff3ca78287bb4c198d0d0055845d856/prompt_toolkit-1.0.9.tar.gz";
-      sha256 = "cd6523b36adc174cc10d54b1193eb626b4268609ff6ea92c15bcf1996609599c";
+      url = "https://pypi.python.org/packages/3e/e9/bc909966f2091e0a00952402c59cc6590c96de71fb97cc2d502b0d5916c5/prompt_toolkit-1.0.10.tar.gz";
+      sha256 = "dcc056c506e977e3679dc4d53bc66223111d16e09b506b4336f60ea6b530a670";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -914,10 +937,10 @@ self: {
 
 
   "pytest-runner" = python.mkDerivation {
-    name = "pytest-runner-2.10.1";
+    name = "pytest-runner-2.11";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/3d/dd/e491ac188a79b4d18628b1f9aa5df3603be72c3a02ae3e1dd5e081cb7ccc/pytest-runner-2.10.1.tar.gz";
-      sha256 = "ecc9549ed1ce9bbfc9e7c9bad33d3f9fa91da2334632070a191a35aa96f0be35";
+      url = "https://pypi.python.org/packages/f8/f9/d740d06d15c1bce86ff7a0502e3da116944efecc61a5cfffedd356f19675/pytest-runner-2.11.tar.gz";
+      sha256 = "bd4cae2efe03495955197983695cc170b5060766f9245994a8cda1ffc7fd3123";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
@@ -1123,15 +1146,16 @@ self: {
 
 
   "taskcluster" = python.mkDerivation {
-    name = "taskcluster-0.3.4";
+    name = "taskcluster-1.0.2";
     src = pkgs.fetchurl {
-      url = "https://pypi.python.org/packages/3e/50/bb7659d5cf396f5c78013bb35ac92931c852b0ae3fa738bbd9224b6192ef/taskcluster-0.3.4.tar.gz";
-      sha256 = "d4fe5e2a44fe27e195b92830ece0a6eb9eb7ad9dc556a0cb16f6f2a6429f1b65";
+      url = "https://pypi.python.org/packages/d8/00/aac389ae5f2db76b029d55d36d394e272486894d155073369c4e0b272619/taskcluster-1.0.2.tar.gz";
+      sha256 = "11cfd462a333e0a084f94c9ce55e349036dbcf04656767f9773da7d148aa5115";
     };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
       self."aiohttp"
+      self."async-timeout"
       self."mohawk"
       self."requests"
       self."six"

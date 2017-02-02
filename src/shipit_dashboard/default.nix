@@ -11,7 +11,7 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   releng_common = import ./../../lib/releng_common {
     inherit releng_pkgs python;
-    extras = ["api" "auth" "cors" "log" "db" ];
+    extras = ["api" "auth" "cors" "log" "db" "security" ];
   };
 
   self = mkBackend rec {
