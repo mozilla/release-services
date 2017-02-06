@@ -79,20 +79,44 @@ def update_bug(bugzilla_id):
     # Browse changes
     payload = bug.payload_data
     for update in request.json:
+        # Build flags map
+        source = update['changes'].get('flagtypes.name', {})
+        removed, added = source['removed'].split(', '), source['added'].split(', ')  # noqa
+        flags_map = zip(removed, added)
 
         if update['target'] == 'bug':
-            # Update bug flags
+            # Update bug flags (tracking & status)
             if update['bugzilla_id'] != bug.bugzilla_id:
                 # should never happen
                 raise Exception('Invalid bugzilla_id in changes list')
             for flag_name, actions in update['changes'].items():
                 payload['bug'][flag_name] = actions.get('added')
 
+            # Update generic flags
+            flags_index = dict([
+                (f['name'], i)
+                for i, f in enumerate(payload['bug']['flags'])
+            ])
+            for rm, add in flags_map:
+                add_name, rm_name = add[:-1], rm[:-1]
+                if add_name in flags_index:
+                    # Update flag status
+                    index = flags_index[add_name]
+                    payload['bug']['flags'][index]['status'] = add[-1]
+
+                elif rm_name in flags_index:
+                    # Remove flag entirely
+                    index = flags_index[rm_name]
+                    del payload['bug']['flags'][index]
+
+                else:
+                    # Create new flag
+                    payload['bug']['flags'].append({
+                        'name': add_name,
+                        'status': add[-1],
+                    })
+
         elif update['target'] == 'attachment':
-            # Build flags map
-            source = update['changes'].get('flagtypes.name', {})
-            removed, added = source['removed'].split(', '), source['added'].split(', ')  # noqa
-            flags_map = zip(removed, added)
 
             def _split(fullkey):
                 # From 'approval-mozilla-beta+' to
