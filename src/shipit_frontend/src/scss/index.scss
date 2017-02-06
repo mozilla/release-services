@@ -85,7 +85,12 @@ div.bugs {
       font-weight: bold;
     }
 
+    div.columns {
+      margin-top: 12px;
+    }
+
     p.summary, p.actions {
+      margin-bottom: 2px;
       * {
         margin-right: 3px;
         display: inline-block;

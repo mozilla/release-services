@@ -78,6 +78,9 @@ type alias Bug =
     , bugzilla_id : Int
     , url : String
     , summary : String
+    , product : String
+    , component : String
+    , status : String
     , keywords : List String
     , flags_status : Dict.Dict String String
     , flags_tracking : Dict.Dict String String
@@ -687,6 +690,9 @@ decodeBug =
         |: ("bugzilla_id" := Json.int)
         |: ("url" := Json.string)
         |: ("summary" := Json.string)
+        |: ("product" := Json.string)
+        |: ("component" := Json.string)
+        |: ("status" := Json.string)
         |: ("keywords" := Json.list Json.string)
         |: ("flags_status" := Json.dict Json.string)
         |: ("flags_tracking" := Json.dict Json.string)
@@ -781,12 +787,31 @@ viewBug editor bugzilla bug =
     div [ class "bug" ]
         [ h4 [] [ text bug.summary ]
         , p [ class "summary" ]
-            ([ a [ class "text-muted monospace", href bug.url, target "_blank" ] [ text ("#" ++ (toString bug.bugzilla_id)) ]
-             ]
+            [ a [ class "text-muted monospace", href bug.url, target "_blank" ] [ text ("#" ++ (toString bug.bugzilla_id)) ]
+            , span [ class "text-muted" ] [ text "is" ]
+            , case bug.status of
+                "RESOLVED" ->
+                    strong [ class "text-success" ] [ text "Resolved" ]
+
+                "ASSIGNED" ->
+                    strong [ class "text-info" ] [ text "Assigned" ]
+
+                "VERIFIED" ->
+                    strong [ class "text-danger" ] [ text "Assigned" ]
+
+                x ->
+                    strong [ class "text-warning" ] [ text x ]
+            , span [ class "text-muted" ] [ text "in" ]
+            , span [ class "" ] [ text bug.product ]
+            , span [ class "text-muted" ] [ text "/" ]
+            , span [ class "" ] [ text bug.component ]
+            ]
+        , p [ class "summary" ]
+            ([ span [ class "text-muted" ] [ text "Versions :" ] ]
                 ++ (List.map viewVersionTag (Dict.toList bug.uplift_versions))
                 ++ (List.map (\k -> span [ class "tag tag-default" ] [ text k ]) bug.keywords)
             )
-        , div [ class "row" ]
+        , div [ class "row columns" ]
             [ div [ class "col-xs-4" ]
                 (List.map (\c -> Html.App.map ContribEditorMsg (viewContributor editor c)) bug.contributors)
             , div [ class "col-xs-4" ]
