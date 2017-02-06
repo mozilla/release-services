@@ -97,6 +97,9 @@ def serialize_bug(bug):
         'url': payload.get('url', 'https://bugzil.la/{}'.format(bug.bugzilla_id)),  # noqa
         'summary': bug_data['summary'],
         'keywords': bug_data['keywords'],
+        'component': bug_data['component'],
+        'product': bug_data['product'],
+        'status': bug_data['status'],
         'flags_status': _filter_flags(status_base_flag),
         'flags_tracking': _filter_flags(tracking_base_flag),
 
