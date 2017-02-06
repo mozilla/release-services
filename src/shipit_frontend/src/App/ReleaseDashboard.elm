@@ -84,6 +84,7 @@ type alias Bug =
     , keywords : List String
     , flags_status : Dict.Dict String String
     , flags_tracking : Dict.Dict String String
+    , flags_generic : Dict.Dict String String
     , -- Contributors
       contributors : List Contributor
     , -- Uplift
@@ -467,8 +468,14 @@ publishBugEdits model bugzilla bug =
                 edits =
                     Dict.filter (\k v -> not (k == "comment")) bug.edits
 
+                -- Send directly status & tracking flags in body
+                cf_flags =
+                    List.map (\( k, v ) -> ( "cf_" ++ k, JsonEncode.string v )) (Dict.toList (Dict.filter (\k v -> (String.startsWith "status_" k) || (String.startsWith "tracking_" k)) edits))
+
+                -- Send generic flags separately
                 flags =
-                    List.map (\( k, v ) -> ( "cf_" ++ k, JsonEncode.string v )) (Dict.toList edits)
+                    List.map (\( k, v ) -> encodeFlag ( (String.dropLeft 8 k), v ))
+                        (Dict.toList (Dict.filter (\k v -> (String.startsWith "generic_" k)) edits))
 
                 -- Build payload for bugzilla
                 payload =
@@ -480,8 +487,9 @@ publishBugEdits model bugzilla bug =
                                     , ( "is_markdown", JsonEncode.bool True )
                                     ]
                                )
+                             , ( "flags", JsonEncode.list flags )
                              ]
-                                ++ flags
+                                ++ cf_flags
                             )
                         )
 
@@ -696,6 +704,7 @@ decodeBug =
         |: ("keywords" := Json.list Json.string)
         |: ("flags_status" := Json.dict Json.string)
         |: ("flags_tracking" := Json.dict Json.string)
+        |: ("flags_generic" := Json.dict Json.string)
         |: ("contributors" := (Json.list decodeContributor))
         |: (Json.maybe ("uplift" := decodeUpliftRequest))
         |: ("versions" := (Json.dict decodeVersion))
@@ -943,31 +952,31 @@ viewPatch ( patchId, patch ) =
         )
 
 
+viewFlagsList : Dict.Dict String String -> String -> Html msg
+viewFlagsList all_flags name =
+    let
+        flags =
+            Dict.filter (\k v -> not (v == "---")) all_flags
+    in
+        div [ class "col-xs-12 col-sm-6" ]
+            [ h5 [] [ text name ]
+            , if Dict.isEmpty flags then
+                p [ class "text-warning" ] [ text ("No " ++ name ++ " set.") ]
+              else
+                ul [] (List.map viewFlag (Dict.toList flags))
+            ]
+
+
 viewFlags : Bug -> Html Msg
 viewFlags bug =
-    let
-        flags_status =
-            Dict.filter (\k v -> not (v == "---")) bug.flags_status
-
-        flags_tracking =
-            Dict.filter (\k v -> not (v == "---")) bug.flags_tracking
-    in
-        div [ class "row flags" ]
-            [ div [ class "col-xs-12 col-sm-6" ]
-                [ h5 [] [ text "Status flags" ]
-                , if Dict.isEmpty flags_status then
-                    p [ class "text-warning" ] [ text "No status flags set." ]
-                  else
-                    ul [] (List.map viewStatusFlag (Dict.toList flags_status))
-                ]
+    div [ class "flags" ]
+        [ div [ class "row" ]
+            [ viewFlagsList bug.flags_status "Status flags"
+            , viewFlagsList bug.flags_generic "Generic flags"
+            ]
+        , div [ class "row" ]
+            [ viewFlagsList bug.flags_tracking "Tracking flags"
             , div [ class "col-xs-12 col-sm-6" ]
-                [ h5 [] [ text "Tracking flags" ]
-                , if Dict.isEmpty flags_tracking then
-                    p [ class "text-warning" ] [ text "No tracking flags set." ]
-                  else
-                    ul [] (List.map viewTrackingFlag (Dict.toList flags_tracking))
-                ]
-            , div [ class "col-xs-12" ]
                 [ h5 [] [ text "Landing dates" ]
                 , if Dict.isEmpty bug.landings then
                     p [ class "text-warning" ] [ text "No landing dates available." ]
@@ -975,6 +984,7 @@ viewFlags bug =
                     ul [] (List.map viewLandingDate (Dict.toList bug.landings))
                 ]
             ]
+        ]
 
 
 viewLandingDate ( key, date ) =
@@ -992,10 +1002,19 @@ viewLandingDate ( key, date ) =
         ]
 
 
-viewStatusFlag ( key, value ) =
+viewFlag ( key, value ) =
     li []
         [ strong [] [ text key ]
         , case value of
+            "+" ->
+                span [ class "tag tag-success" ] [ text value ]
+
+            "-" ->
+                span [ class "tag tag-danger" ] [ text value ]
+
+            "?" ->
+                span [ class "tag tag-info" ] [ text value ]
+
             "affected" ->
                 span [ class "tag tag-danger" ] [ text value ]
 
@@ -1013,78 +1032,50 @@ viewStatusFlag ( key, value ) =
         ]
 
 
-editStatusFlag : Bug -> ( String, String ) -> Html Msg
-editStatusFlag bug ( key, flag_value ) =
-    let
-        possible_values =
-            [ "affected", "verified", "fixed", "wontfix", "---" ]
-    in
-        div [ class "form-group row" ]
-            [ label [ class "col-sm-6 col-form-label" ] [ text key ]
-            , div [ class "col-sm-6" ]
-                [ select [ class "form-control form-control-sm", onChange (EditBug bug ("status_" ++ key)) ]
-                    (List.map (\x -> option [ selected (x == flag_value) ] [ text x ]) possible_values)
-                ]
+editFlag : Bug -> String -> List String -> ( String, String ) -> Html Msg
+editFlag bug prefix possible_values ( key, flag_value ) =
+    div [ class "form-group row" ]
+        [ label [ class "col-sm-6 col-form-label" ] [ text key ]
+        , div [ class "col-sm-6" ]
+            [ select [ class "form-control form-control-sm", onChange (EditBug bug (prefix ++ "_" ++ key)) ]
+                (List.map (\x -> option [ selected (x == flag_value) ] [ text x ]) possible_values)
             ]
-
-
-viewTrackingFlag ( key, value ) =
-    li []
-        [ strong [] [ text key ]
-        , case value of
-            "+" ->
-                span [ class "tag tag-success" ] [ text value ]
-
-            "-" ->
-                span [ class "tag tag-danger" ] [ text value ]
-
-            "?" ->
-                span [ class "tag tag-info" ] [ text value ]
-
-            _ ->
-                span [ class "tag tag-default" ] [ text value ]
         ]
-
-
-editTrackingFlag : Bug -> ( String, String ) -> Html Msg
-editTrackingFlag bug ( key, flag_value ) =
-    let
-        possible_values =
-            [ "+", "-", "?", "---" ]
-    in
-        div [ class "form-group row" ]
-            [ label [ class "col-sm-6 col-form-label" ] [ text key ]
-            , div [ class "col-sm-6" ]
-                [ select [ class "form-control form-control-sm", onChange (EditBug bug ("tracking_" ++ key)) ]
-                    (List.map (\x -> option [ selected (x == flag_value) ] [ text x ]) possible_values)
-                ]
-            ]
 
 
 viewFlagsEditor : Bugzilla.Model -> Bug -> Html Msg
 viewFlagsEditor bugzilla bug =
     -- Show the form to edit flags
-    Html.form [ class "editor", onSubmit (PublishEdits bug) ]
-        [ div [ class "col-xs-12 col-sm-6" ]
-            ([ h4 [] [ text "Status" ] ] ++ (List.map (\x -> editStatusFlag bug x) (Dict.toList bug.flags_status)))
-        , div [ class "col-xs-12 col-sm-6" ]
-            ([ h4 [] [ text "Tracking" ] ] ++ (List.map (\x -> editTrackingFlag bug x) (Dict.toList bug.flags_tracking)))
-        , div [ class "form-group" ]
-            [ textarea [ class "form-control", placeholder "Your comment", onInput (EditBug bug "comment") ] []
-            ]
-        , p [ class "text-warning", hidden (isSuccess bugzilla.check) ] [ text "You need to setup your Bugzilla account on the uplift dashboard before using this action." ]
-        , p [ class "actions" ]
-            [ button [ class "btn btn-success", disabled (not (isSuccess bugzilla.check) || bug.update == Loading) ]
-                [ text
-                    (if bug.update == Loading then
-                        "Loading..."
-                     else
-                        "Update bug"
-                    )
+    let
+        values =
+            [ "+", "-", "?", "---" ]
+
+        status_values =
+            [ "affected", "verified", "fixed", "wontfix", "---" ]
+    in
+        Html.form [ class "editor", onSubmit (PublishEdits bug) ]
+            [ div [ class "col-xs-12 col-sm-6" ]
+                ([ h4 [] [ text "Status" ] ] ++ (List.map (\x -> editFlag bug "status" status_values x) (Dict.toList bug.flags_status)))
+            , div [ class "col-xs-12 col-sm-6" ]
+                ([ h4 [] [ text "Tracking" ] ] ++ (List.map (\x -> editFlag bug "tracking" values x) (Dict.toList bug.flags_tracking)))
+            , div [ class "col-xs-12 col-sm-6" ]
+                ([ h4 [] [ text "Generic" ] ] ++ (List.map (\x -> editFlag bug "generic" values x) (Dict.toList bug.flags_generic)))
+            , div [ class "form-group" ]
+                [ textarea [ class "form-control", placeholder "Your comment", onInput (EditBug bug "comment") ] []
                 ]
-            , span [ class "btn btn-secondary", onClick (ShowBugEditor bug NoEditor) ] [ text "Cancel" ]
+            , p [ class "text-warning", hidden (isSuccess bugzilla.check) ] [ text "You need to setup your Bugzilla account on the uplift dashboard before using this action." ]
+            , p [ class "actions" ]
+                [ button [ class "btn btn-success", disabled (not (isSuccess bugzilla.check) || bug.update == Loading) ]
+                    [ text
+                        (if bug.update == Loading then
+                            "Loading..."
+                         else
+                            "Update bug"
+                        )
+                    ]
+                , span [ class "btn btn-secondary", onClick (ShowBugEditor bug NoEditor) ] [ text "Cancel" ]
+                ]
             ]
-        ]
 
 
 editApproval : Bug -> ( String, UpliftVersion ) -> Html Msg
