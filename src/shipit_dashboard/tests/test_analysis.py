@@ -111,6 +111,9 @@ def test_create_bug(client, bugs, header_bot):
     assert bug_created == {
         'bugzilla_id': 12345,
         'changes_size': 0,
+        'component': 'Reading List',
+        'product': 'Firefox',
+        'status': 'RESOLVED',
         'contributors': [
             {
                 'id': 4,
