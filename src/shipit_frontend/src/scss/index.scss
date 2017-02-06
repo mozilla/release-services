@@ -188,6 +188,8 @@ div.bugs {
 
     div.flags {
       ul {
+        padding-left: 0;
+        list-style-type: none;
         li {
           * {
             margin-right: 4px;
