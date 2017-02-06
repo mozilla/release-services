@@ -87,8 +87,25 @@ def serialize_bug(bug):
     tracking_base_flag = 'cf_tracking_'
 
     def _filter_flags(base):
-        out = [(k.replace(base, '', 1), v) for k, v in bug_data.items() if k.startswith(base + 'firefox')]  # noqa
-        return dict(out)
+        return dict([
+            (k.replace(base, '', 1), v)
+            for k, v in bug_data.items()
+            if k.startswith(base + 'firefox')
+        ])
+
+    def _generic_flags():
+        # Always use qe-verify (set as "empty")
+        flags = {
+            'qe-verify': '---',
+        }
+
+        # Use flags from bug data
+        flags.update(dict([
+            (flag['name'], flag['status'])
+            for flag in bug_data['flags']
+        ]))
+
+        return flags
 
     return {
         # Base
@@ -100,8 +117,11 @@ def serialize_bug(bug):
         'component': bug_data['component'],
         'product': bug_data['product'],
         'status': bug_data['status'],
+
+        # Flags
         'flags_status': _filter_flags(status_base_flag),
         'flags_tracking': _filter_flags(tracking_base_flag),
+        'flags_generic': _generic_flags(),
 
         # Contributor
         'contributors': [

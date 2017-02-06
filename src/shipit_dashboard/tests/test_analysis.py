@@ -138,6 +138,8 @@ def test_create_bug(client, bugs, header_bot):
                            'firefox_esr31': '---',
                            'firefox_esr38': '---',
                            'firefox_relnote': '---'},
+        'flags_generic': {'firefox-backlog': '+',
+                          'qe-verify': '---'},
         'id': 4,
         'keywords': ['test'],
         'landings': {'aurora': 'Fri, 10 Apr 2015 17:06:41 GMT',
@@ -243,12 +245,16 @@ def test_update_bug_flags(client, bugs, header_user):
         'bugzilla_id': 1139560,
         'changes': {
             'cf_status_firefox38': {
-                'remoced': 'affected',
+                'removed': 'affected',
                 'added': 'fixed',
             },
             'cf_tracking_firefox40': {
-                'remoced': '---',
+                'removed': '---',
                 'added': '+',
+            },
+            'flagtypes.name': {
+                'removed': '',
+                'added': 'qe-verify+',
             },
         }
     }]
@@ -258,6 +264,10 @@ def test_update_bug_flags(client, bugs, header_user):
     ])
     assert resp.status_code == 200
     bug = json.loads(resp.data.decode('utf-8'))
+    assert bug['flags_generic'] == {
+        'in-testsuite': '+',
+        'qe-verify': '+',
+    }
     assert bug['flags_status'] == {
         'firefox37': '---',
         'firefox38': 'fixed',
