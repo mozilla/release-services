@@ -41,8 +41,22 @@ paths:
       responses:
         200:
           description: A specific analysis
-          #schema:
-          #  $ref: '#/definitions/Analysis'
+          schema:
+            $ref: '#/definitions/Analysis'
+
+    put:
+      operationId: "shipit_dashboard.api.update_analysis"
+      parameters:
+      - name: analysis_id
+        in: path
+        description: ID of the Analysis to update
+        required: true
+        type: integer
+      responses:
+        200:
+          description: A specific analysis
+          schema:
+            $ref: '#/definitions/Analysis'
 
   /bugs:
     post:
@@ -122,6 +136,7 @@ definitions:
     required:
       - id
       - name
+      - version
       - count
       - parameters
     properties:
@@ -129,6 +144,8 @@ definitions:
         type: integer
       name:
         type: string
+      version:
+        type: integer
       count:
         type: integer
       parameters:

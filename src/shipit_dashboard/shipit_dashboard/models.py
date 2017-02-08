@@ -29,7 +29,8 @@ class BugAnalysis(db.Model):
     __tablename__ = 'shipit_dashboard_analysis'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    name = sa.Column(sa.String(80))
+    name = sa.Column(sa.String(80), nullable=False)
+    version = sa.Column(sa.Integer, nullable=False)
     parameters = sa.Column(sa.Text())
     created = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
 
@@ -39,7 +40,7 @@ class BugAnalysis(db.Model):
         self.name = name
 
     def __repr__(self):
-        return 'AnalysisTemplate {}'.format(self.name)
+        return 'Analysis {} {}'.format(self.name, self.version)
 
     @staticmethod
     def with_bugs():
