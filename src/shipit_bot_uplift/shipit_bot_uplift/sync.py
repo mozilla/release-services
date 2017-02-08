@@ -14,7 +14,7 @@ from shipit_bot_uplift.helpers import (
 )
 from shipit_bot_uplift.mercurial import Repository
 from shipit_bot_uplift import log
-from libmozdata import bugzilla
+from libmozdata import bugzilla, versions
 from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
 
 
@@ -358,13 +358,19 @@ class BotRemote(Bot):
 
         return secrets
 
-    def make_request(self, method, url, data=''):
+    def make_request(self, method, url, data=None):
         """
         Make an HAWK authenticated request on remote server
         """
         request = getattr(requests, method)
         if not request:
             raise Exception('Invalid method {}'.format(method))
+
+        # Encode optional data as json
+        if data is not None:
+            data = json.dumps(data, cls=ShipitJSONEncoder)
+        else:
+            data = ''
 
         # Build HAWK token
         url = self.api_url + url
@@ -411,13 +417,27 @@ class BotRemote(Bot):
         # First update local repository
         self.repository.checkout('release')
 
+        # Get official mozilla release versions
+        current_versions = versions.get(True)
+
         # Load all analysis
         all_analysis = self.make_request('get', '/analysis')
         for analysis in all_analysis:
+            url = '/analysis/{}'.format(analysis['id'])
+
+            # Check version number
+            current_version = current_versions.get(analysis['name'])
+            if current_version is None:
+                raise Exception('Unsupported analysis', version=analysis['name'])
+            if analysis['version'] != current_version:
+                data = {
+                    'version': current_version,
+                }
+                analysis = self.make_request('put', url, data)
+                logger.info('Updated analysis version', name=analysis['name'], version=analysis['version'])
 
             # Mark bugs already in analysis
             logger.info('List remote bugs', name=analysis['name'])
-            url = '/analysis/{}'.format(analysis['id'])
             analysis_details = self.make_request('get', url)
             for bug in analysis_details['bugs']:
                 sync = self.get_bug_sync(bug['bugzilla_id'])
@@ -465,8 +485,7 @@ class BotRemote(Bot):
         # Send payload to server
         try:
             payload = sync.build_payload(self.bugzilla_url)
-            data = json.dumps(payload, cls=ShipitJSONEncoder)
-            self.make_request('post', '/bugs', data)
+            self.make_request('post', '/bugs', payload)
             logger.info('Added bug', bz_id=sync.bugzilla_id, analysis=sync.on_bugzilla)  # noqa
         except Exception as e:
             logger.error('Failed to add bug #{} : {}'.format(sync.bugzilla_id, e))  # noqa
