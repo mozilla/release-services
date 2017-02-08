@@ -20,8 +20,14 @@ from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
 
 logger = log.get_logger('shipit_bot')
 
-# TODO: should come from backend
-VERSIONS = [b'aurora', b'beta', b'release', b'esr45']
+def analysis2branch(analysis):
+    """
+    Convert an analysis dict into a mercurial
+    branch name (special case for esrXX)
+    """
+    if analysis['name'] == 'esr':
+        return 'esr{}'.format(analysis['version'])
+    return analysis['name'].lower()
 
 
 class BugSync(object):
@@ -53,12 +59,12 @@ class BugSync(object):
 
         # Check the versions contain current analysis
         versions = self.list_versions()
-        version_pending = '{} ?'.format(VERSIONS[analysis['id'] - 1].decode('utf-8'))  # noqa
+        version_pending = '{} ?'.format(analysis2branch(analysis))
         if version_pending not in versions:
-            logger.warn('Skipping bugzilla', bz_id=self.bugzilla_id, version=version_pending, versions=versions.keys())  # noqa
+            logger.warn('Skipping bugzilla', bz_id=self.bugzilla_id, version=version_pending, versions=list(versions.keys()))  # noqa
             return
 
-        self.on_bugzilla.append(analysis['id'])
+        self.on_bugzilla.append(analysis)
         logger.debug('On bugzilla', bz_id=self.bugzilla_id)
 
     def update(self):
@@ -97,9 +103,9 @@ class BugSync(object):
         def _rev(r):
             return isinstance(r, int) and r or r.encode('utf-8')
 
-        return [(_rev(revision), VERSIONS[branch - 1])
+        return [(_rev(revision), analysis2branch(analysis).encode('utf-8'))
                 for revision in self.analysis['patches'].keys()
-                for branch in self.on_bugzilla]
+                for analysis in self.on_bugzilla]
 
     def build_payload(self, bugzilla_url):
         """
@@ -111,7 +117,7 @@ class BugSync(object):
         # Build internal payload
         return {
             'bugzilla_id': self.bugzilla_id,
-            'analysis': self.on_bugzilla,
+            'analysis': [a['id'] for a in self.on_bugzilla],
             'payload': {
                 'url': '{}/{}'.format(bugzilla_url, self.bugzilla_id),
                 'bug': self.bug_data,
@@ -486,7 +492,7 @@ class BotRemote(Bot):
         try:
             payload = sync.build_payload(self.bugzilla_url)
             self.make_request('post', '/bugs', payload)
-            logger.info('Added bug', bz_id=sync.bugzilla_id, analysis=sync.on_bugzilla)  # noqa
+            logger.info('Added bug', bz_id=sync.bugzilla_id, analysis=[a['name'] for a in sync.on_bugzilla])  # noqa
         except Exception as e:
             logger.error('Failed to add bug #{} : {}'.format(sync.bugzilla_id, e))  # noqa
 
