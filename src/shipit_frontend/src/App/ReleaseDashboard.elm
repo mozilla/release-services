@@ -101,6 +101,7 @@ type alias Bug =
 type alias Analysis =
     { id : Int
     , name : String
+    , version : Int
     , count : Int
     , bugs : List Bug
     }
@@ -673,9 +674,10 @@ decodeAllAnalysis =
 
 decodeAnalysis : Decoder Analysis
 decodeAnalysis =
-    Json.object4 Analysis
+    Json.object5 Analysis
         ("id" := Json.int)
         ("name" := Json.string)
+        ("version" := Json.int)
         ("count" := Json.int)
         ("bugs" := Json.list decodeBug)
 
@@ -771,7 +773,7 @@ viewAnalysis : ContribEditor.Model -> Bugzilla.Model -> Analysis -> Html Msg
 viewAnalysis editor bugzilla analysis =
     div []
         [ Html.App.map ContribEditorMsg (ContribEditor.viewModal editor)
-        , h1 [] [ text ("Listing all " ++ analysis.name ++ " uplifts for review:") ]
+        , h1 [] [ text ("Listing all " ++ analysis.name ++ " " ++ (toString analysis.version) ++ " uplifts for review:") ]
         , div [ class "bugs" ] (List.map (viewBug editor bugzilla) analysis.bugs)
         ]
 
