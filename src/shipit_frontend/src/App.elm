@@ -358,10 +358,10 @@ viewDashboardStatus dashboard =
 
 viewNavAnalysis : ReleaseDashboard.Analysis -> Html Msg
 viewNavAnalysis analysis =
-    li [ class "nav-item" ]
+    li [ class "nav-item analysis" ]
         [ analysisLink analysis.id
             [ class "nav-link" ]
-            [ span [] [ text (analysis.name ++ " ") ]
+            [ span [ class "name" ] [ text (analysis.name ++ " " ++ (toString analysis.version)) ]
             , if analysis.count > 0 then
                 span [ class "tag tag-pill tag-primary" ] [ text (toString analysis.count) ]
               else
