@@ -136,6 +136,7 @@ def serialize_analysis(analysis, bugs_nb, full=True):
     out = {
         'id': analysis.id,
         'name': analysis.name,
+        'version': analysis.version,
         'count': bugs_nb,
         'parameters': analysis.parameters,
     }

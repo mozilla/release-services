@@ -65,6 +65,33 @@ def get_analysis(analysis_id):
     return serialize_analysis(analysis, bugs_nb)
 
 
+@auth.require_scopes([SCOPES_BOT])
+def update_analysis(analysis_id):
+    """
+    Update an analysis, from a bot
+    Used to update version numbers from bot
+    """
+
+    # Get bug analysis
+    try:
+        analysis, bugs_nb = BugAnalysis.with_bugs() \
+            .filter(BugAnalysis.id == analysis_id) \
+            .one()
+    except NoResultFound:
+        abort(404)
+
+    # Update version
+    if 'version' in request.json:
+        analysis.version = int(request.json['version'])
+
+    # Save changes in db
+    db.session.add(analysis)
+    db.session.commit()
+
+    # Build JSON output
+    return serialize_analysis(analysis, bugs_nb)
+
+
 @auth.require_scopes(SCOPES_USER)
 def update_bug(bugzilla_id):
     """
