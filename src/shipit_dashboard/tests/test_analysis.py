@@ -38,6 +38,7 @@ def test_fetch_analysis(client, bugs, header_user):
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
     assert analysis['id'] == 1
+    assert analysis['version'] == 1
     assert analysis['name'] == 'Analysis Test A'
     assert analysis['parameters'] == 'bugzilla=test'
     assert len(analysis['bugs']) == 3
@@ -81,6 +82,57 @@ def test_fetch_analysis(client, bugs, header_user):
         'firefox_esr38': '---',
         'firefox_relnote': '---',
     }
+
+
+def test_update_analysis(client, bugs, header_bot, header_user):
+    """
+    Update analysis version
+    """
+    url = '/analysis/1'
+
+    # Check analysis has version 1 initially
+    resp = client.get(url, headers=[
+        ('Authorization', header_bot),
+    ])
+    assert resp.status_code == 200
+    analysis = json.loads(resp.data.decode('utf-8'))
+    assert analysis['id'] == 1
+    assert analysis['version'] == 1
+    assert analysis['name'] == 'Analysis Test A'
+
+    # Update to version 2
+    data = {
+        'version': 2,
+    }
+
+    # Only bot has access to the update endpoint
+    resp = client.put(url, data=json.dumps(data), headers=[
+        ('Authorization', header_user),
+        ('Content-Type', 'application/json'),
+    ])
+    assert resp.status_code == 401
+
+    # Update as bot
+    resp = client.put(url, data=json.dumps(data), headers=[
+        ('Authorization', header_bot),
+        ('Content-Type', 'application/json'),
+    ])
+    assert resp.status_code == 200
+    analysis = json.loads(resp.data.decode('utf-8'))
+    assert analysis['id'] == 1
+    assert analysis['version'] == 2
+    assert analysis['name'] == 'Analysis Test A'
+
+    # Check analysis has version 2 now
+    # Accessible by user on GET
+    resp = client.get(url, headers=[
+        ('Authorization', header_user),
+    ])
+    assert resp.status_code == 200
+    analysis = json.loads(resp.data.decode('utf-8'))
+    assert analysis['id'] == 1
+    assert analysis['version'] == 2
+    assert analysis['name'] == 'Analysis Test A'
 
 
 def test_create_bug(client, bugs, header_bot):
