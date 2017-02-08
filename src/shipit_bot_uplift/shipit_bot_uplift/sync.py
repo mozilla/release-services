@@ -20,6 +20,7 @@ from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
 
 logger = log.get_logger('shipit_bot')
 
+
 def analysis2branch(analysis):
     """
     Convert an analysis dict into a mercurial
@@ -434,13 +435,13 @@ class BotRemote(Bot):
             # Check version number
             current_version = current_versions.get(analysis['name'])
             if current_version is None:
-                raise Exception('Unsupported analysis', version=analysis['name'])
+                raise Exception('Unsupported analysis {}'.format(analysis['name']))  # noqa
             if analysis['version'] != current_version:
                 data = {
                     'version': current_version,
                 }
                 analysis = self.make_request('put', url, data)
-                logger.info('Updated analysis version', name=analysis['name'], version=analysis['version'])
+                logger.info('Updated analysis version', name=analysis['name'], version=analysis['version'])  # noqa
 
             # Mark bugs already in analysis
             logger.info('List remote bugs', name=analysis['name'])
