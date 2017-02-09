@@ -8,7 +8,7 @@ from releng_common.mocks import build_header
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
 
-@pytest.yield_fixture(scope='module')
+@pytest.yield_fixture(scope='session')
 def app():
     """
     Load shipit_dashboard app in test mode
@@ -28,7 +28,7 @@ def app():
         yield app
 
 
-@pytest.yield_fixture(scope='module')
+@pytest.yield_fixture(scope='session')
 def client(app):
     """
     A Flask test client for shipit_dashboard
@@ -42,7 +42,7 @@ def client(app):
             yield client
 
 
-@pytest.yield_fixture(scope='module')
+@pytest.yield_fixture(scope='session')
 def bugs(app):
     """
     Add an analysis and some bugs
@@ -99,7 +99,7 @@ def hawk_header(scopes):
     return build_header(client_id, ext_data)
 
 
-@pytest.yield_fixture(scope='module')
+@pytest.yield_fixture(scope='session')
 def header_user(app):
     """
     Build an Hawk header for user role
@@ -108,7 +108,7 @@ def header_user(app):
     return hawk_header(SCOPES_USER)
 
 
-@pytest.yield_fixture(scope='module')
+@pytest.yield_fixture(scope='session')
 def header_admin(app):
     """
     Build an Hawk header for admin role
@@ -117,7 +117,7 @@ def header_admin(app):
     return hawk_header(SCOPES_ADMIN)
 
 
-@pytest.yield_fixture(scope='module')
+@pytest.yield_fixture(scope='session')
 def header_bot(app):
     """
     Build an Hawk header for bot role
