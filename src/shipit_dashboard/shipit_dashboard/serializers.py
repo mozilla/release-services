@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from shipit_dashboard.models import (
-    BugResult, BugContributor, BugAnalysis, Contributor
+    BugResult, BugContributor, BugAnalysis, Contributor, PatchStatus
 )
 from shipit_dashboard import SCOPES_ADMIN
 from flask_login import current_user
@@ -171,3 +171,18 @@ def serialize_analysis(analysis, bugs_nb, full=True):
         out['bugs'] = []
 
     return out
+
+
+def serialize_patch_status(patch_status):
+    """
+    Helper to serialize a patch status
+    """
+    assert isinstance(patch_status, PatchStatus)
+
+    return {
+        'revision': patch_status.revision,
+        'revision_parent': patch_status.revision_parent,
+        'branch': patch_status.branch,
+        'merged': patch_status.merged,
+        'created': patch_status.created,
+    }

@@ -95,6 +95,37 @@ paths:
         200:
           description: Empty
 
+  /bugs/{bugzilla_id}/patches:
+    get:
+      operationId: "shipit_dashboard.api.list_patch_status"
+      parameters:
+      - name: bugzilla_id
+        in: path
+        description: Bugzilla ID of the Bug to use
+        required: true
+        type: integer
+      responses:
+        200:
+          description: An array of Patch status
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PatchStatus'
+    
+    post:
+      operationId: "shipit_dashboard.api.create_patch_status"
+      parameters:
+      - name: bugzilla_id
+        in: path
+        description: Bugzilla ID of the Bug to use
+        required: true
+        type: integer
+      responses:
+        200:
+          description: The newly created Patch status
+          schema:
+            $ref: '#/definitions/PatchStatus'
+    
   /contributor/{contributor_id}:
     put:
       operationId: "shipit_dashboard.api.update_contributor"
@@ -255,4 +286,24 @@ definitions:
         type: string
       changes_size:
         type: integer
+
+  PatchStatus:
+    type: object
+    required:
+      - revision
+      - revision_parent
+      - branch
+      - merged
+      - created
+    properties:
+      revision:
+        type: string
+      revision_parent:
+        type: string
+      branch:
+        type: string
+      merged:
+        type: boolean
+      created:
+        type: string
 

@@ -12,10 +12,11 @@ from releng_common.db import db
 from releng_common import log
 from shipit_dashboard.helpers import gravatar
 from shipit_dashboard.models import (
-    BugAnalysis, BugResult, Contributor, BugContributor
+    BugAnalysis, BugResult, Contributor, BugContributor, PatchStatus
 )
 from shipit_dashboard.serializers import (
-    serialize_analysis, serialize_bug, serialize_contributor
+    serialize_analysis, serialize_bug, serialize_contributor,
+    serialize_patch_status
 )
 from shipit_dashboard import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
 
@@ -294,3 +295,56 @@ def update_contributor(contributor_id):
     db.session.commit()
 
     return serialize_contributor(contributor)
+
+
+@auth.require_scopes(SCOPES_BOT)
+def list_patch_status(bugzilla_id):
+    """
+    List all patches status for a bug
+    """
+    try:
+        bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
+    except:
+        raise Exception('Missing bug {}'.format(bugzilla_id))
+
+    return [serialize_patch_status(ps) for ps in bug.patch_status]
+
+
+@auth.require_scopes(SCOPES_BOT)
+def create_patch_status(bugzilla_id):
+    """
+    Create a patch status for a bug
+    """
+    try:
+        bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
+    except:
+        raise Exception('Missing bug {}'.format(bugzilla_id))
+
+    # Build new patch status
+    ps = PatchStatus(bug_id=bug.id)
+    ps.revision = request.json['revision']
+    ps.revision_parent = request.json['revision_parent']
+    ps.merged = request.json['merged']
+    ps.branch = request.json['branch']
+
+    # Update bug payload to use new patch status
+    payload = bug.payload_data
+    patches = payload['analysis'].get('patches', {})
+    if ps.revision in patches:
+        patch = patches[ps.revision]
+        if 'merge' not in patch:
+            patch['merge'] = {}
+        patch['merge'][ps.branch] = ps.merged
+        payload['analysis']['patches'][ps.revision] = patch
+
+        bug.payload = pickle.dumps(payload, 2)
+        db.session.add(bug)
+
+    else:
+        logger.warn('Failed to save merge status', rev=ps.revision, branch=ps.branch)  # noqa
+
+    # Commit changes
+    db.session.add(ps)
+    db.session.commit()
+
+    return serialize_patch_status(ps)
