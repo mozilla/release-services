@@ -3,16 +3,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import mohawk
-import requests
 import taskcluster
-import json
+import itertools
+import operator
+import dateutil.parser
 import os
 
 from shipit_bot_uplift.helpers import (
-    compute_dict_hash, ShipitJSONEncoder, read_hosts
+    compute_dict_hash, read_hosts
 )
 from shipit_bot_uplift.mercurial import Repository
+from shipit_bot_uplift.api import api_client
 from shipit_bot_uplift import log
 from libmozdata import bugzilla, versions
 from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
@@ -93,7 +94,7 @@ class BugSync(object):
         return True
 
     @property
-    def patches(self):
+    def testable_patches(self):
         """
         List all patches in current analysis
         as (revision, branch) tuples
@@ -101,12 +102,43 @@ class BugSync(object):
         assert self.analysis is not None, \
             'Missing bug analysis'
 
-        def _rev(r):
-            return isinstance(r, int) and r or r.encode('utf-8')
+        last_status = {}
+        try:
+            # Load patch status for this bug
+            # And group them by revision & branch
+            patch_status = api_client.list_patch_status(self.bugzilla_id)
+            grouper = operator.itemgetter('revision', 'branch')
+            groups = itertools.groupby(sorted(patch_status, key=grouper), grouper)  # noqa
 
-        return [(_rev(revision), analysis2branch(analysis).encode('utf-8'))
-                for revision in self.analysis['patches'].keys()
-                for analysis in self.on_bugzilla]
+            for keys, statuses in groups:
+
+                # Sort groups by datetime
+                statuses = sorted(
+                    statuses,
+                    key=lambda s: dateutil.parser.parse(s['created']),
+                    reverse=True
+                )
+                keys = tuple(map(lambda x: x.encode('utf-8'), keys))
+                last_status[keys] = statuses[0]
+        except Exception as e:
+            logger.warn('No patch status', bz_id=self.bugzilla_id, error=e)
+
+        def _link_status(revision, analysis):
+            # Cleanup inputs
+            revision = isinstance(revision, int) \
+                and revision \
+                or revision.encode('utf-8')
+            branch = analysis2branch(analysis).encode('utf-8')
+
+            # Retrieve last status
+            keys = (revision, branch)
+            return revision, branch, last_status.get(keys)
+
+        return [
+            _link_status(revision, analysis)
+            for revision in self.analysis['patches'].keys()
+            for analysis in self.on_bugzilla
+        ]
 
     def build_payload(self, bugzilla_url):
         """
@@ -129,7 +161,7 @@ class BugSync(object):
             'payload_hash': bug_hash,
         }
 
-    def set_merge_status(self, revision, branch, status):
+    def set_merge_status(self, revision, revision_parent, branch, status):
         """
         Update analysis with merge status
         """
@@ -140,16 +172,15 @@ class BugSync(object):
             or revision.decode('utf-8')
         branch = branch.decode('utf-8')
 
-        patches = self.analysis.get('patches', {})
-        if revision not in patches:
-            logger.warn('Failed to save merge status', rev=revision, branch=branch)  # noqa
-            return
-
-        patch = patches[revision]
-        if 'merge' not in patch:
-            patch['merge'] = {}
-        patch['merge'][branch] = status
-        self.analysis['patches'][revision] = patch
+        # Publish as a new patch status
+        data = {
+            'revision': revision,
+            'revision_parent': revision_parent,
+            'merged': status,
+            'branch': branch,
+        }
+        api_client.create_patch_status(self.bugzilla_id, data)
+        logger.info('Created new patch status', **data)
 
     def load_users(self):
         """
@@ -307,17 +338,16 @@ class BotRemote(Bot):
         secrets = self.load_secrets(secrets_path, client_id, access_token)
 
         # Setup credentials for Shipit api
-        self.credentials = {
-          'id': secrets['TASKCLUSTER_CLIENT_ID'],
-          'key': secrets['TASKCLUSTER_ACCESS_TOKEN'],
-          'algorithm': 'sha256',
-        }
+        api_client.setup(
+            secrets['API_URL'],
+            secrets['TASKCLUSTER_CLIENT_ID'],
+            secrets['TASKCLUSTER_ACCESS_TOKEN']
+        )
 
         super(BotRemote, self).__init__(
             secrets['BUGZILLA_URL'],
             secrets['BUGZILLA_TOKEN']
         )
-        self.api_url = secrets['API_URL']
         self.sync = {}  # init
 
     def load_secrets(self, secrets_path, client_id=None, access_token=None):
@@ -365,46 +395,6 @@ class BotRemote(Bot):
 
         return secrets
 
-    def make_request(self, method, url, data=None):
-        """
-        Make an HAWK authenticated request on remote server
-        """
-        request = getattr(requests, method)
-        if not request:
-            raise Exception('Invalid method {}'.format(method))
-
-        # Encode optional data as json
-        if data is not None:
-            data = json.dumps(data, cls=ShipitJSONEncoder)
-        else:
-            data = ''
-
-        # Build HAWK token
-        url = self.api_url + url
-        hawk = mohawk.Sender(self.credentials,
-                             url,
-                             method,
-                             content=data,
-                             content_type='application/json')
-
-        # Support dev ssl ca cert
-        ssl_dev_ca = os.environ.get('SSL_DEV_CA')
-        if ssl_dev_ca is not None:
-            assert os.path.isdir(ssl_dev_ca), \
-                'SSL_DEV_CA must be a dir with hashed dev ca certs'
-
-        # Send request, using optional dev ca
-        headers = {
-            'Authorization': hawk.request_header,
-            'Content-Type': 'application/json',
-        }
-        response = request(url, data=data, headers=headers, verify=ssl_dev_ca)
-        if not response.ok:
-            raise Exception('Invalid response from {} {} : {}'.format(
-                method, url, response.content))
-
-        return response.json()
-
     def get_bug_sync(self, bugzilla_id):
         if bugzilla_id not in self.sync:
             # Init new bug sync
@@ -422,15 +412,13 @@ class BotRemote(Bot):
             'Missing mozilla repository'
 
         # First update local repository
-        self.repository.checkout('release')
+        self.repository.checkout(b'release')
 
         # Get official mozilla release versions
         current_versions = versions.get(True)
 
         # Load all analysis
-        all_analysis = self.make_request('get', '/analysis')
-        for analysis in all_analysis:
-            url = '/analysis/{}'.format(analysis['id'])
+        for analysis in api_client.list_analysis():
 
             # Check version number
             current_version = current_versions.get(analysis['name'])
@@ -440,12 +428,12 @@ class BotRemote(Bot):
                 data = {
                     'version': current_version,
                 }
-                analysis = self.make_request('put', url, data)
+                analysis = api_client.update_analysis(analysis['id'], data)
                 logger.info('Updated analysis version', name=analysis['name'], version=analysis['version'])  # noqa
 
             # Mark bugs already in analysis
             logger.info('List remote bugs', name=analysis['name'])
-            analysis_details = self.make_request('get', url)
+            analysis_details = api_client.get_analysis(analysis['id'])
             for bug in analysis_details['bugs']:
                 sync = self.get_bug_sync(bug['bugzilla_id'])
                 sync.setup_remote(analysis)
@@ -458,6 +446,7 @@ class BotRemote(Bot):
                 sync.setup_bugzilla(analysis, bug_data)
 
         for sync in self.sync.values():
+
             # Filter bugs when 'only' is filled
             if only is not None and sync.bugzilla_id not in only:
                 logger.debug('Skip', bz_id=sync.bugzilla_id)
@@ -481,21 +470,32 @@ class BotRemote(Bot):
         if not sync.update():
             return
 
-        # Check patches merge on repository
-        for revision, branch in sync.patches:
-            sync.set_merge_status(
-                revision,
-                branch,
-                self.repository.is_mergeable(revision, branch)
-            )
-
         # Send payload to server
         try:
             payload = sync.build_payload(self.bugzilla_url)
-            self.make_request('post', '/bugs', payload)
+            api_client.create_bug(payload)
             logger.info('Added bug', bz_id=sync.bugzilla_id, analysis=[a['name'] for a in sync.on_bugzilla])  # noqa
         except Exception as e:
             logger.error('Failed to add bug #{} : {}'.format(sync.bugzilla_id, e))  # noqa
+
+        # Check patches merge on repository
+        # Need bug to be created on remote backend
+        for revision, branch, patch_status in sync.testable_patches:
+
+            # Switch to branch and get parent revision
+            parent = self.repository.checkout(branch)
+
+            if patch_status and parent == patch_status['revision_parent']:
+                logger.info('Skiping merge test : same parent', revision=revision, branch=branch, parent=parent)  # noqa
+                continue
+
+            # Run the merge test
+            sync.set_merge_status(
+                revision,
+                parent,
+                branch,
+                self.repository.is_mergeable(revision)
+            )
 
     def delete_bug(self, sync):
         """
@@ -504,7 +504,7 @@ class BotRemote(Bot):
         assert isinstance(sync, BugSync), \
             'Use BugSync instance'
         try:
-            self.make_request('delete', '/bugs/{}'.format(sync.bugzilla_id))
+            api_client.delete_bug(sync.bugzilla_id)
             logger.info('Deleted bug', bz_id=sync.bugzilla_id, analysis=sync.on_remote)  # noqa
         except Exception as e:
             logger.warning('Failed to delete bug #{} : {}'.format(sync.bugzilla_id, e))  # noqa

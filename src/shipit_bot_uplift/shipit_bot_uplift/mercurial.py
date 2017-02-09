@@ -1,9 +1,11 @@
 import hglib
 import os
+import re
 from shipit_bot_uplift import log
 
 
 logger = log.get_logger('shipit_bot')
+REGEX_TIP = re.compile(r'(\w+)\s*(tip)? (\w+)')
 
 
 class Repository(object):
@@ -22,6 +24,8 @@ class Repository(object):
         Robust Checkout of the repository
         using configured mercurial client with extensions
         """
+        assert isinstance(branch, bytes)
+
         # Build command line
         repo_dir = os.path.join(self.directory, 'repo')
         shared_dir = os.path.join(self.directory, 'shared')
@@ -55,19 +59,25 @@ class Repository(object):
             return b'u\n'
         self.client.setcbprompt(_cb)
 
-    def is_mergeable(self, revision, branch):
+        # Check branch has been successfull checkout
+        identify = self.client.identify().decode('utf-8')
+        parent, _, current_branch = REGEX_TIP.search(identify).groups()
+        assert current_branch == branch.decode('utf-8'), \
+            'Current branch {} is not expected branch {}'.format(current_branch, branch)  # noqa
+        logger.info('Checkout success', branch=branch, tip=parent)
+
+        return parent
+
+    def is_mergeable(self, revision):
         """
-        Test if a revision is mergeable on a branch
+        Test if a revision is mergeable on current branch
         """
         # Use revision in bytes (needed by hglib)
         if isinstance(revision, int):
             revision = str(revision).encode('utf-8')
         assert isinstance(revision, bytes)
 
-        logger.info('Merge test', revision=revision, branch=branch)
-
-        # Switch to branch
-        self.checkout(branch)
+        logger.info('Merge test', revision=revision)
 
         # 4) `hg graft --tool :merge REV [REV ...]`
         cmd = [
@@ -77,9 +87,9 @@ class Repository(object):
         ]
         try:
             self.client.rawcommand(cmd)
-            logger.info('Merge success', revision=revision, branch=branch)
+            logger.info('Merge success', revision=revision)
         except hglib.error.CommandError as e:
-            logger.warning('Auto merge failed', revision=revision, branch=branch, error=e)  # noqa
+            logger.warning('Auto merge failed', revision=revision, error=e)  # noqa
             return False
 
         # If `hg graft` exits code 0, there are no merge conflicts.
