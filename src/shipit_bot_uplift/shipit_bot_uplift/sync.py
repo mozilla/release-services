@@ -14,6 +14,7 @@ from shipit_bot_uplift.helpers import (
 )
 from shipit_bot_uplift.mercurial import Repository
 from shipit_bot_uplift.api import api_client
+from shipit_bot_uplift.report import Report
 from shipit_bot_uplift import log
 from libmozdata import bugzilla, versions
 from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
@@ -81,13 +82,13 @@ class BugSync(object):
 
         # Do patch analysis
         try:
-            self.analysis = bug_analysis(self.bugzilla_id)
+            self.analysis = bug_analysis(self.bugzilla_id, 'release')
         except Exception as e:
             logger.error('Patch analysis failed on {} : {}'.format(self.bugzilla_id, e))  # noqa
             return False
 
         # Build html version of uplift comment
-        if self.analysis['uplift_comment']:
+        if self.analysis.get('uplift_comment'):
             self.analysis['uplift_comment']['html'] = parse_uplift_comment(
                 self.analysis['uplift_comment']['text'], self.bugzilla_id)
 
@@ -335,13 +336,14 @@ class BotRemote(Bot):
     """
     def __init__(self, secrets_path, client_id=None, access_token=None):
         # Start by loading secrets from Taskcluster
-        secrets = self.load_secrets(secrets_path, client_id, access_token)
+        tc_options = self.build_tc_options(client_id, access_token)
+        secrets = self.load_secrets(tc_options, secrets_path)
 
         # Setup credentials for Shipit api
         api_client.setup(
             secrets['API_URL'],
-            secrets['TASKCLUSTER_CLIENT_ID'],
-            secrets['TASKCLUSTER_ACCESS_TOKEN']
+            secrets.get('TASKCLUSTER_CLIENT_ID', client_id),
+            secrets.get('TASKCLUSTER_ACCESS_TOKEN', access_token)
         )
 
         super(BotRemote, self).__init__(
@@ -350,19 +352,25 @@ class BotRemote(Bot):
         )
         self.sync = {}  # init
 
-    def load_secrets(self, secrets_path, client_id=None, access_token=None):
+        # Init report
+        self.report = Report(tc_options, [
+            # TODO: use secrets
+            'babadie@mozilla.com',
+        ])
+
+    def build_tc_options(self, client_id=None, access_token=None):
         """
-        Load Taskcluster secrets
+        Build Taskcluster credentials options
         """
 
         if client_id and access_token:
             # Use provided credentials
-            tc = taskcluster.Secrets({
+            tc_options = {
                 'credentials': {
                     'clientId': client_id,
                     'accessToken': access_token,
                 }
-            })
+            }
 
         else:
             # Get taskcluster proxy host
@@ -375,23 +383,23 @@ class BotRemote(Bot):
             # with taskclusterProxy
             base_url = 'http://{}/secrets/v1'.format(hosts['taskcluster'])
             logger.info('Taskcluster Proxy enabled', url=base_url)
-            tc = taskcluster.Secrets({
+            tc_options = {
                 'baseUrl': base_url
-            })
+            }
 
+        return tc_options
+
+    def load_secrets(self, tc_options, secrets_path):
+        """
+        Load Taskcluster secrets
+        """
         # Check mandatory keys in secrets
-        secrets = tc.get(secrets_path)
+        secrets = taskcluster.Secrets(tc_options).get(secrets_path)
         secrets = secrets['secret']
         required = ('BUGZILLA_URL', 'BUGZILLA_TOKEN', 'API_URL')
         for req in required:
             if req not in secrets:
                 raise Exception('Missing value {} in Taskcluster secret value {}'.format(req, secrets_path))  # noqa
-
-        # Add credentials too
-        if 'TASKCLUSTER_CLIENT_ID' not in secrets:
-            secrets['TASKCLUSTER_CLIENT_ID'] = client_id
-        if 'TASKCLUSTER_ACCESS_TOKEN' not in secrets:
-            secrets['TASKCLUSTER_ACCESS_TOKEN'] = access_token
 
         return secrets
 
@@ -458,6 +466,9 @@ class BotRemote(Bot):
             elif len(sync.on_remote) > 0:
                 self.delete_bug(sync)
 
+        # Send report
+        self.report.send()
+
     def update_bug(self, sync):
         """
         Update specific bug
@@ -490,12 +501,22 @@ class BotRemote(Bot):
                 continue
 
             # Run the merge test
+            merged = self.repository.is_mergeable(revision)
             sync.set_merge_status(
                 revision,
                 parent,
                 branch,
-                self.repository.is_mergeable(revision)
+                merged
             )
+
+            # Save invalid merge in report
+            if not merged:
+                self.report.add_invalid_merge(
+                    sync.bugzilla_id,
+                    branch,
+                    revision,
+                    parent
+                )
 
     def delete_bug(self, sync):
         """
