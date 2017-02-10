@@ -41,8 +41,8 @@ self: {
 
 
   "aiohttp" = python.mkDerivation {
-    name = "aiohttp-1.2.0";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e5/a5/ade96691f6423c56f7911a42a51ecd5454619efd6d5026df7e08a556a36a/aiohttp-1.2.0.tar.gz"; sha256 = "8ce0ab4301bf38db2ae13e4921bdb3841507919c9121373405a43c7bd0a07f78"; };
+    name = "aiohttp-1.3.1";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/41/42/76a4cff04488799e78d37c5bb3b607e36d2c4686141621002d2479b54dbe/aiohttp-1.3.1.tar.gz"; sha256 = "e147b0cea568773443683becce9de4071506431118609b5d477fe61508417af1"; };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
@@ -153,8 +153,8 @@ self: {
 
 
   "cryptography" = python.mkDerivation {
-    name = "cryptography-1.7.1";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/82/f7/d6dfd7595910a20a563a83a762bf79a253c4df71759c3b228accb3d7e5e4/cryptography-1.7.1.tar.gz"; sha256 = "953fef7d40a49a795f4d955c5ce4338abcec5dea822ed0414ed30348303fdb4c"; };
+    name = "cryptography-1.7.2";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/99/df/71c7260003f5c469cec3db4c547115df39e9ce6c719a99e067ba0e78fd8a/cryptography-1.7.2.tar.gz"; sha256 = "878cb68b3da3d493ffd68f36db11c29deee623671d3287c3f8d685117ffda9a9"; };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
@@ -226,8 +226,8 @@ self: {
 
 
   "flake8" = python.mkDerivation {
-    name = "flake8-3.2.1";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/51/70/af1b3130cd051f2f79854b14079b3bcbad84b8bac31a7dffc63ef57f8a7a/flake8-3.2.1.tar.gz"; sha256 = "c7c460b5aff3a2063c798a77af18ec70af3941d35a22e2e76965e3c0e0b36055"; };
+    name = "flake8-3.3.0";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/47/64/382631de5fd8dab367bedeff6b5b55fd9a7c883daa44f4032636e2d203ca/flake8-3.3.0.tar.gz"; sha256 = "b907a26dcf5580753d8f80f1be0ec1d5c45b719f7bac441120793d1a70b03f12"; };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
@@ -245,8 +245,8 @@ self: {
 
 
   "google-api-python-client" = python.mkDerivation {
-    name = "google-api-python-client-1.6.1";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/31/09/e0a41edcec7cedf592803c0b2e61cf3735a0d297f53cdfc6587133a73f38/google-api-python-client-1.6.1.tar.gz"; sha256 = "1b161de2de3900e5faef55c4ed73a9f7c3303b229d2dc9c55b6caea1f09e9fb4"; };
+    name = "google-api-python-client-1.6.2";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e8/04/4bb1672918e4fc6d6a8201bdaf986b9fb4763f2a47b11496186dbbbd40ce/google-api-python-client-1.6.2.tar.gz"; sha256 = "8c2f50f8057571a5f817c74820cadb754d47799c5a4ea463c1500fe8e092c1ae"; };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
@@ -265,8 +265,8 @@ self: {
 
 
   "httplib2" = python.mkDerivation {
-    name = "httplib2-0.9.2";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/ff/a9/5751cdf17a70ea89f6dde23ceb1705bfb638fd8cee00f845308bf8d26397/httplib2-0.9.2.tar.gz"; sha256 = "c3aba1c9539711551f4d83e857b316b5134a1c4ddce98a875b7027be7dd6d988"; };
+    name = "httplib2-0.10.3";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e4/2e/a7e27d2c36076efeb8c0e519758968b20389adf57a9ce3af139891af2696/httplib2-0.10.3.tar.gz"; sha256 = "e404d3b7bd86c1bc931906098e7c1305d6a3a6dcef141b8bb1059903abb3ceeb"; };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [ ];
@@ -330,8 +330,8 @@ self: {
 
 
   "ipython" = python.mkDerivation {
-    name = "ipython-5.1.0";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/89/63/a9292f7cd9d0090a0f995e1167f3f17d5889dcbc9a175261719c513b9848/ipython-5.1.0.tar.gz"; sha256 = "7ef4694e1345913182126b219aaa4a0047e191af414256da6772cf249571b961"; };
+    name = "ipython-5.2.2";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/6e/cf/c2a3ca5942e2d8084574157a8f818efafb7218204cd9e41166c92c452e07/ipython-5.2.2.tar.gz"; sha256 = "6ee1c89f6031e0c86727820ad394c6eb4d3ac28de48e0df3b9367ccf92e212e2"; };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
@@ -370,8 +370,8 @@ self: {
 
 
   "libmozdata" = python.mkDerivation {
-    name = "libmozdata-0.1.26";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c1/c5/8c4ece2083946bb789c922ab620bc1a512fb2ffcdf454a5fe777f4e732b1/libmozdata-0.1.26.tar.gz"; sha256 = "9d0b1199adbf5f93a13f92e68c930db8919cb5b7168becb85a4a8167555e8c91"; };
+    name = "libmozdata-0.1.31";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c0/38/47954d9f4d95e8f54357b7f344ade6767a62b6d95868f27b22edb42d8634/libmozdata-0.1.31.tar.gz"; sha256 = "11a69e600c09c85fe33ee27ab40a7fc14f8bae658e69f52cb3509614273d8747"; };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
@@ -420,8 +420,8 @@ self: {
 
 
   "mccabe" = python.mkDerivation {
-    name = "mccabe-0.5.3";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c9/0b/b66016d49fc1b24864743e388bc4fa7dcbb83c29553b867404fad5b5855d/mccabe-0.5.3.tar.gz"; sha256 = "16293af41e7242031afd73896fef6458f4cad38201d21e28f344fff50ae1c25e"; };
+    name = "mccabe-0.6.1";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/06/18/fa675aa501e11d6d6ca0ae73a101b2f3571a565e0f7d38e062eec18a91ee/mccabe-0.6.1.tar.gz"; sha256 = "dd8d182285a0fe56bace7f45b5e7d1a6ebcbf524e8f3bd87eb0f125271b8831f"; };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [ ];
@@ -553,8 +553,8 @@ self: {
 
 
   "prompt-toolkit" = python.mkDerivation {
-    name = "prompt-toolkit-1.0.9";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/83/14/5ac258da6c530eca02852ee25c7a9ff3ca78287bb4c198d0d0055845d856/prompt_toolkit-1.0.9.tar.gz"; sha256 = "cd6523b36adc174cc10d54b1193eb626b4268609ff6ea92c15bcf1996609599c"; };
+    name = "prompt-toolkit-1.0.13";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/23/be/4876b52d5cc159cbd4b0ff6e7aa419a26470849a43a8f647857a4a24467b/prompt_toolkit-1.0.13.tar.gz"; sha256 = "33d68ca09f76cd73287fde7df5748ffacf26a8238dd61ee81ac50860ea7c6776"; };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
@@ -619,8 +619,8 @@ self: {
 
 
   "pyasn1" = python.mkDerivation {
-    name = "pyasn1-0.1.9";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/f7/83/377e3dd2e95f9020dbd0dfd3c47aaa7deebe3c68d3857a4e51917146ae8b/pyasn1-0.1.9.tar.gz"; sha256 = "853cacd96d1f701ddd67aa03ecc05f51890135b7262e922710112f12a2ed2a7f"; };
+    name = "pyasn1-0.2.2";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/57/f7/c18a86169bb9995a69195177b23e736776b347fd92592da0c3cac9f1a724/pyasn1-0.2.2.tar.gz"; sha256 = "6b42f96b942406712e0be5ea2bbbc57d8f30c7835a4904c9c195cc669736d435"; };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [ ];
@@ -651,8 +651,8 @@ self: {
 
 
   "pycodestyle" = python.mkDerivation {
-    name = "pycodestyle-2.2.0";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/43/9f/56e824b197398582b0c1aaaa2272560bc51f395fe3e45e1dd88de4bb24dc/pycodestyle-2.2.0.tar.gz"; sha256 = "df81dc3293e0123e2e8d1f2aaf819600e4ae287d8b3af8b72181af50257e5d9a"; };
+    name = "pycodestyle-2.3.1";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e1/88/0e2cbf412bd849ea6f1af1f97882add46a374f4ba1d2aea39353609150ad/pycodestyle-2.3.1.tar.gz"; sha256 = "682256a5b318149ca0d2a9185d365d8864a768a28db66a84a2ea946bcc426766"; };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [ ];
@@ -681,8 +681,8 @@ self: {
 
 
   "pyflakes" = python.mkDerivation {
-    name = "pyflakes-1.3.0";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/9f/48/927b1bf3e15d3dadfcfafb505177a62cdabcb78cf7eac4f31f180d5b1e26/pyflakes-1.3.0.tar.gz"; sha256 = "a4f93317c97a9d9ed71d6ecfe08b68e3de9fea3f4d94dcd1d9d83ccbf929bc31"; };
+    name = "pyflakes-1.5.0";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/5b/b7/dcd6ebc826065ca4ccd2406aac4378e1df6eb91124625d45d520219932a1/pyflakes-1.5.0.tar.gz"; sha256 = "aa0d4dff45c0cc2214ba158d29280f8fa1129f3e87858ef825930845146337f4"; };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [ ];
@@ -728,8 +728,8 @@ self: {
 
 
   "pytest-runner" = python.mkDerivation {
-    name = "pytest-runner-2.10.1";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3d/dd/e491ac188a79b4d18628b1f9aa5df3603be72c3a02ae3e1dd5e081cb7ccc/pytest-runner-2.10.1.tar.gz"; sha256 = "ecc9549ed1ce9bbfc9e7c9bad33d3f9fa91da2334632070a191a35aa96f0be35"; };
+    name = "pytest-runner-2.11.1";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/9e/4d/08889e5e27a9f5d6096b9ad257f4dea1faabb03c5ded8f665ead448f5d8a/pytest-runner-2.11.1.tar.gz"; sha256 = "983a31eab45e375240e250161a556163bc8d250edaba97960909338c273a89b3"; };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [ ];
@@ -920,12 +920,13 @@ self: {
 
 
   "taskcluster" = python.mkDerivation {
-    name = "taskcluster-0.3.4";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3e/50/bb7659d5cf396f5c78013bb35ac92931c852b0ae3fa738bbd9224b6192ef/taskcluster-0.3.4.tar.gz"; sha256 = "d4fe5e2a44fe27e195b92830ece0a6eb9eb7ad9dc556a0cb16f6f2a6429f1b65"; };
+    name = "taskcluster-1.0.2";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/d8/00/aac389ae5f2db76b029d55d36d394e272486894d155073369c4e0b272619/taskcluster-1.0.2.tar.gz"; sha256 = "11cfd462a333e0a084f94c9ce55e349036dbcf04656767f9773da7d148aa5115"; };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [
       self."aiohttp"
+      self."async-timeout"
       self."mohawk"
       self."requests"
       self."six"
@@ -1041,8 +1042,8 @@ self: {
 
 
   "yarl" = python.mkDerivation {
-    name = "yarl-0.8.1";
-    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/10/1b/be30529bde22c85c2975a4e21cf7f13edbcb291350fbbde8bc13938620c8/yarl-0.8.1.tar.gz"; sha256 = "9f0397ae540124bf16a8a5b89bc3ea1c07f8ae70c3e44231a40a9edd254d5712"; };
+    name = "yarl-0.9.2";
+    src = pkgs.fetchurl { url = "https://pypi.python.org/packages/4a/15/a9f1b82bb88c2c11fee12d0e4248f0ed4cb0ec3e2b25fa4b0e52baff0899/yarl-0.9.2.tar.gz"; sha256 = "4c63264bdf022e4ab509dd8946147dec026a4110c90e0a2dda9499385c312ece"; };
     doCheck = commonDoCheck;
     buildInputs = commonBuildInputs;
     propagatedBuildInputs = [

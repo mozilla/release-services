@@ -22,10 +22,6 @@ self: super: {
     buildInputs = old.buildInputs ++ [ self."setuptools-scm" ];
   });
 
-  "taskcluster" = python.overrideDerivation super."taskcluster" (old: {
-    patches = [ (pkgs.fetchurl { url = "https://github.com/La0/taskcluster-client.py/commit/042cda02e70fca879ad47509f1bde0ed471ab6bd.diff"; sha256 = "0aqgqy5mvydl3yj6ply5f6c16fh3cvql900jxaran8ya1vzsnkz8"; }) ];
-  });
-
   "libmozdata" = python.overrideDerivation super."libmozdata" (old: {
     # Remove useless dependencies
     preConfigure = ''
