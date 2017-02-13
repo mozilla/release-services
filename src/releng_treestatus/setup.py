@@ -28,7 +28,6 @@ setup(
         'Flask-Login',
         'SQLAlchemy',
         'Werkzeug',
-        'kombu',
         'pytz',
         'redis',
     ],
