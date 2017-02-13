@@ -31,6 +31,7 @@ setup(
         'Jinja2',
         'gunicorn',
         'newrelic',
+        'kombu',
     ],
     extras_require=dict(
         cache=['Flask-Cache'],
