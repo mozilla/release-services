@@ -21,6 +21,7 @@ in python.mkDerivation {
       python.packages."Jinja2"
       python.packages."gunicorn"
       python.packages."newrelic"
+      python.packages."kombu"
     ] ++ optionals (builtins.elem "cache" extras) [ python.packages."Flask-Cache" ]
       ++ optionals (builtins.elem "auth" extras) [ python.packages."Flask-Login" python.packages."taskcluster" ]
       ++ optionals (builtins.elem "api" extras) [ python.packages."connexion" ]
