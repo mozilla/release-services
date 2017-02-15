@@ -16,6 +16,7 @@ let
     , src
     , src_path ? "src/${name}"
     , python
+    , bot_common
     , buildInputs ? []
     , propagatedBuildInputs ? []
     , passthru ? {}
@@ -35,6 +36,7 @@ let
           python.packages."flake8"
         ] ++ buildInputs ;
         propagatedBuildInputs = [
+          bot_common
           releng_pkgs.pkgs.cacert
         ] ++ propagatedBuildInputs;
 
@@ -148,8 +150,13 @@ let
         ];
       };
 
+  bot_common = import ./../../lib/bot_common {
+    inherit releng_pkgs python;
+    extras = ["taskcluster"];
+  };
+
   self = mkPythonEnv rec {
-    inherit python ;
+    inherit python bot_common;
     production = true;
     name = "shipit_bot_uplift";
     version = fileContents ./../../VERSION;
@@ -168,7 +175,6 @@ let
         python.packages.structlog
         python.packages.click
         python.packages.mohawk
-        python.packages.taskcluster
         python.packages.robustcheckout
         python.packages.mercurial
       ];

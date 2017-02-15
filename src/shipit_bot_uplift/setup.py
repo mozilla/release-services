@@ -26,6 +26,7 @@ setup(
         'pytest',
     ],
     install_requires=[
+        'bot_common[taskcluster]',
         'libmozdata',
     ],
     packages=find_packages(),
