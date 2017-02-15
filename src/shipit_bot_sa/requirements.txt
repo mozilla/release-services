@@ -1,0 +1,7 @@
+-e ../../lib/bot_common[pulse,taskcluster]
+
+-e .
+
+libmozdata
+
+click
