@@ -100,6 +100,7 @@ class BugResult(db.Model):
         """
         # Delete links, avoid StaleDataError
         db.engine.execute(sa.text('delete from shipit_dashboard_analysis_bugs where bug_id = :bug_id'), bug_id=self.id)  # noqa
+        db.engine.execute(sa.text('delete from shipit_dashboard_patch_status where bug_id = :bug_id'), bug_id=self.id)  # noqa
 
         # Delete the bug
         db.session.delete(self)
