@@ -107,14 +107,14 @@ isolate them from other processes in the system (except that fixed-output
 derivations do not run in private network namespace to ensure they can access
 the network).
 
-As ``root`` user run:
+As ``$USER`` run:
 
 .. code-block:: bash
 
-    % echo "build-use-sandbox = true" >> /etc/nix/nix.conf
-    % mkdir -p /nix/var/nix/profiles
-    % nix-env -iA nixpkgs.bash -p /nix/var/nix/profiles/sandbox
-    % echo "build-sandbox-paths = /bin/sh=`realpath /nix/var/nix/profiles/sandbox/bin/bash` `nix-store -qR \`realpath /nix/var/nix/profiles/sandbox/bin/bash\` | tr '\n' ' '`" >> /etc/nix/nix.conf
+    % sudo echo "build-use-sandbox = true" >> /etc/nix/nix.conf
+    % sudo mkdir -p /nix/var/nix/profiles
+    % sudo /home/$USER/.nix-profile/bin/nix-env -iA nixpkgs.bash -p /nix/var/nix/profiles/sandbox
+    % sudo echo "build-sandbox-paths = /bin/sh=`realpath /nix/var/nix/profiles/sandbox/bin/bash` `nix-store -qR \`realpath /nix/var/nix/profiles/sandbox/bin/bash\` | tr '\n' ' '`" >> /etc/nix/nix.conf
 
 
 5. Migrating from single user to multi user mode
