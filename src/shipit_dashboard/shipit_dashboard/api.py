@@ -200,6 +200,10 @@ def create_bug():
     payload_hash = request.json.get('payload_hash')
     if not payload or not payload_hash:
         raise Exception('Missing payload updates.')
+    if 'analysis' not in payload:
+        raise Exception('Missing analysis in payload')
+    if payload['analysis'].get('uplift_comment') is None:
+        raise Exception('Missing uplift comment in analysis')
     bug.payload = pickle.dumps(payload, 2)
     bug.payload_hash = payload_hash
 
