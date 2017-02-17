@@ -30,6 +30,7 @@ def test_patch_status(client, bugs, header_bot):
         'revision_parent': '0000001',
         'branch': branch,
         'merged': False,
+        'message': 'random mercurial error',
     }
     resp = client.post(url, data=json.dumps(data), headers=[
         ('Authorization', header_bot),

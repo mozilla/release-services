@@ -159,6 +159,7 @@ class PatchStatus(db.Model):
     revision = sa.Column(sa.String(50), nullable=False)
     revision_parent = sa.Column(sa.String(50), nullable=False)
     branch = sa.Column(sa.String(50), nullable=False)
+    message = sa.Column(sa.Text())
     created = sa.Column(
         sa.DateTime,
         default=datetime.datetime.utcnow,
