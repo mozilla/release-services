@@ -15,19 +15,20 @@ with open(os.path.join(here, 'VERSION')) as f:
     version = f.read().strip()
 
 setup(
-    name='shipit_bot_uplift',
+    name='shipit_bot_sa',
     version=version,
-    description='Automated bot to sync bug analysis for Shipit Dashboard',
-    author='Mozilla Release Engineering',
-    author_email='release@mozilla.com',
+    description='Listens to bugzilla entries, executes'
+    'some static analysis and reports results.',
+    author='Mozilla Release Management',
+    author_email='release-mgmt@mozilla.com',
     url='https://shipit.mozilla-releng.net',
     tests_require=[
         'flake8',
         'pytest',
     ],
     install_requires=[
-        'bot_common[taskcluster]',
         'libmozdata',
+        'bot_common[pulse,taskcluster]',
     ],
     packages=find_packages(),
     include_package_data=True,
@@ -35,7 +36,7 @@ setup(
     license='MPL2',
     entry_points={
         'console_scripts': [
-            'shipit-bot-uplift = shipit_bot_uplift.cli:main',
+            'shipit-bot-sa = shipit_bot_sa.cli:main',
         ]
     },
 )

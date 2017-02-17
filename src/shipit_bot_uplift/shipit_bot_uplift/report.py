@@ -1,5 +1,4 @@
 from shipit_bot_uplift import log
-import taskcluster
 
 
 logger = log.get_logger('shipit_bot')
@@ -11,8 +10,8 @@ class Report(object):
     and send it at the end through TC emails
     """
 
-    def __init__(self, tc_options, emails):
-        self.notify = taskcluster.Notify(tc_options)
+    def __init__(self, taskcluster, emails):
+        self.taskcluster = taskcluster
         self.emails = emails
         self.merges = {}
 
@@ -49,9 +48,5 @@ class Report(object):
 
         # Send mail report to every mail address
         for email in self.emails:
-            self.notify.email({
-                'address': email,
-                'subject': subject,
-                'content': mail_md
-            })
+            self.taskcluster.notify_email(email, subject, mail_md)
             logger.info('Sent report', to=email)

@@ -16,6 +16,7 @@ APPS=\
 	releng_frontend \
 	shipit_dashboard \
 	shipit_bot_uplift \
+	shipit_bot_sa \
 	shipit_pipeline \
 	shipit_signoff \
 	shipit_frontend

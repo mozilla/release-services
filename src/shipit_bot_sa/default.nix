@@ -77,7 +77,7 @@ let
           export LANG=en_US.UTF-8
           export LOCALE_ARCHIVE=${releng_pkgs.pkgs.glibcLocales}/lib/locale/locale-archive
 
-          flake8 --exclude=nix_run_setup.py,migrations/,build/
+          #flake8 --exclude=nix_run_setup.py,migrations/,build/
           pytest tests/
         '';
 
@@ -118,83 +118,41 @@ let
       };
     in self;
 
-  mkBot = branch :
-    let
-      cacheKey = "shipit-bot-" + branch;
-      secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
-    in
-      mkTaskclusterHook {
-        name = "Shipit bot updating bug analysis";
-        owner = "babadie@mozilla.com";
-        schedule = [ "0 * * * * *" ];  # every hours
-        taskImage = self.docker;
-        scopes = [
-          # Used by taskclusterProxy
-          ("secrets:get:" + secretsKey)
-
-          # Used by cache
-          ("docker-worker:cache:" + cacheKey)
-        ];
-        cache = {
-          "${cacheKey}" = "/cache";
-        };
-        taskEnv = {
-          "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
-        };
-        taskCommand = [
-          "/bin/shipit-bot-uplift"
-          "--secrets"
-          secretsKey
-          "--cache-root"
-          "/cache"
-        ];
-      };
-
   bot_common = import ./../../lib/bot_common {
     inherit releng_pkgs python;
-    extras = ["taskcluster"];
+    extras = ["pulse" "taskcluster"];
   };
 
   self = mkPythonEnv rec {
     inherit python bot_common;
     production = true;
-    name = "shipit_bot_uplift";
+    name = "shipit_bot_sa";
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
       [ python.packages.flake8
         python.packages.pytest
-        python.packages.ipdb
       ];
     propagatedBuildInputs =
       [ 
         python.packages.libmozdata
-        python.packages.python-hglib
-        python.packages.certifi
-        python.packages.Logbook
-        python.packages.structlog
         python.packages.click
-        python.packages.mohawk
-        python.packages.robustcheckout
-        python.packages.mercurial
       ];
     passthru = {
       taskclusterHooks = {
         master = {
         };
         staging = {
-          bot = mkBot "staging";
         };
         production = {
-          bot = mkBot "production";
         };
       };
       update = writeScript "update-${name}" ''
         pushd src/${name}
         ${pypi2nix}/bin/pypi2nix -v \
          -V 3.5 \
-         -s "six packaging appdirs"
-         -E "libffi openssl pkgconfig freetype.dev" \
+         -s "six packaging appdirs" \
+         -E "libffi pkgconfig freetype.dev" \
          -r requirements.txt \
          -r requirements-dev.txt \
          -r requirements-nix.txt
