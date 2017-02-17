@@ -33,6 +33,44 @@ def analysis2branch(analysis):
     return analysis['name'].lower()
 
 
+class MergeTest(object):
+    """
+    A merge test for a specific patch
+    against a branch
+    """
+    def __init__(self, bugzilla_id, branch, revision, last_status=None):
+        self.bugzilla_id = bugzilla_id
+        self.branch = branch
+        self.revision = revision
+        self.revision_parent = None
+        self.last_status = last_status
+        self.status = None
+        self.message = None
+
+    def update_result(self, revision_parent, merge_status, message):
+        """
+        Store a new patch status on backend
+        """
+        assert isinstance(merge_status, bool)
+        self.revision_parent = revision_parent
+        self.status = merge_status
+        self.message = message
+
+        # Publish as a new patch status
+        data = {
+            'revision': self.revision.decode('utf-8'),
+            'revision_parent': revision_parent,
+            'merged': merge_status,
+            'branch': self.branch.decode('utf-8'),
+            'message': message,
+        }
+        try:
+            api_client.create_patch_status(self.bugzilla_id, data)
+            logger.info('Created new patch status', **data)
+        except Exception as err:
+            logger.error('Failed to create patch status', err=err)
+
+
 class BugSync(object):
     """
     Helper class to sync bugs between
@@ -85,6 +123,7 @@ class BugSync(object):
             self.analysis = bug_analysis(self.bugzilla_id, 'release')
         except Exception as e:
             logger.error('Patch analysis failed on {} : {}'.format(self.bugzilla_id, e))  # noqa
+            # TODO: Add to report
             return False
 
         # Build html version of uplift comment
@@ -127,13 +166,18 @@ class BugSync(object):
         def _link_status(revision, analysis):
             # Cleanup inputs
             revision = isinstance(revision, int) \
-                and revision \
+                and str(revision).encode('utf-8') \
                 or revision.encode('utf-8')
             branch = analysis2branch(analysis).encode('utf-8')
 
             # Retrieve last status
             keys = (revision, branch)
-            return revision, branch, last_status.get(keys)
+            return MergeTest(
+                self.bugzilla_id,
+                branch,
+                revision,
+                last_status.get(keys)
+            )
 
         return [
             _link_status(revision, analysis)
@@ -161,27 +205,6 @@ class BugSync(object):
             },
             'payload_hash': bug_hash,
         }
-
-    def set_merge_status(self, revision, revision_parent, branch, status):
-        """
-        Update analysis with merge status
-        """
-        assert isinstance(revision, bytes) or isinstance(revision, int)
-        assert isinstance(branch, bytes)
-        assert isinstance(status, bool)
-        revision = isinstance(revision, int) and revision \
-            or revision.decode('utf-8')
-        branch = branch.decode('utf-8')
-
-        # Publish as a new patch status
-        data = {
-            'revision': revision,
-            'revision_parent': revision_parent,
-            'merged': status,
-            'branch': branch,
-        }
-        api_client.create_patch_status(self.bugzilla_id, data)
-        logger.info('Created new patch status', **data)
 
     def load_users(self):
         """
@@ -419,9 +442,6 @@ class BotRemote(Bot):
         assert self.repository is not None, \
             'Missing mozilla repository'
 
-        # First update local repository
-        self.repository.checkout(b'release')
-
         # Get official mozilla release versions
         current_versions = versions.get(True)
 
@@ -453,6 +473,7 @@ class BotRemote(Bot):
                 sync = self.get_bug_sync(bugzilla_id)
                 sync.setup_bugzilla(analysis, bug_data)
 
+        merge_tests = []
         for sync in self.sync.values():
 
             # Filter bugs when 'only' is filled
@@ -461,10 +482,23 @@ class BotRemote(Bot):
                 continue
 
             if len(sync.on_bugzilla) > 0:
-                self.update_bug(sync)
+                if self.update_bug(sync):
+                    merge_tests += sync.testable_patches
 
             elif len(sync.on_remote) > 0:
                 self.delete_bug(sync)
+
+        # Sort merge tests by branches
+        logger.info('Running merge tests', nb=len(merge_tests))
+        groups = itertools.groupby(merge_tests, lambda x: x.branch)
+        for branch, tests in groups:
+
+            # Switch to branch and get parent revision
+            parent = self.repository.checkout(branch)
+
+            # Run all the merge tests for this revision
+            for merge_test in merge_tests:
+                self.run_merge_test(merge_test, parent)
 
         # Send report
         self.report.send()
@@ -479,7 +513,7 @@ class BotRemote(Bot):
         # Do patch analysis on bugs
         logger.info('Started bug analysis', bz_id=sync.bugzilla_id)
         if not sync.update():
-            return
+            return False
 
         # Send payload to server
         try:
@@ -488,35 +522,30 @@ class BotRemote(Bot):
             logger.info('Added bug', bz_id=sync.bugzilla_id, analysis=[a['name'] for a in sync.on_bugzilla])  # noqa
         except Exception as e:
             logger.error('Failed to add bug #{} : {}'.format(sync.bugzilla_id, e))  # noqa
+            return False
 
-        # Check patches merge on repository
-        # Need bug to be created on remote backend
-        for revision, branch, patch_status in sync.testable_patches:
+        return True
 
-            # Switch to branch and get parent revision
-            parent = self.repository.checkout(branch)
+    def run_merge_test(self, merge_test, parent):
+        """
+        Try to merge a patch on current repository branch
+        """
+        assert isinstance(merge_test, MergeTest)
 
-            if patch_status and parent == patch_status['revision_parent']:
-                logger.info('Skiping merge test : same parent', revision=revision, branch=branch, parent=parent)  # noqa
-                continue
+        if merge_test.last_status and parent == merge_test.last_status['revision_parent']: # noqa
+            logger.info('Skiping merge test : same parent', revision=merge_test.revision, branch=merge_test.branch, parent=parent)  # noqa
+            return
 
-            # Run the merge test
-            merged = self.repository.is_mergeable(revision)
-            sync.set_merge_status(
-                revision,
-                parent,
-                branch,
-                merged
-            )
+        # Run the merge test
+        merged, message = self.repository.is_mergeable(merge_test.revision)
+        merge_test.update_result(parent, merged, message)
 
-            # Save invalid merge in report
-            if not merged:
-                self.report.add_invalid_merge(
-                    sync.bugzilla_id,
-                    branch,
-                    revision,
-                    parent
-                )
+        # Always cleanup
+        self.repository.cleanup(parent)
+
+        # Save invalid merge in report
+        if not merged:
+            self.report.add_invalid_merge(merge_test)
 
     def delete_bug(self, sync):
         """

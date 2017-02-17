@@ -90,10 +90,26 @@ class Repository(object):
             logger.info('Merge success', revision=revision)
         except hglib.error.CommandError as e:
             logger.warning('Auto merge failed', revision=revision, error=e)  # noqa
-            return False
+            return False, '{} {}'.format(
+                e.out.decode('utf-8'),
+                e.err.decode('utf-8')
+            )
 
         # If `hg graft` exits code 0, there are no merge conflicts.
-        return True
+        return True, 'merge success'
+
+    def cleanup(self, parent):
+        """
+        Cleanup the client state, used after a graft
+        """
+        try:
+            self.client.update(rev=parent, clean=True)
+        except hglib.error.CommandError as e:
+            logger.warning('Cleanup failed', error=e)
+
+        # Check parent revision got reverted
+        assert parent in self.client.identify().decode('utf-8'), \
+            'Failed to revert to parent revision'
 
 
 if __name__ == '__main__':
