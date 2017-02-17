@@ -326,6 +326,7 @@ def create_patch_status(bugzilla_id):
     ps.revision_parent = request.json['revision_parent']
     ps.merged = request.json['merged']
     ps.branch = request.json['branch']
+    ps.message = request.json['message']
 
     # Update bug payload to use new patch status
     payload = bug.payload_data
