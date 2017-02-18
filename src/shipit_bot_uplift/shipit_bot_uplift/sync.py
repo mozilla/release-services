@@ -52,6 +52,8 @@ class MergeTest(object):
         Store a new patch status on backend
         """
         assert isinstance(merge_status, bool)
+        assert isinstance(revision_parent, str)
+        assert isinstance(message, str)
         self.revision_parent = revision_parent
         self.status = merge_status
         self.message = message
@@ -497,7 +499,7 @@ class BotRemote(Bot):
             parent = self.repository.checkout(branch)
 
             # Run all the merge tests for this revision
-            for merge_test in merge_tests:
+            for merge_test in tests:
                 self.run_merge_test(merge_test, parent)
 
         # Send report
@@ -531,6 +533,8 @@ class BotRemote(Bot):
         Try to merge a patch on current repository branch
         """
         assert isinstance(merge_test, MergeTest)
+        assert merge_test.status is None, \
+            'Already ran this merge test.'
 
         if merge_test.last_status and parent == merge_test.last_status['revision_parent']: # noqa
             logger.info('Skiping merge test : same parent', revision=merge_test.revision, branch=merge_test.branch, parent=parent)  # noqa
