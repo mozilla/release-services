@@ -21,6 +21,12 @@ distribution). In this case we will *only* install Nix, the package manager.
 Bellow instructions should work on any recent enough Linux distribution
 (we only tested below setup with latest distributions).
 
+A fully automated script is available on the `Github Repository`_. It has been
+succesfully tested on a fresh install of Ubuntu 16.04, and simply does the
+following steps (except LVM optional setup just below)
+
+.. _`Github Repository`: https://raw.githubusercontent.com/mozilla-releng/services/master/nix/setup.sh
+
 0. Optional - Use LVM for Nix
 -----------------------------
 
