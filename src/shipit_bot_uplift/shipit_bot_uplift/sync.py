@@ -361,8 +361,10 @@ class BotRemote(Bot):
     """
     def __init__(self, secrets_path, client_id=None, access_token=None):
         # Start by loading secrets from Taskcluster
-        tc_options = self.build_tc_options(client_id, access_token)
-        secrets = self.load_secrets(tc_options, secrets_path)
+        secrets = self.load_secrets(
+            self.build_tc_options('secrets/v1', client_id, access_token),
+            secrets_path
+        )
 
         # Setup credentials for Shipit api
         api_client.setup(
@@ -378,12 +380,13 @@ class BotRemote(Bot):
         self.sync = {}  # init
 
         # Init report
-        self.report = Report(tc_options, [
+        options = self.build_tc_options('notify/v1', client_id, access_token)
+        self.report = Report(options, [
             # TODO: use secrets
             'babadie@mozilla.com',
         ])
 
-    def build_tc_options(self, client_id=None, access_token=None):
+    def build_tc_options(self, service_endpoint, client_id=None, access_token=None):  # noqa
         """
         Build Taskcluster credentials options
         """
@@ -406,7 +409,10 @@ class BotRemote(Bot):
 
             # Load secrets from TC task context
             # with taskclusterProxy
-            base_url = 'http://{}/secrets/v1'.format(hosts['taskcluster'])
+            base_url = 'http://{}/{}'.format(
+                hosts['taskcluster'],
+                service_endpoint
+            )
             logger.info('Taskcluster Proxy enabled', url=base_url)
             tc_options = {
                 'baseUrl': base_url
