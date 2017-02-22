@@ -450,6 +450,9 @@ class BotRemote(Bot):
         assert self.repository is not None, \
             'Missing mozilla repository'
 
+        # Update HG central to get new patches revisions
+        self.repository.checkout(b'central')
+
         # Get official mozilla release versions
         current_versions = versions.get(True)
 
@@ -498,6 +501,7 @@ class BotRemote(Bot):
 
         # Sort merge tests by branches
         logger.info('Running merge tests', nb=len(merge_tests))
+        merge_tests = sorted(merge_tests, key=lambda x: x.branch)
         groups = itertools.groupby(merge_tests, lambda x: x.branch)
         for branch, tests in groups:
 
