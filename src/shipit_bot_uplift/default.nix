@@ -130,6 +130,9 @@ let
           # Used by taskclusterProxy
           ("secrets:get:" + secretsKey)
 
+          # Email notifications
+          "notify:email:babadie@mozilla.com"
+
           # Used by cache
           ("docker-worker:cache:" + cacheKey)
         ];
