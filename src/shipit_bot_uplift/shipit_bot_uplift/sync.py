@@ -71,6 +71,9 @@ class MergeTest(object):
             logger.info('Created new patch status', **data)
         except Exception as err:
             logger.error('Failed to create patch status', err=err)
+            return False
+
+        return True
 
 
 class BugSync(object):
@@ -552,13 +555,13 @@ class BotRemote(Bot):
 
         # Run the merge test
         merged, message = self.repository.is_mergeable(merge_test.revision)
-        merge_test.update_result(parent, merged, message)
+        updated = merge_test.update_result(parent, merged, message)
 
         # Always cleanup
         self.repository.cleanup(parent)
 
         # Save invalid merge in report
-        if not merged:
+        if updated and not merged:
             self.report.add_invalid_merge(merge_test)
 
     def delete_bug(self, sync):

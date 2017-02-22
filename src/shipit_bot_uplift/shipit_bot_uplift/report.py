@@ -30,6 +30,7 @@ class Report(object):
         """
         # Skip sending when there are no failed merges
         if not self.merges:
+            logger.info('Nothing to report.')
             return
 
         # Build markdown output
