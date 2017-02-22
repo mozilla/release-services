@@ -147,11 +147,6 @@ definitions:
   Success:
     type: string 
 
-definitions:
-
-  Success:
-    type: string 
-
   Error:
     type: object
     required:

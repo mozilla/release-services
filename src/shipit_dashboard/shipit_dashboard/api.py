@@ -7,6 +7,7 @@ from __future__ import absolute_import
 import pickle
 from flask import abort, request
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.exc import IntegrityError
 from releng_common.auth import auth
 from releng_common.db import db
 from releng_common import log
@@ -350,6 +351,13 @@ def create_patch_status(bugzilla_id):
 
     # Commit changes
     db.session.add(ps)
-    db.session.commit()
+
+    try:
+        db.session.commit()
+    except IntegrityError as e:
+        return {
+            'error_title': 'Patch status already exist',
+            'error_message': str(e),
+        }, 409  # Conflict
 
     return serialize_patch_status(ps)
