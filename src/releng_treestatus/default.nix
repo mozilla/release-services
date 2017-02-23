@@ -28,7 +28,7 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   releng_common = import ./../../lib/releng_common {
     inherit releng_pkgs python;
-    extras = ["api" "auth" "cors" "log" "db" "cache" "security"];
+    extras = ["api" "auth" "cors" "log" "db" "cache" "security" "pulse"];
   };
 
   self = mkBackend rec {
@@ -53,7 +53,7 @@ let
         python.packages."redis"
       ];
     passthru = {
-      mysql2postgresql = mysql2postgresql {
+      migrate = mysql2postgresql {
         inherit name beforeSQL afterSQL;
         config = ''
           only_tables:
