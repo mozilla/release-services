@@ -33,6 +33,9 @@ class Report(object):
             logger.info('Nothing to report.')
             return
 
+        def _str(x):
+            return isinstance(x, bytes) and x.decode('utf-8') or x
+
         # Build markdown output
         # Sorting failed merge tests by bugzilla id & branch
         subject = 'Uplift bot detected some merge failures'
@@ -45,12 +48,12 @@ class Report(object):
         merges = itertools.groupby(merges, key=cmp_func)
         for keys, failures in merges:
             bz_id, branch = keys
-            mail.append('## Bug [{0}](https://bugzil.la/{0}) - Uplift to {1}\n'.format(bz_id, branch.decode('utf-8')))  # noqa
+            mail.append('## Bug [{0}](https://bugzil.la/{0}) - Uplift to {1}\n'.format(bz_id, _str(branch)))  # noqa
             for merge_test in failures:
                 mail += [
                     ' * Merge failed for commit `{}` (parent `{}`)'.format(
-                        merge_test.revision.decode('utf-8'),
-                        merge_test.revision_parent.decode('utf-8')
+                        _str(merge_test.revision),
+                        _str(merge_test.revision_parent)
                     ),
                     '```{}```'.format(merge_test.message)
                 ]
