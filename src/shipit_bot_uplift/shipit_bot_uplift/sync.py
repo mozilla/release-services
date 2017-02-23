@@ -385,8 +385,8 @@ class BotRemote(Bot):
         # Init report
         options = self.build_tc_options('notify/v1', client_id, access_token)
         self.report = Report(options, [
-            # TODO: use secrets
             'babadie@mozilla.com',
+            'sledru@mozilla.com',
         ])
 
     def build_tc_options(self, service_endpoint, client_id=None, access_token=None):  # noqa

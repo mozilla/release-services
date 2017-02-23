@@ -132,6 +132,7 @@ let
 
           # Email notifications
           "notify:email:babadie@mozilla.com"
+          "notify:email:sledru@mozilla.com"
 
           # Used by cache
           ("docker-worker:cache:" + cacheKey)
