@@ -3,10 +3,21 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend filterSource;
+  inherit (releng_pkgs.lib) mkBackend filterSource mysql2postgresql;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
+
+  beforeSQL = ''
+    DROP TABLE IF EXISTS projects;
+    DROP TABLE IF EXISTS hashes;
+    DROP TABLE IF EXISTS releng_mapper_projects;
+    DROP TABLE IF EXISTS releng_mapper_hashes;
+  '';
+  afterSQL = ''
+    ALTER TABLE projects RENAME TO releng_mapper_projects;
+    ALTER TABLE hashes RENAME TO releng_mapper_hashes;
+  '';
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   releng_common = import ./../../lib/releng_common {
@@ -27,6 +38,14 @@ let
     propagatedBuildInputs =
       [];
     passthru = {
+      migrate = mysql2postgresql {
+        inherit name beforeSQL afterSQL;
+        config = ''
+          only_tables:
+           - projects
+           - hashes
+        '';
+      };
       update = writeScript "update-${name}" ''
         pushd src/${name}
         ${pypi2nix}/bin/pypi2nix -v \
