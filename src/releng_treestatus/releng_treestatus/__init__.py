@@ -11,6 +11,7 @@ import releng_common.auth
 import releng_common.cache
 import releng_common.db
 import releng_common.security
+import releng_common.pulse
 
 
 DEBUG = bool(os.environ.get('DEBUG', __name__ == '__main__'))
@@ -38,6 +39,7 @@ app = releng_common.create_app(
         releng_common.auth,
         releng_common.db,
         releng_common.cache,
+        releng_common.pulse,
     ],
     debug=DEBUG,
     debug_src=HERE,

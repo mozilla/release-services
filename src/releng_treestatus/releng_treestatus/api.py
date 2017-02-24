@@ -20,18 +20,10 @@ from releng_treestatus.__init__ import app
 from releng_treestatus.models import (
     Tree, StatusChange, StatusChangeTree, Log
 )
-from releng_common.pulse import PulseNotifier
 
 
 UNSET = object()
 TREE_SUMMARY_LOG_LIMIT = 5
-PULSE = PulseNotifier(app.config.get('PULSE_HOST'),
-                      app.config.get('PULSE_PORT'),
-                      app.config.get('PULSE_USER'),
-                      app.config.get('PULSE_PWD'),
-                      app.config.get('PULSE_VIRTUAL_HOST'),
-                      app.config.get('PULSE_USE_SSL'),
-                      app.config.get('PULSE_CONNECTION_TIMEOUT'))
 
 log = logging.getLogger(__name__)
 
@@ -49,24 +41,26 @@ def _now():
 
 
 def _notify_status_change(trees_changes, tags):
-    if app.config.get('PULSE_ENABLED'):
+    if app.config.get('PULSE_TREESTATUS_ENABLE'):
         routing_key_pattern = 'tree/{0}/status_change'
-        exchange = app.config.get('TREE_STATUS_CHANGE_EXCHANGE')
-        try:
-            for tree_change in trees_changes:
-                tree, status_from, status_to = tree_change
+        exchange = app.config.get('PULSE_TREESTATUS_EXCHANGE')
 
-                payload = {'status_from': status_from,
-                           'status_to': status_to,
-                           'tree': tree.to_dict(),
-                           'tags': tags}
-                routing_key = routing_key_pattern.format(tree.tree)
-                PULSE.publish(exchange, routing_key, payload)
-        except Exception as e:
-            import traceback
-            msg = "Can't send notification to pulse."
-            trace = traceback.format_exc()
-            log.error("{0}\nExc:{1}\nTraceback: {2}".format(msg, e, trace))
+        for tree_change in trees_changes:
+            tree, status_from, status_to = tree_change
+
+            payload = {'status_from': status_from,
+                       'status_to': status_to,
+                       'tree': tree.to_dict(),
+                       'tags': tags}
+            routing_key = routing_key_pattern.format(tree.tree)
+
+            try:
+                app.pulse.publish(exchange, routing_key, payload)
+            except Exception as e:
+                import traceback
+                msg = "Can't send notification to pulse."
+                trace = traceback.format_exc()
+                log.error("{0}\nException:{1}\nTraceback: {2}".format(msg, e, trace))  # noqa
 
 
 def _update_tree_status(session, tree, status=None, reason=None, tags=[],
