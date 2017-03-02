@@ -54,6 +54,12 @@ def _notify_status_change(trees_changes, tags=[]):
                        'tags': tags}
             routing_key = routing_key_pattern.format(tree.tree)
 
+            log.info(
+                "Sending pulse to {} for tree: {}".format(
+                    exchange,
+                    tree.tree,
+                ))
+
             try:
                 app.pulse.publish(exchange, routing_key, payload)
             except Exception as e:
@@ -147,15 +153,15 @@ def update_trees(body):
     trees_status_change = []
 
     for tree in trees:
+        current_status = tree.status
         _update_tree_status(session, tree,
                             status=new_status,
                             reason=new_reason,
                             message_of_the_day=new_motd,
                             tags=new_tags,
                             )
-
-        if new_status and tree.status != new_status:
-            trees_status_change.append((tree, tree.status, new_status))
+        if new_status and current_status != new_status:
+            trees_status_change.append((tree, current_status, new_status))
 
     session.commit()
 
@@ -263,14 +269,15 @@ def _revert_change(id, revert=None):
                 # if there's no tree to update, don't worry about it
                 pass
 
+            current_status = tree.status
             _update_tree_status(session, tree,
                                 status=last_state['status'],
                                 reason=last_state['reason'],
                                 )
 
-            if last_state['status'] and tree.status != last_state['status']:
+            if last_state['status'] and current_status != last_state['status']:
                 trees_status_change.append(
-                    (tree, tree.status, last_state['status']))
+                    (tree, current_status, last_state['status']))
 
     session.delete(ch)
     session.commit()
