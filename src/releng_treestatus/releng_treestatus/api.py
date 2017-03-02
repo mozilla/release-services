@@ -40,7 +40,7 @@ def _now():
     return datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
 
 
-def _notify_status_change(trees_changes, tags):
+def _notify_status_change(trees_changes, tags=[]):
     if app.config.get('PULSE_TREESTATUS_ENABLE'):
         routing_key_pattern = 'tree/{0}/status_change'
         exchange = app.config.get('PULSE_TREESTATUS_EXCHANGE')
@@ -147,19 +147,20 @@ def update_trees(body):
     trees_status_change = []
 
     for tree in trees:
-        current_status = tree.status
-
         _update_tree_status(session, tree,
                             status=new_status,
                             reason=new_reason,
                             message_of_the_day=new_motd,
-                            tags=new_tags)
+                            tags=new_tags,
+                            )
 
-        if new_status and current_status != new_status:
-            trees_status_change.append((tree, current_status, new_status))
+        if new_status and tree.status != new_status:
+            trees_status_change.append((tree, tree.status, new_status))
 
     session.commit()
+
     _notify_status_change(trees_status_change, new_tags)
+
     return None, 204
 
 
@@ -251,20 +252,31 @@ def _revert_change(id, revert=None):
     if not ch:
         raise NotFound
 
+    trees_status_change = []
+
     if revert:
         for chtree in ch.trees:
+
             last_state = json.loads(chtree.last_state)
             tree = Tree.query.get(chtree.tree)
             if tree is None:
                 # if there's no tree to update, don't worry about it
                 pass
-            _update_tree_status(
-                session, tree,
-                status=last_state['status'],
-                reason=last_state['reason'])
+
+            _update_tree_status(session, tree,
+                                status=last_state['status'],
+                                reason=last_state['reason'],
+                                )
+
+            if last_state['status'] and tree.status != last_state['status']:
+                trees_status_change.append(
+                    (tree, tree.status, last_state['status']))
 
     session.delete(ch)
     session.commit()
+
+    _notify_status_change(trees_status_change)
+
     return None, 204
 
 
