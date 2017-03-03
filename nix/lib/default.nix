@@ -14,6 +14,7 @@ let
     jq
     makeWrapper
     nix-prefetch-scripts
+    nix
     stdenv
     writeScript;
 
@@ -568,11 +569,9 @@ in rec {
       }
 
       github_sha256() {
-        ${nix-prefetch-scripts}/bin/nix-prefetch-zip \
-           --hash-type sha256 \
-           "https://github.com/$1/$2/archive/$3.tar.gz" 2>&1 | \
-           ${gnugrep}/bin/grep "hash is " | \
-           ${gnused}/bin/sed 's/hash is //'
+        ${nix}/bin/nix-prefetch-url \
+           --unpack \
+           "https://github.com/$1/$2/archive/$3.tar.gz"
       }
 
       echo "=== ${owner}/${repo}@${branch} ==="
@@ -582,7 +581,7 @@ in rec {
       echo "revision is \`$rev\`."
 
       sha256=$(github_sha256 "${owner}" "${repo}" "$rev");
-      echo "sha256 is \`$sha256\`."
+      echo "sha256 is '$sha256'."
 
       if [ "$sha256" == "" ]; then
         echo "sha256 is not valid!"
