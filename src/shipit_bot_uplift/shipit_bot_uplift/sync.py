@@ -186,8 +186,9 @@ class BugSync(object):
 
         return [
             _link_status(revision, analysis)
-            for revision in self.analysis['patches'].keys()
+            for revision, patch in self.analysis['patches'].items()
             for analysis in self.on_bugzilla
+            if patch['source'] == 'mercurial'
         ]
 
     def build_payload(self, bugzilla_url):
