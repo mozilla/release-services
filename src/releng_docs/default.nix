@@ -6,20 +6,25 @@ let
   inherit (releng_pkgs.lib) fromRequirementsFile mkTaskclusterGithubTask;
   inherit (releng_pkgs.tools) pypi2nix;
   inherit (releng_pkgs.pkgs) writeScript;
-  inherit (releng_pkgs.pkgs.lib) removeSuffix;
+  inherit (releng_pkgs.pkgs.lib) fileContents replaceStrings;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
 
-  name = "releng_docs";
-  version = removeSuffix "\n" (readFile ./../../VERSION);
-  src_path = "src/${name}";
-
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+
+  name = "mozilla-releng-docs";
+  version = fileContents ./../../VERSION;
+  src_path =
+    "src/" +
+      (replaceStrings ["-"] ["_"]
+        (builtins.substring 8
+          (builtins.stringLength name - 8) name));
 
   self = mkDerivation {
     name = "${name}-${version}";
     src = ./.;
 
-    buildInputs = fromRequirementsFile [ ./requirements.txt ] python.packages;
+    buildInputs =
+      fromRequirementsFile ./requirements.txt python.packages;
 
     buildPhase = ''
       make html RELENG_DOCS_VERSION=${version}
@@ -31,20 +36,19 @@ let
     '';
 
     shellHook = ''
-      export RELENG_DOCS_VERSION=${version}
-      cd src/${name}
+      export RELENG_DOCS_VERSION=${version}-dev
+      cd ${src_path}
     '';
 
-    passthru.taskclusterGithubTasks =
-      map (branch: mkTaskclusterGithubTask { inherit name src_path branch; }) [ "master" "staging" "production" ];
-
-    passthru.update  = writeScript "update-${name}" ''
-      pushd src/${name}
-      ${pypi2nix}/bin/pypi2nix -v \
-        -V 3.5 \
-        -r requirements.txt
-      popd
-    '';
+    passthru = {
+      update  = writeScript "update-${name}" ''
+        pushd ${src_path}
+        ${pypi2nix}/bin/pypi2nix -v \
+          -V 3.5 \
+          -r requirements.txt
+        popd
+      '';
+    };
 
    };
 in self
