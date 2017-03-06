@@ -1,3 +1,1 @@
--e ../../lib/releng_common[api,auth,cors,log,db]
-
--e .
+-e ./../../lib/releng_common[api,cors,auth,log,db]#egg=mozilla-releng-common
