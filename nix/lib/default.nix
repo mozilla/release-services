@@ -20,10 +20,11 @@ let
   inherit (releng_pkgs.pkgs.lib)
     flatten
     inNixShell
+    optional
     optionalAttrs
     optionals
-    optional
     removeSuffix
+    replaceStrings
     splitString
     unique;
 
@@ -206,26 +207,38 @@ in rec {
             - "nix-env -iA nixpkgs.gnumake nixpkgs.curl nixpkgs.cacert && export SSL_CERT_FILE=$HOME/.nix-profile/etc/ssl/certs/ca-bundle.crt && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
     '';
 
-  fromRequirementsFile = files: pkgs':
+  fromRequirementsFile = file: custom_pkgs:
     let
-      # read all files and flatten the dependencies
-      # TODO: read recursivly all -r statements
-      specs =
-        flatten
-          (map
-            (file: splitString "\n"(removeSuffix "\n" (builtins.readFile file)))
-            files
+      removeLines =
+        builtins.filter
+          (line: ! startsWith line "-r" && line != "");
+
+      extractEggName =
+        map
+          (line: 
+            let
+              split = splitString "egg=" line;
+            in
+              if builtins.length split == 2
+                then builtins.elemAt split 1
+                else line
           );
-    in
-      map
-        (requirement: builtins.getAttr requirement pkgs')
-        (unique
-          (cleanRequirementsSpecification
-            (ignoreRequirementsLines
-              specs
-            )
+
+      readLines = file_:
+        (splitString "\n"
+          (removeSuffix "\n"
+            (builtins.readFile file_)
           )
         );
+    in
+      map
+        (pkg_name: builtins.getAttr pkg_name custom_pkgs)
+        (removeLines
+          (extractEggName
+            (readLines file)));
+
+        
+
 
   makeElmStuff = deps:
     let 
@@ -265,6 +278,9 @@ in rec {
       HOME=$home_old
     '';
        
+  startsWith = s: x:
+    builtins.substring 0 (builtins.stringLength x) s == x;
+
   filterSource = src:
     { name ? null
     , include ? [ "/" ]
@@ -285,7 +301,6 @@ in rec {
           "/${name}.egg-info"
           "/build"
         ] else exclude;
-        startsWith = s: x: builtins.substring 0 (builtins.stringLength x) s == x;
         relativePath = path:
           builtins.substring (builtins.stringLength (builtins.toString src))
                              (builtins.stringLength path)
@@ -308,8 +323,8 @@ in rec {
     , patchPhase ? ""
     , postInstall ? ""
     , shellHook ? ""
-    , staging ? true
-    , production ? false
+    , inStaging ? true
+    , inProduction ? false
     }:
     let
       scss_common = ./../../lib/scss_common;
@@ -404,8 +419,8 @@ in rec {
 
         passthru.taskclusterGithubTasks =
           map (branch: mkTaskclusterGithubTask { inherit name src_path branch; })
-              ([ "master" ] ++ optional staging "staging"
-                            ++ optional production "production"
+              ([ "master" ] ++ optional inStaging "staging"
+                            ++ optional inProduction "production"
               );
 
         passthru.update = writeScript "update-${name}" ''
@@ -430,37 +445,37 @@ in rec {
     { name
     , version
     , src
-    , src_path ? "src/${name}"
     , python
-    , releng_common
     , buildInputs ? []
     , propagatedBuildInputs ? []
     , passthru ? {}
-    , staging ? true
-    , production ? false
+    , inStaging ? true
+    , inProduction ? false
     }:
     let
+
       self = python.mkDerivation {
+
         namePrefix = "";
         name = "${name}-${version}";
 
         inherit src;
 
-        buildInputs = [
-          makeWrapper
-          glibcLocales
-          python.packages."flake8"
-          python.packages."gunicorn"
-        ] ++ buildInputs 
-          ++ optional (builtins.elem "db" releng_common.extras) releng_pkgs.postgresql;
-        propagatedBuildInputs = [
-          releng_common
-          releng_pkgs.pkgs.cacert
-        ] ++ propagatedBuildInputs;
+        buildInputs =
+          [ makeWrapper
+            glibcLocales
+          ] ++ buildInputs;
+
+        propagatedBuildInputs =
+          [ releng_pkgs.pkgs.cacert
+          ] ++ propagatedBuildInputs;
 
         patchPhase = ''
+          # replace synlink with real file
           rm VERSION
           echo ${version} > VERSION
+
+          # generate MANIFEST.in to make sure every file is included
           rm -f MANIFEST.in
           cat > MANIFEST.in <<EOF
           recursive-include ${name}/*
@@ -518,7 +533,7 @@ in rec {
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
           export FLASK_APP=${name}:app
 
-          pushd ${src_path} >> /dev/null
+          pushd ${self.src_path} >> /dev/null
           tmp_path=$(mktemp -d)
           export PATH="$tmp_path/bin:$PATH"
           export PYTHONPATH="$tmp_path/${python.__old.python.sitePackages}:$PYTHONPATH"
@@ -527,14 +542,20 @@ in rec {
           ${python.__old.bootstrapped-pip}/bin/pip install -q -e ../../lib/releng_common --prefix $tmp_path
           popd >> /dev/null
 
-          cd ${src_path}
+          cd ${self.src_path}
         '';
 
         passthru = {
+          src_path =
+            "src/" +
+              (replaceStrings ["-"] ["_"]
+                (builtins.substring 8
+                  (builtins.stringLength name - 8) name));
+
           taskclusterGithubTasks =
-            map (branch: mkTaskclusterGithubTask { inherit name src_path branch; })
-                ([ "master" ] ++ optional staging "staging"
-                              ++ optional production "production"
+            map (branch: mkTaskclusterGithubTask { inherit name branch; inherit (self) src_path; })
+                ([ "master" ] ++ optional inStaging "staging"
+                              ++ optional inProduction "production"
                 );
           docker = mkDocker {
             inherit name version;
