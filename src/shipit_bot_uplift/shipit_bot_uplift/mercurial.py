@@ -90,10 +90,12 @@ class Repository(object):
             logger.info('Merge success', revision=revision)
         except hglib.error.CommandError as e:
             logger.warning('Auto merge failed', revision=revision, error=e)  # noqa
-            return False, '{} {}'.format(
+            message = '{} {}'.format(
                 e.out.decode('utf-8'),
                 e.err.decode('utf-8')
             )
+            message = message.replace('\r', '\n')
+            return False, message
 
         # If `hg graft` exits code 0, there are no merge conflicts.
         return True, 'merge success'
