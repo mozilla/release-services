@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend filterSource mysql2postgresql;
+  inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource mysql2postgresql;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -20,23 +20,16 @@ let
   '';
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  releng_common = import ./../../lib/releng_common {
-    inherit releng_pkgs python;
-    extras = ["api" "auth" "cors" "log" "db" ];
-  };
+  name = "mozilla-releng-mapper";
 
-  self = mkBackend rec {
-    inherit python releng_common;
-    name = "releng_mapper";
+  self = mkBackend {
+    inherit python name;
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
-      [ python.packages."flake8"
-        python.packages."pytest"
-        python.packages."ipdb"
-      ];
+      fromRequirementsFile ./requirements-dev.txt python.packages;
     propagatedBuildInputs =
-      [];
+      fromRequirementsFile ./requirements.txt python.packages;
     passthru = {
       migrate = mysql2postgresql {
         inherit name beforeSQL afterSQL;
@@ -47,14 +40,12 @@ let
         '';
       };
       update = writeScript "update-${name}" ''
-        pushd src/${name}
+        pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
-         -V 3.5 \
-         -E "postgresql" \
-         -r ../../lib/releng_common/requirements-dev.txt \
-         -r requirements.txt \
-         -r requirements-dev.txt \
-         -r requirements-nix.txt 
+          -V 3.5 \
+          -E "postgresql" \
+          -r requirements.txt \
+          -r requirements-dev.txt
         popd
       '';
     };
