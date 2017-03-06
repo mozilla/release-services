@@ -17,6 +17,7 @@ class Report(object):
         self.notify = taskcluster.Notify(tc_options)
         self.emails = emails
         self.merges = set()
+        logger.info('Report notifications', emails=self.emails)
 
     def add_invalid_merge(self, merge_test):
         """
