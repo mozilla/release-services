@@ -1,1 +1,1 @@
-https://github.com/garbas/push/archive/ffb8d5c1e9d9b06dd948efb2ddb8d7dbbe7960ca.tar.gz#egg=push
+https://github.com/garbas/push/archive/master.tar.gz#egg=push
