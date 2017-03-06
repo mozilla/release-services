@@ -4,27 +4,37 @@
 
 from __future__ import absolute_import
 
-import os
-
 from setuptools import find_packages
 from setuptools import setup
 
-here = os.path.dirname(__file__)
+
+with open('VERSION') as f:
+    version = f.read().strip()
+
+
+def read_requirements(file_):
+    lines = []
+    with open(file_) as f:
+        for line in f.readlines():
+            line = line.strip()
+            if line.startswith('-e '):
+                lines.append(line.split('#')[1].split('egg=')[1])
+            elif line.startswith('#') or line.startswith('-'):
+                pass
+            else:
+                lines.append(line)
+    return lines
+
 
 setup(
-    name='releng_tooltool',
-    version=open(os.path.join(here, 'VERSION')).read().strip(),
-    description='The code behind https://mozilla-releng.net/tooltool',
-    author='Rok Garbas',
-    author_email='garbas@mozilla.com',
-    url='https://mozilla-releng.net/tooltool',
-    tests_require=[
-        'flake8',
-        'pytest',
-    ],
-    install_requires=[
-        'releng_common[api,auth,cors,log,db]'
-    ],
+    name='mozilla-releng-tooltool',
+    version=version,
+    description='The code behind https://tooltool.mozilla-releng.net/',
+    author='Mozilla Release Engineering',
+    author_email='release@mozilla.com',
+    url='https://tooltool.mozilla-releng.net',
+    tests_require=read_requirements('requirements-dev.txt'),
+    install_requires=read_requirements('requirements.txt'),
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
