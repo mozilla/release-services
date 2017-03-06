@@ -1,3 +1,5 @@
-ipdb
+-r ./../../lib/releng_common/requirements-dev.txt
 flake8
+ipdb
 pytest
+responses
