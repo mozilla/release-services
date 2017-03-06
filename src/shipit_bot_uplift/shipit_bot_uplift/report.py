@@ -55,7 +55,7 @@ class Report(object):
                         _str(merge_test.revision),
                         _str(merge_test.revision_parent)
                     ),
-                    '```{}```'.format(merge_test.message)
+                    '```\n{}```'.format(merge_test.message)
                 ]
             mail.append('')  # newline
         mail_md = '\n'.join(mail)
