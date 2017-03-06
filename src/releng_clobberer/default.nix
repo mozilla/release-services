@@ -3,16 +3,10 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend mkTaskclusterHook filterSource mysql2sqlite mysql2postgresql;
+  inherit (releng_pkgs.lib) mkBackend mkTaskclusterHook fromRequirementsFile filterSource mysql2sqlite mysql2postgresql;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
-
-  python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  releng_common = import ./../../lib/releng_common {
-    inherit releng_pkgs python;
-    extras = ["api" "auth" "cors" "log" "db"];
-  };
 
   beforeSQL = ''
     DROP TABLE IF EXISTS releng_clobberer_builds;
@@ -46,21 +40,26 @@ let
     };
   };
 
-  self = mkBackend rec {
-    inherit python releng_common;
-    name = "releng_clobberer";
+  python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  name = "mozilla-releng-clobberer";
+
+  self = mkBackend {
+    inherit python name;
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
-      [ python.packages."flake8"
-        python.packages."pytest"
-        python.packages."ipdb"
-      ];
+      fromRequirementsFile ./requirements-dev.txt python.packages;
     propagatedBuildInputs =
-      [];
+      fromRequirementsFile ./requirements.txt python.packages;
     passthru = {
-      mysql2sqlite = mysql2sqlite { inherit name beforeSQL afterSQL; };
-      mysql2postgresql = mysql2postgresql { inherit name beforeSQL afterSQL; };
+      migrate = mysql2postgresql {
+        inherit name beforeSQL afterSQL;
+        config = ''
+          only_tables:
+           - builds;
+           - clobber_times;
+        '';
+      };
       taskclusterHooks = {
         master = {
         };
@@ -72,14 +71,12 @@ let
         };
       };
       update = writeScript "update-${name}" ''
-        pushd src/${name}
+        pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
-         -V 3.5 \
-         -E "postgresql libffi openssl" \
-         -r ../../lib/releng_common/requirements-dev.txt \
-         -r requirements.txt \
-         -r requirements-dev.txt \
-         -r requirements-nix.txt
+          -V 3.5 \
+          -E "postgresql libffi openssl" \
+          -r requirements.txt \
+          -r requirements-dev.txt
         popd
       '';
     };
