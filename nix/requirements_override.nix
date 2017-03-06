@@ -1,0 +1,81 @@
+{ pkgs, python }:
+
+let
+
+  skipOverrides = overrides: self: super:
+    let
+      overridesNames = builtins.attrNames overrides;
+      superNames = builtins.attrNames super;
+    in
+      builtins.listToAttrs
+        (builtins.map
+          (name: { inherit name;
+                   value = python.overrideDerivation super."${name}" (overrides."${name}" self);
+                 }
+          )
+          (builtins.filter
+            (name: builtins.elem name superNames)
+            overridesNames
+          )
+        );
+
+in skipOverrides {
+
+  "mozilla-releng-common" = self: old: {
+    doCheck = true;
+    buildInputs =
+      [ self."flake8"
+        self."pytest"
+        self."responses"
+      ];
+    patchPhase = ''
+      rm -f VERSION
+      ln -s ${../VERSION} ./VERSION
+    '';
+    checkPhase = ''
+      flake8 --exclude=nix_run_setup.py,migrations/,build/
+      # TODO: pytest tests/
+    '';
+  };
+
+  # -- in alphabetic order --
+
+  "async-timeout" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['pytest-runner'\],||" setup.py
+    '';
+  };
+
+  "clickclick" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['six', 'flake8'\],||" setup.py
+      sed -i -e "s|command_options=command_options,||" setup.py
+    '';
+  };
+
+  "connexion" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['flake8'\],||" setup.py
+      sed -i -e "s|jsonschema>=2.5.1|jsonschema|" setup.py
+    '';
+  };
+
+  "flake8" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['pytest-runner'\],||" setup.py
+    '';
+  };
+
+  "jsonschema" = self: old: {
+    patchPhase = ''
+      sed -i -e 's|setup_requires=\["vcversioner>=2.16.0.0"\],||' setup.py
+    '';
+  };
+
+  "mccabe" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['pytest-runner'\],||" setup.py
+    '';
+  };
+
+}
