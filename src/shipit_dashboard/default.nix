@@ -10,9 +10,10 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-shipit-dashboard";
+  dirname = "shipit_dashboard";
 
   self = mkBackend rec {
-    inherit python name;
+    inherit python name dirname;
     inProduction = true;
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };

@@ -62,7 +62,7 @@ def test_update_user(client, header_user):
     ])
     assert resp.status_code == 401
     error = json.loads(resp.data.decode('utf-8'))
-    assert error['title'] == 'Unauthorized'
+    assert error['error_title'] == 'Unauthorized'
 
     contrib = Contributor.query.filter_by(id=1).one()
     assert contrib.karma == 1
