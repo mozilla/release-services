@@ -42,9 +42,10 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-releng-clobberer";
+  dirname = "releng-clobberer";
 
   self = mkBackend {
-    inherit python name;
+    inherit python name dirname;
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
