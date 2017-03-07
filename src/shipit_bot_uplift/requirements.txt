@@ -1,13 +1,9 @@
--e .
-
-# i wonder why libmozdata doesn't require this already
-requests[security]>=2.7.0
+Logbook
 certifi
-
-libmozdata
-python-hglib
-
 click
-taskcluster
-logbook
+mohawk
+python-dateutil
+python-hglib
+requests[security]>=2.7.0
 structlog
+taskcluster

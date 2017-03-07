@@ -22,7 +22,7 @@ let
 in skipOverrides {
 
   "mozilla-releng-common" = self: old: {
-    doCheck = true;
+    # TODO: doCheck = true;
     buildInputs =
       [ self."flake8"
         self."pytest"
@@ -69,6 +69,14 @@ in skipOverrides {
   "jsonschema" = self: old: {
     patchPhase = ''
       sed -i -e 's|setup_requires=\["vcversioner>=2.16.0.0"\],||' setup.py
+    '';
+  };
+
+  "libmozdata" = self: old: {
+    # Remove useless dependencies
+    patchPhase = ''
+      sed -i -e "s|mercurial>=3.9.1; python_version < '3.0'||" requirements.txt
+      sed -i -e "s|setuptools>=28.6.1||" requirements.txt
     '';
   };
 
