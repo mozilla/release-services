@@ -1,5 +1,5 @@
 from flask_login import LoginManager, current_user
-from flask import request, abort, current_app
+from flask import request, current_app
 from taskcluster.utils import scope_match
 from functools import wraps
 import structlog
@@ -121,33 +121,33 @@ class Auth(object):
         self.login_manager.init_app(app)
 
     def _require_scopes(self, scopes):
-        response = self._require_login()
-        if response is not None:
-            return response
+        # This will abort in case of login failure
+        self._require_login()
 
         with current_app.app_context():
             user_scopes = current_user.get_permissions()
             if not scope_match(user_scopes, scopes):
                 diffs = [', '.join(set(s).difference(user_scopes)) for s in scopes]  # noqa
                 logger.error('User {} misses some scopes: {}'.format(current_user.get_id(), ' OR '.join(diffs)))  # noqa
-                return abort(401)
+                return False
+
+        return True
 
     def _require_login(self):
         with current_app.app_context():
             if not current_user.is_authenticated:
                 logger.error('Invalid authentication')
-                return abort(401)
+                return False
+
+        return True
 
     def require_login(self, method):
         """Decorator to check if user is authenticated
         """
-
         @wraps(method)
         def wrapper(*args, **kwargs):
-            response = self._require_login()
-            if response is not None:
-                return response
-            return method(*args, **kwargs)
+            if self._require_login():
+                return method(*args, **kwargs)
         return wrapper
 
     def require_scopes(self, scopes):
@@ -163,18 +163,18 @@ class Auth(object):
             @wraps(method)
             def wrapper(*args, **kwargs):
                 logger.info('Checking scopes', scopes=scopes)
-                response = self._require_scopes(scopes)
-                if response is not None:
-                    return response
-                logger.info('Validated scopes, processing api request')
-                return method(*args, **kwargs)
+                if self._require_scopes(scopes):
+                    # Validated scopes, running method
+                    logger.info('Validated scopes, processing api request')
+                    return method(*args, **kwargs)
+                else:
+                    # Abort with a 401 status code
+                    return {
+                        'error_title': 'Unauthorized',
+                        'error_message': 'Invalid user scopes',
+                    }, 401
             return wrapper
         return decorator
-
-        if not current_user.is_authenticated:
-            logger.error('Invalid authentication')
-            return abort(401)
-
 
 auth = Auth(
     anonymous_user=AnonymousUser,
@@ -212,7 +212,12 @@ def taskcluster_user_loader(auth_header):
     except Exception as e:
         logger.error('TC auth error: {}'.format(e))
         logger.error('TC auth details: {}'.format(payload))
-        abort(401)  # Unauthorized
+
+        # Abort with a 401 status code
+        return {
+            'error_title': 'Unauthorized',
+            'error_message': 'Invalid taskcluster auth.',
+        }, 401
 
     return TaskclusterUser(resp)
 
