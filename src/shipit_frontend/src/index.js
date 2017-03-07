@@ -26,7 +26,7 @@ var getUrl = function(name, _default){
 var app = require('./Main.elm').Main.fullscreen({
   taskcluster: localstorage.load_item(TC_KEY),
   bugzilla: localstorage.load_item(BZ_KEY),
-  backend_dashboard_url: getUrl('dashboard', process.env.NEO_DASHBOARD_URL),
+  backend_uplift_url: getUrl('uplift', process.env.NEO_DASHBOARD_URL),
   bugzilla_url: getUrl('bugzilla', process.env.NEO_BUGZILLA_URL),
 });
 

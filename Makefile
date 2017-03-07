@@ -14,7 +14,7 @@ APPS=\
 	releng_mapper \
 	releng_archiver \
 	releng_frontend \
-	shipit_dashboard \
+	shipit_uplift \
 	shipit_bot_uplift \
 	shipit_pipeline \
 	shipit_signoff \
@@ -50,7 +50,7 @@ APP_DEV_PORT_releng_mapper=8004
 APP_DEV_PORT_releng_archiver=8005
 
 APP_DEV_PORT_shipit_frontend=8010
-APP_DEV_PORT_shipit_dashboard=8011
+APP_DEV_PORT_shipit_uplift=8011
 APP_DEV_PORT_shipit_pipeline=8012
 APP_DEV_PORT_shipit_signoff=8013
 
@@ -73,7 +73,7 @@ APP_DEV_ENV_releng_frontend=\
 	NEO_ARCHIVER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_archiver) \
 	$(APP_DEV)
 APP_DEV_ENV_shipit_frontend=\
-	NEO_DASHBOARD_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit_dashboard) \
+	NEO_UPLIFT_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit_uplift) \
 	NEO_PIPELINE_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit_pipeline) \
 	NEO_BUGZILLA_URL=https://bugzilla-dev.allizom.org \
 	$(APP_DEV)
@@ -84,7 +84,7 @@ APP_STAGING_HEROKU_releng_treestatus=releng-staging-treestatus
 APP_STAGING_HEROKU_releng_mapper=releng-staging-mapper
 APP_STAGING_HEROKU_releng_archiver=releng-staging-archiver
 
-APP_STAGING_HEROKU_shipit_dashboard=shipit-staging-dashboard
+APP_STAGING_HEROKU_shipit_uplift=shipit-staging-uplift
 
 APP_STAGING_S3_releng_docs=releng-staging-docs
 APP_STAGING_S3_releng_frontend=releng-staging-frontend
@@ -101,7 +101,7 @@ APP_STAGING_ENV_releng_frontend=\
 APP_STAGING_CSP_shipit_frontend=https://auth.taskcluster.net https://dashboard.shipit.staging.mozilla-releng.net https://bugzilla.mozilla.org
 APP_STAGING_ENV_shipit_frontend=\
 	'version="v$(VERSION)"' \
-	'dashboard-url="https:\/\/dashboard\.shipit\.staging\.mozilla-releng\.net\"' \
+	'uplift-url="https:\/\/dashboard\.shipit\.staging\.mozilla-releng\.net\"' \
 	'bugzilla-url="https:\/\/bugzilla\.mozilla\.org"'
 
 APP_PRODUCTION_HEROKU_releng_clobberer=releng-production-clobberer
@@ -109,7 +109,7 @@ APP_PRODUCTION_HEROKU_releng_tooltool=releng-production-tooltool
 APP_PRODUCTION_HEROKU_releng_treestatus=releng-production-treestatus
 APP_PRODUCTION_HEROKU_releng_mapper=releng-production-mapper
 APP_PRODUCTION_HEROKU_releng_archiver=releng-production-archiver
-APP_PRODUCTION_HEROKU_shipit_dashboard=shipit-production-dashboard
+APP_PRODUCTION_HEROKU_shipit_uplift=shipit-production-uplift
 
 APP_PRODUCTION_S3_releng_docs=releng-production-docs
 APP_PRODUCTION_S3_releng_frontend=releng-production-frontend
@@ -126,7 +126,7 @@ APP_PRODUCTION_ENV_releng_frontend=\
 APP_PRODUCTION_CSP_shipit_frontend=https://auth.taskcluster.net https://dashboard.shipit.mozilla-releng.net https://bugzilla.mozilla.org
 APP_PRODUCTION_ENV_shipit_frontend=\
 	'version="$(VERSION)"' \
-	'dashboard-url="https:\/\/dashboard\.shipit\.mozilla-releng\.net\"'
+	'uplift-url="https:\/\/dashboard\.shipit\.mozilla-releng\.net\"'
 
 FLASK_CMD ?= shell # default value for flask command to run
 
@@ -205,7 +205,7 @@ develop-run-releng_mapper: require-sqlite develop-run-BACKEND
 develop-run-releng_archiver: require-sqlite develop-run-BACKEND
 
 develop-run-shipit_frontend: develop-run-FRONTEND
-develop-run-shipit_dashboard: require-postgres develop-run-BACKEND
+develop-run-shipit_uplift: require-postgres develop-run-BACKEND
 develop-run-shipit_pipeline: require-sqlite develop-run-BACKEND
 develop-run-shipit_signoff: require-sqlite develop-run-BACKEND
 
@@ -279,7 +279,7 @@ deploy-staging-releng_mapper:          deploy-staging-HEROKU
 deploy-staging-releng_archiver:        deploy-staging-HEROKU
 
 deploy-staging-shipit_frontend:        deploy-staging-S3
-deploy-staging-shipit_dashboard:       deploy-staging-HEROKU
+deploy-staging-shipit_uplift:       	 deploy-staging-HEROKU
 deploy-staging-shipit_bot_uplift:   	 # There is no service running, just a hook
 deploy-staging-shipit_pipeline:        # deploy-staging-HEROKU
 deploy-staging-shipit_signoff:         # deploy-staging-HEROKU
@@ -330,7 +330,7 @@ deploy-production-releng_mapper:       # deploy-production-HEROKU
 deploy-production-releng_archiver:     # deploy-production-HEROKU
 
 deploy-production-shipit_frontend:     deploy-production-S3
-deploy-production-shipit_dashboard:    deploy-production-HEROKU
+deploy-production-shipit_uplift:    	 deploy-production-HEROKU
 deploy-production-shipit_bot_uplift:   # There is no service running, just a hook
 deploy-production-shipit_pipeline:     # deploy-staging-HEROKU
 deploy-production-shipit_signoff:      # deploy-staging-HEROKU

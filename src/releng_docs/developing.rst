@@ -10,12 +10,12 @@ To setup the database engine used in development, you need to configure the runn
 
 Here are two examples:
 
- * :code:`shipit_dashboard` uses the Postgres engine
+ * :code:`shipit_uplift` uses the Postgres engine
  * :code:`shipit_workflow` uses the Sqlite engine
 
 .. code-block:: bash
 
-    develop-run-shipit_dashboard: require-postgres develop-run-BACKEND
+    develop-run-shipit_uplift: require-postgres develop-run-BACKEND
     develop-run-shipit_workflow: require-sqlite develop-run-BACKEND 
 
 When running the backend through the Makefile, the environment variable :code:`DATABASE_URL` is set to the choosen engine.

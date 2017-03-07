@@ -57,7 +57,7 @@ type alias Model =
 type alias Flags =
     { taskcluster : Maybe (User.Credentials)
     , bugzilla : Maybe (Bugzilla.Credentials)
-    , backend_dashboard_url : String
+    , backend_uplift_url : String
     , bugzilla_url : String
     }
 
@@ -74,7 +74,7 @@ init flags =
 
         -- App init
         ( dashboard, newCmd ) =
-            ReleaseDashboard.init flags.backend_dashboard_url
+            ReleaseDashboard.init flags.backend_uplift_url
 
         model =
             { bugzilla = bz

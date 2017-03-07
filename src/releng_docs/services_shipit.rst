@@ -22,13 +22,13 @@ Shipit frontend is a web interface, written in Elm, displaying to Mozilla Releas
 The goal of this project is to be fast, nice looking and always having up-to-date informations from multiple sources (Mozilla bugzilla, mercurial repository, patch analysis, ...)
 
 
-``src/shipit_dashboard``
+``src/shipit_uplift``
 ------------------------
 
 :staging: https://dashboard.shipit.staging.mozilla-releng.net
 :production: https://dashboard.shipit.mozilla-releng.net
 
-Shipit Dashboard is the backend service storing and serving bug analysis for each Mozilla Firefox release versions: it's used by Shipit frontend.
+Shipit Uplift is the backend service storing and serving bug analysis for each Mozilla Firefox release versions: it's used by Shipit frontend.
 
 Architecture:
 
@@ -49,7 +49,7 @@ Shipit bot uplift is not a service, it's a Python bot, runnning as a Taskcluster
 It does the following tasks on every run:
 
 - Update a cached clone of mozilla-unified repository
-- List current bugs on shipit_dashboard
+- List current bugs on shipit_uplift
 - List current bugs for every release versions with an uplift request on Bugzilla
 - Run a full bug analysis using libmozdata_ on every new bug (or bugs needing an update)
 - Try to merge (through Mercurial graft) every patch in an uplift request

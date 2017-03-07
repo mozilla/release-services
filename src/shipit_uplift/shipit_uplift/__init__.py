@@ -41,7 +41,7 @@ if not os.environ.get('APP_SETTINGS') and \
 
 
 app = create_app(
-    "shipit_dashboard",
+    "shipit_uplift",
     extensions=[init_app, db, auth],
     debug=DEBUG,
     debug_src=HERE,

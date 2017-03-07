@@ -27,7 +27,7 @@ def read_requirements(file_):
 
 
 setup(
-    name='mozilla-shipit-dashboard',
+    name='mozilla-shipit-uplift',
     version=version,
     description='The code behind https://archiver.mozilla-releng.net/',
     author='Mozilla Release Engineering',

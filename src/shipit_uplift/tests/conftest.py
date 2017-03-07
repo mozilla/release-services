@@ -11,14 +11,14 @@ FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 @pytest.yield_fixture(scope='session')
 def app():
     """
-    Load shipit_dashboard app in test mode
+    Load shipit_uplift app in test mode
     """
     # Set app in testing mode
-    os.environ['APP_TESTING'] = 'shipit_dashboard'
+    os.environ['APP_TESTING'] = 'shipit_uplift'
 
     # Then import app code
     from releng_common.db import db
-    from shipit_dashboard import app
+    from shipit_uplift import app
 
     with app.app_context():
         # Init new database
@@ -31,7 +31,7 @@ def app():
 @pytest.yield_fixture(scope='session')
 def client(app):
     """
-    A Flask test client for shipit_dashboard
+    A Flask test client for shipit_uplift
     with mockups enabled
     """
     from releng_common import mocks
@@ -47,7 +47,7 @@ def bugs(app):
     """
     Add an analysis and some bugs
     """
-    from shipit_dashboard.models import (
+    from shipit_uplift.models import (
         BugAnalysis, BugResult, Contributor, BugContributor
     )
     from releng_common.db import db
@@ -104,7 +104,7 @@ def header_user(app):
     """
     Build an Hawk header for user role
     """
-    from shipit_dashboard import SCOPES_USER
+    from shipit_uplift import SCOPES_USER
     return hawk_header(SCOPES_USER)
 
 
@@ -113,7 +113,7 @@ def header_admin(app):
     """
     Build an Hawk header for admin role
     """
-    from shipit_dashboard import SCOPES_ADMIN
+    from shipit_uplift import SCOPES_ADMIN
     return hawk_header(SCOPES_ADMIN)
 
 
@@ -122,5 +122,5 @@ def header_bot(app):
     """
     Build an Hawk header for bot role
     """
-    from shipit_dashboard import SCOPES_BOT
+    from shipit_uplift import SCOPES_BOT
     return hawk_header(SCOPES_BOT)
