@@ -27,9 +27,10 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-releng-treestatus";
+  dirname = "releng_treestatus";
 
   self = mkBackend {
-    inherit python name;
+    inherit python name dirname;
     inProduction = true;
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
