@@ -7,7 +7,7 @@ from shipit_bot_uplift.helpers import ShipitJSONEncoder
 
 class ApiClient(object):
     """
-    Api client to use remote shipit_dashboard
+    Api client to use remote shipit_uplift
     """
     def setup(self, url, client_id, access_token):
         """
