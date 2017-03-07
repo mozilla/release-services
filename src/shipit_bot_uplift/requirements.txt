@@ -1,9 +1,8 @@
 Logbook
-certifi
 click
 mohawk
 python-dateutil
 python-hglib
-requests[security]>=2.7.0
 structlog
 taskcluster
+libmozdata
