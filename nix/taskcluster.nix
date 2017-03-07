@@ -18,6 +18,7 @@ let
 
 in pkgs.writeText "taskcluster.yml" ''
 version: 0
+allowPullRequests: public
 metadata:
   name: "Mozilla RelEng"
   description: "Mozilla RelEng Services"
