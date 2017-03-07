@@ -5,6 +5,7 @@ let
   inherit (releng_pkgs.lib) mkFrontend;
   inherit (releng_pkgs.pkgs.lib) fileContents;
 in mkFrontend {
+  inProduction = true;
   name = "releng_frontend";
   version = fileContents ./../../VERSION;
   src = ./.;
@@ -13,5 +14,4 @@ in mkFrontend {
   postInstall = ''
     cp -R src/static/* $out/
   '';
-  production = true;
 }
