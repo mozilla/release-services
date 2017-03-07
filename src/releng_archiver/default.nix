@@ -10,9 +10,10 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-releng-archiver";
+  dirname = "releng-archiver";
 
   self = mkBackend {
-    inherit python name;
+    inherit python name dirname;
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
