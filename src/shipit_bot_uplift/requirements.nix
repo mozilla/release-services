@@ -118,8 +118,8 @@ let
 
 
     "appdirs" = python.mkDerivation {
-      name = "appdirs-1.4.2";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/88/99/293dac0b3cdf58ce029ec5393624fac5c6bde52f737f9775bd9ef608ec98/appdirs-1.4.2.tar.gz"; sha256 = "e2de7ae2b3be52542b711eacf4221683f1d2f7706a5550cb2c562ee4ba93ee74"; };
+      name = "appdirs-1.4.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/48/69/d87c60746b393309ca30761f8e2b49473d43450b150cb08f3c6df5c11be5/appdirs-1.4.3.tar.gz"; sha256 = "9e5896d1372858f8dd3344faf4e5014d21849c756c8d5701f78f8a103b372d92"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -219,13 +219,32 @@ let
       self."flake8"
       self."idna"
       self."pyasn1"
+      self."pyasn1-modules"
       self."pytest"
+      self."pytz"
       self."six"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "";
         license = licenses.bsdOriginal;
         description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers.";
+      };
+    };
+
+
+
+    "cycler" = python.mkDerivation {
+      name = "cycler-0.10.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c2/4b/137dea450d6e1e3d474e1d873cd1d4f7d3beed7e0dc973b06e8e10d32488/cycler-0.10.0.tar.gz"; sha256 = "cd7b2d1018258d7247a71425e9f26463dfb444d411c39569972f4ce586b0c9d8"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."six"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.bsdOriginal;
+        description = "Composable style cycles";
       };
     };
 
@@ -241,6 +260,23 @@ let
         homepage = "";
         license = licenses.bsdOriginal;
         description = "Better living through Python with decorators";
+      };
+    };
+
+
+
+    "elasticsearch" = python.mkDerivation {
+      name = "elasticsearch-5.2.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e7/b5/a77098b1f248dbc6407a53d51bf1980ab91718cd93c662cdb1ed529a1278/elasticsearch-5.2.0.tar.gz"; sha256 = "45d9f8fbe0878a1b7493afeb20f4f6677a43982776ed1a77d9373e9c5b9de966"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."urllib3"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.asl20;
+        description = "Python client for Elasticsearch";
       };
     };
 
@@ -265,9 +301,62 @@ let
 
 
 
+    "google-api-python-client" = python.mkDerivation {
+      name = "google-api-python-client-1.6.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e8/04/4bb1672918e4fc6d6a8201bdaf986b9fb4763f2a47b11496186dbbbd40ce/google-api-python-client-1.6.2.tar.gz"; sha256 = "8c2f50f8057571a5f817c74820cadb754d47799c5a4ea463c1500fe8e092c1ae"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."httplib2"
+      self."oauth2client"
+      self."six"
+      self."uritemplate"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.asl20;
+        description = "Google API Client Library for Python";
+      };
+    };
+
+
+
+    "httplib2" = python.mkDerivation {
+      name = "httplib2-0.10.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e4/2e/a7e27d2c36076efeb8c0e519758968b20389adf57a9ce3af139891af2696/httplib2-0.10.3.tar.gz"; sha256 = "e404d3b7bd86c1bc931906098e7c1305d6a3a6dcef141b8bb1059903abb3ceeb"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.mit;
+        description = "A comprehensive HTTP client library.";
+      };
+    };
+
+
+
+    "icalendar" = python.mkDerivation {
+      name = "icalendar-3.11.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/7f/0b/f13fa6ec05f44c13014ab7d7dd2ffae349c94d71151a311a8c5e7198b0a8/icalendar-3.11.3.tar.gz"; sha256 = "6317d716563c41ca44b4694458f0a94734e35bb8c708994eb4503c8638d5d220"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."python-dateutil"
+      self."pytz"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.bsdOriginal;
+        description = "iCalendar parser/generator";
+      };
+    };
+
+
+
     "idna" = python.mkDerivation {
-      name = "idna-2.4";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/a3/06/40cb383eaea6e97047666db51abc2f2b32046f3e2a6e5ab2b946630f6062/idna-2.4.tar.gz"; sha256 = "2a07165f6288f4b920aa8ab4357c1e59073c5d62e048a400510982769e039bd9"; };
+      name = "idna-2.5";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/d8/82/28a51052215014efc07feac7330ed758702fc0581347098a81699b5281cb/idna-2.5.tar.gz"; sha256 = "3cb5ce08046c4e3a560fc02f138d0ac63e00f8ce5901a56b32ec8b7994082aab"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -305,6 +394,7 @@ let
       propagatedBuildInputs = [
       self."Pygments"
       self."decorator"
+      self."numpy"
       self."pexpect"
       self."pickleshare"
       self."prompt-toolkit"
@@ -331,6 +421,56 @@ let
         homepage = "";
         license = licenses.bsdOriginal;
         description = "Vestigial utilities from IPython";
+      };
+    };
+
+
+
+    "libmozdata" = python.mkDerivation {
+      name = "libmozdata-0.1.31";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c0/38/47954d9f4d95e8f54357b7f344ade6767a62b6d95868f27b22edb42d8634/libmozdata-0.1.31.tar.gz"; sha256 = "11a69e600c09c85fe33ee27ab40a7fc14f8bae658e69f52cb3509614273d8747"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."elasticsearch"
+      self."google-api-python-client"
+      self."httplib2"
+      self."icalendar"
+      self."matplotlib"
+      self."numpy"
+      self."oauth2client"
+      self."python-dateutil"
+      self."requests"
+      self."requests-futures"
+      self."six"
+      self."whatthepatch"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = "MPL2";
+        description = "Library to access and aggregate several Mozilla data sources.";
+      };
+    };
+
+
+
+    "matplotlib" = python.mkDerivation {
+      name = "matplotlib-2.0.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/79/a9/db688816150a6ef91fd9ce284c828467f7271c7dd5982753a73a8e1aaafa/matplotlib-2.0.0.tar.gz"; sha256 = "36cf0985829c1ab2b8b1dae5e2272e53ae681bf33ab8bedceed4f0565af5f813"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."cycler"
+      self."numpy"
+      self."pyparsing"
+      self."python-dateutil"
+      self."pytz"
+      self."six"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.psfl;
+        description = "Python plotting package";
       };
     };
 
@@ -378,6 +518,42 @@ let
         homepage = "";
         license = licenses.asl20;
         description = "multidict implementation";
+      };
+    };
+
+
+
+    "numpy" = python.mkDerivation {
+      name = "numpy-1.12.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/b7/9d/8209e555ea5eb8209855b6c9e60ea80119dab5eff5564330b35aa5dc4b2c/numpy-1.12.0.zip"; sha256 = "ff320ecfe41c6581c8981dce892fe6d7e69806459a899e294e4bf8229737b154"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.bsdOriginal;
+        description = "NumPy: array processing for numbers, strings, records, and objects.";
+      };
+    };
+
+
+
+    "oauth2client" = python.mkDerivation {
+      name = "oauth2client-4.0.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c2/ce/7aaf19d8b856191e2e1885201fe45f3dc57b97f5ec5bc98ef2cc15472918/oauth2client-4.0.0.tar.gz"; sha256 = "80be5420889694634b8517b4acd3292ace881d9d1aa9d590d37ec52faec238c7"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."httplib2"
+      self."pyasn1"
+      self."pyasn1-modules"
+      self."rsa"
+      self."six"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.asl20;
+        description = "OAuth 2.0 client library";
       };
     };
 
@@ -514,6 +690,23 @@ let
 
 
 
+    "pyasn1-modules" = python.mkDerivation {
+      name = "pyasn1-modules-0.0.8";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/60/32/7703bccdba05998e4ff04db5038a6695a93bedc45dcf491724b85b5db76a/pyasn1-modules-0.0.8.tar.gz"; sha256 = "10561934f1829bcc455c7ecdcdacdb4be5ffd3696f26f468eb6eb41e107f3837"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."pyasn1"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.bsdOriginal;
+        description = "A collection of ASN.1-based protocols modules.";
+      };
+    };
+
+
+
     "pycodestyle" = python.mkDerivation {
       name = "pycodestyle-2.3.1";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e1/88/0e2cbf412bd849ea6f1af1f97882add46a374f4ba1d2aea39353609150ad/pycodestyle-2.3.1.tar.gz"; sha256 = "682256a5b318149ca0d2a9185d365d8864a768a28db66a84a2ea946bcc426766"; };
@@ -623,6 +816,21 @@ let
 
 
 
+    "pytz" = python.mkDerivation {
+      name = "pytz-2016.10";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/d0/e1/aca6ef73a7bd322a7fc73fd99631ee3454d4fc67dc2bee463e2adf6bb3d3/pytz-2016.10.tar.bz2"; sha256 = "7016b2c4fa075c564b81c37a252a5fccf60d8964aa31b7f5eae59aeb594ae02b"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.mit;
+        description = "World timezone definitions, modern and historical";
+      };
+    };
+
+
+
     "requests" = python.mkDerivation {
       name = "requests-2.13.0";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/16/09/37b69de7c924d318e51ece1c4ceb679bf93be9d05973bb30c35babd596e2/requests-2.13.0.tar.gz"; sha256 = "5722cd09762faa01276230270ff16af7acf7c5c45d623868d9ba116f15791ce8"; };
@@ -637,6 +845,40 @@ let
         homepage = "";
         license = licenses.asl20;
         description = "Python HTTP for Humans.";
+      };
+    };
+
+
+
+    "requests-futures" = python.mkDerivation {
+      name = "requests-futures-0.9.7";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/2c/f0/d9a6d4472286405956dd5ac6279fe932a86151df9816bc35afe601495819/requests-futures-0.9.7.tar.gz"; sha256 = "a9ca2c3480b6fac29ec5de59c146742e2ab2b60f8c68581766094edb52ea7bad"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."requests"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = "License :: OSI Approved :: Apache Software License";
+        description = "Asynchronous Python HTTP for Humans.";
+      };
+    };
+
+
+
+    "rsa" = python.mkDerivation {
+      name = "rsa-3.4.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/14/89/adf8b72371e37f3ca69c6cb8ab6319d009c4a24b04a31399e5bd77d9bb57/rsa-3.4.2.tar.gz"; sha256 = "25df4e10c263fb88b5ace923dd84bf9aa7f5019687b5e55382ffcdb8bede9db5"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."pyasn1"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = "License :: OSI Approved :: Apache Software License";
+        description = "Pure-Python RSA implementation";
       };
     };
 
@@ -746,6 +988,41 @@ let
 
 
 
+    "uritemplate" = python.mkDerivation {
+      name = "uritemplate-3.0.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/cd/db/f7b98cdc3f81513fb25d3cbe2501d621882ee81150b745cdd1363278c10a/uritemplate-3.0.0.tar.gz"; sha256 = "c02643cebe23fc8adb5e6becffe201185bf06c40bda5c0b4028a93f1527d011d"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.bsdOriginal;
+        description = "URI templates";
+      };
+    };
+
+
+
+    "urllib3" = python.mkDerivation {
+      name = "urllib3-1.20";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/20/56/a6aa403b0998f857b474a538343ee483f5c02491bd1aebf61d42a3f60f77/urllib3-1.20.tar.gz"; sha256 = "97ef2b6e2878d84c0126b9f4e608e37a951ca7848e4855a7f7f4437d5c34a72f"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."certifi"
+      self."cryptography"
+      self."idna"
+      self."pyOpenSSL"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.mit;
+        description = "HTTP library with thread-safe connection pooling, file post, and more.";
+      };
+    };
+
+
+
     "wcwidth" = python.mkDerivation {
       name = "wcwidth-0.1.7";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/55/11/e4a2bb08bb450fdbd42cc709dd40de4ed2c472cf0ccb9e64af22279c5495/wcwidth-0.1.7.tar.gz"; sha256 = "3df37372226d6e63e1b1e1eda15c594bca98a22d33a23832a90998faa96bc65e"; };
@@ -756,6 +1033,21 @@ let
         homepage = "";
         license = licenses.mit;
         description = "Measures number of Terminal column cells of wide-character codes";
+      };
+    };
+
+
+
+    "whatthepatch" = python.mkDerivation {
+      name = "whatthepatch-0.0.5";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/64/1e/7a63cba8a0d70245b9ab1c03694dabe36476fa65ee546e6dff6c8660434c/whatthepatch-0.0.5.tar.gz"; sha256 = "494a2ec6c05b80f9ed1bd773f5ac9411298e1af6f0385f179840b5d60d001aa6"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.mit;
+        description = "A patch parsing library.";
       };
     };
 
