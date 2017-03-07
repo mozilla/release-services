@@ -211,7 +211,18 @@ in rec {
     let
       removeLines =
         builtins.filter
-          (line: ! startsWith line "-r" && line != "");
+          (line: ! startsWith line "-r" && line != "" && ! startsWith line "#");
+
+      removeExtras =
+        builtins.map
+          (line:
+            let
+              split = splitString "[" line;
+            in
+              if builtins.length split > 1
+                then builtins.head split
+                else line
+          );
 
       extractEggName =
         map
@@ -233,9 +244,10 @@ in rec {
     in
       map
         (pkg_name: builtins.getAttr pkg_name custom_pkgs)
-        (removeLines
-          (extractEggName
-            (readLines file)));
+        (removeExtras
+          (removeLines
+            (extractEggName
+              (readLines file))));
 
         
 
@@ -442,12 +454,88 @@ in rec {
     in self;
 
   mkBackend =
+    args @
     { name
     , version
     , src
     , python
     , buildInputs ? []
     , propagatedBuildInputs ? []
+    , doCheck ? true
+    , postInstall ? ""
+    , shellHook ? ""
+    , dockerConfig ? {}
+    , passthru ? {}
+    , inStaging ? true
+    , inProduction ? false
+    }:
+    let
+      self = mkPython (args // {
+
+        postInstall = ''
+          mkdir -p $out/bin
+          ln -s ${python.packages."Flask"}/bin/flask $out/bin
+          ln -s ${python.packages."gunicorn"}/bin/gunicorn $out/bin
+          ln -s ${python.packages."newrelic"}/bin/newrelic-admin $out/bin
+          for i in $out/bin/*; do
+            wrapProgram $i --set PYTHONPATH $PYTHONPATH
+          done
+          if [ -e ./settings.py ]; then
+            mkdir -p $out/etc
+            cp ./settings.py $out/etc
+          fi
+
+          if [ -d ./migrations ]; then
+            mv ./migrations $out/${python.__old.python.sitePackages}
+          fi
+        '' + postInstall;
+
+        shellHook = ''
+          export CACHE_DEFAULT_TIMEOUT=3600
+          export CACHE_TYPE=filesystem
+          export CACHE_DIR=$PWD/cache
+          export LANG=en_US.UTF-8
+          export FLASK_APP=${name}
+          export DEBUG=1
+          export FLASK_APP=${name}:app
+        '' + shellHook;
+
+        dockerConfig = {
+          Env = [
+            "PATH=/bin"
+            "APP_SETTINGS=${self}/etc/settings.py"
+            "FLASK_APP=${name}:app"
+            "LANG=en_US.UTF-8"
+            "LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive"
+            "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+          ];
+          Cmd = [
+            "newrelic-admin" "run-program" "gunicorn" "${name}:app" "--log-file" "-"
+          ];
+        };
+
+      });
+    in self;
+
+  mkPython =
+    { name
+    , version
+    , src
+    , python
+    , buildInputs ? []
+    , propagatedBuildInputs ? []
+    , doCheck ? true
+    , postInstall ? ""
+    , shellHook ? ""
+    , dockerConfig ?
+      { Env = [
+          "PATH=/bin"
+          "LANG=en_US.UTF-8"
+          "LOCALE_ARCHIVE=${releng_pkgs.pkgs.glibcLocales}/lib/locale/locale-archive"
+          "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+        ];
+        Cmd = [];
+      }
     , passthru ? {}
     , inStaging ? true
     , inProduction ? false
@@ -491,29 +579,7 @@ in rec {
           EOF
         '';
 
-        postInstall = ''
-          mkdir -p $out/bin $out/etc
-
-          ln -s ${python.__old.python.interpreter} $out/bin
-          ln -s ${python.packages."Flask"}/bin/flask $out/bin
-          ln -s ${python.packages."gunicorn"}/bin/gunicorn $out/bin
-          ln -s ${python.packages."newrelic"}/bin/newrelic-admin $out/bin
-       
-          cp ./settings.py $out/etc
-
-          for i in $out/bin/*; do
-            wrapProgram $i --set PYTHONPATH $PYTHONPATH
-          done
-
-          if [ -d ./migrations ]; then
-            mv ./migrations $out/${python.__old.python.sitePackages}
-          fi
-
-          find $out -type d -name "__pycache__" -exec 'rm -r "{}"' \;
-          find $out -type d -name "*.py" -exec '${python.__old.python.executable} -m compileall -f "{}"' \;
-        '';
-
-        doCheck = true;
+        inherit doCheck;
 
         checkPhase = ''
           export LANG=en_US.UTF-8
@@ -523,15 +589,18 @@ in rec {
           pytest tests/
         '';
 
+        postInstall = ''
+          mkdir -p $out/bin
+          ln -s ${python.__old.python.interpreter} $out/bin
+          for i in $out/bin/*; do
+            wrapProgram $i --set PYTHONPATH $PYTHONPATH
+          done
+          find $out -type d -name "__pycache__" -exec 'rm -r "{}"' \;
+          find $out -type d -name "*.py" -exec '${python.__old.python.executable} -m compileall -f "{}"' \;
+        '' + postInstall;
+
         shellHook = ''
-          export CACHE_DEFAULT_TIMEOUT=3600
-          export CACHE_TYPE=filesystem
-          export CACHE_DIR=$PWD/cache
-          export LANG=en_US.UTF-8
-          export FLASK_APP=${name}
-          export DEBUG=1
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
-          export FLASK_APP=${name}:app
 
           pushd ${self.src_path} >> /dev/null
           tmp_path=$(mktemp -d)
@@ -543,7 +612,7 @@ in rec {
           popd >> /dev/null
 
           cd ${self.src_path}
-        '';
+        '' + shellHook;
 
         passthru = {
           src_path =
@@ -557,22 +626,11 @@ in rec {
                 ([ "master" ] ++ optional inStaging "staging"
                               ++ optional inProduction "production"
                 );
+
           docker = mkDocker {
             inherit name version;
             contents = [ busybox self ];
-            config = {
-              Env = [
-                "PATH=/bin"
-                "APP_SETTINGS=${self}/etc/settings.py"
-                "FLASK_APP=${name}:app"
-                "LANG=en_US.UTF-8"
-                "LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive"
-                "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-              ];
-              Cmd = [
-                "newrelic-admin" "run-program" "gunicorn" "${name}:app" "--log-file" "-"
-              ];
-            };
+            config = dockerConfig;
           };
         } // passthru;
       };
