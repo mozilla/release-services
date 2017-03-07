@@ -496,16 +496,15 @@ in rec {
           export CACHE_TYPE=filesystem
           export CACHE_DIR=$PWD/cache
           export LANG=en_US.UTF-8
-          export FLASK_APP=${name}
           export DEBUG=1
-          export FLASK_APP=${name}:app
+          export FLASK_APP=${dirname}:app
         '' + shellHook;
 
         dockerConfig = {
           Env = [
             "PATH=/bin"
             "APP_SETTINGS=${self}/etc/settings.py"
-            "FLASK_APP=${name}:app"
+            "FLASK_APP=${dirname}:app"
             "LANG=en_US.UTF-8"
             "LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive"
             "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
