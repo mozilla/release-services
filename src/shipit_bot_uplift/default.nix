@@ -36,13 +36,13 @@ let
   mercurial' = mercurial.overrideDerivation (old: {
     postInstall = old.postInstall + ''
       cat > $out/etc/mercurial/hgrc <<EOF
-      [web]
-      cacerts = ${cacert}/etc/ssl/certs/ca-bundle.crt
+[web]
+cacerts = ${cacert}/etc/ssl/certs/ca-bundle.crt
 
-      [extensions]
-      purge =
-      robustcheckout = ${robustcheckout}/robustcheckout/__init__.py
-      EOF
+[extensions]
+purge =
+robustcheckout = ${robustcheckout}/robustcheckout/__init__.py
+EOF
     '';
   });
 
@@ -95,6 +95,9 @@ let
       mkdir -p $out/bin
       ln -s ${mercurial'}/bin/hg $out/bin
     '';
+		shellHook = ''
+			export PATH="${mercurial'}/bin:$PATH"
+		'';
     passthru = {
       taskclusterHooks = {
         master = {
