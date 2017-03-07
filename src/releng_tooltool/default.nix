@@ -10,9 +10,10 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-releng-tooltool";
+  dirname = "releng_tooltool";
 
   self = mkBackend rec {
-    inherit python name;
+    inherit python name dirname;
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
