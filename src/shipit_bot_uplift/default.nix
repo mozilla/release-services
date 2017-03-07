@@ -1,16 +1,17 @@
-{ releng_pkgs
+{ releng_pkgs 
 }: 
 
 let
 
-  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource licenses;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript makeWrapper mercurial cacert fetchurl;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
-  inherit (releng_pkgs.pkgs.lib) fileContents optional;
+  inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-shipit-bot-uplift";
+  dirname = "shipit_bot_uplift";
 
   robustcheckout = mkDerivation {
     name = "robustcheckout";
@@ -82,7 +83,7 @@ let
       };
 
   self = mkPython {
-    inherit python name;
+    inherit python name dirname;
     inProduction = true;
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
