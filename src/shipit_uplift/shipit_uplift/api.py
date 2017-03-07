@@ -11,18 +11,18 @@ from sqlalchemy.exc import IntegrityError
 from releng_common.auth import auth
 from releng_common.db import db
 from releng_common import log
-from shipit_dashboard.helpers import gravatar
-from shipit_dashboard.models import (
+from shipit_uplift.helpers import gravatar
+from shipit_uplift.models import (
     BugAnalysis, BugResult, Contributor, BugContributor, PatchStatus
 )
-from shipit_dashboard.serializers import (
+from shipit_uplift.serializers import (
     serialize_analysis, serialize_bug, serialize_contributor,
     serialize_patch_status
 )
-from shipit_dashboard import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
+from shipit_uplift import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
 
 
-logger = log.get_logger('shipit_dashboard.api')
+logger = log.get_logger('shipit_uplift.api')
 
 
 def ping():

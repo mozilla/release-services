@@ -11,7 +11,7 @@ paths:
 
   /ping:
     get:
-      operationId: "shipit_dashboard.api.ping"
+      operationId: "shipit_uplift.api.ping"
       responses:
         200:
           description: a pong
@@ -20,7 +20,7 @@ paths:
 
   /analysis:
     get:
-      operationId: "shipit_dashboard.api.list_analysis"
+      operationId: "shipit_uplift.api.list_analysis"
       responses:
         200:
           description: An array of Analysis
@@ -31,7 +31,7 @@ paths:
 
   /analysis/{analysis_id}:
     get:
-      operationId: "shipit_dashboard.api.get_analysis"
+      operationId: "shipit_uplift.api.get_analysis"
       parameters:
       - name: analysis_id
         in: path
@@ -45,7 +45,7 @@ paths:
             $ref: '#/definitions/Analysis'
 
     put:
-      operationId: "shipit_dashboard.api.update_analysis"
+      operationId: "shipit_uplift.api.update_analysis"
       parameters:
       - name: analysis_id
         in: path
@@ -60,7 +60,7 @@ paths:
 
   /bugs:
     post:
-      operationId: "shipit_dashboard.api.create_bug"
+      operationId: "shipit_uplift.api.create_bug"
       responses:
         200:
           description: A specific Bug
@@ -70,7 +70,7 @@ paths:
 
   /bugs/{bugzilla_id}:
     put:
-      operationId: "shipit_dashboard.api.update_bug"
+      operationId: "shipit_uplift.api.update_bug"
       parameters:
       - name: bugzilla_id
         in: path
@@ -84,7 +84,7 @@ paths:
             $ref: '#/definitions/Bug'
 
     delete:
-      operationId: "shipit_dashboard.api.delete_bug"
+      operationId: "shipit_uplift.api.delete_bug"
       parameters:
       - name: bugzilla_id
         in: path
@@ -97,7 +97,7 @@ paths:
 
   /bugs/{bugzilla_id}/patches:
     get:
-      operationId: "shipit_dashboard.api.list_patch_status"
+      operationId: "shipit_uplift.api.list_patch_status"
       parameters:
       - name: bugzilla_id
         in: path
@@ -113,7 +113,7 @@ paths:
               $ref: '#/definitions/PatchStatus'
     
     post:
-      operationId: "shipit_dashboard.api.create_patch_status"
+      operationId: "shipit_uplift.api.create_patch_status"
       parameters:
       - name: bugzilla_id
         in: path
@@ -128,7 +128,7 @@ paths:
     
   /contributor/{contributor_id}:
     put:
-      operationId: "shipit_dashboard.api.update_contributor"
+      operationId: "shipit_uplift.api.update_contributor"
       parameters:
       - name: contributor_id
         in: path

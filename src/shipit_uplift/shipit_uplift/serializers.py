@@ -2,16 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from shipit_dashboard.models import (
+from shipit_uplift.models import (
     BugResult, BugContributor, BugAnalysis, Contributor, PatchStatus
 )
-from shipit_dashboard import SCOPES_ADMIN
+from shipit_uplift import SCOPES_ADMIN
 from flask_login import current_user
 from releng_common import log
 import html
 
 
-logger = log.get_logger('shipit_dashboard.serializers')
+logger = log.get_logger('shipit_uplift.serializers')
 
 
 def serialize_contributor(contributor, link=None):

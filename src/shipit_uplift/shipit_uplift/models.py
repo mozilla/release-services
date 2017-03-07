@@ -13,10 +13,10 @@ from releng_common.db import db
 
 # M2M link between analysis & bug
 bugs = db.Table(
-    'shipit_dashboard_analysis_bugs',
-    sa.Column('analysis_id', sa.Integer, sa.ForeignKey('shipit_dashboard_analysis.id')),  # noqa
-    sa.Column('bug_id', sa.Integer, sa.ForeignKey('shipit_dashboard_bug.id')),
-    sa.UniqueConstraint('analysis_id', 'bug_id', name='shipit_dashboard_uniq_ba')  # noqa
+    'shipit_uplift_analysis_bugs',
+    sa.Column('analysis_id', sa.Integer, sa.ForeignKey('shipit_uplift_analysis.id')),  # noqa
+    sa.Column('bug_id', sa.Integer, sa.ForeignKey('shipit_uplift_bug.id')),
+    sa.UniqueConstraint('analysis_id', 'bug_id', name='shipit_uplift_uniq_ba')  # noqa
 )
 
 
@@ -26,7 +26,7 @@ class BugAnalysis(db.Model):
     by listing several bugs from Bugzilla, with
     their analysus
     """
-    __tablename__ = 'shipit_dashboard_analysis'
+    __tablename__ = 'shipit_uplift_analysis'
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String(80), nullable=False)
@@ -62,7 +62,7 @@ class BugResult(db.Model):
     """
     The cached result of an analysis run
     """
-    __tablename__ = 'shipit_dashboard_bug'
+    __tablename__ = 'shipit_uplift_bug'
 
     id = sa.Column(sa.Integer, primary_key=True)
     bugzilla_id = sa.Column(sa.Integer, unique=True)
@@ -99,8 +99,8 @@ class BugResult(db.Model):
         Delete bug and its dependencies
         """
         # Delete links, avoid StaleDataError
-        db.engine.execute(sa.text('delete from shipit_dashboard_analysis_bugs where bug_id = :bug_id'), bug_id=self.id)  # noqa
-        db.engine.execute(sa.text('delete from shipit_dashboard_patch_status where bug_id = :bug_id'), bug_id=self.id)  # noqa
+        db.engine.execute(sa.text('delete from shipit_uplift_analysis_bugs where bug_id = :bug_id'), bug_id=self.id)  # noqa
+        db.engine.execute(sa.text('delete from shipit_uplift_patch_status where bug_id = :bug_id'), bug_id=self.id)  # noqa
 
         # Delete the bug
         db.session.delete(self)
@@ -111,7 +111,7 @@ class Contributor(db.Model):
     """
     An active Mozilla contributor
     """
-    __tablename__ = 'shipit_dashboard_contributor'
+    __tablename__ = 'shipit_uplift_contributor'
     id = sa.Column(sa.Integer, primary_key=True)
     bugzilla_id = sa.Column(sa.Integer, unique=True)
     name = sa.Column(sa.String(250))
@@ -126,14 +126,14 @@ class BugContributor(db.Model):
     """
     M2M link between contributor & bug
     """
-    __tablename__ = 'shipit_dashboard_contributor_bugs'
+    __tablename__ = 'shipit_uplift_contributor_bugs'
     __table_args__ = (
         sa.UniqueConstraint('contributor_id', 'bug_id', name='uniq_contrib_bug'),  # noqa
     )
 
     id = sa.Column(sa.Integer, primary_key=True)
-    contributor_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_dashboard_contributor.id'))  # noqa
-    bug_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_dashboard_bug.id'))  # noqa
+    contributor_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_uplift_contributor.id'))  # noqa
+    bug_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_uplift_bug.id'))  # noqa
     roles = sa.Column(sa.String(250))
 
     bug = db.relationship(BugResult, backref="contributors")
@@ -144,7 +144,7 @@ class PatchStatus(db.Model):
     """
     Patch merge status at a specific time
     """
-    __tablename__ = 'shipit_dashboard_patch_status'
+    __tablename__ = 'shipit_uplift_patch_status'
     __table_args__ = (
         sa.UniqueConstraint('bug_id', 'revision', 'revision_parent', 'branch', name='uniq_patch_status'),  # noqa
     )
@@ -152,7 +152,7 @@ class PatchStatus(db.Model):
     id = sa.Column(sa.Integer, primary_key=True)
     bug_id = sa.Column(
         sa.Integer,
-        sa.ForeignKey('shipit_dashboard_bug.id'),
+        sa.ForeignKey('shipit_uplift_bug.id'),
         nullable=False
     )
 

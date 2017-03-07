@@ -33,7 +33,7 @@ type FormValue
 type alias Model =
     { contributor : Maybe Contributor
     , update : WebData (Contributor)
-    , backend_dashboard_url : String
+    , backend_uplift_url : String
     }
 
 
@@ -50,10 +50,10 @@ type alias Contributor =
 
 
 init : String -> ( Model, Cmd Msg )
-init backend_dashboard_url =
+init backend_uplift_url =
     ( { contributor = Nothing
       , update = NotAsked
-      , backend_dashboard_url = backend_dashboard_url
+      , backend_uplift_url = backend_uplift_url
       }
     , Cmd.none
     )
@@ -144,7 +144,7 @@ sendUpdate model user =
                 Just contributor ->
                     let
                         url =
-                            model.backend_dashboard_url ++ "/contributor/" ++ (toString contributor.id)
+                            model.backend_uplift_url ++ "/contributor/" ++ (toString contributor.id)
 
                         request =
                             Http.Request "PUT"

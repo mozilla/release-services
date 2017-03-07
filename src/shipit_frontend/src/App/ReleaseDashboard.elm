@@ -117,7 +117,7 @@ type alias Model =
     , -- Current Analysis used
       current_analysis : WebData (Analysis)
     , -- Backend base endpoint
-      backend_dashboard_url : String
+      backend_uplift_url : String
     , contrib_editor : ContribEditor.Model
     }
 
@@ -145,15 +145,15 @@ type
 
 
 init : String -> ( Model, Cmd Msg )
-init backend_dashboard_url =
+init backend_uplift_url =
     -- Init empty model
     let
         ( contrib_editor, cmd ) =
-            ContribEditor.init backend_dashboard_url
+            ContribEditor.init backend_uplift_url
     in
         ( { all_analysis = NotAsked
           , current_analysis = NotAsked
-          , backend_dashboard_url = backend_dashboard_url
+          , backend_uplift_url = backend_uplift_url
           , contrib_editor = contrib_editor
           }
         , Cmd.batch
@@ -423,7 +423,7 @@ fetchAllAnalysis model user =
             let
                 -- Build Taskcluster http request
                 url =
-                    model.backend_dashboard_url ++ "/analysis"
+                    model.backend_uplift_url ++ "/analysis"
 
                 request =
                     Http.Request "GET" [] url Http.empty
@@ -444,7 +444,7 @@ fetchAnalysis model user analysis_id =
             let
                 -- Build Taskcluster http request
                 url =
-                    model.backend_dashboard_url ++ "/analysis/" ++ (toString analysis_id)
+                    model.backend_uplift_url ++ "/analysis/" ++ (toString analysis_id)
 
                 request =
                     Http.Request "GET" [] url Http.empty
@@ -622,7 +622,7 @@ sendBugUpdate model user bug update =
 
                 -- Build Taskcluster http request
                 url =
-                    model.backend_dashboard_url ++ "/bugs/" ++ (toString bug.bugzilla_id)
+                    model.backend_uplift_url ++ "/bugs/" ++ (toString bug.bugzilla_id)
 
                 headers =
                     [ ( "Content-Type", "application/json" )
