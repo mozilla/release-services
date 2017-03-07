@@ -21,9 +21,10 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-releng-mapper";
+  dirname = "releng-mapper";
 
   self = mkBackend {
-    inherit python name;
+    inherit python name dirname;
     version = fileContents ./../../VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
