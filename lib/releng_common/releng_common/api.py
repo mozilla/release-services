@@ -119,7 +119,7 @@ class Api:
 
         self.swagger_url = swagger_url
         self.__api = connexion.api.Api(
-            swagger_yaml_path=pathlib.Path(swagger_file),
+            specification=pathlib.Path(swagger_file),
             base_url=base_url,
             arguments=arguments,
             swagger_json=swagger_json,
