@@ -456,6 +456,7 @@ in rec {
   mkBackend =
     args @
     { name
+    , dirname
     , version
     , src
     , python
@@ -519,6 +520,7 @@ in rec {
 
   mkPython =
     { name
+    , dirname
     , version
     , src
     , python
@@ -566,13 +568,13 @@ in rec {
           # generate MANIFEST.in to make sure every file is included
           rm -f MANIFEST.in
           cat > MANIFEST.in <<EOF
-          recursive-include ${name}/*
+          recursive-include ${dirname}/*
 
           include VERSION
-          include ${name}/*.ini
-          include ${name}/*.json
-          include ${name}/*.mako
-          include ${name}/*.yml
+          include ${dirname}/*.ini
+          include ${dirname}/*.json
+          include ${dirname}/*.mako
+          include ${dirname}/*.yml
 
           recursive-exclude * __pycache__
           recursive-exclude * *.py[co]
