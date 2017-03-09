@@ -401,15 +401,15 @@ in rec {
         checkPhase = ''
           if [ -d src/ ]; then
             echo "----------------------------------------------------------"
-            echo "---  Running ... elm-format-0.17 src/ --validate  --------"
+            echo "---  Running ... elm-format-0.18 src/ --validate  --------"
             echo "----------------------------------------------------------"
-            elm-format-0.17 src/ --validate
+            elm-format-0.18 src/ --validate
           fi
           if [ -e Main.elm ]; then
             echo "----------------------------------------------------------"
-            echo "---  Running ... elm-format-0.17 ./*.elm --validate  -----"
+            echo "---  Running ... elm-format-0.18 ./*.elm --validate  -----"
             echo "----------------------------------------------------------"
-            elm-format-0.17 ./*.elm --validate
+            elm-format-0.18 ./*.elm --validate
           fi
           echo "Everything OK!"
           echo "----------------------------------------------------------"
