@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "Usage demonstration of Mozilla RelEng elm-common",
   "main": "index.js",
-  "scripts": {
-    "start": "neo start --port 8000 --config webpack.config.js"
-  },
   "author": "",
   "license": "ISC",
   "devDependencies": {
@@ -22,9 +19,8 @@
       "head": "<link href=\"https://fonts.googleapis.com/css?family=Fira+Sans:400,300,500\" rel=\"stylesheet\" type=\"text/css\"\\>"
     }
   },
-  "dependencies": {
-    "bootstrap": "^3.3.7",
-    "hawk": "^6.0.0",
-    "jquery": "^3.1.1"
+  "scripts": {
+    "start": "webpack-dev-server",
+    "build": "webpack"
   }
 }
