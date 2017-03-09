@@ -185,9 +185,8 @@ loadAllAnalysis model =
 view : Model -> Html Msg
 view model =
     div []
-        [ nav [ id "navbar", class "navbar navbar-full navbar-dark bg-inverse" ]
-            [ div [ class "container-fluid" ] (viewNavBar model)
-            ]
+        [ nav [ class "navbar navbar-toggleable-md navbar-inverse bg-inverse" ]
+            (viewNavBar model)
         , div [ id "content" ]
             [ case model.user of
                 Just user ->
@@ -223,7 +222,7 @@ viewPage model =
 viewNavBar : Model -> List (Html Msg)
 viewNavBar model =
     [ button
-        [ class "navbar-toggler hidden-md-up"
+        [ class "navbar-toggler hidden-md-up navbar-toggler-right"
         , type_ "button"
         , attribute "data-toggle" "collapse"
         , attribute "data-target" ".navbar-collapse"
@@ -233,13 +232,9 @@ viewNavBar model =
     , pageLink Home
         [ class "navbar-brand" ]
         [ text "Uplift Dashboard" ]
-    , div [ class "user collapse navbar-toggleable-sm navbar-collapse" ]
-        [ ul [ class "nav navbar-nav" ]
-            (List.concat
-                [ viewNavDashboard model
-                , [ li [ class "nav-item float-xs-right" ] (viewUser model) ]
-                ]
-            )
+    , div [ class "collapse navbar-collapse" ]
+        [ ul [ class "navbar-nav mr-auto " ] (viewNavDashboard model)
+        , ul [ class "navbar-nav" ] (viewUser model)
         ]
     ]
 
@@ -353,6 +348,7 @@ viewDashboardStatus dashboard =
                                      ]
                                         ++ viewLogin
                                     )
+
                             _ ->
                                 span [] [ text ("The backend produced an error " ++ (toString response)) ]
 
@@ -371,9 +367,9 @@ viewNavAnalysis analysis =
             [ class "nav-link" ]
             [ span [ class "name" ] [ text (analysis.name ++ " " ++ (toString analysis.version)) ]
             , if analysis.count > 0 then
-                span [ class "tag tag-pill tag-primary" ] [ text (toString analysis.count) ]
+                span [ class "badge badge-pill badge-primary" ] [ text (toString analysis.count) ]
               else
-                span [ class "tag tag-pill tag-success" ] [ text (toString analysis.count) ]
+                span [ class "badge badge-pill badge-success" ] [ text (toString analysis.count) ]
             ]
         ]
 
