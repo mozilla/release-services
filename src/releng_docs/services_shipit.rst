@@ -30,6 +30,130 @@ There are a few different types of services:
   for collecting information required by ShipIt.
 
 
+ShipIt v1 and v2 interaction
+----------------------------
+
+Initially, Shipit v2 will compliment v1 by adding features, as opposed to
+replacing. The following is a implementation strategy for how that will work.
+
+ShipIt v1 will solely be responsible for submitting and kicking off a new
+release.
+
+.. code-block:: console
+
+    % curl -X POST -d "product=firefox&version=99.0" https://ship-it.mozilla.org/submit_release.html
+
+releaserunner_ continues to behave as normal by polling ShipIt v1 for new
+releases and, when found, runs release_sanity_, creates taskcluster_graph1_,
+and notifies release-drivers of new release.
+
+In addition, releaserunner will tell Shipit v2 about the new release and ask
+Shipit v2 to create a pipeline:
+
+
+.. code-block:: python
+
+    r = requests.post(
+        'https://pipeline.shipit.mozilla-releng.net',
+        data={uid='foo', pipeline={}},
+    )
+
+Shipit v2's pipeline will consist of steps representing the release. Example
+steps are (1) :ref:`signoff steps <shipit_signoff>` and (2) :ref:`taskcluster
+steps <shipit_taskcluster>`.
+
+Shipit v2 will also create a step for the Shipit v1 generated taskcluster graph
+(graph1) so that it can add that graph to the Shipit v2 pipeline as
+a dependency. This means that a taskcluster step can be passed an existing
+taskcluster graphid to track rather than always creating a new one.
+
+How Shipit v1 taskcluster graph1 will differ?
+
+Since graph1 is created by Shipit v1 and includes taskcluster tasks for doing
+sign offs and publishing releases, it will need to be trimmed and then offload
+its later tasks to Shipit v2 via subsequent steps within the pipeline.
+
+And so, initially, graph1 will create all required tasks up until the first
+human sign off. This is easily defined by: *the first "human decision task"
+within the graph*.
+
+For example, here is an overview of what a Beta release comprises of in
+simplified form:
+
+.. blockdiag::
+   :align: center
+
+   diagram {
+     orientation = portrait;
+     default_fontsize = 16;
+
+
+     A [ label = "generate release\nartifacts"
+       , width = 180
+       , height = 60
+       ];
+     B [ label = "verify artifacts\nand updates on\ntest channel"
+       , width = 180
+       , height = 80
+       ];
+     C [ label = "push artifacts to\nrelease location"
+       , width = 180
+       , height = 60
+       ];
+     D [ label = "publish release\nhuman sign off"
+       , width = 180
+       , height = 60
+       ];
+     E [ label = "publish release"
+       , width = 180
+       ];
+
+     A -> B -> C -> D -> E;
+   }
+
+
+In the beta case, graph1 would finish with *push artifacts to release
+location*. There would then be a Shipit v2 pipeline consisting of a sign off
+step: *publish release human sign off*, and a taskcluster step: *publish
+release*
+
+The taskcluster *publish release* step would comprise of the following tasks:
+publishing on balrog, bumping next version, updating bouncer, and informing
+Shipit v1 the release is complete (mark as shipped).
+
+Release candidates would be implemented in a similar manner but since it
+contains more sign offs, Shipit v1 would offload more tasks to Shipit v2
+
+
+.. _releaserunner: https://dxr.mozilla.org/build-central/search?q=path%3Apuppet%2Fmanifests%2Fmoco-nodes+releaserunner&redirect=false
+.. _release_sanity: https://hg.mozilla.org/build/tools/file/c85a80e0c3e4/buildfarm/release/release-runner.py#l353
+.. _taskcluster_graph1: https://hg.mozilla.org/build/tools/file/c85a80e0c3e4/buildfarm/release/release-runner.py#l501
+
+
+Authentication and authorization
+--------------------------------
+
+ShipIt (and services as a whole) will not rely on solely auth0 or current
+Taskcluster auth/scopes. Instead, ShipIt will use a combination of the two.
+
+Actual implementation design will be implemented, at least initially, as
+follows:
+
+#. Initial login and authentication will continue to be through Taskcluster
+   throughout services including ShipIt_*. Taskcluster scopes will be used for
+   protecting frontend visibility, and backend permissions (authorization) for
+   everything bar resolving a signoff step in ShipIt_signoff.
+
+#. ShipIt_signoff has some added protection. Since Taskcluster auth, as it's
+   currently implemented, can not reliably guarantee the client is who they
+   claim to be, ShipIt_signoff will have an additional login via auth0 as well
+   as support for MFA. Authorization for signing off will likely be managed by
+   LDAP permissions connected to auth0.
+
+
+.. _client: https://tools.taskcluster.net/auth/clients/
+.. _roles: https://tools.taskcluster.net/auth/roles/
+
 
 .. _shipit_frontend:
 
@@ -87,6 +211,7 @@ pipeline. This is so that the pipeline service knows how to create specific
 steps when necessary.
 
 
+
 Pipelines and Firefox releases
 ******************************
 
@@ -137,8 +262,21 @@ with the new pipelines.
    Taskcluster service.
 
 
+``src/shipit_signoff``
+----------------------
+
+TODO
+
+
+``src/shipit_taskcluster``
+--------------------------
+
+TODO
+
+
 Steps
------
+=====
+
 
 In order to ensure the Pipeline service can successfully managed Steps, each
 Step Service is required to implement the following API: (TODO, flesh this out
@@ -274,5 +412,3 @@ It does the following tasks on every run:
 ``src/shipit_static_analysis``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-
-.. target-notes::
