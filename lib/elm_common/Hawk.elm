@@ -30,9 +30,9 @@ update :
 update msg =
     case msg of
         SendRequest text ->
-            case JsonDecode.decodeString portDecoder text of
-                Ok ( requestId, request ) ->
-                    ( Just requestId, Cmd.none, sendRequest request )
+            case JsonDecode.decodeString requestDecoder text of
+                Ok request ->
+                    ( Just request.id, Cmd.none, sendRequest request )
 
                 Err error ->
                     let
@@ -52,7 +52,7 @@ send request credentials =
         requestJson =
             requestEncoder request
     in
-        hawk_add_header ( request.id, requestJson, credentials )
+        hawk_add_header ( requestJson, credentials )
 
 
 
@@ -85,16 +85,23 @@ sendRequest request =
 
 requestEncoder : Request -> String
 requestEncoder request =
-    JsonEncode.encode 0 <|
-        JsonEncode.object
-            [ ( "id", JsonEncode.string request.method )
-            , ( "method", JsonEncode.string request.method )
-            , ( "url", JsonEncode.string request.url )
-            , ( "headers", JsonEncode.list (List.map requestHeadersEncoder request.headers) )
-              -- We can't access the internal type of the body
-              -- so we are forced to send its representation
-            , ( "body", JsonEncode.string (toString request.body) )
-            ]
+    let
+        -- We can't access the internal type of the body
+        -- so we are forced to send its representation
+        body =
+            if (toString request.body) == "EmptyBody" then
+                JsonEncode.null
+            else
+                JsonEncode.string (toString request.body)
+    in
+        JsonEncode.encode 0 <|
+            JsonEncode.object
+                [ ( "id", JsonEncode.string request.id )
+                , ( "method", JsonEncode.string request.method )
+                , ( "url", JsonEncode.string request.url )
+                , ( "headers", JsonEncode.list (List.map requestHeadersEncoder request.headers) )
+                , ( "body", body )
+                ]
 
 
 requestHeadersEncoder : Http.Header -> JsonEncode.Value
@@ -103,25 +110,24 @@ requestHeadersEncoder header =
     JsonEncode.string (toString header)
 
 
-
---  JsonEncode.list
---      [ JsonEncode.string key
---      , JsonEncode.string value
---      ]
-
-
 requestDecoder : JsonDecode.Decoder Request
 requestDecoder =
     JsonDecode.map5 Request
         (JsonDecode.field "id" JsonDecode.string)
         (JsonDecode.field "method" JsonDecode.string)
         (JsonDecode.field "url" JsonDecode.string)
+        -- (JsonDecode.succeed [])
         (JsonDecode.field "headers"
-            (JsonDecode.list
-                (JsonDecode.map2 Http.header JsonDecode.string JsonDecode.string)
-            )
+            (JsonDecode.list requestHeaderDecoder)
         )
         (JsonDecode.field "body" requestBodyDecoder)
+
+
+requestHeaderDecoder : JsonDecode.Decoder Http.Header
+requestHeaderDecoder =
+    JsonDecode.map2 Http.header
+        (JsonDecode.index 0 JsonDecode.string)
+        (JsonDecode.index 1 JsonDecode.string)
 
 
 requestBodyDecoder : JsonDecode.Decoder Http.Body
@@ -132,11 +138,6 @@ requestBodyDecoder =
         , -- From null to Empty
           JsonDecode.null Http.emptyBody
         ]
-
-
-portDecoder : JsonDecode.Decoder ( RequestID, Request )
-portDecoder =
-    JsonDecode.map2 (,) JsonDecode.string requestDecoder
 
 
 
@@ -156,4 +157,4 @@ subscriptions outMsg =
 port hawk_send_request : (String -> msg) -> Sub msg
 
 
-port hawk_add_header : ( RequestID, String, User.Credentials ) -> Cmd msg
+port hawk_add_header : ( String, User.Credentials ) -> Cmd msg
