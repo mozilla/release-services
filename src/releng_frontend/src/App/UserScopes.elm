@@ -1,12 +1,12 @@
 module App.UserScopes exposing (..)
 
 import Http
-import Json.Decode as JsonDecode exposing ((:=))
-import Json.Encode as JsonEncode
-import RemoteData
+import Json.Decode as JsonDecode
+import RemoteData exposing (WebData)
 import String
 import Task
-import TaskclusterLogin
+import Hawk
+import Utils
 import Time
 
 
@@ -19,7 +19,7 @@ type alias Model =
 type Msg
     = FetchScopes
     | CacheScopes Time.Time
-    | FetchedScopes (RemoteData.RemoteData Http.RawError Http.Response)
+    | FetchedScopes (WebData String)
 
 
 decoderScopes : JsonDecode.Decoder (List String)
@@ -37,56 +37,40 @@ init =
 update :
     Msg
     -> Model
-    -> ( Model, Cmd Msg, Maybe { route : String, request : Http.Request } )
+    -> ( Model, Cmd Msg, Maybe Hawk.Request )
 update msg model =
     case msg of
         FetchScopes ->
             ( model
-            , Task.perform
-                (\_ -> Debug.crash "Failed when receiving current time!")
-                CacheScopes
-                Time.now
+            , Task.perform CacheScopes Time.now
             , Nothing
             )
 
         CacheScopes currentTime ->
             let
+                headers =
+                    [ Http.header "Accept" "application/json" ]
+
+                url =
+                    "https://auth.taskcluster.net/v1/scopes/current"
+
                 request =
-                    Http.Request
-                        "GET"
-                        [ ( "Accept", "application/json" )
-                        , ( "Content-Type", "application/json" )
-                        ]
-                        "https://auth.taskcluster.net/v1/scopes/current"
-                        Http.empty
+                    Hawk.Request "FetchedScopes" "GET" url headers Http.emptyBody
 
                 ( newModel, hawkCmd ) =
                     if (model.timestamp + 15000) > currentTime then
                         ( model, Nothing )
                     else
                         ( { model | scopes = [] }
-                        , Just
-                            { route = "FetchedScopes"
-                            , request = request
-                            }
+                        , Just request
                         )
             in
                 ( newModel, Cmd.none, hawkCmd )
 
         FetchedScopes result ->
             let
-                handleResponse response =
-                    case response.value of
-                        Http.Text text ->
-                            JsonDecode.decodeString decoderScopes text
-                                |> Result.withDefault []
-
-                        _ ->
-                            []
-
                 scopes =
-                    result
-                        |> RemoteData.map handleResponse
+                    Utils.decodeJsonString decoderScopes result
                         |> RemoteData.withDefault []
             in
                 ( { model | scopes = scopes }
@@ -96,7 +80,7 @@ update msg model =
 
 
 hawkResponse :
-    Cmd (RemoteData.RemoteData Http.RawError Http.Response)
+    Cmd (WebData String)
     -> String
     -> Cmd Msg
 hawkResponse response route =

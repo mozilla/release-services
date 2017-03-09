@@ -1,7 +1,6 @@
 module App.Types exposing (..)
 
 import UrlParser
-import Hop.Types
 
 
 type alias Page a b =
@@ -30,15 +29,4 @@ type alias Alert =
     { type_ : AlertType
     , title : String
     , text : String
-    }
-
-
-
--- XXX: probably should not be in this module
-
-
-hopConfig : Hop.Types.Config
-hopConfig =
-    { hash = False
-    , basePath = ""
     }

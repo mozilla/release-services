@@ -7,14 +7,11 @@ import App.TryChooser
 import App.Types
 import App.UserScopes
 import Hawk
-import Hop
-import Hop.Types
 import Navigation
 import TaskclusterLogin
 import Time
 import UrlParser
 import UrlParser exposing ((</>))
-import Utils
 
 
 type Route
@@ -38,10 +35,10 @@ routes =
     pages
         |> List.map (\x -> x.matcher)
         |> List.append
-            [ UrlParser.format HomeRoute (UrlParser.s "")
-            , UrlParser.format NotFoundRoute (UrlParser.s "404")
-            , UrlParser.format LoginRoute (UrlParser.s "login")
-            , UrlParser.format LogoutRoute (UrlParser.s "logout")
+            [ UrlParser.map HomeRoute (UrlParser.s "")
+            , UrlParser.map NotFoundRoute (UrlParser.s "404")
+            , UrlParser.map LoginRoute (UrlParser.s "login")
+            , UrlParser.map LogoutRoute (UrlParser.s "logout")
             ]
         |> UrlParser.oneOf
 
@@ -68,33 +65,28 @@ reverse route =
             App.TreeStatus.reverse route
 
 
-urlParser : Navigation.Parser ( Route, Hop.Types.Address )
-urlParser =
-    let
-        parse address =
-            address
-                |> UrlParser.parse identity routes
-                |> Result.withDefault NotFoundRoute
-
-        resolver =
-            Hop.makeResolver App.Types.hopConfig parse
-    in
-        Navigation.makeParser (.href >> resolver)
+urlParser : Navigation.Location -> Msg
+urlParser location =
+    -- TODO: parse location into a route
+    NavigateTo HomeRoute
 
 
-urlUpdate : ( Route, Hop.Types.Address ) -> Model -> ( Model, Cmd Msg )
-urlUpdate ( route, address ) model =
-    ( { model
-        | route = route
-        , address = address
-      }
-    , Cmd.none
-    )
+
+--    let
+--        parse address =
+--            address
+--                |> UrlParser.parse identity routes
+--                |> Result.withDefault NotFoundRoute
+--
+--        resolver =
+--            Hop.makeResolver App.Types.hopConfig parse
+--    in
+--        Navigation.makeParser (.href >> resolver)
 
 
 type alias Model =
-    { route : Route
-    , address : Hop.Types.Address
+    { location : Navigation.Location
+    , route : Route
     , user : TaskclusterLogin.Model
     , userScopes : App.UserScopes.Model
     , trychooser : App.TryChooser.Model

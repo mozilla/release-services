@@ -14,10 +14,12 @@ import TaskclusterLogin
 import Utils
 
 
+hasScope : String -> List String -> Bool
 hasScope scope scopes =
     App.UserScopes.hasScope scopes ("project:releng:treestatus/" ++ scope)
 
 
+onClickGoTo : App.TreeStatus.Types.Route -> Attribute App.TreeStatus.Types.Msg
 onClickGoTo route =
     Utils.onClick (App.TreeStatus.Types.NavigateTo route)
 
@@ -39,10 +41,10 @@ treeStatusLevel status =
 
 
 bugzillaBugAsLink : String -> List (Html a)
-bugzillaBugAsLink text' =
+bugzillaBugAsLink text_ =
     let
         words =
-            String.words text'
+            String.words text_
 
         previousWords =
             Nothing :: (List.map Just words)
@@ -62,6 +64,18 @@ bugzillaBugAsLink text' =
                 )
 
 
+viewRecentChange :
+    List String
+    -> Bool
+    -> { a
+        | id : Int
+        , reason : String
+        , trees : List String
+        , when : String
+        , who : String
+        , status : String
+       }
+    -> List (Html App.TreeStatus.Types.Msg)
 viewRecentChange scopes plural recentChange =
     let
         treeLabel =
@@ -97,22 +111,19 @@ viewRecentChange scopes plural recentChange =
     in
         if hasScope "recent_changes/revert" scopes then
             [ div
-                [ class "list-group-item" ]
-                [ div
-                    [ class "float-xs-right btn-group" ]
-                    [ button
-                        [ type' "button"
-                        , class "btn btn-sm btn-outline-success"
-                        , Utils.onClick (App.TreeStatus.Types.RevertChange recentChange.id)
-                        ]
-                        [ text "Restore" ]
-                    , button
-                        [ type' "button"
-                        , class "btn btn-sm btn-outline-warning"
-                        , Utils.onClick (App.TreeStatus.Types.DiscardChange recentChange.id)
-                        ]
-                        [ text "Discard" ]
+                [ class "float-xs-right btn-group" ]
+                [ button
+                    [ type_ "button"
+                    , class "btn btn-sm btn-outline-success"
+                    , Utils.onClick (App.TreeStatus.Types.RevertChange recentChange.id)
                     ]
+                    [ text "Restore" ]
+                , button
+                    [ type_ "button"
+                    , class "btn btn-sm btn-outline-warning"
+                    , Utils.onClick (App.TreeStatus.Types.DiscardChange recentChange.id)
+                    ]
+                    [ text "Discard" ]
                 , div
                     []
                     (List.append
@@ -169,10 +180,11 @@ viewRecentChanges scopes recentChanges =
             []
 
 
-
--- TODO: viewTreesItem :
-
-
+viewTreesItem :
+    List String
+    -> List String
+    -> { a | reason : String, status : String, name : String }
+    -> Html App.TreeStatus.Types.Msg
 viewTreesItem scopes treesSelected tree =
     let
         isChecked =
@@ -198,7 +210,7 @@ viewTreesItem scopes treesSelected tree =
                 [ label
                     [ class "custom-control custom-checkbox" ]
                     [ input
-                        [ type' "checkbox"
+                        [ type_ "checkbox"
                         , class "custom-control-input"
                         , checked isChecked
                         , onCheck checking
@@ -390,6 +402,13 @@ viewButtons route scopes model =
             )
 
 
+viewConfirmDelete :
+    { a
+        | deleteError : Maybe error
+        , deleteTreesConfirm : Bool
+        , treesSelected : List String
+    }
+    -> List (Html App.TreeStatus.Types.Msg)
 viewConfirmDelete model =
     [ div
         [ id "treestatus-form" ]
@@ -412,7 +431,7 @@ viewConfirmDelete model =
                     (label
                         [ class "custom-control custom-checkbox" ]
                         [ input
-                            [ type' "checkbox"
+                            [ type_ "checkbox"
                             , class "custom-control-input"
                             , checked model.deleteTreesConfirm
                             , onCheck (\x -> App.TreeStatus.Types.DeleteTreesConfirmToggle)
@@ -438,6 +457,7 @@ viewConfirmDelete model =
     ]
 
 
+viewTreesTitle : App.TreeStatus.Types.Route -> Html msg
 viewTreesTitle route =
     case route of
         App.TreeStatus.Types.ShowTreesRoute ->
@@ -456,6 +476,9 @@ viewTreesTitle route =
             h2 [ class "float-xs-left" ] [ text ("Tree: " ++ name) ]
 
 
+viewTreeDetails :
+    RemoteData.RemoteData a { b | message_of_the_day : String, name : String, status : String }
+    -> Html App.TreeStatus.Types.Msg
 viewTreeDetails remote =
     case remote of
         RemoteData.Success tree ->

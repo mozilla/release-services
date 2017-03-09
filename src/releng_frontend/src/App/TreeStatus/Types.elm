@@ -2,8 +2,7 @@ module App.TreeStatus.Types exposing (..)
 
 import App.Types
 import Form
-import Http
-import RemoteData
+import RemoteData exposing (WebData)
 
 
 type Route
@@ -77,19 +76,19 @@ type Msg
     | GetTreeLogsAllResult (RemoteData.WebData TreeLogs)
     | GetRecentChangesResult (RemoteData.WebData (List RecentChange))
     | FormAddTreeMsg Form.Msg
-    | FormAddTreeResult (RemoteData.RemoteData Http.RawError Http.Response)
+    | FormAddTreeResult (WebData String)
     | FormUpdateTreesMsg Form.Msg
-    | FormUpdateTreesResult (RemoteData.RemoteData Http.RawError Http.Response)
+    | FormUpdateTreesResult (WebData String)
     | SelectAllTrees
     | SelectTree String
     | UnselectAllTrees
     | UnselectTree String
     | DeleteTrees
     | DeleteTreesConfirmToggle
-    | DeleteTreesResult (RemoteData.RemoteData Http.RawError Http.Response)
+    | DeleteTreesResult (WebData String)
     | RevertChange Int
     | DiscardChange Int
-    | RecentChangeResult (RemoteData.RemoteData Http.RawError Http.Response)
+    | RecentChangeResult (WebData String)
 
 
 possibleTreeStatuses : List ( String, String )

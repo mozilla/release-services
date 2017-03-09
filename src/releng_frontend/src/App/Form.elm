@@ -1,11 +1,9 @@
 module App.Form exposing (..)
 
 import Form
-import Form.Error
 import Form.Input
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import VirtualDom
 
 
 maybeAppend : Maybe a -> (a -> b) -> List b -> List b
@@ -124,11 +122,12 @@ viewCheckboxInput state labelText =
         ]
 
 
+viewButton : String -> List (Attribute msg) -> Html msg
 viewButton labelText attributes =
     button
         (attributes
             |> List.append
-                [ type' "submit"
+                [ type_ "submit"
                 , class "btn btn-outline-primary"
                 ]
         )
