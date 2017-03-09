@@ -1,13 +1,13 @@
 module App.Home exposing (..)
 
 import App
-import App.TreeStatus
 import App.TreeStatus.Types
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Utils
 
 
+viewCard : String -> String -> Attribute msg -> Html msg
 viewCard title description href =
     div [ class "col-sm-6" ]
         [ a
@@ -22,6 +22,7 @@ viewCard title description href =
         ]
 
 
+view : App.Model -> Html App.Msg
 view model =
     div [ class "row" ]
         [ viewCard

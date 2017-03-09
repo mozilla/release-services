@@ -12,9 +12,8 @@ import Form.Validate
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
-import Json.Encode as JsonEncode
+import Hawk
 import RemoteData
-import String
 import Utils
 
 
@@ -43,51 +42,51 @@ type alias UpdateTree =
 
 validateAddTree : Form.Validate.Validation () AddTree
 validateAddTree =
-    Form.Validate.form1 AddTree
-        (Form.Validate.get "name" Form.Validate.string)
+    Form.Validate.map AddTree
+        (Form.Validate.field "name" Form.Validate.string)
 
 
 validateUpdateTreeTags : Form.Field.Field -> Result (Form.Error.Error a) UpadateTreeTags
 validateUpdateTreeTags =
-    Form.Validate.form6 UpadateTreeTags
-        (Form.Validate.get "checkin_compilation" Form.Validate.bool)
-        (Form.Validate.get "checkin_test" Form.Validate.bool)
-        (Form.Validate.get "infra" Form.Validate.bool)
-        (Form.Validate.get "backlog" Form.Validate.bool)
-        (Form.Validate.get "planned" Form.Validate.bool)
-        (Form.Validate.get "other" Form.Validate.bool)
+    Form.Validate.map6 UpadateTreeTags
+        (Form.Validate.field "checkin_compilation" Form.Validate.bool)
+        (Form.Validate.field "checkin_test" Form.Validate.bool)
+        (Form.Validate.field "infra" Form.Validate.bool)
+        (Form.Validate.field "backlog" Form.Validate.bool)
+        (Form.Validate.field "planned" Form.Validate.bool)
+        (Form.Validate.field "other" Form.Validate.bool)
 
 
 validateUpdateTree : Form.Validate.Validation () UpdateTree
 validateUpdateTree =
-    Form.Validate.form5 UpdateTree
-        (Form.Validate.get "status" Form.Validate.string)
-        (Form.Validate.get "reason" Form.Validate.string
+    Form.Validate.map5 UpdateTree
+        (Form.Validate.field "status" Form.Validate.string)
+        (Form.Validate.field "reason" Form.Validate.string
             |> Form.Validate.defaultValue ""
         )
-        (Form.Validate.get "message_of_the_day" Form.Validate.string
+        (Form.Validate.field "message_of_the_day" Form.Validate.string
             |> Form.Validate.defaultValue ""
         )
-        (Form.Validate.get "tags" validateUpdateTreeTags)
-        (Form.Validate.get "remember" Form.Validate.bool)
+        (Form.Validate.field "tags" validateUpdateTreeTags)
+        (Form.Validate.field "remember" Form.Validate.bool)
 
 
 initAddTreeFields : List ( String, Form.Field.Field )
 initAddTreeFields =
-    [ ( "name", Form.Field.Text "" ) ]
+    [ ( "name", Form.Field.string "" ) ]
 
 
 initUpdateTreeFields : List ( String, Form.Field.Field )
 initUpdateTreeFields =
-    [ ( "status", Form.Field.Text "" )
-    , ( "reason", Form.Field.Text "" )
-    , ( "message_of_the_day", Form.Field.Text "" )
+    [ ( "status", Form.Field.string "" )
+    , ( "reason", Form.Field.string "" )
+    , ( "message_of_the_day", Form.Field.string "" )
     , ( "tags"
       , App.TreeStatus.Types.possibleTreeTags
-            |> List.map (\( _, x, _ ) -> ( x, Form.Field.Check False ))
+            |> List.map (\( _, x, _ ) -> ( x, Form.Field.bool False ))
             |> Form.Field.group
       )
-    , ( "remember", Form.Field.Check True )
+    , ( "remember", Form.Field.bool True )
     ]
 
 
@@ -114,27 +113,23 @@ resetUpdateTree =
 updateAddTree :
     App.TreeStatus.Types.Model AddTree UpdateTree
     -> Form.Msg
-    -> ( App.TreeStatus.Types.Model AddTree UpdateTree, Maybe { request : Http.Request, route : String } )
+    -> ( App.TreeStatus.Types.Model AddTree UpdateTree, Maybe Hawk.Request )
 updateAddTree model formMsg =
     let
         form =
-            Form.update formMsg model.formAddTree
+            Form.update validateAddTree formMsg model.formAddTree
 
         tree name =
             App.TreeStatus.Types.Tree name "closed" "new tree" ""
 
-        treeStr name =
-            JsonEncode.encode 0 (App.TreeStatus.Api.encoderTree (tree name))
-
         newTreeRequest name =
-            Http.Request
+            Hawk.Request
+                "AddTree"
                 "PUT"
-                -- probably this should be in Hawk.elm
-                [ ( "Accept", "application/json" )
-                , ( "Content-Type", "application/json" )
-                ]
                 (model.baseUrl ++ "/trees/" ++ name)
-                (Http.string (treeStr name))
+                -- probably this should be in Hawk.elm
+                [ Http.header "Accept" "application/json" ]
+                (Http.jsonBody (App.TreeStatus.Api.encoderTree (tree name)))
 
         ( trees, alerts, hawkRequest ) =
             case formMsg of
@@ -149,7 +144,7 @@ updateAddTree model formMsg =
                             |> (\y -> RemoteData.map (\x -> List.append x y) model.trees)
                         , []
                         , Form.getOutput form
-                            |> Maybe.map (\x -> { route = "AddTree", request = newTreeRequest x.name })
+                            |> Maybe.map (\x -> newTreeRequest x.name)
                         )
 
                 _ ->
@@ -168,11 +163,11 @@ updateUpdateTree :
     App.TreeStatus.Types.Route
     -> App.TreeStatus.Types.Model AddTree UpdateTree
     -> Form.Msg
-    -> ( App.TreeStatus.Types.Model AddTree UpdateTree, Maybe { request : Http.Request, route : String } )
+    -> ( App.TreeStatus.Types.Model AddTree UpdateTree, Maybe Hawk.Request )
 updateUpdateTree route model formMsg =
     let
         form =
-            Form.update formMsg model.formUpdateTree
+            Form.update validateUpdateTree formMsg model.formUpdateTree
 
         tagsToList tags =
             List.filterMap
@@ -191,12 +186,11 @@ updateUpdateTree route model formMsg =
                 ]
 
         createRequest data =
-            Http.Request
+            Hawk.Request
+                "UpdateTrees"
                 "PATCH"
-                [ ( "Accept", "application/json" )
-                , ( "Content-Type", "application/json" )
-                ]
                 (model.baseUrl ++ "/trees")
+                [ Http.header "Accept" "application/json" ]
                 ((if List.length model.treesSelected /= 1 then
                     ({ trees = model.treesSelected
                      , status = data.status
@@ -217,8 +211,7 @@ updateUpdateTree route model formMsg =
                         |> App.TreeStatus.Api.encoderUpdateTree
                     )
                  )
-                    |> JsonEncode.encode 0
-                    |> Http.string
+                    |> Http.jsonBody
                 )
 
         ( alerts, hawkRequest ) =
@@ -229,12 +222,7 @@ updateUpdateTree route model formMsg =
                     else
                         ( []
                         , Form.getOutput form
-                            |> Maybe.map
-                                (\x ->
-                                    { route = "UpdateTrees"
-                                    , request = createRequest x
-                                    }
-                                )
+                            |> Maybe.map (\x -> createRequest x)
                         )
 
                 _ ->
@@ -248,6 +236,7 @@ updateUpdateTree route model formMsg =
         )
 
 
+getUpdateTreeErrors : Form.Form e o -> List ( String, Form.Error.ErrorValue e )
 getUpdateTreeErrors form =
     let
         validateReason form =

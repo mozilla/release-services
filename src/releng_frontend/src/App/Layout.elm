@@ -8,6 +8,7 @@ import TaskclusterLogin
 import Utils
 
 
+viewDropdown : String -> List (Html msg) -> List (Html msg)
 viewDropdown title pages =
     [ div [ class "dropdown" ]
         [ a
@@ -28,6 +29,7 @@ viewDropdown title pages =
     ]
 
 
+viewUser : App.Model -> List (Html App.Msg)
 viewUser model =
     case model.user of
         Just user ->
@@ -72,10 +74,11 @@ viewUser model =
                 ]
 
 
+viewNavBar : App.Model -> List (Html App.Msg)
 viewNavBar model =
     [ button
         [ class "navbar-toggler hidden-md-up"
-        , type' "button"
+        , type_ "button"
         , attribute "data-toggle" "collapse"
         , attribute "data-target" ".navbar-collapse"
         , attribute "aria-controls" "navbar-header"
@@ -95,6 +98,7 @@ viewNavBar model =
     ]
 
 
+viewFooter : App.Model -> List (Html App.Msg)
 viewFooter model =
     [ hr [] []
     , ul []

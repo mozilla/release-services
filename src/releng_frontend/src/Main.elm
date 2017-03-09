@@ -7,27 +7,21 @@ import App.TreeStatus
 import App.TreeStatus.Api
 import App.TreeStatus.Types
 import App.TryChooser
-import App.Types
 import App.UserScopes
 import Hawk
-import Hop
-import Hop.Types
 import Html exposing (..)
-import Html.App
-import Html.Attributes exposing (..)
-import Http
 import Navigation
 import String
-import Task
+import Dict
 import TaskclusterLogin
 import Time
 import Utils
 
 
-init : App.Flags -> ( App.Route, Hop.Types.Address ) -> ( App.Model, Cmd App.Msg )
-init flags ( route, address ) =
-    ( { route = route
-      , address = address
+init : App.Flags -> Navigation.Location -> ( App.Model, Cmd App.Msg )
+init flags location =
+    ( { location = location
+      , route = App.HomeRoute
       , docsUrl = flags.docsUrl
       , version = flags.version
       , user = flags.user
@@ -35,9 +29,7 @@ init flags ( route, address ) =
       , trychooser = App.TryChooser.init
       , treestatus = App.TreeStatus.init flags.treestatusUrl
       }
-      -- XXX: weird way to trigger a Msg from init, there must be a nicer way
-      -- triggering (App.NavigateTo route) ensures that .load function is called
-    , Utils.performMsg (App.NavigateTo route)
+    , Utils.performMsg (App.NavigateTo App.HomeRoute)
     )
 
 
@@ -110,14 +102,18 @@ update msg model =
         App.NavigateTo route ->
             let
                 newCmd =
-                    Hop.outputFromPath App.Types.hopConfig (App.reverse route)
+                    (App.reverse route)
                         |> Navigation.newUrl
 
                 goHome =
                     App.NavigateTo App.HomeRoute
 
+                -- TODO: parse url query into dict
+                urlQuery =
+                    Dict.empty
+
                 login =
-                    model.address.query
+                    urlQuery
                         |> TaskclusterLogin.convertUrlQueryToUser
                         |> Maybe.map
                             (\x ->
@@ -173,7 +169,7 @@ update msg model =
             in
                 ( { model | userScopes = newModel }
                 , hawkCmd
-                    |> Maybe.map (\x -> [ hawkSend model.user "UserScopes" x.route x.request ])
+                    |> Maybe.map (\req -> [ hawkSend model.user "UserScopes" req ])
                     |> Maybe.withDefault []
                     |> List.append [ Cmd.map App.UserScopesMsg newCmd ]
                     |> Cmd.batch
@@ -203,7 +199,7 @@ update msg model =
             in
                 ( { model | treestatus = newModel }
                 , hawkCmd
-                    |> Maybe.map (\x -> [ hawkSend model.user "TreeStatus" x.route x.request ])
+                    |> Maybe.map (\req -> [ hawkSend model.user "TreeStatus" req ])
                     |> Maybe.withDefault []
                     |> List.append [ Cmd.map App.TreeStatusMsg newCmd ]
                     |> Cmd.batch
@@ -213,17 +209,20 @@ update msg model =
 hawkSend :
     TaskclusterLogin.Model
     -> String
-    -> String
-    -> Http.Request
+    -> Hawk.Request
     -> Cmd App.Msg
-hawkSend user page route request =
-    case user of
-        Just user2 ->
-            Hawk.send (page ++ route) request user2
-                |> Cmd.map App.HawkMsg
+hawkSend user page request =
+    let
+        pagedRequest =
+            { request | id = (page ++ request.id) }
+    in
+        case user of
+            Just user2 ->
+                Hawk.send request user2
+                    |> Cmd.map App.HawkMsg
 
-        Nothing ->
-            Cmd.none
+            Nothing ->
+                Cmd.none
 
 
 viewRoute : App.Model -> Html App.Msg
@@ -244,14 +243,14 @@ viewRoute model =
             text "Logging you out ..."
 
         App.TryChooserRoute ->
-            Html.App.map App.TryChooserMsg (App.TryChooser.view model.trychooser)
+            Html.map App.TryChooserMsg (App.TryChooser.view model.trychooser)
 
         App.TreeStatusRoute route ->
             App.TreeStatus.view
                 route
                 model.userScopes.scopes
                 model.treestatus
-                |> Html.App.map App.TreeStatusMsg
+                |> Html.map App.TreeStatusMsg
 
 
 subscriptions : App.Model -> Sub App.Msg
@@ -263,12 +262,11 @@ subscriptions model =
         ]
 
 
-main : Program App.Flags
+main : Program App.Flags App.Model App.Msg
 main =
     Navigation.programWithFlags App.urlParser
         { init = init
         , view = App.Layout.view viewRoute
         , update = update
-        , urlUpdate = App.urlUpdate
         , subscriptions = subscriptions
         }

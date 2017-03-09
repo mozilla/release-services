@@ -5,21 +5,13 @@ import App.TreeStatus.Form
 import App.TreeStatus.Types
 import App.TreeStatus.View
 import App.Types
-import App.UserScopes
 import App.Utils
-import Form
-import Form.Error
-import Hop
 import Html exposing (..)
-import Html.App
 import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+import Hawk
 import Http
-import Json.Encode as JsonEncode
 import Navigation
 import RemoteData
-import String
-import TaskclusterLogin
 import Title
 import UrlParser
 import UrlParser exposing ((</>))
@@ -34,11 +26,11 @@ import Utils
 routes : UrlParser.Parser (App.TreeStatus.Types.Route -> a) a
 routes =
     UrlParser.oneOf
-        [ UrlParser.format App.TreeStatus.Types.ShowTreesRoute (UrlParser.s "")
-        , UrlParser.format App.TreeStatus.Types.AddTreeRoute (UrlParser.s "add")
-        , UrlParser.format App.TreeStatus.Types.UpdateTreesRoute (UrlParser.s "update")
-        , UrlParser.format App.TreeStatus.Types.DeleteTreesRoute (UrlParser.s "delete")
-        , UrlParser.format App.TreeStatus.Types.ShowTreeRoute (UrlParser.s "show" </> UrlParser.string)
+        [ UrlParser.map App.TreeStatus.Types.ShowTreesRoute (UrlParser.s "")
+        , UrlParser.map App.TreeStatus.Types.AddTreeRoute (UrlParser.s "add")
+        , UrlParser.map App.TreeStatus.Types.UpdateTreesRoute (UrlParser.s "update")
+        , UrlParser.map App.TreeStatus.Types.DeleteTreesRoute (UrlParser.s "delete")
+        , UrlParser.map App.TreeStatus.Types.ShowTreeRoute (UrlParser.s "show" </> UrlParser.string)
         ]
 
 
@@ -65,7 +57,7 @@ page : (App.TreeStatus.Types.Route -> a) -> App.Types.Page a b
 page outRoute =
     { title = "TreeStatus"
     , description = "Current status of Mozilla's version-control repositories."
-    , matcher = UrlParser.format outRoute (UrlParser.s "treestatus" </> routes)
+    , matcher = UrlParser.map outRoute (UrlParser.s "treestatus" </> routes)
     }
 
 
@@ -98,13 +90,7 @@ update :
     App.TreeStatus.Types.Route
     -> App.TreeStatus.Types.Msg
     -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
-    -> ( App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
-       , Cmd App.TreeStatus.Types.Msg
-       , Maybe
-            { request : Http.Request
-            , route : String
-            }
-       )
+    -> ( App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree, Cmd App.TreeStatus.Types.Msg, Maybe Hawk.Request )
 update currentRoute msg model =
     case msg of
         App.TreeStatus.Types.NavigateTo route ->
@@ -190,7 +176,7 @@ update currentRoute msg model =
             in
                 ( newModel
                 , Cmd.batch
-                    [ Hop.outputFromPath App.Types.hopConfig (reverse newRoute)
+                    [ (reverse newRoute)
                         |> Navigation.newUrl
                     , newCmd
                     ]
@@ -229,21 +215,15 @@ update currentRoute msg model =
                 )
 
         App.TreeStatus.Types.FormAddTreeResult result ->
-            let
-                alerts =
-                    result
-                        |> RemoteData.map App.Utils.handleResponse
-                        |> RemoteData.withDefault []
-            in
-                ( { model | treesAlerts = alerts }
-                , Cmd.batch
-                    [ Utils.performMsg App.TreeStatus.Form.resetAddTree
-                        |> Cmd.map App.TreeStatus.Types.FormAddTreeMsg
-                    , Hop.outputFromPath App.Types.hopConfig (reverse App.TreeStatus.Types.ShowTreesRoute)
-                        |> Navigation.newUrl
-                    ]
-                , Nothing
-                )
+            ( { model | treesAlerts = App.Utils.getAlerts result }
+            , Cmd.batch
+                [ Utils.performMsg App.TreeStatus.Form.resetAddTree
+                    |> Cmd.map App.TreeStatus.Types.FormAddTreeMsg
+                , (reverse App.TreeStatus.Types.ShowTreesRoute)
+                    |> Navigation.newUrl
+                ]
+            , Nothing
+            )
 
         App.TreeStatus.Types.FormUpdateTreesMsg formMsg ->
             let
@@ -256,23 +236,17 @@ update currentRoute msg model =
                 )
 
         App.TreeStatus.Types.FormUpdateTreesResult result ->
-            let
-                alerts =
-                    result
-                        |> RemoteData.map App.Utils.handleResponse
-                        |> RemoteData.withDefault []
-            in
-                ( { model | treesAlerts = alerts }
-                , Cmd.batch
-                    [ App.TreeStatus.Api.fetchTrees model.baseUrl
-                    , App.TreeStatus.Api.fetchRecentChanges model.baseUrl
-                    , Utils.performMsg App.TreeStatus.Form.resetUpdateTree
-                        |> Cmd.map App.TreeStatus.Types.FormUpdateTreesMsg
-                    , Hop.outputFromPath App.Types.hopConfig (reverse App.TreeStatus.Types.ShowTreesRoute)
-                        |> Navigation.newUrl
-                    ]
-                , Nothing
-                )
+            ( { model | treesAlerts = App.Utils.getAlerts result }
+            , Cmd.batch
+                [ App.TreeStatus.Api.fetchTrees model.baseUrl
+                , App.TreeStatus.Api.fetchRecentChanges model.baseUrl
+                , Utils.performMsg App.TreeStatus.Form.resetUpdateTree
+                    |> Cmd.map App.TreeStatus.Types.FormUpdateTreesMsg
+                , (reverse App.TreeStatus.Types.ShowTreesRoute)
+                    |> Navigation.newUrl
+                ]
+            , Nothing
+            )
 
         App.TreeStatus.Types.SelectAllTrees ->
             let
@@ -334,17 +308,12 @@ update currentRoute msg model =
                         |> RemoteData.withDefault []
 
                 request =
-                    Http.Request
+                    Hawk.Request
+                        "DeleteTrees"
                         "DELETE"
-                        [ ( "Accept", "application/json" )
-                        , ( "Content-Type", "application/json" )
-                        ]
                         (model.baseUrl ++ "/trees2")
-                        (treesToDelete
-                            |> App.TreeStatus.Api.encoderTreeNames
-                            |> JsonEncode.encode 0
-                            |> Http.string
-                        )
+                        [ Http.header "Accept" "application/json" ]
+                        (Http.jsonBody (App.TreeStatus.Api.encoderTreeNames treesToDelete))
             in
                 if model.deleteTreesConfirm then
                     ( { model
@@ -352,7 +321,7 @@ update currentRoute msg model =
                         , trees = RemoteData.map filterOutTrees model.trees
                       }
                     , Cmd.none
-                    , Just { route = "DeleteTrees", request = request }
+                    , Just request
                     )
                 else
                     ( { model | deleteError = Just "You need to confirm to be able to delete tree(s)." }
@@ -361,64 +330,46 @@ update currentRoute msg model =
                     )
 
         App.TreeStatus.Types.DeleteTreesResult result ->
-            let
-                alerts =
-                    result
-                        |> RemoteData.map App.Utils.handleResponse
-                        |> RemoteData.withDefault []
-            in
-                ( { model | treesAlerts = alerts }
-                , Hop.outputFromPath App.Types.hopConfig (reverse App.TreeStatus.Types.ShowTreesRoute)
-                    |> Navigation.newUrl
-                , Nothing
-                )
+            ( { model | treesAlerts = App.Utils.getAlerts result }
+            , (reverse App.TreeStatus.Types.ShowTreesRoute)
+                |> Navigation.newUrl
+            , Nothing
+            )
 
         App.TreeStatus.Types.RevertChange stack ->
             ( { model | recentChangesAlerts = [] }
             , Cmd.none
             , Just
-                { route = "RevertChange"
-                , request =
-                    Http.Request
-                        "DELETE"
-                        [ ( "Accept", "application/json" )
-                        , ( "Content-Type", "application/json" )
-                        ]
-                        (model.baseUrl ++ "/stack2/restore/" ++ (toString stack))
-                        Http.empty
-                }
+                (Hawk.Request
+                    "RevertChange"
+                    "DELETE"
+                    (model.baseUrl ++ "/stack2/restore/" ++ (toString stack))
+                    [ Http.header "Accept" "application/json" ]
+                    Http.emptyBody
+                )
             )
 
         App.TreeStatus.Types.DiscardChange stack ->
             ( { model | recentChangesAlerts = [] }
             , Cmd.none
             , Just
-                { route = "DiscardChange"
-                , request =
-                    Http.Request
-                        "DELETE"
-                        [ ( "Accept", "application/json" )
-                        , ( "Content-Type", "application/json" )
-                        ]
-                        (model.baseUrl ++ "/stack2/discard/" ++ (toString stack))
-                        Http.empty
-                }
+                (Hawk.Request
+                    "DiscardChange"
+                    "DELETE"
+                    (model.baseUrl ++ "/stack2/discard/" ++ (toString stack))
+                    [ Http.header "Accept" "application/json" ]
+                    Http.emptyBody
+                )
             )
 
         App.TreeStatus.Types.RecentChangeResult result ->
-            let
-                alerts =
-                    result
-                        |> RemoteData.map App.Utils.handleResponse
-                        |> RemoteData.withDefault []
-            in
-                ( { model | recentChangesAlerts = alerts }
-                , Cmd.batch
-                    [ App.TreeStatus.Api.fetchRecentChanges model.baseUrl
-                    , App.TreeStatus.Api.fetchTrees model.baseUrl
-                    ]
-                , Nothing
-                )
+            ( { model | recentChangesAlerts = App.Utils.getAlerts result }
+            , Cmd.batch
+                [ App.TreeStatus.Api.fetchRecentChanges model.baseUrl
+                , App.TreeStatus.Api.fetchTrees model.baseUrl
+                ]
+            , Nothing
+            )
 
         App.TreeStatus.Types.DeleteTreesConfirmToggle ->
             ( { model | deleteTreesConfirm = Basics.not model.deleteTreesConfirm }
@@ -456,12 +407,12 @@ view route scopes model =
 
                         App.TreeStatus.Types.AddTreeRoute ->
                             [ App.TreeStatus.Form.viewAddTree model.formAddTree
-                                |> Html.App.map App.TreeStatus.Types.FormAddTreeMsg
+                                |> Html.map App.TreeStatus.Types.FormAddTreeMsg
                             ]
 
                         App.TreeStatus.Types.UpdateTreesRoute ->
                             [ App.TreeStatus.Form.viewUpdateTree model.treesSelected model.trees model.formUpdateTree
-                                |> Html.App.map App.TreeStatus.Types.FormUpdateTreesMsg
+                                |> Html.map App.TreeStatus.Types.FormUpdateTreesMsg
                             ]
 
                         App.TreeStatus.Types.DeleteTreesRoute ->

@@ -2,7 +2,6 @@ module App.TryChooser exposing (..)
 
 import App.Types
 import Html exposing (..)
-import Html.Attributes exposing (..)
 import UrlParser
 
 
@@ -19,7 +18,7 @@ page outRoute =
     { title = "TryChooser"
     , description =
         "Generate parts of try syntax and restrict tests to certain directories."
-    , matcher = UrlParser.format outRoute (UrlParser.s "trychooser")
+    , matcher = UrlParser.map outRoute (UrlParser.s "trychooser")
     }
 
 

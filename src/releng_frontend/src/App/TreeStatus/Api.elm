@@ -2,9 +2,9 @@ module App.TreeStatus.Api exposing (..)
 
 import App.TreeStatus.Types
 import Http
-import Json.Decode as JsonDecode exposing ((:=))
+import Json.Decode as JsonDecode
 import Json.Encode as JsonEncode
-import RemoteData
+import RemoteData exposing (WebData)
 
 
 encoderUpdateTree :
@@ -70,11 +70,11 @@ decoderTrees =
 
 decoderTree2 : JsonDecode.Decoder App.TreeStatus.Types.Tree
 decoderTree2 =
-    JsonDecode.object4 App.TreeStatus.Types.Tree
-        ("tree" := JsonDecode.string)
-        ("status" := JsonDecode.string)
-        ("reason" := JsonDecode.string)
-        ("message_of_the_day" := JsonDecode.string)
+    JsonDecode.map4 App.TreeStatus.Types.Tree
+        (JsonDecode.field "tree" JsonDecode.string)
+        (JsonDecode.field "status" JsonDecode.string)
+        (JsonDecode.field "reason" JsonDecode.string)
+        (JsonDecode.field "message_of_the_day" JsonDecode.string)
 
 
 decoderTree : JsonDecode.Decoder App.TreeStatus.Types.Tree
@@ -90,13 +90,13 @@ decoderTreeLogs =
 
 decoderTreeLog : JsonDecode.Decoder App.TreeStatus.Types.TreeLog
 decoderTreeLog =
-    JsonDecode.object6 App.TreeStatus.Types.TreeLog
-        ("tree" := JsonDecode.string)
-        ("when" := JsonDecode.string)
-        ("who" := JsonDecode.string)
-        ("status" := JsonDecode.string)
-        ("reason" := JsonDecode.string)
-        ("tags" := JsonDecode.list JsonDecode.string)
+    JsonDecode.map6 App.TreeStatus.Types.TreeLog
+        (JsonDecode.field "tree" JsonDecode.string)
+        (JsonDecode.field "when" JsonDecode.string)
+        (JsonDecode.field "who" JsonDecode.string)
+        (JsonDecode.field "status" JsonDecode.string)
+        (JsonDecode.field "reason" JsonDecode.string)
+        (JsonDecode.field "tags" (JsonDecode.list JsonDecode.string))
 
 
 decoderRecentChanges : JsonDecode.Decoder (List App.TreeStatus.Types.RecentChange)
@@ -107,13 +107,13 @@ decoderRecentChanges =
 
 decoderRecentChange : JsonDecode.Decoder App.TreeStatus.Types.RecentChange
 decoderRecentChange =
-    JsonDecode.object6 App.TreeStatus.Types.RecentChange
-        ("id" := JsonDecode.int)
-        ("trees" := JsonDecode.list JsonDecode.string)
-        ("when" := JsonDecode.string)
-        ("who" := JsonDecode.string)
-        ("status" := JsonDecode.string)
-        ("reason" := JsonDecode.string)
+    JsonDecode.map6 App.TreeStatus.Types.RecentChange
+        (JsonDecode.field "id" JsonDecode.int)
+        (JsonDecode.field "trees" (JsonDecode.list JsonDecode.string))
+        (JsonDecode.field "when" JsonDecode.string)
+        (JsonDecode.field "who" JsonDecode.string)
+        (JsonDecode.field "status" JsonDecode.string)
+        (JsonDecode.field "reason" JsonDecode.string)
 
 
 get :
@@ -122,7 +122,8 @@ get :
     -> JsonDecode.Decoder a
     -> Cmd b
 get msg url decoder =
-    Http.get decoder url
+    Http.get url decoder
+        |> Http.toTask
         |> RemoteData.asCmd
         |> Cmd.map msg
 
@@ -174,7 +175,7 @@ fetchRecentChanges url =
 
 
 hawkResponse :
-    Cmd (RemoteData.RemoteData Http.RawError Http.Response)
+    Cmd (WebData String)
     -> String
     -> Cmd App.TreeStatus.Types.Msg
 hawkResponse response route =
