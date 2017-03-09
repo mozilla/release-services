@@ -111,7 +111,7 @@ checkCredentials model save =
                     Http.request
                         { method = "GET"
                         , headers = buildHeaders model []
-                        , url = Utils.buildUrl (model.url ++ "/valid_login") [ ( "login", creds_.login ) ]
+                        , url = Utils.buildUrl (model.url ++ "/rest/valid_login") [ ( "login", creds_.login ) ]
                         , body = Http.emptyBody
                         , expect = Http.expectJson JsonDecode.bool
                         , timeout = Nothing
@@ -183,19 +183,19 @@ viewStatus : Model -> Html Msg
 viewStatus model =
     case model.check of
         NotAsked ->
-            span [ class "tag tag-warning" ] [ text "No credentials set" ]
+            span [ class "badge badge-warning" ] [ text "No credentials set" ]
 
         Loading ->
-            span [ class "tag tag-info" ] [ text "Checking credentials" ]
+            span [ class "badge badge-info" ] [ text "Checking credentials" ]
 
         Failure err ->
-            span [ class "tag tag-danger" ] [ text (toString err) ]
+            span [ class "badge badge-danger" ] [ text (toString err) ]
 
         Success check ->
             if check then
-                span [ class "tag tag-success" ] [ text "Valid credentials" ]
+                span [ class "badge badge-success" ] [ text "Valid credentials" ]
             else
-                span [ class "tag tag-danger" ] [ text "Invalid credentials" ]
+                span [ class "badge badge-danger" ] [ text "Invalid credentials" ]
 
 
 

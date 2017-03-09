@@ -213,15 +213,12 @@ update msg model =
                                             , ( "test", JsonEncode.int 42 )
                                             ]
                                       )
-                                    , ( "expires", JsonEncode.string "0" )
+                                    , ( "expires", JsonEncode.string "2020-01-01T00:00:00.000Z" )
                                     ]
                                 )
 
-                        headers =
-                            [ Http.header "Content-Type" "application/json" ]
-
                         request =
-                            Hawk.Request "WriteSecret" "PUT" url headers (Http.stringBody "application/json" payload)
+                            Hawk.Request "WriteSecret" "PUT" url [] (Http.stringBody "application/json" payload)
                     in
                         ( model
                         , -- Extensions integration
