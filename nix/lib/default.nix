@@ -328,7 +328,7 @@ in rec {
     { name
     , version
     , src
-    , src_path ? "src/${name}"
+    , src_path ? null
     , csp ? "default-src 'none'; img-src 'self' data:; script-src 'self'; style-src 'self'; font-src 'self';"
     , nodejs
     , node_modules
@@ -425,39 +425,51 @@ in rec {
         inherit postInstall;
 
         shellHook = ''
-          cd ${src_path}
+          cd ${self.src_path}
         '' + self.configurePhase + shellHook;
 
-        passthru.taskclusterGithubTasks =
-          map (branch: mkTaskclusterGithubTask { inherit name src_path branch; })
-              ([ "master" ] ++ optional inStaging "staging"
-                            ++ optional inProduction "production"
-              );
+        passthru = {
 
-        passthru.update = writeScript "update-${name}" ''
-          export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
-          pushd ${src_path} >> /dev/null
+          src_path =
+            if src_path != null
+              then src_path
+              else
+                "src/" +
+                  (replaceStrings ["-"] ["_"]
+                    (builtins.substring 8
+                      (builtins.stringLength name - 8) name));
 
-          ${node2nix}/bin/node2nix \
-            --composition node-modules.nix \
-            --input node-modules.json \
-            --output node-modules-generated.nix \
-            --node-env node-env.nix \
-            --flatten \
-            --pkg-name nodejs-6_x
+          taskclusterGithubTasks =
+            map (branch: mkTaskclusterGithubTask { inherit name branch; inherit (self) src_path; })
+                ([ "master" ] ++ optional inStaging "staging"
+                              ++ optional inProduction "production"
+                );
 
-          # TODO: move this into default.nix
-          ${gnused}/bin/sed -i -e "s| python2||" node-modules.nix
-          ${gnused}/bin/sed -i -e "s| inherit nodejs;| python = pkgs.python2;inherit nodejs;|" node-modules.nix
-          ${gnused}/bin/sed -i -e "s| sources.\"elm-0.18| #sources.\"elm-0.18|" node-modules-generated.nix
-          ${gnused}/bin/sed -i -e "s| name = \"elm-webpack-loader\";| dontNpmInstall = true;name = \"elm-webpack-loader\";|" node-modules-generated.nix
+          update = writeScript "update-${name}" ''
+            export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
+            pushd ${self.src_path} >> /dev/null
 
-          #rm -rf elm-stuff
-          #${elmPackages.elm}/bin/elm-package install -y
-          #${elm2nix}/bin/elm2nix elm-packages.nix
+            ${node2nix}/bin/node2nix \
+              --composition node-modules.nix \
+              --input node-modules.json \
+              --output node-modules-generated.nix \
+              --node-env node-env.nix \
+              --flatten \
+              --pkg-name nodejs-6_x
 
-          popd
-        '';
+            # TODO: move this into default.nix
+            ${gnused}/bin/sed -i -e "s| python2||" node-modules.nix
+            ${gnused}/bin/sed -i -e "s| inherit nodejs;| python = pkgs.python2;inherit nodejs;|" node-modules.nix
+            ${gnused}/bin/sed -i -e "s| sources.\"elm-0.18| #sources.\"elm-0.18|" node-modules-generated.nix
+            ${gnused}/bin/sed -i -e "s| name = \"elm-webpack-loader\";| dontNpmInstall = true;name = \"elm-webpack-loader\";|" node-modules-generated.nix
+
+            #rm -rf elm-stuff
+            #${elmPackages.elm}/bin/elm-package install -y
+            #${elm2nix}/bin/elm2nix elm-packages.nix
+
+            popd
+          '';
+        };
       };
     in self;
 
