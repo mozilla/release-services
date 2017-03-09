@@ -121,8 +121,8 @@ class Auth(object):
         self.login_manager.init_app(app)
 
     def _require_scopes(self, scopes):
-        # This will abort in case of login failure
-        self._require_login()
+        if not self._require_login():
+            return False
 
         with current_app.app_context():
             user_scopes = current_user.get_permissions()
@@ -135,11 +135,11 @@ class Auth(object):
 
     def _require_login(self):
         with current_app.app_context():
-            if not current_user.is_authenticated:
-                logger.error('Invalid authentication')
+            try:
+                return current_user.is_authenticated
+            except Exception as e:
+                logger.error('Invalid authentication: {}'.format(e))
                 return False
-
-        return True
 
     def require_login(self, method):
         """Decorator to check if user is authenticated
