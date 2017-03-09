@@ -1,9 +1,9 @@
 'use strict';
 
-require('expose?$!expose?jQuery!jquery');
-require('expose?Tether!tether');
+require('expose-loader?jQuery!jquery');
+require('expose-loader?Tether!tether');
 require('bootstrap');
-require("./scss/index.scss");
+require('./scss/index.scss');
 
 var redirect = require('./redirect');
 var localstorage = require('./localstorage');
