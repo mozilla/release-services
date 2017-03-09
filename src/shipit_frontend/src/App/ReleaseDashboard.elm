@@ -798,16 +798,16 @@ viewBug editor bugzilla bug =
             ]
         , p [ class "summary" ]
             ([ span [ class "text-muted" ] [ text "Versions :" ] ]
-                ++ (List.map viewVersionTag (Dict.toList bug.uplift_versions))
-                ++ (List.map (\k -> span [ class "tag tag-default" ] [ text k ]) bug.keywords)
+                ++ (List.map viewVersionbadge (Dict.toList bug.uplift_versions))
+                ++ (List.map (\k -> span [ class "badge badge-default" ] [ text k ]) bug.keywords)
             )
         , div [ class "row columns" ]
-            [ div [ class "col-xs-4" ]
+            [ div [ class "col" ]
                 (List.map (\c -> Html.map ContribEditorMsg (viewContributor editor c)) bug.contributors)
-            , div [ class "col-xs-4" ]
+            , div [ class "col" ]
                 [ viewUpliftRequest bug.uplift_request
                 ]
-            , div [ class "col-xs-4" ]
+            , div [ class "col" ]
                 [ case bug.editor of
                     FlagsEditor ->
                         viewFlagsEditor bugzilla bug
@@ -825,20 +825,20 @@ viewBug editor bugzilla bug =
         ]
 
 
-viewVersionTag : ( String, UpliftVersion ) -> Html Msg
-viewVersionTag ( name, version ) =
+viewVersionbadge : ( String, UpliftVersion ) -> Html Msg
+viewVersionbadge ( name, version ) =
     case version.status of
         "?" ->
-            span [ class "tag tag-info" ] [ text name ]
+            span [ class "badge badge-info" ] [ text name ]
 
         "+" ->
-            span [ class "tag tag-success" ] [ text name ]
+            span [ class "badge badge-success" ] [ text name ]
 
         "-" ->
-            span [ class "tag tag-danger" ] [ text name ]
+            span [ class "badge badge-danger" ] [ text name ]
 
         _ ->
-            span [ class "tag tag-default" ] [ text name ]
+            span [ class "badge badge-default" ] [ text name ]
 
 
 viewUpliftRequest : Maybe UpliftRequest -> Html Msg
@@ -924,9 +924,9 @@ viewPatch ( patchId, patch ) =
             ++ (List.map
                     (\( version, status ) ->
                         if status then
-                            span [ class "merge tag tag-success", title ("Merge successful on " ++ version) ] [ text version ]
+                            span [ class "merge badge badge-success", title ("Merge successful on " ++ version) ] [ text version ]
                         else
-                            span [ class "merge tag tag-danger", title ("Merge failed on " ++ version) ] [ text version ]
+                            span [ class "merge badge badge-danger", title ("Merge failed on " ++ version) ] [ text version ]
                     )
                     (Dict.toList patch.merge)
                )
@@ -990,36 +990,36 @@ viewFlag ( key, value ) =
         [ strong [] [ text key ]
         , case value of
             "+" ->
-                span [ class "tag tag-success" ] [ text value ]
+                span [ class "badge badge-success" ] [ text value ]
 
             "-" ->
-                span [ class "tag tag-danger" ] [ text value ]
+                span [ class "badge badge-danger" ] [ text value ]
 
             "?" ->
-                span [ class "tag tag-info" ] [ text value ]
+                span [ class "badge badge-info" ] [ text value ]
 
             "affected" ->
-                span [ class "tag tag-danger" ] [ text value ]
+                span [ class "badge badge-danger" ] [ text value ]
 
             "verified" ->
-                span [ class "tag tag-info" ] [ text value ]
+                span [ class "badge badge-info" ] [ text value ]
 
             "fixed" ->
-                span [ class "tag tag-success" ] [ text value ]
+                span [ class "badge badge-success" ] [ text value ]
 
             "wontfix" ->
-                span [ class "tag tag-warning" ] [ text value ]
+                span [ class "badge badge-warning" ] [ text value ]
 
             _ ->
-                span [ class "tag tag-default" ] [ text value ]
+                span [ class "badge badge-default" ] [ text value ]
         ]
 
 
 editFlag : Bug -> String -> List String -> ( String, String ) -> Html Msg
 editFlag bug prefix possible_values ( key, flag_value ) =
     div [ class "form-group row" ]
-        [ label [ class "col-sm-6 col-form-label" ] [ text key ]
-        , div [ class "col-sm-6" ]
+        [ label [ class "col col-form-label" ] [ text key ]
+        , div [ class "col" ]
             [ select [ class "form-control form-control-sm", onChange (EditBug bug (prefix ++ "_" ++ key)) ]
                 (List.map (\x -> option [ selected (x == flag_value) ] [ text x ]) possible_values)
             ]
@@ -1037,11 +1037,11 @@ viewFlagsEditor bugzilla bug =
             [ "affected", "verified", "fixed", "wontfix", "---" ]
     in
         Html.form [ class "editor", onSubmit (PublishEdits bug) ]
-            [ div [ class "col-xs-12 col-sm-6" ]
+            [ div [ class "col" ]
                 ([ h4 [] [ text "Status" ] ] ++ (List.map (\x -> editFlag bug "status" status_values x) (Dict.toList bug.flags_status)))
-            , div [ class "col-xs-12 col-sm-6" ]
+            , div [ class "col" ]
                 ([ h4 [] [ text "Tracking" ] ] ++ (List.map (\x -> editFlag bug "tracking" values x) (Dict.toList bug.flags_tracking)))
-            , div [ class "col-xs-12 col-sm-6" ]
+            , div [ class "col" ]
                 ([ h4 [] [ text "Generic" ] ] ++ (List.map (\x -> editFlag bug "generic" values x) (Dict.toList bug.flags_generic)))
             , div [ class "form-group" ]
                 [ textarea [ class "form-control", placeholder "Your comment", onInput (EditBug bug "comment") ] []

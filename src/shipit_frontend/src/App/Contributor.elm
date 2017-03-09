@@ -329,19 +329,19 @@ viewContributor model contributor =
                     (\role ->
                         case role of
                             "creator" ->
-                                span [ class "tag tag-success" ] [ text "Bug author" ]
+                                span [ class "badge badge-success" ] [ text "Bug author" ]
 
                             "reviewer" ->
-                                span [ class "tag tag-info" ] [ text "Reviewer" ]
+                                span [ class "badge badge-info" ] [ text "Reviewer" ]
 
                             "assignee" ->
-                                span [ class "tag tag-danger" ] [ text "Assignee" ]
+                                span [ class "badge badge-danger" ] [ text "Assignee" ]
 
                             "uplift_author" ->
-                                span [ class "tag tag-warning" ] [ text "Uplift author" ]
+                                span [ class "badge badge-warning" ] [ text "Uplift author" ]
 
                             _ ->
-                                span [ class "tag tag-default" ] [ text role ]
+                                span [ class "badge badge-default" ] [ text role ]
                     )
                     contributor.roles
                 )

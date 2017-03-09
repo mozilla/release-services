@@ -60,23 +60,22 @@ html {
 }
 
 nav {
-  .user {
-    // Bugzilla erroneous login link
-    .dropdown-item.text-danger .nav-link {
-      color: #d9534f;
-      font-weight: bold;
-    }
-    .dropdown-item.text-info .nav-link {
-      color: #5bc0de;
-      font-weight: bold;
-    }
 
-    // analysis links
-    .analysis {
-      span.name {
-        text-transform: capitalize;
-        margin-right: 3px;
-      }
+  // Bugzilla erroneous login link
+  .dropdown-item.text-danger .nav-link {
+    color: #d9534f;
+    font-weight: bold;
+  }
+  .dropdown-item.text-info .nav-link {
+    color: #5bc0de;
+    font-weight: bold;
+  }
+
+  // analysis links
+  .analysis {
+    span.name {
+      text-transform: capitalize;
+      margin-right: 3px;
     }
   }
 }
@@ -166,7 +165,7 @@ div.bugs {
           }
         }
 
-        .tag {
+        .badge {
           margin-right: 4px;
         }
       }
