@@ -2,11 +2,8 @@ port module App exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (..)
-import Html.App
 import Http
 import String
-import Json.Decode as JsonDecode exposing ((:=))
 import RouteUrl exposing (UrlChange)
 import RouteUrl.Builder as Builder exposing (Builder, builder, replacePath)
 import RemoteData exposing (WebData, RemoteData(..))
@@ -31,6 +28,7 @@ type
     -- Extensions integration
     = BugzillaMsg Bugzilla.Msg
     | UserMsg User.Msg
+    | HomeMsg Home.Msg
     | HawkRequest Hawk.Msg
       -- App code
     | ShowPage Page
@@ -55,8 +53,8 @@ type alias Model =
 
 
 type alias Flags =
-    { taskcluster : Maybe (User.Credentials)
-    , bugzilla : Maybe (Bugzilla.Credentials)
+    { taskcluster : Maybe User.Credentials
+    , bugzilla : Maybe Bugzilla.Credentials
     , backend_uplift_url : String
     , bugzilla_url : String
     }
@@ -153,6 +151,10 @@ update msg model =
         ShowPage page ->
             ( { model | current_page = page }, Cmd.none )
 
+        HomeMsg homeMsg ->
+            -- Does nothing
+            ( model, Cmd.none )
+
         -- Dashboard updates
         ReleaseDashboardMsg dashMsg ->
             let
@@ -205,22 +207,24 @@ view model =
         ]
 
 
+viewPage : Model -> Html Msg
 viewPage model =
     case model.current_page of
         Home ->
-            Home.view model
+            Html.map HomeMsg (Home.view model)
 
         Bugzilla ->
-            Html.App.map BugzillaMsg (Bugzilla.view model.bugzilla)
+            Html.map BugzillaMsg (Bugzilla.view model.bugzilla)
 
         ReleaseDashboard ->
-            Html.App.map ReleaseDashboardMsg (ReleaseDashboard.view model.release_dashboard model.bugzilla)
+            Html.map ReleaseDashboardMsg (ReleaseDashboard.view model.release_dashboard model.bugzilla)
 
 
+viewNavBar : Model -> List (Html Msg)
 viewNavBar model =
     [ button
         [ class "navbar-toggler hidden-md-up"
-        , type' "button"
+        , type_ "button"
         , attribute "data-toggle" "collapse"
         , attribute "data-target" ".navbar-collapse"
         , attribute "aria-controls" "navbar-header"
@@ -240,6 +244,7 @@ viewNavBar model =
     ]
 
 
+viewUser : Model -> List (Html Msg)
 viewUser model =
     case model.user of
         Just user ->
@@ -295,6 +300,7 @@ viewBugzillaCreds bugzilla =
                     ]
 
 
+viewLoginBugzilla : List (Html Msg)
 viewLoginBugzilla =
     [ eventLink (ShowPage Bugzilla) [ class "nav-link" ] [ text "Login Bugzilla" ]
     ]
@@ -332,24 +338,26 @@ viewDashboardStatus dashboard =
                     Http.NetworkError ->
                         span [] [ text "A network error occuring during the request, check your internet connectivity." ]
 
-                    Http.UnexpectedPayload data ->
+                    Http.BadPayload data response ->
                         let
                             l =
                                 Debug.log "Unexpected payload: " data
                         in
                             span [] [ text "An unexpected payload was received, check your browser logs" ]
 
-                    Http.BadResponse code message ->
-                        case code of
+                    Http.BadStatus response ->
+                        case response.status.code of
                             401 ->
                                 p []
                                     ([ p [] [ text "You are not authenticated: please login again." ]
                                      ]
                                         ++ viewLogin
                                     )
-
                             _ ->
-                                span [] [ text ("The backend produced an error " ++ (toString code) ++ " : " ++ message) ]
+                                span [] [ text ("The backend produced an error " ++ (toString response)) ]
+
+                    Http.BadUrl url ->
+                        span [] [ text ("Invalid url : " ++ url) ]
                 ]
 
         _ ->
@@ -370,6 +378,7 @@ viewNavAnalysis analysis =
         ]
 
 
+viewLogin : List (Html Msg)
 viewLogin =
     [ a
         [ Utils.onClick
@@ -385,6 +394,7 @@ viewLogin =
     ]
 
 
+viewFooter : Html msg
 viewFooter =
     footer []
         [ ul []
@@ -396,6 +406,7 @@ viewFooter =
         ]
 
 
+viewDropdown : String -> List (Html msg) -> List (Html msg)
 viewDropdown title pages =
     [ div [ class "dropdown" ]
         [ a
@@ -420,10 +431,12 @@ viewDropdown title pages =
 -- Routing
 
 
+pageLink : Page -> List (Attribute Msg) -> List (Html Msg) -> Html Msg
 pageLink page attributes =
     eventLink (ShowPage page) attributes
 
 
+analysisLink : Int -> List (Attribute Msg) -> List (Html Msg) -> Html Msg
 analysisLink analysis attributes =
     eventLink (ReleaseDashboardMsg (ReleaseDashboard.FetchAnalysis analysis)) attributes
 
@@ -462,9 +475,9 @@ location2messages location =
                                     case List.head rest of
                                         Just analysisId ->
                                             case String.toInt analysisId |> Result.toMaybe of
-                                                Just analysisId' ->
+                                                Just analysisId_ ->
                                                     -- Load specified analysis
-                                                    [ ReleaseDashboardMsg (ReleaseDashboard.FetchAnalysis analysisId') ]
+                                                    [ ReleaseDashboardMsg (ReleaseDashboard.FetchAnalysis analysisId_) ]
 
                                                 Nothing ->
                                                     []

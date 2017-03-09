@@ -4,9 +4,9 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
 import Html.Events exposing (onClick, onInput, onSubmit)
-import Json.Decode as Json exposing (Decoder, (:=))
+import Json.Decode as Json exposing (Decoder)
 import Json.Encode as JsonEncode
-import Utils exposing (onChange, decodeWebResponse)
+import Utils exposing (onChange, decodeJsonString)
 import String
 import Dialog
 import Hawk
@@ -19,7 +19,7 @@ type Msg
     | Cancel
     | SetValue FormValue String
     | UpdateContributor
-    | UpdatedContributor (RemoteData Http.RawError Http.Response)
+    | UpdatedContributor (WebData String)
       -- Hawk Extension
     | HawkRequest Hawk.Msg
 
@@ -32,7 +32,7 @@ type FormValue
 
 type alias Model =
     { contributor : Maybe Contributor
-    , update : WebData (Contributor)
+    , update : WebData Contributor
     , backend_uplift_url : String
     }
 
@@ -108,31 +108,9 @@ update msg model user =
             )
 
         UpdatedContributor response ->
-            let
-                newModel =
-                    case response of
-                        Success r ->
-                            { model | update = decodeWebResponse decodeContributor r }
-
-                        Failure rawError ->
-                            -- Promote error
-                            { model
-                                | contributor = Nothing
-                                , update =
-                                    Failure
-                                        (case rawError of
-                                            Http.RawTimeout ->
-                                                Http.Timeout
-
-                                            Http.RawNetworkError ->
-                                                Http.NetworkError
-                                        )
-                            }
-
-                        _ ->
-                            { model | update = Loading }
-            in
-                ( newModel, Cmd.none )
+            ( { model | update = decodeJsonString decodeContributor response }
+            , Cmd.none
+            )
 
 
 sendUpdate : Model -> User.Model -> Cmd Msg
@@ -146,17 +124,14 @@ sendUpdate model user =
                         url =
                             model.backend_uplift_url ++ "/contributor/" ++ (toString contributor.id)
 
+                        body =
+                            Http.jsonBody (encodeContributor contributor)
+
                         request =
-                            Http.Request "PUT"
-                                [ ( "Content-Type", "application/json" ) ]
-                                url
-                                (contributor
-                                    |> encodeContributor
-                                    |> Http.string
-                                )
+                            Hawk.Request "Contributor" "PUT" url [] body
                     in
                         Cmd.map HawkRequest
-                            (Hawk.send "Contributor" request credentials)
+                            (Hawk.send request credentials)
 
                 Nothing ->
                     Cmd.none
@@ -172,38 +147,37 @@ sendUpdate model user =
 
 decodeContributor : Decoder Contributor
 decodeContributor =
-    Json.object8 Contributor
-        ("id" := Json.int)
-        ("email" := Json.string)
-        ("name" := Json.string)
-        ("avatar" := Json.string)
+    Json.map8 Contributor
+        (Json.field "id" Json.int)
+        (Json.field "email" Json.string)
+        (Json.field "name" Json.string)
+        (Json.field "avatar" Json.string)
         (Json.oneOf
-            [ ("roles" := Json.list Json.string)
+            [ (Json.field "roles" (Json.list Json.string))
             , Json.succeed []
               -- no roles on updates
             ]
         )
-        ("karma" := Json.int)
-        (Json.maybe ("comment_private" := Json.string))
-        ("comment_public" := Json.string)
+        (Json.field "karma" Json.int)
+        (Json.maybe (Json.field "comment_private" Json.string))
+        (Json.field "comment_public" Json.string)
 
 
-encodeContributor : Contributor -> String
+encodeContributor : Contributor -> JsonEncode.Value
 encodeContributor contributor =
     -- Only send karma related data
     case contributor.comment_private of
         Just comment_private ->
-            JsonEncode.encode 0
-                (JsonEncode.object
-                    [ ( "id", JsonEncode.int contributor.id )
-                    , ( "karma", JsonEncode.int contributor.karma )
-                    , ( "comment_private", JsonEncode.string comment_private )
-                    , ( "comment_public", JsonEncode.string contributor.comment_public )
-                    ]
-                )
+            (JsonEncode.object
+                [ ( "id", JsonEncode.int contributor.id )
+                , ( "karma", JsonEncode.int contributor.karma )
+                , ( "comment_private", JsonEncode.string comment_private )
+                , ( "comment_public", JsonEncode.string contributor.comment_public )
+                ]
+            )
 
         Nothing ->
-            ""
+            JsonEncode.null
 
 
 

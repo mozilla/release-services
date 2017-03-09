@@ -1,7 +1,6 @@
 module App.ReleaseDashboard exposing (..)
 
 import Html exposing (..)
-import Html.App
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput, onSubmit, onCheck)
 import HtmlParser exposing (parse)
@@ -9,12 +8,11 @@ import HtmlParser.Util exposing (toVirtualDom)
 import String
 import Dict
 import Date
-import Json.Decode as Json exposing (Decoder, (:=))
+import Json.Decode as Json exposing (Decoder)
 import Json.Decode.Extra as JsonExtra exposing ((|:))
 import Json.Encode as JsonEncode
 import RemoteData as RemoteData exposing (WebData, RemoteData(Loading, Success, NotAsked, Failure), isSuccess)
 import Http
-import Task exposing (Task)
 import Basics exposing (Never)
 import Utils exposing (onChange)
 import TaskclusterLogin as User
@@ -115,7 +113,7 @@ type alias Model =
     { -- All analysis in use
       all_analysis : WebData (List Analysis)
     , -- Current Analysis used
-      current_analysis : WebData (Analysis)
+      current_analysis : WebData Analysis
     , -- Backend base endpoint
       backend_uplift_url : String
     , contrib_editor : ContribEditor.Model
@@ -126,15 +124,15 @@ type
     Msg
     -- List available analysis
     = FetchAllAnalysis
-    | FetchedAllAnalysis (RemoteData Http.RawError Http.Response)
+    | FetchedAllAnalysis (WebData String)
       -- Retrieve detailed analysis
     | FetchAnalysis Int
-    | FetchedAnalysis (RemoteData Http.RawError Http.Response)
+    | FetchedAnalysis (WebData String)
       -- Edit a bug
     | ShowBugEditor Bug BugEditor
     | EditBug Bug String String
     | EditUplift Bug UpliftVersion Bool
-    | FetchedBug (RemoteData Http.RawError Http.Response)
+    | FetchedBug (WebData String)
       -- Save bug edits
     | PublishEdits Bug
     | SavedBugEdit Bug (WebData BugUpdate)
@@ -166,6 +164,7 @@ init backend_uplift_url =
 -- Update
 
 
+routeHawkRequest : Cmd (WebData String) -> String -> Cmd Msg
 routeHawkRequest response route =
     case route of
         "AllAnalysis" ->
@@ -197,15 +196,10 @@ update msg model user bugzilla =
             )
 
         FetchedAllAnalysis response ->
-            ( response
-                |> RemoteData.map
-                    (\r ->
-                        { model
-                            | all_analysis = Utils.decodeWebResponse decodeAllAnalysis r
-                            , current_analysis = NotAsked
-                        }
-                    )
-                |> RemoteData.withDefault model
+            ( { model
+                | all_analysis = Utils.decodeJsonString decodeAllAnalysis response
+                , current_analysis = NotAsked
+              }
             , Cmd.none
             )
 
@@ -216,20 +210,17 @@ update msg model user bugzilla =
             )
 
         FetchedAnalysis response ->
-            ( response
-                |> RemoteData.map
-                    (\r -> { model | current_analysis = Utils.decodeWebResponse decodeAnalysis r })
-                |> RemoteData.withDefault model
+            ( { model | current_analysis = Utils.decodeJsonString decodeAnalysis response }
             , Cmd.none
             )
 
         ShowBugEditor bug show ->
             let
                 -- Mark a bug as being edited
-                model' =
+                model_ =
                     updateBug model bug.id (\b -> { b | editor = show, edits = Dict.empty, attachments = Dict.empty })
             in
-                ( model', Cmd.none )
+                ( model_, Cmd.none )
 
         EditBug bug key value ->
             -- Store a bug edit
@@ -237,10 +228,10 @@ update msg model user bugzilla =
                 edits =
                     Dict.insert key value bug.edits
 
-                model' =
+                model_ =
                     updateBug model bug.id (\b -> { b | edits = edits })
             in
-                ( model', Cmd.none )
+                ( model_, Cmd.none )
 
         EditUplift bug version checked ->
             -- Store an uplift approval
@@ -268,10 +259,10 @@ update msg model user bugzilla =
                         |> Dict.fromList
                         |> Dict.foldl mergeAttachments bug.attachments
 
-                model' =
+                model_ =
                     updateBug model bug.id (\b -> { b | attachments = attachments })
             in
-                ( model', Cmd.none )
+                ( model_, Cmd.none )
 
         PublishEdits bug ->
             -- Send edits to backend
@@ -289,16 +280,8 @@ update msg model user bugzilla =
                     ( model, Cmd.none )
 
         FetchedBug response ->
-            ( response
-                |> RemoteData.map
-                    (\r ->
-                        case Utils.decodeWebResponse decodeBug r of
-                            Success bug ->
-                                updateBug model bug.id (\b -> bug)
-
-                            _ ->
-                                model
-                    )
+            ( Utils.decodeJsonString decodeBug response
+                |> RemoteData.map (\bug -> updateBug model bug.id (\b -> bug))
                 |> RemoteData.withDefault model
             , Cmd.none
             )
@@ -306,16 +289,16 @@ update msg model user bugzilla =
         SavedBugEdit bug update ->
             let
                 -- Store bug update from bugzilla
-                model' =
+                model_ =
                     updateBug model bug.id (\b -> { b | update = update, editor = NoEditor })
             in
                 -- Forward update to backend
                 case update of
                     Success up ->
-                        sendBugUpdate model' user bug up
+                        sendBugUpdate model_ user bug up
 
                     _ ->
-                        ( model', Cmd.none )
+                        ( model_, Cmd.none )
 
         ContribEditorMsg editorMsg ->
             let
@@ -353,13 +336,13 @@ mergeAttachments aId versions attachments =
                     versions
 
         -- Remove useless versions
-        out' =
+        out_ =
             Dict.filter (\k v -> (not (v == "?"))) out
     in
-        if out' == Dict.empty then
+        if out_ == Dict.empty then
             Dict.remove aId attachments
         else
-            Dict.insert aId out' attachments
+            Dict.insert aId out_ attachments
 
 
 updateBugs : Model -> (Bug -> Bug) -> Model
@@ -373,10 +356,10 @@ updateBugs model callback =
                     List.map callback analysis.bugs
 
                 -- Rebuild analysis
-                analysis' =
+                analysis_ =
                     { analysis | bugs = bugs }
             in
-                { model | current_analysis = Success analysis' }
+                { model | current_analysis = Success analysis_ }
 
         _ ->
             model
@@ -426,10 +409,10 @@ fetchAllAnalysis model user =
                     model.backend_uplift_url ++ "/analysis"
 
                 request =
-                    Http.Request "GET" [] url Http.empty
+                    Hawk.Request "AllAnalysis" "GET" url [] Http.emptyBody
             in
                 Cmd.map HawkRequest
-                    (Hawk.send "AllAnalysis" request credentials)
+                    (Hawk.send request credentials)
 
         Nothing ->
             -- No credentials
@@ -447,10 +430,10 @@ fetchAnalysis model user analysis_id =
                     model.backend_uplift_url ++ "/analysis/" ++ (toString analysis_id)
 
                 request =
-                    Http.Request "GET" [] url Http.empty
+                    Hawk.Request "Analysis" "GET" url [] Http.emptyBody
             in
                 Cmd.map HawkRequest
-                    (Hawk.send "Analysis" request credentials)
+                    (Hawk.send request credentials)
 
         Nothing ->
             -- No credentials
@@ -480,40 +463,38 @@ publishBugEdits model bugzilla bug =
 
                 -- Build payload for bugzilla
                 payload =
-                    JsonEncode.encode 0
-                        (JsonEncode.object
-                            ([ ( "comment"
-                               , JsonEncode.object
-                                    [ ( "body", JsonEncode.string comment )
-                                    , ( "is_markdown", JsonEncode.bool True )
-                                    ]
-                               )
-                             , ( "flags", JsonEncode.list flags )
-                             ]
-                                ++ cf_flags
-                            )
+                    JsonEncode.object
+                        ([ ( "comment"
+                           , JsonEncode.object
+                                [ ( "body", JsonEncode.string comment )
+                                , ( "is_markdown", JsonEncode.bool True )
+                                ]
+                           )
+                         , ( "flags", JsonEncode.list flags )
+                         ]
+                            ++ cf_flags
                         )
 
-                headers =
-                    [ ( "Content-Type", "application/json" )
-                    ]
-
                 request =
-                    Http.Request "PUT" headers ("/bug/" ++ (toString bug.bugzilla_id)) (Http.string payload)
-
-                task =
-                    Bugzilla.send request bugzilla
+                    Http.request
+                        { method = "PUT"
+                        , headers = Bugzilla.buildHeaders bugzilla []
+                        , url = bugzilla.url ++ "/rest/bug/" ++ (toString bug.bugzilla_id)
+                        , body = Http.jsonBody payload
+                        , expect = Http.expectJson decodeBugUpdate
+                        , timeout = Nothing
+                        , withCredentials = False
+                        }
 
                 cmd =
-                    (Http.fromJson decodeBugUpdate task)
-                        |> RemoteData.asCmd
+                    RemoteData.sendRequest request
                         |> Cmd.map (SavedBugEdit bug)
 
                 -- Mark bug as being updated
-                model' =
+                model_ =
                     updateBug model bug.id (\b -> { b | update = Loading })
             in
-                ( model', cmd )
+                ( model_, cmd )
 
         _ ->
             -- No credentials !
@@ -533,10 +514,10 @@ publishApproval model bugzilla bug =
                     List.map (updateAttachment bug bugzilla comment) (Dict.toList bug.attachments)
 
                 -- Mark bug as being updatedo
-                model' =
+                model_ =
                     updateBug model bug.id (\b -> { b | update = Loading })
             in
-                ( model', Cmd.batch commands )
+                ( model_, Cmd.batch commands )
 
         _ ->
             -- No credentials !
@@ -552,54 +533,55 @@ updateAttachment bug bugzilla comment ( attachment_id, versions ) =
             List.map encodeFlag (Dict.toList versions)
 
         payload =
-            JsonEncode.encode 0
-                (JsonEncode.object
-                    [ ( "comment", JsonEncode.string comment )
-                    , ( "flags", JsonEncode.list flags )
-                    ]
-                )
+            JsonEncode.object
+                [ ( "comment", JsonEncode.string comment )
+                , ( "flags", JsonEncode.list flags )
+                ]
 
         request =
-            Http.Request "PUT" [] ("/bug/attachment/" ++ attachment_id) (Http.string payload)
-
-        task =
-            Bugzilla.send request bugzilla
+            Http.request
+                { method = "PUT"
+                , headers = Bugzilla.buildHeaders bugzilla []
+                , url = bugzilla.url ++ "/rest/bug/attachment/" ++ attachment_id
+                , body = Http.jsonBody payload
+                , expect = Http.expectJson decodeBugUpdate
+                , timeout = Nothing
+                , withCredentials = False
+                }
     in
-        (Http.fromJson decodeBugUpdate task)
-            |> RemoteData.asCmd
+        RemoteData.sendRequest request
             |> Cmd.map (SavedBugEdit bug)
 
 
-encodeChanges : String -> List Changes -> String
+encodeChanges : String -> List Changes -> JsonEncode.Value
 encodeChanges target changes =
     -- Encode bug changes
-    JsonEncode.encode 0
-        (JsonEncode.list
-            (List.map
-                (\u ->
-                    JsonEncode.object
-                        [ ( "bugzilla_id", JsonEncode.int u.bugzilla_id )
-                        , ( "target", JsonEncode.string target )
-                        , ( "changes"
-                          , JsonEncode.object
-                                (-- There is no JsonEncode.dict :/
-                                 Dict.toList u.changes
-                                    |> List.map
-                                        (\( k, v ) ->
-                                            ( k
-                                            , JsonEncode.object
-                                                [ ( "added", JsonEncode.string v.added )
-                                                , ( "removed", JsonEncode.string v.removed )
-                                                ]
-                                            )
+    (JsonEncode.list
+        (List.map
+            (\u ->
+                JsonEncode.object
+                    [ ( "bugzilla_id", JsonEncode.int u.bugzilla_id )
+                    , ( "target", JsonEncode.string target )
+                    , ( "changes"
+                      , JsonEncode.object
+                            (-- There is no JsonEncode.dict :/
+                             Dict.toList u.changes
+                                |> List.map
+                                    (\( k, v ) ->
+                                        ( k
+                                        , JsonEncode.object
+                                            [ ( "added", JsonEncode.string v.added )
+                                            , ( "removed", JsonEncode.string v.removed )
+                                            ]
                                         )
-                                )
-                          )
-                        ]
-                )
-                changes
+                                    )
+                            )
+                      )
+                    ]
             )
+            changes
         )
+    )
 
 
 sendBugUpdate : Model -> User.Model -> Bug -> BugUpdate -> ( Model, Cmd Msg )
@@ -618,22 +600,18 @@ sendBugUpdate model user bug update =
                             encodeChanges "attachment" changes
 
                         _ ->
-                            ""
+                            JsonEncode.null
 
                 -- Build Taskcluster http request
                 url =
                     model.backend_uplift_url ++ "/bugs/" ++ (toString bug.bugzilla_id)
 
-                headers =
-                    [ ( "Content-Type", "application/json" )
-                    ]
-
                 request =
-                    Http.Request "PUT" headers url (Http.string payload)
+                    Hawk.Request "BugUpdate" "PUT" url [] (Http.jsonBody payload)
             in
                 ( model
                 , Cmd.map HawkRequest
-                    (Hawk.send "BugUpdate" request credentials)
+                    (Hawk.send request credentials)
                 )
 
         Nothing ->
@@ -653,28 +631,29 @@ decodeBugUpdate : Decoder BugUpdate
 decodeBugUpdate =
     Json.oneOf
         [ -- Success decoder after bug update
-          Json.object1 UpdatedBug
-            ("bugs" := Json.list decodeUpdatedBug)
+          Json.map UpdatedBug
+            (Json.field "bugs" (Json.list decodeUpdatedBug))
         , -- Success decoder after attachment update
-          Json.object1 UpdatedAttachment
-            ("attachments" := Json.list decodeUpdatedBug)
+          Json.map UpdatedAttachment
+            (Json.field "attachments" (Json.list decodeUpdatedBug))
         , -- Error decoder
-          Json.object1 UpdateFailed
-            ("message" := Json.string)
+          Json.map UpdateFailed
+            (Json.field "message" Json.string)
         ]
 
 
 decodeUpdatedBug : Decoder Changes
 decodeUpdatedBug =
-    Json.object2 Changes
-        ("id" := Json.int)
-        ("changes"
-            := Json.dict
-                (Json.object2
+    Json.map2 Changes
+        (Json.field "id" Json.int)
+        (Json.field "changes"
+            (Json.dict
+                (Json.map2
                     (\r a -> { removed = r, added = a })
-                    ("removed" := Json.string)
-                    ("added" := Json.string)
+                    (Json.field "removed" Json.string)
+                    (Json.field "added" Json.string)
                 )
+            )
         )
 
 
@@ -685,33 +664,33 @@ decodeAllAnalysis =
 
 decodeAnalysis : Decoder Analysis
 decodeAnalysis =
-    Json.object5 Analysis
-        ("id" := Json.int)
-        ("name" := Json.string)
-        ("version" := Json.int)
-        ("count" := Json.int)
-        ("bugs" := Json.list decodeBug)
+    Json.map5 Analysis
+        (Json.field "id" Json.int)
+        (Json.field "name" Json.string)
+        (Json.field "version" Json.int)
+        (Json.field "count" Json.int)
+        (Json.field "bugs" (Json.list decodeBug))
 
 
 decodeBug : Decoder Bug
 decodeBug =
     Json.succeed Bug
-        |: ("id" := Json.int)
-        |: ("bugzilla_id" := Json.int)
-        |: ("url" := Json.string)
-        |: ("summary" := Json.string)
-        |: ("product" := Json.string)
-        |: ("component" := Json.string)
-        |: ("status" := Json.string)
-        |: ("keywords" := Json.list Json.string)
-        |: ("flags_status" := Json.dict Json.string)
-        |: ("flags_tracking" := Json.dict Json.string)
-        |: ("flags_generic" := Json.dict Json.string)
-        |: ("contributors" := (Json.list decodeContributor))
-        |: (Json.maybe ("uplift" := decodeUpliftRequest))
-        |: ("versions" := (Json.dict decodeVersion))
-        |: ("patches" := (Json.dict decodePatch))
-        |: ("landings" := (Json.dict JsonExtra.date))
+        |: (Json.field "id" Json.int)
+        |: (Json.field "bugzilla_id" Json.int)
+        |: (Json.field "url" Json.string)
+        |: (Json.field "summary" Json.string)
+        |: (Json.field "product" Json.string)
+        |: (Json.field "component" Json.string)
+        |: (Json.field "status" Json.string)
+        |: (Json.field "keywords" (Json.list Json.string))
+        |: (Json.field "flags_status" (Json.dict Json.string))
+        |: (Json.field "flags_tracking" (Json.dict Json.string))
+        |: (Json.field "flags_generic" (Json.dict Json.string))
+        |: (Json.field "contributors" (Json.list decodeContributor))
+        |: (Json.maybe (Json.field "uplift" decodeUpliftRequest))
+        |: (Json.field "versions" (Json.dict decodeVersion))
+        |: (Json.field "patches" (Json.dict decodePatch))
+        |: (Json.field "landings" (Json.dict JsonExtra.date))
         |: (Json.succeed NoEditor)
         -- not editing at first
         |:
@@ -730,29 +709,29 @@ decodeBug =
 
 decodePatch : Decoder Patch
 decodePatch =
-    Json.object7 Patch
-        ("source" := Json.string)
-        ("changes_add" := Json.int)
-        ("changes_del" := Json.int)
-        ("changes_size" := Json.int)
-        ("url" := Json.string)
-        ("languages" := Json.list (Json.string))
-        ("merge" := Json.dict Json.bool)
+    Json.map7 Patch
+        (Json.field "source" Json.string)
+        (Json.field "changes_add" Json.int)
+        (Json.field "changes_del" Json.int)
+        (Json.field "changes_size" Json.int)
+        (Json.field "url" Json.string)
+        (Json.field "languages" (Json.list Json.string))
+        (Json.field "merge" (Json.dict Json.bool))
 
 
 decodeVersion : Decoder UpliftVersion
 decodeVersion =
-    Json.object3 UpliftVersion
-        ("name" := Json.string)
-        ("status" := Json.string)
-        ("attachments" := Json.list Json.string)
+    Json.map3 UpliftVersion
+        (Json.field "name" Json.string)
+        (Json.field "status" Json.string)
+        (Json.field "attachments" (Json.list Json.string))
 
 
 decodeUpliftRequest : Decoder UpliftRequest
 decodeUpliftRequest =
-    Json.object2 UpliftRequest
-        ("id" := Json.int)
-        ("comment" := Json.string)
+    Json.map2 UpliftRequest
+        (Json.field "id" Json.int)
+        (Json.field "comment" Json.string)
 
 
 
@@ -787,7 +766,7 @@ view model bugzilla =
 viewAnalysis : ContribEditor.Model -> Bugzilla.Model -> Analysis -> Html Msg
 viewAnalysis editor bugzilla analysis =
     div []
-        [ Html.App.map ContribEditorMsg (ContribEditor.viewModal editor)
+        [ Html.map ContribEditorMsg (ContribEditor.viewModal editor)
         , h1 [] [ text ("Listing all " ++ analysis.name ++ " " ++ (toString analysis.version) ++ " uplifts for review:") ]
         , div [ class "bugs" ] (List.map (viewBug editor bugzilla) analysis.bugs)
         ]
@@ -824,7 +803,7 @@ viewBug editor bugzilla bug =
             )
         , div [ class "row columns" ]
             [ div [ class "col-xs-4" ]
-                (List.map (\c -> Html.App.map ContribEditorMsg (viewContributor editor c)) bug.contributors)
+                (List.map (\c -> Html.map ContribEditorMsg (viewContributor editor c)) bug.contributors)
             , div [ class "col-xs-4" ]
                 [ viewUpliftRequest bug.uplift_request
                 ]
@@ -989,6 +968,7 @@ viewFlags bug =
         ]
 
 
+viewLandingDate : ( String, Date.Date ) -> Html msg
 viewLandingDate ( key, date ) =
     li []
         [ strong [] [ text key ]
@@ -1004,6 +984,7 @@ viewLandingDate ( key, date ) =
         ]
 
 
+viewFlag : ( String, String ) -> Html msg
 viewFlag ( key, value ) =
     li []
         [ strong [] [ text key ]
@@ -1085,7 +1066,7 @@ editApproval bug ( name, version ) =
     div [ class "row" ]
         [ div [ class "col-xs-12" ]
             [ label [ class "checkbox" ]
-                [ input [ type' "checkbox", onCheck (EditUplift bug version) ] []
+                [ input [ type_ "checkbox", onCheck (EditUplift bug version) ] []
                 , text version.name
                 ]
             ]
