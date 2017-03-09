@@ -1,0 +1,32 @@
+// Mozilla colors
+// https://github.com/mozilla/mozmaker/blob/master/src/scss/custom/_colors.scss
+$charcoal: #4d4f53;
+$white: #fff;
+$black: #000;
+$dino-red: #d24735;
+$firefox-orange: #f26c23;
+$market-orange: #f89c24;
+$flame-yellow: #ffcd02;
+$gecko-green: #7dc14c;
+$summit-teal: #3bba99;
+$mobile-blue: #16afe5;
+$developer-blue: #4383bf;
+$nightly-blue: #5a6ba4;
+$aurora-purple: #ab5da4;
+$bikeshed-magenta: #e14164;
+$border-color: #adadad;
+
+// Mozilla fonts
+$font-family-sans-serif: 'Fira Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+$font-family-serif: 'Fira Sans', Georgia, 'Times New Roman', Times, serif;
+$font-family-monospace: 'Fira Sans', Menlo, Monaco, Consolas, 'Courier New', monospace;
+$font-family-base: 'Fira Sans', $font-family-sans-serif;
+$font-size-root: 16px;
+$headings-font-weight: 300;
+
+// Fonts
+@import url(./font-awesome/font-awesome.css);
+@import url(./fira/fira.css);
+
+// Bootstrap
+@import "~bootstrap/scss/bootstrap";

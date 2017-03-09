@@ -57,25 +57,25 @@ APP_DEV_PORT_shipit_signoff=8013
 APP_DEV_POSTGRES_PORT=9000
 
 APP_DEV=\
-	NEO_VERSION='v$(VERSION) (devel)' \
-	NEO_DOCS_URL='http://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_docs)' \
+	WEBPACK_VERSION='v$(VERSION) (devel)' \
+	WEBPACK_DOCS_URL='http://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_docs)' \
 	SSL_CACERT=$$PWD/tmp/ca.crt \
 	SSL_CERT=$$PWD/tmp/server.crt \
 	SSL_KEY=$$PWD/tmp/server.key
 APP_DEV_ENV_elm_common_example=\
 	$(APP_DEV)
 APP_DEV_ENV_releng_frontend=\
-	NEO_DOCS_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_docs) \
-	NEO_CLOBBERER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_clobberer) \
-	NEO_TOOLTOOL_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_tooltool) \
-	NEO_TREESTATUS_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_treestatus) \
-	NEO_MAPPER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_mapper) \
-	NEO_ARCHIVER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_archiver) \
+	WEBPACK_DOCS_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_docs) \
+	WEBPACK_CLOBBERER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_clobberer) \
+	WEBPACK_TOOLTOOL_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_tooltool) \
+	WEBPACK_TREESTATUS_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_treestatus) \
+	WEBPACK_MAPPER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_mapper) \
+	WEBPACK_ARCHIVER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_archiver) \
 	$(APP_DEV)
 APP_DEV_ENV_shipit_frontend=\
-	NEO_UPLIFT_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit_uplift) \
-	NEO_PIPELINE_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit_pipeline) \
-	NEO_BUGZILLA_URL=https://bugzilla-dev.allizom.org \
+	WEBPACK_UPLIFT_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit_uplift) \
+	WEBPACK_PIPELINE_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit_pipeline) \
+	WEBPACK_BUGZILLA_URL=https://bugzilla-dev.allizom.org \
 	$(APP_DEV)
 
 APP_STAGING_HEROKU_releng_clobberer=releng-staging-clobberer
@@ -192,7 +192,7 @@ develop-run-BACKEND: build-certs nix require-APP
 
 develop-run-FRONTEND: build-certs nix require-APP
 	nix-shell nix/default.nix --pure -A $(APP) \
-		--run "$(APP_DEV_ENV_$(APP)) neo start --port $(APP_DEV_PORT_$(APP)) --config webpack.config.js"
+		--run "$(APP_DEV_ENV_$(APP)) webpack-dev-server --host $(APP_DEV_HOST) --port $(APP_DEV_PORT_$(APP)) --config webpack.config.js"
 
 develop-run-releng_docs: develop-run-SPHINX
 develop-run-elm_common_example: develop-run-FRONTEND

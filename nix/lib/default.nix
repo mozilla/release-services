@@ -330,6 +330,7 @@ in rec {
     , src
     , src_path ? "src/${name}"
     , csp ? "default-src 'none'; img-src 'self' data:; script-src 'self'; style-src 'self'; font-src 'self';"
+    , nodejs
     , node_modules
     , elm_packages
     , patchPhase ? ""
@@ -350,7 +351,7 @@ in rec {
                     )
           src;
 
-        buildInputs = [ elmPackages.elm ] ++ (builtins.attrValues node_modules);
+        buildInputs = [ nodejs elmPackages.elm ] ++ (builtins.attrValues node_modules);
 
         patchPhase = ''
           if [ -e src/scss ]; then
@@ -388,12 +389,11 @@ in rec {
           for item in ${builtins.concatStringsSep " " (builtins.attrValues node_modules)}; do
             ln -s $item/lib/node_modules/* ./node_modules
           done
-          export PATH=./node_modules/mozilla-neo/bin/:$PATH
-          export NODE_PATH=$PWD/node_modules/mozilla-neo/node_modules:$NODE_PATH
+          export NODE_PATH=$PWD/node_modules:$NODE_PATH
         '';
 
         buildPhase = ''
-          ./node_modules/mozilla-neo/bin/neo build --config webpack.config.js
+          webpack
         '';
 
         doCheck = true;
@@ -413,7 +413,6 @@ in rec {
           fi
           echo "Everything OK!"
           echo "----------------------------------------------------------"
-          # TODO: neo test
         '';
 
         installPhase = ''
@@ -438,6 +437,7 @@ in rec {
         passthru.update = writeScript "update-${name}" ''
           export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
           pushd ${src_path} >> /dev/null
+
           ${node2nix}/bin/node2nix \
             --composition node-modules.nix \
             --input node-modules.json \
@@ -445,9 +445,17 @@ in rec {
             --node-env node-env.nix \
             --flatten \
             --pkg-name nodejs-6_x
-          rm -rf elm-stuff
-          ${elmPackages.elm}/bin/elm-package install -y
-          ${elm2nix}/bin/elm2nix elm-packages.nix
+
+          # TODO: move this into default.nix
+          ${gnused}/bin/sed -i -e "s| python2||" node-modules.nix
+          ${gnused}/bin/sed -i -e "s| inherit nodejs;| python = pkgs.python2;inherit nodejs;|" node-modules.nix
+          ${gnused}/bin/sed -i -e "s| sources.\"elm-0.18| #sources.\"elm-0.18|" node-modules-generated.nix
+          ${gnused}/bin/sed -i -e "s| name = \"elm-webpack-loader\";| dontNpmInstall = true;name = \"elm-webpack-loader\";|" node-modules-generated.nix
+
+          #rm -rf elm-stuff
+          #${elmPackages.elm}/bin/elm-package install -y
+          #${elm2nix}/bin/elm2nix elm-packages.nix
+
           popd
         '';
       };
@@ -485,7 +493,6 @@ in rec {
             mkdir -p $out/etc
             cp ./settings.py $out/etc
           fi
-
           if [ -d ./migrations ]; then
             mv ./migrations $out/${python.__old.python.sitePackages}
           fi
