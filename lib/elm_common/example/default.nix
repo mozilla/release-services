@@ -10,13 +10,12 @@ let
     inherit nodejs;
     inherit (releng_pkgs) pkgs;
   };
+  elm_packages = import ./elm-packages.nix;
 
 in mkFrontend {
-  inherit nodejs node_modules;
+  inherit nodejs node_modules elm_packages;
   name = "elm_common_example";
   version = fileContents ./../../../VERSION;
   src = ./.;
   src_path = "lib/elm_common/example";
-  elm_packages = import ./elm-packages.nix;
 }
-#    "build": "rimraf dist && webpack && mv dist/*.eot dist/static/css/ && mv dist/*.woff* dist/static/css/ && mv dist/*.svg dist/static/css/ && mv dist/*.ttf dist/static/css/"
