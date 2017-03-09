@@ -1,12 +1,12 @@
 port module BugzillaLogin exposing (..)
 
 import Http
+import Utils
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onSubmit)
 import RemoteData exposing (WebData, RemoteData(..))
 import Json.Decode as JsonDecode
-import Task exposing (Task)
 
 
 type Msg
@@ -85,8 +85,8 @@ update msg model =
             ( { model | check = check }
             , -- Save credentials stored in model when valid
               case check of
-                Success check' ->
-                    if check' && save then
+                Success check_ ->
+                    if check_ && save then
                         case model.credentials of
                             Just creds ->
                                 bugzillalogin_set creds
@@ -107,44 +107,38 @@ checkCredentials model save =
     case model.credentials of
         Just creds_ ->
             let
-                url =
-                    Http.url "/valid_login" [ ( "login", creds_.login ) ]
-
                 request =
-                    Http.Request "GET" [] url Http.empty
-
-                task =
-                    send request model
+                    Http.request
+                        { method = "GET"
+                        , headers = buildHeaders model []
+                        , url = Utils.buildUrl (model.url ++ "/valid_login") [ ( "login", creds_.login ) ]
+                        , body = Http.emptyBody
+                        , expect = Http.expectJson JsonDecode.bool
+                        , timeout = Nothing
+                        , withCredentials = False
+                        }
             in
-                (Http.fromJson JsonDecode.bool task)
-                    |> RemoteData.asCmd
+                -- send request as webdata
+                RemoteData.sendRequest request
                     |> Cmd.map (CheckedCredentials save)
 
         Nothing ->
             Cmd.none
 
 
-send : Http.Request -> Model -> Task Http.RawError Http.Response
-send request model =
-    -- Add Bugzilla token and url to an api request
+buildHeaders : Model -> List Http.Header -> List Http.Header
+buildHeaders model headers =
+    -- Build security headers for bugzilla requests
     case model.credentials of
         Just credentials ->
-            let
-                headers =
-                    [ ( "x-bugzilla-api-key", credentials.token )
-                    , ( "Accept", "application/json" )
-                    , ( "Content-Type", "application/json" )
-                    ]
-            in
-                Http.send Http.defaultSettings
-                    { url = model.url ++ "/rest" ++ request.url
-                    , verb = request.verb
-                    , headers = List.append request.headers headers
-                    , body = request.body
-                    }
+            List.append headers
+                [ Http.header "x-bugzilla-api-key" credentials.token
+                , Http.header "Accept" "application/json"
+                , Http.header "Content-Type" "application/json"
+                ]
 
         Nothing ->
-            Task.fail Http.RawNetworkError
+            []
 
 
 view : Model -> Html Msg
@@ -166,13 +160,13 @@ viewEditor user =
         [ div [ class "form-group row" ]
             [ label [ class "col-sm-3 col-form-label" ] [ text "Bugzilla Email" ]
             , div [ class "col-sm-9" ]
-                [ input [ type' "text", class "form-control", onInput UpdateLogin ] []
+                [ input [ type_ "text", class "form-control", onInput UpdateLogin ] []
                 ]
             ]
         , div [ class "form-group row" ]
             [ label [ class "col-sm-3 col-form-label" ] [ text "Bugzilla Token" ]
             , div [ class "col-sm-9" ]
-                [ input [ type' "password", class "form-control", onInput UpdateToken ] []
+                [ input [ type_ "password", class "form-control", onInput UpdateToken ] []
                 ]
             ]
         , div [ class "form-group row" ]

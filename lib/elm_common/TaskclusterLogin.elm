@@ -1,9 +1,7 @@
 port module TaskclusterLogin exposing (..)
 
 import Dict exposing (Dict)
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Json.Decode as JsonDecode exposing ((:=))
+import Json.Decode as JsonDecode
 import Maybe
 import Redirect
 import String
@@ -62,14 +60,14 @@ update msg model =
 decodeCertificate : String -> Result String Certificate
 decodeCertificate text =
     JsonDecode.decodeString
-        (JsonDecode.object7 Certificate
-            ("version" := JsonDecode.int)
-            ("scopes" := JsonDecode.list JsonDecode.string)
-            ("start" := JsonDecode.int)
-            ("expiry" := JsonDecode.int)
-            ("seed" := JsonDecode.string)
-            ("signature" := JsonDecode.string)
-            ("issuer" := JsonDecode.string)
+        (JsonDecode.map7 Certificate
+            (JsonDecode.field "version" JsonDecode.int)
+            (JsonDecode.field "scopes" (JsonDecode.list JsonDecode.string))
+            (JsonDecode.field "start" JsonDecode.int)
+            (JsonDecode.field "expiry" JsonDecode.int)
+            (JsonDecode.field "seed" JsonDecode.string)
+            (JsonDecode.field "signature" JsonDecode.string)
+            (JsonDecode.field "issuer" JsonDecode.string)
         )
         text
 
@@ -110,6 +108,7 @@ convertUrlQueryToUser query =
 -- VIEWS
 
 
+redirectToLogin : (Msg -> a) -> String -> String -> a
 redirectToLogin outMsg returnRoute description =
     { url = "https://login.taskcluster.net"
     , target = Just ( returnRoute, description )
@@ -123,6 +122,7 @@ redirectToLogin outMsg returnRoute description =
 -- UTILS
 
 
+shortUsername : String -> String
 shortUsername username =
     let
         parts =

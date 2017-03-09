@@ -4,7 +4,7 @@ import RouteUrl
 import Example as App
 
 
-main : Program App.Flags
+main : RouteUrl.RouteUrlProgram App.Flags App.Model App.Msg
 main =
     RouteUrl.programWithFlags
         { delta2url = App.delta2url

@@ -3,10 +3,9 @@ port module Example exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Html.App
 import Http
 import Json.Encode as JsonEncode
-import Json.Decode as JsonDecode exposing ((:=))
+import Json.Decode as JsonDecode
 import RouteUrl exposing (UrlChange)
 import RouteUrl.Builder as Builder exposing (Builder, builder, replacePath)
 import RemoteData exposing (WebData, RemoteData(..))
@@ -24,11 +23,11 @@ type
     | UserMsg User.Msg
     | HawkRequest Hawk.Msg
       -- App code
-    | SetScopes (RemoteData Http.RawError Http.Response)
+    | SetScopes (WebData String)
     | LoadScopes
-    | SetRoles (RemoteData Http.RawError Http.Response)
+    | SetRoles (WebData String)
     | LoadRoles
-    | SetSecret (RemoteData Http.RawError Http.Response)
+    | SetSecret (WebData String)
     | WriteSecret
 
 
@@ -47,14 +46,14 @@ type alias Model =
       user : User.Model
     , bugzilla : Bugzilla.Model
     , -- App code
-      scopes : List String
-    , roles : List Role
+      scopes : WebData (List String)
+    , roles : WebData (List Role)
     }
 
 
 type alias Flags =
-    { taskcluster : Maybe (User.Credentials)
-    , bugzilla : Maybe (Bugzilla.Credentials)
+    { taskcluster : Maybe User.Credentials
+    , bugzilla : Maybe Bugzilla.Credentials
     }
 
 
@@ -72,8 +71,8 @@ init flags =
             bugzilla = bz
           , user = user
           , -- App code
-            scopes = []
-          , roles = []
+            scopes = NotAsked
+          , roles = NotAsked
           }
         , -- Follow through with sub parts init
           Cmd.batch
@@ -139,18 +138,12 @@ update msg model =
 
         -- App specific
         SetScopes response ->
-            ( response
-                |> RemoteData.map
-                    (\r -> { model | scopes = Utils.decodeResponse scopesDecoder [] r })
-                |> RemoteData.withDefault model
+            ( { model | scopes = Utils.decodeJsonString scopesDecoder response }
             , Cmd.none
             )
 
         SetRoles response ->
-            ( response
-                |> RemoteData.map
-                    (\r -> { model | roles = Utils.decodeResponse rolesDecoder [] r })
-                |> RemoteData.withDefault model
+            ( { model | roles = Utils.decodeJsonString rolesDecoder response }
             , Cmd.none
             )
 
@@ -170,13 +163,13 @@ update msg model =
                             "https://auth.taskcluster.net/v1/scopes/current"
 
                         request =
-                            Http.Request "GET" [] url Http.empty
+                            Hawk.Request "LoadScopes" "GET" url [] Http.emptyBody
                     in
                         ( model
                         , -- Extensions integration
                           -- This is how we do a request using Hawk
                           Cmd.map HawkRequest
-                            (Hawk.send "LoadScopes" request user)
+                            (Hawk.send request user)
                         )
 
                 Nothing ->
@@ -191,13 +184,13 @@ update msg model =
                             "https://auth.taskcluster.net/v1/roles"
 
                         request =
-                            Http.Request "GET" [] url Http.empty
+                            Hawk.Request "LoadRoles" "GET" url [] Http.emptyBody
                     in
                         ( model
                         , -- Extensions integration
                           -- This is how we do a request using Hawk
                           Cmd.map HawkRequest
-                            (Hawk.send "LoadRoles" request user)
+                            (Hawk.send request user)
                         )
 
                 Nothing ->
@@ -225,32 +218,33 @@ update msg model =
                                 )
 
                         headers =
-                            [ ( "Content-Type", "application/json" )
-                            ]
+                            [ Http.header "Content-Type" "application/json" ]
 
                         request =
-                            Http.Request "PUT" headers url (Http.string payload)
+                            Hawk.Request "WriteSecret" "PUT" url headers (Http.stringBody "application/json" payload)
                     in
                         ( model
                         , -- Extensions integration
                           -- This is how we do a request using Hawk
                           Cmd.map HawkRequest
-                            (Hawk.send "WriteSecret" request user)
+                            (Hawk.send request user)
                         )
 
                 Nothing ->
                     ( model, Cmd.none )
 
 
+scopesDecoder : JsonDecode.Decoder (List String)
 scopesDecoder =
     JsonDecode.at [ "scopes" ] (JsonDecode.list JsonDecode.string)
 
 
+rolesDecoder : JsonDecode.Decoder (List Role)
 rolesDecoder =
     JsonDecode.list
-        (JsonDecode.object2 Role
-            ("roleId" := JsonDecode.string)
-            ("scopes" := JsonDecode.list JsonDecode.string)
+        (JsonDecode.map2 Role
+            (JsonDecode.field "roleId" JsonDecode.string)
+            (JsonDecode.field "scopes" (JsonDecode.list JsonDecode.string))
         )
 
 
@@ -258,6 +252,7 @@ rolesDecoder =
 -- Demo view
 
 
+view : Model -> Html Msg
 view model =
     div []
         [ h1 [] [ text "Taskcluster" ]
@@ -265,10 +260,11 @@ view model =
         , h1 [] [ text "Hawk" ]
         , viewHawk model
         , h1 [] [ text "Bugzilla" ]
-        , Html.App.map BugzillaMsg (Bugzilla.view model.bugzilla)
+        , Html.map BugzillaMsg (Bugzilla.view model.bugzilla)
         ]
 
 
+viewLogin : Model -> Html Msg
 viewLogin model =
     case model.user of
         Just user ->
@@ -290,6 +286,7 @@ viewLogin model =
                 ]
 
 
+viewHawk : Model -> Html Msg
 viewHawk model =
     div []
         [ case model.user of
@@ -303,16 +300,40 @@ viewHawk model =
             Nothing ->
                 span [ class "text-warning" ] [ text "Login on Taskcluster first." ]
         , div []
-            [ viewScopes model.scopes
-            , div [] (List.map viewRole model.roles)
+            [ case model.scopes of
+                Success scopes ->
+                    viewScopes scopes
+
+                Failure err ->
+                    div [ class "alert alert-danger" ] [ text ("Error:" ++ (toString err)) ]
+
+                Loading ->
+                    div [ class "alert alert-info" ] [ text "Loading scopes" ]
+
+                NotAsked ->
+                    div [ class "alert alert-info" ] [ text "Scopes Not loaded" ]
+            , case model.roles of
+                Success roles ->
+                    div [] (List.map viewRole roles)
+
+                Failure err ->
+                    div [ class "alert alert-danger" ] [ text ("Error:" ++ (toString err)) ]
+
+                Loading ->
+                    div [ class "alert alert-info" ] [ text "Loading roles" ]
+
+                NotAsked ->
+                    div [ class "alert alert-info" ] [ text "Roles Not loaded" ]
             ]
         ]
 
 
+viewScopes : List String -> Html msg
 viewScopes scopes =
     ul [] (List.map (\s -> li [] [ text s ]) scopes)
 
 
+viewRole : Role -> Html msg
 viewRole role =
     div []
         [ h5 [] [ text ("Role: " ++ role.roleId) ]
@@ -337,8 +358,13 @@ location2messages location =
                     "login" ->
                         [ Builder.query builder
                             |> User.convertUrlQueryToUser
-                            |> User.Logging
-                            |> UserMsg
+                            |> Maybe.map
+                                (\x ->
+                                    x
+                                        |> User.Logging
+                                        |> UserMsg
+                                )
+                            |> Maybe.withDefault (LoadScopes)
                         ]
 
                     _ ->
