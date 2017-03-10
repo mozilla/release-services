@@ -62,7 +62,7 @@ bugzillaBugAsLink text' =
                 )
 
 
-viewRecentChange plural recentChange =
+viewRecentChange scopes plural recentChange =
     let
         treeLabel =
             if plural then
@@ -95,40 +95,44 @@ viewRecentChange plural recentChange =
                 |> List.head
                 |> Maybe.withDefault timestamp
     in
-        div
-            [ class "list-group-item" ]
+        if hasScope "trees/update" scopes || hasScope "trees/delete" scopes then
             [ div
-                [ class "float-xs-right btn-group" ]
-                [ button
-                    [ type' "button"
-                    , class "btn btn-sm btn-outline-success"
-                    , Utils.onClick (App.TreeStatus.Types.RevertChange recentChange.id)
+                [ class "list-group-item" ]
+                [ div
+                    [ class "float-xs-right btn-group" ]
+                    [ button
+                        [ type' "button"
+                        , class "btn btn-sm btn-outline-success"
+                        , Utils.onClick (App.TreeStatus.Types.RevertChange recentChange.id)
+                        ]
+                        [ text "Restore" ]
+                    , button
+                        [ type' "button"
+                        , class "btn btn-sm btn-outline-warning"
+                        , Utils.onClick (App.TreeStatus.Types.DiscardChange recentChange.id)
+                        ]
+                        [ text "Discard" ]
                     ]
-                    [ text "Restore" ]
-                , button
-                    [ type' "button"
-                    , class "btn btn-sm btn-outline-warning"
-                    , Utils.onClick (App.TreeStatus.Types.DiscardChange recentChange.id)
-                    ]
-                    [ text "Discard" ]
+                , div
+                    []
+                    (List.append
+                        [ text "At "
+                        , text (parseTimestamp recentChange.when)
+                        , text (" " ++ (TaskclusterLogin.shortUsername recentChange.who))
+                        , text " changed "
+                        , text treeLabel
+                        , em [] [ text (String.join ", " recentChange.trees) ]
+                        , text " to "
+                        , span
+                            [ class ("tag tag-" ++ (treeStatusLevel recentChange.status)) ]
+                            [ text recentChange.status ]
+                        ]
+                        recentChangeReason
+                    )
                 ]
-            , div
-                []
-                (List.append
-                    [ text "At "
-                    , text (parseTimestamp recentChange.when)
-                    , text (" " ++ (TaskclusterLogin.shortUsername recentChange.who))
-                    , text " changed "
-                    , text treeLabel
-                    , em [] [ text (String.join ", " recentChange.trees) ]
-                    , text " to "
-                    , span
-                        [ class ("tag tag-" ++ (treeStatusLevel recentChange.status)) ]
-                        [ text recentChange.status ]
-                    ]
-                    recentChangeReason
-                )
             ]
+        else
+            []
 
 
 viewRecentChanges :
