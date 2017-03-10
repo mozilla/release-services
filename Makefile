@@ -130,6 +130,8 @@ APP_PRODUCTION_ENV_shipit_frontend=\
 
 FLASK_CMD ?= shell # default value for flask command to run
 
+DEV_DOCKERHUB_EMAIL=release+dockerhub+services@mozilla.com
+DEV_DOCKERHUB_SECRETS=taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:master
 
 help:
 	@echo ""
@@ -164,6 +166,14 @@ nix:
 		echo ""; \
 		exit 1; \
 	fi
+
+
+build-dev-environment:
+	docker build -t mozillareleng/services:latest
+	docker login -e $(DEV_DOCKERHUB_EMAIL) \
+	  -u `curl $(DEV_DOCKERHUB_SECRETS) | python -c 'import json, sys; a = json.load(sys.stdin); print a["secret"]["DOCKER_USERNAME"]'` \
+	  -p `curl $(DEV_DOCKERHUB_SECRETS) | python -c 'import json, sys; a = json.load(sys.stdin); print a["secret"]["DOCKER_PASSWORD"]'`
+	docker push mozillareleng/services:latest
 
 
 develop: nix require-APP
