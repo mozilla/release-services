@@ -442,7 +442,7 @@ view route scopes model =
                 |> App.Utils.appendItem
                     (App.Utils.viewAlerts model.recentChangesAlerts)
                 |> App.Utils.appendItems
-                    (App.TreeStatus.View.viewRecentChanges model.recentChanges)
+                    (App.TreeStatus.View.viewRecentChanges scopes model.recentChanges)
                 |> App.Utils.appendItem
                     (App.Utils.viewAlerts model.treesAlerts)
                 |> App.Utils.appendItem

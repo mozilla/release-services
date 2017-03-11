@@ -95,7 +95,7 @@ viewRecentChange scopes plural recentChange =
                 |> List.head
                 |> Maybe.withDefault timestamp
     in
-        if hasScope "trees/update" scopes || hasScope "trees/delete" scopes then
+        if hasScope "recent_changes/revert" scopes then
             [ div
                 [ class "list-group-item" ]
                 [ div
@@ -136,9 +136,10 @@ viewRecentChange scopes plural recentChange =
 
 
 viewRecentChanges :
-    RemoteData.WebData (List App.TreeStatus.Types.RecentChange)
+    List String
+    -> RemoteData.WebData (List App.TreeStatus.Types.RecentChange)
     -> List (Html App.TreeStatus.Types.Msg)
-viewRecentChanges recentChanges =
+viewRecentChanges scopes recentChanges =
     case recentChanges of
         RemoteData.Success data ->
             let
@@ -150,11 +151,11 @@ viewRecentChanges recentChanges =
             in
                 []
                     |> App.Utils.appendItems title
-                    |> App.Utils.appendItems
-                        (List.map
-                            (viewRecentChange (List.length data > 1))
+                    |> (\x ->
                             data
-                        )
+                                |> List.map (viewRecentChange scopes (List.length data > 1))
+                                |> List.concat
+                       )
                     |> (\x ->
                             [ div
                                 [ id "treestatus-recentchanges"
@@ -166,6 +167,10 @@ viewRecentChanges recentChanges =
 
         _ ->
             []
+
+
+
+-- TODO: viewTreesItem :
 
 
 viewTreesItem scopes treesSelected tree =
