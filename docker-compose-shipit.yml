@@ -2,7 +2,7 @@ version: "2.1"
 
 services:
   shipit_db:
-    image: postgres:9.6
+    image: postgres@sha256:6ac0fbeddde3bb7b0003a2ace8c126f742f8bdd90695801337d3edaaf1fcc478
     expose:
       - 5432
     environment:
@@ -20,6 +20,7 @@ services:
       - .:/app
     working_dir: /app
     environment:
+      - APP_DEV_HOST=0.0.0.0
       - SERVICES_APP=shipit_frontend
     # The frontend exposes information from each of the backends.
     links:
@@ -37,6 +38,7 @@ services:
       - .:/app
     working_dir: /app
     environment:
+      - APP_DEV_HOST=0.0.0.0
       - SERVICES_APP=shipit_dashboard
       - DATABASE_URL=postgresql://shipit:shipit@shipit_db:5432/shipit
     links:
@@ -59,6 +61,7 @@ services:
       - .:/app
     working_dir: /app
     environment:
+      - APP_DEV_HOST=0.0.0.0
       - SERVICES_APP=shipit_pipeline
     # The pipeline service needs to be able to trigger actions in the "step" services
     links:
@@ -75,4 +78,5 @@ services:
       - .:/app
     working_dir: /app
     environment:
+      - APP_DEV_HOST=0.0.0.0
       - SERVICES_APP=shipit_signoff

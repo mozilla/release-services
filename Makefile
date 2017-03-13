@@ -37,7 +37,7 @@ VERSION=$(shell cat VERSION)
 
 APP_DEV_DBNAME=services
 
-APP_DEV_HOST=0.0.0.0
+APP_DEV_HOST?=localhost
 
 APP_DEV_PORT_releng_docs=7000
 APP_DEV_PORT_elm_common_example=7001
