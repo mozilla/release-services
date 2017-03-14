@@ -182,13 +182,14 @@ develop-run-SPHINX : nix require-APP
 	nix-shell nix/default.nix -A releng-docs --run "HOST=$(APP_DEV_HOST) PORT=$(APP_DEV_PORT_$(APP)) python run.py"
 
 develop-run-BACKEND: build-certs nix require-APP
+	$(eval APP_PYTHON=$(subst -,_,$(APP)))
 	DEBUG=true \
 	CACHE_TYPE=filesystem \
-	CACHE_DIR=$$PWD/src/$(APP)/cache \
-	APP_SETTINGS=$$PWD/src/$(APP)/settings.py \
+	CACHE_DIR=$$PWD/src/$(APP_PYTHON)/cache \
+	APP_SETTINGS=$$PWD/src/$(APP_PYTHON)/settings.py \
 	CORS_ORIGINS="*" \
 		nix-shell nix/default.nix -A $(APP) \
-		--run "gunicorn $(APP):app --bind '$(APP_DEV_HOST):$(APP_DEV_PORT_$(APP))' --ca-certs=$$PWD/tmp/ca.crt --certfile=$$PWD/tmp/server.crt --keyfile=$$PWD/tmp/server.key --workers 1 --timeout 3600 --reload --log-file -"
+		--run "gunicorn $(APP_PYTHON):app --bind '$(APP_DEV_HOST):$(APP_DEV_PORT_$(APP))' --ca-certs=$$PWD/tmp/ca.crt --certfile=$$PWD/tmp/server.crt --keyfile=$$PWD/tmp/server.key --workers 1 --timeout 3600 --reload --log-file -"
 
 develop-run-FRONTEND: build-certs nix require-APP
 	nix-shell nix/default.nix --pure -A $(APP) \
