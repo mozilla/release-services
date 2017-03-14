@@ -1,0 +1,82 @@
+version: "2.1"
+
+services:
+  shipit_db:
+    image: postgres@sha256:6ac0fbeddde3bb7b0003a2ace8c126f742f8bdd90695801337d3edaaf1fcc478
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_PASSWORD=shipit
+      - POSTGRES_USER=shipit
+      - POSTGRES_DB=shipit
+    volumes:
+      - ./tmp/postgres:/var/lib/postgresql/data
+
+  shipit_frontend:
+    image: mozbhearsum/bhearsum-shipit-test
+    ports:
+      - "8010:8010"
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - APP_DEV_HOST=0.0.0.0
+      - SERVICES_APP=shipit_frontend
+    # The frontend exposes information from each of the backends.
+    links:
+      - shipit_dashboard
+      - shipit_pipeline
+      - shipit_signoff
+
+  shipit_dashboard:
+    image: mozbhearsum/bhearsum-shipit-test
+    expose:
+      - 8011
+    ports:
+      - "8011:8011"
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - APP_DEV_HOST=0.0.0.0
+      - SERVICES_APP=shipit_dashboard
+      - DATABASE_URL=postgresql://shipit:shipit@shipit_db:5432/shipit
+    links:
+      - shipit_db
+    healthcheck:
+      # TODO: this command generates spamming output from the shipit_db container
+      # using the real pg client might fix this
+      test: ["CMD", "nc", "-vz", "shipit_db", "5432"]
+      interval: 15s
+      timeout: 2s
+      retries: 10
+
+  shipit_pipeline:
+    image: mozbhearsum/bhearsum-shipit-test
+    expose:
+      - 8012
+    ports:
+      - "8012:8012"
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - APP_DEV_HOST=0.0.0.0
+      - SERVICES_APP=shipit_pipeline
+    # The pipeline service needs to be able to trigger actions in the "step" services
+    links:
+      - shipit_signoff
+
+  # TODO: might be nice to rename step services to have "step" in their name to make it more obvious
+  shipit_signoff:
+    image: mozbhearsum/bhearsum-shipit-test
+    expose:
+      - 8013
+    ports:
+      - "8013:8013"
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - APP_DEV_HOST=0.0.0.0
+      - SERVICES_APP=shipit_signoff
