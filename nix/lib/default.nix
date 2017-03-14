@@ -170,18 +170,20 @@ in rec {
     , src_path
     , secrets ? "repo:github.com/mozilla-releng/services:branch:${branch}"
     }:
-    ''
-    # --- ${name} (${branch}) ---
+    let
+      name' = builtins.substring 8 (builtins.stringLength name) name;
+    in ''
+    # --- ${name'} (${branch}) ---
 
       - metadata:
-          name: "${name}"
-          description: "Test, build and deploy ${name}"
+          name: "${name'}"
+          description: "Test, build and deploy ${name'}"
           owner: "{{ event.head.user.email }}"
           source: "https://github.com/mozilla-releng/services/tree/${branch}/${src_path}"
         scopes:
           - secrets:get:${secrets}
-          - hooks:modify-hook:project-releng/services-${branch}-${name}-*
-          - assume:hook-id:project-releng/services-${branch}-${name}-*
+          - hooks:modify-hook:project-releng/services-${branch}-${name'}-*
+          - assume:hook-id:project-releng/services-${branch}-${name'}-*
         extra:
           github:
             env: true
@@ -199,7 +201,7 @@ in rec {
           features:
             taskclusterProxy: true
           env:
-            APP: "${name}"
+            APP: "${name'}"
             TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/${secrets}"
           command:
             - "/bin/bash"

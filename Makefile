@@ -6,19 +6,19 @@ endif
 
 APP=
 APPS=\
-	elm_common_example \
-	releng_docs \
-	releng_clobberer \
-	releng_tooltool \
-	releng_treestatus \
-	releng_mapper \
-	releng_archiver \
-	releng_frontend \
-	shipit_uplift \
-	shipit_bot_uplift \
-	shipit_pipeline \
-	shipit_signoff \
-	shipit_frontend
+	elm-common-example \
+	releng-docs \
+	releng-clobberer \
+	releng-tooltool \
+	releng-treestatus \
+	releng-mapper \
+	releng-archiver \
+	releng-frontend \
+	shipit-uplift \
+	shipit-bot_uplift \
+	shipit-pipeline \
+	shipit-signoff \
+	shipit-frontend
 
 TOOL=
 TOOLS=\
@@ -39,58 +39,58 @@ APP_DEV_DBNAME=services
 
 APP_DEV_HOST=localhost
 
-APP_DEV_PORT_releng_docs=7000
-APP_DEV_PORT_elm_common_example=7001
+APP_DEV_PORT_releng-docs=7000
+APP_DEV_PORT_elm-common-example=7001
 
-APP_DEV_PORT_releng_frontend=8000
-APP_DEV_PORT_releng_clobberer=8001
-APP_DEV_PORT_releng_tooltool=8002
-APP_DEV_PORT_releng_treestatus=8003
-APP_DEV_PORT_releng_mapper=8004
-APP_DEV_PORT_releng_archiver=8005
+APP_DEV_PORT_releng-frontend=8000
+APP_DEV_PORT_releng-clobberer=8001
+APP_DEV_PORT_releng-tooltool=8002
+APP_DEV_PORT_releng-treestatus=8003
+APP_DEV_PORT_releng-mapper=8004
+APP_DEV_PORT_releng-archiver=8005
 
-APP_DEV_PORT_shipit_frontend=8010
-APP_DEV_PORT_shipit_uplift=8011
-APP_DEV_PORT_shipit_pipeline=8012
-APP_DEV_PORT_shipit_signoff=8013
+APP_DEV_PORT_shipit-frontend=8010
+APP_DEV_PORT_shipit-uplift=8011
+APP_DEV_PORT_shipit-pipeline=8012
+APP_DEV_PORT_shipit-signoff=8013
 
 APP_DEV_POSTGRES_PORT=9000
 
 APP_DEV=\
 	WEBPACK_VERSION='v$(VERSION) (devel)' \
-	WEBPACK_DOCS_URL='http://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_docs)' \
+	WEBPACK_DOCS_URL='http://$(APP_DEV_HOST):$(APP_DEV_PORT_releng-docs)' \
 	SSL_CACERT=$$PWD/tmp/ca.crt \
 	SSL_CERT=$$PWD/tmp/server.crt \
 	SSL_KEY=$$PWD/tmp/server.key
 APP_DEV_ENV_elm_common_example=\
 	$(APP_DEV)
-APP_DEV_ENV_releng_frontend=\
-	WEBPACK_DOCS_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_docs) \
-	WEBPACK_CLOBBERER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_clobberer) \
-	WEBPACK_TOOLTOOL_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_tooltool) \
-	WEBPACK_TREESTATUS_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_treestatus) \
-	WEBPACK_MAPPER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_mapper) \
-	WEBPACK_ARCHIVER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng_archiver) \
+APP_DEV_ENV_releng-frontend=\
+	WEBPACK_DOCS_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng-docs) \
+	WEBPACK_CLOBBERER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng-clobberer) \
+	WEBPACK_TOOLTOOL_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng-tooltool) \
+	WEBPACK_TREESTATUS_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng-treestatus) \
+	WEBPACK_MAPPER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng-mapper) \
+	WEBPACK_ARCHIVER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng-archiver) \
 	$(APP_DEV)
 APP_DEV_ENV_shipit_frontend=\
-	WEBPACK_UPLIFT_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit_uplift) \
-	WEBPACK_PIPELINE_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit_pipeline) \
+	WEBPACK_UPLIFT_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit-uplift) \
+	WEBPACK_PIPELINE_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit-pipeline) \
 	WEBPACK_BUGZILLA_URL=https://bugzilla-dev.allizom.org \
 	$(APP_DEV)
 
-APP_STAGING_HEROKU_releng_clobberer=releng-staging-clobberer
-APP_STAGING_HEROKU_releng_tooltool=releng-staging-tooltool
-APP_STAGING_HEROKU_releng_treestatus=releng-staging-treestatus
-APP_STAGING_HEROKU_releng_mapper=releng-staging-mapper
-APP_STAGING_HEROKU_releng_archiver=releng-staging-archiver
+APP_STAGING_HEROKU_releng-clobberer=releng-staging-clobberer
+APP_STAGING_HEROKU_releng-tooltool=releng-staging-tooltool
+APP_STAGING_HEROKU_releng-treestatus=releng-staging-treestatus
+APP_STAGING_HEROKU_releng-mapper=releng-staging-mapper
+APP_STAGING_HEROKU_releng-archiver=releng-staging-archiver
 
-APP_STAGING_HEROKU_shipit_uplift=shipit-staging-uplift
+APP_STAGING_HEROKU_shipit-uplift=shipit-staging-uplift
 
-APP_STAGING_S3_releng_docs=releng-staging-docs
-APP_STAGING_S3_releng_frontend=releng-staging-frontend
-APP_STAGING_S3_shipit_frontend=shipit-staging-frontend
-APP_STAGING_CSP_releng_frontend=https://auth.taskcluster.net https://clobberer.staging.mozilla-releng.net https://tooltool.staging.mozilla-releng.net https://treestatus.staging.mozilla-releng.net https://mapper.staging.mozilla-releng.net https://archiver.staging.mozilla-releng.net
-APP_STAGING_ENV_releng_frontend=\
+APP_STAGING_S3_releng-docs=releng-staging-docs
+APP_STAGING_S3_releng-frontend=releng-staging-frontend
+APP_STAGING_S3_shipit-frontend=shipit-staging-frontend
+APP_STAGING_CSP_releng-frontend=https://auth.taskcluster.net https://clobberer.staging.mozilla-releng.net https://tooltool.staging.mozilla-releng.net https://treestatus.staging.mozilla-releng.net https://mapper.staging.mozilla-releng.net https://archiver.staging.mozilla-releng.net
+APP_STAGING_ENV_releng-frontend=\
 	'version="v$(VERSION)"' \
 	'docs-url="https:\/\/docs\.staging\.mozilla-releng\.net\"' \
 	'clobberer-url="https:\/\/clobberer\.staging\.mozilla-releng\.net\"' \
@@ -98,24 +98,24 @@ APP_STAGING_ENV_releng_frontend=\
 	'treestatus-url="https:\/\/treestatus\.staging\.mozilla-releng\.net\"' \
 	'mapper-url="https:\/\/mapper\.staging\.mozilla-releng\.net\"' \
 	'archiver-url="https:\/\/archiver\.staging\.mozilla-releng\.net\"'
-APP_STAGING_CSP_shipit_frontend=https://auth.taskcluster.net https://dashboard.shipit.staging.mozilla-releng.net https://bugzilla.mozilla.org
-APP_STAGING_ENV_shipit_frontend=\
+APP_STAGING_CSP_shipit-frontend=https://auth.taskcluster.net https://dashboard.shipit.staging.mozilla-releng.net https://bugzilla.mozilla.org
+APP_STAGING_ENV_shipit-frontend=\
 	'version="v$(VERSION)"' \
 	'uplift-url="https:\/\/dashboard\.shipit\.staging\.mozilla-releng\.net\"' \
 	'bugzilla-url="https:\/\/bugzilla\.mozilla\.org"'
 
-APP_PRODUCTION_HEROKU_releng_clobberer=releng-production-clobberer
-APP_PRODUCTION_HEROKU_releng_tooltool=releng-production-tooltool
-APP_PRODUCTION_HEROKU_releng_treestatus=releng-production-treestatus
-APP_PRODUCTION_HEROKU_releng_mapper=releng-production-mapper
-APP_PRODUCTION_HEROKU_releng_archiver=releng-production-archiver
-APP_PRODUCTION_HEROKU_shipit_uplift=shipit-production-uplift
+APP_PRODUCTION_HEROKU_releng-clobberer=releng-production-clobberer
+APP_PRODUCTION_HEROKU_releng-tooltool=releng-production-tooltool
+APP_PRODUCTION_HEROKU_releng-treestatus=releng-production-treestatus
+APP_PRODUCTION_HEROKU_releng-mapper=releng-production-mapper
+APP_PRODUCTION_HEROKU_releng-archiver=releng-production-archiver
+APP_PRODUCTION_HEROKU_shipit-uplift=shipit-production-uplift
 
-APP_PRODUCTION_S3_releng_docs=releng-production-docs
-APP_PRODUCTION_S3_releng_frontend=releng-production-frontend
-APP_PRODUCTION_S3_shipit_frontend=shipit-production-frontend
-APP_PRODUCTION_CSP_releng_frontend=https://auth.taskcluster.net https://clobberer.mozilla-releng.net https://tooltool.mozilla-releng.net https://treestatus.mozilla-releng.net https://mapper.mozilla-releng.net https://archiver.mozilla-releng.net
-APP_PRODUCTION_ENV_releng_frontend=\
+APP_PRODUCTION_S3_releng-docs=releng-production-docs
+APP_PRODUCTION_S3_releng-frontend=releng-production-frontend
+APP_PRODUCTION_S3_shipit-frontend=shipit-production-frontend
+APP_PRODUCTION_CSP_releng-frontend=https://auth.taskcluster.net https://clobberer.mozilla-releng.net https://tooltool.mozilla-releng.net https://treestatus.mozilla-releng.net https://mapper.mozilla-releng.net https://archiver.mozilla-releng.net
+APP_PRODUCTION_ENV_releng-frontend=\
 	'version="v$(VERSION)"' \
 	'docs-url="https:\/\/docs\.mozilla-releng\.net\"' \
 	'clobberer-url="https:\/\/clobberer\.mozilla-releng\.net\"' \
@@ -123,8 +123,8 @@ APP_PRODUCTION_ENV_releng_frontend=\
 	'treestatus-url="https:\/\/treestatus\.mozilla-releng\.net\"' \
 	'mapper-url="https:\/\/mapper\.mozilla-releng\.net\"' \
 	'archiver-url="https:\/\/archiver\.mozilla-releng\.net\"'
-APP_PRODUCTION_CSP_shipit_frontend=https://auth.taskcluster.net https://dashboard.shipit.mozilla-releng.net https://bugzilla.mozilla.org
-APP_PRODUCTION_ENV_shipit_frontend=\
+APP_PRODUCTION_CSP_shipit-frontend=https://auth.taskcluster.net https://dashboard.shipit.mozilla-releng.net https://bugzilla.mozilla.org
+APP_PRODUCTION_ENV_shipit-frontend=\
 	'version="$(VERSION)"' \
 	'uplift-url="https:\/\/dashboard\.shipit\.mozilla-releng\.net\"'
 
@@ -179,7 +179,7 @@ develop: nix require-APP
 develop-run: require-APP develop-run-$(APP)
 
 develop-run-SPHINX : nix require-APP
-	nix-shell nix/default.nix -A releng_docs --run "HOST=$(APP_DEV_HOST) PORT=$(APP_DEV_PORT_$(APP)) python run.py"
+	nix-shell nix/default.nix -A releng-docs --run "HOST=$(APP_DEV_HOST) PORT=$(APP_DEV_PORT_$(APP)) python run.py"
 
 develop-run-BACKEND: build-certs nix require-APP
 	DEBUG=true \
@@ -194,20 +194,20 @@ develop-run-FRONTEND: build-certs nix require-APP
 	nix-shell nix/default.nix --pure -A $(APP) \
 		--run "$(APP_DEV_ENV_$(APP)) webpack-dev-server --host $(APP_DEV_HOST) --port $(APP_DEV_PORT_$(APP)) --config webpack.config.js"
 
-develop-run-releng_docs: develop-run-SPHINX
-develop-run-elm_common_example: develop-run-FRONTEND
+develop-run-releng-docs: develop-run-SPHINX
+develop-run-elm-common-example: develop-run-FRONTEND
 
-develop-run-releng_frontend: develop-run-FRONTEND
-develop-run-releng_clobberer: require-sqlite develop-run-BACKEND
-develop-run-releng_tooltool: require-sqlite develop-run-BACKEND
-develop-run-releng_treestatus: require-postgres develop-run-BACKEND
-develop-run-releng_mapper: require-sqlite develop-run-BACKEND
-develop-run-releng_archiver: require-sqlite develop-run-BACKEND
+develop-run-releng-frontend: develop-run-FRONTEND
+develop-run-releng-clobberer: require-sqlite develop-run-BACKEND
+develop-run-releng-tooltool: require-sqlite develop-run-BACKEND
+develop-run-releng-treestatus: require-postgres develop-run-BACKEND
+develop-run-releng-mapper: require-sqlite develop-run-BACKEND
+develop-run-releng-archiver: require-sqlite develop-run-BACKEND
 
-develop-run-shipit_frontend: develop-run-FRONTEND
-develop-run-shipit_uplift: require-postgres develop-run-BACKEND
-develop-run-shipit_pipeline: require-sqlite develop-run-BACKEND
-develop-run-shipit_signoff: require-sqlite develop-run-BACKEND
+develop-run-shipit-frontend: develop-run-FRONTEND
+develop-run-shipit-uplift: require-postgres develop-run-BACKEND
+develop-run-shipit-pipeline: require-sqlite develop-run-BACKEND
+develop-run-shipit-signoff: require-sqlite develop-run-BACKEND
 
 develop-run-postgres: build-postgresql require-initdb
 	./result-tool-postgresql/bin/postgres -D $(PWD)/tmp/postgres -h localhost -p $(APP_DEV_POSTGRES_PORT)
@@ -268,21 +268,21 @@ deploy-staging-S3: \
 		$(APP_TMP) \
 		s3://$(APP_STAGING_S3_$(APP))
 
-deploy-staging-elm_common_example:     # no deployment
+deploy-staging-elm-common-example:     # no deployment
 
-deploy-staging-releng_frontend:        deploy-staging-S3
-deploy-staging-releng_docs:            deploy-staging-S3
-deploy-staging-releng_clobberer:       deploy-staging-HEROKU
-deploy-staging-releng_tooltool:        deploy-staging-HEROKU
-deploy-staging-releng_treestatus:      deploy-staging-HEROKU
-deploy-staging-releng_mapper:          deploy-staging-HEROKU
-deploy-staging-releng_archiver:        deploy-staging-HEROKU
+deploy-staging-releng-frontend:        deploy-staging-S3
+deploy-staging-releng-docs:            deploy-staging-S3
+deploy-staging-releng-clobberer:       deploy-staging-HEROKU
+deploy-staging-releng-tooltool:        deploy-staging-HEROKU
+deploy-staging-releng-treestatus:      deploy-staging-HEROKU
+deploy-staging-releng-mapper:          deploy-staging-HEROKU
+deploy-staging-releng-archiver:        deploy-staging-HEROKU
 
-deploy-staging-shipit_frontend:        deploy-staging-S3
-deploy-staging-shipit_uplift:       	 deploy-staging-HEROKU
-deploy-staging-shipit_bot_uplift:   	 # There is no service running, just a hook
-deploy-staging-shipit_pipeline:        # deploy-staging-HEROKU
-deploy-staging-shipit_signoff:         # deploy-staging-HEROKU
+deploy-staging-shipit-frontend:        deploy-staging-S3
+deploy-staging-shipit-uplift:       	 deploy-staging-HEROKU
+deploy-staging-shipit-bot_uplift:   	 # There is no service running, just a hook
+deploy-staging-shipit-pipeline:        # deploy-staging-HEROKU
+deploy-staging-shipit-signoff:         # deploy-staging-HEROKU
 
 
 
@@ -319,21 +319,21 @@ deploy-production-S3: \
 		$(APP_TMP) \
 		s3://$(APP_PRODUCTION_S3_$(APP))
 
-deploy-production-elm_common_example:  # no deployment
+deploy-production-elm-common-example:  # no deployment
 
-deploy-production-releng_frontend:     deploy-production-S3
-deploy-production-releng_docs:         deploy-production-S3
-deploy-production-releng_clobberer:    # deploy-production-HEROKU
-deploy-production-releng_tooltool:     # deploy-production-HEROKU
-deploy-production-releng_treestatus:   deploy-production-HEROKU
-deploy-production-releng_mapper:       # deploy-production-HEROKU
-deploy-production-releng_archiver:     # deploy-production-HEROKU
+deploy-production-releng-frontend:     deploy-production-S3
+deploy-production-releng-docs:         deploy-production-S3
+deploy-production-releng-clobberer:    # deploy-production-HEROKU
+deploy-production-releng-tooltool:     # deploy-production-HEROKU
+deploy-production-releng-treestatus:   deploy-production-HEROKU
+deploy-production-releng-mapper:       # deploy-production-HEROKU
+deploy-production-releng-archiver:     # deploy-production-HEROKU
 
-deploy-production-shipit_frontend:     deploy-production-S3
-deploy-production-shipit_uplift:    	 deploy-production-HEROKU
-deploy-production-shipit_bot_uplift:   # There is no service running, just a hook
-deploy-production-shipit_pipeline:     # deploy-staging-HEROKU
-deploy-production-shipit_signoff:      # deploy-staging-HEROKU
+deploy-production-shipit-frontend:     deploy-production-S3
+deploy-production-shipit-uplift:    	 deploy-production-HEROKU
+deploy-production-shipit-bot_uplift:   # There is no service running, just a hook
+deploy-production-shipit-pipeline:     # deploy-staging-HEROKU
+deploy-production-shipit-signoff:      # deploy-staging-HEROKU
 
 
 
@@ -451,8 +451,8 @@ require-APP:
 	@if [ -z "$(APP)" ]; then \
 		echo ""; \
 		echo "You need to specify which APP, eg:"; \
-		echo "  make develop APP=releng_clobberer"; \
-		echo "  make build-app APP=releng_clobberer"; \
+		echo "  make develop APP=releng-clobberer"; \
+		echo "  make build-app APP=releng-clobberer"; \
 		echo "  ..."; \
 		echo ""; \
 		echo "Available APPS are: "; \
@@ -469,7 +469,7 @@ require-AWS:
 		[ -z "$$AWS_SECRET_ACCESS_KEY" ]; then \
 		echo ""; \
 		echo "You need to specify AWS credentials, eg:"; \
-		echo "  make deploy-production-releng_frontend \\"; \
+		echo "  make deploy-production-releng-frontend \\"; \
 	    echo "       AWS_ACCESS_KEY_ID=\"...\" \\"; \
 		echo "       AWS_SECRET_ACCESS_KEY=\"...\""; \
 		echo ""; \
@@ -482,7 +482,7 @@ require-HEROKU:
 		[ -z "$$HEROKU_PASSWORD" ]; then \
 		echo ""; \
 		echo "You need to specify HEROKU credentials, eg:"; \
-		echo "  make deploy-production-releng_clobberer \\"; \
+		echo "  make deploy-production-releng-clobberer \\"; \
 	    echo "       HEROKU_USERNAME=\"...\" \\"; \
 		echo "       HEROKU_PASSWORD=\"...\""; \
 		echo ""; \
