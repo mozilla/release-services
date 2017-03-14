@@ -15,7 +15,7 @@ APPS=\
 	releng-archiver \
 	releng-frontend \
 	shipit-uplift \
-	shipit-bot_uplift \
+	shipit-bot-uplift \
 	shipit-pipeline \
 	shipit-signoff \
 	shipit-frontend
@@ -280,7 +280,7 @@ deploy-staging-releng-archiver:        deploy-staging-HEROKU
 
 deploy-staging-shipit-frontend:        deploy-staging-S3
 deploy-staging-shipit-uplift:       	 deploy-staging-HEROKU
-deploy-staging-shipit-bot_uplift:   	 # There is no service running, just a hook
+deploy-staging-shipit-bot-uplift:   	 # There is no service running, just a hook
 deploy-staging-shipit-pipeline:        # deploy-staging-HEROKU
 deploy-staging-shipit-signoff:         # deploy-staging-HEROKU
 
@@ -331,7 +331,7 @@ deploy-production-releng-archiver:     # deploy-production-HEROKU
 
 deploy-production-shipit-frontend:     deploy-production-S3
 deploy-production-shipit-uplift:    	 deploy-production-HEROKU
-deploy-production-shipit-bot_uplift:   # There is no service running, just a hook
+deploy-production-shipit-bot-uplift:   # There is no service running, just a hook
 deploy-production-shipit-pipeline:     # deploy-staging-HEROKU
 deploy-production-shipit-signoff:      # deploy-staging-HEROKU
 
