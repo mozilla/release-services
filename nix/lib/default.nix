@@ -350,7 +350,7 @@ in rec {
     , inProduction ? false
     }:
     let
-      scss_common = ./../../lib/scss_common;
+      scss_common = ./../../lib/frontend_common/scss;
       frontend_common = ./../../lib/frontend_common;
       self = stdenv.mkDerivation {
         name = "${name}-${version}";
