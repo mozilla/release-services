@@ -1,2 +1,6 @@
 Sphinx
 livereload
+sphinxcontrib-blockdiag
+sphinxcontrib-seqdiag
+sphinxcontrib-actdiag
+sphinxcontrib-nwdiag
