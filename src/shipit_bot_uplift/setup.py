@@ -27,7 +27,7 @@ def read_requirements(file_):
 
 
 setup(
-    name='shipit_bot_uplift',
+    name='mozilla-shipit-bot-uplift',
     version=version,
     description='Automated bot to sync bug analysis for Shipit Dashboard',
     author='Mozilla Release Engineering',
