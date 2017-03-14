@@ -7,17 +7,17 @@ metadata:
   source: "{{ event.head.repo.url }}"
 tasks:
 
-# --- elm-common-example (master) ---
+# --- frontend-common-example (master) ---
 
   - metadata:
-      name: "elm-common-example"
-      description: "Test, build and deploy elm-common-example"
+      name: "frontend-common-example"
+      description: "Test, build and deploy frontend-common-example"
       owner: "{{ event.head.user.email }}"
-      source: "https://github.com/mozilla-releng/services/tree/master/lib/elm_common/example"
+      source: "https://github.com/mozilla-releng/services/tree/master/lib/frontend_common/example"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:master
-      - hooks:modify-hook:project-releng/services-master-elm-common-example-*
-      - assume:hook-id:project-releng/services-master-elm-common-example-*
+      - hooks:modify-hook:project-releng/services-master-frontend-common-example-*
+      - assume:hook-id:project-releng/services-master-frontend-common-example-*
     extra:
       github:
         env: true
@@ -34,7 +34,7 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "elm-common-example"
+        APP: "frontend-common-example"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:master"
       command:
         - "/bin/bash"
@@ -42,17 +42,17 @@ tasks:
         - "nix-env -iA nixpkgs.gnumake nixpkgs.curl nixpkgs.cacert && export SSL_CERT_FILE=$HOME/.nix-profile/etc/ssl/certs/ca-bundle.crt && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
 
 
-# --- elm-common-example (staging) ---
+# --- frontend-common-example (staging) ---
 
   - metadata:
-      name: "elm-common-example"
-      description: "Test, build and deploy elm-common-example"
+      name: "frontend-common-example"
+      description: "Test, build and deploy frontend-common-example"
       owner: "{{ event.head.user.email }}"
-      source: "https://github.com/mozilla-releng/services/tree/staging/lib/elm_common/example"
+      source: "https://github.com/mozilla-releng/services/tree/staging/lib/frontend_common/example"
     scopes:
       - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
-      - hooks:modify-hook:project-releng/services-staging-elm-common-example-*
-      - assume:hook-id:project-releng/services-staging-elm-common-example-*
+      - hooks:modify-hook:project-releng/services-staging-frontend-common-example-*
+      - assume:hook-id:project-releng/services-staging-frontend-common-example-*
     extra:
       github:
         env: true
@@ -68,7 +68,7 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        APP: "elm-common-example"
+        APP: "frontend-common-example"
         TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:staging"
       command:
         - "/bin/bash"

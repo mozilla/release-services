@@ -1,1 +1,1 @@
-../../../lib/elm_common/Utils.elm
+../../../lib/frontend_common/Utils.elm

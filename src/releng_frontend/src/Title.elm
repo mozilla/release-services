@@ -1,1 +1,1 @@
-../../../lib/elm_common/Title.elm
+../../../lib/frontend_common/Title.elm
