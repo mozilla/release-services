@@ -84,7 +84,7 @@ APP_STAGING_HEROKU_releng-treestatus=releng-staging-treestatus
 APP_STAGING_HEROKU_releng-mapper=releng-staging-mapper
 APP_STAGING_HEROKU_releng-archiver=releng-staging-archiver
 
-APP_STAGING_HEROKU_shipit-uplift=shipit-staging-uplift
+APP_STAGING_HEROKU_shipit-uplift=shipit-staging-dashboard
 
 APP_STAGING_S3_releng-docs=releng-staging-docs
 APP_STAGING_S3_releng-frontend=releng-staging-frontend
@@ -109,7 +109,7 @@ APP_PRODUCTION_HEROKU_releng-tooltool=releng-production-tooltool
 APP_PRODUCTION_HEROKU_releng-treestatus=releng-production-treestatus
 APP_PRODUCTION_HEROKU_releng-mapper=releng-production-mapper
 APP_PRODUCTION_HEROKU_releng-archiver=releng-production-archiver
-APP_PRODUCTION_HEROKU_shipit-uplift=shipit-production-uplift
+APP_PRODUCTION_HEROKU_shipit-uplift=shipit-production-dashboard
 
 APP_PRODUCTION_S3_releng-docs=releng-production-docs
 APP_PRODUCTION_S3_releng-frontend=releng-production-frontend
@@ -279,7 +279,7 @@ deploy-staging-releng-mapper:          deploy-staging-HEROKU
 deploy-staging-releng-archiver:        deploy-staging-HEROKU
 
 deploy-staging-shipit-frontend:        deploy-staging-S3
-deploy-staging-shipit-uplift:       	 deploy-staging-HEROKU
+deploy-staging-shipit-uplift:          deploy-staging-HEROKU
 deploy-staging-shipit-bot-uplift:   	 # There is no service running, just a hook
 deploy-staging-shipit-pipeline:        # deploy-staging-HEROKU
 deploy-staging-shipit-signoff:         # deploy-staging-HEROKU
@@ -330,7 +330,7 @@ deploy-production-releng-mapper:       # deploy-production-HEROKU
 deploy-production-releng-archiver:     # deploy-production-HEROKU
 
 deploy-production-shipit-frontend:     deploy-production-S3
-deploy-production-shipit-uplift:    	 deploy-production-HEROKU
+deploy-production-shipit-uplift:       deploy-production-HEROKU
 deploy-production-shipit-bot-uplift:   # There is no service running, just a hook
 deploy-production-shipit-pipeline:     # deploy-staging-HEROKU
 deploy-production-shipit-signoff:      # deploy-staging-HEROKU
