@@ -8,14 +8,6 @@ supporting.
 
     Currently supported platform is **Linux**.
 
-
-.. blockdiag::
-
-   diagram {
-     A -> B -> C;
-          B -> D;
-   }
-
 Useful links
 ------------
 
