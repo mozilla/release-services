@@ -1,1 +1,1 @@
-../../../lib/elm_common/localstorage.js
+../../../lib/frontend_common/localstorage.js

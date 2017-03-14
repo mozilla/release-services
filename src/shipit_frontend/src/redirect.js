@@ -1,1 +1,1 @@
-../../../lib/elm_common/redirect.js
+../../../lib/frontend_common/redirect.js

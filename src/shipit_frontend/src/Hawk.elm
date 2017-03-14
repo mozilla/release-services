@@ -1,1 +1,1 @@
-../../../lib/elm_common/Hawk.elm
+../../../lib/frontend_common/Hawk.elm

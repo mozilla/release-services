@@ -1,7 +1,7 @@
 {
-  "name": "elm-common-example",
+  "name": "frontend-common-example",
   "version": "1.0.0",
-  "description": "Usage demonstration of Mozilla RelEng elm-common",
+  "description": "Usage demonstration of Mozilla RelEng frontend-common",
   "main": "index.js",
   "author": "",
   "license": "ISC",
@@ -14,7 +14,7 @@
     "entry": "index.js",
     "html": {
       "title": "Elm Common Example",
-      "description": "Usage demonstration of Mozilla RelEng elm-common",
+      "description": "Usage demonstration of Mozilla RelEng frontend-common",
       "author": "Mozilla RelEng Team",
       "head": "<link href=\"https://fonts.googleapis.com/css?family=Fira+Sans:400,300,500\" rel=\"stylesheet\" type=\"text/css\"\\>"
     }

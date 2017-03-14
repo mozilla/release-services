@@ -1,1 +1,1 @@
-../../../lib/elm_common/Redirect.elm
+../../../lib/frontend_common/Redirect.elm

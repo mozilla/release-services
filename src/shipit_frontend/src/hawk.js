@@ -1,1 +1,1 @@
-../../../lib/elm_common/hawk.js
+../../../lib/frontend_common/hawk.js

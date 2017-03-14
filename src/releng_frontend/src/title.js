@@ -1,1 +1,1 @@
-../../../lib/elm_common/title.js
+../../../lib/frontend_common/title.js

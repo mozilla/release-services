@@ -1,1 +1,1 @@
-../../../lib/elm_common/BugzillaLogin.elm
+../../../lib/frontend_common/BugzillaLogin.elm

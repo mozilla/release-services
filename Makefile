@@ -6,7 +6,7 @@ endif
 
 APP=
 APPS=\
-	elm-common-example \
+	frontend-common-example \
 	releng-docs \
 	releng-clobberer \
 	releng-tooltool \
@@ -40,7 +40,7 @@ APP_DEV_DBNAME=services
 APP_DEV_HOST=localhost
 
 APP_DEV_PORT_releng-docs=7000
-APP_DEV_PORT_elm-common-example=7001
+APP_DEV_PORT_frontend-common-example=7001
 
 APP_DEV_PORT_releng-frontend=8000
 APP_DEV_PORT_releng-clobberer=8001
@@ -62,7 +62,7 @@ APP_DEV=\
 	SSL_CACERT=$$PWD/tmp/ca.crt \
 	SSL_CERT=$$PWD/tmp/server.crt \
 	SSL_KEY=$$PWD/tmp/server.key
-APP_DEV_ENV_elm_common_example=\
+APP_DEV_ENV_frontend-common-example=\
 	$(APP_DEV)
 APP_DEV_ENV_releng-frontend=\
 	WEBPACK_DOCS_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng-docs) \
@@ -72,7 +72,7 @@ APP_DEV_ENV_releng-frontend=\
 	WEBPACK_MAPPER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng-mapper) \
 	WEBPACK_ARCHIVER_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_releng-archiver) \
 	$(APP_DEV)
-APP_DEV_ENV_shipit_frontend=\
+APP_DEV_ENV_shipit-frontend=\
 	WEBPACK_UPLIFT_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit-uplift) \
 	WEBPACK_PIPELINE_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_shipit-pipeline) \
 	WEBPACK_BUGZILLA_URL=https://bugzilla-dev.allizom.org \
@@ -195,7 +195,7 @@ develop-run-FRONTEND: build-certs nix require-APP
 		--run "$(APP_DEV_ENV_$(APP)) webpack-dev-server --host $(APP_DEV_HOST) --port $(APP_DEV_PORT_$(APP)) --config webpack.config.js"
 
 develop-run-releng-docs: develop-run-SPHINX
-develop-run-elm-common-example: develop-run-FRONTEND
+develop-run-frontend-common-example: develop-run-FRONTEND
 
 develop-run-releng-frontend: develop-run-FRONTEND
 develop-run-releng-clobberer: require-sqlite develop-run-BACKEND
@@ -268,7 +268,7 @@ deploy-staging-S3: \
 		$(APP_TMP) \
 		s3://$(APP_STAGING_S3_$(APP))
 
-deploy-staging-elm-common-example:     # no deployment
+deploy-staging-frontend-common-example:     # no deployment
 
 deploy-staging-releng-frontend:        deploy-staging-S3
 deploy-staging-releng-docs:            deploy-staging-S3
@@ -319,7 +319,7 @@ deploy-production-S3: \
 		$(APP_TMP) \
 		s3://$(APP_PRODUCTION_S3_$(APP))
 
-deploy-production-elm-common-example:  # no deployment
+deploy-production-frontend-common-example:  # no deployment
 
 deploy-production-releng-frontend:     deploy-production-S3
 deploy-production-releng-docs:         deploy-production-S3

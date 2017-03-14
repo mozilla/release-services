@@ -1,1 +1,1 @@
-../../../lib/elm_common/TaskclusterLogin.elm
+../../../lib/frontend_common/TaskclusterLogin.elm

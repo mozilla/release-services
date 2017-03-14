@@ -27,7 +27,7 @@ let
     postgresql = pkgs.postgresql95;
 
     # TODO: releng_common_example = import ./../lib/releng_common/example { inherit releng_pkgs; };
-    "elm-common-example" = import ./../lib/elm_common/example { inherit releng_pkgs; };
+    "frontend-common-example" = import ./../lib/frontend_common/example { inherit releng_pkgs; };
 
     "releng-docs" = import ./../src/releng_docs { inherit releng_pkgs; };
     "releng-frontend" = import ./../src/releng_frontend { inherit releng_pkgs; };

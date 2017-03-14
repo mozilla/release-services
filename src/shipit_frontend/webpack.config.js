@@ -1,1 +1,1 @@
-../../lib/elm_common/webpack.config.js
+../../lib/frontend_common/webpack.config.js
