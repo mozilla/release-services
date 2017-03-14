@@ -9,8 +9,6 @@ let
   inherit (releng_pkgs.lib) packagesWith mkDocker;
 
 in builtins.listToAttrs 
-     (map (pkg: { name = (builtins.parseDrvName pkg.name).name;
-                  value = pkg.docker;
-                })
+     (map ({ name, pkg}: { inherit name; value = pkg.docker; })
           (packagesWith "docker" releng_pkgs)
      )

@@ -80,8 +80,16 @@ in rec {
 
   packagesWith = attrName: pkgs':
     builtins.filter
-      (pkg: builtins.hasAttr "name" pkg && builtins.hasAttr attrName pkg)
-      (builtins.attrValues pkgs');
+      ({ name, pkg }:
+          let
+            pkg = builtins.getAttr name pkgs';
+        in
+            builtins.hasAttr "name" pkg && builtins.hasAttr attrName pkg
+      )
+      (builtins.map
+        (name: { inherit name; pkg = builtins.getAttr name pkgs'; })
+        (builtins.attrNames pkgs')
+      );
 
   mkDocker =
     { name

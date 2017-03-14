@@ -232,7 +232,7 @@ build-app-%: nix
 build-docker: require-APP build-docker-$(APP)
 
 build-docker-%: nix
-	@nix-build nix/docker.nix -A $(subst build-docker-,,$@) -o result-docker-$(subst build-docker-,,$@) --fallback
+	nix-build nix/docker.nix -A $(subst build-docker-,,$@) -o result-docker-$(subst build-docker-,,$@) --fallback
 
 
 
