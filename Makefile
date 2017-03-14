@@ -37,7 +37,7 @@ VERSION=$(shell cat VERSION)
 
 APP_DEV_DBNAME=services
 
-APP_DEV_HOST=localhost
+APP_DEV_HOST=0.0.0.0
 
 APP_DEV_PORT_releng_docs=7000
 APP_DEV_PORT_elm_common_example=7001
@@ -130,6 +130,8 @@ APP_PRODUCTION_ENV_shipit_frontend=\
 
 FLASK_CMD ?= shell # default value for flask command to run
 
+DEV_DOCKERHUB_EMAIL=release+dockerhub+services@mozilla.com
+DEV_DOCKERHUB_SECRETS=taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:master
 
 help:
 	@echo ""
@@ -158,16 +160,20 @@ nix:
 		echo ""; \
 		echo "This Makefile uses Nix packages to run commands in an isolated environment."; \
 		echo ""; \
-		echo "To install Nix please follow instructions on https://nixos.org/nix/"; \
-		echo ""; \
-		echo "For inpatients, run the following curl-bash"; \
-		echo ""; \
-		echo "$$ curl https://nixos.org/nix/install | sh; . \$$HOME/.nix-profile/etc/profile.d/nix.sh"; \
+		echo "To install Nix please follow instructions on https://docs.mozilla-releng.net/prerequirements.html#prerequirements"; \
 		echo ""; \
 		echo "and rerun the same command again"; \
 		echo ""; \
 		exit 1; \
 	fi
+
+
+build-dev-environment:
+	docker build -t mozillareleng/services:latest
+	docker login -e $(DEV_DOCKERHUB_EMAIL) \
+	  -u `curl $(DEV_DOCKERHUB_SECRETS) | python -c 'import json, sys; a = json.load(sys.stdin); print a["secret"]["DOCKER_USERNAME"]'` \
+	  -p `curl $(DEV_DOCKERHUB_SECRETS) | python -c 'import json, sys; a = json.load(sys.stdin); print a["secret"]["DOCKER_PASSWORD"]'`
+	docker push mozillareleng/services:latest
 
 
 develop: nix require-APP
@@ -177,6 +183,7 @@ develop: nix require-APP
 
 
 develop-run: require-APP develop-run-$(APP)
+docker-run: require-APP docker-run-$(APP)
 
 develop-run-SPHINX : nix require-APP
 	nix-shell nix/default.nix -A releng_docs --run "HOST=$(APP_DEV_HOST) PORT=$(APP_DEV_PORT_$(APP)) python run.py"
@@ -208,6 +215,18 @@ develop-run-shipit_frontend: develop-run-FRONTEND
 develop-run-shipit_dashboard: require-postgres develop-run-BACKEND
 develop-run-shipit_pipeline: require-sqlite develop-run-BACKEND
 develop-run-shipit_signoff: require-sqlite develop-run-BACKEND
+
+docker-run-releng_frontend: develop-run-FRONTEND
+docker-run-releng_clobberer: require-sqlite develop-run-BACKEND
+docker-run-releng_tooltool: require-sqlite develop-run-BACKEND
+docker-run-releng_treestatus: develop-run-BACKEND
+docker-run-releng_mapper: require-sqlite develop-run-BACKEND
+docker-run-releng_archiver: require-sqlite develop-run-BACKEND
+
+docker-run-shipit_frontend: develop-run-FRONTEND
+docker-run-shipit_dashboard: develop-run-BACKEND
+docker-run-shipit_pipeline: require-sqlite develop-run-BACKEND
+docker-run-shipit_signoff: require-sqlite develop-run-BACKEND
 
 develop-run-postgres: build-postgresql require-initdb
 	./result-tool-postgresql/bin/postgres -D $(PWD)/tmp/postgres -h localhost -p $(APP_DEV_POSTGRES_PORT)

@@ -36,8 +36,10 @@ config.module.loaders.push({
 config.module.noParse = /\.elm$/;
 
 
-// in development environment use ssl
 if (config_type === 'dev') {
+  // bind to all interfaces, to make docker port forwards work
+  config.devServer.host = "0.0.0.0";
+  // use ssl
   config.devServer.https = true;
   config.devServer.cacert = fs.readFileSync(process.env.SSL_CACERT);
   config.devServer.cert = fs.readFileSync(process.env.SSL_CERT);
