@@ -1,4 +1,4 @@
--e ./../../lib/releng_common[api,auth,cors,log,db,cache,security,pulse]#egg=mozilla-releng-common
+-e ./../../lib/backend_common[api,auth,cors,log,db,cache,security,pulse]#egg=mozilla-backend-common
 SQLAlchemy
 Werkzeug
 pytz

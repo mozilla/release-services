@@ -12,7 +12,7 @@ import flask_sqlalchemy
 import logging  # for sql alchemy
 
 
-logger = structlog.get_logger('releng_common.db')
+logger = structlog.get_logger('backend_common.db')
 db = flask_sqlalchemy.SQLAlchemy()
 migrate = flask_migrate.Migrate(db=db)
 

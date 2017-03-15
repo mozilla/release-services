@@ -6,12 +6,12 @@ from __future__ import absolute_import
 
 import os
 
-import releng_common
-import releng_common.auth
-import releng_common.cache
-import releng_common.db
-import releng_common.security
-import releng_common.pulse
+import backend_common
+import backend_common.auth
+import backend_common.cache
+import backend_common.db
+import backend_common.security
+import backend_common.pulse
 
 
 DEBUG = bool(os.environ.get('DEBUG', __name__ == '__main__'))
@@ -32,14 +32,14 @@ if not os.environ.get('APP_SETTINGS') and \
     os.environ['APP_SETTINGS'] = APP_SETTINGS
 
 
-app = releng_common.create_app(
+app = backend_common.create_app(
     "releng_treestatus",
     extensions=[
         init_app,
-        releng_common.auth,
-        releng_common.db,
-        releng_common.cache,
-        releng_common.pulse,
+        backend_common.auth,
+        backend_common.db,
+        backend_common.cache,
+        backend_common.pulse,
     ],
     debug=DEBUG,
     debug_src=HERE,

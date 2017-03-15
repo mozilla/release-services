@@ -3,7 +3,7 @@ import pickle
 import os
 import glob
 import json
-from releng_common.mocks import build_header
+from backend_common.mocks import build_header
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
@@ -17,7 +17,7 @@ def app():
     os.environ['APP_TESTING'] = 'shipit_uplift'
 
     # Then import app code
-    from releng_common.db import db
+    from backend_common.db import db
     from shipit_uplift import app
 
     with app.app_context():
@@ -34,7 +34,7 @@ def client(app):
     A Flask test client for shipit_uplift
     with mockups enabled
     """
-    from releng_common import mocks
+    from backend_common import mocks
 
     # Give test client with mockups
     with app.test_client() as client:
@@ -50,7 +50,7 @@ def bugs(app):
     from shipit_uplift.models import (
         BugAnalysis, BugResult, Contributor, BugContributor
     )
-    from releng_common.db import db
+    from backend_common.db import db
 
     # Add 2 analysis
     analysis = []

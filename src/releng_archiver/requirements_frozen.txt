@@ -27,7 +27,7 @@ Mako==1.0.6
 MarkupSafe==0.23
 mccabe==0.6.1
 mohawk==0.3.4
-mozilla-releng-common==10
+mozilla-backend-common==10
 multidict==2.1.4
 newrelic==2.80.1.61
 packaging==16.8

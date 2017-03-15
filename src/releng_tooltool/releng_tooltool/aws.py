@@ -9,7 +9,7 @@ import boto.s3
 import boto.sqs
 import importlib
 import json
-from releng_common import log
+from backend_common import log
 import threading
 import time
 

@@ -8,9 +8,9 @@ import pickle
 from flask import abort, request
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
-from releng_common.auth import auth
-from releng_common.db import db
-from releng_common import log
+from backend_common.auth import auth
+from backend_common.db import db
+from backend_common import log
 from shipit_uplift.helpers import gravatar
 from shipit_uplift.models import (
     BugAnalysis, BugResult, Contributor, BugContributor, PatchStatus

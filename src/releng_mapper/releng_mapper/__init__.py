@@ -6,8 +6,8 @@ from __future__ import absolute_import
 
 import os
 
-import releng_common
-import releng_common.db
+import backend_common
+import backend_common.db
 
 
 DEBUG = bool(os.environ.get('DEBUG', __name__ == '__main__'))
@@ -29,9 +29,9 @@ if not os.environ.get('APP_SETTINGS') and \
     os.environ['APP_SETTINGS'] = APP_SETTINGS
 
 
-app = releng_common.create_app(
+app = backend_common.create_app(
     "releng_mapper",
-    extensions=[init_app, releng_common.db],
+    extensions=[init_app, backend_common.db],
     debug=DEBUG,
     debug_src=HERE,
 )
