@@ -66,6 +66,7 @@ class Report(object):
             self.notify.email({
                 'address': email,
                 'subject': subject,
-                'content': mail_md
+                'content': mail_md,
+                'template': 'fullscreen',
             })
             logger.info('Sent report', to=email)
