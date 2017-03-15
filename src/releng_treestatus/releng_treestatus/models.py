@@ -12,7 +12,7 @@ from sqlalchemy import types
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relation
 
-from releng_common.db import db
+from backend_common.db import db
 
 
 class UTCDateTime(types.TypeDecorator):

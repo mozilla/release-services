@@ -21,7 +21,7 @@ let
 
 in skipOverrides {
 
-  "mozilla-releng-common" = self: old: {
+  "mozilla-backend-common" = self: old: {
     # TODO: doCheck = true;
     buildInputs =
       [ self."flake8"

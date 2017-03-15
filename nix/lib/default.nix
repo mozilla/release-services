@@ -638,7 +638,7 @@ in rec {
           export PYTHONPATH="$tmp_path/${python.__old.python.sitePackages}:$PYTHONPATH"
           mkdir -p $tmp_path/${python.__old.python.sitePackages}
           ${python.__old.bootstrapped-pip}/bin/pip install -q -e . --prefix $tmp_path
-          ${python.__old.bootstrapped-pip}/bin/pip install -q -e ../../lib/releng_common --prefix $tmp_path
+          ${python.__old.bootstrapped-pip}/bin/pip install -q -e ../../lib/backend_common --prefix $tmp_path
           popd >> /dev/null
 
           cd ${self.src_path}

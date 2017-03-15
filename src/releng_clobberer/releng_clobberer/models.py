@@ -8,7 +8,7 @@ import re
 import sqlalchemy as sa
 import time
 
-from releng_common.db import db
+from backend_common.db import db
 
 
 BUILDBOT_BUILDDIR_REL_PREFIX = 'rel-'

@@ -1,7 +1,7 @@
 import pytest
 from flask_login import current_user
 from flask import jsonify
-from releng_common import create_app, auth, mocks
+from backend_common import create_app, auth, mocks
 
 
 @pytest.fixture(scope='module')

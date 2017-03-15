@@ -28,7 +28,7 @@ def get_buildbot():
 #         who = 'automation'
 
 # TODO: require scopes
-# releng_common.auth.auth.require_scope('releng???/api/clobberer/buildbot/post)
+# backend_common.auth.auth.require_scope('releng???/api/clobberer/buildbot/post)
 def post_buildbot(body):
     result = []
 

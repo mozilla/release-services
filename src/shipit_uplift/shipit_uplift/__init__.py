@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 import os
 
-from releng_common import auth, db, create_app
+from backend_common import auth, db, create_app
 
 
 DEBUG = os.environ.get('DEBUG') == 'true' or __name__ == '__main__'

@@ -6,7 +6,7 @@ import structlog
 import taskcluster
 
 
-logger = structlog.get_logger('releng_common.auth')
+logger = structlog.get_logger('backend_common.auth')
 
 
 class BaseUser(object):

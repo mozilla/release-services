@@ -7,7 +7,7 @@ from shipit_uplift.models import (
 )
 from shipit_uplift import SCOPES_ADMIN
 from flask_login import current_user
-from releng_common import log
+from backend_common import log
 import html
 
 

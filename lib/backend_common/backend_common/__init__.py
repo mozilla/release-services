@@ -16,26 +16,26 @@ __BASE_EXTENSIONS = []
 logger = structlog.get_logger()
 
 try:
-    from releng_common import log
+    from backend_common import log
     __BASE_EXTENSIONS.append(log)
 except:
     pass
 
 try:
-    from releng_common import security
+    from backend_common import security
     __BASE_EXTENSIONS.append(security)
 except:
     pass
 
 try:
-    from releng_common import api
+    from backend_common import api
     __BASE_EXTENSIONS.append(api)
 except:
     pass
 
 if 'CORS_ORIGINS' in os.environ:
     try:
-        from releng_common import cors
+        from backend_common import cors
         __BASE_EXTENSIONS.append(cors)
     except:
         pass

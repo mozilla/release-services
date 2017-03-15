@@ -1,7 +1,7 @@
 from __future__ import with_statement
 from alembic import context
 from sqlalchemy import engine_from_config, pool
-from releng_common import log
+from backend_common import log
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

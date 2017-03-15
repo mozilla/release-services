@@ -41,13 +41,13 @@ A typical authenticated request follows these steps:
 Backend usage
 ~~~~~~~~~~~~~
 
-The **auth** application in `releng_common`_ uses a Taskcluster Auth endpoint `authenticateHawk`_ to validate an HAWK header provider by your service frontend. The backend receives the list of scopes available to the user, and can immediately check them against a known list.
+The **auth** application in `backend_common`_ uses a Taskcluster Auth endpoint `authenticateHawk`_ to validate an HAWK header provider by your service frontend. The backend receives the list of scopes available to the user, and can immediately check them against a known list.
 
 This process is exposed to your backend python code through a single decorator:
 
 .. code-block:: python
 
-    from releng_common.auth import auth
+    from backend_common.auth import auth
     from flask import jsonify
     from flask_login import current_user
 
@@ -61,7 +61,7 @@ The :code:`require_scopes` decorator supports:
  * a list of scopes, to describe a single role
  * a list of list of scopes, to describe several roles who can access the endpoint
 
-As you can see, once logged, the :code:`current_user` from `Flask Login`_ becomes a :code:`TaskclusterUser` instance also described in `releng_common`_ You can easily access the clientId and scopes for the logged in user this way.
+As you can see, once logged, the :code:`current_user` from `Flask Login`_ becomes a :code:`TaskclusterUser` instance also described in `backend_common`_ You can easily access the clientId and scopes for the logged in user this way.
     
 Frontend usage
 ~~~~~~~~~~~~~~
@@ -155,7 +155,7 @@ Security wise, this is not an issue: the api token is then stored in :code:`loca
 .. _`Mozilla Taskcluster`: https://docs.taskcluster.net
 .. _`HAWK`: https://github.com/hueniverse/hawk
 .. _`login provider`: https://login.taskcluster.net/
-.. _`releng_common`: https://github.com/mozilla-releng/services/blob/master/lib/releng_common/releng_common/auth.py
+.. _`backend_common`: https://github.com/mozilla-releng/services/blob/master/lib/backend_common/backend_common/auth.py
 .. _`authenticateHawk`: https://docs.taskcluster.net/reference/platform/auth/api-docs#authenticateHawk
 .. _`Flask Login`: https://flask-login.readthedocs.io/en/latest/
 .. _`Taskcluster tools`: https://tools.taskcluster.net/credentials/

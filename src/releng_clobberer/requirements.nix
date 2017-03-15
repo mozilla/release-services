@@ -632,9 +632,9 @@ let
 
 
 
-    "mozilla-releng-common" = python.mkDerivation {
-      name = "mozilla-releng-common-10";
-      src = ./../../lib/releng_common;
+    "mozilla-backend-common" = python.mkDerivation {
+      name = "mozilla-backend-common-10";
+      src = ./../../lib/backend_common;
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [

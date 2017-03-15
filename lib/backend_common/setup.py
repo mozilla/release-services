@@ -26,7 +26,7 @@ def read_requirements(file_):
 
 
 setup(
-    name='mozilla-releng-common',
+    name='mozilla-backend-common',
     version=version,
     description='Services behind https://mozilla-releng.net',
     author='Mozilla Release Engineering',

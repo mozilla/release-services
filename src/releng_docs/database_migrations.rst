@@ -1,7 +1,7 @@
 Database Migrations
 ===================
 
-Flask applications using ``releng_common.db`` app (enabled by default) support Database migrations through Flask-Migrate_ and Alembic_.
+Flask applications using ``backend_common.db`` app (enabled by default) support Database migrations through Flask-Migrate_ and Alembic_.
 
 Migrations are stored in ``src/<APP_NAME>/migrations``. The specific migrations folder structure is automaticallty created by Flask-Migrate at runtime.
 

@@ -5,7 +5,7 @@
 from __future__ import absolute_import
 
 import datetime
-from releng_common import log
+from backend_common import log
 import time
 import random
 

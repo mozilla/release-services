@@ -8,7 +8,7 @@ import datetime
 import pickle
 import sqlalchemy as sa
 
-from releng_common.db import db
+from backend_common.db import db
 
 
 # M2M link between analysis & bug

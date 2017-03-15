@@ -14,8 +14,8 @@ from flask import current_app
 from flask_login import current_user
 from werkzeug.exceptions import NotFound, BadRequest
 
-from releng_common.cache import cache
-from releng_common.auth import auth
+from backend_common.cache import cache
+from backend_common.auth import auth
 from releng_treestatus.__init__ import app
 from releng_treestatus.models import (
     Tree, StatusChange, StatusChangeTree, Log

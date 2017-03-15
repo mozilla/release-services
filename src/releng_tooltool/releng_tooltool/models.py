@@ -7,7 +7,7 @@ from __future__ import absolute_import
 import json
 import sqlalchemy as sa
 
-from releng_common.db import db
+from backend_common.db import db
 
 ALLOWED_REGIONS = ('us-east-1', 'us-west-1', 'us-west-2')
 
