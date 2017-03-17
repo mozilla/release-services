@@ -16,9 +16,47 @@ function as_root {
 	sudo bash -c "$@"
 }
 
+function has_single_user_install {
+	# Check if there is an existing single user install
+	if [[ -d /nix && -e /home/$USER/.nix-profile && -d /home/$USER/.nix-profile/bin ]] ; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+function has_multi_user_install {
+	# Check if there is an existing multi user install
+	if [[ ! -f /etc/nix/nix.conf ]] ; then
+		return 1
+	fi
+	if ! $(grep -Fxq 'build-use-sandbox = true' /etc/nix/nix.conf) ; then
+		return 1
+	fi
+	if ! pgrep -x 'nix-daemon' ; then
+		return 1
+	fi
+
+	return 0
+}
+
+function update_nix {
+	# Update nix install as root user
+	as_root "
+	source /etc/nix/nix-profile.sh
+	nix-channel --update
+	nix-env \
+		-p /nix/var/nix/profiles/default \
+		-f /root/.nix-defexpr/channels/nixpkgs/ \
+		-iA nix
+	nix-env -iA nixpkgs.nix nixpkgs.cacert"
+}
+
 # Check all dependencies
 check_dep sudo
 check_dep curl
+check_dep grep
+check_dep pgrep
 check_dep groupadd
 check_dep useradd
 
@@ -36,13 +74,6 @@ if [[ $? -ne 0 ]] ; then
 	exit 1
 fi
 
-# Check nix is not already installed
-if [[ -d /nix || -d /etc/nix || -e /home/$USER/.nix* ]] ; then
-	echo "Nix seems to be installed on your system."
-	echo "To uninstall Nix, run: sudo rm -rf /nix /etc/nix /home/$USER/.nix*"
-	exit 1
-fi
-
 # Check for init service : systemd or upstart
 INIT_PROC=$(ps -p 1)
 if [[ $INIT_PROC == *systemd* ]] ; then
@@ -55,10 +86,30 @@ else
 fi
 echo "Detected init service: $INITD"
 
-echo "1. Installing Nix as single user mode"
-sudo mkdir -m 0755 /nix
-sudo chown $USER /nix
-curl https://nixos.org/nix/install | sh
+# Single user install
+if has_single_user_install ; then
+	echo "Skipping Step 1: Nix is already installed as single user."
+else
+	echo "1. Installing Nix as single user mode"
+	sudo mkdir -m 0755 /nix
+	sudo chown $USER /nix
+	curl https://nixos.org/nix/install | sh
+fi
+
+# Update for existing multi user install
+if has_multi_user_install ; then
+
+	echo "Skipping install steps: just update Nix install"
+	sudo chown -R $USER:$USER /nix/var/nix/profiles/per-user/$USER /nix/var/nix/gcroots/per-user/$USER
+	update_nix
+
+	# Install packages to test it out
+	nix-env -iA nixpkgs.git
+	nix-env -iA nixpkgs.gnumake
+
+	echo "Update done."
+	exit 0 # Finish gracefully
+fi
 
 echo "2. Add custom binary cache"
 sudo mkdir -p /etc/nix
@@ -208,16 +259,8 @@ fi
 EOF'
 
 echo "8. Set up the new default (root) profile"
-as_root "
-source /etc/nix/nix-profile.sh
-nix-channel --update
-nix-env \
-	-p /nix/var/nix/profiles/default \
-	-f /root/.nix-defexpr/channels/nixpkgs/ \
-	-iA nix
-nix-env -iA nixpkgs.nix nixpkgs.cacert
-echo 'source /etc/nix/nix-profile.sh' >> /root/.bashrc"
-
+update_nix
+as_root "echo 'source /etc/nix/nix-profile.sh' >> /root/.bashrc"
 
 echo "9. Set up the user profile"
 sudo mkdir -p /nix/var/nix/gcroots/per-user/$USER
