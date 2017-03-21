@@ -1,10 +1,10 @@
 import hglib
 import os
 import re
-from shipit_bot_uplift import log
+from cli_common.log import get_logger
 
 
-logger = log.get_logger('shipit_bot')
+logger = get_logger('shipit_bot')
 REGEX_TIP = re.compile(r'(\w+)\s*(tip)? (\w+)')
 
 

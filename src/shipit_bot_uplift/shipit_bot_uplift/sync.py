@@ -15,12 +15,12 @@ from shipit_bot_uplift.helpers import (
 from shipit_bot_uplift.mercurial import Repository
 from shipit_bot_uplift.api import api_client
 from shipit_bot_uplift.report import Report
-from shipit_bot_uplift import log
+from cli_common.log import get_logger
 from libmozdata import bugzilla, versions
 from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
 
 
-logger = log.get_logger('shipit_bot')
+logger = get_logger('shipit_bot')
 
 
 def analysis2branch(analysis):

@@ -508,6 +508,24 @@ let
 
 
 
+    "mozilla-cli-common" = python.mkDerivation {
+      name = "mozilla-cli-common-11";
+      src = ./../../lib/cli_common;
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."Logbook"
+      self."structlog"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = "MPL2";
+        description = "Services behind https://mozilla-releng.net";
+      };
+    };
+
+
+
     "multidict" = python.mkDerivation {
       name = "multidict-2.1.4";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/2a/df/eaea73e46a58fd780c35ecc304ca42364fa3c1f4cd03568ed33b9d2c7547/multidict-2.1.4.tar.gz"; sha256 = "a77aa8c9f68846c3b5db43ff8ed2a7a884dbe845d01f55113a3fba78518c4cd7"; };

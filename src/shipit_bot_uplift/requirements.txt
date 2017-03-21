@@ -1,8 +1,8 @@
-Logbook
+-e ./../../lib/cli_common[all]#egg=mozilla-cli-common
+
 click
 mohawk
 python-dateutil
 python-hglib
-structlog
 taskcluster
 libmozdata
