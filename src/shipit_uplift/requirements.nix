@@ -650,7 +650,7 @@ let
 
 
     "mozilla-backend-common" = python.mkDerivation {
-      name = "mozilla-backend-common-10";
+      name = "mozilla-backend-common-11";
       src = ./../../lib/backend_common;
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
@@ -661,14 +661,31 @@ let
       self."Flask-Migrate"
       self."Flask-SQLAlchemy"
       self."Jinja2"
-      self."Logbook"
       self."connexion"
       self."flask-talisman"
       self."gunicorn"
+      self."mozilla-cli-common"
       self."newrelic"
       self."psycopg2"
-      self."structlog"
       self."taskcluster"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = "MPL2";
+        description = "Services behind https://mozilla-releng.net";
+      };
+    };
+
+
+
+    "mozilla-cli-common" = python.mkDerivation {
+      name = "mozilla-cli-common-11";
+      src = ./../../lib/cli_common;
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."Logbook"
+      self."structlog"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "";
