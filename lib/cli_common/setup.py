@@ -26,23 +26,14 @@ def read_requirements(file_):
 
 
 setup(
-    name='mozilla-backend-common',
+    name='mozilla-cli-common',
     version=version,
     description='Services behind https://mozilla-releng.net',
     author='Mozilla Release Engineering',
     author_email='release@mozilla.com',
-    url='https://github.com/garbas/mozilla-releng',
+    url='https://github.com/mozilla-releng/services',
     tests_require=read_requirements('requirements-dev.txt'),
     install_requires=read_requirements('requirements.txt'),
-    extras_require=dict(
-        api=['connexion'],
-        auth=['Flask-Login', 'taskcluster'],
-        cache=['Flask-Cache'],
-        cors=['Flask-Cors'],
-        db=['psycopg2', 'Flask-SQLAlchemy', 'Flask-Migrate'],
-        pulse=['kombu'],
-        security=['flask-talisman'],
-    ),
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,

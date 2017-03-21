@@ -23,6 +23,14 @@ class UnstructuredRenderer(structlog.processors.KeyValueRenderer):
 
 
 def init_app(app):
+    """
+    Init logger from a Flask Application
+    """
+    mozdef = app.config.get('MOZDEF_TARGET', None)
+    init_logger(app.debug, mozdef)
+
+
+def init_logger(debug=False, mozdef=None):
 
     # Output logs on stderr
     fmt = '{record.channel}: {record.message}'
@@ -31,7 +39,7 @@ def init_app(app):
 
     def logbook_factory(*args, **kwargs):
         # Logger given to structlog
-        level = app.debug and logbook.DEBUG or logbook.INFO
+        level = debug and logbook.DEBUG or logbook.INFO
         logbook.compat.redirect_logging()
         return logbook.Logger(level=level, *args, **kwargs)
 
@@ -44,7 +52,6 @@ def init_app(app):
     ]
 
     # send to mozdef before formatting into a string
-    mozdef = app.config.get('MOZDEF_TARGET', None)
     if mozdef:
         processors.append(mozdef)
 

@@ -34,7 +34,23 @@ in skipOverrides {
     '';
     checkPhase = ''
       flake8 --exclude=nix_run_setup.py,migrations/,build/
-      # TODO: pytest tests/
+      pytest tests
+    '';
+  };
+
+  "mozilla-cli-common" = self: old: {
+    # TODO: doCheck = true;
+    buildInputs =
+      [ self."flake8"
+        self."pytest"
+      ];
+    patchPhase = ''
+      rm -f VERSION
+      ln -s ${../VERSION} ./VERSION
+    '';
+    checkPhase = ''
+      flake8 --exclude=nix_run_setup.py,build/
+      pytest tests
     '';
   };
 

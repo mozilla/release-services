@@ -16,7 +16,7 @@ __BASE_EXTENSIONS = []
 logger = structlog.get_logger()
 
 try:
-    from backend_common import log
+    from cli_common import log
     __BASE_EXTENSIONS.append(log)
 except:
     pass
