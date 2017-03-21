@@ -1,4 +1,5 @@
--e ./../../lib/backend_common[api,auth,cors,log,db]#egg=mozilla-backend-common
+-e ./../../lib/cli_common[all]#egg=mozilla-cli-common
+-e ./../../lib/backend_common[api,auth,cors,db]#egg=mozilla-backend-common
 Flask
 Flask-Login
 SQLAlchemy
