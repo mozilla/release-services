@@ -1,10 +1,10 @@
-from shipit_bot_uplift import log
+from cli_common.log import get_logger
 import taskcluster
 import operator
 import itertools
 
 
-logger = log.get_logger('shipit_bot')
+logger = get_logger('shipit_bot')
 
 
 class Report(object):
