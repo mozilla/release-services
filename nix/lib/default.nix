@@ -539,7 +539,7 @@ in rec {
             "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
           ];
           Cmd = [
-            "newrelic-admin" "run-program" "gunicorn" "${name}:app" "--log-file" "-"
+            "newrelic-admin" "run-program" "gunicorn" "${dirname}:app" "--log-file" "-"
           ];
         };
 
