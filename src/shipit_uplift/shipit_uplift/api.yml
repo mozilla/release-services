@@ -285,20 +285,23 @@ definitions:
   PatchStatus:
     type: object
     required:
+      - group
       - revision
       - revision_parent
       - branch
-      - merged
+      - status
       - created
     properties:
+      group:
+        type: integer
       revision:
         type: string
       revision_parent:
         type: string
       branch:
         type: string
-      merged:
-        type: boolean
+      status:
+        type: string
       created:
         type: string
 

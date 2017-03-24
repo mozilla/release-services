@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 import datetime
 import pickle
+import enum
 import sqlalchemy as sa
 
 from backend_common.db import db
@@ -140,6 +141,12 @@ class BugContributor(db.Model):
     contributor = db.relationship(Contributor, backref="bugs")
 
 
+class MergeStatus(enum.Enum):
+    failed = 'failed'
+    merged = 'merged'
+    skipped = 'skipped'
+
+
 class PatchStatus(db.Model):
     """
     Patch merge status at a specific time
@@ -147,9 +154,11 @@ class PatchStatus(db.Model):
     __tablename__ = 'shipit_uplift_patch_status'
     __table_args__ = (
         sa.UniqueConstraint('bug_id', 'revision', 'revision_parent', 'branch', name='uniq_patch_status'),  # noqa
+        sa.UniqueConstraint('bug_id', 'group', 'revision', name="uniq_patch_status_group")  # noqa
     )
 
     id = sa.Column(sa.Integer, primary_key=True)
+    group = sa.Column(sa.Integer, default=1, nullable=False)
     bug_id = sa.Column(
         sa.Integer,
         sa.ForeignKey('shipit_uplift_bug.id'),
@@ -165,6 +174,6 @@ class PatchStatus(db.Model):
         default=datetime.datetime.utcnow,
         nullable=False
     )
-    merged = sa.Column(sa.Boolean, default=False, nullable=False)
+    status = sa.Column(sa.Enum(MergeStatus), default=MergeStatus.merged)
 
     bug = db.relationship(BugResult, backref="patch_status")

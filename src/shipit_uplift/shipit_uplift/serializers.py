@@ -180,9 +180,10 @@ def serialize_patch_status(patch_status):
     assert isinstance(patch_status, PatchStatus)
 
     return {
+        'group': patch_status.group,
         'revision': patch_status.revision,
         'revision_parent': patch_status.revision_parent,
         'branch': patch_status.branch,
-        'merged': patch_status.merged,
+        'status': str(patch_status.status),
         'created': patch_status.created,
     }

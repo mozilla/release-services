@@ -306,13 +306,15 @@ def update_contributor(contributor_id):
 def list_patch_status(bugzilla_id):
     """
     List all patches status for a bug
+    Last created first
     """
-    try:
-        bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
-    except:
-        raise Exception('Missing bug {}'.format(bugzilla_id))
+    patch_status = PatchStatus.query \
+        .join(BugResult) \
+        .filter_by(bugzilla_id=bugzilla_id) \
+        .order_by(PatchStatus.created.desc()) \
+        .all()
 
-    return [serialize_patch_status(ps) for ps in bug.patch_status]
+    return [serialize_patch_status(ps) for ps in patch_status]
 
 
 @auth.require_scopes(SCOPES_BOT)
@@ -327,9 +329,10 @@ def create_patch_status(bugzilla_id):
 
     # Build new patch status
     ps = PatchStatus(bug_id=bug.id)
+    ps.group = request.json['group']  # link between graft tests
     ps.revision = request.json['revision']
     ps.revision_parent = request.json['revision_parent']
-    ps.merged = request.json['merged']
+    ps.status = request.json['status']
     ps.branch = request.json['branch']
     ps.message = request.json['message']
 
@@ -340,7 +343,7 @@ def create_patch_status(bugzilla_id):
         patch = patches[ps.revision]
         if 'merge' not in patch:
             patch['merge'] = {}
-        patch['merge'][ps.branch] = ps.merged
+        patch['merge'][ps.branch] = ps.status == 'merged'
         payload['analysis']['patches'][ps.revision] = patch
 
         bug.payload = pickle.dumps(payload, 2)
