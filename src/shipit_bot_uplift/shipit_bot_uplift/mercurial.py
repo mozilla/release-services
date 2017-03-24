@@ -17,6 +17,8 @@ class Repository(object):
         self.url = url
         self.directory = directory
         self.client = None
+        self.branch = None
+        self.parent = None
         logger.info('Mercurial repository', url=self.url, directory=self.directory)  # noqa
 
     def checkout(self, branch):
@@ -61,16 +63,32 @@ class Repository(object):
 
         # Check branch has been successfull checkout
         identify = self.client.identify().decode('utf-8')
-        parent, _, current_branch = REGEX_TIP.search(identify).groups()
+        self.parent, _, current_branch = REGEX_TIP.search(identify).groups()
         assert current_branch == branch.decode('utf-8'), \
             'Current branch {} is not expected branch {}'.format(current_branch, branch)  # noqa
-        logger.info('Checkout success', branch=branch, tip=parent)
+        logger.info('Checkout success', branch=branch, tip=self.parent)
+        self.branch = branch  # store
 
-        return parent
+        return self.parent
+
+    def identify(self, revision):
+        """
+        Identify a revision by retrieving its local numerical id
+        """
+        if isinstance(revision, int):
+            revision = str(revision).encode('utf-8')
+        assert isinstance(revision, bytes)
+
+        try:
+            out = self.client.identify(num=True, rev=revision)
+            return int(out)  # local id is numerical
+        except hglib.error.CommandError as e:
+            logger.warn('Failed to identify revision', rev=revision, error=e)
 
     def is_mergeable(self, revision):
         """
         Test if a revision is mergeable on current branch
+        Returns merge status and message (as tuple)
         """
         # Use revision in bytes (needed by hglib)
         if isinstance(revision, int):
@@ -100,24 +118,15 @@ class Repository(object):
         # If `hg graft` exits code 0, there are no merge conflicts.
         return True, 'merge success'
 
-    def cleanup(self, parent):
+    def cleanup(self):
         """
         Cleanup the client state, used after a graft
         """
         try:
-            self.client.update(rev=parent, clean=True)
+            self.client.update(rev=self.parent, clean=True)
         except hglib.error.CommandError as e:
             logger.warning('Cleanup failed', error=e)
 
         # Check parent revision got reverted
-        assert parent in self.client.identify().decode('utf-8'), \
+        assert self.parent in self.client.identify().decode('utf-8'), \
             'Failed to revert to parent revision'
-
-
-if __name__ == '__main__':
-    import tempfile
-    repo = Repository(
-        'https://hg.mozilla.org/mozilla-unified',
-        os.path.join(tempfile.gettempdir(), 'mozilla-unified')
-    )
-    repo.checkout('beta')
