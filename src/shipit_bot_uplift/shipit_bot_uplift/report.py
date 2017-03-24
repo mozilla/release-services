@@ -37,6 +37,19 @@ class Report(object):
         def _str(x):
             return isinstance(x, bytes) and x.decode('utf-8') or x
 
+        def _commit_report(revision, result):
+            fail_fmt = ' * Merge failed for commit `{}` (parent `{}`)\n\n```\n{}```'  # noqa
+            default_fmt = ' * Merge success for commit `{}`'
+            if result.status == 'failed':
+                return fail_fmt.format(
+                    _str(revision),
+                    _str(result.parent),
+                    result.message,
+                )
+
+            else:
+                return default_fmt.format(result.status, _str(revision))
+
         # Build markdown output
         # Sorting failed merge tests by bugzilla id & branch
         subject = 'Uplift bot detected some merge failures'
@@ -52,11 +65,8 @@ class Report(object):
             mail.append('## Bug [{0}](https://bugzil.la/{0}) - Uplift to {1}\n'.format(bz_id, _str(branch)))  # noqa
             for merge_test in failures:
                 mail += [
-                    ' * Merge failed for commit `{}` (parent `{}`)'.format(
-                        _str(merge_test.revision),
-                        _str(merge_test.revision_parent)
-                    ),
-                    '```\n{}```'.format(merge_test.message)
+                    _commit_report(revision, result)
+                    for revision, result in merge_test.results.items()
                 ]
             mail.append('')  # newline
         mail_md = '\n'.join(mail)
