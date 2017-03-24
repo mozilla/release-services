@@ -26,10 +26,11 @@ def test_patch_status(client, bugs, header_bot):
 
     # Add a patch status
     data = {
+        'group': 1,
         'revision': revision,
         'revision_parent': '0000001',
         'branch': branch,
-        'merged': False,
+        'status': 'failed',
         'message': 'random mercurial error',
     }
     resp = client.post(url, data=json.dumps(data), headers=[
