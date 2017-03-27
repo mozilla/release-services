@@ -154,7 +154,7 @@ class PatchStatus(db.Model):
     __tablename__ = 'shipit_uplift_patch_status'
     __table_args__ = (
         sa.UniqueConstraint('bug_id', 'revision', 'revision_parent', 'branch', name='uniq_patch_status'),  # noqa
-        sa.UniqueConstraint('bug_id', 'group', 'revision', name="uniq_patch_status_group")  # noqa
+        sa.UniqueConstraint('bug_id', 'group', 'branch', 'revision', name="uniq_patch_status_group")  # noqa
     )
 
     id = sa.Column(sa.Integer, primary_key=True)

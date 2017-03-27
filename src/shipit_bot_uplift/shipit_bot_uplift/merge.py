@@ -47,7 +47,7 @@ class MergeTest(object):
         last_status = patch_statuses[0]
 
         # Update group
-        self.group = last_status['group'] + 1
+        self.group = int(last_status['group']) + 1
 
         # Run new test when parent has changed
         return self.parent != last_status['revision_parent']
