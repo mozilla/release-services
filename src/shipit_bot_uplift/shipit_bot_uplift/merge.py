@@ -120,7 +120,7 @@ class MergeTest(object):
                 # And do not try to run the merge test
                 # as the previous one failed
                 msg = u'Graft skipped: parent merge failed'
-                result = MergeResult(False, msg, parent)
+                result = MergeResult('skipped', msg, parent)
 
             # Save result in backend
             self.save_result(revision, result)
