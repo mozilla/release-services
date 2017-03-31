@@ -47,9 +47,13 @@ $headings-font-weight: 300;
         border: 0;
         padding: 0;
         float: right;
+        text-align: right;
     }
-    .nav {
-        float: right;
+    .navbar-toggler-icon {
+        color: $white;
+    }
+    #navbarNavDropdown {
+        justify-content: flex-end;
     }
     .nav-item a.nav-link {
         color: darken($white, 20%);
@@ -122,24 +126,6 @@ footer {
           text-decoration: none;
           border-bottom: 1px dotted $charcoal;
       }
-    }
-}
-
-.progress-wrapper {
-    position: relative;
-    margin: 1rem;
-
-    progress {
-        height:  1.5em;
-    }
-    span {
-        position: absolute;
-        top: 0;
-        left: 0;
-        color: $white;
-        font-size: 0.9em;
-        text-align: center;
-        width: 100%;
     }
 }
 
@@ -265,7 +251,7 @@ footer {
 .timeline-panel {
     position: relative;
     margin-left: 2em;
-    .tag { margin-right: 0.5em; }
+    .badge { margin-right: 0.5em; }
 }
 
 .timeline-time {
@@ -277,6 +263,9 @@ footer {
 }
 
 
+.float-xs-right {
+    float: right;
+}
 
 
 .tooltip2 {
@@ -306,6 +295,14 @@ footer {
 
 #treestatus-trees .list-group-item {
     position: relative;
+}
+
+#treestatus-trees .list-group-item-action:hover {
+    background: transparent;
+}
+
+#treestatus-trees .list-group-item h5 {
+    margin: 0;
 }
 
 #treestatus-trees .list-group-item-with-checkbox {

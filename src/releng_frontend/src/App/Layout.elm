@@ -77,21 +77,26 @@ viewUser model =
 viewNavBar : App.Model -> List (Html App.Msg)
 viewNavBar model =
     [ button
-        [ class "navbar-toggler hidden-md-up"
+        [ class "navbar-toggler navbar-toggler-right"
         , type_ "button"
         , attribute "data-toggle" "collapse"
-        , attribute "data-target" ".navbar-collapse"
-        , attribute "aria-controls" "navbar-header"
+        , attribute "data-target" "#navbarNavDropdown"
+        , attribute "aria-controls" "navbarNavDropdown"
+        , attribute "aria-expanded" "false"
+        , attribute "aria-label" "Toggle navigation"
         ]
-        [ text "&#9776;" ]
+        [ span [ class "navbar-toggler-icon" ] [] ]
     , a
         [ Utils.onClick (App.NavigateTo App.HomeRoute)
         , href "#"
         , class "navbar-brand"
         ]
         [ text "Release Engineering" ]
-    , div [ class "collapse navbar-toggleable-sm navbar-collapse" ]
-        [ ul [ class "nav navbar-nav" ]
+    , div
+        [ class "collapse navbar-collapse"
+        , id "navbarNavDropdown"
+        ]
+        [ ul [ class "navbar-nav" ]
             [ li [ class "nav-item" ] (viewUser model)
             ]
         ]
@@ -141,7 +146,7 @@ view viewRoute model =
         div [ id ("page-" ++ routeName) ]
             [ nav
                 [ id "navbar"
-                , class "navbar navbar-full navbar-light"
+                , class "navbar navbar-toggleable-md bg-faded navbar-inverse"
                 ]
                 [ div [ class "container" ] (viewNavBar model) ]
             , div [ id "content" ]

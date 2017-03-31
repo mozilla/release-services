@@ -23,10 +23,10 @@ import Utils
 --
 
 
-routes : UrlParser.Parser (App.TreeStatus.Types.Route -> a) a
-routes =
+routeParser : UrlParser.Parser (App.TreeStatus.Types.Route -> a) a
+routeParser =
     UrlParser.oneOf
-        [ UrlParser.map App.TreeStatus.Types.ShowTreesRoute (UrlParser.s "")
+        [ UrlParser.map App.TreeStatus.Types.ShowTreesRoute UrlParser.top
         , UrlParser.map App.TreeStatus.Types.AddTreeRoute (UrlParser.s "add")
         , UrlParser.map App.TreeStatus.Types.UpdateTreesRoute (UrlParser.s "update")
         , UrlParser.map App.TreeStatus.Types.DeleteTreesRoute (UrlParser.s "delete")
@@ -34,8 +34,8 @@ routes =
         ]
 
 
-reverse : App.TreeStatus.Types.Route -> String
-reverse route =
+reverseRoute : App.TreeStatus.Types.Route -> String
+reverseRoute route =
     case route of
         App.TreeStatus.Types.ShowTreesRoute ->
             "/treestatus"
@@ -57,7 +57,7 @@ page : (App.TreeStatus.Types.Route -> a) -> App.Types.Page a b
 page outRoute =
     { title = "TreeStatus"
     , description = "Current status of Mozilla's version-control repositories."
-    , matcher = UrlParser.map outRoute (UrlParser.s "treestatus" </> routes)
+    , matcher = UrlParser.map outRoute (UrlParser.s "treestatus" </> routeParser)
     }
 
 
@@ -176,7 +176,7 @@ update currentRoute msg model =
             in
                 ( newModel
                 , Cmd.batch
-                    [ (reverse newRoute)
+                    [ (reverseRoute newRoute)
                         |> Navigation.newUrl
                     , newCmd
                     ]
@@ -219,7 +219,7 @@ update currentRoute msg model =
             , Cmd.batch
                 [ Utils.performMsg App.TreeStatus.Form.resetAddTree
                     |> Cmd.map App.TreeStatus.Types.FormAddTreeMsg
-                , (reverse App.TreeStatus.Types.ShowTreesRoute)
+                , (reverseRoute App.TreeStatus.Types.ShowTreesRoute)
                     |> Navigation.newUrl
                 ]
             , Nothing
@@ -242,7 +242,7 @@ update currentRoute msg model =
                 , App.TreeStatus.Api.fetchRecentChanges model.baseUrl
                 , Utils.performMsg App.TreeStatus.Form.resetUpdateTree
                     |> Cmd.map App.TreeStatus.Types.FormUpdateTreesMsg
-                , (reverse App.TreeStatus.Types.ShowTreesRoute)
+                , (reverseRoute App.TreeStatus.Types.ShowTreesRoute)
                     |> Navigation.newUrl
                 ]
             , Nothing
@@ -331,7 +331,7 @@ update currentRoute msg model =
 
         App.TreeStatus.Types.DeleteTreesResult result ->
             ( { model | treesAlerts = App.Utils.getAlerts result }
-            , (reverse App.TreeStatus.Types.ShowTreesRoute)
+            , (reverseRoute App.TreeStatus.Types.ShowTreesRoute)
                 |> Navigation.newUrl
             , Nothing
             )

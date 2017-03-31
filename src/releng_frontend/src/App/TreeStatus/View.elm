@@ -111,20 +111,8 @@ viewRecentChange scopes plural recentChange =
     in
         if hasScope "recent_changes/revert" scopes then
             [ div
-                [ class "float-xs-right btn-group" ]
-                [ button
-                    [ type_ "button"
-                    , class "btn btn-sm btn-outline-success"
-                    , Utils.onClick (App.TreeStatus.Types.RevertChange recentChange.id)
-                    ]
-                    [ text "Restore" ]
-                , button
-                    [ type_ "button"
-                    , class "btn btn-sm btn-outline-warning"
-                    , Utils.onClick (App.TreeStatus.Types.DiscardChange recentChange.id)
-                    ]
-                    [ text "Discard" ]
-                , div
+                [ class "list-group-item justify-content-between" ]
+                [ div
                     []
                     (List.append
                         [ text "At "
@@ -135,11 +123,26 @@ viewRecentChange scopes plural recentChange =
                         , em [] [ text (String.join ", " recentChange.trees) ]
                         , text " to "
                         , span
-                            [ class ("tag tag-" ++ (treeStatusLevel recentChange.status)) ]
+                            [ class ("badge badge-" ++ (treeStatusLevel recentChange.status)) ]
                             [ text recentChange.status ]
                         ]
                         recentChangeReason
                     )
+                , div
+                    [ class "btn-group" ]
+                    [ button
+                        [ type_ "button"
+                        , class "btn btn-sm btn-outline-success"
+                        , Utils.onClick (App.TreeStatus.Types.RevertChange recentChange.id)
+                        ]
+                        [ text "Restore" ]
+                    , button
+                        [ type_ "button"
+                        , class "btn btn-sm btn-outline-warning"
+                        , Utils.onClick (App.TreeStatus.Types.DiscardChange recentChange.id)
+                        ]
+                        [ text "Discard" ]
+                    ]
                 ]
             ]
         else
@@ -155,26 +158,25 @@ viewRecentChanges scopes recentChanges =
         RemoteData.Success data ->
             let
                 title =
-                    if List.isEmpty data then
+                    if List.isEmpty (data |> Debug.log "XXX") then
                         []
                     else
                         [ h2 [] [ text "Recent Changes" ] ]
+
+                recentChanges =
+                    data
+                        |> List.map (viewRecentChange scopes (List.length data > 1))
+                        |> List.concat
             in
-                []
-                    |> App.Utils.appendItems title
-                    |> (\x ->
-                            data
-                                |> List.map (viewRecentChange scopes (List.length data > 1))
-                                |> List.concat
-                       )
-                    |> (\x ->
-                            [ div
-                                [ id "treestatus-recentchanges"
-                                , class "list-group"
-                                ]
-                                x
-                            ]
-                       )
+                [ div
+                    [ id "treestatus-recentchanges"
+                    , class "list-group"
+                    ]
+                    ([]
+                        |> App.Utils.appendItems title
+                        |> App.Utils.appendItems recentChanges
+                    )
+                ]
 
         _ ->
             []
@@ -203,7 +205,7 @@ viewTreesItem scopes treesSelected tree =
                 |> App.TreeStatus.Types.NavigateTo
 
         treeTagClass =
-            "float-xs-right tag tag-" ++ (treeStatusLevel tree.status)
+            "float-xs-right badge badge-" ++ (treeStatusLevel tree.status)
 
         checkboxItem =
             if hasScope "trees/update" scopes || hasScope "trees/delete" scopes then
@@ -236,14 +238,23 @@ viewTreesItem scopes treesSelected tree =
                 , class "list-group-item-action"
                 , Utils.onClick openTree
                 ]
-                [ h5 [ class "list-group-item-heading" ]
-                    [ text tree.name
-                    , span [ class treeTagClass ]
-                        [ text tree.status ]
-                    ]
-                , p [ class "list-group-item-text" ]
-                    [ text tree.reason ]
-                ]
+                ([]
+                    |> List.append
+                        (if tree.reason == "" then
+                            []
+                         else
+                            [ p [ class "list-group-item-text" ]
+                                [ text tree.reason ]
+                            ]
+                        )
+                    |> List.append
+                        [ h5 [ class "list-group-item-heading" ]
+                            [ text tree.name
+                            , span [ class treeTagClass ]
+                                [ text tree.status ]
+                            ]
+                        ]
+                )
     in
         div [ class itemClass ]
             (List.append checkboxItem [ treeItem ])
@@ -489,7 +500,7 @@ viewTreeDetails remote =
                     [ text tree.name ]
                 , text " status is "
                 , span
-                    [ class ("tag tag-" ++ (treeStatusLevel tree.status)) ]
+                    [ class ("badge badge-" ++ (treeStatusLevel tree.status)) ]
                     [ text tree.status ]
                 , p [ class "lead" ] (bugzillaBugAsLink tree.message_of_the_day)
                 ]
@@ -524,7 +535,7 @@ viewTreeLog log =
     in
         div [ class "timeline-item" ]
             --TODO: show status in hover of the badge
-            [ div [ class <| "timeline-badge tag-" ++ (treeStatusLevel log.status) ]
+            [ div [ class <| "timeline-badge badge-" ++ (treeStatusLevel log.status) ]
                 [ text " " ]
             , div [ class "timeline-panel" ]
                 [ div [ class "timeline-time" ]
@@ -536,7 +547,7 @@ viewTreeLog log =
                     (List.map
                         (\tag ->
                             span
-                                [ class "tag tag-default" ]
+                                [ class "badge badge-default" ]
                                 [ App.TreeStatus.Types.possibleTreeTags
                                     |> List.filterMap
                                         (\( x, _, y ) ->

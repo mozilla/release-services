@@ -39,7 +39,7 @@ update :
     -> Model
     -> ( Model, Cmd Msg, Maybe Hawk.Request )
 update msg model =
-    case msg of
+    case (Debug.log "XXX" msg) of
         FetchScopes ->
             ( model
             , Task.perform CacheScopes Time.now
@@ -59,11 +59,19 @@ update msg model =
 
                 ( newModel, hawkCmd ) =
                     if (model.timestamp + 15000) > currentTime then
-                        ( model, Nothing )
+                        let
+                            _ =
+                                Debug.log "XXX" "CACHING"
+                        in
+                            ( model, Nothing )
                     else
-                        ( { model | scopes = [] }
-                        , Just request
-                        )
+                        let
+                            _ =
+                                Debug.log "XXX" "FETCHING"
+                        in
+                            ( { model | scopes = [] }
+                            , Just request
+                            )
             in
                 ( newModel, Cmd.none, hawkCmd )
 
