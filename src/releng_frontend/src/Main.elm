@@ -12,52 +12,149 @@ import Hawk
 import Html exposing (..)
 import Navigation
 import String
-import Dict
 import TaskclusterLogin
 import Time
 import Utils
 
 
+main : Program App.Flags App.Model App.Msg
+main =
+    Navigation.programWithFlags App.UrlChange
+        { init = init
+        , view = App.Layout.view viewRoute
+        , update = update
+        , subscriptions = subscriptions
+        }
+
+
 init : App.Flags -> Navigation.Location -> ( App.Model, Cmd App.Msg )
 init flags location =
-    ( { location = location
-      , route = App.HomeRoute
-      , docsUrl = flags.docsUrl
-      , version = flags.version
-      , user = flags.user
-      , userScopes = App.UserScopes.init
-      , trychooser = App.TryChooser.init
-      , treestatus = App.TreeStatus.init flags.treestatusUrl
-      }
-    , Utils.performMsg (App.NavigateTo App.HomeRoute)
-    )
+    let
+        route =
+            App.parseLocation location
+
+        model =
+            { history = [ location ]
+            , route = route
+            , docsUrl = flags.docsUrl
+            , version = flags.version
+            , user = flags.user
+            , userScopes = App.UserScopes.init
+            , trychooser = App.TryChooser.init
+            , treestatus = App.TreeStatus.init flags.treestatusUrl
+            }
+    in
+        initRoute model route
+
+
+initRoute : App.Model -> App.Route -> ( App.Model, Cmd App.Msg )
+initRoute model route =
+    case route of
+        App.NotFoundRoute ->
+            model ! []
+
+        App.HomeRoute ->
+            { model
+                | trychooser = App.TryChooser.init
+                , treestatus =
+                    App.TreeStatus.init model.treestatus.baseUrl
+            }
+                ! [ Utils.performMsg (App.UserScopesMsg App.UserScopes.FetchScopes) ]
+
+        App.LoginRoute clientId accessToken certificate ->
+            let
+                -- TODO: parsing of the arguments should go into TaskclusterLogin.elm
+                certificate_ =
+                    case certificate of
+                        Just text ->
+                            TaskclusterLogin.decodeCertificate text
+                                |> Result.toMaybe
+
+                        Nothing ->
+                            Nothing
+
+                credentials =
+                    case ( clientId, accessToken ) of
+                        ( Just clientId_, Just accessToken_ ) ->
+                            Just
+                                (TaskclusterLogin.Credentials
+                                    clientId_
+                                    accessToken_
+                                    certificate_
+                                )
+
+                        _ ->
+                            Nothing
+
+                loginCmd =
+                    case credentials of
+                        Just credentials_ ->
+                            Utils.performMsg
+                                (App.TaskclusterLoginMsg
+                                    (TaskclusterLogin.Logging credentials_)
+                                )
+
+                        Nothing ->
+                            Cmd.none
+            in
+                model
+                    ! [ loginCmd
+                      , App.navigateTo App.HomeRoute
+                      ]
+
+        App.LogoutRoute ->
+            model
+                ! [ Utils.performMsg (App.TaskclusterLoginMsg TaskclusterLogin.Logout)
+                    -- TODO: we should be redirecting to the url that we were loging in from
+                  , Utils.performMsg (App.NavigateTo App.HomeRoute)
+                  ]
+
+        App.TryChooserRoute ->
+            model
+                ! [ Utils.performMsg (App.TryChooserMsg App.TryChooser.Load)
+                  , Utils.performMsg (App.UserScopesMsg App.UserScopes.FetchScopes)
+                  ]
+
+        App.TreeStatusRoute route ->
+            model
+                ! [ Utils.performMsg (App.TreeStatusMsg (App.TreeStatus.Types.NavigateTo route))
+                  , Utils.performMsg (App.UserScopesMsg App.UserScopes.FetchScopes)
+                  ]
 
 
 update : App.Msg -> App.Model -> ( App.Model, Cmd App.Msg )
 update msg model =
     case msg of
-        App.Tick newTime ->
-            case model.user of
-                Just user ->
-                    case user.certificate of
-                        Just certificate ->
-                            let
-                                expired =
-                                    newTime > (toFloat certificate.expiry)
+        --
+        -- ROUTING
+        --
+        App.UrlChange location ->
+            { model
+                | history = location :: model.history
+                , route = App.parseLocation location
+            }
+                ! []
 
-                                logout =
-                                    App.TaskclusterLoginMsg TaskclusterLogin.Logout
-                            in
-                                if expired then
-                                    update logout model
-                                else
-                                    ( model, Cmd.none )
+        App.NavigateTo route ->
+            let
+                ( newModel, newCmd ) =
+                    initRoute model route
+            in
+                ( newModel
+                , Cmd.batch
+                    [ App.navigateTo route
+                    , newCmd
+                    ]
+                )
 
-                        Nothing ->
-                            ( model, Cmd.none )
-
-                Nothing ->
-                    ( model, Cmd.none )
+        --
+        -- LOGIN / LOGOUT
+        --
+        App.Tick time ->
+            if TaskclusterLogin.isCertificateExpired time model.user then
+                update (App.TaskclusterLoginMsg TaskclusterLogin.Logout) model
+            else
+                ( model, Cmd.none )
 
         App.TaskclusterLoginMsg userMsg ->
             let
@@ -68,6 +165,9 @@ update msg model =
                 , Cmd.map App.TaskclusterLoginMsg userCmd
                 )
 
+        --
+        -- HAWK REQUESTS
+        --
         App.HawkMsg hawkMsg ->
             let
                 ( requestId, cmd, response ) =
@@ -99,73 +199,10 @@ update msg model =
                     ]
                 )
 
-        App.NavigateTo route ->
-            let
-                newCmd =
-                    (App.reverse route)
-                        |> Navigation.newUrl
-
-                goHome =
-                    App.NavigateTo App.HomeRoute
-
-                -- TODO: parse url query into dict
-                urlQuery =
-                    Dict.empty
-
-                login =
-                    urlQuery
-                        |> TaskclusterLogin.convertUrlQueryToUser
-                        |> Maybe.map
-                            (\x ->
-                                x
-                                    |> TaskclusterLogin.Logging
-                                    |> App.TaskclusterLoginMsg
-                            )
-                        |> Maybe.withDefault goHome
-
-                logout =
-                    App.TaskclusterLoginMsg TaskclusterLogin.Logout
-
-                fetchUserScopes =
-                    App.UserScopesMsg App.UserScopes.FetchScopes
-            in
-                case route of
-                    App.NotFoundRoute ->
-                        ( model, newCmd )
-
-                    App.HomeRoute ->
-                        { model
-                            | trychooser = App.TryChooser.init
-                            , treestatus =
-                                App.TreeStatus.init model.treestatus.baseUrl
-                        }
-                            ! [ newCmd ]
-                            |> Utils.andThen update fetchUserScopes
-
-                    App.LoginRoute ->
-                        model
-                            ! []
-                            |> Utils.andThen update login
-                            |> Utils.andThen update goHome
-
-                    App.LogoutRoute ->
-                        model
-                            ! []
-                            |> Utils.andThen update logout
-                            |> Utils.andThen update goHome
-
-                    App.TryChooserRoute ->
-                        update (App.TryChooserMsg App.TryChooser.Load) model
-                            |> Utils.andThen update fetchUserScopes
-
-                    App.TreeStatusRoute route ->
-                        update (App.TreeStatusMsg (App.TreeStatus.Types.NavigateTo route)) model
-                            |> Utils.andThen update fetchUserScopes
-
-        App.UserScopesMsg msg2 ->
+        App.UserScopesMsg msg_ ->
             let
                 ( newModel, newCmd, hawkCmd ) =
-                    App.UserScopes.update msg2 model.userScopes
+                    App.UserScopes.update msg_ model.userScopes
             in
                 ( { model | userScopes = newModel }
                 , hawkCmd
@@ -175,16 +212,16 @@ update msg model =
                     |> Cmd.batch
                 )
 
-        App.TryChooserMsg msg2 ->
+        App.TryChooserMsg msg_ ->
             let
                 ( newModel, newCmd ) =
-                    App.TryChooser.update msg2 model.trychooser
+                    App.TryChooser.update msg_ model.trychooser
             in
                 ( { model | trychooser = newModel }
                 , Cmd.map App.TryChooserMsg newCmd
                 )
 
-        App.TreeStatusMsg msg2 ->
+        App.TreeStatusMsg msg_ ->
             let
                 route =
                     case model.route of
@@ -195,7 +232,7 @@ update msg model =
                             App.TreeStatus.Types.ShowTreesRoute
 
                 ( newModel, newCmd, hawkCmd ) =
-                    App.TreeStatus.update route msg2 model.treestatus
+                    App.TreeStatus.update route msg_ model.treestatus
             in
                 ( { model | treestatus = newModel }
                 , hawkCmd
@@ -218,7 +255,7 @@ hawkSend user page request =
     in
         case user of
             Just user2 ->
-                Hawk.send request user2
+                Hawk.send pagedRequest user2
                     |> Cmd.map App.HawkMsg
 
             Nothing ->
@@ -234,7 +271,7 @@ viewRoute model =
         App.HomeRoute ->
             App.Home.view model
 
-        App.LoginRoute ->
+        App.LoginRoute _ _ _ ->
             -- TODO: this should be already a view on TaskclusterLogin
             text "Logging you in ..."
 
@@ -258,15 +295,5 @@ subscriptions model =
     Sub.batch
         [ TaskclusterLogin.subscriptions App.TaskclusterLoginMsg
         , Hawk.subscriptions App.HawkMsg
-        , Time.every Time.second App.Tick
+        , Time.every (50 * Time.second) App.Tick
         ]
-
-
-main : Program App.Flags App.Model App.Msg
-main =
-    Navigation.programWithFlags App.urlParser
-        { init = init
-        , view = App.Layout.view viewRoute
-        , update = update
-        , subscriptions = subscriptions
-        }

@@ -72,6 +72,23 @@ decodeCertificate text =
         text
 
 
+isCertificateExpired time user_ =
+    case user_ of
+        Just user ->
+            case user.certificate of
+                Just certificate ->
+                    if time > (toFloat certificate.expiry) then
+                        True
+                    else
+                        False
+
+                Nothing ->
+                    False
+
+        Nothing ->
+            False
+
+
 convertUrlQueryToUser : Dict String String -> Maybe Credentials
 convertUrlQueryToUser query =
     let

@@ -19,5 +19,6 @@
 /src/**/.coverage-html
 /src/**/build
 /src/**/elm-stuff/
+/src/**/cache/
 /src/**/node_modules/
 /tmp

@@ -51,14 +51,18 @@ dropdown event items selected =
 
 loading : VirtualDom.Node a
 loading =
-    div [ class "progress-wrapper" ]
-        [ progress
-            [ class "progress progress-striped progress-animated"
-            , attribute "value" "100"
-            , attribute "max" "100"
+    div
+        [ class "progress"
+        ]
+        [ div
+            [ class "progress-bar progress-bar-striped progress-bar-animated"
+            , attribute "role" "progressbar"
+            , attribute "aria-valuenow" "100"
+            , attribute "aria-valuemin" "0"
+            , attribute "aria-valuemax" "100"
+            , style [ ( "width", "100%" ) ]
             ]
             [ text "Loading ..." ]
-        , span [] [ text "Loading ..." ]
         ]
 
 
