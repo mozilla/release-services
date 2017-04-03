@@ -102,4 +102,14 @@ in skipOverrides {
     '';
   };
 
+  "flask-talisman" = self: old: {
+    # XXX: from https://github.com/GoogleCloudPlatform/flask-talisman/pull/8
+    patchPhase = ''
+      sed -i \
+        -e "s|view_function = flask.current_app.view_functions\[|view_function = flask.current_app.view_functions.get(|" \
+        -e "s|flask.request.endpoint\]|flask.request.endpoint)|" \
+          flask_talisman/talisman.py
+    '';
+  };
+
 }
