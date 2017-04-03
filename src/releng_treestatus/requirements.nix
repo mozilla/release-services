@@ -742,6 +742,7 @@ let
       propagatedBuildInputs = [
       self."Logbook"
       self."structlog"
+      self."click"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "";
