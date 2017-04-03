@@ -1,7 +1,7 @@
 # generated using pypi2nix tool (version: 1.6.0)
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -s six packaging appdirs -E libffi openssl pkgconfig freetype.dev -r /home/lao/dev/mozilla/relengapi/src/shipit_bot_static_analysis/requirements.txt -r /home/lao/dev/mozilla/relengapi/src/shipit_bot_static_analysis/requirements-dev.txt -r /home/lao/dev/mozilla/relengapi/src/shipit_bot_static_analysis/requirements-nix.txt
+#   pypi2nix -v -V 3.5 -s six packaging appdirs -E libffi openssl pkgconfig freetype.dev -r /home/lao/dev/mozilla/relengapi/src/shipit_static_analysis/requirements.txt -r /home/lao/dev/mozilla/relengapi/src/shipit_static_analysis/requirements-dev.txt -r /home/lao/dev/mozilla/relengapi/src/shipit_static_analysis/requirements-nix.txt
 #
 
 { pkgs, python, commonBuildInputs ? [], commonDoCheck ? false }:

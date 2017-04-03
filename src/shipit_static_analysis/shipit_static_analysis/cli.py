@@ -1,4 +1,4 @@
-from shipit_bot_static_analysis.workflow import PulseWorkflow
+from shipit_static_analysis.workflow import PulseWorkflow
 import click
 
 

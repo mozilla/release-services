@@ -30,7 +30,7 @@ def read_requirements(file_):
 
 
 setup(
-    name='shipit_bot_static_analysis',
+    name='shipit_static_analysis',
     version=version,
     description='Listens to bugzilla entries, executes'
     'some static analysis and reports results.',
@@ -48,7 +48,7 @@ setup(
     license='MPL2',
     entry_points={
         'console_scripts': [
-            'shipit-bot-static-analysis = shipit_bot_static_analysis.cli:main',
+            'shipit-static-analysis = shipit_static_analysis.cli:main',
         ]
     },
 )

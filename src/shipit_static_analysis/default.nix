@@ -9,8 +9,8 @@ let
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-shipit-bot-static-analysis";
-  dirname = "shipit_bot_uplift";
+  name = "mozilla-shipit-static-analysis";
+  dirname = "shipit_static_analysis";
 
   mercurial' = mercurial.overrideDerivation (old: {
     postInstall = old.postInstall + ''
