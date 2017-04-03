@@ -42,6 +42,7 @@ let
     "shipit-bot-uplift" = import ./../src/shipit_bot_uplift { inherit releng_pkgs; };
     "shipit-static-analysis" = import ./../src/shipit_static_analysis { inherit releng_pkgs; };
     "shipit-code-coverage" = import ./../src/shipit_code_coverage { inherit releng_pkgs; };
+    "shipit-risk-assessment" = import ./../src/shipit_risk_assessment { inherit releng_pkgs; };
     "shipit-pipeline" = import ./../src/shipit_pipeline { inherit releng_pkgs; };
     "shipit-signoff" = import ./../src/shipit_signoff { inherit releng_pkgs; };
 

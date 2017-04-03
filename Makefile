@@ -18,6 +18,7 @@ APPS=\
 	shipit-bot-uplift \
 	shipit-static-analysis \
 	shipit-code-coverage \
+	shipit-risk-assessment \
 	shipit-pipeline \
 	shipit-signoff \
 	shipit-frontend

@@ -1,0 +1,3 @@
+setuptools-scm
+vcversioner
+pytest-runner
