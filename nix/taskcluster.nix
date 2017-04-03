@@ -11,8 +11,8 @@ let
 
   tasks =
       pkgs.lib.strings.concatStringsSep "\n\n" (
-        flatten (map (pkg: pkg.taskclusterGithubTasks)
-                     (packagesWith  "taskclusterGithubTasks"  releng_pkgs)
+        flatten (map ({ name, pkg }: pkg.taskclusterGithubTasks)
+                     (packagesWith "taskclusterGithubTasks" releng_pkgs)
                 )
       );
 
