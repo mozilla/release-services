@@ -1,3 +1,4 @@
+from shipit_code_coverage import codecov
 import click
 
 
@@ -6,7 +7,7 @@ import click
 @click.option('--client-id', help='Taskcluster Client ID')
 @click.option('--client-token', help='Taskcluster Client token')
 def main(secrets, client_id, client_token):
-    pass
+    codecov.go()
 
 
 if __name__ == '__main__':
