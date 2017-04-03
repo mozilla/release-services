@@ -19,6 +19,7 @@ APPS=\
 	shipit-static-analysis \
 	shipit-code-coverage \
 	shipit-risk-assessment \
+	shipit-pulse-listener \
 	shipit-pipeline \
 	shipit-signoff \
 	shipit-frontend
