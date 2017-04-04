@@ -84,6 +84,7 @@ EOF
         grcov
       ];
     postInstall = ''
+      mkdir -p $out/tmp
       mkdir -p $out/bin
       ln -s ${mercurial'}/bin/hg $out/bin
 
