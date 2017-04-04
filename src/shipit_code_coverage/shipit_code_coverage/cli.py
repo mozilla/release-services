@@ -1,5 +1,6 @@
-from shipit_code_coverage import codecov
 import click
+
+from shipit_code_coverage import codecov
 
 
 @click.command()

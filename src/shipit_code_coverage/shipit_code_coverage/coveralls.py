@@ -1,10 +1,7 @@
 import requests
 
 
-def upload():
-    with open('result.json', 'r') as f:
-        data = f.read()
-
+def upload(data):
     r = requests.post('https://coveralls.io/api/v1/jobs', files={
         'json_file': data
     })

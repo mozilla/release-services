@@ -60,13 +60,15 @@ def generate_info(revision):
       '--commit-sha', get_github_commit(revision),
       '--token', '95dgNaxbGORBDEaxioPGWXT0FskF8eDzd'
     ]
-    cmd.extend(ordered_files[:3])
+    cmd.extend(ordered_files)
 
-    proc = subprocess.Popen(cmd, stdout=open("output.json", 'w'))
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, err) = proc.communicate()
 
-    ret = proc.wait()
-    if ret != 0:
-        raise Exception("Error while running grcov:" + str(ret))
+    if proc.returncode != 0:
+        raise Exception("Error while running grcov:\n" + err.decode('utf-8'))
+
+    return output
 
 
 def go():
@@ -75,8 +77,8 @@ def go():
     task_data = taskcluster.get_task_details(task_id)
     revision = task_data["payload"]["env"]["GECKO_HEAD_REV"]
 
-    # download_coverage_artifacts(task_id)
+    download_coverage_artifacts(task_id)
 
-    generate_info(revision)
+    output = generate_info(revision)
 
-    coveralls.upload()
+    coveralls.upload(output)
