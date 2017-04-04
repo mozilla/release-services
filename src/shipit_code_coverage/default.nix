@@ -1,14 +1,14 @@
-{ releng_pkgs 
-}: 
+{releng_pkgs }: 
 
 let
 
-  inherit (releng_pkgs.lib) mkPython fromRequirementsFile filterSource;
-  inherit (releng_pkgs.pkgs) writeScript makeWrapper mercurial cacert ;
+  inherit (releng_pkgs.lib) mkPython fromRequirementsFile filterSource mkRustPlatform;
+  inherit (releng_pkgs.pkgs) writeScript makeWrapper mercurial cacert rustStable ;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  rustPlatform = mkRustPlatform {};
   name = "mozilla-shipit-code-coverage";
   dirname = "shipit_code_coverage";
 
@@ -24,6 +24,49 @@ EOF
     '';
   });
 
+  # Marco grcov
+  grcov = rustPlatform.buildRustPackage rec {
+    version = "0.1.5";
+    name = "grcov-${version}";
+
+    src = releng_pkgs.pkgs.fetchFromGitHub {
+      owner = "marco-c";
+      repo = "grcov";
+      rev = "v${version}";
+      sha256 = "0kzds5c6mj0zv4zmyjz73drq3rxqzhrg45c8dsfvs94pklqnzsma";
+    };
+
+    # running 4 tests
+    # test test_merge_results ... ok
+    # test test_producer ... FAILED
+    # test test_zip_producer ... ok
+    # test test_parser ... ok
+    #
+    # failures:
+    #
+    # ---- test_producer stdout ----
+    #     thread 'test_producer' panicked at 'Missing grcov/test/Platform.gcda', src/main.rs:97
+    # note: Run with `RUST_BACKTRACE=1` for a backtrace.
+    #
+    #
+    # failures:
+    #     test_producer
+    #
+    # test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured
+    #
+    # error: test failed
+    doCheck = false;
+
+    depsSha256 = "14w2h234i8fhd0s1ggndrkadd0wbfadmrpsnxkbmqay7irgaw0ly";
+
+    meta = with releng_pkgs.pkgs.stdenv.lib; {
+      description = "grcov collects and aggregates code coverage information for multiple source files.";
+      homepage = https://github.com/marco-c/grcov;
+      license = with releng_pkgs.pkgs.lib.licenses; [ mit ];
+      platforms = platforms.all;
+    };
+  };
+
   self = mkPython {
     inherit python name dirname;
     inProduction = true;
@@ -32,7 +75,14 @@ EOF
     buildInputs =
       fromRequirementsFile ./requirements-dev.txt python.packages;
     propagatedBuildInputs =
-      fromRequirementsFile ./requirements.txt python.packages;
+      fromRequirementsFile ./requirements.txt python.packages 
+      ++ [
+        releng_pkgs.pkgs.gcc
+        releng_pkgs.pkgs.lcov
+        rustStable.rustc
+        rustStable.cargo
+        grcov
+      ];
     postInstall = ''
       mkdir -p $out/bin
       ln -s ${mercurial'}/bin/hg $out/bin

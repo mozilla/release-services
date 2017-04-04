@@ -710,4 +710,7 @@ in rec {
       REPO
       echo
     '';
+
+  mkRustPlatform = (import ./rust.nix) releng_pkgs.pkgs;
+
 }
