@@ -32,7 +32,13 @@ EOF
     buildInputs =
       fromRequirementsFile ./requirements-dev.txt python.packages;
     propagatedBuildInputs =
-      fromRequirementsFile ./requirements.txt python.packages;
+      fromRequirementsFile ./requirements.txt python.packages
+      ++ [
+        releng_pkgs.pkgs.clang
+        releng_pkgs.pkgs.llvm
+        releng_pkgs.pkgs.sqlite
+      ];
+
     postInstall = ''
       mkdir -p $out/bin
       ln -s ${mercurial'}/bin/hg $out/bin
