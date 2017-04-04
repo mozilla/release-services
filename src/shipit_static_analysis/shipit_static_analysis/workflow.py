@@ -1,147 +1,68 @@
-import base64
-import re
-import json
-import warnings
-import whatthepatch
-import hglib
-from urllib.request import urlopen
-from cli_common.pulse import create_consumer, run_consumer
 from cli_common.taskcluster import TaskclusterClient
-from libmozdata import bugzilla
+from cli_common.log import get_logger
+import subprocess
+import hglib
+import os
 
-MOZREVIEW_URL_PATTERN = 'https://reviewboard.mozilla.org/r/([0-9]+)/'
-REPO_DIR = ''
+logger = get_logger(__name__)
+
+REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
+REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
 
 
-class PulseWorkflow(object):
+class Workflow(object):
     """
-    Main bot workflow
+    Static analysis workflow
     """
-    def __init__(self, secrets_path, client_id=None, access_token=None):
+    taskcluster = None
 
-        # Fetch pulse credentials from TC secrets
-        self.tc = TaskclusterClient(client_id, access_token)
+    def __init__(self, secrets_path, cache_root, client_id=None, client_token=None):  # noqa
+        self.cache_root = cache_root
+        assert os.path.isdir(self.cache_root), \
+            "Cache root {} is not a dir.".format(self.cache_root)
 
-        # Save History and Attachment
-        self.bug = {}
+        # Load secrets
+        # TODO: use it later for publications on mozreview
+        self.taskcluster = TaskclusterClient(client_id, client_token)
+        self.taskcluster.get_secrets(secrets_path)
 
-        # Mercurial repository
-        self.repo = hglib.open(REPO_DIR)
+        # Clone mozilla-central
+        self.repo_dir = os.path.join(self.cache_root, 'static-analysis')
+        shared_dir = os.path.join(self.cache_root, 'static-analysis-shared')
+        logger.info('Clone mozilla central', dir=self.repo_dir)
+        cmd = hglib.util.cmdbuilder('robustcheckout',
+                                    REPO_CENTRAL,
+                                    self.repo_dir,
+                                    purge=True,
+                                    sharebase=shared_dir,
+                                    branch=b'tip')
 
-        secrets = self.tc.get_secret(secrets_path)
-        required = ('PULSE_USER', 'PULSE_PASSWORD', 'PULSE_QUEUE')
-        for req in required:
-            if req not in secrets:
-                raise Exception('Missing value {} in Taskcluster secret value {}'.format(req, secrets_path))  # noqa
+        cmd.insert(0, hglib.HGPATH)
+        proc = hglib.util.popen(cmd)
+        out, err = proc.communicate()
+        if proc.returncode:
+            raise hglib.error.CommandError(cmd, proc.returncode, out, err)
 
-        # Use pulse consumer from bot_common
-        self.consumer = create_consumer(
-            secrets['PULSE_USER'],
-            secrets['PULSE_PASSWORD'],
-            secrets['PULSE_QUEUE'],
-            secrets.get('PULSE_TOPIC', '#'),
-            self.got_message
-        )
+        # Open new hg client
+        self.hg = hglib.open(self.repo_dir)
 
-    def run(self):
-        run_consumer(self.consumer)
-
-    async def got_message(self, channel, body, envelope, properties):
+    def run(self, revision):
         """
-        Pulse consumer callback
+        Run the static analysis workflow:
+         * Pull revision from review
+         * Checkout revision
+         * Run static analysis
         """
-        assert isinstance(body, bytes), \
-            'Body is not in bytes'
 
-        # Extract bugzilla id
-        body = json.loads(body.decode('utf-8'))
-        if 'payload' not in body:
-            raise Exception('Missing payload in body')
-        bugzilla_id = body['payload'].get('id')
-        if not bugzilla_id:
-            raise Exception('Missing bugzilla id')
+        # Pull revision from review
+        logger.info('Pull from review', revision=revision)
+        self.hg.pull(source=REPO_REVIEW, rev=revision, update=True, force=True)
 
-        # Analyse the attachment of the bug
-        fields = ['id', 'data', 'is_obsolete', 'creation_time',
-                  'content_type']
+        # Run mach configure
+        cmd = [
+            './mach', 'configure'
+        ]
+        proc = subprocess.Popen(cmd, cwd=self.repo_dir)
+        exit = proc.wait()
 
-        self.bug['id'] = bugzilla_id
-
-        bugzilla.Bugzilla(
-            bugzilla_id,
-            historyhandler=self.historyHandler,
-            attachmenthandler=self.attachmenthandler,
-            attachment_include_fields=fields
-        ).get_data().wait()
-
-        self.analyzebug()
-
-        # Ack the message so it is removed from the broker's queue
-        await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
-
-    def historyHandler(self, found_bug):
-        self.bug['history'] = found_bug['history']
-
-    def attachmenthandler(self, attachments, bugid):
-        self.bug['attachments'] = attachments
-
-    def commenthandler(self, data, bugid):
-        bug = {
-            'id': bugid,
-            'comments': data['comments'],
-        }
-
-        commits, _ = bugzilla.patchanalysis.get_commits_for_bug(bug)
-
-    def analyzebug(self):
-        attachmentId = 0
-        attachmentData = None
-
-        if len(self.bug['history']) < 1:
-            warnings.warn("Bug: {} - History is empty!".format(self.bug['id']))
-            return
-
-        # begin with the history to see if the latest comment it's a attachment
-        for changes in self.bug['history'][-1]['changes']:
-            if 'attachment_id' in changes:
-                attachmentId = changes['attachment_id']
-
-        if attachmentId > 0:
-            for attachment in self.bug['attachments']:
-                if attachment['content_type'] == \
-                        'text/x-review-board-request' and attachment[
-                    'is_obsolete'] == 0 and attachment['id'] == attachmentId:  # noqa
-
-                    mozreview_url = base64.b64decode(attachment['data']).decode('utf-8')  # noqa
-
-                    review_num = re.search(MOZREVIEW_URL_PATTERN, mozreview_url).group(1)  # noqa
-                    diff_url = 'https://reviewboard.mozilla.org/r/{}/diff/raw/'.format(review_num)  # noqa
-
-                    response = urlopen(diff_url)
-                    attachmentData = response.read().decode('ascii', 'ignore')
-
-                    paths_list = []
-                    for diff in whatthepatch.parse_patch(attachmentData):
-                        old_path = (diff.header.old_path[2:]
-                                    if diff.header.old_path.startswith('a/')
-                                    else diff.header.old_path)
-                        new_path = (diff.header.new_path[2:]
-                                    if diff.header.new_path.startswith('b/')
-                                    else diff.header.new_path)
-
-                        # Pushing the new path to the list that's going to be
-                        # used to pass it to the clang-tiy as argument
-                        paths_list.append(new_path)
-                        print(old_path)
-
-            self.applypatch(attachmentData, paths_list)
-
-    def applypatch(self, patch, patchFiles):
-
-        # First revert everything and update
-        result = self.repo.update(clean=True)
-
-        # if result['updated']:
-        #    print("{} Files Updated", format(result['updated']))
-
-        return result
+        print('Exit', exit)
