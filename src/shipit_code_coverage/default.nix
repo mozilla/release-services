@@ -2,7 +2,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkPython fromRequirementsFile filterSource mkRustPlatform;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource mkRustPlatform;
   inherit (releng_pkgs.pkgs) writeScript makeWrapper mercurial cacert rustStable ;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -67,6 +67,29 @@ EOF
     };
   };
 
+  mkBot = branch:
+    let
+      secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
+    in
+      mkTaskclusterHook {
+        name = "Shipit task aggregating code coverage data";
+        owner = "mcastelluccio@mozilla.com";
+        schedule = [ "0 0 0 * * *" ];  # every day
+        taskImage = self.docker;
+        scopes = [
+          # Used by taskclusterProxy
+          ("secrets:get:" + secretsKey)
+        ];
+        taskEnv = {
+          "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+        };
+        taskCommand = [
+          "/bin/shipit-code-coverage"
+          "--secrets"
+          secretsKey
+        ];
+      };
+
   self = mkPython {
     inherit python name dirname;
     inProduction = true;
@@ -100,8 +123,10 @@ EOF
         master = {
         };
         staging = {
+          bot = mkBot "staging";
         };
         production = {
+          bot = mkBot "production";
         };
       };
       update = writeScript "update-${name}" ''
