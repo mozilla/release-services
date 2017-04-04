@@ -62,10 +62,10 @@ def generate_info(revision):
     ]
     cmd.extend(ordered_files)
 
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (output, err) = proc.communicate()
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, err) = p.communicate()
 
-    if proc.returncode != 0:
+    if p.returncode != 0:
         raise Exception("Error while running grcov:\n" + err.decode('utf-8'))
 
     return output
