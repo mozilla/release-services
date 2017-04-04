@@ -86,7 +86,10 @@ EOF
     postInstall = ''
       mkdir -p $out/bin
       ln -s ${mercurial'}/bin/hg $out/bin
+
+      # Needed by grcov runtime
       ln -s ${releng_pkgs.pkgs.gcc}/bin/gcc $out/bin
+      ln -s ${releng_pkgs.pkgs.gcc.cc}/bin/gcov $out/bin
       ln -s ${releng_pkgs.pkgs.lcov}/bin/lcov $out/bin
       ln -s ${rustStable.rustc}/bin/rustc $out/bin
       ln -s ${rustStable.cargo}/bin/cargo $out/bin
