@@ -13,12 +13,20 @@ class TaskclusterClient(object):
         """
         Build Taskcluster credentials options
         """
-        if client_id and access_token:
+        self.client_id = client_id
+        self.access_token = access_token
+
+    def build_options(self, service_endpoint):
+        """
+        Build Taskcluster credentials options
+        """
+
+        if self.client_id and self.access_token:
             # Use provided credentials
-            self.options = {
+            tc_options = {
                 'credentials': {
-                    'clientId': client_id,
-                    'accessToken': access_token,
+                    'clientId': self.client_id,
+                    'accessToken': self.access_token,
                 }
             }
 
@@ -31,24 +39,37 @@ class TaskclusterClient(object):
 
             # Load secrets from TC task context
             # with taskclusterProxy
-            base_url = 'http://{}/secrets/v1'.format(hosts['taskcluster'])
+            base_url = 'http://{}/{}'.format(
+                hosts['taskcluster'],
+                service_endpoint
+            )
             logger.info('Taskcluster Proxy enabled', url=base_url)
-            self.options = {
+            tc_options = {
                 'baseUrl': base_url
             }
 
-    def get_secret(self, path):
+        return tc_options
+
+    def get_secrets(self, path, required=[]):
         """
-        Get secret from a specific path
+        Get secrets from a specific path
+        and check mandatory ones
         """
-        secrets = taskcluster.Secrets(self.options).get(path)
-        return secrets['secret']
+        options = self.build_options('secrets/v1')
+        secrets = taskcluster.Secrets(options).get(path)
+        secrets = secrets['secret']
+        for req in required:
+            if req not in secrets:
+                raise Exception('Missing value {} in Taskcluster secret value {}'.format(req, path))  # noqa
+
+        return secrets
 
     def notify_email(self, address, subject, content):
         """
         Send an email through Taskcluster notification service
         """
-        notify = taskcluster.Notify(self.options)
+        options = self.build_options('notify/v1')
+        notify = taskcluster.Notify(options)
         return notify.email({
             'address': address,
             'subject': subject,
