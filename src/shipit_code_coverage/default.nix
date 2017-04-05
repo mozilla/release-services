@@ -88,6 +88,7 @@ EOF
           "--secrets"
           secretsKey
         ];
+        maxRunTime = 18000;
       };
 
   self = mkPython {

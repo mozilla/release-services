@@ -156,6 +156,7 @@ in rec {
       , taskEnv ? {}
       , scopes ? []
       , cache ? {}
+      , maxRunTime ? 3600
       }:
       { inherit schedule expires deadline;
         metadata = { inherit name description owner emailOnError; };
@@ -164,6 +165,7 @@ in rec {
           payload = mkTaskclusterTaskPayload {
             image = taskImage;
             command = taskCommand;
+            maxRunTime = maxRunTime;
             artifacts = taskArtifacts;
             env = taskEnv;
             cache = cache;
