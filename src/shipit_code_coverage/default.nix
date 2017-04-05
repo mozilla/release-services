@@ -88,6 +88,7 @@ EOF
           "--secrets"
           secretsKey
         ];
+        deadline = "5 hours";
         maxRunTime = 18000;
       };
 
