@@ -76,7 +76,7 @@ class TaskclusterClient(object):
             'content': content,
         })
 
-    def read_hosts():
+    def read_hosts(self):
         """
         Read /etc/hosts to get hostnames
         on a Nix env (used for taskclusterProxy)
