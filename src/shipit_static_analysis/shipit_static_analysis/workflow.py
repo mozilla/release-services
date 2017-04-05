@@ -46,6 +46,10 @@ class Workflow(object):
         # Open new hg client
         self.hg = hglib.open(self.repo_dir)
 
+        # Force cleanup to reset tip
+        # otherwise previous pull are there
+        self.hg.update(rev=b'tip', clean=True)
+
     def run(self, revision):
         """
         Run the static analysis workflow:
@@ -54,15 +58,55 @@ class Workflow(object):
          * Run static analysis
         """
 
+        # Get the tip revision
+        tip = self.hg.identify(id=True).decode('utf-8').strip()
+
         # Pull revision from review
         logger.info('Pull from review', revision=revision)
         self.hg.pull(source=REPO_REVIEW, rev=revision, update=True, force=True)
 
-        # Run mach configure
-        cmd = [
-            './mach', 'configure'
+        # Find modified files by this revision
+        changeset = '{}:{}'.format(revision, tip)
+        status = self.hg.status(change=[changeset, ])
+        modified_files = [f.decode('utf-8') for _, f in status]
+        logger.info('Modified files', files=modified_files)
+
+        # mach configure
+        self.run_command(['./mach', 'configure'])
+
+        # Build CompileDB backend
+        self.run_command(['./mach', 'build-backend', '--backend=CompileDB'])
+
+        # Build exports
+        self.run_command(['./mach', 'build', 'pre-export'])
+        self.run_command(['./mach', 'build', 'export'])
+
+        # Run static analysis through run-clang-tidy.py
+        checks = [
+            '-*',
+            'modernize-loop-convert',
+            'modernize-use-auto',
+            'modernize-use-default',
+            'modernize-raw-string-literal',
+            'modernize-use-bool-literals',
+            'modernize-use-override',
+            'modernize-use-nullptr',
         ]
+        cmd = [
+            'run-clang-tidy.py',
+            '-j', '18',
+            '-p', 'obj-x86_64-pc-linux-gnu/',
+            '-checks={}'.format(','.join(checks)),
+        ] + modified_files
+        self.run_command(cmd)
+
+    def run_command(self, cmd):
+        """
+        Run a command in the repo through subprocess
+        """
+        logger.info('Running repo command', cmd=' '.join(cmd))
         proc = subprocess.Popen(cmd, cwd=self.repo_dir)
         exit = proc.wait()
 
-        print('Exit', exit)
+        if exit != 0:
+            raise Exception('Invalid exit code for command {}: {}'.format(cmd, exit))  # noqa

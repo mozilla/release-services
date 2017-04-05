@@ -13,7 +13,7 @@ let
     perl unzip zip gnumake yasm pkgconfig xlibs gnome2 pango dbus dbus_glib
     alsaLib libpulseaudio gstreamer gst_plugins_base gtk3 glib
     gobjectIntrospection git mercurial openssl cmake
-    clang clang-tools;
+    clang clang-tools llvmPackages_39;
 
   inherit (releng_pkgs.pkgs.pythonPackages) setuptools;
 
@@ -67,8 +67,7 @@ EOF
         # Needed for the static analysis
         clang
         clang-tools
-      ]
-      ++ [
+
         # TODO: Use nixpkgs-mozilla gecko buildInputs
         # From https://github.com/mozilla/nixpkgs-mozilla/blob/master/pkgs/gecko/default.nix
         # Expected by "mach"
@@ -111,10 +110,11 @@ EOF
       ln -s ${mercurial'}/bin/hg $out/bin
       ln -s ${rustStable.rustc}/bin/rustc $out/bin
       ln -s ${rustStable.cargo}/bin/cargo $out/bin
+      ln -s ${llvmPackages_39.clang-unwrapped}/share/clang/run-clang-tidy.py $out/bin
     '';
 		shellHook = ''
 			export PATH="${mercurial'}/bin:$PATH"
-			#export PKG_CONFIG_PATH="${releng_pkgs.pkgs.gtk3}/bin:$PKG_CONFIG_PATH"
+			export PATH="${llvmPackages_39.clang-unwrapped}/share/clang:$PATH"
 		'';
     passthru = {
       taskclusterHooks = {
