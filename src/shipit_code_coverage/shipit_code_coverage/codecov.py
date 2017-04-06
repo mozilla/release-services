@@ -1,9 +1,14 @@
 import os
 import requests
 import subprocess
+import hglib
 
 from shipit_code_coverage import taskcluster
 from shipit_code_coverage import coveralls
+
+
+REPO_CENTRAL = 'https://hg.mozilla.org/mozilla-central'
+REPO_DIR = 'mozilla-central'
 
 
 def is_coverage_task(task):
@@ -56,7 +61,8 @@ def generate_info(revision):
       'grcov',
       '-z',
       '-t', 'coveralls',
-      '-s', '/home/worker/workspace/build/src/',
+      '-s', REPO_DIR,
+      '-p', '/home/worker/workspace/build/src/',
       '--commit-sha', get_github_commit(revision),
       '--token', '95dgNaxbGORBDEaxioPGWXT0FskF8eDzd'
     ]
@@ -71,6 +77,26 @@ def generate_info(revision):
     return output
 
 
+def clone_mozilla_central(revision):
+    shared_dir = REPO_DIR + '-shared'
+    cmd = hglib.util.cmdbuilder('robustcheckout',
+                                REPO_CENTRAL,
+                                REPO_DIR,
+                                purge=True,
+                                sharebase=shared_dir,
+                                branch=b'tip')
+
+    cmd.insert(0, hglib.HGPATH)
+    proc = hglib.util.popen(cmd)
+    out, err = proc.communicate()
+    if proc.returncode:
+        raise hglib.error.CommandError(cmd, proc.returncode, out, err)
+
+    hg = hglib.open(REPO_DIR)
+
+    hg.update(rev=revision, clean=True)
+
+
 def go():
     task_id = taskcluster.get_last_task()
 
@@ -78,6 +104,8 @@ def go():
     revision = task_data["payload"]["env"]["GECKO_HEAD_REV"]
 
     download_coverage_artifacts(task_id)
+
+    clone_mozilla_central(revision)
 
     output = generate_info(revision)
 
