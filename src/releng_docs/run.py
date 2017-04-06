@@ -1,14 +1,19 @@
 import os
 import sys
 import livereload
+import subprocess
 
 HERE = os.path.dirname(__file__)
+
 
 server = livereload.Server()
 server.watch(
     os.path.join(HERE, '*.rst'),
-    livereload.shell('make html', cwd=HERE),
+    livereload.shell('make html'),
 )
+
+subprocess.call('make html', shell=True)
+
 server.serve(
     port=os.environ.get('PORT', 5000),
     host=os.environ.get('HOST', 'localhost'),
