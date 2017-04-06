@@ -1,8 +1,10 @@
 let
   pkgs' = import <nixpkgs> {};
   nixpkgs = pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs.json));
+  nixpkgs-mozilla = pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs-mozilla.json));
 in
 { pkgs ? import nixpkgs {}
+, mozilla ? import nixpkgs-mozilla {}
 }:
 
 let
@@ -18,6 +20,16 @@ let
         repo = "nixpkgs-channels";
         branch = "nixos-unstable";
         path = "nix/nixpkgs.json";
+      };
+    };
+
+    mozilla = mozilla // {
+      name = "nixpkgs-mozilla";
+      update = releng_pkgs.lib.updateFromGitHub {
+        owner = "mozilla";
+        repo = "nixpkgs-mozilla";
+        branch = "master";
+        path = "nix/nixpkgs-mozilla.json";
       };
     };
 
