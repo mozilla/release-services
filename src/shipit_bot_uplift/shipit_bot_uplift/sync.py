@@ -3,18 +3,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import taskcluster
 import itertools
 import os
 
-from shipit_bot_uplift.helpers import (
-    compute_dict_hash, read_hosts
-)
+from shipit_bot_uplift.helpers import compute_dict_hash
 from shipit_bot_uplift.mercurial import Repository
 from shipit_bot_uplift.api import api_client
 from shipit_bot_uplift.merge import MergeTest
 from shipit_bot_uplift.report import Report
 from cli_common.log import get_logger
+from cli_common.taskcluster import TaskclusterClient
 from libmozdata import bugzilla, versions
 from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
 
@@ -209,7 +207,36 @@ class Bot(object):
     """
     Update all analysis data
     """
-    def __init__(self, bugzilla_url, bugzilla_token=None):
+    def __init__(self, secrets_path, client_id=None, access_token=None):
+        # Start by loading secrets from Taskcluster
+        self.taskcluster = TaskclusterClient(client_id, access_token)
+
+        # Load secrets
+        required = ('BUGZILLA_URL', 'BUGZILLA_TOKEN', 'API_URL')
+        secrets = self.taskcluster.get_secrets(secrets_path, required)
+
+        # Setup credentials for Shipit api
+        api_client.setup(
+            secrets['API_URL'],
+            secrets.get('TASKCLUSTER_CLIENT_ID', client_id),
+            secrets.get('TASKCLUSTER_ACCESS_TOKEN', access_token)
+        )
+
+        # Setup bugzilla
+        self.use_bugzilla(
+            secrets['BUGZILLA_URL'],
+            secrets['BUGZILLA_TOKEN']
+        )
+        self.sync = {}  # init
+
+        # Init report
+        emails = secrets.get('UPLIFT_NOTIFICATIONS', ['babadie@mozilla.com'])
+        self.report = Report(self.taskcluster, emails)
+
+    def use_bugzilla(self, bugzilla_url, bugzilla_token=None):
+        """
+        Setup bugzilla usage (url + token)
+        """
         self.bugs = {}
         self.repository = None
         self.bugzilla_url = bugzilla_url
@@ -227,9 +254,6 @@ class Bot(object):
             bugzilla.BugzillaUser.TOKEN = bugzilla_token
 
         logger.info('Use bugzilla server', url=self.bugzilla_url)
-
-    def run(self):
-        raise NotImplementedError
 
     def use_cache(self, cache_root):
         """
@@ -277,85 +301,6 @@ class Bot(object):
             bugs[bugid]['attachments'] = _attachments
 
         return bugs
-
-
-class BotRemote(Bot):
-    """
-    Use a distant shipit api server
-    to store processed analysis
-    """
-    def __init__(self, secrets_path, client_id=None, access_token=None):
-        # Start by loading secrets from Taskcluster
-        secrets = self.load_secrets(
-            self.build_tc_options('secrets/v1', client_id, access_token),
-            secrets_path
-        )
-
-        # Setup credentials for Shipit api
-        api_client.setup(
-            secrets['API_URL'],
-            secrets.get('TASKCLUSTER_CLIENT_ID', client_id),
-            secrets.get('TASKCLUSTER_ACCESS_TOKEN', access_token)
-        )
-
-        super(BotRemote, self).__init__(
-            secrets['BUGZILLA_URL'],
-            secrets['BUGZILLA_TOKEN']
-        )
-        self.sync = {}  # init
-
-        # Init report
-        options = self.build_tc_options('notify/v1', client_id, access_token)
-        emails = secrets.get('UPLIFT_NOTIFICATIONS', ['babadie@mozilla.com'])
-        self.report = Report(options, emails)
-
-    def build_tc_options(self, service_endpoint, client_id=None, access_token=None):  # noqa
-        """
-        Build Taskcluster credentials options
-        """
-
-        if client_id and access_token:
-            # Use provided credentials
-            tc_options = {
-                'credentials': {
-                    'clientId': client_id,
-                    'accessToken': access_token,
-                }
-            }
-
-        else:
-            # Get taskcluster proxy host
-            # as /etc/hosts is not used in the Nix image (?)
-            hosts = read_hosts()
-            if 'taskcluster' not in hosts:
-                raise Exception('Missing taskcluster in /etc/hosts')
-
-            # Load secrets from TC task context
-            # with taskclusterProxy
-            base_url = 'http://{}/{}'.format(
-                hosts['taskcluster'],
-                service_endpoint
-            )
-            logger.info('Taskcluster Proxy enabled', url=base_url)
-            tc_options = {
-                'baseUrl': base_url
-            }
-
-        return tc_options
-
-    def load_secrets(self, tc_options, secrets_path):
-        """
-        Load Taskcluster secrets
-        """
-        # Check mandatory keys in secrets
-        secrets = taskcluster.Secrets(tc_options).get(secrets_path)
-        secrets = secrets['secret']
-        required = ('BUGZILLA_URL', 'BUGZILLA_TOKEN', 'API_URL')
-        for req in required:
-            if req not in secrets:
-                raise Exception('Missing value {} in Taskcluster secret value {}'.format(req, secrets_path))  # noqa
-
-        return secrets
 
     def get_bug_sync(self, bugzilla_id):
         if bugzilla_id not in self.sync:

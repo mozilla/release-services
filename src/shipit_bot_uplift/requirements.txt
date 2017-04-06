@@ -1,8 +1,6 @@
--e ./../../lib/cli_common[all]#egg=mozilla-cli-common
+-e ./../../lib/cli_common[taskcluster,mercurial]#egg=mozilla-cli-common
 
 click
 mohawk
 python-dateutil
-python-hglib
-taskcluster
 libmozdata

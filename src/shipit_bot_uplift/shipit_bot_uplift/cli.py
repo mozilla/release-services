@@ -1,7 +1,7 @@
 import click
 import os.path
 import tempfile
-from shipit_bot_uplift.sync import BotRemote
+from shipit_bot_uplift.sync import Bot
 
 
 DEFAULT_CACHE = os.path.join(tempfile.gettempdir(), 'shipit_bot_cache')
@@ -17,7 +17,7 @@ def main(secrets, client_id, client_token, cache_root, bugzilla_id):
     """
     Run bot to sync bug & analysis on a remote server
     """
-    bot = BotRemote(secrets, client_id, client_token)
+    bot = Bot(secrets, client_id, client_token)
     bot.use_cache(cache_root)
     if bugzilla_id:
         bot.run(only=[bugzilla_id, ])

@@ -64,7 +64,7 @@ class TaskclusterClient(object):
 
         return secrets
 
-    def notify_email(self, address, subject, content):
+    def notify_email(self, address, subject, content, template='simple'):
         """
         Send an email through Taskcluster notification service
         """
@@ -74,6 +74,7 @@ class TaskclusterClient(object):
             'address': address,
             'subject': subject,
             'content': content,
+            'template': template,
         })
 
     def read_hosts(self):

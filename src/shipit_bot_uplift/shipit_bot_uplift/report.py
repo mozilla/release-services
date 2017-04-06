@@ -1,5 +1,4 @@
 from cli_common.log import get_logger
-import taskcluster
 import operator
 import itertools
 
@@ -13,8 +12,8 @@ class Report(object):
     and send it at the end through TC emails
     """
 
-    def __init__(self, tc_options, emails):
-        self.notify = taskcluster.Notify(tc_options)
+    def __init__(self, taskcluster, emails):
+        self.taskcluster = taskcluster
         self.emails = emails
         self.merges = set()
         logger.info('Report notifications', emails=self.emails)
@@ -73,10 +72,5 @@ class Report(object):
 
         # Send mail report to every mail address
         for email in self.emails:
-            self.notify.email({
-                'address': email,
-                'subject': subject,
-                'content': mail_md,
-                'template': 'fullscreen',
-            })
+            self.taskcluster.notify_email(email, subject, mail_md, template='fullscreen')  # noqa
             logger.info('Sent report', to=email)
