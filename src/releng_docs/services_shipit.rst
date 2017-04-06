@@ -83,7 +83,12 @@ Initially we will integrate the legacy ship-it/release-runner infrastructure wit
 2. release-runner will then create a new pipeline and POST it to the pipeline service for execution. The pipeline will
    look roughly like this:
 
-    B -> S -> P
+    blockdiag {
+        B [label = "Build"];
+        S [label = "Signoff"];
+        P [label = "Publish"];
+        B -> S -> P;
+    }
 
     B (Build) is a Taskcluster Step that waits for the tasks initially created by release-runner to finish
     S (Signoff) is a Signoff Step that waits for humans to approve the release
