@@ -3,7 +3,8 @@
 let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource mkRustPlatform;
-  inherit (releng_pkgs.pkgs) writeScript makeWrapper mercurial cacert rustStable ;
+  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl mercurial cacert rustStable ;
+  inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
   inherit (releng_pkgs.tools) pypi2nix;
 
@@ -11,6 +12,26 @@ let
   rustPlatform = mkRustPlatform {};
   name = "mozilla-shipit-code-coverage";
   dirname = "shipit_code_coverage";
+
+  robustcheckout = mkDerivation {
+    name = "robustcheckout";
+    src = fetchurl {
+      url = "https://hg.mozilla.org/hgcustom/version-control-tools/archive/1a8415be17e8.tar.bz2";
+      sha256 = "005n7ar8cn7162s1qx970x1aabv263zp7mxm38byxc23nzym37kn";
+    };
+    installPhase = ''
+      mkdir -p $out
+      cp -rf hgext/robustcheckout $out
+    '';
+    doCheck = false;
+    buildInputs = [];
+    propagatedBuildInputs = [ ];
+    meta = {
+      homepage = "https://hg.mozilla.org/hgcustom/version-control-tools";
+      license = licenses.mit;
+      description = "Mozilla Version Control Tools: robustcheckout";
+    };
+  };
 
   mercurial' = mercurial.overrideDerivation (old: {
     postInstall = old.postInstall + ''
@@ -20,6 +41,7 @@ cacerts = ${cacert}/etc/ssl/certs/ca-bundle.crt
 
 [extensions]
 purge =
+robustcheckout = ${robustcheckout}/robustcheckout/__init__.py
 EOF
     '';
   });
@@ -119,6 +141,9 @@ EOF
       ln -s ${releng_pkgs.pkgs.lcov}/bin/lcov $out/bin
       ln -s ${rustStable.rustc}/bin/rustc $out/bin
       ln -s ${rustStable.cargo}/bin/cargo $out/bin
+    '';
+    shellHook = ''
+      export PATH="${mercurial'}/bin:$PATH"
     '';
     passthru = {
       taskclusterHooks = {
