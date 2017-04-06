@@ -83,17 +83,24 @@ Initially we will integrate the legacy ship-it/release-runner infrastructure wit
 2. release-runner will then create a new pipeline and POST it to the pipeline service for execution. The pipeline will
    look roughly like this:
 
-    blockdiag {
-        B [label = "Build"];
-        S [label = "Signoff"];
-        P [label = "Publish"];
-        B -> S -> P;
-    }
+    .. blockdiag::
 
-    B (Build) is a Taskcluster Step that waits for the tasks initially created by release-runner to finish
-    S (Signoff) is a Signoff Step that waits for humans to approve the release
-    P (Publish) is another Taskcluster Step that runs the in-tree decision task to generate the final set of tasks
-    responsible for publishing the release.
+        blockdiag foo {
+            B [label = "(B)uild"];
+            S [label = "(S)ignoff"];
+            P [label = "(P)ublish"];
+            B -> S -> P;
+        }
+
+
+  B (Build) is a Taskcluster Step that waits for the tasks initially created by
+  release-runner to finish
+
+  S (Signoff) is a Signoff Step that waits for humans to approve the release
+
+  P (Publish) is another Taskcluster Step that runs the in-tree decision task
+  to generate the final set of tasks responsible for publishing the release.
+
 
 3. The pipeline service will evaluate the pipeline and notice that step B is runnable, and so will create an instance
    of this step on the Taskcluster Step service. The pipeline service will then wait for the Taskcluster step to
