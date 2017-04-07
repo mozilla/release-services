@@ -20,9 +20,9 @@ paths:
           required: true
           type: string
       responses:
-        302:
+        "302":
           description: Log a user in
-        307:
+        "307":
           description: Log a user in
 
 # Useful for policy checking before step creation?
@@ -48,7 +48,7 @@ paths:
       operationId: "shipit_signoff.api.list_steps"
       description: List all steps with status
       responses:
-        200:
+        "200":
           description: List of all steps
           schema:
             type: array
@@ -64,7 +64,7 @@ paths:
       parameters:
         - $ref: "#/parameters/uid"
       responses:
-        200:
+        "200":
           description: Status of a step
           schema:
             $ref: '#/definitions/StepResult'
@@ -83,7 +83,7 @@ paths:
           schema:
             $ref: '#/definitions/Step'
       responses:
-        200:
+        "200":
           description: Returns nothing
 
     delete:
@@ -92,7 +92,7 @@ paths:
       parameters:
         - $ref: '#/parameters/uid'
       responses:
-        200:
+        "200":
           description: Removal of step
           
     get:
@@ -101,7 +101,7 @@ paths:
       parameters:
           - $ref: '#/parameters/uid'
       responses:
-        200:
+        "200":
           description: Definition of step
           schema:
             $ref: '#/definitions/Step'
@@ -117,7 +117,7 @@ paths:
       parameters:
         - $ref: '#/parameters/uid'
       responses:
-        200:
+        "200":
           description: signed off
 
   /step/{uid}/unsign:
@@ -127,7 +127,7 @@ paths:
       parameters:
         - $ref: '#/parameters/uid'
       responses:
-        200:
+        "200":
           description: Signature removed
 
 
