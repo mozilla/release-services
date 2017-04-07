@@ -1,0 +1,190 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "Signoff service"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+paths:
+  /login:
+    get:
+      tags:
+      - "default_controller"
+      description: "Interactively log a user in"
+      operationId: "shipit_signoff.api.login"
+      parameters:
+      - name: "callback_url"
+        in: "query"
+        description: "Where to send the user in the UI after login"
+        required: true
+        type: "string"
+      responses:
+        302:
+          description: "Log a user in"
+        307:
+          description: "Log a user in"
+  /step:
+    get:
+      tags:
+      - "default_controller"
+      description: "List all steps with status"
+      operationId: "shipit_signoff.api.list_steps"
+      parameters: []
+      responses:
+        200:
+          description: "List of all steps"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/StepResult"
+  /step/{uid}:
+    get:
+      tags:
+      - "default_controller"
+      description: "Step definition"
+      operationId: "shipit_signoff.api.get_step"
+      parameters:
+      - name: "uid"
+        in: "path"
+        description: "Step UID"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Definition of step"
+          schema:
+            $ref: "#/definitions/Step"
+    put:
+      tags:
+      - "default_controller"
+      description: "Create new step"
+      operationId: "shipit_signoff.api.create_step"
+      parameters:
+      - name: "uid"
+        in: "path"
+        description: "Step UID"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "definition"
+        description: "Step Definition"
+        required: true
+        schema:
+          $ref: "#/definitions/Step"
+      responses:
+        200:
+          description: "Returns nothing"
+    delete:
+      tags:
+      - "default_controller"
+      description: "Remove a step"
+      operationId: "shipit_signoff.api.delete_step"
+      parameters:
+      - name: "uid"
+        in: "path"
+        description: "Step UID"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Removal of step"
+  /step/{uid}/sign:
+    put:
+      tags:
+      - "default_controller"
+      description: "Sign off"
+      operationId: "shipit_signoff.api.sign_off"
+      parameters:
+      - name: "uid"
+        in: "path"
+        description: "Step UID"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "signed off"
+  /step/{uid}/status:
+    get:
+      tags:
+      - "default_controller"
+      description: "Status of a step"
+      operationId: "shipit_signoff.api.get_step_status"
+      parameters:
+      - name: "uid"
+        in: "path"
+        description: "Step UID"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Status of a step"
+          schema:
+            $ref: "#/definitions/StepResult"
+  /step/{uid}/unsign:
+    put:
+      tags:
+      - "default_controller"
+      description: "Remove a signature from a step"
+      operationId: "shipit_signoff.api.delete_signature"
+      parameters:
+      - name: "uid"
+        in: "path"
+        description: "Step UID"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Signature removed"
+definitions:
+  StepResult:
+    type: "object"
+    required:
+    - "state"
+    properties:
+      state:
+        type: "string"
+        enum:
+        - "starting"
+        - "running"
+        - "stopping"
+        - "exception"
+        - "completed"
+        - "failed"
+      message:
+        type: "string"
+        description: "More elaborate description of state for humans."
+      signees:
+        type: "array"
+        description: "A list of the users who have signed off this step"
+        items:
+          type: "string"
+      output:
+        $ref: "#/definitions/Output"
+  Step:
+    type: "object"
+    required:
+    - "input"
+    - "parameters"
+    - "uid"
+    properties:
+      uid:
+        type: "string"
+      input:
+        $ref: "#/definitions/Input"
+      parameters:
+        $ref: "#/definitions/Parameters"
+  Parameters:
+    type: "object"
+  Input:
+    type: "object"
+  Output:
+    type: "object"
+parameters:
+  uid:
+    name: "uid"
+    in: "path"
+    description: "Step UID"
+    required: true
+    type: "string"
