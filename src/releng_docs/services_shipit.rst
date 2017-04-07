@@ -125,17 +125,25 @@ Step Services API
 In order to ensure the Pipeline service can successfully managed Steps, each Step Service is required to implement the following API:
 (TODO, flesh this out more)
 
-* /
-** GET - Returns all steps with status (TODO: probably need pagination and filtering here)
-* /{uid}
-** PUT - Create a new Step
-** DELETE - Remove the given Step
-* /{uid}/definition
-** GET Returns the definition of the given step
-* /{uid}/status
-** GET Returns the status of the given step.
-*** Currently, one of: in_progress, success, failure, cancelled
-*** Probably need to add support for including custom service-specific status info.
+- /
+
+ - GET - Returns all steps with status (TODO: probably need pagination and filtering here)
+
+- /{uid}
+
+ - PUT - Create a new Step
+ - DELETE - Remove the given Step
+
+- /{uid}/definition
+
+ - GET Returns the definition of the given step
+
+- /{uid}/status
+
+ - GET Returns the status of the given step.
+
+  - Currently, one of: in_progress, success, failure, cancelled
+  - Probably need to add support for including custom service-specific status info.
 
 Step Services are free to add additional endpoints past the required ones.
 
