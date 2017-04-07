@@ -12,6 +12,13 @@ STEPS = {}
 SIGNOFFS = {}
 
 
+def login(callback_url):
+    """Log a user in, using auth0
+
+    Returns the user to callback_url when finished.
+    """
+    pass
+
 def list_steps():
     log.info('listing steps')
     return list(STEPS.keys())
@@ -45,10 +52,19 @@ def delete_step(uid):
     return None
 
 
-def signoff(uid):
-    log.error('signing off step %s', uid)
+def sign_off(uid):
+    log.info('Signing off step %s', uid)
     if uid not in STEPS:
         return None, 404
     SIGNOFFS[uid] = True
     STEPS[uid] = 'completed'
     return None
+
+def delete_signature(uid):
+    log.info("Removing signature from step %s", uid)
+    if uid not in STEPS:
+        return None, 404
+    SIGNOFFS[uid] = False
+    STEPS[uid] = 'running'
+    return None
+
