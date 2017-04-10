@@ -568,6 +568,7 @@ in rec {
         ];
         Cmd = [];
       }
+    , dockerContents ? []
     , passthru ? {}
     , inStaging ? true
     , inProduction ? false
@@ -662,7 +663,7 @@ in rec {
 
           docker = mkDocker {
             inherit name version;
-            contents = [ busybox self ];
+            contents = [ busybox self ] ++ dockerContents;
             config = dockerConfig;
           };
         } // passthru;
