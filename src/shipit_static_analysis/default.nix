@@ -3,19 +3,15 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkPython fromRequirementsFile filterSource;
-  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl ;
+  inherit (releng_pkgs.lib) mkPython fromRequirementsFile filterSource ;
+  inherit (releng_pkgs.pkgs.lib.customisation) addPassthru;
+  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl dockerTools
+      mercurial cacert clang llvmPackages_39 clang-tools rustStable;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
-  inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
+  inherit (releng_pkgs.pkgs.lib) fileContents optional licenses ;
   inherit (releng_pkgs.tools) pypi2nix;
-
-  inherit (releng_pkgs.pkgs) rustStable cacert fetchFromGitHub pythonFull which autoconf213
-    perl unzip zip gnumake yasm pkgconfig xlibs gnome2 pango dbus dbus_glib
-    alsaLib libpulseaudio gstreamer gst_plugins_base gtk3 glib freetype fontconfig cairo
-    gobjectIntrospection git mercurial openssl cmake  python27 gawk binutils
-    gcc gcc-unwrapped glibc clang clang-tools llvmPackages_39 libstdcxx5;
-
   inherit (releng_pkgs.pkgs.pythonPackages) setuptools;
+  inherit (releng_pkgs.mozilla) gecko;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-shipit-static-analysis";
@@ -54,6 +50,41 @@ EOF
     '';
   });
 
+  geckoCustom = gecko.overrideDerivation (old: {
+    # Dummy src, cannot be null
+    src = ./.;
+    configurePhase = ''
+      mkdir -p $out/bin
+
+      # Gecko build environment
+      geckoenv=$out/bin/gecko-env.sh
+      echo "# Gecko dev env" > $geckoenv
+      echo "SHELL=xterm" >> $geckoenv
+      env | grep -e '^PATH=' >> $geckoenv
+      env | grep -e '^PKG_CONFIG_PATH=' >> $geckoenv
+      env | grep -e '^CMAKE_INCLUDE_PATH=' >> $geckoenv
+      echo "CPLUS_INCLUDE_PATH=$CMAKE_INCLUDE_PATH" >> $geckoenv
+      echo "C_INCLUDE_PATH=$CMAKE_INCLUDE_PATH" >> $geckoenv
+
+      # Transform LDFLAGS in list of paths for LIBRARY_PATH
+      ldflags=$(env | grep -e '^NIX_LDFLAGS=' | cut -c13-)
+      echo "LIBRARY_PATH=$(echo $ldflags | sed -E 's,-rpath ([/\.a-zA-Z0-9\-]+) ,,g' | sed -e 's, -L,:,g')" >> $geckoenv
+      chmod +x $geckoenv
+    '';
+    buildPhase = ''
+      echo "Skip build"
+    '';
+    installPhase = ''
+      echo "Skip install"
+    '';
+    propagatedBuildInputs = old.propagatedBuildInputs 
+      ++ [
+        # Update rust to 1.15
+        rustStable.rustc
+        rustStable.cargo
+      ];
+  });
+
   self = mkPython {
     inherit python name dirname;
     inProduction = true;
@@ -67,86 +98,23 @@ EOF
         # Needed for the static analysis
         clang
         clang-tools
-        libstdcxx5
-        gcc
-        gcc-unwrapped
-        glibc
-        gawk
-
-        # TODO: Use nixpkgs-mozilla gecko buildInputs
-        # From https://github.com/mozilla/nixpkgs-mozilla/blob/master/pkgs/gecko/default.nix
-        # Expected by "mach"
-        setuptools which autoconf213
-
-        # Expected by the configure script
-        perl unzip zip gnumake yasm pkgconfig
-
-        xlibs.libICE xlibs.libSM xlibs.libX11 xlibs.libXau xlibs.libxcb
-        xlibs.libXdmcp xlibs.libXext xlibs.libXt xlibs.printproto
-        xlibs.renderproto xlibs.xextproto xlibs.xproto xlibs.libXcomposite
-        xlibs.compositeproto xlibs.libXfixes xlibs.fixesproto
-        xlibs.damageproto xlibs.libXdamage xlibs.libXrender xlibs.kbproto
-
-        gnome2.libart_lgpl gnome2.libbonobo gnome2.libbonoboui
-        gnome2.libgnome gnome2.libgnomecanvas gnome2.libgnomeui
-        gnome2.libIDL
-
-        pango
-
-        dbus dbus_glib
-
-        alsaLib libpulseaudio
-        gstreamer gst_plugins_base
-
-        gtk3 glib gobjectIntrospection
-
-        rustStable.rustc rustStable.cargo
-
-        # "mach vendor rust" wants to list modified files by using the vcs.
-        # mercurial is already there !
-        git 
-
-        # needed for compiling cargo-vendor and its dependencies
-        openssl cmake
       ];
 
     postInstall = ''
       mkdir -p $out/tmp
       mkdir -p $out/bin
       ln -s ${mercurial'}/bin/hg $out/bin
-      ln -s ${rustStable.rustc}/bin/rustc $out/bin
-      ln -s ${rustStable.cargo}/bin/cargo $out/bin
+      ln -s ${clang-tools}/bin/clang-tidy $out/bin
       ln -s ${llvmPackages_39.clang-unwrapped}/share/clang/run-clang-tidy.py $out/bin
-			ln -s ${gnumake}/bin/make $out/bin
-			ln -s ${python27}/bin/python2.7 $out/bin
-			ln -s ${gcc}/bin/gcc $out/bin
-			ln -s ${gcc}/bin/g++ $out/bin
-			ln -s ${binutils}/bin/as $out/bin
-			ln -s ${zip}/bin/zip $out/bin
-			ln -s ${perl}/bin/perl $out/bin
-			ln -s ${autoconf213}/bin/autoconf $out/bin/autoconf-2.13
-			ln -s ${gawk}/bin/gawk $out/bin
-			ln -s ${pkgconfig}/bin/pkg-config $out/bin
     '';
-
-    dockerConfig = { 
-      Env = [
-        "PATH=/bin"
-        "SHELL=/bin/sh"
-        "LANG=en_US.UTF-8"
-        "PKG_CONFIG_PATH=${pango.dev}/lib/pkgconfig:${glib.dev}/lib/pkgconfig:${freetype.dev}/lib/pkgconfig:${fontconfig.dev}/lib/pkgconfig:${cairo.dev}/lib/pkgconfig"
-      ];
-      Cmd = [];
-    };
 
 		shellHook = ''
 			export PATH="${mercurial'}/bin:$PATH"
-			export PATH="${gcc}/bin:$PATH"
-			export PATH="${llvmPackages_39.clang-unwrapped}/share/clang:$PATH"
-
-      export CPATH="${gcc-unwrapped.CPATH}:$CPATH"
-      export LIBRARY_PATH="${gcc-unwrapped.LIBRARY_PATH}:$LIBRARY_PATH"
 		'';
+
+    # Our patched Gecko is embedded in the docker image
+    dockerContents = [geckoCustom];
+
     passthru = {
       taskclusterHooks = {
         master = {

@@ -2,12 +2,14 @@ from cli_common.taskcluster import TaskclusterClient
 from cli_common.log import get_logger
 import subprocess
 import hglib
+import re
 import os
 
 logger = get_logger(__name__)
 
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
+GECKO_ENV = '/bin/gecko-env.sh'
 
 
 class Workflow(object):
@@ -104,8 +106,24 @@ class Workflow(object):
         """
         Run a command in the repo through subprocess
         """
+        # Load custom environment
+        env = os.environ
+
+        def _split_env(line):
+            out = re.search('([A-Z_]*)=(.*)\n', line)
+            if out:
+                return out.groups()
+
+        if os.path.exists(GECKO_ENV):
+            logger.info('Using custom environment', env=GECKO_ENV)
+            with open(GECKO_ENV) as f:
+                old_path = env.get('PATH')
+                env.update(dict(filter(None, map(_split_env, f.readlines()))))
+                env['PATH'] += old_path
+
+        # Run command with env
         logger.info('Running repo command', cmd=' '.join(cmd))
-        proc = subprocess.Popen(cmd, cwd=self.repo_dir)
+        proc = subprocess.Popen(cmd, cwd=self.repo_dir, env=env)
         exit = proc.wait()
 
         if exit != 0:
