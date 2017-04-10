@@ -3,6 +3,8 @@ import requests
 import subprocess
 import hglib
 
+from cli_common.taskcluster import TaskclusterClient
+
 from shipit_code_coverage import taskcluster
 from shipit_code_coverage import coveralls
 
@@ -17,7 +19,7 @@ def is_coverage_task(task):
 
 def download_coverage_artifacts(build_task_id):
     try:
-        os.mkdir("ccov-artifacts")
+        os.mkdir('ccov-artifacts')
     except:
         pass
 
@@ -39,23 +41,23 @@ def download_coverage_artifacts(build_task_id):
 
 
 def get_github_commit(mercurial_commit):
-    url = "https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s"
+    url = 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s'
     r = requests.get(url % mercurial_commit)
 
-    return r.text.split(" ")[0]
+    return r.text.split(' ')[0]
 
 
-def generate_info(revision):
-    files = os.listdir("ccov-artifacts")
+def generate_info(revision, coveralls_token):
+    files = os.listdir('ccov-artifacts')
     ordered_files = []
     for fname in files:
         if not fname.endswith('.zip'):
             continue
 
         if 'gcno' in fname:
-            ordered_files.insert(0, "ccov-artifacts/" + fname)
+            ordered_files.insert(0, 'ccov-artifacts/' + fname)
         else:
-            ordered_files.append("ccov-artifacts/" + fname)
+            ordered_files.append('ccov-artifacts/' + fname)
 
     cmd = [
       'grcov',
@@ -64,7 +66,7 @@ def generate_info(revision):
       '-s', REPO_DIR,
       '-p', '/home/worker/workspace/build/src/',
       '--commit-sha', get_github_commit(revision),
-      '--token', '95dgNaxbGORBDEaxioPGWXT0FskF8eDzd'
+      '--token', coveralls_token,
     ]
     cmd.extend(ordered_files)
 
@@ -72,7 +74,7 @@ def generate_info(revision):
     (output, err) = p.communicate()
 
     if p.returncode != 0:
-        raise Exception("Error while running grcov:\n" + err.decode('utf-8'))
+        raise Exception('Error while running grcov:\n' + err.decode('utf-8'))
 
     return output
 
@@ -97,16 +99,22 @@ def clone_mozilla_central(revision):
     hg.update(rev=revision, clean=True)
 
 
-def go():
+def go(secrets, client_id=None, client_token=None):
+    tc_client = TaskclusterClient(client_id, client_token)
+
+    secrets = tc_client.get_secrets(secrets, ['SHIPIT_CODE_COVERAGE_COVERALLS_TOKEN'])
+
+    coveralls_token = secrets['SHIPIT_CODE_COVERAGE_COVERALLS_TOKEN']
+
     task_id = taskcluster.get_last_task()
 
     task_data = taskcluster.get_task_details(task_id)
-    revision = task_data["payload"]["env"]["GECKO_HEAD_REV"]
+    revision = task_data['payload']['env']['GECKO_HEAD_REV']
 
     download_coverage_artifacts(task_id)
 
     clone_mozilla_central(revision)
 
-    output = generate_info(revision)
+    output = generate_info(revision, coveralls_token)
 
     coveralls.upload(output)
