@@ -47,7 +47,8 @@ class Api:
         self.__app = app
 
         logger.debug('Setting JSON encoder.')
-        app.json_encoder = connexion.decorators.produces.JSONEncoder
+
+        app.json_encoder =  connexion.apps.flask_app.FlaskJSONEncoder
 
         logger.debug('Setting common error handler for all error codes.')
         for error_code in werkzeug.exceptions.default_exceptions:
@@ -118,7 +119,7 @@ class Api:
             base_url = app.config.get('SWAGGER_BASE_URL')
 
         self.swagger_url = swagger_url
-        self.__api = connexion.api.Api(
+        self.__api = connexion.apis.flask_api.FlaskApi(
             specification=pathlib.Path(swagger_file),
             base_url=base_url,
             arguments=arguments,
