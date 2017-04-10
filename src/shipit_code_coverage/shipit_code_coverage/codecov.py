@@ -4,10 +4,13 @@ import subprocess
 import hglib
 
 from cli_common.taskcluster import TaskclusterClient
+from cli_common.log import get_logger
 
 from shipit_code_coverage import taskcluster
 from shipit_code_coverage import coveralls
 
+
+logger = get_logger(__name__)
 
 REPO_CENTRAL = 'https://hg.mozilla.org/mozilla-central'
 REPO_DIR = 'mozilla-central'
@@ -100,6 +103,31 @@ def clone_mozilla_central(revision):
     hg.update(rev=revision, clean=True)
 
 
+def run_command(cmd):
+    """
+    Run a command in the repo through subprocess
+    """
+    # Use gecko-env to run command
+    cmd = ['gecko-env', ] + cmd
+
+    # Run command with env
+    logger.info('Running repo command', cmd=' '.join(cmd))
+    proc = subprocess.Popen(cmd, cwd=REPO_DIR)
+    exit = proc.wait()
+
+    if exit != 0:
+        raise Exception('Invalid exit code for command {}: {}'.format(cmd, exit))  # NOQA
+
+
+def build_files():
+    with open(os.path.join(REPO_DIR, '.mozconfig'), 'w') as f:
+        f.write('mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-firefox')
+
+    run_command(['./mach', 'configure'])
+    run_command(['./mach', 'build', 'pre-export'])
+    run_command(['./mach', 'build', 'export'])
+
+
 def go(secrets, client_id=None, client_token=None):
     tc_client = TaskclusterClient(client_id, client_token)
 
@@ -115,6 +143,7 @@ def go(secrets, client_id=None, client_token=None):
     download_coverage_artifacts(task_id)
 
     clone_mozilla_central(revision)
+    build_files()
 
     output = generate_info(revision, coveralls_token)
 
