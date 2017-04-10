@@ -92,4 +92,6 @@ in {
 
   createcert = import ./createcert.nix { inherit releng_pkgs; };
 
+  mercurial = import ./mercurial.nix { inherit releng_pkgs; };
+
 }
