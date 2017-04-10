@@ -11,6 +11,7 @@ from shipit_code_coverage import coveralls
 
 REPO_CENTRAL = 'https://hg.mozilla.org/mozilla-central'
 REPO_DIR = 'mozilla-central'
+TOKEN_FIELD = 'SHIPIT_CODE_COVERAGE_COVERALLS_TOKEN'
 
 
 def is_coverage_task(task):
@@ -102,9 +103,9 @@ def clone_mozilla_central(revision):
 def go(secrets, client_id=None, client_token=None):
     tc_client = TaskclusterClient(client_id, client_token)
 
-    secrets = tc_client.get_secrets(secrets, ['SHIPIT_CODE_COVERAGE_COVERALLS_TOKEN'])
+    secrets = tc_client.get_secrets(secrets, [TOKEN_FIELD])
 
-    coveralls_token = secrets['SHIPIT_CODE_COVERAGE_COVERALLS_TOKEN']
+    coveralls_token = secrets[TOKEN_FIELD]
 
     task_id = taskcluster.get_last_task()
 
