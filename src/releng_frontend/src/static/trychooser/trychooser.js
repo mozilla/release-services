@@ -209,7 +209,7 @@ $(document).ready(function() {
         });
 
         if ($('.profile').is(':checked')) {
-            args.push('mozharness: --spsProfile');
+            args.push('mozharness: --geckoProfile');
         }
 
         if ($('.no-retry').is(':checked')) {
