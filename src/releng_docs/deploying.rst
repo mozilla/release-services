@@ -1,146 +1,269 @@
 Deploying
 =========
 
-Merging to either ``staging`` or ``production`` branches will, if build is
-successfull, also trigger a deployment script. Deployment script will only
-deploy services that were changed, since last deployment.
+Deployment happens **automatically** in :ref:`continuous integration
+<continuous-integration>` when code is pushed / merged to **staging** or
+**production** branch.
 
-``mozilla-releng/services`` build system is flexible enough to deploy to many
-different targets. Currently we deploy services to Heroku and Amazon S3, but
-this can be extended to any other target.
-
-Deploying of new services - at this time - does not handle creation/removal of
-S3 buckets / Heroku applications. Those need to be created beforehand.
-
-Manually deploying
-------------------
-
-To deploy a single service manually, you need to run:
-
-.. code-block:: bash
-
-    % make deploy-staging APP=releng_clobberer ...
-        or
-    % make deploy-production APP=releng_clobberer ...
-
-Above commands are missing many secrets which you need to provide as variables
-to make commands above. You can check how this is done on taskcluster via
-``.taskcluster.sh`` script.
-
-Secrets are retrived from `taskcluster secrets services`_ for each branch
-separatly.
-
-- staging => `repo:github.com/mozilla-releng/services:branch:staging`_
-- production => `repo:github.com/mozilla-releng/services:branch:production`_
+If interested please read more on :ref:`branching policy <branching-policy>`.
 
 
-URL naming scheme
+Release Schedule
+----------------
+
+Releases happen on a **weekly** basis, on Wednesday, excluding `Firefox release
+weeks`_ and chemspill weeks.
+
+`Next release`_ is announced in github issue tracker.
+
+Any **out-of-schedule** release can be requested by contacting :ref:`Services
+manager <services-managers>` or `creating a ticket on github`_.
+
+.. _`Firefox release weeks`: https://wiki.mozilla.org/RapidRelease/Calendar
+.. _`creating a ticket on github`: https://github.com/mozilla-releng/services/issues/new
+.. _`Next release`: https://github.com/mozilla-releng/services/issues?q=is%3Aopen+is%3Apr+label%3A%220.kind%3A+release%22
+
+
+Release Protocol
+----------------
+
+This protocal is followed by the :ref:`services manager <services-managers>`.
+
+#. If not already there, create a PR from ``master`` to ``production`` branch.
+   (`Example of release PR`_).
+
+   Please make sure that release notes are collected in description of the PR.
+   Encurage developers adding release notes as their PR gets merged into
+   ``master``.
+
+#. A day prior to the scheduled release send an email to all :ref:`service
+   owners <service-owners>`
+
+   This email should announce and remind everybody that release is going to
+   happen to avoid surprises.
+   
+   Template for email::
+
+       SUBJECT:
+
+           mozilla-releng/services release v<VERSION> is going to
+           happen on <RELEASE_DATETIME>
+
+       BODY:
+
+           Hi,
+
+           Next planned mozilla-releng/services relase is going to
+           happen tomorrow. We encurage everybody that contributed
+           to this release to join "#shipit" channel where release
+           is going to be coordinated. 
+
+               YYYY-MM-DD MM:HH CET
+               YYYY-MM-DD MM:HH PST
+
+           Please follow the link bellow for more details.
+
+               <LINK-TO-RELEASE-PR>
+
+           For any question please contact
+
+               <CURRENT-RELEASE-MANAGER>
+
+          
+#. Release starts by :ref:`services manager <services-managers>` logging all the
+   steps into ``#shipit`` channel and coordinating with others.
+
+#. Push to ``staging`` branch and do (if needed) some manual checks.
+
+   .. code-block:: shell
+
+        $ git clone git@github.com/mozilla-releng/services.git
+        $ cd services
+        $ git checkout -b staging origin/staging
+        $ git push origin staging -f 
+
+#. Push to ``production`` branch and do (if needed) some manual checks.
+   
+   Create a merge commig (Example of merge commit) of master branch and tag it
+
+   .. code-block:: shell
+
+        $ git clone git@github.com/mozilla-releng/services.git
+        $ cd services
+        $ git checkout -b production origin/production
+        $ git merge master -m "Release: v`cat ./VERSION`"
+        $ git push origin production
+        $ git tag v`cat ./VERSION`
+        $ git push origin v`cat ./VERSION`
+
+#. Bump version in master
+
+   .. code-block:: shell
+   
+        $ git clone git@github.com/mozilla-releng/services.git
+        $ cd services
+        $ rm -f VERSION
+        $ echo "$(((`cat VERSION`) + 1))" > VERSION
+        $ git commit VERSION -m "setup: bumping to `cat ./VERSION`"
+        $ git push origin master
+
+
+#. `Open next release PR`_
+
+#. Send email to `Release Engineering`_ and `Release Management`_ Team
+   announcing that new release just happened.
+
+   Template for email::
+
+       SUBJECT:
+
+           mozilla-releng/services v<VERSION> was released
+
+       BODY:
+
+           Hi,
+
+           mozilla-releng/services[1] is a common platform to
+           develop, test and deploy different parts of our release
+           pipeline.
+           
+           ------
+
+           If you are not interested in work being done in
+           mozilla-releng/services you can stop reading this
+           email.
+
+           ------
+
+           Purpose of this email is to inform every team what
+           was release and to be abore in case of any breakage.
+
+
+           # Release notes for v<VERSION>
+
+           <CONTENT-OF-RELEASE-PR>
+
+           <LINK-TO-RELEASE-PR>
+
+
+           # Next release
+
+           Next release is going to be on
+           
+               YYYY-MM-DD MM:HH CET
+               YYYY-MM-DD MM:HH PST
+
+           and is going to be managed by
+           
+               <NEXT-RELEASE-MANAGER>
+           
+           You can follow the progress in release PR
+
+               <LINK-TO-NEXT-RELEASE-PR>
+
+
+
+           [1] https://github.com/mozilla-releng/services
+
+
+.. _`Example of release PR`: https://github.com/mozilla-releng/services/pull/237
+.. _`Open next release PR`: https://github.com/mozilla-releng/services/compare/production...master
+.. _`Release Engineering`: https://wiki.mozilla.org/ReleaseEngineering
+.. _`Release Management`: https://wiki.mozilla.org/Release_Management
+
+
+.. _services-managers:
+
+Services Managers
 -----------------
 
-URL naming scheme of deployed services is as following:
-
-- ``src/releng_frontend``
-
-  - staging => https://staging.mozilla-releng.net
-  - production => https://mozilla-releng.net
-
-- ``src/releng_SERVICE``
-
-  - staging => https://SERVICE.mozilla-releng.net
-  - production => https://SERVICE.staging.mozilla-releng.net
-
-- ``src/shipit_frontend``
-
-  - staging => https://shipit.staging.mozilla-releng.net
-  - production => https://shipit.mozilla-releng.net
-
-- ``src/shipit_SERVICE``
-
-  - staging => https://SERVICE.shipit.mozilla-releng.net
-  - production => https://SERVICE.shipit.staging.mozilla-releng.net
+- `Rok Garbas`_
 
 
-.. _deploying-docker:
+.. _service-owners:
 
-Creating and pushing docker images
-----------------------------------
+Service Owners
+--------------
 
-``mozilla-releng/services`` build system also creates minimal docker images
-which you can build and run locally. Building and pushing docker images to
-``hub.docker.io`` does not require docker command and docker daemon line to be
-installed.
-
-To build and run a docker image for a service run:
-
-.. code-block:: bash
-
-    % make build-docker APP=releng_clobberer
-    % cat ./result-docker-releng_clobberer | docker load
-
-There is a convinient tool that can be used to pushed above generated docker
-image tarball to ``hub.docker.io``. 
-
-.. code-block:: bash
-
-    % make build-tool-push
-    % ./result-tool-push/bin/push \
-		`realpath ./result-docker-releng_clobberer \
-		https://index.docker.io \
-		-u <HEROKU_USERNAME> \
-		-p <HEROKU_PASSWORD> \
-		-N <DOCKER_REPO> \
-		-T <DOCKER_REPO_TAG>
-
-
-Amazon
-------
-
-In order to make ``mozilla-releng/services`` work with Amazon following
-configuration needed to be in place:
-
-- 3 users are created (**RelEngDevelop**, **RelEngStaging**,
-  **RelEngProduction**) and their api credentials stored in taskcluster
-  secrets.
-
-- 3 custom policies were created (TODO) to allow above created users to sync 
-
-- 2 S3 buckets are created per each **src/*_frontend** application to hold
-  frontend code.
-
-- For each S3 bucket a CloudFront Policy is created and configured to
-
-  - redirect every URL to ``index.html``
-  - redirect from http to https
-
-- A ``releng-cache`` S3 bucket is created and read/write/delete permission
-  granted for all above created policies. This S3 bucket is used to hold binary
-  files of builds.
-
-- S3 buckets need to be created before deploying new service
-
-TODO: write how certificates are handled once Route51 is configured
++--------------------------------+---------------------------+
++ Service                        | Owner(s)                  |
++================================+===========================+
++ :ref:`releng_archiver`         | - `Rok Garbas`_           |
++--------------------------------+---------------------------+
++ :ref:`releng_clobberer`        | - `Rok Garbas`_           |
++--------------------------------+---------------------------+
++ :ref:`releng_docs`             | - `Rok Garbas`_           |
++--------------------------------+---------------------------+
++ :ref:`releng_frontend`         | - `Rok Garbas`_           |
++--------------------------------+---------------------------+
++ :ref:`releng_mapper`           | - `Rok Garbas`_           |
++--------------------------------+---------------------------+
++ :ref:`releng_slavehealth`      | - `Rok Garbas`_           |
++--------------------------------+---------------------------+
++ :ref:`releng_tooltool`         | - `Rok Garbas`_           |
++--------------------------------+---------------------------+
++ :ref:`releng_treestatus`       | - `Rok Garbas`_           |
++--------------------------------+---------------------------+
++ :ref:`shipit_bot_uplift`       | - `Bastien Abadie`_       |
++--------------------------------+---------------------------+
++ :ref:`shipit_code_coverage`    + - `Bastien Abadie`_       +
++                                | - `Marco Castelluccio`_   |
++--------------------------------+---------------------------+
++ :ref:`shipit_frontend`         | - `Rok Garbas`_           |
++                                | - `Bastien Abadie`_       |
++--------------------------------+---------------------------+
++ :ref:`shipit_pipeline`         | - (not yet started)       |
++--------------------------------+---------------------------+
++ :ref:`shipit_pulse_listener`   + - `Bastien Abadie`_       +
++                                | - `Marco Castelluccio`_   |
++--------------------------------+---------------------------+
++ :ref:`shipit_risk_assessment`  + - `Bastien Abadie`_       +
++                                | - `Marco Castelluccio`_   |
++--------------------------------+---------------------------+
++ :ref:`shipit_signoff`          | - `Ben Hearsum`_          |
++                                | - `Simon Fraser`_         |
++--------------------------------+---------------------------+
++ :ref:`shipit_static_analysis`  + - `Bastien Abadie`_       +
++                                | - `Marco Castelluccio`_   |
++--------------------------------+---------------------------+
++ :ref:`shipit_uplift`           | - `Bastien Abadie`_       |
++                                | - `Marco Castelluccio`_   |
++--------------------------------+---------------------------+
++ :ref:`shipit_taskcluster`      | - `Jordan Lund`_          |
++                                | - `Nick Thomas`_          |
++--------------------------------+---------------------------+
 
 
-Heroku
-------
-
-We currently use a (quite some time in beta) Heroku feature that allows to run
-docker images on Heroku infrastructure. To manually push docker images build in
-:ref:`previous praragraph <deploying-docker>` you need to push docker images to
-Heroku's custom docker registry.
-
-.. code-block:: bash
-
-    % make build-tool-push
-	./result-tool-push/bin/push \
-		`realpath ./result-docker-releng_clobberer` \
-		https://registry.heroku.com \
-		-u <HEROKU_USERNAME> \
-		-p <HEROKU_PASSWORD> \
-		-N <HEROKU_APP>/web \
-		-T latest
+In case when Owner(s) of services are on PTO or not responsive please follow
+`Contacting Release Engineering`_ wiki page.
 
 
-.. _`taskcluster secrets services`: https://tools.taskcluster.net/secrets/
-.. _`repo:github.com/mozilla-releng/services:branch:staging`: TODO
-.. _`repo:github.com/mozilla-releng/services:branch:production`: TODO
+.. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
+.. _`Ben Hearsum`: https://phonebook.mozilla.org/?search/Ben%20Hearsum
+.. _`Simon Fraser`: https://phonebook.mozilla.org/?search/Simon%20Fraser
+.. _`Jordan Lund`: https://phonebook.mozilla.org/?search/Jordan%20Lund
+.. _`Nick Thomas`: https://phonebook.mozilla.org/?search/Nick%20Thomas
+.. _`Marco Castelluccio`: https://phonebook.mozilla.org/?search/Marco%20Castelluccio
+.. _`Bastien Abadie`: https://github.com/La0
+.. _`Contacting Release Engineering`: https://wiki.mozilla.org/ReleaseEngineering#Contacting_Release_Engineering
+
+
+.. _continuous-integration:
+
+Continuos Integration
+---------------------
+
+TODO: write about taskcluster github integration
+
+
+Deployment targets
+------------------
+
+TODO: where can we deploy
+
+- amazon s3
+- amazon aws (soon)
+- heroku
+- building docker
+- via ssh
+

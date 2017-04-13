@@ -72,7 +72,8 @@ Contents
 --------
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 4
+    :includehidden:
 
     prerequirements
     developing

@@ -1,10 +1,11 @@
-.. _shipit-signoffs:
 
-Signoffs Service
-========================
+.. todo::
+
+    explain purpose of signoff step
+
 
 Architecture
-------------
+************
 
 .. graphviz::
 
@@ -21,9 +22,15 @@ Architecture
         "Auth0" -> "Signoffs Service";
     }
 
+
 Signoff Policies
-----------------
-Over the wire and in memory, policies will be stored as lists of dictionaries. For example::
+****************
+
+Over the wire and in memory, policies will be stored as lists of dictionaries.
+
+For example:
+
+.. code-block:: json
 
     [
         {
@@ -34,4 +41,6 @@ Over the wire and in memory, policies will be stored as lists of dictionaries. F
         }
     ]
 
-Each item in the list represents a way of reaching quorum. In the example above, quorum is reached when either userW and userX sign off *or* when 2 people from groupY and 2 people from groupZ sign off.
+Each item in the list represents a way of reaching quorum. In the example
+above, quorum is reached when either userW and userX sign off *or* when
+2 people from groupY and 2 people from groupZ sign off.
