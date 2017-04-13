@@ -4,8 +4,8 @@
 let
 
   inherit (releng_pkgs.lib) mkPython fromRequirementsFile filterSource ;
-  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl dockerTools
-      cacert clang llvmPackages_39 clang-tools rustStable;
+  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl dockerTools gcc
+      cacert clang llvmPackages_39 clang-tools gcc-unwrapped glibc glibcLocales;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
@@ -28,6 +28,8 @@ let
         # Needed for the static analysis
         clang
         clang-tools
+				glibc
+				gcc
 
         # Gecko environment
         releng_pkgs.gecko-env
@@ -45,8 +47,24 @@ let
     '';
 
 		shellHook = ''
-			export PATH="${mercurial}/bin:$PATH"
+			export PATH="${mercurial}/bin:${llvmPackages_39.clang-unwrapped}/share/clang:$PATH"
+
+			# Extras for clang-tidy
+			export CPLUS_INCLUDE_PATH="$CPLUS_INCLUDE_PATH:${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
 		'';
+
+    dockerConfig = {
+			Env = [
+				"PATH=/bin"
+				"LANG=en_US.UTF-8"
+				"LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive"
+				"SSL_CERT_FILE=${cacert}/etc/ssl/certs/ca-bundle.crt"
+
+				# Extras for clang-tidy
+				"CPLUS_INCLUDE_PATH=${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
+			];
+			Cmd = [];
+		};
 
     passthru = {
       taskclusterHooks = {

@@ -98,14 +98,15 @@ class Workflow(object):
             '-p', 'obj-x86_64-pc-linux-gnu/',
             '-checks={}'.format(','.join(checks)),
         ] + modified_files
-        self.run_command(cmd)
+        self.run_command(cmd, gecko_env=False)
 
-    def run_command(self, cmd):
+    def run_command(self, cmd, gecko_env=True):
         """
         Run a command in the repo through subprocess
         """
         # Use gecko-env to run command
-        cmd = ['gecko-env', ] + cmd
+        if gecko_env:
+            cmd = ['gecko-env', ] + cmd
 
         # Run command with env
         logger.info('Running repo command', cmd=' '.join(cmd))
