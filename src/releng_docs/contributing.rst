@@ -11,6 +11,8 @@ To get code you need to clone `mozilla-releng/services`_ repository.
     % cd services/
 
 
+.. _branching-policy:
+
 Branching policy
 ----------------
 
@@ -27,7 +29,7 @@ branch is for:
   automatically deployed and are accessible under <service>.mozilla-releng.net.
 
 For more details of deployments, please look at specific service documentation
-(eg: documentation for :ref:`Clobberer service <service-clobberer>`).
+(eg: documentation for :ref:`Clobberer service <releng_clobberer>`).
 
 
 Pull Requests
