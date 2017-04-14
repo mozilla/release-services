@@ -98,8 +98,8 @@ let
 
 
     "aiohttp" = python.mkDerivation {
-      name = "aiohttp-2.0.5";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/ba/f0/59bead4038ccc3f42d2dfdcab43bfb6411684bfb0d0764948c778e0f15a8/aiohttp-2.0.5.tar.gz"; sha256 = "ea5d251f8a0a2734e3c19f293307560b9bf52b300e69fdae3060bffb0c433714"; };
+      name = "aiohttp-2.0.7";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/f1/1a/e6090179b3c272c6e437cc6e0d78be6220727a7bdc9ee74bef214144c5d3/aiohttp-2.0.7.tar.gz"; sha256 = "76bfd47ee7fbda115cff486c3944fcb237ecbf6195bf2943fae74052fb40c4fe"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -180,8 +180,8 @@ let
 
 
     "chardet" = python.mkDerivation {
-      name = "chardet-2.3.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/7d/87/4e3a3f38b2f5c578ce44f8dc2aa053217de9f0b6d737739b0ddac38ed237/chardet-2.3.0.tar.gz"; sha256 = "e53e38b3a4afe6d1132de62b7400a4ac363452dc5dfcf8d88e8e0cce663c68aa"; };
+      name = "chardet-3.0.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/91/05/28f23094cdf1410fb03533f0d71e6b4aad3c504100e83b8cea6fc899552c/chardet-3.0.2.tar.gz"; sha256 = "4f7832e7c583348a9eddd927ee8514b3bf717c061f57b21dbe7697211454d9bb"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -437,7 +437,7 @@ let
 
 
     "mozilla-cli-common" = python.mkDerivation {
-      name = "mozilla-cli-common-11";
+      name = "mozilla-cli-common-14";
       src = ./../../lib/cli_common;
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
@@ -687,8 +687,8 @@ let
 
 
     "python-hglib" = python.mkDerivation {
-      name = "python-hglib-2.3";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/80/9c/1618281fc1ef0df4436b1435de6276452fefb46b111b3b00d3e20fcf5e17/python-hglib-2.3.tar.gz"; sha256 = "3d2e2eb2ecf73789635363784fdc6f0c0935256fe0263dfd6ed005a055c418df"; };
+      name = "python-hglib-2.4";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3a/6c/52c4ba6050b80e266d87783ccd4d39b76a0d2459965abf1c7bde54dd9a72/python-hglib-2.4.tar.gz"; sha256 = "693d6ed92a6566e78802c7a03c256cda33d08c63ad3f00fcfa11379b184b9462"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -904,5 +904,14 @@ let
 
   };
   overrides = import ./requirements_override.nix { inherit pkgs python; };
+  commonOverrides = [
 
-in python.withPackages (fix' (extends overrides generated))
+  ];
+
+in python.withPackages
+   (fix' (pkgs.lib.fold
+            extends
+            generated
+            ([overrides] ++ commonOverrides)
+         )
+   )
