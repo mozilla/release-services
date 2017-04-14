@@ -28,6 +28,9 @@ in skipOverrides {
         self."pytest"
         self."responses"
       ];
+    preConfigure = ''
+      rm -rf build *.egg-info
+    '';
     patchPhase = ''
       rm -f VERSION
       ln -s ${../VERSION} ./VERSION
@@ -39,11 +42,14 @@ in skipOverrides {
   };
 
   "mozilla-cli-common" = self: old: {
-    # TODO: doCheck = true;
     buildInputs =
       [ self."flake8"
         self."pytest"
       ];
+    preConfigure = ''
+      rm -rf build *.egg-info
+    '';
+    # TODO: doCheck = true;
     patchPhase = ''
       rm -f VERSION
       ln -s ${../VERSION} ./VERSION
