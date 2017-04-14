@@ -591,6 +591,10 @@ in rec {
           [ releng_pkgs.pkgs.cacert
           ] ++ propagatedBuildInputs;
 
+        preConfigure = ''
+          rm -rf build *.egg-info
+        '';
+
         patchPhase = ''
           # replace synlink with real file
           rm VERSION
