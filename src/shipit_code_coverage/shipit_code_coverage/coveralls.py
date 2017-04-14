@@ -1,9 +1,10 @@
+import gzip
 import requests
 
 
 def upload(data):
     r = requests.post('https://coveralls.io/api/v1/jobs', files={
-        'json_file': data
+        'json_file': ('json_file', gzip.compress(data), 'gzip/json')
     })
 
     try:
