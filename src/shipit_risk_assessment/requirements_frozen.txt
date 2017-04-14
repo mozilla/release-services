@@ -1,14 +1,14 @@
 aioamqp==0.9.0
-aiohttp==2.0.5
+aiohttp==2.0.7
 appdirs==1.4.3
 async-timeout==1.2.0
-chardet==2.3.0
+chardet==3.0.2
 click==6.7
 flake8==3.3.0
 Logbook==1.0.0
 mccabe==0.6.1
 mohawk==0.3.4
-mozilla-cli-common==12
+mozilla-cli-common==14
 multidict==2.1.4
 packaging==16.8
 py==1.4.33
