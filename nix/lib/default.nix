@@ -475,9 +475,9 @@ in rec {
             ${gnused}/bin/sed -i -e "s| sources.\"elm-0.18| #sources.\"elm-0.18|" node-modules-generated.nix
             ${gnused}/bin/sed -i -e "s| name = \"elm-webpack-loader\";| dontNpmInstall = true;name = \"elm-webpack-loader\";|" node-modules-generated.nix
 
-            #rm -rf elm-stuff
-            #${elmPackages.elm}/bin/elm-package install -y
-            #${elm2nix}/bin/elm2nix elm-packages.nix
+            rm -rf elm-stuff
+            ${elmPackages.elm}/bin/elm-package install -y
+            ${elm2nix}/bin/elm2nix elm-packages.nix
 
             popd
           '';
