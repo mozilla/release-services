@@ -98,8 +98,8 @@ let
 
 
     "aiohttp" = python.mkDerivation {
-      name = "aiohttp-2.0.6";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/96/1b/d68ca02d684b59cb91fd486a0d874334387bc3050659c7e37339a78d4298/aiohttp-2.0.6.tar.gz"; sha256 = "5f2e6de6477cad697b4be160b23e9e60ec4dcaa776634e6b8609a7c23ac26c1a"; };
+      name = "aiohttp-2.0.7";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/f1/1a/e6090179b3c272c6e437cc6e0d78be6220727a7bdc9ee74bef214144c5d3/aiohttp-2.0.7.tar.gz"; sha256 = "76bfd47ee7fbda115cff486c3944fcb237ecbf6195bf2943fae74052fb40c4fe"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -180,8 +180,8 @@ let
 
 
     "chardet" = python.mkDerivation {
-      name = "chardet-2.3.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/7d/87/4e3a3f38b2f5c578ce44f8dc2aa053217de9f0b6d737739b0ddac38ed237/chardet-2.3.0.tar.gz"; sha256 = "e53e38b3a4afe6d1132de62b7400a4ac363452dc5dfcf8d88e8e0cce663c68aa"; };
+      name = "chardet-3.0.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/91/05/28f23094cdf1410fb03533f0d71e6b4aad3c504100e83b8cea6fc899552c/chardet-3.0.2.tar.gz"; sha256 = "4f7832e7c583348a9eddd927ee8514b3bf717c061f57b21dbe7697211454d9bb"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -509,7 +509,7 @@ let
 
 
     "mozilla-cli-common" = python.mkDerivation {
-      name = "mozilla-cli-common-12";
+      name = "mozilla-cli-common-14";
       src = ./../../lib/cli_common;
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
@@ -1090,5 +1090,14 @@ let
 
   };
   overrides = import ./requirements_override.nix { inherit pkgs python; };
+  commonOverrides = [
 
-in python.withPackages (fix' (extends overrides generated))
+  ];
+
+in python.withPackages
+   (fix' (pkgs.lib.fold
+            extends
+            generated
+            ([overrides] ++ commonOverrides)
+         )
+   )
