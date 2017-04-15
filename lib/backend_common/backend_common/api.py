@@ -5,9 +5,10 @@
 from __future__ import absolute_import
 
 import connexion
-import structlog
+import flask
 import pathlib
-import werkzeug.exceptions
+import structlog
+import werkzeug
 
 
 logger = structlog.get_logger()
@@ -134,7 +135,20 @@ class Api:
             debug=app.debug,
         )
         app.register_blueprint(self.__api.blueprint)
+
+        for code, exception in werkzeug.exceptions.default_exceptions.items():
+            app.register_error_handler(exception, handle_default_exceptions)
+
         return self.__api
+
+
+def handle_default_exceptions(e):
+    return flask.jsonify({
+        'status_code': e.code,
+        'message': str(e),
+        'description': e.description
+    }), e.code
+
 
 
 def init_app(app):
