@@ -5,14 +5,14 @@ let
   inherit (builtins) readFile concatStringsSep;
   inherit (releng_pkgs.lib) fromRequirementsFile mkTaskclusterGithubTask;
   inherit (releng_pkgs.tools) pypi2nix;
-  inherit (releng_pkgs.pkgs) writeScript;
+  inherit (releng_pkgs.pkgs) writeScript graphviz-nox;
   inherit (releng_pkgs.pkgs.lib) fileContents replaceStrings;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
 
   name = "mozilla-releng-docs";
-  version = fileContents ./../../VERSION;
+  version = fileContents ./VERSION;
   src_path =
     "src/" +
       (replaceStrings ["-"] ["_"]
@@ -24,6 +24,7 @@ let
     src = ./.;
 
     buildInputs =
+      [ graphviz-nox ] ++
       fromRequirementsFile ./requirements.txt python.packages;
 
     buildPhase = ''

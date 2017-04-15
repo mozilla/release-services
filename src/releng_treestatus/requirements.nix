@@ -66,8 +66,8 @@ let
   generated = self: {
 
     "Flask" = python.mkDerivation {
-      name = "Flask-0.12";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/4b/3a/4c20183df155dd2e39168e35d53a388efb384a512ca6c73001d8292c094a/Flask-0.12.tar.gz"; sha256 = "93e803cdbe326a61ebd5c5d353959397c85f829bec610d59cb635c9f97d7ca8b"; };
+      name = "Flask-0.12.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/24/6e/11b9c57e46f276a8a8dfda85a2fa7ada62b0463b68693616c7ab5df356fa/Flask-0.12.1.tar.gz"; sha256 = "9dce4b6bfbb5b062181d3f7da8f727ff70c1156cbb4024351eafd426deb5fb88"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -193,8 +193,8 @@ let
 
 
     "Jinja2" = python.mkDerivation {
-      name = "Jinja2-2.9.5";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/71/59/d7423bd5e7ddaf3a1ce299ab4490e9044e8dfd195420fc83a24de9e60726/Jinja2-2.9.5.tar.gz"; sha256 = "702a24d992f856fa8d5a7a36db6128198d0c21e1da34448ca236c42e92384825"; };
+      name = "Jinja2-2.9.6";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/90/61/f820ff0076a2599dd39406dcb858ecb239438c02ce706c8e91131ab9c7f1/Jinja2-2.9.6.tar.gz"; sha256 = "ddaa01a212cd6d641401cb01b605f4a4d9f37bfc93043d7f760ec70fb99ff9ff"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -292,8 +292,8 @@ let
 
 
     "SQLAlchemy" = python.mkDerivation {
-      name = "SQLAlchemy-1.1.6";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/24/de/66d96cbad7a91443af1399469e9aa0aec8a41669ba6d0faae8b8411ddb27/SQLAlchemy-1.1.6.tar.gz"; sha256 = "815924e3218d878ddd195d2f9f5bf3d2bb39fabaddb1ea27dace6ac27d9865e4"; };
+      name = "SQLAlchemy-1.1.9";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/02/69/9473d60abef55445f8e967cfae215da5de29ca21b865c99d2bf02a45ee01/SQLAlchemy-1.1.9.tar.gz"; sha256 = "b65cdc73cd348448ef0164f6c77d45a9f27ca575d3c5d71ccc33adf684bc6ef0"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -324,8 +324,8 @@ let
 
 
     "aiohttp" = python.mkDerivation {
-      name = "aiohttp-2.0.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/b0/88/712947e5c06479ea27a59ebf2ab78bf4358798c0b472dbd2535815f8a293/aiohttp-2.0.0.tar.gz"; sha256 = "9d73c4b530ff11ca58f96184618180fbc1f93d08fe8da600dfe9c858e471bdfa"; };
+      name = "aiohttp-2.0.7";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/f1/1a/e6090179b3c272c6e437cc6e0d78be6220727a7bdc9ee74bef214144c5d3/aiohttp-2.0.7.tar.gz"; sha256 = "76bfd47ee7fbda115cff486c3944fcb237ecbf6195bf2943fae74052fb40c4fe"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -410,8 +410,8 @@ let
 
 
     "chardet" = python.mkDerivation {
-      name = "chardet-2.3.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/7d/87/4e3a3f38b2f5c578ce44f8dc2aa053217de9f0b6d737739b0ddac38ed237/chardet-2.3.0.tar.gz"; sha256 = "e53e38b3a4afe6d1132de62b7400a4ac363452dc5dfcf8d88e8e0cce663c68aa"; };
+      name = "chardet-3.0.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/91/05/28f23094cdf1410fb03533f0d71e6b4aad3c504100e83b8cea6fc899552c/chardet-3.0.2.tar.gz"; sha256 = "4f7832e7c583348a9eddd927ee8514b3bf717c061f57b21dbe7697211454d9bb"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -458,8 +458,8 @@ let
 
 
     "connexion" = python.mkDerivation {
-      name = "connexion-1.1.5";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/00/87/de8d2fea2b919bb4ac0ddc8101cbdaa2b358ed19b4372d1a3e243374c8ff/connexion-1.1.5.tar.gz"; sha256 = "2689e8c88aa2e8df5b544d04fbfe925ed14405648e840eb30fcea212f03f0a76"; };
+      name = "connexion-1.1.9";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3b/df/7ecdaa8417c1f68e1fb9abaf9235afb7cf3f2847f679ccf76964f6fddad7/connexion-1.1.9.tar.gz"; sha256 = "4508d6d5bb2db18c8b421dbf6f1a276e2f7e262c8e2846752c0874f1e41065ad"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -467,11 +467,11 @@ let
       self."PyYAML"
       self."clickclick"
       self."decorator"
+      self."inflection"
       self."jsonschema"
       self."pytest"
       self."requests"
       self."six"
-      self."strict-rfc3339"
       self."swagger-spec-validator"
     ];
       meta = with pkgs.stdenv.lib; {
@@ -564,6 +564,21 @@ let
 
 
 
+    "inflection" = python.mkDerivation {
+      name = "inflection-0.3.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/d5/35/a6eb45b4e2356fe688b21570864d4aa0d0a880ce387defe9c589112077f8/inflection-0.3.1.tar.gz"; sha256 = "18ea7fb7a7d152853386523def08736aa8c32636b047ade55f7578c4edeb16ca"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.mit;
+        description = "A port of Ruby on Rails inflector to Python";
+      };
+    };
+
+
+
     "ipdb" = python.mkDerivation {
       name = "ipdb-0.10.2";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e1/fa/446cc6443c0dd5bcce55af12b73e1a561b330913a3792d4037f4aa654ed2/ipdb-0.10.2.tar.gz"; sha256 = "fffc45b615e46eb75becbd88a30c69c75e7164ecd0122f2c78579b4dfa41b8c9"; };
@@ -640,9 +655,7 @@ let
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/58/b9/171dbb07e18c6346090a37f03c7e74410a1a56123f847efed59af260a298/jsonschema-2.6.0.tar.gz"; sha256 = "6ff5f3180870836cae40f06fa10419f557208175f13ad7bc26caa77beb1f6e02"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [
-      self."strict-rfc3339"
-    ];
+      propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
         homepage = "";
         license = licenses.mit;
@@ -704,7 +717,7 @@ let
 
 
     "mozilla-backend-common" = python.mkDerivation {
-      name = "mozilla-backend-common-11";
+      name = "mozilla-backend-common-1.0.0";
       src = ./../../lib/backend_common;
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
@@ -735,14 +748,15 @@ let
 
 
     "mozilla-cli-common" = python.mkDerivation {
-      name = "mozilla-cli-common-11";
+      name = "mozilla-cli-common-1.0.0";
       src = ./../../lib/cli_common;
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."Logbook"
-      self."structlog"
       self."click"
+      self."structlog"
+      self."taskcluster"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "";
@@ -834,8 +848,8 @@ let
 
 
     "prompt-toolkit" = python.mkDerivation {
-      name = "prompt-toolkit-1.0.13";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/23/be/4876b52d5cc159cbd4b0ff6e7aa419a26470849a43a8f647857a4a24467b/prompt_toolkit-1.0.13.tar.gz"; sha256 = "33d68ca09f76cd73287fde7df5748ffacf26a8238dd61ee81ac50860ea7c6776"; };
+      name = "prompt-toolkit-1.0.14";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/55/56/8c39509b614bda53e638b7500f12577d663ac1b868aef53426fc6a26c3f5/prompt_toolkit-1.0.14.tar.gz"; sha256 = "cc66413b1b4b17021675d9f2d15d57e640b06ddfd99bb724c73484126d22622f"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -974,8 +988,8 @@ let
 
 
     "pytz" = python.mkDerivation {
-      name = "pytz-2016.10";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/d0/e1/aca6ef73a7bd322a7fc73fd99631ee3454d4fc67dc2bee463e2adf6bb3d3/pytz-2016.10.tar.bz2"; sha256 = "7016b2c4fa075c564b81c37a252a5fccf60d8964aa31b7f5eae59aeb594ae02b"; };
+      name = "pytz-2017.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/a4/09/c47e57fc9c7062b4e83b075d418800d322caa87ec0ac21e6308bd3a2d519/pytz-2017.2.zip"; sha256 = "f5c056e8f62d45ba8215e5cb8f50dfccb198b4b9fbea8500674f3443e4689589"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -1084,21 +1098,6 @@ let
 
 
 
-    "strict-rfc3339" = python.mkDerivation {
-      name = "strict-rfc3339-0.7";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/56/e4/879ef1dbd6ddea1c77c0078cd59b503368b0456bcca7d063a870ca2119d3/strict-rfc3339-0.7.tar.gz"; sha256 = "5cad17bedfc3af57b399db0fed32771f18fc54bbd917e85546088607ac5e1277"; };
-      doCheck = commonDoCheck;
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "";
-        license = licenses.gpl3;
-        description = "Strict, simple, lightweight RFC3339 functions";
-      };
-    };
-
-
-
     "structlog" = python.mkDerivation {
       name = "structlog-16.1.0";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3d/d8/90e87637a53ebcb0bbc78b76bceea2f7e8bd98de80feefec7471e38dccf2/structlog-16.1.0.tar.gz"; sha256 = "b44dfaadcbab84e6bb97bd9b263f61534a79611014679757cd93e2359ee7be01"; };
@@ -1117,8 +1116,8 @@ let
 
 
     "swagger-spec-validator" = python.mkDerivation {
-      name = "swagger-spec-validator-2.0.4";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/f1/45/f0d42353cafc5da7ea61e8de36cc159dc6e7a1a14437e4c904af2f790730/swagger-spec-validator-2.0.4.tar.gz"; sha256 = "869930c23459a40aa425a61f60883663d92c000d1e7e8b4441e2bc54d3a71a0e"; };
+      name = "swagger-spec-validator-2.1.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e3/2f/3767da696617ee72190361805dff4bca68a611d4673de848857654789534/swagger-spec-validator-2.1.0.tar.gz"; sha256 = "dc9219c6572ce0def6e1c160ca253c0e7fcde75812628f0c0199334f85bd138e"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -1223,5 +1222,14 @@ let
 
   };
   overrides = import ./requirements_override.nix { inherit pkgs python; };
+  commonOverrides = [
 
-in python.withPackages (fix' (extends overrides generated))
+  ];
+
+in python.withPackages
+   (fix' (pkgs.lib.fold
+            extends
+            generated
+            ([overrides] ++ commonOverrides)
+         )
+   )

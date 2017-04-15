@@ -81,8 +81,8 @@ let
 
 
     "awscli" = python.mkDerivation {
-      name = "awscli-1.11.56";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/66/10/5ae3b4ae1f8968d48dc3b90b608e66b5fac4d4507139e3e7b968b0f8bfef/awscli-1.11.56.tar.gz"; sha256 = "2fe68889078a4b0914673247db80445be0e29eb8659e4314d1c1663b75c37d8c"; };
+      name = "awscli-1.11.76";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/66/21/44b38c0373e0d1765addce0c3e49f0a3f9abcf0be2929111dafc7a4dc19b/awscli-1.11.76.tar.gz"; sha256 = "8f19e13e2741e40054be641e0bd2fce75ea336e694f809c6717a21ad03bf349c"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -103,8 +103,8 @@ let
 
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.5.19";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/0d/ff/11e9bc15fb1d1377e9c9e7a5a6548d165909f9d76ec673183adf97d5c2cf/botocore-1.5.19.tar.gz"; sha256 = "05d83df20f798bfd871e29272b00dbb567a129c6e119a5a8a9cda0f339c8c919"; };
+      name = "botocore-1.5.39";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/8e/7c/d30801e93b84846a2383ad1767bb0510a598c42c17df3dab5720a780f475/botocore-1.5.39.tar.gz"; sha256 = "d89c3d79beaf4555885f5c0f756e287c10075d4534ad61b9072420402157e813"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -152,8 +152,8 @@ let
 
 
     "jmespath" = python.mkDerivation {
-      name = "jmespath-0.9.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/9d/1a/c8ab901753ad7581032f99f88c759a45b6c72b75615f0cd731dd7c9dd0de/jmespath-0.9.1.tar.gz"; sha256 = "e72d02de23c1814322f7c0dcffb46716271f9b52b129aace0ab6f5a0450d5f02"; };
+      name = "jmespath-0.9.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/96/6e/0723cccec195a37de6a428ad8879fe063b6debe5c855444e9285b27d253e/jmespath-0.9.2.tar.gz"; sha256 = "54c441e2e08b23f12d7fa7d8e6761768c47c969e6aed10eead57505ba760aee9"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -247,5 +247,14 @@ let
 
   };
   overrides = import ./awscli_override.nix { inherit pkgs python; };
+  commonOverrides = [
 
-in python.withPackages (fix' (extends overrides generated))
+  ];
+
+in python.withPackages
+   (fix' (pkgs.lib.fold
+            extends
+            generated
+            ([overrides] ++ commonOverrides)
+         )
+   )

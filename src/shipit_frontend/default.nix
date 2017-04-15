@@ -16,7 +16,7 @@ in mkFrontend {
   inProduction = true;
   inherit nodejs node_modules elm_packages;
   name = "mozilla-shipit-frontend";
-  version = fileContents ./../../VERSION;
+  version = fileContents ./VERSION;
   csp = "default-src 'none'; img-src 'self' data: *.gravatar.com; script-src 'self'; style-src 'self'; font-src 'self';";
   src = ./.;
 }

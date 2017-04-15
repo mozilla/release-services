@@ -8,12 +8,12 @@
     sha256 = "0k07s964ahq0mfgvwl8yp93ziqfzz3r38h4xawbl44g7pfajlz3v";
   };
   "krisajenkins/elm-dialog" = {
-    version = "4.0.2";
-    sha256 = "0d0kn9k0w00vxmsywpmc6ib53avqyfvi1a5pj62wdm46kr5k4hvp";
+    version = "4.0.3";
+    sha256 = "105agrxj0k18qk1xwlv5cxa2k8cxda37xiqj88fyn4sxk26cmfq6";
   };
   "krisajenkins/elm-exts" = {
-    version = "26.5.0";
-    sha256 = "0zkghvgw3ilq7wazj8ppqs5j1ykyq2x7i4mdax5pslsnagggqbp3";
+    version = "27.4.0";
+    sha256 = "00yzz5jy9k44jy92mx1klsvcxvziyf63c6ld9vj071vgwzp55dxf";
   };
   "elm-lang/navigation" = {
     version = "2.1.0";

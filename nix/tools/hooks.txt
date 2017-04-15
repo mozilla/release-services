@@ -1,4 +1,2 @@
 click
 taskcluster
-pytest-runner
-setuptools-scm

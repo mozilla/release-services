@@ -27,7 +27,7 @@ EOF
   self = mkPython {
     inherit python name dirname;
     inProduction = true;
-    version = fileContents ./../../VERSION;
+    version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
       fromRequirementsFile ./requirements-dev.txt python.packages;

@@ -4,8 +4,6 @@ let
   inherit (releng_pkgs.pkgs) writeScript stdenv makeWrapper;
 in {
 
-  inherit (releng_pkgs.pkgs) jq gnused coreutils;
-
   pypi2nix = import ./pypi2nix.nix { inherit releng_pkgs; } // {
     update = releng_pkgs.lib.updateFromGitHub {
       owner = "garbas";
@@ -90,7 +88,9 @@ in {
     '';
   };
 
-  createcert = import ./createcert.nix { inherit releng_pkgs; };
+  createcert = (import ./createcert.nix { inherit releng_pkgs; }) // {
+    update = null;
+  };
 
   mercurial = import ./mercurial.nix { inherit releng_pkgs; };
 

@@ -1,5 +1,1 @@
-{ pkgs, python }:
-
-self: super: {
-
-}
+../requirements_override.nix
