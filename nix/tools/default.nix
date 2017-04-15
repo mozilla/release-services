@@ -71,15 +71,6 @@ in {
 
   elm2nix = import ./elm2nix.nix { inherit releng_pkgs; };
 
-  mysql2sqlite = import ./mysql2sqlite.nix { inherit releng_pkgs; } // {
-    update = releng_pkgs.lib.updateFromGitHub {
-      owner = "dumblob";
-      repo = "mysql2sqlite";
-      branch = "master";
-      path = "nix/tools/mysql2sqlite.json";
-    };
-  };
-
   mysql2pgsql = (import ./mysql2pgsql.nix { inherit (releng_pkgs) pkgs; }).packages."py-mysql2pgsql" // {
     update = writeScript "update-tools-mysql2pgsql" ''
       pushd nix/tools

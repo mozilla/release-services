@@ -8,10 +8,17 @@ import os
 
 
 SWAGGER_BASE_URL = os.environ.get('SWAGGER_BASE_URL')
+
+
+# -- DATABASE -----------------------------------------------------------------
+
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if not DATABASE_URL:
     raise Exception("You need to specify DATABASE_URL variable.")
+
+if not DATABASE_URL.startswith('postgresql://'):
+    raise Exception('Shipit dashboard needs a postgresql:// DATABASE_URL')
 
 
 SQLALCHEMY_DATABASE_URI = DATABASE_URL

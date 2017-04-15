@@ -29,7 +29,6 @@ TOOLS=\
 	awscli \
 	createcert \
 	mysql2pgsql \
-	mysql2sqlite \
 	node2nix \
 	push \
 	pypi2nix \
@@ -200,16 +199,16 @@ develop-run-releng-docs: develop-run-SPHINX
 develop-run-frontend-common-example: develop-run-FRONTEND
 
 develop-run-releng-frontend: develop-run-FRONTEND
-develop-run-releng-clobberer: require-sqlite develop-run-BACKEND
-develop-run-releng-tooltool: require-sqlite develop-run-BACKEND
+develop-run-releng-clobberer: require-postgres develop-run-BACKEND
+develop-run-releng-tooltool: require-postgres develop-run-BACKEND
 develop-run-releng-treestatus: require-postgres develop-run-BACKEND
-develop-run-releng-mapper: require-sqlite develop-run-BACKEND
-develop-run-releng-archiver: require-sqlite develop-run-BACKEND
+develop-run-releng-mapper: require-postgres develop-run-BACKEND
+develop-run-releng-archiver: require-postgres develop-run-BACKEND
 
 develop-run-shipit-frontend: develop-run-FRONTEND
 develop-run-shipit-uplift: require-postgres develop-run-BACKEND
-develop-run-shipit-pipeline: require-sqlite develop-run-BACKEND
-develop-run-shipit-signoff: require-sqlite develop-run-BACKEND
+develop-run-shipit-pipeline: require-postgres develop-run-BACKEND
+develop-run-shipit-signoff: require-postgres develop-run-BACKEND
 
 develop-run-postgres: build-pkgs-postgresql require-initdb
 	./result-pkgs-postgresql/bin/postgres -D $(PWD)/tmp/postgres -h localhost -p $(APP_DEV_POSTGRES_PORT)
@@ -569,11 +568,5 @@ require-postgres: build-pkgs-postgresql
 	fi
 	$(eval export DATABASE_URL=postgresql://localhost:$(APP_DEV_POSTGRES_PORT)/services)
 	@echo "Using postgresql dev database $(DATABASE_URL)"
-
-require-sqlite:
-	$(eval export DATABASE_URL=sqlite:///$(PWD)/app.db)
-	@echo "Using sqlite dev database $(DATABASE_URL)"
-
-
 
 all: build-apps build-tools

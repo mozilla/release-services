@@ -76,7 +76,7 @@ let
 
 in rec {
 
-  inherit (migrate) mysql2sqlite mysql2postgresql;
+  inherit (migrate) mysql2postgresql;
 
   packagesWith = attrName: pkgs':
     builtins.filter
