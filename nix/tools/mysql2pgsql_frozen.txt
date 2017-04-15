@@ -1,9 +1,9 @@
-appdirs==1.4.0
+appdirs==1.4.3
 MySQL-python==1.2.5
 packaging==16.8
-psycopg2==2.7
+psycopg2==2.7.1
 py-mysql2pgsql==0.1.5
-pyparsing==2.1.10
+pyparsing==2.2.0
 PyYAML==3.12
 six==1.10.0
 termcolor==1.1.0

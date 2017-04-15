@@ -30,7 +30,7 @@ in pkgs.stdenv.mkDerivation {
     export HOME=$PWD
     echo "Updating packages ..."
     ${builtins.concatStringsSep "\n\n" (
-        map (pkg: "echo ' - ${(builtins.parseDrvName pkg.name).name}'; ${pkg.update}") packages)}
+        map (pkg: "echo ' - ${(builtins.parseDrvName pkg.name).name}'; ${if pkg.update == null then "" else pkg.update}") packages)}
     echo "" 
     echo "Packages updated!"
     exit

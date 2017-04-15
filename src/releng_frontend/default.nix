@@ -16,7 +16,7 @@ in mkFrontend {
   inProduction = true;
   name = "mozilla-releng-frontend";
   inherit nodejs node_modules elm_packages;
-  version = fileContents ./../../VERSION;
+  version = fileContents ./VERSION;
   src = ./.;
   postInstall = ''
     cp -R src/static/* $out/

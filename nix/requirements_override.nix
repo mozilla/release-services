@@ -2,6 +2,8 @@
 
 let
 
+  inherit (pkgs.lib) fileContents;
+
   skipOverrides = overrides: self: super:
     let
       overridesNames = builtins.attrNames overrides;
@@ -22,6 +24,7 @@ let
 in skipOverrides {
 
   "mozilla-backend-common" = self: old: {
+    name = "mozilla-backend-common-${fileContents ./../lib/backend_common/VERSION}";
     # TODO: doCheck = true;
     buildInputs =
       [ self."flake8"
@@ -31,10 +34,6 @@ in skipOverrides {
     preConfigure = ''
       rm -rf build *.egg-info
     '';
-    patchPhase = ''
-      rm -f VERSION
-      ln -s ${../VERSION} ./VERSION
-    '';
     checkPhase = ''
       flake8 --exclude=nix_run_setup.py,migrations/,build/
       pytest tests
@@ -42,6 +41,7 @@ in skipOverrides {
   };
 
   "mozilla-cli-common" = self: old: {
+    name = "mozilla-cli-common-${fileContents ./../lib/backend_common/VERSION}";
     buildInputs =
       [ self."flake8"
         self."pytest"
@@ -50,10 +50,6 @@ in skipOverrides {
       rm -rf build *.egg-info
     '';
     # TODO: doCheck = true;
-    patchPhase = ''
-      rm -f VERSION
-      ln -s ${../VERSION} ./VERSION
-    '';
     checkPhase = ''
       flake8 --exclude=nix_run_setup.py,build/
       pytest tests
@@ -65,6 +61,17 @@ in skipOverrides {
   "async-timeout" = self: old: {
     patchPhase = ''
       sed -i -e "s|setup_requires=\['pytest-runner'\],||" setup.py
+    '';
+  };
+
+  "awscli" = self: old: {
+    propagatedBuildInputs = old.propagatedBuildInputs ++ (with pkgs; [ groff less ]);
+    postInstall = ''
+      mkdir -p $out/etc/bash_completion.d
+      echo "complete -C $out/bin/aws_completer aws" > $out/etc/bash_completion.d/awscli
+      mkdir -p $out/share/zsh/site-functions
+      mv $out/bin/aws_zsh_completer.sh $out/share/zsh/site-functions
+      rm $out/bin/aws.cmd
     '';
   };
 

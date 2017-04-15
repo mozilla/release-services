@@ -18,7 +18,7 @@ let
       update = releng_pkgs.lib.updateFromGitHub {
         owner = "NixOS";
         repo = "nixpkgs-channels";
-        branch = "nixos-unstable";
+        branch = "nixos-17.03";
         path = "nix/nixpkgs.json";
       };
     };

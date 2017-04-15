@@ -314,7 +314,6 @@ in rec {
       assert name == null -> exclude != null;
       let
         _include= if include == null then [
-          "/VERSION"
           "/${name}"
           "/tests"
           "/MANIFEST.in"
@@ -470,8 +469,6 @@ in rec {
               --pkg-name nodejs-6_x
 
             # TODO: move this into default.nix
-            ${gnused}/bin/sed -i -e "s| python2||" node-modules.nix
-            ${gnused}/bin/sed -i -e "s| inherit nodejs;| python = pkgs.python2;inherit nodejs;|" node-modules.nix
             ${gnused}/bin/sed -i -e "s| sources.\"elm-0.18| #sources.\"elm-0.18|" node-modules-generated.nix
             ${gnused}/bin/sed -i -e "s| name = \"elm-webpack-loader\";| dontNpmInstall = true;name = \"elm-webpack-loader\";|" node-modules-generated.nix
 
@@ -597,15 +594,12 @@ in rec {
 
         patchPhase = ''
           # replace synlink with real file
-          rm VERSION
-          echo ${version} > VERSION
 
           # generate MANIFEST.in to make sure every file is included
           rm -f MANIFEST.in
           cat > MANIFEST.in <<EOF
           recursive-include ${dirname}/*
 
-          include VERSION
           include ${dirname}/*.ini
           include ${dirname}/*.json
           include ${dirname}/*.mako

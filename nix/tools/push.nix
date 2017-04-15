@@ -97,5 +97,14 @@ let
 
   };
   overrides = import ./push_override.nix { inherit pkgs python; };
+  commonOverrides = [
 
-in python.withPackages (fix' (extends overrides generated))
+  ];
+
+in python.withPackages
+   (fix' (pkgs.lib.fold
+            extends
+            generated
+            ([overrides] ++ commonOverrides)
+         )
+   )

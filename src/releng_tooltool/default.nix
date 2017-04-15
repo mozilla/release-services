@@ -14,7 +14,7 @@ let
 
   self = mkBackend rec {
     inherit python name dirname;
-    version = fileContents ./../../VERSION;
+    version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
       fromRequirementsFile ./requirements-dev.txt python.packages;

@@ -111,8 +111,8 @@ let
 
 
     "psycopg2" = python.mkDerivation {
-      name = "psycopg2-2.7";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/62/ca/0a479c9664526e86c2913a7ad593586eeb86b428b7e629e7c7b6b69e3cb7/psycopg2-2.7.tar.gz"; sha256 = "ceadecf660ad4f7a31ea5baef30a7351add8626f9fd3daaafabb9a9e549f3f9a"; };
+      name = "psycopg2-2.7.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/f8/e9/5793369ce8a41bf5467623ded8d59a434dfef9c136351aca4e70c2657ba0/psycopg2-2.7.1.tar.gz"; sha256 = "86c9355f5374b008c8479bc00023b295c07d508f7c3b91dbd2e74f8925b1d9c6"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -161,5 +161,14 @@ let
 
   };
   overrides = import ./mysql2pgsql_override.nix { inherit pkgs python; };
+  commonOverrides = [
 
-in python.withPackages (fix' (extends overrides generated))
+  ];
+
+in python.withPackages
+   (fix' (pkgs.lib.fold
+            extends
+            generated
+            ([overrides] ++ commonOverrides)
+         )
+   )
