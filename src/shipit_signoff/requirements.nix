@@ -497,6 +497,26 @@ let
 
 
 
+    "flask-oidc" = python.mkDerivation {
+      name = "flask-oidc-1.1.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/be/cc/7bbead3a11dd7623f7499e4e3186509efeced28ec935ba8d995b3788c586/flask-oidc-1.1.1.tar.gz"; sha256 = "c2b73664dbcd3f10b78c0df4eb02fa26ec5752a60c1e134f8f8b9ce02a90c5ab"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."Flask"
+      self."itsdangerous"
+      self."oauth2client"
+      self."six"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.bsdOriginal;
+        description = "OpenID Connect extension for Flask";
+      };
+    };
+
+
+
     "gunicorn" = python.mkDerivation {
       name = "gunicorn-19.7.1";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/30/3a/10bb213cede0cc4d13ac2263316c872a64bf4c819000c8ccd801f1d5f822/gunicorn-19.7.1.tar.gz"; sha256 = "eee1169f0ca667be05db3351a0960765620dad53f53434262ff8901b68a1b622"; };
@@ -507,6 +527,21 @@ let
         homepage = "";
         license = licenses.mit;
         description = "WSGI HTTP Server for UNIX";
+      };
+    };
+
+
+
+    "httplib2" = python.mkDerivation {
+      name = "httplib2-0.10.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e4/2e/a7e27d2c36076efeb8c0e519758968b20389adf57a9ce3af139891af2696/httplib2-0.10.3.tar.gz"; sha256 = "e404d3b7bd86c1bc931906098e7c1305d6a3a6dcef141b8bb1059903abb3ceeb"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.mit;
+        description = "A comprehensive HTTP client library.";
       };
     };
 
@@ -545,13 +580,14 @@ let
 
 
     "ipython" = python.mkDerivation {
-      name = "ipython-5.3.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/a4/70/d07a28ea595953acacc128a6efe25696be20b2e1d3e3c81ef4b55410b488/ipython-5.3.0.tar.gz"; sha256 = "bf5e615e7d96dac5a61fbf98d9e2926d98aa55582681bea7e9382992a3f43c1d"; };
+      name = "ipython-6.0.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/75/03/bb1ce0cf9f8a86f52b34090708e1806bc11e2d29b193e7d6fe0afe9a61e5/ipython-6.0.0.tar.gz"; sha256 = "f429b82b8d9807068da734b15965768bd21b15d0b706340b6d1b4d6f6f5b98a4"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."Pygments"
       self."decorator"
+      self."jedi"
       self."pexpect"
       self."pickleshare"
       self."prompt-toolkit"
@@ -593,6 +629,21 @@ let
         homepage = "";
         license = licenses.bsdOriginal;
         description = "Various helpers to pass trusted data to untrusted environments and back.";
+      };
+    };
+
+
+
+    "jedi" = python.mkDerivation {
+      name = "jedi-0.10.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/80/b9/4e9b0b999deeec8a91cb84e567380853a842e6c387c9d39b8fc9a49953fa/jedi-0.10.2.tar.gz"; sha256 = "7abb618cac6470ebbd142e59c23daec5e6e063bfcecc8a43a037d2ab57276f4e"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.mit;
+        description = "An autocompletion tool for Python that can be used for text editors.";
       };
     };
 
@@ -658,6 +709,7 @@ let
       self."Flask-SQLAlchemy"
       self."Jinja2"
       self."connexion"
+      self."flask-oidc"
       self."gunicorn"
       self."mozilla-cli-common"
       self."newrelic"
@@ -709,8 +761,8 @@ let
 
 
     "newrelic" = python.mkDerivation {
-      name = "newrelic-2.82.0.62";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/a1/2f/c7cd1e36b640565bd5e81abe7dfbedc4287ffc343302332d2ec21cab452f/newrelic-2.82.0.62.tar.gz"; sha256 = "482bdb36a9858d4d2aaeec4e211bd5b318310b270aa0211adc8e481e8ca235ec"; };
+      name = "newrelic-2.82.1.63";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/73/94/f18a1094e77828b5aecbf238f51a9bdcbe92a29e3b5070a770964334f043/newrelic-2.82.1.63.tar.gz"; sha256 = "068a642f2dbfc8628ce8649b7b2d506f64dcb8120ba2146df06623e08c5a8443"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -718,6 +770,27 @@ let
         homepage = "";
         license = "License :: Other/Proprietary License";
         description = "New Relic Python Agent";
+      };
+    };
+
+
+
+    "oauth2client" = python.mkDerivation {
+      name = "oauth2client-4.0.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c2/ce/7aaf19d8b856191e2e1885201fe45f3dc57b97f5ec5bc98ef2cc15472918/oauth2client-4.0.0.tar.gz"; sha256 = "80be5420889694634b8517b4acd3292ace881d9d1aa9d590d37ec52faec238c7"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."httplib2"
+      self."pyasn1"
+      self."pyasn1-modules"
+      self."rsa"
+      self."six"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.asl20;
+        description = "OAuth 2.0 client library";
       };
     };
 
@@ -836,6 +909,38 @@ let
 
 
 
+    "pyasn1" = python.mkDerivation {
+      name = "pyasn1-0.2.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/69/17/eec927b7604d2663fef82204578a0056e11e0fc08d485fdb3b6199d9b590/pyasn1-0.2.3.tar.gz"; sha256 = "738c4ebd88a718e700ee35c8d129acce2286542daa80a82823a7073644f706ad"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.bsdOriginal;
+        description = "ASN.1 types and codecs";
+      };
+    };
+
+
+
+    "pyasn1-modules" = python.mkDerivation {
+      name = "pyasn1-modules-0.0.8";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/60/32/7703bccdba05998e4ff04db5038a6695a93bedc45dcf491724b85b5db76a/pyasn1-modules-0.0.8.tar.gz"; sha256 = "10561934f1829bcc455c7ecdcdacdb4be5ffd3696f26f468eb6eb41e107f3837"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."pyasn1"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.bsdOriginal;
+        description = "A collection of ASN.1-based protocols modules.";
+      };
+    };
+
+
+
     "pycodestyle" = python.mkDerivation {
       name = "pycodestyle-2.3.1";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e1/88/0e2cbf412bd849ea6f1af1f97882add46a374f4ba1d2aea39353609150ad/pycodestyle-2.3.1.tar.gz"; sha256 = "682256a5b318149ca0d2a9185d365d8864a768a28db66a84a2ea946bcc426766"; };
@@ -944,6 +1049,23 @@ let
         homepage = "";
         license = licenses.asl20;
         description = "A utility library for mocking out the `requests` Python library.";
+      };
+    };
+
+
+
+    "rsa" = python.mkDerivation {
+      name = "rsa-3.4.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/14/89/adf8b72371e37f3ca69c6cb8ab6319d009c4a24b04a31399e5bd77d9bb57/rsa-3.4.2.tar.gz"; sha256 = "25df4e10c263fb88b5ace923dd84bf9aa7f5019687b5e55382ffcdb8bede9db5"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."pyasn1"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = "License :: OSI Approved :: Apache Software License";
+        description = "Pure-Python RSA implementation";
       };
     };
 

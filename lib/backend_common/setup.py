@@ -37,6 +37,7 @@ setup(
     extras_require=dict(
         api=['connexion'],
         auth=['Flask-Login', 'taskcluster'],
+        auth0=['flask-oidc'],
         cache=['Flask-Cache'],
         cors=['Flask-Cors'],
         db=['psycopg2', 'Flask-SQLAlchemy', 'Flask-Migrate'],

@@ -189,6 +189,7 @@ develop-run-BACKEND: build-certs nix require-APP
 	CACHE_TYPE=filesystem \
 	CACHE_DIR=$$PWD/src/$(APP_PYTHON)/cache \
 	APP_SETTINGS=$$PWD/src/$(APP_PYTHON)/settings.py \
+	APP_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_$(APP)) \
 	CORS_ORIGINS="*" \
 		nix-shell nix/default.nix -A $(APP) \
 			--run "gunicorn $(APP_PYTHON):app --bind '$(APP_DEV_HOST):$(APP_DEV_PORT_$(APP))' --ca-certs=$$PWD/tmp/ca.crt --certfile=$$PWD/tmp/server.crt --keyfile=$$PWD/tmp/server.key --workers 1 --timeout 3600 --reload --log-file -"

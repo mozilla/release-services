@@ -4,51 +4,220 @@
 
 from __future__ import absolute_import
 
-import logging
+import pickle
 
-log = logging.getLogger(__name__)
+from flask import abort, request
+from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.exc import IntegrityError
+from backend_common import log
+from backend_common.auth0 import auth0
+from backend_common.db import db
+
+from shipit_signoff.models import SignoffStep, SigningStatus, Signature
+
+
+logger = log.get_logger('shipit_signoffs.api')
+
+# provided by https://auth.mozilla.auth0.com/.well-known/openid-configuration
+AUTH0_FIELDS = [
+    "openid", "profile", "offline_access", "name", "given_name", "family_name",
+    "nickname", "email", "email_verified", "picture", "created_at",
+    "identities", "phone", "address",
+]
 
 STEPS = {}
 SIGNOFFS = {}
 
 
+@auth0.require_login
+def login(callback_url):
+    """Log a user in, using auth0
+
+    Returns the user to callback_url when finished.
+    """
+    pass
+
+
+def signoffstep_to_status(step):
+    """
+    Given a Signoff Step, extract and return only the data needed for its
+    current status
+    """
+    status = dict(
+        uid=step.uid,
+        state=step.state.value,  # it's an enum
+        message="{}".format(step.status_message),
+        created=str(step.created),
+    )
+
+    if step.completed:
+        status['completed'] = str(step.completed)
+
+    return status
+
+
 def list_steps():
-    log.info('listing steps')
-    return list(STEPS.keys())
+    """
+    List all the known steps with a given status, or running ones if not
+    specified.
+    """
+    logger.info('listing steps')
+
+    desired_state = request.args.get('state', 'running')
+
+    try:
+        steps = db.session.query(SignoffStep)\
+            .filter(SignoffStep.state == SigningStatus[desired_state])\
+            .all()
+    except NoResultFound:
+        return list()
+
+    logger.info("list_steps(): {}".format(steps))
+    return [signoffstep_to_status(step) for step in steps]
 
 
 def get_step(uid):
-    log.info('getting step %s', uid)
-    if uid not in STEPS:
-        return None, 404
-    return dict(uid=uid, input={}, parameters={})
+    """
+    Get a sign-off step definition
+    """
+    logger.info('getting step %s', uid)
+
+    try:
+        step = db.session.query(SignoffStep).filter(
+            SignoffStep.uid == uid).one()
+    except NoResultFound:
+        abort(404)
+
+    return dict(uid=uid, policy=step.policy_data, parameters={})
 
 
 def get_step_status(uid):
-    log.info('getting step status %s', uid)
-    return dict(
-        state=STEPS[uid]
-    )
+    """
+    Get the current status of a sign-off step, including who has signed
+    """
+    logger.info('getting step status %s', uid)
+
+    try:
+        step = db.session.query(SignoffStep).filter(
+            SignoffStep.uid == uid).one()
+    except NoResultFound:
+        abort(404)
+
+    return signoffstep_to_status(step)
 
 
 def create_step(uid):
-    log.info('creating step %s', uid)
-    STEPS[uid] = 'running'
-    SIGNOFFS[uid] = False
-    return None
+    """
+    Create a sign-off step
+    """
+    logger.info('creating step %s', uid)
+
+    step = SignoffStep()
+
+    step.uid = uid
+    step.state = 'running'
+    step.policy = pickle.dumps(request.json['policy'])
+
+    db.session.add(step)
+
+    try:
+        db.session.commit()
+    except IntegrityError as e:
+        return {
+            'error_title': 'Step with that uid already exists',
+            'error_message': str(e),
+        }, 409  # Conflict
+
+    return {}
 
 
 def delete_step(uid):
-    log.info('deleting step %s', uid)
-    del STEPS[uid]
-    del SIGNOFFS[uid]
+    logger.info('deleting step %s', uid)
+    try:
+        step = SignoffStep.query.filter_by(uid=uid).one()
+    except:
+        logger.error("Missing step when deleting: %s", uid)
+        abort(404)
+
+    step.delete()
+    return {}
+
+
+def is_user_in_group(group):
+    """
+    Dummy function while auth0 wrappers are not in place.
+    """
+    return True
+
+    if auth0.user_loggedin:
+        group_membership = auth0.user_getinfo(['groups']).get('groups')
+        return group in group_membership
+    return False
+
+
+def get_logged_in_email():
+    """
+    TODO: move to backend_common.auth0
+    TODO: write equivalent functions for groups, email_verified. Or get a user
+          dict?
+    """
+    return 'sfraser@mozilla.com'
+
+    if auth0.user_loggedin:
+        return auth0.user_getinfo(['email']).get('email')
     return None
 
 
-def signoff(uid):
-    log.error('signing off step %s', uid)
+def policy_can_be_signed(email, groupname, policy):
+    """
+    Check whether the email or group given should be allowed
+    to sign the specified policy.
+    TODO: implement
+    """
+    return True
+
+
+def sign_off(uid):
+    logger.info('Signing off step %s', uid)
+
+    logger.info('Fetching step %s', uid)
+
+    try:
+        step = db.session.query(SignoffStep).filter(
+            SignoffStep.uid == uid).one()
+    except NoResultFound:
+        abort(404)
+
+    claim_group = request.json['group']
+
+    # TODO: is the claim_group in the policy for step uid?
+
+    if not is_user_in_group(claim_group):
+        abort(403)
+
+    if not policy_can_be_signed(
+            get_logged_in_email(), claim_group, step.policy_data):
+        abort(403)
+
+    signature = Signature(step_uid=step.uid)
+    signature.email = get_logged_in_email()
+    signature.group = claim_group
+
+    db.session.add(signature)
+    db.session.commit()
+
+    # TODO: Check for policy completion, and update status if needed
+
+    return {}
+
+
+def delete_signature(uid):
+    """
+    TODO: implement
+    """
+    logger.info("Removing signature from step %s", uid)
     if uid not in STEPS:
         return None, 404
-    SIGNOFFS[uid] = True
-    STEPS[uid] = 'completed'
+    SIGNOFFS[uid] = False
+    STEPS[uid] = 'running'
     return None
