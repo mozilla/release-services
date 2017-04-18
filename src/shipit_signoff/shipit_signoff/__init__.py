@@ -9,6 +9,7 @@ import os
 import backend_common
 import backend_common.db
 import backend_common.auth
+import backend_common.auth0
 
 
 DEBUG = bool(os.environ.get('DEBUG', __name__ == '__main__'))
@@ -31,6 +32,7 @@ app = backend_common.create_app(
     extensions=[
         init_app,
         backend_common.auth,
+        backend_common.auth0,
         backend_common.db,
     ],
     debug=DEBUG,

@@ -9,71 +9,190 @@ produces:
   - application/json
 paths:
 
-  /:
+  /login:
+    get:
+      operationId: "shipit_signoff.api.login"
+      description: "Interactively log a user in"
+      parameters:
+        - name: callback_url
+          in: query
+          description: "Where to send the user in the UI after login"
+          required: true
+          type: string
+      responses:
+        "302":
+          description: "Log a user in"
+        "307":
+          description: "Log a user in"
 
+# Useful for policy checking before step creation?
+#  /validate_policy:
+#    put:
+#      operationId: "validate_policy"
+#      description: Checks whether a given policy is valid and completable. 
+#      parameters:
+#        - name: policy
+#          description: The policy to validate
+#          in: body
+#          required: true
+#          type: string
+#      responses:
+#        200:
+#          description: Returns nothing
+#        422:
+#          description: Unprocessable Entity
+
+
+  /step:
     get:
       operationId: "shipit_signoff.api.list_steps"
-      description: List all steps with status
-      responses:
-        200:
-          description: List of all steps
-
-  /{uid}/definition:
-
-    get:
-      operationId: "shipit_signoff.api.get_step"
-      description: Step definition
+      description: "List all steps with status"
       parameters:
-          - $ref: '#/parameters/uid'
+        - $ref: "#/parameters/state"
       responses:
-        200:
-          description: Definition of step
+        "200":
+          description: "List of all steps"
           schema:
-            $ref: '#/definitions/Step'
+            type: array
+            items:
+              $ref: '#/definitions/StepResult'
+          examples:
+            application/json: |-
+              [
+                {
+                  "uid": "1001",
+                  "state": "failed",
+                  "message": "Waiting for sign-offs",
+                  "signees": [],
+                  "output": ""
+                },
+                {
+                  "uid": "1002",
+                  "state": "completed",
+                  "message": "Waiting for sign-offs",
+                  "signees": [
+                    "example3@mozilla.com",
+                    "example4@mozilla.com"
+                  ],
+                  "output": ""
+                },
+                {
+                  "uid": "1003",
+                  "state": "running",
+                  "message": "Waiting for sign-offs",
+                  "signees": [
+                    "example1@mozilla.com",
+                    "example2@mozilla.com"
+                  ],
+                  "output": ""
+                }
+              ]
 
-
-  /{uid}/status:
+  /step/{uid}/status:
 
     get:
       operationId: "shipit_signoff.api.get_step_status"
-      description: Status of a step
+      description: "Status of a step"
       parameters:
         - $ref: "#/parameters/uid"
       responses:
-        200:
-          description: Status of a step
+        "200":
+          description: "Status of a step"
           schema:
             $ref: '#/definitions/StepResult'
+          examples:
+            application/json: |-
+              {
+                "uid": "1003",
+                "state": "running",
+                "message": "Waiting for sign-offs",
+                "signees": [
+                  "example1@mozilla.com",
+                  "example2@mozilla.com"
+                ],
+                "created": 
+                "completed":
+              }
 
-  /{uid}:
+
+  /step/{uid}:
     put:
       operationId: "shipit_signoff.api.create_step"
       description: Create new step
       parameters:
-        - $ref: "#/parameters/uid"
+        - $ref: '#/parameters/uid'
+        - name: definition
+          in: body
+          description: "Step Definition"
+          required: true
+          schema:
+            $ref: '#/definitions/Step'
       responses:
-        200:
-          description: Returns nothing
+        "200":
+          description: "Returns nothing"
+        "409":
+          description: "A step with this uid already exists"
 
     delete:
       operationId: "shipit_signoff.api.delete_step"
-      description: Remove a step
+      description: "Remove a step"
       parameters:
         - $ref: '#/parameters/uid'
       responses:
-        200:
-          description: Removal of step
+        "200":
+          description: "Step successfully removed"
+        "403":
+          description: "Unable to delete a completed step"
+          
+    get:
+      operationId: "shipit_signoff.api.get_step"
+      description: "Step definition"
+      parameters:
+          - $ref: '#/parameters/uid'
+      responses:
+        "200":
+          description: "Definition of step"
+          schema:
+            $ref: '#/definitions/Step'
 
-  # Signoff specific
-  /{uid}/signoff:
+
+  # User is acquired from the access token
+  /step/{uid}/sign:
     put:
-      operationId: "shipit_signoff.api.signoff"
+      operationId: "shipit_signoff.api.sign_off"
       description: "Sign off"
       parameters:
         - $ref: '#/parameters/uid'
+        - name: group
+          in: body
+          description: "Claimed group membership"
+          required: true
+          schema:
+            $ref: '#/definitions/Group'
       responses:
-        200:
-          description: signed off
+        "200":
+          description: "Step successfully signed"
+        "403":
+          description: "User lacks permission to sign this step"
+        "404":
+          description: "Step not found"
+
+    # A completed policy cannot be undone this way, only 
+    # removing an existing signature from an incomplete step.
+    delete:
+      operationId: "shipit_signoff.api.delete_signature"
+      description: "Remove a signature from a step"
+      parameters:
+        - $ref: '#/parameters/uid'
+      responses:
+        "200":
+          description: "Signature removed"
+        "403":
+          description: "User lacks permission to remove signature"
+        "409":
+          description: "User has not signed this step"
+
+
 
 definitions:
 
@@ -85,45 +204,78 @@ definitions:
       state:
         type: string
         enum:
-          - starting # / pending
-          - running
-          - stopping
-          - exception
-          - completed #/ success
-          - failed
-      message:
+        - "starting" # / pending
+        - "running"
+        - "stopping"
+        - "exception"
+        - "completed" #/ success
+        - "failed"
+      uid:
         type: string
+        description: Unique step identifier
+      message:
+        type: "string"
         description: More elaborate description of state for humans.
-      output:
-        $ref: '#/definitions/Ouput'
+      signees:
+        type: "array"
+        description: A list of the users who have signed off this step
+        items:
+          type: "string"
+      created:
+        type: "string"
+      completed:
+        type: "string"
+        
 
   Step:
-    type: object
+    type: "object"
     required:
-      - uid
-      - input
-      - parameters
+    # - "uid"
+    - "policy"
+    - "parameters"
     properties:
       uid:
         type: string
-      input:
-        $ref: '#/definitions/Input'
+      policy:
+        $ref: '#/definitions/Policy'
       parameters:
         $ref: '#/definitions/Parameters'
 
   Parameters:
-    type: object
+    type: "object"
 
-  Input:
-    type: object
+  Policy:
+    type: "object"
+    required:
+      - "method"
+      - "definition"
+    properties:
+      method:
+        type: "string"
+      definition:
+        type: object
 
-  Ouput:
-    type: object
+  Output:
+    type: "object"
+
+  Group:
+    type: "object"
+    properties:
+      group:
+        type: "string"
+
 
 parameters:
-    uid:
-        name: uid
-        in: path
-        description: Step UID
-        required: true
-        type: string
+  uid:
+    name: "uid"
+    in: "path"
+    description: "Step UID"
+    required: true
+    type: "string"
+  state:
+    name: "state"
+    in: "query"
+    description: "Filter by signoff step state"
+    required: false
+    type: "string"
+  
