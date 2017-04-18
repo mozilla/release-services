@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 import requests
 import subprocess
 import hglib
@@ -69,6 +70,9 @@ def generate_info(revision, coveralls_token):
       '-t', 'coveralls',
       '-s', REPO_DIR,
       '-p', '/home/worker/workspace/build/src/',
+      '--service-name', 'TaskCluster',
+      '--service-number', datetime.today().strftime('%Y%m%d'),
+      '--service-job-number', '1',
       '--commit-sha', get_github_commit(revision),
       '--token', coveralls_token,
     ]
