@@ -70,6 +70,7 @@ def generate_info(revision, coveralls_token):
       '-t', 'coveralls',
       '-s', REPO_DIR,
       '-p', '/home/worker/workspace/build/src/',
+      '--ignore-dir', 'gcc',
       '--service-name', 'TaskCluster',
       '--service-number', datetime.today().strftime('%Y%m%d'),
       '--service-job-number', '1',
