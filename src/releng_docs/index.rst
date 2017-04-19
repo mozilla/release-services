@@ -79,4 +79,6 @@ Contents
     deploying
     services_releng
     services_shipit
+    continuous-integration
+    deploying
     defending
