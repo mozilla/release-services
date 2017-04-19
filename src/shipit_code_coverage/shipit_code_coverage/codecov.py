@@ -145,6 +145,7 @@ def go(secrets, client_id=None, client_token=None):
 
     task_data = taskcluster.get_task_details(task_id)
     revision = task_data['payload']['env']['GECKO_HEAD_REV']
+    logger.info('Revision %s' % revision)
 
     download_coverage_artifacts(task_id)
 
