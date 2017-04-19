@@ -116,10 +116,16 @@ Initially we will integrate the legacy ship-it/release-runner infrastructure wit
 7. The pipeline service sees that S is finished, and creates step P via the Taskcluster service.
 
 
-Steps
------
+Step Services
+-------------
 
-Step Services API
+.. toctree::
+    :maxdepth: 1
+
+    shipit_signoffs/shipit-signoffs
+
+
+API
 ~~~~~~~~~~~~~~~~~
 
 In order to ensure the Pipeline service can successfully managed Steps, each Step Service is required to implement the following API:
@@ -146,15 +152,3 @@ In order to ensure the Pipeline service can successfully managed Steps, each Ste
   - Probably need to add support for including custom service-specific status info.
 
 Step Services are free to add additional endpoints past the required ones.
-
-
-``src/shipit_signoff``
-~~~~~~~~~~~~~~~~~~~~~~
-
-TODO
-
-
-``src/shipit_taskcluster``
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-TODO
