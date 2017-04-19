@@ -237,7 +237,6 @@ let
       self."Logbook"
       self."aioamqp"
       self."click"
-      self."python-hglib"
       self."structlog"
       self."taskcluster"
     ];
@@ -355,21 +354,6 @@ let
         homepage = "";
         license = licenses.mit;
         description = "pytest: simple powerful testing with Python";
-      };
-    };
-
-
-
-    "python-hglib" = python.mkDerivation {
-      name = "python-hglib-2.4";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3a/6c/52c4ba6050b80e266d87783ccd4d39b76a0d2459965abf1c7bde54dd9a72/python-hglib-2.4.tar.gz"; sha256 = "693d6ed92a6566e78802c7a03c256cda33d08c63ad3f00fcfa11379b184b9462"; };
-      doCheck = commonDoCheck;
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "";
-        license = licenses.mit;
-        description = "Mercurial Python library";
       };
     };
 
