@@ -50,13 +50,44 @@ class TaskclusterClient(object):
 
         return tc_options
 
+    def get_secrets_service(self):
+        """
+        Configured Secrets Service
+        """
+        return taskcluster.Secrets(
+            self.build_options('secrets/v1')
+        )
+
+    def get_hooks_service(self):
+        """
+        Configured Hooks Service
+        """
+        return taskcluster.Hooks(
+            self.build_options('hooks/v1')
+        )
+
+    def get_queue_service(self):
+        """
+        Configured Queue Service
+        """
+        return taskcluster.Queue(
+            self.build_options('queue/v1')
+        )
+
+    def get_notify_service(self):
+        """
+        Configured Queue Service
+        """
+        return taskcluster.Notify(
+            self.build_options('notify/v1')
+        )
+
     def get_secrets(self, path, required=[]):
         """
         Get secrets from a specific path
         and check mandatory ones
         """
-        options = self.build_options('secrets/v1')
-        secrets = taskcluster.Secrets(options).get(path)
+        secrets = self.get_secrets_service().get(path)
         secrets = secrets['secret']
         for req in required:
             if req not in secrets:
@@ -68,9 +99,7 @@ class TaskclusterClient(object):
         """
         Send an email through Taskcluster notification service
         """
-        options = self.build_options('notify/v1')
-        notify = taskcluster.Notify(options)
-        return notify.email({
+        return self.get_notify_service().email({
             'address': address,
             'subject': subject,
             'content': content,
