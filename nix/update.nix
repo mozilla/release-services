@@ -28,6 +28,7 @@ in pkgs.stdenv.mkDerivation {
   '';
   shellHook = ''
     export HOME=$PWD
+    export NIX_PATH=nixpkgs=${pkgs.path}
     echo "Updating packages ..."
     ${builtins.concatStringsSep "\n\n" (
         map (pkg: "echo ' - ${(builtins.parseDrvName pkg.name).name}'; ${if pkg.update == null then "" else pkg.update}") packages)}
