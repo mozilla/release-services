@@ -102,9 +102,9 @@ This protocal is followed by the :ref:`services manager <services-managers>`.
    
         $ git clone git@github.com/mozilla-releng/services.git
         $ cd services
-        $ rm -f VERSION
-        $ echo "$(((`cat VERSION`) + 1))" > VERSION
-        $ git commit VERSION -m "setup: bumping to `cat ./VERSION`"
+        $ echo "$(((`cat VERSION`) + 1))" > VERSION2
+        $ mv VERSION2 VERSION
+        $ git commit VERSION -m "setup: bumping to v`cat ./VERSION`"
         $ git push origin master
 
 
