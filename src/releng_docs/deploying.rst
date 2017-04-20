@@ -42,40 +42,51 @@ This protocal is followed by the :ref:`services manager <services-managers>`.
    This email should announce and remind everybody that release is going to
    happen to avoid surprises.
    
-   Template for email::
+   Email subject::
 
-       SUBJECT:
+       mozilla-releng/services release v<VERSION> is going to happen on
+       <RELEASE_DATETIME_WITH_TIMEZONE>
 
-           mozilla-releng/services release v<VERSION> is going to
-           happen on <RELEASE_DATETIME>
+   Email body::
 
-       BODY:
+       Hi,
 
-           Hi,
+       Next planned mozilla-releng/services relase is going to happen tomorrow.
+       
+       <RELEASE_DATETIME>
+         Release date and time in multiple timezones.
+         Example:
+           2017-04-27 11:00 UTC
+           2017-04-27 04:00 PDT  (UTC-7)
+           2017-04-27 07:00 EDT  (UTC-4)
+           2017-04-27 13:00 CEST (UTC+2)
+       </RELEASE_DATETIME>
 
-           Next planned mozilla-releng/services relase is going to
-           happen tomorrow. We encurage everybody that contributed
-           to this release to join "#shipit" channel where release
-           is going to be coordinated. 
+       We encurage everybody that contributed to this release to join "#shipit" channel where release is going to be coordinated. 
 
-               YYYY-MM-DD MM:HH CET
-               YYYY-MM-DD MM:HH PST
+       Please follow the link bellow for more details.
 
-           Please follow the link bellow for more details.
+           <LINK-TO-RELEASE-PR>
 
-               <LINK-TO-RELEASE-PR>
+       For any question please contact
 
-           For any question please contact
+           <CURRENT-RELEASE-MANAGER>
 
-               <CURRENT-RELEASE-MANAGER>
+       Thank you!
 
-          
+
+#. Before starting a release inform MOC person on duty (in ``#moc`` channel)
+   that new deployment of ``mozilla-releng/services`` is going to be happen.
+   
+   If some monitoring alert goes off then kindly ask to ping you directly - the
+   services manager.
+
 #. Release starts by :ref:`services manager <services-managers>` logging all the
    steps into ``#shipit`` channel and coordinating with others.
 
-#. Push to ``staging`` branch and do (if needed) some manual checks.
+#. Push to ``staging`` branch and do - if needed - some manual checks.
 
-   .. code-block:: shell
+   .. code-block:: console
 
         $ git clone git@github.com/mozilla-releng/services.git
         $ cd services
@@ -84,9 +95,9 @@ This protocal is followed by the :ref:`services manager <services-managers>`.
 
 #. Push to ``production`` branch and do (if needed) some manual checks.
    
-   Create a merge commig (Example of merge commit) of master branch and tag it
+   Create a merge commig (Example of merge commit) of master branch and tag it.
 
-   .. code-block:: shell
+   .. code-block:: console
 
         $ git clone git@github.com/mozilla-releng/services.git
         $ cd services
@@ -98,7 +109,7 @@ This protocal is followed by the :ref:`services manager <services-managers>`.
 
 #. Bump version in master
 
-   .. code-block:: shell
+   .. code-block:: console
    
         $ git clone git@github.com/mozilla-releng/services.git
         $ cd services
@@ -110,60 +121,66 @@ This protocal is followed by the :ref:`services manager <services-managers>`.
 
 #. `Open next release PR`_
 
+#. Notify MOC person on duty (in ``#moc`` channel) that release is done.
+
 #. Send email to `Release Engineering`_ and `Release Management`_ Team
    announcing that new release just happened.
 
-   Template for email::
+   Email subject::
 
-       SUBJECT:
+       mozilla-releng/services v<VERSION> was released
 
-           mozilla-releng/services v<VERSION> was released
+   Email body::
 
-       BODY:
+       Hi,
 
-           Hi,
+       If you are not interested in work being done in mozilla-releng/services[1] you can stop reading this email.
 
-           mozilla-releng/services[1] is a common platform to
-           develop, test and deploy different parts of our release
-           pipeline.
-           
-           ------
+       ------
 
-           If you are not interested in work being done in
-           mozilla-releng/services you can stop reading this
-           email.
-
-           ------
-
-           Purpose of this email is to inform every team what
-           was release and to be abore in case of any breakage.
+       mozilla-releng/services[1] is a common platform to develop, test and deploy different parts of our release pipeline. The purpose of this email is to inform every team contributing to mozilla-releng/services what was released to avoid unexpected situations.
 
 
-           # Release notes for v<VERSION>
+       ### Notable changes in v<VERSION>
 
-           <CONTENT-OF-RELEASE-PR>
-
-           <LINK-TO-RELEASE-PR>
-
-
-           # Next release
-
-           Next release is going to be on
-           
-               YYYY-MM-DD MM:HH CET
-               YYYY-MM-DD MM:HH PST
-
-           and is going to be managed by
-           
-               <NEXT-RELEASE-MANAGER>
-           
-           You can follow the progress in release PR
-
-               <LINK-TO-NEXT-RELEASE-PR>
+       <WRITE-HIGHLIGHTS-OF-THE-RELEASE>
+         Include links to
+           (1) release PR,
+           (2) release notes and
+           (3) irc logs
+         Also comment on a release, eg: what went good, what not so good
+         and what should we improve in future.
+         You might also pick few (eg. 2-3) good-first-bugs and ask for some
+         help.
+       </WRITE-HIGHLIGHTS-OF-THE-RELEASE>
 
 
+       ### Next release
 
-           [1] https://github.com/mozilla-releng/services
+       Next release is going to be on
+       
+           <NEXT_RELEASE_DATETIME>
+           Release date and time in multiple timezones.
+           Example:
+           2017-04-27 11:00 UTC
+           2017-04-27 04:00 PDT  (UTC-7)
+           2017-04-27 07:00 EDT  (UTC-4)
+           2017-04-27 13:00 CEST (UTC+2)
+           </NEXT_RELEASE_DATETIME>
+
+       and is going to be managed by
+           <NEXT-RELEASE-MANAGER>
+             provide link to phonebook for contacting details
+           </NEXT-RELEASE-MANAGER>
+       
+       You can follow the progress for next release in a release PR:
+           <LINK-TO-NEXT-RELEASE-PR>
+
+
+       Thank you!
+
+
+       [1] https://github.com/mozilla-releng/services
 
 
 .. _`Example of release PR`: https://github.com/mozilla-releng/services/pull/237
