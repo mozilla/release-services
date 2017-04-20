@@ -95,14 +95,14 @@ class PulseListener(object):
         # Ack the message so it is removed from the broker's queue
         await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
 
-    def run_task(self, task_payload, ttl=5, extra_env={}):
+    def run_task(self, task_definition, ttl=5, extra_env={}):
         """
         Create a new task on Taskcluster
         """
-        assert isinstance(task_payload, dict)
+        assert isinstance(task_definition, dict)
 
         # Update the env in task
-        task_payload['payload']['env'].update(extra_env)
+        task_definition['payload']['env'].update(extra_env)
 
         # Get taskcluster queue
         queue = self.taskcluster.get_queue_service()
@@ -112,9 +112,9 @@ class PulseListener(object):
 
         # Set dates
         now = datetime.utcnow()
-        task_payload['created'] = now
-        task_payload['deadline'] = now + timedelta(seconds=ttl * 3600)
-        logger.info('Creating a new task', id=task_id, name=task_payload['metadata']['name'])  # noqa
+        task_definition['created'] = now
+        task_definition['deadline'] = now + timedelta(seconds=ttl * 3600)
+        logger.info('Creating a new task', id=task_id, name=task_definition['metadata']['name'])  # noqa
 
         # Create a new task
-        return queue.createTask(task_id, task_payload)
+        return queue.createTask(task_id, task_definition)
