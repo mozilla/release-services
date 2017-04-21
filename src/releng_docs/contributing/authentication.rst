@@ -28,7 +28,9 @@ Each client (a user device) must provide a unique Authorization header **per req
 Workflow
 ~~~~~~~~
 
-.. image:: img/hawk.svg
+.. todo:: convert this graph to graphviz
+
+.. image:: ../img/hawk.svg
 
 A typical authenticated request follows these steps:
 

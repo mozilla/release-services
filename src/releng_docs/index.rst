@@ -15,6 +15,7 @@ Useful links
 :Issues: https://github.com/mozilla-releng/services/issues
 :Documentation: https://docs.mozilla-releng.net
 
+.. todo:: include video for quickstart
 
 Repository structure
 --------------------
@@ -72,16 +73,10 @@ Contents
 --------
 
 .. toctree::
-    :maxdepth: 4
-    :includehidden:
+    :maxdepth: 3
 
-    prerequirements
-    developing
-    continuous-integration
+    contributing/index
     deploying
-    contributing
-    authentication
     services_releng
     services_shipit
     defending
-    database_migrations
