@@ -21,7 +21,7 @@ class TaskclusterClient(object):
         Build Taskcluster credentials options
         """
 
-        if self.client_id and self.access_token:
+        if self.client_id is not None and self.access_token is not None:
             # Use provided credentials
             tc_options = {
                 'credentials': {
@@ -122,11 +122,7 @@ class TaskclusterClient(object):
             raise Exception('No completed run found')
 
         # Load artifact from task run
-        artifact = queue.getArtifact(task_id, run_id, artifact_name)
-        response = artifact.get('response')
-        if response is None or not response.ok:
-            raise Exception('No artifact found for task {} run {}'.format(task_id, run_id))  # noqa
-        return response.content
+        return queue.getArtifact(task_id, run_id, artifact_name)
 
     def notify_email(self, address, subject, content, template='simple'):
         """
