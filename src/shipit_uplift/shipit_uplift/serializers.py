@@ -161,7 +161,7 @@ def serialize_analysis(analysis, bugs_nb, full=True):
         'name': analysis.name,
         'version': analysis.version,
         'count': bugs_nb,
-        'parameters': analysis.parameters,
+        'parameters': analysis.build_parameters(),
     }
 
     if full:
