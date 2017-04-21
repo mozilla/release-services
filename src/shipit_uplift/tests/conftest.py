@@ -54,9 +54,8 @@ def bugs(app):
 
     # Add 2 analysis
     analysis = []
-    for i in ('A', 'B'):
-        a = BugAnalysis(name='Analysis Test {}'.format(i))
-        a.parameters = 'bugzilla=test'  # dummy params.
+    for i in ('Dev', 'Release'):
+        a = BugAnalysis(name=i)
         a.version = 1  # dummy version
         db.session.add(a)
         analysis.append(a)

@@ -23,8 +23,8 @@ def test_list_analysis_valid(client, bugs, header_user):
     assert len(data) == 2
     analysis = data[0]
     assert analysis['id'] == 1
-    assert analysis['name'] == 'Analysis Test A'
-    assert analysis['parameters'] == 'bugzilla=test'
+    assert analysis['name'] == 'Dev'
+    assert analysis['parameters'] == 'j1=OR&o5=substring&f12=CP&o3=substring&f0=OP&v3=approval-mozilla-dev%3F&j9=OR&o2=substring&f10=requestees.login_name&f11=CP&f4=flagtypes.name&f2=flagtypes.name&f9=OP&f3=flagtypes.name&query_format=advanced&f7=CP&f1=OP&f8=OP&columnlist=product%2Ccomponent%2Clast_visit_ts%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc%2Cchangeddate&f6=CP&known_name=approval-mozilla-dev&query_based_on=approval-mozilla-dev&o4=substring&f5=flagtypes.name&o10=substring'  # noqa
     assert analysis['bugs'] == []
 
 
@@ -39,8 +39,8 @@ def test_fetch_analysis(client, bugs, header_user):
     analysis = json.loads(resp.data.decode('utf-8'))
     assert analysis['id'] == 1
     assert analysis['version'] == 1
-    assert analysis['name'] == 'Analysis Test A'
-    assert analysis['parameters'] == 'bugzilla=test'
+    assert analysis['name'] == 'Dev'
+    assert analysis['parameters'] == 'j1=OR&o5=substring&f12=CP&o3=substring&f0=OP&v3=approval-mozilla-dev%3F&j9=OR&o2=substring&f10=requestees.login_name&f11=CP&f4=flagtypes.name&f2=flagtypes.name&f9=OP&f3=flagtypes.name&query_format=advanced&f7=CP&f1=OP&f8=OP&columnlist=product%2Ccomponent%2Clast_visit_ts%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc%2Cchangeddate&f6=CP&known_name=approval-mozilla-dev&query_based_on=approval-mozilla-dev&o4=substring&f5=flagtypes.name&o10=substring'  # noqa
     assert len(analysis['bugs']) == 3
 
     bugs = {b['bugzilla_id']: b for b in analysis['bugs']}
@@ -98,7 +98,7 @@ def test_update_analysis(client, bugs, header_bot, header_user):
     analysis = json.loads(resp.data.decode('utf-8'))
     assert analysis['id'] == 1
     assert analysis['version'] == 1
-    assert analysis['name'] == 'Analysis Test A'
+    assert analysis['name'] == 'Dev'
 
     # Update to version 2
     data = {
@@ -121,7 +121,7 @@ def test_update_analysis(client, bugs, header_bot, header_user):
     analysis = json.loads(resp.data.decode('utf-8'))
     assert analysis['id'] == 1
     assert analysis['version'] == 2
-    assert analysis['name'] == 'Analysis Test A'
+    assert analysis['name'] == 'Dev'
 
     # Check analysis has version 2 now
     # Accessible by user on GET
@@ -132,7 +132,7 @@ def test_update_analysis(client, bugs, header_bot, header_user):
     analysis = json.loads(resp.data.decode('utf-8'))
     assert analysis['id'] == 1
     assert analysis['version'] == 2
-    assert analysis['name'] == 'Analysis Test A'
+    assert analysis['name'] == 'Dev'
 
 
 def test_create_bug(client, bugs, header_bot):

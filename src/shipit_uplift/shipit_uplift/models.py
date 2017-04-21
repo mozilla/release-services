@@ -7,6 +7,7 @@ from __future__ import absolute_import
 import datetime
 import pickle
 import enum
+import urllib.parse
 import sqlalchemy as sa
 
 from backend_common.db import db
@@ -32,7 +33,6 @@ class BugAnalysis(db.Model):
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String(80), nullable=False)
     version = sa.Column(sa.Integer, nullable=False)
-    parameters = sa.Column(sa.Text())
     created = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
 
     bugs = db.relationship('BugResult', secondary=bugs, backref=db.backref('analysis', lazy='dynamic'), order_by='BugResult.bugzilla_id')  # noqa
@@ -57,6 +57,56 @@ class BugAnalysis(db.Model):
              ) \
             .join(bugs, isouter=True) \
             .group_by(BugAnalysis)
+
+    def build_parameters(self):
+        """
+        Build parameters for uplift bug search
+        """
+        name = self.name.lower()
+        name += name == 'esr' and str(self.version) or ''
+
+        approval = 'approval-mozilla-{}'.format(name)
+        columns = (
+            'product',
+            'component',
+            'last_visit_ts',
+            'assigned_to',
+            'bug_status',
+            'resolution',
+            'short_desc',
+            'changeddate',
+        )
+        parameters = {
+            # Common parameters
+            'columnlist': ','.join(columns),
+            'f0': 'OP',
+            'f1': 'OP',
+            'f10': 'requestees.login_name',
+            'f11': 'CP',
+            'f12': 'CP',
+            'f2': 'flagtypes.name',
+            'f3': 'flagtypes.name',
+            'f4': 'flagtypes.name',
+            'f5': 'flagtypes.name',
+            'f6': 'CP',
+            'f7': 'CP',
+            'f8': 'OP',
+            'f9': 'OP',
+            'j1': 'OR',
+            'j9': 'OR',
+            'o10': 'substring',
+            'o2': 'substring',
+            'o3': 'substring',
+            'o4': 'substring',
+            'o5': 'substring',
+            'query_format': 'advanced',
+
+            # Version specific parameters
+            'known_name': approval,
+            'query_based_on': approval,
+            'v3': approval + '?',
+        }
+        return urllib.parse.urlencode(parameters)
 
 
 class BugResult(db.Model):
