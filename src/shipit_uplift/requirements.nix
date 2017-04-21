@@ -562,13 +562,14 @@ let
 
 
     "ipython" = python.mkDerivation {
-      name = "ipython-5.3.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/a4/70/d07a28ea595953acacc128a6efe25696be20b2e1d3e3c81ef4b55410b488/ipython-5.3.0.tar.gz"; sha256 = "bf5e615e7d96dac5a61fbf98d9e2926d98aa55582681bea7e9382992a3f43c1d"; };
+      name = "ipython-6.0.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/75/03/bb1ce0cf9f8a86f52b34090708e1806bc11e2d29b193e7d6fe0afe9a61e5/ipython-6.0.0.tar.gz"; sha256 = "f429b82b8d9807068da734b15965768bd21b15d0b706340b6d1b4d6f6f5b98a4"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."Pygments"
       self."decorator"
+      self."jedi"
       self."pexpect"
       self."pickleshare"
       self."prompt-toolkit"
@@ -610,6 +611,21 @@ let
         homepage = "";
         license = licenses.bsdOriginal;
         description = "Various helpers to pass trusted data to untrusted environments and back.";
+      };
+    };
+
+
+
+    "jedi" = python.mkDerivation {
+      name = "jedi-0.10.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/80/b9/4e9b0b999deeec8a91cb84e567380853a842e6c387c9d39b8fc9a49953fa/jedi-0.10.2.tar.gz"; sha256 = "7abb618cac6470ebbd142e59c23daec5e6e063bfcecc8a43a037d2ab57276f4e"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.mit;
+        description = "An autocompletion tool for Python that can be used for text editors.";
       };
     };
 
@@ -727,8 +743,8 @@ let
 
 
     "newrelic" = python.mkDerivation {
-      name = "newrelic-2.82.0.62";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/a1/2f/c7cd1e36b640565bd5e81abe7dfbedc4287ffc343302332d2ec21cab452f/newrelic-2.82.0.62.tar.gz"; sha256 = "482bdb36a9858d4d2aaeec4e211bd5b318310b270aa0211adc8e481e8ca235ec"; };
+      name = "newrelic-2.82.1.63";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/73/94/f18a1094e77828b5aecbf238f51a9bdcbe92a29e3b5070a770964334f043/newrelic-2.82.1.63.tar.gz"; sha256 = "068a642f2dbfc8628ce8649b7b2d506f64dcb8120ba2146df06623e08c5a8443"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];

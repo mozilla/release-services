@@ -141,6 +141,28 @@ paths:
           schema:
             $ref: '#/definitions/Contributor'
 
+  /hook/artifact/{group}/{hook}/{artifact}:
+    get:
+      operationId: "shipit_uplift.api.load_hook_artifact"
+      parameters:
+      - name: group
+        in: path
+        description: Hook group id
+        required: true
+        type: string
+      - name: hook
+        in: path
+        description: Hook id
+        required: true
+        type: string
+      - name: artifact
+        in: path
+        description: Artifact name to retrieve
+        required: true
+        type: string
+      responses:
+        200:
+          description: The artifact as is
 
 definitions:
 
