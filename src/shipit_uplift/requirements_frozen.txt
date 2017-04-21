@@ -19,9 +19,10 @@ flask-talisman==0.3.2
 gunicorn==19.7.1
 inflection==0.3.1
 ipdb==0.10.2
-ipython==5.3.0
+ipython==6.0.0
 ipython-genutils==0.2.0
 itsdangerous==0.24
+jedi==0.10.2
 Jinja2==2.9.6
 jsonschema==2.6.0
 Logbook==1.0.0
@@ -32,7 +33,7 @@ mohawk==0.3.4
 mozilla-backend-common==1.0.0
 mozilla-cli-common==1.0.0
 multidict==2.1.4
-newrelic==2.82.0.62
+newrelic==2.82.1.63
 packaging==16.8
 pexpect==4.2.1
 pickleshare==0.7.4
