@@ -95,6 +95,39 @@ class TaskclusterClient(object):
 
         return secrets
 
+    def get_hook_artifact(self, hook_group_id, hook_id, artifact_name):
+        """
+        Load an artifact from the last execution of an hook
+        """
+
+        # Get last run from hook
+        hooks = self.get_hooks_service()
+        hook_status = hooks.getHookStatus(hook_group_id, hook_id)
+        last_fire = hook_status.get('lastFire')
+        if last_fire is None:
+            raise Exception('Hook did not fire')
+        task_id = last_fire['taskId']
+
+        # Get successful run for this task
+        queue = self.get_queue_service()
+        task_status = queue.status(task_id)
+        if task_status['status']['state'] != 'completed':
+            raise Exception('Task {} is not completed'.format(task_id))
+        run_id = None
+        for run in task_status['status']['runs']:
+            if run['state'] == 'completed':
+                run_id = run['runId']
+                break
+        if run_id is None:
+            raise Exception('No completed run found')
+
+        # Load artifact from task run
+        artifact = queue.getArtifact(task_id, run_id, artifact_name)
+        response = artifact.get('response')
+        if response is None or not response.ok:
+            raise Exception('No artifact found for task {} run {}'.format(task_id, run_id))  # noqa
+        return response.content
+
     def notify_email(self, address, subject, content, template='simple'):
         """
         Send an email through Taskcluster notification service
