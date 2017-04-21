@@ -79,6 +79,12 @@ let
         ];
         deadline = "5 hours";
         maxRunTime = 18000;
+        taskArtifacts = {
+          "coverage_by_dir.json" = {
+            type = "file";
+            path = "/coverage_by_dir.json";
+          };
+        };
       };
 
   self = mkPython {
