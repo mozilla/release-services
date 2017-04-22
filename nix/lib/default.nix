@@ -238,7 +238,7 @@ in rec {
 
       extractEggName =
         map
-          (line: 
+          (line:
             let
               split = splitString "egg=" line;
             in
@@ -261,11 +261,11 @@ in rec {
             (extractEggName
               (readLines file))));
 
-        
+
 
 
   makeElmStuff = deps:
-    let 
+    let
         inherit (releng_pkgs.pkgs) lib fetchurl;
         json = builtins.toJSON (lib.mapAttrs (name: info: info.version) deps);
         cmds = lib.mapAttrsToList (name: info: let
@@ -301,7 +301,7 @@ in rec {
     '' + lib.concatStrings cmds + ''
       HOME=$home_old
     '';
-       
+
   startsWith = s: x:
     builtins.substring 0 (builtins.stringLength x) s == x;
 
@@ -329,7 +329,7 @@ in rec {
                              (builtins.stringLength path)
                              path;
       in
-        builtins.filterSource (path: type: 
+        builtins.filterSource (path: type:
           if builtins.any (x: x) (builtins.map (startsWith (relativePath path)) _exclude) then false
           else if builtins.any (x: x) (builtins.map (startsWith (relativePath path)) _include) then true
           else false
@@ -492,6 +492,7 @@ in rec {
     , buildInputs ? []
     , propagatedBuildInputs ? []
     , doCheck ? true
+    , checkPhase ? null
     , postInstall ? ""
     , shellHook ? ""
     , dockerConfig ? {}
@@ -519,12 +520,25 @@ in rec {
           fi
         '' + postInstall;
 
+        checkPhase =
+          if checkPhase != null
+            then checkPhase
+            else ''
+              export LANG=en_US.UTF-8
+              export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
+              export APP_TESTING=${name}
+
+              flake8 --exclude=nix_run_setup.py,migrations/,build/
+              pytest tests/
+            '';
+
         shellHook = ''
           export CACHE_DEFAULT_TIMEOUT=3600
           export CACHE_TYPE=filesystem
           export CACHE_DIR=$PWD/cache
           export LANG=en_US.UTF-8
           export DEBUG=1
+          export APP_TESTING=${name}
           export FLASK_APP=${dirname}:app
         '' + shellHook;
 
@@ -554,6 +568,7 @@ in rec {
     , buildInputs ? []
     , propagatedBuildInputs ? []
     , doCheck ? true
+    , checkPhase ? null
     , postInstall ? ""
     , shellHook ? ""
     , dockerConfig ?
@@ -612,13 +627,16 @@ in rec {
 
         inherit doCheck;
 
-        checkPhase = ''
-          export LANG=en_US.UTF-8
-          export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
+        checkPhase =
+          if checkPhase != null
+            then checkPhase
+            else ''
+              export LANG=en_US.UTF-8
+              export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 
-          flake8 --exclude=nix_run_setup.py,migrations/,build/
-          pytest tests/
-        '';
+              flake8 --exclude=nix_run_setup.py,migrations/,build/
+              pytest tests/
+            '';
 
         postInstall = ''
           mkdir -p $out/bin
