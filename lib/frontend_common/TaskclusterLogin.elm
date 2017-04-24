@@ -41,7 +41,7 @@ type Msg
 
 init : Maybe Credentials -> ( Model, Cmd Msg )
 init credentials =
-    ( credentials, getTimeAndThen CheckCertificate )
+    ( credentials, Task.perform CheckCertificate Time.now )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -64,11 +64,6 @@ update msg model =
                 ( Nothing, taskclusterlogin_remove True )
             else
                 ( model, Cmd.none )
-
-
-getTimeAndThen : (Time -> Msg) -> Cmd Msg
-getTimeAndThen successHandler =
-    Task.perform successHandler Time.now
 
 
 decodeCertificate : String -> Result String Certificate

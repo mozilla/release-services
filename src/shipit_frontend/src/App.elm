@@ -111,8 +111,9 @@ update msg model =
                 ( user, userCmd ) =
                     User.update userMsg model.user
 
-                l =
-                    Debug.log "new user" user
+                -- Store in model
+                model_ =
+                    { model | user = user }
 
                 -- Load analysis on user login
                 commands =
@@ -120,13 +121,13 @@ update msg model =
                         [ [ Cmd.map UserMsg userCmd ]
                         , case userMsg of
                             User.Logged _ ->
-                                [ loadAllAnalysis model ]
+                                [ loadAllAnalysis model_ ]
 
                             _ ->
                                 []
                         ]
             in
-                ( { model | user = user }, Cmd.batch commands )
+                ( model_, Cmd.batch commands )
 
         HawkRequest hawkMsg ->
             let
@@ -535,6 +536,6 @@ subscriptions model =
     Sub.batch
         [ -- Extensions integration
           Sub.map BugzillaMsg (Bugzilla.bugzillalogin_get (Bugzilla.Logged))
-        , Sub.map UserMsg (User.taskclusterlogin_get (User.Logged))
+        , User.subscriptions UserMsg
         , Sub.map HawkRequest (Hawk.hawk_send_request (Hawk.SendRequest))
         ]
