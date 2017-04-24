@@ -1,0 +1,17 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "ShipIt Taskcluster service"
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+
+  /example:
+    get:
+      operationId: "shipit_taskcluster.api.example"
+      responses:
+        200:
+          description: Example
