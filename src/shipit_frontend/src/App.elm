@@ -2,7 +2,6 @@ port module App exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Http
 import String
 import RouteUrl exposing (UrlChange)
 import RouteUrl.Builder as Builder exposing (Builder, builder, replacePath)
@@ -14,12 +13,14 @@ import Hawk
 import Utils
 import App.Utils exposing (eventLink)
 import App.Home as Home
+import App.CodeCoverage as CodeCoverage
 import App.ReleaseDashboard as ReleaseDashboard
 
 
 type Page
     = Home
     | ReleaseDashboard
+    | CodeCoverage
     | Bugzilla
 
 
@@ -31,8 +32,11 @@ type
     | HomeMsg Home.Msg
     | HawkRequest Hawk.Msg
       -- App code
+    | ShowCodeCoverage (Maybe String)
+    | ShowReleaseDashboard Int
     | ShowPage Page
     | ReleaseDashboardMsg ReleaseDashboard.Msg
+    | CodeCoverageMsg CodeCoverage.Msg
 
 
 type alias Role =
@@ -49,6 +53,7 @@ type alias Model =
         -- App code
     , current_page : Page
     , release_dashboard : ReleaseDashboard.Model
+    , code_coverage : CodeCoverage.Model
     }
 
 
@@ -71,14 +76,18 @@ init flags =
             User.init flags.taskcluster
 
         -- App init
-        ( dashboard, newCmd ) =
+        ( dashboard, dashboardCmd ) =
             ReleaseDashboard.init flags.backend_uplift_url
+
+        ( code_coverage, ccCmd ) =
+            CodeCoverage.init flags.backend_uplift_url
 
         model =
             { bugzilla = bz
             , user = user
             , current_page = Home
             , release_dashboard = dashboard
+            , code_coverage = code_coverage
             }
     in
         ( model
@@ -87,6 +96,7 @@ init flags =
             [ -- Extensions integration
               Cmd.map BugzillaMsg bzCmd
             , Cmd.map UserMsg userCmd
+            , Cmd.map CodeCoverageMsg ccCmd
             , loadAllAnalysis model
             ]
         )
@@ -149,6 +159,25 @@ update msg model =
                 )
 
         -- Routing
+        ShowCodeCoverage path ->
+            let
+                ( cc, ccCmd ) =
+                    CodeCoverage.setDirectory model.code_coverage path
+            in
+                ( { model | code_coverage = cc, current_page = CodeCoverage }
+                , Cmd.map CodeCoverageMsg ccCmd
+                )
+
+        ShowReleaseDashboard analysisId ->
+            -- Fetch analysis and set page
+            let
+                rdCmd =
+                    ReleaseDashboard.fetchAnalysis model.release_dashboard model.user analysisId
+            in
+                ( { model | current_page = ReleaseDashboard }
+                , Cmd.map ReleaseDashboardMsg rdCmd
+                )
+
         ShowPage page ->
             ( { model | current_page = page }, Cmd.none )
 
@@ -162,8 +191,17 @@ update msg model =
                 ( dashboard, cmd ) =
                     ReleaseDashboard.update dashMsg model.release_dashboard model.user model.bugzilla
             in
-                ( { model | release_dashboard = dashboard, current_page = ReleaseDashboard }
+                ( { model | release_dashboard = dashboard }
                 , Cmd.map ReleaseDashboardMsg cmd
+                )
+
+        CodeCoverageMsg ccMsg ->
+            let
+                ( code_coverage, cmd ) =
+                    CodeCoverage.update ccMsg model.code_coverage model.user
+            in
+                ( { model | code_coverage = code_coverage }
+                , Cmd.map CodeCoverageMsg cmd
                 )
 
 
@@ -188,21 +226,7 @@ view model =
     div []
         [ nav [ class "navbar navbar-toggleable-md navbar-inverse bg-inverse" ]
             (viewNavBar model)
-        , div [ id "content" ]
-            [ case model.user of
-                Just user ->
-                    div [ class "container-fluid" ]
-                        [ viewDashboardStatus model.release_dashboard
-                        , viewPage model
-                        ]
-
-                Nothing ->
-                    div [ class "container" ]
-                        [ div [ class "alert alert-warning" ]
-                            [ text "Please login first."
-                            ]
-                        ]
-            ]
+        , div [ id "content" ] [ viewPage model ]
         , viewFooter
         ]
 
@@ -216,8 +240,11 @@ viewPage model =
         Bugzilla ->
             Html.map BugzillaMsg (Bugzilla.view model.bugzilla)
 
+        CodeCoverage ->
+            Html.map CodeCoverageMsg (CodeCoverage.view model.code_coverage)
+
         ReleaseDashboard ->
-            Html.map ReleaseDashboardMsg (ReleaseDashboard.view model.release_dashboard model.bugzilla)
+            Html.map ReleaseDashboardMsg (ReleaseDashboard.view model.release_dashboard model.user model.bugzilla)
 
 
 viewNavBar : Model -> List (Html Msg)
@@ -234,7 +261,13 @@ viewNavBar model =
         [ class "navbar-brand" ]
         [ text "Uplift Dashboard" ]
     , div [ class "collapse navbar-collapse" ]
-        [ ul [ class "navbar-nav mr-auto " ] (viewNavDashboard model)
+        [ ul [ class "navbar-nav mr-auto " ]
+            (viewNavDashboard model
+                ++ [ li [ class "nav-item" ]
+                        [ eventLink (ShowCodeCoverage Nothing) [ class "nav-link" ] [ text "Code Coverage" ]
+                        ]
+                   ]
+            )
         , ul [ class "navbar-nav" ] (viewUser model)
         ]
     ]
@@ -320,51 +353,10 @@ viewNavDashboard model =
             (List.map viewNavAnalysis allAnalysis)
 
 
-viewDashboardStatus : ReleaseDashboard.Model -> Html Msg
-viewDashboardStatus dashboard =
-    -- Display explicit error messages
-    case dashboard.all_analysis of
-        Failure err ->
-            div [ class "alert alert-danger" ]
-                [ h4 [] [ text "Error while loading analysis" ]
-                , case err of
-                    Http.Timeout ->
-                        span [] [ text "A timeout occured during the request." ]
-
-                    Http.NetworkError ->
-                        span [] [ text "A network error occuring during the request, check your internet connectivity." ]
-
-                    Http.BadPayload data response ->
-                        let
-                            l =
-                                Debug.log "Unexpected payload: " data
-                        in
-                            span [] [ text "An unexpected payload was received, check your browser logs" ]
-
-                    Http.BadStatus response ->
-                        case response.status.code of
-                            401 ->
-                                p []
-                                    ([ p [] [ text "You are not authenticated: please login again." ]
-                                     ]
-                                        ++ viewLogin
-                                    )
-
-                            _ ->
-                                span [] [ text ("The backend produced an error " ++ (toString response)) ]
-
-                    Http.BadUrl url ->
-                        span [] [ text ("Invalid url : " ++ url) ]
-                ]
-
-        _ ->
-            div [] []
-
-
 viewNavAnalysis : ReleaseDashboard.Analysis -> Html Msg
 viewNavAnalysis analysis =
     li [ class "nav-item analysis" ]
-        [ analysisLink analysis.id
+        [ eventLink (ShowReleaseDashboard analysis.id)
             [ class "nav-link" ]
             [ span [ class "name" ] [ text (analysis.name ++ " " ++ (toString analysis.version)) ]
             , if analysis.count > 0 then
@@ -433,11 +425,6 @@ pageLink page attributes =
     eventLink (ShowPage page) attributes
 
 
-analysisLink : Int -> List (Attribute Msg) -> List (Html Msg) -> Html Msg
-analysisLink analysis attributes =
-    eventLink (ReleaseDashboardMsg (ReleaseDashboard.FetchAnalysis analysis)) attributes
-
-
 location2messages : Location -> List Msg
 location2messages location =
     let
@@ -464,6 +451,16 @@ location2messages location =
                     "bugzilla" ->
                         [ ShowPage Bugzilla
                         ]
+
+                    "code-coverage" ->
+                        let
+                            path =
+                                if List.length rest > 0 then
+                                    Just (String.join "/" rest)
+                                else
+                                    Nothing
+                        in
+                            [ ShowCodeCoverage path ]
 
                     "release-dashboard" ->
                         let
@@ -520,6 +517,20 @@ delta2url previous current =
                 Maybe.map
                     (Builder.prependToPath [ "bugzilla" ])
                     (Just builder)
+
+            CodeCoverage ->
+                let
+                    parts =
+                        case current.code_coverage.path of
+                            Just path ->
+                                String.split "/" path
+
+                            Nothing ->
+                                []
+                in
+                    Maybe.map
+                        (Builder.prependToPath ([ "code-coverage" ] ++ parts))
+                        (Just builder)
 
             _ ->
                 Maybe.map
