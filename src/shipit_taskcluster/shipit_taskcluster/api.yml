@@ -9,9 +9,118 @@ produces:
   - application/json
 paths:
 
-  /example:
+  /steps:
     get:
-      operationId: "shipit_taskcluster.api.example"
+      operationId: "shipit_taskcluster.api.list_taskcluster_steps"
+      description: List all Taskcluster steps with status
+      parameters:
+        - name: state
+          in: query
+          required: false
+          default: running
+          type: string
       responses:
         200:
-          description: Example
+          description: List of all steps
+
+  /steps/{uid}/status:
+    get:
+      operationId: "shipit_taskcluster.api.get_taskcluster_step_status"
+      description: Status of a Taskcluster step
+      parameters:
+        - $ref: "#/parameters/uid"
+      responses:
+        200:
+          description: Status of a Taskcluster step
+          schema:
+            $ref: '#/definitions/StepResult'
+
+  /steps/{uid}:
+    put:
+      operationId: "shipit_taskcluster.api.create_taskcluster_step"
+      description: Create new Taskcluster step
+      parameters:
+        - $ref: '#/parameters/uid'
+        - name: body
+          in: body
+          description: inputs to create Taskcluster step
+          required: true
+          schema:
+            $ref: '#/definitions/TaskclusterStep'
+      responses:
+        200:
+          description: Returns nothing
+          schema:
+            type: string
+        409:
+          description: A step with this uid or task_group_id already exists
+    get:
+      operationId: "shipit_taskcluster.api.get_taskcluster_step"
+      description: "Step definition"
+      parameters:
+          - $ref: '#/parameters/uid'
+      responses:
+        200:
+          description: "Definition of a TaskclusterStep"
+          schema:
+            $ref: '#/definitions/TaskclusterStep'
+    delete:
+      operationId: "shipit_taskcluster.api.delete_taskcluster_step"
+      description: Remove a Taskcluster step
+      parameters:
+        - $ref: '#/parameters/uid'
+      responses:
+        200:
+          description: Removed Taskcluster step
+
+definitions:
+
+  # TODO move this to a common place
+  StepResult:
+    type: object
+    required:
+      - state
+    properties:
+      state:
+        type: string
+        enum:
+          - pending
+          - running
+          - exception
+          - completed
+          - failed
+      message:
+        type: string
+        description: More elaborate description of state for humans.
+      created:
+        type: "string"
+      finished:
+        type: "string"
+
+  # TODO make this a generic step and move it to common place
+  TaskclusterStep:
+    type: object
+    description: A representation of Taskcluster group of Tasks
+    required:
+      - taskGroupId
+      - schedulerAPI
+    properties:
+      uid:
+        type: string
+      taskGroupId:
+        type: string
+        description: the group id that is shared between tasks
+      schedulerAPI:
+        type: boolean
+        default: false
+        description: |
+          if true, use taskcluster's old scheduler api. Note, the scheduler api has been deprecated
+          in favour of task.dependencies and should only be used for backwards support.
+
+parameters:
+  uid:
+    name: uid
+    in: path
+    description: Step UID
+    required: true
+    type: string
