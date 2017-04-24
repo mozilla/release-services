@@ -78,17 +78,19 @@ APP_DEV_ENV_shipit-frontend=\
 	WEBPACK_BUGZILLA_URL=https://bugzilla-dev.allizom.org \
 	$(APP_DEV)
 
+APP_STAGING_S3_releng-docs=releng-staging-docs
+APP_STAGING_S3_releng-frontend=releng-staging-frontend
 APP_STAGING_HEROKU_releng-clobberer=releng-staging-clobberer
 APP_STAGING_HEROKU_releng-tooltool=releng-staging-tooltool
 APP_STAGING_HEROKU_releng-treestatus=releng-staging-treestatus
 APP_STAGING_HEROKU_releng-mapper=releng-staging-mapper
 APP_STAGING_HEROKU_releng-archiver=releng-staging-archiver
 
-APP_STAGING_HEROKU_shipit-uplift=shipit-staging-dashboard
-
-APP_STAGING_S3_releng-docs=releng-staging-docs
-APP_STAGING_S3_releng-frontend=releng-staging-frontend
 APP_STAGING_S3_shipit-frontend=shipit-staging-frontend
+APP_STAGING_HEROKU_shipit-uplift=shipit-staging-dashboard
+APP_STAGING_HEROKU_shipit-pipeline=shipit-staging-pipeline
+APP_STAGING_HEROKU_shipit-signoff=shipit-staging-signoff
+
 APP_STAGING_CSP_releng-frontend=https://auth.taskcluster.net https://clobberer.staging.mozilla-releng.net https://tooltool.staging.mozilla-releng.net https://treestatus.staging.mozilla-releng.net https://mapper.staging.mozilla-releng.net https://archiver.staging.mozilla-releng.net
 APP_STAGING_ENV_releng-frontend=\
 	'version="v$(VERSION)"' \
@@ -104,16 +106,19 @@ APP_STAGING_ENV_shipit-frontend=\
 	'uplift-url="https:\/\/dashboard\.shipit\.staging\.mozilla-releng\.net\"' \
 	'bugzilla-url="https:\/\/bugzilla\.mozilla\.org"'
 
+APP_PRODUCTION_S3_releng-docs=releng-production-docs
+APP_PRODUCTION_S3_releng-frontend=releng-production-frontend
 APP_PRODUCTION_HEROKU_releng-clobberer=releng-production-clobberer
 APP_PRODUCTION_HEROKU_releng-tooltool=releng-production-tooltool
 APP_PRODUCTION_HEROKU_releng-treestatus=releng-production-treestatus
 APP_PRODUCTION_HEROKU_releng-mapper=releng-production-mapper
 APP_PRODUCTION_HEROKU_releng-archiver=releng-production-archiver
-APP_PRODUCTION_HEROKU_shipit-uplift=shipit-production-dashboard
 
-APP_PRODUCTION_S3_releng-docs=releng-production-docs
-APP_PRODUCTION_S3_releng-frontend=releng-production-frontend
 APP_PRODUCTION_S3_shipit-frontend=shipit-production-frontend
+APP_PRODUCTION_HEROKU_shipit-uplift=shipit-production-dashboard
+APP_PRODUCTION_HEROKU_shipit-pipeline=shipit-production-pipeline
+APP_PRODUCTION_HEROKU_shipit-signoff=shipit-production-signoff
+
 APP_PRODUCTION_CSP_releng-frontend=https://auth.taskcluster.net https://clobberer.mozilla-releng.net https://tooltool.mozilla-releng.net https://treestatus.mozilla-releng.net https://mapper.mozilla-releng.net https://archiver.mozilla-releng.net
 APP_PRODUCTION_ENV_releng-frontend=\
 	'version="v$(VERSION)"' \
@@ -284,13 +289,13 @@ deploy-staging-releng-archiver:        deploy-staging-HEROKU
 
 deploy-staging-shipit-frontend:        deploy-staging-S3
 deploy-staging-shipit-uplift:          deploy-staging-HEROKU
-deploy-staging-shipit-bot-uplift:   	 # There is no service running, just a hook
+deploy-staging-shipit-bot-uplift:      # There is no service running, just a hook
 deploy-staging-shipit-pulse-listener:  # There is no service running, just a hook
 deploy-staging-shipit-code-coverage:   # There is no service running, just a hook
 deploy-staging-shipit-static-analysis: # There is no service running, just a triggered task
 deploy-staging-shipit-risk-assessment: # There is no service running, just a triggered task
-deploy-staging-shipit-pipeline:        # deploy-staging-HEROKU
-deploy-staging-shipit-signoff:         # deploy-staging-HEROKU
+deploy-staging-shipit-pipeline:        deploy-staging-HEROKU
+deploy-staging-shipit-signoff:         deploy-staging-HEROKU
 
 
 
@@ -344,8 +349,8 @@ deploy-production-shipit-pulse-listener:  # There is no service running, just a 
 deploy-production-shipit-code-coverage:   # There is no service running, just a hook
 deploy-production-shipit-static-analysis: # There is no service running, just a triggered task
 deploy-production-shipit-risk-assessment: # There is no service running, just a triggered task
-deploy-production-shipit-pipeline:     # deploy-staging-HEROKU
-deploy-production-shipit-signoff:      # deploy-staging-HEROKU
+deploy-production-shipit-pipeline:     deploy-staging-HEROKU
+deploy-production-shipit-signoff:      deploy-staging-HEROKU
 
 
 
