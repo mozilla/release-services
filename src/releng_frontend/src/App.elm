@@ -9,7 +9,6 @@ import App.UserScopes
 import Hawk
 import Navigation
 import TaskclusterLogin
-import Time
 import UrlParser
 import UrlParser exposing ((</>), (<?>))
 
@@ -132,7 +131,6 @@ type alias Model =
 type Msg
     = UrlChange Navigation.Location
     | NavigateTo Route
-    | Tick Time.Time
     | TaskclusterLoginMsg TaskclusterLogin.Msg
     | HawkMsg Hawk.Msg
     | UserScopesMsg App.UserScopes.Msg
