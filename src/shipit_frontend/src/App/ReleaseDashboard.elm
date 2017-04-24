@@ -191,7 +191,7 @@ update msg model user bugzilla =
 
         -- Load all Analysis
         FetchAllAnalysis ->
-            ( { model | all_analysis = Loading }
+            ( { model | all_analysis = Loading, current_analysis = NotAsked }
             , fetchAllAnalysis model user
             )
 
@@ -747,20 +747,76 @@ subscriptions analysis =
 -- Views
 
 
-view : Model -> Bugzilla.Model -> Html Msg
-view model bugzilla =
-    case model.current_analysis of
-        NotAsked ->
-            div [ class "alert alert-info" ] [ text "Please select an analysis in the navbar above." ]
+view : Model -> User.Model -> Bugzilla.Model -> Html Msg
+view model user bugzilla =
+    case user of
+        Just user ->
+            div [ class "container-fluid" ]
+                [ viewStatus model bugzilla
+                ]
 
-        Loading ->
-            div [ class "alert alert-info" ] [ text "Loading your bugs..." ]
+        Nothing ->
+            div [ class "container" ]
+                [ div [ class "alert alert-warning" ]
+                    [ text "Please login first."
+                    ]
+                ]
 
+
+viewStatus : Model -> Bugzilla.Model -> Html Msg
+viewStatus model bugzilla =
+    -- Display explicit error messages
+    case model.all_analysis of
         Failure err ->
-            div [ class "alert alert-danger" ] [ text ("Error: " ++ toString err) ]
+            viewStatusError err
 
-        Success analysis ->
-            viewAnalysis model.contrib_editor bugzilla analysis
+        _ ->
+            case model.current_analysis of
+                NotAsked ->
+                    div [ class "alert alert-info" ] [ text "Please select an analysis in the navbar above." ]
+
+                Loading ->
+                    div [ class "alert alert-info" ] [ text "Loading your bugs..." ]
+
+                Failure err ->
+                    div [ class "alert alert-danger" ] [ text ("Error: " ++ toString err) ]
+
+                Success analysis ->
+                    viewAnalysis model.contrib_editor bugzilla analysis
+
+
+viewStatusError : Http.Error -> Html msg
+viewStatusError error =
+    div [ class "alert alert-danger" ]
+        [ h4 [] [ text "Error while loading analysis" ]
+        , case error of
+            Http.Timeout ->
+                span [] [ text "A timeout occured during the request." ]
+
+            Http.NetworkError ->
+                span [] [ text "A network error occuring during the request, check your internet connectivity." ]
+
+            Http.BadPayload data response ->
+                let
+                    l =
+                        Debug.log "Unexpected payload: " data
+                in
+                    span [] [ text "An unexpected payload was received, check your browser logs" ]
+
+            Http.BadStatus response ->
+                case response.status.code of
+                    401 ->
+                        p []
+                            ([ p [] [ text "You are not authenticated: please login again." ]
+                             ]
+                            )
+
+                    _ ->
+                        span [] [ text ("The backend produced an error " ++ (toString response)) ]
+
+            Http.BadUrl url ->
+                span [] [ text ("Invalid url : " ++ url) ]
+        ]
 
 
 viewAnalysis : ContribEditor.Model -> Bugzilla.Model -> Analysis -> Html Msg
