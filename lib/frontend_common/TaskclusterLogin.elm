@@ -4,6 +4,8 @@ import Dict exposing (Dict)
 import Json.Decode as JsonDecode
 import Maybe
 import Redirect
+import Task
+import Time exposing (Time)
 import String
 
 
@@ -34,11 +36,12 @@ type Msg
     | Logging Credentials
     | Logged Model
     | Logout
+    | CheckCertificate Time
 
 
 init : Maybe Credentials -> ( Model, Cmd Msg )
 init credentials =
-    ( credentials, Cmd.none )
+    ( credentials, getTimeAndThen CheckCertificate )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -56,6 +59,17 @@ update msg model =
         Logout ->
             ( model, taskclusterlogin_remove True )
 
+        CheckCertificate time ->
+            if isCertificateExpired time model then
+                ( Nothing, taskclusterlogin_remove True )
+            else
+                ( model, Cmd.none )
+
+
+getTimeAndThen : (Time -> Msg) -> Cmd Msg
+getTimeAndThen successHandler =
+    Task.perform successHandler Time.now
+
 
 decodeCertificate : String -> Result String Certificate
 decodeCertificate text =
@@ -72,6 +86,7 @@ decodeCertificate text =
         text
 
 
+isCertificateExpired : Float -> Model -> Bool
 isCertificateExpired time user_ =
     case user_ of
         Just user ->
@@ -160,7 +175,10 @@ shortUsername username =
 
 subscriptions : (Msg -> a) -> Sub a
 subscriptions outMsg =
-    taskclusterlogin_get Logged
+    Sub.batch
+        [ taskclusterlogin_get Logged
+        , Time.every (50 * Time.second) CheckCertificate
+        ]
         |> Sub.map outMsg
 
 
