@@ -13,7 +13,6 @@ import Html exposing (..)
 import Navigation
 import String
 import TaskclusterLogin
-import Time
 import Utils
 
 
@@ -150,12 +149,6 @@ update msg model =
         --
         -- LOGIN / LOGOUT
         --
-        App.Tick time ->
-            if TaskclusterLogin.isCertificateExpired time model.user then
-                update (App.TaskclusterLoginMsg TaskclusterLogin.Logout) model
-            else
-                ( model, Cmd.none )
-
         App.TaskclusterLoginMsg userMsg ->
             let
                 ( newUser, userCmd ) =
@@ -295,5 +288,4 @@ subscriptions model =
     Sub.batch
         [ TaskclusterLogin.subscriptions App.TaskclusterLoginMsg
         , Hawk.subscriptions App.HawkMsg
-        , Time.every (50 * Time.second) App.Tick
         ]
