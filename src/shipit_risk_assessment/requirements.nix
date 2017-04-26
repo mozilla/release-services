@@ -265,6 +265,24 @@ let
 
 
 
+    "mozilla-mocoda" = python.mkDerivation {
+      name = "mozilla-mocoda-0.1.0";
+      src = pkgs.fetchurl { url = "https://github.com/mozilla/mocoda/archive/fb04724fd484bfcc949216decc15e2c2467b2f30.tar.gz"; sha256 = "16mw7z80gahmk17f3bkgkn3mimncz52pv8qnj2sg4jchvxm2a5nf"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+        self."python-hglib"
+        self."whatthepatch"
+      ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = "MPL2";
+        description = "Risk assessment";
+      };
+    };
+
+
+
     "packaging" = python.mkDerivation {
       name = "packaging-16.8";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c6/70/bb32913de251017e266c5114d0a645f262fb10ebc9bf6de894966d124e35/packaging-16.8.tar.gz"; sha256 = "5d50835fdf0a7edf0b55e311b7c887786504efea1177abd7e69329a8e5ea619e"; };
@@ -454,6 +472,21 @@ let
         homepage = "";
         license = "";
         description = "Python client for Taskcluster";
+      };
+    };
+
+
+
+    "whatthepatch" = python.mkDerivation {
+      name = "whatthepatch-0.0.5";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/64/1e/7a63cba8a0d70245b9ab1c03694dabe36476fa65ee546e6dff6c8660434c/whatthepatch-0.0.5.tar.gz"; sha256 = "494a2ec6c05b80f9ed1bd773f5ac9411298e1af6f0385f179840b5d60d001aa6"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = licenses.mit;
+        description = "A patch parsing library.";
       };
     };
 
