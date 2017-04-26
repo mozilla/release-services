@@ -27,6 +27,7 @@ in gecko.overrideDerivation (old: {
     # Transform LDFLAGS in list of paths for LIBRARY_PATH
     ldflags=$(env | grep -e '^NIX_LDFLAGS=' | cut -c13-)
     echo "export LIBRARY_PATH=$(echo $ldflags | sed -E 's,-rpath ([/\.a-zA-Z0-9\-]+) ,,g' | sed -E 's, -L(\s*),:,g')" >> $geckoenv
+    echo  "export LD_LIBRARY_PATH=$LIBRARY_PATH" >> $geckoenv
 
     # Setup CC & Autoconf
     echo "export CC=${gcc}/bin/gcc" >> $geckoenv

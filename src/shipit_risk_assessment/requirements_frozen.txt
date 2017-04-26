@@ -1,4 +1,4 @@
-aioamqp==0.9.0
+aioamqp==0.10.0
 aiohttp==2.0.7
 appdirs==1.4.3
 async-timeout==1.2.0
@@ -9,6 +9,7 @@ Logbook==1.0.0
 mccabe==0.6.1
 mohawk==0.3.4
 mozilla-cli-common==1.0.0
+mozilla-mocoda==0.1.0
 multidict==2.1.4
 packaging==16.8
 py==1.4.33
@@ -20,6 +21,7 @@ python-hglib==2.4
 requests==2.13.0
 six==1.10.0
 slugid==1.0.7
-structlog==16.1.0
+structlog==17.1.0
 taskcluster==1.2.0
+whatthepatch==0.0.5
 yarl==0.10.0

@@ -1,12 +1,15 @@
 import click
+from shipit_risk_assessment.bot import Bot
 
 
 @click.command()
-@click.option('--secrets', required=True, help='Taskcluster Secrets path')
+@click.argument('work_dir')
+@click.argument('merge_revision')
 @click.option('--client-id', help='Taskcluster Client ID')
 @click.option('--client-token', help='Taskcluster Client token')
-def main(secrets, client_id, client_token):
-    pass
+def main(work_dir, merge_revision, client_id, client_token):
+    bot = Bot(client_id, client_token)
+    bot.run(work_dir, merge_revision)
 
 
 if __name__ == '__main__':
