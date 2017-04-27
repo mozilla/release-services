@@ -14,7 +14,7 @@ from alembic import op
 import sqlalchemy as sa
 import os
 import json
-from shipit_uplift import HERE
+from shipit_uplift.flask import HERE
 
 from sqlalchemy.schema import CreateTable
 from sqlalchemy.ext.compiler import compiles

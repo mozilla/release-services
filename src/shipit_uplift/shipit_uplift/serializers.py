@@ -5,7 +5,7 @@
 from shipit_uplift.models import (
     BugResult, BugContributor, BugAnalysis, Contributor, PatchStatus
 )
-from shipit_uplift import SCOPES_ADMIN
+from shipit_uplift.flask import SCOPES_ADMIN
 from flask_login import current_user
 from backend_common import log
 import html

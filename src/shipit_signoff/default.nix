@@ -1,5 +1,5 @@
 { releng_pkgs
-}: 
+}:
 
 let
 
@@ -22,8 +22,7 @@ let
       export APP_TESTING=${name}
 
       flake8 --exclude=nix_run_setup.py,migrations/,build/
-      #TODO: need to make tests work
-      #pytest tests/
+      pytest tests/
     '';
     buildInputs =
       fromRequirementsFile ./requirements-dev.txt python.packages;

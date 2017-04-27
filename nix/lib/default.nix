@@ -539,20 +539,20 @@ in rec {
           export LANG=en_US.UTF-8
           export DEBUG=1
           export APP_TESTING=${name}
-          export FLASK_APP=${dirname}:app
+          export FLASK_APP=${dirname}:flask.app
         '' + shellHook;
 
         dockerConfig = {
           Env = [
             "PATH=/bin"
             "APP_SETTINGS=${self}/etc/settings.py"
-            "FLASK_APP=${dirname}:app"
+            "FLASK_APP=${dirname}:flask.app"
             "LANG=en_US.UTF-8"
             "LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive"
             "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
           ];
           Cmd = [
-            "newrelic-admin" "run-program" "gunicorn" "${dirname}:app" "--log-file" "-"
+            "newrelic-admin" "run-program" "gunicorn" "${dirname}:flask.app" "--log-file" "-"
           ];
         };
 
