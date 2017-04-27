@@ -2,6 +2,7 @@ from backend_common.auth import AnonymousUser, TaskclusterUser
 from backend_common.mocks import build_header
 import pytest
 import json
+from flask import g
 
 
 def test_anonymous():
@@ -53,7 +54,7 @@ def test_auth(client):
     assert resp.status_code in (200, 302)
 
     # Test authenticated endpoint without header
-    resp = client.get('/test-login')
+    resp = client.get('/test-auth-login')
     assert resp.status_code == 401
 
     # Test authenticated endpoint with header
@@ -62,7 +63,7 @@ def test_auth(client):
     }
     client_id = 'test/user@mozilla.com'
     header = build_header(client_id, ext_data)
-    resp = client.get('/test-login', headers=[('Authorization', header)])
+    resp = client.get('/test-auth-login', headers=[('Authorization', header)])
     assert resp.status_code == 200
     data = json.loads(resp.data.decode('utf-8'))
     assert data['auth']
@@ -81,7 +82,7 @@ def test_scopes_invalid(client):
         'scopes': ['project/test/A', 'project/test/C', ],
     }
     header = build_header(client_id, ext_data)
-    resp = client.get('/test-scopes', headers=[('Authorization', header)])
+    resp = client.get('/test-auth-scopes', headers=[('Authorization', header)])
     assert resp.status_code == 401
 
 
@@ -90,13 +91,13 @@ def test_scopes_user(client):
     Test the Taskcluster required scopes
     """
     client_id = 'test/user@mozilla.com'
-
     # Validate with user scopes
     ext_data = {
         'scopes': ['project/test/A', 'project/test/B', ],
     }
     header = build_header(client_id, ext_data)
-    resp = client.get('/test-scopes', headers=[('Authorization', header)])
+    resp = client.get('/test-auth-scopes',
+                      headers=[('Authorization', header)])
     assert resp.status_code == 200
     assert resp.data == b'Your scopes are ok.'
 
@@ -112,6 +113,28 @@ def test_scopes_admin(client):
         'scopes': ['project/another/*', 'project/test-admin/*']
     }
     header = build_header(client_id, ext_data)
-    resp = client.get('/test-scopes', headers=[('Authorization', header)])
+    resp = client.get('/test-auth-scopes', headers=[('Authorization', header)])
     assert resp.status_code == 200
     assert resp.data == b'Your scopes are ok.'
+
+
+def test_auth0_access_token(client):
+    """
+    Test the validation of an access_token using the auth0 userinfo endpoint
+    """
+    resp = client.get('/test-auth0-userinfo',
+                      query_string={'access_token': 'abcdef123456'})
+    assert resp.status_code == 200
+    # side effect of the auth
+    assert 'userinfo' in g
+    assert g.get('userinfo').get('email') == 'lmoran@mozilla.com'
+
+
+def test_auth0_access_token_invalid(client):
+    """
+    Test the validation of an access_token using the auth0 userinfo endpoint
+    """
+    resp = client.get('/test-auth0-userinfo',
+                      query_string={'access_token': 'badtoken'})
+    assert resp.status_code == 401
+    assert resp.data == b'{"error": "invalid_token", "error_description": "Unauthorized"}'

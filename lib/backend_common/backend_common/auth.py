@@ -1,5 +1,5 @@
 from flask_login import LoginManager, current_user
-from flask import request, current_app
+from flask import request, current_app, jsonify
 from taskcluster.utils import scope_match
 from functools import wraps
 import structlog
@@ -148,6 +148,7 @@ class Auth(object):
         def wrapper(*args, **kwargs):
             if self._require_login():
                 return method(*args, **kwargs)
+            return 'Unauthorized', 401
         return wrapper
 
     def require_scopes(self, scopes):
@@ -169,10 +170,10 @@ class Auth(object):
                     return method(*args, **kwargs)
                 else:
                     # Abort with a 401 status code
-                    return {
+                    return jsonify({
                         'error_title': 'Unauthorized',
                         'error_message': 'Invalid user scopes',
-                    }, 401
+                    }), 401
             return wrapper
         return decorator
 
