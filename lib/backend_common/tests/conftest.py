@@ -6,23 +6,6 @@ from flask import jsonify
 from backend_common import create_app, auth, auth0, mocks
 from os.path import join, dirname
 
-FAKE_CLIENT_SECRETS = """
-{
-    "web": {
-        "auth_uri": "https://auth.mozilla.auth0.com/authorize",
-        "issuer": "https://auth.mozilla.auth0.com/",
-        "client_id": "some-id-string",
-        "client_secret": "my-super-secret",
-        "redirect_uris": [
-            "https://signoff.shipit.mozilla.com/oidc_callback"
-        ],
-        "token_uri": "https://auth.mozilla.auth0.com/oauth/token",
-        "token_introspection_uri": "https://test/oauth/token",
-        "userinfo_uri": "https://auth.mozilla.auth0.com/userinfo"
-    }
-}
-"""
-
 
 @pytest.fixture(scope='module')
 def app():
