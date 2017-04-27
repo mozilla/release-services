@@ -528,7 +528,7 @@ in rec {
               export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
               export APP_TESTING=${name}
 
-              flake8 --exclude=nix_run_setup.py,migrations/,build/
+              flake8 --exclude=nix_run_setup.py,migrations/,build/ --max-line-length=159
               pytest tests/
             '';
 
@@ -634,7 +634,7 @@ in rec {
               export LANG=en_US.UTF-8
               export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 
-              flake8 --exclude=nix_run_setup.py,migrations/,build/
+              flake8 --exclude=nix_run_setup.py,migrations/,build/ --max-line-length=159
               pytest tests/
             '';
 
