@@ -9,12 +9,13 @@ from cli_common.log import get_logger
 
 from shipit_code_coverage import taskcluster
 from shipit_code_coverage import uploader
+from shipit_code_coverage import coverage_by_dir
 
 
 logger = get_logger(__name__)
 
 REPO_CENTRAL = 'https://hg.mozilla.org/mozilla-central'
-REPO_DIR = '/home/marco/Documenti/FD/mozilla-central'
+REPO_DIR = 'mozilla-central'
 COVERALLS_TOKEN_FIELD = 'SHIPIT_CODE_COVERAGE_COVERALLS_TOKEN'
 CODECOV_TOKEN_FIELD = 'SHIPIT_CODE_COVERAGE_CODECOV_TOKEN'
 
@@ -161,3 +162,5 @@ def go(secrets, client_id=None, client_token=None):
 
     uploader.coveralls(output)
     uploader.codecov(output, commit_sha, codecov_token)
+
+    coverage_by_dir.generate(REPO_DIR)
