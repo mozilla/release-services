@@ -1,4 +1,4 @@
--e ./../../lib/cli_common[taskcluster,mercurial]#egg=mozilla-cli-common
+-e ./../../lib/cli_common[taskcluster,mercurial] #egg=mozilla-cli-common
 
 click
 mohawk
