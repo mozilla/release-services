@@ -7,7 +7,7 @@ from __future__ import absolute_import
 import os
 
 import backend_common
-import backend_common.db
+# import backend_common.db
 import backend_common.auth
 
 
@@ -31,7 +31,7 @@ app = backend_common.create_app(
     extensions=[
         init_app,
         backend_common.auth,
-        backend_common.db,
+        # backend_common.db,
     ],
     debug=DEBUG,
     debug_src=HERE,
