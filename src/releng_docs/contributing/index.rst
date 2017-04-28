@@ -36,6 +36,7 @@ Contributing
     :maxdepth: 4
     :includehidden:
 
+    developing
     prerequirements
     continuous-integration
     database_migrations
