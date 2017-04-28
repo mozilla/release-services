@@ -22,6 +22,7 @@ APPS=\
 	shipit-pulse-listener \
 	shipit-pipeline \
 	shipit-signoff \
+	shipit-taskcluster \
 	shipit-frontend
 
 TOOL=
@@ -53,6 +54,7 @@ APP_DEV_PORT_shipit-frontend=8010
 APP_DEV_PORT_shipit-uplift=8011
 APP_DEV_PORT_shipit-pipeline=8012
 APP_DEV_PORT_shipit-signoff=8013
+APP_DEV_PORT_shipit-taskcluster=8014
 
 APP_DEV_POSTGRES_PORT=9000
 
@@ -90,6 +92,7 @@ APP_STAGING_S3_shipit-frontend=shipit-staging-frontend
 APP_STAGING_HEROKU_shipit-uplift=shipit-staging-dashboard
 APP_STAGING_HEROKU_shipit-pipeline=shipit-staging-pipeline
 APP_STAGING_HEROKU_shipit-signoff=shipit-staging-signoff
+APP_STAGING_HEROKU_shipit-taskcluster=shipit-staging-taskcluster
 
 APP_STAGING_CSP_releng-frontend=https://auth.taskcluster.net https://clobberer.staging.mozilla-releng.net https://tooltool.staging.mozilla-releng.net https://treestatus.staging.mozilla-releng.net https://mapper.staging.mozilla-releng.net https://archiver.staging.mozilla-releng.net
 APP_STAGING_ENV_releng-frontend=\
@@ -118,6 +121,7 @@ APP_PRODUCTION_S3_shipit-frontend=shipit-production-frontend
 APP_PRODUCTION_HEROKU_shipit-uplift=shipit-production-dashboard
 APP_PRODUCTION_HEROKU_shipit-pipeline=shipit-production-pipeline
 APP_PRODUCTION_HEROKU_shipit-signoff=shipit-production-signoff
+APP_PRODUCTION_HEROKU_shipit-taskcluster=shipit-production-taskcluster
 
 APP_PRODUCTION_CSP_releng-frontend=https://auth.taskcluster.net https://clobberer.mozilla-releng.net https://tooltool.mozilla-releng.net https://treestatus.mozilla-releng.net https://mapper.mozilla-releng.net https://archiver.mozilla-releng.net
 APP_PRODUCTION_ENV_releng-frontend=\
@@ -217,6 +221,7 @@ develop-run-shipit-frontend: develop-run-FRONTEND
 develop-run-shipit-uplift: require-postgres develop-run-BACKEND
 develop-run-shipit-pipeline: require-postgres develop-run-BACKEND
 develop-run-shipit-signoff: require-postgres develop-run-BACKEND
+develop-run-shipit-taskcluster: require-postgres develop-run-BACKEND
 
 develop-run-postgres: build-pkgs-postgresql require-initdb
 	./result-pkgs-postgresql/bin/postgres -D $(PWD)/tmp/postgres -h localhost -p $(APP_DEV_POSTGRES_PORT)
@@ -296,6 +301,7 @@ deploy-staging-shipit-static-analysis: # There is no service running, just a tri
 deploy-staging-shipit-risk-assessment: # There is no service running, just a triggered task
 deploy-staging-shipit-pipeline:        deploy-staging-HEROKU
 deploy-staging-shipit-signoff:         deploy-staging-HEROKU
+deploy-staging-shipit-taskcluster:     deploy-staging-HEROKU
 
 
 
@@ -351,6 +357,7 @@ deploy-production-shipit-static-analysis: # There is no service running, just a 
 deploy-production-shipit-risk-assessment: # There is no service running, just a triggered task
 deploy-production-shipit-pipeline:     deploy-staging-HEROKU
 deploy-production-shipit-signoff:      deploy-staging-HEROKU
+deploy-production-shipit-taskcluster:  deploy-staging-HEROKU
 
 
 

@@ -59,6 +59,7 @@ let
     "shipit-pulse-listener" = import ./../src/shipit_pulse_listener { inherit releng_pkgs; };
     "shipit-pipeline" = import ./../src/shipit_pipeline { inherit releng_pkgs; };
     "shipit-signoff" = import ./../src/shipit_signoff { inherit releng_pkgs; };
+    "shipit-taskcluster" = import ./../src/shipit_taskcluster { inherit releng_pkgs; };
 
   };
 
