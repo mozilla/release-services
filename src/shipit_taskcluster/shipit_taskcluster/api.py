@@ -7,7 +7,8 @@ from __future__ import absolute_import
 import logging
 import collections
 
-from shipit_taskcluster.taskcluster import get_task_group_state, TASK_TO_STEP_STATE
+from shipit_taskcluster.taskcluster import get_task_group_state, \
+    TASK_TO_STEP_STATE
 
 log = logging.getLogger(__name__)
 
@@ -15,14 +16,13 @@ log = logging.getLogger(__name__)
 STEPS = {}
 STEP = collections.namedtuple("Step", "uid state taskGroupId")
 
-# helpers
 
+# helpers
 def query_state(step):
     return TASK_TO_STEP_STATE[get_task_group_state(step.task_group_id)]
 
-## api
 
-
+# api
 def list_steps():
     log.info('listing steps')
     return list(STEPS.keys())
@@ -61,4 +61,3 @@ def delete_step(uid):
         return "step with uid {} unknown".format(uid), 404
     del STEPS[uid]
     return None
-
