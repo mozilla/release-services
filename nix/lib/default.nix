@@ -559,6 +559,40 @@ in rec {
       });
     in self;
 
+  mkPythonScript = 
+    { name
+    , python
+    , script
+    , passthru ? {}
+    }:
+    let
+
+      python_path =
+        "${python.__old.python}/${python.__old.python.sitePackages}:" +
+        (builtins.concatStringsSep ":"
+          (map (pkg: "${pkg}/${python.__old.python.sitePackages}")
+               (builtins.attrValues python.packages)
+          )
+        );
+
+      self = stdenv.mkDerivation {
+        inherit name passthru;
+        buildInputs = [ makeWrapper python.__old.python ];
+        buildCommand = ''
+          mkdir -p $out/bin
+          cp ${script} $out/bin/${name}
+          chmod +x $out/bin/${name}
+          echo "${python.__old.python}"
+          patchShebangs $out/bin/${name}
+          wrapProgram $out/bin/${name}\
+            --set PYTHONPATH "${python_path}" \
+            --set LANG "en_US.UTF-8" \
+            --set LOCALE_ARCHIVE ${glibcLocales}/lib/locale/locale-archive
+        '';
+      };
+
+    in self;
+
   mkPython =
     { name
     , dirname
@@ -683,8 +717,8 @@ in rec {
             inherit name version;
             contents = [ busybox self ] ++ dockerContents;
             config = dockerConfig;
-          };
-        } // passthru;
+          } // passthru;
+        };
       };
     in self;
 

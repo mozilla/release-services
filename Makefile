@@ -33,7 +33,8 @@ TOOLS=\
 	node2nix \
 	push \
 	pypi2nix \
-	taskcluster-hooks
+	taskcluster-hooks \
+	taskcluster-tasks
 VERSION=$(shell cat VERSION)
 
 APP_DEV_DBNAME=services

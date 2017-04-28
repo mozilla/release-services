@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix --basename hooks -V 3.5 -r hooks.txt -v
+#   pypi2nix --basename taskcluster-tasks -V 3.5 -r taskcluster-tasks.txt -v
 #
 
 { pkgs ? import <nixpkgs> {}
@@ -245,7 +245,7 @@ let
     };
 
   };
-  overrides = import ./hooks_override.nix { inherit pkgs python; };
+  overrides = import ./taskcluster-tasks_override.nix { inherit pkgs python; };
   commonOverrides = [
 
   ];
