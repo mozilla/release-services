@@ -1,0 +1,10 @@
+-e ./../../lib/cli_common[pulse,taskcluster,mercurial] #egg=mozilla-cli-common
+
+awscli
+click-spinner
+colorama<=0.3.7,>=0.2.5 #(from awscli==1.11.85)
+https://github.com/garbas/push/archive/9883706635f1b145bff93d6490b2d9c270d3f674.zip#egg=push
+mozdef-client
+requests
+slugid
+taskcluster

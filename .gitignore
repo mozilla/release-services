@@ -6,6 +6,7 @@
 /.cache
 /.elm
 /.floo
+/Dockerfile
 /docs/build/
 /lib/**/*.egg-info/
 /lib/**/.coverage
@@ -18,7 +19,7 @@
 /src/**/.coverage
 /src/**/.coverage-html
 /src/**/build
-/src/**/elm-stuff/
 /src/**/cache/
+/src/**/elm-stuff/
 /src/**/node_modules/
 /tmp

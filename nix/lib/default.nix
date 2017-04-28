@@ -225,16 +225,30 @@ in rec {
         builtins.filter
           (line: ! startsWith line "-r" && line != "" && ! startsWith line "#");
 
+      removeAfter =
+        delim: line:
+          let
+            split = splitString delim line;
+          in
+            if builtins.length split > 1
+              then builtins.head split
+              else line;
+
       removeExtras =
+        builtins.map (removeAfter "[");
+
+      removeSpecs =
         builtins.map
           (line:
-            let
-              split = splitString "[" line;
-            in
-              if builtins.length split > 1
-                then builtins.head split
-                else line
-          );
+            (removeAfter "<" (
+              (removeAfter ">" (
+                (removeAfter ">=" (
+                  (removeAfter "<=" (
+                    (removeAfter "==" line))
+                  ))
+                ))
+              ))
+            ));
 
       extractEggName =
         map
@@ -257,9 +271,10 @@ in rec {
       map
         (pkg_name: builtins.getAttr pkg_name custom_pkgs)
         (removeExtras
-          (removeLines
-            (extractEggName
-              (readLines file))));
+          (removeSpecs
+            (removeLines
+              (extractEggName
+                (readLines file)))));
 
 
 
@@ -314,6 +329,7 @@ in rec {
       assert name == null -> exclude != null;
       let
         _include= if include == null then [
+          "/VERSION"
           "/${name}"
           "/tests"
           "/MANIFEST.in"
@@ -323,6 +339,7 @@ in rec {
         _exclude = if exclude == null then [
           "/${name}.egg-info"
           "/build"
+          "/cache"
         ] else exclude;
         relativePath = path:
           builtins.substring (builtins.stringLength (builtins.toString src))
@@ -441,6 +458,11 @@ in rec {
 
         passthru = {
 
+          deploy = {
+            staging = self;
+            production = self;
+          };
+
           src_path =
             if src_path != null
               then src_path
@@ -458,7 +480,7 @@ in rec {
 
           update = writeScript "update-${name}" ''
             export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
-            pushd ${self.src_path} >> /dev/null
+            pushd "$SERVICES_ROOT"${self.src_path} >> /dev/null
 
             ${node2nix}/bin/node2nix \
               --composition node-modules.nix \
@@ -502,6 +524,8 @@ in rec {
     }:
     let
       self = mkPython (args // {
+
+        buildInputs = [ releng_pkgs.postgresql.package ] ++ buildInputs;
 
         postInstall = ''
           mkdir -p $out/bin
@@ -559,6 +583,41 @@ in rec {
       });
     in self;
 
+  mkPythonScript = 
+    { name
+    , scriptName ? name
+    , python
+    , script
+    , passthru ? {}
+    }:
+    let
+
+      python_path =
+        "${python.__old.python}/${python.__old.python.sitePackages}:" +
+        (builtins.concatStringsSep ":"
+          (map (pkg: "${pkg}/${python.__old.python.sitePackages}")
+               (builtins.attrValues python.packages)
+          )
+        );
+
+      self = stdenv.mkDerivation {
+        inherit name passthru;
+        buildInputs = [ makeWrapper python.__old.python ];
+        buildCommand = ''
+          mkdir -p $out/bin
+          cp ${script} $out/bin/${scriptName}
+          chmod +x $out/bin/${scriptName}
+          echo "${python.__old.python}"
+          patchShebangs $out/bin/${scriptName}
+          wrapProgram $out/bin/${scriptName}\
+            --set PYTHONPATH "${python_path}" \
+            --set LANG "en_US.UTF-8" \
+            --set LOCALE_ARCHIVE ${glibcLocales}/lib/locale/locale-archive
+        '';
+      };
+
+    in self;
+
   mkPython =
     { name
     , dirname
@@ -569,6 +628,8 @@ in rec {
     , propagatedBuildInputs ? []
     , doCheck ? true
     , checkPhase ? null
+    , prePatch ? ""
+    , postPatch ? ""
     , postInstall ? ""
     , shellHook ? ""
     , dockerConfig ?
@@ -586,6 +647,12 @@ in rec {
     , inProduction ? false
     }:
     let
+
+      self_docker = mkDocker {
+        inherit name version;
+        contents = [ busybox self ] ++ dockerContents;
+        config = dockerConfig;
+      };
 
       self = python.mkDerivation {
 
@@ -607,7 +674,7 @@ in rec {
           rm -rf build *.egg-info
         '';
 
-        patchPhase = ''
+        patchPhase = prePatch + ''
           # replace synlink with real file
           rm -f setup.cfg
           ln -s ${../setup.cfg} setup.cfg
@@ -617,6 +684,8 @@ in rec {
           cat > MANIFEST.in <<EOF
           recursive-include ${dirname}/*
 
+          include VERSION
+          include ${dirname}/VERSION
           include ${dirname}/*.ini
           include ${dirname}/*.json
           include ${dirname}/*.mako
@@ -625,7 +694,7 @@ in rec {
           recursive-exclude * __pycache__
           recursive-exclude * *.py[co]
           EOF
-        '';
+        '' + postPatch;
 
         inherit doCheck;
 
@@ -653,7 +722,7 @@ in rec {
         shellHook = ''
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 
-          pushd ${self.src_path} >> /dev/null
+          pushd "$SERVICES_ROOT"${self.src_path} >> /dev/null
           tmp_path=$(mktemp -d)
           export PATH="$tmp_path/bin:$PATH"
           export PYTHONPATH="$tmp_path/${python.__old.python.sitePackages}:$PYTHONPATH"
@@ -679,11 +748,13 @@ in rec {
                               ++ optional inProduction "production"
                 );
 
-          docker = mkDocker {
-            inherit name version;
-            contents = [ busybox self ] ++ dockerContents;
-            config = dockerConfig;
+          docker = self_docker;
+
+          deploy = {
+            staging = self_docker;
+            production = self_docker;
           };
+
         } // passthru;
       };
     in self;

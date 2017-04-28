@@ -12,8 +12,8 @@ let
   inherit (releng_pkgs.lib) packagesWith;
   inherit (releng_pkgs.pkgs.lib) flatten;
 
-  pkg = if builtins.hasAttr app releng_pkgs 
-        then builtins.getAttr app releng_pkgs 
+  pkg = if builtins.hasAttr app releng_pkgs.apps
+        then builtins.getAttr app releng_pkgs.apps
         else null;
 
   hooks = if pkg == null || ! builtins.hasAttr "taskclusterHooks" pkg then {}

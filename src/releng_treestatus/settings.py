@@ -56,18 +56,17 @@ PULSE_USER = os.environ.get('PULSE_USER')
 PULSE_PASSWORD = os.environ.get('PULSE_PASSWORD')
 PULSE_VIRTUAL_HOST = os.environ.get('PULSE_VIRTUAL_HOST', '/')
 
-if not PULSE_USER:
-    raise Exception('PULSE_USER not provided.')
+if os.environ.get('DEBUG') != '1':
+    if not PULSE_USER:
+        raise Exception('PULSE_USER not provided.')
+    if not PULSE_PASSWORD:
+        raise Exception('PULSE_PASSWORD not provided.')
 
-if not PULSE_PASSWORD:
-    raise Exception('PULSE_PASSWORD not provided.')
+    PULSE_TREESTATUS_ENABLE = True
+    PULSE_TREESTATUS_EXCHANGE = os.environ.get(
+        'PULSE_TREESTATUS_EXCHANGE',
+        'exchange/{}/treestatus'.format(PULSE_USER),
+    )
 
-
-PULSE_TREESTATUS_ENABLE = True
-PULSE_TREESTATUS_EXCHANGE = os.environ.get(
-    'PULSE_TREESTATUS_EXCHANGE',
-    'exchange/{}/treestatus'.format(PULSE_USER),
-)
-
-if PULSE_TREESTATUS_ENABLE and not PULSE_TREESTATUS_EXCHANGE:
-    raise Exception('PULSE_TREESTATUS_EXCHANGE not provided.')
+    if PULSE_TREESTATUS_ENABLE and not PULSE_TREESTATUS_EXCHANGE:
+        raise Exception('PULSE_TREESTATUS_EXCHANGE not provided.')

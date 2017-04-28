@@ -88,6 +88,13 @@ in skipOverrides {
     '';
   };
 
+  "click-spinner" = self: old: {
+    patchPhase = ''
+      rm README.md
+      touch README.md
+    '';
+  };
+
   "connexion" = self: old: {
     patchPhase = ''
       sed -i -e "s|setup_requires=\['flake8'\],||" setup.py
