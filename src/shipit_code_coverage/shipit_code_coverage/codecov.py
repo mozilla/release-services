@@ -8,14 +8,15 @@ from cli_common.taskcluster import TaskclusterClient
 from cli_common.log import get_logger
 
 from shipit_code_coverage import taskcluster
-from shipit_code_coverage import coveralls
+from shipit_code_coverage import uploader
 
 
 logger = get_logger(__name__)
 
 REPO_CENTRAL = 'https://hg.mozilla.org/mozilla-central'
-REPO_DIR = 'mozilla-central'
-TOKEN_FIELD = 'SHIPIT_CODE_COVERAGE_COVERALLS_TOKEN'
+REPO_DIR = '/home/marco/Documenti/FD/mozilla-central'
+COVERALLS_TOKEN_FIELD = 'SHIPIT_CODE_COVERAGE_COVERALLS_TOKEN'
+CODECOV_TOKEN_FIELD = 'SHIPIT_CODE_COVERAGE_CODECOV_TOKEN'
 
 
 def is_coverage_task(task):
@@ -52,7 +53,7 @@ def get_github_commit(mercurial_commit):
     return r.text.split(' ')[0]
 
 
-def generate_info(revision, coveralls_token):
+def generate_info(commit_sha, coveralls_token):
     files = os.listdir('ccov-artifacts')
     ordered_files = []
     for fname in files:
@@ -75,7 +76,7 @@ def generate_info(revision, coveralls_token):
       '--service-name', 'TaskCluster',
       '--service-number', datetime.today().strftime('%Y%m%d'),
       '--service-job-number', '1',
-      '--commit-sha', get_github_commit(revision),
+      '--commit-sha', commit_sha,
       '--token', coveralls_token,
     ]
     cmd.extend(ordered_files)
@@ -137,21 +138,26 @@ def build_files():
 def go(secrets, client_id=None, client_token=None):
     tc_client = TaskclusterClient(client_id, client_token)
 
-    secrets = tc_client.get_secrets(secrets, [TOKEN_FIELD])
+    required_fields = [COVERALLS_TOKEN_FIELD, CODECOV_TOKEN_FIELD]
+    secrets = tc_client.get_secrets(secrets, required_fields)
 
-    coveralls_token = secrets[TOKEN_FIELD]
+    coveralls_token = secrets[COVERALLS_TOKEN_FIELD]
+    codecov_token = secrets[CODECOV_TOKEN_FIELD]
 
     task_id = taskcluster.get_last_task()
 
     task_data = taskcluster.get_task_details(task_id)
     revision = task_data['payload']['env']['GECKO_HEAD_REV']
     logger.info('Revision %s' % revision)
+    commit_sha = get_github_commit(revision)
+    logger.info('GitHub revision %s' % commit_sha)
 
     download_coverage_artifacts(task_id)
 
     clone_mozilla_central(revision)
     build_files()
 
-    output = generate_info(revision, coveralls_token)
+    output = generate_info(commit_sha, coveralls_token)
 
-    coveralls.upload(output)
+    uploader.coveralls(output)
+    uploader.codecov(output, commit_sha, codecov_token)
