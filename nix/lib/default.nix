@@ -528,7 +528,7 @@ in rec {
               export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
               export APP_TESTING=${name}
 
-              flake8 --exclude=nix_run_setup.py,migrations/,build/ --max-line-length=159
+              flake8
               pytest tests/
             '';
 
@@ -609,6 +609,8 @@ in rec {
 
         patchPhase = ''
           # replace synlink with real file
+          rm -f setup.cfg
+          ln -s ${../setup.cfg} setup.cfg
 
           # generate MANIFEST.in to make sure every file is included
           rm -f MANIFEST.in
@@ -634,7 +636,7 @@ in rec {
               export LANG=en_US.UTF-8
               export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 
-              flake8 --exclude=nix_run_setup.py,migrations/,build/ --max-line-length=159
+              flake8
               pytest tests/
             '';
 

@@ -35,7 +35,7 @@ in skipOverrides {
       rm -rf build *.egg-info
     '';
     checkPhase = ''
-      flake8 --exclude=nix_run_setup.py,migrations/,build/ --max-line-length=159
+      flake8
       pytest tests
     '';
   };
@@ -51,7 +51,7 @@ in skipOverrides {
     '';
     # TODO: doCheck = true;
     checkPhase = ''
-      flake8 --exclude=nix_run_setup.py,build/ --max-line-length=159
+      flake8
       pytest tests
     '';
   };
