@@ -176,6 +176,8 @@ paths:
           description: "User lacks permission to sign this step"
         "404":
           description: "Step not found"
+        "409":
+          description: "Step already signed by user"
 
     # A completed policy cannot be undone this way, only 
     # removing an existing signature from an incomplete step.
@@ -253,7 +255,9 @@ definitions:
       method:
         type: "string"
       definition:
-        type: object
+        type: array
+        items:
+          type: object
 
   Output:
     type: "object"
@@ -278,4 +282,3 @@ parameters:
     description: "Filter by signoff step state"
     required: false
     type: "string"
-  

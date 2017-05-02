@@ -18,7 +18,7 @@ def app():
 
     # Then import app code
     from backend_common.db import db
-    from shipit_uplift import app
+    from shipit_uplift.flask import app
 
     with app.app_context():
         # Init new database
@@ -103,7 +103,7 @@ def header_user(app):
     """
     Build an Hawk header for user role
     """
-    from shipit_uplift import SCOPES_USER
+    from shipit_uplift.flask import SCOPES_USER
     return hawk_header(SCOPES_USER)
 
 
@@ -112,7 +112,7 @@ def header_admin(app):
     """
     Build an Hawk header for admin role
     """
-    from shipit_uplift import SCOPES_ADMIN
+    from shipit_uplift.flask import SCOPES_ADMIN
     return hawk_header(SCOPES_ADMIN)
 
 
@@ -121,5 +121,5 @@ def header_bot(app):
     """
     Build an Hawk header for bot role
     """
-    from shipit_uplift import SCOPES_BOT
+    from shipit_uplift.flask import SCOPES_BOT
     return hawk_header(SCOPES_BOT)

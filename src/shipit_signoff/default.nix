@@ -1,5 +1,5 @@
 { releng_pkgs
-}: 
+}:
 
 let
 
@@ -16,15 +16,6 @@ let
     inherit python name dirname;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
-    checkPhase = ''
-      export LANG=en_US.UTF-8
-      export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
-      export APP_TESTING=${name}
-
-      flake8 --exclude=nix_run_setup.py,migrations/,build/
-      #TODO: need to make tests work
-      #pytest tests/
-    '';
     buildInputs =
       fromRequirementsFile ./requirements-dev.txt python.packages;
     propagatedBuildInputs =

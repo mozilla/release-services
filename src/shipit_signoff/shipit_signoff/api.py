@@ -13,7 +13,10 @@ from backend_common import log
 from backend_common.auth0 import auth0
 from backend_common.db import db
 
-from shipit_signoff.models import SignoffStep, SigningStatus, Signature
+from shipit_signoff.db_services import get_step_by_uid, insert_new_signature
+from shipit_signoff.models import SignoffStep, SigningStatus
+from shipit_signoff.policies import check_whether_policy_can_be_signed, is_sign_off_policy_met, \
+    UnauthorizedUserError, NoSignoffLeftError
 
 
 logger = log.get_logger('shipit_signoffs.api')
@@ -168,23 +171,12 @@ def get_logged_in_email():
     return None
 
 
-def policy_can_be_signed(email, groupname, policy):
-    """
-    Check whether the email or group given should be allowed
-    to sign the specified policy.
-    TODO: implement
-    """
-    return True
-
-
 def sign_off(uid):
     logger.info('Signing off step %s', uid)
-
     logger.info('Fetching step %s', uid)
 
     try:
-        step = db.session.query(SignoffStep).filter(
-            SignoffStep.uid == uid).one()
+        step = get_step_by_uid(uid)
     except NoResultFound:
         abort(404)
 
@@ -195,18 +187,24 @@ def sign_off(uid):
     if not is_user_in_group(claim_group):
         abort(403)
 
-    if not policy_can_be_signed(
-            get_logged_in_email(), claim_group, step.policy_data):
-        abort(403)
+    existing_signatures = step.signatures
+    email = get_logged_in_email()
+    # TODO Process the definition only if "local" is set
+    policy_definition = step.policy_data['definition']
 
-    signature = Signature(step_uid=step.uid)
-    signature.email = get_logged_in_email()
-    signature.group = claim_group
+    try:
+        check_whether_policy_can_be_signed(email, claim_group, policy_definition, existing_signatures)
+    except UnauthorizedUserError as e:
+        abort(403, str(e))
+    except NoSignoffLeftError as e:
+        abort(409, str(e))
 
-    db.session.add(signature)
-    db.session.commit()
+    insert_new_signature(step, email, claim_group)
+    all_signatures = step.signatures
 
-    # TODO: Check for policy completion, and update status if needed
+    if is_sign_off_policy_met(policy_definition, all_signatures):
+        # TODO: Do something more useful
+        print('Step fully signed off!')
 
     return {}
 
