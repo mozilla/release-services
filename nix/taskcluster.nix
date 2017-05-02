@@ -1,6 +1,7 @@
 let pkgs' = import <nixpkgs> {}; in
 { pkgs ? import (pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs.json))) {}
 , taskcluster_secrets
+, tasks_group_id
 }:
 
 let
@@ -33,6 +34,7 @@ in pkgs.stdenv.mkDerivation {
     curl -L ${taskcluster_secrets} -o tmp/taskcluster_secrets
     taskcluster-tasks \
         --taskcluster-base-url=http://`cat /etc/hosts | grep taskcluster | awk '{ print $1 }'` \
+        --tasks-file ./tmp/tasks.json
         --docker-username=`cat tmp/taskcluster_secrets | jq -r '.secret.DOCKER_USERNAME'` \
         --docker-password=`cat tmp/taskcluster_secrets | jq -r '.secret.DOCKER_PASSWORD'`
     exit

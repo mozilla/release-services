@@ -6,6 +6,7 @@ click==6.7
 mohawk==0.3.4
 multidict==2.1.4
 packaging==16.8
+push==0.0.1
 pyparsing==2.2.0
 requests==2.13.0
 six==1.10.0

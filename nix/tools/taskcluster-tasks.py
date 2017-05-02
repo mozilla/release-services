@@ -2,15 +2,15 @@
 
 import click
 import click.exceptions
-import copy
 import json
 import logging
 import shlex
 import subprocess
 import taskcluster
+import push
 
 
-log = logging.getLogger('taskcluster-cli')
+log = logging.getLogger('taskcluster-tasks')
 
 
 def cmp(a, b):
@@ -48,53 +48,14 @@ def nix_to_tag(repo, image_path):
         return "%s:%s" % (repo, tag)
     return image_path
 
-def diff_hooks(all, existing, prefix, repo):
-    create, update, remove = {}, {}, {}
 
-    for hookId, hook in all.items():
-        if hookId not in existing.keys() and hookId.startswith(prefix):
-            if 'hookId' in hook:
-                del hook['hookId']
-            if 'hookGroupId' in hook:
-                del hook['hookGroupId']
-            create[hookId] = hook
+def _get_tool(
+        taskcluster_client_id,
+        taskcluster_access_token,
+        taskcluster_base_url,
+        ):
 
-    for hookId, hook in existing.items():
-        if 'hookId' in hook:
-            del hook['hookId']
-        if 'hookGroupId' in hook:
-            del hook['hookGroupId']
-        if hookId in all.keys():
-            tmp_hook = copy.deepcopy(all[hookId])
-            tmp_hook['task']['payload']['image'] = nix_to_tag(repo, tmp_hook['task']['payload']['image'])  # noqa
-            if not cmp(tmp_hook, hook):
-                update[hookId] = all[hookId]
-        else:
-            remove[hookId] = hook
-
-    return create, update, remove
-
-
-@click.group()
-@click.option('--taskcluster-client-id', default=None, required=False)
-@click.option('--taskcluster-access-token', default=None, required=False)
-@click.option('--taskcluster-base-url', default=None, required=False)
-@click.option('--docker-push', required=False, type=click.Path(resolve_path=True))
-@click.option('--docker-registry', required=False, default="https://index.docker.com")  # noqa
-@click.option('--docker-repo', required=False)
-@click.option('--docker-username', required=False)
-@click.option('--docker-password', required=False)
-@click.option('--debug', is_flag=False)
-@click.pass_context
-def main(ctx, taskcluster_client_id, taskcluster_access_token,
-         taskcluster_base_url, docker_push, docker_registry, docker_repo,
-         docker_username, docker_password, debug):
-
-    if debug:
-        logging.basicConfig(level=logging.DEBUG)
-
-
-    def get_taskcluster_tool(name):
+    def __get_tool(name):
 
         if taskcluster_base_url is None and taskcluster_client_id is None and \
                taskcluster_access_token is None:
@@ -115,34 +76,44 @@ def main(ctx, taskcluster_client_id, taskcluster_access_token,
 
         if taskcluster_client_id and taskcluster_access_token:
             options = dict(
-                clientid=taskcluster_client_id,
-                accesstoken=taskcluster_access_token,
+                credentials=dict(
+                    clientId=taskcluster_client_id,
+                    accessToken=taskcluster_access_token,
+                )
             )
 
         if taskcluster_base_url:
             options = dict(
-                baseurl=taskcluster_base_url,
+                baseUrl=taskcluster_base_url,
             )
+        import pdb
+        pdb.set_trace()
 
-
-            name = name.lower()
-            tool = getattr(
-                taskcluster,
-                name[0].upper(), name[1:],
-            )
+        name = name.lower()
+        tool = getattr(
+            taskcluster,
+            name[0].upper() + name[1:],
+        )
 
         if 'baseUrl' in options:
             return tool({
                 **options,
-                **{ "baseUrl": options['baseUrl'] + ("/%s/v1" % name) },
+                **{"baseUrl": options['baseUrl'] + ("/%s/v1" % name)},
             })
         else:
             return tool(options)
 
-    ctx.get_taskcluster_tool = get_taskcluster_tool
+    return __get_tool
 
 
-    def push_docker_image(image):
+def _push_image(
+        docker_registry,
+        docker_repo,
+        docker_username,
+        docker_password,
+        ):
+
+    def __push_image(image):
 
         # only upload if image is create via nix
         if image.startswith('/nix/store'):
@@ -152,98 +123,71 @@ def main(ctx, taskcluster_client_id, taskcluster_access_token,
             tag = image[image.find(':', 1) + 1:]
 
             click.echo(' => ' + image)
-            returncode, output = cmd(
-                '%s %s %s -u "%s" -p "%s" -N "%s" -T "%s"' % (
-                    docker_push,
-                    image_path,
-                    docker_registry,
-                    docker_username,
-                    docker_password,
-                    docker_repo,
-                    tag,
-                ))
 
-            if returncode != 0:
-                click.echo(output)
-                raise click.exceptions.ClickException("Error while pushing docker images")
+            push.registry.push(
+                push.image.spec(image_path),
+                docker_registry,
+                docker_username,
+                docker_password,
+                docker_repo,
+                tag,
+            )
 
         return image
 
-
-    ctx.push_docker_image = push_docker_image
-
+    return __push_image
 
 
+@click.command('taskcluster-tasks')
+@click.option('--taskcluster-client-id', default=None, required=False)
+@click.option('--taskcluster-access-token', default=None, required=False)
+@click.option('--taskcluster-base-url', default=None, required=False)
+@click.option('--docker-registry', required=False, default="https://index.docker.com")  # noqa
+@click.option('--docker-repo', required=False)
+@click.option('--docker-username', required=False)
+@click.option('--docker-password', required=False)
+@click.option('--tasks-file', required=True, type=click.File())
+@click.option('--debug', is_flag=False)
+def main(
+        taskcluster_client_id,
+        taskcluster_access_token,
+        taskcluster_base_url,
+        docker_registry,
+        docker_repo,
+        docker_username,
+        docker_password,
+        tasks_file,
+        debug,
+        ):
 
-@main.command()
-@click.pass_context
-def tasks(ctx):
-    print("YAAAAY")
-    pass
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
 
+    get_tool = _get_tool(
+        taskcluster_client_id,
+        taskcluster_access_token,
+        taskcluster_base_url,
+    )
 
-@main.command()
-@click.option('--hooks-file', required=True, type=click.File())
-@click.option('--hooks-group', required=True)
-@click.option('--hooks-prefix', required=True, default="services-")
-@click.pass_context
-def hooks(ctx, hooks_file, hooks_group, hooks_prefix):
-    """ A tool for creating / updating taskcluster hooks (also creating and
-        pushing docker images.
-    """
+    push_image = _push_image(
+        docker_registry,
+        docker_repo,
+        docker_username,
+        docker_password,
+    )
 
-    taskcluster_hooks = ctx.get_taskcluster_tool('hooks')
+    # 1. push all images to docker registry
+    tasks = json.load(tasks_file)
+    for taskId, task in tasks.items():
+        image = push_image(task['payload']['image'])
+        tasks[taskId]['payload']['image'] = image
 
-    hooks_all = json.load(hooks_file)
-    click.echo("Expected hooks:%s" % "\n - ".join([""] + list(hooks_all.keys())))
-
-    log.debug("Gathering existing hooks for group `%s`. Might take some time ..." % hooks_group)
-    hooks_existing = {
-        hook['hookId']: hook
-        for hook in taskcluster_hooks.listHooks(hooks_group).get('hooks', [])
-        if hook.get('hookId', '').startswith(hooks_prefix)
-    }
-
-    click.echo("Existing hooks: %s" % "\n - ".join([""] + list(hooks_existing.keys())))
-
-    hooks_create, hooks_update, hooks_remove = \
-        diff_hooks(hooks_all,
-                   hooks_existing,
-                   hooks_prefix,
-                   docker_repo,
-                   )
-
-    log.debug("Hooks to create:%s" % "\n - ".join([""] + list(hooks_create.keys())))
-    log.debug("Hooks to update:%s" % "\n - ".join([""] + list(hooks_update.keys())))
-    log.debug("Hooks to remove:%s" % "\n - ".join([""] + list(hooks_remove.keys())))
-
-    click.echo("(1) Pushing images to docker_registry:")
-
-    for hookId, hook in hooks_create.items():
-        hook_image = ctx.push_docker_image(hook['task']['payload']['image'])
-        hooks_create[hookId]['task']['payload']['image'] = hook_image
-
-    for hookId, hook in hooks_update.items():
-        hook_image = ctx.push_docker_image(hook['task']['payload']['image'])
-        hooks_update[hookId]['task']['payload']['image'] = hook_image
-
-    click.echo("(2) Creating new hooks:")
-
-    for hookId, hook in hooks_create.items():
-        click.echo(" => %s/%s" % (hooks_group, hookId))
-        taskcluster_hooks.createHook(hooks_group, hookId, hook)
-
-    click.echo("(3) Updating hooks:")
-
-    for hookId, hook in hooks_update.items():
-        click.echo(" => %s/%s" % (hooks_group, hookId))
-        taskcluster_hooks.updateHook(hooks_group, hookId, hook)
-
-    click.echo("(4) Removing hooks:")
-
-    for hookId, hook in hooks_remove.items():
-        click.echo(" => %s/%s" % (hooks_group, hookId))
-        taskcluster_hooks.removeHook(hooks_group, hookId)
+    # 2. create taskcluster tasks
+    queue = get_tool('queue')
+    for taskId, task in tasks.items():
+        from pprint import pprint
+        pprint(task)
+        queue.createTask(taskId, task)
 
 
 if __name__ == "__main__":
