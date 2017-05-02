@@ -5,7 +5,6 @@ import subprocess
 
 HERE = os.path.dirname(__file__)
 
-
 server = livereload.Server()
 server.watch(
     os.path.join(HERE, '*'),
