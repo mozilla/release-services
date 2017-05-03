@@ -16,7 +16,6 @@ from werkzeug.exceptions import NotFound, BadRequest
 
 from backend_common.cache import cache
 from backend_common.auth import auth
-from releng_treestatus.__init__ import app
 from releng_treestatus.models import (
     Tree, StatusChange, StatusChangeTree, Log
 )
@@ -41,9 +40,9 @@ def _now():
 
 
 def _notify_status_change(trees_changes, tags=[]):
-    if app.config.get('PULSE_TREESTATUS_ENABLE'):
+    if current_app.config.get('PULSE_TREESTATUS_ENABLE'):
         routing_key_pattern = 'tree/{0}/status_change'
-        exchange = app.config.get('PULSE_TREESTATUS_EXCHANGE')
+        exchange = current_app.config.get('PULSE_TREESTATUS_EXCHANGE')
 
         for tree_change in trees_changes:
             tree, status_from, status_to = tree_change
@@ -61,7 +60,7 @@ def _notify_status_change(trees_changes, tags=[]):
                 ))
 
             try:
-                app.pulse.publish(exchange, routing_key, payload)
+                current_app.pulse.publish(exchange, routing_key, payload)
             except Exception as e:
                 import traceback
                 msg = "Can't send notification to pulse."
