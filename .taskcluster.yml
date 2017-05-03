@@ -8,10 +8,12 @@ metadata:
 tasks:
 
   - metadata:
-      name: "setup"
+      name: "0. Decidion task"
       description: ""
       owner: "{{ event.head.user.email }}"
       source: "https://github.com/mozilla-releng/services/tree/taskcluster-rework"
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
     extra:
       github:
         env: true
@@ -32,4 +34,4 @@ tasks:
       command:
         - "/bin/bash"
         - "-c"
-        - "nix-env -iA nixpkgs.curl && mkdir /app && cd /app && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && nix-shell nix/taskcluster.nix --pure --argstr taskcluster_secrets $TASKCLUSTER_SECRETS"
+        - "mkdir /app && cd /app && wget https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && ./please configure-taskcluster --taskcluster-secrets $TASKCLUSTER_SECRETS"
