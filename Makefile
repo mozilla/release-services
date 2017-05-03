@@ -32,9 +32,8 @@ TOOLS=\
 	mysql2pgsql \
 	node2nix \
 	push \
-	pypi2nix \
-	taskcluster-hooks \
-	taskcluster-tasks
+	pypi2nix
+	
 VERSION=$(shell cat VERSION)
 
 APP_DEV_DBNAME=services
@@ -181,7 +180,7 @@ nix:
 
 
 develop: nix require-APP
-	@SSL_DEV_CA=$$PWD/tmp nix-shell nix/default.nix -A $(APP)
+	@SSL_DEV_CA=$$PWD/tmp nix-shell nix/default.nix -A apps.$(APP)
 
 
 
@@ -190,7 +189,7 @@ develop-run: require-APP develop-run-$(APP)
 
 develop-run-SPHINX : nix require-APP
 	DEBUG=true \
-		nix-shell nix/default.nix -A releng-docs \
+		nix-shell nix/default.nix -A apps.$(APP) \
 			--run "HOST=$(APP_DEV_HOST) PORT=$(APP_DEV_PORT_$(APP)) python run.py"
 
 develop-run-BACKEND: build-certs nix require-APP
@@ -201,11 +200,11 @@ develop-run-BACKEND: build-certs nix require-APP
 	APP_SETTINGS=$$PWD/src/$(APP_PYTHON)/settings.py \
 	APP_URL=https://$(APP_DEV_HOST):$(APP_DEV_PORT_$(APP)) \
 	CORS_ORIGINS="*" \
-		nix-shell nix/default.nix -A $(APP) \
+		nix-shell nix/default.nix -A apps.$(APP) \
 			--run "gunicorn $(APP_PYTHON):flask.app --bind '$(APP_DEV_HOST):$(APP_DEV_PORT_$(APP))' --ca-certs=$$PWD/tmp/ca.crt --certfile=$$PWD/tmp/server.crt --keyfile=$$PWD/tmp/server.key --workers 1 --timeout 3600 --reload --log-file -"
 
 develop-run-FRONTEND: build-certs nix require-APP
-	nix-shell nix/default.nix --pure -A $(APP) \
+	nix-shell nix/default.nix --pure -A apps.$(APP) \
 		--run "$(APP_DEV_ENV_$(APP)) webpack-dev-server --host $(APP_DEV_HOST) --port $(APP_DEV_PORT_$(APP)) --config webpack.config.js"
 
 develop-run-releng-docs: develop-run-SPHINX
@@ -233,7 +232,7 @@ develop-flask-shell: nix require-APP
 	CACHE_DIR=$$PWD/src/$(APP)/cache \
 	FLASK_APP=$(APP) \
 	APP_SETTINGS=$$PWD/src/$(APP)/settings.py \
-		nix-shell nix/default.nix -A $(APP) \
+		nix-shell nix/default.nix -A apps.$(APP) \
 		--run "flask $(FLASK_CMD)"
 
 build-apps: $(foreach app, $(APPS), build-app-$(app))
@@ -241,13 +240,13 @@ build-apps: $(foreach app, $(APPS), build-app-$(app))
 build-app: require-APP build-app-$(APP)
 
 build-app-%: nix
-	@nix-build nix/default.nix -A $(subst build-app-,,$@) -o result-$(subst build-app-,,$@) --fallback
+	@nix-build nix/default.nix -A apps.$(subst build-app-,,$@) -o result-$(subst build-app-,,$@) --fallback
 
 
 build-docker: require-APP build-docker-$(APP)
 
 build-docker-%: nix
-	nix-build nix/docker.nix -A $(subst build-docker-,,$@) -o result-docker-$(subst build-docker-,,$@) --fallback
+	nix-build nix/docker.nix -A apps.$(subst build-docker-,,$@) -o result-docker-$(subst build-docker-,,$@) --fallback
 
 
 
@@ -417,11 +416,6 @@ deploy-cache: require-AWS require-CACHE_BUCKET build-tool-awscli build-cache
 		--acl public-read  \
 		tmp/cache/ \
 		s3://$(CACHE_BUCKET)
-
-
-taskcluster.yml: nix
-	@nix-build nix/taskcluster.nix -o result-taskcluster --fallback
-	@cp -f ./result-taskcluster .taskcluster.yml
 
 
 taskcluster-hooks.json: require-APP require-BRANCH nix

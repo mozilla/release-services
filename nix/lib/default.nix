@@ -561,6 +561,7 @@ in rec {
 
   mkPythonScript = 
     { name
+    , scriptName ? name
     , python
     , script
     , passthru ? {}
@@ -580,11 +581,11 @@ in rec {
         buildInputs = [ makeWrapper python.__old.python ];
         buildCommand = ''
           mkdir -p $out/bin
-          cp ${script} $out/bin/${name}
-          chmod +x $out/bin/${name}
+          cp ${script} $out/bin/${scriptName}
+          chmod +x $out/bin/${scriptName}
           echo "${python.__old.python}"
-          patchShebangs $out/bin/${name}
-          wrapProgram $out/bin/${name}\
+          patchShebangs $out/bin/${scriptName}
+          wrapProgram $out/bin/${scriptName}\
             --set PYTHONPATH "${python_path}" \
             --set LANG "en_US.UTF-8" \
             --set LOCALE_ARCHIVE ${glibcLocales}/lib/locale/locale-archive
@@ -717,8 +718,8 @@ in rec {
             inherit name version;
             contents = [ busybox self ] ++ dockerContents;
             config = dockerConfig;
-          } // passthru;
-        };
+          };
+        } // passthru;
       };
     in self;
 

@@ -1,3 +1,6 @@
-click
+-e ./../../lib/cli_common[pulse,taskcluster,mercurial] #egg=mozilla-cli-common
+
 taskcluster
+requests
+slugid
 https://github.com/garbas/push/archive/9883706635f1b145bff93d6490b2d9c270d3f674.zip#egg=push

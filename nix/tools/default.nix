@@ -22,28 +22,6 @@ in {
     '';
   };
 
-  taskcluster-hooks = mkPythonScript {
-    name = "taskcluster-hooks";
-    python = import ./taskcluster-hooks.nix { inherit (releng_pkgs) pkgs; };
-    script = ./taskcluster-hooks.py;
-    passthru.update = writeScript "update-tools-taskcluster-hooks" ''
-      pushd nix/tools
-      ${releng_pkgs.tools.pypi2nix}/bin/pypi2nix --basename "taskcluster-hooks" -V "3.5" -r taskcluster-hooks.txt -v
-      popd
-    '';
-  };
-
-  taskcluster-tasks = mkPythonScript {
-    name = "taskcluster-tasks";
-    python = import ./taskcluster-tasks.nix { inherit (releng_pkgs) pkgs; };
-    script = ./taskcluster-tasks.py;
-    passthru.update = writeScript "update-tools-taskcluster-tasks" ''
-      pushd nix/tools
-      ${releng_pkgs.tools.pypi2nix}/bin/pypi2nix --basename "taskcluster-tasks" -V "3.5" -r taskcluster-tasks.txt -v
-      popd
-    '';
-  };
-
   push = (import ./push.nix { inherit (releng_pkgs) pkgs; }).packages."push" // {
     update = writeScript "update-tools-push" ''
       pushd nix/tools

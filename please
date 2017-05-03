@@ -1,0 +1,14 @@
+set -eu
+
+# DEBUG
+#set -x
+
+
+# TODO: check if nix exists
+
+
+nix-build nix/default.nix -A tools.please-cli -o result-tools-please-cli &> /dev/null
+exec -a "$0" ./result-tools-please-cli/bin/please "$@"
+
+
+# TODO: check if docker exists and run nix inside nixos/docker

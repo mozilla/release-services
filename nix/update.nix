@@ -10,12 +10,12 @@ let
   packages =
     if pkg == null
       then 
-        ((releng_pkgs.lib.packagesWith "update" releng_pkgs) ++
+        ((releng_pkgs.lib.packagesWith "update" releng_pkgs.apps) ++
          (releng_pkgs.lib.packagesWith "update" releng_pkgs.tools))
     else if (builtins.substring 0 6 pkg) == "tools."
       then [(builtins.getAttr (builtins.substring 6 100 pkg) releng_pkgs.tools)]
     else
-      [(builtins.getAttr pkg releng_pkgs)];
+      [(builtins.getAttr pkg releng_pkgs.apps)];
 
 in pkgs.stdenv.mkDerivation {
   name = "update-releng";
