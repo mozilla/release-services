@@ -28,45 +28,7 @@ tasks:
       features:
         taskclusterProxy: true
       env:
-        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secre{
-
-    "provisionerId": "aws-provisioner-v1",
-    "workerType": "releng-task",
-    "schedulerId": "-",
-    "taskGroupId": "ReH4w-4NTtmjKfUVwi666A",
-    "dependencies": [ ],
-    "requires": "all-completed",
-    "routes": [ ],
-    "priority": "normal",
-    "retries": 0,
-    "created": "2017-01-05T17:08:51.217Z",
-    "deadline": "2017-01-05T18:08:51.217Z",
-    "expires": "2017-01-12T15:57:23.344Z",
-    "scopes": [
-        "queue:create-task:aws-provisioner-v1/releng-task"
-    ],
-    "payload": {
-        "image": "tutum/curl",
-        "command": [
-            "/bin/bash",
-            "-c",
-            "curl -L https://github.com/taskcluster/slugid-go/releases/download/v1.0.0/slug-linux-amd64 > slugid && chmod +x ./slugid && apt-get update && apt-get install jq && curl -X PUT -d \"`curl -sL https://gist.githubusercontent.com/garbas/703275d089ba3539fed51cfcbff8ef81/raw/9bb921bc11be0cb0c623332de28663a67acf3ade/gista-file | sed \"s|TASK_ID|\\`echo $TASK_ID\\`|\" | sed \"s|CREATED|\\`date +%Y-%m-%dT%T.%sZ\\`|\" | sed \"s|DEADLINE|\\`date --set=\"+1 day\" +%Y-%m-%dT%T.%sZ\\`|\" | sed \"s|EXPIRES|\\`date --set=\"+1 year\" +%Y-%m-%dT%T.%sZ\\`|\"`\" http://taskcluster/queue/v1/task/`./slugid`"
-        ],
-        "features": {
-            "taskclusterProxy": true
-        },
-        "maxRunTime": 10800
-    },
-    "metadata": {
-        "name": "Example Task",
-        "description": "Markdown description of **what** this task does",
-        "owner": "name@example.com",
-        "source": "https://tools.taskcluster.net/task-creator/"
-    },
-    "tags": { },
-    "extra": { }
-
-}t/repo:github.com/mozilla-releng/services:branch:staging"
+        TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/services:branch:staging"
       command:
         - "/bin/bash"
         - "-c"
