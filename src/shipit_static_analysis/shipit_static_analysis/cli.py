@@ -3,11 +3,7 @@ import click
 
 
 @click.command()
-@click.option(
-    '--revision',
-    required=True,
-    help='Mercurial revision to use for static analysis'
-)
+@click.argument('revisions', nargs=-1)
 @click.option(
     '--cache-root',
     required=True,
@@ -16,9 +12,10 @@ import click
 @click.option('--secrets', required=True, help='Taskcluster Secrets path')
 @click.option('--client-id', help='Taskcluster Client ID')
 @click.option('--client-token', help='Taskcluster Client token')
-def main(revision, cache_root, secrets, client_id, client_token):
+def main(revisions, cache_root, secrets, client_id, client_token):
     w = Workflow(secrets, cache_root, client_id, client_token)
-    w.run(revision)
+    for rev in revisions:
+        w.run(revisions)
 
 
 if __name__ == '__main__':

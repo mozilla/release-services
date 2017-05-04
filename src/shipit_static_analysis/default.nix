@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkPython fromRequirementsFile filterSource ;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource ;
   inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl dockerTools gcc
       cacert clang llvmPackages_39 clang-tools gcc-unwrapped glibc glibcLocales;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
@@ -14,6 +14,38 @@ let
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-shipit-static-analysis";
   dirname = "shipit_static_analysis";
+
+  mkBot = branch:
+    let
+      cacheKey = "shipit-static-analysis-" + branch;
+      secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
+    in
+      mkTaskclusterHook {
+        name = "Static analysis automated tests";
+        owner = "jan@mozilla.com";
+        taskImage = self.docker;
+        scopes = [
+          # Used by taskclusterProxy
+          ("secrets:get:" + secretsKey)
+
+          # Used by cache
+          ("docker-worker:cache:" + cacheKey)
+        ];
+        cache = {
+          "${cacheKey}" = "/cache";
+        };
+        taskEnv = {
+          "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+        };
+        taskCommand = [
+          "/bin/shipit-static-analysis"
+          "$REVISIONS"
+          "--secrets"
+          secretsKey
+          "--cache-root"
+          "/cache"
+        ];
+      };
 
   self = mkPython {
     inherit python name dirname;
@@ -70,8 +102,10 @@ let
         master = {
         };
         staging = {
+          bot = mkBot "staging";
         };
         production = {
+          bot = mkBot "production";
         };
       };
       update = writeScript "update-${name}" ''
