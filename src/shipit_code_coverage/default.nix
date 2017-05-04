@@ -58,6 +58,7 @@ let
 
   mkBot = branch:
     let
+      cacheKey = "shipit-static-analysis-" + branch;
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
     in
       mkTaskclusterHook {
@@ -68,7 +69,13 @@ let
         scopes = [
           # Used by taskclusterProxy
           ("secrets:get:" + secretsKey)
+
+          # Used by cache
+          ("docker-worker:cache:" + cacheKey)
         ];
+        cache = {
+          "${cacheKey}" = "/cache";
+        };
         taskEnv = {
           "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
         };
@@ -76,6 +83,8 @@ let
           "/bin/shipit-code-coverage"
           "--secrets"
           secretsKey
+          "--cache-root"
+          "/cache"
         ];
         deadline = "5 hours";
         maxRunTime = 18000;
