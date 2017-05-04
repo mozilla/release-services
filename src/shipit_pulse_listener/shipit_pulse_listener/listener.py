@@ -24,11 +24,11 @@ class HookStaticAnalysis(Hook):
         Start new tasks for every bugzilla id
         """
         # Filter on repo url
-        landing_repository_url = payload.get('landing_repository_url')
-        if not landing_repository_url:
-            raise Exception('Missing landinf repository url in payload')
-        if 'reviewboard-hg.mozilla.org' not in landing_repository_url:
-            logger.warn('Skipping this message, invalid landing repository url', url=landing_repository_url)  # noqa
+        repository_url = payload.get('repository_url')
+        if not repository_url:
+            raise Exception('Missing repository url in payload')
+        if repository_url != 'https://reviewboard-hg.mozilla.org/gecko':
+            logger.warn('Skipping this message, invalid repository url', url=repository_url)  # noqa
             return
 
         # Extract commits
