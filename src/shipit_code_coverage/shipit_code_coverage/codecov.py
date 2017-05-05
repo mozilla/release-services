@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 import requests
 import subprocess
+import time
 import hglib
 
 from cli_common.taskcluster import TaskclusterClient
@@ -52,7 +53,11 @@ class CodeCov(object):
 
     def get_github_commit(self, mercurial_commit):
         url = 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s'
-        r = requests.get(url % mercurial_commit)
+        while True:
+            r = requests.get(url % mercurial_commit)
+            if r.status_code == requests.codes.ok:
+                break
+            time.sleep(60)
 
         return r.text.split(' ')[0]
 
@@ -140,13 +145,14 @@ class CodeCov(object):
         task_data = taskcluster.get_task_details(task_id)
         revision = task_data['payload']['env']['GECKO_HEAD_REV']
         logger.info('Revision %s' % revision)
-        commit_sha = self.get_github_commit(revision)
-        logger.info('GitHub revision %s' % commit_sha)
 
         self.download_coverage_artifacts(task_id)
 
         self.clone_mozilla_central(revision)
         self.build_files()
+
+        commit_sha = self.get_github_commit(revision)
+        logger.info('GitHub revision %s' % commit_sha)
 
         coveralls_jobs = []
 
