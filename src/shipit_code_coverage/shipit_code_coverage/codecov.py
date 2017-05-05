@@ -1,3 +1,4 @@
+import errno
 import os
 from datetime import datetime
 import requests
@@ -19,30 +20,35 @@ CODECOV_TOKEN_FIELD = 'SHIPIT_CODE_COVERAGE_CODECOV_TOKEN'
 
 
 class CodeCov(object):
-    def is_coverage_task(self, task):
-        return task['task']['metadata']['name'].startswith('test-linux64-ccov')
-
     def download_coverage_artifacts(self, build_task_id):
         try:
             os.mkdir('ccov-artifacts')
-        except:
-            pass
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise e
 
         task_data = taskcluster.get_task_details(build_task_id)
 
         artifacts = taskcluster.get_task_artifacts(build_task_id)
         for artifact in artifacts:
             if 'target.code-coverage-gcno.zip' in artifact['name']:
-                taskcluster.download_artifact(build_task_id, artifact)
+                taskcluster.download_artifact(build_task_id, '', artifact)
+
+        all_suites = set()
 
         tasks = taskcluster.get_tasks_in_group(task_data['taskGroupId'])
-        test_tasks = [t for t in tasks if self.is_coverage_task(t)]
+        test_tasks = [t for t in tasks if taskcluster.is_coverage_task(t)]
         for test_task in test_tasks:
+            suite_name = taskcluster.get_suite_name(test_task)
+            all_suites.add(suite_name)
             test_task_id = test_task['status']['taskId']
             artifacts = taskcluster.get_task_artifacts(test_task_id)
             for artifact in artifacts:
                 if 'code-coverage-gcda.zip' in artifact['name']:
-                    taskcluster.download_artifact(test_task_id, artifact)
+                    taskcluster.download_artifact(test_task_id, suite_name, artifact)
+
+        self.suites = list(all_suites)
+        self.suites.sort()
 
     def get_github_commit(self, mercurial_commit):
         url = 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s'
@@ -50,7 +56,7 @@ class CodeCov(object):
 
         return r.text.split(' ')[0]
 
-    def generate_info(self, commit_sha, coveralls_token):
+    def generate_info(self, commit_sha, suite, coveralls_token):
         files = os.listdir('ccov-artifacts')
         ordered_files = []
         for fname in files:
@@ -59,7 +65,7 @@ class CodeCov(object):
 
             if 'gcno' in fname:
                 ordered_files.insert(0, 'ccov-artifacts/' + fname)
-            else:
+            elif suite in fname:
                 ordered_files.append('ccov-artifacts/' + fname)
 
         cmd = [
@@ -72,7 +78,7 @@ class CodeCov(object):
           '--ignore-not-existing',
           '--service-name', 'TaskCluster',
           '--service-number', datetime.today().strftime('%Y%m%d'),
-          '--service-job-number', '1',
+          '--service-job-number', str(self.suites.index(suite) + 1),
           '--commit-sha', commit_sha,
           '--token', coveralls_token,
         ]
@@ -118,7 +124,7 @@ class CodeCov(object):
         exit = proc.wait()
 
         if exit != 0:
-            raise Exception('Invalid exit code for command {}: {}'.format(cmd, exit))  # NOQA
+            raise Exception('Invalid exit code for command {}: {}'.format(cmd, exit))
 
     def build_files(self):
         with open(os.path.join(self.repo_dir, '.mozconfig'), 'w') as f:
@@ -142,16 +148,31 @@ class CodeCov(object):
         self.clone_mozilla_central(revision)
         self.build_files()
 
-        output = self.generate_info(commit_sha, self.coveralls_token)
+        coveralls_jobs = []
 
-        uploader.coveralls(output)
-        uploader.codecov(output, commit_sha, self.codecov_token)
+        # TODO: Process suites in parallel.
+        # While we are uploading results for a suite, we can start to process the next one.
+        for suite in self.suites:
+            output = self.generate_info(commit_sha, suite, self.coveralls_token)
+
+            print('suite generated ' + suite)
+
+            coveralls_jobs.append(uploader.coveralls(output))
+            uploader.codecov(output, commit_sha, [suite.replace('-', '_')], self.codecov_token)
+
+        # Wait until the build has been injested by Coveralls.
+        for coveralls_job in coveralls_jobs:
+            uploader.coveralls_wait(coveralls_job)
 
         coverage_by_dir.generate(self.repo_dir)
 
     def __init__(self, cache_root, secrets, client_id=None, client_token=None):
+        # List of test-suite, sorted alphabetically.
+        # This way, the index of a suite in the array should be stable enough.
+        self.suites = []
+
         assert os.path.isdir(cache_root), "Cache root {} is not a dir.".format(cache_root)
-        self.repo_dir = os.path.join(cache_root, 'mozilla-unified')
+        self.repo_dir = os.path.join(cache_root, 'mozilla-central')
 
         tc_client = TaskclusterClient(client_id, client_token)
 

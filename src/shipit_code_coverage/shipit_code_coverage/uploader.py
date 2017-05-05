@@ -19,18 +19,19 @@ def coveralls(data):
     except ValueError:
         raise Exception('Failure to submit data. Response [%s]: %s' % (r.status_code, r.text))  # NOQA
 
-    # Wait until the build has been injested by Coveralls.
-    url = result['url'] + '.json'
+    return result['url'] + '.json'
+
+
+def coveralls_wait(job_url):
     while True:
-        r = requests.get(url)
-        result = r.json()
-        if result['covered_percent']:
+        r = requests.get(job_url)
+        if r.json()['covered_percent']:
             break
         time.sleep(60)
 
 
-def codecov(data, commit_sha, token):
-    r = requests.post('https://codecov.io/upload/v4?commit=%s&token=%s&build=1&job=1&service=custom' % (commit_sha, token), headers={  # NOQA
+def codecov(data, commit_sha, flags, token):
+    r = requests.post('https://codecov.io/upload/v4?commit=%s&flags=%s&token=%s&service=custom' % (commit_sha, ','.join(flags), token), headers={  # NOQA
         'Accept': 'text/plain',
     })
 
