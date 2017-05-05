@@ -15,7 +15,7 @@ import click
 def main(revisions, cache_root, secrets, client_id, client_token):
     w = Workflow(secrets, cache_root, client_id, client_token)
     for rev in revisions:
-        w.run(revisions)
+        w.run(rev)
 
 
 if __name__ == '__main__':

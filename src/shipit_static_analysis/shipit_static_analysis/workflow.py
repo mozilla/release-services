@@ -1,6 +1,6 @@
 from cli_common.taskcluster import TaskclusterClient
 from cli_common.log import get_logger
-import subprocess
+from cli_common.utils import run_command, run_gecko_command
 import hglib
 import os
 
@@ -46,10 +46,6 @@ class Workflow(object):
         # Open new hg client
         self.hg = hglib.open(self.repo_dir)
 
-        # Force cleanup to reset tip
-        # otherwise previous pull are there
-        self.hg.update(rev=b'tip', clean=True)
-
     def run(self, revision):
         """
         Run the static analysis workflow:
@@ -57,6 +53,9 @@ class Workflow(object):
          * Checkout revision
          * Run static analysis
         """
+        # Force cleanup to reset tip
+        # otherwise previous pull are there
+        self.hg.update(rev=b'tip', clean=True)
 
         # Get the tip revision
         tip = self.hg.identify(id=True).decode('utf-8').strip()
@@ -72,14 +71,15 @@ class Workflow(object):
         logger.info('Modified files', files=modified_files)
 
         # mach configure
-        self.run_command(['./mach', 'configure'])
+        run_gecko_command(['./mach', 'configure'], self.repo_dir)
 
         # Build CompileDB backend
-        self.run_command(['./mach', 'build-backend', '--backend=CompileDB'])
+        cmd = ['./mach', 'build-backend', '--backend=CompileDB']
+        run_gecko_command(cmd, self.repo_dir)
 
         # Build exports
-        self.run_command(['./mach', 'build', 'pre-export'])
-        self.run_command(['./mach', 'build', 'export'])
+        run_gecko_command(['./mach', 'build', 'pre-export'], self.repo_dir)
+        run_gecko_command(['./mach', 'build', 'export'], self.repo_dir)
 
         # Run static analysis through run-clang-tidy.py
         checks = [
@@ -98,20 +98,7 @@ class Workflow(object):
             '-p', 'obj-x86_64-pc-linux-gnu/',
             '-checks={}'.format(','.join(checks)),
         ] + modified_files
-        self.run_command(cmd, gecko_env=False)
+        clang_output = run_command(cmd, self.repo_dir)
 
-    def run_command(self, cmd, gecko_env=True):
-        """
-        Run a command in the repo through subprocess
-        """
-        # Use gecko-env to run command
-        if gecko_env:
-            cmd = ['gecko-env', ] + cmd
-
-        # Run command with env
-        logger.info('Running repo command', cmd=' '.join(cmd))
-        proc = subprocess.Popen(cmd, cwd=self.repo_dir)
-        exit = proc.wait()
-
-        if exit != 0:
-            raise Exception('Invalid exit code for command {}: {}'.format(cmd, exit))  # noqa
+        # TODO Analyse clang output
+        logger.info('Clang output', output=clang_output)
