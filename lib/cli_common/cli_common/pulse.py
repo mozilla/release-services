@@ -1,9 +1,9 @@
 import aioamqp
 import sys
-import logging
 import asyncio
+from cli_common.log import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 async def create_consumer(user, password, queue, topic, callback):
