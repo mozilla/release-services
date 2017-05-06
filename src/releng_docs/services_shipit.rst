@@ -3,19 +3,18 @@
 Service family: ``src/shipit_*``
 ================================
 
-
 **The ShipIt family** is a collection of smaller services that help us build,
 ship, and maintain Releases.
 
 There are a few different types of services:
 
 #. **FRONTEND**
-   
+
    This is one single page application for all of the our backend services.
    This is also where all user interaction with ShipIt happens.
 
 #. **BACKENDS**
-   
+
    This are JSON API endpoints that have specific functionality.
 
 #. **PIPELINE STEPS**
@@ -180,6 +179,46 @@ up-to-date informations from multiple sources (Mozilla bugzilla, mercurial
 repository, patch analysis, ...)
 Back
 
+Steps
+-----
+In order to ensure the Pipeline service can successfully managed Steps, each
+Step Service is required to implement the following API: (TODO, flesh this out
+more)
+
+.. todo:: once implemented point to api.yml
+
+.. todo:: it would be much more usefull to show `sequence diagram`_ of how
+          pipeline <-> steps interact. once final implementation lands.
+
+.. _`sequence diagram`: http://blockdiag.com/en/seqdiag/index.html
+
+Step API:
+
+- /
+
+ - GET - Returns all steps with status (TODO: probably need pagination and
+   filtering here)
+
+- /{uid}
+
+ - PUT - Create a new Step
+
+ - DELETE - Remove the given Step
+
+- /{uid}/definition
+
+ - GET Returns the definition of the given step
+
+- /{uid}/status
+
+ - GET Returns the status of the given step.
+
+  - Currently, one of: in_progress, success, failure, cancelled
+
+  - Probably need to add support for including custom service-specific status
+    info.
+
+Step Services are free to add additional endpoints past the required ones.
 
 
 Backends
@@ -187,6 +226,8 @@ Backends
 
 .. todo:: in short explain what a backend is also point to general backend
           documentation
+
+Further documentation about the backend can be found in :ref:`backend_docs`.
 
 
 .. _shipit_pipeline:
@@ -262,74 +303,18 @@ with the new pipelines.
    Taskcluster service.
 
 
-``src/shipit_signoff``
-----------------------
-
-TODO
-
-
-``src/shipit_taskcluster``
---------------------------
-
-TODO
-
-
-Steps
-=====
-
-
-In order to ensure the Pipeline service can successfully managed Steps, each
-Step Service is required to implement the following API: (TODO, flesh this out
-more)
-
-.. todo:: once implemented point to api.yml
-
-.. todo:: it would be much more usefull to show `sequence diagram`_ of how
-          pipeline <-> steps interact. once final implementation lands.
-
-.. _`sequence diagram`: http://blockdiag.com/en/seqdiag/index.html
-
-Step API:
-
-- /
-
- - GET - Returns all steps with status (TODO: probably need pagination and
-   filtering here)
-
-- /{uid}
-
- - PUT - Create a new Step
-
- - DELETE - Remove the given Step
-
-- /{uid}/definition
-
- - GET Returns the definition of the given step
-
-- /{uid}/status
-
- - GET Returns the status of the given step.
-
-  - Currently, one of: in_progress, success, failure, cancelled
-
-  - Probably need to add support for including custom service-specific status
-    info.
-
-Step Services are free to add additional endpoints past the required ones.
-
-
 .. _shipit_signoff:
 
 ``src/shipit_signoff``
 ^^^^^^^^^^^^^^^^^^^^^^
-
 .. include:: shipit_signoffs/shipit-signoffs.rst
-
 
 .. _shipit_taskcluster:
 
-``src/shipit_tackluster``
-^^^^^^^^^^^^^^^^^^^^^^^^^
+``src/shipit_taskcluster``
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+TODO
 
 
 .. _shipit_uplift:
