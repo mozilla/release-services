@@ -77,9 +77,15 @@ This protocal is followed by the :ref:`services manager <services-managers>`.
 
 #. Before starting a release inform MOC person on duty (in ``#moc`` channel)
    that new deployment of ``mozilla-releng/services`` is going to be happen.
+   The channel subject should contain `on duty sysadmin:` followed by the IRC
+   nickname to contact.
    
    If some monitoring alert goes off then kindly ask to ping you directly - the
    services manager.
+
+   Example message::
+
+       nickname: I am about to release a new version of mozilla-releng/services (*.mozilla-releng.net). Any alerts coming up soon will be best directed to me. I'll let you know when it's all done. Thank you!
 
 #. Release starts by :ref:`services manager <services-managers>` logging all the
    steps into ``#shipit`` channel and coordinating with others.
@@ -88,24 +94,53 @@ This protocal is followed by the :ref:`services manager <services-managers>`.
 
    .. code-block:: console
 
-        $ git clone git@github.com/mozilla-releng/services.git
+        $ git clone git@github.com:mozilla-releng/services.git
         $ cd services
         $ git checkout -b staging origin/staging
         $ git push origin staging -f 
 
+#. Verify the staging sites are functioning properly.
+
+   #. `Staging Site`_
+   #. `Treestatus Staging`_
+   #. `Shipit Staging`_
+   #. `Shipit Staging Dashboard`_
+
+   Monitor the `Heroku dashboard`_ for errors.
+
 #. Push to ``production`` branch and do (if needed) some manual checks.
    
-   Create a merge commig (Example of merge commit) of master branch and tag it.
+   Create a merge comming (Example of merge commit) of master branch and tag it.
 
    .. code-block:: console
 
         $ git clone git@github.com/mozilla-releng/services.git
         $ cd services
         $ git checkout -b production origin/production
-        $ git merge master -m "Release: v`cat ./VERSION`"
+        $ git merge master -m "Release: v$(git show master:VERSION)"
         $ git push origin production
-        $ git tag v`cat ./VERSION`
-        $ git push origin v`cat ./VERSION`
+        $ git tag v$(cat ./VERSION)
+        $ git push origin v$(cat ./VERSION)
+
+#. Verify the production sites are functioning properly.
+
+   - `Main Site`_
+   - `Treestatus`_
+   - `Shipit`_
+   - `Shipit Dashboard`_
+
+   Monitor the `Heroku dashboard`_ for errors
+
+#. Fill in the release notes on GitHub
+
+   `New GitHub Release`_
+
+   If the previous release was done on 2017/05/04 then a good starting point might be
+
+   .. code-block:: console
+
+       git shortlog --since="20170504" | sed -e '/^[^ ]/d' -e '/^$/d' -e 's/^[ \t]*/- /g' | sor
+
 
 #. Bump version in master
 
@@ -113,13 +148,13 @@ This protocal is followed by the :ref:`services manager <services-managers>`.
    
         $ git clone git@github.com/mozilla-releng/services.git
         $ cd services
-        $ echo "$(((`cat VERSION`) + 1))" > VERSION2
+        $ echo "$((($(cat VERSION)) + 1))" | tee VERSION2
         $ mv VERSION2 VERSION
-        $ git commit VERSION -m "setup: bumping to v`cat ./VERSION`"
+        $ git commit VERSION -m "setup: bumping to v$(cat ./VERSION)"
         $ git push origin master
 
 
-#. `Open next release PR`_
+#. `Open next release PR`_ The title should be `Release: vNN` where `NN` is the new version number.
 
 #. Notify MOC person on duty (in ``#moc`` channel) that release is done.
 
@@ -187,7 +222,16 @@ This protocal is followed by the :ref:`services manager <services-managers>`.
 .. _`Open next release PR`: https://github.com/mozilla-releng/services/compare/production...master
 .. _`Release Engineering`: https://wiki.mozilla.org/ReleaseEngineering
 .. _`Release Management`: https://wiki.mozilla.org/Release_Management
-
+.. _`Staging Site`: https://treestatus.staging.mozilla-releng.net/
+.. _`Treestatus Staging`: https://staging.mozilla-releng.net/
+.. _`Shipit Staging`: https://shipit.staging.mozilla-releng.net/
+.. _`Shipit Staging Dashboard`: https://dashboard.shipit.staging.mozilla-releng.net/
+.. _`Main Site`: https://treestatus.mozilla-releng.net/
+.. _`Treestatus`: https://www.mozilla-releng.net/
+.. _`Shipit`: https://shipit.mozilla-releng.net/
+.. _`Shipit Dashboard`: https://dashboard.shipit.mozilla-releng.net/
+.. _`Heroku dashboard`: https://dashboard.heroku.com/apps/releng-production-treestatus/metrics/web
+.. _`New GitHub Release`: https://github.com/mozilla-releng/services/releases/new
 
 .. _services-managers:
 
