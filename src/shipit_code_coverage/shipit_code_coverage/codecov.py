@@ -56,7 +56,7 @@ class CodeCov(object):
 
         return r.text.split(' ')[0]
 
-    def generate_info(self, commit_sha, suite, coveralls_token):
+    def generate_info(self, commit_sha, coveralls_token, suite=None):
         files = os.listdir('ccov-artifacts')
         ordered_files = []
         for fname in files:
@@ -65,7 +65,7 @@ class CodeCov(object):
 
             if 'gcno' in fname:
                 ordered_files.insert(0, 'ccov-artifacts/' + fname)
-            elif suite in fname:
+            elif suite is None or suite in fname:
                 ordered_files.append('ccov-artifacts/' + fname)
 
         cmd = [
@@ -78,10 +78,15 @@ class CodeCov(object):
           '--ignore-not-existing',
           '--service-name', 'TaskCluster',
           '--service-number', datetime.today().strftime('%Y%m%d'),
-          '--service-job-number', str(self.suites.index(suite) + 1),
           '--commit-sha', commit_sha,
           '--token', coveralls_token,
         ]
+
+        if suite is not None:
+            cmd.extend(['--service-job-number', str(self.suites.index(suite) + 1)])
+        else:
+            cmd.extend(['--service-job-number', '1'])
+
         cmd.extend(ordered_files)
 
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -152,13 +157,17 @@ class CodeCov(object):
 
         # TODO: Process suites in parallel.
         # While we are uploading results for a suite, we can start to process the next one.
-        for suite in self.suites:
-            output = self.generate_info(commit_sha, suite, self.coveralls_token)
-
-            print('suite generated ' + suite)
+        # TODO: Reenable when Coveralls and/or Codecov will be able to properly handle the load.
+        '''for suite in self.suites:
+            output = self.generate_info(commit_sha, self.coveralls_token, suite)
 
             coveralls_jobs.append(uploader.coveralls(output))
-            uploader.codecov(output, commit_sha, [suite.replace('-', '_')], self.codecov_token)
+            uploader.codecov(output, commit_sha, self.codecov_token, [suite.replace('-', '_')])'''
+
+        output = self.generate_info(commit_sha, self.coveralls_token)
+
+        coveralls_jobs.append(uploader.coveralls(output))
+        uploader.codecov(output, commit_sha, self.codecov_token)
 
         # Wait until the build has been injested by Coveralls.
         for coveralls_job in coveralls_jobs:

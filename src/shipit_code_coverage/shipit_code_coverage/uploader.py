@@ -17,7 +17,7 @@ def coveralls(data):
         result = r.json()
         logger.info('Uploaded build to Coveralls: %s' % r.text)
     except ValueError:
-        raise Exception('Failure to submit data. Response [%s]: %s' % (r.status_code, r.text))  # NOQA
+        raise Exception('Failure to submit data. Response [%s]: %s' % (r.status_code, r.text))
 
     return result['url'] + '.json'
 
@@ -30,13 +30,22 @@ def coveralls_wait(job_url):
         time.sleep(60)
 
 
-def codecov(data, commit_sha, flags, token):
-    r = requests.post('https://codecov.io/upload/v4?commit=%s&flags=%s&token=%s&service=custom' % (commit_sha, ','.join(flags), token), headers={  # NOQA
+def codecov(data, commit_sha, token, flags=None):
+    params = {
+        'commit': commit_sha,
+        'token': token,
+        'service': 'custom',
+    }
+
+    if flags is not None:
+        params['flags'] = ','.join(flags)
+
+    r = requests.post('https://codecov.io/upload/v4', params=params, headers={
         'Accept': 'text/plain',
     })
 
     if r.status_code != requests.codes.ok:
-        raise Exception('Failure to submit data. Response [%s]: %s' % (r.status_code, r.text))  # NOQA
+        raise Exception('Failure to submit data. Response [%s]: %s' % (r.status_code, r.text))
 
     lines = r.text.splitlines()
 
@@ -51,4 +60,4 @@ def codecov(data, commit_sha, flags, token):
     })
 
     if r.status_code != requests.codes.ok:
-        raise Exception('Failure to upload data to S3. Response [%s]: %s' % (r.status_code, r.text))  # NOQA
+        raise Exception('Failure to upload data to S3. Response [%s]: %s' % (r.status_code, r.text))
