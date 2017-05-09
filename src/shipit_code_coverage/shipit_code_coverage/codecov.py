@@ -50,6 +50,7 @@ class CodeCov(object):
 
     def get_github_commit(self, mercurial_commit):
         url = 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s'
+
         def get_commit():
             r = requests.get(url % mercurial_commit)
 
