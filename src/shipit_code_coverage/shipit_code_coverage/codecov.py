@@ -3,15 +3,12 @@ import os
 from datetime import datetime
 import requests
 import subprocess
-import time
 import hglib
 
 from cli_common.taskcluster import TaskclusterClient
 from cli_common.log import get_logger
 
-from shipit_code_coverage import taskcluster
-from shipit_code_coverage import uploader
-from shipit_code_coverage import coverage_by_dir
+from shipit_code_coverage import coverage_by_dir, taskcluster, uploader, utils
 
 
 logger = get_logger(__name__)
@@ -53,13 +50,18 @@ class CodeCov(object):
 
     def get_github_commit(self, mercurial_commit):
         url = 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s'
-        while True:
+        def get_commit():
             r = requests.get(url % mercurial_commit)
-            if r.status_code == requests.codes.ok:
-                break
-            time.sleep(60)
 
-        return r.text.split(' ')[0]
+            if r.status_code == requests.codes.ok:
+                return r.text.split(' ')[0]
+
+            return None
+
+        ret = utils.wait_until(get_commit)
+        if ret is None:
+            raise Exception('Mercurial commit is not available yet on mozilla/gecko-dev.')
+        return ret
 
     def generate_info(self, commit_sha, suite, coveralls_token):
         files = os.listdir('ccov-artifacts')
