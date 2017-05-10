@@ -16,7 +16,7 @@ def coveralls(data):
 
     try:
         result = r.json()
-        logger.info('Uploaded build to Coveralls: %s' % r.text)
+        logger.info('Uploaded report to Coveralls', report=r.text)
     except ValueError:
         raise Exception('Failure to submit data. Response [%s]: %s' % (r.status_code, r.text))
 
@@ -55,7 +55,7 @@ def codecov(data, commit_sha, token, flags=None):
 
     lines = r.text.splitlines()
 
-    logger.info('Codecov report URL: %s' % lines[0])
+    logger.info('Uploaded report to Codecov', report=lines[0])
 
     data += b'\n<<<<<< EOF'
 
