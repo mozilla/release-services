@@ -358,7 +358,7 @@ viewNavAnalysis analysis =
     li [ class "nav-item analysis" ]
         [ eventLink (ShowReleaseDashboard analysis.id)
             [ class "nav-link" ]
-            [ span [ class "name" ] [ text (analysis.name ++ " " ++ (toString analysis.version)) ]
+            [ span [ class "name" ] [ text analysis.full_name ]
             , if analysis.count > 0 then
                 span [ class "badge badge-pill badge-primary" ] [ text (toString analysis.count) ]
               else

@@ -104,6 +104,7 @@ type alias Analysis =
     { id : Int
     , name : String
     , version : Int
+    , full_name : String
     , count : Int
     , bugs : List Bug
     }
@@ -662,14 +663,34 @@ decodeAllAnalysis =
     Json.list decodeAnalysis
 
 
+buildAnalysisName : String -> Int -> String
+buildAnalysisName name version =
+    let
+        name_ =
+            if String.startsWith "esr" name then
+                "esr"
+            else
+                name
+    in
+        name_ ++ " " ++ (toString version)
+
+
 decodeAnalysis : Decoder Analysis
 decodeAnalysis =
-    Json.map5 Analysis
-        (Json.field "id" Json.int)
-        (Json.field "name" Json.string)
-        (Json.field "version" Json.int)
-        (Json.field "count" Json.int)
-        (Json.field "bugs" (Json.list decodeBug))
+    let
+        name =
+            Json.field "name" Json.string
+
+        version =
+            Json.field "version" Json.int
+    in
+        Json.map6 Analysis
+            (Json.field "id" Json.int)
+            name
+            version
+            (Json.map2 buildAnalysisName name version)
+            (Json.field "count" Json.int)
+            (Json.field "bugs" (Json.list decodeBug))
 
 
 decodeBug : Decoder Bug
@@ -823,7 +844,7 @@ viewAnalysis : ContribEditor.Model -> Bugzilla.Model -> Analysis -> Html Msg
 viewAnalysis editor bugzilla analysis =
     div []
         [ Html.map ContribEditorMsg (ContribEditor.viewModal editor)
-        , h1 [] [ text ("Listing all " ++ analysis.name ++ " " ++ (toString analysis.version) ++ " uplifts for review:") ]
+        , h1 [] [ text ("Listing all " ++ analysis.full_name ++ " uplifts for review:") ]
         , div [ class "bugs" ] (List.map (viewBug editor bugzilla) analysis.bugs)
         ]
 

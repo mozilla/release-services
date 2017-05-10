@@ -37,8 +37,9 @@ class BugAnalysis(db.Model):
 
     bugs = db.relationship('BugResult', secondary=bugs, backref=db.backref('analysis', lazy='dynamic'), order_by='BugResult.bugzilla_id')  # noqa
 
-    def __init__(self, name):
+    def __init__(self, name, version=1):
         self.name = name
+        self.version = version
 
     def __repr__(self):
         return 'Analysis {} {}'.format(self.name, self.version)
@@ -63,22 +64,18 @@ class BugAnalysis(db.Model):
         Build parameters for uplift bug search
         """
         name = self.name.lower()
-        name += name == 'esr' and str(self.version) or ''
+        if name.startswith('esr'):
+            # Esr releases
+            name += str(self.version)
+            approval = 'approval-{}'.format(name)
+            v3 = 'approval-mozilla-{}?'.format(name)
+        else:
+            # Normal releases
+            approval = 'approval-mozilla-{}'.format(name)
+            v3 = 'approval-mozilla-{}?'.format(name)
 
-        approval = 'approval-mozilla-{}'.format(name)
-        columns = (
-            'product',
-            'component',
-            'last_visit_ts',
-            'assigned_to',
-            'bug_status',
-            'resolution',
-            'short_desc',
-            'changeddate',
-        )
         parameters = {
             # Common parameters
-            'columnlist': ','.join(columns),
             'f0': 'OP',
             'f1': 'OP',
             'f10': 'requestees.login_name',
@@ -104,7 +101,7 @@ class BugAnalysis(db.Model):
             # Version specific parameters
             'known_name': approval,
             'query_based_on': approval,
-            'v3': approval + '?',
+            'v3': v3,
         }
         return urllib.parse.urlencode(parameters)
 

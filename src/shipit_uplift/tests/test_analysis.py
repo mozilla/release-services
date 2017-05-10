@@ -1,4 +1,18 @@
 import json
+from urllib.parse import parse_qs
+
+
+def assert_query_strings(x, y):
+    """
+    Helper to compare Query strings
+    """
+    x = parse_qs(x)
+    y = parse_qs(y)
+    from pprint import pprint
+    if x != y:
+        pprint(x)
+        pprint(y)
+    assert x == y
 
 
 def test_list_analysis_invalid(client):
@@ -24,7 +38,10 @@ def test_list_analysis_valid(client, bugs, header_user):
     analysis = data[0]
     assert analysis['id'] == 1
     assert analysis['name'] == 'Dev'
-    assert analysis['parameters'] == 'j1=OR&o5=substring&f12=CP&o3=substring&f0=OP&v3=approval-mozilla-dev%3F&j9=OR&o2=substring&f10=requestees.login_name&f11=CP&f4=flagtypes.name&f2=flagtypes.name&f9=OP&f3=flagtypes.name&query_format=advanced&f7=CP&f1=OP&f8=OP&columnlist=product%2Ccomponent%2Clast_visit_ts%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc%2Cchangeddate&f6=CP&known_name=approval-mozilla-dev&query_based_on=approval-mozilla-dev&o4=substring&f5=flagtypes.name&o10=substring'  # noqa
+    assert_query_strings(
+        analysis['parameters'],
+        'j1=OR&o5=substring&f12=CP&o3=substring&f0=OP&v3=approval-mozilla-dev%3F&j9=OR&o2=substring&f10=requestees.login_name&f11=CP&f4=flagtypes.name&f2=flagtypes.name&f9=OP&f3=flagtypes.name&query_format=advanced&f7=CP&f1=OP&f8=OP&f6=CP&known_name=approval-mozilla-dev&query_based_on=approval-mozilla-dev&o4=substring&f5=flagtypes.name&o10=substring'  # noqa
+    )
     assert analysis['bugs'] == []
 
 
@@ -40,7 +57,10 @@ def test_fetch_analysis(client, bugs, header_user):
     assert analysis['id'] == 1
     assert analysis['version'] == 1
     assert analysis['name'] == 'Dev'
-    assert analysis['parameters'] == 'j1=OR&o5=substring&f12=CP&o3=substring&f0=OP&v3=approval-mozilla-dev%3F&j9=OR&o2=substring&f10=requestees.login_name&f11=CP&f4=flagtypes.name&f2=flagtypes.name&f9=OP&f3=flagtypes.name&query_format=advanced&f7=CP&f1=OP&f8=OP&columnlist=product%2Ccomponent%2Clast_visit_ts%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc%2Cchangeddate&f6=CP&known_name=approval-mozilla-dev&query_based_on=approval-mozilla-dev&o4=substring&f5=flagtypes.name&o10=substring'  # noqa
+    assert_query_strings(
+        analysis['parameters'],
+        'j1=OR&o5=substring&f12=CP&o3=substring&f0=OP&v3=approval-mozilla-dev%3F&j9=OR&o2=substring&f10=requestees.login_name&f11=CP&f4=flagtypes.name&f2=flagtypes.name&f9=OP&f3=flagtypes.name&query_format=advanced&f7=CP&f1=OP&f8=OP&f6=CP&known_name=approval-mozilla-dev&query_based_on=approval-mozilla-dev&o4=substring&f5=flagtypes.name&o10=substring'  # noqa
+    )
     assert len(analysis['bugs']) == 3
 
     bugs = {b['bugzilla_id']: b for b in analysis['bugs']}
@@ -82,6 +102,30 @@ def test_fetch_analysis(client, bugs, header_user):
         'firefox_esr38': '---',
         'firefox_relnote': '---',
     }
+
+
+def test_analysis_query_strings():
+    """
+    Check Bugzilla parameters building
+    """
+    from shipit_uplift.models import BugAnalysis
+
+    assert_query_strings(
+        BugAnalysis(name='aurora', version=52).build_parameters(),
+        'o5=substring&j9=OR&o2=substring&f12=CP&o4=substring&known_name=approval-mozilla-aurora&f10=requestees.login_name&f1=OP&o3=substring&f0=OP&f8=OP&v3=approval-mozilla-aurora%3F&query_based_on=approval-mozilla-aurora&f9=OP&f4=flagtypes.name&query_format=advanced&o10=substring&j1=OR&f3=flagtypes.name&f2=flagtypes.name&f11=CP&f5=flagtypes.name&f6=CP&f7=CP'  # noqa
+    )
+    assert_query_strings(
+        BugAnalysis(name='beta', version=51).build_parameters(),
+        'o5=substring&f10=requestees.login_name&f1=OP&j9=OR&o3=substring&f0=OP&f8=OP&v3=approval-mozilla-beta%3F&query_based_on=approval-mozilla-beta&o2=substring&f9=OP&f4=flagtypes.name&query_format=advanced&o10=substring&f12=CP&j1=OR&f3=flagtypes.name&f2=flagtypes.name&o4=substring&f11=CP&f5=flagtypes.name&f6=CP&f7=CP&known_name=approval-mozilla-beta'  # noqa
+    )
+    assert_query_strings(
+        BugAnalysis(name='release', version=50).build_parameters(),
+        'o5=substring&j9=OR&o2=substring&f12=CP&o4=substring&known_name=approval-mozilla-release&f10=requestees.login_name&f1=OP&o3=substring&f0=OP&f8=OP&v3=approval-mozilla-release%3F&query_based_on=approval-mozilla-release&f9=OP&f4=flagtypes.name&query_format=advanced&o10=substring&j1=OR&f3=flagtypes.name&f2=flagtypes.name&f11=CP&f5=flagtypes.name&f6=CP&f7=CP'  # noqa
+    )
+    assert_query_strings(
+        BugAnalysis(name='esr', version=45).build_parameters(),
+        'o5=substring&f10=requestees.login_name&f1=OP&j9=OR&o3=substring&f0=OP&f8=OP&v3=approval-mozilla-esr45%3F&query_based_on=approval-esr45&o2=substring&f9=OP&f4=flagtypes.name&query_format=advanced&o10=substring&f12=CP&j1=OR&f3=flagtypes.name&f2=flagtypes.name&o4=substring&f11=CP&f5=flagtypes.name&f6=CP&f7=CP&known_name=approval-esr45'  # noqa
+    )
 
 
 def test_update_analysis(client, bugs, header_bot, header_user):
