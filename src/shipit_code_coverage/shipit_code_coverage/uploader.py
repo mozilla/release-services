@@ -1,8 +1,9 @@
 import gzip
-import time
 import requests
 
 from cli_common.log import get_logger
+
+from shipit_code_coverage import utils
 
 
 logger = get_logger(__name__)
@@ -23,11 +24,16 @@ def coveralls(data):
 
 
 def coveralls_wait(job_url):
-    while True:
+    def check_coveralls_job():
         r = requests.get(job_url)
+
         if r.json()['covered_percent']:
-            break
-        time.sleep(60)
+            return True
+
+        return False
+
+    if utils.wait_until(check_coveralls_job, 60) is None:
+        raise Exception('Coveralls took too much time to injest data.')
 
 
 def codecov(data, commit_sha, flags, token):

@@ -8,9 +8,7 @@ import hglib
 from cli_common.taskcluster import TaskclusterClient
 from cli_common.log import get_logger
 
-from shipit_code_coverage import taskcluster
-from shipit_code_coverage import uploader
-from shipit_code_coverage import coverage_by_dir
+from shipit_code_coverage import coverage_by_dir, taskcluster, uploader, utils
 
 
 logger = get_logger(__name__)
@@ -52,9 +50,19 @@ class CodeCov(object):
 
     def get_github_commit(self, mercurial_commit):
         url = 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s'
-        r = requests.get(url % mercurial_commit)
 
-        return r.text.split(' ')[0]
+        def get_commit():
+            r = requests.get(url % mercurial_commit)
+
+            if r.status_code == requests.codes.ok:
+                return r.text.split(' ')[0]
+
+            return None
+
+        ret = utils.wait_until(get_commit)
+        if ret is None:
+            raise Exception('Mercurial commit is not available yet on mozilla/gecko-dev.')
+        return ret
 
     def generate_info(self, commit_sha, suite, coveralls_token):
         files = os.listdir('ccov-artifacts')
@@ -140,13 +148,14 @@ class CodeCov(object):
         task_data = taskcluster.get_task_details(task_id)
         revision = task_data['payload']['env']['GECKO_HEAD_REV']
         logger.info('Revision %s' % revision)
-        commit_sha = self.get_github_commit(revision)
-        logger.info('GitHub revision %s' % commit_sha)
 
         self.download_coverage_artifacts(task_id)
 
         self.clone_mozilla_central(revision)
         self.build_files()
+
+        commit_sha = self.get_github_commit(revision)
+        logger.info('GitHub revision %s' % commit_sha)
 
         coveralls_jobs = []
 
