@@ -2,11 +2,11 @@ import errno
 import os
 from datetime import datetime
 import requests
-import subprocess
 import hglib
 
 from cli_common.taskcluster import TaskclusterClient
 from cli_common.log import get_logger
+from cli_common.utils import run_command, run_gecko_command
 
 from shipit_code_coverage import coverage_by_dir, taskcluster, uploader, utils
 
@@ -97,13 +97,7 @@ class CodeCov(object):
 
         cmd.extend(ordered_files)
 
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (output, err) = p.communicate()
-
-        if p.returncode != 0:
-            raise Exception('Error while running grcov:\n' + err.decode('utf-8'))
-
-        return output
+        return run_command(cmd, os.getcwd())
 
     def clone_mozilla_central(self, revision):
         shared_dir = self.repo_dir + '-shared'
@@ -124,28 +118,13 @@ class CodeCov(object):
 
         hg.update(rev=revision, clean=True)
 
-    def run_command(self, cmd):
-        """
-        Run a command in the repo through subprocess
-        """
-        # Use gecko-env to run command
-        cmd = ['gecko-env', ] + cmd
-
-        # Run command with env
-        logger.info('Running repo command', cmd=' '.join(cmd))
-        proc = subprocess.Popen(cmd, cwd=self.repo_dir)
-        exit = proc.wait()
-
-        if exit != 0:
-            raise Exception('Invalid exit code for command {}: {}'.format(cmd, exit))
-
     def build_files(self):
         with open(os.path.join(self.repo_dir, '.mozconfig'), 'w') as f:
             f.write('mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-firefox')
 
-        self.run_command(['./mach', 'configure'])
-        self.run_command(['./mach', 'build', 'pre-export'])
-        self.run_command(['./mach', 'build', 'export'])
+        run_gecko_command(['./mach', 'configure'], self.repo_dir)
+        run_gecko_command(['./mach', 'build', 'pre-export'], self.repo_dir)
+        run_gecko_command(['./mach', 'build', 'export'], self.repo_dir)
 
     def go(self):
         task_id = taskcluster.get_last_task()
