@@ -185,7 +185,7 @@ viewDirectory ( path, directory ) =
         tr [ class style ]
             [ td [] [ span [ class "btn btn-link", onClick (SetDirectory (Just path)) ] [ text path ] ]
             , td [] [ text (toString directory.current) ]
-            , td [] [ text (toString directory.previous) ]
+            , td [] [ text (toString (toFloat (round (directory.previous * 100)) / 100)) ]
             , td [] [ ul [] (List.map viewBug directory.bugs) ]
             ]
 
