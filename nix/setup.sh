@@ -71,7 +71,7 @@ fi
 
 # Check we have sudo capabilities
 echo "Testing sudo access"
-if sudo bash -c 'echo $UID > /dev/null'; then
+if ! sudo bash -c 'echo $UID > /dev/null'; then
 	echo "You do not seem to have sudo access. Aborting."
 	exit 1
 fi
