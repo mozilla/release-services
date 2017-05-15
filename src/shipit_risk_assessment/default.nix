@@ -84,7 +84,6 @@ let
         taskCommand = [
           "/bin/shipit-risk-assessment"
           "/work"
-          "$REVISION"
         ];
         deadline = "5 hours";
         maxRunTime = 18000;
