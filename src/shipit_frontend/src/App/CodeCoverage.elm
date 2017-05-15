@@ -162,8 +162,8 @@ viewDirectories directories =
     table [ class "table table-striped" ]
         ([ tr []
             [ th [] [ text "Path" ]
-            , th [] [ text "Current" ]
             , th [] [ text "Previous" ]
+            , th [] [ text "Current" ]
             , th [] [ text "Bugs" ]
             ]
          ]
@@ -184,8 +184,8 @@ viewDirectory ( path, directory ) =
     in
         tr [ class style ]
             [ td [] [ span [ class "btn btn-link", onClick (SetDirectory (Just path)) ] [ text path ] ]
-            , td [] [ text (toString directory.current) ]
             , td [] [ text (toString (toFloat (round (directory.previous * 100)) / 100)) ]
+            , td [] [ text (toString directory.current) ]
             , td [] [ ul [] (List.map viewBug directory.bugs) ]
             ]
 
