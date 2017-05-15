@@ -68,8 +68,8 @@ Happy hacking!
 @click.pass_context
 def cmd(ctx, verbose, mozdef):
 
-    # we start with critical level
-    log_level = logbook.CRITICAL
+    # we start with warning level
+    log_level = logbook.WARNING
 
     # log_level=1 is info – for messages you usually don’t want to see
     if verbose == 1:

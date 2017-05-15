@@ -1,5 +1,5 @@
 from cli_common.pulse import run_consumer
-from cli_common.taskcluster import TaskclusterClient
+from cli_common.taskcluster import get_secrets
 from cli_common.log import get_logger
 from shipit_pulse_listener.hook import Hook
 import asyncio
@@ -68,13 +68,10 @@ class PulseListener(object):
     """
     Listen to pulse messages and trigger new tasks
     """
-    def __init__(self, secrets_path, client_id=None, access_token=None):
-        self.taskcluster = TaskclusterClient(client_id, access_token)
+    def __init__(self):
 
         # Fetch pulse credentials from TC secrets
-        logger.info('Using secrets', path=secrets_path)
-        required = ('PULSE_USER', 'PULSE_PASSWORD',)
-        self.secrets = self.taskcluster.get_secrets(secrets_path, required)
+        self.secrets = get_secrets(required=('PULSE_USER', 'PULSE_PASSWORD',))
 
     def run(self, branch):
 
@@ -89,6 +86,6 @@ class PulseListener(object):
         consumers = [
             hook.connect_pulse(self.secrets)
             for hook in hooks
-            if hook.connect_taskcluster(self.taskcluster)
+            if hook.connect_taskcluster()
         ]
         run_consumer(asyncio.gather(*consumers))

@@ -13,11 +13,13 @@ import click_spinner
 
 import cli_common.taskcluster
 import cli_common.command
+import cli_common.click
 import please_cli.config
 import please_cli.utils
 
 
 @click.command()
+@cli_common.click.taskcluster_options
 @click.argument(
     'app',
     required=True,
@@ -45,20 +47,6 @@ import please_cli.utils
     default=None,
     )
 @click.option(
-    '--taskcluster-secrets',
-    required=True,
-    )
-@click.option(
-    '--taskcluster-client-id',
-    default=None,
-    required=False,
-    )
-@click.option(
-    '--taskcluster-access-token',
-    default=None,
-    required=False,
-    )
-@click.option(
     '--interactive/--no-interactive',
     default=True,
     )
@@ -67,7 +55,7 @@ def cmd(app,
         nix_build,
         nix_push,
         cache_bucket,
-        taskcluster_secrets,
+        taskcluster_secret,
         taskcluster_client_id,
         taskcluster_access_token,
         interactive,
@@ -76,12 +64,7 @@ def cmd(app,
     secrets = dict()
 
     if cache_bucket:
-        taskcluster = cli_common.taskcluster.TaskclusterClient(
-            taskcluster_client_id,
-            taskcluster_access_token,
-        )
-        secrets_tool = taskcluster.get_service('secrets')
-        secrets = secrets_tool.get(taskcluster_secrets)['secret']
+        secrets = cli_common.taskcluster.get_secrets()
 
         AWS_ACCESS_KEY_ID = secrets.get('CACHE_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = secrets.get('CACHE_SECRET_ACCESS_KEY')
@@ -89,7 +72,7 @@ def cmd(app,
         if AWS_ACCESS_KEY_ID is None or AWS_SECRET_ACCESS_KEY is None:
             raise click.UsageError(click.wrap_text(
                 'ERROR: CACHE_ACCESS_KEY_ID and/or CACHE_SECRET_ACCESS_KEY '
-                'are not in Taskcluster secret (`{}`).'.format(taskcluster_secrets)
+                'are not in Taskcluster secret (`{}`).'.format(taskcluster_secret)
             ))
 
     click.echo(' => Building {} application ... '.format(app), nl=False)

@@ -1,5 +1,4 @@
 from cli_common.log import get_logger
-from cli_common.taskcluster import TaskclusterClient
 from cli_common.mercurial import robust_checkout, MOZILLA_CENTRAL
 from mocoda.compiledb import react as mocoda_react
 import os
@@ -11,9 +10,7 @@ class Bot(object):
     """
     Risk assessment analysis
     """
-    def __init__(self, client_id=None, access_token=None):
-        # Load taskcluster client (may be useful later on)
-        self.taskcluster = TaskclusterClient(client_id, access_token)
+    def __init__(self):
 
         # Load mozconfig from env
         self.mozconfig_path = os.environ.get('MOZCONFIG')

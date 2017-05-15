@@ -7,7 +7,7 @@ from __future__ import absolute_import
 import hglib
 import os
 
-from cli_common.taskcluster import TaskclusterClient
+from cli_common.taskcluster import get_secrets
 from cli_common.log import get_logger
 from cli_common.command import run_check
 
@@ -23,15 +23,14 @@ class Workflow(object):
     """
     taskcluster = None
 
-    def __init__(self, secrets_path, cache_root, client_id=None, client_token=None):  # noqa
+    def __init__(self, cache_root):  # noqa
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
             "Cache root {} is not a dir.".format(self.cache_root)
 
         # Load secrets
         # TODO: use it later for publications on mozreview
-        self.taskcluster = TaskclusterClient(client_id, client_token)
-        self.taskcluster.get_secrets(secrets_path)
+        get_secrets()
 
         # Clone mozilla-central
         self.repo_dir = os.path.join(self.cache_root, 'static-analysis')

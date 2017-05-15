@@ -1,19 +1,18 @@
 from shipit_static_analysis.workflow import Workflow
+from cli_common.click import taskcluster_options
 import click
 
 
 @click.command()
+@taskcluster_options
 @click.argument('revisions', nargs=-1)
 @click.option(
     '--cache-root',
     required=True,
     help='Cache root, used to pull changesets'
 )
-@click.option('--secrets', required=True, help='Taskcluster Secrets path')
-@click.option('--client-id', help='Taskcluster Client ID')
-@click.option('--client-token', help='Taskcluster Client token')
-def main(revisions, cache_root, secrets, client_id, client_token):
-    w = Workflow(secrets, cache_root, client_id, client_token)
+def main(revisions, cache_root, *args, **kwargs):
+    w = Workflow(cache_root)
     for rev in revisions:
         w.run(rev)
 

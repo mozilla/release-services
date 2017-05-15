@@ -41,7 +41,7 @@ let
         };
         taskCommand = [
           "/bin/shipit-bot-uplift"
-          "--secrets"
+          "--taskcluster-secret"
           secretsKey
           "--cache-root"
           "/cache"

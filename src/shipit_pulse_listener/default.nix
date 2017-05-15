@@ -47,7 +47,7 @@ EOF
         taskCommand = [
           "/bin/shipit-pulse-listener"
           branch
-          "--secrets"
+          "--taskcluster-secret"
           secretsKey
         ];
       };
