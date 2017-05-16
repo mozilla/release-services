@@ -315,8 +315,15 @@ APPS = {
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
         ],
-        # XXX: temporary disable deployment
-        # 'deploy': 'TASKCLUSTER_HOOK',
+        'requires': [],
+        'deploy': 'HEROKU',
+        'deploy_options': {
+            'staging': {
+                'heroku_app': 'shipit-staging-pulse-listener',
+            },
+            'production': {
+            },
+        },
     },
     'shipit-risk-assessment': {
         'checks': [

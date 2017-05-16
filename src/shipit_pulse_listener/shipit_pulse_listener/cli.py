@@ -5,10 +5,9 @@ from shipit_pulse_listener.listener import PulseListener
 
 @click.command()
 @taskcluster_options
-@click.argument('branch', type=click.Choice(['staging', 'production']))
-def main(branch, *args, **kwargs):
+def main(*args, **kwargs):
     pl = PulseListener()
-    pl.run(branch)
+    pl.run()
 
 
 if __name__ == '__main__':

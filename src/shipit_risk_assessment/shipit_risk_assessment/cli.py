@@ -6,10 +6,11 @@ from shipit_risk_assessment.bot import Bot
 @click.command()
 @taskcluster_options
 @click.argument('work_dir')
-@click.argument('merge_revision', envvar='REVISION')
-def main(work_dir, merge_revision, *args, **kwargs):
-    bot = Bot()
-    bot.run(work_dir, merge_revision)
+@click.argument('revisions', envvar='REVISIONS')
+def main(work_dir, revisions, *args, **kwargs):
+    bot = Bot(work_dir)
+    for revision in revisions.split(' '):
+        bot.run(revision)
 
 
 if __name__ == '__main__':
