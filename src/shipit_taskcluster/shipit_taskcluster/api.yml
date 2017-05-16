@@ -31,7 +31,6 @@ paths:
           schema:
             $ref: '#/definitions/Step'
 
-
   /{uid}/status:
 
     get:

@@ -7,19 +7,23 @@ from __future__ import absolute_import
 import logging
 import collections
 
-from shipit_taskcluster.taskcluster import get_task_group_state, \
+from shipit_taskcluster.taskcluster_utils import get_task_group_state, \
     TASK_TO_STEP_STATE
 
 log = logging.getLogger(__name__)
 
 # TODO use postgres
 STEPS = {}
-STEP = collections.namedtuple("Step", "uid state taskGroupId")
+STEP = collections.namedtuple("Step", "uid state task_group_id")
 
+# XXX testing
+STEPS['001'] = STEP(uid='001', state='running', task_group_id='bOFIB-1aQhax372teskb9A')
 
 # helpers
 def query_state(step):
-    return TASK_TO_STEP_STATE[get_task_group_state(step.task_group_id)]
+    log.info(step.task_group_id)
+    tc_state = get_task_group_state(step.task_group_id)
+    return TASK_TO_STEP_STATE[tc_state]
 
 
 # api
@@ -41,6 +45,7 @@ def get_step_status(uid):
     if not STEPS.get(uid):
         return "Step with uid {} unknown".format(uid), 404
     step = STEPS[uid]
+    log.info('step: %s', step)
     step.state = query_state(step)
     return dict(
         state=step.state
