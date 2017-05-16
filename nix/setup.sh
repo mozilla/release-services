@@ -8,7 +8,7 @@ CONF=/etc/nix/nix.conf
 GROUP=nixbld
 
 function check_dep {
-	command -v $1 >/dev/null 2>&1 || {
+	command -v "$1" >/dev/null 2>&1 || {
 		echo >&2 "This script required $1 but it's not installed. Aborting.";
 		exit 1;
 	}
@@ -33,7 +33,7 @@ function has_multi_user_install {
 	if [[ ! -f /etc/nix/nix.conf ]] ; then
 		return 1
 	fi
-	if ! $(grep -Fxq 'build-use-sandbox = true' /etc/nix/nix.conf) ; then
+	if ! grep -Fxq 'build-use-sandbox = true' /etc/nix/nix.conf ; then
 		return 1
 	fi
 	if ! pgrep -x 'nix-daemon' ; then
@@ -71,8 +71,7 @@ fi
 
 # Check we have sudo capabilities
 echo "Testing sudo access"
-sudo sh -c 'echo $UID > /dev/null'
-if [[ $? -ne 0 ]] ; then
+if ! sudo bash -c 'echo $UID > /dev/null'; then
 	echo "You do not seem to have sudo access. Aborting."
 	exit 1
 fi
@@ -95,7 +94,7 @@ if has_single_user_install ; then
 else
 	echo "1. Installing Nix as single user mode"
 	sudo mkdir -m 0755 /nix
-	sudo chown $USER /nix
+	sudo chown "$USER" /nix
 	curl https://nixos.org/nix/install | sh
 fi
 
@@ -103,7 +102,7 @@ fi
 if has_multi_user_install ; then
 
 	echo "Skipping install steps: just update Nix install"
-	sudo chown -R $USER:$USER /nix/var/nix/profiles/per-user/$USER /nix/var/nix/gcroots/per-user/$USER
+	sudo chown -R "$USER":"$USER" "/nix/var/nix/profiles/per-user/$USER" "/nix/var/nix/gcroots/per-user/$USER"
 	update_nix
 
 	# Install packages to test it out
@@ -120,20 +119,20 @@ as_root "echo 'binary-caches = https://s3.amazonaws.com/releng-cache/ https://ca
 
 echo "3. Add build group and users for multi user mode"
 # Create group & users only when they do not exist
-sudo getent group $GROUP > /dev/null || sudo groupadd -r $GROUP
+getent group "$GROUP" > /dev/null || sudo groupadd -r $GROUP
 for n in $(seq 1 10); do
 	username=$GROUP$n
-	sudo id -u $username 2>&1 1> /dev/null || sudo useradd \
+	id -u "$username" 1> /dev/null 2>&1 || sudo useradd \
 		-c "Nix build user $n" \
 		-d /var/empty \
-		-g $GROUP \
-		-G $GROUP \
+		-g "$GROUP" \
+		-G "$GROUP" \
 		-M -N -r -s "$(which nologin)" \
-    $username;
+    "$username";
 done
 
 as_root "echo \"build-users-group = $GROUP\" >> $CONF"
-sudo chown -R root:$GROUP /nix
+sudo chown -R root:"$GROUP" /nix
 sudo chmod 1777 /nix/var/nix/profiles/per-user
 sudo mkdir -m 1777 -p /nix/var/nix/gcroots/per-user
 
@@ -145,18 +144,17 @@ as_root "/home/$USER/.nix-profile/bin/nix-channel --update"
 as_root "/home/$USER/.nix-profile/bin/nix-env -iA nixpkgs.bash -p /nix/var/nix/profiles/sandbox"
 
 bash_path=$(realpath /nix/var/nix/profiles/sandbox/bin/bash)
-bash_deps=$(sudo /home/$USER/.nix-profile/bin/nix-store -qR $bash_path | tr '\n' ' ')
+bash_deps=$(sudo "/home/$USER/.nix-profile/bin/nix-store" -qR "$bash_path" | tr '\n' ' ')
 as_root "echo \"build-sandbox-paths = /bin/sh=$bash_path $bash_deps\" >> $CONF"
 
 echo "5. Migrating from single user to multi user mode"
-rm $HOME/.nix-profile
-rm -r $HOME/.nix-defexpr
-sudo cp -r /nix/var/nix/profiles/default-*-link /nix/var/nix/profiles/per-user/$USER/profile-1-link
+rm "$HOME/.nix-profile"
+rm -r "$HOME/.nix-defexpr"
+sudo cp -r /nix/var/nix/profiles/default-*-link "/nix/var/nix/profiles/per-user/$USER/profile-1-link"
 
 echo "6. Add nix-daemon service"
 if [[ $INITD == "systemd" ]] ; then
-
-	as_root 'cat <<"EOF" > /etc/systemd/system/nix-daemon.service
+    cat <<'EOF' | sudo tee /etc/systemd/system/nix-daemon.service
 [Unit]
 Description=Nix daemon
 
@@ -168,22 +166,21 @@ KillMode=process
 
 [Install]
 WantedBy=multi-user.target
-EOF'
+EOF
 
 	sudo mkdir -p /nix/var/nix/daemon-socket
 	sudo systemctl enable nix-daemon
 	sudo systemctl start nix-daemon
 
 elif [[ $INITD == "upstart" ]] ; then
-
-	as_root 'cat <<"EOF" > /etc/init/nix-daemon.conf
+    cat <<'EOF' | sudo tee /etc/init/nix-daemon.conf
 description "Nix Daemon"
 start on filesystem
 stop on shutdown
 respawn
 env SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt
 exec /nix/var/nix/profiles/default/bin/nix-daemon $EXTRA_OPTS
-EOF'
+EOF
 
 	sudo chmod 644 /etc/init/nix-daemon.conf
 	sudo initctl reload-configuration
@@ -196,7 +193,7 @@ fi
 
 
 echo "7. Nix multi user profile script"
-as_root 'cat <<"EOF" > /etc/nix/nix-profile.sh
+cat <<'EOF' | sudo tee /etc/nix/nix-profile.sh
 # From https://gist.github.com/benley/e4a91e8425993e7d6668
 
 # Heavily cribbed from the equivalent NixOS login script.
@@ -261,16 +258,16 @@ if [ -w "$HOME" ]; then
   SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt
   CURL_CA_BUNDLE=$SSL_CERT_FILE
 fi
-EOF'
+EOF
 
 echo "8. Set up the new default (root) profile"
 update_nix
 as_root "echo 'source /etc/nix/nix-profile.sh' >> /root/.bashrc"
 
 echo "9. Set up the user profile"
-sudo mkdir -p /nix/var/nix/gcroots/per-user/$USER
-sudo chown -R $USER:$USER /nix/var/nix/profiles/per-user/$USER /nix/var/nix/gcroots/per-user/$USER
-rm -rf $HOME/.nix-profile
+sudo mkdir -p "/nix/var/nix/gcroots/per-user/$USER"
+sudo chown -R "$USER":"$USER" "/nix/var/nix/profiles/per-user/$USER" "/nix/var/nix/gcroots/per-user/$USER"
+rm -rf "$HOME/.nix-profile"
 echo "source /etc/nix/nix-profile.sh" >> ~/.bashrc
 source /etc/nix/nix-profile.sh
 nix-channel --remove nixpkgs
