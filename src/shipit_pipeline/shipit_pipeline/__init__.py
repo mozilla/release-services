@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from shipit_pipeline.flask import app
+from shipit_pipeline.flask_control import app
 
 
 if __name__ == "__main__":

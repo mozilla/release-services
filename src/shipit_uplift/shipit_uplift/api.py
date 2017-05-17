@@ -20,7 +20,7 @@ from shipit_uplift.serializers import (
     serialize_analysis, serialize_bug, serialize_contributor,
     serialize_patch_status
 )
-from shipit_uplift.flask import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
+from shipit_uplift.flask_control import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
 
 
 logger = log.get_logger('shipit_uplift.api')
