@@ -3,6 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if __name__ == "__main__":
-    from shipit_signoff.flask import app
+    from shipit_signoff.flask_control import app
 
     app.run(**app.run_options())
