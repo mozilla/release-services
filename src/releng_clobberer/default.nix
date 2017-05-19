@@ -61,16 +61,6 @@ let
            - clobber_times;
         '';
       };
-      taskclusterHooks = {
-        master = {
-        };
-        staging = {
-          inherit taskcluster_cache;
-        };
-        production = {
-          inherit taskcluster_cache;
-        };
-      };
       update = writeScript "update-${name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
