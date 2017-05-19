@@ -4,6 +4,13 @@ from cli_common.log import get_logger
 
 logger = get_logger(__name__)
 
+with open(taskcluster._client_importer.__file__) as f:
+    TASKCLUSTER_SERVICES = [
+        line.split(' ')[1][1:]
+        for line in f.read().split('\n')
+        if line
+    ]
+
 
 class TaskclusterClient(object):
     """
@@ -16,7 +23,7 @@ class TaskclusterClient(object):
         self.client_id = client_id
         self.access_token = access_token
 
-    def build_options(self, service_endpoint):
+    def get_options(self, service_endpoint):
         """
         Build Taskcluster credentials options
         """
@@ -50,36 +57,15 @@ class TaskclusterClient(object):
 
         return tc_options
 
-    def get_secrets_service(self):
-        """
-        Configured Secrets Service
-        """
-        return taskcluster.Secrets(
-            self.build_options('secrets/v1')
-        )
-
-    def get_hooks_service(self):
+    def get_service(self, service):
         """
         Configured Hooks Service
         """
-        return taskcluster.Hooks(
-            self.build_options('hooks/v1')
-        )
+        if service not in TASKCLUSTER_SERVICES:
+            raise Exception('Service `{}` does not exists.'.format(service))
 
-    def get_queue_service(self):
-        """
-        Configured Queue Service
-        """
-        return taskcluster.Queue(
-            self.build_options('queue/v1')
-        )
-
-    def get_notify_service(self):
-        """
-        Configured Queue Service
-        """
-        return taskcluster.Notify(
-            self.build_options('notify/v1')
+        return getattr(taskcluster, service.capitalize())(
+            self.get_options(service + '/v1')
         )
 
     def get_secrets(self, path, required=[]):
@@ -87,7 +73,7 @@ class TaskclusterClient(object):
         Get secrets from a specific path
         and check mandatory ones
         """
-        secrets = self.get_secrets_service().get(path)
+        secrets = self.get_service('secrets').get(path)
         secrets = secrets['secret']
         for req in required:
             if req not in secrets:
@@ -101,7 +87,7 @@ class TaskclusterClient(object):
         """
 
         # Get last run from hook
-        hooks = self.get_hooks_service()
+        hooks = self.get_service('hooks')
         hook_status = hooks.getHookStatus(hook_group_id, hook_id)
         last_fire = hook_status.get('lastFire')
         if last_fire is None:
@@ -109,7 +95,7 @@ class TaskclusterClient(object):
         task_id = last_fire['taskId']
 
         # Get successful run for this task
-        queue = self.get_queue_service()
+        queue = self.get_service('queue')
         task_status = queue.status(task_id)
         if task_status['status']['state'] != 'completed':
             raise Exception('Task {} is not completed'.format(task_id))
@@ -128,7 +114,7 @@ class TaskclusterClient(object):
         """
         Send an email through Taskcluster notification service
         """
-        return self.get_notify_service().email({
+        return self.get_service('notify').email({
             'address': address,
             'subject': subject,
             'content': content,

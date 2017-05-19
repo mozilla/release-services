@@ -71,8 +71,7 @@ let
   mkBot = branch:
     let
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
-    in
-      mkTaskclusterHook {
+      hook = mkTaskclusterHook {
         name = "Shipit task generating risk assessment data";
         owner = "cdenizet@mozilla.com";
         taskImage = self.docker;
@@ -88,6 +87,8 @@ let
         deadline = "5 hours";
         maxRunTime = 18000;
       };
+    in
+      releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
   self = mkPython {
     inherit python name dirname version;
@@ -131,15 +132,9 @@ let
     };
 
     passthru = {
-      taskclusterHooks = {
-        master = {
-        };
-        staging = {
-          bot = mkBot "staging";
-        };
-        production = {
-          bot = mkBot "production";
-        };
+      deploy = {
+        staging = mkBot "staging";
+        production = mkBot "production";
       };
       update = writeScript "update-${name}" ''
         pushd ${self.src_path}

@@ -115,7 +115,7 @@ fi
 
 echo "2. Add custom binary cache"
 sudo mkdir -p /etc/nix
-as_root "echo 'binary-caches = https://s3.amazonaws.com/releng-cache/ https://cache.nixos.org/' > $CONF"
+as_root "echo 'binary-caches = https://cache.mozilla-releng.net https://cache.nixos.org' > $CONF"
 
 echo "3. Add build group and users for multi user mode"
 # Create group & users only when they do not exist

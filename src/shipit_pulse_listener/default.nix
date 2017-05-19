@@ -65,15 +65,9 @@ EOF
       ln -s ${mercurial'}/bin/hg $out/bin
     '';
     passthru = {
-      taskclusterHooks = {
-        master = {
-        };
-        staging = {
-          bot = mkBot "staging";
-        };
-        production = {
-          bot = mkBot "production";
-        };
+      deploy = {
+        staging = mkBot "staging";
+        production = mkBot "production";
       };
       update = writeScript "update-${name}" ''
         pushd ${self.src_path}

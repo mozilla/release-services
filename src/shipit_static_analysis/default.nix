@@ -19,8 +19,7 @@ let
     let
       cacheKey = "shipit-static-analysis-" + branch;
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
-    in
-      mkTaskclusterHook {
+      hook = mkTaskclusterHook {
         name = "Static analysis automated tests";
         owner = "jan@mozilla.com";
         taskImage = self.docker;
@@ -46,6 +45,8 @@ let
           "/cache"
         ];
       };
+    in
+      releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
   self = mkPython {
     inherit python name dirname;
@@ -98,15 +99,9 @@ let
 		};
 
     passthru = {
-      taskclusterHooks = {
-        master = {
-        };
-        staging = {
-          bot = mkBot "staging";
-        };
-        production = {
-          bot = mkBot "production";
-        };
+      deploy = {
+        staging = mkBot "staging";
+        production = mkBot "production";
       };
       update = writeScript "update-${name}" ''
         pushd ${self.src_path}

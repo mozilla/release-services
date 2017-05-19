@@ -9,8 +9,6 @@ in
 
 let
 
-  postgresql = pkgs.postgresql95;
-
   releng_pkgs = {
 
     pkgs = pkgs // {
@@ -37,10 +35,18 @@ let
     tools = import ./tools/default.nix { inherit releng_pkgs; };
     gecko-env = import ./gecko_env.nix { inherit releng_pkgs; };
     elmPackages = pkgs.elmPackages.override { nodejs = pkgs."nodejs-6_x"; };
-    postgresql = pkgs.postgresql95;
 
+    "postgresql" =
+      pkgs.stdenv.mkDerivation
+        { name = "${pkgs.postgresql.name}-env";
+          buildInputs = [ pkgs.postgresql95 ];
+          passthru.package = pkgs.postgresql95;
+        };
+
+    "please-cli" = import ./../lib/please_cli { inherit releng_pkgs; };
     # TODO: backend_common_example = import ./../lib/backend_common/example { inherit releng_pkgs; };
     "frontend-common-example" = import ./../lib/frontend_common/example { inherit releng_pkgs; };
+
 
     "releng-docs" = import ./../src/releng_docs { inherit releng_pkgs; };
     "releng-frontend" = import ./../src/releng_frontend { inherit releng_pkgs; };

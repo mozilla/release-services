@@ -2,6 +2,7 @@
 
 let
   inherit (releng_pkgs.pkgs) writeScript stdenv makeWrapper;
+  inherit (releng_pkgs.lib) mkPythonScript;
 in {
 
   pypi2nix = import ./pypi2nix.nix { inherit releng_pkgs; } // {
@@ -20,37 +21,6 @@ in {
       popd
     '';
   };
-
-  taskcluster-hooks = 
-    let
-      python = import ./hooks.nix { inherit (releng_pkgs) pkgs; };
-      python_path =
-        "${python.__old.python}/${python.__old.python.sitePackages}:" +
-        (builtins.concatStringsSep ":"
-          (map (pkg: "${pkg}/${python.__old.python.sitePackages}")
-               (builtins.attrValues python.packages)
-          )
-        );
-    in stdenv.mkDerivation {
-      name = "taskcluster-hooks";
-      buildInputs = [ makeWrapper python.__old.python ];
-      buildCommand = ''
-        mkdir -p $out/bin
-        cp ${./hooks.py} $out/bin/taskcluster-hooks
-        chmod +x $out/bin/taskcluster-hooks
-        echo "${python.__old.python}"
-        patchShebangs $out/bin/taskcluster-hooks
-        wrapProgram $out/bin/taskcluster-hooks \
-          --set PYTHONPATH "${python_path}" \
-          --set LANG "en_US.UTF-8" \
-          --set LOCALE_ARCHIVE ${releng_pkgs.pkgs.glibcLocales}/lib/locale/locale-archive
-      '';
-      passthru.update = writeScript "update-tools-taskcluster-hooks" ''
-        pushd nix/tools
-        ${releng_pkgs.tools.pypi2nix}/bin/pypi2nix --basename "hooks" -V "3.5" -r hooks.txt -v
-        popd
-      '';
-    };
 
   push = (import ./push.nix { inherit (releng_pkgs) pkgs; }).packages."push" // {
     update = writeScript "update-tools-push" ''
@@ -77,10 +47,6 @@ in {
       ${releng_pkgs.tools.pypi2nix}/bin/pypi2nix --basename "mysql2pgsql" -V "2.7" -e py-mysql2pgsql -E "postgresql mysql.lib" -v
       popd
     '';
-  };
-
-  createcert = (import ./createcert.nix { inherit releng_pkgs; }) // {
-    update = null;
   };
 
   mercurial = import ./mercurial.nix { inherit releng_pkgs; };

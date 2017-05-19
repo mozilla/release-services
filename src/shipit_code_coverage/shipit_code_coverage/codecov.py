@@ -6,7 +6,7 @@ import hglib
 
 from cli_common.taskcluster import TaskclusterClient
 from cli_common.log import get_logger
-from cli_common.utils import run_command, run_gecko_command
+from cli_common.command import run_check
 
 from shipit_code_coverage import coverage_by_dir, taskcluster, uploader, utils
 
@@ -97,7 +97,7 @@ class CodeCov(object):
 
         cmd.extend(ordered_files)
 
-        return run_command(cmd, os.getcwd())
+        return run_check(cmd, cwd=os.getcwd())
 
     def clone_mozilla_central(self, revision):
         shared_dir = self.repo_dir + '-shared'
@@ -122,9 +122,9 @@ class CodeCov(object):
         with open(os.path.join(self.repo_dir, '.mozconfig'), 'w') as f:
             f.write('mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-firefox')
 
-        run_gecko_command(['./mach', 'configure'], self.repo_dir)
-        run_gecko_command(['./mach', 'build', 'pre-export'], self.repo_dir)
-        run_gecko_command(['./mach', 'build', 'export'], self.repo_dir)
+        run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
+        run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
+        run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
 
     def go(self):
         task_id = taskcluster.get_last_task()

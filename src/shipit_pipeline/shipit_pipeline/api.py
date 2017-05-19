@@ -11,7 +11,9 @@ from shipit_pipeline.pipeline import get_runnable_steps, get_running_steps, refr
 
 log = logging.getLogger(__name__)
 
-PIPELINES = {}
+PIPELINES = {
+
+}
 
 
 def list_pipelines():
