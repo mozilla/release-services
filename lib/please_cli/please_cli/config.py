@@ -258,7 +258,7 @@ APPS = {
             }
         },
         'requires': [
-            'uplift',
+            'shipit-uplift',
         ],
         'deploy': 'S3',
         'deploy_options': {

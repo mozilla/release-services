@@ -99,6 +99,7 @@ def cmd(app, zsh, quiet, command, nix_shell):
     ] + run
 
     os.environ['SERVICES_ROOT'] = please_cli.config.ROOT_DIR + '/'
+    os.environ['SSL_DEV_CA'] = os.path.join(please_cli.config.TMP_DIR, 'certs')
 
     if command:
         handle_stream_line = None
