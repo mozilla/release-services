@@ -26,21 +26,31 @@ def get_build_task(index,
                    task_group_id,
                    parent_task,
                    github_commit,
-                   github_branch,
-                   github_user_email,
+                   owner,
+                   channel,
                    ):
+
+    app_config = please_cli.config.APPS.get(app, {})
+    deploy_type = app_config.get('deploy')
+    deploy_options = app_config.get('deploy_options', {}).get(channel, {})
+
+    extra_attributes =  []
+    if channel in deploy_options.keys():
+        extra_attributes = [
+            '--extra-attribute="{}.deploy.{}"'.format(app, channel),
+        ]
+
     command = [
         './please', '-vv', 'tools', 'build', app,
         '--cache-bucket="releng-cache"',
-        '--extra-attribute="{}.deploy.{}"'.format(app, github_branch),
-        '--taskcluster-secrets=repo:github.com/mozilla-releng/services:branch:' + github_branch,
+        '--taskcluster-secrets=repo:github.com/mozilla-releng/services:branch:' + channel,
         '--no-interactive',
-    ]
+    ] + extra_attributes
     return get_task(
         task_group_id,
         [parent_task],
         github_commit,
-        github_branch,
+        channel,
         ' '.join(command),
         {
             'name': '1.{index:02}. Building {app}'.format(
@@ -48,8 +58,8 @@ def get_build_task(index,
                 app=app,
             ),
             'description': '',
-            'owner': github_user_email,
-            'source': 'https://github.com/mozilla-releng/services/tree/' + github_branch,
+            'owner': owner,
+            'source': 'https://github.com/mozilla-releng/services/tree/' + channel,
 
         },
         max_run_time_in_hours=3,
@@ -61,14 +71,20 @@ def get_deploy_task(index,
                     task_group_id,
                     parent_task,
                     github_commit,
-                    github_branch,
-                    github_user_email,
+                    owner,
+                    channel,
                     ):
 
     app_config = please_cli.config.APPS.get(app, {})
     deploy_type = app_config.get('deploy')
-    deploy_options = app_config.get('deploy_options', {}).get(github_branch, {})
+    deploy_options = app_config.get('deploy_options', {}).get(channel, {})
     scopes = []
+
+    extra_attributes = []
+    if channel in deploy_options.keys():
+        extra_attributes = [
+            '--extra-attribute="{}.deploy.{}"'.format(app, channel),
+        ]
 
     if deploy_type == 'S3':
         app_csp = []
@@ -76,7 +92,7 @@ def get_deploy_task(index,
             app_csp.append('--csp="{}"'.format(url))
         for require in app_config.get('requires', []):
             require_config = please_cli.config.APPS.get(require, {})
-            require_deploy_options = require_config.get('deploy_options', {}).get(github_branch, {})
+            require_deploy_options = require_config.get('deploy_options', {}).get(channel, {})
             require_url = require_deploy_options.get('url')
             if require_url:
                 app_csp.append('--csp="{}"'.format(require_url))
@@ -86,7 +102,7 @@ def get_deploy_task(index,
             app_envs.append('--env="{}: {}"'.format(env_name, env_value))
         for require in app_config.get('requires', []):
             require_config = please_cli.config.APPS.get(require, {})
-            require_deploy_options = require_config.get('deploy_options', {}).get(github_branch, {})
+            require_deploy_options = require_config.get('deploy_options', {}).get(channel, {})
             require_url = require_deploy_options.get('url')
             if require_url:
                 env_name = '-'.join(require.split('-')[1:])
@@ -97,10 +113,9 @@ def get_deploy_task(index,
             'tools', 'deploy:S3',
             app,
             '--s3-bucket=' + deploy_options['s3_bucket'],
-            '--extra-attribute="{}.deploy.{}"'.format(app, github_branch),
-            '--taskcluster-secrets=repo:github.com/mozilla-releng/services:branch:' + github_branch,
+            '--taskcluster-secrets=repo:github.com/mozilla-releng/services:branch:' + channel,
             '--no-interactive',
-        ] + app_csp + app_envs
+        ] + app_csp + app_envs + extra_attributes
 
     elif deploy_type == 'HEROKU':
         command = [
@@ -108,24 +123,22 @@ def get_deploy_task(index,
             'tools', 'deploy:HEROKU',
             app,
             '--heroku-app=' + deploy_options['heroku_app'],
-            '--extra-attribute="{}.deploy.{}"'.format(app, github_branch),
-            '--taskcluster-secrets=repo:github.com/mozilla-releng/services:branch:' + github_branch,
+            '--taskcluster-secrets=repo:github.com/mozilla-releng/services:branch:' + channel,
             '--no-interactive',
-        ]
+        ] + extra_attributes
 
     elif deploy_type == 'TASKCLUSTER_HOOK':
         command = [
             './please', '-vv',
             'tools', 'deploy:TASKCLUSTER_HOOK',
             app,
-            '--hook-id=services-{}-{}'.format(github_branch, app),
-            '--extra-attribute="{}.deploy.{}"'.format(app, github_branch),
-            '--taskcluster-secrets=repo:github.com/mozilla-releng/services:branch:' + github_branch,
+            '--hook-id=services-{}-{}'.format(channel, app),
+            '--taskcluster-secrets=repo:github.com/mozilla-releng/services:branch:' + channel,
             '--no-interactive',
-        ]
+        ] + extra_attributes
         scopes = [
-          'assume:hook-id:project-releng/services-{}-*'.format(github_branch),
-          'hooks:modify-hook:project-releng/services-{}-*'.format(github_branch),
+          'assume:hook-id:project-releng/services-{}-*'.format(channel),
+          'hooks:modify-hook:project-releng/services-{}-*'.format(channel),
         ]
 
     else:
@@ -135,7 +148,7 @@ def get_deploy_task(index,
         task_group_id,
         [parent_task],
         github_commit,
-        github_branch,
+        channel,
         ' '.join(command),
         {
             'name': '3.{index:02}. Deploying {app}'.format(
@@ -143,8 +156,8 @@ def get_deploy_task(index,
                 app=app,
             ),
             'description': '',
-            'owner': github_user_email,
-            'source': 'https://github.com/mozilla-releng/services/tree/' + github_branch,
+            'owner': owner,
+            'source': 'https://github.com/mozilla-releng/services/tree/' + channel,
 
         },
         scopes,
@@ -154,7 +167,7 @@ def get_deploy_task(index,
 def get_task(task_group_id,
              dependencies,
              github_commit,
-             github_branch,
+             channel,
              command,
              metadata,
              scopes=[],
@@ -163,17 +176,15 @@ def get_task(task_group_id,
              ):
     now = datetime.datetime.utcnow()
     command = (' && '.join([
-      'cd /tmp',
-      'wget https://github.com/mozilla-releng/services/archive/{github_commit}.tar.gz',  # noqa
+      'mkdir -p /tmp/app',
+      'cd /tmp/app',
+      'wget https://github.com/mozilla-releng/services/archive/{github_commit}.tar.gz',
       'tar zxf {github_commit}.tar.gz',
       'cd services-{github_commit}',
       'env',
       'rm -rf /root/.cache/nix',
       command
-    ])).format(
-        github_branch=github_branch,
-        github_commit=github_commit,
-    )
+    ])).format(github_commit=github_commit)
     return {
         'provisionerId': 'aws-provisioner-v1',
         'workerType': 'releng-task',
@@ -183,7 +194,7 @@ def get_task(task_group_id,
         'created': now,
         'deadline': now + datetime.timedelta(**deadline),
         'scopes': [
-          'secrets:get:repo:github.com/mozilla-releng/services:branch:' + github_branch,
+          'secrets:get:repo:github.com/mozilla-releng/services:branch:' + channel,
         ] + scopes,
         'payload': {
             'maxRunTime': 60 * 60 * max_run_time_in_hours,
@@ -208,12 +219,13 @@ def get_task(task_group_id,
     required=True,
     )
 @click.option(
-    '--github-branch',
-    envvar="GITHUB_HEAD_BRANCH",
+    '--channel',
+    type=click.Choice(please_cli.config.CHANNELS),
+    envvar="GITHUB_BASE_BRANCH",
     required=True,
     )
 @click.option(
-    '--github-user-email',
+    '--owner',
     envvar="GITHUB_HEAD_USER_EMAIL",
     required=True,
     )
@@ -251,8 +263,8 @@ def get_task(task_group_id,
 @click.pass_context
 def cmd(ctx,
         github_commit,
-        github_branch,
-        github_user_email,
+        channel,
+        owner,
         task_id,
         cache_url,
         nix_instantiate,
@@ -299,7 +311,7 @@ def cmd(ctx,
 
     click.echo(' => Checking which application needs to be redeployed')
     deploy_apps = []
-    if github_branch in please_cli.config.DEPLOYMENT_BRANCHES:
+    if channel in please_cli.config.DEPLOY_CHANNELS:
 
         # TODO: get status for our index branch
         status = {}
@@ -310,7 +322,7 @@ def cmd(ctx,
             if app_hash == app_hashes[app]:
                 continue
 
-            if github_branch not in DEPLOYABLE_APPS[app].get('deploy_options', {}):
+            if channel not in DEPLOYABLE_APPS[app].get('deploy_options', {}):
                 continue
 
             deploy_apps.append(app)
@@ -328,8 +340,8 @@ def cmd(ctx,
             task_group_id,
             task_id,
             github_commit,
-            github_branch,
-            github_user_email,
+            owner,
+            channel,
         )
         tasks.append((app_uuid, build_tasks[app_uuid]))
 
@@ -345,13 +357,13 @@ def cmd(ctx,
             task_group_id,
             maintanance_on_dependencies,
             github_commit,
-            github_branch,
+            channel,
             './please -vv tools maintanance:on ' + ' '.join(deploy_apps),
             {
                 'name': '2. Maintanance ON',
                 'description': '',
-                'owner': github_user_email,
-                'source': 'https://github.com/mozilla-releng/services/tree/' + github_branch,
+                'owner': owner,
+                'source': 'https://github.com/mozilla-releng/services/tree/' + channel,
 
             },
         )
@@ -367,8 +379,8 @@ def cmd(ctx,
                 task_group_id,
                 maintanance_on_uuid,
                 github_commit,
-                github_branch,
-                github_user_email,
+                owner,
+                channel,
             )
             if app_task:
                 deploy_tasks[app_uuid] = app_task
@@ -380,13 +392,13 @@ def cmd(ctx,
             task_group_id,
             [i for i in deploy_tasks.keys()],
             github_commit,
-            github_branch,
+            channel,
             './please -vv tools maintanance:off ' + ' '.join(deploy_apps),
             {
                 'name': '4. Maintanance OFF',
                 'description': '',
-                'owner': github_user_email,
-                'source': 'https://github.com/mozilla-releng/services/tree/' + github_branch,
+                'owner': owner,
+                'source': 'https://github.com/mozilla-releng/services/tree/' + channel,
 
             },
         )

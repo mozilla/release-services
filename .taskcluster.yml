@@ -2,25 +2,26 @@ version: 0
 allowPullRequests: public
 metadata:
   name: "Mozilla RelEng"
-  description: "Mozilla RelEng Services"
+  description: "Mozilla Release Engineering Services"
   owner: "{{ event.head.user.email }}"
   source: "{{ event.head.repo.url }}"
 tasks:
 
+        
   - metadata:
       name: "0. Decision task"
       description: "A task that detects changes and rebuilds application that needs to be rebuilt."
       owner: "{{ event.head.user.email }}"
-      source: "https://github.com/mozilla-releng/services/tree/taskcluster-rework"
+      source: "https://github.com/mozilla-releng/services/tree/master"
     routes:
-      - index.project.releng.services.requests.{{ event.head.repo.branch }}.by-timestamp.{{ timestamp }}
-      - index.project.releng.services.requests.{{ event.head.repo.branch }}.by-revision.{{ event.head.sha }}
+      - index.project.releng.services.requests.{{ event.base.repo.branch }}.by-timestamp.{{ timestamp }}
+      - index.project.releng.services.requests.{{ event.base.repo.branch }}.by-revision.{{ event.head.sha }}
     scopes:
-      - secrets:get:repo:github.com/mozilla-releng/services:branch:taskcluster-rework
-      - assume:hook-id:project-releng/services-taskcluster-rework-*
-      - hooks:modify-hook:project-releng/services-taskcluster-rework-*
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - assume:hook-id:project-releng/services-master-*
+      - hooks:modify-hook:project-releng/services-master-*
       - queue:create-task:aws-provisioner-v1/releng-task
-      - queue:route:index.project.releng.services.requests.{{ event.head.repo.branch }}.*
+      - queue:route:index.project.releng.services.requests.{{ event.base.repo.branch }}.*
     extra:
       github:
         env: true
@@ -28,7 +29,73 @@ tasks:
           - pull_request.*
           - push
         branches:
-          - taskcluster-rework
+          - master
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 1800  # 30min
+      image: "mozillareleng/services:base-latest"
+      features:
+        taskclusterProxy: true
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "cd /tmp && wget https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /root/.cache/nix && ./please -vv tools decision-task"
+
+  - metadata:
+      name: "0. Decision task"
+      description: "A task that detects changes and rebuilds application that needs to be rebuilt."
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/staging"
+    routes:
+      - index.project.releng.services.requests.{{ event.base.repo.branch }}.by-timestamp.{{ timestamp }}
+      - index.project.releng.services.requests.{{ event.base.repo.branch }}.by-revision.{{ event.head.sha }}
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
+      - assume:hook-id:project-releng/services-staging-*
+      - hooks:modify-hook:project-releng/services-staging-*
+      - queue:create-task:aws-provisioner-v1/releng-task
+      - queue:route:index.project.releng.services.requests.{{ event.base.repo.branch }}.*
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - staging
+    provisionerId: "{{ taskcluster.docker.provisionerId }}"
+    workerType: "{{ taskcluster.docker.workerType }}"
+    payload:
+      maxRunTime: 1800  # 30min
+      image: "mozillareleng/services:base-latest"
+      features:
+        taskclusterProxy: true
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "cd /tmp && wget https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /root/.cache/nix && ./please -vv tools decision-task"
+
+  - metadata:
+      name: "0. Decision task"
+      description: "A task that detects changes and rebuilds application that needs to be rebuilt."
+      owner: "{{ event.head.user.email }}"
+      source: "https://github.com/mozilla-releng/services/tree/production"
+    routes:
+      - index.project.releng.services.requests.{{ event.base.repo.branch }}.by-timestamp.{{ timestamp }}
+      - index.project.releng.services.requests.{{ event.base.repo.branch }}.by-revision.{{ event.head.sha }}
+    scopes:
+      - secrets:get:repo:github.com/mozilla-releng/services:branch:production
+      - assume:hook-id:project-releng/services-production-*
+      - hooks:modify-hook:project-releng/services-production-*
+      - queue:create-task:aws-provisioner-v1/releng-task
+      - queue:route:index.project.releng.services.requests.{{ event.base.repo.branch }}.*
+    extra:
+      github:
+        env: true
+        events:
+          - push
+        branches:
+          - production
     provisionerId: "{{ taskcluster.docker.provisionerId }}"
     workerType: "{{ taskcluster.docker.workerType }}"
     payload:
