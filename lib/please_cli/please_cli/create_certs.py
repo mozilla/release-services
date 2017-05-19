@@ -12,21 +12,7 @@ import click_spinner
 
 import cli_common.command
 import please_cli.config
-
-
-def check_result(returncode, output):
-    if returncode == 0:
-        click.secho('DONE', fg='green')
-    else:
-        click.secho('ERROR', fg='red')
-
-    if returncode != 0:
-        show_details = click.confirm(
-            '    Show details?', default=False, abort=False, prompt_suffix=' ',
-            show_default=True, err=False)
-        if show_details:
-            click.echo_via_pager(output)
-        raise click.ClickException('Something went wrong, please look at the logs.')
+import please_cli.utils
 
 
 @click.command()
@@ -66,7 +52,7 @@ def cmd(certificates_dir, openssl, c_rehash, openssl_config, interactive=True):
         click.echo(' => Creating certificates directory ... ')
         with click_spinner.spinner():
             os.makedirs(certificates_dir)
-        check_result(0, '', ask_for_details=interactive)
+        please_cli.utils.check_result(0, '', ask_for_details=interactive)
 
     ca_key_file = os.path.join(certificates_dir, 'ca.key')
     ca_cert_file = os.path.join(certificates_dir, 'ca.crt')
@@ -74,9 +60,11 @@ def cmd(certificates_dir, openssl, c_rehash, openssl_config, interactive=True):
     if os.path.exists(ca_key_file) or os.path.exists(ca_cert_file):
         click.echo(' => Removing existing certificates ... ')
         with click_spinner.spinner():
-            os.unlink(ca_key_file)
-            os.unlink(ca_cert_file)
-        check_result(0, '', ask_for_details=interactive)
+            if os.path.exists(ca_key_file):
+                os.unlink(ca_key_file)
+            if os.path.exists(ca_cert_file):
+                os.unlink(ca_cert_file)
+        please_cli.utils.check_result(0, '', ask_for_details=interactive)
 
     click.echo(' => Building CA certificate key ... ', nl=False)
     with click_spinner.spinner():
@@ -90,7 +78,7 @@ def cmd(certificates_dir, openssl, c_rehash, openssl_config, interactive=True):
             stream=True,
             stderr=subprocess.STDOUT,
         )
-    check_result(result, output, ask_for_details=interactive)
+    please_cli.utils.check_result(result, output, ask_for_details=interactive)
 
     click.echo(' => Self signing CA certificate  ... ', nl=False)
     with click_spinner.spinner():
@@ -106,7 +94,7 @@ def cmd(certificates_dir, openssl, c_rehash, openssl_config, interactive=True):
             stream=True,
             stderr=subprocess.STDOUT,
         )
-    check_result(result, output, ask_for_details=interactive)
+    please_cli.utils.check_result(result, output, ask_for_details=interactive)
 
     server_key_file = os.path.join(certificates_dir, 'server.key')
     server_cert_file = os.path.join(certificates_dir, 'server.crt')
@@ -137,14 +125,14 @@ def cmd(certificates_dir, openssl, c_rehash, openssl_config, interactive=True):
             stream=True,
             stderr=subprocess.STDOUT,
         )
-    check_result(result, output, ask_for_details=interactive)
+    please_cli.utils.check_result(result, output, ask_for_details=interactive)
 
     click.echo(' => Creating openssh configuration ... ', nl=False)
     with open(openssl_config, 'r') as f:
         openssl_config_content = f.read()
     with open(server_cnf_file, 'w+') as f:
         f.write('{}\n[SAN]\nsubjectAltName=DNS:localhost,DNS:127.0.0.1'.format(openssl_config_content))
-    check_result(0, '', ask_for_details=interactive)
+    please_cli.utils.check_result(0, '', ask_for_details=interactive)
 
     click.echo(' => Building backend csr certificate with mandatory subjectAltName ... ', nl=False)
     with click_spinner.spinner():
@@ -161,7 +149,7 @@ def cmd(certificates_dir, openssl, c_rehash, openssl_config, interactive=True):
             stream=True,
             stderr=subprocess.STDOUT,
         )
-    check_result(result, output, ask_for_details=interactive)
+    please_cli.utils.check_result(result, output, ask_for_details=interactive)
 
     click.echo(' => Signing server certificate with CA certificate ... ', nl=False)
     with click_spinner.spinner():
@@ -181,7 +169,7 @@ def cmd(certificates_dir, openssl, c_rehash, openssl_config, interactive=True):
             stream=True,
             stderr=subprocess.STDOUT,
         )
-    check_result(result, output, ask_for_details=interactive)
+    please_cli.utils.check_result(result, output, ask_for_details=interactive)
 
     click.echo(' => Hash certificates directory ... ', nl=False)
     with click_spinner.spinner():
@@ -191,7 +179,7 @@ def cmd(certificates_dir, openssl, c_rehash, openssl_config, interactive=True):
             stream=True,
             stderr=subprocess.STDOUT,
         )
-    check_result(result, output, ask_for_details=interactive)
+    please_cli.utils.check_result(result, output, ask_for_details=interactive)
 
 
 if __name__ == "__main__":
