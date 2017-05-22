@@ -3,6 +3,7 @@ import json
 import os
 import re
 import requests
+from libmozdata.bugzilla import Bugzilla
 
 
 MAX_LEVEL = 3
@@ -84,6 +85,7 @@ def generate(rootDir):
     directories = get_directories(rootDir, rootDir)
 
     data = dict()
+    all_bugs = set()
 
     for directory in directories:
         d = get_coverage(latest_commit, directory)
@@ -94,7 +96,33 @@ def generate(rootDir):
         data[directory] = {}
         data[directory]['cur'] = d['paths_covered_percent']
         data[directory]['prev'] = d['paths_previous_covered_percent']
-        data[directory]['bugs'] = get_related_bugs(changesets, directory)
+
+        # Add bugs with structure for libmozdata updates
+        directory_bugs = get_related_bugs(changesets, directory)
+        all_bugs.update(directory_bugs)
+        data[directory]['bugs'] = [
+            {
+                'id': bug,
+                'summary': None,
+            }
+            for bug in directory_bugs
+        ]
+
+    def _bughandler(bug, *args, **kwargs):
+        for directory in data.values():
+            bug_id = bug['id']
+            for b in directory['bugs']:
+                if b['id'] == bug_id:
+                    b.update(bug)
+
+    Bugzilla(
+        all_bugs,
+        bughandler=_bughandler,
+        include_fields=(
+            'id',
+            'summary',
+        )
+    ).get_data().wait()
 
     with open('coverage_by_dir.json', 'w') as f:
         json.dump(data, f)

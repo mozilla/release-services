@@ -13,10 +13,16 @@ import Dict exposing (Dict)
 -- Models
 
 
+type alias Bug =
+    { id : Int
+    , summary : Maybe String
+    }
+
+
 type alias Directory =
     { current : Float
     , previous : Maybe Float
-    , bugs : List Int
+    , bugs : List Bug
     }
 
 
@@ -111,7 +117,14 @@ decodeDirectory =
     JsonDecode.map3 Directory
         (JsonDecode.field "cur" JsonDecode.float)
         (JsonDecode.field "prev" (JsonDecode.nullable JsonDecode.float))
-        (JsonDecode.field "bugs" (JsonDecode.list JsonDecode.int))
+        (JsonDecode.field "bugs" (JsonDecode.list decodeBug))
+
+
+decodeBug : Decoder Bug
+decodeBug =
+    JsonDecode.map2 Bug
+        (JsonDecode.field "id" JsonDecode.int)
+        (JsonDecode.field "summary" (JsonDecode.nullable JsonDecode.string))
 
 
 filterDirectories : Directories -> Maybe String -> Directories
@@ -222,10 +235,17 @@ viewDirectory ( path, directory ) =
             ]
 
 
-viewBug : Int -> Html Msg
-viewBug bugzillaId =
+viewBug : Bug -> Html Msg
+viewBug bug =
     li []
-        [ a [ href ("https://bugzil.la/" ++ (toString bugzillaId)), target "_blank" ]
-            [ text (toString bugzillaId)
+        [ a [ href ("https://bugzil.la/" ++ (toString bug.id)), target "_blank" ]
+            [ text (toString bug.id)
             ]
+        , span [ class "text-muted" ] [ text ": " ]
+        , case bug.summary of
+            Just summary ->
+                span [] [ text summary ]
+
+            Nothing ->
+                span [ class "text-muted" ] [ text "No summary available" ]
         ]
