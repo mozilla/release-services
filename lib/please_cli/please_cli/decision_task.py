@@ -221,7 +221,7 @@ def get_task(task_group_id,
 @click.option(
     '--channel',
     type=click.Choice(please_cli.config.CHANNELS),
-    envvar="GITHUB_BASE_BRANCH",
+    envvar="GITHUB_BRANCH",
     required=True,
     )
 @click.option(
