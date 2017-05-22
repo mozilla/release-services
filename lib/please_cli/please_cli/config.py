@@ -34,7 +34,8 @@ CACHE_URL = "https://cache.mozilla-releng.net"
 SRC_DIR = os.path.join(ROOT_DIR, 'src')
 TMP_DIR = os.path.join(ROOT_DIR, 'tmp')
 
-DEPLOYMENT_BRANCHES = ['staging', 'production', 'taskcluster-rework']
+CHANNELS = ['master', 'staging', 'production']
+DEPLOY_CHANNELS = ['staging', 'production']
 
 DOCKER_REPO = 'mozillareleng/services'
 DOCKER_BASE_TAG = 'base-latest'
