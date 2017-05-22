@@ -10,7 +10,7 @@ let
     if crates_json == null
       then crates_json_default
       else crates_json;
-  crates_version = "2017-04-04";
+  crates_version = "2017-05-22";
   crates_src = pkgs.fetchFromGitHub
     { owner = "rust-lang";
       repo = "crates.io-index";

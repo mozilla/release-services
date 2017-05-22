@@ -11,7 +11,7 @@ in
 
 let
   crates_json = _pkgs.lib.importJSON ./crates.json;
-  crates_version = "2017-02-22";
+  crates_version = "2017-05-22";
   crates_src = _pkgs.fetchFromGitHub { owner = "rust-lang";
                                        repo = "crates.io-index";
                                        rev = crates_json.rev;
