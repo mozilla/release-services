@@ -216,7 +216,7 @@ def cmd(ctx, app, quiet, nix_shell):
             )
             os.environ[env_name] = env_value
 
-        for env_name, env_value in run_options.get('envs', []):
+        for env_name, env_value in run_options.get('envs', {}).items():
             os.environ[env_name] = env_value
 
         command = [
