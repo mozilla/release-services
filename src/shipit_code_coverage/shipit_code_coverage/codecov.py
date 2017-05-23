@@ -4,7 +4,7 @@ from datetime import datetime
 import requests
 import hglib
 
-from cli_common.taskcluster import TaskclusterClient
+from cli_common.taskcluster import get_secrets
 from cli_common.log import get_logger
 from cli_common.command import run_check
 
@@ -165,7 +165,7 @@ class CodeCov(object):
 
         coverage_by_dir.generate(self.repo_dir)
 
-    def __init__(self, cache_root, secrets, client_id=None, client_token=None):
+    def __init__(self, cache_root):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = []
@@ -173,10 +173,8 @@ class CodeCov(object):
         assert os.path.isdir(cache_root), "Cache root {} is not a dir.".format(cache_root)
         self.repo_dir = os.path.join(cache_root, 'mozilla-central')
 
-        tc_client = TaskclusterClient(client_id, client_token)
-
         required_fields = [COVERALLS_TOKEN_FIELD, CODECOV_TOKEN_FIELD]
-        secrets = tc_client.get_secrets(secrets, required_fields)
+        secrets = get_secrets(required=required_fields)
 
         self.coveralls_token = secrets[COVERALLS_TOKEN_FIELD]
         self.codecov_token = secrets[CODECOV_TOKEN_FIELD]

@@ -12,7 +12,7 @@ from shipit_bot_uplift.api import api_client
 from shipit_bot_uplift.merge import MergeTest
 from shipit_bot_uplift.report import Report
 from cli_common.log import get_logger
-from cli_common.taskcluster import TaskclusterClient
+from cli_common.taskcluster import get_secrets
 from libmozdata import bugzilla, versions
 from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
 
@@ -207,13 +207,11 @@ class Bot(object):
     """
     Update all analysis data
     """
-    def __init__(self, secrets_path, client_id=None, access_token=None):
-        # Start by loading secrets from Taskcluster
-        self.taskcluster = TaskclusterClient(client_id, access_token)
+    def __init__(self, client_id=None, access_token=None):
 
         # Load secrets
         required = ('BUGZILLA_URL', 'BUGZILLA_TOKEN', 'API_URL')
-        secrets = self.taskcluster.get_secrets(secrets_path, required)
+        secrets = get_secrets(required=required)
 
         # Setup credentials for Shipit api
         api_client.setup(
@@ -231,7 +229,7 @@ class Bot(object):
 
         # Init report
         emails = secrets.get('UPLIFT_NOTIFICATIONS', ['babadie@mozilla.com'])
-        self.report = Report(self.taskcluster, emails)
+        self.report = Report(emails)
 
     def use_bugzilla(self, bugzilla_url, bugzilla_token=None):
         """

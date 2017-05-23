@@ -69,6 +69,7 @@ def cmd(ctx, app, quiet, nix_shell):
     server_key_file = os.path.join(please_cli.config.TMP_DIR, 'certs', 'server.key')
 
     os.environ['DEBUG'] = 'true'
+    os.environ['APP_NAME'] = app_name
 
     pg_host = please_cli.config.APPS['postgresql']['run_options'].get('host', host)
     pg_port = str(please_cli.config.APPS['postgresql']['run_options']['port'])

@@ -68,8 +68,8 @@ Happy hacking!
 @click.pass_context
 def cmd(ctx, verbose, mozdef):
 
-    # we start with critical level
-    log_level = logbook.CRITICAL
+    # we start with warning level
+    log_level = logbook.WARNING
 
     # log_level=1 is info – for messages you usually don’t want to see
     if verbose == 1:
@@ -79,7 +79,7 @@ def cmd(ctx, verbose, mozdef):
     elif verbose > 1:
         log_level = logbook.DEBUG
 
-    cli_common.log.init_logger(log_level, mozdef)
+    cli_common.log.init_logger(log_level, mozdef, app_name='please')
 
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())

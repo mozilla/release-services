@@ -43,7 +43,7 @@ def get_build_task(index,
     command = [
         './please', '-vv', 'tools', 'build', app,
         '--cache-bucket="releng-cache"',
-        '--taskcluster-secrets=repo:github.com/mozilla-releng/services:branch:' + channel,
+        '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
         '--no-interactive',
     ] + extra_attributes
     return get_task(
@@ -113,7 +113,7 @@ def get_deploy_task(index,
             'tools', 'deploy:S3',
             app,
             '--s3-bucket=' + deploy_options['s3_bucket'],
-            '--taskcluster-secrets=repo:github.com/mozilla-releng/services:branch:' + channel,
+            '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
             '--no-interactive',
         ] + app_csp + app_envs + extra_attributes
 
@@ -123,7 +123,7 @@ def get_deploy_task(index,
             'tools', 'deploy:HEROKU',
             app,
             '--heroku-app=' + deploy_options['heroku_app'],
-            '--taskcluster-secrets=repo:github.com/mozilla-releng/services:branch:' + channel,
+            '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
             '--no-interactive',
         ] + extra_attributes
 
@@ -133,7 +133,7 @@ def get_deploy_task(index,
             'tools', 'deploy:TASKCLUSTER_HOOK',
             app,
             '--hook-id=services-{}-{}'.format(channel, app),
-            '--taskcluster-secrets=repo:github.com/mozilla-releng/services:branch:' + channel,
+            '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
             '--no-interactive',
         ] + extra_attributes
         scopes = [
@@ -275,11 +275,7 @@ def cmd(ctx,
     """A tool to be ran on each commit.
     """
 
-    taskcluster = cli_common.taskcluster.TaskclusterClient(
-        taskcluster_client_id,
-        taskcluster_access_token,
-    )
-    taskcluster_queue = taskcluster.get_service('queue')
+    taskcluster_queue = cli_common.taskcluster.get_service('queue')
 
     click.echo(' => Retriving taskGroupId ... ', nl=False)
     with click_spinner.spinner():

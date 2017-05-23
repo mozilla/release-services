@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+import os
 import structlog
 import logbook
 import structlog.exceptions
@@ -53,25 +54,53 @@ def mozdef_sender(target):
         return event_dict
     return send
 
+def setup_papertrail(app_name):
+    """
+    Setup papertrail account using taskcluster secrets
+    """
+
+    # Load secrets from environment
+    from cli_common.taskcluster import get_secrets
+    try:
+        secrets = get_secrets(required=('PAPERTRAIL_HOST', 'PAPERTRAIL_PORT'))
+    except:
+        return
+
+    # Setup papertrail
+    papertrail = logbook.SyslogHandler(
+        application_name=app_name,
+        address=(secrets['PAPERTRAIL_HOST'], int(secrets['PAPERTRAIL_PORT'])),
+        format_string='{record.time} {record.channel}: {record.message}',
+        bubble=True,
+    )
+    papertrail.push_application()
+
 
 def init_app(app):
     """
     Init logger from a Flask Application
     """
     mozdef = app.config.get('MOZDEF_TARGET', None)
-    level = logbook.ERROR
+    level = logbook.INFO
     if app.debug:
         level = logbook.DEBUG
-    init_logger(level=level, mozdef=mozdef)
+    init_logger(level=level, mozdef=mozdef, app_name=app.name)
 
 
-def init_logger(level=logbook.ERROR, handler=None, mozdef=None):
+def init_logger(level=logbook.INFO, handler=None, mozdef=None, app_name=None):
+    if app_name is None:
+        app_name = os.environ.get('APP_NAME')
+    assert app_name is not None, \
+        'Missing APP_NAME to setup logging'
 
     # Output logs on stderr
     if handler is None:
         fmt = '{record.channel}: {record.message}'
         handler = logbook.StderrHandler(level=level, format_string=fmt)
     handler.push_application()
+
+    # Output logs on papertrail
+    setup_papertrail(app_name)
 
     def logbook_factory(*args, **kwargs):
         # Logger given to structlog

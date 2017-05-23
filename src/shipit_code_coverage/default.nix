@@ -80,7 +80,7 @@ let
         };
         taskCommand = [
           "/bin/shipit-code-coverage"
-          "--secrets"
+          "--taskcluster-secret"
           secretsKey
           "--cache-root"
           "/cache"

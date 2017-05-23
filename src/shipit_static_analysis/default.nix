@@ -39,7 +39,7 @@ let
         taskCommand = [
           "/bin/shipit-static-analysis"
           "$REVISIONS"
-          "--secrets"
+          "--taskcluster-secret"
           secretsKey
           "--cache-root"
           "/cache"

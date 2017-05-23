@@ -19,6 +19,7 @@ import taskcluster.exceptions
 
 import cli_common.log
 import cli_common.taskcluster
+import cli_common.click
 import please_cli.config
 import please_cli.build
 import please_cli.utils
@@ -28,6 +29,7 @@ log = cli_common.log.get_logger(__name__)
 
 
 @click.command()
+@cli_common.click.taskcluster_options
 @click.argument(
     'app',
     required=True,
@@ -67,20 +69,6 @@ log = cli_common.log.get_logger(__name__)
     help='`nix-push` command',
     )
 @click.option(
-    '--taskcluster-secrets',
-    required=True,
-    )
-@click.option(
-    '--taskcluster-client-id',
-    default=None,
-    required=False,
-    )
-@click.option(
-    '--taskcluster-access-token',
-    default=None,
-    required=False,
-    )
-@click.option(
     '--interactive/--no-interactive',
     default=True,
     )
@@ -93,7 +81,7 @@ def cmd_S3(ctx,
            env,
            nix_build,
            nix_push,
-           taskcluster_secrets,
+           taskcluster_secret,
            taskcluster_client_id,
            taskcluster_access_token,
            interactive,
@@ -101,12 +89,7 @@ def cmd_S3(ctx,
     '''
     '''
 
-    taskcluster_client = cli_common.taskcluster.TaskclusterClient(
-        taskcluster_client_id,
-        taskcluster_access_token,
-    )
-    secrets_tool = taskcluster_client.get_service('secrets')
-    secrets = secrets_tool.get(taskcluster_secrets)['secret']
+    secrets = cli_common.taskcluster.get_secrets()
 
     AWS_ACCESS_KEY_ID = secrets['DEPLOY_S3_ACCESS_KEY_ID']
     AWS_SECRET_ACCESS_KEY = secrets['DEPLOY_S3_SECRET_ACCESS_KEY']
@@ -117,7 +100,7 @@ def cmd_S3(ctx,
                extra_attribute=extra_attribute,
                nix_build=nix_build,
                nix_push=nix_push,
-               taskcluster_secrets=taskcluster_secrets,
+               taskcluster_secret=taskcluster_secret,
                taskcluster_client_id=taskcluster_client_id,
                taskcluster_access_token=taskcluster_access_token,
                interactive=interactive,
@@ -195,6 +178,7 @@ def cmd_S3(ctx,
 
 
 @click.command()
+@cli_common.click.taskcluster_options
 @click.argument(
     'app',
     required=True,
@@ -221,20 +205,6 @@ def cmd_S3(ctx,
     help='`nix-push` command',
     )
 @click.option(
-    '--taskcluster-secrets',
-    required=True,
-    )
-@click.option(
-    '--taskcluster-client-id',
-    default=None,
-    required=False,
-    )
-@click.option(
-    '--taskcluster-access-token',
-    default=None,
-    required=False,
-    )
-@click.option(
     '--interactive/--no-interactive',
     default=True,
     )
@@ -245,18 +215,13 @@ def cmd_HEROKU(ctx,
                extra_attribute,
                nix_build,
                nix_push,
-               taskcluster_secrets,
+               taskcluster_secret,
                taskcluster_client_id,
                taskcluster_access_token,
                interactive,
                ):
 
-    taskcluster_client = cli_common.taskcluster.TaskclusterClient(
-        taskcluster_client_id,
-        taskcluster_access_token,
-    )
-    secrets_tool = taskcluster_client.get_service('secrets')
-    secrets = secrets_tool.get(taskcluster_secrets)['secret']
+    secrets = cli_common.taskcluster.get_secrets()
 
     HEROKU_USERNAME = secrets['HEROKU_USERNAME']
     HEROKU_PASSWORD = secrets['HEROKU_PASSWORD']
@@ -266,7 +231,7 @@ def cmd_HEROKU(ctx,
                extra_attribute=extra_attribute,
                nix_build=nix_build,
                nix_push=nix_push,
-               taskcluster_secrets=taskcluster_secrets,
+               taskcluster_secret=taskcluster_secret,
                taskcluster_client_id=taskcluster_client_id,
                taskcluster_access_token=taskcluster_access_token,
                interactive=interactive,
@@ -295,6 +260,7 @@ def cmd_HEROKU(ctx,
 
 
 @click.command()
+@cli_common.click.taskcluster_options
 @click.argument(
     'app',
     required=True,
@@ -326,20 +292,6 @@ def cmd_HEROKU(ctx,
     help='`nix-push` command',
     )
 @click.option(
-    '--taskcluster-secrets',
-    required=True,
-    )
-@click.option(
-    '--taskcluster-client-id',
-    default=None,
-    required=False,
-    )
-@click.option(
-    '--taskcluster-access-token',
-    default=None,
-    required=False,
-    )
-@click.option(
     '--interactive/--no-interactive',
     default=True,
     )
@@ -351,17 +303,13 @@ def cmd_TASKCLUSTER_HOOK(ctx,
                          hook_group_id,
                          nix_build,
                          nix_push,
-                         taskcluster_secrets,
+                         taskcluster_secret,
                          taskcluster_client_id,
                          taskcluster_access_token,
                          interactive,
                          ):
 
-    taskcluster_client = cli_common.taskcluster.TaskclusterClient(
-        taskcluster_client_id,
-        taskcluster_access_token,
-    )
-    hooks_tool = taskcluster_client.get_service('hooks')
+    hooks_tool = cli_common.taskcluster.get_service('hooks')
 
     click.echo(' => Hook `{}/{}` exists? ... '.format(hook_group_id, hook_id), nl=False)
     with click_spinner.spinner():
@@ -389,7 +337,7 @@ def cmd_TASKCLUSTER_HOOK(ctx,
                extra_attribute=extra_attribute,
                nix_build=nix_build,
                nix_push=nix_push,
-               taskcluster_secrets=taskcluster_secrets,
+               taskcluster_secret=taskcluster_secret,
                taskcluster_client_id=taskcluster_client_id,
                taskcluster_access_token=taskcluster_access_token,
                interactive=interactive,
