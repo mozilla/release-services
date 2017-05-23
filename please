@@ -7,6 +7,7 @@ set -eu
 
 USE_NIX=0
 USE_DOCKER=0
+DOCKER_VOLUME="services_nix_store"
 
 case "`uname`" in
   Darwin)
@@ -46,11 +47,7 @@ if [ "$USE_NIX" = "1" ]; then
 
 else
   if [ "$USE_DOCKER" = "1" ]; then
-      if [ ! -d tmp/nix-docker]; then
-        mkdir -p tmp/nix-docker;
-        docker run --rm --volume=`pwd`/tmp/nix-docker:/tmp/nix-docker garbas/mozilla-releng-services:base-latest cp -upPR /nix/store /tmp/nix-docker;
-      fi
-      exec docker run --tty --volume=`pwd`:/app --volume=`pwd`/tmp/nix-docker/store:/nix/store --workdir=/app garbas/mozilla-releng-services:base-latest ./please "$@"
+      exec docker run --tty --volume="$(pwd)":/app --volume="${DOCKER_VOLUME}":/nix/store --workdir=/app garbas/mozilla-releng-services:base-latest ./please "$@"
   else
     # TODO: better error message and point to documentation
     echo "ERROR: please install nix or docker!"
