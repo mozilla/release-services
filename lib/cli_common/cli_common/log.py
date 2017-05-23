@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+import os
 import structlog
 import logbook
 import structlog.exceptions
@@ -66,9 +67,12 @@ def setup_papertrail():
         return
 
     # Setup papertrail
+    app_name = os.environ.get('PROJECT', 'UnknownApp')
     papertrail = logbook.SyslogHandler(
-        address=(secrets['PAPERTRAIL_HOST'], secrets['PAPERTRAIL_PORT']),
-        format_string='{record.time} {record.module} {record.channel}: {record.message}'
+        application_name=app_name,
+        address=(secrets['PAPERTRAIL_HOST'], int(secrets['PAPERTRAIL_PORT'])),
+        format_string='{record.time} {record.channel}: {record.message}',
+        bubble=True,
     )
     papertrail.push_application()
 
