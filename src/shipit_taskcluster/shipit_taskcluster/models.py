@@ -14,7 +14,7 @@ from backend_common.db import db
 
 
 # TODO use shared step backend base class for statuses
-class SigningStatus(enum.Enum):
+class TaskclusterStatus(enum.Enum):
     starting = 'starting'
     running = 'running'
     stopping = 'stopping'
@@ -32,7 +32,7 @@ class TaskclusterStep(db.Model):
     __tablename__ = 'shipit_taskcluster_steps'
 
     uid = sa.Column(sa.String(80), primary_key=True)
-    state = sa.Column(sa.Enum(SigningStatus), default=SigningStatus.starting)
+    state = sa.Column(sa.Enum(TaskclusterStatus), default=TaskclusterStatus.starting)
     status_message = sa.Column(sa.String(200), nullable=True)
     created = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
     completed = sa.Column(sa.DateTime, nullable=True)
