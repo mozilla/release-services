@@ -5,19 +5,14 @@
 from __future__ import absolute_import
 
 import logging
-import collections
+from sqlalchemy.exc import IntegrityError
 
+from shipit_taskcluster.models import TaskclusterStep
 from shipit_taskcluster.taskcluster_utils import get_task_group_state, \
     TASK_TO_STEP_STATE
 
 log = logging.getLogger(__name__)
 
-# TODO use postgres
-STEPS = {}
-STEP = collections.namedtuple("Step", "uid state task_group_id")
-
-# XXX testing
-STEPS['001'] = STEP(uid='001', state='running', task_group_id='bOFIB-1aQhax372teskb9A')
 
 # helpers
 def query_state(step):
@@ -27,42 +22,37 @@ def query_state(step):
 
 
 # api
-def list_steps():
-    log.info('listing steps')
-    return list(STEPS.keys())
+def list_taskcluster_steps():
+    pass  # TODO
 
 
-def get_step(uid):
-    log.info('getting step %s', uid)
-    if not STEPS.get(uid):
-        return "Step with uid {} unknown".format(uid), 404
-    step = STEPS[uid]
-    return dict(uid=step.uid, input={}, parameters=step)
+def get_taskcluster_step_status(uid):
+    pass  # TODO
 
 
-def get_step_status(uid):
-    log.info('getting step status %s', uid)
-    if not STEPS.get(uid):
-        return "Step with uid {} unknown".format(uid), 404
-    step = STEPS[uid]
-    log.info('step: %s', step)
-    step.state = query_state(step)
-    return dict(
-        state=step.state
-    )
+def create_taskcluster_step(uid, body):
+    """creates taskcluster step"""
 
+    log.info('creating taskcluster step %s for task_group_id %s', uid, task_group_id)
+    step = TaskclusterStep()
 
-def create_step(uid, body):
-    log.info('creating step %s', uid)
-    log.info('with inputs %s', body)
-    task_group_id = body.task_group_id
-    STEPS[uid] = STEP(uid=uid, state='running', taskGroupId=task_group_id)
-    return STEPS[uid]
+    step.uid = uid
+    step.state = 'running'
+    step.task_group_id = body.task_group_id
 
+    db.session.add(step)
 
-def delete_step(uid):
-    log.info('deleting step %s', uid)
-    if not STEPS.get(uid):
-        return "step with uid {} unknown".format(uid), 404
-    del STEPS[uid]
+    try:
+        db.session.commit()
+    except IntegrityError as e:
+        # TODO check for existence of step with same task_group_id
+        return {
+                   'error_title': 'Step with that uid already exists',
+                   'error_message': str(e),
+               }, 409  # Conflict
+
     return None
+
+
+def delete_taskcluster_step(uid):
+    pass  # TODO

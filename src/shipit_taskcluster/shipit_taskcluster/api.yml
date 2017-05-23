@@ -9,47 +9,37 @@ produces:
   - application/json
 paths:
 
-  /:
+#  /steps:
+#    get:
+#      operationId: "shipit_taskcluster.api.list_taskcluster_steps"
+#      description: List all Taskcluster steps with status
+#      responses:
+#        200:
+#          description: List of all steps
 
-    get:
-      operationId: "shipit_taskcluster.api.list_steps"
-      description: List all Taskcluster steps with status
-      responses:
-        200:
-          description: List of all steps
+#  /steps/{uid}/status:
+#
+#    get:
+#      operationId: "shipit_taskcluster.api.get_step_status"
+#      description: Status of a Taskcluster step
+#      parameters:
+#        - $ref: "#/parameters/uid"
+#      responses:
+#        200:
+#          description: Status of a Taskcluster step
+#          schema:
+#            $ref: '#/definitions/StepResult'
 
-  /{uid}/definition:
-
-    get:
-      operationId: "shipit_taskcluster.api.get_step"
-      description: Step definition
-      parameters:
-          - $ref: '#/parameters/uid'
-      responses:
-        200:
-          description: Definition of a Taskcluster step
-          schema:
-            $ref: '#/definitions/Step'
-
-  /{uid}/status:
-
-    get:
-      operationId: "shipit_taskcluster.api.get_step_status"
-      description: Status of a Taskcluster step
-      parameters:
-        - $ref: "#/parameters/uid"
-      responses:
-        200:
-          description: Status of a Taskcluster step
-          schema:
-            $ref: '#/definitions/StepResult'
-
-  /{uid}:
+  /steps/{uid}:
     put:
-      operationId: "shipit_taskcluster.api.create_step"
+      operationId: "shipit_taskcluster.api.create_taskcluster_step"
       description: Create new Taskcluster step
       parameters:
-        - $ref: "#/parameters/uid"
+        - name: uid
+          in: path
+          description: Step UID
+          required: true
+          type: string
         - name: body
           in: body
           description: inputs to create Taskcluster step
@@ -59,51 +49,55 @@ paths:
       responses:
         200:
           description: Returns nothing
-
-    delete:
-      operationId: "shipit_taskcluster.api.delete_step"
-      description: Remove a Taskcluster step
-      parameters:
-        - $ref: '#/parameters/uid'
-      responses:
-        200:
-          description: Removal of Taskcluster step
+          schema:
+            type: string
+        409:
+          description: "A step with this uid already exists"
+#
+#    delete:
+#      operationId: "shipit_taskcluster.api.delete_step"
+#      description: Remove a Taskcluster step
+#      parameters:
+#        - $ref: '#/parameters/uid'
+#      responses:
+#        200:
+#          description: Removal of Taskcluster step
 
 definitions:
 
   # Step and StepResult definitions seem generic enough that they should be defined in a more global
   # location for all shipit services that represent a step
-  StepResult:
-    type: object
-    required:
-      - state
-    properties:
-      state:
-        type: string
-        enum:
-          - in_progress
-          - success
-          - failed
-          - cancelled
-      message:
-        type: string
-        description: More elaborate description of state for humans.
-      output:
-        $ref: '#/definitions/Output'
+#  StepResult:
+#    type: object
+#    required:
+#      - state
+#    properties:
+#      state:
+#        type: string
+#        enum:
+#          - in_progress
+#          - success
+#          - failed
+#          - cancelled
+#      message:
+#        type: string
+#        description: More elaborate description of state for humans.
+#      output:
+#        $ref: '#/definitions/Output'
 
-  Step:
-    type: object
-    required:
-      - uid
-      - input
-      - parameters
-    properties:
-      uid:
-        type: string
-      input:
-        $ref: '#/definitions/Input'
-      parameters:
-        $ref: '#/definitions/Parameters'
+#  Step:
+#    type: object
+#    required:
+#      - uid
+#      - input
+#      - parameters
+#    properties:
+#      uid:
+#        type: string
+#      input:
+#        $ref: '#/definitions/Input'
+#      parameters:
+#        $ref: '#/definitions/Parameters'
 
   Taskcluster:
     type: object
@@ -113,21 +107,20 @@ definitions:
     properties:
       taskGroupId:
         type: string
-        description: if given, skip creating a graph and instead track existing taskGroupId graph.
+        description: the group id that is shared between tasks
 
-  Parameters:
-    type: object
+#  Parameters:
+#    type: object
+#
+#  Input:
+#    type: object
+#
+#  Output:
+#    type: object
 
-  Input:
-    type: object
-
-  Output:
-    type: object
-
-parameters:
-  uid:
-    name: uid
-    in: path
-    description: Step UID
-    required: true
-    type: string
+#parameters:
+#  uid:
+#    name: uid
+#    in: path
+#    description: Step UID
+#    required: true
