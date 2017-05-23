@@ -568,7 +568,7 @@ in rec {
 
         dockerConfig = {
           Env = [
-            "PROJECT=${name}-${version}"
+            "APP_NAME=${name}-${version}"
             "PATH=/bin"
             "APP_SETTINGS=${self}/etc/settings.py"
             "FLASK_APP=${dirname}:flask.app"
@@ -635,7 +635,7 @@ in rec {
     , shellHook ? ""
     , dockerConfig ?
       { Env = [
-          "PROJECT=${name}-${version}"
+          "APP_NAME=${name}-${version}"
           "PATH=/bin"
           "LANG=en_US.UTF-8"
           "LOCALE_ARCHIVE=${releng_pkgs.pkgs.glibcLocales}/lib/locale/locale-archive"
@@ -722,7 +722,7 @@ in rec {
         '' + postInstall;
 
         shellHook = ''
-          export PROJECT="${name}-${version}"
+          export APP_NAME="${name}-${version}"
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 
           pushd "$SERVICES_ROOT"${self.src_path} >> /dev/null

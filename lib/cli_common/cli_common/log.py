@@ -54,7 +54,7 @@ def mozdef_sender(target):
         return event_dict
     return send
 
-def setup_papertrail():
+def setup_papertrail(app_name):
     """
     Setup papertrail account using taskcluster secrets
     """
@@ -67,7 +67,6 @@ def setup_papertrail():
         return
 
     # Setup papertrail
-    app_name = os.environ.get('PROJECT', 'UnknownApp')
     papertrail = logbook.SyslogHandler(
         application_name=app_name,
         address=(secrets['PAPERTRAIL_HOST'], int(secrets['PAPERTRAIL_PORT'])),
@@ -85,10 +84,14 @@ def init_app(app):
     level = logbook.INFO
     if app.debug:
         level = logbook.DEBUG
-    init_logger(level=level, mozdef=mozdef)
+    init_logger(level=level, mozdef=mozdef, app_name=app.name)
 
 
-def init_logger(level=logbook.INFO, handler=None, mozdef=None):
+def init_logger(level=logbook.INFO, handler=None, mozdef=None, app_name=None):
+    if app_name is None:
+        app_name = os.environ.get('APP_NAME')
+    assert app_name is not None, \
+        'Missing APP_NAME to setup logging'
 
     # Output logs on stderr
     if handler is None:
@@ -97,7 +100,7 @@ def init_logger(level=logbook.INFO, handler=None, mozdef=None):
     handler.push_application()
 
     # Output logs on papertrail
-    setup_papertrail()
+    setup_papertrail(app_name)
 
     def logbook_factory(*args, **kwargs):
         # Logger given to structlog

@@ -79,7 +79,7 @@ def cmd(ctx, verbose, mozdef):
     elif verbose > 1:
         log_level = logbook.DEBUG
 
-    cli_common.log.init_logger(log_level, mozdef)
+    cli_common.log.init_logger(log_level, mozdef, app_name='please')
 
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
