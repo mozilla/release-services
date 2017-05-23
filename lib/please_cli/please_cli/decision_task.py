@@ -35,7 +35,7 @@ def get_build_task(index,
     deploy_options = app_config.get('deploy_options', {}).get(channel, {})
 
     extra_attributes =  []
-    if channel in deploy_options.keys():
+    if channel in app_config.get('deploy_options', {}).keys():
         extra_attributes = [
             '--extra-attribute="{}.deploy.{}"'.format(app, channel),
         ]
@@ -81,7 +81,7 @@ def get_deploy_task(index,
     scopes = []
 
     extra_attributes = []
-    if channel in deploy_options.keys():
+    if channel in app_config.get('deploy_options', {}).keys():
         extra_attributes = [
             '--extra-attribute="{}.deploy.{}"'.format(app, channel),
         ]
@@ -221,7 +221,7 @@ def get_task(task_group_id,
 @click.option(
     '--channel',
     type=click.Choice(please_cli.config.CHANNELS),
-    envvar="GITHUB_BASE_BRANCH",
+    envvar="GITHUB_BRANCH",
     required=True,
     )
 @click.option(
