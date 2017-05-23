@@ -15,7 +15,7 @@ import Dict exposing (Dict)
 
 type alias Directory =
     { current : Float
-    , previous : Float
+    , previous : Maybe Float
     , bugs : List Int
     }
 
@@ -110,7 +110,7 @@ decodeDirectory : Decoder Directory
 decodeDirectory =
     JsonDecode.map3 Directory
         (JsonDecode.field "cur" JsonDecode.float)
-        (JsonDecode.field "prev" JsonDecode.float)
+        (JsonDecode.field "prev" (JsonDecode.nullable JsonDecode.float))
         (JsonDecode.field "bugs" (JsonDecode.list JsonDecode.int))
 
 
@@ -164,6 +164,7 @@ viewDirectories directories =
             [ th [] [ text "Path" ]
             , th [] [ text "Previous" ]
             , th [] [ text "Current" ]
+            , th [] [ text "Difference" ]
             , th [] [ text "Bugs" ]
             ]
          ]
@@ -171,21 +172,52 @@ viewDirectories directories =
         )
 
 
+roundFloat : Float -> Float
+roundFloat x =
+    toFloat (round (x * 100)) / 100
+
+
 viewDirectory : ( String, Directory ) -> Html Msg
 viewDirectory ( path, directory ) =
     let
+        diff =
+            case directory.previous of
+                Just previous ->
+                    roundFloat (directory.current - previous)
+
+                Nothing ->
+                    0.0
+
         style =
-            if directory.current < directory.previous then
-                "table-danger"
-            else if directory.current > directory.previous then
+            if diff > 0 then
                 "table-success"
+            else if diff < 0 then
+                "table-danger"
             else
                 "table-info"
+
+        previous =
+            case directory.previous of
+                Just previous ->
+                    toString (roundFloat previous)
+
+                Nothing ->
+                    "No previous value"
     in
         tr [ class style ]
             [ td [] [ span [ class "btn btn-link", onClick (SetDirectory (Just path)) ] [ text path ] ]
-            , td [] [ text (toString (toFloat (round (directory.previous * 100)) / 100)) ]
+            , td [] [ text previous ]
             , td [] [ text (toString directory.current) ]
+            , td []
+                [ text
+                    ((if diff > 0 then
+                        "+"
+                      else
+                        ""
+                     )
+                        ++ (toString diff)
+                    )
+                ]
             , td [] [ ul [] (List.map viewBug directory.bugs) ]
             ]
 
