@@ -10,6 +10,8 @@ logger = get_logger(__name__)
 
 
 def coveralls(data):
+    logger.info('Upload report to Coveralls')
+
     r = requests.post('https://coveralls.io/api/v1/jobs', files={
         'json_file': ('json_file', gzip.compress(data), 'gzip/json')
     })
@@ -37,6 +39,8 @@ def coveralls_wait(job_url):
 
 
 def codecov(data, commit_sha, token, flags=None):
+    logger.info('Upload report to Codecov')
+
     params = {
         'commit': commit_sha,
         'token': token,
