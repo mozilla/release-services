@@ -36,7 +36,7 @@ class TaskclusterStep(db.Model):
     status_message = sa.Column(sa.String(200), nullable=True)
     created = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
     completed = sa.Column(sa.DateTime, nullable=True)
-    task_group_id = sa.Column(sa.String(80), nullable=False)
+    task_group_id = sa.Column(sa.String(80), nullable=False, unique=True)
 
     def delete(self):
         """

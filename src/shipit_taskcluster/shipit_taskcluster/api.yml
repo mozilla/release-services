@@ -9,13 +9,19 @@ produces:
   - application/json
 paths:
 
-#  /steps:
-#    get:
-#      operationId: "shipit_taskcluster.api.list_taskcluster_steps"
-#      description: List all Taskcluster steps with status
-#      responses:
-#        200:
-#          description: List of all steps
+  /steps:
+    get:
+      operationId: "shipit_taskcluster.api.list_taskcluster_steps"
+      description: List all Taskcluster steps with status
+      parameters:
+        - name: state
+          in: query
+          required: false
+          default: running
+          type: string
+      responses:
+        200:
+          description: List of all steps
 
 #  /steps/{uid}/status:
 #
@@ -52,7 +58,7 @@ paths:
           schema:
             type: string
         409:
-          description: "A step with this uid already exists"
+          description: "A step with this uid or task_group_id already exists"
 #
 #    delete:
 #      operationId: "shipit_taskcluster.api.delete_step"
