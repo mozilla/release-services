@@ -7,7 +7,7 @@ from __future__ import absolute_import
 import logging
 
 from sqlalchemy.orm.exc import NoResultFound
-from flask import request
+from flask import request, abort
 from sqlalchemy.exc import IntegrityError
 
 from backend_common.db import db
@@ -26,14 +26,14 @@ def query_state(step):
 
 
 # api
-def list_taskcluster_steps():
+def list_taskcluster_steps(state="running"):
     log.info('listing steps')
 
     try:
-        desired_state = TaskclusterStatus[request.args.get('state', 'running')]
+        desired_state = TaskclusterStatus[state]
     except KeyError:
         log.warning("valid states: %s", [state.value for state in TaskclusterStatus])
-        log.exception("%s is not a valid state", request.args["state"])
+        log.exception("%s is not a valid state", state)
         return []
 
     try:
@@ -47,6 +47,17 @@ def list_taskcluster_steps():
 
 def get_taskcluster_step_status(uid):
     pass  # TODO
+
+
+def get_taskcluster_step(uid):
+    log.info('getting step %s', uid)
+
+    try:
+        step = db.session.query(TaskclusterStep).filter(TaskclusterStep.uid == uid).one()
+    except NoResultFound:
+        abort(404)
+
+    return dict(uid=step.uid, taskGroupId=step.task_group_id, parameters={})
 
 
 def create_taskcluster_step(uid, body):

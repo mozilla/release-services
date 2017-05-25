@@ -24,7 +24,6 @@ paths:
           description: List of all steps
 
 #  /steps/{uid}/status:
-#
 #    get:
 #      operationId: "shipit_taskcluster.api.get_step_status"
 #      description: Status of a Taskcluster step
@@ -41,17 +40,13 @@ paths:
       operationId: "shipit_taskcluster.api.create_taskcluster_step"
       description: Create new Taskcluster step
       parameters:
-        - name: uid
-          in: path
-          description: Step UID
-          required: true
-          type: string
+        - $ref: '#/parameters/uid'
         - name: body
           in: body
           description: inputs to create Taskcluster step
           required: true
           schema:
-            $ref: '#/definitions/Taskcluster'
+            $ref: '#/definitions/TaskclusterStep'
       responses:
         200:
           description: Returns nothing
@@ -59,7 +54,16 @@ paths:
             type: string
         409:
           description: "A step with this uid or task_group_id already exists"
-#
+    get:
+      operationId: "shipit_taskcluster.api.get_taskcluster_step"
+      description: "Step definition"
+      parameters:
+          - $ref: '#/parameters/uid'
+      responses:
+        200:
+          description: "Definition of a TaskclusterStep"
+          schema:
+            $ref: '#/definitions/TaskclusterStep'
 #    delete:
 #      operationId: "shipit_taskcluster.api.delete_step"
 #      description: Remove a Taskcluster step
@@ -71,8 +75,7 @@ paths:
 
 definitions:
 
-  # Step and StepResult definitions seem generic enough that they should be defined in a more global
-  # location for all shipit services that represent a step
+  # TODO move this to a common place
 #  StepResult:
 #    type: object
 #    required:
@@ -91,42 +94,23 @@ definitions:
 #      output:
 #        $ref: '#/definitions/Output'
 
-#  Step:
-#    type: object
-#    required:
-#      - uid
-#      - input
-#      - parameters
-#    properties:
-#      uid:
-#        type: string
-#      input:
-#        $ref: '#/definitions/Input'
-#      parameters:
-#        $ref: '#/definitions/Parameters'
-
-  Taskcluster:
+  # TODO make this a generic step and move it to common place
+  TaskclusterStep:
     type: object
     description: A representation of Taskcluster group of Tasks
     required:
       - taskGroupId
     properties:
+      uid:
+        type: string
       taskGroupId:
         type: string
         description: the group id that is shared between tasks
 
-#  Parameters:
-#    type: object
-#
-#  Input:
-#    type: object
-#
-#  Output:
-#    type: object
-
-#parameters:
-#  uid:
-#    name: uid
-#    in: path
-#    description: Step UID
-#    required: true
+parameters:
+  uid:
+    name: uid
+    in: path
+    description: Step UID
+    required: true
+    type: string
