@@ -39,6 +39,7 @@ Contributing
 
 
 
+
 .. _please_command:
 
 ``./please`` command
@@ -49,6 +50,7 @@ Install Nix:
 .. code-block:: bash
 
     % curl https://raw.githubusercontent.com/mozilla-releng/services/master/nix/setup.sh | bash
+
 
 You can read more what above ``setup.sh`` script does in :ref:`prerequirements`
 section.
