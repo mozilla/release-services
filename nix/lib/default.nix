@@ -517,7 +517,9 @@ in rec {
     , checkPhase ? null
     , postInstall ? ""
     , shellHook ? ""
-    , dockerConfig ? {}
+    , dockerCmd ? []
+    , dockerEnv ? []
+    , dockerContents ? []
     , passthru ? {}
     , inStaging ? true
     , inProduction ? false
@@ -566,25 +568,24 @@ in rec {
           export FLASK_APP=${dirname}:flask.app
         '' + shellHook;
 
-        dockerConfig = {
-          Env = [
-            "APP_NAME=${name}-${version}"
-            "PATH=/bin"
-            "APP_SETTINGS=${self}/etc/settings.py"
-            "FLASK_APP=${dirname}:flask.app"
-            "LANG=en_US.UTF-8"
-            "LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive"
-            "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-          ];
-          Cmd = [
-            "newrelic-admin" "run-program" "gunicorn" "${dirname}:flask.app" "--log-file" "-"
-          ];
-        };
+        inherit dockerContents;
+        dockerEnv = [
+          "APP_SETTINGS=${self}/etc/settings.py"
+          "FLASK_APP=${dirname}:flask.app"
+        ];
+        dockerCmd = [
+          "newrelic-admin"
+          "run-program"
+          "gunicorn"
+          "${dirname}:flask.app"
+          "--log-file"
+          "-"
+        ];
 
       });
     in self;
 
-  mkPythonScript = 
+  mkPythonScript =
     { name
     , scriptName ? name
     , python
@@ -633,16 +634,8 @@ in rec {
     , postPatch ? ""
     , postInstall ? ""
     , shellHook ? ""
-    , dockerConfig ?
-      { Env = [
-          "APP_NAME=${name}-${version}"
-          "PATH=/bin"
-          "LANG=en_US.UTF-8"
-          "LOCALE_ARCHIVE=${releng_pkgs.pkgs.glibcLocales}/lib/locale/locale-archive"
-          "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-        ];
-        Cmd = [];
-      }
+    , dockerCmd ? []
+    , dockerEnv ? []
     , dockerContents ? []
     , passthru ? {}
     , inStaging ? true
@@ -653,7 +646,16 @@ in rec {
       self_docker = mkDocker {
         inherit name version;
         contents = [ busybox self ] ++ dockerContents;
-        config = dockerConfig;
+        config =
+          { Env = [
+              "APP_NAME=${name}-${version}"
+              "PATH=/bin"
+              "LANG=en_US.UTF-8"
+              "LOCALE_ARCHIVE=${releng_pkgs.pkgs.glibcLocales}/lib/locale/locale-archive"
+              "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+            ] ++ dockerEnv;
+            Cmd = dockerCmd;
+          };
       };
 
       self = python.mkDerivation {

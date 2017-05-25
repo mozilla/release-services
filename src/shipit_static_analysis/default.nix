@@ -78,25 +78,17 @@ let
       ln -s ${releng_pkgs.gecko-env}/bin/gecko-env $out/bin
     '';
 
-		shellHook = ''
-			export PATH="${mercurial}/bin:${llvmPackages_39.clang-unwrapped}/share/clang:$PATH"
+    shellHook = ''
+      export PATH="${mercurial}/bin:${llvmPackages_39.clang-unwrapped}/share/clang:$PATH"
 
-			# Extras for clang-tidy
-			export CPLUS_INCLUDE_PATH="$CPLUS_INCLUDE_PATH:${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
-		'';
+      # Extras for clang-tidy
+      export CPLUS_INCLUDE_PATH="$CPLUS_INCLUDE_PATH:${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
+    '';
 
-    dockerConfig = {
-			Env = [
-				"PATH=/bin"
-				"LANG=en_US.UTF-8"
-				"LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive"
-				"SSL_CERT_FILE=${cacert}/etc/ssl/certs/ca-bundle.crt"
-
-				# Extras for clang-tidy
-				"CPLUS_INCLUDE_PATH=${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
-			];
-			Cmd = [];
-		};
+    dockerEnv =
+      [ "CPLUS_INCLUDE_PATH=${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
+      ];
+    dockerCmd = [];
 
     passthru = {
       deploy = {

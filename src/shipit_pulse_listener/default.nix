@@ -36,17 +36,9 @@ EOF
       mkdir -p $out/bin
       ln -s ${mercurial'}/bin/hg $out/bin
     '';
-    dockerConfig = {
-      Env = [
-        "PATH=/bin"
-        "LANG=en_US.UTF-8"
-        "LOCALE_ARCHIVE=${releng_pkgs.pkgs.glibcLocales}/lib/locale/locale-archive"
-        "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-      ];
-      Cmd = [
-          "/bin/shipit-pulse-listener"
-      ];
-    };
+    dockerCmd = [
+      "/bin/shipit-pulse-listener"
+    ];
     passthru = {
       deploy = {
       };
