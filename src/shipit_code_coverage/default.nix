@@ -58,7 +58,7 @@ let
 
   mkBot = branch:
     let
-      cacheKey = "shipit-static-analysis-" + branch;
+      cacheKey = "services-shipit-code-coverage-" + branch;
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
       hook = mkTaskclusterHook {
         name = "Shipit task aggregating code coverage data";
