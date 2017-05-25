@@ -8,16 +8,22 @@ supporting.
 
     Currently supported platform is **Linux**.
 
-Useful links
-------------
+
+Links
+-----
 
 :Code: https://github.com/mozilla-releng/services
 :Issues: https://github.com/mozilla-releng/services/issues
 :Documentation: https://docs.mozilla-releng.net
 
 
-.. todo:: include video for quickstart
+Introduction
+------------
 
+.. raw:: html
+
+    <iframe src="https://player.vimeo.com/video/218952258" width="640" height="480" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+    <p><a href="https://vimeo.com/218952258">mozilla-releng/services introduction</a> from <a href="https://vimeo.com/user13978491">Rok Garbas</a> on <a href="https://vimeo.com">Vimeo</a>.</p>
 
 Contents
 --------
