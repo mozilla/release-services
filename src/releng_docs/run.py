@@ -7,7 +7,11 @@ HERE = os.path.dirname(__file__)
 
 server = livereload.Server()
 server.watch(
-    os.path.join(HERE, '*'),
+    os.path.join(HERE, '*.rst'),
+    livereload.shell('make html'),
+)
+server.watch(
+    os.path.join(HERE, '*', '*.rst'),
     livereload.shell('make html'),
 )
 server.watch(
