@@ -23,6 +23,8 @@ def read_requirements(file_):
             else:
                 lines.append(line)
     return lines
+
+
 setup(
     name='mozilla-releng-treestatus',
     version=version,
