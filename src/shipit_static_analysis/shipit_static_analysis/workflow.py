@@ -77,12 +77,15 @@ class Workflow(object):
         logger.info('Modified files', files=modified_files)
 
         # mach configure
+        logger.info('Mach configure ...')
         run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
 
         # Build CompileDB backend
+        logger.info('Mach build backend ...')
         run_check(['gecko-env', './mach', 'build-backend', '--backend=CompileDB'], cwd=self.repo_dir)
 
         # Build exports
+        logger.info('Mach build exports ...')
         run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
         run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
 

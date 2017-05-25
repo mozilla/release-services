@@ -5,7 +5,7 @@ import click
 
 @click.command()
 @taskcluster_options
-@click.argument('revisions', nargs=-1)
+@click.argument('revisions', nargs=-1, envvar='REVISIONS')
 @click.option(
     '--cache-root',
     required=True,

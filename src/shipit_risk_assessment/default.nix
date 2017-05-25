@@ -117,19 +117,11 @@ let
 
       export EXTRAS_INCLUDE_PATH="${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/backward:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
     '';
-    dockerConfig = {
-      Env = [
-        "PATH=/bin"
-        "LANG=en_US.UTF-8"
-        "LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive"
-        "SSL_CERT_FILE=${cacert}/etc/ssl/certs/ca-bundle.crt"
-
-        # Extras for compilation
-        "MOZCONFIG=${libmocoda}/conf/mozconfig"
+    dockerEnv =
+      [ "MOZCONFIG=${libmocoda}/conf/mozconfig"
         "EXTRAS_INCLUDE_PATH=${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/backward:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
       ];
-      Cmd = [];
-    };
+    dockerCmd = [];
 
     passthru = {
       deploy = {

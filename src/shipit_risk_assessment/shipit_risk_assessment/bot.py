@@ -10,7 +10,7 @@ class Bot(object):
     """
     Risk assessment analysis
     """
-    def __init__(self):
+    def __init__(self, work_dir):
 
         # Load mozconfig from env
         self.mozconfig_path = os.environ.get('MOZCONFIG')
@@ -19,10 +19,6 @@ class Bot(object):
         assert os.path.exists(self.mozconfig_path), \
             'Invalid MOZCONFIG in {}'.format(self.mozconfig_path)
 
-    def run(self, work_dir, merge_revision):
-        """
-        Main workflow
-        """
         if not os.path.isdir(work_dir):
             os.makedirs(work_dir)
 
@@ -38,6 +34,9 @@ class Bot(object):
         os.environ['MOCODA_ROOT'] = repo_dir
         os.environ['MOCODA_TMPDIR'] = tmp_dir
 
-        # Run mocoda react
-        logger.info('Mocoda react', revision=merge_revision)
-        mocoda_react(merge_revision)
+    def run(self, revision):
+        """
+        Run mocoda react on a revision
+        """
+        logger.info('Mocoda react', revision=revision)
+        mocoda_react(revision)
