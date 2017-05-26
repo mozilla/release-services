@@ -53,7 +53,7 @@ paths:
           schema:
             type: string
         409:
-          description: "A step with this uid or task_group_id already exists"
+          description: A step with this uid or task_group_id already exists
     get:
       operationId: "shipit_taskcluster.api.get_taskcluster_step"
       description: "Step definition"
@@ -64,14 +64,14 @@ paths:
           description: "Definition of a TaskclusterStep"
           schema:
             $ref: '#/definitions/TaskclusterStep'
-#    delete:
-#      operationId: "shipit_taskcluster.api.delete_step"
-#      description: Remove a Taskcluster step
-#      parameters:
-#        - $ref: '#/parameters/uid'
-#      responses:
-#        200:
-#          description: Removal of Taskcluster step
+    delete:
+      operationId: "shipit_taskcluster.api.delete_taskcluster_step"
+      description: Remove a Taskcluster step
+      parameters:
+        - $ref: '#/parameters/uid'
+      responses:
+        200:
+          description: Removed Taskcluster step
 
 definitions:
 

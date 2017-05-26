@@ -6,8 +6,8 @@ from __future__ import absolute_import
 
 import logging
 
-from sqlalchemy.orm.exc import NoResultFound
 from flask import request, abort
+from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 
 from backend_common.db import db
@@ -32,14 +32,15 @@ def list_taskcluster_steps(state="running"):
     try:
         desired_state = TaskclusterStatus[state]
     except KeyError:
+        exception = "{} is not a valid state".format(state)
         log.warning("valid states: %s", [state.value for state in TaskclusterStatus])
-        log.exception("%s is not a valid state", state)
-        return []
+        log.exception(exception)
+        abort(400, exception)
 
     try:
         steps = db.session.query(TaskclusterStep).filter(TaskclusterStep.state == desired_state).all()
     except NoResultFound:
-        return []
+        abort(404, "No Taskcluster steps found with that given state.")
 
     log.info("listing steps: {}", steps)
     return [step.uid for step in steps]
@@ -55,7 +56,7 @@ def get_taskcluster_step(uid):
     try:
         step = db.session.query(TaskclusterStep).filter(TaskclusterStep.uid == uid).one()
     except NoResultFound:
-        abort(404)
+        abort(404, "taskcluster step not found")
 
     return dict(uid=step.uid, taskGroupId=step.task_group_id, parameters={})
 
@@ -88,4 +89,16 @@ def create_taskcluster_step(uid, body):
 
 
 def delete_taskcluster_step(uid):
-    pass  # TODO
+    log.info('deleting step %s', uid)
+
+    try:
+        step = TaskclusterStep.query.filter_by(uid=uid).one()
+    except Exception as e:
+        exception = "Taskcluster step could not be found by given uid: {}".format(uid)
+        log.exception(exception)
+        abort(404, exception)
+
+    db.session.delete(step)
+    db.session.commit()
+
+    return {}
