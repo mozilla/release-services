@@ -28,7 +28,6 @@ for item in reversed(CWD_DIR.split(os.sep)):
 if ROOT_DIR is None:
     raise click.ClickException(NO_ROOT_DIR_ERROR % '\n - '.join(_folders))
 
-DOCKER_REGISTRY = "https://index.docker.com"
 CACHE_URL = "https://cache.mozilla-releng.net"
 
 SRC_DIR = os.path.join(ROOT_DIR, 'src')
@@ -37,6 +36,7 @@ TMP_DIR = os.path.join(ROOT_DIR, 'tmp')
 CHANNELS = ['master', 'staging', 'production']
 DEPLOY_CHANNELS = ['staging', 'production']
 
+DOCKER_REGISTRY = "https://index.docker.io"
 DOCKER_REPO = 'mozillareleng/services'
 DOCKER_BASE_TAG = 'base-latest'
 
@@ -76,10 +76,10 @@ APPS = {
                 'heroku_app': 'releng-staging-archiver',
                 'url': 'https://archiver.staging.mozilla-releng.net',
             },
-            #'production': {
-            #    'heroku_app': 'releng-production-archiver',
-            #    'url': 'https://archiver.mozilla-releng.net',
-            #},
+            # 'production': {
+            #     'heroku_app': 'releng-production-archiver',
+            #     'url': 'https://archiver.mozilla-releng.net',
+            # },
         },
     },
     'releng-clobberer': {
@@ -100,10 +100,10 @@ APPS = {
                 'heroku_app': 'releng-staging-clobberer',
                 'url': 'https://clobberer.staging.mozilla-releng.net',
             },
-            #'production': {
-            #    'heroku_app': 'releng-production-clobberer',
-            #    'url': 'https://clobberer.mozilla-releng.net',
-            #},
+            # 'production': {
+            #     'heroku_app': 'releng-production-clobberer',
+            #     'url': 'https://clobberer.mozilla-releng.net',
+            # },
         },
     },
     'releng-docs': {
@@ -173,10 +173,10 @@ APPS = {
                 'heroku_app': 'releng-staging-mapper',
                 'url': 'https://mapper.staging.mozilla-releng.net',
             },
-            #'production': {
-            #    'heroku_app': 'releng-production-mapper',
-            #    'url': 'https://mapper.mozilla-releng.net',
-            #},
+            # 'production': {
+            #     'heroku_app': 'releng-production-mapper',
+            #     'url': 'https://mapper.mozilla-releng.net',
+            # },
         },
     },
     'releng-tooltool': {
@@ -197,10 +197,10 @@ APPS = {
                 'heroku_app': 'releng-staging-tooltool',
                 'url': 'https://tooltool.staging.mozilla-releng.net',
             },
-            #'production': {
-            #    'heroku_app': 'releng-production-tooltool',
-            #    'url': 'https://tooltool.mozilla-releng.net',
-            #},
+            # 'production': {
+            #     'heroku_app': 'releng-production-tooltool',
+            #     'url': 'https://tooltool.mozilla-releng.net',
+            # },
         },
     },
     'releng-treestatus': {
@@ -246,7 +246,7 @@ APPS = {
         'deploy': 'TASKCLUSTER_HOOK',
         'deploy_options': {
             'staging': {},
-            #'production': {},
+            # 'production': {},
         },
     },
     'shipit-frontend': {
@@ -304,10 +304,10 @@ APPS = {
                 'heroku_app': 'shipit-staging-pipeline',
                 'url': 'https://pipeline.shipit.staging.mozilla-releng.net',
             },
-            #'production': {
-            #    'heroku_app': 'shipit-production-pipeline',
-            #    'url': 'https://pipeline.shipit.mozilla-releng.net',
-            #},
+            # 'production': {
+            #     'heroku_app': 'shipit-production-pipeline',
+            #     'url': 'https://pipeline.shipit.mozilla-releng.net',
+            # },
         },
     },
     'shipit-pulse-listener': {
@@ -321,8 +321,9 @@ APPS = {
             'staging': {
                 'heroku_app': 'shipit-staging-pulse-listener',
             },
-            'production': {
-            },
+            # 'production': {
+            #     'heroku_app': 'shipit-production-pulse-listener',
+            # },
         },
     },
     'shipit-risk-assessment': {
@@ -333,7 +334,7 @@ APPS = {
         'deploy': 'TASKCLUSTER_HOOK',
         'deploy_options': {
             'staging': {},
-            #'production': {},
+            # 'production': {},
         },
     },
     'shipit-signoff': {
@@ -354,10 +355,10 @@ APPS = {
                 'heroku_app': 'shipit-staging-signoff',
                 'url': 'https://signoff.shipit.staging.mozilla-releng.net',
             },
-            #'production': {
-            #    'heroku_app': 'shipit-production-signoff',
-            #    'url': 'https://signoff.shipit.mozilla-releng.net',
-            #},
+            # 'production': {
+            #     'heroku_app': 'shipit-production-signoff',
+            #     'url': 'https://signoff.shipit.mozilla-releng.net',
+            # },
         },
     },
     'shipit-static-analysis': {
@@ -368,7 +369,7 @@ APPS = {
         'deploy': 'TASKCLUSTER_HOOK',
         'deploy_options': {
             'staging': {},
-            #'production': {},
+            # 'production': {},
         },
     },
     'shipit-taskcluster': {
@@ -389,10 +390,10 @@ APPS = {
                 'heroku_app': 'shipit-staging-taskcluster',
                 'url': 'https://taskcluster.shipit.staging.mozilla-releng.net',
             },
-            #'production': {
-            #    'heroku_app': 'shipit-production-taskcluster',
-            #    'url': 'https://taskcluster.shipit.mozilla-releng.net',
-            #},
+            # 'production': {
+            #     'heroku_app': 'shipit-production-taskcluster',
+            #     'url': 'https://taskcluster.shipit.mozilla-releng.net',
+            # },
         },
     },
     'shipit-uplift': {

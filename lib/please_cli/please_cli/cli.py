@@ -12,7 +12,7 @@ import push
 import requests
 
 
-DOCKER_REGISTRY = "https://index.docker.com"
+DOCKER_REGISTRY = "https://index.docker.io"
 CACHE_URL = "https://cache.mozilla-releng.net"
 
 log = logging.getLogger('taskcluster-cli')
