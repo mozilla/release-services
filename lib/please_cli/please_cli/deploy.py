@@ -292,6 +292,12 @@ def cmd_HEROKU(ctx,
     help='`nix-push` command',
     )
 @click.option(
+    '--docker-repo',
+    required=True,
+    default=please_cli.config.DOCKER_REPO,
+    help='Docker repository.',
+    )
+@click.option(
     '--interactive/--no-interactive',
     default=True,
     )
@@ -306,8 +312,22 @@ def cmd_TASKCLUSTER_HOOK(ctx,
                          taskcluster_secret,
                          taskcluster_client_id,
                          taskcluster_access_token,
+                         docker_repo,
                          interactive,
                          ):
+
+    secrets = cli_common.taskcluster.get_secrets(
+        taskcluster_secret,
+        [
+            'DOCKER_USERNAME',
+            'DOCKER_PASSWORD',
+        ],
+        taskcluster_client_id,
+        taskcluster_access_token,
+    )
+
+    docker_username = secrets['DOCKER_USERNAME']
+    docker_password = secrets['DOCKER_PASSWORD']
 
     hooks_tool = cli_common.taskcluster.get_service('hooks')
 
@@ -349,6 +369,29 @@ def cmd_TASKCLUSTER_HOOK(ctx,
 
     with open(app_path) as f:
         hook = json.load(f)
+
+    image = hook.get('task', {}).get('payload', {}).get('image', '')
+    if image.startswith('/nix/store'):
+
+        image_tag = '-'.join(reversed(image[11:-7].split('-', 1)))
+        click.echo(' => Uploading docker image `{}:{}` ... '.format(docker_repo, image_tag), nl=False)
+        with click_spinner.spinner():
+            push.registry.push(
+                push.image.spec(image),
+                please_cli.config.DOCKER_REGISTRY,
+                docker_username,
+                docker_password,
+                docker_repo,
+                image_tag,
+            )
+
+        please_cli.utils.check_result(
+            0,
+            'Pushed {}:{} docker image.'.format(docker_repo, image_tag),
+            ask_for_details=interactive,
+        )
+
+        hook['task']['payload']['image'] = '{}:{}'.format(docker_repo, image_tag)
 
     if hook_exists:
         click.echo(' => Updating hook `{}/{}` ... '.format(hook_group_id, hook_id), nl=False)
