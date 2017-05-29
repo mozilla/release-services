@@ -12,3 +12,6 @@ paths:
   /example:
     get:
       operationId: "releng_mapper.api.example"
+      responses:
+        200:
+          description: Example

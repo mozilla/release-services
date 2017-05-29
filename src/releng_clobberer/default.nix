@@ -42,7 +42,7 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-releng-clobberer";
-  dirname = "releng-clobberer";
+  dirname = "releng_clobberer";
 
   self = mkBackend {
     inherit python name dirname;

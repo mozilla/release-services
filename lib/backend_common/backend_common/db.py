@@ -12,7 +12,7 @@ import flask_sqlalchemy
 import logging  # for sql alchemy
 
 
-logger = structlog.get_logger('backend_common.db')
+logger = structlog.get_logger(__name__)
 db = flask_sqlalchemy.SQLAlchemy()
 migrate = flask_migrate.Migrate(db=db)
 
@@ -29,7 +29,7 @@ def init_database(app):
         # Needed to init potential migrations later on
         # Use a separate alembic_version table per app
         options = {
-            'version_table': '{}_alembic_version'.format(app.name),
+            'version_table': '{}_alembic_version'.format(app.db_prefix),
         }
         migrate.init_app(app, directory=migrations_dir, **options)
 
@@ -47,12 +47,13 @@ def init_database(app):
 
 
 def init_app(app):
+    app.db_prefix = app.name.replace('-', '_')
     db.init_app(app)
 
-    # Check every table starts with app_name
+    # Check every table starts with app.db_prefix
     for table_name in db.metadata.tables.keys():
-        if not table_name.startswith(app.name):
-            raise Exception('DB table {} should start with {}'.format(table_name, app.name))  # noqa
+        if not table_name.startswith(app.db_prefix):
+            raise Exception('DB table {} should start with {}'.format(table_name, app.db_prefix))  # noqa
 
     # Log queries
     logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)

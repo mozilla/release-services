@@ -4,7 +4,7 @@ import operator
 import itertools
 
 
-logger = get_logger('shipit_bot')
+logger = get_logger(__name__)
 
 
 class Report(object):

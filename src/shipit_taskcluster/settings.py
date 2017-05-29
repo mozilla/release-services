@@ -5,21 +5,32 @@
 from __future__ import absolute_import
 
 import os
+import cli_common.taskcluster
+import shipit_taskcluster.config
 
 
-SWAGGER_BASE_URL = os.environ.get('SWAGGER_BASE_URL')
+DEBUG = bool(os.environ.get('DEBUG', False))
+
+
+# -- LOAD SECRETS -------------------------------------------------------------
+
+required = [
+    'DATABASE_URL',
+]
+
+secrets = cli_common.taskcluster.get_secrets(
+    os.environ.get('TASKCLUSTER_SECRET'),
+    shipit_taskcluster.config.PROJECT_NAME,
+    required=required,
+    existing={x: os.environ.get(x) for x in required},
+    taskcluster_client_id=os.environ.get('TASKCLUSTER_CLIENT_ID'),
+    taskcluster_access_token=os.environ.get('TASKCLUSTER_ACCESS_TOKEN'),
+)
+
+locals().update(secrets)
 
 
 # -- DATABASE -----------------------------------------------------------------
 
-DATABASE_URL = os.environ.get('DATABASE_URL')
-
-if not DATABASE_URL:
-    raise Exception("You need to specify DATABASE_URL variable.")
-
-if not DATABASE_URL.startswith('postgresql://'):
-    raise Exception('Shipit dashboard needs a postgresql:// DATABASE_URL')
-
-
-SQLALCHEMY_DATABASE_URI = DATABASE_URL
+SQLALCHEMY_DATABASE_URI = secrets['DATABASE_URL']
 SQLALCHEMY_TRACK_MODIFICATIONS = False

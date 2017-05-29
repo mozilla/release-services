@@ -7,43 +7,42 @@ from __future__ import absolute_import
 import json
 import os
 import tempfile
+import cli_common.taskcluster
+import shipit_signoff.config
 
 
-APP_URL = os.environ.get('APP_URL')
-
-if not APP_URL:
-    raise Exception("You need to specify APP_URL variable.")
+DEBUG = bool(os.environ.get('DEBUG', False))
 
 
-SWAGGER_BASE_URL = os.environ.get('SWAGGER_BASE_URL')
+# -- LOAD SECRETS -------------------------------------------------------------
+
+required = [
+    'DATABASE_URL',
+    'APP_URL',
+    'AUTH0_CLIENT_ID',
+    'AUTH0_CLIENT_SECRET',
+
+]
+
+secrets = cli_common.taskcluster.get_secrets(
+    os.environ.get('TASKCLUSTER_SECRET'),
+    shipit_signoff.config.PROJECT_NAME,
+    required=required,
+    existing={x: os.environ.get(x) for x in required},
+    taskcluster_client_id=os.environ.get('TASKCLUSTER_CLIENT_ID'),
+    taskcluster_access_token=os.environ.get('TASKCLUSTER_ACCESS_TOKEN'),
+)
+
+locals().update(secrets)
 
 
 # -- DATABASE -----------------------------------------------------------------
 
-DATABASE_URL = os.environ.get('DATABASE_URL')
-
-if not DATABASE_URL:
-    raise Exception("You need to specify DATABASE_URL variable.")
-#
-if not DATABASE_URL.startswith('postgresql://'):
-    raise Exception('Shipit dashboard needs a postgresql:// DATABASE_URL')
-
-
-SQLALCHEMY_DATABASE_URI = DATABASE_URL
+SQLALCHEMY_DATABASE_URI = secrets['DATABASE_URL']
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 # -- AUTH0 --------------------------------------------------------------------
-
-
-AUTH0_CLIENT_ID = os.environ.get('AUTH0_CLIENT_ID')
-AUTH0_CLIENT_SECRET = os.environ.get('AUTH0_CLIENT_SECRET')
-
-if not AUTH0_CLIENT_ID:
-    raise Exception("You need to specify AUTH0_CLIENT_ID variable.")
-
-if not AUTH0_CLIENT_SECRET:
-    raise Exception("You need to specify AUTH0_CLIENT_SECRET variable.")
 
 
 SECRET_KEY = os.urandom(24)
@@ -52,17 +51,17 @@ OIDC_USER_INFO_ENABLED = True
 OIDC_CLIENT_SECRETS = tempfile.mkstemp()[1]
 
 
-with open(OIDC_CLIENT_SECRETS, "w+") as f:
+with open(OIDC_CLIENT_SECRETS, 'w+') as f:
     f.write(json.dumps({
-        "web": {
-            "auth_uri": "https://auth.mozilla.auth0.com/authorize",
-            "issuer": "https://auth.mozilla.auth0.com/",
-            "client_id": AUTH0_CLIENT_ID,
-            "client_secret": AUTH0_CLIENT_SECRET,
-            "redirect_uris": [
-                APP_URL + "/oidc_callback",
+        'web': {
+            'auth_uri': 'https://auth.mozilla.auth0.com/authorize',
+            'issuer': 'https://auth.mozilla.auth0.com/',
+            'client_id': secrets['AUTH0_CLIENT_ID'],
+            'client_secret': secrets['AUTH0_CLIENT_SECRET'],
+            'redirect_uris': [
+                secrets['APP_URL'] + '/oidc_callback',
             ],
-            "token_uri": "https://auth.mozilla.auth0.com/oauth/token",
-            "userinfo_uri": "https://auth.mozilla.auth0.com/userinfo",
+            'token_uri': 'https://auth.mozilla.auth0.com/oauth/token',
+            'userinfo_uri': 'https://auth.mozilla.auth0.com/userinfo',
         }
     }))

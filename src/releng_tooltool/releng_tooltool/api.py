@@ -5,7 +5,7 @@
 from __future__ import absolute_import
 
 import datetime
-from backend_common import log
+from cli_common import log
 import time
 import random
 
@@ -24,7 +24,7 @@ from releng_tooltool.utils import (
 )
 
 
-logger = log.get_logger()
+logger = log.get_logger(__name__)
 
 # This value should be fairly short (and its value is included in the
 # `upload_batch` docstring).  Uploads cannot be validated until this

@@ -6,20 +6,17 @@ from __future__ import absolute_import
 
 import flask
 import jinja2
-import structlog
 import os
 import sys
 
+import cli_common.log
+
+
 __APP = dict()
-__BASE_EXTENSIONS = []
+__BASE_EXTENSIONS = [cli_common.log]
 
-logger = structlog.get_logger()
+logger = cli_common.log.get_logger(__name__)
 
-try:
-    from cli_common import log
-    __BASE_EXTENSIONS.append(log)
-except:
-    pass
 
 try:
     from backend_common import security
@@ -33,12 +30,11 @@ try:
 except:
     pass
 
-if 'CORS_ORIGINS' in os.environ:
-    try:
-        from backend_common import cors
-        __BASE_EXTENSIONS.append(cors)
-    except:
-        pass
+try:
+    from backend_common import cors
+    __BASE_EXTENSIONS.append(cors)
+except:
+    pass
 
 
 def create_app(name, extensions=[], config=None, debug=False, debug_src=None,

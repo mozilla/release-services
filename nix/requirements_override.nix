@@ -108,6 +108,16 @@ in skipOverrides {
     '';
   };
 
+  "flask-talisman" = self: old: {
+    # XXX: from https://github.com/GoogleCloudPlatform/flask-talisman/pull/8
+    patchPhase = ''
+      sed -i \
+        -e "s|view_function = flask.current_app.view_functions\[|view_function = flask.current_app.view_functions.get(|" \
+        -e "s|flask.request.endpoint\]|flask.request.endpoint)|" \
+          flask_talisman/talisman.py
+    '';
+  };
+
   "jsonschema" = self: old: {
     patchPhase = ''
       sed -i -e 's|setup_requires=\["vcversioner>=2.16.0.0"\],||' setup.py
@@ -128,13 +138,9 @@ in skipOverrides {
     '';
   };
 
-  "flask-talisman" = self: old: {
-    # XXX: from https://github.com/GoogleCloudPlatform/flask-talisman/pull/8
+  "pytest" = self: old: {
     patchPhase = ''
-      sed -i \
-        -e "s|view_function = flask.current_app.view_functions\[|view_function = flask.current_app.view_functions.get(|" \
-        -e "s|flask.request.endpoint\]|flask.request.endpoint)|" \
-          flask_talisman/talisman.py
+      sed -i -e "s|setup_requires=\['setuptools-scm'\],||" setup.py
     '';
   };
 

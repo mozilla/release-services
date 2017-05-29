@@ -15,14 +15,14 @@ import cli_common.taskcluster
 import please_cli.config
 
 
-DEPLOYABLE_APPS = {}
-for app_name, app_config in please_cli.config.APPS.items():
-    if 'deploy' in app_config:
-        DEPLOYABLE_APPS[app_name] = app_config
+DEPLOYABLE_PROJECTS = {}
+for project_name, project_config in please_cli.config.PROJECTS.items():
+    if 'deploy' in project_config:
+        DEPLOYABLE_PROJECTS[project_name] = project_config
 
 
 def get_build_task(index,
-                   app,
+                   project,
                    task_group_id,
                    parent_task,
                    github_commit,
@@ -30,18 +30,16 @@ def get_build_task(index,
                    channel,
                    ):
 
-    app_config = please_cli.config.APPS.get(app, {})
-    deploy_type = app_config.get('deploy')
-    deploy_options = app_config.get('deploy_options', {}).get(channel, {})
+    project_config = please_cli.config.PROJECTS.get(project, {})
 
-    extra_attributes =  []
-    if channel in app_config.get('deploy_options', {}).keys():
+    extra_attributes = []
+    if channel in project_config.get('deploy_options', {}).keys():
         extra_attributes = [
-            '--extra-attribute="{}.deploy.{}"'.format(app, channel),
+            '--extra-attribute="{}.deploy.{}"'.format(project, channel),
         ]
 
     command = [
-        './please', '-vv', 'tools', 'build', app,
+        './please', '-vv', 'tools', 'build', project,
         '--cache-bucket="releng-cache"',
         '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
         '--no-interactive',
@@ -53,9 +51,9 @@ def get_build_task(index,
         channel,
         ' '.join(command),
         {
-            'name': '1.{index:02}. Building {app}'.format(
+            'name': '1.{index:02}. Building {project}'.format(
                 index=index + 1,
-                app=app,
+                project=project,
             ),
             'description': '',
             'owner': owner,
@@ -67,7 +65,7 @@ def get_build_task(index,
 
 
 def get_deploy_task(index,
-                    app,
+                    project,
                     task_group_id,
                     parent_task,
                     github_commit,
@@ -75,53 +73,53 @@ def get_deploy_task(index,
                     channel,
                     ):
 
-    app_config = please_cli.config.APPS.get(app, {})
-    deploy_type = app_config.get('deploy')
-    deploy_options = app_config.get('deploy_options', {}).get(channel, {})
+    project_config = please_cli.config.PROJECTS.get(project, {})
+    deploy_type = project_config.get('deploy')
+    deploy_options = project_config.get('deploy_options', {}).get(channel, {})
     scopes = []
 
     extra_attributes = []
-    if channel in app_config.get('deploy_options', {}).keys():
+    if channel in project_config.get('deploy_options', {}).keys():
         extra_attributes = [
-            '--extra-attribute="{}.deploy.{}"'.format(app, channel),
+            '--extra-attribute="{}.deploy.{}"'.format(project, channel),
         ]
 
     if deploy_type == 'S3':
-        app_csp = []
+        project_csp = []
         for url in deploy_options.get('csp', []):
-            app_csp.append('--csp="{}"'.format(url))
-        for require in app_config.get('requires', []):
-            require_config = please_cli.config.APPS.get(require, {})
+            project_csp.append('--csp="{}"'.format(url))
+        for require in project_config.get('requires', []):
+            require_config = please_cli.config.PROJECTS.get(require, {})
             require_deploy_options = require_config.get('deploy_options', {}).get(channel, {})
             require_url = require_deploy_options.get('url')
             if require_url:
-                app_csp.append('--csp="{}"'.format(require_url))
+                project_csp.append('--csp="{}"'.format(require_url))
 
-        app_envs = []
+        project_envs = []
         for env_name, env_value in deploy_options.get('envs', {}).items():
-            app_envs.append('--env="{}: {}"'.format(env_name, env_value))
-        for require in app_config.get('requires', []):
-            require_config = please_cli.config.APPS.get(require, {})
+            project_envs.append('--env="{}: {}"'.format(env_name, env_value))
+        for require in project_config.get('requires', []):
+            require_config = please_cli.config.PROJECTS.get(require, {})
             require_deploy_options = require_config.get('deploy_options', {}).get(channel, {})
             require_url = require_deploy_options.get('url')
             if require_url:
                 env_name = '-'.join(require.split('-')[1:])
-                app_envs.append('--env="{}-url: {}"'.format(env_name, require_url))
+                project_envs.append('--env="{}-url: {}"'.format(env_name, require_url))
 
         command = [
             './please', '-vv',
             'tools', 'deploy:S3',
-            app,
+            project,
             '--s3-bucket=' + deploy_options['s3_bucket'],
             '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
             '--no-interactive',
-        ] + app_csp + app_envs + extra_attributes
+        ] + project_csp + project_envs + extra_attributes
 
     elif deploy_type == 'HEROKU':
         command = [
             './please', '-vv',
             'tools', 'deploy:HEROKU',
-            app,
+            project,
             '--heroku-app=' + deploy_options['heroku_app'],
             '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
             '--no-interactive',
@@ -131,8 +129,8 @@ def get_deploy_task(index,
         command = [
             './please', '-vv',
             'tools', 'deploy:TASKCLUSTER_HOOK',
-            app,
-            '--hook-id=services-{}-{}'.format(channel, app),
+            project,
+            '--hook-id=services-{}-{}'.format(channel, project),
             '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
             '--no-interactive',
         ] + extra_attributes
@@ -142,7 +140,7 @@ def get_deploy_task(index,
         ]
 
     else:
-        raise click.ClickException('Unknown deployment type `{}` for application `{}`'.format(deploy_type, app))
+        raise click.ClickException('Unknown deployment type `{}` for project `{}`'.format(deploy_type, project))
 
     return get_task(
         task_group_id,
@@ -151,9 +149,9 @@ def get_deploy_task(index,
         channel,
         ' '.join(command),
         {
-            'name': '3.{index:02}. Deploying {app}'.format(
+            'name': '3.{index:02}. Deploying {project}'.format(
                 index=index + 1,
-                app=app,
+                project=project,
             ),
             'description': '',
             'owner': owner,
@@ -174,11 +172,14 @@ def get_task(task_group_id,
              deadline=dict(hours=5),
              max_run_time_in_hours=1,
              ):
+    priority = 'high'
+    if channel == 'production':
+        priority = 'very-high'
     now = datetime.datetime.utcnow()
     command = (' && '.join([
       'mkdir -p /tmp/app',
       'cd /tmp/app',
-      'wget https://github.com/mozilla-releng/services/archive/{github_commit}.tar.gz',
+      'wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/mozilla-releng/services/archive/{github_commit}.tar.gz',
       'tar zxf {github_commit}.tar.gz',
       'cd services-{github_commit}',
       'env',
@@ -187,7 +188,7 @@ def get_task(task_group_id,
     ])).format(github_commit=github_commit)
     return {
         'provisionerId': 'aws-provisioner-v1',
-        'workerType': 'releng-task',
+        'workerType': 'releng-svc',
         'schedulerId': 'taskcluster-github',
         'taskGroupId': task_group_id,
         'dependencies': dependencies,
@@ -196,6 +197,7 @@ def get_task(task_group_id,
         'scopes': [
           'secrets:get:repo:github.com/mozilla-releng/services:branch:' + channel,
         ] + scopes,
+        'priority': priority,
         'payload': {
             'maxRunTime': 60 * 60 * max_run_time_in_hours,
             'image': 'mozillareleng/services:base-latest',
@@ -288,60 +290,60 @@ def cmd(ctx,
     please_cli.utils.check_result(0, '')
     click.echo('    taskGroupId: ' + task_group_id)
 
-    click.echo(' => Checking cache which application needs to be rebuilt')
-    build_apps = []
-    app_hashes = dict()
-    for app in sorted(DEPLOYABLE_APPS.keys()):
-        click.echo('     => ' + app)
-        app_exists_in_cache, app_hash = ctx.invoke(
+    click.echo(' => Checking cache which project needs to be rebuilt')
+    build_projects = []
+    project_hashes = dict()
+    for project in sorted(DEPLOYABLE_PROJECTS.keys()):
+        click.echo('     => ' + project)
+        project_exists_in_cache, project_hash = ctx.invoke(
             please_cli.check_cache.cmd,
-            app=app,
+            project=project,
             cache_url=cache_url,
             nix_instantiate=nix_instantiate,
             indent=8,
             interactive=False,
         )
-        app_hashes[app] = app_hash
-        if not app_exists_in_cache:
-            build_apps.append(app)
+        project_hashes[project] = project_hash
+        if not project_exists_in_cache:
+            build_projects.append(project)
 
-    click.echo(' => Checking which application needs to be redeployed')
-    deploy_apps = []
+    click.echo(' => Checking which project needs to be redeployed')
+    deploy_projects = []
     if channel in please_cli.config.DEPLOY_CHANNELS:
 
         # TODO: get status for our index branch
         status = {}
 
-        for app in sorted(DEPLOYABLE_APPS.keys()):
-            app_hash = status.get(app)
+        for project in sorted(DEPLOYABLE_PROJECTS.keys()):
+            project_hash = status.get(project)
 
-            if app_hash == app_hashes[app]:
+            if project_hash == project_hashes[project]:
                 continue
 
-            if channel not in DEPLOYABLE_APPS[app].get('deploy_options', {}):
+            if channel not in DEPLOYABLE_PROJECTS[project].get('deploy_options', {}):
                 continue
 
-            deploy_apps.append(app)
+            deploy_projects.append(project)
 
     click.echo(' => Creating taskcluster tasks definitions')
     tasks = []
 
     # 1. build tasks
     build_tasks = {}
-    for index, app in enumerate(sorted(build_apps)):
-        app_uuid = slugid.nice().decode('utf-8')
-        build_tasks[app_uuid] = get_build_task(
+    for index, project in enumerate(sorted(build_projects)):
+        project_uuid = slugid.nice().decode('utf-8')
+        build_tasks[project_uuid] = get_build_task(
             index,
-            app,
+            project,
             task_group_id,
             task_id,
             github_commit,
             owner,
             channel,
         )
-        tasks.append((app_uuid, build_tasks[app_uuid]))
+        tasks.append((project_uuid, build_tasks[project_uuid]))
 
-    if deploy_apps:
+    if deploy_projects:
 
         # 2. maintanance on task
         maintanance_on_uuid = slugid.nice().decode('utf-8')
@@ -354,7 +356,7 @@ def cmd(ctx,
             maintanance_on_dependencies,
             github_commit,
             channel,
-            './please -vv tools maintanance:on ' + ' '.join(deploy_apps),
+            './please -vv tools maintanance:on ' + ' '.join(deploy_projects),
             {
                 'name': '2. Maintanance ON',
                 'description': '',
@@ -367,20 +369,20 @@ def cmd(ctx,
 
         # 3. deploy tasks (if on production/staging)
         deploy_tasks = {}
-        for index, app in enumerate(sorted(deploy_apps)):
-            app_uuid = slugid.nice().decode('utf-8')
-            app_task = get_deploy_task(
+        for index, project in enumerate(sorted(deploy_projects)):
+            project_uuid = slugid.nice().decode('utf-8')
+            project_task = get_deploy_task(
                 index,
-                app,
+                project,
                 task_group_id,
                 maintanance_on_uuid,
                 github_commit,
                 owner,
                 channel,
             )
-            if app_task:
-                deploy_tasks[app_uuid] = app_task
-                tasks.append((app_uuid, deploy_tasks[app_uuid]))
+            if project_task:
+                deploy_tasks[project_uuid] = project_task
+                tasks.append((project_uuid, deploy_tasks[project_uuid]))
 
         # 4. maintanance off task
         maintanance_off_uuid = slugid.nice().decode('utf-8')
@@ -389,7 +391,7 @@ def cmd(ctx,
             [i for i in deploy_tasks.keys()],
             github_commit,
             channel,
-            './please -vv tools maintanance:off ' + ' '.join(deploy_apps),
+            './please -vv tools maintanance:off ' + ' '.join(deploy_projects),
             {
                 'name': '4. Maintanance OFF',
                 'description': '',

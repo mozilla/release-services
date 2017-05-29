@@ -134,7 +134,7 @@ in rec {
       , schedulerId ? "-"
       , scopes ? []
       , tags ? {}
-      , workerType ? "releng-task"
+      , workerType ? "releng-svc"
       }:
       { inherit extra priority provisionerId retries routes schedulerId scopes
            tags workerType;
@@ -157,6 +157,7 @@ in rec {
       , scopes ? []
       , cache ? {}
       , maxRunTime ? 3600
+      , workerType ? "releng-svc"
       }:
       { inherit schedule expires deadline;
         metadata = { inherit name description owner emailOnError; };
@@ -171,6 +172,7 @@ in rec {
             cache = cache;
           };
           scopes = scopes;
+          workerType = workerType;
         });
       };
 
@@ -533,7 +535,6 @@ in rec {
           mkdir -p $out/bin
           ln -s ${python.packages."Flask"}/bin/flask $out/bin
           ln -s ${python.packages."gunicorn"}/bin/gunicorn $out/bin
-          ln -s ${python.packages."newrelic"}/bin/newrelic-admin $out/bin
           for i in $out/bin/*; do
             wrapProgram $i --set PYTHONPATH $PYTHONPATH
           done
@@ -574,8 +575,6 @@ in rec {
           "FLASK_APP=${dirname}:flask.app"
         ];
         dockerCmd = [
-          "newrelic-admin"
-          "run-program"
           "gunicorn"
           "${dirname}:flask.app"
           "--log-file"

@@ -10,7 +10,7 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-releng-archiver";
-  dirname = "releng-archiver";
+  dirname = "releng_archiver";
 
   self = mkBackend {
     inherit python name dirname;

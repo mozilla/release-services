@@ -50,7 +50,7 @@ with open(os.path.join(os.path.dirname(__file__), 'VERSION')) as f:
 
 
 # TODO: below data should be placed in src/<app>/default.nix files alongside
-APPS = {
+PROJECTS = {
     'postgresql': {
         'run': 'POSTGRESQL',
         'run_options': {
@@ -345,6 +345,10 @@ APPS = {
         'run': 'FLASK',
         'run_options': {
             'port': 8013,
+            'envs': {
+                'AUTH0_CLIENT_ID': 'XXX',
+                'AUTH0_CLIENT_SECRET': 'YYY',
+            }
         },
         'requires': [
             'postgresql',
@@ -411,11 +415,11 @@ APPS = {
         'deploy': 'HEROKU',
         'deploy_options': {
             'staging': {
-                'heroku_app': 'shipit-staging-dashboard',
+                'heroku_app': 'shipit-staging-uplift',
                 'url': 'https://uplift.shipit.staging.mozilla-releng.net',
             },
             'production': {
-                'heroku_app': 'shipit-production-dashboard',
+                'heroku_app': 'shipit-production-uplift',
                 'url': 'https://uplift.shipit.mozilla-releng.net',
             },
         },

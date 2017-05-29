@@ -2,4 +2,3 @@
 Flask
 Jinja2
 gunicorn
-newrelic

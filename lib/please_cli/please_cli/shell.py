@@ -16,15 +16,15 @@ log = cli_common.log.get_logger(__name__)
 
 CMD_HELP = '''
 
-Enter development environment of an APPLICATION.
+Enter development environment of an PROJECT.
 
 \b
-APPLICATIONS:
-{apps}
+PROJECTS:
+{projects}
 
 EXAMPLES:
 
-  1. for Flask / Connexion application:
+  1. for Flask / Connexion project:
 
   \b
   ~/d/m/services % ./please shell releng-treestatus
@@ -36,7 +36,7 @@ EXAMPLES:
   In [2]: exit
   [nix-shell] ~/d/m/s/s/releng_treestatus % exit
 
-  2. for Elm application:
+  2. for Elm project:
 
   \b
   ~/d/m/services % ./please shell releng-frontend
@@ -44,20 +44,20 @@ EXAMPLES:
   [nix-shell] ~/d/m/s/s/releng_frontend % exit
 
 '''.format(
-    apps=''.join([' - ' + i + '\n' for i in please_cli.config.APPS]),
+    projects=''.join([' - ' + i + '\n' for i in please_cli.config.PROJECTS]),
 )
 
 
 @click.command(
     cls=please_cli.utils.ClickCustomCommand,
-    short_help="Enter development environment of an APPLICATION.",
+    short_help="Enter development environment of an PROJECT.",
     epilog="Happy hacking!",
     help=CMD_HELP,
     )
 @click.argument(
-    'app',
+    'project',
     required=True,
-    type=click.Choice(please_cli.config.APPS),
+    type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
     '--zsh',
@@ -82,7 +82,7 @@ EXAMPLES:
         please_cli.config.NIX_BIN_DIR + 'nix-shell',
         ),
     )
-def cmd(app, zsh, quiet, command, nix_shell):
+def cmd(project, zsh, quiet, command, nix_shell):
 
     run = []
     if zsh or command:
@@ -95,7 +95,8 @@ def cmd(app, zsh, quiet, command, nix_shell):
     _command = [
         nix_shell,
         os.path.join(please_cli.config.ROOT_DIR, 'nix/default.nix'),
-        '-A', app,
+        '-A', project,
+        '-j', '1',
     ] + run
 
     os.environ['SERVICES_ROOT'] = please_cli.config.ROOT_DIR + '/'

@@ -4,7 +4,7 @@ import re
 from cli_common.log import get_logger
 
 
-logger = get_logger('shipit_bot')
+logger = get_logger(__name__)
 REGEX_TIP = re.compile(r'(\w+)\s*(tip)? (\w+)')
 
 
