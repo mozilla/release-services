@@ -255,6 +255,7 @@ APPS = {
             'port': 8010,
             'envs': {
                 'WEBPACK_BUGZILLA_URL': 'https://bugzilla-dev.allizom.org',
+                'WEBPACK_UPLIFT_URL': 'https://localhost:8011',
             }
         },
         'requires': [
@@ -267,6 +268,7 @@ APPS = {
                 'url': 'https://shipit.staging.mozilla-releng.net',
                 'envs': {
                     'bugzilla-url': 'https://bugzilla.mozilla.org',
+                    'uplift-url': 'https://dashboard.shipit.staging.mozilla-releng.net',
                 },
                 'csp': [
                     'https://auth.taskcluster.net',
@@ -278,6 +280,7 @@ APPS = {
                 'url': 'https://shipit.mozilla-releng.net',
                 'envs': {
                     'bugzilla-url': 'https://bugzilla.mozilla.org',
+                    'uplift-url': 'https://dashboard.shipit.mozilla-releng.net',
                 },
                 'csp': [
                     'https://auth.taskcluster.net',

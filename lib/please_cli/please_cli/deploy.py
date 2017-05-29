@@ -143,7 +143,7 @@ def cmd_S3(ctx,
         if env:
             index_html = index_html.replace(
                 '<body',
-                '<body ' + (' '.join(['data-' + i for i in env])),
+                '<body ' + (' '.join(['data-{}="{}"'.format(*i.split(': ')) for i in env])),
             )
 
         os.chmod(index_html_file, 755)
