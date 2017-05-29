@@ -1,11 +1,6 @@
 Contributing
 ============
 
-.. todo::
-
-    move quickstart from front page here. It should explain in few commands how
-    to get started in most common cases  and have pointers to other sections
-    when things get complicated
 
 .. todo::
 
@@ -42,6 +37,69 @@ Contributing
     database_migrations
     authentication
 
+
+
+
+.. _please_command:
+
+``./please`` command
+--------------------
+
+Install Nix:
+
+.. code-block:: bash
+
+    % curl https://raw.githubusercontent.com/mozilla-releng/services/master/nix/setup.sh | bash
+
+
+You can read more what above ``setup.sh`` script does in :ref:`prerequirements`
+section.
+
+Get code:
+
+.. code-block:: bash
+
+    % git clone https://github.com/mozilla-releng/services
+    % cd services/
+    % ./please  # will display help
+
+
+Start **developing** a project:
+
+.. code-block:: bash
+
+    % ./please shell <PROJECT>
+
+
+Running a project in **develop** mode (eg. restarting when source files changes):
+
+.. code-block:: bash
+
+    % ./please run <PROJECT>
+
+
+Run **tests** and other check (eg. linting):
+
+.. code-block:: bash
+
+    % ./please check <PROJECT>
+
+
+.. todo:: point to section how projects get deployed
+
+
+
+Repository structure
+--------------------
+
+- **src/**: folder with all the projects
+- **src/<PROJECT>**: folder with a <PROJECT> sources
+- **lib/**: sources of libraries to help build projects in **src/**
+- **nix/**: all nix related tools
+- **./please**: a helper utility to drive development, testing and deployment.
+- **VERSION**: current version of mozilla-releng/services
+
+
 .. _branching-policy:
 
 Branching policy
@@ -67,6 +125,7 @@ branch is for:
 
 For more details of deployments, please look at specific service documentation
 (eg: documentation for :ref:`Clobberer service <releng_clobberer>`).
+
 
 Pull Requests
 -------------
