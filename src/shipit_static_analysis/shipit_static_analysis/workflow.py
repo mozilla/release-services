@@ -75,19 +75,20 @@ class Workflow(object):
         logger.info('Modified files', files=modified_files)
 
         # mach configure
-        logger.info('Mach configure ...')
+        logger.info('Mach configure...')
         run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
 
         # Build CompileDB backend
-        logger.info('Mach build backend ...')
+        logger.info('Mach build backend...')
         run_check(['gecko-env', './mach', 'build-backend', '--backend=CompileDB'], cwd=self.repo_dir)
 
         # Build exports
-        logger.info('Mach build exports ...')
+        logger.info('Mach build exports...')
         run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
         run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
 
         # Run static analysis through run-clang-tidy.py
+        logger.info('Run clang-tidy...')
         checks = [
             '-*',
             'modernize-loop-convert',
@@ -104,7 +105,35 @@ class Workflow(object):
             '-p', 'obj-x86_64-pc-linux-gnu/',
             '-checks={}'.format(','.join(checks)),
         ] + modified_files
-        clang_output = run_check(cmd, cwd=self.repo_dir)
+        clang_output = run_check(cmd, cwd=self.repo_dir).decode('utf-8')
 
-        # TODO Analyse clang output
-        logger.info('Clang output', output=clang_output)
+        # Parse clang-tidy's output to indentify potential code problems
+        logger.info('Process static analysis results...')
+        problems = []
+        for feedback in clang_output.split(self.repo_dir):
+            lines = feedback.split('\n')
+            refs = lines[0].split(': ', 3)
+            if len(refs) < 3:
+                # Unsupported feedback format
+                continue
+
+            issue = {
+                "path": refs[0],
+                "type": refs[1],
+                "message": refs[2],
+                "snippet": "",
+                "notes": []
+            }
+
+            if len(lines) >= 3:
+                issue["snippet"] = lines[1] + "\n" + lines[2]
+
+            if issue["type"] in ["warning", "error"]:
+                problems.append(issue)
+                logger.info('Clang-tidy {}: "{}" at {}'.format(issue["type"], issue["message"], issue["path"]))
+            elif issue["type"] == "note":
+                problems[-1]["notes"].append(issue)
+            else:
+                logger.info('Unsupported feedback type:', output=issue["type"])
+
+        logger.info('Detected {} code problem(s).'.format(len(problems)))
