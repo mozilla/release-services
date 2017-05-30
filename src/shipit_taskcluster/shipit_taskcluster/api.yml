@@ -23,17 +23,17 @@ paths:
         200:
           description: List of all steps
 
-#  /steps/{uid}/status:
-#    get:
-#      operationId: "shipit_taskcluster.api.get_step_status"
-#      description: Status of a Taskcluster step
-#      parameters:
-#        - $ref: "#/parameters/uid"
-#      responses:
-#        200:
-#          description: Status of a Taskcluster step
-#          schema:
-#            $ref: '#/definitions/StepResult'
+  /steps/{uid}/status:
+    get:
+      operationId: "shipit_taskcluster.api.get_taskcluster_step_status"
+      description: Status of a Taskcluster step
+      parameters:
+        - $ref: "#/parameters/uid"
+      responses:
+        200:
+          description: Status of a Taskcluster step
+          schema:
+            $ref: '#/definitions/StepResult'
 
   /steps/{uid}:
     put:
@@ -54,6 +54,22 @@ paths:
             type: string
         409:
           description: A step with this uid or task_group_id already exists
+#    patch:
+#      operationId: "releng_taskcluster.api.update_taskcluster_step"
+#      description: Update existing Taskcluster Step
+#      parameters:
+#        - $ref: '#/parameters/uid'
+#        - name: body
+#          in: body
+#          description: inputs to update a Taskcluster Step
+#          required: true
+#          schema:
+#            $ref: '#/definitions/TaskclusterStep'
+#      responses:
+#        200:
+#          description: Returns nothing
+#          schema:
+#            type: string
     get:
       operationId: "shipit_taskcluster.api.get_taskcluster_step"
       description: "Step definition"
@@ -76,23 +92,26 @@ paths:
 definitions:
 
   # TODO move this to a common place
-#  StepResult:
-#    type: object
-#    required:
-#      - state
-#    properties:
-#      state:
-#        type: string
-#        enum:
-#          - in_progress
-#          - success
-#          - failed
-#          - cancelled
-#      message:
-#        type: string
-#        description: More elaborate description of state for humans.
-#      output:
-#        $ref: '#/definitions/Output'
+  StepResult:
+    type: object
+    required:
+      - state
+    properties:
+      state:
+        type: string
+        enum:
+          - pending
+          - running
+          - exception
+          - completed
+          - failed
+      message:
+        type: string
+        description: More elaborate description of state for humans.
+      created:
+        type: "string"
+      finished:
+        type: "string"
 
   # TODO make this a generic step and move it to common place
   TaskclusterStep:
@@ -100,12 +119,19 @@ definitions:
     description: A representation of Taskcluster group of Tasks
     required:
       - taskGroupId
+      - schedulerAPI
     properties:
       uid:
         type: string
       taskGroupId:
         type: string
         description: the group id that is shared between tasks
+      schedulerAPI:
+        type: boolean
+        default: false
+        description: |
+          if true, use taskcluster's old scheduler api. Note, the scheduler api has been deprecated
+          in favour of task.dependencies and should only be used for backwards support.
 
 parameters:
   uid:

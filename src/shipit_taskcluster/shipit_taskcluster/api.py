@@ -11,18 +11,9 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 
 from backend_common.db import db
-from shipit_taskcluster.models import TaskclusterStep, TaskclusterStatus
-from shipit_taskcluster.taskcluster_utils import get_task_group_state, \
-    TASK_TO_STEP_STATE
+from shipit_taskcluster.models import TaskclusterStatus, TaskclusterStep
 
 log = logging.getLogger(__name__)
-
-
-# helpers
-def query_state(step):
-    log.info(step.task_group_id)
-    tc_state = get_task_group_state(step.task_group_id)
-    return TASK_TO_STEP_STATE[tc_state]
 
 
 # api
@@ -47,7 +38,28 @@ def list_taskcluster_steps(state="running"):
 
 
 def get_taskcluster_step_status(uid):
-    pass  # TODO
+    """
+    Get the current status of a taskcluster step
+    """
+    log.info('getting step status %s', uid)
+
+    try:
+        step = db.session.query(SignoffStep).filter(SignoffStep.uid == uid).one()
+    except NoResultFound:
+        abort(404)
+
+    task_group_status, task_group_status_message = get_task_group_state(step.task_group_id)
+
+    if not step.status != task_group_status:
+        # update step status!
+        if task_group_status in ["completed", "failed", "exception"]:
+            step.completed = datetime.datetime.utcnow
+        step.status = task_group_status
+        step.task_message = task_group_status_message
+        db.session.commit()
+
+    return dict(uid=step.uid, status=step.task_group_id, message=step.status_message,
+                finished=step.finished, created=step.created)
 
 
 def get_taskcluster_step(uid):
@@ -58,7 +70,8 @@ def get_taskcluster_step(uid):
     except NoResultFound:
         abort(404, "taskcluster step not found")
 
-    return dict(uid=step.uid, taskGroupId=step.task_group_id, parameters={})
+    return dict(uid=step.uid, taskGroupId=step.task_group_id,
+                schedulerAPI=step.scheduler_api, parameters={})
 
 
 def create_taskcluster_step(uid, body):
@@ -69,6 +82,7 @@ def create_taskcluster_step(uid, body):
     step.uid = uid
     step.state = 'running'
     step.task_group_id = body["taskGroupId"]
+    step.scheduler_api = body["schedulerAPI"]
 
     log.info('creating taskcluster step %s for task_group_id %s', step.uid, step.task_group_id)
     db.session.add(step)

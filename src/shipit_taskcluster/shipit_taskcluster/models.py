@@ -15,9 +15,8 @@ from backend_common.db import db
 
 # TODO use shared step backend base class for statuses
 class TaskclusterStatus(enum.Enum):
-    starting = 'starting'
+    pending = 'pending'
     running = 'running'
-    stopping = 'stopping'
     exception = 'exception'
     completed = 'completed'
     failed = 'failed'
@@ -32,15 +31,9 @@ class TaskclusterStep(db.Model):
     __tablename__ = 'shipit_taskcluster_steps'
 
     uid = sa.Column(sa.String(80), primary_key=True)
-    state = sa.Column(sa.Enum(TaskclusterStatus), default=TaskclusterStatus.starting)
+    state = sa.Column(sa.Enum(TaskclusterStatus), default=TaskclusterStatus.pending)
     status_message = sa.Column(sa.String(200), nullable=True)
     created = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
-    completed = sa.Column(sa.DateTime, nullable=True)
+    finished = sa.Column(sa.DateTime, nullable=True)
     task_group_id = sa.Column(sa.String(80), nullable=False, unique=True)
-
-    def delete(self):
-        """
-        Delete step
-        """
-        db.session.delete(self)
-        db.session.commit()
+    scheduler_api = sa.Column(sa.Boolean, nullable=False, default=False)
