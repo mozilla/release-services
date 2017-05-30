@@ -32,7 +32,6 @@ class TaskclusterStep(db.Model):
 
     uid = sa.Column(sa.String(80), primary_key=True)
     state = sa.Column(sa.Enum(TaskclusterStatus), default=TaskclusterStatus.pending)
-    status_message = sa.Column(sa.String(200), nullable=True)
     created = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
     finished = sa.Column(sa.DateTime, nullable=True)
     task_group_id = sa.Column(sa.String(80), nullable=False, unique=True)

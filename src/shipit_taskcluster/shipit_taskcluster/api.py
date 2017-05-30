@@ -5,6 +5,7 @@
 from __future__ import absolute_import
 
 import logging
+import datetime
 
 from flask import request, abort
 from sqlalchemy.orm.exc import NoResultFound
@@ -12,6 +13,7 @@ from sqlalchemy.exc import IntegrityError
 
 from backend_common.db import db
 from shipit_taskcluster.models import TaskclusterStatus, TaskclusterStep
+from shipit_taskcluster.taskcluster_utils import get_taskcluster_tasks_state
 
 log = logging.getLogger(__name__)
 
@@ -44,22 +46,25 @@ def get_taskcluster_step_status(uid):
     log.info('getting step status %s', uid)
 
     try:
-        step = db.session.query(SignoffStep).filter(SignoffStep.uid == uid).one()
+        step = db.session.query(TaskclusterStep).filter(TaskclusterStep.uid == uid).one()
     except NoResultFound:
         abort(404)
 
-    task_group_status, task_group_status_message = get_task_group_state(step.task_group_id)
+    if not step.state.value == "completed":
+        # only poll taskcluster if the step is not resolved successfully
+        # this is so the shipit taskcluster step can still be manually overridden as complete
 
-    if not step.status != task_group_status:
-        # update step status!
-        if task_group_status in ["completed", "failed", "exception"]:
-            step.completed = datetime.datetime.utcnow
-        step.status = task_group_status
-        step.task_message = task_group_status_message
-        db.session.commit()
+        task_group_state = get_taskcluster_tasks_state(step.task_group_id, step.scheduler_api)
 
-    return dict(uid=step.uid, status=step.task_group_id, message=step.status_message,
-                finished=step.finished, created=step.created)
+        if step.state.value != task_group_state:
+            # update step status!
+            if task_group_state in ["completed", "failed", "exception"]:
+                step.finished = datetime.datetime.utcnow()
+            step.state = task_group_state
+            db.session.commit()
+
+    return dict(uid=step.uid, task_group_id=step.task_group_id, state=step.state.value,
+                finished=step.finished or "", created=step.created)
 
 
 def get_taskcluster_step(uid):
