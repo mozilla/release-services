@@ -134,7 +134,7 @@ in rec {
       , schedulerId ? "-"
       , scopes ? []
       , tags ? {}
-      , workerType ? "releng-task"
+      , workerType ? "releng-svc"
       }:
       { inherit extra priority provisionerId retries routes schedulerId scopes
            tags workerType;
@@ -157,6 +157,7 @@ in rec {
       , scopes ? []
       , cache ? {}
       , maxRunTime ? 3600
+      , workerType ? "releng-svc"
       }:
       { inherit schedule expires deadline;
         metadata = { inherit name description owner emailOnError; };
@@ -171,6 +172,7 @@ in rec {
             cache = cache;
           };
           scopes = scopes;
+          workerType = workerType;
         });
       };
 

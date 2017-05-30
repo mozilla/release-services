@@ -93,6 +93,7 @@ let
             path = "/coverage_by_dir.json";
           };
         };
+        workerType = "releng-svc-compute";
       };
     in
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
