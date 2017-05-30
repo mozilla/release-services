@@ -155,13 +155,16 @@ class CodeCov(object):
             uploader.codecov(output, commit_sha, self.codecov_token, [suite.replace('-', '_')])'''
 
         output = self.generate_info(commit_sha, self.coveralls_token)
+        logger.info('Report generated successfully')
 
         coveralls_jobs.append(uploader.coveralls(output))
         uploader.codecov(output, commit_sha, self.codecov_token)
 
+        logger.info('Waiting for build to be injested by Coveralls...')
         # Wait until the build has been injested by Coveralls.
         for coveralls_job in coveralls_jobs:
             uploader.coveralls_wait(coveralls_job)
+        logger.info('Build injested by coveralls')
 
         coverage_by_dir.generate(self.repo_dir)
 
