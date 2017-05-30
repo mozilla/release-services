@@ -63,17 +63,20 @@ class Workflow(object):
         # otherwise previous pull are there
         self.hg.update(rev=b'tip', clean=True)
 
-        # Get the tip revision
-        tip = self.hg.identify(id=True).decode('utf-8').strip()
-
         # Pull revision from review
         logger.info('Pull from review', revision=revision)
         self.hg.pull(source=REPO_REVIEW, rev=revision, update=True, force=True)
 
+        # Get the parents revisions
+        parent_rev = 'parents({})'.format(revision)
+        parents = self.hg.identify(id=True, rev=parent_rev).decode('utf-8').strip()
+
         # Find modified files by this revision
-        changeset = '{}:{}'.format(revision, tip)
-        status = self.hg.status(change=[changeset, ])
-        modified_files = [f.decode('utf-8') for _, f in status]
+        modified_files = []
+        for parent in parents.split('\n'):
+            changeset = '{}:{}'.format(parent, revision)
+            status = self.hg.status(change=[changeset, ])
+            modified_files += [f.decode('utf-8') for _, f in status]
         logger.info('Modified files', files=modified_files)
 
         # mach configure
