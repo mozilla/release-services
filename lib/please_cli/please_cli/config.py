@@ -412,11 +412,11 @@ APPS = {
         'deploy_options': {
             'staging': {
                 'heroku_app': 'shipit-staging-dashboard',
-                'url': 'https://uplift.shipit.staging.mozilla-releng.net',
+                'url': 'https://dashboard.shipit.staging.mozilla-releng.net',
             },
             'production': {
                 'heroku_app': 'shipit-production-dashboard',
-                'url': 'https://uplift.shipit.mozilla-releng.net',
+                'url': 'https://dashboard.shipit.mozilla-releng.net',
             },
         },
     },
