@@ -58,6 +58,54 @@ APPS = {
             'data_dir': os.path.join(TMP_DIR, 'postgresql'),
         },
     },
+    'releng-notification-policy': {
+        'checks': [
+            ('Checking code quality', 'flake8'),
+            ('Running tests', 'pytest tests/'),
+        ],
+        'run': 'FLASK',
+        'run_options': {
+            'port': 8006,
+        },
+        'requires': [
+            'postgresql',
+        ],
+        'deploy': 'HEROKU',
+        'deploy_options': {
+            #'staging': {
+            #    'heroku_app': 'releng-staging-notification-policy',
+            #    'url': 'https://policy.notification.staging.mozilla-releng.net',
+            #},
+            # 'production': {
+            #    'heroku_app': 'releng-production-notification-policy',
+            #    'url': 'https://policy.notification.mozilla-releng.net',
+            # },
+        },
+    },
+    'releng-notification-identity': {
+        'checks': [
+            ('Checking code quality', 'flake8'),
+            ('Running tests', 'pytest tests/'),
+        ],
+        'run': 'FLASK',
+        'run_options': {
+            'port': 8007,
+        },
+        'requires': [
+            'postgresql',
+        ],
+        'deploy': 'HEROKU',
+        'deploy_options': {
+            #'staging': {
+            #    'heroku_app': 'releng-staging-notification-identity',
+            #    'url': 'https://identity.notification.staging.mozilla-releng.net',
+            #},
+            # 'production': {
+            #    'heroku_app': 'releng-production-notification-identity',
+            #    'url': 'https://identity.notification.mozilla-releng.net',
+            # },
+        },
+    },
     'releng-archiver': {
         'checks': [
             ('Checking code quality', 'flake8'),
