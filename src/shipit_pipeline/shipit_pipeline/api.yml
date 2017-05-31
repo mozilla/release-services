@@ -65,6 +65,31 @@ paths:
         200:
           description: Removal of pipeline
 
+  # Mock Step
+  /mock/{uid}:
+    get:
+      operationId: "shipit_pipeline.pipeline.get_step"
+      description: Returns step
+      parameters:
+          - $ref: '#/parameters/uid'
+      responses:
+        200:
+          description: Definition of Step
+          schema:
+            $ref: '#/definitions/Step'
+
+  /mock/{uid}/status:
+    get:
+      operationId: "shipit_pipeline.pipeline.get_state"
+      description: Returns status of the ste
+      parameters:
+        - $ref: '#/parameters/uid'
+      responses:
+        200:
+          description: Status of step
+          schema:
+            $ref: '#/definitions/StepResult'
+
   # Pipeline specific
   /ticktock:
     put:
@@ -96,17 +121,35 @@ definitions:
       output:
         $ref: '#/definitions/Output'
 
-  # Step:
-  #   type: object
-  #   required:
-  #     - uid
-  #     - parameters
-  #   properties:
-  #     uid:
-  #       type: string
-  #     parameters:
-  #       $ref: '#/definitions/Parameters'
-  #
+  StepResult:
+    type: object
+    required:
+      - state
+    properties:
+      state:
+        type: string
+        enum:
+          - starting # / pending
+          - running
+          - stopping
+          - exception
+          - completed #/ success
+          - failed
+      message:
+        type: string
+        description: More elaborate description of state for humans.
+      output:
+        $ref: '#/definitions/Output'
+  Step:
+    type: object
+    required:
+      - uid
+      - parameters
+    properties:
+      uid:
+        type: string
+      parameters:
+        $ref: '#/definitions/PipelineStep'
 
   # Pipeline is like a subclass of Step
   Pipeline:

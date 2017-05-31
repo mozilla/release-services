@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 from copy import copy
 import requests
+import time
 
 
 class PipelineStep:
@@ -51,6 +52,77 @@ class PipelineStep:
     @property
     def is_running(self):
         return self.state in ('starting', 'running')
+
+class MockPipelineStep:
+    MockSteps = {}
+
+
+    def __init__(self, uid,
+            params, requires, state='pending', step_time=100):
+        self.uid = uid
+        self.url = ""
+        self.params = params
+        self.requires = requires
+        self.state = state
+        self.step_time = step_time
+
+
+    def start_step(self, uid, data, verify):
+        self.start_time = time.time()
+
+    def complete(self):
+        self.state = 'completed'
+
+    def get_state(self):
+        current_time = time.time()
+        if current_time - self.start_time > step_time:
+            return 'completed'
+        return self.state
+
+    def update_state(self):
+       if current_time - self.start_time > step_time:
+            self.state = 'completed'
+    @property
+    def is_pending(self):
+        return self.state == 'pending'
+
+    @property
+    def is_running(self):
+        return self.state in ('starting', 'running')
+
+    @property
+    def full_url(self):
+        return '{}/mock/{}'.format(self.url, self.uid)
+
+    def to_dict(self):
+        return {
+                  "parameters": {
+                    "api_url": self.full_url,
+                    "description": "string",
+                    "parameters": self.params,
+                    "parameters_schema": "string",
+                    "requires": [
+                      self.requires
+                    ],
+                    "uid": self.uid
+                  },
+                  "uid": self.uid
+                }
+
+
+
+def add_step(uid, params, requires, state='pending', step_time=100):
+    step = MockPipelineStep(uid, params, requires, state=state, step_time=step_time)
+    MockSteps[uid] = step
+
+def start_Step(uid):
+    return MockSteps[uid].start_step()
+
+def get_state(uid):
+    return MockSteps[uid].get_state()
+
+def get_step(uid):
+    return MockSteps[uid].to_dict()
 
 
 def refresh_pipeline_steps(steps):
