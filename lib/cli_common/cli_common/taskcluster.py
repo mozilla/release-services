@@ -1,10 +1,20 @@
-import taskcluster
-import re
-import os
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from __future__ import absolute_import
+
 import click
+import copy
+import os
+import re
+import taskcluster
+
 from cli_common.log import get_logger
 
+
 logger = get_logger(__name__)
+
 
 with open(taskcluster._client_importer.__file__) as f:
     TASKCLUSTER_SERVICES = [
@@ -12,6 +22,7 @@ with open(taskcluster._client_importer.__file__) as f:
         for line in f.read().split('\n')
         if line
     ]
+
 
 def read_hosts():
     """
@@ -31,6 +42,7 @@ def read_hosts():
         out.update(dict(zip(names, [ip] * len(names))))
 
     return out
+
 
 def get_options(service_endpoint, client_id=None, access_token=None):
     """
@@ -66,6 +78,7 @@ def get_options(service_endpoint, client_id=None, access_token=None):
 
     return tc_options
 
+
 def get_service(service_name, client_id=None, access_token=None):
     """
     Build a Taskcluster service instance from the environment
@@ -96,35 +109,48 @@ def get_service(service_name, client_id=None, access_token=None):
     options = get_options(service_name + '/v1', client_id, access_token)
     return getattr(taskcluster, service_name.capitalize())(options)
 
-def get_secrets(path=None, required=[], client_id=None, access_token=None):
+
+def get_secrets(name,
+                project_name,
+                required=[],
+                existing=dict(),
+                taskcluster_client_id=None,
+                taskcluster_access_token=None,
+                ):
     """
-    Get secrets from a specific path
-    and check mandatory ones
+    Fetch a specific set of secrets by name
+    - merge project specific secrets
+    - check that all required secrets are present
+    - extend existing set of secrets
     """
 
-    # Credentials preference: Use click variable
-    if path is None:
-        try:
-            ctx = click.get_current_context()
-            path = ctx.params.get('taskcluster_secret')
-        except RuntimeError:
-            pass  # no active context
+    secrets = dict()
+    if existing:
+        secrets = copy.deepcopy(existing)
 
-    # Credentials preference: Use env. variable
-    if path is None:
-        path = os.environ.get('TASKCLUSTER_SECRET')
+    all_secrets = dict()
+    if name:
+        secrets_service = get_service('secrets',
+                                      taskcluster_client_id,
+                                      taskcluster_access_token,
+                                      )
+        all_secrets = secrets_service.get(name).get('secret', dict())
 
-    assert path is not None, \
-        'Missing secrets path'
-    secrets = get_service('secrets', client_id, access_token).get(path)
-    secrets = secrets['secret']
-    for req in required:
-        if req not in secrets:
-            raise Exception('Missing value {} in Taskcluster secret value {}'.format(req, path))  # noqa
+    secrets_common = all_secrets.get('common', dict())
+    secrets.update(secrets_common)
+
+    secrets_app = all_secrets.get(project_name, dict())
+    secrets.update(secrets_app)
+
+    for required_secret in required:
+        if required_secret not in secrets:
+            raise Exception('Missing value {} in secrets.'.format(required_secret))
 
     return secrets
 
-def get_hook_artifact(hook_group_id, hook_id, artifact_name, client_id=None, access_token=None):
+
+def get_hook_artifact(hook_group_id, hook_id, artifact_name, client_id=None,
+                      access_token=None):
     """
     Load an artifact from the last execution of an hook
     """

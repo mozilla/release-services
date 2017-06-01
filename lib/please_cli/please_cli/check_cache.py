@@ -32,9 +32,9 @@ class Derive:
 
 @click.command()
 @click.argument(
-    'app',
+    'project',
     required=True,
-    type=click.Choice(please_cli.config.APPS),
+    type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
     '--cache-url',
@@ -48,17 +48,17 @@ class Derive:
     default='nix-instantiate',
     help='`nix-instantiate` command',
     )
-def cmd(app, cache_url, nix_instantiate, indent=0, interactive=True):
-    """Command to check if application is already in cache.
+def cmd(project, cache_url, nix_instantiate, indent=0, interactive=True):
+    """Command to check if project is already in cache.
     """
 
     indent = ' ' * indent
 
-    click.echo('{} => Calculating `{}` hash ... '.format(indent, app), nl=False)
+    click.echo('{} => Calculating `{}` hash ... '.format(indent, project), nl=False)
     command = [
         nix_instantiate,
         os.path.join(please_cli.config.ROOT_DIR, 'nix/default.nix'),
-        '-A', app
+        '-A', project
     ]
     if interactive:
         with click_spinner.spinner():
@@ -85,19 +85,19 @@ def cmd(app, cache_url, nix_instantiate, indent=0, interactive=True):
             derivation = eval(f.read())
     except Exception as e:
         log.exception(e)
-        raise click.ClickException('Something went wrong when reading derivation file for `{}` application.'.format(app))
+        raise click.ClickException('Something went wrong when reading derivation file for `{}` project.'.format(project))
     click.echo('{}    Application hash: {}'.format(indent, derivation.nix_hash))
 
-    click.echo('{} => Checking cache if build artifacts exists for `{}` ... '.format(indent, app), nl=False)
+    click.echo('{} => Checking cache if build artifacts exists for `{}` ... '.format(indent, project), nl=False)
     with click_spinner.spinner():
         response = requests.get(
             '%s/%s.narinfo' % (cache_url, derivation.nix_hash),
         )
 
-    app_exists = response.status_code == 200
+    project_exists = response.status_code == 200
 
     result = 1
-    if app_exists:
+    if project_exists:
         result = 0
     please_cli.utils.check_result(
         result,
@@ -107,7 +107,7 @@ def cmd(app, cache_url, nix_instantiate, indent=0, interactive=True):
         ask_for_details=False,
     )
 
-    return app_exists, derivation.nix_hash
+    return project_exists, derivation.nix_hash
 
 
 if __name__ == "__main__":

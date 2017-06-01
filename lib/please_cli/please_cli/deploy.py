@@ -1,5 +1,4 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
@@ -31,9 +30,9 @@ log = cli_common.log.get_logger(__name__)
 @click.command()
 @cli_common.click.taskcluster_options
 @click.argument(
-    'app',
+    'project',
     required=True,
-    type=click.Choice(please_cli.config.APPS),
+    type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
     '--s3-bucket',
@@ -74,7 +73,7 @@ log = cli_common.log.get_logger(__name__)
     )
 @click.pass_context
 def cmd_S3(ctx,
-           app,
+           project,
            s3_bucket,
            extra_attribute,
            csp,
@@ -89,14 +88,23 @@ def cmd_S3(ctx,
     '''
     '''
 
-    secrets = cli_common.taskcluster.get_secrets()
+    secrets = cli_common.taskcluster.get_secrets(
+        taskcluster_secret,
+        project,
+        required=(
+            'DEPLOY_S3_ACCESS_KEY_ID',
+            'DEPLOY_S3_SECRET_ACCESS_KEY',
+        ),
+        taskcluster_client_id=taskcluster_client_id,
+        taskcluster_access_token=taskcluster_access_token,
+    )
 
     AWS_ACCESS_KEY_ID = secrets['DEPLOY_S3_ACCESS_KEY_ID']
     AWS_SECRET_ACCESS_KEY = secrets['DEPLOY_S3_SECRET_ACCESS_KEY']
 
-    # 1. build app (TODO: but only pull from cache)
+    # 1. build project (TODO: but only pull from cache)
     ctx.invoke(please_cli.build.cmd,
-               app=app,
+               project=project,
                extra_attribute=extra_attribute,
                nix_build=nix_build,
                nix_push=nix_push,
@@ -105,22 +113,22 @@ def cmd_S3(ctx,
                taskcluster_access_token=taskcluster_access_token,
                interactive=interactive,
                )
-    app_path = os.path.realpath(os.path.join(
+    project_path = os.path.realpath(os.path.join(
         please_cli.config.TMP_DIR,
-        'result-build-{}-1'.format(app),
+        'result-build-{}-1'.format(project),
     ))
 
-    # 2. create temporary copy of app
+    # 2. create temporary copy of project
     click.echo(' => Copying build artifacs to temporary location ... ', nl=False)
     with click_spinner.spinner():
         if not os.path.exists(please_cli.config.TMP_DIR):
             os.makedirs(please_cli.config.TMP_DIR)
         tmp_dir = tempfile.mkdtemp(
-            prefix='copy-of-result-{}-'.format(app),
+            prefix='copy-of-result-{}-'.format(project),
             dir=please_cli.config.TMP_DIR,
         )
         shutil.rmtree(tmp_dir)
-        shutil.copytree(app_path, tmp_dir, copy_function=shutil.copy)
+        shutil.copytree(project_path, tmp_dir, copy_function=shutil.copy)
     please_cli.utils.check_result(
         0,
         'Copied build artifacs to temporary location: {}'.format(tmp_dir),
@@ -128,13 +136,11 @@ def cmd_S3(ctx,
     )
 
     # 3. apply csp and flags to index.html
-
     click.echo(' => Applying CSP and environment flags to index.html ... ', nl=False)
     with click_spinner.spinner():
         index_html_file = os.path.join(tmp_dir, 'index.html')
         with io.open(index_html_file, 'r', encoding='utf-8') as f:
             index_html = f.read()
-
         if csp:
             index_html = index_html.replace(
                 'font-src \'self\';',
@@ -143,7 +149,10 @@ def cmd_S3(ctx,
         if env:
             index_html = index_html.replace(
                 '<body',
-                '<body ' + (' '.join(['data-' + i for i in env])),
+                '<body ' + (' '.join([
+                    'data-{}="{}"'.format(*[j.strip() for j in i.split(':', 1)])
+                    for i in env
+                ])),
             )
 
         os.chmod(index_html_file, 755)
@@ -172,7 +181,7 @@ def cmd_S3(ctx,
         ])
     please_cli.utils.check_result(
         0,
-        'Synced {} to S3 bucket {}'.format(app, s3_bucket),
+        'Synced {} to S3 bucket {}'.format(project, s3_bucket),
         ask_for_details=interactive,
     )
 
@@ -180,9 +189,9 @@ def cmd_S3(ctx,
 @click.command()
 @cli_common.click.taskcluster_options
 @click.argument(
-    'app',
+    'project',
     required=True,
-    type=click.Choice(please_cli.config.APPS),
+    type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
     '--heroku-app',
@@ -210,7 +219,7 @@ def cmd_S3(ctx,
     )
 @click.pass_context
 def cmd_HEROKU(ctx,
-               app,
+               project,
                heroku_app,
                extra_attribute,
                nix_build,
@@ -221,13 +230,22 @@ def cmd_HEROKU(ctx,
                interactive,
                ):
 
-    secrets = cli_common.taskcluster.get_secrets()
+    secrets = cli_common.taskcluster.get_secrets(
+        taskcluster_secret,
+        project,
+        required=(
+            'HEROKU_USERNAME',
+            'HEROKU_PASSWORD',
+        ),
+        taskcluster_client_id=taskcluster_client_id,
+        taskcluster_access_token=taskcluster_access_token,
+    )
 
     HEROKU_USERNAME = secrets['HEROKU_USERNAME']
     HEROKU_PASSWORD = secrets['HEROKU_PASSWORD']
 
     ctx.invoke(please_cli.build.cmd,
-               app=app,
+               project=project,
                extra_attribute=extra_attribute,
                nix_build=nix_build,
                nix_push=nix_push,
@@ -237,15 +255,15 @@ def cmd_HEROKU(ctx,
                interactive=interactive,
                )
 
-    app_path = os.path.realpath(os.path.join(
+    project_path = os.path.realpath(os.path.join(
         please_cli.config.TMP_DIR,
-        'result-build-{}-1'.format(app),
+        'result-build-{}-1'.format(project),
     ))
 
-    click.echo(' => Pushing {} to heroku ... '.format(app), nl=False)
+    click.echo(' => Pushing {} to heroku ... '.format(project), nl=False)
     with click_spinner.spinner():
         push.registry.push(
-            push.image.spec(app_path),
+            push.image.spec(project_path),
             "https://registry.heroku.com",
             HEROKU_USERNAME,
             HEROKU_PASSWORD,
@@ -254,7 +272,7 @@ def cmd_HEROKU(ctx,
         )
     please_cli.utils.check_result(
         0,
-        'Pushed {} to heroku.'.format(app),
+        'Pushed {} to heroku.'.format(project),
         ask_for_details=interactive,
     )
 
@@ -262,9 +280,9 @@ def cmd_HEROKU(ctx,
 @click.command()
 @cli_common.click.taskcluster_options
 @click.argument(
-    'app',
+    'project',
     required=True,
-    type=click.Choice(please_cli.config.APPS),
+    type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
     '--extra-attribute',
@@ -303,7 +321,7 @@ def cmd_HEROKU(ctx,
     )
 @click.pass_context
 def cmd_TASKCLUSTER_HOOK(ctx,
-                         app,
+                         project,
                          extra_attribute,
                          hook_id,
                          hook_group_id,
@@ -318,12 +336,13 @@ def cmd_TASKCLUSTER_HOOK(ctx,
 
     secrets = cli_common.taskcluster.get_secrets(
         taskcluster_secret,
-        [
+        project,
+        required=(
             'DOCKER_USERNAME',
             'DOCKER_PASSWORD',
-        ],
-        taskcluster_client_id,
-        taskcluster_access_token,
+        ),
+        taskcluster_client_id=taskcluster_client_id,
+        taskcluster_access_token=taskcluster_access_token,
     )
 
     docker_username = secrets['DOCKER_USERNAME']
@@ -353,7 +372,7 @@ def cmd_TASKCLUSTER_HOOK(ctx,
     )
 
     ctx.invoke(please_cli.build.cmd,
-               app=app,
+               project=project,
                extra_attribute=extra_attribute,
                nix_build=nix_build,
                nix_push=nix_push,
@@ -362,12 +381,12 @@ def cmd_TASKCLUSTER_HOOK(ctx,
                taskcluster_access_token=taskcluster_access_token,
                interactive=interactive,
                )
-    app_path = os.path.realpath(os.path.join(
+    project_path = os.path.realpath(os.path.join(
         please_cli.config.TMP_DIR,
-        'result-build-{}-1'.format(app),
+        'result-build-{}-1'.format(project),
     ))
 
-    with open(app_path) as f:
+    with open(project_path) as f:
         hook = json.load(f)
 
     image = hook.get('task', {}).get('payload', {}).get('image', '')

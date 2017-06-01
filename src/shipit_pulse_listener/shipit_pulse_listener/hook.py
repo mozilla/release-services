@@ -40,14 +40,14 @@ class Hook(object):
 
         return True
 
-    def connect_pulse(self, secrets):
+    def connect_pulse(self, pulse_user, pulse_password):
         """
         Create the pulse consumer triggering the hook
         """
         # Use pulse consumer from bot_common
         consumer = create_consumer(
-            secrets['PULSE_USER'],
-            secrets['PULSE_PASSWORD'],
+            pulse_user,
+            pulse_password,
             self.pulse_queue,
             self.pulse_route,
             self.got_message

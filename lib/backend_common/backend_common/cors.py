@@ -13,6 +13,6 @@ cors = CORS()
 
 def init_app(app):
     # Allow specific origins
-    origins = os.environ.get('CORS_ORIGINS', '*')
+    origins = app.config.get('CORS_ORIGINS', '*')
     cors.init_app(app, origins=origins.split(' '))
     return cors

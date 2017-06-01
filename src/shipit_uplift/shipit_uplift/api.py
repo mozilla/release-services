@@ -10,7 +10,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 from backend_common.auth import auth
 from backend_common.db import db
-from backend_common import log
+from cli_common import log
 from cli_common.taskcluster import get_hook_artifact
 from shipit_uplift.helpers import gravatar
 from shipit_uplift.models import (
@@ -23,7 +23,7 @@ from shipit_uplift.serializers import (
 from shipit_uplift.flask import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
 
 
-logger = log.get_logger('shipit_uplift.api')
+logger = log.get_logger(__name__)
 
 
 def ping():

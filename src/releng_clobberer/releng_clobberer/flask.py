@@ -9,6 +9,7 @@ import json
 import os
 
 import releng_clobberer.cli
+import releng_clobberer.config
 import backend_common
 import backend_common.db
 
@@ -29,7 +30,7 @@ if not os.environ.get('APP_SETTINGS') and \
 
 
 app = backend_common.create_app(
-    "releng_clobberer",
+    releng_clobberer.config.PROJECT_NAME,
     extensions=[init_app, backend_common.db],
     debug=DEBUG,
     debug_src=HERE,

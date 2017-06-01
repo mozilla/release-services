@@ -39,6 +39,7 @@ setup(
         pulse=['aioamqp'],
         taskcluster=['taskcluster'],
         mercurial=['python-hglib'],
+        sentry=['raven'],
     ),
     include_package_data=True,
     zip_safe=False,

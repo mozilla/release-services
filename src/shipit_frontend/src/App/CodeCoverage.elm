@@ -83,7 +83,7 @@ loadArtifact model =
             "project-releng"
 
         hookId =
-            "services-staging-shipit-code-coverage-bot"
+            "services-staging-shipit-code-coverage"
 
         artifact =
             "coverage_by_dir.json"

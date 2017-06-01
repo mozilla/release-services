@@ -7,7 +7,6 @@ from __future__ import absolute_import
 import hglib
 import os
 
-from cli_common.taskcluster import get_secrets
 from cli_common.log import get_logger
 from cli_common.command import run_check
 
@@ -27,10 +26,6 @@ class Workflow(object):
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
             "Cache root {} is not a dir.".format(self.cache_root)
-
-        # Load secrets
-        # TODO: use it later for publications on mozreview
-        get_secrets()
 
         # Clone mozilla-central
         self.repo_dir = os.path.join(self.cache_root, 'static-analysis')

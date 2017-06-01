@@ -58,7 +58,7 @@ let
 
   mkBot = branch:
     let
-      cacheKey = "services-shipit-code-coverage-" + branch;
+      cacheKey = "services-" + branch + "-shipit-code-coverage";
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
       hook = mkTaskclusterHook {
         name = "Shipit task aggregating code coverage data";
@@ -77,6 +77,7 @@ let
         };
         taskEnv = {
           "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+          "APP_CHANNEL" = branch;
         };
         taskCommand = [
           "/bin/shipit-code-coverage"
@@ -93,6 +94,7 @@ let
             path = "/coverage_by_dir.json";
           };
         };
+        workerType = "releng-svc-compute";
       };
     in
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);

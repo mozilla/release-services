@@ -10,6 +10,13 @@ import logbook
 import structlog.exceptions
 
 
+CHANNELS = [
+    'master',
+    'staging',
+    'production',
+]
+
+
 class UnstructuredRenderer(structlog.processors.KeyValueRenderer):
 
     def __call__(self, logger, method_name, event_dict):
@@ -26,10 +33,14 @@ class UnstructuredRenderer(structlog.processors.KeyValueRenderer):
             return event
 
 
-def mozdef_sender(target):
+def setup_mozdef(project_name, channel, MOZDEF):
+    """
+    Setup mozdef using taskcluster secrets
+    """
+
     import mozdef_client
 
-    sev_map = {
+    sevirity_map = {
         'critical': mozdef_client.MozDefEvent.SEVERITY_CRITICAL,
         'error': mozdef_client.MozDefEvent.SEVERITY_ERROR,
         'warning': mozdef_client.MozDefEvent.SEVERITY_WARNING,
@@ -38,69 +49,122 @@ def mozdef_sender(target):
     }
 
     def send(logger, method_name, event_dict):
+
         # only send to mozdef if `mozdef` is set
         if event_dict.pop('mozdef', False):
-            msg = mozdef_client.MozDefEvent(target)
+            msg = mozdef_client.MozDefEvent(MOZDEF)
+
             msg.summary = event_dict.get('event', '')
-            msg.tags = ['relengapi']
+            msg.tags = [
+                'mozilla-releng/services/' + channel,
+                project_name,
+            ]
+
             if set(event_dict) - {'event'}:
                 msg.details = event_dict.copy()
                 msg.details.pop('event', None)
+
             msg.source = logger.name
-            msg.set_severity(sev_map.get(method_name,
-                                         mozdef_client.MozDefEvent.SEVERITY_INFO))
+            msg.set_severity(
+                sevirity_map.get(
+                    method_name,
+                    mozdef_client.MozDefEvent.SEVERITY_INFO,
+                ),
+            )
             msg.send()
-        # return the message unchanged
+
         return event_dict
+
     return send
 
-def setup_papertrail(app_name):
+
+def setup_papertrail(project_name, channel, PAPERTRAIL_HOST, PAPERTRAIL_PORT):
     """
     Setup papertrail account using taskcluster secrets
     """
 
-    # Load secrets from environment
-    from cli_common.taskcluster import get_secrets
-    try:
-        secrets = get_secrets(required=('PAPERTRAIL_HOST', 'PAPERTRAIL_PORT'))
-    except:
-        return
-
     # Setup papertrail
     papertrail = logbook.SyslogHandler(
-        application_name=app_name,
-        address=(secrets['PAPERTRAIL_HOST'], int(secrets['PAPERTRAIL_PORT'])),
+        application_name='mozilla-releng/services/{}/{}'.format(channel, project_name),
+        address=(PAPERTRAIL_HOST, int(PAPERTRAIL_PORT)),
         format_string='{record.time} {record.channel}: {record.message}',
         bubble=True,
     )
     papertrail.push_application()
 
 
+def setup_sentry(project_name, channel, SENTRY_DSN):
+    """
+    Setup sentry account using taskcluster secrets
+    """
+
+    from raven import Client
+    from raven.handlers.logbook import SentryHandler
+
+    sentry_client = Client(
+        dsn=SENTRY_DSN,
+        site=project_name,
+        name="mozilla-releng/services",
+        environment=channel,
+        # TODO:
+        # release=read(VERSION) we need to promote that as well via secrets
+        # tags=...
+        # repos=...
+    )
+
+    sentry = SentryHandler(sentry_client, level=logbook.WARNING, bubble=True)
+
+    sentry.push_application()
+
+
 def init_app(app):
     """
     Init logger from a Flask Application
     """
-    mozdef = app.config.get('MOZDEF_TARGET', None)
     level = logbook.INFO
     if app.debug:
         level = logbook.DEBUG
-    init_logger(level=level, mozdef=mozdef, app_name=app.name)
+
+    init_logger(app.name,
+                level=level,
+                channel=app.config.get('APP_CHANNEL'),
+                PAPERTRAIL_HOST=app.config.get('PAPERTRAIL_HOST'),
+                PAPERTRAIL_PORT=app.config.get('PAPERTRAIL_PORT'),
+                SENTRY_DSN=app.config.get('SENTRY_DSN'),
+                MOZDEF=app.config.get('MOZDEF'),
+                )
 
 
-def init_logger(level=logbook.INFO, handler=None, mozdef=None, app_name=None):
-    if app_name is None:
-        app_name = os.environ.get('APP_NAME')
-    assert app_name is not None, \
-        'Missing APP_NAME to setup logging'
+def init_logger(project_name,
+                channel=None,
+                level=logbook.INFO,
+                handler=None,
+                PAPERTRAIL_HOST=None,
+                PAPERTRAIL_PORT=None,
+                SENTRY_DSN=None,
+                MOZDEF=None
+                ):
 
-    # Output logs on stderr
+    if not channel:
+        channel = os.environ.get('APP_CHANNEL')
+
+    if channel and channel not in CHANNELS:
+        raise Exception('Initilizing logging with channel `{}`. It should be one of: {}'.format(channel, ', '.join(CHANNELS)))
+
+    # By default utput logs on stderr
     if handler is None:
         fmt = '{record.channel}: {record.message}'
         handler = logbook.StderrHandler(level=level, format_string=fmt)
+
     handler.push_application()
 
-    # Output logs on papertrail
-    setup_papertrail(app_name)
+    # Log to papertrail
+    if channel and PAPERTRAIL_HOST and PAPERTRAIL_PORT:
+        setup_papertrail(project_name, channel, PAPERTRAIL_HOST, PAPERTRAIL_PORT)
+
+    # Log to sentry
+    if channel and SENTRY_DSN:
+        setup_sentry(project_name, channel, SENTRY_DSN)
 
     def logbook_factory(*args, **kwargs):
         # Logger given to structlog
@@ -115,8 +179,8 @@ def init_logger(level=logbook.INFO, handler=None, mozdef=None, app_name=None):
     ]
 
     # send to mozdef before formatting into a string
-    if mozdef:
-        processors.append(mozdef_sender(mozdef))
+    if channel and MOZDEF:
+        processors.append(setup_mozdef(project_name, channel, MOZDEF))
 
     processors.append(UnstructuredRenderer())
 
