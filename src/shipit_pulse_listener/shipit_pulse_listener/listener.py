@@ -32,10 +32,13 @@ class HookStaticAnalysis(Hook):
             return
 
         # Extract commits
-        commits = [c['rev'] for c in payload.get('commits', [])]
+        commits = [
+            '{rev}:{review_request_id}:{diffset_revision}'.format(**c)
+            for c in payload.get('commits', [])
+        ]
         logger.info('Received new commits', commits=commits)
         return {
-            'REVISIONS': ' '.join(commits),
+            'COMMITS': ' '.join(commits),
         }
 
 
