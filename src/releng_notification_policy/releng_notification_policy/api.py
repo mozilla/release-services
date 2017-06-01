@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import current_app, request
 from typing import Tuple
 from .models import Message, Policy
@@ -47,7 +47,8 @@ def put_message(uid: str, body: dict):
         session.flush()
 
         policies = [
-            Policy(**p, policy_id=new_message.id)
+            # Overwrite the frequency object input from the API with a db compatible timedelta object
+            Policy(**{**p, 'frequency': timedelta(**p['frequency'])}, policy_id=new_message.id)
             for p in body['policies']
         ]
 
@@ -91,11 +92,20 @@ def get_tick_tock():
         for message in pending_messages:
             policies = session.query(Policy).filter(Policy.policy_id == message.id).all()
             for policy in policies:
+                # Check our policy time frame is in effect
                 if policy.stop_timestamp < current_time or current_time < policy.start_timestamp:
+                    continue
+
+                # If we have notified already, only notify according to the frequency
+                if policy.last_notified and current_time - policy.last_notified < policy.frequency:
                     continue
 
                 notification_info = send_notifications(message, policy)
                 notifications.append(notification_info)
+                policy.last_notified = current_time
+
+            session.add_all(policies)
+        session.commit()
 
         return {
             'notifications': notifications,

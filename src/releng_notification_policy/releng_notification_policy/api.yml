@@ -83,8 +83,21 @@ paths:
                       format: date-time
 
                     frequency:
-                      type: string
-                      description: Cron frequency description string.
+                      type: object
+                      description: Frequency as a time interval. Given as [Days, Hours, Minutes, Seconds]
+                      properties:
+                        days:
+                          type: integer
+                          format: int64
+                          description: Number of days between notifications.
+                        hours:
+                          type: integer
+                          format: int64
+                          description: Number of hours between notifications.
+                        minutes:
+                          type: integer
+                          format: int64
+                          description: Number of minutes between notifications.
 
       responses:
         200:
