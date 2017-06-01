@@ -8,7 +8,7 @@ import hglib
 import os
 import re
 
-from cli_common.taskcluster import get_secrets, get_service
+from cli_common.taskcluster import get_service
 from cli_common.log import get_logger
 from cli_common.command import run_check
 
@@ -63,16 +63,18 @@ class Workflow(object):
     """
     taskcluster = None
 
-    def __init__(self, cache_root):  # noqa
+    def __init__(self, cache_root, emails, client_id=None, access_token=None):
+        self.emails = emails
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
             "Cache root {} is not a dir.".format(self.cache_root)
 
         # Load TC services & secrets
-        self.secrets = get_secrets(
-            required=('STATIC_ANALYSIS_NOTIFICATIONS', ),
+        self.notify = get_service(
+            'notify',
+            client_id=client_id,
+            access_token=access_token,
         )
-        self.notify = get_service('notify')
 
         # Clone mozilla-central
         self.repo_dir = os.path.join(self.cache_root, 'static-analysis/')
@@ -94,7 +96,7 @@ class Workflow(object):
         # Open new hg client
         self.hg = hglib.open(self.repo_dir)
 
-    def run(self, revision):
+    def run(self, revision, review_request_id, diffset_revision):
         """
         Run the static analysis workflow:
          * Pull revision from review
@@ -208,7 +210,7 @@ class Workflow(object):
         """
         Send an email to administrators
         """
-        for email in self.secrets['STATIC_ANALYSIS_NOTIFICATIONS']:
+        for email in self.emails:
             self.notify.email({
                 'address': email,
                 'subject': 'Static analysis problem',
