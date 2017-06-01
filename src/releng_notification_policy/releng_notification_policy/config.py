@@ -6,3 +6,7 @@ from __future__ import absolute_import
 
 
 PROJECT_NAME = 'releng-notification-policy'
+
+URGENCY_LEVELS = [
+    'LOW', 'NORMAL', 'HIGH', 'DO_YESTERDAY',
+]
