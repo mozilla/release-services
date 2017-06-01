@@ -166,7 +166,7 @@ class Workflow(object):
         # Notify by email
         if issues:
             logger.info('Send email to admins')
-            self.notify_admins(issues)
+            self.notify_admins(review_request_id, issues)
 
     def parse_issues(self, clang_output):
         """
@@ -206,14 +206,16 @@ class Workflow(object):
 
         return issues
 
-    def notify_admins(self, issues):
+    def notify_admins(self, review_request_id, issues):
         """
         Send an email to administrators
         """
+        review_url = 'https://reviewboard.mozilla.org/r/' + review_request_id + '/'
+        content = review_url + '\n\n' + '\n'.join([i.as_markdown() for i in issues])
         for email in self.emails:
             self.notify.email({
                 'address': email,
-                'subject': 'Static analysis problem',
-                'content': '\n'.join([i.as_markdown() for i in issues]),
+                'subject': 'New Static Analysis Review',
+                'content': content,
                 'template': 'fullscreen',
             })
