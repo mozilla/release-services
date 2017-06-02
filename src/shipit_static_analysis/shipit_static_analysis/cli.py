@@ -10,17 +10,23 @@ from cli_common.click import taskcluster_options
 from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
 import click
+import logging
+import re
+
+logger = logging.getLogger(__name__)
+
+REGEX_COMMIT = re.compile(r'^(\w+):(\d+):(\d+)$')
 
 
 @click.command()
 @taskcluster_options
-@click.argument('revisions', nargs=-1, envvar='REVISIONS')
+@click.argument('commits', nargs=-1, envvar='COMMITS')
 @click.option(
     '--cache-root',
     required=True,
     help='Cache root, used to pull changesets'
 )
-def main(revisions,
+def main(commits,
          cache_root,
          taskcluster_secret,
          taskcluster_client_id,
@@ -29,6 +35,7 @@ def main(revisions,
 
     secrets = get_secrets(taskcluster_secret,
                           config.PROJECT_NAME,
+                          required=('STATIC_ANALYSIS_NOTIFICATIONS', ),
                           taskcluster_client_id=taskcluster_client_id,
                           taskcluster_access_token=taskcluster_access_token,
                           )
@@ -40,9 +47,19 @@ def main(revisions,
                 MOZDEF=secrets.get('MOZDEF'),
                 )
 
-    w = Workflow(cache_root)
-    for rev in revisions:
-        w.run(rev)
+    w = Workflow(cache_root,
+                 secrets['STATIC_ANALYSIS_NOTIFICATIONS'],
+                 taskcluster_client_id,
+                 taskcluster_access_token,
+                 )
+
+    for commit in commits:
+        commit_args = REGEX_COMMIT.search(commit)
+        if commit_args is None:
+            logger.warn('Skipping commit {}'.format(commit))
+            continue
+
+        w.run(*commit_args.groups())
 
 
 if __name__ == '__main__':

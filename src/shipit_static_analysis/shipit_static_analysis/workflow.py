@@ -6,7 +6,9 @@ from __future__ import absolute_import
 
 import hglib
 import os
+import re
 
+from cli_common.taskcluster import get_service
 from cli_common.log import get_logger
 from cli_common.command import run_check
 
@@ -15,6 +17,45 @@ logger = get_logger(__name__)
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
 
+REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): (.*)\n', re.MULTILINE)
+
+
+class Issue(object):
+    """
+    An issue reported by clang-tidy
+    """
+    def __init__(self, header_data, work_dir):
+        assert isinstance(header_data, tuple)
+        assert len(header_data) == 5
+        self.path, self.line, self.char, self.type, self.message = header_data
+        if self.path.startswith(work_dir):
+            self.path = self.path[len(work_dir):]
+        self.line = int(self.line)
+        self.char = int(self.char)
+        self.body = None
+        self.notes = []
+
+    def __str__(self):
+        return '[{}] {} {}:{}'.format(self.type, self.path, self.line, self.char)
+
+    def is_problem(self):
+        return self.type in ('warning', 'error')
+
+    def as_markdown(self):
+        out = [
+            '# {} : {}'.format(self.type, self.path),
+            '**Position**: {}:{}'.format(self.line, self.char),
+            '**Snippet**: {}'.format(self.message),
+            '',
+        ]
+        out += [
+            '* note on {} at {}:{} : {}'.format(
+                n.path, n.line, n.char, n.message
+            )
+            for n in self.notes
+        ]
+        return '\n'.join(out)
+
 
 class Workflow(object):
     """
@@ -22,13 +63,21 @@ class Workflow(object):
     """
     taskcluster = None
 
-    def __init__(self, cache_root):  # noqa
+    def __init__(self, cache_root, emails, client_id=None, access_token=None):
+        self.emails = emails
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
             "Cache root {} is not a dir.".format(self.cache_root)
 
+        # Load TC services & secrets
+        self.notify = get_service(
+            'notify',
+            client_id=client_id,
+            access_token=access_token,
+        )
+
         # Clone mozilla-central
-        self.repo_dir = os.path.join(self.cache_root, 'static-analysis')
+        self.repo_dir = os.path.join(self.cache_root, 'static-analysis/')
         shared_dir = os.path.join(self.cache_root, 'static-analysis-shared')
         logger.info('Clone mozilla central', dir=self.repo_dir)
         cmd = hglib.util.cmdbuilder('robustcheckout',
@@ -47,7 +96,7 @@ class Workflow(object):
         # Open new hg client
         self.hg = hglib.open(self.repo_dir)
 
-    def run(self, revision):
+    def run(self, revision, review_request_id, diffset_revision):
         """
         Run the static analysis workflow:
          * Pull revision from review
@@ -75,19 +124,21 @@ class Workflow(object):
         logger.info('Modified files', files=modified_files)
 
         # mach configure
-        logger.info('Mach configure ...')
+        logger.info('Mach configure...')
         run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
 
         # Build CompileDB backend
-        logger.info('Mach build backend ...')
-        run_check(['gecko-env', './mach', 'build-backend', '--backend=CompileDB'], cwd=self.repo_dir)
+        logger.info('Mach build backend...')
+        cmd = ['gecko-env', './mach', 'build-backend', '--backend=CompileDB']
+        run_check(cmd, cwd=self.repo_dir)
 
         # Build exports
-        logger.info('Mach build exports ...')
+        logger.info('Mach build exports...')
         run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
         run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
 
         # Run static analysis through run-clang-tidy.py
+        logger.info('Run clang-tidy...')
         checks = [
             '-*',
             'modernize-loop-convert',
@@ -104,7 +155,67 @@ class Workflow(object):
             '-p', 'obj-x86_64-pc-linux-gnu/',
             '-checks={}'.format(','.join(checks)),
         ] + modified_files
-        clang_output = run_check(cmd, cwd=self.repo_dir)
+        clang_output = run_check(cmd, cwd=self.repo_dir).decode('utf-8')
 
-        # TODO Analyse clang output
-        logger.info('Clang output', output=clang_output)
+        # Parse clang-tidy's output to indentify potential code problems
+        logger.info('Process static analysis results...')
+        issues = self.parse_issues(clang_output)
+
+        logger.info('Detected {} code issue(s)'.format(len(issues)))
+
+        # Notify by email
+        if issues:
+            logger.info('Send email to admins')
+            self.notify_admins(review_request_id, issues)
+
+    def parse_issues(self, clang_output):
+        """
+        Parse clang-tidy output into structured issues
+        """
+
+        # Limit clang output parsing to "Enabled checks:"
+        end = re.search(r'^Enabled checks:\n', clang_output, re.MULTILINE)
+        if end is not None:
+            clang_output = clang_output[:end.start()-1]
+
+        # Sort headers by positions
+        headers = sorted(
+            REGEX_HEADER.finditer(clang_output),
+            key=lambda h: h.start()
+        )
+
+        issues = []
+        for i, header in enumerate(headers):
+            issue = Issue(header.groups(), self.repo_dir)
+
+            # Get next header
+            if i+1 < len(headers):
+                next_header = headers[i+1]
+                issue.body = clang_output[header.end():next_header.start() - 1]
+            else:
+                issue.body = clang_output[header.end():]
+
+            if issue.is_problem():
+                # Save problem to append notes
+                issues.append(issue)
+                logger.info('Found code issue {}'.format(issue))
+
+            elif issues:
+                # Link notes to last problem
+                issues[-1].notes.append(issue)
+
+        return issues
+
+    def notify_admins(self, review_request_id, issues):
+        """
+        Send an email to administrators
+        """
+        review_url = 'https://reviewboard.mozilla.org/r/' + review_request_id + '/'
+        content = review_url + '\n\n' + '\n'.join([i.as_markdown() for i in issues])
+        for email in self.emails:
+            self.notify.email({
+                'address': email,
+                'subject': 'New Static Analysis Review',
+                'content': content,
+                'template': 'fullscreen',
+            })
