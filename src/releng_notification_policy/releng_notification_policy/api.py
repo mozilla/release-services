@@ -5,22 +5,11 @@
 from __future__ import absolute_import
 
 from datetime import datetime, timedelta
-from flask import current_app, request
+from flask import current_app
 from typing import Tuple
+from werkzeug.exceptions import Conflict, NotFound
 from .models import Message, Policy
 from .channels import send_notifications
-
-
-def create_problem(code=400, type='about:blank', title='', detail='', extra={}, headers=None) -> Tuple[dict, int, dict]:
-    """Create a Problem JSON response according to https://tools.ietf.org/html/rfc7807"""
-    problem_json = {
-        'title': title,
-        'status': code,
-        'type': type,
-        'detail': detail,
-        'instance': request.base_url,
-    }
-    return {**problem_json, **extra}, code, headers
 
 
 def put_message(uid: str, body: dict):
@@ -36,10 +25,7 @@ def put_message(uid: str, body: dict):
 
         # Make sure the message UID doesn't already exist in the DB
         if session.query(Message).filter(Message.uid == uid).count():
-            return create_problem(409,
-                                  title='Message with uid {uid} already exists'.format(uid=uid),
-                                  detail='The provided uid {uid} already corresponds to an instantiated message. '
-                                         'Please use a different uid parameter and try again.'.format(uid=uid))
+            raise Conflict('Message with uid {uid} already exists'.format(uid=uid))
 
         new_message = Message(uid=uid, shortMessage=body['shortMessage'],
                               message=body['message'], deadline=body['deadline'])
@@ -72,7 +58,7 @@ def delete_message(uid: str):
 
             return None, 200
         else:
-            return create_problem(code=404, title='Not Found', detail='Message with uid "{}" not found'.format(uid))
+            raise NotFound('Message with uid "{}" not found'.format(uid))
 
     except ValueError:
         return None, 400
@@ -86,10 +72,15 @@ def get_tick_tock():
         current_time = datetime.now()
         pending_messages = session.query(Message).all()
         if not pending_messages:
-            return create_problem(code=404, title='Not Found', detail='No pending policies to trigger.')
+            raise NotFound('No pending policies to trigger.')
 
         notifications = []
         for message in pending_messages:
+            # If the message has reached its deadline, delete it
+            if current_time > message.deadline:
+                session.delete(message)
+                continue
+
             policies = session.query(Policy).filter(Policy.policy_id == message.id).all()
             for policy in policies:
                 # Check our policy time frame is in effect

@@ -21,6 +21,6 @@ class Policy(db.Model):
     urgency = Column(Enum(*URGENCY_LEVELS, name='notification-urgency-levels'), nullable=False)
     start_timestamp = Column(DateTime, nullable=False)
     stop_timestamp = Column(DateTime, nullable=False)
-    last_notified = Column(DateTime)
+    last_notified = Column(DateTime, nullable=True)  # This will be null when no notification has been sent yet
     frequency = Column(Interval, nullable=False)
     policy_id = Column(Integer, ForeignKey(Message.id, ondelete='CASCADE', onupdate='CASCADE'), nullable=False)

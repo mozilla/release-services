@@ -3,6 +3,9 @@ swagger: "2.0"
 info:
   version: "1.0.0"
   title: "RelEng Notification Policy"
+  description: |
+    Releng Notification Policy service manages the sending and acknowledging of RelEng notification
+    messages based on notification policies.
   contact:
     name: Mozilla Release Engineering
     url: 'https://wiki.mozilla.org/ReleaseEngineering'
@@ -19,6 +22,7 @@ produces:
 paths:
   '/message/{uid}':
     put:
+      summary: Add a new notification message to the service.
       operationId: "releng_notification_policy.api.put_message"
       parameters:
         - name: uid
@@ -84,7 +88,7 @@ paths:
 
                     frequency:
                       type: object
-                      description: Frequency as a time interval. Given as [Days, Hours, Minutes, Seconds]
+                      description: Frequency as a time interval.
                       properties:
                         days:
                           type: integer
@@ -113,8 +117,8 @@ paths:
 
 
     delete:
+      summary: Acknowledge or end the notification policy.
       operationId: releng_notification_policy.api.delete_message
-      description: Acknowledge or end the notification policy.
       parameters:
         - name: uid
           in: path
@@ -133,8 +137,8 @@ paths:
 
   /ticktock:
     get:
+      summary: Hook endpoint to take action on pending policies.
       operationId: releng_notification_policy.api.get_tick_tock
-      description: Hook endpoint to take action on pending policies.
       responses:
         404:
           description: No pending policies to trigger.
@@ -180,7 +184,6 @@ paths:
                       description: Long version of message.
                       type: string
 
-
 definitions:
   Problem:
     type: object
@@ -194,6 +197,7 @@ definitions:
           (e.g., using HTML).
         default: 'about:blank'
         example: 'https://zalando.github.io/problem/constraint-violation'
+
       title:
         type: string
         description: |
@@ -201,6 +205,7 @@ definitions:
           for engineers (usually not suited for non technical stakeholders and
           not localized)
         example: Service Unavailable
+
       status:
         type: integer
         format: int32
@@ -211,16 +216,17 @@ definitions:
         maximum: 600
         exclusiveMaximum: true
         example: 503
+
       detail:
         type: string
         description: |
           A human readable explanation specific to this occurrence of the
           problem.
         example: Connection to database timed out
+
       instance:
         type: string
         format: uri
         description: |
           An absolute URI that identifies the specific occurrence of the problem.
           It may or may not yield further information if dereferenced.
-
