@@ -3,10 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+from backend_common.notifications import *
 
 
 PROJECT_NAME = 'releng-notification-policy'
-
-URGENCY_LEVELS = [
-    'LOW', 'NORMAL', 'HIGH', 'DO_YESTERDAY',
-]
