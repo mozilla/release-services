@@ -12,7 +12,7 @@ from .models import Message, Policy
 from .channels import send_notifications
 
 
-def put_message(uid: str, body: dict):
+def put_message(uid: str, body: dict) -> Tuple[None, int]:
     """
     Add a new message to be delivered into the service.
 
@@ -20,51 +20,43 @@ def put_message(uid: str, body: dict):
     :param body: Description of message
     :return:
     """
-    try:
-        session = current_app.db.session
+    session = current_app.db.session
 
-        # Make sure the message UID doesn't already exist in the DB
-        if session.query(Message).filter(Message.uid == uid).count():
-            raise Conflict('Message with uid {uid} already exists'.format(uid=uid))
+    # Make sure the message UID doesn't already exist in the DB
+    if session.query(Message).filter(Message.uid == uid).count():
+        raise Conflict('Message with uid {uid} already exists'.format(uid=uid))
 
-        new_message = Message(uid=uid, shortMessage=body['shortMessage'],
-                              message=body['message'], deadline=body['deadline'])
-        session.add(new_message)
-        session.flush()
+    new_message = Message(uid=uid, shortMessage=body['shortMessage'],
+                          message=body['message'], deadline=body['deadline'])
+    session.add(new_message)
+    session.flush()
 
-        policies = [
-            # Overwrite the frequency object input from the API with a db compatible timedelta object
-            Policy(**{**p, 'frequency': timedelta(**p['frequency'])}, policy_id=new_message.id)
-            for p in body['policies']
-        ]
+    policies = [
+        # Overwrite the frequency object input from the API with a db compatible timedelta object
+        Policy(**{**p, 'frequency': timedelta(**p['frequency'])}, policy_id=new_message.id)
+        for p in body['policies']
+    ]
 
-        session.add_all(policies)
+    session.add_all(policies)
+    session.commit()
+
+    return None, 200
+
+
+def delete_message(uid: str) -> Tuple[None, int]:
+    """Delete the message with the specified UID"""
+    session = current_app.db.session
+    message = session.query(Message).filter(Message.uid == uid).first()
+    if message:
+        session.delete(message)
         session.commit()
 
         return None, 200
-
-    except ValueError:
-        return None, 400
-
-
-def delete_message(uid: str):
-    """Delete the message with the specified UID"""
-    try:
-        session = current_app.db.session
-        message = session.query(Message).filter(Message.uid == uid).first()
-        if message:
-            session.delete(message)
-            session.commit()
-
-            return None, 200
-        else:
-            raise NotFound('Message with uid "{}" not found'.format(uid))
-
-    except ValueError:
-        return None, 400
+    else:
+        raise NotFound('Message with uid "{}" not found'.format(uid))
 
 
-def get_tick_tock():
+def get_tick_tock() -> dict:
     """Trigger pending notifications according to their notification policies"""
     try:
         session = current_app.db.session
