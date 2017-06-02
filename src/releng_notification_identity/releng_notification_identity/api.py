@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
-from flask import current_app, request
+from flask import current_app
 from typing import List, Tuple
 from werkzeug.exceptions import BadRequest, Conflict, NotFound
 from .models import Identity, Preference
@@ -22,7 +22,7 @@ def _get_identity_preferences(identity_name: str) -> List[Preference]:
         raise NotFound('Identity with name {} could not be found.'.format(identity_name))
 
 
-def put_identity(identity_name: str, body: dict):
+def put_identity(identity_name: str, body: dict) -> Tuple[None, int]:
     try:
         session = current_app.db.session
 
@@ -47,7 +47,7 @@ def put_identity(identity_name: str, body: dict):
         raise BadRequest('Request preferences contain duplicate urgency level {}.'.format(ie.params.get('urgency')))
 
 
-def post_identity(identity_name: str, body: dict):
+def post_identity(identity_name: str, body: dict) -> Tuple[None, int]:
     session = current_app.db.session
     preference_records = _get_identity_preferences(identity_name)
     new_preference_lookup = {
@@ -70,7 +70,7 @@ def post_identity(identity_name: str, body: dict):
     return None, 200
 
 
-def get_identity(identity_name: str):
+def get_identity(identity_name: str) -> Tuple[dict, int]:
     preferences = _get_identity_preferences(identity_name)
     if preferences:
         return {
@@ -85,7 +85,7 @@ def get_identity(identity_name: str):
         raise NotFound('No preferences found for identity {}.'.format(identity_name))
 
 
-def get_identity_preference_by_urgency(identity_name: str, urgency: str):
+def get_identity_preference_by_urgency(identity_name: str, urgency: str) -> Tuple[dict, int]:
     preferences = _get_identity_preferences(identity_name)
     preferences = filter(lambda pref: pref.urgency == urgency, preferences)
     if preferences:
@@ -98,4 +98,4 @@ def get_identity_preference_by_urgency(identity_name: str, urgency: str):
         }, 200
 
     else:
-        return NotFound('No preferences found for identity {}.'.format(identity_name))
+        raise NotFound('No preferences found for identity {}.'.format(identity_name))
