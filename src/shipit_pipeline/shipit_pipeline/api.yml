@@ -68,7 +68,7 @@ paths:
   # Mock Step
   /mock/{uid}:
     get:
-      operationId: "shipit_pipeline.pipeline.get_step"
+      operationId: "shipit_pipeline.api.get_status"
       description: Returns step
       parameters:
           - $ref: '#/parameters/uid'
@@ -80,7 +80,7 @@ paths:
 
   /mock/{uid}/status:
     get:
-      operationId: "shipit_pipeline.pipeline.get_state"
+      operationId: "shipit_pipeline.api.get_mock_status"
       description: Returns status of the ste
       parameters:
         - $ref: '#/parameters/uid'
