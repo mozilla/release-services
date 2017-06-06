@@ -21,14 +21,14 @@ class Hook(object):
         self.pulse_route = pulse_route
         self.queue = None  # TC queue
 
-    def connect_taskcluster(self):
+    def connect_taskcluster(self, client_id=None, access_token=None):
         """
         Load the hook's task definition through Taskcluster
         Save queue service for later use
         """
         logger.info('Loading task definition', hook=self.hook_id, group=self.group_id)  # noqa
         try:
-            service = get_service('hooks')
+            service = get_service('hooks', client_id, access_token)
             hook_payload = service.hook(self.group_id, self.hook_id)
             self.task_definition = hook_payload['task']
         except Exception as e:
@@ -36,7 +36,7 @@ class Hook(object):
             return False
 
         # Get taskcluster queue
-        self.queue = get_service('queue')
+        self.queue = get_service('queue', client_id, access_token)
 
         return True
 
@@ -71,7 +71,7 @@ class Hook(object):
         # Parse payload
         env = self.parse_payload(payload)
         if env is None:
-            logger.warn('Skipping message, no task created')
+            logger.warn('Skipping message, no task created', hook=self.hook_id)
         else:
             self.create_task(extra_env=env)
 
