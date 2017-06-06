@@ -1,5 +1,6 @@
 from backend_common.db import db
-from .config import CHANNELS, PROJECT_NAME, URGENCY_LEVELS
+from backend_common.notifications import CHANNELS, URGENCY_LEVELS
+from .config import PROJECT_NAME
 from sqlalchemy import Column, Enum, ForeignKey, Integer, String, UniqueConstraint
 
 
