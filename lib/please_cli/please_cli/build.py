@@ -21,9 +21,9 @@ import please_cli.utils
 @click.command()
 @cli_common.click.taskcluster_options
 @click.argument(
-    'app',
+    'project',
     required=True,
-    type=click.Choice(please_cli.config.APPS),
+    type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
     '--extra-attribute',
@@ -50,7 +50,7 @@ import please_cli.utils
     '--interactive/--no-interactive',
     default=True,
     )
-def cmd(app,
+def cmd(project,
         extra_attribute,
         nix_build,
         nix_push,
@@ -61,28 +61,27 @@ def cmd(app,
         interactive,
         ):
 
-    secrets = dict()
-
     if cache_bucket:
-        secrets = cli_common.taskcluster.get_secrets()
+        secrets = cli_common.taskcluster.get_secrets(
+            taskcluster_secret,
+            project,
+            required=(
+                'CACHE_ACCESS_KEY_ID',
+                'CACHE_SECRET_ACCESS_KEY',
+            ),
+        )
 
-        AWS_ACCESS_KEY_ID = secrets.get('CACHE_ACCESS_KEY_ID')
-        AWS_SECRET_ACCESS_KEY = secrets.get('CACHE_SECRET_ACCESS_KEY')
+        AWS_ACCESS_KEY_ID = secrets['CACHE_ACCESS_KEY_ID']
+        AWS_SECRET_ACCESS_KEY = secrets['CACHE_SECRET_ACCESS_KEY']
 
-        if AWS_ACCESS_KEY_ID is None or AWS_SECRET_ACCESS_KEY is None:
-            raise click.UsageError(click.wrap_text(
-                'ERROR: CACHE_ACCESS_KEY_ID and/or CACHE_SECRET_ACCESS_KEY '
-                'are not in Taskcluster secret (`{}`).'.format(taskcluster_secret)
-            ))
-
-    click.echo(' => Building {} application ... '.format(app), nl=False)
+    click.echo(' => Building {} project ... '.format(project), nl=False)
     with click_spinner.spinner():
-        for index, attribute in enumerate([app] + list(extra_attribute)):
+        for index, attribute in enumerate([project] + list(extra_attribute)):
             command = [
                 nix_build,
                 please_cli.config.ROOT_DIR + '/nix/default.nix',
                 '-A', attribute,
-                '-o', please_cli.config.TMP_DIR + '/result-build-{app}-{index}'.format(app=app, index=index),
+                '-o', please_cli.config.TMP_DIR + '/result-build-{project}-{index}'.format(project=project, index=index),
             ]
             result, output, error = cli_common.command.run(
                 command,
@@ -106,7 +105,7 @@ def cmd(app,
         build_results = [
             os.path.join(please_cli.config.TMP_DIR, item)
             for item in os.listdir(please_cli.config.TMP_DIR)
-            if item.startswith('result-build-' + app)
+            if item.startswith('result-build-' + project)
         ]
 
         command = [
@@ -114,7 +113,7 @@ def cmd(app,
             '--dest', tmp_cache_dir,
             '--force',
         ] + build_results
-        click.echo(' => Creating cache artifacts for {} application... '.format(app), nl=False)
+        click.echo(' => Creating cache artifacts for {} project... '.format(project), nl=False)
         with click_spinner.spinner():
             result, output, error = cli_common.command.run(
                 command,
@@ -130,7 +129,7 @@ def cmd(app,
         os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY_ID
         os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
         aws = awscli.clidriver.create_clidriver().main
-        click.echo(' => Pushing cache artifacts of {} to S3 ... '.format(app), nl=False)
+        click.echo(' => Pushing cache artifacts of {} to S3 ... '.format(project), nl=False)
         with click_spinner.spinner():
             result = aws([
                 's3',

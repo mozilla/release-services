@@ -25,28 +25,28 @@ import please_cli.utils
 CMD_HELP = '''
 
 Welcome to `please` command line utility which should help you develop
-`mozilla-releng/services` applications.
+`mozilla-releng/services` projects.
 
-To enter a development shell of application do:
+To enter a development shell of project do:
 
-  % ./please shell <APPLICATION>
+  % ./please shell <PROJECT>
 
-To run application in a foreground mode do:
+To run project in a foreground mode do:
 
-  % ./please run <APPLICATION>
+  % ./please run <PROJECT>
 
 To run tests, linters, etc... do:
 
-  % ./please check <APPLICATION>
+  % ./please check <PROJECT>
 
 Above is usefull to run before pushing code to upstream repository.
 
 \b
-APPLICATIONS:
-{apps}
+PROJECTS:
+{projects}
 
 '''.format(
-    apps=''.join([' - ' + i + '\n' for i in please_cli.config.APPS]),
+    projects=''.join([' - ' + i + '\n' for i in please_cli.config.PROJECTS]),
 )
 
 CMD_EPILOG = '''
@@ -64,9 +64,8 @@ Happy hacking!
 @click.option('-v', '--verbose', count=True, help='Increase verbosity level')
 @click.version_option(version=please_cli.config.VERSION)
 @click.help_option()
-@click.option('--mozdef', type=str, default=None, help="TODO: add description")
 @click.pass_context
-def cmd(ctx, verbose, mozdef):
+def cmd(ctx, verbose):
 
     # we start with warning level
     log_level = logbook.WARNING
@@ -79,7 +78,7 @@ def cmd(ctx, verbose, mozdef):
     elif verbose > 1:
         log_level = logbook.DEBUG
 
-    cli_common.log.init_logger(log_level, mozdef, app_name='please')
+    cli_common.log.init_logger('please-cli', level=log_level)
 
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())

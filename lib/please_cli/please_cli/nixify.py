@@ -14,18 +14,18 @@ import please_cli.config
 def cmd(app):
     pass
     # TODO
-    #update-all: update-tools update-apps
-    #update-tools: $(foreach tool, $(TOOLS), update-tool-$(tool))
-    #update-apps: $(foreach app, $(APPS), update-app-$(app))
-    #
-    #update-app: require-APP update-app-$(APP)
-    #update-app-%: tmpdir nix
-    #	nix-shell nix/update.nix --argstr pkg $(subst update-app-,,$@)
-    #
-    #
-    #update-tool: require-TOOL update-tool-$(TOOL)
-    #update-tool-%: tmpdir nix
-    #	nix-shell nix/update.nix --argstr pkg tools.$(subst update-tool-,,$@)
+    # update-all: update-tools update-projects
+    # update-tools: $(foreach tool, $(TOOLS), update-tool-$(tool))
+    # update-projects: $(foreach app, $(PROJECTS), update-app-$(app))
+    # 
+    # update-app: require-APP update-app-$(APP)
+    # update-app-%: tmpdir nix
+    # 	nix-shell nix/update.nix --argstr pkg $(subst update-app-,,$@)
+    # 
+    # 
+    # update-tool: require-TOOL update-tool-$(TOOL)
+    # update-tool-%: tmpdir nix
+    # 	nix-shell nix/update.nix --argstr pkg tools.$(subst update-tool-,,$@)
 
 
 if __name__ == "__main__":

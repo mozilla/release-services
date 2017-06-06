@@ -7,11 +7,11 @@ from shipit_uplift.models import (
 )
 from shipit_uplift.flask import SCOPES_ADMIN
 from flask_login import current_user
-from backend_common import log
+from cli_common import log
 import html
 
 
-logger = log.get_logger('shipit_uplift.serializers')
+logger = log.get_logger(__name__)
 
 
 def serialize_contributor(contributor, link=None):

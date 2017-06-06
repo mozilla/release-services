@@ -8,12 +8,12 @@ import click
 
 
 @click.command()
-@click.argument('apps', nargs=-1)
-def cmd_on(apps):
+@click.argument('projects', nargs=-1)
+def cmd_on(projects):
     click.echo('TODO: maintanance ON')
 
 
 @click.command()
-@click.argument('apps', nargs=-1)
-def cmd_off(apps):
+@click.argument('projects', nargs=-1)
+def cmd_off(projects):
     click.echo('TODO: maintanance OFF')

@@ -9,6 +9,8 @@ import os
 import backend_common
 import backend_common.db
 
+import releng_mapper.config
+
 
 DEBUG = bool(os.environ.get('DEBUG', __name__ == '__main__'))
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -26,7 +28,7 @@ if not os.environ.get('APP_SETTINGS') and \
 
 
 app = backend_common.create_app(
-    "releng_mapper",
+    releng_mapper.config.PROJECT_NAME,
     extensions=[init_app, backend_common.db],
     debug=DEBUG,
     debug_src=HERE,

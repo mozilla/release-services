@@ -4,7 +4,6 @@ from datetime import datetime
 import requests
 import hglib
 
-from cli_common.taskcluster import get_secrets
 from cli_common.log import get_logger
 from cli_common.command import run_check
 
@@ -13,11 +12,20 @@ from shipit_code_coverage import coverage_by_dir, taskcluster, uploader, utils
 
 logger = get_logger(__name__)
 
-COVERALLS_TOKEN_FIELD = 'SHIPIT_CODE_COVERAGE_COVERALLS_TOKEN'
-CODECOV_TOKEN_FIELD = 'SHIPIT_CODE_COVERAGE_CODECOV_TOKEN'
-
 
 class CodeCov(object):
+
+    def __init__(self, cache_root, coveralls_token, codecov_token):
+        # List of test-suite, sorted alphabetically.
+        # This way, the index of a suite in the array should be stable enough.
+        self.suites = []
+
+        assert os.path.isdir(cache_root), "Cache root {} is not a dir.".format(cache_root)
+        self.repo_dir = os.path.join(cache_root, 'mozilla-central')
+
+        self.coveralls_token = coveralls_token
+        self.codecov_token = codecov_token
+
     def download_coverage_artifacts(self, build_task_id):
         try:
             os.mkdir('ccov-artifacts')
@@ -168,17 +176,3 @@ class CodeCov(object):
             logger.info('Coveralls took too much time to injest data.')
 
         coverage_by_dir.generate(self.repo_dir)
-
-    def __init__(self, cache_root):
-        # List of test-suite, sorted alphabetically.
-        # This way, the index of a suite in the array should be stable enough.
-        self.suites = []
-
-        assert os.path.isdir(cache_root), "Cache root {} is not a dir.".format(cache_root)
-        self.repo_dir = os.path.join(cache_root, 'mozilla-central')
-
-        required_fields = [COVERALLS_TOKEN_FIELD, CODECOV_TOKEN_FIELD]
-        secrets = get_secrets(required=required_fields)
-
-        self.coveralls_token = secrets[COVERALLS_TOKEN_FIELD]
-        self.codecov_token = secrets[CODECOV_TOKEN_FIELD]

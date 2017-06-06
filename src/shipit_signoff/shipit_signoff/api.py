@@ -9,7 +9,7 @@ import pickle
 from flask import abort, request
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
-from backend_common import log
+from cli_common import log
 from backend_common.auth0 import auth0
 from backend_common.db import db
 
@@ -19,7 +19,7 @@ from shipit_signoff.policies import check_whether_policy_can_be_signed, is_sign_
     UnauthorizedUserError, NoSignoffLeftError
 
 
-logger = log.get_logger('shipit_signoffs.api')
+logger = log.get_logger(__name__)
 
 # provided by https://auth.mozilla.auth0.com/.well-known/openid-configuration
 AUTH0_FIELDS = [

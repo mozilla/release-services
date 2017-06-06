@@ -117,9 +117,6 @@ class Api:
 
         logger.debug('Adding API: %s', swagger_file)
 
-        if base_url is None:
-            base_url = app.config.get('SWAGGER_BASE_URL')
-
         self.swagger_url = swagger_url
         self.__api = connexion.apis.flask_api.FlaskApi(
             specification=pathlib.Path(swagger_file),

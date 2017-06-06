@@ -13,27 +13,27 @@ import please_cli.shell
 
 
 CMD_HELP = '''
-Run tests, linters, etc.. for an APPLICATION.
+Run tests, linters, etc.. for an PROJECT.
 
 \b
-APPLICATIONS:
-{apps}
+PROJECTS:
+{projects}
 
 '''.format(
-    apps=''.join([' - ' + i + '\n' for i in please_cli.config.APPS]),
+    projects=''.join([' - ' + i + '\n' for i in please_cli.config.PROJECTS]),
 )
 
 
 @click.command(
     cls=please_cli.utils.ClickCustomCommand,
-    short_help="Run tests, linters, etc.. for an APPLICATION.",
+    short_help="Run tests, linters, etc.. for an PROJECT.",
     epilog="Happy hacking!",
     help=CMD_HELP,
     )
 @click.argument(
-    'app',
+    'project',
     required=True,
-    type=click.Choice(please_cli.config.APPS),
+    type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
     '--nix-shell',
@@ -44,17 +44,17 @@ APPLICATIONS:
         ),
     )
 @click.pass_context
-def cmd(ctx, app, nix_shell):
-    checks = please_cli.config.APPS.get(app, {}).get('checks')
+def cmd(ctx, project, nix_shell):
+    checks = please_cli.config.PROJECTS.get(project, {}).get('checks')
 
     if not checks:
-        raise click.ClickException('No checks found for `{}` application.'.format(app))
+        raise click.ClickException('No checks found for `{}` project.'.format(project))
 
     for check_title, check_command in checks:
         click.echo(' => {}: '.format(check_title), nl=False)
         with click_spinner.spinner():
             returncode, output, error = ctx.invoke(please_cli.shell.cmd,
-                                                   app=app,
+                                                   project=project,
                                                    quiet=True,
                                                    command=check_command,
                                                    nix_shell=nix_shell,

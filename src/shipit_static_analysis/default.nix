@@ -27,6 +27,12 @@ let
           # Used by taskclusterProxy
           ("secrets:get:" + secretsKey)
 
+          # Send emails to relman
+          "notify:email:jan@mozilla.com"
+          "notify:email:andi@mozilla.com"
+          "notify:email:marco@mozilla.com"
+          "notify:email:sledru@mozilla.com"
+
           # Used by cache
           ("docker-worker:cache:" + cacheKey)
         ];
@@ -35,6 +41,7 @@ let
         };
         taskEnv = {
           "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+          "APP_CHANNEL" = branch;
         };
         taskCommand = [
           "/bin/shipit-static-analysis"
