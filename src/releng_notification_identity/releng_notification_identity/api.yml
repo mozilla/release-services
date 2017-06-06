@@ -41,7 +41,7 @@ paths:
               preferences:
                 type: array
                 items:
-                  $ref: '#/definitions/Preference'
+                  $ref: '#/definitions/InputPreference'
 
       responses:
         200:
@@ -77,7 +77,7 @@ paths:
               preferences:
                 type: array
                 items:
-                  $ref: '#/definitions/Preference'
+                  $ref: '#/definitions/InputPreference'
 
       responses:
         409:
@@ -118,7 +118,7 @@ paths:
                 description: Notification preferences for this identity.
                 type: array
                 items:
-                  $ref: '#/definitions/Preference'
+                  $ref: '#/definitions/ResponsePreference'
 
 
   '/identity/{identity_name}/{urgency}':
@@ -149,7 +149,7 @@ paths:
                 description: Notification preferences matching the specified urgency level.
                 type: array
                 items:
-                  $ref: '#/definitions/Preference'
+                  $ref: '#/definitions/ResponsePreference'
 
         404:
           description: Notification preference for this urgency level or identity could not be found.
@@ -158,15 +158,10 @@ paths:
 
 
 definitions:
-  Preference:
+  InputPreference:
     description: Notification preference object.
     type: object
     properties:
-      name:
-        description: Name of identity.
-        type: string
-        example: releng
-
       channel:
         description: Notification channel for this urgency level.
         type: string
@@ -230,3 +225,13 @@ definitions:
         description: |
           An absolute URI that identifies the specific occurrence of the problem.
           It may or may not yield further information if dereferenced.
+
+  ResponsePreference:
+    description: Notification preference object with name included in each preference.
+    allOf:
+      - $ref: '#/definitions/InputPreference'
+      - properties:
+          name:
+            description: Name of identity.
+            type: string
+            example: releng
