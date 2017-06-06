@@ -54,22 +54,6 @@ paths:
             type: string
         409:
           description: A step with this uid or task_group_id already exists
-#    patch:
-#      operationId: "releng_taskcluster.api.update_taskcluster_step"
-#      description: Update existing Taskcluster Step
-#      parameters:
-#        - $ref: '#/parameters/uid'
-#        - name: body
-#          in: body
-#          description: inputs to update a Taskcluster Step
-#          required: true
-#          schema:
-#            $ref: '#/definitions/TaskclusterStep'
-#      responses:
-#        200:
-#          description: Returns nothing
-#          schema:
-#            type: string
     get:
       operationId: "shipit_taskcluster.api.get_taskcluster_step"
       description: "Step definition"
