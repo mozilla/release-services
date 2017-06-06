@@ -1,5 +1,6 @@
 from backend_common.db import db
-from .config import URGENCY_LEVELS, PROJECT_NAME
+from backend_common.notifications import URGENCY_LEVELS
+from .config import PROJECT_NAME, RELENG_NOTIFICATION_IDENTITY_ENDPOINT
 from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, Interval, String, Text
 
 
@@ -11,6 +12,10 @@ class Message(db.Model):
     shortMessage = Column(String, nullable=False)
     message = Column(Text, nullable=False)
     deadline = Column(DateTime, nullable=False)
+
+    def create_ack_url(self, identity_pref):
+        return '{api_endpoint}/message/{uid}/{identity_name}'.format(
+            api_endpoint=RELENG_NOTIFICATION_IDENTITY_ENDPOINT, uid=self.uid, identity_name=identity_pref['name'])
 
 
 class Policy(db.Model):
