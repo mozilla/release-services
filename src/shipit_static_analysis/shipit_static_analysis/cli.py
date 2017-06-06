@@ -15,12 +15,12 @@ import re
 
 logger = logging.getLogger(__name__)
 
-REGEX_COMMIT = re.compile(r'^(\w+):(\d+):(\d+)$')
+REGEX_COMMIT = re.compile(r'(\w+):(\d+):(\d+)')
 
 
 @click.command()
 @taskcluster_options
-@click.argument('commits', nargs=-1, envvar='COMMITS')
+@click.argument('commits', envvar='COMMITS')
 @click.option(
     '--cache-root',
     required=True,
@@ -53,13 +53,8 @@ def main(commits,
                  taskcluster_access_token,
                  )
 
-    for commit in commits:
-        commit_args = REGEX_COMMIT.search(commit)
-        if commit_args is None:
-            logger.warn('Skipping commit {}'.format(commit))
-            continue
-
-        w.run(*commit_args.groups())
+    for commit in REGEX_COMMIT.findall(commits):
+        w.run(*commit)
 
 
 if __name__ == '__main__':
