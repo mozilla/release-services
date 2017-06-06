@@ -198,6 +198,14 @@ def cmd_S3(ctx,
     required=True,
     )
 @click.option(
+    '--heroku-username',
+    required=False,
+    )
+@click.option(
+    '--heroku-api-token',
+    required=False,
+    )
+@click.option(
     '--extra-attribute',
     multiple=True,
     )
@@ -221,6 +229,8 @@ def cmd_S3(ctx,
 def cmd_HEROKU(ctx,
                project,
                heroku_app,
+               heroku_username,
+               heroku_api_token,
                extra_attribute,
                nix_build,
                nix_push,
@@ -230,19 +240,20 @@ def cmd_HEROKU(ctx,
                interactive,
                ):
 
-    secrets = cli_common.taskcluster.get_secrets(
-        taskcluster_secret,
-        project,
-        required=(
-            'HEROKU_USERNAME',
-            'HEROKU_PASSWORD',
-        ),
-        taskcluster_client_id=taskcluster_client_id,
-        taskcluster_access_token=taskcluster_access_token,
-    )
+    if heroku_username is None or heroku_api_token is None:
+        secrets = cli_common.taskcluster.get_secrets(
+            taskcluster_secret,
+            project,
+            required=(
+                'HEROKU_USERNAME',
+                'HEROKU_PASSWORD',
+            ),
+            taskcluster_client_id=taskcluster_client_id,
+            taskcluster_access_token=taskcluster_access_token,
+        )
 
-    HEROKU_USERNAME = secrets['HEROKU_USERNAME']
-    HEROKU_PASSWORD = secrets['HEROKU_PASSWORD']
+        heroku_username = secrets['HEROKU_USERNAME']
+        heroku_api_token = secrets['HEROKU_PASSWORD']
 
     ctx.invoke(please_cli.build.cmd,
                project=project,
@@ -265,8 +276,8 @@ def cmd_HEROKU(ctx,
         push.registry.push(
             push.image.spec(project_path),
             "https://registry.heroku.com",
-            HEROKU_USERNAME,
-            HEROKU_PASSWORD,
+            heroku_username,
+            heroku_api_token,
             heroku_app + "/web",
             "latest",
         )
