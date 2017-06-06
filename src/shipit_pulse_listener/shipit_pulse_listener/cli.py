@@ -43,6 +43,8 @@ def main(taskcluster_secret,
     pl = PulseListener(secrets['PULSE_USER'],
                        secrets['PULSE_PASSWORD'],
                        secrets['PULSE_LISTENER_HOOKS'],
+                       taskcluster_client_id,
+                       taskcluster_access_token,
                        )
     click.echo('Listening to pulse messages...')
     pl.run()
