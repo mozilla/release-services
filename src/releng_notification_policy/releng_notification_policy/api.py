@@ -20,7 +20,7 @@ def put_message(uid: str, body: dict) -> Tuple[None, int]:
 
     :param uid: UID of message to track
     :param body: Description of message
-    :return:
+    :return: No content, status code
     """
     session = current_app.db.session
 
@@ -35,7 +35,7 @@ def put_message(uid: str, body: dict) -> Tuple[None, int]:
 
     policies = [
         # Overwrite the frequency object input from the API with a db compatible timedelta object
-        Policy(**{**p, 'frequency': timedelta(**p['frequency'])}, policy_id=new_message.id)
+        Policy(**{**p, 'frequency': timedelta(**p['frequency']), 'policy_id': new_message.id})
         for p in body['policies']
     ]
 
@@ -46,7 +46,12 @@ def put_message(uid: str, body: dict) -> Tuple[None, int]:
 
 
 def delete_message(uid: str) -> Tuple[None, int]:
-    """Delete the message with the specified UID"""
+    """
+    Delete the message with the specified UID
+
+    :param uid: UID of the message to delete.
+    :return: No content, status code
+    """
     session = current_app.db.session
     message = session.query(Message).filter(Message.uid == uid).first()
     if message:
@@ -58,14 +63,12 @@ def delete_message(uid: str) -> Tuple[None, int]:
         raise NotFound('Message with uid "{}" not found'.format(uid))
 
 
-def get_acknowledge_message_by_identity(uid: str, identity_name: str) -> Tuple[None, int]:
-    session = current_app.db.session
-    message = session.query(Message).filter(Message.uid == uid).first()
-    return None, 500
-
-
 def get_tick_tock() -> dict:
-    """Trigger pending notifications according to their notification policies"""
+    """
+    Trigger pending notifications according to their notification policies
+
+    :return: Information about notification triggered by this call in JSON format.
+    """
     try:
         session = current_app.db.session
 
@@ -94,7 +97,7 @@ def get_tick_tock() -> dict:
                 identity_uri = '{endpoint}/identity/{identity_name}/{urgency}'.format(endpoint=RELENG_NOTIFICATION_IDENTITY_ENDPOINT,
                                                                                       identity_name=policy.identity,
                                                                                       urgency=policy.urgency)
-                identity_preference = get(identity_uri).json()
+                identity_preference, *_ = get(identity_uri).json()['preferences']
 
                 notification_info = send_notifications(message, identity_preference)
                 notifications.append(notification_info)

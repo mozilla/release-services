@@ -134,32 +134,6 @@ paths:
           description: Message with specified UID not found.
 
 
-  '/message/{uid}/{identity_name}':
-      get:
-        summary: Acknowledge the message with specified ID as specified identity.
-        operationId: releng_notification_policy.api.get_acknowledge_message_by_identity
-        parameters:
-          - name: uid
-            in: path
-            type: string
-            description: Tracking UID of message to acknowledge.
-            required: true
-
-          - name: identity_name
-            in: path
-            type: string
-            description: Identity name to use for acknowledgement.
-            required: true
-
-        responses:
-          200:
-            description: Message successfully acknowledged.
-
-          404:
-            description: Message with specified UID not found.
-
-
-
   /ticktock:
     get:
       summary: Hook endpoint to take action on pending policies.
