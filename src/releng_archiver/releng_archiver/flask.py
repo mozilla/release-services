@@ -18,6 +18,13 @@ APP_SETTINGS = os.path.abspath(os.path.join(HERE, '..', 'settings.py'))
 
 
 def init_app(app):
+
+    app.notify = cli_common.taskcluster.get_service(
+        'notify',
+        app.config.get('XXX'),
+        app.config.get('YYY'),
+    )
+
     return app.api.register(
         os.path.join(os.path.dirname(__file__), 'api.yml'))
 

@@ -4,6 +4,11 @@
 
 from __future__ import absolute_import
 
+import flask
+import cli_common.taskcluster
+
 
 def example():
+
+    flaks.current_app.notify.email...
     return {}

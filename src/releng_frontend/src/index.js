@@ -5,32 +5,62 @@ require('expose-loader?Tether!tether');
 require('bootstrap');
 require('./scss/index.scss');
 
-var redirect = require('./redirect');
-var localstorage = require('./localstorage');
-var hawk = require('./hawk');
-var title = require('./title');
-
 var url;
 var getData = function(name, _default) {
   url = document.body.getAttribute('data-' + name);
   if (url === null) {
-    url = _default || 'You need to set WEBPACK_' + name.replace('-', '_').toUpperCase() + ' variable or data-' + name;
+    url = _default;
+  }
+  if (url === undefined) {
+    throw Error('You need to set `data-' + name + '`');
   }
   return url;
 };
 
+var redirect = require('./redirect');
+var localstorage = require('./localstorage');
+var hawk = require('./hawk');
 
-// Start the ELM application
-var KEY = 'taskclusterlogin';  // do not change this key
-var app = require('./Main.elm').Main.fullscreen({
-  user: localstorage.load_item(KEY),
-  treestatusUrl: getData('treestatus-url', process.env.WEBPACK_TREESTATUS_URL),
-  docsUrl: getData('docs-url', process.env.WEBPACK_DOCS_URL),
-  version: getData('version', process.env.WEBPACK_VERSION)
-});
+var release_version = getData('release-version', process.env.RELEASE_VERSION)
+var release_channel = getData('release-channel', process.env.RELEASE_CHANNEL);
 
-// Setup ports
-localstorage.init(app, KEY);
-hawk(app);
-redirect(app);
-title(app);
+var TC_KEY = 'taskclusterlogin';  // do not change this key
+
+var init = function() {
+    // Start the ELM application
+    var app = require('./Main.elm').Main.fullscreen({
+      user: localstorage.load_item(TC_KEY),
+      treestatusUrl: getData('releng-treestatus-url', process.env.RELENG_TREESTATUS_URL),
+      docsUrl: getData('releng-docs-url', process.env.RELENG_DOCS_URL),
+      version: release_version
+    });
+
+
+    // Setup ports
+    localstorage.init(app, KEY);
+    hawk(app);
+    redirect(app);
+    title(app);
+};
+
+// Setup logging
+var Raven = require('raven-js');
+var sentry_dsn = document.body.getAttribute('data-sentry-dsn');
+if (sentry_dsn != null) {
+    Raven
+        .config(
+            sentry_dsn,
+            {
+                debug: true,
+                release: release_version,
+                environment: release_channel,
+                tags: {
+                    server_name: 'mozilla-releng/services',
+                    site: 'releng-frontend'
+                }
+            })
+        .install()
+        .context(init);
+} else {
+    init();
+}
