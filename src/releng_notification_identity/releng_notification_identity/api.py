@@ -74,9 +74,8 @@ def get_identity(identity_name: str) -> Tuple[dict, int]:
     preferences = _get_identity_preferences(identity_name)
     if preferences:
         return {
-            'name': identity_name,
             'preferences': [
-                pref.to_dict()
+                {**pref.to_dict(), 'name': identity_name}
                 for pref in preferences
             ],
         }, 200
@@ -87,13 +86,14 @@ def get_identity(identity_name: str) -> Tuple[dict, int]:
 
 def get_identity_preference_by_urgency(identity_name: str, urgency: str) -> Tuple[dict, int]:
     preferences = _get_identity_preferences(identity_name)
-    preferences = filter(lambda pref: pref.urgency == urgency, preferences)
-    if preferences:
+    preference_by_urgency_level = list(filter(lambda pref: pref.urgency == urgency, preferences))[0]
+    if preference_by_urgency_level:
         return {
-            'name': identity_name,
             'preferences': [
-                pref.to_dict()
-                for pref in preferences
+                {
+                    'name': identity_name,
+                    **preference_by_urgency_level.to_dict(),
+                }
             ],
         }, 200
 

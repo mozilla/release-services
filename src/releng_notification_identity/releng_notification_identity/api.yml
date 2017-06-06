@@ -114,11 +114,6 @@ paths:
             title: Identity with all notification preferences.
             type: object
             properties:
-              name:
-                description: Name of identity.
-                type: string
-                example: releng
-
               preferences:
                 description: Notification preferences for this identity.
                 type: array
@@ -167,6 +162,11 @@ definitions:
     description: Notification preference object.
     type: object
     properties:
+      name:
+        description: Name of identity.
+        type: string
+        example: releng
+
       channel:
         description: Notification channel for this urgency level.
         type: string
