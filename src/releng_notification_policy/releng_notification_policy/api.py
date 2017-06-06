@@ -10,6 +10,8 @@ from typing import Tuple
 from werkzeug.exceptions import Conflict, NotFound
 from .models import Message, Policy
 from .channels import send_notifications
+from .config import RELENG_NOTIFICATION_IDENTITY_ENDPOINT
+from requests import get
 
 
 def put_message(uid: str, body: dict) -> Tuple[None, int]:
@@ -56,6 +58,12 @@ def delete_message(uid: str) -> Tuple[None, int]:
         raise NotFound('Message with uid "{}" not found'.format(uid))
 
 
+def get_acknowledge_message_by_identity(uid: str, identity_name: str) -> Tuple[None, int]:
+    session = current_app.db.session
+    message = session.query(Message).filter(Message.uid == uid).first()
+    return None, 500
+
+
 def get_tick_tock() -> dict:
     """Trigger pending notifications according to their notification policies"""
     try:
@@ -83,8 +91,14 @@ def get_tick_tock() -> dict:
                 if policy.last_notified and current_time - policy.last_notified < policy.frequency:
                     continue
 
-                notification_info = send_notifications(message, policy)
+                identity_uri = '{endpoint}/identity/{identity_name}/{urgency}'.format(endpoint=RELENG_NOTIFICATION_IDENTITY_ENDPOINT,
+                                                                                      identity_name=policy.identity,
+                                                                                      urgency=policy.urgency)
+                identity_preference = get(identity_uri).json()
+
+                notification_info = send_notifications(message, identity_preference)
                 notifications.append(notification_info)
+
                 policy.last_notified = current_time
 
             session.add_all(policies)

@@ -117,13 +117,13 @@ paths:
 
 
     delete:
-      summary: Acknowledge or end the notification policy.
+      summary: End the notification policy.
       operationId: releng_notification_policy.api.delete_message
       parameters:
         - name: uid
           in: path
           type: string
-          description: Tracking UID for notification policy
+          description: Tracking UID for message.
           required: true
 
       responses:
@@ -132,6 +132,31 @@ paths:
 
         404:
           description: Message with specified UID not found.
+
+
+  '/message/{uid}/{identity_name}':
+      get:
+        summary: Acknowledge the message with specified ID as specified identity.
+        operationId: releng_notification_policy.api.get_acknowledge_message_by_identity
+        parameters:
+          - name: uid
+            in: path
+            type: string
+            description: Tracking UID of message to acknowledge.
+            required: true
+
+          - name: identity_name
+            in: path
+            type: string
+            description: Identity name to use for acknowledgement.
+            required: true
+
+        responses:
+          200:
+            description: Message successfully acknowledged.
+
+          404:
+            description: Message with specified UID not found.
 
 
 
