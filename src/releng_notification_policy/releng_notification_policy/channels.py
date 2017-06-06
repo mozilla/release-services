@@ -1,6 +1,5 @@
 from .models import Message
-from .config import TASKCLUSTER_ACCESS_TOKEN, TASKCLUSTER_CLIENT_ID
-from .flask import app
+from releng_notification_policy.flask import app
 
 
 def send_irc_notification(message: Message, identity_preference: dict) -> dict:
