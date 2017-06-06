@@ -199,7 +199,7 @@ $(document).ready(function() {
             $('[try-filter=' + filter_tryopt + '] :checked').each(function () {
                 filters.push.apply(filters, $(this).attr('value').split(','));
             });
-            if (filters.length > 0) {
+            if (filters.length > 0 && names != 'none') {
                 filters = resolveFilters(filters).join(',');
                 names = names.map(function (n) { return n + '[' + filters + ']'; });
             }
@@ -282,4 +282,3 @@ $(document).ready(function() {
 
     }
 });
-
