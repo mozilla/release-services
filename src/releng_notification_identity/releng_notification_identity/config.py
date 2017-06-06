@@ -5,4 +5,4 @@
 from __future__ import absolute_import
 
 
-PROJECT_NAME = 'releng-notification-identity'
+PROJECT_NAME = 'releng_notification_identity'

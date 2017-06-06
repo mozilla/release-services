@@ -5,14 +5,14 @@ from sqlalchemy import Column, Enum, ForeignKey, Integer, String, UniqueConstrai
 
 
 class Identity(db.Model):
-    __tablename__ = PROJECT_NAME + '-identities'
+    __tablename__ = PROJECT_NAME + '_identities'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(32), unique=True)
 
 
 class Preference(db.Model):
-    __tablename__ = PROJECT_NAME + '-preferences'
+    __tablename__ = PROJECT_NAME + '_preferences'
     __table_args__ = (UniqueConstraint('identity', 'urgency', name='_one_urgency_per_id'),)
 
     id = Column(Integer, primary_key=True)
