@@ -8,6 +8,7 @@ import os
 
 import backend_common
 import backend_common.db
+import cli_common.taskcluster
 import releng_notification_policy.config
 
 
@@ -17,6 +18,12 @@ APP_SETTINGS = os.path.abspath(os.path.join(HERE, '..', 'settings.py'))
 
 
 def init_app(app):
+    app.notify = cli_common.taskcluster.get_service(
+        'notify',
+        app.config.get('TASKCLUSTER_CLIENT_ID'),
+        app.config.get('TASKCLUSTER_ACCESS_TOKEN')
+    )
+
     return app.api.register(
         os.path.join(os.path.dirname(__file__), 'api.yml'))
 

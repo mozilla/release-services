@@ -1,11 +1,11 @@
 from backend_common.db import db
 from backend_common.notifications import URGENCY_LEVELS
-from .config import PROJECT_NAME, RELENG_NOTIFICATION_IDENTITY_ENDPOINT
+from .config import PROJECT_PATH_NAME, RELENG_NOTIFICATION_IDENTITY_ENDPOINT
 from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, Interval, String, Text
 
 
 class Message(db.Model):
-    __tablename__ = PROJECT_NAME + '-messages'
+    __tablename__ = PROJECT_PATH_NAME + '_messages'
 
     id = Column(Integer, primary_key=True)
     uid = Column(String(32), unique=True)
@@ -19,7 +19,7 @@ class Message(db.Model):
 
 
 class Policy(db.Model):
-    __tablename__ = PROJECT_NAME + '-policies'
+    __tablename__ = PROJECT_PATH_NAME + '_policies'
 
     id = Column(Integer, primary_key=True)
     identity = Column(String, nullable=False)
