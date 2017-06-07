@@ -96,6 +96,8 @@ def get_deploy_task(index,
                 project_csp.append('--csp="{}"'.format(require_url))
 
         project_envs = []
+        project_envs.append('--env="release-version: {}"'.format(please_cli.config.version))
+        project_envs.append('--env="release-channel: {}"'.format(channel))
         for env_name, env_value in deploy_options.get('envs', {}).items():
             project_envs.append('--env="{}: {}"'.format(env_name, env_value))
         for require in project_config.get('requires', []):
@@ -103,8 +105,7 @@ def get_deploy_task(index,
             require_deploy_options = require_config.get('deploy_options', {}).get(channel, {})
             require_url = require_deploy_options.get('url')
             if require_url:
-                env_name = '-'.join(require.split('-')[1:])
-                project_envs.append('--env="{}-url: {}"'.format(env_name, require_url))
+                project_envs.append('--env="{}-url: {}"'.format(require, require_url))
 
         command = [
             './please', '-vv',

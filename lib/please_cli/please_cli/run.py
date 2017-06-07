@@ -74,9 +74,6 @@ def cmd(ctx, project, quiet, nix_shell):
     pg_host = please_cli.config.PROJECTS['postgresql']['run_options'].get('host', host)
     pg_port = str(please_cli.config.PROJECTS['postgresql']['run_options']['port'])
 
-    for env_name, env_value in run_options.get('envs', {}).items():
-        os.environ[env_name] = env_value
-
     if 'postgresql' in project_config.get('requires', []):
 
         dbname = 'services'
@@ -157,6 +154,10 @@ def cmd(ctx, project, quiet, nix_shell):
 
     elif run_type == 'FLASK':
 
+        for env_name, env_value in run_options.get('envs', {}).items():
+            env_name = env_name.replace('-', '_').upper()
+            os.environ[env_name] = env_value
+
         if not os.path.exists(ca_cert_file) or \
            not os.path.exists(server_cert_file) or \
            not os.path.exists(server_key_file):
@@ -206,13 +207,19 @@ def cmd(ctx, project, quiet, nix_shell):
                        certificates_dir=os.path.join(please_cli.config.TMP_DIR, 'certs'),
                        )
 
-        os.environ['WEBPACK_VERSION'] = 'v{} (devel)'.format(please_cli.config.VERSION)
+        os.environ['WEBPACK_RELEASE_VERSION'] = please_cli.config.VERSION
+        os.environ['WEBPACK_RELEASE_CHANNEL'] = 'development'
         os.environ['SSL_CACERT'] = ca_cert_file
         os.environ['SSL_CERT'] = server_cert_file
         os.environ['SSL_KEY'] = server_key_file
 
+        for env_name, env_value in run_options.get('envs', {}).items():
+            env_name = 'WEBPACK_' + env_name.replace('-', '_').upper()
+            os.environ[env_name] = env_value
+
+        # XXX: once we move please_cli.config.PROJECTS to nix we wont need this
         for require in project_config.get('requires', []):
-            env_name = 'WEBPACK_{}_URL'.format(('-'.join(require.split('-')[1:])).upper())
+            env_name = 'WEBPACK_{}_URL'.format(require.replace('-', '_').upper())
             env_value = '{}://{}:{}'.format(
                 please_cli.config.PROJECTS[require]['run_options'].get('schema', 'https'),
                 please_cli.config.PROJECTS[require]['run_options'].get('host', host),

@@ -354,21 +354,6 @@ let
 
 
 
-    "appdirs" = python.mkDerivation {
-      name = "appdirs-1.4.3";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/48/69/d87c60746b393309ca30761f8e2b49473d43450b150cb08f3c6df5c11be5/appdirs-1.4.3.tar.gz"; sha256 = "9e5896d1372858f8dd3344faf4e5014d21849c756c8d5701f78f8a103b372d92"; };
-      doCheck = commonDoCheck;
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "http://github.com/ActiveState/appdirs";
-        license = licenses.mit;
-        description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\".";
-      };
-    };
-
-
-
     "async-timeout" = python.mkDerivation {
       name = "async-timeout-1.2.1";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/eb/a3/9fbe8bf7de4128d8f5562ca0b7b2f81d21b006085149528b937e1624e71f/async-timeout-1.2.1.tar.gz"; sha256 = "380e9bfd4c009a14931ffe487499b0906b00b3378bb743542cfd9fbb6d8e4657"; };
@@ -601,8 +586,8 @@ let
 
 
     "ipython" = python.mkDerivation {
-      name = "ipython-6.0.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/75/03/bb1ce0cf9f8a86f52b34090708e1806bc11e2d29b193e7d6fe0afe9a61e5/ipython-6.0.0.tar.gz"; sha256 = "f429b82b8d9807068da734b15965768bd21b15d0b706340b6d1b4d6f6f5b98a4"; };
+      name = "ipython-6.1.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/79/63/b671fc2bf0051739e87a7478a207bbeb45cfae3c328d38ccdd063d9e0074/ipython-6.1.0.tar.gz"; sha256 = "5c53e8ee4d4bec27879982b9f3b4aa2d6e3cfd7b26782d250fa117f85bb29814"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -753,6 +738,7 @@ let
       propagatedBuildInputs = [
       self."Logbook"
       self."click"
+      self."raven"
       self."structlog"
       self."taskcluster"
     ];
@@ -775,24 +761,6 @@ let
         homepage = "https://github.com/aio-libs/multidict/";
         license = licenses.asl20;
         description = "multidict implementation";
-      };
-    };
-
-
-
-    "packaging" = python.mkDerivation {
-      name = "packaging-16.8";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c6/70/bb32913de251017e266c5114d0a645f262fb10ebc9bf6de894966d124e35/packaging-16.8.tar.gz"; sha256 = "5d50835fdf0a7edf0b55e311b7c887786504efea1177abd7e69329a8e5ea619e"; };
-      doCheck = commonDoCheck;
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [
-      self."pyparsing"
-      self."six"
-    ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "https://github.com/pypa/packaging";
-        license = licenses.bsdOriginal;
-        description = "Core utilities for Python packages";
       };
     };
 
@@ -879,8 +847,8 @@ let
 
 
     "py" = python.mkDerivation {
-      name = "py-1.4.33";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/2a/a5/139ca93a9ffffd9fc1d3f14be375af3085f53cc490c508cf1c988b886baa/py-1.4.33.tar.gz"; sha256 = "1f9a981438f2acc20470b301a07a496375641f902320f70e31916fe3377385a9"; };
+      name = "py-1.4.34";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/68/35/58572278f1c097b403879c1e9369069633d1cbad5239b9057944bb764782/py-1.4.34.tar.gz"; sha256 = "0f2d585d22050e90c7d293b6451c83db097df77871974d90efd5a30dc12fcde3"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -918,21 +886,6 @@ let
         homepage = "https://github.com/PyCQA/pyflakes";
         license = licenses.mit;
         description = "passive checker of Python programs";
-      };
-    };
-
-
-
-    "pyparsing" = python.mkDerivation {
-      name = "pyparsing-2.2.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3c/ec/a94f8cf7274ea60b5413df054f82a8980523efd712ec55a59e7c3357cf7c/pyparsing-2.2.0.tar.gz"; sha256 = "0832bcf47acd283788593e7a0f542407bd9550a55a8a8435214a1960e04bcb04"; };
-      doCheck = commonDoCheck;
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "http://pyparsing.wikispaces.com/";
-        license = licenses.mit;
-        description = "Python parsing module";
       };
     };
 
@@ -982,6 +935,29 @@ let
         homepage = "https://github.com/fmoo/python-editor";
         license = "License :: OSI Approved :: Apache Software License";
         description = "Programmatically open an editor, capture the result.";
+      };
+    };
+
+
+
+    "raven" = python.mkDerivation {
+      name = "raven-6.1.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/ee/82/9a85650c174920f5bd260b8138a1db7190156e55193b0a1d03d2fa7a2811/raven-6.1.0.tar.gz"; sha256 = "02cabffb173b99d860a95d4908e8b1864aad1b8452146e13fd7e212aa576a884"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."Flask"
+      self."Flask-Login"
+      self."Logbook"
+      self."flake8"
+      self."pycodestyle"
+      self."pytest"
+      self."requests"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/getsentry/raven-python";
+        license = licenses.bsdOriginal;
+        description = "Raven is a client for Sentry (https://getsentry.com)";
       };
     };
 
@@ -1109,8 +1085,8 @@ let
 
 
     "taskcluster" = python.mkDerivation {
-      name = "taskcluster-1.3.2";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/0f/12/8d9df8c43589d10a82d1113c33151d9313d6eb59c6747d2a96d49c111aef/taskcluster-1.3.2.tar.gz"; sha256 = "7d96e3677450db0cff16dc44635efea43de9a405e897876dde536d36bca00cf1"; };
+      name = "taskcluster-1.3.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/d6/22/965885edd7bac853f0eab17150cb4b6e605e89601452ba62504421b8f05b/taskcluster-1.3.3.tar.gz"; sha256 = "8874b556fe0cd815c5cf9509f263a323b0ab91a680edfe9afdab04ca65ff1375"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
