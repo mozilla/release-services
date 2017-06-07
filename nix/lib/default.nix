@@ -566,17 +566,17 @@ in rec {
           export LANG=en_US.UTF-8
           export DEBUG=1
           export APP_TESTING=${name}
-          export FLASK_APP=${dirname}:flask.app
+          export FLASK_APP=${dirname}.flask:app
         '' + shellHook;
 
         inherit dockerContents;
         dockerEnv = [
           "APP_SETTINGS=${self}/etc/settings.py"
-          "FLASK_APP=${dirname}:flask.app"
+          "FLASK_APP=${dirname}.flask:app"
         ];
         dockerCmd = [
           "gunicorn"
-          "${dirname}:flask.app"
+          "${dirname}.flask:app"
           "--log-file"
           "-"
         ];

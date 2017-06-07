@@ -96,7 +96,7 @@ def get_deploy_task(index,
                 project_csp.append('--csp="{}"'.format(require_url))
 
         project_envs = []
-        project_envs.append('--env="release-version: {}"'.format(please_cli.config.version))
+        project_envs.append('--env="release-version: {}"'.format(please_cli.config.VERSION))
         project_envs.append('--env="release-channel: {}"'.format(channel))
         for env_name, env_value in deploy_options.get('envs', {}).items():
             project_envs.append('--env="{}: {}"'.format(env_name, env_value))
