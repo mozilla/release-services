@@ -1,0 +1,237 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "RelEng Notification Identity"
+  description: |
+    RelEng Notification Identity service manages user notification channel preferences based on urgency levels
+    for RelEng related notifications.
+  contact:
+    name: Mozilla Release Engineering
+    url: 'https://wiki.mozilla.org/ReleaseEngineering'
+    email: release@mozilla.com
+  license:
+    name: Mozilla Public License Version 2.0
+    url: 'https://www.mozilla.org/en-US/MPL/2.0/'
+
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  '/identity/{identity_name}':
+    post:
+      summary: Modify notification preferences for an identity.
+      operationId: releng_notification_identity.api.post_identity
+      parameters:
+        - name: identity_name
+          in: path
+          type: string
+          description: Name of identity to modify.
+          required: true
+
+        - name: body
+          in: body
+          description: New preferences for identity with specified name.
+          required: true
+          schema:
+            type: object
+            properties:
+              preferences:
+                type: array
+                items:
+                  $ref: '#/definitions/InputPreference'
+
+      responses:
+        200:
+          description: Identity with specified name successfully updated.
+
+        404:
+          description: Identity with specified name not found.
+          schema:
+            $ref: '#/definitions/Problem'
+
+        400:
+          description: Identity with specified name could not be modified.
+          schema:
+            $ref: '#/definitions/Problem'
+
+    put:
+      summary: Add a new identity to the service.
+      operationId: releng_notification_identity.api.put_identity
+      parameters:
+        - name: identity_name
+          in: path
+          type: string
+          description: Name of identity to create.
+          required: true
+
+        - name: body
+          in: body
+          description: Preferences for identity with specified name.
+          required: true
+          schema:
+            type: object
+            properties:
+              preferences:
+                type: array
+                items:
+                  $ref: '#/definitions/InputPreference'
+
+      responses:
+        409:
+          description: Identity with the specified name already exists.
+          schema:
+            $ref: '#/definitions/Problem'
+
+        400:
+          description: Could not create identity.
+          schema:
+            $ref: '#/definitions/Problem'
+
+        200:
+          description: Identity with specified name successfully created.
+
+    get:
+      summary: Retrieve an identity from the service.
+      operationId: "releng_notification_identity.api.get_identity"
+      parameters:
+        - name: identity_name
+          in: path
+          type: string
+          description: Name of identity to retrieve.
+          required: true
+
+      responses:
+        404:
+          description: Identity with specified name could not be found.
+          schema:
+            $ref: '#/definitions/Problem'
+        200:
+          description: Retrieves the notification preferences for the specified identity.
+          schema:
+            title: Identity with all notification preferences.
+            type: object
+            properties:
+              preferences:
+                description: Notification preferences for this identity.
+                type: array
+                items:
+                  $ref: '#/definitions/ResponsePreference'
+
+
+  '/identity/{identity_name}/{urgency}':
+    get:
+      operationId: releng_notification_identity.api.get_identity_preference_by_urgency
+      summary: Retrieve the notification preferences for an identity by urgency level.
+      parameters:
+        - name: identity_name
+          description: Identity to retrieve preference for.
+          in: path
+          type: string
+          required: true
+
+        - name: urgency
+          description: Urgency level we wish to notify for.
+          in: path
+          type: string
+          required: true
+
+      responses:
+        200:
+          description: Notification preference successfully retrieved.
+          schema:
+            type: object
+            description: Notification channel preferences.
+            properties:
+              preferences:
+                description: Notification preferences matching the specified urgency level.
+                type: array
+                items:
+                  $ref: '#/definitions/ResponsePreference'
+
+        404:
+          description: Notification preference for this urgency level or identity could not be found.
+          schema:
+            $ref: '#/definitions/Problem'
+
+
+definitions:
+  InputPreference:
+    description: Notification preference object.
+    type: object
+    properties:
+      channel:
+        description: Notification channel for this urgency level.
+        type: string
+        enum:
+          - EMAIL
+          - IRC
+          - SMS
+
+      urgency:
+        description: Urgency level for this notification preference.
+        type: string
+        enum:
+          - LOW
+          - NORMAL
+          - HIGH
+          - DO_YESTERDAY
+
+      target:
+        description: Target for notification, differs by channel.
+        type: string
+        example: release@mozilla.com
+
+  Problem:
+    type: object
+    properties:
+      type:
+        type: string
+        format: uri
+        description: |
+          An absolute URI that identifies the problem type.  When dereferenced,
+          it SHOULD provide human-readable documentation for the problem type
+          (e.g., using HTML).
+        default: 'about:blank'
+        example: 'https://zalando.github.io/problem/constraint-violation'
+      title:
+        type: string
+        description: |
+          A short, summary of the problem type. Written in english and readable
+          for engineers (usually not suited for non technical stakeholders and
+          not localized)
+        example: Service Unavailable
+      status:
+        type: integer
+        format: int32
+        description: |
+          The HTTP status code generated by the origin server for this occurrence
+          of the problem.
+        minimum: 100
+        maximum: 600
+        exclusiveMaximum: true
+        example: 503
+      detail:
+        type: string
+        description: |
+          A human readable explanation specific to this occurrence of the
+          problem.
+        example: Connection to database timed out
+      instance:
+        type: string
+        format: uri
+        description: |
+          An absolute URI that identifies the specific occurrence of the problem.
+          It may or may not yield further information if dereferenced.
+
+  ResponsePreference:
+    description: Notification preference object with name included in each preference.
+    allOf:
+      - $ref: '#/definitions/InputPreference'
+      - properties:
+          name:
+            description: Name of identity.
+            type: string
+            example: releng

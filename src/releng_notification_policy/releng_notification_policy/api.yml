@@ -1,0 +1,231 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "RelEng Notification Policy"
+  description: |
+    Releng Notification Policy service manages the sending and acknowledging of RelEng notification
+    messages based on notification policies.
+  contact:
+    name: Mozilla Release Engineering
+    url: 'https://wiki.mozilla.org/ReleaseEngineering'
+    email: release@mozilla.com
+  license:
+    name: Mozilla Public License Version 2.0
+    url: 'https://www.mozilla.org/en-US/MPL/2.0/'
+
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  '/message/{uid}':
+    put:
+      summary: Add a new notification message to the service.
+      operationId: "releng_notification_policy.api.put_message"
+      parameters:
+        - name: uid
+          in: path
+          type: string
+          description: Tracking UID for notification policy
+          required: true
+
+        - name: body
+          in: body
+          required: true
+          description: Policy to add to the service.
+          schema:
+            type: object
+            required:
+              - shortMessage
+              - message
+              - deadline
+              - policies
+
+            properties:
+              shortMessage:
+                type: string
+
+              message:
+                type: string
+
+              deadline:
+                type: string
+                format: date-time
+
+              policies:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - identity
+                    - urgency
+                    - start_timestamp
+                    - stop_timestamp
+                    - frequency
+                  properties:
+                    identity:
+                      type: string
+                      description: Identity to notify.
+
+                    urgency:
+                      type: string
+                      enum:
+                        - LOW
+                        - NORMAL
+                        - HIGH
+                        - DO_YESTERDAY
+                      description: Urgency level of notification.
+
+                    start_timestamp:
+                      type: string
+                      format: date-time
+
+                    stop_timestamp:
+                      type: string
+                      format: date-time
+
+                    frequency:
+                      type: object
+                      description: Frequency as a time interval.
+                      properties:
+                        days:
+                          type: integer
+                          format: int64
+                          description: Number of days between notifications.
+                        hours:
+                          type: integer
+                          format: int64
+                          description: Number of hours between notifications.
+                        minutes:
+                          type: integer
+                          format: int64
+                          description: Number of minutes between notifications.
+
+      responses:
+        200:
+          description: Notification policy created.
+        409:
+          description: Message or policy with the specified UID already exists
+          schema:
+            $ref: '#/definitions/Problem'
+        400:
+          description: Could not create the notification policy
+          schema:
+            $ref: '#/definitions/Problem'
+
+
+    delete:
+      summary: End the notification policy.
+      operationId: releng_notification_policy.api.delete_message
+      parameters:
+        - name: uid
+          in: path
+          type: string
+          description: Tracking UID for message.
+          required: true
+
+      responses:
+        200:
+          description: Message successfully deleted.
+
+        404:
+          description: Message with specified UID not found.
+
+
+  /ticktock:
+    get:
+      summary: Hook endpoint to take action on pending policies.
+      operationId: releng_notification_policy.api.get_tick_tock
+      responses:
+        404:
+          description: No pending policies to trigger.
+          schema:
+            $ref: '#/definitions/Problem'
+
+        200:
+          description: Notification policies successfully executed.
+          schema:
+            title: Information about sent notifications.
+            type: object
+            properties:
+              notifications:
+                type: array
+                items:
+                  description: Description of a single new notification instance.
+                  type: object
+                  properties:
+                    uid:
+                      type: string
+                      description: UID of notification policy corresponding to this instance.
+
+                    channel:
+                      description: Notification channel used to notify.
+                      type: string
+                      enum:
+                        - email
+                        - irc
+                        - sms
+
+                    targets:
+                      description: Identity who the notification was sent to.
+                      type: array
+                      items:
+                        type: string
+                        description: Email address, IRC nick, phone number of recipient.
+
+                    shortMessage:
+                      description: Short version of message.
+                      type: string
+
+                    message:
+                      description: Long version of message.
+                      type: string
+
+definitions:
+  Problem:
+    type: object
+    properties:
+      type:
+        type: string
+        format: uri
+        description: |
+          An absolute URI that identifies the problem type.  When dereferenced,
+          it SHOULD provide human-readable documentation for the problem type
+          (e.g., using HTML).
+        default: 'about:blank'
+        example: 'https://zalando.github.io/problem/constraint-violation'
+
+      title:
+        type: string
+        description: |
+          A short, summary of the problem type. Written in english and readable
+          for engineers (usually not suited for non technical stakeholders and
+          not localized)
+        example: Service Unavailable
+
+      status:
+        type: integer
+        format: int32
+        description: |
+          The HTTP status code generated by the origin server for this occurrence
+          of the problem.
+        minimum: 100
+        maximum: 600
+        exclusiveMaximum: true
+        example: 503
+
+      detail:
+        type: string
+        description: |
+          A human readable explanation specific to this occurrence of the
+          problem.
+        example: Connection to database timed out
+
+      instance:
+        type: string
+        format: uri
+        description: |
+          An absolute URI that identifies the specific occurrence of the problem.
+          It may or may not yield further information if dereferenced.

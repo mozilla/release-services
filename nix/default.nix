@@ -56,6 +56,9 @@ let
     "releng-mapper" = import ./../src/releng_mapper { inherit releng_pkgs; };
     "releng-archiver" = import ./../src/releng_archiver { inherit releng_pkgs; };
 
+    "releng-notification-policy" = import ./../src/releng_notification_policy { inherit releng_pkgs; };
+    "releng-notification-identity" = import ./../src/releng_notification_identity { inherit releng_pkgs; };
+
     "shipit-frontend" = import ./../src/shipit_frontend { inherit releng_pkgs; };
     "shipit-uplift" = import ./../src/shipit_uplift { inherit releng_pkgs; };
     "shipit-bot-uplift" = import ./../src/shipit_bot_uplift { inherit releng_pkgs; };
