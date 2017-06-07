@@ -4,7 +4,8 @@
     pip install -r requirements.txt -r requirements-dev.txt -c requirements_frozen.txt 
     pip install -e . -c requirements_frozen.txt 
     Fill in `client_secrets.json.tmpl` as `client_secrets.json` for auth0 connections
-    python3 shipit_signoff/__init__.py
+    Set the environment variables APP_URL DATABASE_URL
+    FLASK_APP=shipit_signoff.flask:app flask run
 
 # Generating API documentation
 
