@@ -2,3 +2,4 @@
 ipdb
 flake8
 pytest
+flake8-coding

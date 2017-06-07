@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 
 os.environ['APP_TESTING'] = 'shipit_pipeline'  # NoQA

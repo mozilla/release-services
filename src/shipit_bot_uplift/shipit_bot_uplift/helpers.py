@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from json import JSONEncoder, dumps as json_dumps
 import hashlib
 from datetime import timedelta, datetime

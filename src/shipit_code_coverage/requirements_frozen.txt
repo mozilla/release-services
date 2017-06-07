@@ -49,3 +49,4 @@ uritemplate==3.0.0
 urllib3==1.21.1
 whatthepatch==0.0.5
 yarl==0.10.2
+flake8-coding

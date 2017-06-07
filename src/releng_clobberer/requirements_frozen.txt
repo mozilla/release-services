@@ -65,3 +65,4 @@ urllib3==1.21.1
 wcwidth==0.1.7
 Werkzeug==0.12.2
 yarl==0.10.2
+flake8-coding

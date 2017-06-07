@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from cli_common.log import get_logger
 from cli_common.mercurial import robust_checkout, MOZILLA_CENTRAL
 from mocoda.compiledb import react as mocoda_react

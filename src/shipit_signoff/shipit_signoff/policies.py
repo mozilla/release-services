@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import copy
 
 from shipit_signoff.util import is_key_present_in_list_of_dicts

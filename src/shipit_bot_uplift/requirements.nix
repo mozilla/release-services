@@ -310,6 +310,23 @@ let
 
 
 
+    "flake8-coding" = python.mkDerivation {
+      name = "flake8-coding-1.3.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/ae/26/3c6304d646f8ee27d6c40bfcd9874fea870098c3ef3cf60e284ea9db29ef/flake8-coding-1.3.0.tar.gz"; sha256 = "ba01e96f879377766a3d71f3499a832b19386ce4831270bfe671ab57d0fe50be"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."flake8"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/tk0miya/flake8-coding";
+        license = licenses.asl20;
+        description = "Adds coding magic comment checks to flake8";
+      };
+    };
+
+
+
     "google-api-python-client" = python.mkDerivation {
       name = "google-api-python-client-1.6.2";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e8/04/4bb1672918e4fc6d6a8201bdaf986b9fb4763f2a47b11496186dbbbd40ce/google-api-python-client-1.6.2.tar.gz"; sha256 = "8c2f50f8057571a5f817c74820cadb754d47799c5a4ea463c1500fe8e092c1ae"; };
