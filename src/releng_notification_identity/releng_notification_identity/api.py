@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 def _get_identity_preferences(identity_name: str) -> List[Preference]:
     session = current_app.db.session
 
-    identity = session.query(Identity).filter(Identity.name == identity_name).first_or_404()
+    identity = session.query(Identity).filter(Identity.name == identity_name).first()
     if identity:
         preferences = session.query(Preference).filter(identity.id == Preference.identity).all()
         return preferences
