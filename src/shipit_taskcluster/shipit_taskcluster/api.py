@@ -7,7 +7,7 @@ from __future__ import absolute_import
 import logging
 import datetime
 
-from flask import request, abort
+from flask import abort
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 

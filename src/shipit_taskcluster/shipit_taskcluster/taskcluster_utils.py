@@ -20,8 +20,7 @@ def get_taskcluster_tasks_state(task_group_id, scheduler_api=False):
     # we should use pulse and listen in for status changes
     if scheduler_api:
         return get_scheduler_graph_state(task_graph_id=task_group_id)
-    return get_task_group_state(task_group_id)
-
+    return get_queue_group_state(task_group_id)
 
 
 def get_scheduler_graph_state(task_graph_id):
@@ -35,7 +34,6 @@ def get_scheduler_graph_state(task_graph_id):
         log.exception("Could not determine status from taskcluster scheduler with graph id: %s",
                       task_graph_id)
         return state
-
 
 
 def get_queue_group_state(task_group_id):
