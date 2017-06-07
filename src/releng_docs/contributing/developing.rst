@@ -43,7 +43,9 @@ To start the application you are developing you can do:
 
 .. code-block:: console
 
-    $ DATABASE_URL="postgresql://...." ./env/bin/python shipit_taskcluster/flake.py
+    $ export DATABASE_URL="postgresql://...."
+    $ export FLASK_APP=shipit_taskcluster.flask:app
+    $ flask run
 
 Variables which are required are described in ``settings.py`` configuration
 file. Most likely you will need to configure ``DATABASE_URL`` which will point
