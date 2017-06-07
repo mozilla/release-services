@@ -1,4 +1,4 @@
--e ./../../lib/cli_common[pulse,taskcluster,mercurial] #egg=mozilla-cli-common
+-e ./../../lib/cli_common[pulse,taskcluster,mercurial,sentry] #egg=mozilla-cli-common
 
 # mozilla-mocoda when it will be on PyPi
--e https://github.com/mozilla/mocoda/archive/fb04724fd484bfcc949216decc15e2c2467b2f30.tar.gz #egg=mozilla-mocoda
+https://github.com/mozilla/mocoda/archive/fb04724fd484bfcc949216decc15e2c2467b2f30.tar.gz#egg=mozilla-mocoda

@@ -1,4 +1,4 @@
--e ./../../lib/cli_common #egg=mozilla-cli-common
+-e ./../../lib/cli_common[sentry] #egg=mozilla-cli-common
 -e ./../../lib/backend_common[api,auth,cors,db,cache,security,pulse] #egg=mozilla-backend-common
 SQLAlchemy
 Werkzeug

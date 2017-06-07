@@ -302,7 +302,7 @@ PROJECTS = {
         'run_options': {
             'port': 8010,
             'envs': {
-                'WEBPACK_BUGZILLA_URL': 'https://bugzilla-dev.allizom.org',
+                'bugzilla-url': 'https://bugzilla-dev.allizom.org',
             }
         },
         'requires': [

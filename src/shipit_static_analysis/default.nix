@@ -28,8 +28,7 @@ let
           ("secrets:get:" + secretsKey)
 
           # Send emails to relman
-          "notify:email:babadie@mozilla.com"
-          "notify:email:sledru@mozilla.com"
+          "notify:email:*"
 
           # Used by cache
           ("docker-worker:cache:" + cacheKey)

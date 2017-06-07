@@ -19,10 +19,23 @@ class File(db.Model):
 
     __tablename__ = 'releng_tooltool_files'
 
-    id = sa.Column(sa.Integer, primary_key=True)
-    size = sa.Column(sa.Integer, nullable=False)
-    sha512 = sa.Column(sa.String(128), unique=True, nullable=False)
-    visibility = sa.Column(sa.Enum('public', 'internal'), nullable=False)
+    id = sa.Column(
+        sa.Integer,
+        primary_key=True,
+    )
+    size = sa.Column(
+        sa.Integer,
+        nullable=False,
+    )
+    sha512 = sa.Column(
+        sa.String(128),
+        unique=True,
+        nullable=False,
+    )
+    visibility = sa.Column(
+        sa.Enum('public', 'internal', name="visibility"),
+        nullable=False,
+    )
 
     instances = sa.orm.relationship('FileInstance', backref='file')
 
@@ -45,39 +58,29 @@ class File(db.Model):
         return json.dumps(file)
 
 
-class FileInstance(db.Model):
-
-    """A verified instance of a file in a single region."""
-
-    __tablename__ = 'releng_tooltool_file_instances'
-
-    file_id = sa.Column(sa.Integer, sa.ForeignKey('tooltool_files.id'), primary_key=True)  # noqa
-    region = sa.Column(sa.Enum(*ALLOWED_REGIONS), primary_key=True)
-
-
-class BatchFile(db.Model):
-
-    """An association of upload batches to files, with filenames"""
-
-    __tablename__ = 'releng_tooltool_batch_files'
-
-    file_id = sa.Column(sa.Integer, sa.ForeignKey('tooltool_files.id'), primary_key=True)  # noqa
-    file = sa.orm.relationship("File", backref="_batches")
-    batch_id = sa.Column(sa.Integer, sa.ForeignKey('tooltool_batches.id'), primary_key=True)  # noqa
-    batch = sa.orm.relationship("Batch", backref="_files")
-    filename = sa.Column(sa.Text, nullable=False)
-
-
 class Batch(db.Model):
     """Upload batches, with batch metadata, linked to the uploaded files.
     """
 
     __tablename__ = 'releng_tooltool_batches'
 
-    id = sa.Column(sa.Integer, primary_key=True)
-    uploaded = sa.Column(db.UTCDateTime, index=True, nullable=False)
-    author = sa.Column(sa.Text, nullable=False)
-    message = sa.Column(sa.Text, nullable=False)
+    id = sa.Column(
+        sa.Integer,
+        primary_key=True,
+    )
+    uploaded = sa.Column(
+        sa.DateTime,
+        index=True,
+        nullable=False,
+    )
+    author = sa.Column(
+        sa.Text,
+        nullable=False,
+    )
+    message = sa.Column(
+        sa.Text,
+        nullable=False,
+    )
 
     # note that changes to this dictionary will not be reflected to the DB;
     # add or delete BatchFile instances directly instead.
@@ -101,6 +104,47 @@ class Batch(db.Model):
         )
 
 
+class FileInstance(db.Model):
+    """A verified instance of a file in a single region.
+    """
+
+    __tablename__ = 'releng_tooltool_file_instances'
+
+    file_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey('releng_tooltool_files.id'),
+        primary_key=True,
+    )
+    region = sa.Column(
+        sa.Enum(*ALLOWED_REGIONS, name="region"),
+        primary_key=True,
+    )
+
+
+class BatchFile(db.Model):
+    """An association of upload batches to files, with filenames
+    """
+
+    __tablename__ = 'releng_tooltool_batch_files'
+
+    file_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey('releng_tooltool_files.id'),
+        primary_key=True,
+    )
+    file = sa.orm.relationship("File", backref="_batches")
+    batch_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey('releng_tooltool_batches.id'),
+        primary_key=True,
+    )
+    batch = sa.orm.relationship("Batch", backref="_files")
+    filename = sa.Column(
+        sa.Text,
+        nullable=False,
+    )
+
+
 class PendingUpload(db.Model):
     """Files for which upload URLs have been generated, but which haven't yet
        been uploaded.  This table is used to poll for completed uploads, and to
@@ -111,10 +155,19 @@ class PendingUpload(db.Model):
     __tablename__ = 'releng_tooltool_pending_upload'
 
     file_id = sa.Column(
-        sa.Integer, sa.ForeignKey('tooltool_files.id'),
-        nullable=False, primary_key=True)
-    expires = sa.Column(db.UTCDateTime, index=True, nullable=False)
+        sa.Integer,
+        sa.ForeignKey('releng_tooltool_files.id'),
+        nullable=False,
+        primary_key=True,
+    )
+    expires = sa.Column(
+        sa.DateTime,
+        index=True,
+        nullable=False,
+    )
     region = sa.Column(
-        sa.Enum(*ALLOWED_REGIONS), nullable=False)
+        sa.Enum(*ALLOWED_REGIONS, name="region"),
+        nullable=False,
+    )
 
     file = sa.orm.relationship('File', backref='pending_uploads')

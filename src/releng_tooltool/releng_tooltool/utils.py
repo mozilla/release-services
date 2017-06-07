@@ -8,12 +8,11 @@ import datetime
 import pytz
 import random
 import re
-
-from flask import current_app
+import flask
 
 
 def get_region_and_bucket(region):
-    regions = current_app.config['TOOLTOOL_REGIONS']
+    regions = flask.current_app.config['TOOLTOOL_REGIONS']
 
     if region and region in regions:
         return region, regions[region]

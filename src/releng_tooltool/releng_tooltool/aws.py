@@ -9,9 +9,10 @@ import boto.s3
 import boto.sqs
 import importlib
 import json
-from cli_common import log
 import threading
 import time
+
+from cli_common import log
 
 
 logger = log.get_logger(__name__)

@@ -1,2 +1,2 @@
--e ./../../lib/cli_common[taskcluster] #egg=mozilla-cli-common
+-e ./../../lib/cli_common[taskcluster,sentry] #egg=mozilla-cli-common
 -e ./../../lib/backend_common[api,cors,auth,db,security] #egg=mozilla-backend-common

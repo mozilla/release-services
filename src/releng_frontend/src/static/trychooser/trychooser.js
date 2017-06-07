@@ -199,8 +199,10 @@ $(document).ready(function() {
             $('[try-filter=' + filter_tryopt + '] :checked').each(function () {
                 filters.push.apply(filters, $(this).attr('value').split(','));
             });
-            if (filters.length > 0) {
+            if (filters.length > 0 && names != 'none') {
                 filters = resolveFilters(filters).join(',');
+                // For command line output, we need to escape the backslashes here.
+                filters = filters.replace(/ /g, "\\ ");
                 names = names.map(function (n) { return n + '[' + filters + ']'; });
             }
 
@@ -269,8 +271,15 @@ $(document).ready(function() {
             value = "(NO JOBS CHOSEN)";
             $('.result').val(value);
         } else {
-            $('#result_try').val('try: ' + value);
             $('#result_mach').val('./mach try ' + value);
+
+            // The simple try syntax that is passed to the parent shouldn't have
+            // slashes in it, so we elimate them here. This is simpler than trying
+            // to insert slashes after we've generated the value, or to be
+            // generating the value twice.
+            value = value.replace(/\\/g, "");
+
+            $('#result_try').val('try: ' + value);
         }
         if (isEmbedded && window.parent) {
             if (incomplete) {
@@ -282,4 +291,3 @@ $(document).ready(function() {
 
     }
 });
-
