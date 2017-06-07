@@ -93,7 +93,7 @@ def get_tick_tock() -> dict:
                 if policy.last_notified and current_time - policy.last_notified < policy.frequency:
                     continue
 
-                identity_uri = '{endpoint}/identity/{identity_name}/{urgency}'.format(endpoint=RELENG_NOTIFICATION_IDENTITY_ENDPOINT,
+                identity_uri = '{endpoint}/identity/{identity_name}/{urgency}'.format(endpoint=current_app.config.get('RELENG_NOTIFICATION_IDENTITY_ENDPOINT'),
                                                                                       identity_name=policy.identity,
                                                                                       urgency=policy.urgency)
                 identity_preference, *_ = get(identity_uri).json()['preferences']
