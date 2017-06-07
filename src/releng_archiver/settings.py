@@ -18,15 +18,13 @@ required = [
     'DATABASE_URL',
 ]
 
-XXX = os.environ.get('TASKCLUSTER_CLIENT_ID')
-YYY = os.environ.get('TASKCLUSTER_ACCESS_TOKEN')
 secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
     releng_archiver.config.PROJECT_NAME,
     required=required,
     existing={x: os.environ.get(x) for x in required},
-    taskcluster_client_id=XXX,
-    taskcluster_access_token=YYY,
+    taskcluster_client_id=os.environ.get('TASKCLUSTER_CLIENT_ID'),
+    taskcluster_access_token=os.environ.get('TASKCLUSTER_ACCESS_TOKEN'),
 )
 
 locals().update(secrets)
