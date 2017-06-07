@@ -10,7 +10,6 @@ import flask
 import flask_login
 import random
 import sqlalchemy as sa
-import time
 import werkzeug
 import werkzeug.exceptions
 
