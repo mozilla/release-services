@@ -10,7 +10,6 @@ from typing import Tuple
 from werkzeug.exceptions import Conflict, NotFound
 from .models import Message, Policy
 from .channels import send_notifications
-from .config import RELENG_NOTIFICATION_IDENTITY_ENDPOINT
 from requests import get
 
 
