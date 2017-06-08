@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 from taskcluster.utils import slugId
 from cli_common.taskcluster import get_service

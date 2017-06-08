@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from cli_common.pulse import run_consumer
 from cli_common.log import get_logger
 from shipit_pulse_listener.hook import Hook

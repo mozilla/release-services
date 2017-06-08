@@ -508,6 +508,23 @@ let
 
 
 
+    "flake8-coding" = python.mkDerivation {
+      name = "flake8-coding-1.3.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/ae/26/3c6304d646f8ee27d6c40bfcd9874fea870098c3ef3cf60e284ea9db29ef/flake8-coding-1.3.0.tar.gz"; sha256 = "ba01e96f879377766a3d71f3499a832b19386ce4831270bfe671ab57d0fe50be"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."flake8"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/tk0miya/flake8-coding";
+        license = licenses.asl20;
+        description = "Adds coding magic comment checks to flake8";
+      };
+    };
+
+
+
     "flask-oidc" = python.mkDerivation {
       name = "flask-oidc-1.1.1";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/be/cc/7bbead3a11dd7623f7499e4e3186509efeced28ec935ba8d995b3788c586/flask-oidc-1.1.1.tar.gz"; sha256 = "c2b73664dbcd3f10b78c0df4eb02fa26ec5752a60c1e134f8f8b9ce02a90c5ab"; };

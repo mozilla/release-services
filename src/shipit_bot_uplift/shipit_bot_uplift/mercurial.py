@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import hglib
 import os
 import re

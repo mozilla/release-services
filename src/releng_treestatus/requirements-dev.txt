@@ -1,4 +1,6 @@
 -r ./../../lib/backend_common/requirements-dev.txt
 ipdb
 flake8
+flake8-coding
 pytest
+flake8-coding

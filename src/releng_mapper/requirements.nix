@@ -508,6 +508,23 @@ let
 
 
 
+    "flake8-coding" = python.mkDerivation {
+      name = "flake8-coding-1.3.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/ae/26/3c6304d646f8ee27d6c40bfcd9874fea870098c3ef3cf60e284ea9db29ef/flake8-coding-1.3.0.tar.gz"; sha256 = "ba01e96f879377766a3d71f3499a832b19386ce4831270bfe671ab57d0fe50be"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."flake8"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/tk0miya/flake8-coding";
+        license = licenses.asl20;
+        description = "Adds coding magic comment checks to flake8";
+      };
+    };
+
+
+
     "gunicorn" = python.mkDerivation {
       name = "gunicorn-19.7.1";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/30/3a/10bb213cede0cc4d13ac2263316c872a64bf4c819000c8ccd801f1d5f822/gunicorn-19.7.1.tar.gz"; sha256 = "eee1169f0ca667be05db3351a0960765620dad53f53434262ff8901b68a1b622"; };

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import click
 from cli_common.click import taskcluster_options
 from cli_common.log import init_logger

@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 import json
 import jsonschema
 from os import path

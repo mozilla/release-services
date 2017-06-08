@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
 import operator
