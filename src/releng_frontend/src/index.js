@@ -37,7 +37,7 @@ var init = function() {
 
 
     // Setup ports
-    localstorage.init(app, KEY);
+    localstorage.init(app, TC_KEY);
     hawk(app);
     redirect(app);
     title(app);
