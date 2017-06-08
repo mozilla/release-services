@@ -20,6 +20,24 @@ REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
 
 REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): (.*)\n', re.MULTILINE)
 
+ISSUE_MARKDOWN = '''
+## {type}
+**Message**: {message}
+**Location**: {location}
+```
+{body}
+```
+{notes}
+'''
+
+ISSUE_NOTE_MARKDOWN = '''
+**Note**: {message}
+**Location**: {location}
+```
+{body}
+```
+'''
+
 
 class Issue(object):
     """
@@ -43,19 +61,19 @@ class Issue(object):
         return self.type in ('warning', 'error')
 
     def as_markdown(self):
-        out = [
-            '# {} : {}'.format(self.type, self.path),
-            '**Position**: {}:{}'.format(self.line, self.char),
-            '**Snippet**: {}'.format(self.message),
-            '',
-        ]
-        out += [
-            '* note on {} at {}:{} : {}'.format(
-                n.path, n.line, n.char, n.message
-            )
-            for n in self.notes
-        ]
-        return '\n'.join(out)
+        return ISSUE_MARKDOWN.format(
+            type=self.type,
+            message=self.message,
+            location="{}:{}:{}".format(self.path, self.line, self.char),
+            body=self.body,
+            notes='\n'.join([
+                ISSUE_NOTE_MARKDOWN.format(
+                    message=n.message,
+                    location='{}:{}:{}'.format(n.path, n.line, n.char),
+                    body=n.body,
+                ) for n in self.notes
+            ]),
+        )
 
 
 class Workflow(object):
