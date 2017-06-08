@@ -43,17 +43,23 @@ class Issue(object):
 
     def as_markdown(self):
         out = [
-            '# {} : {}'.format(self.type, self.path),
-            '**Position**: {}:{}'.format(self.line, self.char),
-            '**Snippet**: {}'.format(self.message),
+            '## {}'.format(self.type),
+            '**Message**: {}'.format(self.message),
+            '**Location**: {}:{}:{}'.format(self.path, self.line, self.char),
+            '```',
+            '{}'.format(self.body),
+            '```',
             '',
         ]
-        out += [
-            '* note on {} at {}:{} : {}'.format(
-                n.path, n.line, n.char, n.message
-            )
-            for n in self.notes
-        ]
+        for n in self.notes:
+            out += [
+                '**Note**: {}'.format(n.message),
+                '**Location**: {}:{}:{}'.format(n.path, n.line, n.char),
+                '```',
+                '{}'.format(self.body),
+                '```',
+                '',
+            ]
         return '\n'.join(out)
 
 
