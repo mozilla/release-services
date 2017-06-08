@@ -5,7 +5,6 @@
 <title>TryChooser Syntax Builder</title>
 <link href="jquery-ui.css" rel="stylesheet" type="text/css">
 <script type="text/javascript" src="jquery.min.js"></script>
-<script type="text/javascript" src="tryload.js"></script>
 <script type="text/javascript" src="trychooser.js"></script>
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="stylesheet" type="text/css" href="trychooser.css">
@@ -41,136 +40,78 @@
             <label id='platforms-none'><input type="checkbox" class="group-selector none-selector" CHECKED>None</label>
             <ul>
             <li>
-                <label>Platform</label>
-                <span id="test_header" class="test_queue">Test</span>
-                <span id="build_header" class="build_queue">Build</span>
-            </li>
-            <li>
-                <label>&nbsp;</label>
-                <span id="test_header2" class="test_queue">Queue</span>
-                <span id="build_header2" class="build_queue">Queue</span>
-            </li>
-            <li>
                 <label><input type="checkbox" name="platform" value="linux">linux</label>
-                <span id="test_linux" class="test_queue">N/A</span>
-                <span id="build_linux" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="linux64">linux64</label>
-                <span id="test_linux64" class="test_queue">N/A</span>
-                <span id="build_linux64" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="linux64-asan">linux64-asan</label>
-                <span id="test_linux64-asan" class="test_queue">N/A</span>
-                <span id="build_linux64-asan" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="linux64-stylo">linux64-stylo</label>
-                <span id="test_linux64-stylo" class="test_queue">N/A</span>
-                <span id="build_linux64-stylo" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="linux64-st-an">linux64 static analysis</label>
-                <span id="test_linux64-st-an" class="test_queue">N/A</span>
-                <span id="build_linux64-st-an" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="linux64-valgrind">linux64 valgrind</label>
-                <span id="test_linux64-valgrind" class="test_queue">N/A</span>
-                <span id="build_linux64-valgrind" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="linux64-haz">browser rooting analysis</label>
-                <span id="test_linux64-haz" class="test_queue">N/A</span>
-                <span id="build_linux64-haz" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="linux64-shell-haz" class="nondefault">shell rooting analysis</label>
-                <span id="test_linux64-shell-haz" class="test_queue">N/A</span>
-                <span id="build_linux64-shell-haz" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="macosx64">macosx64</label>
-                <span id="test_macosx64" class="test_queue">N/A</span>
-                <span id="build_macosx64" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="macosx64-st-an">macosx64 static analysis</label>
-                <span id="test_macosx64-st-an" class="test_queue">N/A</span>
-                <span id="build_macosx64-st-an" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="win32">win32</label>
-                <span id="test_win32" class="test_queue">N/A</span>
-                <span id="build_win32" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="win32-st-an">win32 static analysis</label>
-                <span id="test_win32-st-an" class="test_queue">N/A</span>
-                <span id="build_win32-st-an" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="win64">win64</label>
-                <span id="test_win64" class="test_queue">N/A</span>
-                <span id="build_win64" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="win64-st-an">win64 static analysis</label>
-                <span id="test_win64-st-an" class="test_queue">N/A</span>
-                <span id="build_win64-st-an" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="android-api-15">android api 15+</label>
-                <span id="test_android-api-15" class="test_queue">N/A</span>
-                <span id="build_android-api-15" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="android-api-15-gradle">android api 15+ gradle</label>
-                <span id="test_android-api-15-gradle" class="test_queue">N/A</span>
-                <span id="build_android-api-15-gradle" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="android-api-15-gradle-dependencies">android api 15+ gradle deps</label>
-                <span id="test_android-api-15-gradle-deps" class="test_queue">N/A</span>
-                <span id="build_android-api-15-gradle-deps" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="android-api-15-frontend">android api 15+ frontend</label>
-                <span id="test_android-api-15-frontend" class="test_queue">N/A</span>
-                <span id="build_android-api-15-frontend" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="android-x86">android-x86 (Android 4.2)</label>
-                <span id="test_android-x86" class="test_queue">N/A</span>
-                <span id="build_android-x86" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="sm-arm-sim">Spidermonkey arm-sim</label>
-                <span id="test_sm-arm-sim" class="test_queue">N/A</span>
-                <span id="build_sm-arm-sim" class="build_queue">N/A</span>
             </li>
             <!-- TODO: Currently not supported, enable when it is
             <li>
                 <label><input type="checkbox" name="platform" value="sm-arm-sim-osx">Spidermonkey arm-sim-osx</label>
-                <span id="test_sm-arm-sim-osx" class="test_queue">N/A</span>
-                <span id="build_sm-arm-sim-osx" class="build_queue">N/A</span>
             </li>
             -->
             <li>
                 <label><input type="checkbox" name="platform" value="sm-compacting">Spidermonkey compacting</label>
-                <span id="test_sm-compacting" class="test_queue">N/A</span>
-                <span id="build_sm-compacting" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="sm-plain">Spidermonkey plain</label>
-                <span id="test_sm-plain" class="test_queue">N/A</span>
-                <span id="build_sm-plain" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="sm-rootanalysis">Spidermonkey rootanalysis</label>
-                <span id="test_sm-rootanalysis" class="test_queue">N/A</span>
-                <span id="build_sm-rootanalysis" class="build_queue">N/A</span>
             </li>
             </ul>
             <p>Looking for PGO builds? See <a href="https://wiki.mozilla.org/ReleaseEngineering/TryChooser#What_if_I_want_PGO_for_my_build">this page</a>.</p>
