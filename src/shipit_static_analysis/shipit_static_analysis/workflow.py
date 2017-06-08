@@ -141,6 +141,7 @@ class Workflow(object):
         logger.info('Run clang-tidy...')
         checks = [
             '-*',
+            'clang-analyzer-deadcode.DeadStores',
             'modernize-loop-convert',
             'modernize-use-auto',
             'modernize-use-default',
@@ -148,6 +149,8 @@ class Workflow(object):
             'modernize-use-bool-literals',
             'modernize-use-override',
             'modernize-use-nullptr',
+            'mozilla-*',
+            'readability-else-after-return',
         ]
         cmd = [
             'run-clang-tidy.py',
