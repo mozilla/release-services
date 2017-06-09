@@ -35,7 +35,7 @@ class Build(db.Model):
 
     @classmethod
     def unique_hash(cls, branch, builddir, buildername, *args, **kwargs):
-        return "{}:{}:{}".format(branch, builddir, buildername)
+        return '{}:{}:{}'.format(branch, builddir, buildername)
 
     @classmethod
     def unique_filter(cls, query, branch, builddir, buildername,
@@ -69,7 +69,7 @@ class ClobberTime(db.Model):
 
     @classmethod
     def unique_hash(cls, branch, slave, builddir, *args, **kwargs):
-        return "{}:{}:{}".format(branch, slave, builddir)
+        return '{}:{}:{}'.format(branch, slave, builddir)
 
     @classmethod
     def unique_filter(cls, query, branch, slave, builddir, *args, **kwargs):
@@ -97,15 +97,15 @@ def buildbot_branches(db_session):
 
     return [
         dict(
-            name=branch[0] or "",
+            name=branch[0] or '',
             builders=[
                 dict(
-                    name=builder[0] or "",
-                    branch=builder[1] or "",
-                    slave=builder[2] or "",
-                    builddir=builder[3] or "",
+                    name=builder[0] or '',
+                    branch=builder[1] or '',
+                    slave=builder[2] or '',
+                    builddir=builder[3] or '',
                     lastclobber=builder[4] or -1,
-                    who=builder[5] or "",
+                    who=builder[5] or '',
                 )
                 for builder in buildbot_branch_builders(db_session, branch[0])
                 if all([builder[1], builder[2], builder[3]])

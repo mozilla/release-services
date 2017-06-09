@@ -4,3 +4,4 @@ ipdb
 pytest
 responses
 flake8-coding
+flake8-quotes

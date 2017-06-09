@@ -58,7 +58,7 @@ class MergeTest(object):
         Check if all revisions are valid
         """
         assert len(self.results) > 0, \
-            "Merge test must be run before using is_valid"
+            'Merge test must be run before using is_valid'
         return all([r.status == 'merged' for r in self.results.values()])
 
     def list_revisions(self, repository):

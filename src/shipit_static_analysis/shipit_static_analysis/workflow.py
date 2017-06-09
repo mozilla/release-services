@@ -20,7 +20,7 @@ REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
 
 REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): ([\w\s\.\'\"^_,-<>]+)(?: \[([\w-]+)\])?\n', re.MULTILINE)
 
-ISSUE_MARKDOWN = '''
+ISSUE_MARKDOWN = """
 ## {type}
 **Message**: {message}
 **Location**: {location}
@@ -29,15 +29,15 @@ ISSUE_MARKDOWN = '''
 {body}
 ```
 {notes}
-'''
+"""
 
-ISSUE_NOTE_MARKDOWN = '''
+ISSUE_NOTE_MARKDOWN = """
 **Note**: {message}
 **Location**: {location}
 ```
 {body}
 ```
-'''
+"""
 
 
 class Issue(object):
@@ -65,7 +65,7 @@ class Issue(object):
         return ISSUE_MARKDOWN.format(
             type=self.type,
             message=self.message,
-            location="{}:{}:{}".format(self.path, self.line, self.char),
+            location='{}:{}:{}'.format(self.path, self.line, self.char),
             body=self.body,
             check=self.check,
             notes='\n'.join([
@@ -88,7 +88,7 @@ class Workflow(object):
         self.emails = emails
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
-            "Cache root {} is not a dir.".format(self.cache_root)
+            'Cache root {} is not a dir.'.format(self.cache_root)
 
         # Load TC services & secrets
         self.notify = get_service(

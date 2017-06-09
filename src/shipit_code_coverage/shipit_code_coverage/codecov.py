@@ -21,7 +21,7 @@ class CodeCov(object):
         # This way, the index of a suite in the array should be stable enough.
         self.suites = []
 
-        assert os.path.isdir(cache_root), "Cache root {} is not a dir.".format(cache_root)
+        assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
         self.repo_dir = os.path.join(cache_root, 'mozilla-central')
 
         self.coveralls_token = coveralls_token
@@ -155,13 +155,13 @@ class CodeCov(object):
         # TODO: Process suites in parallel.
         # While we are uploading results for a suite, we can start to process the next one.
         # TODO: Reenable when Coveralls and/or Codecov will be able to properly handle the load.
-        '''for suite in self.suites:
+        """for suite in self.suites:
             output = self.generate_info(commit_sha, self.coveralls_token, suite)
 
             logger.info('Suite report generated', suite=suite)
 
             coveralls_jobs.append(uploader.coveralls(output))
-            uploader.codecov(output, commit_sha, self.codecov_token, [suite.replace('-', '_')])'''
+            uploader.codecov(output, commit_sha, self.codecov_token, [suite.replace('-', '_')])"""
 
         output = self.generate_info(commit_sha, self.coveralls_token)
         logger.info('Report generated successfully')
