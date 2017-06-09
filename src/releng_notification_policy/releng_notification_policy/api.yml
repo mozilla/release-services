@@ -20,7 +20,8 @@ produces:
   - application/json
 
 paths:
-  '/message/{uid}':
+
+  /message/{uid}:
     put:
       summary: Add a new notification message to the service.
       operationId: "releng_notification_policy.api.put_message"

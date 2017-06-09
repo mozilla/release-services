@@ -1,9 +1,9 @@
 from .models import Message
-from releng_notification_policy.flask import app
+from flask import current_app
 
 
 def send_irc_notification(message: Message, identity_preference: dict) -> dict:
-    app.notify.irc()
+    current_app.notify.irc()
 
     return {
         'channel': 'IRC',
@@ -14,7 +14,7 @@ def send_irc_notification(message: Message, identity_preference: dict) -> dict:
 
 
 def send_email_notifications(message: Message, identity_preference: dict) -> dict:
-    app.notify.email({
+    current_app.notify.email({
         'address': identity_preference['target'],
         'content': message.message,
         'subject': message.shortMessage,
