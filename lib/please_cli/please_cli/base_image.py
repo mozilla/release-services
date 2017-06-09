@@ -121,13 +121,13 @@ RUN . /root/.profile \\
     '--docker-repo',
     required=True,
     default=please_cli.config.DOCKER_REPO,
-    help='Docker repository.',
+    help='Docker repository (default: {}).'.format(please_cli.config.DOCKER_REPO),
     )
 @click.option(
     '--docker-tag',
     required=True,
     default=please_cli.config.DOCKER_BASE_TAG,
-    help='Tag of base image.',
+    help='Tag of base image (default: {}).'.format(please_cli.config.DOCKER_BASE_TAG),
     )
 def cmd(docker_username, docker_password, docker, docker_repo, docker_tag):
 
