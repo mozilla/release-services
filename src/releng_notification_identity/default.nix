@@ -10,7 +10,7 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-releng-notification-identity";
-  dirname = "releng-notification-identity";
+  dirname = "releng_notification_identity";
 
   self = mkBackend {
     inherit python name dirname;
