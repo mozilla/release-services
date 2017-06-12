@@ -99,3 +99,16 @@ def get_identity_preference_by_urgency(identity_name: str, urgency: str) -> Tupl
 
     else:
         raise NotFound('No preferences found for identity {}.'.format(identity_name))
+
+
+def delete_identity_by_name(identity_name: str) -> Tuple[None, int]:
+    session = current_app.db.session
+    identity = session.query(Identity).filter(Identity.name == identity_name).first()
+    if identity:
+        session.delete(identity)
+        session.commit()
+
+        return None, 200
+
+    else:
+        raise NotFound('Identity with name {} not found.'.format(identity_name))

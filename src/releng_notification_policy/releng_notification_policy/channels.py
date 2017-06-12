@@ -13,7 +13,7 @@ def send_irc_notification(message: Message, identity_preference: dict) -> dict:
     }
 
 
-def send_email_notifications(message: Message, identity_preference: dict) -> dict:
+def send_email_notification(message: Message, identity_preference: dict) -> dict:
     current_app.notify.email({
         'address': identity_preference['target'],
         'content': message.message,
@@ -30,7 +30,7 @@ def send_email_notifications(message: Message, identity_preference: dict) -> dic
 
 
 CHANNEL_MAPPING = {
-    'EMAIL': send_email_notifications,
+    'EMAIL': send_email_notification,
     'IRC': send_irc_notification,
 }
 

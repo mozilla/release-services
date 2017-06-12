@@ -96,7 +96,7 @@ def get_tick_tock() -> dict:
                 identity_uri = '{endpoint}/identity/{identity_name}/{urgency}'.format(endpoint=current_app.config.get('RELENG_NOTIFICATION_IDENTITY_ENDPOINT'),
                                                                                       identity_name=policy.identity,
                                                                                       urgency=policy.urgency)
-                identity_preference, *_ = get(identity_uri).json()['preferences']
+                identity_preference, *_ = get(identity_uri, verify=False).json()['preferences']
 
                 notification_info = send_notifications(message, identity_preference)
                 notifications.append(notification_info)

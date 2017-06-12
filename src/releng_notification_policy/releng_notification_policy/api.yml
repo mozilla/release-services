@@ -21,7 +21,7 @@ produces:
 
 paths:
 
-  /message/{uid}:
+  '/message/{uid}':
     put:
       summary: Add a new notification message to the service.
       operationId: "releng_notification_policy.api.put_message"
@@ -135,7 +135,7 @@ paths:
           description: Message with specified UID not found.
 
 
-  /ticktock:
+  '/ticktock':
     get:
       summary: Hook endpoint to take action on pending policies.
       operationId: releng_notification_policy.api.get_tick_tock
@@ -165,9 +165,9 @@ paths:
                       description: Notification channel used to notify.
                       type: string
                       enum:
-                        - email
-                        - irc
-                        - sms
+                        - EMAIL
+                        - IRC
+                        - SMS
 
                     targets:
                       description: Identity who the notification was sent to.

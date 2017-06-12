@@ -21,6 +21,24 @@ produces:
 
 paths:
   '/identity/{identity_name}':
+    delete:
+      summary: Delete identity with the specified name.
+      operationId: releng_notification_identity.api.delete_identity_by_name
+      parameters:
+        - name: identity_name
+          in: path
+          type: string
+          description: Name of identity to delete
+          required: true
+
+      responses:
+        200:
+          description: Notification identity successfully deleted.
+
+        404:
+          description: Notification identity not found.
+          schema:
+            $ref: '#/definitions/Problem'
     post:
       summary: Modify notification preferences for an identity.
       operationId: releng_notification_identity.api.post_identity
