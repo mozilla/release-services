@@ -1,2 +1,3 @@
 -e ./../../lib/cli_common[sentry] #egg=mozilla-cli-common
 -e ./../../lib/backend_common[api,cors,auth,db,auth0] #egg=mozilla-backend-common
+responses

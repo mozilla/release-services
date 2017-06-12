@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 import os
+import shipit_signoff.flask  # NOQA
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 

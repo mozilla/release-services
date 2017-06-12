@@ -63,6 +63,7 @@ def create_app(name, extensions=[], config=None, debug=False, debug_src=None,
         app.config.update(**config)
     elif os.environ.get('APP_SETTINGS'):  # noqa
         app.config.from_envvar('APP_SETTINGS')
+        print("APP SETTINGS {}".format(app.config))
     else:
         print("Using default settings; to configure releng, set "
               "APP_SETTINGS to point to your settings file")
