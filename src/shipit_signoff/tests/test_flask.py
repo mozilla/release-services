@@ -1,10 +1,7 @@
-import os
 import json
-import shipit_signoff.flask
 import backend_common.auth0
 import backend_common.mocks
 from unittest.mock import patch
-import pytest
 
 
 UID = '1'
@@ -107,26 +104,26 @@ def test_delete_step_bad_token(client):
 
 
 def test_step_list(client):
-    """
+    '''
     List available analysis through api
-    """
+    '''
     resp = client.get('/step', headers=GOODHEADERS)
     assert resp.status_code == 200
 
 
 def setup_step(func):
-    """
+    '''
     Prepopulate the testing database.
 
     Can't use a fixture because it cancels the @patch to user_getinfo
-    """
+    '''
     def decorator(client, *args, **kwargs):
-        resp = client.put('/step/{}'.format(UID),
-                          content_type='application/json',
-                          data=json.dumps(TEST_STEP),
-                          headers=GOODHEADERS)
+        _ = client.put('/step/{}'.format(UID),
+                       content_type='application/json',
+                       data=json.dumps(TEST_STEP),
+                       headers=GOODHEADERS)
         func(client)
-        resp = client.delete('/step/{}'.format(UID), headers=GOODHEADERS)
+        _ = client.delete('/step/{}'.format(UID), headers=GOODHEADERS)
     return decorator
 
 

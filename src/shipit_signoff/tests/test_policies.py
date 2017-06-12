@@ -3,9 +3,9 @@ import pytest
 from unittest.mock import MagicMock
 
 from shipit_signoff.policies import (
-    UnauthorizedUserError, NoSignoffLeftError, check_whether_policy_can_be_signed, 
-    _is_group_defined_in_policy, _is_email_defined_in_policy, _are_there_signoffs_left_for_group, 
-    _are_there_signoffs_left_for_email, is_sign_off_policy_met, _is_signoff_condition_met, 
+    UnauthorizedUserError, NoSignoffLeftError, check_whether_policy_can_be_signed,
+    _is_group_defined_in_policy, _is_email_defined_in_policy, _are_there_signoffs_left_for_group,
+    _are_there_signoffs_left_for_email, is_sign_off_policy_met, _is_signoff_condition_met,
     _calculate_missing_signoffs, _has_user_signed_policy, NoSignaturePresentError,
     check_whether_policy_can_be_unsigned)
 
@@ -334,7 +334,6 @@ def test_not_has_user_signed_policy(email, group_name, policy, existing_signatur
     assert not _has_user_signed_policy(email, group_name, policy, existing_signatures)
 
 
-
 @pytest.mark.parametrize('email, group_name, policy, existing_signatures', (
     (
         'a-valid-releng@m.c',
@@ -372,4 +371,3 @@ def test_check_whether_policy_can_be_unsigned(email, group_name, policy, existin
 def test_error_check_whether_policy_can_be_unsigned(email, group_name, policy, existing_signatures, expected_exception):
     with pytest.raises(expected_exception):
         check_whether_policy_can_be_unsigned(email, group_name, policy, existing_signatures)
-
