@@ -121,9 +121,9 @@ def setup_step(func):
     '''
     def decorator(client, *args, **kwargs):
         client.put('/step/{}'.format(UID),
-                       content_type='application/json',
-                       data=json.dumps(TEST_STEP),
-                       headers=GOODHEADERS)
+                   content_type='application/json',
+                   data=json.dumps(TEST_STEP),
+                   headers=GOODHEADERS)
         func(client)
         client.delete('/step/{}'.format(UID), headers=GOODHEADERS)
     return decorator
