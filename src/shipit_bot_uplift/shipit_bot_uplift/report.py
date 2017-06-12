@@ -9,10 +9,10 @@ logger = get_logger(__name__)
 
 
 class Report(object):
-    """
+    '''
     Build a report during bot execution
     and send it at the end through TC emails
-    """
+    '''
 
     def __init__(self, emails):
         self.emails = emails
@@ -20,15 +20,15 @@ class Report(object):
         logger.info('Report notifications', emails=self.emails)
 
     def add_invalid_merge(self, merge_test):
-        """
+        '''
         Mark a bug with an invalid merged test
-        """
+        '''
         self.merges.add(merge_test)
 
     def send(self):
-        """
+        '''
         Build and send report using Taskcluster notification service
-        """
+        '''
         # Skip sending when there are no failed merges
         if not self.merges:
             logger.info('Nothing to report.')

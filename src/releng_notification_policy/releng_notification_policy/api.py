@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -14,13 +15,13 @@ from requests import get
 
 
 def put_message(uid: str, body: dict) -> Tuple[None, int]:
-    """
+    '''
     Add a new message to be delivered into the service.
 
     :param uid: UID of message to track
     :param body: Description of message
     :return: No content, status code
-    """
+    '''
     session = current_app.db.session
 
     # Make sure the message UID doesn't already exist in the DB
@@ -45,12 +46,12 @@ def put_message(uid: str, body: dict) -> Tuple[None, int]:
 
 
 def delete_message(uid: str) -> Tuple[None, int]:
-    """
+    '''
     Delete the message with the specified UID
 
     :param uid: UID of the message to delete.
     :return: No content, status code
-    """
+    '''
     session = current_app.db.session
     message = session.query(Message).filter(Message.uid == uid).first()
     if message:
@@ -59,15 +60,15 @@ def delete_message(uid: str) -> Tuple[None, int]:
 
         return None, 200
     else:
-        raise NotFound('Message with uid "{}" not found'.format(uid))
+        raise NotFound('Message with uid `{}` not found'.format(uid))
 
 
 def get_tick_tock() -> dict:
-    """
+    '''
     Trigger pending notifications according to their notification policies
 
     :return: Information about notification triggered by this call in JSON format.
-    """
+    '''
     try:
         session = current_app.db.session
 

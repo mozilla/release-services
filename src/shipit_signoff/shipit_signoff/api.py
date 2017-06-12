@@ -24,9 +24,9 @@ logger = log.get_logger(__name__)
 
 # provided by https://auth.mozilla.auth0.com/.well-known/openid-configuration
 AUTH0_FIELDS = [
-    "openid", "profile", "offline_access", "name", "given_name", "family_name",
-    "nickname", "email", "email_verified", "picture", "created_at",
-    "identities", "phone", "address",
+    'openid', 'profile', 'offline_access', 'name', 'given_name', 'family_name',
+    'nickname', 'email', 'email_verified', 'picture', 'created_at',
+    'identities', 'phone', 'address',
 ]
 
 STEPS = {}
@@ -35,22 +35,22 @@ SIGNOFFS = {}
 
 @auth0.require_login
 def login(callback_url):
-    """Log a user in, using auth0
+    '''Log a user in, using auth0
 
     Returns the user to callback_url when finished.
-    """
+    '''
     pass
 
 
 def signoffstep_to_status(step):
-    """
+    '''
     Given a Signoff Step, extract and return only the data needed for its
     current status
-    """
+    '''
     status = dict(
         uid=step.uid,
         state=step.state.value,  # it's an enum
-        message="{}".format(step.status_message),
+        message='{}'.format(step.status_message),
         created=str(step.created),
     )
 
@@ -61,10 +61,10 @@ def signoffstep_to_status(step):
 
 
 def list_steps():
-    """
+    '''
     List all the known steps with a given status, or running ones if not
     specified.
-    """
+    '''
     logger.info('listing steps')
 
     desired_state = request.args.get('state', 'running')
@@ -76,14 +76,14 @@ def list_steps():
     except NoResultFound:
         return list()
 
-    logger.info("list_steps(): {}".format(steps))
+    logger.info('list_steps(): {}'.format(steps))
     return [signoffstep_to_status(step) for step in steps]
 
 
 def get_step(uid):
-    """
+    '''
     Get a sign-off step definition
-    """
+    '''
     logger.info('getting step %s', uid)
 
     try:
@@ -96,9 +96,9 @@ def get_step(uid):
 
 
 def get_step_status(uid):
-    """
+    '''
     Get the current status of a sign-off step, including who has signed
-    """
+    '''
     logger.info('getting step status %s', uid)
 
     try:
@@ -111,9 +111,9 @@ def get_step_status(uid):
 
 
 def create_step(uid):
-    """
+    '''
     Create a sign-off step
-    """
+    '''
     logger.info('creating step %s', uid)
 
     step = SignoffStep()
@@ -140,7 +140,7 @@ def delete_step(uid):
     try:
         step = SignoffStep.query.filter_by(uid=uid).one()
     except:
-        logger.error("Missing step when deleting: %s", uid)
+        logger.error('Missing step when deleting: %s', uid)
         abort(404)
 
     step.delete()
@@ -148,9 +148,9 @@ def delete_step(uid):
 
 
 def is_user_in_group(group):
-    """
+    '''
     Dummy function while auth0 wrappers are not in place.
-    """
+    '''
     return True
 
     if auth0.user_loggedin:
@@ -160,11 +160,11 @@ def is_user_in_group(group):
 
 
 def get_logged_in_email():
-    """
+    '''
     TODO: move to backend_common.auth0
     TODO: write equivalent functions for groups, email_verified. Or get a user
           dict?
-    """
+    '''
     return 'sfraser@mozilla.com'
 
     if auth0.user_loggedin:
@@ -190,7 +190,7 @@ def sign_off(uid):
 
     existing_signatures = step.signatures
     email = get_logged_in_email()
-    # TODO Process the definition only if "local" is set
+    # TODO Process the definition only if 'local' is set
     policy_definition = step.policy_data['definition']
 
     try:
@@ -211,10 +211,10 @@ def sign_off(uid):
 
 
 def delete_signature(uid):
-    """
+    '''
     TODO: implement
-    """
-    logger.info("Removing signature from step %s", uid)
+    '''
+    logger.info('Removing signature from step %s', uid)
     if uid not in STEPS:
         return None, 404
     SIGNOFFS[uid] = False

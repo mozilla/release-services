@@ -25,7 +25,7 @@ class UTCDateTime(types.TypeDecorator):
             value = pytz.UTC.normalize(value.astimezone(pytz.UTC))
             # MySQL stores datetimes without any timezone information, similar
             # to a naive Python datetime.  Passing it a tz-aware datetime
-            # causes a warning ("Out of range value for column .."), so we make
+            # causes a warning ('Out of range value for column ..'), so we make
             # it naive.
             if dialect.name == 'mysql':
                 value = value.replace(tzinfo=None)
@@ -43,9 +43,9 @@ class Tree(db.Model):
     __tablename__ = 'releng_treestatus_trees'
 
     tree = sa.Column(sa.String(32), primary_key=True)
-    status = sa.Column(sa.String(64), default="open", nullable=False)
-    reason = sa.Column(sa.Text, default="", nullable=False)
-    message_of_the_day = sa.Column(sa.Text, default="", nullable=False)
+    status = sa.Column(sa.String(64), default='open', nullable=False)
+    reason = sa.Column(sa.Text, default='', nullable=False)
+    message_of_the_day = sa.Column(sa.Text, default='', nullable=False)
 
     def to_dict(self):
         return dict(
@@ -66,7 +66,7 @@ class Log(db.Model):
     who = sa.Column(sa.Text, nullable=False)
     status = sa.Column(sa.String(64), nullable=False)
     reason = sa.Column(sa.Text, nullable=False)
-    _tags = sa.Column("tags", sa.Text, nullable=False)
+    _tags = sa.Column('tags', sa.Text, nullable=False)
 
     def __init__(self, tags=None, **kwargs):
         if tags is not None:

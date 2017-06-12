@@ -24,11 +24,11 @@ bugs = db.Table(
 
 
 class BugAnalysis(db.Model):
-    """
+    '''
     A template to build some cached analysis
     by listing several bugs from Bugzilla, with
     their analysus
-    """
+    '''
     __tablename__ = 'shipit_uplift_analysis'
 
     id = sa.Column(sa.Integer, primary_key=True)
@@ -47,10 +47,10 @@ class BugAnalysis(db.Model):
 
     @staticmethod
     def with_bugs():
-        """
+        '''
         List all analysis with bugs count
         Uses a single sql request
-        """
+        '''
         return \
             db.session \
             .query(
@@ -61,9 +61,9 @@ class BugAnalysis(db.Model):
             .group_by(BugAnalysis)
 
     def build_parameters(self):
-        """
+        '''
         Build parameters for uplift bug search
-        """
+        '''
         name = self.name.lower()
         if name.startswith('esr'):
             # Esr releases
@@ -108,9 +108,9 @@ class BugAnalysis(db.Model):
 
 
 class BugResult(db.Model):
-    """
+    '''
     The cached result of an analysis run
-    """
+    '''
     __tablename__ = 'shipit_uplift_bug'
 
     id = sa.Column(sa.Integer, primary_key=True)
@@ -133,9 +133,9 @@ class BugResult(db.Model):
         return pickle.loads(self.payload)
 
     def list_contributors(self):
-        """
+        '''
         List contributors with roles in one SQL query
-        """
+        '''
         return \
             db.session \
             .query(Contributor, BugContributor) \
@@ -144,9 +144,9 @@ class BugResult(db.Model):
             .all()
 
     def delete(self):
-        """
+        '''
         Delete bug and its dependencies
-        """
+        '''
         # Delete links, avoid StaleDataError
         db.engine.execute(sa.text('delete from shipit_uplift_analysis_bugs where bug_id = :bug_id'), bug_id=self.id)  # noqa
         db.engine.execute(sa.text('delete from shipit_uplift_patch_status where bug_id = :bug_id'), bug_id=self.id)  # noqa
@@ -157,9 +157,9 @@ class BugResult(db.Model):
 
 
 class Contributor(db.Model):
-    """
+    '''
     An active Mozilla contributor
-    """
+    '''
     __tablename__ = 'shipit_uplift_contributor'
     id = sa.Column(sa.Integer, primary_key=True)
     bugzilla_id = sa.Column(sa.Integer, unique=True)
@@ -172,9 +172,9 @@ class Contributor(db.Model):
 
 
 class BugContributor(db.Model):
-    """
+    '''
     M2M link between contributor & bug
-    """
+    '''
     __tablename__ = 'shipit_uplift_contributor_bugs'
     __table_args__ = (
         sa.UniqueConstraint('contributor_id', 'bug_id', name='uniq_contrib_bug'),  # noqa
@@ -185,8 +185,8 @@ class BugContributor(db.Model):
     bug_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_uplift_bug.id'))  # noqa
     roles = sa.Column(sa.String(250))
 
-    bug = db.relationship(BugResult, backref="contributors")
-    contributor = db.relationship(Contributor, backref="bugs")
+    bug = db.relationship(BugResult, backref='contributors')
+    contributor = db.relationship(Contributor, backref='bugs')
 
 
 class MergeStatus(enum.Enum):
@@ -196,13 +196,13 @@ class MergeStatus(enum.Enum):
 
 
 class PatchStatus(db.Model):
-    """
+    '''
     Patch merge status at a specific time
-    """
+    '''
     __tablename__ = 'shipit_uplift_patch_status'
     __table_args__ = (
         sa.UniqueConstraint('bug_id', 'revision', 'revision_parent', 'branch', name='uniq_patch_status'),  # noqa
-        sa.UniqueConstraint('bug_id', 'group', 'branch', 'revision', name="uniq_patch_status_group")  # noqa
+        sa.UniqueConstraint('bug_id', 'group', 'branch', 'revision', name='uniq_patch_status_group')  # noqa
     )
 
     id = sa.Column(sa.Integer, primary_key=True)
@@ -224,4 +224,4 @@ class PatchStatus(db.Model):
     )
     status = sa.Column(sa.Enum(MergeStatus), default=MergeStatus.merged)
 
-    bug = db.relationship(BugResult, backref="patch_status")
+    bug = db.relationship(BugResult, backref='patch_status')

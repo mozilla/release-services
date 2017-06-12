@@ -3,10 +3,10 @@ import json
 
 
 def test_comments_user(client, header_user):
-    """
+    '''
     A user must not have private comment
     in bugs details
-    """
+    '''
     resp = client.get('/analysis/1', headers=[
         ('Authorization', header_user),
     ])
@@ -23,10 +23,10 @@ def test_comments_user(client, header_user):
 
 
 def test_comments_admin(client, header_admin):
-    """
+    '''
     An admin must have private comment
     in bugs details
-    """
+    '''
     resp = client.get('/analysis/1', headers=[
         ('Authorization', header_admin),
     ])
@@ -43,9 +43,9 @@ def test_comments_admin(client, header_admin):
 
 
 def test_update_user(client, header_user):
-    """
+    '''
     A user can't update a contributor
-    """
+    '''
     from shipit_uplift.models import Contributor
     contrib = Contributor.query.filter_by(id=1).one()
     assert contrib.karma == 1
@@ -72,9 +72,9 @@ def test_update_user(client, header_user):
 
 
 def test_update_admin(client, header_admin):
-    """
+    '''
     An admin can update a contributor
-    """
+    '''
     from shipit_uplift.models import Contributor
     contrib = Contributor.query.filter_by(id=1).one()
     assert contrib.karma == 1

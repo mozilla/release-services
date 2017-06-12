@@ -24,9 +24,9 @@ class SigningStatus(enum.Enum):
 
 
 class SignoffStep(db.Model):
-    """
+    '''
     Recording signoff steps as distinct entities
-    """
+    '''
 
     __tablename__ = 'shipit_signoff_steps'
 
@@ -46,9 +46,9 @@ class SignoffStep(db.Model):
         return pickle.loads(self.policy)
 
     def delete(self):
-        """
+        '''
         Delete step, and associated signatures
-        """
+        '''
         signatures = Signature.query.filter_by(step_uid=self.uid).all()
 
         for signature in signatures:
@@ -59,9 +59,9 @@ class SignoffStep(db.Model):
 
 
 class Signature(db.Model):
-    """
+    '''
     Data about a signature attached to a specific step
-    """
+    '''
     __tablename__ = 'shipit_signoff_signatures'
 
     id = sa.Column(sa.Integer, primary_key=True)

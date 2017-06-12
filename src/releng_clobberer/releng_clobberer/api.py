@@ -55,8 +55,8 @@ def post_buildbot(body):
 
 
 def get_taskcluster(branch='staging'):
-    """
-    """
+    '''
+    '''
 
     hooks = taskcluster.Hooks()
     queue = taskcluster.Queue()

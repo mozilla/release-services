@@ -17,9 +17,9 @@ BUILDBOT_BUILDER_REL_PREFIX = 'release-'
 
 
 class Build(db.Model):
-    """
+    '''
     A clobberable builds.
-    """
+    '''
 
     __tablename__ = 'releng_clobberer_builds'
 
@@ -81,8 +81,8 @@ class ClobberTime(db.Model):
 
 
 def buildbot_branches(db_session):
-    """List of all buildbot branches.
-    """
+    '''List of all buildbot branches.
+    '''
 
     branches = db_session.query(
         Build.branch
@@ -116,9 +116,9 @@ def buildbot_branches(db_session):
 
 
 def buildbot_branch_builders(db_session, branch):
-    """Return a dictionary of most recent ClobberTime grouped by
+    '''Return a dictionary of most recent ClobberTime grouped by
        buildername.
-    """
+    '''
     # Isolates the maximum lastclobber for each builddir on a branch
     max_ct_sub_query = db_session.query(
         sa.func.max(ClobberTime.lastclobber).label('lastclobber'),
@@ -131,9 +131,9 @@ def buildbot_branch_builders(db_session, branch):
         ClobberTime.branch == branch
     ).subquery()
 
-    # Finds the "greatest n per group" by joining with the
+    # Finds the 'greatest n per group' by joining with the
     # max_ct_sub_query
-    # This is necessary to get the correct "who" values
+    # This is necessary to get the correct 'who' values
     sub_query = db_session.query(
         ClobberTime
     ).join(
@@ -167,8 +167,8 @@ def buildbot_branch_builders(db_session, branch):
 
 def clobber_buildbot(db_session, who, branch=None, slave=None, builddir=None,
                      log=None):
-    """ TODO:
-    """
+    ''' TODO:
+    '''
 
     builder = ClobberTime.unique_hash(branch, slave, builddir)
 

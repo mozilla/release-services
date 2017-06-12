@@ -4,9 +4,9 @@ from urllib.parse import parse_qs
 
 
 def assert_query_strings(x, y):
-    """
+    '''
     Helper to compare Query strings
-    """
+    '''
     x = parse_qs(x)
     y = parse_qs(y)
     from pprint import pprint
@@ -17,9 +17,9 @@ def assert_query_strings(x, y):
 
 
 def test_list_analysis_invalid(client):
-    """
+    '''
     List available analysis through api
-    """
+    '''
 
     # No header : Should fail
     resp = client.get('/analysis')
@@ -27,9 +27,9 @@ def test_list_analysis_invalid(client):
 
 
 def test_list_analysis_valid(client, bugs, header_user):
-    """
+    '''
     List available analysis through api
-    """
+    '''
     resp = client.get('/analysis', headers=[
         ('Authorization', header_user),
     ])
@@ -47,9 +47,9 @@ def test_list_analysis_valid(client, bugs, header_user):
 
 
 def test_fetch_analysis(client, bugs, header_user):
-    """
+    '''
     Fetch detailled analysis, with bugs
-    """
+    '''
     resp = client.get('/analysis/1', headers=[
         ('Authorization', header_user),
     ])
@@ -106,9 +106,9 @@ def test_fetch_analysis(client, bugs, header_user):
 
 
 def test_analysis_query_strings():
-    """
+    '''
     Check Bugzilla parameters building
-    """
+    '''
     from shipit_uplift.models import BugAnalysis
 
     assert_query_strings(
@@ -130,9 +130,9 @@ def test_analysis_query_strings():
 
 
 def test_update_analysis(client, bugs, header_bot, header_user):
-    """
+    '''
     Update analysis version
-    """
+    '''
     url = '/analysis/1'
 
     # Check analysis has version 1 initially
@@ -181,9 +181,9 @@ def test_update_analysis(client, bugs, header_bot, header_user):
 
 
 def test_create_bug(client, bugs, header_bot):
-    """
+    '''
     Create a new bug in analysis
-    """
+    '''
     # Check we have 3 bugs
     resp = client.get('/analysis/1', headers=[
         ('Authorization', header_bot),
@@ -267,9 +267,9 @@ def test_create_bug(client, bugs, header_bot):
 
 
 def test_deprecating_bug(client, bugs, header_bot):
-    """
+    '''
     Deprecate a bug from an analysis
-    """
+    '''
     def in_analysis(bugzilla_id, analysis_id):
         # Check a bug is in an analysis
         url = '/analysis/{}'.format(analysis_id)
@@ -304,9 +304,9 @@ def test_deprecating_bug(client, bugs, header_bot):
 
 
 def test_delete_bug(client, bugs, header_bot):
-    """
+    '''
     Delete a bug in an analysis
-    """
+    '''
     # Check we have 4 bugs
     resp = client.get('/analysis/1', headers=[
         ('Authorization', header_bot),
@@ -334,9 +334,9 @@ def test_delete_bug(client, bugs, header_bot):
 
 
 def test_update_bug_flags(client, bugs, header_user):
-    """
+    '''
     Update tracking flags for a bug
-    """
+    '''
     data = [{
         'target': 'bug',
         'bugzilla_id': 1139560,
@@ -385,9 +385,9 @@ def test_update_bug_flags(client, bugs, header_user):
 
 
 def test_update_bug_attachment(client, bugs, header_user):
-    """
+    '''
     Update attachment for a bug
-    """
+    '''
     data = [{
         'target': 'attachment',
         'bugzilla_id': 8590815,  # attachment id

@@ -46,17 +46,17 @@ def upload_batch(region, body):
 
     if not body.message:
         raise werkzeug.exceptions.BadRequest(
-            "message must be non-empty"
+            'message must be non-empty'
         )
 
     if not body.files:
         raise werkzeug.exceptions.BadRequest(
-            "a batch must include at least one file"
+            'a batch must include at least one file'
         )
 
     if body.author:
         raise werkzeug.exceptions.BadRequest(
-            "Author must not be specified for upload"
+            'Author must not be specified for upload'
         )
     try:
         body.author = flask_login.current_user.authenticated_email
@@ -71,7 +71,7 @@ def upload_batch(region, body):
         # TODO: check for scope with visibility
         # prm = p.get('tooltool.upload.{}'.format(v))
         # if not prm or not prm.can():
-        #     raise Forbidden("no permission to upload {} files".format(v))
+        #     raise Forbidden('no permission to upload {} files'.format(v))
         pass
 
     session = flask.g.db.session
@@ -94,22 +94,22 @@ def upload_batch(region, body):
         )
         if info.algorithm != 'sha512':
             raise werkzeug.exceptions.BadRequest(
-                "'sha512' is the only allowed digest algorithm"
+                '`sha512` is the only allowed digest algorithm'
             )
         if not is_valid_sha512(info.digest):
             raise werkzeug.exceptions.BadRequest(
-                "Invalid sha512 digest"
+                'Invalid sha512 digest'
             )
         digest = info.digest
         file = File.query.filter(File.sha512 == digest).first()
         if file and file.visibility != info.visibility:
             raise werkzeug.exceptions.BadRequest(
-                "Cannot change a file's visibility level"
+                'Cannot change a file\'s visibility level'
             )
         if file and file.instances != []:
             if file.size != info.size:
                 raise werkzeug.exceptions.BadRequest(
-                    "Size mismatch for {}".format(filename)
+                    'Size mismatch for {}'.format(filename)
                 )
         else:
             if not file:
@@ -119,8 +119,8 @@ def upload_batch(region, body):
                     size=info.size)
                 session.add(file)
             log.info(
-                "generating signed S3 PUT URL to {} for {}; expiring in "
-                "{}s".format(
+                'generating signed S3 PUT URL to {} for {}; expiring in '
+                '{}s'.format(
                     info.digest[:10],
                     flask_login.current_user,
                     UPLOAD_EXPIRES_IN,
@@ -165,7 +165,7 @@ def get_batch(id):
 
 def upload_complete(digest):
     if not is_valid_sha512(digest):
-        raise werkzeug.exceptions.BadRequest("Invalid sha512 digest")
+        raise werkzeug.exceptions.BadRequest('Invalid sha512 digest')
 
     # if the pending upload is still valid, then we can't check this file
     # yet, so return 409 Conflict.  If there is no PU, or it's expired,
@@ -202,7 +202,7 @@ def get_file(digest):
 def download_file(digest, region):
     log = logger.bind(tooltool_sha512=digest, tooltool_operation='download')
     if not is_valid_sha512(digest):
-        raise werkzeug.exceptions.BadRequest("Invalid sha512 digest")
+        raise werkzeug.exceptions.BadRequest('Invalid sha512 digest')
 
     # see where the file is..
     file_row = File.query.filter(File.sha512 == digest).first()
@@ -233,7 +233,7 @@ def download_file(digest, region):
     key = keyname(digest)
 
     s3 = flask.current_app.aws.connect_to('s3', selected_region)
-    log.info("generating signed S3 GET URL for {}.. expiring in {}s".format(
+    log.info('generating signed S3 GET URL for {}.. expiring in {}s'.format(
         digest[:10], GET_EXPIRES_IN))
     signed_url = s3.generate_url(
         method='GET', expires_in=GET_EXPIRES_IN, bucket=bucket, key=key)
@@ -249,7 +249,7 @@ def patch_file(digest, body):
 
     for change in body:
         if 'op' not in change:
-            raise werkzeug.exceptions.BadRequest("no op")
+            raise werkzeug.exceptions.BadRequest('no op')
         if change['op'] == 'delete_instances':
             key_name = keyname(digest)
             cfg = flask.current_app.config.get('TOOLTOOL_REGIONS')
@@ -260,9 +260,9 @@ def patch_file(digest, body):
                 session.delete(i)
         elif change['op'] == 'set_visibility':
             if change['visibility'] not in ('internal', 'public'):
-                raise werkzeug.exceptions.BadRequest("bad visibility level")
+                raise werkzeug.exceptions.BadRequest('bad visibility level')
             file.visibility = change['visibility']
         else:
-            raise werkzeug.exceptions.BadRequest("unknown op")
+            raise werkzeug.exceptions.BadRequest('unknown op')
     session.commit()
     return file.to_json(include_instances=True)
