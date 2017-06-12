@@ -18,12 +18,13 @@ logger = get_logger(__name__)
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
 
-REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): (.*)\n', re.MULTILINE)
+REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): ([\w\s\.\'\"^_,-<>]+)(?: \[([\w-]+)\])?\n', re.MULTILINE)
 
 ISSUE_MARKDOWN = '''
 ## {type}
 **Message**: {message}
 **Location**: {location}
+**Clang check**: {check}
 ```
 {body}
 ```
@@ -45,8 +46,8 @@ class Issue(object):
     """
     def __init__(self, header_data, work_dir):
         assert isinstance(header_data, tuple)
-        assert len(header_data) == 5
-        self.path, self.line, self.char, self.type, self.message = header_data
+        assert len(header_data) == 6
+        self.path, self.line, self.char, self.type, self.message, self.check = header_data  # noqa
         if self.path.startswith(work_dir):
             self.path = self.path[len(work_dir):]
         self.line = int(self.line)
@@ -66,6 +67,7 @@ class Issue(object):
             message=self.message,
             location="{}:{}:{}".format(self.path, self.line, self.char),
             body=self.body,
+            check=self.check,
             notes='\n'.join([
                 ISSUE_NOTE_MARKDOWN.format(
                     message=n.message,
@@ -219,8 +221,12 @@ class Workflow(object):
 
             if issue.is_problem():
                 # Save problem to append notes
-                issues.append(issue)
-                logger.info('Found code issue {}'.format(issue))
+                # Skip diagnostic errors
+                if issue.check == 'clang-diagnostic-error':
+                    logger.warn('Skipping clang-diagnostic-error: {}'.format(issue))
+                else:
+                    issues.append(issue)
+                    logger.info('Found code issue {}'.format(issue))
 
             elif issues:
                 # Link notes to last problem
