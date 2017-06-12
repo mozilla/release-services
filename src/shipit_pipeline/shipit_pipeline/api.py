@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
 PIPELINES = {}
 MockSteps = {}
 
+
 def list_pipelines():
     log.info('listing pipelines')
     return list(PIPELINES.keys())
@@ -49,19 +50,17 @@ def update_pipeline_state(uid, state):
     PIPELINES[uid][0] = state
 
 
-
-def add_mock_step(uid, params, requires, state='pending', step_time=100):
-    step = MockPipelineStep(uid, params, requires, state=state, step_time=step_time)
-    MockSteps[uid] = step
-
 def start_mock_step(uid):
     return MockSteps[uid].start_step()
+
 
 def get_mock_status(uid):
     return MockSteps[uid].get_state()
 
+
 def get_mock(uid):
     return MockSteps[uid].to_dict()
+
 
 def ticktock():
 
@@ -92,4 +91,3 @@ def ticktock():
         import traceback
         print('OH NOES!', e)
         traceback.print_exc()
-

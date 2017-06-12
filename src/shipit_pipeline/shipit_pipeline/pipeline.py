@@ -53,19 +53,17 @@ class PipelineStep:
     def is_running(self):
         return self.state in ('starting', 'running')
 
+
 class MockPipelineStep:
     MockSteps = {}
 
-
-    def __init__(self, uid,
-            params, requires, state='pending', step_time=100):
+    def __init__(self, uid, params, requires, state='pending', step_time=100):
         self.uid = uid
         self.url = ""
         self.params = params
         self.requires = requires
         self.state = state
         self.step_time = step_time
-
 
     def start_step(self, uid, data, verify):
         self.start_time = time.time()
@@ -75,13 +73,14 @@ class MockPipelineStep:
 
     def get_state(self):
         current_time = time.time()
-        if current_time - self.start_time > step_time:
+        if current_time - self.start_time > self.step_time:
             return 'completed'
         return self.state
 
     def update_state(self):
-       if current_time - self.start_time > step_time:
+        if self.current_time - self.start_time > self.step_time:
             self.state = 'completed'
+
     @property
     def is_pending(self):
         return self.state == 'pending'
@@ -108,21 +107,6 @@ class MockPipelineStep:
                   },
                   "uid": self.uid
                 }
-
-
-
-def add_step(uid, params, requires, state='pending', step_time=100):
-    step = MockPipelineStep(uid, params, requires, state=state, step_time=step_time)
-    MockSteps[uid] = step
-
-def start_Step(uid):
-    return MockSteps[uid].start_step()
-
-def get_state(uid):
-    return MockSteps[uid].get_state()
-
-def get_step(uid):
-    return MockSteps[uid].to_dict()
 
 
 def refresh_pipeline_steps(steps):
