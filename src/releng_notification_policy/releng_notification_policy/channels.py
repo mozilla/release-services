@@ -1,5 +1,6 @@
 from .models import Message
 from flask import current_app
+from taskcluster import TaskclusterFailure
 
 
 def send_irc_notification(message: Message, identity_preference: dict) -> dict:
@@ -10,7 +11,7 @@ def send_irc_notification(message: Message, identity_preference: dict) -> dict:
 
     return {
         'channel': 'IRC',
-        'message': message.message,
+        'message': message.shortMessage,
         'uid': message.uid,
         'target': identity_preference['target'],
     }
@@ -39,4 +40,8 @@ CHANNEL_MAPPING = {
 
 
 def send_notifications(message: Message, identity_preference: dict) -> dict:
-    return CHANNEL_MAPPING[identity_preference['channel']](message, identity_preference)
+    try:
+        return CHANNEL_MAPPING[identity_preference['channel']](message, identity_preference)
+
+    except TaskclusterFailure:
+        pass
