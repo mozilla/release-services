@@ -2,9 +2,12 @@
 import pytest
 from unittest.mock import MagicMock
 
-from shipit_signoff.policies import UnauthorizedUserError, NoSignoffLeftError, check_whether_policy_can_be_signed, \
-    _is_group_defined_in_policy, _is_email_defined_in_policy, _are_there_signoffs_left_for_group, \
-    _are_there_signoffs_left_for_email, is_sign_off_policy_met, _is_signoff_condition_met, _calculate_missing_signoffs
+from shipit_signoff.policies import (
+    UnauthorizedUserError, NoSignoffLeftError, check_whether_policy_can_be_signed, 
+    _is_group_defined_in_policy, _is_email_defined_in_policy, _are_there_signoffs_left_for_group, 
+    _are_there_signoffs_left_for_email, is_sign_off_policy_met, _is_signoff_condition_met, 
+    _calculate_missing_signoffs, _has_user_signed_policy, NoSignaturePresentError,
+    check_whether_policy_can_be_unsigned)
 
 
 @pytest.mark.parametrize('email, group_name, policy, existing_signatures', (
@@ -287,3 +290,86 @@ def test_calculate_missing_signoffs(policy, existing_signatures, expected):
 def test_calculate_missing_signoffs_wrong_decrement(policy, existing_signatures):
     with pytest.raises(Exception):
         _calculate_missing_signoffs(policy, existing_signatures)
+
+
+@pytest.mark.parametrize('email, group_name, policy, existing_signatures', (
+    (
+        'a-valid-releng@m.c',
+        'releng',
+        [{'releng': 2, 'relman': 1}],
+        [MagicMock(email='a-valid-releng@m.c', group='releng')],
+    ),
+))
+def test_has_user_signed_policy(email, group_name, policy, existing_signatures):
+    assert _has_user_signed_policy(email, group_name, policy, existing_signatures)
+
+
+@pytest.mark.parametrize('email, group_name, policy, existing_signatures', (
+    (
+        'a-valid-relman@m.c',
+        'relman',
+        [{'releng': 2, 'relman': 1}],
+        [MagicMock(email='a-valid-releng@m.c', group='releng')],
+    ),
+    (
+        'a-valid-releng@m.c',
+        'releng',
+        [{'releng': 2, 'relman': 1}],
+        [],
+    ),
+    (
+        'a-valid-releng@m.c',
+        'relman',
+        [{'releng': 2, 'relman': 1}],
+        [MagicMock(email='a-valid-releng@m.c', group='releng')],
+    ),
+    (
+        'a-valid-releng@m.c',
+        'relman',
+        [{'releng': 2, 'relman': 1}],
+        [MagicMock(email='a-valid-relman@m.c', group='relman')],
+    ),
+))
+def test_not_has_user_signed_policy(email, group_name, policy, existing_signatures):
+    assert not _has_user_signed_policy(email, group_name, policy, existing_signatures)
+
+
+
+@pytest.mark.parametrize('email, group_name, policy, existing_signatures', (
+    (
+        'a-valid-releng@m.c',
+        'releng',
+        [{'releng': 2, 'relman': 1}],
+        [MagicMock(email='a-valid-releng@m.c', group='releng')],
+    ),
+    (
+        'super-admin@m.c',
+        'non-important',
+        [{'releng': 2, 'relman': 1}, {'super-admin@m.c': 1}],
+        [MagicMock(email='super-admin@m.c', group='releng'), MagicMock(email='another-releng@m.c', group='releng')],
+    ),
+))
+def test_check_whether_policy_can_be_unsigned(email, group_name, policy, existing_signatures):
+    check_whether_policy_can_be_unsigned(email, group_name, policy, existing_signatures)
+
+
+@pytest.mark.parametrize('email, group_name, policy, existing_signatures, expected_exception', (
+    (
+        'a-valid-releng@m.c',
+        'releng',
+        [{'relman': 1, 'qe': 1}],
+        [],
+        UnauthorizedUserError,
+    ),
+    (
+        'a-valid-releng@m.c',
+        'releng',
+        [{'releng': 1, 'relman': 1}],
+        [],
+        NoSignaturePresentError,
+    ),
+))
+def test_error_check_whether_policy_can_be_unsigned(email, group_name, policy, existing_signatures, expected_exception):
+    with pytest.raises(expected_exception):
+        check_whether_policy_can_be_unsigned(email, group_name, policy, existing_signatures)
+

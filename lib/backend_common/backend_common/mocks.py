@@ -182,11 +182,12 @@ def apply_mockups():
             content_type='application/json',
         )
 
+        import re
+        matcher = re.compile('https://auth\.mozilla\.auth0\.com/userinfo.*')
         mock.add_callback(
             responses.GET,
-            'https://auth.mozilla.auth0.com/userinfo',
+            matcher,
             callback=auth0_userinfo_mock,
-            content_type='application/json',
         )
 
         yield mock
