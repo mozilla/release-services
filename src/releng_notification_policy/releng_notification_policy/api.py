@@ -13,6 +13,27 @@ from .channels import send_notifications
 from requests import get
 
 
+def get_message_by_uid(uid: str) -> Tuple[dict, int]:
+    session = current_app.db.session
+
+    message = session.query(Message).filter(Message.uid == uid).first()
+    if message:
+        notification_policies = session.query(Policy).filter(Policy.message_id == message.id).all()
+        policies_dicts = [
+            policy.to_dict()
+            for policy in notification_policies
+        ]
+
+        return {
+            'shortMessage': message.shortMessage,
+            'message': message.message,
+            'deadline': message.deadline,
+            'policies': policies_dicts,
+        }
+    else:
+        raise NotFound('Message with uid {} not found.'.format(uid))
+
+
 def put_message(uid: str, body: dict) -> Tuple[None, int]:
     """
     Add a new message to be delivered into the service.
@@ -34,7 +55,7 @@ def put_message(uid: str, body: dict) -> Tuple[None, int]:
 
     policies = [
         # Overwrite the frequency object input from the API with a db compatible timedelta object
-        Policy(**{**p, 'frequency': timedelta(**p['frequency']), 'policy_id': new_message.id})
+        Policy(**{**p, 'frequency': timedelta(**p['frequency']), 'message_id': new_message.id})
         for p in body['policies']
     ]
 
@@ -83,7 +104,7 @@ def get_tick_tock() -> dict:
                 session.delete(message)
                 continue
 
-            policies = session.query(Policy).filter(Policy.policy_id == message.id).all()
+            policies = session.query(Policy).filter(Policy.message_id == message.id).all()
             for policy in policies:
                 # Check our policy time frame is in effect
                 if policy.stop_timestamp < current_time or current_time < policy.start_timestamp:
