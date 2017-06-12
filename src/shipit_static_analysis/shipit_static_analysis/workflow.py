@@ -165,11 +165,14 @@ class Workflow(object):
             'modernize-use-auto',
             'modernize-use-default',
             'modernize-raw-string-literal',
-            'modernize-use-bool-literals',
+            # 'modernize-use-bool-literals', (too noisy because of `while (0)` in many macros)
             'modernize-use-override',
             'modernize-use-nullptr',
             'mozilla-*',
+            'performance-faster-string-find',
+            'performance-for-range-copy',
             'readability-else-after-return',
+            'readability-misleading-indentation',
         ]
         cmd = [
             'run-clang-tidy.py',
