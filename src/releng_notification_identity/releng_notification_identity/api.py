@@ -47,6 +47,19 @@ def put_identity(identity_name: str, body: dict) -> Tuple[None, int]:
         raise BadRequest('Request preferences contain duplicate urgency level {}.'.format(ie.params.get('urgency')))
 
 
+def modify_existing_preferences(new_preferences_lookup: dict, existing_preferences: list):
+    for record in existing_preferences:
+        if record.urgency not in new_preferences_lookup:
+            continue
+
+        new_preference = new_preferences_lookup[record.urgency]
+
+        record.channel = new_preference['channel']
+        record.target = new_preference['target']
+
+        yield record
+
+
 def post_identity(identity_name: str, body: dict) -> Tuple[None, int]:
     session = current_app.db.session
     preference_records = _get_identity_preferences(identity_name)
@@ -55,18 +68,17 @@ def post_identity(identity_name: str, body: dict) -> Tuple[None, int]:
         for new_preference in body['preferences']
     }
 
-    for record in preference_records:
-        if record.urgency not in new_preference_lookup:
-            continue
-
-        new_preference = new_preference_lookup[record.urgency]
-
-        record.channel = new_preference['channel']
-        record.target = new_preference['target']
-
+    for record in modify_existing_preferences(new_preference_lookup, preference_records):
         session.merge(record)
-    session.commit()
+        new_preference_lookup.pop(record.urgency)
 
+    if new_preference_lookup:
+        identity = session.query(Identity).filter(Identity.name == identity_name).first()
+        for new_urgency, new_preference in new_preference_lookup.items():
+            new_pref = Preference(**new_preference, identity=identity.id)
+            session.add(new_pref)
+
+    session.commit()
     return None, 200
 
 
@@ -110,5 +122,26 @@ def delete_identity_by_name(identity_name: str) -> Tuple[None, int]:
 
         return None, 200
 
+    else:
+        raise NotFound('Identity with name {} not found.'.format(identity_name))
+
+
+def delete_identity_preference_by_urgency(identity_name: str, urgency: str) -> Tuple[None, int]:
+    session = current_app.db.session
+    identity_key = session.query(Identity).filter(Identity.name == identity_name).value(Identity.id)
+    if identity_key:
+        notification_preference = session.query(Preference)\
+            .filter(Preference.identity == identity_key)\
+            .filter(Preference.urgency == urgency)\
+            .first()
+
+        if notification_preference:
+            session.delete(notification_preference)
+            session.commit()
+
+            return None, 200
+
+        else:
+            raise NotFound('Identity {} has no preferences for urgency level {}.'.format(identity_name, urgency))
     else:
         raise NotFound('Identity with name {} not found.'.format(identity_name))
