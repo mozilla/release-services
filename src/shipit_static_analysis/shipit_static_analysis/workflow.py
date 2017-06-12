@@ -41,9 +41,9 @@ ISSUE_NOTE_MARKDOWN = '''
 
 
 class Issue(object):
-    """
+    '''
     An issue reported by clang-tidy
-    """
+    '''
     def __init__(self, header_data, work_dir):
         assert isinstance(header_data, tuple)
         assert len(header_data) == 6
@@ -65,7 +65,7 @@ class Issue(object):
         return ISSUE_MARKDOWN.format(
             type=self.type,
             message=self.message,
-            location="{}:{}:{}".format(self.path, self.line, self.char),
+            location='{}:{}:{}'.format(self.path, self.line, self.char),
             body=self.body,
             check=self.check,
             notes='\n'.join([
@@ -79,16 +79,16 @@ class Issue(object):
 
 
 class Workflow(object):
-    """
+    '''
     Static analysis workflow
-    """
+    '''
     taskcluster = None
 
     def __init__(self, cache_root, emails, client_id=None, access_token=None):
         self.emails = emails
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
-            "Cache root {} is not a dir.".format(self.cache_root)
+            'Cache root {} is not a dir.'.format(self.cache_root)
 
         # Load TC services & secrets
         self.notify = get_service(
@@ -118,12 +118,12 @@ class Workflow(object):
         self.hg = hglib.open(self.repo_dir)
 
     def run(self, revision, review_request_id, diffset_revision):
-        """
+        '''
         Run the static analysis workflow:
          * Pull revision from review
          * Checkout revision
          * Run static analysis
-        """
+        '''
         # Force cleanup to reset tip
         # otherwise previous pull are there
         self.hg.update(rev=b'tip', clean=True)
@@ -196,11 +196,11 @@ class Workflow(object):
             self.notify_admins(review_request_id, issues)
 
     def parse_issues(self, clang_output):
-        """
+        '''
         Parse clang-tidy output into structured issues
-        """
+        '''
 
-        # Limit clang output parsing to "Enabled checks:"
+        # Limit clang output parsing to 'Enabled checks:'
         end = re.search(r'^Enabled checks:\n', clang_output, re.MULTILINE)
         if end is not None:
             clang_output = clang_output[:end.start()-1]
@@ -238,9 +238,9 @@ class Workflow(object):
         return issues
 
     def notify_admins(self, review_request_id, issues):
-        """
+        '''
         Send an email to administrators
-        """
+        '''
         review_url = 'https://reviewboard.mozilla.org/r/' + review_request_id + '/'
         content = review_url + '\n\n' + '\n'.join([i.as_markdown() for i in issues])
         for email in self.emails:

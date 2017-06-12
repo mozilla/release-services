@@ -11,10 +11,10 @@ MergeResult = namedtuple('MergeResult', 'status, message, parent')
 
 
 class MergeTest(object):
-    """
+    '''
     A merge test for a set of patches
     against a branch
-    """
+    '''
     def __init__(self, bugzilla_id, branch, patches):
         self.bugzilla_id = bugzilla_id
         self.branch = branch
@@ -25,11 +25,11 @@ class MergeTest(object):
         self.group = 1  # Group used for every result
 
     def is_needed(self):
-        """
+        '''
         Check if running this test is needed:
          * on initial test (no patch status)
          * when branch parent has changed
-        """
+        '''
         assert self.parent is not None
         assert self.revisions is not None
 
@@ -54,18 +54,18 @@ class MergeTest(object):
         return self.parent != last_status['revision_parent']
 
     def is_valid(self):
-        """
+        '''
         Check if all revisions are valid
-        """
+        '''
         assert len(self.results) > 0, \
-            "Merge test must be run before using is_valid"
+            'Merge test must be run before using is_valid'
         return all([r.status == 'merged' for r in self.results.values()])
 
     def list_revisions(self, repository):
-        """
+        '''
         List patch revisions, ordered in time
         Mercurial graft tests will be run in this order
-        """
+        '''
         def _id_revision(revision):
             revision = isinstance(revision, int) \
                 and str(revision).encode('utf-8') \
@@ -84,12 +84,12 @@ class MergeTest(object):
         ], key=lambda x: x[1])
 
     def run(self, repository):
-        """
+        '''
         Run full merge test on repository
         We assume the repository is already on correct branch
-        """
+        '''
         assert repository.branch == self.branch, \
-            "Repository is not on correct branch ({}/{})".format(repository.branch, self.branch)  # noqa
+            'Repository is not on correct branch ({}/{})'.format(repository.branch, self.branch)  # noqa
 
         # Store repository parent
         self.parent = repository.parent
@@ -132,9 +132,9 @@ class MergeTest(object):
         return True
 
     def save_result(self, revision, result):
-        """
+        '''
         Store a new patch status on backend
-        """
+        '''
         assert isinstance(result, MergeResult)
 
         # Publish as a new patch status

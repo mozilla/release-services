@@ -25,9 +25,9 @@ class TaskclusterStatus(enum.Enum):
 
 # TODO use shared step backend base class for db steps
 class TaskclusterStep(db.Model):
-    """
+    '''
     Recording taskcluster steps as distinct entities
-    """
+    '''
 
     __tablename__ = 'shipit_taskcluster_steps'
 

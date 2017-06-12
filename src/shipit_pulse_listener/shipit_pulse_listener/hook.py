@@ -12,9 +12,9 @@ logger = get_logger(__name__)
 
 
 class Hook(object):
-    """
+    '''
     A taskcluster hook, used to build a task
-    """
+    '''
     def __init__(self, group_id, hook_id, pulse_queue, pulse_route='#'):
         self.group_id = group_id
         self.hook_id = hook_id
@@ -23,10 +23,10 @@ class Hook(object):
         self.queue = None  # TC queue
 
     def connect_taskcluster(self, client_id=None, access_token=None):
-        """
+        '''
         Load the hook's task definition through Taskcluster
         Save queue service for later use
-        """
+        '''
         logger.info('Loading task definition', hook=self.hook_id, group=self.group_id)  # noqa
         try:
             service = get_service('hooks', client_id, access_token)
@@ -42,9 +42,9 @@ class Hook(object):
         return True
 
     def connect_pulse(self, pulse_user, pulse_password):
-        """
+        '''
         Create the pulse consumer triggering the hook
-        """
+        '''
         # Use pulse consumer from bot_common
         consumer = create_consumer(
             pulse_user,
@@ -57,9 +57,9 @@ class Hook(object):
         return consumer
 
     async def got_message(self, channel, body, envelope, properties):
-        """
+        '''
         Generic Pulse consumer callback
-        """
+        '''
         assert isinstance(body, bytes), \
             'Body is not in bytes'
 
@@ -80,16 +80,16 @@ class Hook(object):
         await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
 
     def parse_payload(self, payload):
-        """
+        '''
         Analyse payload content to extract needed environment
         variables to trigger a new task
-        """
+        '''
         raise NotImplementedError
 
     def create_task(self, ttl=5, extra_env={}):
-        """
+        '''
         Create a new task on Taskcluster
-        """
+        '''
         assert self.queue is not None
 
         # Update the env in task

@@ -8,9 +8,9 @@ logger = get_logger(__name__)
 
 
 class HookStaticAnalysis(Hook):
-    """
+    '''
     Taskcluster hook handling the static analysis
-    """
+    '''
     def __init__(self, configuration):
         assert 'hookId' in configuration
         super().__init__(
@@ -21,9 +21,9 @@ class HookStaticAnalysis(Hook):
         )
 
     def parse_payload(self, payload):
-        """
+        '''
         Extract revisions from payload
-        """
+        '''
         # Filter on repo url
         repository_url = payload.get('repository_url')
         if not repository_url:
@@ -44,9 +44,9 @@ class HookStaticAnalysis(Hook):
 
 
 class HookRiskAssessment(Hook):
-    """
+    '''
     Taskcluster hook handling the risk assessment
-    """
+    '''
     def __init__(self, configuration):
         assert 'hookId' in configuration
         super().__init__(
@@ -56,9 +56,9 @@ class HookRiskAssessment(Hook):
         )
 
     def parse_payload(self, payload):
-        """
+        '''
         Extract revisions from payload
-        """
+        '''
         # Use only changesets
         if payload.get('type') != 'changegroup.1':
             return
@@ -77,9 +77,9 @@ class HookRiskAssessment(Hook):
 
 
 class PulseListener(object):
-    """
+    '''
     Listen to pulse messages and trigger new tasks
-    """
+    '''
     def __init__(self,
                  pulse_user,
                  pulse_password,
@@ -117,9 +117,9 @@ class PulseListener(object):
         run_consumer(asyncio.gather(*consumers))
 
     def build_hook(self, conf):
-        """
+        '''
         Build a new hook instance according to configuration
-        """
+        '''
         assert isinstance(conf, dict)
         assert 'type' in conf
         classes = {

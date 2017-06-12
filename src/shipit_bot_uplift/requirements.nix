@@ -189,8 +189,8 @@ let
 
 
     "chardet" = python.mkDerivation {
-      name = "chardet-3.0.3";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/fc/f9/3963ae8e196ceb4a09e0d7906f511fdf62a631f05d9288dc4905a93a1f52/chardet-3.0.3.tar.gz"; sha256 = "77df6d712a6037ed6f247ad1dd67faca506f64bc1295d43533e9212a101f28cb"; };
+      name = "chardet-3.0.4";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/fc/bb/a5768c230f9ddb03acc9ef3f0d4a3cf93462473795d18e9535498c8f929d/chardet-3.0.4.tar.gz"; sha256 = "84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -322,6 +322,23 @@ let
         homepage = "https://github.com/tk0miya/flake8-coding";
         license = licenses.asl20;
         description = "Adds coding magic comment checks to flake8";
+      };
+    };
+
+
+
+    "flake8-quotes" = python.mkDerivation {
+      name = "flake8-quotes-0.11.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/d5/9b/20adf6a3c718a4ad48c1968e2851aa27b9cb9c907b96519fe7797bebef7f/flake8-quotes-0.11.0.tar.gz"; sha256 = "0b8e5ea5407e8308ff237ab814414a1dcd4c309c5c47363b6ad07a35068684e1"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."flake8"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://github.com/zheller/flake8-quotes/";
+        license = licenses.mit;
+        description = "Flake8 lint for quotes.";
       };
     };
 
@@ -588,8 +605,8 @@ let
 
 
     "numpy" = python.mkDerivation {
-      name = "numpy-1.12.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/a5/16/8a678404411842fe02d780b5f0a676ff4d79cd58f0f22acddab1b392e230/numpy-1.12.1.zip"; sha256 = "a65266a4ad6ec8936a1bc85ce51f8600634a31a258b722c9274a80ff189d9542"; };
+      name = "numpy-1.13.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/05/84/0feb999c05f252af50a5fbc463268044feda92cdaad8cb0d0a6073d76057/numpy-1.13.0.zip"; sha256 = "dcff367b725586830ff0e20b805c7654c876c2d4585c0834a6049502b9d6cf7e"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -603,8 +620,8 @@ let
 
 
     "oauth2client" = python.mkDerivation {
-      name = "oauth2client-4.1.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/29/25/7880f9e3835494d1b7f31659a07d73f1c25454c0bd40cfd1962fef8c346c/oauth2client-4.1.0.tar.gz"; sha256 = "cd0a259a5d354fc7fcea5f1dc3f037e80f06091bc0303251ae177f92bb949e7f"; };
+      name = "oauth2client-4.1.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/7f/60/d683b7933ae7f4d2f3cd53afda197025d7178ca1516aa340aba0020b1094/oauth2client-4.1.1.tar.gz"; sha256 = "fd02b705092b76f443028328eaed366135f26c0d3e52bdbf66e649a944938ca1"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [

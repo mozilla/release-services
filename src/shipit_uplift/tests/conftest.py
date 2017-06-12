@@ -1,19 +1,27 @@
 # -*- coding: utf-8 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from __future__ import absolute_import
+
 import pytest
 import pickle
 import os
 import glob
 import json
+
 from backend_common.mocks import build_header
+
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
 
 @pytest.yield_fixture(scope='session')
 def app():
-    """
+    '''
     Load shipit_uplift app in test mode
-    """
+    '''
     # Set app in testing mode
     os.environ['APP_TESTING'] = 'shipit-uplift'
 
@@ -31,10 +39,10 @@ def app():
 
 @pytest.yield_fixture(scope='session')
 def client(app):
-    """
+    '''
     A Flask test client for shipit_uplift
     with mockups enabled
-    """
+    '''
     from backend_common import mocks
 
     # Give test client with mockups
@@ -45,9 +53,9 @@ def client(app):
 
 @pytest.yield_fixture(scope='session')
 def bugs(app):
-    """
+    '''
     Add an analysis and some bugs
-    """
+    '''
     from shipit_uplift.models import (
         BugAnalysis, BugResult, Contributor, BugContributor
     )
@@ -88,10 +96,10 @@ def bugs(app):
 
 
 def hawk_header(scopes):
-    """"
+    ''''
     Helper to build an Hawk header
     for a set of TC scopes
-    """
+    '''
     client_id = 'test/shipit-user@mozilla.com'
     ext_data = {
         'scopes': scopes,
@@ -101,26 +109,26 @@ def hawk_header(scopes):
 
 @pytest.yield_fixture(scope='session')
 def header_user(app):
-    """
+    '''
     Build an Hawk header for user role
-    """
+    '''
     from shipit_uplift.flask import SCOPES_USER
     return hawk_header(SCOPES_USER)
 
 
 @pytest.yield_fixture(scope='session')
 def header_admin(app):
-    """
+    '''
     Build an Hawk header for admin role
-    """
+    '''
     from shipit_uplift.flask import SCOPES_ADMIN
     return hawk_header(SCOPES_ADMIN)
 
 
 @pytest.yield_fixture(scope='session')
 def header_bot(app):
-    """
+    '''
     Build an Hawk header for bot role
-    """
+    '''
     from shipit_uplift.flask import SCOPES_BOT
     return hawk_header(SCOPES_BOT)

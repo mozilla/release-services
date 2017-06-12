@@ -28,9 +28,9 @@ def main(bugzilla_id,
          taskcluster_client_id,
          taskcluster_access_token,
          ):
-    """
+    '''
     Run bot to sync bug & analysis on a remote server
-    """
+    '''
 
     # load secrets
     secrets = get_secrets(taskcluster_secret,

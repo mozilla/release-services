@@ -3,9 +3,9 @@ import json
 
 
 def test_patch_status(client, bugs, header_bot):
-    """
+    '''
     Fetch detailled analysis, with bugs
-    """
+    '''
     from shipit_uplift.models import BugResult
     url = '/bugs/1139560/patches'
     revision = '80c32af73390'  # existing patch revision

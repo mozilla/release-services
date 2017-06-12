@@ -3,3 +3,4 @@ ipdb
 flake8
 pytest
 flake8-coding
+flake8-quotes

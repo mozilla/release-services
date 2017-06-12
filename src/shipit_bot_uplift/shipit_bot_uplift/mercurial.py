@@ -10,9 +10,9 @@ REGEX_TIP = re.compile(r'(\w+)\s*(tip)? (\w+)')
 
 
 class Repository(object):
-    """
+    '''
     Maintains an updated mercurial repository
-    """
+    '''
 
     def __init__(self, url, directory):
         self.url = url
@@ -23,10 +23,10 @@ class Repository(object):
         logger.info('Mercurial repository', url=self.url, directory=self.directory)  # noqa
 
     def checkout(self, branch):
-        """
+        '''
         Robust Checkout of the repository
         using configured mercurial client with extensions
-        """
+        '''
         assert isinstance(branch, bytes)
 
         # Build command line
@@ -73,9 +73,9 @@ class Repository(object):
         return self.parent
 
     def identify(self, revision):
-        """
+        '''
         Identify a revision by retrieving its local numerical id
-        """
+        '''
         if isinstance(revision, int):
             revision = str(revision).encode('utf-8')
         assert isinstance(revision, bytes)
@@ -87,10 +87,10 @@ class Repository(object):
             logger.warn('Failed to identify revision', rev=revision, error=e)
 
     def is_mergeable(self, revision):
-        """
+        '''
         Test if a revision is mergeable on current branch
         Returns merge status and message (as tuple)
-        """
+        '''
         # Use revision in bytes (needed by hglib)
         if isinstance(revision, int):
             revision = str(revision).encode('utf-8')
@@ -120,9 +120,9 @@ class Repository(object):
         return True, 'merge success'
 
     def cleanup(self):
-        """
+        '''
         Cleanup the client state, used after a graft
-        """
+        '''
         try:
             self.client.update(rev=self.parent, clean=True)
         except hglib.error.CommandError as e:

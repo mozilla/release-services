@@ -21,7 +21,7 @@ class CodeCov(object):
         # This way, the index of a suite in the array should be stable enough.
         self.suites = []
 
-        assert os.path.isdir(cache_root), "Cache root {} is not a dir.".format(cache_root)
+        assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
         self.repo_dir = os.path.join(cache_root, 'mozilla-central')
 
         self.coveralls_token = coveralls_token
