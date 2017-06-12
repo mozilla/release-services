@@ -3,7 +3,7 @@ Common constants and utilities for releng_notification_* services
 """
 
 CHANNELS = [
-    'EMAIL',
+    'EMAIL', 'IRC',
 ]
 
 URGENCY_LEVELS = [

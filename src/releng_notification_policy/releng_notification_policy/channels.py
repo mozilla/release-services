@@ -3,7 +3,10 @@ from flask import current_app
 
 
 def send_irc_notification(message: Message, identity_preference: dict) -> dict:
-    current_app.notify.irc()
+    current_app.notify.irc({
+        'channel' if identity_preference['target'].startswith('#') else 'user': identity_preference['target'],
+        'message': message.shortMessage,
+    })
 
     return {
         'channel': 'IRC',
