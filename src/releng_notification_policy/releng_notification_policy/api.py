@@ -11,6 +11,7 @@ from werkzeug.exceptions import Conflict, NotFound
 from .models import Message, Policy
 from .channels import send_notifications
 from requests import get
+from simplejson import JSONDecodeError
 
 
 def get_message_by_uid(uid: str) -> Tuple[dict, int]:
@@ -117,12 +118,15 @@ def get_tick_tock() -> dict:
                 identity_uri = '{endpoint}/identity/{identity_name}/{urgency}'.format(endpoint=current_app.config.get('RELENG_NOTIFICATION_IDENTITY_ENDPOINT'),
                                                                                       identity_name=policy.identity,
                                                                                       urgency=policy.urgency)
-                identity_preference, *_ = get(identity_uri, verify=False).json()['preferences']
+                try:
+                    identity_preference = get(identity_uri, verify=False).json()['preferences'].pop()
 
-                notification_info = send_notifications(message, identity_preference)
-                notifications.append(notification_info)
+                    notification_info = send_notifications(message, identity_preference)
+                    notifications.append(notification_info)
 
-                policy.last_notified = current_time
+                    policy.last_notified = current_time
+                except JSONDecodeError:
+                    pass
 
             session.add_all(policies)
         session.commit()
