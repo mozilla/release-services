@@ -14,7 +14,7 @@ def app():
     Load shipit_uplift app in test mode
     """
     # Set app in testing mode
-    os.environ['APP_TESTING'] = 'shipit_uplift'
+    os.environ['APP_TESTING'] = 'shipit-uplift'
 
     # Then import app code
     from backend_common.db import db

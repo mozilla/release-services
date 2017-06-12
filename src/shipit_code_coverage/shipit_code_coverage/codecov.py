@@ -4,20 +4,28 @@ from datetime import datetime
 import requests
 import hglib
 
-from cli_common.taskcluster import TaskclusterClient
 from cli_common.log import get_logger
-from cli_common.utils import run_command, run_gecko_command
+from cli_common.command import run_check
 
 from shipit_code_coverage import coverage_by_dir, taskcluster, uploader, utils
 
 
 logger = get_logger(__name__)
 
-COVERALLS_TOKEN_FIELD = 'SHIPIT_CODE_COVERAGE_COVERALLS_TOKEN'
-CODECOV_TOKEN_FIELD = 'SHIPIT_CODE_COVERAGE_CODECOV_TOKEN'
-
 
 class CodeCov(object):
+
+    def __init__(self, cache_root, coveralls_token, codecov_token):
+        # List of test-suite, sorted alphabetically.
+        # This way, the index of a suite in the array should be stable enough.
+        self.suites = []
+
+        assert os.path.isdir(cache_root), "Cache root {} is not a dir.".format(cache_root)
+        self.repo_dir = os.path.join(cache_root, 'mozilla-central')
+
+        self.coveralls_token = coveralls_token
+        self.codecov_token = codecov_token
+
     def download_coverage_artifacts(self, build_task_id):
         try:
             os.mkdir('ccov-artifacts')
@@ -97,7 +105,7 @@ class CodeCov(object):
 
         cmd.extend(ordered_files)
 
-        return run_command(cmd, os.getcwd())
+        return run_check(cmd, cwd=os.getcwd())
 
     def clone_mozilla_central(self, revision):
         shared_dir = self.repo_dir + '-shared'
@@ -122,9 +130,9 @@ class CodeCov(object):
         with open(os.path.join(self.repo_dir, '.mozconfig'), 'w') as f:
             f.write('mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-firefox')
 
-        run_gecko_command(['./mach', 'configure'], self.repo_dir)
-        run_gecko_command(['./mach', 'build', 'pre-export'], self.repo_dir)
-        run_gecko_command(['./mach', 'build', 'export'], self.repo_dir)
+        run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
+        run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
+        run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
 
     def go(self):
         task_id = taskcluster.get_last_task()
@@ -155,28 +163,16 @@ class CodeCov(object):
             uploader.codecov(output, commit_sha, self.codecov_token, [suite.replace('-', '_')])'''
 
         output = self.generate_info(commit_sha, self.coveralls_token)
+        logger.info('Report generated successfully')
 
         coveralls_jobs.append(uploader.coveralls(output))
         uploader.codecov(output, commit_sha, self.codecov_token)
 
+        logger.info('Waiting for build to be injested by Coveralls...')
         # Wait until the build has been injested by Coveralls.
-        for coveralls_job in coveralls_jobs:
-            uploader.coveralls_wait(coveralls_job)
+        if all([uploader.coveralls_wait(job_url) for job_url in coveralls_jobs]):
+            logger.info('Build injested by coveralls')
+        else:
+            logger.info('Coveralls took too much time to injest data.')
 
         coverage_by_dir.generate(self.repo_dir)
-
-    def __init__(self, cache_root, secrets, client_id=None, client_token=None):
-        # List of test-suite, sorted alphabetically.
-        # This way, the index of a suite in the array should be stable enough.
-        self.suites = []
-
-        assert os.path.isdir(cache_root), "Cache root {} is not a dir.".format(cache_root)
-        self.repo_dir = os.path.join(cache_root, 'mozilla-central')
-
-        tc_client = TaskclusterClient(client_id, client_token)
-
-        required_fields = [COVERALLS_TOKEN_FIELD, CODECOV_TOKEN_FIELD]
-        secrets = tc_client.get_secrets(secrets, required_fields)
-
-        self.coveralls_token = secrets[COVERALLS_TOKEN_FIELD]
-        self.codecov_token = secrets[CODECOV_TOKEN_FIELD]

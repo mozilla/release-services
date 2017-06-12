@@ -7,11 +7,12 @@ from __future__ import absolute_import
 import connexion
 import flask
 import pathlib
-import structlog
 import werkzeug
 
+import cli_common.log
 
-logger = structlog.get_logger()
+
+logger = cli_common.log.get_logger(__name__)
 
 
 def common_error_handler(exception):
@@ -49,7 +50,7 @@ class Api:
 
         logger.debug('Setting JSON encoder.')
 
-        app.json_encoder =  connexion.apps.flask_app.FlaskJSONEncoder
+        app.json_encoder = connexion.apps.flask_app.FlaskJSONEncoder
 
         logger.debug('Setting common error handler for all error codes.')
         for error_code in werkzeug.exceptions.default_exceptions:
@@ -116,9 +117,6 @@ class Api:
 
         logger.debug('Adding API: %s', swagger_file)
 
-        if base_url is None:
-            base_url = app.config.get('SWAGGER_BASE_URL')
-
         self.swagger_url = swagger_url
         self.__api = connexion.apis.flask_api.FlaskApi(
             specification=pathlib.Path(swagger_file),
@@ -148,7 +146,6 @@ def handle_default_exceptions(e):
         'message': str(e),
         'description': e.description
     }), e.code
-
 
 
 def init_app(app):

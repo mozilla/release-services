@@ -1,9 +1,10 @@
 from cli_common.log import get_logger
+from cli_common.taskcluster import get_service
 import operator
 import itertools
 
 
-logger = get_logger('shipit_bot')
+logger = get_logger(__name__)
 
 
 class Report(object):
@@ -12,8 +13,7 @@ class Report(object):
     and send it at the end through TC emails
     """
 
-    def __init__(self, taskcluster, emails):
-        self.taskcluster = taskcluster
+    def __init__(self, emails):
         self.emails = emails
         self.merges = set()
         logger.info('Report notifications', emails=self.emails)
@@ -71,6 +71,12 @@ class Report(object):
         mail_md = '\n'.join(mail)
 
         # Send mail report to every mail address
+        notify = get_service('notify')
         for email in self.emails:
-            self.taskcluster.notify_email(email, subject, mail_md, template='fullscreen')  # noqa
+            notify.email({
+                'address': email,
+                'subject': subject,
+                'content': mail_md,
+                'template': 'fullscreen',
+            })
             logger.info('Sent report', to=email)

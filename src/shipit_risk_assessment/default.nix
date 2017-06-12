@@ -71,8 +71,7 @@ let
   mkBot = branch:
     let
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
-    in
-      mkTaskclusterHook {
+      hook = mkTaskclusterHook {
         name = "Shipit task generating risk assessment data";
         owner = "cdenizet@mozilla.com";
         taskImage = self.docker;
@@ -80,15 +79,17 @@ let
         ];
         taskEnv = {
           "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+          "APP_CHANNEL" = branch;
         };
         taskCommand = [
           "/bin/shipit-risk-assessment"
           "/work"
-          "$REVISION"
         ];
         deadline = "5 hours";
         maxRunTime = 18000;
       };
+    in
+      releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
   self = mkPython {
     inherit python name dirname version;
@@ -117,30 +118,16 @@ let
 
       export EXTRAS_INCLUDE_PATH="${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/backward:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
     '';
-    dockerConfig = {
-      Env = [
-        "PATH=/bin"
-        "LANG=en_US.UTF-8"
-        "LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive"
-        "SSL_CERT_FILE=${cacert}/etc/ssl/certs/ca-bundle.crt"
-
-        # Extras for compilation
-        "MOZCONFIG=${libmocoda}/conf/mozconfig"
+    dockerEnv =
+      [ "MOZCONFIG=${libmocoda}/conf/mozconfig"
         "EXTRAS_INCLUDE_PATH=${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/backward:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
       ];
-      Cmd = [];
-    };
+    dockerCmd = [];
 
     passthru = {
-      taskclusterHooks = {
-        master = {
-        };
-        staging = {
-          bot = mkBot "staging";
-        };
-        production = {
-          bot = mkBot "production";
-        };
+      deploy = {
+        staging = mkBot "staging";
+        production = mkBot "production";
       };
       update = writeScript "update-${name}" ''
         pushd ${self.src_path}

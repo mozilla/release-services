@@ -10,8 +10,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 from backend_common.auth import auth
 from backend_common.db import db
-from backend_common import log
-from cli_common.taskcluster import TaskclusterClient
+from cli_common import log
+from cli_common.taskcluster import get_hook_artifact
 from shipit_uplift.helpers import gravatar
 from shipit_uplift.models import (
     BugAnalysis, BugResult, Contributor, BugContributor, PatchStatus
@@ -23,7 +23,7 @@ from shipit_uplift.serializers import (
 from shipit_uplift.flask import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
 
 
-logger = log.get_logger('shipit_uplift.api')
+logger = log.get_logger(__name__)
 
 
 def ping():
@@ -376,8 +376,7 @@ def load_hook_artifact(group, hook, artifact):
     """
     try:
         artifact = 'public/' + artifact
-        client = TaskclusterClient('', '')  # anonymous
-        return client.get_hook_artifact(group, hook, artifact)
+        return get_hook_artifact(group, hook, artifact, '', '')  # as anonymous
     except Exception as e:
         return {
             'error_title': 'Failed loading artifact',

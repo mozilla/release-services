@@ -42,7 +42,7 @@ let
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-releng-clobberer";
-  dirname = "releng-clobberer";
+  dirname = "releng_clobberer";
 
   self = mkBackend {
     inherit python name dirname;
@@ -60,16 +60,6 @@ let
            - builds;
            - clobber_times;
         '';
-      };
-      taskclusterHooks = {
-        master = {
-        };
-        staging = {
-          inherit taskcluster_cache;
-        };
-        production = {
-          inherit taskcluster_cache;
-        };
       };
       update = writeScript "update-${name}" ''
         pushd ${self.src_path}

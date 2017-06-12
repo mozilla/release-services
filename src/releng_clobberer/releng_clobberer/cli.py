@@ -4,11 +4,11 @@
 
 from __future__ import absolute_import
 
-from backend_common import log
+from cli_common import log
 import taskcluster
 
 
-logger = log.get_logger()
+logger = log.get_logger(__name__)
 
 
 def taskcluster_cache(namespace='gecko.v2',

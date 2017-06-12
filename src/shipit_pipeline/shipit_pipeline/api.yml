@@ -91,6 +91,7 @@ paths:
             $ref: '#/definitions/StepResult'
 
   # Pipeline specific
+
   /ticktock:
     put:
       operationId: "shipit_pipeline.api.ticktock"

@@ -9,12 +9,12 @@ import boto.s3
 import boto.sqs
 import importlib
 import json
-from backend_common import log
+from cli_common import log
 import threading
 import time
 
 
-logger = log.get_logger()
+logger = log.get_logger(__name__)
 
 
 class StopListening(Exception):

@@ -13,10 +13,16 @@ import Dict exposing (Dict)
 -- Models
 
 
+type alias Bug =
+    { id : Int
+    , summary : Maybe String
+    }
+
+
 type alias Directory =
     { current : Float
-    , previous : Float
-    , bugs : List Int
+    , previous : Maybe Float
+    , bugs : List Bug
     }
 
 
@@ -77,7 +83,7 @@ loadArtifact model =
             "project-releng"
 
         hookId =
-            "services-staging-shipit-code-coverage-bot"
+            "services-staging-shipit-code-coverage"
 
         artifact =
             "coverage_by_dir.json"
@@ -110,8 +116,15 @@ decodeDirectory : Decoder Directory
 decodeDirectory =
     JsonDecode.map3 Directory
         (JsonDecode.field "cur" JsonDecode.float)
-        (JsonDecode.field "prev" JsonDecode.float)
-        (JsonDecode.field "bugs" (JsonDecode.list JsonDecode.int))
+        (JsonDecode.field "prev" (JsonDecode.nullable JsonDecode.float))
+        (JsonDecode.field "bugs" (JsonDecode.list decodeBug))
+
+
+decodeBug : Decoder Bug
+decodeBug =
+    JsonDecode.map2 Bug
+        (JsonDecode.field "id" JsonDecode.int)
+        (JsonDecode.field "summary" (JsonDecode.nullable JsonDecode.string))
 
 
 filterDirectories : Directories -> Maybe String -> Directories
@@ -162,8 +175,9 @@ viewDirectories directories =
     table [ class "table table-striped" ]
         ([ tr []
             [ th [] [ text "Path" ]
-            , th [] [ text "Current" ]
             , th [] [ text "Previous" ]
+            , th [] [ text "Current" ]
+            , th [] [ text "Difference" ]
             , th [] [ text "Bugs" ]
             ]
          ]
@@ -171,29 +185,67 @@ viewDirectories directories =
         )
 
 
+roundFloat : Float -> Float
+roundFloat x =
+    toFloat (round (x * 100)) / 100
+
+
 viewDirectory : ( String, Directory ) -> Html Msg
 viewDirectory ( path, directory ) =
     let
+        diff =
+            case directory.previous of
+                Just previous ->
+                    roundFloat (directory.current - previous)
+
+                Nothing ->
+                    0.0
+
         style =
-            if directory.current < directory.previous then
-                "table-danger"
-            else if directory.current > directory.previous then
+            if diff > 0 then
                 "table-success"
+            else if diff < 0 then
+                "table-danger"
             else
                 "table-info"
+
+        previous =
+            case directory.previous of
+                Just previous ->
+                    toString (roundFloat previous)
+
+                Nothing ->
+                    "No previous value"
     in
         tr [ class style ]
             [ td [] [ span [ class "btn btn-link", onClick (SetDirectory (Just path)) ] [ text path ] ]
+            , td [] [ text previous ]
             , td [] [ text (toString directory.current) ]
-            , td [] [ text (toString directory.previous) ]
+            , td []
+                [ text
+                    ((if diff > 0 then
+                        "+"
+                      else
+                        ""
+                     )
+                        ++ (toString diff)
+                    )
+                ]
             , td [] [ ul [] (List.map viewBug directory.bugs) ]
             ]
 
 
-viewBug : Int -> Html Msg
-viewBug bugzillaId =
+viewBug : Bug -> Html Msg
+viewBug bug =
     li []
-        [ a [ href ("https://bugzil.la/" ++ (toString bugzillaId)), target "_blank" ]
-            [ text (toString bugzillaId)
+        [ a [ href ("https://bugzil.la/" ++ (toString bug.id)), target "_blank" ]
+            [ text (toString bug.id)
             ]
+        , span [ class "text-muted" ] [ text ": " ]
+        , case bug.summary of
+            Just summary ->
+                span [] [ text summary ]
+
+            Nothing ->
+                span [ class "text-muted" ] [ text "No summary available" ]
         ]

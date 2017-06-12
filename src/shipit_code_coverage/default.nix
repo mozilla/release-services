@@ -15,14 +15,14 @@ let
 
   # Marco grcov
   grcov = rustPlatform.buildRustPackage rec {
-    version = "0.1.13";
+    version = "0.1.19";
     name = "grcov-${version}";
 
     src = releng_pkgs.pkgs.fetchFromGitHub {
       owner = "marco-c";
       repo = "grcov";
       rev = "v${version}";
-      sha256 = "0b9xggvmfcy64mfxnqwayck0ldijvn4f2zkhkmgs3myiay7iv4v7";
+      sha256 = "186mh2kdm284fb1w0nmij6fsq8ckf51v6difvsg441s1hpjswh1j";
     };
 
     # running 4 tests
@@ -46,7 +46,7 @@ let
     # error: test failed
     doCheck = false;
 
-    depsSha256 = "0pb7p9h47v82dab7hivka4faa0ilxw20dsdkkhv5j7lxjxwl5dhj";
+    depsSha256 = "0945zi2k0ajqy5wcp61k3f41h4a42k2jscwz2gfs7jc3fqijnjqk";
 
     meta = with releng_pkgs.pkgs.stdenv.lib; {
       description = "grcov collects and aggregates code coverage information for multiple source files.";
@@ -58,10 +58,9 @@ let
 
   mkBot = branch:
     let
-      cacheKey = "shipit-static-analysis-" + branch;
+      cacheKey = "services-" + branch + "-shipit-code-coverage";
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
-    in
-      mkTaskclusterHook {
+      hook = mkTaskclusterHook {
         name = "Shipit task aggregating code coverage data";
         owner = "mcastelluccio@mozilla.com";
         schedule = [ "0 0 0 * * *" ];  # every day
@@ -78,23 +77,27 @@ let
         };
         taskEnv = {
           "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+          "APP_CHANNEL" = branch;
         };
         taskCommand = [
           "/bin/shipit-code-coverage"
-          "--secrets"
+          "--taskcluster-secret"
           secretsKey
           "--cache-root"
           "/cache"
         ];
-        deadline = "5 hours";
-        maxRunTime = 18000;
+        deadline = "9 hours";
+        maxRunTime = 32400;
         taskArtifacts = {
           "public/coverage_by_dir.json" = {
             type = "file";
             path = "/coverage_by_dir.json";
           };
         };
+        workerType = "releng-svc-compute";
       };
+    in
+      releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
   self = mkPython {
     inherit python name dirname;
@@ -131,15 +134,9 @@ let
       export PATH="${mercurial}/bin:$PATH"
     '';
     passthru = {
-      taskclusterHooks = {
-        master = {
-        };
-        staging = {
-          bot = mkBot "staging";
-        };
-        production = {
-          bot = mkBot "production";
-        };
+      deploy = {
+        staging = mkBot "staging";
+        production = mkBot "production";
       };
       update = writeScript "update-${name}" ''
         pushd ${self.src_path}

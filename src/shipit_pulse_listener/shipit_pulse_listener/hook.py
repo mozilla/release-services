@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from taskcluster.utils import slugId
+from cli_common.taskcluster import get_service
 from cli_common.pulse import create_consumer
 from cli_common.log import get_logger
 import copy
@@ -20,14 +21,14 @@ class Hook(object):
         self.pulse_route = pulse_route
         self.queue = None  # TC queue
 
-    def connect_taskcluster(self, taskcluster):
+    def connect_taskcluster(self):
         """
         Load the hook's task definition through Taskcluster
         Save queue service for later use
         """
         logger.info('Loading task definition', hook=self.hook_id, group=self.group_id)  # noqa
         try:
-            service = taskcluster.get_hooks_service()
+            service = get_service('hooks')
             hook_payload = service.hook(self.group_id, self.hook_id)
             self.task_definition = hook_payload['task']
         except Exception as e:
@@ -35,18 +36,18 @@ class Hook(object):
             return False
 
         # Get taskcluster queue
-        self.queue = taskcluster.get_queue_service()
+        self.queue = get_service('queue')
 
         return True
 
-    def connect_pulse(self, secrets):
+    def connect_pulse(self, pulse_user, pulse_password):
         """
         Create the pulse consumer triggering the hook
         """
         # Use pulse consumer from bot_common
         consumer = create_consumer(
-            secrets['PULSE_USER'],
-            secrets['PULSE_PASSWORD'],
+            pulse_user,
+            pulse_password,
             self.pulse_queue,
             self.pulse_route,
             self.got_message

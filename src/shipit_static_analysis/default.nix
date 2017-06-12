@@ -19,14 +19,19 @@ let
     let
       cacheKey = "shipit-static-analysis-" + branch;
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
-    in
-      mkTaskclusterHook {
+      hook = mkTaskclusterHook {
         name = "Static analysis automated tests";
         owner = "jan@mozilla.com";
         taskImage = self.docker;
         scopes = [
           # Used by taskclusterProxy
           ("secrets:get:" + secretsKey)
+
+          # Send emails to relman
+          "notify:email:jan@mozilla.com"
+          "notify:email:andi@mozilla.com"
+          "notify:email:marco@mozilla.com"
+          "notify:email:sledru@mozilla.com"
 
           # Used by cache
           ("docker-worker:cache:" + cacheKey)
@@ -36,16 +41,19 @@ let
         };
         taskEnv = {
           "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+          "APP_CHANNEL" = branch;
         };
         taskCommand = [
           "/bin/shipit-static-analysis"
           "$REVISIONS"
-          "--secrets"
+          "--taskcluster-secret"
           secretsKey
           "--cache-root"
           "/cache"
         ];
       };
+    in
+      releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
   self = mkPython {
     inherit python name dirname;
@@ -77,36 +85,22 @@ let
       ln -s ${releng_pkgs.gecko-env}/bin/gecko-env $out/bin
     '';
 
-		shellHook = ''
-			export PATH="${mercurial}/bin:${llvmPackages_39.clang-unwrapped}/share/clang:$PATH"
+    shellHook = ''
+      export PATH="${mercurial}/bin:${llvmPackages_39.clang-unwrapped}/share/clang:$PATH"
 
-			# Extras for clang-tidy
-			export CPLUS_INCLUDE_PATH="$CPLUS_INCLUDE_PATH:${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
-		'';
+      # Extras for clang-tidy
+      export CPLUS_INCLUDE_PATH="$CPLUS_INCLUDE_PATH:${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
+    '';
 
-    dockerConfig = {
-			Env = [
-				"PATH=/bin"
-				"LANG=en_US.UTF-8"
-				"LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive"
-				"SSL_CERT_FILE=${cacert}/etc/ssl/certs/ca-bundle.crt"
-
-				# Extras for clang-tidy
-				"CPLUS_INCLUDE_PATH=${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
-			];
-			Cmd = [];
-		};
+    dockerEnv =
+      [ "CPLUS_INCLUDE_PATH=${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
+      ];
+    dockerCmd = [];
 
     passthru = {
-      taskclusterHooks = {
-        master = {
-        };
-        staging = {
-          bot = mkBot "staging";
-        };
-        production = {
-          bot = mkBot "production";
-        };
+      deploy = {
+        staging = mkBot "staging";
+        production = mkBot "production";
       };
       update = writeScript "update-${name}" ''
         pushd ${self.src_path}

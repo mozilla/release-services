@@ -5,23 +5,49 @@
 from __future__ import absolute_import
 
 import os
+import cli_common.taskcluster
+import releng_treestatus.config
 
 
-SWAGGER_BASE_URL = os.environ.get('SWAGGER_BASE_URL')
+DEBUG = bool(os.environ.get('DEBUG', False))
+
+
+# -- LOAD SECRETS -------------------------------------------------------------
+
+required = [
+    'DATABASE_URL'
+]
+
+if not DEBUG:
+    required += [
+        'REDIS_URL',
+        'PULSE_USER',
+        'PULSE_TREESTATUS_EXCHANGE',
+        'PULSE_TREESTATUS_EXCHANGE',
+        'PULSE_USE_SSL',
+        'PULSE_CONNECTION_TIMEOUT',
+        'PULSE_HOST',
+        'PULSE_PORT',
+        'PULSE_USER',
+        'PULSE_PASSWORD',
+        'PULSE_VIRTUAL_HOST',
+    ]
+
+secrets = cli_common.taskcluster.get_secrets(
+    os.environ.get('TASKCLUSTER_SECRET'),
+    releng_treestatus.config.PROJECT_NAME,
+    required=required,
+    existing={x: os.environ.get(x) for x in required},
+    taskcluster_client_id=os.environ.get('TASKCLUSTER_CLIENT_ID'),
+    taskcluster_access_token=os.environ.get('TASKCLUSTER_ACCESS_TOKEN'),
+)
+
+locals().update(secrets)
 
 
 # -- DATABASE -----------------------------------------------------------------
 
-DATABASE_URL = os.environ.get('DATABASE_URL')
-
-if not DATABASE_URL:
-    raise Exception("You need to specify DATABASE_URL variable.")
-
-if not DATABASE_URL.startswith('postgresql://'):
-    raise Exception('Shipit dashboard needs a postgresql:// DATABASE_URL')
-
-
-SQLALCHEMY_DATABASE_URI = DATABASE_URL
+SQLALCHEMY_DATABASE_URI = secrets['DATABASE_URL']
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
@@ -33,41 +59,33 @@ CACHE = {
     if x.startswith('CACHE_')
 }
 
-if 'REDIS_URL' in os.environ:
-    CACHE['CACHE_TYPE'] = 'redis'
-    CACHE['CACHE_REDIS_URL'] = os.environ['REDIS_URL']
-
 if 'CACHE_DEFAULT_TIMEOUT' not in CACHE:
     CACHE['CACHE_DEFAULT_TIMEOUT'] = 60 * 5
 else:
     CACHE['CACHE_DEFAULT_TIMEOUT'] = float(CACHE['CACHE_DEFAULT_TIMEOUT'])
 
 if 'CACHE_KEY_PREFIX' not in CACHE:
-    CACHE['CACHE_KEY_PREFIX'] = "releng_treestatus-"
+    CACHE['CACHE_KEY_PREFIX'] = releng_treestatus.config.PROJECT_NAME + '-'
+
+if not DEBUG:
+    CACHE['CACHE_TYPE'] = 'redis'
+    CACHE['CACHE_REDIS_URL'] = secrets['REDIS_URL']
 
 
-# -- CACHE --------------------------------------------------------------------
+# -- PULSE --------------------------------------------------------------------
+#
+# Only used in production.
+#
 
-PULSE_USE_SSL = os.environ.get('PULSE_USE_SSL', True)
-PULSE_CONNECTION_TIMEOUT = int(os.environ.get('PULSE_CONNECTION_TIMEOUT', 5))
-PULSE_HOST = os.environ.get('PULSE_HOST', 'pulse.mozilla.org')
-PULSE_PORT = int(os.environ.get('PULSE_PORT', 5671))
-PULSE_USER = os.environ.get('PULSE_USER')
-PULSE_PASSWORD = os.environ.get('PULSE_PASSWORD')
-PULSE_VIRTUAL_HOST = os.environ.get('PULSE_VIRTUAL_HOST', '/')
+PULSE_TREESTATUS_ENABLE = False
 
-if not PULSE_USER:
-    raise Exception('PULSE_USER not provided.')
-
-if not PULSE_PASSWORD:
-    raise Exception('PULSE_PASSWORD not provided.')
-
-
-PULSE_TREESTATUS_ENABLE = True
-PULSE_TREESTATUS_EXCHANGE = os.environ.get(
-    'PULSE_TREESTATUS_EXCHANGE',
-    'exchange/{}/treestatus'.format(PULSE_USER),
-)
-
-if PULSE_TREESTATUS_ENABLE and not PULSE_TREESTATUS_EXCHANGE:
-    raise Exception('PULSE_TREESTATUS_EXCHANGE not provided.')
+if not DEBUG:
+    PULSE_TREESTATUS_ENABLE = True
+    PULSE_TREESTATUS_EXCHANGE = secrets['PULSE_TREESTATUS_EXCHANGE']
+    PULSE_USE_SSL = bool(secrets['PULSE_USE_SSL'])
+    PULSE_CONNECTION_TIMEOUT = int(secrets['PULSE_CONNECTION_TIMEOUT'])
+    PULSE_HOST = secrets['PULSE_HOST']
+    PULSE_PORT = int(secrets['PULSE_PORT'])
+    PULSE_USER = secrets['PULSE_USER']
+    PULSE_PASSWORD = secrets['PULSE_PASSWORD']
+    PULSE_VIRTUAL_HOST = secrets['PULSE_VIRTUAL_HOST']

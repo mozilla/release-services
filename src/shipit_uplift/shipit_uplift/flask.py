@@ -7,6 +7,7 @@ from __future__ import absolute_import
 import os
 
 from backend_common import auth, db, create_app
+from shipit_uplift.config import PROJECT_NAME
 
 
 DEBUG = os.environ.get('DEBUG') == 'true' or __name__ == '__main__'
@@ -41,7 +42,7 @@ if not os.environ.get('APP_SETTINGS') and \
 
 
 app = create_app(
-    "shipit_uplift",
+    PROJECT_NAME,
     extensions=[init_app, db, auth],
     debug=DEBUG,
     debug_src=HERE,

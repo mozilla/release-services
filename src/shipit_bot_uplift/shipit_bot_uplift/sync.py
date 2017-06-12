@@ -12,12 +12,11 @@ from shipit_bot_uplift.api import api_client
 from shipit_bot_uplift.merge import MergeTest
 from shipit_bot_uplift.report import Report
 from cli_common.log import get_logger
-from cli_common.taskcluster import TaskclusterClient
 from libmozdata import bugzilla, versions
 from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
 
 
-logger = get_logger('shipit_bot')
+logger = get_logger(__name__)
 
 
 def analysis2branch(analysis):
@@ -207,31 +206,11 @@ class Bot(object):
     """
     Update all analysis data
     """
-    def __init__(self, secrets_path, client_id=None, access_token=None):
-        # Start by loading secrets from Taskcluster
-        self.taskcluster = TaskclusterClient(client_id, access_token)
-
-        # Load secrets
-        required = ('BUGZILLA_URL', 'BUGZILLA_TOKEN', 'API_URL')
-        secrets = self.taskcluster.get_secrets(secrets_path, required)
-
-        # Setup credentials for Shipit api
-        api_client.setup(
-            secrets['API_URL'],
-            secrets.get('TASKCLUSTER_CLIENT_ID', client_id),
-            secrets.get('TASKCLUSTER_ACCESS_TOKEN', access_token)
-        )
-
-        # Setup bugzilla
-        self.use_bugzilla(
-            secrets['BUGZILLA_URL'],
-            secrets['BUGZILLA_TOKEN']
-        )
-        self.sync = {}  # init
+    def __init__(self, notification_emails=[]):
+        self.sync = {}
 
         # Init report
-        emails = secrets.get('UPLIFT_NOTIFICATIONS', ['babadie@mozilla.com'])
-        self.report = Report(self.taskcluster, emails)
+        self.report = Report(notification_emails)
 
     def use_bugzilla(self, bugzilla_url, bugzilla_token=None):
         """

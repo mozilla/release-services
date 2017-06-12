@@ -10,6 +10,8 @@ logger = get_logger(__name__)
 
 
 def coveralls(data):
+    logger.info('Upload report to Coveralls')
+
     r = requests.post('https://coveralls.io/api/v1/jobs', files={
         'json_file': ('json_file', gzip.compress(data), 'gzip/json')
     })
@@ -26,17 +28,14 @@ def coveralls(data):
 def coveralls_wait(job_url):
     def check_coveralls_job():
         r = requests.get(job_url)
+        return True if r.json()['covered_percent'] else False
 
-        if r.json()['covered_percent']:
-            return True
-
-        return False
-
-    if utils.wait_until(check_coveralls_job, 60) is None:
-        raise Exception('Coveralls took too much time to injest data.')
+    return utils.wait_until(check_coveralls_job, 60) is not None
 
 
 def codecov(data, commit_sha, token, flags=None):
+    logger.info('Upload report to Codecov')
+
     params = {
         'commit': commit_sha,
         'token': token,

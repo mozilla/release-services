@@ -42,6 +42,10 @@ let
     '';
 
     passthru = {
+      deploy = {
+        staging = self;
+        production = self;
+      };
       taskclusterGithubTasks =
         map
           (branch: mkTaskclusterGithubTask { inherit name src_path branch; })

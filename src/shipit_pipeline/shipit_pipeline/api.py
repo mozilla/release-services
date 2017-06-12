@@ -67,7 +67,7 @@ def ticktock():
     try:
         print('In ticktock')
         running_pipelines = [
-            (uid, status, steps) for (uid, (status, steps)) in PIPELINES.items() if status == 'running'
+            (uid, status, steps) for (uid, status, steps) in PIPELINES.items() if status == 'running'
         ]
 
         print('running_pipelines', running_pipelines)

@@ -1,0 +1,55 @@
+#!/bin/sh
+
+set -eu
+
+# DEBUG
+#set -x
+
+USE_NIX=0
+USE_DOCKER=0
+DOCKER_VOLUME="services_nix_store"
+
+case "`uname`" in
+  Darwin)
+    if hash docker 2>/dev/null; then
+       USE_DOCKER=1
+    fi
+    ;; 
+  Linux)
+    if hash nix-build 2>/dev/null; then
+         USE_NIX=1
+    else
+      if hash docker 2>/dev/null; then
+         USE_DOCKER=1
+      fi
+    fi
+    ;;
+  *)
+    echo "ERROR: Unknown platform '$OSTYPE'"
+    exit 1
+    ;;
+esac
+
+if [ "$USE_NIX" = "1" ]; then
+  if hash grep 2>/dev/null && [ -e /etc/nix/nix.conf ] && grep -q "https://s3.amazonaws.com/releng-cache" /etc/nix/nix.conf; then
+    echo "ERROR: Old cache url detected in /etc/nix/nix.conf.";
+    echo "";
+    echo "Please change";
+    echo "    https://s3.amazonaws.com/releng-cache";
+    echo "to";
+    echo "    https://cache.mozilla-releng.net";
+    echo "";
+    echo "Thank you!";
+    exit 1;
+  fi;
+  nix-build nix/default.nix -A please-cli -o result-please-cli 1>/dev/null;
+  exec ./result-please-cli/bin/please "$@";
+
+else
+  if [ "$USE_DOCKER" = "1" ]; then
+      exec docker run --tty --volume="$(pwd)":/app --volume="${DOCKER_VOLUME}":/nix/store --workdir=/app mozillareleng/services:base-latest ./please "$@"
+  else
+    # TODO: better error message and point to documentation
+    echo "ERROR: please install nix or docker!"
+  fi
+fi

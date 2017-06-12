@@ -3,7 +3,7 @@ from collections import OrderedDict, namedtuple
 from cli_common.log import get_logger
 
 
-logger = get_logger('shipit_bot')
+logger = get_logger(__name__)
 
 # Status can be: merged, failed, skipped
 MergeResult = namedtuple('MergeResult', 'status, message, parent')

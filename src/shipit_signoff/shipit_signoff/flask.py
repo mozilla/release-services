@@ -11,6 +11,8 @@ import backend_common.db
 import backend_common.auth
 import backend_common.auth0
 
+import shipit_signoff.config
+
 
 DEBUG = bool(os.environ.get('DEBUG', __name__ == '__main__'))
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -28,7 +30,7 @@ if not os.environ.get('APP_SETTINGS') and \
 
 
 app = backend_common.create_app(
-    "shipit_signoff",
+    shipit_signoff.config.PROJECT_NAME,
     extensions=[
         init_app,
         backend_common.auth,

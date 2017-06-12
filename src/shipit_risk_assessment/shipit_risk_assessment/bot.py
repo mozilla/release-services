@@ -1,5 +1,4 @@
 from cli_common.log import get_logger
-from cli_common.taskcluster import TaskclusterClient
 from cli_common.mercurial import robust_checkout, MOZILLA_CENTRAL
 from mocoda.compiledb import react as mocoda_react
 import os
@@ -11,9 +10,7 @@ class Bot(object):
     """
     Risk assessment analysis
     """
-    def __init__(self, client_id=None, access_token=None):
-        # Load taskcluster client (may be useful later on)
-        self.taskcluster = TaskclusterClient(client_id, access_token)
+    def __init__(self, work_dir):
 
         # Load mozconfig from env
         self.mozconfig_path = os.environ.get('MOZCONFIG')
@@ -22,10 +19,6 @@ class Bot(object):
         assert os.path.exists(self.mozconfig_path), \
             'Invalid MOZCONFIG in {}'.format(self.mozconfig_path)
 
-    def run(self, work_dir, merge_revision):
-        """
-        Main workflow
-        """
         if not os.path.isdir(work_dir):
             os.makedirs(work_dir)
 
@@ -41,6 +34,9 @@ class Bot(object):
         os.environ['MOCODA_ROOT'] = repo_dir
         os.environ['MOCODA_TMPDIR'] = tmp_dir
 
-        # Run mocoda react
-        logger.info('Mocoda react', revision=merge_revision)
-        mocoda_react(merge_revision)
+    def run(self, revision):
+        """
+        Run mocoda react on a revision
+        """
+        logger.info('Mocoda react', revision=revision)
+        mocoda_react(revision)

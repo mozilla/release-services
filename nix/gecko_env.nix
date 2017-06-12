@@ -24,6 +24,9 @@ in gecko.overrideDerivation (old: {
     # Add self in PATH, needed to exec
     echo "export PATH=$out/bin:\$PATH" >> $geckoenv
 
+    # Use python2.7 environment
+    echo "export PYTHONPATH=$PYTHONPATH" >> $geckoenv
+
     # Transform LDFLAGS in list of paths for LIBRARY_PATH
     ldflags=$(env | grep -e '^NIX_LDFLAGS=' | cut -c13-)
     echo "export LIBRARY_PATH=$(echo $ldflags | sed -E 's,-rpath ([/\.a-zA-Z0-9\-]+) ,,g' | sed -E 's, -L(\s*),:,g')" >> $geckoenv

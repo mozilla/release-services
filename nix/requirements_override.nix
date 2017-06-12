@@ -88,6 +88,13 @@ in skipOverrides {
     '';
   };
 
+  "click-spinner" = self: old: {
+    patchPhase = ''
+      rm README.md
+      touch README.md
+    '';
+  };
+
   "connexion" = self: old: {
     patchPhase = ''
       sed -i -e "s|setup_requires=\['flake8'\],||" setup.py
@@ -98,6 +105,16 @@ in skipOverrides {
   "flake8" = self: old: {
     patchPhase = ''
       sed -i -e "s|setup_requires=\['pytest-runner'\],||" setup.py
+    '';
+  };
+
+  "flask-talisman" = self: old: {
+    # XXX: from https://github.com/GoogleCloudPlatform/flask-talisman/pull/8
+    patchPhase = ''
+      sed -i \
+        -e "s|view_function = flask.current_app.view_functions\[|view_function = flask.current_app.view_functions.get(|" \
+        -e "s|flask.request.endpoint\]|flask.request.endpoint)|" \
+          flask_talisman/talisman.py
     '';
   };
 
@@ -121,13 +138,9 @@ in skipOverrides {
     '';
   };
 
-  "flask-talisman" = self: old: {
-    # XXX: from https://github.com/GoogleCloudPlatform/flask-talisman/pull/8
+  "pytest" = self: old: {
     patchPhase = ''
-      sed -i \
-        -e "s|view_function = flask.current_app.view_functions\[|view_function = flask.current_app.view_functions.get(|" \
-        -e "s|flask.request.endpoint\]|flask.request.endpoint)|" \
-          flask_talisman/talisman.py
+      sed -i -e "s|setup_requires=\['setuptools-scm'\],||" setup.py
     '';
   };
 
