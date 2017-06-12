@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import json
 import backend_common.auth0
 import backend_common.mocks
@@ -118,12 +120,12 @@ def setup_step(func):
     Can't use a fixture because it cancels the @patch to user_getinfo
     '''
     def decorator(client, *args, **kwargs):
-        _ = client.put('/step/{}'.format(UID),
+        client.put('/step/{}'.format(UID),
                        content_type='application/json',
                        data=json.dumps(TEST_STEP),
                        headers=GOODHEADERS)
         func(client)
-        _ = client.delete('/step/{}'.format(UID), headers=GOODHEADERS)
+        client.delete('/step/{}'.format(UID), headers=GOODHEADERS)
     return decorator
 
 
