@@ -15,7 +15,7 @@ from cli_common.log import get_logger
 
 logger = get_logger(__name__)
 
-REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): ([\w\s\.\'\"^_,-<>]+)(?: \[([\w-]+)\])?\n', re.MULTILINE)
+REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): ([\w\s\.\'\"^_,-<>]+)(?: \[([\.\w-]+)\])?\n', re.MULTILINE)
 
 ISSUE_MARKDOWN = '''
 ## {type}
