@@ -58,10 +58,6 @@ class Workflow(object):
         # Open new hg client
         self.hg = hglib.open(self.repo_dir)
 
-        # mach configure once
-        logger.info('Mach configure...')
-        run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
-
     def run(self, revision, review_request_id, diffset_revision):
         '''
         Run the static analysis workflow:
@@ -88,6 +84,10 @@ class Workflow(object):
             status = self.hg.status(change=[changeset, ])
             modified_files += [f.decode('utf-8') for _, f in status]
         logger.info('Modified files', files=modified_files)
+
+        # mach configure
+        logger.info('Mach configure...')
+        run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
 
         # Build CompileDB backend
         logger.info('Mach build backend...')
