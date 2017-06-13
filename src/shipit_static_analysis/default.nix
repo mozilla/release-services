@@ -5,7 +5,7 @@ let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource ;
   inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl dockerTools gcc
-      cacert clang llvmPackages_39 clang-tools gcc-unwrapped glibc glibcLocales xorg;
+      cacert clang clang-tools gcc-unwrapped glibc glibcLocales xorg;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
@@ -86,14 +86,13 @@ let
       mkdir -p $out/bin
       ln -s ${mercurial}/bin/hg $out/bin
       ln -s ${clang-tools}/bin/clang-tidy $out/bin
-      ln -s ${llvmPackages_39.clang-unwrapped}/share/clang/run-clang-tidy.py $out/bin
 
       # Expose gecko env in final output
       ln -s ${releng_pkgs.gecko-env}/bin/gecko-env $out/bin
     '';
 
     shellHook = ''
-      export PATH="${mercurial}/bin:${llvmPackages_39.clang-unwrapped}/share/clang:$PATH"
+      export PATH="${mercurial}/bin:$PATH"
 
       # Extras for clang-tidy
       export CPLUS_INCLUDE_PATH=${includes}
