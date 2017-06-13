@@ -14,6 +14,13 @@ class Message(db.Model):
     message = Column(Text, nullable=False)
     deadline = Column(DateTime, nullable=False)
 
+    def __repr__(self):
+        return 'Message(uid={uid}, shortMessage={short_message}, deadline={deadline})'.format(
+            uid=self.uid,
+            short_message=self.shortMessage,
+            deadline=self.deadline
+        )
+
 
 class Policy(db.Model):
     __tablename__ = PROJECT_PATH_NAME + '_policies'
@@ -26,6 +33,13 @@ class Policy(db.Model):
     last_notified = Column(DateTime, nullable=True)  # This will be null when no notification has been sent yet
     frequency = Column(Interval, nullable=False)
     message_id = Column(Integer, ForeignKey(Message.id, ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
+
+    def __repr__(self):
+        return 'Policy(message_uid={message_uid}, identity={identity_name}, urgency={urgency})'.format(
+            message_uid=self.message_id,
+            identity_name=self.identity,
+            urgency=self.urgency
+        )
 
     def to_dict(self):
         """Return the object as a dict, with the Interval converted to a dict with days, hours, mins"""
