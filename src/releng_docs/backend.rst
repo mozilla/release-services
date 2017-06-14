@@ -1,13 +1,37 @@
 .. _backend_docs:
 
-``lib/backend_common``
-----------------------
 
-Service structure:
+Backend project structure:
 
-- code is located in ``src/<service>``
+- project code is located in ``src/<project>``
 
-- ``settings.py`` - configuration for Flask application
+  Look at contribution guide (TODO:link) how to start working on a project.
+
+- runtime dependencies (install_requires) are listed in
+  ``src/<project>/requirements.txt``
+
+- buildtime dependencies (tests_require) are listed in 
+  ``src/<project>/requirements-dev.txt``
+
+- like every python project also our project has a ``src/<project>/setup.py``
+
+  Use ``requirements.txt`` and ``requirements-dev.txt`` to list dependencies.
+  That way we only change
+
+  Every time you add/remove/update dependencies rereun::
+
+      % ./please update-dependencies <project>
+
+  More information about updating dependencies you can find here (TODO: link)
+
+
+- your python module should be names the same as the project, that means that
+  the code for your  python module will be located in
+  ``src/<project>/<project>/``
+
+- every flask 
+
+  ``src/<project>/settings.py`` - configuration for Flask application
 
 - ``<service>/__init__.py`` -  this is where ``app`` (aka Flask app) should be
   present

@@ -5,7 +5,19 @@
 
 from __future__ import absolute_import
 
-import releng_tooltool
+
+HTTPS_ENVIRON = {'wsgi.url_scheme': 'https'}
+
+app_config = {
+    'DEBUG': True,
+    'TESTING': True,
+}
 
 
-app = releng_tooltool.create_app()
+def clear_app(app):
+    '''
+    '''
+
+    if 'db' in app.__extensions:
+        app.db.drop_all()
+        app.db.create_all()

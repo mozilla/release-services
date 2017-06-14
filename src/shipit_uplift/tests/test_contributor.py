@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from __future__ import absolute_import
+
+import backend_common.testing
 import json
 
 
@@ -7,9 +14,11 @@ def test_comments_user(client, header_user):
     A user must not have private comment
     in bugs details
     '''
-    resp = client.get('/analysis/1', headers=[
-        ('Authorization', header_user),
-    ])
+    resp = client.get(
+        '/analysis/1',
+        headers=[('Authorization', header_user)],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
     assert len(analysis['bugs']) == 3
@@ -27,9 +36,11 @@ def test_comments_admin(client, header_admin):
     An admin must have private comment
     in bugs details
     '''
-    resp = client.get('/analysis/1', headers=[
-        ('Authorization', header_admin),
-    ])
+    resp = client.get(
+        '/analysis/1',
+        headers=[('Authorization', header_admin)],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
     assert len(analysis['bugs']) == 3
@@ -57,10 +68,15 @@ def test_update_user(client, header_user):
         'comment_public': 'Bad comment',
         'comment_private': 'Explanation',
     }
-    resp = client.put('/contributor/1', data=json.dumps(data), headers=[
-        ('Content-Type', 'application/json'),
-        ('Authorization', header_user),
-    ])
+    resp = client.put(
+        '/contributor/1',
+        data=json.dumps(data),
+        headers=[
+            ('Content-Type', 'application/json'),
+            ('Authorization', header_user),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 401
     error = json.loads(resp.data.decode('utf-8'))
     assert error['error_title'] == 'Unauthorized'
@@ -86,10 +102,15 @@ def test_update_admin(client, header_admin):
         'comment_public': 'Bad comment',
         'comment_private': 'Explanation',
     }
-    resp = client.put('/contributor/1', data=json.dumps(data), headers=[
-        ('Content-Type', 'application/json'),
-        ('Authorization', header_admin),
-    ])
+    resp = client.put(
+        '/contributor/1',
+        data=json.dumps(data),
+        headers=[
+            ('Content-Type', 'application/json'),
+            ('Authorization', header_admin),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     output = json.loads(resp.data.decode('utf-8'))
     assert output['comment_private'] == 'Explanation'

@@ -5,12 +5,14 @@
 
 from __future__ import absolute_import
 
+import copy
 import pytest
 import pickle
 import os
 import glob
 import json
 
+import backend_common.testing
 from backend_common.mocks import build_header
 
 
@@ -22,18 +24,17 @@ def app():
     '''
     Load shipit_uplift app in test mode
     '''
-    # Set app in testing mode
-    os.environ['APP_TESTING'] = 'shipit-uplift'
+    import shipit_uplift
 
-    # Then import app code
-    from backend_common.db import db
-    from shipit_uplift.flask import app
+    app_config = copy.deepcopy(backend_common.testing.app_config)
+    app_config.update({
+        'SQLALCHEMY_DATABASE_URI': 'sqlite://',
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+    })
+    app = shipit_uplift.create_app(app_config)
 
     with app.app_context():
-        # Init new database
-        db.create_all()
-
-        # Give app in its context
+        backend_common.testing.clear_app(app)
         yield app
 
 
@@ -112,7 +113,7 @@ def header_user(app):
     '''
     Build an Hawk header for user role
     '''
-    from shipit_uplift.flask import SCOPES_USER
+    from shipit_uplift.config import SCOPES_USER
     return hawk_header(SCOPES_USER)
 
 
@@ -121,7 +122,7 @@ def header_admin(app):
     '''
     Build an Hawk header for admin role
     '''
-    from shipit_uplift.flask import SCOPES_ADMIN
+    from shipit_uplift.config import SCOPES_ADMIN
     return hawk_header(SCOPES_ADMIN)
 
 
@@ -130,5 +131,5 @@ def header_bot(app):
     '''
     Build an Hawk header for bot role
     '''
-    from shipit_uplift.flask import SCOPES_BOT
+    from shipit_uplift.config import SCOPES_BOT
     return hawk_header(SCOPES_BOT)

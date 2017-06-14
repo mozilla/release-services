@@ -5,7 +5,9 @@
 
 from __future__ import absolute_import
 
-import releng_tooltool
+
+import jinja2
 
 
-app = releng_tooltool.create_app()
+def init_app(app):
+    app.jinja_loader = jinja2.loaders.FileSystemLoader(app.config['APP_TEMPLATES_FOLDER'])

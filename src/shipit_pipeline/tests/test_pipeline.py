@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-import os
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-os.environ['APP_TESTING'] = 'shipit_pipeline'  # NoQA
+from __future__ import absolute_import
 
 import pytest
 import requests
-
 from unittest.mock import MagicMock
-
 from shipit_pipeline.pipeline import PipelineStep, get_runnable_steps, refresh_pipeline_steps
 
 

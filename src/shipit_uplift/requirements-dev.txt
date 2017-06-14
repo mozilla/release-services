@@ -1,7 +1,1 @@
--r ./../../lib/backend_common/requirements-dev.txt
-flake8
-ipdb
-pytest
-responses
-flake8-coding
-flake8-quotes
+-e ./../../lib/backend_common[all] #egg=mozilla-backend-common

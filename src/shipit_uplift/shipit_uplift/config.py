@@ -7,3 +7,17 @@ from __future__ import absolute_import
 
 
 PROJECT_NAME = 'shipit-uplift'
+
+# Tasckcluster scopes
+SCOPES_USER = [
+    'project:shipit:user',
+    'project:shipit:analysis/use',
+    'project:shipit:bugzilla'
+]
+SCOPES_ADMIN = SCOPES_USER + [
+    'project:shipit:admin',
+]
+SCOPES_BOT = [
+    'project:shipit:bot',
+    'project:shipit:analysis/manage',
+]

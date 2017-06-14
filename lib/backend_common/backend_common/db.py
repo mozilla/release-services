@@ -1,26 +1,26 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
 
-import structlog
-import os
+import cli_common.log
 import flask
 import flask_migrate
 import flask_sqlalchemy
-import logging  # for sql alchemy
+import os
 
 
-logger = structlog.get_logger(__name__)
+logger = cli_common.log.get_logger(__name__)
 db = flask_sqlalchemy.SQLAlchemy()
 migrate = flask_migrate.Migrate(db=db)
 
 
 def init_database(app):
-    """
+    '''
     Run Migrations through Alembic
-    """
+    '''
     migrations_dir = os.path.abspath(
         os.path.join(app.root_path, '..', 'migrations'))
 
@@ -54,9 +54,6 @@ def init_app(app):
     for table_name in db.metadata.tables.keys():
         if not table_name.startswith(app.db_prefix):
             raise Exception('DB table {} should start with {}'.format(table_name, app.db_prefix))  # noqa
-
-    # Log queries
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
     # Try to run migrations on the app
     # or direct db creation

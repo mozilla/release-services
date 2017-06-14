@@ -1,44 +1,57 @@
-"""Configure a mock application to run queries against"""
+# -*- coding: utf-8 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
+'''Configure a mock application to run queries against
+'''
+
+import flask
+import flask_login
+import os.path
 import pytest
-from flask_login import current_user
-from flask import jsonify
-from backend_common import create_app, auth, auth0, mocks
-from os.path import join, dirname
 
 
 @pytest.fixture(scope='module')
 def app():
-    """
+    '''
     Build an app with an authenticated dummy api
-    """
+    '''
+    import backend_common
 
     # Use unique auth instance
     config = {
         'DEBUG': True,
-        'OIDC_CLIENT_SECRETS': join(dirname(__file__), 'client_secrets.json'),
-        'OIDC_RESOURCE_SERVER_ONLY': True
+        'OIDC_CLIENT_SECRETS': os.path.join(os.path.dirname(__file__), 'client_secrets.json'),
+        'OIDC_RESOURCE_SERVER_ONLY': True,
+        'APP_TEMPLATES_FOLDER': '',
     }
 
-    app = create_app('test', extensions=[auth, auth0], config=config)
+    app = backend_common.create_app(
+        'test',
+        extensions=backend_common.EXTENSIONS,
+        config=config,
+    )
 
     @app.route('/')
     def index():
         return app.response_class('OK')
 
     @app.route('/test-auth-login')
-    @auth.auth.require_login
+    @backend_common.auth.auth.require_login
     def logged_in():
         data = {
             'auth': True,
-            'user': current_user.get_id(),
+            'user': flask_login.current_user.get_id(),
             # permissions is a set, not serializable
-            'scopes': list(current_user.permissions),
+            'scopes': list(flask_login.current_user.permissions),
         }
-        return jsonify(data)
+        return flask.jsonify(data)
 
     @app.route('/test-auth-scopes')
-    @auth.auth.require_scopes([
+    @backend_common.auth.auth.require_scopes([
         ['project/test/A', 'project/test/B'],
         ['project/test-admin/*'],
     ])
@@ -46,7 +59,7 @@ def app():
         return app.response_class('Your scopes are ok.')
 
     @app.route('/test-auth0-userinfo')
-    @auth0.accept_token()
+    @backend_common.auth0.accept_token()
     def auth0_token():
         return app.response_class('OK')
 
@@ -58,9 +71,11 @@ def app():
 
 @pytest.yield_fixture(scope='module')
 def client(app):
-    """
+    '''
     A Flask test client.
-    """
+    '''
+    import backend_common
+
     with app.test_client() as client:
-        with mocks.apply_mockups():
+        with backend_common.mocks.apply_mockups():
             yield client

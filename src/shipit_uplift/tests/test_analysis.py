@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
-import json
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from __future__ import absolute_import
+
 from urllib.parse import parse_qs
+import backend_common.testing
+import json
 
 
 def assert_query_strings(x, y):
@@ -22,7 +29,10 @@ def test_list_analysis_invalid(client):
     '''
 
     # No header : Should fail
-    resp = client.get('/analysis')
+    resp = client.get(
+        '/analysis',
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 401
 
 
@@ -30,9 +40,13 @@ def test_list_analysis_valid(client, bugs, header_user):
     '''
     List available analysis through api
     '''
-    resp = client.get('/analysis', headers=[
-        ('Authorization', header_user),
-    ])
+    resp = client.get(
+        '/analysis',
+        headers=[
+            ('Authorization', header_user),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     data = json.loads(resp.data.decode('utf-8'))
     assert len(data) == 2
@@ -50,9 +64,13 @@ def test_fetch_analysis(client, bugs, header_user):
     '''
     Fetch detailled analysis, with bugs
     '''
-    resp = client.get('/analysis/1', headers=[
-        ('Authorization', header_user),
-    ])
+    resp = client.get(
+        '/analysis/1',
+        headers=[
+            ('Authorization', header_user),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
     assert analysis['id'] == 1
@@ -136,9 +154,13 @@ def test_update_analysis(client, bugs, header_bot, header_user):
     url = '/analysis/1'
 
     # Check analysis has version 1 initially
-    resp = client.get(url, headers=[
-        ('Authorization', header_bot),
-    ])
+    resp = client.get(
+        url,
+        headers=[
+            ('Authorization', header_bot),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
     assert analysis['id'] == 1
@@ -151,17 +173,27 @@ def test_update_analysis(client, bugs, header_bot, header_user):
     }
 
     # Only bot has access to the update endpoint
-    resp = client.put(url, data=json.dumps(data), headers=[
-        ('Authorization', header_user),
-        ('Content-Type', 'application/json'),
-    ])
+    resp = client.put(
+        url,
+        data=json.dumps(data),
+        headers=[
+            ('Authorization', header_user),
+            ('Content-Type', 'application/json'),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 401
 
     # Update as bot
-    resp = client.put(url, data=json.dumps(data), headers=[
-        ('Authorization', header_bot),
-        ('Content-Type', 'application/json'),
-    ])
+    resp = client.put(
+        url,
+        data=json.dumps(data),
+        headers=[
+            ('Authorization', header_bot),
+            ('Content-Type', 'application/json'),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
     assert analysis['id'] == 1
@@ -170,9 +202,13 @@ def test_update_analysis(client, bugs, header_bot, header_user):
 
     # Check analysis has version 2 now
     # Accessible by user on GET
-    resp = client.get(url, headers=[
-        ('Authorization', header_user),
-    ])
+    resp = client.get(
+        url,
+        headers=[
+            ('Authorization', header_user),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
     assert analysis['id'] == 1
@@ -185,9 +221,13 @@ def test_create_bug(client, bugs, header_bot):
     Create a new bug in analysis
     '''
     # Check we have 3 bugs
-    resp = client.get('/analysis/1', headers=[
-        ('Authorization', header_bot),
-    ])
+    resp = client.get(
+        '/analysis/1',
+        headers=[
+            ('Authorization', header_bot),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
     assert len(analysis['bugs']) == 3
@@ -199,10 +239,15 @@ def test_create_bug(client, bugs, header_bot):
         'payload_hash': 'deadbeef12345',
         'payload': json.load(open('tests/fixtures/payload_12345.json')),
     }
-    resp = client.post('/bugs', data=json.dumps(data), headers=[
-        ('Content-Type', 'application/json'),
-        ('Authorization', header_bot),
-    ])
+    resp = client.post(
+        '/bugs',
+        data=json.dumps(data),
+        headers=[
+            ('Content-Type', 'application/json'),
+            ('Authorization', header_bot),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     bug_created = json.loads(resp.data.decode('utf-8'))
     assert bug_created == {
@@ -258,9 +303,13 @@ def test_create_bug(client, bugs, header_bot):
         'versions': {}}
 
     # Check we now have 4 bugs
-    resp = client.get('/analysis/1', headers=[
-        ('Authorization', header_bot),
-    ])
+    resp = client.get(
+        '/analysis/1',
+        headers=[
+            ('Authorization', header_bot),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
     assert len(analysis['bugs']) == 4
@@ -273,9 +322,13 @@ def test_deprecating_bug(client, bugs, header_bot):
     def in_analysis(bugzilla_id, analysis_id):
         # Check a bug is in an analysis
         url = '/analysis/{}'.format(analysis_id)
-        resp = client.get(url, headers=[
-            ('Authorization', header_bot),
-        ])
+        resp = client.get(
+            url,
+            headers=[
+                ('Authorization', header_bot),
+            ],
+            environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+        )
         assert resp.status_code == 200
         analysis = json.loads(resp.data.decode('utf-8'))
         return bugzilla_id in [b['bugzilla_id'] for b in analysis['bugs']]
@@ -292,10 +345,15 @@ def test_deprecating_bug(client, bugs, header_bot):
         'payload': json.load(open('tests/fixtures/payload_12345.json')),
         'versions': {},
     }
-    resp = client.post('/bugs', data=json.dumps(data), headers=[
-        ('Content-Type', 'application/json'),
-        ('Authorization', header_bot),
-    ])
+    resp = client.post(
+        '/bugs',
+        data=json.dumps(data),
+        headers=[
+            ('Content-Type', 'application/json'),
+            ('Authorization', header_bot),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
 
     # We should have bug 12345 in analysis 1 only
@@ -308,23 +366,35 @@ def test_delete_bug(client, bugs, header_bot):
     Delete a bug in an analysis
     '''
     # Check we have 4 bugs
-    resp = client.get('/analysis/1', headers=[
-        ('Authorization', header_bot),
-    ])
+    resp = client.get(
+        '/analysis/1',
+        headers=[
+            ('Authorization', header_bot),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
     assert len(analysis['bugs']) == 4
 
     # Delete created bug 12345
-    resp = client.delete('/bugs/12345', headers=[
-        ('Authorization', header_bot),
-    ])
+    resp = client.delete(
+        '/bugs/12345',
+        headers=[
+            ('Authorization', header_bot),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
 
     # Check we now have 3 bugs
-    resp = client.get('/analysis/1', headers=[
-        ('Authorization', header_bot),
-    ])
+    resp = client.get(
+        '/analysis/1',
+        headers=[
+            ('Authorization', header_bot),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
     assert len(analysis['bugs']) == 3
@@ -355,10 +425,15 @@ def test_update_bug_flags(client, bugs, header_user):
             },
         }
     }]
-    resp = client.put('/bugs/1139560', data=json.dumps(data), headers=[
-        ('Content-Type', 'application/json'),
-        ('Authorization', header_user),
-    ])
+    resp = client.put(
+        '/bugs/1139560',
+        data=json.dumps(data),
+        headers=[
+            ('Content-Type', 'application/json'),
+            ('Authorization', header_user),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     bug = json.loads(resp.data.decode('utf-8'))
     assert bug['flags_generic'] == {
@@ -398,10 +473,15 @@ def test_update_bug_attachment(client, bugs, header_user):
             },
         }
     }]
-    resp = client.put('/bugs/1139560', data=json.dumps(data), headers=[
-        ('Content-Type', 'application/json'),
-        ('Authorization', header_user),
-    ])
+    resp = client.put(
+        '/bugs/1139560',
+        data=json.dumps(data),
+        headers=[
+            ('Content-Type', 'application/json'),
+            ('Authorization', header_user),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     bug = json.loads(resp.data.decode('utf-8'))
     assert bug['versions'] == {

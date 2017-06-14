@@ -1,3 +1,6 @@
 -e ./../../lib/cli_common[sentry] #egg=mozilla-cli-common
--e ./../../lib/backend_common[api,cors,auth,db] #egg=mozilla-backend-common
+-e ./../../lib/backend_common[log,security,cors,api,auth,db] #egg=mozilla-backend-common
+
 boto
+psycopg2
+gunicorn

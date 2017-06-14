@@ -1,29 +1,28 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
 
+import cli_common.log
 import connexion
 import flask
 import pathlib
 import werkzeug
-
-import cli_common.log
 
 
 logger = cli_common.log.get_logger(__name__)
 
 
 def common_error_handler(exception):
-    """
-    TODO: add description
+    '''TODO: add description
 
     :param extension:  TODO
     :type exception: Exception
 
     :rtype: TODO:
-    """
+    '''
 
     if not isinstance(exception, werkzeug.exceptions.HTTPException):
         exception = werkzeug.exceptions.InternalServerError()
@@ -36,16 +35,15 @@ def common_error_handler(exception):
 
 
 class Api:
-    """
-    TODO: add description
-    TODO: annotate class
-    """
+    '''TODO: add description
+       TODO: annotate class
+    '''
 
     def __init__(self, app):
-        """
+        '''
         TODO: add description
         TODO: annotate function
-        """
+        '''
         self.__app = app
 
         logger.debug('Setting JSON encoder.')
@@ -64,13 +62,12 @@ class Api:
                  swagger_json=True,
                  swagger_ui=True,
                  swagger_path=None,
-                 swagger_url="docs",
+                 swagger_url='docs',
                  validate_responses=True,
                  strict_validation=True,
                  resolver=connexion.resolver.Resolver(),
                  ):
-        """
-        Adds an API to the application based on a swagger file
+        '''Adds an API to the application based on a swagger file
 
         :param swagger_file: swagger file with the specification
         :type swagger_file: str
@@ -109,7 +106,7 @@ class Api:
         :type resolver: connexion.resolver.Resolver | types.FunctionType
 
         :rtype: None
-        """
+        '''
 
         app = self.__app
         if hasattr(resolver, '__call__'):
