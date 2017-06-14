@@ -12,9 +12,8 @@ from shipit_pipeline.pipeline import get_runnable_steps, get_running_steps, refr
 
 log = logging.getLogger(__name__)
 
-PIPELINES = {
-
-}
+PIPELINES = {}
+MockSteps = {}
 
 
 def list_pipelines():
@@ -52,12 +51,24 @@ def update_pipeline_state(uid, state):
     PIPELINES[uid][0] = state
 
 
+def start_mock_step(uid):
+    return MockSteps[uid].start_step()
+
+
+def get_mock_status(uid):
+    return MockSteps[uid].get_state()
+
+
+def get_mock(uid):
+    return MockSteps[uid].to_dict()
+
+
 def ticktock():
 
     try:
         print('In ticktock')
         running_pipelines = [
-            (uid, status, steps) for (uid, (status, steps)) in PIPELINES.items() if status == 'running'
+            (uid, status, steps) for (uid, status, steps) in PIPELINES.items() if status == 'running'
         ]
 
         print('running_pipelines', running_pipelines)
