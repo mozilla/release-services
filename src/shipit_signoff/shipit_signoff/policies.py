@@ -5,13 +5,24 @@ from shipit_signoff.util import is_key_present_in_list_of_dicts
 
 
 class UnauthorizedUserError(Exception):
+
     def __init__(self, email, group_name, policy):
-        super().__init__('{} (in group "{}") is not allowed to sign off policy {}'.format(email, group_name, policy))
+        super().__init__('{} (in group "{}") is not allowed to sign off policy {}'.format(
+            email, group_name, policy))
 
 
 class NoSignoffLeftError(Exception):
+
     def __init__(self, email, group_name, policy, missing_signoffs):
-        super().__init__('{} (in group "{}") cannot signoff policy {}. Missing signoff are: {}'.format(email, group_name, policy, missing_signoffs))
+        super().__init__('{} (in group "{}") cannot signoff policy {}. Missing signoff are: {}'.format(
+            email, group_name, policy, missing_signoffs))
+
+
+class NoSignaturePresentError(Exception):
+
+    def __init__(self, email, group_name):
+        super().__init__('{} (in group "{}") has not signed policy.'.format(
+            email, group_name))
 
 
 def check_whether_policy_can_be_signed(email, group_name, policy, existing_signatures):
@@ -29,8 +40,22 @@ def check_whether_policy_can_be_signed(email, group_name, policy, existing_signa
     ))
 
     if not can_user_still_sign:
-        missing_signoffs = _calculate_missing_signoffs(policy, existing_signatures)
+        missing_signoffs = _calculate_missing_signoffs(
+            policy, existing_signatures)
         raise NoSignoffLeftError(email, group_name, policy, missing_signoffs)
+
+
+def check_whether_policy_can_be_unsigned(email, group_name, policy, existing_signatures):
+    is_user_allowed_to_sign = any((
+        _is_group_defined_in_policy(group_name, policy),
+        _is_email_defined_in_policy(email, policy)
+    ))
+
+    if not is_user_allowed_to_sign:
+        raise UnauthorizedUserError(email, group_name, policy)
+
+    if not _has_user_signed_policy(email, group_name, policy, existing_signatures):
+        raise NoSignaturePresentError(email, group_name)
 
 
 def _is_group_defined_in_policy(group_name, policy):
@@ -39,6 +64,19 @@ def _is_group_defined_in_policy(group_name, policy):
 
 def _is_email_defined_in_policy(email, policy):
     return is_key_present_in_list_of_dicts(key=email, list_of_dicts=policy)
+
+
+def _has_user_signed_policy(email, group_name, policy, existing_signatures):
+    return any((
+        all((
+            _is_group_defined_in_policy(group_name, policy),
+            any(s.email == email and s.group == group_name for s in existing_signatures),
+        )),
+        all((
+            _is_email_defined_in_policy(email, policy),
+            any(s.email == email for s in existing_signatures)
+        ))
+    ))
 
 
 def _are_there_signoffs_left_for_group(group_name, policy, existing_signatures):
@@ -69,7 +107,8 @@ def _calculate_missing_signoffs(policy, existing_signatures):
     for signature in existing_signatures:
         for email_or_group in (signature.group, signature.email):
             for signoff_condition in missing_signoffs:
-                number_of_signoffs = signoff_condition.get(email_or_group, None)
+                number_of_signoffs = signoff_condition.get(
+                    email_or_group, None)
                 if number_of_signoffs is not None:
                     if number_of_signoffs <= 0:
                         # TODO use finer error

@@ -17,11 +17,14 @@ import json
 import flask_oidc
 from flask import g, request
 import requests
+from cli_common import log
+
+logger = log.get_logger(__name__)
 
 auth0 = flask_oidc.OpenIDConnect()
 
 
-def accept_token(render_errors=True):
+def moz_accept_token(render_errors=True):
     """
     Use this to decorate view functions that should accept OAuth2 tokens,
     this will most likely apply to API functions.
@@ -66,8 +69,10 @@ def accept_token(render_errors=True):
                     response_body = json.dumps(response_body)
                 return response_body, 401, {'WWW-Authenticate': 'Bearer'}
 
-            # store response.content for later?
+            # store response.content for later
             g.userinfo = json.loads(response.content)
+            # g.oidc_id_token = token # requires a specific format
+            g.access_token = token
 
             return view_func(*args, **kwargs)
 
