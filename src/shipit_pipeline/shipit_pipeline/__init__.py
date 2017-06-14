@@ -13,6 +13,7 @@ import shipit_pipeline.config
 def create_app(config=None):
     app = backend_common.create_app(
         name=shipit_pipeline.config.PROJECT_NAME,
+        config=config,
         extensions=[
             'log',
             'security',

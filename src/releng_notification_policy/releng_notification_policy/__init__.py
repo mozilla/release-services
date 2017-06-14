@@ -13,6 +13,7 @@ import releng_notification_policy.config
 def create_app(config=None):
     app = backend_common.create_app(
         name=releng_notification_policy.config.PROJECT_NAME,
+        config=config,
         extensions=[
             'log',
             'security',

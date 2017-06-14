@@ -13,6 +13,7 @@ import releng_treestatus.config
 def create_app(config=None):
     app = backend_common.create_app(
         name=releng_treestatus.config.PROJECT_NAME,
+        config=config,
         extensions=[
             'log',
             'security',

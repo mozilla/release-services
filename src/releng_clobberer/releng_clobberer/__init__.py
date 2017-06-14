@@ -13,6 +13,7 @@ import releng_clobberer.config
 def create_app(config=None):
     app = backend_common.create_app(
         name=releng_clobberer.config.PROJECT_NAME,
+        config=config,
         extensions=[
             'log',
             'security',

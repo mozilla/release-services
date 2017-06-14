@@ -14,7 +14,7 @@ import os.path
 import pytest
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def app():
     '''
     Build an app with an authenticated dummy api
@@ -22,12 +22,13 @@ def app():
     import backend_common
 
     # Use unique auth instance
-    config = {
-        'DEBUG': True,
+    config = backend_common.testing.get_app_config({
         'OIDC_CLIENT_SECRETS': os.path.join(os.path.dirname(__file__), 'client_secrets.json'),
         'OIDC_RESOURCE_SERVER_ONLY': True,
         'APP_TEMPLATES_FOLDER': '',
-    }
+        'SQLALCHEMY_DATABASE_URI': 'sqlite://',
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+    })
 
     app = backend_common.create_app(
         'test',
@@ -66,16 +67,6 @@ def app():
     # Add fake swagger url, used by redirect
     app.api.swagger_url = '/'
 
-    return app
-
-
-@pytest.yield_fixture(scope='module')
-def client(app):
-    '''
-    A Flask test client.
-    '''
-    import backend_common
-
-    with app.test_client() as client:
-        with backend_common.mocks.apply_mockups():
-            yield client
+    with app.app_context():
+        backend_common.testing.configure_app(app)
+        yield app

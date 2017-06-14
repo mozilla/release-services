@@ -13,6 +13,7 @@ import releng_archiver.config
 def create_app(config=None):
     app = backend_common.create_app(
         name=releng_archiver.config.PROJECT_NAME,
+        config=config,
         extensions=[
             'log',
             'security',

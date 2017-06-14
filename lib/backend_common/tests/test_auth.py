@@ -5,8 +5,6 @@
 
 from __future__ import absolute_import
 
-import backend_common.auth
-import backend_common.mocks
 import flask
 import json
 import pytest
@@ -16,6 +14,7 @@ def test_anonymous():
     '''
     Test AnonymousUser instances
     '''
+    import backend_common.auth
 
     user = backend_common.auth.AnonymousUser()
 
@@ -31,6 +30,8 @@ def test_taskcluster_user():
     '''
     Test TasklusterUser instances
     '''
+
+    import backend_common.auth
 
     credentials = {
         'clientId': 'test/user@mozilla.com',
@@ -56,6 +57,9 @@ def test_auth(client):
     '''
     Test the Taskcluster authentication
     '''
+
+    import backend_common.testing
+
     # Test non authenticated endpoint
     resp = client.get('/')
     assert resp.status_code in (200, 302)
@@ -69,7 +73,7 @@ def test_auth(client):
         'scopes': ['project/test/*', ],
     }
     client_id = 'test/user@mozilla.com'
-    header = backend_common.mocks.build_header(client_id, ext_data)
+    header = backend_common.testing.build_header(client_id, ext_data)
     resp = client.get('/test-auth-login', headers=[('Authorization', header)])
     assert resp.status_code == 200
     data = json.loads(resp.data.decode('utf-8'))
@@ -82,13 +86,16 @@ def test_scopes_invalid(client):
     '''
     Test the Taskcluster required scopes
     '''
+
+    import backend_common.testing
+
     client_id = 'test/user@mozilla.com'
 
     # Missing a scope to validate test
     ext_data = {
         'scopes': ['project/test/A', 'project/test/C', ],
     }
-    header = backend_common.mocks.build_header(client_id, ext_data)
+    header = backend_common.testing.build_header(client_id, ext_data)
     resp = client.get('/test-auth-scopes', headers=[('Authorization', header)])
     assert resp.status_code == 401
 
@@ -97,12 +104,15 @@ def test_scopes_user(client):
     '''
     Test the Taskcluster required scopes
     '''
+
+    import backend_common.testing
+
     client_id = 'test/user@mozilla.com'
     # Validate with user scopes
     ext_data = {
         'scopes': ['project/test/A', 'project/test/B', ],
     }
-    header = backend_common.mocks.build_header(client_id, ext_data)
+    header = backend_common.testing.build_header(client_id, ext_data)
     resp = client.get('/test-auth-scopes',
                       headers=[('Authorization', header)])
     assert resp.status_code == 200
@@ -113,13 +123,16 @@ def test_scopes_admin(client):
     '''
     Test the Taskcluster required scopes
     '''
+
+    import backend_common.testing
+
     client_id = 'test/user@mozilla.com'
 
     # Validate with admin scopes
     ext_data = {
         'scopes': ['project/another/*', 'project/test-admin/*']
     }
-    header = backend_common.mocks.build_header(client_id, ext_data)
+    header = backend_common.testing.build_header(client_id, ext_data)
     resp = client.get('/test-auth-scopes', headers=[('Authorization', header)])
     assert resp.status_code == 200
     assert resp.data == b'Your scopes are ok.'

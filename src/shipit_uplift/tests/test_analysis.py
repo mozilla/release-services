@@ -5,7 +5,7 @@
 
 from __future__ import absolute_import
 
-from urllib.parse import parse_qs
+import urllib.parse
 import backend_common.testing
 import json
 
@@ -14,12 +14,8 @@ def assert_query_strings(x, y):
     '''
     Helper to compare Query strings
     '''
-    x = parse_qs(x)
-    y = parse_qs(y)
-    from pprint import pprint
-    if x != y:
-        pprint(x)
-        pprint(y)
+    x = urllib.parse.parse_qs(x)
+    y = urllib.parse.parse_qs(y)
     assert x == y
 
 
@@ -362,8 +358,7 @@ def test_deprecating_bug(client, bugs, header_bot):
 
 
 def test_delete_bug(client, bugs, header_bot):
-    '''
-    Delete a bug in an analysis
+    '''Delete a bug in an analysis.
     '''
     # Check we have 4 bugs
     resp = client.get(
@@ -373,8 +368,11 @@ def test_delete_bug(client, bugs, header_bot):
         ],
         environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
+
     assert resp.status_code == 200
+
     analysis = json.loads(resp.data.decode('utf-8'))
+
     assert len(analysis['bugs']) == 4
 
     # Delete created bug 12345
@@ -385,6 +383,7 @@ def test_delete_bug(client, bugs, header_bot):
         ],
         environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
+
     assert resp.status_code == 200
 
     # Check we now have 3 bugs
@@ -395,8 +394,11 @@ def test_delete_bug(client, bugs, header_bot):
         ],
         environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
+
     assert resp.status_code == 200
+
     analysis = json.loads(resp.data.decode('utf-8'))
+
     assert len(analysis['bugs']) == 3
 
     # Check bug is removed
@@ -404,9 +406,9 @@ def test_delete_bug(client, bugs, header_bot):
 
 
 def test_update_bug_flags(client, bugs, header_user):
+    '''Update tracking flags for a bug.
     '''
-    Update tracking flags for a bug
-    '''
+
     data = [{
         'target': 'bug',
         'bugzilla_id': 1139560,
@@ -425,6 +427,7 @@ def test_update_bug_flags(client, bugs, header_user):
             },
         }
     }]
+
     resp = client.put(
         '/bugs/1139560',
         data=json.dumps(data),
@@ -434,12 +437,16 @@ def test_update_bug_flags(client, bugs, header_user):
         ],
         environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
+
     assert resp.status_code == 200
+
     bug = json.loads(resp.data.decode('utf-8'))
+
     assert bug['flags_generic'] == {
         'in-testsuite': '+',
         'qe-verify': '+',
     }
+
     assert bug['flags_status'] == {
         'firefox37': '---',
         'firefox38': 'fixed',
@@ -448,6 +455,7 @@ def test_update_bug_flags(client, bugs, header_user):
         'firefox_esr31': '---',
         'firefox_esr38': '---',
     }
+
     assert bug['flags_tracking'] == {
         'firefox37': '---',
         'firefox38': '+',
@@ -460,8 +468,7 @@ def test_update_bug_flags(client, bugs, header_user):
 
 
 def test_update_bug_attachment(client, bugs, header_user):
-    '''
-    Update attachment for a bug
+    '''Update attachment for a bug.
     '''
     data = [{
         'target': 'attachment',
@@ -473,6 +480,7 @@ def test_update_bug_attachment(client, bugs, header_user):
             },
         }
     }]
+
     resp = client.put(
         '/bugs/1139560',
         data=json.dumps(data),
@@ -482,8 +490,11 @@ def test_update_bug_attachment(client, bugs, header_user):
         ],
         environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
+
     assert resp.status_code == 200
+
     bug = json.loads(resp.data.decode('utf-8'))
+
     assert bug['versions'] == {
         'aurora -': {
             'attachments': ['8590815'],

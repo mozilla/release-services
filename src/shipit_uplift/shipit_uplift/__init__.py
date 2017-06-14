@@ -13,6 +13,7 @@ import shipit_uplift.config
 def create_app(config=None):
     app = backend_common.create_app(
         name=shipit_uplift.config.PROJECT_NAME,
+        config=config,
         extensions=[
             'log',
             'security',

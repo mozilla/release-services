@@ -13,6 +13,7 @@ import releng_notification_identity.config
 def create_app(config=None):
     app = backend_common.create_app(
         name=releng_notification_identity.config.PROJECT_NAME,
+        config=config,
         extensions=[
             'log',
             'security',

@@ -13,6 +13,7 @@ import shipit_taskcluster.config
 def create_app(config=None):
     app = backend_common.create_app(
         name=shipit_taskcluster.config.PROJECT_NAME,
+        config=config,
         extensions=[
             'log',
             'security',
