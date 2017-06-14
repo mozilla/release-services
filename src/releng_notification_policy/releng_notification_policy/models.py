@@ -35,7 +35,8 @@ class Policy(db.Model):
     message_id = Column(Integer, ForeignKey(Message.id, ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
 
     def __repr__(self):
-        return 'Policy(message_uid={message_uid}, identity={identity_name}, urgency={urgency})'.format(
+        return 'Policy(id={policy_id}, message_uid={message_uid}, identity={identity_name}, urgency={urgency})'.format(
+            policy_id=self.id,
             message_uid=self.message_id,
             identity_name=self.identity,
             urgency=self.urgency
