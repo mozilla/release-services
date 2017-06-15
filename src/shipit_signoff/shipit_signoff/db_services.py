@@ -15,3 +15,10 @@ def insert_new_signature(step, email, group_name):
 
     db.session.add(signature)
     db.session.commit()
+
+
+def delete_existing_signature(step, email, group_name):
+    signature = db.session.query(Signature).filter(
+        Signature.step_uid == step.uid).filter(Signature.email == email).one()
+    signature.delete()
+    db.session.commit()

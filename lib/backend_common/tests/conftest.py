@@ -60,7 +60,7 @@ def app():
         return app.response_class('Your scopes are ok.')
 
     @app.route('/test-auth0-userinfo')
-    @backend_common.auth0.accept_token()
+    @backend_common.auth0.mozilla_accept_token()
     def auth0_token():
         return app.response_class('OK')
 
