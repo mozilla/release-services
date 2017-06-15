@@ -5,38 +5,7 @@
 
 from __future__ import absolute_import
 
-import os
-
-import backend_common
-import backend_common.db
-import cli_common.taskcluster
-import releng_notification_policy.config
+import releng_notification_policy
 
 
-DEBUG = bool(os.environ.get('DEBUG', __name__ == '__main__'))
-HERE = os.path.dirname(os.path.abspath(__file__))
-APP_SETTINGS = os.path.abspath(os.path.join(HERE, '..', 'settings.py'))
-
-
-def init_app(app):
-    app.notify = cli_common.taskcluster.get_service(
-        'notify',
-        app.config.get('TASKCLUSTER_CLIENT_ID'),
-        app.config.get('TASKCLUSTER_ACCESS_TOKEN')
-    )
-
-    return app.api.register(
-        os.path.join(os.path.dirname(__file__), 'api.yml'))
-
-
-if not os.environ.get('APP_SETTINGS') and \
-       os.path.isfile(APP_SETTINGS):
-    os.environ['APP_SETTINGS'] = APP_SETTINGS
-
-
-app = backend_common.create_app(
-    releng_notification_policy.config.PROJECT_NAME,
-    extensions=[init_app, backend_common.db],
-    debug=DEBUG,
-    debug_src=HERE,
-)
+app = releng_notification_policy.create_app()

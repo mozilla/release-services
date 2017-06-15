@@ -1,12 +1,19 @@
-from flask_login import LoginManager, current_user
-from flask import request, current_app, jsonify
-from taskcluster.utils import scope_match
-from functools import wraps
-import structlog
+# -*- coding: utf-8 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from __future__ import absolute_import
+
+import cli_common.log
+import flask
+import flask_login
+import functools
 import taskcluster
+import taskcluster.utils
 
 
-logger = structlog.get_logger(__name__)
+logger = cli_common.log.get_logger(__name__)
 
 
 class BaseUser(object):
@@ -72,24 +79,24 @@ class TaskclusterUser(BaseUser):
         return self.credentials['scopes']
 
     def has_permissions(self, required_permissions):
-        """
+        '''
         Check user has some required permissions
         Using Taskcluster comparison algorithm
-        """
+        '''
         if len(required_permissions) > 0 \
            and not isinstance(required_permissions[0], (tuple, list)):
                 required_permissions = [required_permissions]
 
-        return scope_match(self.get_permissions(), required_permissions)
+        return taskcluster.utils.scope_match(self.get_permissions(), required_permissions)
 
     # XXX: this should not be here
 
     def taskcluster_options(self):
-        """
+        '''
         Configure the TaskCluster Secrets client
         with optional target HAWK header
-        """
-        target_header = request.environ.get('HTTP_X_AUTHORIZATION_TARGET')
+        '''
+        target_header = flask.request.environ.get('HTTP_X_AUTHORIZATION_TARGET')
         if not target_header:
             raise Exception('Missing X-AUTHORIZATION-TARGET header')
         return {
@@ -99,9 +106,9 @@ class TaskclusterUser(BaseUser):
         }
 
     def get_secret(self, name):
-        """
+        '''
         Helper to read a Taskcluster secret
-        """
+        '''
         secrets = taskcluster.Secrets(self.taskcluster_options())
         secret = secrets.get(name)
         if not secret:
@@ -112,7 +119,7 @@ class TaskclusterUser(BaseUser):
 class Auth(object):
 
     def __init__(self, anonymous_user):
-        self.login_manager = LoginManager()
+        self.login_manager = flask_login.LoginManager()
         self.login_manager.anonymous_user = anonymous_user
         self.app = None
 
@@ -124,27 +131,27 @@ class Auth(object):
         if not self._require_login():
             return False
 
-        with current_app.app_context():
-            user_scopes = current_user.get_permissions()
-            if not scope_match(user_scopes, scopes):
+        with flask.current_app.app_context():
+            user_scopes = flask_login.current_user.get_permissions()
+            if not taskcluster.utils.scope_match(user_scopes, scopes):
                 diffs = [', '.join(set(s).difference(user_scopes)) for s in scopes]  # noqa
-                logger.error('User {} misses some scopes: {}'.format(current_user.get_id(), ' OR '.join(diffs)))  # noqa
+                logger.error('User {} misses some scopes: {}'.format(flask_login.current_user.get_id(), ' OR '.join(diffs)))  # noqa
                 return False
 
         return True
 
     def _require_login(self):
-        with current_app.app_context():
+        with flask.current_app.app_context():
             try:
-                return current_user.is_authenticated
+                return flask_login.current_user.is_authenticated
             except Exception as e:
                 logger.error('Invalid authentication: {}'.format(e))
                 return False
 
     def require_login(self, method):
-        """Decorator to check if user is authenticated
-        """
-        @wraps(method)
+        '''Decorator to check if user is authenticated
+        '''
+        @functools.wraps(method)
         def wrapper(*args, **kwargs):
             if self._require_login():
                 return method(*args, **kwargs)
@@ -152,8 +159,8 @@ class Auth(object):
         return wrapper
 
     def require_scopes(self, scopes):
-        """Decorator to check if user has required scopes or set of scopes
-        """
+        '''Decorator to check if user has required scopes or set of scopes
+        '''
 
         assert isinstance(scopes, (tuple, list))
 
@@ -161,7 +168,7 @@ class Auth(object):
             scopes = [scopes]
 
         def decorator(method):
-            @wraps(method)
+            @functools.wraps(method)
             def wrapper(*args, **kwargs):
                 logger.info('Checking scopes', scopes=scopes)
                 if self._require_scopes(scopes):
@@ -170,12 +177,13 @@ class Auth(object):
                     return method(*args, **kwargs)
                 else:
                     # Abort with a 401 status code
-                    return jsonify({
+                    return flask.jsonify({
                         'error_title': 'Unauthorized',
                         'error_message': 'Invalid user scopes',
                     }), 401
             return wrapper
         return decorator
+
 
 auth = Auth(
     anonymous_user=AnonymousUser,
@@ -186,18 +194,18 @@ auth = Auth(
 def taskcluster_user_loader(auth_header):
 
     # Get Endpoint configuration
-    if ':' in request.host:
-        host, port = request.host.split(':')
+    if ':' in flask.request.host:
+        host, port = flask.request.host.split(':')
     else:
-        host = request.host
-        port = request.environ.get('HTTP_X_FORWARDED_PORT')
+        host = flask.request.host
+        port = flask.request.environ.get('HTTP_X_FORWARDED_PORT')
         if port is None:
-            port = request.scheme == 'https' and 443 or 80
-    method = request.method.lower()
+            port = flask.request.scheme == 'https' and 443 or 80
+    method = flask.request.method.lower()
 
     # Build taskcluster payload
     payload = {
-        'resource': request.path,
+        'resource': flask.request.path,
         'method': method,
         'host': host,
         'port': int(port),

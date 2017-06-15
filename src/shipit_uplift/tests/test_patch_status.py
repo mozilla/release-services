@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from __future__ import absolute_import
+
+import backend_common.testing
 import json
 
 
@@ -18,9 +25,13 @@ def test_patch_status(client, bugs, header_bot):
     assert 'merge' not in patches[revision]
 
     # Check there are no patch statuses at first
-    resp = client.get(url, headers=[
-        ('Authorization', header_bot),
-    ])
+    resp = client.get(
+        url,
+        headers=[
+            ('Authorization', header_bot),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     statuses = json.loads(resp.data.decode('utf-8'))
     assert statuses == []
@@ -34,16 +45,25 @@ def test_patch_status(client, bugs, header_bot):
         'status': 'failed',
         'message': 'random mercurial error',
     }
-    resp = client.post(url, data=json.dumps(data), headers=[
-        ('Authorization', header_bot),
-        ('Content-Type', 'application/json'),
-    ])
+    resp = client.post(
+        url,
+        data=json.dumps(data),
+        headers=[
+            ('Authorization', header_bot),
+            ('Content-Type', 'application/json'),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
 
     # Check we now have 1 patch status attached to the bug
-    resp = client.get(url, headers=[
-        ('Authorization', header_bot),
-    ])
+    resp = client.get(
+        url,
+        headers=[
+            ('Authorization', header_bot),
+        ],
+        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
+    )
     assert resp.status_code == 200
     statuses = json.loads(resp.data.decode('utf-8'))
     assert len(statuses) == 1
