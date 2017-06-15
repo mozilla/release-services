@@ -56,12 +56,11 @@ class Policy(db.Model):
         return {
             'identity': self.identity,
             'urgency': self.urgency,
-            'start_timestamp': self.start_timestamp,
-            'stop_timestamp': self.stop_timestamp,
+            'start_timestamp': self.start_timestamp.isoformat(),
+            'stop_timestamp': self.stop_timestamp.isoformat(),
             'frequency': {
                 'days': num_days,
                 'hours': num_hours,
                 'minutes': num_minutes,
             },
         }
-

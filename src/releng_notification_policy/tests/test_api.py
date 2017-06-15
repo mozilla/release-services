@@ -1,8 +1,10 @@
 import pytest
-from releng_notification_policy.api import create_identity_preference_url, determine_message_action, get_identity_url_for_actionable_policies
+from releng_notification_policy.api import create_identity_preference_url, determine_message_action, \
+    get_identity_url_for_actionable_policies, get_policies_in_json_serializable_form
 from releng_notification_policy.models import Policy, Message
 from datetime import datetime, timedelta
 from operator import itemgetter
+from json import dumps as dump_to_json
 
 
 @pytest.fixture
@@ -126,3 +128,8 @@ def test_determine_message_action(app, list_of_messages):
     result = list(determine_message_action(list_of_messages))
     bool_vals = list(map(itemgetter(1), result))
     assert bool_vals == [True, False], 'Determine message action did not correctly identify notifiable messages.'
+
+
+def test_get_policies_in_json_serializable_form(app, list_of_policies):
+    json_serializable_form = get_policies_in_json_serializable_form(list_of_policies)
+    assert all(dump_to_json(test) for test in json_serializable_form)

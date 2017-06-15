@@ -42,7 +42,7 @@ def get_message_by_uid(uid: str) -> dict:
         }
     else:
         err_str = 'Message with uid {} not found.'.format(uid)
-        logger.warning(err_str)
+        logger.info(err_str)
         raise NotFound(err_str)
 
 
@@ -60,7 +60,7 @@ def put_message(uid: str, body: dict) -> None:
     existing_message = session.query(Message).filter(Message.uid == uid).first()
     if existing_message:
         err_str = '{message} already exists'.format(message=existing_message)
-        logger.warn(err_str)
+        logger.info(err_str)
         raise Conflict(err_str)
 
     new_message = Message(uid=uid, shortMessage=body['shortMessage'],

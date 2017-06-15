@@ -1,6 +1,10 @@
 from .models import Message
 from flask import current_app
 from taskcluster import TaskclusterFailure
+from cli_common import log
+
+
+logger = log.get_logger(__name__)
 
 
 def send_irc_notification(message: Message, identity_preference: dict) -> dict:
@@ -41,7 +45,15 @@ CHANNEL_MAPPING = {
 
 def send_notifications(message: Message, identity_preference: dict) -> dict:
     try:
-        return CHANNEL_MAPPING[identity_preference['channel']](message, identity_preference)
+        response = CHANNEL_MAPPING[identity_preference['channel']](message, identity_preference)
+
+        log.info('{target} notified about {message} on {channel}'.format(
+            target=identity_preference['target'],
+            message=message,
+            channel=identity_preference['channel']
+        ))
+
+        return response
 
     except TaskclusterFailure:
         pass
