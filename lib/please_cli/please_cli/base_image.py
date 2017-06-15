@@ -22,7 +22,7 @@ log = cli_common.log.get_logger(__name__)
 
 DOCKERFILE = '''
 #
-# Generated from './please tools build-base-image' command
+# Generated from './please tools base-image' command
 #
 
 FROM debian:jessie-slim
@@ -97,6 +97,38 @@ RUN . /root/.profile \\
 '''
 
 
+DOCKERFILE_DEV =  '''
+#
+# Generated from './please tools base-image --dev' command
+#
+
+FROM {}:{}
+
+MAINTAINER rgarbas@mozilla.com
+
+
+#
+# Install git
+#
+RUN apt-get -q --yes install git \\
+ && apt-get clean
+
+
+#
+# Checkout mozilla-releng/services
+#
+RUN rm /app -rf \\
+ && cd / \\
+ && git clone https://github.com/mozilla-releng/services.git /app
+
+RUN . /root/.profile \\
+ && mkdir /app/tmp \\
+ && nix-build /app/nix/default.nix -A please-cli -o /app/tmp/result-please-cli
+
+{}
+'''
+
+
 @click.command(
     cls=please_cli.utils.ClickCustomCommand,
     short_help="Build base docker image.",
@@ -130,7 +162,18 @@ RUN . /root/.profile \\
     default=please_cli.config.DOCKER_BASE_TAG,
     help='Tag of base image (default: {}).'.format(please_cli.config.DOCKER_BASE_TAG),
     )
-def cmd(docker_username, docker_password, docker, docker_repo, docker_tag):
+@click.option(
+    '--dev',
+    is_flag=True,
+    help='Build development image with all projects preinstalled.',
+    )
+@click.option(
+    '--docker-dev-tag',
+    required=True,
+    default=please_cli.config.DOCKER_DEV_TAG,
+    help='Tag of dev image (default: {}).'.format(please_cli.config.DOCKER_DEV_TAG),
+    )
+def cmd(docker_username, docker_password, docker, docker_repo, docker_tag, dev, docker_dev_tag):
 
     docker_file = os.path.join(please_cli.config.ROOT_DIR, 'Dockerfile')
     nixpkgs_json_file = os.path.join(please_cli.config.ROOT_DIR, 'nix', 'nixpkgs.json')
@@ -156,6 +199,21 @@ def cmd(docker_username, docker_password, docker, docker_repo, docker_tag):
                 ))
         please_cli.utils.check_result(0, '')
 
+        click.echo(' => Logging into hub.docker.com ... ', nl=False)
+        with click_spinner.spinner():
+            result, output, error = cli_common.command.run(
+                [
+                    docker,
+                    'login',
+                    '--username', docker_username,
+                    '--password', docker_password,
+                ],
+                stream=True,
+                stderr=subprocess.STDOUT,
+                log_command=False,
+            )
+        please_cli.utils.check_result(result, output)
+
         click.echo(' => Building base docker image ... ', nl=False)
         with click_spinner.spinner():
             result, output, error = cli_common.command.run(
@@ -175,21 +233,6 @@ def cmd(docker_username, docker_password, docker, docker_repo, docker_tag):
             )
         please_cli.utils.check_result(result, output)
 
-        click.echo(' => Logging into hub.docker.com ... ', nl=False)
-        with click_spinner.spinner():
-            result, output, error = cli_common.command.run(
-                [
-                    docker,
-                    'login',
-                    '--username', docker_username,
-                    '--password', docker_password,
-                ],
-                stream=True,
-                stderr=subprocess.STDOUT,
-                log_command=False,
-            )
-        please_cli.utils.check_result(result, output)
-
         click.echo(' => Pushing base docker image ... ', nl=False)
         with click_spinner.spinner():
             result, output, error = cli_common.command.run(
@@ -202,6 +245,54 @@ def cmd(docker_username, docker_password, docker, docker_repo, docker_tag):
                 stderr=subprocess.STDOUT,
             )
         please_cli.utils.check_result(result, output)
+
+        if dev:
+            click.echo(' => Creating dev Dockerfile ... ', nl=False)
+            with click_spinner.spinner():
+                with open(docker_file, 'w+') as f:
+                    f.write(DOCKERFILE_DEV.format(
+                        docker_repo,
+                        docker_tag,
+                        '\n\n'.join([
+                            'RUN nix-shell /app/nix/default.nix -A {} --run "exit"'.format(project)
+                            for project in please_cli.config.PROJECTS
+                        ]),
+                    ))
+            please_cli.utils.check_result(0, '')
+
+            click.echo(' => Building dev docker image ... ', nl=False)
+            with click_spinner.spinner():
+                result, output, error = cli_common.command.run(
+                    [
+                        docker,
+                        'build',
+                        '--no-cache',
+                        '--pull',
+                        '--force-rm',
+                        '-t',
+                        '{}:{}'.format(docker_repo, docker_dev_tag),
+                        please_cli.config.ROOT_DIR,
+                    ],
+                    stream=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                )
+            please_cli.utils.check_result(result, output)
+
+            click.echo(' => Pushing base docker image ... ', nl=False)
+            with click_spinner.spinner():
+                result, output, error = cli_common.command.run(
+                    [
+                        docker,
+                        'push',
+                        '{}:{}'.format(docker_repo, docker_dev_tag),
+                    ],
+                    stream=True,
+                    stderr=subprocess.STDOUT,
+                )
+            please_cli.utils.check_result(result, output)
+
+
     finally:
         if os.path.exists(docker_file):
             os.unlink(docker_file)

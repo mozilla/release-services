@@ -39,6 +39,7 @@ DEPLOY_CHANNELS = ['staging', 'production']
 DOCKER_REGISTRY = "https://index.docker.io"
 DOCKER_REPO = 'mozillareleng/services'
 DOCKER_BASE_TAG = 'base-latest'
+DOCKER_DEV_TAG = 'dev-latest'
 
 NIX_BIN_DIR = os.environ.get("NIX_BIN_DIR", "")  # must end with /
 OPENSSL_BIN_DIR = os.environ.get("OPENSSL_BIN_DIR", "")  # must end with /
