@@ -60,7 +60,7 @@ class MockPipelineStep:
 
     def __init__(self, uid, params, requires, state='pending', step_time=100):
         self.uid = uid
-        self.url = ""
+        self.url = ''
         self.params = params
         self.requires = requires
         self.state = state
@@ -96,17 +96,17 @@ class MockPipelineStep:
 
     def to_dict(self):
         return {
-                  "parameters": {
-                    "api_url": self.full_url,
-                    "description": "string",
-                    "parameters": self.params,
-                    "parameters_schema": "string",
-                    "requires": [
+                  'parameters': {
+                    'api_url': self.full_url,
+                    'description': 'string',
+                    'parameters': self.params,
+                    'parameters_schema': 'string',
+                    'requires': [
                       self.requires
                     ],
-                    "uid": self.uid
+                    'uid': self.uid
                   },
-                  "uid": self.uid
+                  'uid': self.uid
                 }
 
 
