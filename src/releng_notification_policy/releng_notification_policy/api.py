@@ -12,7 +12,7 @@ from werkzeug.exceptions import Conflict, NotFound
 from .models import Message, Policy
 from .channels import send_notifications
 from requests import get
-from simplejson import JSONDecodeError
+from json import JSONDecodeError
 from cli_common import log
 
 logger = log.get_logger(__name__)
