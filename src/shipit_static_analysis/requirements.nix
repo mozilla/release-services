@@ -91,6 +91,24 @@ let
 
 
 
+    "RBTools" = python.mkDerivation {
+      name = "RBTools-0.7.10";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/b3/9b/f2824009aefc5876a10d122424f83d31572ead24aaec869837a86dbd7156/RBTools-0.7.10.tar.gz"; sha256 = "7da97baa0dd447b3d83e1eed8ff41eee32d9195925ac08dc2c7b019b9b85ae8d"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."six"
+      self."tqdm"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://www.reviewboard.org/";
+        license = licenses.mit;
+        description = "Command line tools for use with Review Board";
+      };
+    };
+
+
+
     "aioamqp" = python.mkDerivation {
       name = "aioamqp-0.10.0";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/22/f2/2b78c982e81eb840de18a419aa5c7d10519ccd81852e91310ebcbcd3e78b/aioamqp-0.10.0.tar.gz"; sha256 = "c618af6d005942a2a8711f7548348f9028fac2673f0dc2d192310cef83486204"; };
@@ -679,8 +697,8 @@ let
 
 
     "pytest" = python.mkDerivation {
-      name = "pytest-3.1.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/96/51/8fa6bdb9c80e21a90e162f6774da2506497ef0c92afae8ba654c3a5ce4c3/pytest-3.1.1.tar.gz"; sha256 = "0173a366a259e1d23b0f433b1f06e1b753110bb33e77a79bd8ea54cbd0b5df15"; };
+      name = "pytest-3.1.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/72/2b/2d3155e01f45a5a04427857352ee88220ee39550b2bc078f9db3190aea46/pytest-3.1.2.tar.gz"; sha256 = "795ec29fbba70b22a593691ce8bcd4bdde2dc96e8099731f73c7d8bb3ce879bf"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -765,8 +783,8 @@ let
 
 
     "requests" = python.mkDerivation {
-      name = "requests-2.17.3";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/27/c7/a45641c83c6e28f4922ba6af3d4ae4d79b41932c2f3d77fed9e0bf878149/requests-2.17.3.tar.gz"; sha256 = "8d29f97ed1541709b57caddb77bb20592411d7ca10ec4f03275f49ee8456e225"; };
+      name = "requests-2.18.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/2c/b5/2b6e8ef8dd18203b6399e9f28c7d54f6de7b7549853fe36d575bd31e29a7/requests-2.18.1.tar.gz"; sha256 = "c6f3bdf4a4323ac7b45d01e04a6f6c20e32a052cd04de81e05103abc049ad9b9"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -889,6 +907,21 @@ let
 
 
 
+    "tqdm" = python.mkDerivation {
+      name = "tqdm-4.14.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/67/7c/95e5425871bf314e484aea5f8ec65b49ab006944309b496cd53c47646155/tqdm-4.14.0.tar.gz"; sha256 = "284b7cb57c135f41122580df8a818ffffd85449a61365dfb41907d2bf115e88e"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/tqdm/tqdm";
+        license = licenses.mpl20;
+        description = "Fast, Extensible Progress Meter";
+      };
+    };
+
+
+
     "uritemplate" = python.mkDerivation {
       name = "uritemplate-3.0.0";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/cd/db/f7b98cdc3f81513fb25d3cbe2501d621882ee81150b745cdd1363278c10a/uritemplate-3.0.0.tar.gz"; sha256 = "c02643cebe23fc8adb5e6becffe201185bf06c40bda5c0b4028a93f1527d011d"; };
@@ -940,8 +973,8 @@ let
 
 
     "yarl" = python.mkDerivation {
-      name = "yarl-0.10.2";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/83/cd/c9d2c92f12de6bbb8ab025a6a9488d64e75f8650e52232b4718124d28279/yarl-0.10.2.tar.gz"; sha256 = "a042c5b3584531cd09cd5ca647f71553df7caaa3359b9b3f7eb34c3b1045b38d"; };
+      name = "yarl-0.10.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e6/fc/9b3820c47aa66924c38841f1766bf3b4857161b3c53e8548dd7a6dc0b226/yarl-0.10.3.tar.gz"; sha256 = "27b24ba3ef3cb8475aea1a655a1750bb11918ba139278af21db5846ee9643138"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [

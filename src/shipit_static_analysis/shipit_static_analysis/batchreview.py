@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import json
 import logging
 
@@ -8,15 +10,15 @@ from rbtools.api.errors import APIError
 
 
 class BatchReview(object):
-    """Create a review and comments with a single API call
+    '''Create a review and comments with a single API call
 
     Using BatchReview is much faster than creating a review and comments
     with individual API calls.
-    """
+    '''
 
     def __init__(self, api_root, review_request_id, diff_revision,
                  max_comments=100, logger=None):
-        """Initialize BatchReview
+        '''Initialize BatchReview
 
         The ``api_root`` is the result of calling get_root on a Reviewboard
         client.
@@ -31,7 +33,7 @@ class BatchReview(object):
         which can be made as part of the BatchReview.
 
         The ``logger`` object is a logger to be used.
-        """
+        '''
 
         self.api_root = api_root
         self.review_request_id = review_request_id
@@ -48,7 +50,7 @@ class BatchReview(object):
         self._file_to_diffdata = {}
 
     def destfile_to_file(self, destfile):
-        """Map a path to a file object"""
+        '''Map a path to a file object'''
         if not self._destfile_to_file:
             start = 0
             while True:
@@ -65,7 +67,7 @@ class BatchReview(object):
         return self._destfile_to_file.get(destfile)
 
     def changed_lines_for_file(self, filename):
-        """Determine which lines changed in a file"""
+        '''Determine which lines changed in a file'''
         f = self.destfile_to_file(filename)
         diff_data = self._file_to_diffdata.setdefault(f, f.get_diff_data())
 
@@ -80,13 +82,13 @@ class BatchReview(object):
         return changed_lines
 
     def translate_line_num(self, filename, line_num, original=False):
-        """Convert a file line number to a filediff line number.
+        '''Convert a file line number to a filediff line number.
 
         If original is True, will convert based on the original
         file numbers, instead of the patched.
 
         TODO: Convert to a faster search algorithm.
-        """
+        '''
         f = self.destfile_to_file(filename)
         diff_data = self._file_to_diffdata.setdefault(f, f.get_diff_data())
 
@@ -101,7 +103,7 @@ class BatchReview(object):
 
     def comment(self, filename, first_line, num_lines, text,
                 issue_opened=True):
-        """Add a comment to the list of comments."""
+        '''Add a comment to the list of comments.'''
 
         f = self.destfile_to_file(filename)
         if f is None:
@@ -121,14 +123,14 @@ class BatchReview(object):
         self.comments.append(data)
 
     def publish(self, body_top='', body_bottom='', ship_it=False):
-        """Publish the review to Reviewboard."""
+        '''Publish the review to Reviewboard.'''
 
         # Truncate comments to the maximum permitted amount to avoid
         # overloading the review and freezing the browser.
         if len(self.comments) > self.max_comments:
             warning = ('WARNING: Number of comments exceeded maximum, showing '
                        '%d of %d.') % (self.max_comments, len(self.comments))
-            self.body_top = "%s\n%s" % (self.body_top, warning)
+            self.body_top = '%s\n%s' % (self.body_top, warning)
             del self.comments[self.max_comments:]
 
         try:
