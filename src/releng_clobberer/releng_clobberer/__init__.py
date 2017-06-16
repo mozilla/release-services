@@ -8,6 +8,7 @@ from __future__ import absolute_import
 import os
 import backend_common
 import releng_clobberer.config
+import releng_clobberer.models  # noqa
 
 
 def create_app(config=None):

@@ -8,6 +8,7 @@ from __future__ import absolute_import
 import os
 import backend_common
 import releng_notification_identity.config
+import releng_notification_identity.models  # noqa
 
 
 def create_app(config=None):
