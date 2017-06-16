@@ -33,6 +33,7 @@
                 <label id="build_type-none"><input type="radio" name="build_type" value="none" CHECKED>None</label>
             </span>
             <p><label><input type="checkbox" class="artifact-build">Use artifact build</label>
+            <p>Looking for PGO builds? See <a href="https://wiki.mozilla.org/ReleaseEngineering/TryChooser#What_if_I_want_PGO_for_my_build">this page</a>.</p>
 
             <h4>Platforms</h4>
             <div class='option-group' id='platforms' try-section='p'>
@@ -117,7 +118,6 @@
                 <label><input type="checkbox" name="platform" value="sm-rootanalysis">Spidermonkey rootanalysis</label>
             </li>
             </ul>
-            <p>Looking for PGO builds? See <a href="https://wiki.mozilla.org/ReleaseEngineering/TryChooser#What_if_I_want_PGO_for_my_build">this page</a>.</p>
             </div>
 
             <div class='option-group' id='tee-platforms' try-filter='u'>
@@ -384,7 +384,7 @@
             <li><label><input type="checkbox" class="rebuild-talos">To compare talos numbers we need 5 retriggers. Do you want to retrigger talos jobs 5 times?</label></li>
             <p><label for="rebuilds">Retrigger all test jobs (up to 20 times):</label></p>
             <input type="text" id="rebuilds">
-            <p><label for="tags">Restrict tests to tag:</label></p>
+            <p><label for="tags">Restrict tests to tag (<a href="https://wiki.mozilla.org/ReleaseEngineering/TryChooser#What_if_I_want_to_run_a_sub-set_of_tests_for_a_job.3F">more info</a>):</label></p>
             <input type="text" id="tags">
             <p><label for="setenv">Set environment variables:</label></p>
             <input id="setenv" type="text" placeholder="e.g. FOO=bar" size="40" pattern=".*\w=.*" list="setenv_suggestions">
