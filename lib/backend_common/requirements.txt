@@ -1,4 +1,2 @@
--e ./../cli_common[all]#egg=mozilla-cli-common
+-e ./../cli_common #egg=mozilla-cli-common
 Flask
-Jinja2
-gunicorn

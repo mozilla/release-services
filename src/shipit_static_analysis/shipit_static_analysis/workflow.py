@@ -7,86 +7,29 @@ from __future__ import absolute_import
 
 import hglib
 import os
-import re
 
 from cli_common.taskcluster import get_service
 from cli_common.log import get_logger
 from cli_common.command import run_check
+from shipit_static_analysis.clang import ClangTidy
 
 logger = get_logger(__name__)
 
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
 
-REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): (.*)\n', re.MULTILINE)
-
-ISSUE_MARKDOWN = '''
-## {type}
-**Message**: {message}
-**Location**: {location}
-```
-{body}
-```
-{notes}
-'''
-
-ISSUE_NOTE_MARKDOWN = '''
-**Note**: {message}
-**Location**: {location}
-```
-{body}
-```
-'''
-
-
-class Issue(object):
-    """
-    An issue reported by clang-tidy
-    """
-    def __init__(self, header_data, work_dir):
-        assert isinstance(header_data, tuple)
-        assert len(header_data) == 5
-        self.path, self.line, self.char, self.type, self.message = header_data
-        if self.path.startswith(work_dir):
-            self.path = self.path[len(work_dir):]
-        self.line = int(self.line)
-        self.char = int(self.char)
-        self.body = None
-        self.notes = []
-
-    def __str__(self):
-        return '[{}] {} {}:{}'.format(self.type, self.path, self.line, self.char)
-
-    def is_problem(self):
-        return self.type in ('warning', 'error')
-
-    def as_markdown(self):
-        return ISSUE_MARKDOWN.format(
-            type=self.type,
-            message=self.message,
-            location="{}:{}:{}".format(self.path, self.line, self.char),
-            body=self.body,
-            notes='\n'.join([
-                ISSUE_NOTE_MARKDOWN.format(
-                    message=n.message,
-                    location='{}:{}:{}'.format(n.path, n.line, n.char),
-                    body=n.body,
-                ) for n in self.notes
-            ]),
-        )
-
 
 class Workflow(object):
-    """
+    '''
     Static analysis workflow
-    """
+    '''
     taskcluster = None
 
     def __init__(self, cache_root, emails, client_id=None, access_token=None):
         self.emails = emails
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
-            "Cache root {} is not a dir.".format(self.cache_root)
+            'Cache root {} is not a dir.'.format(self.cache_root)
 
         # Load TC services & secrets
         self.notify = get_service(
@@ -116,12 +59,12 @@ class Workflow(object):
         self.hg = hglib.open(self.repo_dir)
 
     def run(self, revision, review_request_id, diffset_revision):
-        """
+        '''
         Run the static analysis workflow:
          * Pull revision from review
          * Checkout revision
          * Run static analysis
-        """
+        '''
         # Force cleanup to reset tip
         # otherwise previous pull are there
         self.hg.update(rev=b'tip', clean=True)
@@ -165,23 +108,17 @@ class Workflow(object):
             'modernize-use-auto',
             'modernize-use-default',
             'modernize-raw-string-literal',
-            'modernize-use-bool-literals',
+            # 'modernize-use-bool-literals', (too noisy because of `while (0)` in many macros)
             'modernize-use-override',
             'modernize-use-nullptr',
             'mozilla-*',
+            'performance-faster-string-find',
+            'performance-for-range-copy',
             'readability-else-after-return',
+            'readability-misleading-indentation',
         ]
-        cmd = [
-            'run-clang-tidy.py',
-            '-j', '18',
-            '-p', 'obj-x86_64-pc-linux-gnu/',
-            '-checks={}'.format(','.join(checks)),
-        ] + modified_files
-        clang_output = run_check(cmd, cwd=self.repo_dir).decode('utf-8')
-
-        # Parse clang-tidy's output to indentify potential code problems
-        logger.info('Process static analysis results...')
-        issues = self.parse_issues(clang_output)
+        clang = ClangTidy(self.repo_dir, 'obj-x86_64-pc-linux-gnu')
+        issues = clang.run(checks, modified_files)
 
         logger.info('Detected {} code issue(s)'.format(len(issues)))
 
@@ -190,48 +127,10 @@ class Workflow(object):
             logger.info('Send email to admins')
             self.notify_admins(review_request_id, issues)
 
-    def parse_issues(self, clang_output):
-        """
-        Parse clang-tidy output into structured issues
-        """
-
-        # Limit clang output parsing to "Enabled checks:"
-        end = re.search(r'^Enabled checks:\n', clang_output, re.MULTILINE)
-        if end is not None:
-            clang_output = clang_output[:end.start()-1]
-
-        # Sort headers by positions
-        headers = sorted(
-            REGEX_HEADER.finditer(clang_output),
-            key=lambda h: h.start()
-        )
-
-        issues = []
-        for i, header in enumerate(headers):
-            issue = Issue(header.groups(), self.repo_dir)
-
-            # Get next header
-            if i+1 < len(headers):
-                next_header = headers[i+1]
-                issue.body = clang_output[header.end():next_header.start() - 1]
-            else:
-                issue.body = clang_output[header.end():]
-
-            if issue.is_problem():
-                # Save problem to append notes
-                issues.append(issue)
-                logger.info('Found code issue {}'.format(issue))
-
-            elif issues:
-                # Link notes to last problem
-                issues[-1].notes.append(issue)
-
-        return issues
-
     def notify_admins(self, review_request_id, issues):
-        """
+        '''
         Send an email to administrators
-        """
+        '''
         review_url = 'https://reviewboard.mozilla.org/r/' + review_request_id + '/'
         content = review_url + '\n\n' + '\n'.join([i.as_markdown() for i in issues])
         for email in self.emails:

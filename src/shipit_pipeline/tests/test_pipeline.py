@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-import os
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-os.environ['APP_TESTING'] = 'shipit_pipeline'  # NoQA
+from __future__ import absolute_import
 
 import pytest
 import requests
-
 from unittest.mock import MagicMock
-
 from shipit_pipeline.pipeline import PipelineStep, get_runnable_steps, refresh_pipeline_steps
 
 
@@ -15,34 +15,34 @@ from shipit_pipeline.pipeline import PipelineStep, get_runnable_steps, refresh_p
 def pipeline_steps():
     pipeline_steps_ = [
       {
-        "api_url": "http://localhost:5001/signoff1",
-        "description": "signoff 1",
-        "parameters": {
+        'api_url': 'http://localhost:5001/signoff1',
+        'description': 'signoff 1',
+        'parameters': {
         },
-        "parameters_schema": "https://null",
-        "requires": [
+        'parameters_schema': 'https://null',
+        'requires': [
         ],
-        "uid": "signoff1"
+        'uid': 'signoff1'
       }, {
-        "api_url": "http://localhost:5001/signoff2",
-        "description": "signoff 2 - relman gatekeeps all the things",
-        "parameters": {
+        'api_url': 'http://localhost:5001/signoff2',
+        'description': 'signoff 2 - relman gatekeeps all the things',
+        'parameters': {
         },
-        "parameters_schema": "https://null",
-        "requires": [
-          "signoff1"
+        'parameters_schema': 'https://null',
+        'requires': [
+          'signoff1'
         ],
-        "uid": "signoff2"
+        'uid': 'signoff2'
       }, {
-        "api_url": "http://localhost:5001/publish1",
-        "description": "final publish",
-        "parameters": {
+        'api_url': 'http://localhost:5001/publish1',
+        'description': 'final publish',
+        'parameters': {
         },
-        "parameters_schema": "https://null",
-        "requires": [
-          "signoff2"
+        'parameters_schema': 'https://null',
+        'requires': [
+          'signoff2'
         ],
-        "uid": "publish1"
+        'uid': 'publish1'
       }
     ]
     return [PipelineStep.from_dict(step) for step in pipeline_steps_]

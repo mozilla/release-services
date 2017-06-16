@@ -1,4 +1,1 @@
--r ./../../lib/backend_common/requirements-dev.txt
-ipdb
-flake8
-pytest
+-e ./../../lib/backend_common[all] #egg=mozilla-backend-common

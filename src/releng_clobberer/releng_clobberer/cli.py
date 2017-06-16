@@ -15,10 +15,10 @@ logger = log.get_logger(__name__)
 def taskcluster_cache(namespace='gecko.v2',
                       decision_task_namespace='latest.firefox.decision',
                       ):
-    """ TODO: add description
-    """
+    ''' TODO: add description
+    '''
 
-    logger.info('Querying taskcluster for list of branches in "%s" '
+    logger.info('Querying taskcluster for list of branches in `%s` '
                 'namespace.' % namespace)
 
     # taskcluster api's we need to query
@@ -31,7 +31,7 @@ def taskcluster_cache(namespace='gecko.v2',
 
         branch_name = branch.get('name')
         if not branch_name:
-            logger.error('Name for branch "%s" not found.' % branch)
+            logger.error('Name for branch `%s` not found.' % branch)
 
         # compose decision_task index fro
         branch_decision_task_name = '%s.%s.%s' % (
@@ -42,12 +42,12 @@ def taskcluster_cache(namespace='gecko.v2',
             branch_decision_task = index.findTask(branch_decision_task_name)
         except taskcluster.exceptions.TaskclusterRestFailure:
             logger.info(
-                'Decision task "%s" not found.' % branch_decision_task_name)
+                'Decision task `%s` not found.' % branch_decision_task_name)
             continue
 
         branches[branch_name] = dict()
 
-        logger.info('Decision task "%s" found.' % branch_decision_task_name)
+        logger.info('Decision task `%s` found.' % branch_decision_task_name)
 
         # we try to look for all tasks that were scheduled by this decision
         # task. this is stored as artifict in 'public/task-graph.json' or
@@ -60,8 +60,8 @@ def taskcluster_cache(namespace='gecko.v2',
             )
             branch_tasks = list(graph.values())
             logger.debug(
-                'Tasks for branch "%s" decision task "%s" found in '
-                '"public/task-graph.json" artifact.' % (
+                'Tasks for branch `%s` decision task `%s` found in '
+                '`public/task-graph.json` artifact.' % (
                     branch_name,
                     branch_decision_task_name,
                 )
@@ -74,15 +74,15 @@ def taskcluster_cache(namespace='gecko.v2',
                 )
                 branch_tasks = graph.get('tasks', [])
                 logger.debug(
-                    'Tasks for branch "%s" decision task "%s" found in '
-                    '"public/graph.json" artifact.' % (
+                    'Tasks for branch `%s` decision task `%s` found in '
+                    '`public/graph.json` artifact.' % (
                         branch_name,
                         branch_decision_task_name,
                     )
                 )
             except taskcluster.exceptions.TaskclusterRestFailure:
                 logger.error(
-                    'Tasks for branch "%s" and its decision task "%s" '
+                    'Tasks for branch `%s` and its decision task `%s` '
                     'couldn\'t be found.' % (
                         branch_name,
                         branch_decision_task_name,
@@ -97,7 +97,7 @@ def taskcluster_cache(namespace='gecko.v2',
             task = branch_task.get('task')
             if not task:
                 logger.error(
-                    'Task for branch_task "%s" of branch "%s" couldn\'t be '
+                    'Task for branch_task `%s` of branch `%s` couldn\'t be '
                     'found.' % (
                         branch_task,
                         branch_name,
@@ -109,7 +109,7 @@ def taskcluster_cache(namespace='gecko.v2',
             provisioner_id = task.get('provisionerId')
             if not provisioner_id:
                 logger.error(
-                    'provisionerId for task "%s" of branch "%s" couldn\'t be '
+                    'provisionerId for task `%s` of branch `%s` couldn\'t be '
                     'found.' % (
                         task,
                         branch_name,
@@ -121,7 +121,7 @@ def taskcluster_cache(namespace='gecko.v2',
             worker_type = task.get('workerType')
             if not worker_type:
                 logger.error(
-                    'workerType for task "%s" of branch "%s" couldn\'t be '
+                    'workerType for task `%s` of branch `%s` couldn\'t be '
                     'found.' % (
                         task,
                         branch_name,
@@ -133,7 +133,7 @@ def taskcluster_cache(namespace='gecko.v2',
             task_payload = task.get('payload')
             if not task_payload:
                 logger.error(
-                    'payload for task "%s" of branch "%s" couldn\'t be '
+                    'payload for task `%s` of branch `%s` couldn\'t be '
                     'found.' % (
                         task,
                         branch_name,

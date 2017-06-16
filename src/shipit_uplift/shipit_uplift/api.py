@@ -21,25 +21,25 @@ from shipit_uplift.serializers import (
     serialize_analysis, serialize_bug, serialize_contributor,
     serialize_patch_status
 )
-from shipit_uplift.flask import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
+from shipit_uplift.config import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
 
 
 logger = log.get_logger(__name__)
 
 
 def ping():
-    """
+    '''
     Test service availability
-    """
+    '''
     logger.info('Got ping request. Sending pong...')
     return 'pong'
 
 
 @auth.require_scopes([SCOPES_USER, SCOPES_BOT])
 def list_analysis():
-    """
+    '''
     List all available analysis
-    """
+    '''
     all_analysis = BugAnalysis.with_bugs().all()
     logger.info('Fetched all analysis from db', all_analysis=all_analysis)
     return [
@@ -50,9 +50,9 @@ def list_analysis():
 
 @auth.require_scopes([SCOPES_USER, SCOPES_BOT])
 def get_analysis(analysis_id):
-    """
+    '''
     Fetch an analysis and all its bugs
-    """
+    '''
 
     # Get bug analysis
     try:
@@ -71,10 +71,10 @@ def get_analysis(analysis_id):
 
 @auth.require_scopes([SCOPES_BOT])
 def update_analysis(analysis_id):
-    """
+    '''
     Update an analysis, from a bot
     Used to update version numbers from bot
-    """
+    '''
 
     # Get bug analysis
     try:
@@ -98,9 +98,9 @@ def update_analysis(analysis_id):
 
 @auth.require_scopes(SCOPES_USER)
 def update_bug(bugzilla_id):
-    """
+    '''
     Update a bug after modifications on Bugzilla
-    """
+    '''
     # Load bug
     try:
         bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
@@ -184,9 +184,9 @@ def update_bug(bugzilla_id):
 
 @auth.require_scopes(SCOPES_BOT)
 def create_bug():
-    """
+    '''
     Create a new bug, or update its payload
-    """
+    '''
     # Load bug
     bugzilla_id = request.json.get('bugzilla_id')
     if not bugzilla_id:
@@ -266,9 +266,9 @@ def create_bug():
 
 @auth.require_scopes(SCOPES_BOT)
 def delete_bug(bugzilla_id):
-    """
+    '''
     Delete a bug when it's not in Bugzilla analysis
-    """
+    '''
     # Load bug
     try:
         bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
@@ -280,9 +280,9 @@ def delete_bug(bugzilla_id):
 
 @auth.require_scopes(SCOPES_ADMIN)
 def update_contributor(contributor_id):
-    """
+    '''
     Update a contributor after modifications on frontend
-    """
+    '''
     # Load contributor
     try:
         contributor = Contributor.query.filter_by(id=contributor_id).one()
@@ -306,10 +306,10 @@ def update_contributor(contributor_id):
 
 @auth.require_scopes(SCOPES_BOT)
 def list_patch_status(bugzilla_id):
-    """
+    '''
     List all patches status for a bug
     Last created first
-    """
+    '''
     patch_status = PatchStatus.query \
         .join(BugResult) \
         .filter_by(bugzilla_id=bugzilla_id) \
@@ -321,9 +321,9 @@ def list_patch_status(bugzilla_id):
 
 @auth.require_scopes(SCOPES_BOT)
 def create_patch_status(bugzilla_id):
-    """
+    '''
     Create a patch status for a bug
-    """
+    '''
     try:
         bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
     except:
@@ -369,12 +369,12 @@ def create_patch_status(bugzilla_id):
 
 
 def load_hook_artifact(group, hook, artifact):
-    """
+    '''
     Serve an artifact from the last run of
     a specified source hook
     Only support anonymous & public artifacts for now
     This is a public API: no authentication is needed
-    """
+    '''
     try:
         artifact = 'public/' + artifact
         return get_hook_artifact(group, hook, artifact, '', '')  # as anonymous

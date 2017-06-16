@@ -55,7 +55,7 @@ def _notify_status_change(trees_changes, tags=[]):
             routing_key = routing_key_pattern.format(tree.tree)
 
             log.info(
-                "Sending pulse to {} for tree: {}".format(
+                'Sending pulse to {} for tree: {}'.format(
                     exchange,
                     tree.tree,
                 ))
@@ -64,16 +64,16 @@ def _notify_status_change(trees_changes, tags=[]):
                 current_app.pulse.publish(exchange, routing_key, payload)
             except Exception as e:
                 import traceback
-                msg = "Can't send notification to pulse."
+                msg = 'Can\'t send notification to pulse.'
                 trace = traceback.format_exc()
-                log.error("{0}\nException:{1}\nTraceback: {2}".format(msg, e, trace))  # noqa
+                log.error('{0}\nException:{1}\nTraceback: {2}'.format(msg, e, trace))  # noqa
 
 
 def _update_tree_status(session, tree, status=None, reason=None, tags=[],
                         message_of_the_day=None):
-    """Update the given tree's status; note that this does not commit
+    '''Update the given tree's status; note that this does not commit
        the session.  Supply a tree object or name.
-    """
+    '''
     if status is not None:
         tree.status = status
     if reason is not None:
@@ -102,7 +102,7 @@ def _update_tree_status(session, tree, status=None, reason=None, tags=[],
 def v0_get_tree(tree):
     t = current_app.db.session.query(Tree).get(tree)
     if not t:
-        raise NotFound("No such tree")
+        raise NotFound('No such tree')
     return t.to_dict()
 
 
@@ -120,16 +120,16 @@ def update_trees(body):
     session = current_app.db.session
     trees = [session.query(Tree).get(t) for t in body['trees']]
     if not all(trees):
-        raise NotFound("one or more trees not found")
+        raise NotFound('one or more trees not found')
 
     if _is_unset(body, 'tags') \
             and _get(body, 'status') == 'closed':
-        raise BadRequest("tags are required when closing a tree")
+        raise BadRequest('tags are required when closing a tree')
 
     if not _is_unset(body, 'remember') and body['remember'] is True:
         if _is_unset(body, 'status') or _is_unset(body, 'reason'):
             raise BadRequest(
-                "must specify status and reason to remember the change")
+                'must specify status and reason to remember the change')
         # add a new stack entry with the new and existing states
         ch = StatusChange(
             who=str(current_user),
@@ -174,7 +174,7 @@ def update_trees(body):
 def make_tree(tree, body):
     session = current_app.db.session
     if body['tree'] != tree:
-        raise BadRequest("Tree names must match")
+        raise BadRequest('Tree names must match')
     t = Tree(
         tree=tree,
         status=body['status'],
@@ -184,7 +184,7 @@ def make_tree(tree, body):
         session.add(t)
         session.commit()
     except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-        raise BadRequest("tree already exists")
+        raise BadRequest('tree already exists')
     return None, 204
 
 
@@ -192,7 +192,7 @@ def _kill_tree(tree):
     session = current_app.db.session
     t = session.query(Tree).get(tree)
     if not t:
-        raise NotFound("No such tree")
+        raise NotFound('No such tree')
     session.delete(t)
     # delete from logs and change stack, too
     Log.query.filter_by(tree=tree).delete()
@@ -220,7 +220,7 @@ def get_logs(tree, all=0):
     # verify the tree exists first
     t = session.query(Tree).get(tree)
     if not t:
-        raise NotFound("No such tree")
+        raise NotFound('No such tree')
 
     logs = []
     q = session.query(Log).filter_by(tree=tree)
@@ -251,7 +251,7 @@ def get_stack():
 
 def _revert_change(id, revert=None):
     if revert not in (0, 1, None):
-        raise BadRequest("Unexpected value for 'revert'")
+        raise BadRequest('Unexpected value for `revert`')
 
     session = current_app.db.session
     ch = session.query(StatusChange).get(id)

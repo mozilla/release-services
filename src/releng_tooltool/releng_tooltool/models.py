@@ -14,9 +14,9 @@ ALLOWED_REGIONS = ('us-east-1', 'us-west-1', 'us-west-2')
 
 
 class File(db.Model):
-    """An file, identified by size and digest.  The server may have zero
+    '''An file, identified by size and digest.  The server may have zero
        or many copies of a file.
-    """
+    '''
 
     __tablename__ = 'releng_tooltool_files'
 
@@ -34,7 +34,7 @@ class File(db.Model):
         nullable=False,
     )
     visibility = sa.Column(
-        sa.Enum('public', 'internal', name="visibility"),
+        sa.Enum('public', 'internal', name='visibility'),
         nullable=False,
     )
 
@@ -60,8 +60,8 @@ class File(db.Model):
 
 
 class Batch(db.Model):
-    """Upload batches, with batch metadata, linked to the uploaded files.
-    """
+    '''Upload batches, with batch metadata, linked to the uploaded files.
+    '''
 
     __tablename__ = 'releng_tooltool_batches'
 
@@ -106,8 +106,8 @@ class Batch(db.Model):
 
 
 class FileInstance(db.Model):
-    """A verified instance of a file in a single region.
-    """
+    '''A verified instance of a file in a single region.
+    '''
 
     __tablename__ = 'releng_tooltool_file_instances'
 
@@ -117,14 +117,14 @@ class FileInstance(db.Model):
         primary_key=True,
     )
     region = sa.Column(
-        sa.Enum(*ALLOWED_REGIONS, name="region"),
+        sa.Enum(*ALLOWED_REGIONS, name='region'),
         primary_key=True,
     )
 
 
 class BatchFile(db.Model):
-    """An association of upload batches to files, with filenames
-    """
+    '''An association of upload batches to files, with filenames
+    '''
 
     __tablename__ = 'releng_tooltool_batch_files'
 
@@ -133,13 +133,13 @@ class BatchFile(db.Model):
         sa.ForeignKey('releng_tooltool_files.id'),
         primary_key=True,
     )
-    file = sa.orm.relationship("File", backref="_batches")
+    file = sa.orm.relationship('File', backref='_batches')
     batch_id = sa.Column(
         sa.Integer,
         sa.ForeignKey('releng_tooltool_batches.id'),
         primary_key=True,
     )
-    batch = sa.orm.relationship("Batch", backref="_files")
+    batch = sa.orm.relationship('Batch', backref='_files')
     filename = sa.Column(
         sa.Text,
         nullable=False,
@@ -147,11 +147,11 @@ class BatchFile(db.Model):
 
 
 class PendingUpload(db.Model):
-    """Files for which upload URLs have been generated, but which haven't yet
+    '''Files for which upload URLs have been generated, but which haven't yet
        been uploaded.  This table is used to poll for completed uploads, and to
        prevent trusting files for which there is an outstanding signed upload
        URL.
-    """
+    '''
 
     __tablename__ = 'releng_tooltool_pending_upload'
 
@@ -167,7 +167,7 @@ class PendingUpload(db.Model):
         nullable=False,
     )
     region = sa.Column(
-        sa.Enum(*ALLOWED_REGIONS, name="region"),
+        sa.Enum(*ALLOWED_REGIONS, name='region'),
         nullable=False,
     )
 

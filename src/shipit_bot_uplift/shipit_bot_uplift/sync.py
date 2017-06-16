@@ -20,20 +20,20 @@ logger = get_logger(__name__)
 
 
 def analysis2branch(analysis):
-    """
+    '''
     Convert an analysis dict into a mercurial
     branch name (special case for esrXX)
-    """
+    '''
     if analysis['name'] == 'esr':
         return 'esr{}'.format(analysis['version'])
     return analysis['name'].lower()
 
 
 class BugSync(object):
-    """
+    '''
     Helper class to sync bugs between
     Bugzilla & remote server
-    """
+    '''
     def __init__(self, bugzilla_id):
         self.bugzilla_id = bugzilla_id
         self.on_remote = []
@@ -42,17 +42,17 @@ class BugSync(object):
         self.analysis = None
 
     def setup_remote(self, analysis):
-        """
+        '''
         Bug is on remote (backend)
-        """
+        '''
         self.on_remote.append(analysis['id'])
         logger.debug('On remote', bz_id=self.bugzilla_id)
 
     def setup_bugzilla(self, analysis, bug_data):
-        """
+        '''
         Bug is on Bugzilla, store data
         Only when the uplift is pending (tag '?' on attachment)
-        """
+        '''
         if self.bug_data is None:
             self.bug_data = bug_data
 
@@ -67,9 +67,9 @@ class BugSync(object):
         logger.debug('On bugzilla', bz_id=self.bugzilla_id)
 
     def update(self):
-        """
+        '''
         Update bug used in this sync
-        """
+        '''
 
         # Skip when it's already processed in instance
         if self.analysis is not None:
@@ -93,10 +93,10 @@ class BugSync(object):
 
     @property
     def merge_tests(self):
-        """
+        '''
         List all available merge tests
         One per uplift request
-        """
+        '''
         assert self.analysis is not None, \
             'Missing bug analysis'
 
@@ -110,9 +110,9 @@ class BugSync(object):
         ]
 
     def build_payload(self, bugzilla_url):
-        """
+        '''
         Build final paylaod, sent to remote server
-        """
+        '''
         # Compute the hash of the new bug
         bug_hash = compute_dict_hash(self.bug_data)
 
@@ -131,9 +131,9 @@ class BugSync(object):
         }
 
     def load_users(self):
-        """
+        '''
         Load users linked through roles to an analysis
-        """
+        '''
         assert self.analysis is not None, \
             'Missing bug analysis'
 
@@ -180,9 +180,9 @@ class BugSync(object):
         return out
 
     def list_versions(self):
-        """
+        '''
         Extract versions from bug attachments
-        """
+        '''
         approval_base_flag = 'approval-mozilla-'
         versions = {}
         for a in self.bug_data.get('attachments', []):
@@ -203,9 +203,9 @@ class BugSync(object):
 
 
 class Bot(object):
-    """
+    '''
     Update all analysis data
-    """
+    '''
     def __init__(self, notification_emails=[]):
         self.sync = {}
 
@@ -213,9 +213,9 @@ class Bot(object):
         self.report = Report(notification_emails)
 
     def use_bugzilla(self, bugzilla_url, bugzilla_token=None):
-        """
+        '''
         Setup bugzilla usage (url + token)
-        """
+        '''
         self.bugs = {}
         self.repository = None
         self.bugzilla_url = bugzilla_url
@@ -235,10 +235,10 @@ class Bot(object):
         logger.info('Use bugzilla server', url=self.bugzilla_url)
 
     def use_cache(self, cache_root):
-        """
+        '''
         Setup cache directory
         User to clone Mercurial repository for merge checks
-        """
+        '''
 
         # Check cache directory
         assert os.path.isdir(cache_root), \
@@ -254,9 +254,9 @@ class Bot(object):
         )
 
     def list_bugs(self, query):
-        """
+        '''
         List all the bugs from a Bugzilla query
-        """
+        '''
         def _bughandler(bug, data):
             bugid = bug['id']
             data[bugid] = bug
@@ -290,10 +290,10 @@ class Bot(object):
         return self.sync[bugzilla_id]
 
     def run(self, only=None):
-        """
+        '''
         Build bug analysis for a specified Bugzilla query
         Used by taskcluster - no db interaction
-        """
+        '''
         assert self.repository is not None, \
             'Missing mozilla repository'
 
@@ -363,9 +363,9 @@ class Bot(object):
         self.report.send()
 
     def update_bug(self, sync):
-        """
+        '''
         Update specific bug
-        """
+        '''
         assert isinstance(sync, BugSync), \
             'Use BugSync instance'
 
@@ -386,9 +386,9 @@ class Bot(object):
         return True
 
     def run_merge_test(self, merge_test):
-        """
+        '''
         Try to merge a patch on current repository branch
-        """
+        '''
         assert isinstance(merge_test, MergeTest)
         assert len(merge_test.results) == 0, \
             'Already ran this merge test.'
@@ -405,9 +405,9 @@ class Bot(object):
             self.report.add_invalid_merge(merge_test)
 
     def delete_bug(self, sync):
-        """
+        '''
         Remove bugs from remote server
-        """
+        '''
         assert isinstance(sync, BugSync), \
             'Use BugSync instance'
         try:

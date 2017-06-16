@@ -6,7 +6,7 @@
 from shipit_uplift.models import (
     BugResult, BugContributor, BugAnalysis, Contributor, PatchStatus
 )
-from shipit_uplift.flask import SCOPES_ADMIN
+from shipit_uplift.config import SCOPES_ADMIN
 from flask_login import current_user
 from cli_common import log
 import html
@@ -16,9 +16,9 @@ logger = log.get_logger(__name__)
 
 
 def serialize_contributor(contributor, link=None):
-    """
+    '''
     Helper to serialize a contributor & its role
-    """
+    '''
     assert isinstance(contributor, Contributor)
 
     out = {
@@ -41,9 +41,9 @@ def serialize_contributor(contributor, link=None):
 
 
 def serialize_patch(patch):
-    """
+    '''
     Helper to serialize a Patch
-    """
+    '''
     assert isinstance(patch, dict)
     return {
         'source': patch['source'],
@@ -57,9 +57,9 @@ def serialize_patch(patch):
 
 
 def serialize_bug(bug):
-    """
+    '''
     Helper to serialize a bug from its payload
-    """
+    '''
     assert isinstance(bug, BugResult)
 
     payload = bug.payload_data
@@ -95,7 +95,7 @@ def serialize_bug(bug):
         ])
 
     def _generic_flags():
-        # Always use qe-verify (set as "empty")
+        # Always use qe-verify (set as 'empty')
         flags = {
             'qe-verify': '---',
         }
@@ -149,9 +149,9 @@ def serialize_bug(bug):
 
 
 def serialize_analysis(analysis, bugs_nb, full=True):
-    """
+    '''
     Helper to serialize an analysis
-    """
+    '''
     assert isinstance(analysis, BugAnalysis)
     assert isinstance(bugs_nb, int)
 
@@ -175,9 +175,9 @@ def serialize_analysis(analysis, bugs_nb, full=True):
 
 
 def serialize_patch_status(patch_status):
-    """
+    '''
     Helper to serialize a patch status
-    """
+    '''
     assert isinstance(patch_status, PatchStatus)
 
     return {

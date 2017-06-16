@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from __future__ import absolute_import
 from backend_common.db import db
 from backend_common.notifications import URGENCY_LEVELS
 from .config import PROJECT_PATH_NAME
@@ -43,7 +49,7 @@ class Policy(db.Model):
         )
 
     def to_dict(self):
-        """Return the object as a dict, with the Interval converted to a dict with days, hours, mins"""
+        '''Return the object as a dict, with the Interval converted to a dict with days, hours, mins'''
         day, hour, minute = timedelta(days=1), timedelta(hours=1), timedelta(minutes=1)
         remaining = self.frequency
 

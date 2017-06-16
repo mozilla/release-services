@@ -186,6 +186,7 @@ def cmd(ctx, project, quiet, nix_shell):
             '--workers', '1',
             '--timeout', '3600',
             '--reload',
+            '--reload-engine=poll',
             '--log-file', '-',
         ]
 

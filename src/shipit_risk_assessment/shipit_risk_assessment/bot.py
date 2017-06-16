@@ -8,9 +8,9 @@ logger = get_logger(__name__)
 
 
 class Bot(object):
-    """
+    '''
     Risk assessment analysis
-    """
+    '''
     def __init__(self, work_dir):
 
         # Load mozconfig from env
@@ -36,8 +36,8 @@ class Bot(object):
         os.environ['MOCODA_TMPDIR'] = tmp_dir
 
     def run(self, revision):
-        """
+        '''
         Run mocoda react on a revision
-        """
+        '''
         logger.info('Mocoda react', revision=revision)
         mocoda_react(revision)

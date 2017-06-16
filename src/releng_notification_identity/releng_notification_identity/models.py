@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from backend_common.db import db
 from backend_common.notifications import CHANNELS, URGENCY_LEVELS
 from .config import PROJECT_PATH_NAME

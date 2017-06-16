@@ -1,28 +1,33 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-"""
+'''
 Provide auth0 / OpenID Connect protection for API endpoints.
 
 accept_token will take an oauth2 access_token provided by auth0 and
 user the userinfo endpoint to validate it. This is because the token
 info endpoint used by the Flask-OIDC accept_token wrapper has some
 issues with validating tokens for certain application types.
-"""
+'''
 
 from __future__ import absolute_import
-from functools import wraps
-import json
+
+import cli_common.log
+import flask
 import flask_oidc
-from flask import g, request
+import functools
+import json
 import requests
 
+
+logger = cli_common.log.get_logger(__name__)
 auth0 = flask_oidc.OpenIDConnect()
 
 
-def accept_token(render_errors=True):
-    """
+def mozilla_accept_token(render_errors=True):
+    '''
     Use this to decorate view functions that should accept OAuth2 tokens,
     this will most likely apply to API functions.
 
@@ -40,18 +45,18 @@ def accept_token(render_errors=True):
     from the response
 
     .. versionadded:: 1.0
-    """
+    '''
     def wrapper(view_func):
-        @wraps(view_func)
+        @functools.wraps(view_func)
         def decorated(*args, **kwargs):
             token = None
-            if request.headers.get('Authorization', '').startswith('Bearer'):
-                token = request.headers['Authorization'].split(maxsplit=1)[
+            if flask.request.headers.get('Authorization', '').startswith('Bearer'):
+                token = flask.request.headers['Authorization'].split(maxsplit=1)[
                     1].strip()
-            if 'access_token' in request.form:
-                token = request.form['access_token']
-            elif 'access_token' in request.args:
-                token = request.args['access_token']
+            if 'access_token' in flask.request.form:
+                token = flask.request.form['access_token']
+            elif 'access_token' in flask.request.args:
+                token = flask.request.args['access_token']
 
             url = auth0.client_secrets.get(
                 'userinfo_uri', 'https://auth.mozilla.auth0.com/userinfo')
@@ -66,8 +71,10 @@ def accept_token(render_errors=True):
                     response_body = json.dumps(response_body)
                 return response_body, 401, {'WWW-Authenticate': 'Bearer'}
 
-            # store response.content for later?
-            g.userinfo = json.loads(response.content)
+            # store response.content for later
+            flask.g.userinfo = json.loads(str(response.content, 'utf-8'))
+            # g.oidc_id_token = token # requires a specific format
+            flask.g.access_token = token
 
             return view_func(*args, **kwargs)
 

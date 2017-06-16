@@ -1,16 +1,22 @@
-from backend_common.auth import AnonymousUser, TaskclusterUser
-from backend_common.mocks import build_header
-import pytest
+# -*- coding: utf-8 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from __future__ import absolute_import
+
+import flask
 import json
-from flask import g
+import pytest
 
 
 def test_anonymous():
-    """
+    '''
     Test AnonymousUser instances
-    """
+    '''
+    import backend_common.auth
 
-    user = AnonymousUser()
+    user = backend_common.auth.AnonymousUser()
 
     # Test base
     assert user.get_id() == 'anonymous:'
@@ -21,15 +27,17 @@ def test_anonymous():
 
 
 def test_taskcluster_user():
-    """
+    '''
     Test TasklusterUser instances
-    """
+    '''
+
+    import backend_common.auth
 
     credentials = {
         'clientId': 'test/user@mozilla.com',
         'scopes': ['project:test:*', ]
     }
-    user = TaskclusterUser(credentials)
+    user = backend_common.auth.TaskclusterUser(credentials)
 
     # Test base
     assert user.get_id() == credentials['clientId']
@@ -40,15 +48,18 @@ def test_taskcluster_user():
 
     # Test invalid input
     with pytest.raises(AssertionError):
-        user = TaskclusterUser({})
+        user = backend_common.auth.TaskclusterUser({})
     with pytest.raises(AssertionError):
-        user = TaskclusterUser({'clientId': '', 'scopes': None})
+        user = backend_common.auth.TaskclusterUser({'clientId': '', 'scopes': None})
 
 
 def test_auth(client):
-    """
+    '''
     Test the Taskcluster authentication
-    """
+    '''
+
+    import backend_common.testing
+
     # Test non authenticated endpoint
     resp = client.get('/')
     assert resp.status_code in (200, 302)
@@ -62,7 +73,7 @@ def test_auth(client):
         'scopes': ['project/test/*', ],
     }
     client_id = 'test/user@mozilla.com'
-    header = build_header(client_id, ext_data)
+    header = backend_common.testing.build_header(client_id, ext_data)
     resp = client.get('/test-auth-login', headers=[('Authorization', header)])
     assert resp.status_code == 200
     data = json.loads(resp.data.decode('utf-8'))
@@ -72,30 +83,36 @@ def test_auth(client):
 
 
 def test_scopes_invalid(client):
-    """
+    '''
     Test the Taskcluster required scopes
-    """
+    '''
+
+    import backend_common.testing
+
     client_id = 'test/user@mozilla.com'
 
     # Missing a scope to validate test
     ext_data = {
         'scopes': ['project/test/A', 'project/test/C', ],
     }
-    header = build_header(client_id, ext_data)
+    header = backend_common.testing.build_header(client_id, ext_data)
     resp = client.get('/test-auth-scopes', headers=[('Authorization', header)])
     assert resp.status_code == 401
 
 
 def test_scopes_user(client):
-    """
+    '''
     Test the Taskcluster required scopes
-    """
+    '''
+
+    import backend_common.testing
+
     client_id = 'test/user@mozilla.com'
     # Validate with user scopes
     ext_data = {
         'scopes': ['project/test/A', 'project/test/B', ],
     }
-    header = build_header(client_id, ext_data)
+    header = backend_common.testing.build_header(client_id, ext_data)
     resp = client.get('/test-auth-scopes',
                       headers=[('Authorization', header)])
     assert resp.status_code == 200
@@ -103,38 +120,41 @@ def test_scopes_user(client):
 
 
 def test_scopes_admin(client):
-    """
+    '''
     Test the Taskcluster required scopes
-    """
+    '''
+
+    import backend_common.testing
+
     client_id = 'test/user@mozilla.com'
 
     # Validate with admin scopes
     ext_data = {
         'scopes': ['project/another/*', 'project/test-admin/*']
     }
-    header = build_header(client_id, ext_data)
+    header = backend_common.testing.build_header(client_id, ext_data)
     resp = client.get('/test-auth-scopes', headers=[('Authorization', header)])
     assert resp.status_code == 200
     assert resp.data == b'Your scopes are ok.'
 
 
 def test_auth0_access_token(client):
-    """
+    '''
     Test the validation of an access_token using the auth0 userinfo endpoint
-    """
+    '''
     resp = client.get('/test-auth0-userinfo',
                       query_string={'access_token': 'abcdef123456'})
     assert resp.status_code == 200
     # side effect of the auth
-    assert 'userinfo' in g
-    assert g.get('userinfo').get('email') == 'lmoran@mozilla.com'
+    assert 'userinfo' in flask.g
+    assert flask.g.get('userinfo').get('email') == 'lmoran@mozilla.com'
 
 
 def test_auth0_access_token_invalid(client):
-    """
+    '''
     Test the validation of an access_token using the auth0 userinfo endpoint
-    """
+    '''
     resp = client.get('/test-auth0-userinfo',
                       query_string={'access_token': 'badtoken'})
     assert resp.status_code == 401
-    assert resp.data == b'{"error": "invalid_token", "error_description": "Unauthorized"}'
+    assert json.loads(str(resp.data, 'utf-8')) == {'error': 'invalid_token', 'error_description': 'Unauthorized'}

@@ -113,6 +113,8 @@ paths:
 #                "created": 
 #                "completed":
 #              }
+        "404":
+          description: "Step not found"
 
 
   /step/{uid}:
@@ -172,6 +174,8 @@ paths:
       responses:
         "200":
           description: "Step successfully signed"
+        "401":
+          description: "Unauthorized, invalid token"
         "403":
           description: "User lacks permission to sign this step"
         "404":
@@ -189,6 +193,8 @@ paths:
       responses:
         "200":
           description: "Signature removed"
+        "401":
+          description: "Unauthorized, invalid token"
         "403":
           description: "User lacks permission to remove signature"
         "409":

@@ -10,9 +10,9 @@ TC_SCHEDULER = taskcluster.Scheduler()
 
 
 TASK_GRAPH_STATE_TO_STEP_STATE = {
-    "running": "running",
-    "blocked": "failed",
-    "finished": "completed"
+    'running': 'running',
+    'blocked': 'failed',
+    'finished': 'completed'
 }
 
 
@@ -25,14 +25,14 @@ def get_taskcluster_tasks_state(task_group_id, scheduler_api=False):
 
 
 def get_scheduler_graph_state(task_graph_id):
-    """poll the scheduler for overall status.
+    '''poll the scheduler for overall status.
     this request is relatively cheap.
-    :returns state where state is of: running, blocked or finished"""
+    :returns state where state is of: running, blocked or finished'''
     try:
-        return TASK_GRAPH_STATE_TO_STEP_STATE[TC_SCHEDULER.status(task_graph_id)["status"]["state"]]
+        return TASK_GRAPH_STATE_TO_STEP_STATE[TC_SCHEDULER.status(task_graph_id)['status']['state']]
     except Exception:
-        state = "exception"
-        log.exception("Could not determine status from taskcluster scheduler with graph id: %s",
+        state = 'exception'
+        log.exception('Could not determine status from taskcluster scheduler with graph id: %s',
                       task_graph_id)
         return state
 

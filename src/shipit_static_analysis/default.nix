@@ -5,9 +5,9 @@ let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource ;
   inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl dockerTools gcc
-      cacert clang llvmPackages_39 clang-tools gcc-unwrapped glibc glibcLocales;
+      cacert clang clang-tools gcc-unwrapped glibc glibcLocales xorg;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
-  inherit (releng_pkgs.pkgs.lib) fileContents optional licenses ;
+  inherit (releng_pkgs.pkgs.lib) fileContents optional licenses concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
   inherit (releng_pkgs.pkgs.pythonPackages) setuptools;
 
@@ -51,6 +51,17 @@ let
     in
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
+  includes = concatStringsSep ":" [
+    "${gcc-unwrapped}/include/c++/5.4.0"
+    "${gcc-unwrapped}/include/c++/5.4.0/backward"
+    "${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu"
+    "${glibc.dev}/include/"
+    "${xorg.libX11.dev}/include"
+    "${xorg.xproto}/include"
+    "${xorg.libXrender.dev}/include"
+    "${xorg.renderproto}/include"
+  ];
+
   self = mkPython {
     inherit python name dirname;
     version = fileContents ./VERSION;
@@ -75,21 +86,22 @@ let
       mkdir -p $out/bin
       ln -s ${mercurial}/bin/hg $out/bin
       ln -s ${clang-tools}/bin/clang-tidy $out/bin
-      ln -s ${llvmPackages_39.clang-unwrapped}/share/clang/run-clang-tidy.py $out/bin
 
       # Expose gecko env in final output
       ln -s ${releng_pkgs.gecko-env}/bin/gecko-env $out/bin
     '';
 
     shellHook = ''
-      export PATH="${mercurial}/bin:${llvmPackages_39.clang-unwrapped}/share/clang:$PATH"
+      export PATH="${mercurial}/bin:$PATH"
 
       # Extras for clang-tidy
-      export CPLUS_INCLUDE_PATH="$CPLUS_INCLUDE_PATH:${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
+      export CPLUS_INCLUDE_PATH=${includes}
+      export C_INCLUDE_PATH=${includes}
     '';
 
     dockerEnv =
-      [ "CPLUS_INCLUDE_PATH=${gcc-unwrapped}/include/c++/5.4.0:${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu:${glibc.dev}/include/"
+      [ "CPLUS_INCLUDE_PATH=${includes}"
+        "C_INCLUDE_PATH=${includes}"
       ];
     dockerCmd = [];
 

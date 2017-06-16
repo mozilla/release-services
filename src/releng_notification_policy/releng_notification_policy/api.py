@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -47,13 +48,13 @@ def get_message_by_uid(uid: str) -> dict:
 
 
 def put_message(uid: str, body: dict) -> None:
-    """
+    '''
     Add a new message to be delivered into the service.
 
     :param uid: UID of message to track
     :param body: Description of message
     :return: No content, status code
-    """
+    '''
     session = current_app.db.session
 
     # Make sure the message UID doesn't already exist in the DB
@@ -85,12 +86,12 @@ def put_message(uid: str, body: dict) -> None:
 
 
 def delete_message(uid: str) -> None:
-    """
+    '''
     Delete the message with the specified UID
 
     :param uid: UID of the message to delete.
     :return: No content, status code
-    """
+    '''
     session = current_app.db.session
     message = session.query(Message).filter(Message.uid == uid).first()
     if message:
@@ -139,11 +140,11 @@ def get_identity_url_for_actionable_policies(policies: List[Policy]) -> Iterator
 
 
 def get_tick_tock() -> dict:
-    """
+    '''
     Trigger pending notifications according to their notification policies
 
     :return: Information about notification triggered by this call in JSON format.
-    """
+    '''
     session = current_app.db.session
 
     current_time = datetime.now()

@@ -7,9 +7,9 @@ import hashlib
 
 
 def gravatar(email):
-    """
+    '''
     Build a gravatar url from an email address
-    """
+    '''
     email = email.lower()
     h = hashlib.md5(email.encode('utf-8'))
     return 'https://www.gravatar.com/avatar/{}'.format(h.hexdigest())

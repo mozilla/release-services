@@ -28,15 +28,15 @@ class UnstructuredRenderer(structlog.processors.KeyValueRenderer):
             # and append to the event
             rendered = super(UnstructuredRenderer, self).__call__(
                 logger, method_name, event_dict)
-            return "%s (%s)" % (event, rendered)
+            return '%s (%s)' % (event, rendered)
         else:
             return event
 
 
 def setup_mozdef(project_name, channel, MOZDEF):
-    """
+    '''
     Setup mozdef using taskcluster secrets
-    """
+    '''
 
     import mozdef_client
 
@@ -79,9 +79,9 @@ def setup_mozdef(project_name, channel, MOZDEF):
 
 
 def setup_papertrail(project_name, channel, PAPERTRAIL_HOST, PAPERTRAIL_PORT):
-    """
+    '''
     Setup papertrail account using taskcluster secrets
-    """
+    '''
 
     # Setup papertrail
     papertrail = logbook.SyslogHandler(
@@ -94,9 +94,9 @@ def setup_papertrail(project_name, channel, PAPERTRAIL_HOST, PAPERTRAIL_PORT):
 
 
 def setup_sentry(project_name, channel, SENTRY_DSN):
-    """
+    '''
     Setup sentry account using taskcluster secrets
-    """
+    '''
 
     from raven import Client
     from raven.handlers.logbook import SentryHandler
@@ -104,7 +104,7 @@ def setup_sentry(project_name, channel, SENTRY_DSN):
     sentry_client = Client(
         dsn=SENTRY_DSN,
         site=project_name,
-        name="mozilla-releng/services",
+        name='mozilla-releng/services',
         environment=channel,
         # TODO:
         # release=read(VERSION) we need to promote that as well via secrets
@@ -115,24 +115,6 @@ def setup_sentry(project_name, channel, SENTRY_DSN):
     sentry = SentryHandler(sentry_client, level=logbook.WARNING, bubble=True)
 
     sentry.push_application()
-
-
-def init_app(app):
-    """
-    Init logger from a Flask Application
-    """
-    level = logbook.INFO
-    if app.debug:
-        level = logbook.DEBUG
-
-    init_logger(app.name,
-                level=level,
-                channel=app.config.get('APP_CHANNEL'),
-                PAPERTRAIL_HOST=app.config.get('PAPERTRAIL_HOST'),
-                PAPERTRAIL_PORT=app.config.get('PAPERTRAIL_PORT'),
-                SENTRY_DSN=app.config.get('SENTRY_DSN'),
-                MOZDEF=app.config.get('MOZDEF'),
-                )
 
 
 def init_logger(project_name,

@@ -1,27 +1,26 @@
+# -*- coding: utf-8 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from __future__ import absolute_import
+
 import pytest
-import os
+
+import backend_common
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def app():
-    # Set app to testing mode
-    os.environ['APP_TESTING'] = 'releng-notification-policy'
+    import releng_notification_policy
 
-    # Import app code
-    from backend_common.db import db
-    from releng_notification_policy.flask import app
+    config = backend_common.testing.get_app_config({
+        'SQLALCHEMY_DATABASE_URI': 'sqlite://',
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'RELENG_NOTIFICATION_IDENTITY_ENDPOINT': 'https://fake_endpoint.mozilla-releng.net'
+    })
+    app = releng_notification_policy.create_app(config)
 
-    # Create db and yield app
     with app.app_context():
-        db.create_all()
-        app.config['RELENG_NOTIFICATION_IDENTITY_ENDPOINT'] = 'https://fake_endpoint.mozilla-releng.net'
+        backend_common.testing.configure_app(app)
         yield app
-
-
-@pytest.yield_fixture(scope='session')
-def client(app):
-    from backend_common import mocks
-
-    with app.test_client() as test_client:
-        with mocks.apply_mockups():
-            yield test_client
