@@ -2,11 +2,12 @@
 import errno
 import os
 from datetime import datetime
+import zipfile
 import requests
 import hglib
 
 from cli_common.log import get_logger
-from cli_common.command import run_check
+from cli_common.command import run, run_check
 
 from shipit_code_coverage import coverage_by_dir, taskcluster, uploader, utils
 
@@ -51,7 +52,7 @@ class CodeCov(object):
             test_task_id = test_task['status']['taskId']
             artifacts = taskcluster.get_task_artifacts(test_task_id)
             for artifact in artifacts:
-                if 'code-coverage-gcda.zip' in artifact['name']:
+                if any(n in artifact['name'] for n in ['code-coverage-gcda.zip', 'code-coverage-jsvm.zip']):
                     taskcluster.download_artifact(test_task_id, suite_name, artifact)
 
         self.suites = list(all_suites)
@@ -73,21 +74,43 @@ class CodeCov(object):
             raise Exception('Mercurial commit is not available yet on mozilla/gecko-dev.')
         return ret
 
+    def rewrite_jsvm_lcov(self):
+        files = os.listdir('ccov-artifacts')
+        for fname in files:
+            if 'jsvm' not in fname or not fname.endswith('.zip'):
+                continue
+
+            zip_file_path = 'ccov-artifacts/' + fname
+            out_dir = 'ccov-artifacts/' + fname[:-4]
+
+            zip_file = zipfile.ZipFile(zip_file_path, 'r')
+            zip_file.extractall(out_dir)
+            zip_file.close()
+
+            lcov_files = [os.path.abspath(os.path.join(out_dir, f)) for f in os.listdir(out_dir)]
+            run(['gecko-env', './mach', 'python', 'python/mozbuild/mozbuild/codecoverage/lcov_rewriter.py'] + lcov_files, cwd=self.repo_dir)
+
+            for lcov_file in lcov_files:
+                os.remove(lcov_file)
+
+            lcov_out_files = [os.path.abspath(os.path.join(out_dir, f)) for f in os.listdir(out_dir)]
+            for lcov_out_file in lcov_out_files:
+                os.rename(lcov_out_file, lcov_out_file[:-4])
+
     def generate_info(self, commit_sha, coveralls_token, suite=None):
         files = os.listdir('ccov-artifacts')
         ordered_files = []
         for fname in files:
-            if not fname.endswith('.zip'):
+            if ('gcda' in fname or 'gcno' in fname) and not fname.endswith('.zip'):
+                continue
+            if 'jsvm' in fname and fname.endswith('.zip'):
                 continue
 
-            if 'gcno' in fname:
-                ordered_files.insert(0, 'ccov-artifacts/' + fname)
-            elif suite is None or suite in fname:
+            if 'gcno' in fname or suite is None or suite in fname:
                 ordered_files.append('ccov-artifacts/' + fname)
 
         cmd = [
           'grcov',
-          '-z',
           '-t', 'coveralls',
           '-s', self.repo_dir,
           '-p', '/home/worker/workspace/build/src/',
@@ -129,11 +152,12 @@ class CodeCov(object):
 
     def build_files(self):
         with open(os.path.join(self.repo_dir, '.mozconfig'), 'w') as f:
-            f.write('mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-firefox')
+            f.write('mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-firefox\n')
+            f.write('ac_add_options --enable-debug\n')
+            f.write('ac_add_options --enable-artifact-builds\n')
 
-        run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
-        run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
-        run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
+        run_check(['gecko-env', './mach', 'build'], cwd=self.repo_dir)
+        run_check(['gecko-env', './mach', 'build-backend', '-b', 'ChromeMap'], cwd=self.repo_dir)
 
     def go(self):
         task_id = taskcluster.get_last_task()
@@ -143,9 +167,15 @@ class CodeCov(object):
         logger.info('Mercurial revision', revision=revision)
 
         self.download_coverage_artifacts(task_id)
+        logger.info('Code coverage artifacts downloaded')
 
         self.clone_mozilla_central(revision)
+        logger.info('mozilla-central cloned')
         self.build_files()
+        logger.info('Build successful')
+
+        self.rewrite_jsvm_lcov()
+        logger.info('JSVM LCOV files rewritten')
 
         commit_sha = self.get_github_commit(revision)
         logger.info('GitHub revision', revision=commit_sha)
