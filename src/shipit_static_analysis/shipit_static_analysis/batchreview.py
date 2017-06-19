@@ -4,9 +4,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
-import logging
-
+from cli_common import log
 from rbtools.api.errors import APIError
+
+logger = log.get_logger(__name__)
 
 
 class BatchReview(object):
@@ -17,7 +18,7 @@ class BatchReview(object):
     '''
 
     def __init__(self, api_root, review_request_id, diff_revision,
-                 max_comments=100, logger=None):
+                 max_comments=100):
         '''Initialize BatchReview
 
         The ``api_root`` is the result of calling get_root on a Reviewboard
@@ -31,8 +32,6 @@ class BatchReview(object):
 
         The ``max_comments`` provides a limit on the number of comments
         which can be made as part of the BatchReview.
-
-        The ``logger`` object is a logger to be used.
         '''
 
         self.api_root = api_root
@@ -40,11 +39,6 @@ class BatchReview(object):
         self.diff_revision = diff_revision
         self.max_comments = max_comments
         self.comments = []
-
-        if logger is None:
-            self.logger = logging.getLogger('batchreview')
-        else:
-            self.logger = logger
 
         self._destfile_to_file = {}
         self._file_to_diffdata = {}
@@ -107,9 +101,9 @@ class BatchReview(object):
 
         f = self.destfile_to_file(filename)
         if f is None:
-            self.logger.error('batchreview: could not comment on file: %s it '
-                              'does not appear to be part of the commit.' %
-                              filename)
+            logger.error('batchreview: could not comment on file: %s it does '
+                         'not appear to be part of the commit.' %
+                         filename)
             return
         translated_line_num = self.translate_line_num(filename, first_line)
 
@@ -145,8 +139,7 @@ class BatchReview(object):
                 body_bottom=body_bottom,
                 diff_comments=json.dumps(self.comments))
         except APIError as e:
-            self.logger.error(
-                'batchreview: could not publish review: %s' % str(e))
+            logger.error('batchreview: could not publish review: %s' % str(e))
             return False
 
         return True
