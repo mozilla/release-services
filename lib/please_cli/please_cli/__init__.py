@@ -20,6 +20,7 @@ import please_cli.nagios_config
 import please_cli.nixify
 import please_cli.run
 import please_cli.shell
+import please_cli.update_dependencies
 import please_cli.utils
 
 
@@ -112,6 +113,7 @@ cmd_tools.add_command(please_cli.maintanance.cmd_on, "maintanance:on")
 cmd_tools.add_command(please_cli.nixify.cmd, "nixify")
 cmd_tools.add_command(please_cli.base_image.cmd, "base-image")
 cmd_tools.add_command(please_cli.nagios_config.cmd, "nagios-config")
+cmd_tools.add_command(please_cli.update_dependencies.cmd, "update-dependencies")
 
 
 if __name__ == "__main__":
