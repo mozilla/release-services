@@ -94,18 +94,56 @@ in skipOverrides {
   };
 
   "mozilla-cli-common" = self: old: {
-    name = "mozilla-cli-common-${fileContents ./../lib/backend_common/VERSION}";
+    name = "mozilla-cli-common-${fileContents ./../lib/cli_common/VERSION}";
+
+    doCheck = true;
+
     buildInputs =
       [ self."flake8"
         self."pytest"
       ];
+
+    patchPhase = ''
+      # replace synlink with real file
+      rm -f setup.cfg
+      ln -s ${./setup.cfg} setup.cfg
+
+      # generate MANIFEST.in to make sure every file is included
+      rm -f MANIFEST.in
+      cat > MANIFEST.in <<EOF
+      recursive-include cli_common/*
+
+      include VERSION
+      include cli_common/VERSION
+      include cli_common/*.ini
+      include cli_common/*.json
+      include cli_common/*.mako
+      include cli_common/*.yml
+
+      recursive-exclude * __pycache__
+      recursive-exclude * *.py[co]
+      EOF
+    '';
+
     preConfigure = ''
       rm -rf build *.egg-info
     '';
-    # TODO: doCheck = true;
+
     checkPhase = ''
-      flake8
-      pytest tests
+      export LANG=en_US.UTF-8
+      export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
+
+      echo "################################################################"
+      echo "## flake8 ######################################################"
+      echo "################################################################"
+      flake8 -v
+      echo "################################################################"
+
+      echo "################################################################"
+      echo "## pytest ######################################################"
+      echo "################################################################"
+      pytest tests/ -vvv -s
+      echo "################################################################"
     '';
   };
 

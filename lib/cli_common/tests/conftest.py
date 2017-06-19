@@ -1,6 +1,5 @@
 import pytest
 import logbook
-from cli_common.log import init_logger
 
 
 @pytest.fixture(scope='module')
@@ -8,4 +7,8 @@ def logger():
     """
     Build a logger
     """
-    return init_logger(level=logbook.DEBUG)
+
+    import cli_common.log
+
+    cli_common.log.init_logger('cli_common', level=logbook.DEBUG)
+    return cli_common.log.get_logger(__name__)
