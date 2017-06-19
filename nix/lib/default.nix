@@ -759,6 +759,8 @@ in rec {
         '' + shellHook;
 
         passthru = {
+          inherit python;
+
           src_path =
             "src/" +
               (replaceStrings ["-"] ["_"]
