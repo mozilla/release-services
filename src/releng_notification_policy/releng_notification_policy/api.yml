@@ -81,10 +81,7 @@ paths:
                     urgency:
                       type: string
                       enum:
-                        - LOW
-                        - NORMAL
-                        - HIGH
-                        - DO_YESTERDAY
+                        {{ URGENCY_LEVELS }}
                       description: Urgency level of notification.
 
                     start_timestamp:
@@ -176,10 +173,7 @@ paths:
                     urgency:
                       type: string
                       enum:
-                        - LOW
-                        - NORMAL
-                        - HIGH
-                        - DO_YESTERDAY
+                        {{ URGENCY_LEVELS }}
                       description: Urgency level of notification.
 
                     start_timestamp:
@@ -268,9 +262,7 @@ paths:
                       description: Notification channel used to notify.
                       type: string
                       enum:
-                        - EMAIL
-                        - IRC
-                        - SMS
+                        {{ CHANNELS }}
 
                     targets:
                       description: Identity who the notification was sent to.

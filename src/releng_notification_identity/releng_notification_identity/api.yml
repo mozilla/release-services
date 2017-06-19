@@ -209,18 +209,13 @@ definitions:
         description: Notification channel for this urgency level.
         type: string
         enum:
-          - EMAIL
-          - IRC
-          - SMS
+          {{ CHANNELS }}
 
       urgency:
         description: Urgency level for this notification preference.
         type: string
         enum:
-          - LOW
-          - NORMAL
-          - HIGH
-          - DO_YESTERDAY
+          {{ URGENCY_LEVELS }}
 
       target:
         description: Target for notification, differs by channel.
