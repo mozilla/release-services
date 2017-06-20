@@ -220,7 +220,11 @@ class RelengapiToken(backend_common.db.db.Model):
 
     @property
     def permissions(self):
-        return [i.strip() for i in self._permissions.split(',') if i]
+        return [
+            'project:releng:{}'.format(permission.strip().replace('.', '/'))
+            for permission in self._permissions.split(',')
+            if permission
+        ]
 
 
 @auth.login_manager.header_loader

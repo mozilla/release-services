@@ -72,7 +72,7 @@ def upload_batch(region, body):
     # verify permissions based on visibilities
     visibilities = set(f.visibility for f in body['files'].itervalues())
     for visibility in visibilities:
-        prm = flask_login.current_user.has_permissions('tooltool.upload.{}'.format(visibility))
+        prm = flask_login.current_user.has_permissions('project:releng:tooltool/upload/{}'.format(visibility))
         if not prm or not prm.can():
             raise werkzeug.exceptions.Forbidden('no permission to upload {} files'.format(visibility))
 
@@ -177,7 +177,6 @@ def search_files(q):
     return [row.to_json() for row in query.all()]
 
 
-@backend_common.auth.auth.require_scopes(['project:releng:tooltool/manage'])
 def get_file(digest):
 
     if not releng_tooltool.utils.is_valid_sha512(digest):
@@ -264,7 +263,7 @@ def download_file(digest, region=None):
 
     # check visibility
     if file_row.visibility != 'public' or not ALLOW_ANONYMOUS_PUBLIC_DOWNLOAD:
-        if not flask_login.current_user.has_permissions('tooltool.download.{}'.format(file_row.visibility)):
+        if not flask_login.current_user.has_permissions('project:releng:tooltool/download/{}'.format(file_row.visibility)):
             raise werkzeug.exceptions.Forbidden
 
     # figure out which region to use, and from there which bucket
