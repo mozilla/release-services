@@ -17,19 +17,35 @@ DEBUG = bool(os.environ.get('DEBUG', False))
 
 required = [
     'DATABASE_URL',
+    # https://github.com/mozilla/build-cloud-tools/blob/master/configs/cloudformation/tooltool.py
+    'S3_REGIONS',
+    # https://github.com/mozilla/build-cloud-tools/blob/master/configs/cloudformation/iam_relengapi.py
+    'S3_REGIONS_ACCESS_KEY_ID',
+    'S3_REGIONS_SECRET_ACCESS_KEY',
 ]
+
+existing = {x: os.environ.get(x) for x in required}
+existing['ALLOW_ANONYMOUS_PUBLIC_DOWNLOAD'] = False
+# This value should be fairly short (and its value is included in the
+# `upload_batch` docstring).  Uploads cannot be validated until this
+# time has elapsed, otherwise a malicious uploader could alter a file
+# after it had been verified.
+existing['UPLOAD_EXPIRES_IN'] = 60
+existing['DOWLOAD_EXPIRES_IN'] = 60
+existing['S3_REGIONS'] = dict()
 
 secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
     releng_tooltool.config.PROJECT_NAME,
     required=required,
-    existing={x: os.environ.get(x) for x in required},
+    existing=existing,
     taskcluster_client_id=os.environ.get('TASKCLUSTER_CLIENT_ID'),
     taskcluster_access_token=os.environ.get('TASKCLUSTER_ACCESS_TOKEN'),
 )
 
 locals().update(secrets)
 
+SECRET_KEY = os.urandom(24)
 
 # -- DATABASE -----------------------------------------------------------------
 

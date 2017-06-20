@@ -9,12 +9,14 @@ produces:
  - application/json
 paths:
 
+
   /upload:
+
     get:
       operationId: "releng_tooltool.api.search_batches"
       description: Search upload batches.
       parameters:
-        - name: query
+        - name: q
           in: query
           description: |
             Query parameter can match a substring of an authors email or a
@@ -28,6 +30,7 @@ paths:
             type: array
             items:
               $ref: '#/definitions/UploadBatch'
+
     post:
       operationId: "releng_tooltool.api.upload_batch"
       description: |
@@ -67,7 +70,9 @@ paths:
           schema:
             $ref: '#/definitions/UploadBatch'
 
+
   /upload/{id}:
+
     get:
       operationId: "releng_tooltool.api.get_batch"
       description: Get a specific upload batch by id.
@@ -82,6 +87,10 @@ paths:
           description: Upload batch.
           schema:
             $ref: '#/definitions/UploadBatch'
+        404:
+          description: Batch can not be found.
+          schema:
+            $ref: '#/definitions/Problem'
 
   /upload/complete/sha512/{digest}:
     get:
@@ -110,13 +119,25 @@ paths:
             should wait before trying again.
           schema:
             type: string
+        400:
+          description: Wrong digest.
+          schema:
+            $ref: '#/definitions/Problem'
+        409:
+          description: Upload expired, send retry eader
+          headers:
+            X-Retry-After:
+              description: Retry after timestamp in epoc.
+              type: string
+
 
   /file:
+
     get:
       operationId: "releng_tooltool.api.search_files"
       description: Search for files matching the query.
       parameters:
-        - name: query
+        - name: q
           in: query
           description: |
             The query matches against prefixes of hashes (at least 8
@@ -132,7 +153,9 @@ paths:
               $ref: '#/definitions/File'
 
 
+
   /file/sha512/{digest}:
+
     get:
       operationId: "releng_tooltool.api.get_file"
       description: |
@@ -152,30 +175,19 @@ paths:
           description: File
           schema:
             $ref: '#/definitions/File'
+        400:
+          description: Wrong digest.
+          schema:
+            $ref: '#/definitions/Problem'
+        404:
+          description: File can not be found.
+          schema:
+            $ref: '#/definitions/Problem'
+        500:
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/Problem'
 
-  /sha512/{digest}:
-    get:
-      operationId: "releng_tooltool.api.download_file"
-      description: Fetch a link to the file with the given sha512 digest.
-      parameters:
-        - name: digest
-          in: path
-          required: true
-          type: string
-        - name: region
-          in: query
-          description: |
-            The query argument ``region=us-west-1`` indicates a preference for
-            a URL in that region, although if the file is not available in tht
-            region then a URL from another region may be returned.
-          type: string
-      responses:
-        302:
-          description: Redirect to a signed download URL.
-          headers:
-            Location:
-              description: Download URL.
-              type: string
     patch:
       operationId: "releng_tooltool.api.patch_file"
       description: |
@@ -216,6 +228,64 @@ paths:
           description: File
           schema:
             $ref: '#/definitions/File'
+        400:
+          description: Wrong op.
+          schema:
+            $ref: '#/definitions/Problem'
+        401:
+          description: No permission.
+          schema:
+            $ref: '#/definitions/Problem'
+        404:
+          description: File can not be found.
+          schema:
+            $ref: '#/definitions/Problem'
+        500:
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/Problem'
+
+
+  /sha512/{digest}:
+    get:
+      operationId: "releng_tooltool.api.download_file"
+      description: Fetch a link to the file with the given sha512 digest.
+      parameters:
+        - name: digest
+          in: path
+          required: true
+          type: string
+        - name: region
+          in: query
+          required: false
+          description: |
+            The query argument ``region=us-west-1`` indicates a preference for
+            a URL in that region, although if the file is not available in tht
+            region then a URL from another region may be returned.
+          type: string
+      responses:
+        302:
+          description: Redirect to a signed download URL.
+          headers:
+            Location:
+              description: Download URL.
+              type: string
+        400:
+          description: sha512 digest is not valid.
+          schema:
+            $ref: '#/definitions/Problem'
+        401:
+          description: No permission to download file.
+          schema:
+            $ref: '#/definitions/Problem'
+        404:
+          description: File can not be found.
+          schema:
+            $ref: '#/definitions/Problem'
+        500:
+          description: Internal server error.
+          schema:
+            $ref: '#/definitions/Problem'
 
 
 definitions:
@@ -307,3 +377,45 @@ definitions:
         description: |
           The URL to which this file can be uploaded via HTTP PUT. The URL
           requires the request content-type to be ``application/octet-stream``.
+
+  Problem:
+    type: object
+    properties:
+      type:
+        type: string
+        format: uri
+        description: |
+          An absolute URI that identifies the problem type.  When dereferenced,
+          it SHOULD provide human-readable documentation for the problem type
+          (e.g., using HTML).
+        default: 'about:blank'
+        example: 'https://zalando.github.io/problem/constraint-violation'
+      title:
+        type: string
+        description: |
+          A short, summary of the problem type. Written in english and readable
+          for engineers (usually not suited for non technical stakeholders and
+          not localized)
+        example: Service Unavailable
+      status:
+        type: integer
+        format: int32
+        description: |
+          The HTTP status code generated by the origin server for this occurrence
+          of the problem.
+        minimum: 100
+        maximum: 600
+        exclusiveMaximum: true
+        example: 503
+      detail:
+        type: string
+        description: |
+          A human readable explanation specific to this occurrence of the
+          problem.
+        example: Connection to database timed out
+      instance:
+        type: string
+        format: uri
+        description: |
+          An absolute URI that identifies the specific occurrence of the problem.
+          It may or may not yield further information if dereferenced.
