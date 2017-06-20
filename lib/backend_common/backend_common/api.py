@@ -139,9 +139,11 @@ class Api:
 
 def handle_default_exceptions(e):
     return flask.jsonify({
-        'status_code': e.code,
-        'message': str(e),
-        'description': e.description
+        'type': 'about:blank',
+        'title': str(e),
+        'status': e.code,
+        'detail': e.description,
+        'instance': 'about:blank',
     }), e.code
 
 

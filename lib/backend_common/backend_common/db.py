@@ -46,14 +46,19 @@ def init_database(app):
             db.create_all()
 
 
+ALLOWED_TABLES = [
+    'relengapi_auth_tokens',
+]
+
+
 def init_app(app):
     app.db_prefix = app.name.replace('-', '_')
     db.init_app(app)
 
     # Check every table starts with app.db_prefix
     for table_name in db.metadata.tables.keys():
-        if not table_name.startswith(app.db_prefix):
-            raise Exception('DB table {} should start with {}'.format(table_name, app.db_prefix))  # noqa
+        if not table_name.startswith(app.db_prefix) and table_name not in ALLOWED_TABLES:
+            raise Exception('DB table {} should start with {}'.format(table_name, app.db_prefix))
 
     # Try to run migrations on the app
     # or direct db creation

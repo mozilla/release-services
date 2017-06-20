@@ -7,19 +7,7 @@ from __future__ import absolute_import
 
 import datetime
 import pytz
-import random
 import re
-import flask
-
-
-def get_region_and_bucket(region):
-    regions = flask.current_app.config['TOOLTOOL_REGIONS']
-
-    if region and region in regions:
-        return region, regions[region]
-
-    # no region specified, so return one at random
-    return random.choice(regions.items())
 
 
 def now():

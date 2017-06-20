@@ -13,15 +13,15 @@ import os
 
 EXTENSIONS = [
     'log',
+    'templates',
     'security',
     'cors',
     'api',
     'auth',
     'auth0',
     'cache',
-    'db',
     'pulse',
-    'templates',
+    'db',
 ]
 
 logger = cli_common.log.get_logger(__name__)

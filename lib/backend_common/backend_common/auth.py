@@ -5,13 +5,16 @@
 
 from __future__ import absolute_import
 
+import backend_common.db
 import cli_common.log
 import flask
 import flask_login
 import functools
+import itsdangerous
+import sqlalchemy as sa
 import taskcluster
 import taskcluster.utils
-
+import time
 
 logger = cli_common.log.get_logger(__name__)
 
@@ -89,31 +92,35 @@ class TaskclusterUser(BaseUser):
 
         return taskcluster.utils.scope_match(self.get_permissions(), required_permissions)
 
-    # XXX: this should not be here
 
-    def taskcluster_options(self):
-        '''
-        Configure the TaskCluster Secrets client
-        with optional target HAWK header
-        '''
-        target_header = flask.request.environ.get('HTTP_X_AUTHORIZATION_TARGET')
-        if not target_header:
-            raise Exception('Missing X-AUTHORIZATION-TARGET header')
-        return {
-            'credentials': {
-                'hawkHeader': target_header
-            }
-        }
+class RelengapiTokenUser(BaseUser):
 
-    def get_secret(self, name):
-        '''
-        Helper to read a Taskcluster secret
-        '''
-        secrets = taskcluster.Secrets(self.taskcluster_options())
-        secret = secrets.get(name)
-        if not secret:
-            raise Exception('Missing TC secret {}'.format(name))
-        return secret['secret']
+    type = 'relengapi-token'
+
+    def __init__(self, claims, authenticated_email=None, permissions=[], token_data={}):
+
+        self.claims = claims
+        self._permissions = set(permissions)
+        self.token_data = token_data
+
+        if authenticated_email:
+            self.authenticated_email = authenticated_email
+
+    def get_id(self):
+        parts = ['token', self.claims['typ']]
+        if 'jti' in self.claims:
+            parts.append('id={}'.format(self.claims['jti']))
+        try:
+            parts.append('user={}'.format(self.authenticated_email))
+        except AttributeError:
+            pass
+        return ':'.join(parts)
+
+    def get_permissions(self):
+        return self._permissions
+
+    def has_permissions(self, permissions):
+        return all([permission in self._permissions for permission in permissions])
 
 
 class Auth(object):
@@ -190,8 +197,85 @@ auth = Auth(
 )
 
 
+def jti2id(jti):
+    if jti[0] != 't':
+        raise TypeError('jti not in the format `t$token_id`')
+    return int(jti[1:])
+
+
+class RelengapiToken(backend_common.db.db.Model):
+    __tablename__ = 'relengapi_auth_tokens'
+
+    def __init__(self, permissions=None, **kwargs):
+        if permissions is not None:
+            kwargs['_permissions'] = ','.join((str(a) for a in permissions))
+        super(RelengapiToken, self).__init__(**kwargs)
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    typ = sa.Column(sa.String(4), nullable=False)
+    description = sa.Column(sa.Text, nullable=False)
+    user = sa.Column(sa.Text, nullable=True)
+    disabled = sa.Column(sa.Boolean, nullable=False)
+    _permissions = sa.Column(sa.Text, nullable=False)
+
+    @property
+    def permissions(self):
+        return [i.strip() for i in self._permissions.split(',') if i]
+
+
 @auth.login_manager.header_loader
-def taskcluster_user_loader(auth_header):
+def parse_header(auth_header):
+
+    header = auth_header.split()
+    if len(header) == 2 and header[0].lower() != 'bearer':
+
+        TOKENAUTH_ISSUER = 'ra2'
+        token_str = header[1]
+        tokenauth_serializer = itsdangerous.JSONWebSignatureSerializer(flask.current_app.secret_key)
+
+        try:
+            claims = tokenauth_serializer.loads(token_str)
+        except itsdangerous.BadData:
+            logger.warning('Got invalid signature in token %r', token_str)
+            return None
+        except Exception:
+            logger.exception('Error processing signature in token %r', token_str)
+            return None
+
+        # convert v1 to ra2
+        if claims.get('v') == 1:
+            claims = {'iss': 'ra2', 'typ': 'prm', 'jti': 't%d' % claims['id']}
+
+        if claims.get('iss') != TOKENAUTH_ISSUER:
+            return
+
+        if claims['typ'] == 'prm':
+            token_id = jti2id(claims['jti'])
+            token_data = RelengapiToken.query.filter_by(id=token_id).first()
+            if token_data:
+                assert token_data.typ == 'prm'
+                return RelengapiTokenUser(claims,
+                                          permissions=token_data.permissions,
+                                          token_data=token_data)
+
+        elif claims['typ'] == 'tmp':
+            now = time.time()
+            if now < claims['nbf'] or now > claims['exp']:
+                return
+            permissions = [i for i in claims['prm'] if i]
+            return RelengapiTokenUser(claims, permissions=permissions)
+
+        elif claims['typ'] == 'usr':
+            token_id = jti2id(claims['jti'])
+            token_data = RelengapiToken.query.filter_by(id=token_id).first()
+            if token_data and not token_data.disabled:
+                assert token_data.typ == 'usr'
+                return RelengapiTokenUser(claims,
+                                          permissions=token_data.permissions,
+                                          token_data=token_data,
+                                          authenticated_email=token_data.user)
+        else:
+            return
 
     # Get Endpoint configuration
     if ':' in flask.request.host:
