@@ -7,20 +7,28 @@ from __future__ import absolute_import
 
 from .models import Message
 from flask import current_app
+from taskcluster import TaskclusterFailure
+from cli_common import log
+
+
+logger = log.get_logger(__name__)
 
 
 def send_irc_notification(message: Message, identity_preference: dict) -> dict:
-    current_app.notify.irc()
+    current_app.notify.irc({
+        'channel' if identity_preference['target'].startswith('#') else 'user': identity_preference['target'],
+        'message': message.shortMessage,
+    })
 
     return {
         'channel': 'IRC',
-        'message': message.message,
+        'message': message.shortMessage,
         'uid': message.uid,
         'target': identity_preference['target'],
     }
 
 
-def send_email_notifications(message: Message, identity_preference: dict) -> dict:
+def send_email_notification(message: Message, identity_preference: dict) -> dict:
     current_app.notify.email({
         'address': identity_preference['target'],
         'content': message.message,
@@ -37,10 +45,22 @@ def send_email_notifications(message: Message, identity_preference: dict) -> dic
 
 
 CHANNEL_MAPPING = {
-    'EMAIL': send_email_notifications,
+    'EMAIL': send_email_notification,
     'IRC': send_irc_notification,
 }
 
 
 def send_notifications(message: Message, identity_preference: dict) -> dict:
-    return CHANNEL_MAPPING[identity_preference['channel']](message, identity_preference)
+    try:
+        response = CHANNEL_MAPPING[identity_preference['channel']](message, identity_preference)
+
+        log.info('{target} notified about {message} on {channel}'.format(
+            target=identity_preference['target'],
+            message=message,
+            channel=identity_preference['channel']
+        ))
+
+        return response
+
+    except TaskclusterFailure:
+        pass

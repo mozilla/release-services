@@ -12,8 +12,6 @@ import backend_common
 
 @pytest.fixture(scope='session')
 def app():
-    '''Load releng_notification_identity in test mode
-    '''
     import releng_notification_identity
 
     config = backend_common.testing.get_app_config({

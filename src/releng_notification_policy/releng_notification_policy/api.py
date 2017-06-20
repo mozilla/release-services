@@ -7,14 +7,47 @@ from __future__ import absolute_import
 
 from datetime import datetime, timedelta
 from flask import current_app
-from typing import Tuple
+from typing import Iterator, List, Tuple
 from werkzeug.exceptions import Conflict, NotFound
 from .models import Message, Policy
 from .channels import send_notifications
 from requests import get
+from json import JSONDecodeError
+from cli_common import log
+
+logger = log.get_logger(__name__)
 
 
-def put_message(uid: str, body: dict) -> Tuple[None, int]:
+def get_policies_in_json_serializable_form(notification_policies: List[Policy]) -> List[dict]:
+    return [
+        policy.to_dict()
+        for policy in notification_policies
+    ]
+
+
+def get_message_by_uid(uid: str) -> dict:
+    session = current_app.db.session
+
+    message = session.query(Message).filter(Message.uid == uid).first()
+    if message:
+        notification_policies = session.query(Policy).filter(Policy.message_id == message.id).all()
+        policies_dicts = get_policies_in_json_serializable_form(notification_policies)
+
+        logger.info('Serving {message}'.format(message=message))
+
+        return {
+            'shortMessage': message.shortMessage,
+            'message': message.message,
+            'deadline': message.deadline,
+            'policies': policies_dicts,
+        }
+    else:
+        err_str = 'Message with uid {} not found.'.format(uid)
+        logger.info(err_str)
+        raise NotFound(err_str)
+
+
+def put_message(uid: str, body: dict) -> None:
     '''
     Add a new message to be delivered into the service.
 
@@ -25,8 +58,11 @@ def put_message(uid: str, body: dict) -> Tuple[None, int]:
     session = current_app.db.session
 
     # Make sure the message UID doesn't already exist in the DB
-    if session.query(Message).filter(Message.uid == uid).count():
-        raise Conflict('Message with uid {uid} already exists'.format(uid=uid))
+    existing_message = session.query(Message).filter(Message.uid == uid).first()
+    if existing_message:
+        err_str = '{message} already exists'.format(message=existing_message)
+        logger.info(err_str)
+        raise Conflict(err_str)
 
     new_message = Message(uid=uid, shortMessage=body['shortMessage'],
                           message=body['message'], deadline=body['deadline'])
@@ -35,17 +71,21 @@ def put_message(uid: str, body: dict) -> Tuple[None, int]:
 
     policies = [
         # Overwrite the frequency object input from the API with a db compatible timedelta object
-        Policy(**{**p, 'frequency': timedelta(**p['frequency']), 'policy_id': new_message.id})
+        Policy(**{**p, 'frequency': timedelta(**p['frequency']), 'message_id': new_message.id})
         for p in body['policies']
     ]
 
     session.add_all(policies)
     session.commit()
 
-    return None, 200
+    logger.info('{} created.'.format(new_message))
+    for new_policy in policies:
+        logger.info('{} created.'.format(new_policy))
+
+    return None
 
 
-def delete_message(uid: str) -> Tuple[None, int]:
+def delete_message(uid: str) -> None:
     '''
     Delete the message with the specified UID
 
@@ -58,9 +98,45 @@ def delete_message(uid: str) -> Tuple[None, int]:
         session.delete(message)
         session.commit()
 
-        return None, 200
+        logger.info('{} deleted.'.format(message))
+
+        return None
     else:
-        raise NotFound('Message with uid `{}` not found'.format(uid))
+        err_str = 'Message with uid "{}" not found'.format(uid)
+        logger.warning(err_str)
+        raise NotFound(err_str)
+
+
+def determine_message_action(messages: List[Message]) -> Iterator[Tuple[Message, bool]]:
+    current_time = datetime.now()
+    for message in messages:
+        if current_time > message.deadline:
+            yield message, True
+        else:
+            yield message, False
+
+
+def create_identity_preference_url(policy: Policy) -> str:
+    return '{endpoint}/identity/{identity_name}/{urgency}'\
+            .format(endpoint=current_app.config.get('RELENG_NOTIFICATION_IDENTITY_ENDPOINT'),
+                    identity_name=policy.identity,
+                    urgency=policy.urgency)
+
+
+def get_identity_url_for_actionable_policies(policies: List[Policy]) -> Iterator[Tuple[Policy, str]]:
+    current_time = datetime.now()
+    for policy in policies:
+        # Check our policy time frame is in effect
+        if policy.stop_timestamp < current_time or current_time < policy.start_timestamp:
+            continue
+
+        # If we have notified already, only notify according to the frequency
+        if policy.last_notified and current_time - policy.last_notified < policy.frequency:
+            continue
+
+        identity_preference_url = create_identity_preference_url(policy)
+
+        yield policy, identity_preference_url
 
 
 def get_tick_tock() -> dict:
@@ -69,47 +145,34 @@ def get_tick_tock() -> dict:
 
     :return: Information about notification triggered by this call in JSON format.
     '''
-    try:
-        session = current_app.db.session
+    session = current_app.db.session
 
-        current_time = datetime.now()
-        pending_messages = session.query(Message).all()
-        if not pending_messages:
-            raise NotFound('No pending policies to trigger.')
+    current_time = datetime.now()
+    pending_messages = session.query(Message).all()
+    if not pending_messages:
+        raise NotFound('No pending policies to trigger.')
 
-        notifications = []
-        for message in pending_messages:
-            # If the message has reached its deadline, delete it
-            if current_time > message.deadline:
-                session.delete(message)
-                continue
+    notifications = []
+    for message, is_past_deadline in determine_message_action(pending_messages):
+        if is_past_deadline:
+            session.delete(message)
+            continue
 
-            policies = session.query(Policy).filter(Policy.policy_id == message.id).all()
-            for policy in policies:
-                # Check our policy time frame is in effect
-                if policy.stop_timestamp < current_time or current_time < policy.start_timestamp:
-                    continue
-
-                # If we have notified already, only notify according to the frequency
-                if policy.last_notified and current_time - policy.last_notified < policy.frequency:
-                    continue
-
-                identity_uri = '{endpoint}/identity/{identity_name}/{urgency}'.format(endpoint=current_app.config.get('RELENG_NOTIFICATION_IDENTITY_ENDPOINT'),
-                                                                                      identity_name=policy.identity,
-                                                                                      urgency=policy.urgency)
-                identity_preference, *_ = get(identity_uri).json()['preferences']
+        policies = session.query(Policy).filter(Policy.message_id == message.id).all()
+        for policy, identity_preference_url in get_identity_url_for_actionable_policies(policies):
+            try:
+                identity_preference = get(identity_preference_url, verify=False).json()['preferences'].pop()
 
                 notification_info = send_notifications(message, identity_preference)
                 notifications.append(notification_info)
 
                 policy.last_notified = current_time
+            except JSONDecodeError:
+                logger.warn('')
 
-            session.add_all(policies)
-        session.commit()
+        session.add_all(policies)
+    session.commit()
 
-        return {
-            'notifications': notifications,
-        }
-
-    except (SystemError, KeyboardInterrupt,):
-        raise
+    return {
+        'notifications': notifications,
+    }

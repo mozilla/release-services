@@ -20,8 +20,101 @@ produces:
   - application/json
 
 paths:
+  '/message/{uid}':
+    get:
+      summary: Get details about the notification policies for message with specified UID.
+      operationId: releng_notification_policy.api.get_message_by_uid
+      parameters:
+        - name: uid
+          in: path
+          type: string
+          description: Tracking UID for message.
+          required: true
 
-  /message/{uid}:
+      responses:
+        200:
+          description: Notification policies for message with specified UID successfully retrieved.
+          schema:
+            type: object
+            required:
+              - message
+              - shortMessage
+              - policies
+              - deadline
+
+            properties:
+              shortMessage:
+                type: string
+                description: A short version of the message.
+                example: You are needed for a task!
+
+              message:
+                type: string
+                description: A long version of the message.
+                example: |
+                  Your signoff is required to advance the release process. Please do X, Y and Z, call your boss, pass
+                  go and collect $200. Thank you.
+
+              deadline:
+                type: string
+                format: date-time
+
+              policies:
+                type: array
+                description: List of notification policies using this message payload.
+                items:
+                  policies:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - identity
+                    - urgency
+                    - start_timestamp
+                    - stop_timestamp
+                    - frequency
+                  properties:
+                    identity:
+                      type: string
+                      description: Identity to notify.
+
+                    urgency:
+                      type: string
+                      enum:
+                        {{ URGENCY_LEVELS }}
+                      description: Urgency level of notification.
+
+                    start_timestamp:
+                      type: string
+                      format: date-time
+
+                    stop_timestamp:
+                      type: string
+                      format: date-time
+
+                    frequency:
+                      type: object
+                      description: Frequency as a time interval.
+                      properties:
+                        days:
+                          type: integer
+                          format: int64
+                          description: Number of days between notifications.
+                        hours:
+                          type: integer
+                          format: int64
+                          description: Number of hours between notifications.
+                        minutes:
+                          type: integer
+                          format: int64
+                          description: Number of minutes between notifications.
+
+        404:
+          description: Notification policy with specified UID not found.
+          schema:
+            $ref: '#/definitions/Problem'
+
+
     put:
       summary: Add a new notification message to the service.
       operationId: "releng_notification_policy.api.put_message"
@@ -29,13 +122,13 @@ paths:
         - name: uid
           in: path
           type: string
-          description: Tracking UID for notification policy
+          description: Tracking UID for message.
           required: true
 
         - name: body
           in: body
           required: true
-          description: Policy to add to the service.
+          description: Notification message to add to the service.
           schema:
             type: object
             required:
@@ -47,11 +140,18 @@ paths:
             properties:
               shortMessage:
                 type: string
+                description: A short version of the message.
+                example: You are needed for a task!
 
               message:
                 type: string
+                description: A long version of the message.
+                example: |
+                  Your signoff is required to advance the release process. Please do X, Y and Z, call your boss, pass
+                  go and collect $200. Thank you.
 
               deadline:
+                description: Message notification deadline - notifications will not be sent for this message after this deadline.
                 type: string
                 format: date-time
 
@@ -73,10 +173,7 @@ paths:
                     urgency:
                       type: string
                       enum:
-                        - LOW
-                        - NORMAL
-                        - HIGH
-                        - DO_YESTERDAY
+                        {{ URGENCY_LEVELS }}
                       description: Urgency level of notification.
 
                     start_timestamp:
@@ -135,7 +232,7 @@ paths:
           description: Message with specified UID not found.
 
 
-  /ticktock:
+  '/ticktock':
     get:
       summary: Hook endpoint to take action on pending policies.
       operationId: releng_notification_policy.api.get_tick_tock
@@ -165,9 +262,7 @@ paths:
                       description: Notification channel used to notify.
                       type: string
                       enum:
-                        - email
-                        - irc
-                        - sms
+                        {{ CHANNELS }}
 
                     targets:
                       description: Identity who the notification was sent to.

@@ -21,6 +21,24 @@ produces:
 
 paths:
   '/identity/{identity_name}':
+    delete:
+      summary: Delete identity with the specified name.
+      operationId: releng_notification_identity.api.delete_identity_by_name
+      parameters:
+        - name: identity_name
+          in: path
+          type: string
+          description: Name of identity to delete
+          required: true
+
+      responses:
+        200:
+          description: Notification identity successfully deleted.
+
+        404:
+          description: Notification identity not found.
+          schema:
+            $ref: '#/definitions/Problem'
     post:
       summary: Modify notification preferences for an identity.
       operationId: releng_notification_identity.api.post_identity
@@ -122,6 +140,31 @@ paths:
 
 
   '/identity/{identity_name}/{urgency}':
+    delete:
+      operationId: releng_notification_identity.api.delete_identity_preference_by_urgency
+      summary: Delete the notification preference for the specified identity at the specified urgency level.
+      parameters:
+        - name: identity_name
+          in: path
+          type: string
+          description: Name of identity with notification preference to be removed.
+          required: true
+
+        - name: urgency
+          in: path
+          type: string
+          description: Urgency level of notification preference to delete.
+          required: true
+
+      responses:
+        200:
+          description: Notification preference successfully deleted.
+
+        404:
+          description: Notification preference for identity with specified urgency level not found.
+          schema:
+            $ref: '#/definitions/Problem'
+
     get:
       operationId: releng_notification_identity.api.get_identity_preference_by_urgency
       summary: Retrieve the notification preferences for an identity by urgency level.
@@ -166,18 +209,13 @@ definitions:
         description: Notification channel for this urgency level.
         type: string
         enum:
-          - EMAIL
-          - IRC
-          - SMS
+          {{ CHANNELS }}
 
       urgency:
         description: Urgency level for this notification preference.
         type: string
         enum:
-          - LOW
-          - NORMAL
-          - HIGH
-          - DO_YESTERDAY
+          {{ URGENCY_LEVELS }}
 
       target:
         description: Target for notification, differs by channel.

@@ -12,13 +12,12 @@ import backend_common
 
 @pytest.fixture(scope='session')
 def app():
-    '''Load releng_notification_policy in test mode
-    '''
     import releng_notification_policy
 
     config = backend_common.testing.get_app_config({
         'SQLALCHEMY_DATABASE_URI': 'sqlite://',
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'RELENG_NOTIFICATION_IDENTITY_ENDPOINT': 'https://fake_endpoint.mozilla-releng.net'
     })
     app = releng_notification_policy.create_app(config)
 
