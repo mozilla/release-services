@@ -25,6 +25,13 @@ class NoSignaturePresentError(Exception):
             email, group_name))
 
 
+class NoChangingCompletedPolicyError(Exception):
+
+    def __init__(self, email, group_name, policy):
+        super().__init__('{} (in group "{}") cannot modify completed policy {}.'.format(
+            email, group_name, policy))
+
+
 def check_whether_policy_can_be_signed(email, group_name, policy, existing_signatures):
     is_user_allowed_to_sign = any((
         _is_group_defined_in_policy(group_name, policy),
@@ -49,6 +56,9 @@ def check_whether_policy_can_be_unsigned(email, group_name, policy, existing_sig
         _is_group_defined_in_policy(group_name, policy),
         _is_email_defined_in_policy(email, policy)
     ))
+
+    if is_sign_off_policy_met(policy, existing_signatures):
+        raise NoChangingCompletedPolicyError(email, group_name, policy)
 
     if not is_user_allowed_to_sign:
         raise UnauthorizedUserError(email, group_name, policy)

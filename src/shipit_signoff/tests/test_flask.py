@@ -11,9 +11,16 @@ INVALID_UID = '1234'
 
 TEST_STEP = {
     'uid': UID,
+    'policy': {'method': 'local', 'definition': [{'avengers': 1, 'xmen': 1}]},
+    'parameters': {'test': 1},
+}
+
+TEST_STEP_SMALL = {
+    'uid': UID,
     'policy': {'method': 'local', 'definition': [{'avengers': 1}]},
     'parameters': {'test': 1},
 }
+
 
 GOODHEADERS = {
     'Authorization': 'Bearer goodtoken'
@@ -131,6 +138,23 @@ def setup_step(func):
         client.put('/step/{}'.format(UID),
                    content_type='application/json',
                    data=json.dumps(TEST_STEP),
+                   headers=GOODHEADERS)
+        func(client)
+        client.delete('/step/{}'.format(UID),
+                      headers=GOODHEADERS)
+    return decorator
+
+
+def setup_step_small(func):
+    '''
+    Prepopulate the testing database.
+
+    Can't use a fixture because it cancels the @patch to user_getinfo
+    '''
+    def decorator(client, *args, **kwargs):
+        client.put('/step/{}'.format(UID),
+                   content_type='application/json',
+                   data=json.dumps(TEST_STEP_SMALL),
                    headers=GOODHEADERS)
         func(client)
         client.delete('/step/{}'.format(UID),
@@ -293,6 +317,26 @@ def test_sign_off_deletion_unauthorized(client):
                          headers=GOODHEADERS,
                          data=json.dumps(data))
     assert resp.status_code == 403
+
+
+@patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
+@setup_step_small
+def test_sign_off_deletion_completed(client):
+    '''Try to delete a step when it has been fully signed off.'''
+    data = {
+        'group': 'avengers',
+    }
+    # First sign the step
+    resp = client.put('/step/{}/sign'.format(UID),
+                      content_type='application/json',
+                      headers=GOODHEADERS,
+                      data=json.dumps(data))
+
+    resp = client.delete('/step/{}/sign'.format(UID),
+                         content_type='application/json',
+                         headers=GOODHEADERS,
+                         data=json.dumps(data))
+    assert resp.status_code == 409
 
 
 # delete a step when you haven't signed it

@@ -344,7 +344,7 @@ def test_not_has_user_signed_policy(email, group_name, policy, existing_signatur
     (
         'super-admin@m.c',
         'non-important',
-        [{'releng': 2, 'relman': 1}, {'super-admin@m.c': 1}],
+        [{'releng': 2, 'relman': 1}, {'super-admin@m.c': 1, 'super-admin-two@m.c': 1}],
         [MagicMock(email='super-admin@m.c', group='releng'), MagicMock(email='another-releng@m.c', group='releng')],
     ),
 ))
