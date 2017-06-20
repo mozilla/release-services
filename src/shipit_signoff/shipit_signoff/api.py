@@ -20,7 +20,8 @@ from shipit_signoff.policies import (
     check_whether_policy_can_be_signed,
     check_whether_policy_can_be_unsigned,
     is_sign_off_policy_met,
-    UnauthorizedUserError, NoSignoffLeftError, NoSignaturePresentError)
+    UnauthorizedUserError, NoSignoffLeftError, NoSignaturePresentError,
+    NoChangingCompletedPolicyError)
 
 
 logger = log.get_logger(__name__)
@@ -196,8 +197,6 @@ def sign_off(uid):
 
     try:
         check_whether_policy_can_be_signed(email, claim_group, policy_definition, existing_signatures)
-        check_whether_policy_can_be_signed(
-            email, claim_group, policy_definition, existing_signatures)
     except UnauthorizedUserError as e:
         logger.error('User %s (%s) not allowed to sign step %s', email, claim_group, uid)
         abort(403, str(e))
@@ -230,7 +229,7 @@ def delete_signature(uid):
     claim_group = request.json['group']
     if not is_user_in_group(claim_group):
         logger.error(
-            'User %s is not in the group %s when deleting step %s', email, claim_group, uid)
+            'User %s is not in the group %s when deleting signature %s', email, claim_group, uid)
         abort(403)
     existing_signatures = step.signatures
     if not existing_signatures:
@@ -252,6 +251,10 @@ def delete_signature(uid):
     except NoSignaturePresentError as e:
         logger.error(
             'User %s attempting to remove missing signature from step %s', email, uid)
+        abort(409, str(e))
+    except NoChangingCompletedPolicyError as e:
+        logger.error(
+            'User %s unable to modify completed policy in step %s', email, uid)
         abort(409, str(e))
     delete_existing_signature(step, email, claim_group)
     if not is_sign_off_policy_met(policy_definition, step.signatures):

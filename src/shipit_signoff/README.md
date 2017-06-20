@@ -1,10 +1,24 @@
 
 # Installation and running
 
-    pip install -r requirements.txt -r requirements-dev.txt -c requirements_frozen.txt 
-    pip install -e . -c requirements_frozen.txt 
-    Fill in `client_secrets.json.tmpl` as `client_secrets.json` for auth0 connections
-    python3 shipit_signoff/__init__.py
+
+    https://docs.mozilla-releng.net/contributing/developing.html#not-using-please-command
+
+    pip install -r requirements.txt -r requirements-dev.txt -c requirements_frozen.txt
+    pip install -e . -c requirements_frozen.txt
+
+Set environment variables:
+
+    * export APP_SETTINGS=$(pwd)/settings.py
+    * export FLASK_APP=shipit_signoff.flask:app
+    * export DATABASE_URL=postgresql://localhost:5432/
+    * export APP_URL=123
+    * export AUTH0_CLIENT_ID=123
+    * export AUTH0_CLIENT_SECRET=123
+
+Run the app:
+
+    flask run
 
 # Generating API documentation
 
