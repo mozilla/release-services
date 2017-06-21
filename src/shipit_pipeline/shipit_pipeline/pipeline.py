@@ -63,7 +63,7 @@ class MockPipelineStep:
         self.params = params
         self.requires = requires
         self.state = state
-        self.step_time = step_time
+        self.step_time = self.params["timeout"]
 
     def start_step(self, uid, data, verify):
         self.start_time = time.time()
@@ -94,15 +94,25 @@ class MockPipelineStep:
         return '{}/mock/{}'.format(self.url, self.uid)
 
     def to_dict(self):
+        print({
+                  "parameters": {
+                    "api_url": self.full_url,
+                    "description": "string",
+                    "parameters": self.params,
+                    "parameters_schema": "string",
+                    "requires": self.requires,
+                    
+                    "uid": self.uid
+                  },
+                  "uid": self.uid
+                })
         return {
                   "parameters": {
                     "api_url": self.full_url,
                     "description": "string",
                     "parameters": self.params,
                     "parameters_schema": "string",
-                    "requires": [
-                      self.requires
-                    ],
+                    "requires": self.requires,
                     "uid": self.uid
                   },
                   "uid": self.uid

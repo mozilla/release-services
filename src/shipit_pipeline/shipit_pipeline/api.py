@@ -7,12 +7,21 @@ from __future__ import absolute_import
 import logging
 
 from shipit_pipeline.pipeline import get_runnable_steps, get_running_steps, refresh_pipeline_steps, start_steps,\
-    PipelineStep
-
+    PipelineStep, MockPipelineStep
+mock1 = MockPipelineStep("mock1", {"timeout": 2}, [], "pending", 2)
+mock2 = MockPipelineStep("mock2", {"timeout": 5}, ["mock1"], "pending", 5)
+mock3 = MockPipelineStep("mock3", {"timeout": 10}, ["mock2"], "pending", 10)
+mock4 = PipelineStep("mock4", "https://tset",{"timeout": 2}, [], "pending")
 log = logging.getLogger(__name__)
 
-PIPELINES = {}
-MockSteps = {}
+PIPELINES = { "pipelinetest":["running",{
+              "parameters": {
+                "steps": [mock1]
+              },
+              "uid": "pipelinetest"
+            }]
+            }
+MockSteps = {"mock1":mock1, "mock2":mock2, "mock3":mock3}
 
 
 def list_pipelines():
@@ -67,7 +76,7 @@ def ticktock():
     try:
         print('In ticktock')
         running_pipelines = [
-            (uid, status, steps) for (uid, status, steps) in PIPELINES.items() if status == 'running'
+            (uid, status, steps) for (uid, (status, steps)) in PIPELINES.items() if status == 'running'
         ]
 
         print('running_pipelines', running_pipelines)
