@@ -24,7 +24,7 @@ required = [
     'S3_REGIONS_SECRET_ACCESS_KEY',
 ]
 
-existing = {x: os.environ.get(x) for x in required}
+existing = {x: os.environ.get(x) for x in required if x in os.environ}
 existing['ALLOW_ANONYMOUS_PUBLIC_DOWNLOAD'] = False
 # This value should be fairly short (and its value is included in the
 # `upload_batch` docstring).  Uploads cannot be validated until this
