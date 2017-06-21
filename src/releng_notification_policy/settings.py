@@ -30,7 +30,7 @@ secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
     releng_notification_policy.config.PROJECT_NAME,
     required=required,
-    existing={x: os.environ.get(x) for x in required},
+    existing={x: os.environ.get(x) for x in required if x in os.environ},
     taskcluster_client_id=os.getenv('TASKCLUSTER_CLIENT_ID'),
     taskcluster_access_token=os.getenv('TASKCLUSTER_ACCESS_TOKEN'),
 )
