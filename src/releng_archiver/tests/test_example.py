@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
 
 
-def test_example():
+def test_example(app):
     assert True

@@ -742,6 +742,8 @@ in rec {
         '' + postInstall;
 
         shellHook = ''
+          export APP_SETTINGS="$PWD/${self.src_path}/settings.py"
+          export SECRET_KEY=123
           export APP_NAME="${name}-${version}"
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 

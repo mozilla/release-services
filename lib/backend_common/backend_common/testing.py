@@ -10,6 +10,7 @@ import collections
 import datetime
 import hashlib
 import json
+import os
 import pytest
 import random
 import re
@@ -59,8 +60,8 @@ AUTH0_DUMMY_USERINFO = {
 
 def get_app_config(extra_config):
     config = {
-        'DEBUG': True,
         'TESTING': True,
+        'SECRET_KEY': os.urandom(24),
     }
     config.update(extra_config)
     return config

@@ -16,6 +16,7 @@ DEBUG = bool(os.environ.get('DEBUG', False))
 # -- LOAD SECRETS -------------------------------------------------------------
 
 required = [
+    'SECRET_KEY',
     'DATABASE_URL',
     # https://github.com/mozilla/build-cloud-tools/blob/master/configs/cloudformation/tooltool.py
     'S3_REGIONS',
