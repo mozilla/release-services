@@ -320,5 +320,7 @@ def parse_header(auth_header):
 
 
 def init_app(app):
+    if app.config.get('SECRET_KEY') is None:
+        raise Exception('When using `auth` extention you need to specify SECRET_KEY.')
     auth.init_app(app)
     return auth

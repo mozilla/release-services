@@ -16,6 +16,7 @@ DEBUG = bool(os.environ.get('DEBUG', False))
 # -- LOAD SECRETS -------------------------------------------------------------
 
 required = [
+    'SECRET_KEY',
     'DATABASE_URL',
     'TASKCLUSTER_CLIENT_ID',
     'TASKCLUSTER_ACCESS_TOKEN',

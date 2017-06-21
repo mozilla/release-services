@@ -742,6 +742,8 @@ in rec {
         '' + postInstall;
 
         shellHook = ''
+          export APP_SETTINGS="$PWD/${self.src_path}/settings.py"
+          export SECRET_KEY=123
           export APP_NAME="${name}-${version}"
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 
@@ -751,8 +753,6 @@ in rec {
           export PYTHONPATH="$tmp_path/${python.__old.python.sitePackages}:$PYTHONPATH"
           mkdir -p $tmp_path/${python.__old.python.sitePackages}
           ${python.__old.bootstrapped-pip}/bin/pip install -q -e . --prefix $tmp_path
-          ${python.__old.bootstrapped-pip}/bin/pip install -q -e ../../lib/cli_common --prefix $tmp_path
-          ${python.__old.bootstrapped-pip}/bin/pip install -q -e ../../lib/backend_common --prefix $tmp_path
           popd >> /dev/null
 
           cd ${self.src_path}

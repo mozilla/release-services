@@ -83,5 +83,7 @@ def mozilla_accept_token(render_errors=True):
 
 
 def init_app(app):
+    if app.config.get('SECRET_KEY') is None:
+        raise Exception('When using `auth0` extention you need to specify SECRET_KEY.')
     auth0.init_app(app)
     return auth0
