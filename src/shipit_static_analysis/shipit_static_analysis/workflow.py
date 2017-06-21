@@ -12,7 +12,10 @@ import os
 from cli_common.taskcluster import get_service
 from cli_common.log import get_logger
 from cli_common.command import run_check
+from rbtools.api.client import RBClient
+from rbtools.api.errors import APIError
 from shipit_static_analysis.clang import ClangTidy
+from shipit_static_analysis.batchreview import BatchReview
 
 logger = get_logger(__name__)
 
@@ -44,6 +47,17 @@ class Workflow(object):
         self.config = yaml.load(open(config_path))
         assert 'clang_checkers' in self.config
         assert 'target' in self.config
+
+        # Create new MozReview API client
+        url = 'https://reviewboard.mozilla.org'
+        username = 'jkeromnes+clangbot@mozilla.com'
+        apikey = '(secret)'
+        rbc = RBClient(url, save_cookies=False, allow_caching=False)
+        login_resource = rbc.get_path(
+            'extensions/mozreview.extension.MozReviewExtension/'
+            'bugzilla-api-key-logins/')
+        login_resource.create(username=username, api_key=apikey)
+        self.api_root = rbc.get_root()
 
         # Clone mozilla-central
         self.repo_dir = os.path.join(self.cache_root, 'static-analysis/')
@@ -119,6 +133,8 @@ class Workflow(object):
         if issues:
             logger.info('Send email to admins')
             self.notify_admins(review_request_id, issues)
+            logger.info('Post issues to MozReview')
+            self.post_review(review_request_id, diffset_revision, issues)
 
     def notify_admins(self, review_request_id, issues):
         '''
@@ -133,3 +149,12 @@ class Workflow(object):
                 'content': content,
                 'template': 'fullscreen',
             })
+
+    def post_review(self, review_request_id, diffset_revision, issues):
+        '''
+        Post review comments to MozReview in a single batch
+        '''
+        review = BatchReview(self.api_root, review_request_id, diffset_revision)
+        # review.comment(filename, line, num_lines, comment)
+        # review.publish(body_top='\n'.join(commentlines),
+        #                ship_it=false)
