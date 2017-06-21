@@ -33,19 +33,17 @@ def _get_region_and_bucket(region, regions):
 
 
 def search_batches(q):
-    return [row.to_json()
+    return [row.to_dict()
             for row in releng_tooltool.models.Batch.query.filter(
                 sa.or_(releng_tooltool.models.Batch.author.contains(q),
                        releng_tooltool.models.Batch.message.contains(q))).all()]
 
 
 def get_batch(id):
-
     row = releng_tooltool.models.Batch.query.filter(releng_tooltool.models.Batch.id == id).first()
     if not row:
         raise werkzeug.exceptions.NotFound
-
-    return row.to_json()
+    return row.to_dict()
 
 
 def upload_batch(region, body):
@@ -174,7 +172,7 @@ def search_files(q):
     query = session.query(releng_tooltool.models.File).join(releng_tooltool.models.BatchFile)
     query = query.filter(sa.or_(releng_tooltool.models.BatchFile.filename.contains(q),
                                 releng_tooltool.models.File.sha512.startswith(q)))
-    return [row.to_json() for row in query.all()]
+    return [row.to_dict() for row in query.all()]
 
 
 def get_file(digest):
@@ -186,11 +184,13 @@ def get_file(digest):
     if not row:
         raise werkzeug.exceptions.NotFound
 
-    return row.to_json(include_instances=True)
+    return row.to_dict(include_instances=True)
 
 
 @backend_common.auth.auth.require_scopes(['project:releng:tooltool/manage'])
 def patch_file(digest, body):
+    import pdb
+    pdb.set_trace()
     S3_REGIONS = flask.current_app.config['S3_REGIONS']
     if type(S3_REGIONS) is not dict:
         raise werkzeug.exceptions.InternalServerError('S3_REGIONS should be of type dict.')
@@ -232,7 +232,7 @@ def patch_file(digest, body):
 
     session.commit()
 
-    return file.to_json(include_instances=True)
+    return file.to_dict(include_instances=True)
 
 
 def download_file(digest, region=None):

@@ -5,9 +5,7 @@
 
 from __future__ import absolute_import
 
-import json
 import sqlalchemy as sa
-
 from backend_common.db import db
 
 ALLOWED_REGIONS = ('us-east-1', 'us-west-1', 'us-west-2')
@@ -46,7 +44,7 @@ class File(db.Model):
     def batches(self):
         return {bf.filename: bf.batch for bf in self._batches}
 
-    def to_json(self, include_instances=False):
+    def to_dict(self, include_instances=False):
         file = dict(
             size=self.size,
             digest=self.sha512,
@@ -55,8 +53,8 @@ class File(db.Model):
             has_instances=any(self.instances)
         )
         if include_instances:
-            file.instances = [i.region for i in self.instances]
-        return json.dumps(file)
+            file['instances'] = [i.region for i in self.instances]
+        return file
 
 
 class Batch(db.Model):
@@ -92,14 +90,14 @@ class Batch(db.Model):
             for batch_file in self._files
         }
 
-    def to_json(self):
-        return json.dumps(
+    def to_dict(self):
+        return dict(
             id=self.id,
             uploaded=self.uploaded,
             author=self.author,
             message=self.message,
             files={
-                filename: file.to_json()
+                filename: file.to_dict()
                 for filename, file in self.files.iteritems()
             }
         )
