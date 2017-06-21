@@ -357,7 +357,7 @@ definitions:
         default: public
         enum:
            - public
-           - private
+           - internal
       has_instances:
         type: boolean
         description: |
