@@ -245,10 +245,10 @@ PROJECTS = {
                 'heroku_app': 'releng-staging-tooltool',
                 'url': 'https://tooltool.staging.mozilla-releng.net',
             },
-            # 'production': {
-            #     'heroku_app': 'releng-production-tooltool',
-            #     'url': 'https://tooltool.mozilla-releng.net',
-            # },
+            'production': {
+                'heroku_app': 'releng-production-tooltool',
+                'url': 'https://tooltool.mozilla-releng.net',
+            },
         },
     },
     'releng-treestatus': {
