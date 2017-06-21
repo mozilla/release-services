@@ -32,7 +32,6 @@ existing['ALLOW_ANONYMOUS_PUBLIC_DOWNLOAD'] = False
 # after it had been verified.
 existing['UPLOAD_EXPIRES_IN'] = 60
 existing['DOWLOAD_EXPIRES_IN'] = 60
-existing['S3_REGIONS'] = dict()
 
 secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
