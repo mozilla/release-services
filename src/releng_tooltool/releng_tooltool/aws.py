@@ -25,8 +25,9 @@ class StopListening(Exception):
 
 class AWS(object):
 
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, access_key_id, secret_access_key):
+        self.access_key_id = access_key_id
+        self.secret_access_key = secret_access_key
         self._connections = {}
         self._queues = {}
         self._listeners = []
@@ -58,8 +59,8 @@ class AWS(object):
         connect_fn = getattr(boto, 'connect_' + service_name)
         return connect_fn(
             region=region,
-            aws_access_key_id=self.config.get('access_key_id'),
-            aws_secret_access_key=self.config.get('secret_access_key'),
+            aws_access_key_id=self.access_key_id,
+            aws_secret_access_key=self.secret_access_key,
         )
 
     def connect_to_s3(self, service_name, region_name):
@@ -67,8 +68,8 @@ class AWS(object):
         # the other services
         return boto.s3.connect_to_region(
             region_name=region_name,
-            aws_access_key_id=self.config.get('access_key_id'),
-            aws_secret_access_key=self.config.get('secret_access_key'),
+            aws_access_key_id=self.config.access_key_id,
+            aws_secret_access_key=self.config.secret_access_key,
         )
 
     def get_sqs_queue(self, region_name, queue_name):

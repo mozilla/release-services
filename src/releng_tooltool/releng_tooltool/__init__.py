@@ -25,7 +25,7 @@ def create_app(config=None):
             'db',
         ],
     )
-    # TODO: add predefined api.yml
     app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
-    app.aws = releng_tooltool.aws.AWS(app.config.get('AWS', {}))
+    app.aws = releng_tooltool.aws.AWS(app.config['S3_REGIONS_ACCESS_KEY_ID'],
+                                      app.config['S3_REGIONS_SECRET_ACCESS_KEY'])
     return app
