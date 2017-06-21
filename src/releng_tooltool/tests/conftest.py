@@ -19,6 +19,9 @@ def app():
     config = backend_common.testing.get_app_config({
         'SQLALCHEMY_DATABASE_URI': 'sqlite://',
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'S3_REGIONS': dict(),
+        'S3_REGIONS_ACCESS_KEY_ID': '123',
+        'S3_REGIONS_SECRET_ACCESS_KEY': '123',
     })
     app = releng_tooltool.create_app(config)
 

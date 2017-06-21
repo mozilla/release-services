@@ -221,8 +221,19 @@ paths:
             type: array
             items:
               type: object
-              additionalProperties:
-                type: string
+              required:
+                - op
+              properties:
+                op:
+                  type: string
+                  enum:
+                    - set_visibility
+                    - delete_instances
+                visibility:
+                  type: string
+                  enum:
+                     - public
+                     - internal
       responses:
         200:
           description: File
@@ -357,7 +368,7 @@ definitions:
         default: public
         enum:
            - public
-           - private
+           - internal
       has_instances:
         type: boolean
         description: |
