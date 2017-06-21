@@ -56,7 +56,7 @@ class Api:
 
     def register(self,
                  swagger_file,
-                 base_url=None,
+                 base_path=None,
                  arguments=None,
                  auth_all_paths=False,
                  swagger_json=True,
@@ -72,8 +72,8 @@ class Api:
         :param swagger_file: swagger file with the specification
         :type swagger_file: str
 
-        :param base_url: base path where to add this api
-        :type base_url: str | None
+        :param base_path: base path where to add this api
+        :type base_path: str | None
 
         :param arguments: api version specific arguments to replace on the
                           specification
@@ -117,7 +117,7 @@ class Api:
         self.swagger_url = swagger_url
         self.__api = connexion.apis.flask_api.FlaskApi(
             specification=pathlib.Path(swagger_file),
-            base_url=base_url,
+            base_path=base_path,
             arguments=arguments,
             swagger_json=swagger_json,
             swagger_ui=swagger_ui,
