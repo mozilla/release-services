@@ -32,7 +32,7 @@ def app():
 
     app = backend_common.create_app(
         'test',
-        extensions=['auth', 'auth0', 'api'],  # backend_common.EXTENSIONS,
+        extensions=backend_common.EXTENSIONS,
         config=config,
     )
 

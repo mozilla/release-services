@@ -6,7 +6,6 @@
 from __future__ import absolute_import
 
 import urllib.parse
-import backend_common.testing
 import json
 
 
@@ -27,7 +26,6 @@ def test_list_analysis_invalid(client):
     # No header : Should fail
     resp = client.get(
         '/analysis',
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 401
 
@@ -41,7 +39,6 @@ def test_list_analysis_valid(client, bugs, header_user):
         headers=[
             ('Authorization', header_user),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 200
     data = json.loads(resp.data.decode('utf-8'))
@@ -65,7 +62,6 @@ def test_fetch_analysis(client, bugs, header_user):
         headers=[
             ('Authorization', header_user),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
@@ -155,7 +151,6 @@ def test_update_analysis(client, bugs, header_bot, header_user):
         headers=[
             ('Authorization', header_bot),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
@@ -176,7 +171,6 @@ def test_update_analysis(client, bugs, header_bot, header_user):
             ('Authorization', header_user),
             ('Content-Type', 'application/json'),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 401
 
@@ -188,7 +182,6 @@ def test_update_analysis(client, bugs, header_bot, header_user):
             ('Authorization', header_bot),
             ('Content-Type', 'application/json'),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
@@ -203,7 +196,6 @@ def test_update_analysis(client, bugs, header_bot, header_user):
         headers=[
             ('Authorization', header_user),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
@@ -222,7 +214,6 @@ def test_create_bug(client, bugs, header_bot):
         headers=[
             ('Authorization', header_bot),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
@@ -242,7 +233,6 @@ def test_create_bug(client, bugs, header_bot):
             ('Content-Type', 'application/json'),
             ('Authorization', header_bot),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 200
     bug_created = json.loads(resp.data.decode('utf-8'))
@@ -304,7 +294,6 @@ def test_create_bug(client, bugs, header_bot):
         headers=[
             ('Authorization', header_bot),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
@@ -323,7 +312,6 @@ def test_deprecating_bug(client, bugs, header_bot):
             headers=[
                 ('Authorization', header_bot),
             ],
-            environ_overrides=backend_common.testing.HTTPS_ENVIRON,
         )
         assert resp.status_code == 200
         analysis = json.loads(resp.data.decode('utf-8'))
@@ -348,7 +336,6 @@ def test_deprecating_bug(client, bugs, header_bot):
             ('Content-Type', 'application/json'),
             ('Authorization', header_bot),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 200
 
@@ -366,7 +353,6 @@ def test_delete_bug(client, bugs, header_bot):
         headers=[
             ('Authorization', header_bot),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
 
     assert resp.status_code == 200
@@ -381,7 +367,6 @@ def test_delete_bug(client, bugs, header_bot):
         headers=[
             ('Authorization', header_bot),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
 
     assert resp.status_code == 200
@@ -392,7 +377,6 @@ def test_delete_bug(client, bugs, header_bot):
         headers=[
             ('Authorization', header_bot),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
 
     assert resp.status_code == 200
@@ -435,7 +419,6 @@ def test_update_bug_flags(client, bugs, header_user):
             ('Content-Type', 'application/json'),
             ('Authorization', header_user),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
 
     assert resp.status_code == 200
@@ -488,7 +471,6 @@ def test_update_bug_attachment(client, bugs, header_user):
             ('Content-Type', 'application/json'),
             ('Authorization', header_user),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
 
     assert resp.status_code == 200

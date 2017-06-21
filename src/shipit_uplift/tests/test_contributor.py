@@ -5,7 +5,6 @@
 
 from __future__ import absolute_import
 
-import backend_common.testing
 import json
 
 
@@ -17,7 +16,6 @@ def test_comments_user(client, header_user):
     resp = client.get(
         '/analysis/1',
         headers=[('Authorization', header_user)],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
@@ -39,7 +37,6 @@ def test_comments_admin(client, header_admin):
     resp = client.get(
         '/analysis/1',
         headers=[('Authorization', header_admin)],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 200
     analysis = json.loads(resp.data.decode('utf-8'))
@@ -75,7 +72,6 @@ def test_update_user(client, header_user):
             ('Content-Type', 'application/json'),
             ('Authorization', header_user),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 401
     error = json.loads(resp.data.decode('utf-8'))
@@ -109,7 +105,6 @@ def test_update_admin(client, header_admin):
             ('Content-Type', 'application/json'),
             ('Authorization', header_admin),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 200
     output = json.loads(resp.data.decode('utf-8'))

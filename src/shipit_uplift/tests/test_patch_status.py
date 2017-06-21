@@ -5,7 +5,6 @@
 
 from __future__ import absolute_import
 
-import backend_common.testing
 import json
 
 
@@ -30,7 +29,6 @@ def test_patch_status(client, bugs, header_bot):
         headers=[
             ('Authorization', header_bot),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 200
     statuses = json.loads(resp.data.decode('utf-8'))
@@ -52,7 +50,6 @@ def test_patch_status(client, bugs, header_bot):
             ('Authorization', header_bot),
             ('Content-Type', 'application/json'),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 200
 
@@ -62,7 +59,6 @@ def test_patch_status(client, bugs, header_bot):
         headers=[
             ('Authorization', header_bot),
         ],
-        environ_overrides=backend_common.testing.HTTPS_ENVIRON,
     )
     assert resp.status_code == 200
     statuses = json.loads(resp.data.decode('utf-8'))

@@ -41,6 +41,9 @@ def create_app(name, extensions=[], config=None, redirect_root_to_api=True, **kw
         app.config.update(**config)
 
     for extension_name in EXTENSIONS:
+        if app.config.get('TESTING') and extension_name in ['security', 'cors']:
+            continue
+
         if extension_name not in extensions:
             continue
 
