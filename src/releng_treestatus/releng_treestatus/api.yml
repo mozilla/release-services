@@ -276,12 +276,6 @@ paths:
           description: Tree name
           required: true
           type: string
-        - name: body
-          in: body
-          description: Tree 
-          required: true
-          schema:
-            $ref: '#/definitions/Tree'
       responses:
         200:
           description: Tree
