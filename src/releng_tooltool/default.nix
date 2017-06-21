@@ -14,6 +14,8 @@ let
 
   self = mkBackend rec {
     inherit python name dirname;
+    inStaging = true;
+    inProduction = true;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
