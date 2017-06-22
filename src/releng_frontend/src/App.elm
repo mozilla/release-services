@@ -1,5 +1,8 @@
 module App exposing (..)
 
+import App.NotificationIdentity
+import App.NotificationIdentity.Types
+--import App.NotificationPolicy.Types
 import App.TreeStatus
 import App.TreeStatus.Form
 import App.TreeStatus.Types
@@ -25,6 +28,8 @@ type Route
     | HomeRoute
     | LoginRoute (Maybe String) (Maybe String) (Maybe String)
     | LogoutRoute
+    | NotificationIdentityRoute App.NotificationIdentity.Types.Route
+    | NotificationPolicyRoute
     | TryChooserRoute
     | TreeStatusRoute App.TreeStatus.Types.Route
 
@@ -33,6 +38,7 @@ pages : List (App.Types.Page Route b)
 pages =
     [ App.TryChooser.page TryChooserRoute
     , App.TreeStatus.page TreeStatusRoute
+    , App.NotificationIdentity.page NotificationIdentityRoute
     ]
 
 
@@ -57,6 +63,12 @@ routeParser =
 reverseRoute : Route -> String
 reverseRoute route =
     case route of
+        NotificationPolicyRoute ->
+            "/404"
+
+        NotificationIdentityRoute route ->
+            "/notificationidentity"
+
         NotFoundRoute ->
             "/404"
 
@@ -119,6 +131,7 @@ type alias Model =
     , treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
     , docsUrl : String
     , version : String
+    , notification_identity : App.NotificationIdentity.Types.Model
     }
 
 
@@ -136,3 +149,4 @@ type Msg
     | UserScopesMsg App.UserScopes.Msg
     | TryChooserMsg App.TryChooser.Msg
     | TreeStatusMsg App.TreeStatus.Types.Msg
+    | NotificationIdentityMsg App.NotificationIdentity.Types.Msg

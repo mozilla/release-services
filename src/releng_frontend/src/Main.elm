@@ -3,6 +3,8 @@ module Main exposing (..)
 import App
 import App.Home
 import App.Layout
+import App.NotificationIdentity
+import App.NotificationIdentity.Types
 import App.TreeStatus
 import App.TreeStatus.Api
 import App.TreeStatus.Types
@@ -41,6 +43,7 @@ init flags location =
             , userScopes = App.UserScopes.init
             , trychooser = App.TryChooser.init
             , treestatus = App.TreeStatus.init flags.treestatusUrl
+            , notification_identity = App.NotificationIdentity.init "https://localhost:8007"
             }
     in
         initRoute model route
@@ -49,6 +52,13 @@ init flags location =
 initRoute : App.Model -> App.Route -> ( App.Model, Cmd App.Msg )
 initRoute model route =
     case route of
+        App.NotificationPolicyRoute ->
+            model ! []
+
+        App.NotificationIdentityRoute route ->
+            {model | route = App.NotificationIdentityRoute App.NotificationIdentity.Types.BaseRoute}
+                ! []
+
         App.NotFoundRoute ->
             model ! []
 
@@ -235,6 +245,23 @@ update msg model =
                     |> Cmd.batch
                 )
 
+        App.NotificationIdentityMsg msg_ ->
+            let
+                new_route =
+                    case model.route of
+                        App.NotificationIdentityRoute x ->
+                            App.NotificationIdentity.Types.BaseRoute
+
+                        _ ->
+                            App.NotificationIdentity.Types.BaseRoute
+
+                (newModel, newCmd, hawkCmd) =
+                    App.NotificationIdentity.update new_route msg_ model.notification_identity
+
+            in
+                ({model |
+                    notification_identity = newModel}, Cmd.map App.NotificationIdentityMsg newCmd)
+
 
 hawkSend :
     TaskclusterLogin.Model
@@ -258,6 +285,16 @@ hawkSend user page request =
 viewRoute : App.Model -> Html App.Msg
 viewRoute model =
     case model.route of
+        App.NotificationPolicyRoute ->
+            App.Layout.viewNotFound model
+
+        App.NotificationIdentityRoute route ->
+            App.NotificationIdentity.view
+                route
+                model.userScopes.scopes
+                model.notification_identity
+                |> Html.map App.NotificationIdentityMsg
+
         App.NotFoundRoute ->
             App.Layout.viewNotFound model
 

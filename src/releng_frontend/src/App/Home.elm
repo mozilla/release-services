@@ -2,6 +2,8 @@ module App.Home exposing (..)
 
 import App
 import App.TreeStatus.Types
+import App.NotificationIdentity.Types
+--import App.NotificationPolicy.Types
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Utils
@@ -33,4 +35,12 @@ view model =
             "TreeStatus"
             "Current status of Mozilla's version-control repositories."
             (Utils.onClick <| App.NavigateTo (App.TreeStatusRoute App.TreeStatus.Types.ShowTreesRoute))
+        , viewCard
+            "Notification Identity"
+            "Manage RelEng notification preferences for individuals and groups."
+            (Utils.onClick <| App.NavigateTo (App.NotificationIdentityRoute App.NotificationIdentity.Types.BaseRoute))
+       , viewCard
+            "Notification Policy"
+            "Manage RelEng message notification policies."
+            (Utils.onClick <| App.NavigateTo App.NotificationPolicyRoute)
         ]
