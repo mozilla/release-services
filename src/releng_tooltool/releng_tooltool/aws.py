@@ -68,8 +68,8 @@ class AWS(object):
         # the other services
         return boto.s3.connect_to_region(
             region_name=region_name,
-            aws_access_key_id=self.config.access_key_id,
-            aws_secret_access_key=self.config.secret_access_key,
+            aws_access_key_id=self.access_key_id,
+            aws_secret_access_key=self.secret_access_key,
         )
 
     def get_sqs_queue(self, region_name, queue_name):
