@@ -40,35 +40,49 @@ RUN apt-get -q update \\
  && locale-gen
 
 #
+# create app user
+#
+RUN groupadd app \\
+ && useradd --create-home -g app app \\
+ && mkdir -p /app \\
+ && chown app:app /app \\
+ && mkdir -m 0755 /nix \\
+ && chown app:app /nix \\
+ && mkdir -p /etc/nix \\
+ && echo "binary-caches = https://cache.mozilla-releng.net https://cache.nixos.org" >> /etc/nix/nix.conf \\
+ && echo "trusted-users = app" >> /etc/nix/nix.conf \\
+ && echo "allowed-users = *" >> /etc/nix/nix.conf \\
+ && chown app:app /etc/nix
+
+USER app
+WORKDIR /home/app
+
+#
 # Downloading nixpkgs
 #
 ENV \\
- NIX_PATH="nixpkgs=/nixpkgs"
+ NIX_PATH="nixpkgs=/home/app/nixpkgs"
 
 RUN wget {nixpkgs_url} \\
  && tar zxf {nixpkgs_rev}.tar.gz \\
- && mv {nixpkgs_repo}-{nixpkgs_rev} /nixpkgs
+ && mv {nixpkgs_repo}-{nixpkgs_rev} /home/app/nixpkgs
 
 
 #
 # installing Nix in multiuser mode
 #
 ONBUILD ENV \\
- NIX_PATH="nixpkgs=/nixpkgs"
+ NIX_PATH="nixpkgs=/home/app/nixpkgs"
 
-RUN wget -q -O- http://nixos.org/releases/nix/nix-1.11.9/nix-1.11.9-x86_64-linux.tar.bz2 | bzcat - | tar xf - \\
- && echo "nixbld:x:30000:nixbld1,nixbld2,nixbld3,nixbld4,nixbld5,nixbld6,nixbld7,nixbld8,nixbld9,nixbld10,nixbld11,nixbld12,nixbld13,nixbld14,nixbld15,nixbld16,nixbld17,nixbld18,nixbld19,nixbld20,nixbld21,nixbld22,nixbld23,nixbld24,nixbld25,nixbld26,nixbld27,nixbld28,nixbld29,nixbld30" >> /etc/group \\
- && for i in $(seq 1 30); do echo "nixbld$i:x:$((30000 + $i)):30000:::" >> /etc/passwd; done \\
- && mkdir -m 0755 /nix && USER=root bash nix-*-x86_64-linux/install \\
- && echo ". /root/.nix-profile/etc/profile.d/nix.sh" >> /etc/profile \\
- && rm -r /nix-*-x86_64-linux \\
- && mkdir -p /etc/nix \\
- && echo "binary-caches = https://cache.mozilla-releng.net https://cache.nixos.org" >> /etc/nix/nix.conf \\
- && . /root/.profile \\
+RUN wget -O- http://nixos.org/releases/nix/nix-1.11.9/nix-1.11.9-x86_64-linux.tar.bz2 | bzcat - | tar vxf - \\
+ && USER=app bash /home/app/nix-*-x86_64-linux/install \\
+ && echo ". /home/app/.nix-profile/etc/profile.d/nix.sh" >> /home/app/.profile \\
+ && rm -r /home/app/nix-*-x86_64-linux \\
+ && . /home/app/.profile \\
  && nix-env -iA nixpkgs.cacert \\
  && nix-env -u \\
  && nix-collect-garbage -d \\
- && rm -rf /root/.cache/nix
+ && rm -rf /home/app/.cache/nix
 
 
 #
@@ -85,13 +99,13 @@ WORKDIR /app
 # install please command
 #
 ENV \\
- ENV=/etc/profile \\
- PATH=/root/.nix-profile/bin:/root/.nix-profile/sbin:/bin:/sbin:/usr/bin:/usr/sbin \\
- GIT_SSL_CAINFO=/root/.nix-profile/etc/ssl/certs/ca-bundle.crt \\
+ ENV=/home/app/.profile \\
+ PATH=/home/app/.nix-profile/bin:/home/app/.nix-profile/sbin:/bin:/sbin:/usr/bin:/usr/sbin \\
+ GIT_SSL_CAINFO=/home/app/.nix-profile/etc/ssl/certs/ca-bundle.crt \\
  LANG=en_US.UTF-8 \\
- NIX_SSL_CERT_FILE=/root/.nix-profile/etc/ssl/certs/ca-bundle.crt
+ NIX_SSL_CERT_FILE=/home/app/.nix-profile/etc/ssl/certs/ca-bundle.crt
 
-RUN . /root/.profile \\
+RUN . /home/app/.profile \\
  && mkdir /app/tmp \\
  && nix-build /app/nix/default.nix -A please-cli -o /app/tmp/result-please-cli
 '''
