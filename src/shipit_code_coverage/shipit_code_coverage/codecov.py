@@ -5,6 +5,7 @@ from datetime import datetime
 import zipfile
 import requests
 import hglib
+from concurrent.futures import ThreadPoolExecutor
 
 from cli_common.log import get_logger
 from cli_common.command import run, run_check
@@ -76,10 +77,8 @@ class CodeCov(object):
 
     def rewrite_jsvm_lcov(self):
         files = os.listdir('ccov-artifacts')
-        for fname in files:
-            if 'jsvm' not in fname or not fname.endswith('.zip'):
-                continue
 
+        def rewrite(fname):
             zip_file_path = 'ccov-artifacts/' + fname
             out_dir = 'ccov-artifacts/' + fname[:-4]
 
@@ -96,6 +95,13 @@ class CodeCov(object):
             lcov_out_files = [os.path.abspath(os.path.join(out_dir, f)) for f in os.listdir(out_dir)]
             for lcov_out_file in lcov_out_files:
                 os.rename(lcov_out_file, lcov_out_file[:-4])
+
+        with ThreadPoolExecutor() as executor:
+            for fname in files:
+                if 'jsvm' not in fname or not fname.endswith('.zip'):
+                    continue
+
+                executor.submit(rewrite, fname)
 
     def generate_info(self, commit_sha, coveralls_token, suite=None):
         files = os.listdir('ccov-artifacts')
