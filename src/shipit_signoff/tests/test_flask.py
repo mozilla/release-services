@@ -40,20 +40,11 @@ def mocked_getinfo(fields, access_token):
         return b'Unauthorized'
 
 
-def mocked_current_user(*args, **kwargs):
-    return {
-        "roles": {
-            "avengers": {
-                "data_version": 1,
-            },
-            "x_men": {
-                "data_version": 1,
-            },
-        },
-    }
+def mocked_current_user_roles(*args, **kwargs):
+    return ["avengers", "x_men"]
 
 
-@patch('shipit_signoff.api.CurrentUser.do_request', new=mocked_current_user)
+@patch('shipit_signoff.api.get_current_user_roles', new=mocked_current_user_roles)
 def test_is_user_in_group_balrog():
     assert is_user_in_group('x_men', method='balrog') == True
 

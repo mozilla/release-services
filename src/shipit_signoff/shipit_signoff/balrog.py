@@ -1,10 +1,11 @@
 from flask import current_app as app
 
-import balrogclient
+import requests
 
 
-# TODO: Move to balrogclient lib
-class CurrentUser(balrogclient.api.API):
-    url_template = '/users/current'
-    prerequest_url_template = '/users/current'
-    url_template_vars = {}
+def get_current_user_roles():
+    user_info = requests.get(
+        "{}/users/current".format(app.config['BALROG_API_ROOT']),
+        auth=(app.config['BALROG_USERNAME'], app.config['BALROG_PASSWORD']),
+    )
+    return user_info.get("roles", {}).keys()

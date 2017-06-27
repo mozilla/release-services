@@ -3,7 +3,6 @@ alembic==0.9.2
 amqp==2.1.4
 appdirs==1.4.3
 async-timeout==1.2.1
-balrogclient==0.0.4
 certifi==2017.4.17
 chardet==3.0.4
 click==6.7
