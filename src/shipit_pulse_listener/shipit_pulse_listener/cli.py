@@ -10,7 +10,7 @@ from cli_common.click import taskcluster_options
 from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
 from shipit_pulse_listener.listener import PulseListener
-from shipit_pulse_listener import config
+from shipit_pulse_listener import config, task_monitoring
 
 
 @click.command()
@@ -26,9 +26,11 @@ def main(taskcluster_secret,
                               'PULSE_USER',
                               'PULSE_PASSWORD',
                               'PULSE_LISTENER_HOOKS',
+                              'ADMINS',
                           ),
                           existing=dict(
                               PULSE_LISTENER_HOOKS=[],
+                              ADMINS=['babadie@mozilla.com', ]
                           ),
                           taskcluster_client_id=taskcluster_client_id,
                           taskcluster_access_token=taskcluster_access_token,
@@ -40,6 +42,8 @@ def main(taskcluster_secret,
                 SENTRY_DSN=secrets.get('SENTRY_DSN'),
                 MOZDEF=secrets.get('MOZDEF'),
                 )
+
+    task_monitoring.emails = secrets['ADMINS']
 
     pl = PulseListener(secrets['PULSE_USER'],
                        secrets['PULSE_PASSWORD'],
