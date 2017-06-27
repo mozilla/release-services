@@ -80,23 +80,6 @@ def setup_step_small(func):
     return decorator
 
 
-def setup_step_balrog(func):
-    '''
-    Prepopulate the testing database.
-
-    Can't use a fixture because it cancels the @patch to user_getinfo
-    '''
-    def decorator(client, *args, **kwargs):
-        client.put('/step/{}'.format(UID),
-                   content_type='application/json',
-                   data=json.dumps(TEST_STEP_BALROG),
-                   headers=GOODHEADERS)
-        func(client)
-        client.delete('/step/{}'.format(UID),
-                      headers=GOODHEADERS)
-    return decorator
-
-
 @patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
 def test_step_creation(client):
     resp = client.put('/step/{}'.format(UID),
