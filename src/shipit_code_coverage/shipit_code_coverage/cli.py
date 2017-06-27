@@ -15,17 +15,18 @@ from shipit_code_coverage import config
 
 @click.command()
 @taskcluster_options
+@click.option('--revision', envvar='REVISION')
 @click.option(
     '--cache-root',
     required=True,
     help='Cache root, used to pull changesets'
 )
-def main(cache_root,
+def main(revision,
+         cache_root,
          taskcluster_secret,
          taskcluster_client_id,
          taskcluster_access_token,
          ):
-
     secrets = get_secrets(taskcluster_secret,
                           config.PROJECT_NAME,
                           required=(
@@ -43,7 +44,8 @@ def main(cache_root,
                 MOZDEF=secrets.get('MOZDEF'),
                 )
 
-    c = CodeCov(cache_root,
+    c = CodeCov(revision,
+                cache_root,
                 secrets[config.COVERALLS_TOKEN_FIELD],
                 secrets[config.CODECOV_TOKEN_FIELD],
                 )
