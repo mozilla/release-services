@@ -50,6 +50,18 @@ def mocked_current_user_roles(*args, **kwargs):
     return ["avengers", "x_men"]
 
 
+def mocked_balrog_signoff_status_waiting(*args, **kwargs):
+    # TODO: what does this data look like? probably will be hitting a new balrog
+    # endpoint for this.
+    return {"capt": "avengers", "storm": "x_men"}
+
+
+def mocked_balrog_signoff_status_completed(*args, **kwargs):
+    # TODO: what does this data look like? probably will be hitting a new balrog
+    # endpoint for this.
+    return {"capt": "avengers", "storm": "x_men"}
+
+
 @patch('shipit_signoff.api.get_current_user_roles', new=mocked_current_user_roles)
 def test_is_user_in_group_balrog():
     assert is_user_in_group('x_men', method='balrog') == True
@@ -124,12 +136,26 @@ def test_step_creation(client):
 
 
 @patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
+@patch("shipit_signoff.api.get_balrog_signoff_status", new=mocked_balrog_signoff_status_waiting)
 def test_step_creation_balrog(client):
     resp = client.put('/step/{}'.format(UID),
                       content_type='application/json',
                       data=json.dumps(TEST_STEP_BALROG),
                       headers=GOODHEADERS)
     assert resp.status_code == 200
+    # TODO: check that balrog was contacted
+
+
+@patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
+@patch("shipit_signoff.api.get_balrog_signoff_status", new=mocked_balrog_signoff_status_completed)
+def test_step_creation_balrog_already_completed(client):
+    resp = client.put('/step/{}'.format(UID),
+                      content_type='application/json',
+                      data=json.dumps(TEST_STEP_BALROG),
+                      headers=GOODHEADERS)
+    assert resp.status_code == 200
+    # TODO: check that balrog was contacted
+    # TODO: check that db was updated
 
 
 @patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
@@ -176,6 +202,21 @@ def test_get_present_step(client):
     assert data['policy']['method'] == 'local'
 
 
+@setup_step_balrog
+def test_get_present_step_balrog(client):
+    resp = client.get('/step/{}'.format(UID),
+                      headers=GOODHEADERS)
+    assert resp.status_code == 200
+    data = json.loads(str(resp.data, 'utf-8'))
+
+    # doesn't return the parameters at the moment, so can't do:
+    # assert data == TEST_STEP
+
+    assert 'policy' in data
+    assert 'method' in data['policy']
+    assert data['policy']['method'] == 'balrog'
+
+
 @setup_step
 def test_get_step_status(client):
     resp = client.get('/step/{}/status'.format(UID),
@@ -188,6 +229,35 @@ def test_get_step_status(client):
     assert 'created' in data
 
 
+@patch("shipit_signoff.api.get_balrog_signoff_status", new=mocked_balrog_signoff_status_waiting)
+@setup_step
+def test_get_step_status_balrog_no_change(client):
+    resp = client.get('/step/{}/status'.format(UID),
+                      headers=GOODHEADERS)
+    assert resp.status_code == 200
+    data = json.loads(str(resp.data, 'utf-8'))
+    assert data['state'] == 'running'
+    assert data['uid'] == UID
+    assert 'message' in data
+    assert 'created' in data
+    # TODO: check that balrog was contacted
+
+
+@patch("shipit_signoff.api.get_balrog_signoff_status", new=mocked_balrog_signoff_status_completed)
+@setup_step
+def test_get_step_status_balrog_completed(client):
+    resp = client.get('/step/{}/status'.format(UID),
+                      headers=GOODHEADERS)
+    assert resp.status_code == 200
+    data = json.loads(str(resp.data, 'utf-8'))
+    assert data['state'] == 'running'
+    assert data['uid'] == UID
+    assert 'message' in data
+    assert 'created' in data
+    # TODO: check that balrog was contacted
+    # TODO: check that db state gets updated when balrog state changes
+
+
 def test_get_missing_step_status(client):
     resp = client.get('/step/{}/status'.format(INVALID_UID),
                       headers=GOODHEADERS)
@@ -195,6 +265,13 @@ def test_get_missing_step_status(client):
 
 
 @setup_step
+def test_delete_step(client):
+    resp = client.delete('/step/{}'.format(UID),
+                         headers=GOODHEADERS)
+    assert resp.status_code == 200
+
+
+@setup_step_balrog
 def test_delete_step(client):
     resp = client.delete('/step/{}'.format(UID),
                          headers=GOODHEADERS)
@@ -220,6 +297,7 @@ def test_step_list(client):
     resp = client.get('/step',
                       headers=GOODHEADERS)
     assert resp.status_code == 200
+    # TODO: add a few steps
 
 
 @patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
@@ -429,14 +507,3 @@ def test_sign_off_deletion_completed(client):
                          headers=GOODHEADERS,
                          data=json.dumps(data))
     assert resp.status_code == 409
-
-
-# delete a step when you haven't signed it
-
-# get step status when fully signed.
-
-# get balrog-based step
-# get list of steps including balrog based on
-# get status of balrog based step 
-# delete balrog based step
-# check existing signature for signoff and delete

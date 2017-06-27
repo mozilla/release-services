@@ -105,6 +105,7 @@ def get_step_status(uid):
     Get the current status of a sign-off step, including who has signed
     '''
     logger.info('Getting step status %s', uid)
+    # TODO: need to pull status rom balrog for method = 'balrog'
 
     try:
         step = db.session.query(SignoffStep).filter(
@@ -125,6 +126,7 @@ def create_step(uid):
 
     step = SignoffStep()
 
+    # TODO: need to pull status rom balrog for method = 'balrog'
     step.uid = uid
     step.state = 'running'
     step.policy = pickle.dumps(request.json['policy'])
