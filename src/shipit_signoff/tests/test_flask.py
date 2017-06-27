@@ -23,6 +23,12 @@ TEST_STEP_SMALL = {
     'parameters': {'test': 1},
 }
 
+TEST_STEP_BALROG = {
+    'uid': UID,
+    'policy': {'method': 'balrog', 'definition': {'sc_id': 23, 'object': 'rules'}},
+    'parameters': {},
+}
+
 
 GOODHEADERS = {
     'Authorization': 'Bearer goodtoken'
@@ -91,11 +97,37 @@ def setup_step_small(func):
     return decorator
 
 
+def setup_step_balrog(func):
+    '''
+    Prepopulate the testing database.
+
+    Can't use a fixture because it cancels the @patch to user_getinfo
+    '''
+    def decorator(client, *args, **kwargs):
+        client.put('/step/{}'.format(UID),
+                   content_type='application/json',
+                   data=json.dumps(TEST_STEP_BALROG),
+                   headers=GOODHEADERS)
+        func(client)
+        client.delete('/step/{}'.format(UID),
+                      headers=GOODHEADERS)
+    return decorator
+
+
 @patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
 def test_step_creation(client):
     resp = client.put('/step/{}'.format(UID),
                       content_type='application/json',
                       data=json.dumps(TEST_STEP),
+                      headers=GOODHEADERS)
+    assert resp.status_code == 200
+
+
+@patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
+def test_step_creation_balrog(client):
+    resp = client.put('/step/{}'.format(UID),
+                      content_type='application/json',
+                      data=json.dumps(TEST_STEP_BALROG),
                       headers=GOODHEADERS)
     assert resp.status_code == 200
 
@@ -204,6 +236,21 @@ def test_sign_off(client):
 
 
 @patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
+@patch('shipit_signoff.api.get_current_user_roles', new=mocked_current_user_roles)
+@setup_step_balrog
+def test_sign_off_balrog(client):
+    data = {
+        'group': 'avengers',
+    }
+    resp = client.put('/step/{}/sign'.format(UID),
+                      content_type='application/json',
+                      headers=GOODHEADERS,
+                      data=json.dumps(data))
+    assert resp.status_code == 307
+    assert resp.headers["Location"] == "https://balrog/api/scheduled_changes/rules/23/signoffs"
+
+
+@patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
 def test_sign_off_missing_data(client):
     resp = client.put('/step/{}/sign'.format(UID),
                       headers=GOODHEADERS)
@@ -283,6 +330,23 @@ def test_sign_off_deletion(client):
                          data=json.dumps(data))
 
     assert resp.status_code == 200
+
+
+@patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
+@patch('shipit_signoff.api.get_current_user_roles', new=mocked_current_user_roles)
+@setup_step_balrog
+def test_sign_off_deletion_balrog(client):
+    data = {
+        'group': 'avengers',
+    }
+
+    resp = client.delete('/step/{}/sign'.format(UID),
+                         content_type='application/json',
+                         headers=GOODHEADERS,
+                         data=json.dumps(data))
+
+    assert resp.status_code == 307
+    assert resp.headers["Location"] == "https://balrog/api/scheduled_changes/rules/23/signoffs"
 
 
 @patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
