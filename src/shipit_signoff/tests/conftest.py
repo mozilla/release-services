@@ -11,7 +11,7 @@ import os
 import backend_common
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def app():
     '''Load shipit_signoff in test mode
     '''
