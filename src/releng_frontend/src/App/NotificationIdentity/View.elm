@@ -2,9 +2,9 @@
 module App.NotificationIdentity.View exposing (..)
 
 import App.NotificationIdentity.Types exposing (..)
+import App.Utils
 import Html exposing (..)
 import Html.Attributes exposing (class, placeholder)
-import Html.Events exposing (onClick, onInput)
 import RemoteData exposing (..)
 
 
@@ -16,31 +16,23 @@ channelIcon channel target =
 
         "IRC" ->
             if String.startsWith "#" target then
-                --i [ class "fa fa-comments" ] []
-                i [class "fa fa-circle-o-notch"] []
+                i [ class "fa fa-comments" ] []
             else
                 i [ class "fa fa-comment" ] []
 
         _ ->
             i [] []
 
-
+-- Map notification urgency level to badge colour class
 urgencyLevel : String -> String
 urgencyLevel urgency =
     case urgency of
-        "LOW" ->
-            "success"
+        "LOW" -> "success"
+        "NORMAL" -> "warning"
+        "HIGH" -> "danger"
+        _ -> "default"
 
-        "NORMAL" ->
-            "warning"
-
-        "HIGH" ->
-            "danger"
-
-        _ ->
-            "default"
-
-
+-- Display a single notification preference
 viewPreferenceItem : App.NotificationIdentity.Types.Preference -> Html App.NotificationIdentity.Types.Msg
 viewPreferenceItem preference =
     div [ class "list-group-item justify-content-between" ]
@@ -55,18 +47,56 @@ viewPreferenceItem preference =
     ]
 
 
+-- Method to use for sorting preferences
+preferenceSort : App.NotificationIdentity.Types.Preference -> Int
+preferenceSort preference =
+    case preference.urgency of
+        "LOW" -> 1
+        "NORMAL" -> 2
+        "HIGH" -> 3
+        "DO_YESTERDAY" -> 4
+        _ -> -1
 
+
+-- Display view for preferences
 viewPreferences : App.NotificationIdentity.Types.Model -> Html App.NotificationIdentity.Types.Msg
 viewPreferences model =
     case model.preferences of
         NotAsked -> text ""
 
-        Loading -> text "Loading..."
+        Loading -> App.Utils.loading
 
         Failure err -> text ""
 
         Success prefs ->
-            prefs
-                |> List.sortBy .urgency
-                |> List.map (viewPreferenceItem)
-                |> div [ class "list-group" ]
+            let
+                pref_display =
+                    prefs
+                        |> List.sortBy preferenceSort
+                        |> List.map (viewPreferenceItem)
+                        |> div [ class "list-group" ]
+
+                display_name =
+                    case model.retrieved_identity of
+                        Just val ->
+                            val
+
+                        Nothing ->
+                            ""
+
+            in
+                div [ class "container" ]
+                    [ h3 [ class "lead" ] [ text display_name ]
+                    , pref_display
+                    ]
+
+
+viewStatusMessage : App.NotificationIdentity.Types.Model -> Html App.NotificationIdentity.Types.Msg
+viewStatusMessage model =
+    case model.is_service_processing of
+        True ->
+            App.Utils.loading
+
+        False ->
+            text model.status_message
+

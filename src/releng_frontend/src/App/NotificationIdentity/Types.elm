@@ -21,25 +21,37 @@ type alias ApiProblem =
 type alias Preferences =
     List Preference
 
+nullPreference : Preference
+nullPreference =
+    { channel = ""
+    , name = ""
+    , target = ""
+    , urgency = ""
+    }
+
 type Route = BaseRoute
 
-
 type alias Model =
-    { baseUrl : String
-    , identity_name : String
-    , preferences : WebData Preferences
-    , api_problem : WebData ApiProblem
-    , status_message : String
+    { baseUrl : String                         -- URL of notification identity service
+    , identity_name : Maybe String             -- Name of identity in the input field
+    , retrieved_identity : Maybe String        -- Name of identity whose preferences are being displayed
+    , preferences : WebData Preferences        -- Preferences retrieved from service for retrieved_identity
+    , api_problem : WebData ApiProblem         -- Elm representation of Problem JSON
+    , status_message : String                  -- Status of request/service/whatever
+    , selected_preference : Maybe Preference   -- Currently selected preference, in case of editing
+    , is_service_processing : Bool             -- Flag indicating the status of a request to the service
     }
 
 -- FrontEnd Actions
 type Msg =
-    NavigateTo Route
-    | ChangeName String
-    | PreferencesRequest
-    | PreferencesResponse (WebData Preferences)
-    | IdentityDeleteRequest
-    | IdentityDeleteResponse (WebData ApiProblem)
+    NavigateTo Route                                -- Route navigation within page
+    | ChangeName String                             -- Update state with name in input box
+    | PreferencesRequest                            -- Request preferences from service
+    | PreferencesResponse (WebData Preferences)     -- Handle response for preferences request
+    | IdentityDeleteRequest                         -- Delete identity from service
+    | IdentityDeleteResponse (WebData ApiProblem)   -- Handle identity delete response
+    | UrgencyDeleteRequest                          -- Delete identity preference
+    | UrgencyDeleteResponse (WebData ApiProblem)    -- Handle preference delete response
 --    | GetPreferencesForIdentity String
 --    | GetJson
 --    | UpdateIdName

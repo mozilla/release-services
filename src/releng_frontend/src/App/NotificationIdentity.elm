@@ -53,10 +53,13 @@ page outRoute =
 init : String -> App.NotificationIdentity.Types.Model
 init url =
     { baseUrl = url
-    , identity_name = "an identity."
+    , identity_name = Nothing
     , preferences = NotAsked
     , api_problem = NotAsked
     , status_message = ""
+    , selected_preference = Just (App.NotificationIdentity.Types.Preference "" "" "" "LOW")
+    , is_service_processing = False
+    , retrieved_identity = Nothing
     }
 
 
@@ -74,44 +77,96 @@ update currentRoute msg model =
             let
                 newName =
                     if String.isEmpty name then
-                        "an identity."
+                        Nothing
                     else
-                        name
+                        Just name
             in
                 ({model | identity_name = newName}, Cmd.none, Nothing)
 
         App.NotificationIdentity.Types.PreferencesRequest ->
-            ({model
-                | status_message = ""}, App.NotificationIdentity.Api.getPreferences model, Nothing)
+            case model.identity_name of
+                Just val ->
+                    ({model
+                        | status_message = ""
+                        , is_service_processing = True
+                        , retrieved_identity = model.identity_name}, App.NotificationIdentity.Api.getPreferences model, Nothing)
+
+                Nothing ->
+                    ({model
+                        | status_message = "Please enter an identity name."}, Cmd.none, Nothing)
 
         App.NotificationIdentity.Types.PreferencesResponse response ->
-            if RemoteData.isFailure response then
-                ({model
-                    | status_message = "Could not get preferences for " ++ model.identity_name
-                    , preferences = response},
-                    Cmd.none, Nothing)
+            let
+                resp_model =
+                    {model | is_service_processing = False}
 
-            else
-                ({model |
-                    preferences = response}, Cmd.none, Nothing)
+                identity =
+                    case model.identity_name of
+                        Just val ->
+                            val
+                        Nothing ->
+                            ""
+            in
+                if RemoteData.isFailure response then
+                    ({resp_model
+                        | status_message = "Could not get preferences for " ++ identity
+                        , preferences = response
+                        },
+                        Cmd.none, Nothing)
+
+                else
+                    ({resp_model |
+                        preferences = response}, Cmd.none, Nothing)
 
         App.NotificationIdentity.Types.IdentityDeleteRequest ->
             ({model
-                | status_message = ""}, App.NotificationIdentity.Api.deleteIdentity model, Nothing)
+                | status_message = ""
+                , is_service_processing = True}, App.NotificationIdentity.Api.deleteIdentity model, Nothing)
 
         App.NotificationIdentity.Types.IdentityDeleteResponse response ->
-            case response of
-                Success resp->
-                    ({model
-                        | api_problem = response
-                        , status_message = "Id deleted."}, Cmd.none, Nothing)
-                Failure err->
-                    ({model
-                        | api_problem = response
-                        , status_message = toString err}, Cmd.none, Nothing)
-                _ ->
-                    ({model
-                        | api_problem = response}, Cmd.none, Nothing)
+            let
+                resp_model =
+                    {model | is_service_processing = False}
+            in
+                case response of
+                    Success resp->
+                        ({resp_model
+                            | api_problem = response
+                            , status_message = "Id deleted."}, Cmd.none, Nothing)
+                    Failure err ->
+                        ({resp_model
+                            | api_problem = response
+                            , status_message = toString err}, Cmd.none, Nothing)
+                    _ ->
+                        ({resp_model
+                            | api_problem = response}, Cmd.none, Nothing)
+
+
+        App.NotificationIdentity.Types.UrgencyDeleteRequest ->
+            ({model
+                | status_message = ""
+                , is_service_processing = True}, App.NotificationIdentity.Api.deletePreferenceByUrgency model, Nothing)
+
+        App.NotificationIdentity.Types.UrgencyDeleteResponse response ->
+            let
+                resp_model =
+                    {model | is_service_processing = False}
+
+            in
+                case response of
+                    Success resp ->
+                        ({resp_model
+                            | api_problem = response
+                            , status_message = "Preference deleted."}, Cmd.none, Nothing)
+
+                    Failure err ->
+                        ({resp_model
+                            | api_problem = response
+                            , status_message = toString err}, Cmd.none, Nothing)
+
+                    _ ->
+                        ({resp_model
+                            | api_problem = response}, Cmd.none, Nothing)
 
 
 
@@ -121,16 +176,17 @@ view :
     -> App.NotificationIdentity.Types.Model
     -> Html App.NotificationIdentity.Types.Msg
 view route scopes model =
-    div [ class "container" ] [
-        h1 [] [ text "RelEng Notification Identity Preferences" ],
-        p [ class "lead" ] [ text "Manage preferred notification preferences for RelEng events" ],
-        div [ class "container" ] [
-            p [ class "lead" ] [text model.status_message ],
-            div [ class "container" ] [
-                input [ placeholder "Enter identity name", onInput App.NotificationIdentity.Types.ChangeName] [],
-                button [ onClick App.NotificationIdentity.Types.PreferencesRequest ] [ text "Get preferences"  ],
-                button [ onClick App.NotificationIdentity.Types.IdentityDeleteRequest ] [ text "Delete identity" ]
-            ],
-            p [ class "lead" ] [ App.NotificationIdentity.View.viewPreferences model ]
+    div [ class "container" ]
+        [ h1 [] [ text "RelEng Notification Identity Preferences" ]
+        , p [ class "lead" ] [ text "Manage preferred notification preferences for RelEng events" ]
+        , div [ class "container" ]
+            [ p [ class "lead" ] [ App.NotificationIdentity.View.viewStatusMessage model ]
+            , div [ class "container" ]
+                [ input [ placeholder "Enter identity name", onInput App.NotificationIdentity.Types.ChangeName ] []
+                , button [ onClick App.NotificationIdentity.Types.PreferencesRequest ] [ text "Get preferences"  ]
+                , button [ onClick App.NotificationIdentity.Types.IdentityDeleteRequest ] [ text "Delete identity" ]
+                , button [ onClick App.NotificationIdentity.Types.UrgencyDeleteRequest ] [ text "Delete LOW urgency" ]
+                ]
+            , p [ class "lead" ] [ App.NotificationIdentity.View.viewPreferences model ]
+            ]
         ]
-    ]
