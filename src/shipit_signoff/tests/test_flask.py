@@ -46,88 +46,6 @@ def test_login(client):
     assert resp.status_code == 302
 
 
-@patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
-def test_step_creation(client):
-    resp = client.put('/step/{}'.format(UID),
-                      content_type='application/json',
-                      data=json.dumps(TEST_STEP),
-                      headers=GOODHEADERS)
-    assert resp.status_code == 200
-
-
-@patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
-def test_step_creation_bad_token(client):
-    resp = client.put('/step/{}'.format(UID),
-                      content_type='application/json',
-                      data=json.dumps(TEST_STEP),
-                      headers=BADHEADERS)
-    assert resp.status_code == 401
-
-
-def test_get_missing_step(client):
-    resp = client.get('/step/{}'.format(INVALID_UID),
-                      headers=GOODHEADERS)
-    assert resp.status_code == 404
-
-
-def test_get_present_step(client):
-    resp = client.get('/step/{}'.format(UID),
-                      headers=GOODHEADERS)
-    assert resp.status_code == 200
-    data = json.loads(str(resp.data, 'utf-8'))
-
-    # doesn't return the parameters at the moment, so can't do:
-    # assert data == TEST_STEP
-
-    assert 'policy' in data
-    assert 'method' in data['policy']
-    assert data['policy']['method'] == 'local'
-
-
-def test_get_step_status(client):
-    resp = client.get('/step/{}/status'.format(UID),
-                      headers=GOODHEADERS)
-    assert resp.status_code == 200
-    data = json.loads(str(resp.data, 'utf-8'))
-    assert data['state'] == 'running'
-    assert data['uid'] == UID
-    assert 'message' in data
-    assert 'created' in data
-
-
-def test_get_missing_step_status(client):
-    resp = client.get('/step/{}/status'.format(INVALID_UID),
-                      headers=GOODHEADERS)
-    assert resp.status_code == 404
-
-
-def test_delete_step(client):
-    resp = client.delete('/step/{}'.format(UID),
-                         headers=GOODHEADERS)
-    assert resp.status_code == 200
-
-
-def test_delete_missing_step(client):
-    resp = client.delete('/step/{}'.format(INVALID_UID),
-                         headers=GOODHEADERS)
-    assert resp.status_code == 404
-
-
-def test_delete_step_bad_token(client):
-    resp = client.delete('/step/{}'.format(UID),
-                         headers=BADHEADERS)
-    assert resp.status_code == 401
-
-
-def test_step_list(client):
-    '''
-    List available analysis through api
-    '''
-    resp = client.get('/step',
-                      headers=GOODHEADERS)
-    assert resp.status_code == 200
-
-
 def setup_step(func):
     '''
     Prepopulate the testing database.
@@ -160,6 +78,108 @@ def setup_step_small(func):
         client.delete('/step/{}'.format(UID),
                       headers=GOODHEADERS)
     return decorator
+
+
+def setup_step_balrog(func):
+    '''
+    Prepopulate the testing database.
+
+    Can't use a fixture because it cancels the @patch to user_getinfo
+    '''
+    def decorator(client, *args, **kwargs):
+        client.put('/step/{}'.format(UID),
+                   content_type='application/json',
+                   data=json.dumps(TEST_STEP_BALROG),
+                   headers=GOODHEADERS)
+        func(client)
+        client.delete('/step/{}'.format(UID),
+                      headers=GOODHEADERS)
+    return decorator
+
+
+@patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
+def test_step_creation(client):
+    resp = client.put('/step/{}'.format(UID),
+                      content_type='application/json',
+                      data=json.dumps(TEST_STEP),
+                      headers=GOODHEADERS)
+    assert resp.status_code == 200
+
+
+@patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
+def test_step_creation_bad_token(client):
+    resp = client.put('/step/{}'.format(UID),
+                      content_type='application/json',
+                      data=json.dumps(TEST_STEP),
+                      headers=BADHEADERS)
+    assert resp.status_code == 401
+
+
+def test_get_missing_step(client):
+    resp = client.get('/step/{}'.format(INVALID_UID),
+                      headers=GOODHEADERS)
+    assert resp.status_code == 404
+
+
+@setup_step
+def test_get_present_step(client):
+    resp = client.get('/step/{}'.format(UID),
+                      headers=GOODHEADERS)
+    assert resp.status_code == 200
+    data = json.loads(str(resp.data, 'utf-8'))
+
+    # doesn't return the parameters at the moment, so can't do:
+    # assert data == TEST_STEP
+
+    assert 'policy' in data
+    assert 'method' in data['policy']
+    assert data['policy']['method'] == 'local'
+
+
+@setup_step
+def test_get_step_status(client):
+    resp = client.get('/step/{}/status'.format(UID),
+                      headers=GOODHEADERS)
+    assert resp.status_code == 200
+    data = json.loads(str(resp.data, 'utf-8'))
+    assert data['state'] == 'running'
+    assert data['uid'] == UID
+    assert 'message' in data
+    assert 'created' in data
+
+
+def test_get_missing_step_status(client):
+    resp = client.get('/step/{}/status'.format(INVALID_UID),
+                      headers=GOODHEADERS)
+    assert resp.status_code == 404
+
+
+@setup_step
+def test_delete_step(client):
+    resp = client.delete('/step/{}'.format(UID),
+                         headers=GOODHEADERS)
+    assert resp.status_code == 200
+
+
+def test_delete_missing_step(client):
+    resp = client.delete('/step/{}'.format(INVALID_UID),
+                         headers=GOODHEADERS)
+    assert resp.status_code == 404
+
+
+def test_delete_step_bad_token(client):
+    resp = client.delete('/step/{}'.format(UID),
+                         headers=BADHEADERS)
+    assert resp.status_code == 401
+
+
+def test_step_list(client):
+    '''
+    List available analysis through api
+    '''
+    resp = client.get('/step',
+                      headers=GOODHEADERS)
+    assert resp.status_code == 200
 
 
 @patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
