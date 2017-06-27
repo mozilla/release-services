@@ -28,7 +28,7 @@ Signoff Policies
 
 Over the wire and in memory, policies will be stored as lists of dictionaries.
 
-For example:
+For example, here is a native policy:
 
 .. code-block:: json
 
@@ -41,6 +41,19 @@ For example:
         }
     ]
 
-Each item in the list represents a way of reaching quorum. In the example
-above, quorum is reached when either userW and userX sign off *or* when
-2 people from groupY and 2 people from groupZ sign off.
+In a native policy, each item in the list represents a way of reaching quorum
+In the example above, quorum is reached when either userW and userX sign off
+*or* when 2 people from groupY and 2 people from groupZ sign off.
+
+Balrog-backed policies are much simpler:
+
+.. code-block:: json
+
+    {
+        "sc_id": 23,
+        "object": "rule"
+    }
+
+Balrog maintains its own set of signoff requirements and policies. The Signoffs
+service simply needs to know which scheduled change to look at when trying to
+find information about sign off requirements, et. al.
