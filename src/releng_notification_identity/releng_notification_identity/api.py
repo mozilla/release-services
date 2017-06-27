@@ -17,7 +17,10 @@ def _get_identity_preferences(identity_name: str) -> List[Preference]:
     identity = session.query(Identity).filter(Identity.name == identity_name).first()
     if identity:
         preferences = session.query(Preference).filter(identity.id == Preference.identity).all()
-        return preferences
+        if preferences:
+            return preferences
+        else:
+            raise NotFound('Identity with name {} has no configured notification preferences.'.format(identity_name))
 
     else:
         raise NotFound('Identity with name {} could not be found.'.format(identity_name))
