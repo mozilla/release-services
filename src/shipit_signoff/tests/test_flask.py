@@ -115,6 +115,20 @@ def test_step_creation_bad_token(client):
     assert resp.status_code == 401
 
 
+@patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
+def test_step_creation_bad_method(client):
+    step = {
+        'uid': UID,
+        'policy': {'method': 'fake', 'definition': [{'avergers': 1}]},
+        'parameters': {},
+    }
+    resp = client.put('/step/{}'.format(UID),
+                      content_type='application/json',
+                      data=json.dumps(step),
+                      headers=GOODHEADERS)
+    assert resp.status_code == 400
+
+
 def test_get_missing_step(client):
     resp = client.get('/step/{}'.format(INVALID_UID),
                       headers=GOODHEADERS)

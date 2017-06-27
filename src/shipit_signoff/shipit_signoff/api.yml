@@ -260,10 +260,11 @@ definitions:
     properties:
       method:
         type: "string"
+        enum:
+          - local
+          - balrog
       definition:
-        type: array
-        items:
-          type: object
+        type: ["array", "object"]
 
   Output:
     type: "object"
