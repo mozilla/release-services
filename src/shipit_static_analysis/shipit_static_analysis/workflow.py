@@ -116,6 +116,7 @@ class Workflow(object):
             'performance-for-range-copy',
             'readability-else-after-return',
             'readability-misleading-indentation',
+            'readability-redundant-control-flow',
         ]
         clang = ClangTidy(self.repo_dir, 'obj-x86_64-pc-linux-gnu')
         issues = clang.run(checks, modified_files)
