@@ -7,13 +7,14 @@ from __future__ import absolute_import
 
 import pickle
 
-from flask import abort, request, g
+from flask import abort, request, g, current_app as app
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 from cli_common import log
 from backend_common.auth0 import auth0, mozilla_accept_token
 from backend_common.db import db
 
+from shipit_signoff.balrog import CurrentUser
 from shipit_signoff.db_services import get_step_by_uid, insert_new_signature, delete_existing_signature
 from shipit_signoff.models import SignoffStep, SigningStatus
 from shipit_signoff.policies import (
@@ -155,12 +156,22 @@ def delete_step(uid):
     return {}
 
 
-def is_user_in_group(group):
-    '''Check a user's group membership using auth0
+def is_user_in_group(group, method='local'):
+    '''Check a user's group membership. For local policies, this is done by
+       looking at auth0. For Balrog policies, this is done by looking at Balrog
+       roles.
     '''
-    group_membership = auth0.user_getinfo(
-        ['groups'], access_token=g.access_token).get('groups')
-    return group in group_membership
+    if method == 'balrog':
+        client = CurrentUser(
+            api_root=app.config['BALROG_API_ROOT'],
+            auth=(app.config['BALROG_USERNAME'], app.config['BALROG_PASSWORD']),
+        )
+        user_info = client.request(method='GET')
+        return group in user_info.get('roles', {}).keys()
+    else:
+        group_membership = auth0.user_getinfo(
+            ['groups'], access_token=g.access_token).get('groups')
+        return group in group_membership
 
 
 def get_logged_in_email():

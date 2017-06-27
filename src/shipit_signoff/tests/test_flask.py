@@ -6,6 +6,8 @@ import backend_common.testing
 from unittest.mock import patch
 
 
+from shipit_signoff.api import is_user_in_group
+
 UID = '1'
 INVALID_UID = '1234'
 
@@ -36,6 +38,24 @@ def mocked_getinfo(fields, access_token):
         return backend_common.testing.AUTH0_DUMMY_USERINFO
     else:
         return b'Unauthorized'
+
+
+def mocked_current_user(*args, **kwargs):
+    return {
+        "roles": {
+            "avengers": {
+                "data_version": 1,
+            },
+            "x_men": {
+                "data_version": 1,
+            },
+        },
+    }
+
+
+@patch('shipit_signoff.api.CurrentUser.do_request', new=mocked_current_user)
+def test_is_user_in_group_balrog():
+    assert is_user_in_group('x_men', method='balrog') == True
 
 
 def test_login(client):
@@ -359,3 +379,9 @@ def test_sign_off_deletion_completed(client):
 # delete a step when you haven't signed it
 
 # get step status when fully signed.
+
+# get balrog-based step
+# get list of steps including balrog based on
+# get status of balrog based step 
+# delete balrog based step
+# check existing signature for signoff and delete
