@@ -12,6 +12,9 @@ import shipit_signoff.util
 
 
 DEBUG = bool(os.environ.get('DEBUG', False))
+# TODO: is this the right way to tell the difference between staging and prod?
+# Maybe we should require BALROG_API_ROOT set in the environment instead?
+STAGING = bool(os.environ.get('DEBUG', False))
 
 
 # -- LOAD SECRETS -------------------------------------------------------------
@@ -22,7 +25,7 @@ required = [
     'APP_URL',
     'AUTH0_CLIENT_ID',
     'AUTH0_CLIENT_SECRET',
-
+    'BALROG_API_ROOT',
 ]
 
 secrets = cli_common.taskcluster.get_secrets(
@@ -54,3 +57,17 @@ OIDC_CLIENT_SECRETS = shipit_signoff.util.create_auth0_secrets_file(
     secrets['AUTH0_CLIENT_SECRET'],
     secrets['APP_URL'],
 )
+
+# -- BALROG -------------------------------------------------------------------
+
+# Allow users to override for local development
+if os.environ.get('BALROG_API_ROOT'):
+    BALROG_API_ROOT = os.environ.get('BALROG_API_ROOT')
+else:
+    if not STAGING:
+        BALROG_API_ROOT = 'https://aus4-admin.mozilla.org/api'
+    else:
+        BALROG_API_ROOT = 'https://balrog-admin.stage.mozaws.net/api'
+
+BALROG_USERNAME = os.environ.get('BALROG_USERNAME', secrets['BALROG_USERNAME'])
+BALROG_PASSWORD = os.environ.get('BALROG_PASSWORD', secrets['BALROG_PASSWORD'])
