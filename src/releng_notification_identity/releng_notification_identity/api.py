@@ -102,19 +102,19 @@ def get_identity(identity_name: str) -> Tuple[dict, int]:
 
 def get_identity_preference_by_urgency(identity_name: str, urgency: str) -> Tuple[dict, int]:
     preferences = _get_identity_preferences(identity_name)
-    preference_by_urgency_level = list(filter(lambda pref: pref.urgency == urgency, preferences))[0]
+    preference_by_urgency_level = list(filter(lambda pref: pref.urgency == urgency, preferences))
     if preference_by_urgency_level:
         return {
             'preferences': [
                 {
                     'name': identity_name,
-                    **preference_by_urgency_level.to_dict(),
+                    **preference_by_urgency_level[0].to_dict(),
                 }
             ],
         }, 200
 
     else:
-        raise NotFound('No preferences found for identity {}.'.format(identity_name))
+        raise NotFound('No {} preference found for identity {}.'.format(urgency, identity_name))
 
 
 def delete_identity_by_name(identity_name: str) -> Tuple[None, int]:
