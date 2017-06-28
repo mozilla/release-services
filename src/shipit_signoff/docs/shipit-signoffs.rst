@@ -127,17 +127,21 @@ state is updated. To avoid potential inconsistencies between Balrog and the Sign
 we purposely avoid importing Balrog Signoffs as Signatures.
 
 The Signoffs service also takes on the role of redirecting clients to Balrog when they attempt
-to Signoff on a Balrog based Step. This interaction looks as follows:
+to Signoff or revoke a Signoff on a Balrog based Step. This interaction looks as follows:
 
-* The client makes a request to https://signoffs/step/1/sign
+* The client makes a request to https://signoffs/step/1/sign.
 
-* The Signoffs service returns a 307 with the appropriate Balrog URI in the Location
-  header (eg: https://balrog/api/scheduled_changes/rules/72/signoffs)
+* The Signoffs service talks to Balrog to check that the user holds the Balrog Role they need
+  to make the Signoff. If the User does not hold that Role, a 403 is returned and nothing further
+  happens.
+
+* Otherwise, the Signoffs service returns a 307 with the appropriate Balrog URI in the Location
+  header (eg: https://balrog/api/scheduled_changes/rules/72/signoffs).
 
 * The client must rewrite the Balrog URI to get a CSRF token (eg: https://balrog/api/csrf_token),
-  and change "group" to "role" in the request body
+  and change "group" to "role" in the request body.
 
 * The client can then make a new request to the URI returned by the Signoffs service to perform
-  the Signoff
+  the Signoff.
 
 .. _balrog: https://mozilla-balrog.readthedocs.io/en/latest/
