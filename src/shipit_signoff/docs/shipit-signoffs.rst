@@ -120,10 +120,10 @@ Balrog Interaction
 ******************
 
 Although the Signoffs service delegates the tracking and enforcement of some Steps to Balrog,
-it still must know when the approriate Signoffs have been met in Balrog order to resolve the
+it still must know when the Signoff requirements have been met in Balrog order to resolve a
 Step as completed. Whenever a Step is created or status is requested for it, the Signoffs
 service will talk to Balrog and update the Step's state to match Balrog. Note that *only* the
-state is updated here. To avoid potential inconsistencies between Balrog and the Signoff service,
+state is updated. To avoid potential inconsistencies between Balrog and the Signoff service,
 we purposely avoid importing Balrog Signoffs as Signatures.
 
 The Signoffs service also takes on the role of redirecting clients to Balrog when they attempt
