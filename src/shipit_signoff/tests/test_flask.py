@@ -508,3 +508,8 @@ def test_sign_off_deletion_completed(client):
                          headers=GOODHEADERS,
                          data=json.dumps(data))
     assert resp.status_code == 409
+
+
+# delete a step when you haven't signed it
+
+# get step status when fully signed.
