@@ -105,7 +105,7 @@ class Workflow(object):
             '-*',
             'clang-analyzer-deadcode.DeadStores',
             'modernize-loop-convert',
-            'modernize-use-auto',
+            # 'modernize-use-auto', (controversial, see bug 1371052)
             'modernize-use-default',
             'modernize-raw-string-literal',
             # 'modernize-use-bool-literals', (too noisy because of `while (0)` in many macros)
