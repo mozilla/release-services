@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import pickle
 import backend_common.auth0
 from backend_common.db import db
 import backend_common.testing
@@ -8,7 +9,7 @@ from unittest.mock import patch, Mock
 
 
 from shipit_signoff.api import is_user_in_group
-from shipit_signoff.models import SignoffStep
+from shipit_signoff.models import SignoffStep, SigningStatus
 
 UID = '1'
 INVALID_UID = '1234'
@@ -52,12 +53,8 @@ def mocked_current_user_roles(*args, **kwargs):
     return ['avengers', 'x_men']
 
 
-def mocked_balrog_signoff_status_waiting(*args, **kwargs):
-    return {'capt': 'avengers', 'storm': 'x_men'}
-
-
-def mocked_balrog_signoff_status_completed(*args, **kwargs):
-    return {'capt': 'avengers', 'storm': 'x_men'}
+mocked_balrog_signoff_status_waiting = ({}, {'avengers': 1})
+mocked_balrog_signoff_status_completed = ({'capt': 'avengers'}, {'avengers': 1})
 
 
 @patch('shipit_signoff.api.get_current_user_roles', new=mocked_current_user_roles)
@@ -114,13 +111,13 @@ def setup_step_balrog(func):
     Can't use a fixture because it cancels the @patch to user_getinfo
     '''
     def decorator(client, *args, **kwargs):
-        client.put('/step/{}'.format(UID),
-                   content_type='application/json',
-                   data=json.dumps(TEST_STEP_BALROG),
-                   headers=GOODHEADERS)
+        step = SignoffStep()
+        step.uid = UID
+        step.policy = pickle.dumps(TEST_STEP_BALROG['policy'])
+        step.state = 'running'
+        db.session.add(step)
+        db.session.commit()
         func(client)
-        client.delete('/step/{}'.format(UID),
-                      headers=GOODHEADERS)
     return decorator
 
 
@@ -135,7 +132,7 @@ def test_step_creation(client):
 
 @patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
 def test_step_creation_balrog(client):
-    with patch('shipit_signoff.api.get_signoff_status') as status_mock:
+    with patch('shipit_signoff.balrog.get_signoff_status') as status_mock:
         status_mock.return_value = mocked_balrog_signoff_status_waiting
         resp = client.put('/step/{}'.format(UID),
                         content_type='application/json',
@@ -147,7 +144,7 @@ def test_step_creation_balrog(client):
 
 @patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
 def test_step_creation_balrog_already_completed(client):
-    with patch('shipit_signoff.api.get_signoff_status') as status_mock:
+    with patch('shipit_signoff.balrog.get_signoff_status') as status_mock:
         status_mock.return_value = mocked_balrog_signoff_status_completed
         resp = client.put('/step/{}'.format(UID),
                         content_type='application/json',
@@ -156,9 +153,7 @@ def test_step_creation_balrog_already_completed(client):
         assert resp.status_code == 200
         assert status_mock.call_count == 1
         row = db.session.query(SignoffStep).filter(SignoffStep.uid == UID).one()
-        assert row.state == 'completed'
-        # TODO: check this (and mock it) after it has been implemented
-        #assert row.completed == 'something'
+        assert row.state == SigningStatus.completed
 
 
 @patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
@@ -233,7 +228,7 @@ def test_get_step_status(client):
 
 
 @setup_step_balrog
-@patch('shipit_signoff.api.get_signoff_status')
+@patch('shipit_signoff.balrog.get_signoff_status')
 def test_get_step_status_balrog_no_change(client, status_mock):
     status_mock.return_value = mocked_balrog_signoff_status_waiting
     resp = client.get('/step/{}/status'.format(UID),
@@ -248,7 +243,7 @@ def test_get_step_status_balrog_no_change(client, status_mock):
 
 
 @setup_step_balrog
-@patch('shipit_signoff.api.get_signoff_status')
+@patch('shipit_signoff.balrog.get_signoff_status')
 def test_get_step_status_balrog_completed(client, status_mock):
     status_mock.return_value = mocked_balrog_signoff_status_completed
     resp = client.get('/step/{}/status'.format(UID),
@@ -261,9 +256,7 @@ def test_get_step_status_balrog_completed(client, status_mock):
     assert 'created' in data
     assert status_mock.call_count == 1
     row = db.session.query(SignoffStep).filter(SignoffStep.uid == UID).one()
-    assert row.state == 'completed'
-    # TODO: check this (and mock it) after it has been implemented
-    #assert row.completed == 'something'
+    assert row.state == SigningStatus.completed
 
 
 def test_get_missing_step_status(client):

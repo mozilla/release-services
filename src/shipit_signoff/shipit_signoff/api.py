@@ -15,7 +15,7 @@ from cli_common import log
 from backend_common.auth0 import auth0, mozilla_accept_token
 from backend_common.db import db
 
-from shipit_signoff.balrog import get_current_user_roles, make_signoffs_uri, get_signoff_status
+from shipit_signoff.balrog import get_current_user_roles, make_signoffs_uri, get_balrog_signoff_state
 from shipit_signoff.db_services import get_step_by_uid, insert_new_signature, delete_existing_signature
 from shipit_signoff.models import SignoffStep, SigningStatus
 from shipit_signoff.policies import (
@@ -105,7 +105,6 @@ def get_step_status(uid):
     Get the current status of a sign-off step, including who has signed
     '''
     logger.info('Getting step status %s', uid)
-    # TODO: need to pull status rom balrog for method = 'balrog'
 
     try:
         step = db.session.query(SignoffStep).filter(
@@ -113,6 +112,13 @@ def get_step_status(uid):
     except NoResultFound:
         logger.error('Step %s not found', uid)
         abort(404)
+
+    if step.policy_data['method'] == 'balrog':
+        # Once a step is complete there is nothing we need to know from Balrog,
+        # so we can avoid talking to it altogether.
+        if step.state == SigningStatus.running:
+            print(step.policy_data)
+            step.state = get_balrog_signoff_state(step.policy_data['definition'])
 
     return signoffstep_to_status(step)
 
@@ -126,10 +132,12 @@ def create_step(uid):
 
     step = SignoffStep()
 
-    # TODO: need to pull status rom balrog for method = 'balrog'
     step.uid = uid
-    step.state = 'running'
     step.policy = pickle.dumps(request.json['policy'])
+    if step.policy_data['method'] == 'balrog':
+        step.state = get_balrog_signoff_state(step.policy_data['definition'])
+    else:
+        step.state = 'running'
 
     db.session.add(step)
 
