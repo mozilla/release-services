@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 from taskcluster.utils import slugId
+from shipit_pulse_listener import task_monitoring
 from cli_common.taskcluster import get_service
 from cli_common.pulse import create_consumer
 from cli_common.log import get_logger
@@ -15,7 +16,7 @@ class Hook(object):
     '''
     A taskcluster hook, used to build a task
     '''
-    def __init__(self, group_id, hook_id, pulse_queue, pulse_route='#'):
+    def __init__(self, group_id, hook_id, pulse_queue, pulse_route):
         self.group_id = group_id
         self.hook_id = hook_id
         self.pulse_queue = pulse_queue
@@ -74,7 +75,7 @@ class Hook(object):
         if env is None:
             logger.warn('Skipping message, no task created', hook=self.hook_id)
         else:
-            self.create_task(extra_env=env)
+            await self.create_task(extra_env=env)
 
         # Ack the message so it is removed from the broker's queue
         await channel.basic_client_ack(delivery_tag=envelope.delivery_tag)
@@ -86,7 +87,7 @@ class Hook(object):
         '''
         raise NotImplementedError
 
-    def create_task(self, ttl=5, extra_env={}):
+    async def create_task(self, ttl=5, extra_env={}):
         '''
         Create a new task on Taskcluster
         '''
@@ -106,4 +107,9 @@ class Hook(object):
         logger.info('Creating a new task', id=task_id, name=task_definition['metadata']['name'])  # noqa
 
         # Create a new task
-        return self.queue.createTask(task_id, task_definition)
+        self.queue.createTask(task_id, task_definition)
+
+        # Send task to monitoring
+        await task_monitoring.add_task(self.group_id, self.hook_id, task_id)
+
+        return task_id
