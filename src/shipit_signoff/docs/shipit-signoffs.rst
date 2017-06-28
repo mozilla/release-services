@@ -116,5 +116,28 @@ service simply needs to know which scheduled change to look at when trying to
 find information about sign off requirements, et. al.
 
 
+Balrog Interaction
+******************
+
+Although the Signoffs service delegates the tracking and enforcement of some Steps to Balrog,
+it still must know when the approriate Signoffs have been met in Balrog order to resolve the
+Step as completed. Whenever a Step is created or status is requested for it, the Signoffs
+service will talk to Balrog and update the Step's state to match Balrog. Note that *only* the
+state is updated here. To avoid potential inconsistencies between Balrog and the Signoff service,
+we purposely avoid importing Balrog Signoffs as Signatures.
+
+The Signoffs service also takes on the role of redirecting clients to Balrog when they attempt
+to Signoff on a Balrog based Step. This interaction looks as follows:
+
+* The client makes a request to https://signoffs/step/1/sign
+
+* The Signoffs service returns a 307 with the appropriate Balrog URI in the Location
+  header (eg: https://balrog/api/scheduled_changes/rules/72/signoffs)
+
+* The client must rewrite the Balrog URI to get a CSRF token (eg: https://balrog/api/csrf_token),
+  and change "group" to "role" in the request body
+
+* The client can then make a new request to the URI returned by the Signoffs service to perform
+  the Signoff
 
 .. _balrog: https://mozilla-balrog.readthedocs.io/en/latest/
