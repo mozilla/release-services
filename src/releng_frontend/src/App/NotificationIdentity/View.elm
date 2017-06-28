@@ -4,7 +4,7 @@ module App.NotificationIdentity.View exposing (..)
 import App.NotificationIdentity.Types exposing (..)
 import App.Utils
 import Html exposing (..)
-import Html.Attributes exposing (class, placeholder)
+import Html.Attributes exposing (class, placeholder, id)
 import RemoteData exposing (..)
 
 

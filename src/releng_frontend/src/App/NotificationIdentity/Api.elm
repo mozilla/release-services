@@ -61,7 +61,7 @@ getPreferences model =
     in
         Http.get (model.baseUrl ++ "/identity/" ++ identity) pref_decoder
             |> RemoteData.sendRequest
-            |> Cmd.map PreferencesResponse
+            |> Cmd.map GetPreferencesResponse
 
 
 deleteIdentity : Model -> Cmd Msg

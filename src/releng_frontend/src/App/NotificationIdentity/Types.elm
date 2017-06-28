@@ -44,16 +44,16 @@ type alias Model =
     }
 
 -- FrontEnd Actions
-type Msg =
-    NavigateTo Route                                -- Route navigation within page
+type Msg
+    = NavigateTo Route                              -- Route navigation within page
     | ChangeName String                             -- Update state with name in input box
-    | PreferencesRequest                            -- Request preferences from service
-    | PreferencesResponse (WebData Preferences)     -- Handle response for preferences request
+    | GetPreferencesRequest                         -- Request preferences from service
+    | GetPreferencesResponse (WebData Preferences)  -- Handle response for preferences request
     | IdentityDeleteRequest                         -- Delete identity from service
-    | IdentityDeleteResponse (WebData String)   -- Handle identity delete response
+    | IdentityDeleteResponse (WebData String)       -- Handle identity delete response
     | UrgencyDeleteRequest                          -- Delete identity preference
     | UrgencyDeleteResponse (WebData ApiProblem)    -- Handle preference delete response
     | NewIdentityRequest                            -- Add new identity request
     | NewIdentityResponse (WebData ApiProblem)      -- Handle new identity response
     | OperationFail String                          -- Operation failed with the given reason
-    | HandleProblemJson (Http.Response String)
+    | HandleProblemJson (Http.Response String)      -- Handle problem JSON
