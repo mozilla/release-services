@@ -59,6 +59,10 @@ class CodeCov(object):
         test_tasks = [t for t in tasks if taskcluster.is_coverage_task(t)]
         for test_task in test_tasks:
             suite_name = taskcluster.get_suite_name(test_task)
+            # Ignore awsy as it is not actually a suite of tests.
+            if suite_name == 'awsy':
+                continue
+
             all_suites.add(suite_name)
             test_task_id = test_task['status']['taskId']
             artifacts = taskcluster.get_task_artifacts(test_task_id)
