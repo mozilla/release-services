@@ -39,9 +39,7 @@ viewPreferenceItem preference =
     [ h5 [ class "list-group-item-heading" ]
         [ channelIcon preference.channel preference.target
         , text (preference.target)
-        , span [class ("float-xs-right badge badge-" ++ (urgencyLevel preference.urgency))]
-            [ text preference.urgency
-            ]
+        , span [class ("float-xs-right badge badge-" ++ (urgencyLevel preference.urgency))] [ text preference.urgency ]
         ]
 
     ]
@@ -98,5 +96,6 @@ viewStatusMessage model =
             App.Utils.loading
 
         False ->
-            text model.status_message
-
+            case model.status_message of
+                Nothing -> text ""
+                Just message -> text message

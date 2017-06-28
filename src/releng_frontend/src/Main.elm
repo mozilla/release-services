@@ -43,7 +43,7 @@ init flags location =
             , userScopes = App.UserScopes.init
             , trychooser = App.TryChooser.init
             , treestatus = App.TreeStatus.init flags.treestatusUrl
-            , notification_identity = App.NotificationIdentity.init "https://localhost:8007"
+            , notification_identity = App.NotificationIdentity.init "https://localhost:8007"  -- TODO: remove hard coded local url, switch to using a flag
             }
     in
         initRoute model route
