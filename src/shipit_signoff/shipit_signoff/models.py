@@ -6,7 +6,7 @@
 from __future__ import absolute_import
 
 import datetime
-import pickle
+import json
 import enum
 
 import sqlalchemy as sa
@@ -36,14 +36,14 @@ class SignoffStep(db.Model):
     status_message = sa.Column(sa.String(200), nullable=True)
     created = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
     completed = sa.Column(sa.DateTime, nullable=True)
-    policy = sa.Column(sa.Binary())
+    policy = sa.Column(sa.JSON)
     signatures = db.relationship('Signature')
 
     @property
     def policy_data(self):
         if not self.policy:
             return None
-        return pickle.loads(self.policy)
+        return json.loads(self.policy)
 
     def delete(self):
         '''
