@@ -17,3 +17,7 @@ def make_signoffs_uri(policy_definition):
         policy_definition['object'],
         policy_definition['sc_id'],
     )
+
+
+def get_signoff_status(policy_definition):
+    return requests.get(make_signoffs_uri(policy_definition))

@@ -15,7 +15,7 @@ from cli_common import log
 from backend_common.auth0 import auth0, mozilla_accept_token
 from backend_common.db import db
 
-from shipit_signoff.balrog import get_current_user_roles, make_signoffs_uri
+from shipit_signoff.balrog import get_current_user_roles, make_signoffs_uri, get_signoff_status
 from shipit_signoff.db_services import get_step_by_uid, insert_new_signature, delete_existing_signature
 from shipit_signoff.models import SignoffStep, SigningStatus
 from shipit_signoff.policies import (
