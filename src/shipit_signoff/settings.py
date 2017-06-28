@@ -25,7 +25,8 @@ required = [
     'APP_URL',
     'AUTH0_CLIENT_ID',
     'AUTH0_CLIENT_SECRET',
-    'BALROG_API_ROOT',
+    'BALROG_USERNAME',
+    'BALROG_PASSWORD',
 ]
 
 secrets = cli_common.taskcluster.get_secrets(
