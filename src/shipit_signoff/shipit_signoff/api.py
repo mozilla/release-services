@@ -121,7 +121,6 @@ def get_step_status(uid):
         # Once a step is complete there is nothing we need to know from Balrog,
         # so we can avoid talking to it altogether.
         if step.state == SigningStatus.running:
-            print(step.policy_data)
             step.state = get_balrog_signoff_state(step.policy_data['definition'])
 
     return signoffstep_to_status(step)
