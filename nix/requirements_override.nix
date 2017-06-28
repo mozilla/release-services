@@ -250,4 +250,13 @@ in skipOverrides {
     '';
   };
 
+  "RBTools" = self: old: {
+    patches = [
+         (pkgs.fetchurl {
+           url = "https://github.com/La0/rbtools/commit/190b4adb768897f65cf7ec57806649bc14c8e45d.diff";
+           sha256 = "1hh6i3cffsc4fxr4jqlxralnf78529i0pspm7jn686a2s6bh26mw";
+         })
+      ];
+  };
+
 }

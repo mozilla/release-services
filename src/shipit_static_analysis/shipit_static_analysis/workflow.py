@@ -13,7 +13,6 @@ from cli_common.taskcluster import get_service
 from cli_common.log import get_logger
 from cli_common.command import run_check
 from rbtools.api.client import RBClient
-from rbtools.api.errors import APIError
 from shipit_static_analysis.clang import ClangTidy
 from shipit_static_analysis.batchreview import BatchReview
 
@@ -28,6 +27,7 @@ class Workflow(object):
     Static analysis workflow
     '''
     taskcluster = None
+    mozreview = None
 
     def __init__(self, cache_root, emails, client_id=None, access_token=None):
         self.emails = emails
@@ -47,17 +47,6 @@ class Workflow(object):
         self.config = yaml.load(open(config_path))
         assert 'clang_checkers' in self.config
         assert 'target' in self.config
-
-        # Create new MozReview API client
-        url = 'https://reviewboard.mozilla.org'
-        username = 'jkeromnes+clangbot@mozilla.com'
-        apikey = '(secret)'
-        rbc = RBClient(url, save_cookies=False, allow_caching=False)
-        login_resource = rbc.get_path(
-            'extensions/mozreview.extension.MozReviewExtension/'
-            'bugzilla-api-key-logins/')
-        login_resource.create(username=username, api_key=apikey)
-        self.api_root = rbc.get_root()
 
         # Clone mozilla-central
         self.repo_dir = os.path.join(self.cache_root, 'static-analysis/')
@@ -81,6 +70,18 @@ class Workflow(object):
 
         # Setup clang
         self.clang = ClangTidy(self.repo_dir, self.config['target'])
+
+    def setup_mozreview(self, username, api_key):
+        '''
+        Use mozreview client to post results
+        '''
+        url = 'https://reviewboard.mozilla.org'
+        path = 'extensions/mozreview.extension.MozReviewExtension/bugzilla-api-key-logins/' # noqa
+        rbc = RBClient(url, save_cookies=False, allow_caching=False)
+        login_resource = rbc.get_path(path)
+        login_resource.create(username=username, api_key=api_key)
+        self.mozreview = rbc.get_root()
+        logger.info('Connected to MozReview', username=username)
 
     def run(self, revision, review_request_id, diffset_revision):
         '''
@@ -154,7 +155,8 @@ class Workflow(object):
         '''
         Post review comments to MozReview in a single batch
         '''
-        review = BatchReview(self.api_root, review_request_id, diffset_revision)
+        review = BatchReview(self.mozreview, review_request_id, diffset_revision)
+        print(review)
         # review.comment(filename, line, num_lines, comment)
         # review.publish(body_top='\n'.join(commentlines),
         #                ship_it=false)
