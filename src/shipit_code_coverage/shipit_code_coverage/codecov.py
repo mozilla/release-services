@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 
 class CodeCov(object):
 
-    def __init__(self, cache_root, coveralls_token, codecov_token):
+    def __init__(self, revision, cache_root, coveralls_token, codecov_token):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = []
@@ -28,6 +28,16 @@ class CodeCov(object):
 
         self.coveralls_token = coveralls_token
         self.codecov_token = codecov_token
+
+        if revision is None:
+            self.task_id = taskcluster.get_last_task()
+
+            task_data = taskcluster.get_task_details(self.task_id)
+            self.revision = task_data['payload']['env']['GECKO_HEAD_REV']
+        else:
+            self.task_id = taskcluster.get_task('mozilla-central', self.revision)
+
+        logger.info('Mercurial revision', revision=self.revision)
 
     def download_coverage_artifacts(self, build_task_id):
         try:
@@ -49,6 +59,10 @@ class CodeCov(object):
         test_tasks = [t for t in tasks if taskcluster.is_coverage_task(t)]
         for test_task in test_tasks:
             suite_name = taskcluster.get_suite_name(test_task)
+            # Ignore awsy as it is not actually a suite of tests.
+            if suite_name == 'awsy':
+                continue
+
             all_suites.add(suite_name)
             test_task_id = test_task['status']['taskId']
             artifacts = taskcluster.get_task_artifacts(test_task_id)
@@ -166,16 +180,10 @@ class CodeCov(object):
         run_check(['gecko-env', './mach', 'build-backend', '-b', 'ChromeMap'], cwd=self.repo_dir)
 
     def go(self):
-        task_id = taskcluster.get_last_task()
-
-        task_data = taskcluster.get_task_details(task_id)
-        revision = task_data['payload']['env']['GECKO_HEAD_REV']
-        logger.info('Mercurial revision', revision=revision)
-
-        self.download_coverage_artifacts(task_id)
+        self.download_coverage_artifacts(self.task_id)
         logger.info('Code coverage artifacts downloaded')
 
-        self.clone_mozilla_central(revision)
+        self.clone_mozilla_central(self.revision)
         logger.info('mozilla-central cloned')
         self.build_files()
         logger.info('Build successful')
@@ -183,7 +191,7 @@ class CodeCov(object):
         self.rewrite_jsvm_lcov()
         logger.info('JSVM LCOV files rewritten')
 
-        commit_sha = self.get_github_commit(revision)
+        commit_sha = self.get_github_commit(self.revision)
         logger.info('GitHub revision', revision=commit_sha)
 
         coveralls_jobs = []

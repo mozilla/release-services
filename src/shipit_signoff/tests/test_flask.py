@@ -273,7 +273,7 @@ def test_delete_step(client):
 
 
 @setup_step_balrog
-def test_delete_step(client):
+def test_delete_step_balrog(client):
     resp = client.delete('/step/{}'.format(UID),
                          headers=GOODHEADERS)
     assert resp.status_code == 200

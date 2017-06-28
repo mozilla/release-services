@@ -2,6 +2,7 @@
 from cli_common.pulse import run_consumer
 from cli_common.log import get_logger
 from shipit_pulse_listener.hook import Hook
+from shipit_pulse_listener import task_monitoring
 import requests
 import itertools
 import asyncio
@@ -101,6 +102,8 @@ class HookRiskAssessment(Hook):
         data = resp.json()
 
         def _has_extension(path):
+            if '.' not in path:
+                return False
             pos = path.rindex('.')
             ext = path[pos+1:].lower()
             return ext in self.extensions
@@ -132,6 +135,11 @@ class PulseListener(object):
         self.taskcluster_client_id = taskcluster_client_id
         self.taskcluster_access_token = taskcluster_access_token
 
+        task_monitoring.connect_taskcluster(
+            self.taskcluster_client_id,
+            self.taskcluster_access_token,
+        )
+
     def run(self):
 
         # Build hooks for each conf
@@ -152,6 +160,11 @@ class PulseListener(object):
                 self.taskcluster_access_token,
             )
         ]
+
+        # Add monitoring process
+        consumers.append(task_monitoring.run())
+
+        # Run all consumers together
         run_consumer(asyncio.gather(*consumers))
 
     def build_hook(self, conf):

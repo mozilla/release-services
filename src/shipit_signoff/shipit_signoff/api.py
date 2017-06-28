@@ -9,6 +9,7 @@ import pickle
 
 from flask import abort, request, g, redirect, current_app as app
 import requests
+import urllib.parse
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 from cli_common import log
@@ -42,7 +43,10 @@ def login(callback_url):
 
     Returns the user to callback_url when finished.
     '''
-    pass
+    url = urllib.parse.unquote(callback_url)
+    if url.find('http://') != 0 and url.find('https://') != 0:
+        url = 'https://' + url
+    redirect(url)
 
 
 def signoffstep_to_status(step):
