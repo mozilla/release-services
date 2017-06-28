@@ -2,11 +2,13 @@
 
 import json
 import backend_common.auth0
+from backend_common.db import db
 import backend_common.testing
 from unittest.mock import patch, Mock
 
 
 from shipit_signoff.api import is_user_in_group
+from shipit_signoff.models import SignoffStep
 
 UID = '1'
 INVALID_UID = '1234'
@@ -153,7 +155,10 @@ def test_step_creation_balrog_already_completed(client):
                         headers=GOODHEADERS)
         assert resp.status_code == 200
         assert status_mock.call_count == 1
-        # TODO: check that db was updated
+        row = db.session.query(SignoffStep).filter(SignoffStep.uid == UID).one()
+        assert row.state == 'completed'
+        # TODO: check this (and mock it) after it has been implemented
+        #assert row.completed == 'something'
 
 
 @patch('backend_common.auth0.auth0.user_getinfo', new=mocked_getinfo)
@@ -250,12 +255,15 @@ def test_get_step_status_balrog_completed(client, status_mock):
                       headers=GOODHEADERS)
     assert resp.status_code == 200
     data = json.loads(str(resp.data, 'utf-8'))
-    assert data['state'] == 'running'
+    assert data['state'] == 'completed'
     assert data['uid'] == UID
     assert 'message' in data
     assert 'created' in data
     assert status_mock.call_count == 1
-    # TODO: check that db state gets updated when balrog state changes
+    row = db.session.query(SignoffStep).filter(SignoffStep.uid == UID).one()
+    assert row.state == 'completed'
+    # TODO: check this (and mock it) after it has been implemented
+    #assert row.completed == 'something'
 
 
 def test_get_missing_step_status(client):
