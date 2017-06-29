@@ -5,10 +5,16 @@
 
 from __future__ import absolute_import
 
+import json
 import os
+from flask import jsonify
 import backend_common
 import shipit_signoff.config
 import shipit_signoff.models  # noqa
+
+
+def fake_auth():
+    return jsonify(json.loads(open(os.path.join(os.path.dirname(__file__), 'fakeauth.json')).read()))
 
 
 def create_app(config=None):
@@ -17,7 +23,7 @@ def create_app(config=None):
         config=config,
         extensions=[
             'log',
-            'security',
+            #'security',
             'cors',
             'api',
             'auth',
@@ -27,4 +33,7 @@ def create_app(config=None):
     )
     # TODO: add predefined api.yml
     app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
+
+    #if config and config.get("TESTING"):
+    app.add_url_rule("/fake_auth", 'fake_auth', fake_auth)
     return app
