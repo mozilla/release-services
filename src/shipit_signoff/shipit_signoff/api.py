@@ -7,8 +7,7 @@ from __future__ import absolute_import
 
 import pickle
 
-from flask import abort, request, g, redirect, current_app as app
-import requests
+from flask import abort, request, g, redirect
 import urllib.parse
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError

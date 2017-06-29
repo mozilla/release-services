@@ -5,7 +5,7 @@ import pickle
 import backend_common.auth0
 from backend_common.db import db
 import backend_common.testing
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 
 from shipit_signoff.api import is_user_in_group
@@ -59,7 +59,7 @@ mocked_balrog_signoff_status_completed = ({'capt': 'avengers'}, {'avengers': 1})
 
 @patch('shipit_signoff.api.get_current_user_roles', new=mocked_current_user_roles)
 def test_is_user_in_group_balrog():
-    assert is_user_in_group('x_men', method='balrog') == True
+    assert is_user_in_group('x_men', method='balrog') is True
 
 
 def test_login(client):
@@ -135,9 +135,9 @@ def test_step_creation_balrog(client):
     with patch('shipit_signoff.balrog.get_signoff_status') as status_mock:
         status_mock.return_value = mocked_balrog_signoff_status_waiting
         resp = client.put('/step/{}'.format(UID),
-                        content_type='application/json',
-                        data=json.dumps(TEST_STEP_BALROG),
-                        headers=GOODHEADERS)
+                          content_type='application/json',
+                          data=json.dumps(TEST_STEP_BALROG),
+                          headers=GOODHEADERS)
         assert resp.status_code == 200
         assert status_mock.call_count == 1
 
@@ -147,9 +147,9 @@ def test_step_creation_balrog_already_completed(client):
     with patch('shipit_signoff.balrog.get_signoff_status') as status_mock:
         status_mock.return_value = mocked_balrog_signoff_status_completed
         resp = client.put('/step/{}'.format(UID),
-                        content_type='application/json',
-                        data=json.dumps(TEST_STEP_BALROG),
-                        headers=GOODHEADERS)
+                          content_type='application/json',
+                          data=json.dumps(TEST_STEP_BALROG),
+                          headers=GOODHEADERS)
         assert resp.status_code == 200
         assert status_mock.call_count == 1
         row = db.session.query(SignoffStep).filter(SignoffStep.uid == UID).one()
