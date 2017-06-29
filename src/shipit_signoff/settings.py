@@ -11,6 +11,7 @@ import shipit_signoff.config
 import shipit_signoff.util
 
 
+TESTING = bool(os.environ.get('TESTING', False))
 DEBUG = bool(os.environ.get('DEBUG', False))
 
 
@@ -49,8 +50,11 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 SECRET_KEY = os.urandom(24)
 # OIDC_CALLBACK_ROUTE='/redirect_url'
 OIDC_USER_INFO_ENABLED = True
-OIDC_CLIENT_SECRETS = shipit_signoff.util.create_auth0_secrets_file(
+args = [
     secrets['AUTH0_CLIENT_ID'],
     secrets['AUTH0_CLIENT_SECRET'],
     secrets['APP_URL'],
-)
+]
+if TESTING:
+    args.append(secrets['APP_URL'] + 'fake_auth')
+OIDC_CLIENT_SECRETS = shipit_signoff.util.create_auth0_secrets_file(*args)

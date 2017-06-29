@@ -39,6 +39,6 @@ def create_app(config=None):
     # TODO: add predefined api.yml
     app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
 
-    #if config and config.get("TESTING"):
-    app.add_url_rule("/fake_auth", 'fake_auth', fake_auth)
+    if os.environ.get("TESTING"):
+        app.add_url_rule("/fake_auth", 'fake_auth', fake_auth)
     return app
