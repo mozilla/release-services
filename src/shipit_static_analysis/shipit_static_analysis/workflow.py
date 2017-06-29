@@ -65,6 +65,9 @@ class Workflow(object):
         # Open new hg client
         self.hg = hglib.open(self.repo_dir)
 
+        # Setup clang
+        self.clang = ClangTidy(self.repo_dir, self.config['target'])
+
     def run(self, revision, review_request_id, diffset_revision):
         '''
         Run the static analysis workflow:
@@ -108,8 +111,7 @@ class Workflow(object):
 
         # Run static analysis through run-clang-tidy.py
         logger.info('Run clang-tidy...')
-        clang = ClangTidy(self.repo_dir, self.config['target'])
-        issues = clang.run(self.config['clang_checkers'], modified_files)
+        issues = self.clang.run(self.config['clang_checkers'], modified_files)
 
         logger.info('Detected {} code issue(s)'.format(len(issues)))
 

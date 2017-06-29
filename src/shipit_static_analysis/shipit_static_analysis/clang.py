@@ -12,6 +12,7 @@ import os
 import re
 
 from cli_common.log import get_logger
+from cli_common.command import run_check
 
 logger = get_logger(__name__)
 
@@ -36,6 +37,12 @@ ISSUE_NOTE_MARKDOWN = '''
 ```
 '''
 
+CLANG_SETUP_CMD = [
+    'gecko-env',
+    './mach', 'artifact', 'toolchain',
+    '--from-build', 'linux64-clang-tidy'
+]
+
 
 class ClangTidy(object):
     '''
@@ -44,27 +51,21 @@ class ClangTidy(object):
     '''
     db_path = 'compile_commands.json'
 
-    def __init__(self, work_dir, build_dir, workers=0):
+    def __init__(self, work_dir, build_dir):
         assert os.path.isdir(work_dir)
 
         self.work_dir = work_dir
         self.build_dir = os.path.join(work_dir, build_dir)
 
-        # Load the database and extract all files.
-        database = json.load(open(os.path.join(self.build_dir, self.db_path)))
-        self.database_files = [entry['file'] for entry in database]
-
-        # Build workers queue
-        if workers == 0:
-            workers = multiprocessing.cpu_count()
-        else:
-            assert 0 < workers <= 32
-        self.workers = workers
-        logger.info('Clang tidy will spawn workers', nb=workers)
-        self.queue_workers = queue.Queue(self.workers)
-
-        # Build issues queue to get results
-        self.queue_issues = queue.Queue()
+        # Check the local clang is available
+        logger.info('Loading Mozilla clang-tidy...')
+        run_check(CLANG_SETUP_CMD, cwd=work_dir)
+        self.binary = os.path.join(
+            work_dir,
+            'clang/bin/clang-tidy',
+        )
+        assert os.path.exists(self.binary), \
+            'Missing clang tidy in {}'.format(self.binary)
 
     def run(self, checks, files):
         '''
@@ -72,13 +73,25 @@ class ClangTidy(object):
         using threaded workers (communicate through queues)
         Output a list of ClangIssue
         '''
+        # Load the database and extract all files.
+        database = json.load(open(os.path.join(self.build_dir, self.db_path)))
+        self.database_files = [entry['file'] for entry in database]
+
+        # Build workers queue
+        workers = multiprocessing.cpu_count()
+        logger.info('Clang tidy will spawn workers', nb=workers)
+        self.queue_workers = queue.Queue(workers)
+
+        # Build issues queue to get results
+        self.queue_issues = queue.Queue()
+
         # Build up a big regexy filter from all modified files
         file_name_re = re.compile('(' + ')|('.join(files) + ')')
 
         issues = []
         try:
             # Spin up a bunch of tidy-launching threads.
-            for _ in range(self.workers):
+            for _ in range(workers):
                 t = threading.Thread(
                     target=self.run_clang_tidy,
                     args=(checks, )
@@ -118,7 +131,7 @@ class ClangTidy(object):
 
             # Build command line for a filename
             cmd = [
-                'clang-tidy',  # use from $PATH
+                self.binary,
                 # Show warnings in all in-project headers by default.
                 '-header-filter=^{}/.*'.format(os.path.basename(self.build_dir)),
                 '-checks={}'.format(','.join(checks)),
