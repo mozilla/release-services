@@ -497,7 +497,13 @@ in rec {
             ${gnused}/bin/sed -i -e "s| name = \"elm-webpack-loader\";| dontNpmInstall = true;name = \"elm-webpack-loader\";|" node-modules-generated.nix
 
             rm -rf elm-stuff
-            ${elmPackages.elm}/bin/elm-package install -y
+            n=0
+            until [ $n -ge 5 ]
+            do
+              ${elmPackages.elm}/bin/elm-package install -y
+              n=$[$n+1]
+              sleep 5
+            done
             ${elm2nix}/bin/elm2nix elm-packages.nix
 
             popd
