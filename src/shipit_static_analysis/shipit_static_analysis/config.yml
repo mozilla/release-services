@@ -5,7 +5,6 @@ clang_checkers:
  - -*
  - clang-analyzer-deadcode.DeadStores
  - modernize-loop-convert
- - modernize-use-auto
  - modernize-use-default
  - modernize-raw-string-literal
  - modernize-use-override
