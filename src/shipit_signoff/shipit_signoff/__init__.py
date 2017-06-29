@@ -7,14 +7,19 @@ from __future__ import absolute_import
 
 import json
 import os
-from flask import jsonify
+from flask import jsonify, request
 import backend_common
 import shipit_signoff.config
 import shipit_signoff.models  # noqa
 
 
 def fake_auth():
-    return jsonify(json.loads(open(os.path.join(os.path.dirname(__file__), 'fakeauth.json')).read()))
+    username = request.args.get("username")
+    users = json.loads(open(os.path.join(os.path.dirname(__file__), 'fakeauth.json')).read())
+    if username not in users:
+        return "Unauthorized"
+    else:
+        return jsonify(users.get(username))
 
 
 def create_app(config=None):
