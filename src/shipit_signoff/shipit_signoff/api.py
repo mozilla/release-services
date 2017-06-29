@@ -5,8 +5,6 @@
 
 from __future__ import absolute_import
 
-import pickle
-
 from flask import abort, request, g, redirect
 import urllib.parse
 from sqlalchemy.orm.exc import NoResultFound
@@ -129,7 +127,7 @@ def create_step(uid):
 
     step.uid = uid
     step.state = 'running'
-    step.policy = pickle.dumps(request.json['policy'])
+    step.policy = request.json['policy']
 
     db.session.add(step)
 
