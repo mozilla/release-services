@@ -48,6 +48,10 @@ POSTGRESQL_BIN_DIR = os.environ.get("POSTGRESQL_BIN_DIR", "")  # must end with /
 with open(os.path.join(os.path.dirname(__file__), 'VERSION')) as f:
     VERSION = f.read().strip()
 
+IN_DOCKER = False
+with open('/proc/1/cgroup', 'rt') as ifh:
+    IN_DOCKER = 'docker' in ifh.read()
+
 
 # TODO: below data should be placed in src/<app>/default.nix files alongside
 PROJECTS = {
