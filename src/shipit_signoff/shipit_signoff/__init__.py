@@ -5,21 +5,10 @@
 
 from __future__ import absolute_import
 
-import json
 import os
-from flask import jsonify, request
 import backend_common
 import shipit_signoff.config
 import shipit_signoff.models  # noqa
-
-
-def fake_auth():
-    username = request.args.get('access_token')
-    users = json.loads(open(os.path.join(os.path.dirname(__file__), 'fakeauth.json')).read())
-    if username not in users:
-        return b'Unauthorized'
-    else:
-        return jsonify(users.get(username))
 
 
 def create_app(config=None):
@@ -40,5 +29,6 @@ def create_app(config=None):
     app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
 
     if os.environ.get("TESTING"):
+        from shipit_signoff.testing import fake_auth
         app.add_url_rule("/fake_auth", 'fake_auth', fake_auth)
     return app
