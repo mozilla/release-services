@@ -15,6 +15,8 @@ DEBUG = bool(os.environ.get('DEBUG', False))
 # TODO: is this the right way to tell the difference between staging and prod?
 # Maybe we should require BALROG_API_ROOT set in the environment instead?
 STAGING = bool(os.environ.get('DEBUG', False))
+# Local auth defaults to True if DEBUG is set to True.
+LOCAL_AUTH = bool(os.environ.get('LOCAL_AUTH', DEBUG))
 
 
 # -- LOAD SECRETS -------------------------------------------------------------
@@ -53,11 +55,14 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 SECRET_KEY = os.urandom(24)
 # OIDC_CALLBACK_ROUTE='/redirect_url'
 OIDC_USER_INFO_ENABLED = True
-OIDC_CLIENT_SECRETS = shipit_signoff.util.create_auth0_secrets_file(
+args = [
     secrets['AUTH0_CLIENT_ID'],
     secrets['AUTH0_CLIENT_SECRET'],
     secrets['APP_URL'],
-)
+]
+if LOCAL_AUTH:
+    args.append(secrets['APP_URL'] + 'fake_auth')
+OIDC_CLIENT_SECRETS = shipit_signoff.util.create_auth0_secrets_file(*args)
 
 # -- BALROG -------------------------------------------------------------------
 
