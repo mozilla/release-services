@@ -31,10 +31,9 @@ def make_signoffs_uri(policy_definition):
 def get_signoff_status(policy_definition):
     # TODO: switch this to a GET to /scheduled_changes/{object}/{sc_id} when that endpoint exists
     scheduled_changes = requests.get(
-        '{}/scheduled_changes/{}/{}'.format(app.config['BALROG_API_ROOT'],
-                                            policy_definition['object'],
-                                            policy_definition['sc_id'])
-    )
+        '{}/scheduled_changes/{}?all=1'.format(app.config['BALROG_API_ROOT'],
+                                               policy_definition['object'])
+    ).json().get('scheduled_changes', {})
     for sc in scheduled_changes:
         if sc['sc_id'] == policy_definition['sc_id']:
             return sc['signoffs'], sc['required_signoffs']
