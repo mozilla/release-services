@@ -9,6 +9,8 @@ clang_checkers:
  - modernize-raw-string-literal
  - modernize-use-override
  - modernize-use-nullptr
+# modernize-use-auto (controversial, see bug 1371052)
+# modernize-use-bool-literals (too noisy because of `while (0)` in many macros)
  - mozilla-*
  - performance-faster-string-find
  - performance-for-range-copy
