@@ -40,7 +40,7 @@ tasks:
       command:
         - "/bin/bash"
         - "-c"
-        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /root/.cache/nix && ./please -vv tools decision-task"
+        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
 
   - metadata:
       name: "0. Decision task"
@@ -75,7 +75,7 @@ tasks:
       command:
         - "/bin/bash"
         - "-c"
-        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /root/.cache/nix && ./please -vv tools decision-task"
+        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
 
   - metadata:
       name: "0. Decision task"
@@ -110,7 +110,7 @@ tasks:
       command:
         - "/bin/bash"
         - "-c"
-        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /root/.cache/nix && ./please -vv tools decision-task"
+        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
 
   - metadata:
       name: "0. Decision task"
@@ -145,4 +145,4 @@ tasks:
       command:
         - "/bin/bash"
         - "-c"
-        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /root/.cache/nix && ./please -vv tools decision-task"
+        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
