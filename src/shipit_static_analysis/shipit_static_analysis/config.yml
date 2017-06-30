@@ -5,10 +5,13 @@ clang_checkers:
  - -*
  - clang-analyzer-deadcode.DeadStores
  - modernize-loop-convert
- - modernize-use-default
  - modernize-raw-string-literal
- - modernize-use-override
+# modernize-use-auto (controversial, see bug 1371052)
+# modernize-use-bool-literals (too noisy because of `while (0)` in many macros)
+ - modernize-use-equals-default
+ - modernize-use-equals-delete
  - modernize-use-nullptr
+ - modernize-use-override
  - mozilla-*
  - performance-faster-string-find
  - performance-for-range-copy
