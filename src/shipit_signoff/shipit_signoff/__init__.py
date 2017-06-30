@@ -28,7 +28,7 @@ def create_app(config=None):
     # TODO: add predefined api.yml
     app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
 
-    if os.environ.get("TESTING"):
+    if os.environ.get('TESTING'):
         from shipit_signoff.testing import fake_auth
-        app.add_url_rule("/fake_auth", 'fake_auth', fake_auth)
+        app.add_url_rule('/fake_auth', 'fake_auth', fake_auth)
     return app
