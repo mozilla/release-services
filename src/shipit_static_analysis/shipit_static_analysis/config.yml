@@ -2,19 +2,33 @@ target: obj-x86_64-pc-linux-gnu
 
 # All the clang checks used by the bot
 clang_checkers:
- - -*
- - clang-analyzer-deadcode.DeadStores
- - modernize-loop-convert
- - modernize-raw-string-literal
+ - name: -*
+   mozreview: no
+ - name: clang-analyzer-deadcode.DeadStores
+   mozreview: no
+ - name: modernize-loop-convert
+   mozreview: yes
+ - name: modernize-raw-string-literal
+   mozreview: yes
 # modernize-use-auto (controversial, see bug 1371052)
 # modernize-use-bool-literals (too noisy because of `while (0)` in many macros)
- - modernize-use-equals-default
- - modernize-use-equals-delete
- - modernize-use-nullptr
- - modernize-use-override
- - mozilla-*
- - performance-faster-string-find
- - performance-for-range-copy
- - readability-else-after-return
- - readability-misleading-indentation
- - readability-redundant-control-flow
+ - name: modernize-use-equals-default
+   mozreview: yes
+ - name: modernize-use-equals-delete
+   mozreview: yes
+ - name: modernize-use-nullptr
+   mozreview: yes
+ - name: modernize-use-override
+   mozreview: no
+ - name: mozilla-*
+   mozreview: no
+ - name: performance-faster-string-find
+   mozreview: yes
+ - name: performance-for-range-copy
+   mozreview: yes
+ - name: readability-else-after-return
+   mozreview: yes
+ - name: readability-misleading-indentation
+   mozreview: yes
+ - name: readability-redundant-control-flow
+   mozreview: yes

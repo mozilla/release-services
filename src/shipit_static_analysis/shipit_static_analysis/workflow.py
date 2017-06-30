@@ -130,12 +130,15 @@ class Workflow(object):
 
         logger.info('Detected {} code issue(s)'.format(len(issues)))
 
-        # Notify by email
         if issues:
+            # Notify by email
             logger.info('Send email to admins')
             self.notify_admins(review_request_id, issues)
-            logger.info('Post issues to MozReview')
-            self.post_review(review_request_id, diffset_revision, issues)
+
+            # Post on MozReview when available
+            if self.mozreview:
+                logger.info('Post issues to MozReview')
+                self.post_review(review_request_id, diffset_revision, issues)
 
     def notify_admins(self, review_request_id, issues):
         '''
@@ -156,7 +159,6 @@ class Workflow(object):
         Post review comments to MozReview in a single batch
         '''
         review = BatchReview(self.mozreview, review_request_id, diffset_revision)
-        print(review)
-        # review.comment(filename, line, num_lines, comment)
-        # review.publish(body_top='\n'.join(commentlines),
-        #                ship_it=false)
+        for issue in issues:
+            issue.build_mozreview(review)
+        review.publish(ship_it=False)
