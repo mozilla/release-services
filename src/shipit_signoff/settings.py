@@ -11,11 +11,12 @@ import shipit_signoff.config
 import shipit_signoff.util
 
 
-LOCAL_AUTH = bool(os.environ.get('LOCAL_AUTH', False))
 DEBUG = bool(os.environ.get('DEBUG', False))
 # TODO: is this the right way to tell the difference between staging and prod?
 # Maybe we should require BALROG_API_ROOT set in the environment instead?
 STAGING = bool(os.environ.get('DEBUG', False))
+# Local auth defaults to True if DEBUG is set to True.
+LOCAL_AUTH = bool(os.environ.get('LOCAL_AUTH', DEBUG))
 
 
 # -- LOAD SECRETS -------------------------------------------------------------
