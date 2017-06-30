@@ -132,7 +132,7 @@ filterDirectories directories path =
     case path of
         Just parentPath ->
             -- Shows sub directories
-            Dict.filter (\p dir -> String.startsWith parentPath p) directories
+            Dict.filter (\p dir -> String.startsWith parentPath p && parentPath /= p) directories
 
         Nothing ->
             -- Shows top directories only
