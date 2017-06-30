@@ -760,6 +760,21 @@ let
 
 
 
+    "PyYAML" = python.mkDerivation {
+      name = "PyYAML-3.12";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/4a/85/db5a2df477072b2902b0eb892feb37d88ac635d36245a72a6a69b23b383a/PyYAML-3.12.tar.gz"; sha256 = "592766c6303207a20efc445587778322d7f73b161bd994f227adaa341ba212ab"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://pyyaml.org/wiki/PyYAML";
+        license = licenses.mit;
+        description = "YAML parser and emitter for Python";
+      };
+    };
+
+
+
     "raven" = python.mkDerivation {
       name = "raven-6.1.0";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/ee/82/9a85650c174920f5bd260b8138a1db7190156e55193b0a1d03d2fa7a2811/raven-6.1.0.tar.gz"; sha256 = "02cabffb173b99d860a95d4908e8b1864aad1b8452146e13fd7e212aa576a884"; };

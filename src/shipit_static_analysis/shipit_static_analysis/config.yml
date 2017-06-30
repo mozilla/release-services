@@ -1,0 +1,17 @@
+target: obj-x86_64-pc-linux-gnu
+
+# All the clang checks used by the bot
+clang_checkers:
+ - -*
+ - clang-analyzer-deadcode.DeadStores
+ - modernize-loop-convert
+ - modernize-use-default
+ - modernize-raw-string-literal
+ - modernize-use-override
+ - modernize-use-nullptr
+ - mozilla-*
+ - performance-faster-string-find
+ - performance-for-range-copy
+ - readability-else-after-return
+ - readability-misleading-indentation
+ - readability-redundant-control-flow

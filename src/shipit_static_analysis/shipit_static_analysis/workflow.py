@@ -6,6 +6,7 @@
 from __future__ import absolute_import
 
 import hglib
+import yaml
 import os
 
 from cli_common.taskcluster import get_service
@@ -37,6 +38,12 @@ class Workflow(object):
             client_id=client_id,
             access_token=access_token,
         )
+
+        # Read local config
+        config_path = os.path.join(os.path.dirname(__file__), 'config.yml')
+        self.config = yaml.load(open(config_path))
+        assert 'clang_checkers' in self.config
+        assert 'target' in self.config
 
         # Clone mozilla-central
         self.repo_dir = os.path.join(self.cache_root, 'static-analysis/')
@@ -101,25 +108,8 @@ class Workflow(object):
 
         # Run static analysis through run-clang-tidy.py
         logger.info('Run clang-tidy...')
-        checks = [
-            '-*',
-            'clang-analyzer-deadcode.DeadStores',
-            'modernize-loop-convert',
-            # 'modernize-use-auto', (controversial, see bug 1371052)
-            'modernize-use-default',
-            'modernize-raw-string-literal',
-            # 'modernize-use-bool-literals', (too noisy because of `while (0)` in many macros)
-            'modernize-use-override',
-            'modernize-use-nullptr',
-            'mozilla-*',
-            'performance-faster-string-find',
-            'performance-for-range-copy',
-            'readability-else-after-return',
-            'readability-misleading-indentation',
-            'readability-redundant-control-flow',
-        ]
-        clang = ClangTidy(self.repo_dir, 'obj-x86_64-pc-linux-gnu')
-        issues = clang.run(checks, modified_files)
+        clang = ClangTidy(self.repo_dir, self.config['target'])
+        issues = clang.run(self.config['clang_checkers'], modified_files)
 
         logger.info('Detected {} code issue(s)'.format(len(issues)))
 
