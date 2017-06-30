@@ -11,7 +11,7 @@ import shipit_signoff.config
 import shipit_signoff.util
 
 
-TESTING = bool(os.environ.get('TESTING', False))
+LOCAL_AUTH = bool(os.environ.get('LOCAL_AUTH', False))
 DEBUG = bool(os.environ.get('DEBUG', False))
 # TODO: is this the right way to tell the difference between staging and prod?
 # Maybe we should require BALROG_API_ROOT set in the environment instead?
@@ -59,7 +59,7 @@ args = [
     secrets['AUTH0_CLIENT_SECRET'],
     secrets['APP_URL'],
 ]
-if TESTING:
+if LOCAL_AUTH:
     args.append(secrets['APP_URL'] + 'fake_auth')
 OIDC_CLIENT_SECRETS = shipit_signoff.util.create_auth0_secrets_file(*args)
 
