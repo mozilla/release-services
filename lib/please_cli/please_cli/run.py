@@ -185,7 +185,7 @@ def cmd(ctx, project, quiet, nix_shell):
             '--ca-certs={}'.format(ca_cert_file),
             '--certfile={}'.format(server_cert_file),
             '--keyfile={}'.format(server_key_file),
-            '--workers', '1',
+            '--workers', '2',
             '--timeout', '3600',
             '--reload',
             '--reload-engine=poll',
