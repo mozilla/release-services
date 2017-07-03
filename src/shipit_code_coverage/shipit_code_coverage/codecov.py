@@ -59,8 +59,8 @@ class CodeCov(object):
         test_tasks = [t for t in tasks if taskcluster.is_coverage_task(t)]
         for test_task in test_tasks:
             suite_name = taskcluster.get_suite_name(test_task)
-            # Ignore awsy as it is not actually a suite of tests.
-            if suite_name == 'awsy':
+            # Ignore awsy and talos as they aren't actually suites of tests.
+            if any(to_ignore in suite_name for to_ignore in ['awsy', 'talos']):
                 continue
 
             all_suites.add(suite_name)
