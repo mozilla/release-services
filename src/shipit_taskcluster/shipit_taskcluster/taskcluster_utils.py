@@ -54,6 +54,7 @@ def listTaskGroup_all(task_group_id):
 
     return taskgroup
 
+
 def get_queue_group_state(task_group_id):
     '''Use taskcluster.queue to get the task group data'''
     taskgroup = listTaskGroup_all(task_group_id)
