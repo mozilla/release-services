@@ -31,11 +31,16 @@ required = [
     'BALROG_PASSWORD',
 ]
 
+existing = {x: os.environ.get(x) for x in required if x in os.environ}
+
+if 'SECRET_KEY' not in existing:
+    existing['SECRET_KEY'] = os.urandom(24)
+
 secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
     shipit_signoff.config.PROJECT_NAME,
     required=required,
-    existing={x: os.environ.get(x) for x in required if x in os.environ},
+    existing=existing,
     taskcluster_client_id=os.environ.get('TASKCLUSTER_CLIENT_ID'),
     taskcluster_access_token=os.environ.get('TASKCLUSTER_ACCESS_TOKEN'),
 )
@@ -52,7 +57,6 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 # -- AUTH0 --------------------------------------------------------------------
 
 
-SECRET_KEY = os.urandom(24)
 # OIDC_CALLBACK_ROUTE='/redirect_url'
 OIDC_USER_INFO_ENABLED = True
 args = [
