@@ -64,14 +64,10 @@ class Hook(object):
         assert isinstance(body, bytes), \
             'Body is not in bytes'
 
-        # Extract bugzilla id from body
         body = json.loads(body.decode('utf-8'))
-        if 'payload' not in body:
-            raise Exception('Missing payload in body')
-        payload = body['payload']
 
         # Parse payload
-        env = self.parse_payload(payload)
+        env = self.parse(body)
         if env is None:
             logger.warn('Skipping message, no task created', hook=self.hook_id)
         else:
