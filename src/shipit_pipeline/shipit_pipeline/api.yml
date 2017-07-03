@@ -161,7 +161,7 @@ definitions:
     properties:
       name:
         type: string
-        description: Unique Name of the pipeline
+        description: Name of the pipeline
       steps:
         type: array
         items:
