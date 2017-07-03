@@ -38,13 +38,25 @@ def get_scheduler_graph_state(task_graph_id):
         return state
 
 
-def get_queue_group_state(task_group_id):
-    # TODO
-    # the python taskcluster package doesn't actually support the limit or
-    # continuationToken query strings, so we can't get a subset or more than
-    # 1000 tasks
-
+def listTaskGroup_all(task_group_id):
+    '''Use the continuation token to get an entire task group_name
+    We currently have task graphs ranging up to ~2500 entries, so
+    this should be relatively safe for now. May need to revisit it
+    once task graphs grow.
+    '''
     taskgroup = TC_QUEUE.listTaskGroup(task_group_id)
+
+    continuationToken = taskgroup.get('continuationToken')
+    while continuationToken:
+        result = TC_QUEUE.listTaskGroup(task_group_id, continuationToken=continuationToken)
+        taskgroup['tasks'].extend(result.get('tasks', list()))
+        continuationToken = result.get('continuationToken')
+
+    return taskgroup
+
+def get_queue_group_state(task_group_id):
+    '''Use taskcluster.queue to get the task group data'''
+    taskgroup = listTaskGroup_all(task_group_id)
 
     try:
         states = Counter(task['status']['state'] for task in taskgroup['tasks'])
