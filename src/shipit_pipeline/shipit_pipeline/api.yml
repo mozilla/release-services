@@ -166,6 +166,9 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/PipelineStep'
+      description:
+        type: string
+        description: Description of the pipeline
 
   PipelineStep:
     type: object
