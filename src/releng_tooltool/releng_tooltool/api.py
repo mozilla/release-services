@@ -189,8 +189,6 @@ def get_file(digest):
 
 @backend_common.auth.auth.require_scopes(['project:releng:tooltool/manage'])
 def patch_file(digest, body):
-    import pdb
-    pdb.set_trace()
     S3_REGIONS = flask.current_app.config['S3_REGIONS']
     if type(S3_REGIONS) is not dict:
         raise werkzeug.exceptions.InternalServerError('S3_REGIONS should be of type dict.')
