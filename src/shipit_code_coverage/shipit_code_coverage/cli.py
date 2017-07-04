@@ -48,6 +48,7 @@ def main(revision,
                 cache_root,
                 secrets[config.COVERALLS_TOKEN_FIELD],
                 secrets[config.CODECOV_TOKEN_FIELD],
+                secrets.get(config.GECKO_DEV_STAGING_DEPLOY_KEY_FIELD)
                 )
     c.go()
 

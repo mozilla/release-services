@@ -18,16 +18,19 @@ logger = get_logger(__name__)
 
 class CodeCov(object):
 
-    def __init__(self, revision, cache_root, coveralls_token, codecov_token):
+    def __init__(self, revision, cache_root, coveralls_token, codecov_token, deploy_key):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = []
+
+        self.cache_root = cache_root
 
         assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
         self.repo_dir = os.path.join(cache_root, 'mozilla-central')
 
         self.coveralls_token = coveralls_token
         self.codecov_token = codecov_token
+        self.deploy_key = deploy_key
 
         if revision is None:
             self.task_id = taskcluster.get_last_task()
@@ -72,6 +75,16 @@ class CodeCov(object):
 
         self.suites = list(all_suites)
         self.suites.sort()
+
+    def update_github_repo(self):
+        with open(os.path.expanduser('~/.ssh/id_rsa'), 'w') as f:
+            f.write(self.deploy_key)
+
+        repo_path = os.path.join(self.cache_root, 'gecko-dev')
+        if not os.path.isdir(repo_path):
+            run_check(['git', 'clone', 'git@github.com:marco-c/gecko-dev.git'], cwd=self.cache_root)
+        run_check(['git', 'pull', 'git@github.com:mozilla/gecko-dev.git', 'master'], cwd=repo_path)
+        run_check(['git', 'push'], cwd=repo_path)
 
     def get_github_commit(self, mercurial_commit):
         url = 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s'
@@ -190,6 +203,9 @@ class CodeCov(object):
 
         self.rewrite_jsvm_lcov()
         logger.info('JSVM LCOV files rewritten')
+
+        if self.deploy_key is not None:
+            self.update_github_repo()
 
         commit_sha = self.get_github_commit(self.revision)
         logger.info('GitHub revision', revision=commit_sha)
