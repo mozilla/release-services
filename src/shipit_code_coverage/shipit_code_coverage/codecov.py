@@ -77,8 +77,9 @@ class CodeCov(object):
         self.suites.sort()
 
     def update_github_repo(self):
-        with open(os.path.expanduser('~/.ssh/id_rsa'), 'w') as f:
+        with open('id_rsa', 'w') as f:
             f.write(self.deploy_key)
+        run_check(['ssh-add', 'id_rsa'])
 
         repo_path = os.path.join(self.cache_root, 'gecko-dev')
         if not os.path.isdir(repo_path):
