@@ -52,11 +52,6 @@ class CodeCov(object):
 
         task_data = taskcluster.get_task_details(build_task_id)
 
-        artifacts = taskcluster.get_task_artifacts(build_task_id)
-        for artifact in artifacts:
-            if 'target.code-coverage-gcno.zip' in artifact['name']:
-                taskcluster.download_artifact(build_task_id, '', artifact)
-
         all_suites = set()
 
         tasks = taskcluster.get_tasks_in_group(task_data['taskGroupId'])
@@ -71,7 +66,7 @@ class CodeCov(object):
             test_task_id = test_task['status']['taskId']
             artifacts = taskcluster.get_task_artifacts(test_task_id)
             for artifact in artifacts:
-                if any(n in artifact['name'] for n in ['code-coverage-gcda.zip', 'code-coverage-jsvm.zip']):
+                if any(n in artifact['name'] for n in ['code-coverage-grcov.zip', 'code-coverage-jsvm.zip']):
                     taskcluster.download_artifact(test_task_id, suite_name, artifact)
 
         self.suites = list(all_suites)
@@ -136,12 +131,12 @@ class CodeCov(object):
         files = os.listdir('ccov-artifacts')
         ordered_files = []
         for fname in files:
-            if ('gcda' in fname or 'gcno' in fname) and not fname.endswith('.zip'):
+            if 'grcov' in fname and not fname.endswith('.zip'):
                 continue
             if 'jsvm' in fname and fname.endswith('.zip'):
                 continue
 
-            if 'gcno' in fname or suite is None or suite in fname:
+            if suite is None or suite in fname:
                 ordered_files.append('ccov-artifacts/' + fname)
 
         cmd = [
