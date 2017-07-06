@@ -38,7 +38,8 @@ class CodeCov(object):
             task_data = taskcluster.get_task_details(self.task_id)
             self.revision = task_data['payload']['env']['GECKO_HEAD_REV']
         else:
-            self.task_id = taskcluster.get_task('mozilla-central', self.revision)
+            self.task_id = taskcluster.get_task('mozilla-central', revision)
+            self.revision = revision
 
         logger.info('Mercurial revision', revision=self.revision)
 
