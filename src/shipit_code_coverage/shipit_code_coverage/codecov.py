@@ -234,8 +234,15 @@ class CodeCov(object):
         logger.info('Waiting for build to be injested by Coveralls...')
         # Wait until the build has been injested by Coveralls.
         if all([uploader.coveralls_wait(job_url) for job_url in coveralls_jobs]):
-            logger.info('Build injested by coveralls')
+            logger.info('Build injested by coveralls.io')
         else:
-            logger.info('Coveralls took too much time to injest data.')
+            logger.info('coveralls.io took too much time to injest data.')
+
+        logger.info('Waiting for build to be injested by Codecov...')
+        # Wait until the build has been injested by Codecov.
+        if uploader.codecov_wait(commit_sha):
+            logger.info('Build injested by codecov.io')
+        else:
+            logger.info('codecov.io took too much time to injest data.')
 
         coverage_by_dir.generate(self.repo_dir)
