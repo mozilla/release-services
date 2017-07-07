@@ -26,7 +26,7 @@ def _get_identity_preferences(identity_name: str) -> List[Preference]:
         raise NotFound('Identity with name {} could not be found.'.format(identity_name))
 
 
-def put_identity(identity_name: str, body: dict) -> Tuple[None, int]:
+def put_identity(identity_name: str, body: dict) -> None:
     try:
         session = current_app.db.session
 
@@ -45,7 +45,7 @@ def put_identity(identity_name: str, body: dict) -> Tuple[None, int]:
         session.add_all(preferences)
         session.commit()
 
-        return None, 200
+        return None
 
     except IntegrityError as ie:
         raise BadRequest('Request preferences contain duplicate urgency level {}.'.format(ie.params.get('urgency')))
@@ -64,7 +64,7 @@ def modify_existing_preferences(new_preferences_lookup: dict, existing_preferenc
         yield record
 
 
-def post_identity(identity_name: str, body: dict) -> Tuple[None, int]:
+def post_identity(identity_name: str, body: dict) -> None:
     session = current_app.db.session
     preference_records = _get_identity_preferences(identity_name)
     new_preference_lookup = {
@@ -83,10 +83,10 @@ def post_identity(identity_name: str, body: dict) -> Tuple[None, int]:
             session.add(new_pref)
 
     session.commit()
-    return None, 200
+    return None
 
 
-def get_identity(identity_name: str) -> Tuple[dict, int]:
+def get_identity(identity_name: str) -> dict:
     preferences = _get_identity_preferences(identity_name)
     if preferences:
         return {
@@ -94,13 +94,13 @@ def get_identity(identity_name: str) -> Tuple[dict, int]:
                 {**pref.to_dict(), 'name': identity_name}
                 for pref in preferences
             ],
-        }, 200
+        }
 
     else:
         raise NotFound('No preferences found for identity {}.'.format(identity_name))
 
 
-def get_identity_preference_by_urgency(identity_name: str, urgency: str) -> Tuple[dict, int]:
+def get_identity_preference_by_urgency(identity_name: str, urgency: str) -> dict:
     preferences = _get_identity_preferences(identity_name)
     preference_by_urgency_level = list(filter(lambda pref: pref.urgency == urgency, preferences))
     if preference_by_urgency_level:
@@ -111,26 +111,26 @@ def get_identity_preference_by_urgency(identity_name: str, urgency: str) -> Tupl
                     **preference_by_urgency_level[0].to_dict(),
                 }
             ],
-        }, 200
+        }
 
     else:
         raise NotFound('No {} preference found for identity {}.'.format(urgency, identity_name))
 
 
-def delete_identity_by_name(identity_name: str) -> Tuple[None, int]:
+def delete_identity_by_name(identity_name: str) -> None:
     session = current_app.db.session
     identity = session.query(Identity).filter(Identity.name == identity_name).first()
     if identity:
         session.delete(identity)
         session.commit()
 
-        return None, 200
+        return None
 
     else:
         raise NotFound('Identity with name {} not found.'.format(identity_name))
 
 
-def delete_identity_preference_by_urgency(identity_name: str, urgency: str) -> Tuple[None, int]:
+def delete_identity_preference_by_urgency(identity_name: str, urgency: str) -> None:
     session = current_app.db.session
     identity_key = session.query(Identity).filter(Identity.name == identity_name).value(Identity.id)
     if identity_key:
@@ -143,7 +143,7 @@ def delete_identity_preference_by_urgency(identity_name: str, urgency: str) -> T
             session.delete(notification_preference)
             session.commit()
 
-            return None, 200
+            return None
 
         else:
             raise NotFound('Identity {} has no preferences for urgency level {}.'.format(identity_name, urgency))

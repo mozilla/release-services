@@ -2,11 +2,11 @@
 module App.NotificationIdentity exposing (..)
 
 import App.NotificationIdentity.Api
---import App.NotificationIdentity.Form
+import App.NotificationIdentity.Form
 import App.NotificationIdentity.Types
 import App.NotificationIdentity.View
 import App.Types
---import App.Utils
+import Form
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
@@ -14,7 +14,6 @@ import Json.Decode exposing (..)
 import Hawk
 import Http
 import Navigation
---import Title
 import UrlParser
 import UrlParser exposing ((</>))
 import Utils
@@ -57,15 +56,12 @@ init url =
     , preferences = NotAsked
     , api_problem = NotAsked
     , status_message = Nothing
-    --, selected_preference = Just (App.NotificationIdentity.Types.Preference "" "" "" "LOW")  -- Set for testing "delete urgency"
     , selected_preference = Nothing
     , is_service_processing = False
     , retrieved_identity = Nothing
-    , new_identity =
-        Just { name = "testid"
-        , preferences =
-            [{channel = "EMAIL", name = "testid", target = "testid@moz.com", urgency = "LOW"}]
-        }
+    , is_creating_identity = False
+    , edit_form = Form.initial [] App.NotificationIdentity.Form.editPreferenceValidation
+    , new_identity = Form.initial [] App.NotificationIdentity.Form.newIdentityValidation
     }
 
 
@@ -105,9 +101,11 @@ update currentRoute msg model =
             case model.identity_name of
                 Just val ->
                     ({model
-                        | status_message = Nothing
-                        , is_service_processing = True
-                        , retrieved_identity = model.identity_name}, App.NotificationIdentity.Api.getPreferences model, Nothing)
+                        | is_service_processing = True
+                        , retrieved_identity = model.identity_name
+                        , selected_preference = Nothing
+                        , preferences = Loading
+                        , is_creating_identity = False}, App.NotificationIdentity.Api.getPreferences model, Nothing)
 
                 Nothing ->
                     ({model
@@ -116,7 +114,9 @@ update currentRoute msg model =
         App.NotificationIdentity.Types.GetPreferencesResponse response ->
             let
                 resp_model =
-                    {model | is_service_processing = False}
+                    {model
+                        | is_service_processing = False
+                        , preferences = NotAsked}
 
                 err_resp =
                     (resp_model, Cmd.none, Nothing)
@@ -146,7 +146,8 @@ update currentRoute msg model =
                     Success resp ->  -- Means the body was null/no body
                         ({resp_model
                             | api_problem = NotAsked
-                            , status_message = Just "Id deleted."}, Cmd.none, Nothing)
+                            , status_message = Just "Id deleted."
+                            , preferences = NotAsked }, Cmd.none, Nothing)
                     Failure err ->
                         handleApiRequestFailure resp_model err
                     _ ->
@@ -170,7 +171,9 @@ update currentRoute msg model =
                     Success resp ->
                         ({resp_model
                             | api_problem = NotAsked
-                            , status_message = Just "Preference deleted."}, Cmd.none, Nothing)
+                            , status_message = Just "Preference deleted."},
+
+                        Utils.performMsg App.NotificationIdentity.Types.GetPreferencesRequest, Nothing)
 
                     Failure err ->
                         handleApiRequestFailure resp_model err
@@ -178,6 +181,32 @@ update currentRoute msg model =
                     _ ->
                         (resp_model, Cmd.none, Nothing)
 
+
+        App.NotificationIdentity.Types.NewIdentityFormDisplay ->
+            ({model
+                | is_creating_identity = True
+                , retrieved_identity = Nothing
+                , preferences = NotAsked
+                , selected_preference = Nothing
+                , new_identity = App.NotificationIdentity.Form.initializeNewIdentityForm}, Cmd.none, Nothing)
+
+
+        App.NotificationIdentity.Types.NewIdentityFormMsg formMsg ->
+            let
+                new_model =
+                    { model
+                        | new_identity = Form.update App.NotificationIdentity.Form.newIdentityValidation formMsg model.new_identity }
+
+            in
+                case formMsg of
+                    Form.Submit ->  -- Submit new identity
+                        (new_model, Utils.performMsg App.NotificationIdentity.Types.NewIdentityRequest, Nothing)
+
+                    Form.Append pref ->  -- New preference for ID
+                        (new_model, Cmd.none, Nothing)
+
+                    _ -> -- Catchall
+                        (new_model, Cmd.none, Nothing)
 
         App.NotificationIdentity.Types.NewIdentityRequest ->
             ({model
@@ -190,25 +219,84 @@ update currentRoute msg model =
                 resp_model =
                     {model | is_service_processing = False}
 
-                success_message =
-                    case model.new_identity of
-                        Just new_identity ->
-                            new_identity.name ++ " created."
+                name_field = Form.getFieldAsString "name" model.new_identity
+
+                name =
+                    case name_field.value of
+                        Just v -> v
                         Nothing -> ""
+
+                success_message =
+                            "Identity " ++ name ++ " sucessfully created."
             in
                 case response of
                     Success resp ->
                         ({resp_model
                             | api_problem = NotAsked
-                            , status_message = Just success_message}, Cmd.none, Nothing)
+                            , status_message = Just success_message
+                            , identity_name = Just name},
+                        Utils.performMsg App.NotificationIdentity.Types.GetPreferencesRequest, Nothing)
 
                     Failure err ->
                        handleApiRequestFailure resp_model err
 
                     _ ->
                         ({resp_model
-                            | api_problem = response}, Cmd.none, Nothing)
+                            | api_problem = NotAsked}, Cmd.none, Nothing)
 
+        App.NotificationIdentity.Types.ModifyIdentityRequest ->
+            ({model
+                | status_message = Nothing
+                , is_service_processing = True}, App.NotificationIdentity.Api.modifyIdentity model, Nothing)
+
+
+        App.NotificationIdentity.Types.ModifyIdentityResponse response ->
+            let
+                resp_model =
+                    { model
+                        | is_service_processing = False }
+
+                success_message = "Identity modified."
+            in
+                case response of
+                    Success resp ->
+                        ({resp_model
+                            | api_problem = NotAsked
+                            , status_message = Just success_message}, Utils.performMsg App.NotificationIdentity.Types.GetPreferencesRequest, Nothing)
+
+                    Failure err ->
+                       handleApiRequestFailure resp_model err
+
+                    _ ->
+                        ({resp_model
+                            | api_problem = NotAsked}, Cmd.none, Nothing)
+
+
+        App.NotificationIdentity.Types.SelectPreference preference ->
+            ({ model
+                | selected_preference = Just preference
+                , edit_form = App.NotificationIdentity.Form.initializeFormFromPreference preference},
+            Cmd.none, Nothing)
+
+        App.NotificationIdentity.Types.EditPreferenceFormMsg formMsg ->
+            let
+                new_model = { model
+                    | edit_form = Form.update App.NotificationIdentity.Form.editPreferenceValidation formMsg model.edit_form }
+
+
+                command =
+                    case formMsg of
+                        Form.Submit ->
+                            Utils.performMsg App.NotificationIdentity.Types.ModifyIdentityRequest
+
+
+                        Form.RemoveItem _ _ ->
+                            Utils.performMsg App.NotificationIdentity.Types.UrgencyDeleteRequest
+
+                        _ ->
+                            Cmd.none
+            in
+                (new_model, command, Nothing)
 
         App.NotificationIdentity.Types.OperationFail reason ->
             ({model
@@ -220,7 +308,7 @@ update currentRoute msg model =
             let
                 problem_json =
                     err.body
-                    |> Json.Decode.decodeString App.NotificationIdentity.Api.problem_decoder
+                    |> Json.Decode.decodeString App.NotificationIdentity.Api.problemDecoder
 
                 err_return =
                     ({model
@@ -242,26 +330,44 @@ update currentRoute msg model =
 --
 -- VIEW
 --
-
 view :
     App.NotificationIdentity.Types.Route
     -> List String
     -> App.NotificationIdentity.Types.Model
     -> Html App.NotificationIdentity.Types.Msg
 view route scopes model =
-    div [ class "container" ]
-        [ h1 [] [ text "RelEng Notification Identity Preferences" ]
-        , p [ class "lead" ] [ text "Manage preferred notification preferences for RelEng events" ]
-        , div []
-            [ p [ class "lead" ] [ App.NotificationIdentity.View.viewStatusMessage model ]
-            , div [ class "container" ]
-                [ input [ placeholder "Enter identity name", onInput App.NotificationIdentity.Types.ChangeName ] []
-                , button [ onClick App.NotificationIdentity.Types.GetPreferencesRequest ] [ text "Get preferences"  ]
-                , button [ onClick App.NotificationIdentity.Types.IdentityDeleteRequest ] [ text "Delete identity" ]
-                , button [ onClick App.NotificationIdentity.Types.UrgencyDeleteRequest ] [ text "Delete LOW urgency" ]
-                , button [ onClick App.NotificationIdentity.Types.NewIdentityRequest ] [ text "Test New Identity create" ]
-               -- , button [ onClick App.NotificationIdentity.Types.ModifyIdentityRequest ] [ text "Test modify identity" ]
+    let
+        new_identity_form =
+            case model.is_creating_identity of
+                True ->
+                    p [ class "lead" ] [ App.NotificationIdentity.Form.viewNewIdentity model ]
+                False ->
+                    text ""
+
+        preferences_view =
+            case model.preferences of
+                Success _ ->
+                    p [ class "lead" ] [ App.NotificationIdentity.View.viewPreferences model ]
+                _ ->
+                    text ""
+    in
+        div [ class "container" ]
+            [ h1 [] [ text "RelEng NagBot Preferences" ]
+            , p [ class "lead" ] [ text "Manage preferred notification preferences for RelEng events" ]
+            , div []
+                [ p [ class "lead" ] [ App.NotificationIdentity.View.viewStatusMessage model ]
+                , div [ class "container" ]
+                    [ input [ placeholder "Enter identity name", onInput App.NotificationIdentity.Types.ChangeName ] []
+                    , button [ onClick App.NotificationIdentity.Types.GetPreferencesRequest ]
+                        [ i [ class "fa fa-search" ] []
+                        , text " Search Identities"
+                        ]
+                    , button [ onClick App.NotificationIdentity.Types.NewIdentityFormDisplay ]
+                        [ i [ class "fa fa-user-plus" ] []
+                        , text " New Identity"
+                        ]
+                    ]
+                , new_identity_form
+                , preferences_view
                 ]
-            , p [ class "lead" ] [ App.NotificationIdentity.View.viewPreferences model ]
             ]
-        ]

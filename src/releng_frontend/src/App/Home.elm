@@ -36,11 +36,7 @@ view model =
             "Current status of Mozilla's version-control repositories."
             (Utils.onClick <| App.NavigateTo (App.TreeStatusRoute App.TreeStatus.Types.ShowTreesRoute))
         , viewCard
-            "Notification Identity"
-            "Manage RelEng notification preferences for individuals and groups."
+            "RelEng NagBot"
+            "Manage notification policies and preferences for RelEng NagBot."
             (Utils.onClick <| App.NavigateTo (App.NotificationIdentityRoute App.NotificationIdentity.Types.BaseRoute))
-       , viewCard
-            "Notification Policy"
-            "Manage RelEng message notification policies."
-            (Utils.onClick <| App.NavigateTo App.NotificationPolicyRoute)
         ]

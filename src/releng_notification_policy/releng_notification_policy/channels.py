@@ -54,7 +54,7 @@ def send_notifications(message: Message, identity_preference: dict) -> dict:
     try:
         response = CHANNEL_MAPPING[identity_preference['channel']](message, identity_preference)
 
-        log.info('{target} notified about {message} on {channel}'.format(
+        logger.info('{target} notified about {message} on {channel}'.format(
             target=identity_preference['target'],
             message=message,
             channel=identity_preference['channel']

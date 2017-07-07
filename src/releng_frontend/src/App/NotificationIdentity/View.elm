@@ -2,9 +2,12 @@
 module App.NotificationIdentity.View exposing (..)
 
 import App.NotificationIdentity.Types exposing (..)
+import App.NotificationIdentity.Form exposing (..)
+import App.NotificationIdentity.Utils exposing (preferenceSort, urgencyLevel)
 import App.Utils
 import Html exposing (..)
 import Html.Attributes exposing (class, placeholder, id)
+import Html.Events exposing (onClick)
 import RemoteData exposing (..)
 
 
@@ -23,37 +26,41 @@ channelIcon channel target =
         _ ->
             i [] []
 
--- Map notification urgency level to badge colour class
-urgencyLevel : String -> String
-urgencyLevel urgency =
-    case urgency of
-        "LOW" -> "success"
-        "NORMAL" -> "warning"
-        "HIGH" -> "danger"
-        _ -> "default"
 
 -- Display a single notification preference
-viewPreferenceItem : App.NotificationIdentity.Types.Preference -> Html App.NotificationIdentity.Types.Msg
-viewPreferenceItem preference =
-    div [ class "list-group-item justify-content-between" ]
-    [ h5 [ class "list-group-item-heading" ]
-        [ channelIcon preference.channel preference.target
-        , text (preference.target)
-        , span [class ("float-xs-right badge badge-" ++ (urgencyLevel preference.urgency))] [ text preference.urgency ]
+viewPreferenceItem : App.NotificationIdentity.Types.Model -> App.NotificationIdentity.Types.Preference -> Html App.NotificationIdentity.Types.Msg
+viewPreferenceItem model preference =
+    let
+        urgency =
+            case model.selected_preference of
+                Just pref ->
+                    pref.urgency
+                Nothing ->
+                    ""
+
+        is_selected =
+            urgency == preference.urgency
+
+        item_content =
+            [ channelIcon preference.channel preference.target
+            , text (" " ++ preference.target)
+            , span [ class ("float-xs-right badge badge-" ++ (urgencyLevel preference.urgency)) ] [ text preference.urgency ]
+            , (if is_selected == True
+                    then App.NotificationIdentity.Form.viewEditPreference model
+                    else text "")
+            ]
+
+        div_attributes =
+            [ class "list-group-item justify-content-between" ]
+                |> List.append (if is_selected == False
+                                then [ onClick (App.NotificationIdentity.Types.SelectPreference preference) ]
+                                else [])
+
+
+    in
+        div div_attributes
+        [ h5 [ class "list-group-item-heading list-group-item-action" ] item_content
         ]
-
-    ]
-
-
--- Method to use for sorting preferences
-preferenceSort : App.NotificationIdentity.Types.Preference -> Int
-preferenceSort preference =
-    case preference.urgency of
-        "LOW" -> 1
-        "NORMAL" -> 2
-        "HIGH" -> 3
-        "DO_YESTERDAY" -> 4
-        _ -> -1
 
 
 -- Display view for preferences
@@ -71,7 +78,7 @@ viewPreferences model =
                 pref_display =
                     prefs
                         |> List.sortBy preferenceSort
-                        |> List.map (viewPreferenceItem)
+                        |> List.map (viewPreferenceItem model)
                         |> div [ class "list-group" ]
 
                 display_name =
@@ -84,7 +91,14 @@ viewPreferences model =
 
             in
                 div [ class "container" ]
-                    [ h3 [ class "lead" ] [ text display_name ]
+                    [    hr [] []
+                    ,    div [ class "container justify-content-between" ]
+                            [ text display_name
+                            , button [ onClick App.NotificationIdentity.Types.IdentityDeleteRequest ]
+                                [ i [ class "fa fa-trash" ] []
+                                , text " Delete identity"
+                                ]
+                            ]
                     , pref_display
                     ]
 
