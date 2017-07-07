@@ -206,8 +206,9 @@ class CodeCov(object):
         self.rewrite_jsvm_lcov()
         logger.info('JSVM LCOV files rewritten')
 
-        if self.deploy_key is not None:
-            self.update_github_repo()
+        # TODO: Reenable once https://github.com/mozilla-releng/services/issues/481 is fixed.
+        # if self.deploy_key is not None:
+        #     self.update_github_repo()
 
         commit_sha = self.get_github_commit(self.revision)
         logger.info('GitHub revision', revision=commit_sha)
