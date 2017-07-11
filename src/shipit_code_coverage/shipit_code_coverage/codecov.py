@@ -8,7 +8,7 @@ import hglib
 from concurrent.futures import ThreadPoolExecutor
 
 from cli_common.log import get_logger
-from cli_common.command import run, run_check
+from cli_common.command import run_check
 
 from shipit_code_coverage import coverage_by_dir, taskcluster, uploader, utils
 
@@ -116,7 +116,7 @@ class CodeCov(object):
             zip_file.close()
 
             lcov_files = [os.path.abspath(os.path.join(out_dir, f)) for f in os.listdir(out_dir)]
-            run(['gecko-env', './mach', 'python', 'python/mozbuild/mozbuild/codecoverage/lcov_rewriter.py'] + lcov_files, cwd=self.repo_dir)
+            run_check(['gecko-env', './mach', 'python', 'python/mozbuild/mozbuild/codecoverage/lcov_rewriter.py'] + lcov_files, cwd=self.repo_dir)
 
             for lcov_file in lcov_files:
                 os.remove(lcov_file)
