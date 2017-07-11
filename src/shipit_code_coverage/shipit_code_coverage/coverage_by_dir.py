@@ -132,8 +132,8 @@ def generate(rootDir):
             continue
 
         data[directory] = {}
-        data[directory]['cur'] = d['cur']
-        data[directory]['prev'] = d['prev']
+        data[directory]['cur'] = float(d['cur']) if d['cur'] is not None else None
+        data[directory]['prev'] = float(d['prev']) if d['prev'] is not None else None
 
         # Add bugs with structure for libmozdata updates
         directory_bugs = get_related_bugs(changesets, directory)
