@@ -3,8 +3,8 @@ module Main exposing (..)
 import App
 import App.Home
 import App.Layout
-import App.NotificationIdentity
-import App.NotificationIdentity.Types
+import App.Notifications
+import App.Notifications.Types
 import App.TreeStatus
 import App.TreeStatus.Api
 import App.TreeStatus.Types
@@ -43,7 +43,7 @@ init flags location =
             , userScopes = App.UserScopes.init
             , trychooser = App.TryChooser.init
             , treestatus = App.TreeStatus.init flags.treestatusUrl
-            , notification_identity = App.NotificationIdentity.init "https://localhost:8007"  -- TODO: remove hard coded local url, switch to using a flag
+            , notifications = App.Notifications.init "https://localhost:8007" "https://localhost:8006" -- TODO: remove hard coded local url, switch to using a flag
             }
     in
         initRoute model route
@@ -52,11 +52,8 @@ init flags location =
 initRoute : App.Model -> App.Route -> ( App.Model, Cmd App.Msg )
 initRoute model route =
     case route of
-        App.NotificationPolicyRoute ->
-            model ! []
-
-        App.NotificationIdentityRoute route ->
-            {model | route = App.NotificationIdentityRoute App.NotificationIdentity.Types.BaseRoute}
+        App.NotificationRoute route ->
+            {model | route = App.NotificationRoute App.Notifications.Types.BaseRoute}
                 ! []
 
         App.NotFoundRoute ->
@@ -245,22 +242,22 @@ update msg model =
                     |> Cmd.batch
                 )
 
-        App.NotificationIdentityMsg msg_ ->
+        App.NotificationMsg msg_ ->
             let
                 new_route =
                     case model.route of
-                        App.NotificationIdentityRoute x ->
-                            App.NotificationIdentity.Types.BaseRoute
+                        App.NotificationRoute x ->
+                            App.Notifications.Types.BaseRoute
 
                         _ ->
-                            App.NotificationIdentity.Types.BaseRoute
+                            App.Notifications.Types.BaseRoute
 
                 (newModel, newCmd, hawkCmd) =
-                    App.NotificationIdentity.update new_route msg_ model.notification_identity
+                    App.Notifications.update new_route msg_ model.notifications
 
             in
                 ({model |
-                    notification_identity = newModel}, Cmd.map App.NotificationIdentityMsg newCmd)
+                    notifications = newModel}, Cmd.map App.NotificationMsg newCmd)
 
 
 hawkSend :
@@ -285,15 +282,12 @@ hawkSend user page request =
 viewRoute : App.Model -> Html App.Msg
 viewRoute model =
     case model.route of
-        App.NotificationPolicyRoute ->
-            App.Layout.viewNotFound model
-
-        App.NotificationIdentityRoute route ->
-            App.NotificationIdentity.view
+        App.NotificationRoute route ->
+            App.Notifications.view
                 route
                 model.userScopes.scopes
-                model.notification_identity
-                |> Html.map App.NotificationIdentityMsg
+                model.notifications
+                |> Html.map App.NotificationMsg
 
         App.NotFoundRoute ->
             App.Layout.viewNotFound model

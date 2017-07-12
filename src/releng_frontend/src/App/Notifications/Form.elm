@@ -1,8 +1,8 @@
 -- FORM/INPUT VALIDATION CODE HERE
-module App.NotificationIdentity.Form exposing (..)
+module App.Notifications.Form exposing (..)
 
-import App.NotificationIdentity.Types
-import App.NotificationIdentity.Utils exposing (urgencyLevel)
+import App.Notifications.Types
+import App.Notifications.Utils exposing (urgencyLevel)
 import Html exposing (..)
 import Html.Attributes exposing (class, placeholder)
 import Html.Events exposing (onClick)
@@ -13,7 +13,7 @@ import Form.Init as Init
 import Form.Field
 
 
-initializeFormFromPreference : App.NotificationIdentity.Types.Preference -> Form.Form () App.NotificationIdentity.Types.Preference
+initializeFormFromPreference : App.Notifications.Types.Preference -> Form.Form () App.Notifications.Types.Preference
 initializeFormFromPreference preference =
     let
         channelTuple = Init.setString "channel" preference.channel
@@ -24,7 +24,7 @@ initializeFormFromPreference preference =
         Form.initial [channelTuple, targetTuple, nameTuple, urgencyTuple] editPreferenceValidation
 
 
-initializeNewIdentityForm : Form.Form () App.NotificationIdentity.Types.Identity
+initializeNewIdentityForm : Form.Form () App.Notifications.Types.Identity
 initializeNewIdentityForm =
     let
         nameField = Init.setString "name" ""
@@ -46,31 +46,56 @@ initializeNewIdentityForm =
         Form.initial [nameField, preferencesList] newIdentityValidation
 
 
-editPreferenceValidation : Validation () App.NotificationIdentity.Types.Preference
+editPreferenceValidation : Validation () App.Notifications.Types.Preference
 editPreferenceValidation =
-    map4 App.NotificationIdentity.Types.Preference
+    map4 App.Notifications.Types.Preference
         (field "channel" string)
         (field "name" string)
         (field "target" string)
         (field "urgency" string)
 
 
-newPreferenceValidation : Validation () App.NotificationIdentity.Types.InputPreference
+newPreferenceValidation : Validation () App.Notifications.Types.InputPreference
 newPreferenceValidation =
-    map3 App.NotificationIdentity.Types.InputPreference
+    map3 App.Notifications.Types.InputPreference
         (field "channel" string)
         (field "target" string)
         (field "urgency" string)
 
 
-newIdentityValidation : Validation () App.NotificationIdentity.Types.Identity
+newIdentityValidation : Validation () App.Notifications.Types.Identity
 newIdentityValidation =
-    map2 App.NotificationIdentity.Types.Identity
+    map2 App.Notifications.Types.Identity
         (field "name" string)
         (field "preferences" (list newPreferenceValidation))
 
 
-editPreferenceFormView : Form () App.NotificationIdentity.Types.Preference -> Html Form.Msg
+newMessageValidation : Validation () App.Notifications.Types.MessageInstance
+newMessageValidation =
+    map4 App.Notifications.Types.MessageInstance
+        (field "deadline" string)
+        (field "message" string)
+        (field "shortMessage" string)
+        (field "policies" (list policyValidation))
+
+
+frequencyValidation : Validation () App.Notifications.Types.Frequency
+frequencyValidation =
+    map3 App.Notifications.Types.Frequency
+        (field "minutes" int)
+        (field "hours" int)
+        (field "days" int)
+
+policyValidation : Validation () App.Notifications.Types.Policy
+policyValidation =
+    map5 App.Notifications.Types.Policy
+        (field "identity" string)
+        (field "start_timestamp" string)
+        (field "stop_timestamp" string)
+        (field "urgency" string)
+        (field "frequency" frequencyValidation)
+
+editPreferenceFormView : Form () App.Notifications.Types.Preference -> Html Form.Msg
 editPreferenceFormView form =
     let
         -- Error presentation
@@ -115,7 +140,7 @@ editPreferenceFormView form =
             ]
 
 
-editNewPreferenceFormView : Form () App.NotificationIdentity.Types.Identity -> Int -> Html Form.Msg
+editNewPreferenceFormView : Form () App.Notifications.Types.Identity -> Int -> Html Form.Msg
 editNewPreferenceFormView form i =
     let
         -- Field states
@@ -154,7 +179,7 @@ editNewPreferenceFormView form i =
             ]
 
 
-newIdentityFormView : Form () App.NotificationIdentity.Types.Identity -> Html Form.Msg
+newIdentityFormView : Form () App.Notifications.Types.Identity -> Html Form.Msg
 newIdentityFormView form =
     let
         name = Form.getFieldAsString "name" form
@@ -175,11 +200,11 @@ newIdentityFormView form =
             ]
 
 
-viewEditPreference : App.NotificationIdentity.Types.Model -> Html App.NotificationIdentity.Types.Msg
+viewEditPreference : App.Notifications.Types.Model -> Html App.Notifications.Types.Msg
 viewEditPreference model =
-    Html.map App.NotificationIdentity.Types.EditPreferenceFormMsg (editPreferenceFormView model.edit_form)
+    Html.map App.Notifications.Types.EditPreferenceFormMsg (editPreferenceFormView model.edit_form)
 
 
-viewNewIdentity : App.NotificationIdentity.Types.Model -> Html App.NotificationIdentity.Types.Msg
+viewNewIdentity : App.Notifications.Types.Model -> Html App.Notifications.Types.Msg
 viewNewIdentity model =
-    Html.map App.NotificationIdentity.Types.NewIdentityFormMsg (newIdentityFormView model.new_identity)
+    Html.map App.Notifications.Types.NewIdentityFormMsg (newIdentityFormView model.new_identity)

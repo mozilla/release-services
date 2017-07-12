@@ -2,7 +2,7 @@ module App.Home exposing (..)
 
 import App
 import App.TreeStatus.Types
-import App.NotificationIdentity.Types
+import App.Notifications.Types
 --import App.NotificationPolicy.Types
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -38,5 +38,5 @@ view model =
         , viewCard
             "RelEng NagBot"
             "Manage notification policies and preferences for RelEng NagBot."
-            (Utils.onClick <| App.NavigateTo (App.NotificationIdentityRoute App.NotificationIdentity.Types.BaseRoute))
+            (Utils.onClick <| App.NavigateTo (App.NotificationRoute App.Notifications.Types.BaseRoute))
         ]

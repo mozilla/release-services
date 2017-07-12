@@ -1,6 +1,6 @@
-module App.NotificationIdentity.Utils exposing (..)
+module App.Notifications.Utils exposing (..)
 
-import App.NotificationIdentity.Types
+import App.Notifications.Types
 
 
 -- Map notification urgency level to badge colour class
@@ -14,7 +14,7 @@ urgencyLevel urgency =
 
 
 -- Method to use for sorting preferences
-preferenceSort : App.NotificationIdentity.Types.Preference -> Int
+preferenceSort : App.Notifications.Types.Preference -> Int
 preferenceSort preference =
     case preference.urgency of
         "LOW" -> 1

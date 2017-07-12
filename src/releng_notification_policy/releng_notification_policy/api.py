@@ -47,6 +47,54 @@ def get_message_by_uid(uid: str) -> dict:
         raise NotFound(err_str)
 
 
+def get_policies_as_dict_for_message(message: Message) -> dict:
+    session = current_app.db.session
+
+    policies = session.query(Policy).filter(Policy.message_id == message.id).all()
+    serialized_policies = get_policies_in_json_serializable_form(policies)
+
+    return {
+        'policies': serialized_policies,
+    }
+
+
+def get_active_policies_for_identity(identity_name: str) -> dict:
+    session = current_app.db.session
+
+    now = datetime.now()
+
+    active_policies = session.query(Policy).filter(Policy.identity == identity_name)\
+                                           .filter(Policy.start_timestamp < now)\
+                                           .filter(Policy.stop_timestamp > now)\
+                                           .all()
+
+    if active_policies:
+        return {
+            'policies': get_policies_in_json_serializable_form(active_policies),
+        }
+
+    else:
+        raise NotFound('No active policies found for {}.'.format(identity_name))
+
+
+def get_pending_messages() -> dict:
+    session = current_app.db.session
+
+    current_time = datetime.now()
+    messages = session.query(Message).filter(Message.deadline > current_time).all()
+
+    if messages:
+        return {
+            'messages': [
+                {**message.to_dict(), **get_policies_as_dict_for_message(message)}
+                for message in messages
+            ],
+        }
+
+    else:
+        raise NotFound('No pending messages found.')
+
+
 def put_message(uid: str, body: dict) -> None:
     '''
     Add a new message to be delivered into the service.

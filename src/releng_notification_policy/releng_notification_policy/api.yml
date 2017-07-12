@@ -20,6 +20,32 @@ produces:
   - application/json
 
 paths:
+  '/message':
+    get:
+      summary: Return all pending notification messages
+      operationId : releng_notification_policy.api.get_pending_messages
+
+      responses:
+        200:
+          description: Pending messages retrieved successfully.
+          schema:
+            type: object
+            required:
+              - messages
+
+            properties:
+              messages:
+                type: array
+                description: List of all pending messages.
+                items:
+                  $ref: '#/definitions/Message'
+
+
+        404:
+          description: No pending messages found.
+          schema:
+            $ref: '#/definitions/Problem'
+
   '/message/{uid}':
     get:
       summary: Get details about the notification policies for message with specified UID.
@@ -35,79 +61,7 @@ paths:
         200:
           description: Notification policies for message with specified UID successfully retrieved.
           schema:
-            type: object
-            required:
-              - message
-              - shortMessage
-              - policies
-              - deadline
-
-            properties:
-              shortMessage:
-                type: string
-                description: A short version of the message.
-                example: You are needed for a task!
-
-              message:
-                type: string
-                description: A long version of the message.
-                example: |
-                  Your signoff is required to advance the release process. Please do X, Y and Z, call your boss, pass
-                  go and collect $200. Thank you.
-
-              deadline:
-                type: string
-                format: date-time
-
-              policies:
-                type: array
-                description: List of notification policies using this message payload.
-                items:
-                  policies:
-                type: array
-                items:
-                  type: object
-                  required:
-                    - identity
-                    - urgency
-                    - start_timestamp
-                    - stop_timestamp
-                    - frequency
-                  properties:
-                    identity:
-                      type: string
-                      description: Identity to notify.
-
-                    urgency:
-                      type: string
-                      enum:
-                        {{ URGENCY_LEVELS }}
-                      description: Urgency level of notification.
-
-                    start_timestamp:
-                      type: string
-                      format: date-time
-
-                    stop_timestamp:
-                      type: string
-                      format: date-time
-
-                    frequency:
-                      type: object
-                      description: Frequency as a time interval.
-                      properties:
-                        days:
-                          type: integer
-                          format: int64
-                          description: Number of days between notifications.
-                        hours:
-                          type: integer
-                          format: int64
-                          description: Number of hours between notifications.
-                        minutes:
-                          type: integer
-                          format: int64
-                          description: Number of minutes between notifications.
+            $ref: '#/definitions/Message'
 
         404:
           description: Notification policy with specified UID not found.
@@ -130,76 +84,7 @@ paths:
           required: true
           description: Notification message to add to the service.
           schema:
-            type: object
-            required:
-              - shortMessage
-              - message
-              - deadline
-              - policies
-
-            properties:
-              shortMessage:
-                type: string
-                description: A short version of the message.
-                example: You are needed for a task!
-
-              message:
-                type: string
-                description: A long version of the message.
-                example: |
-                  Your signoff is required to advance the release process. Please do X, Y and Z, call your boss, pass
-                  go and collect $200. Thank you.
-
-              deadline:
-                description: Message notification deadline - notifications will not be sent for this message after this deadline.
-                type: string
-                format: date-time
-
-              policies:
-                type: array
-                items:
-                  type: object
-                  required:
-                    - identity
-                    - urgency
-                    - start_timestamp
-                    - stop_timestamp
-                    - frequency
-                  properties:
-                    identity:
-                      type: string
-                      description: Identity to notify.
-
-                    urgency:
-                      type: string
-                      enum:
-                        {{ URGENCY_LEVELS }}
-                      description: Urgency level of notification.
-
-                    start_timestamp:
-                      type: string
-                      format: date-time
-
-                    stop_timestamp:
-                      type: string
-                      format: date-time
-
-                    frequency:
-                      type: object
-                      description: Frequency as a time interval.
-                      properties:
-                        days:
-                          type: integer
-                          format: int64
-                          description: Number of days between notifications.
-                        hours:
-                          type: integer
-                          format: int64
-                          description: Number of hours between notifications.
-                        minutes:
-                          type: integer
-                          format: int64
-                          description: Number of minutes between notifications.
+            $ref: '#/definitions/Message'
 
       responses:
         200:
@@ -230,6 +115,25 @@ paths:
 
         404:
           description: Message with specified UID not found.
+          schema:
+            $ref: '#/definitions/Problem'
+
+  '/policy/{identity_name}':
+    get:
+      summary: Return all active policies related to this identity.
+      operationId: releng_notification_policy.api.get_active_policies_for_identity
+      parameters:
+        - name: identity_name
+          in: path
+          type: string
+          description: Name of identity to retrieve active policies for.
+          required: true
+
+      responses:
+        404:
+          description: No active policies found for identity.
+          schema:
+            $ref: '#/definitions/Problem'
 
 
   '/ticktock':
@@ -280,6 +184,82 @@ paths:
                       type: string
 
 definitions:
+  Policy:
+    type: object
+    required:
+      - identity
+      - urgency
+      - start_timestamp
+      - stop_timestamp
+      - frequency
+    properties:
+      identity:
+        type: string
+        description: Identity to notify.
+
+      urgency:
+        type: string
+        enum:
+          {{ URGENCY_LEVELS }}
+        description: Urgency level of notification.
+
+      start_timestamp:
+        type: string
+        format: date-time
+
+      stop_timestamp:
+        type: string
+        format: date-time
+
+      frequency:
+        type: object
+        description: Frequency as a time interval.
+        properties:
+          days:
+            type: integer
+            format: int64
+            description: Number of days between notifications.
+          hours:
+            type: integer
+            format: int64
+            description: Number of hours between notifications.
+          minutes:
+            type: integer
+            format: int64
+            description: Number of minutes between notifications.
+
+  Message:
+    type: object
+    required:
+      - message
+      - shortMessage
+      - policies
+      - deadline
+
+    properties:
+      shortMessage:
+        type: string
+        description: A short version of the message.
+        example: You are needed for a task!
+
+      message:
+        type: string
+        description: A long version of the message.
+        example: |
+          Your signoff is required to advance the release process. Please do X, Y and Z, call your boss, pass
+          go and collect $200. Thank you.
+
+      deadline:
+        type: string
+        format: date-time
+
+      policies:
+        type: array
+        description: List of notification policies using this message payload.
+        items:
+          $ref: '#/definitions/Policy'
+
+
   Problem:
     type: object
     properties:

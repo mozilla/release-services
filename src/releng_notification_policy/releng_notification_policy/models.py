@@ -27,6 +27,13 @@ class Message(db.Model):
             deadline=self.deadline
         )
 
+    def to_dict(self):
+        return {
+            'message': self.message,
+            'shortMessage': self.shortMessage,
+            'deadline': self.deadline,
+        }
+
 
 class Policy(db.Model):
     __tablename__ = PROJECT_PATH_NAME + '_policies'
@@ -64,6 +71,7 @@ class Policy(db.Model):
             'urgency': self.urgency,
             'start_timestamp': self.start_timestamp.isoformat(),
             'stop_timestamp': self.stop_timestamp.isoformat(),
+            'message_uid': self.message_id,
             'frequency': {
                 'days': num_days,
                 'hours': num_hours,
