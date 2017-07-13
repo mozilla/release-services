@@ -233,9 +233,9 @@ paths:
 
 
   '/ticktock':
-    get:
+    post:
       summary: Hook endpoint to take action on pending policies.
-      operationId: releng_notification_policy.api.get_tick_tock
+      operationId: releng_notification_policy.api.post_tick_tock
       responses:
         404:
           description: No pending policies to trigger.
