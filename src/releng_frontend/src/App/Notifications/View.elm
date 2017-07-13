@@ -123,6 +123,6 @@ viewStatusMessage model =
             App.Utils.loading
 
         False ->
-            case model.status_message of
+            case model.status_html of
                 Nothing -> text ""
-                Just message -> text message
+                Just html -> html

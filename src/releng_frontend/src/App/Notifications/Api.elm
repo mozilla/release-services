@@ -131,7 +131,7 @@ newIdentity model =
                         |> Cmd.map NewIdentityResponse
 
             Nothing ->
-                Utils.performMsg (OperationFail "No new identity data.")
+                Utils.performMsg (OperationFail App.Notifications.Types.NewIdentityRequest "No new identity data.")
 
 
 modifyIdentity : Model -> Cmd Msg
@@ -169,7 +169,7 @@ modifyIdentity model =
                         |> Cmd.map ModifyIdentityResponse
 
             Nothing ->
-                Utils.performMsg (OperationFail "No preference selected.")
+                Utils.performMsg (OperationFail App.Notifications.Types.ModifyIdentityRequest "No preference selected.")
 
 
 
@@ -177,7 +177,7 @@ deletePreferenceByUrgency : Model -> Cmd Msg
 deletePreferenceByUrgency model =
     case model.selected_preference of
         Nothing ->
-            Utils.performMsg (OperationFail "Please select a preference to delete.")
+            Utils.performMsg (OperationFail App.Notifications.Types.UrgencyDeleteRequest "Please select a preference to delete.")
 
         Just preference ->
             let
@@ -335,7 +335,7 @@ putNewMessage model =
     in
         case new_message_output of
             Nothing ->
-                Utils.performMsg (OperationFail "No new message data.")
+                Utils.performMsg (OperationFail App.Notifications.Types.NewMessageRequest "No new message data.")
 
             Just new_message ->
                 let

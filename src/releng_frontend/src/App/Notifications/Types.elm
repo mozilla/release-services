@@ -4,6 +4,7 @@ module App.Notifications.Types exposing (..)
 import RemoteData exposing (WebData)
 import Form
 import Http exposing (Error)
+import Html exposing (Html)
 
 
 -- Releng Notification Identity FrontEnd Types
@@ -86,13 +87,13 @@ type alias Model =
     , retrieved_identity : Maybe String             -- Name of identity whose preferences are being displayed
     , preferences : WebData Preferences             -- Preferences retrieved from service for retrieved_identity
     , api_problem : WebData ApiProblem              -- Elm representation of Problem JSON
-    , status_message : Maybe String                 -- Status of request/service/whatever
     , selected_preference : Maybe Preference        -- Currently selected preference, in case of editing
     , is_service_processing : Bool                  -- Flag indicating the status of a request to the service
     , new_identity : Form.Form () Identity          -- New identity to be added to service
     , edit_form : Form.Form () Preference           -- Form to edit a notification preference
-    , new_message : Form.Form () MessageInstance
-    , uid : Maybe String
+    , new_message : Form.Form () MessageInstance    -- New Message create form
+    , uid : Maybe String                            -- String in the UID input field
+    , status_html : Maybe (Html Msg)
     }
 
 -- FrontEnd Actions
@@ -131,5 +132,6 @@ type Msg
     | UpdateUID String
 
     -- Error handlers
-    | OperationFail String                          -- Operation failed with the given reason
-    | HandleProblemJson (Http.Response String)      -- Handle problem JSON
+    | OperationFail Msg String                          -- Operation failed with the given reason
+    | HandleProblemJson Msg (Http.Response String)      -- Handle problem JSON
+    | ClearStatusMessage

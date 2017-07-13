@@ -6,6 +6,7 @@ import App.Notifications.Form
 import App.Notifications.Types
 import App.Notifications.View
 import App.Types
+import App.Utils
 import Form
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -68,7 +69,7 @@ init identityUrl policyUrl =
     , identity_name = Nothing
     , preferences = NotAsked
     , api_problem = NotAsked
-    , status_message = Nothing
+    --, status_message = Nothing
     , selected_preference = Nothing
     , is_service_processing = False
     , retrieved_identity = Nothing
@@ -76,17 +77,19 @@ init identityUrl policyUrl =
     , new_identity = Form.initial [] App.Notifications.Form.newIdentityValidation
     , new_message = Form.initial [] App.Notifications.Form.newMessageValidation
     , uid = Nothing
+    , status_html = Nothing
     }
 
 
 handleApiRequestFailure :
     App.Notifications.Types.Model ->
     Http.Error ->
+    App.Notifications.Types.Msg ->
     (App.Notifications.Types.Model, Cmd App.Notifications.Types.Msg, Maybe Hawk.Request)
-handleApiRequestFailure model err =
+handleApiRequestFailure model err event =
     case err of
         Http.BadStatus err ->
-            (model, Utils.performMsg (App.Notifications.Types.HandleProblemJson err), Nothing)
+            (model, Utils.performMsg (App.Notifications.Types.HandleProblemJson event err), Nothing)
         _ ->  -- Theoretically this should never happen
             (model, Cmd.none, Nothing)
 
@@ -115,11 +118,12 @@ update currentRoute msg model =
                         | is_service_processing = True
                         , retrieved_identity = model.identity_name
                         , selected_preference = Nothing
-                        , preferences = Loading}, App.Notifications.Api.getPreferences model, Nothing)
+                        , preferences = Loading
+                        }, App.Notifications.Api.getPreferences model, Nothing)
 
                 Nothing ->
                     ({model
-                        | status_message = Just "Please enter an identity name."}, Cmd.none, Nothing)
+                        | status_html = Just (App.Utils.error App.Notifications.Types.GetPreferencesRequest "Please enter an identity.")}, Cmd.none, Nothing)
 
         App.Notifications.Types.GetPreferencesResponse response ->
             let
@@ -146,15 +150,16 @@ update currentRoute msg model =
                             | api_problem = NotAsked
                             , preferences = response}, navigation_change_command, Nothing)
                     Failure err ->
-                        handleApiRequestFailure resp_model err
+                        handleApiRequestFailure resp_model err App.Notifications.Types.GetPreferencesRequest
                     _ ->
                         err_resp
 
 
         App.Notifications.Types.IdentityDeleteRequest ->
             ({model
-                | status_message = Nothing
-                , is_service_processing = True}, App.Notifications.Api.deleteIdentity model, Nothing)
+                | status_html = Nothing
+                , is_service_processing = True
+                , status_html = Nothing}, App.Notifications.Api.deleteIdentity model, Nothing)
 
         App.Notifications.Types.IdentityDeleteResponse response ->
             let
@@ -165,10 +170,10 @@ update currentRoute msg model =
                     Success resp ->  -- Means the body was null/no body
                         ({resp_model
                             | api_problem = NotAsked
-                            , status_message = Just "Id deleted."
+                            , status_html = Just (App.Utils.success App.Notifications.Types.ClearStatusMessage "Identity successfully deleted")
                             , preferences = NotAsked }, Cmd.none, Nothing)
                     Failure err ->
-                        handleApiRequestFailure resp_model err
+                        handleApiRequestFailure resp_model err App.Notifications.Types.IdentityDeleteRequest
                     _ ->
                         ({resp_model
                             | api_problem = NotAsked}, Cmd.none, Nothing)
@@ -176,7 +181,7 @@ update currentRoute msg model =
 
         App.Notifications.Types.UrgencyDeleteRequest ->
             ({model
-                | status_message = Nothing
+                | status_html = Nothing
                 , is_service_processing = True}, App.Notifications.Api.deletePreferenceByUrgency model, Nothing)
 
 
@@ -185,17 +190,20 @@ update currentRoute msg model =
                 resp_model =
                     {model | is_service_processing = False}
 
+                success_status =
+                    App.Utils.success App.Notifications.Types.ClearStatusMessage "Preference deleted!"
+
             in
                 case response of
                     Success resp ->
                         ({resp_model
                             | api_problem = NotAsked
-                            , status_message = Just "Preference deleted."},
+                            , status_html = Just success_status},
 
                         Utils.performMsg App.Notifications.Types.GetPreferencesRequest, Nothing)
 
                     Failure err ->
-                        handleApiRequestFailure resp_model err
+                        handleApiRequestFailure resp_model err App.Notifications.Types.UrgencyDeleteRequest
 
                     _ ->
                         (resp_model, Cmd.none, Nothing)
@@ -231,9 +239,10 @@ update currentRoute msg model =
                     _ -> -- Catchall
                         (new_model, Cmd.none, Nothing)
 
+
         App.Notifications.Types.NewIdentityRequest ->
             ({model
-                | status_message = Nothing
+                | status_html = Nothing
                 , is_service_processing = True}, App.Notifications.Api.newIdentity model, Nothing)
 
 
@@ -250,26 +259,30 @@ update currentRoute msg model =
                         Nothing -> ""
 
                 success_message =
-                            "Identity " ++ name ++ " sucessfully created."
+                            "Identity " ++ name ++ " successfully created!"
+
+                success =
+                    App.Utils.success App.Notifications.Types.ClearStatusMessage success_message
             in
                 case response of
                     Success resp ->
                         ({resp_model
                             | api_problem = NotAsked
-                            , status_message = Just success_message
+                            , status_html = Just success
                             , identity_name = Just name},
                         Utils.performMsg App.Notifications.Types.GetPreferencesRequest, Nothing)
 
                     Failure err ->
-                       handleApiRequestFailure resp_model err
+                       handleApiRequestFailure resp_model err App.Notifications.Types.NewIdentityRequest
 
                     _ ->
                         ({resp_model
                             | api_problem = NotAsked}, Cmd.none, Nothing)
 
+
         App.Notifications.Types.ModifyIdentityRequest ->
             ({model
-                | status_message = Nothing
+                | status_html = Nothing
                 , is_service_processing = True}, App.Notifications.Api.modifyIdentity model, Nothing)
 
 
@@ -279,16 +292,17 @@ update currentRoute msg model =
                     { model
                         | is_service_processing = False }
 
-                success_message = "Identity modified."
+                success_message =
+                    App.Utils.success App.Notifications.Types.ClearStatusMessage "Identity modified."
             in
                 case response of
                     Success resp ->
                         ({resp_model
                             | api_problem = NotAsked
-                            , status_message = Just success_message}, Utils.performMsg App.Notifications.Types.GetPreferencesRequest, Nothing)
+                            , status_html = Just success_message}, Utils.performMsg App.Notifications.Types.GetPreferencesRequest, Nothing)
 
                     Failure err ->
-                       handleApiRequestFailure resp_model err
+                       handleApiRequestFailure resp_model err App.Notifications.Types.ModifyIdentityRequest
 
                     _ ->
                         ({resp_model
@@ -306,7 +320,6 @@ update currentRoute msg model =
             let
                 new_model = { model
                     | edit_form = Form.update App.Notifications.Form.editPreferenceValidation formMsg model.edit_form }
-
 
                 command =
                     case formMsg of
@@ -345,20 +358,19 @@ update currentRoute msg model =
             let
                 resp_model =
                     {model | is_service_processing = False}
+
+
             in
                 case response of
                     Success resp ->
-                        ({resp_model
-                            | status_message = Just (toString resp)}, Cmd.none, Nothing)
+                        (resp_model, Cmd.none, Nothing)
 
                     Failure err ->
-                       handleApiRequestFailure resp_model err
+                       handleApiRequestFailure resp_model err App.Notifications.Types.GetPendingMessagesRequest
 
                     _ ->
                         ({resp_model
                             | api_problem = NotAsked}, Cmd.none, Nothing)
-
-
 
 
         App.Notifications.Types.GetMessageRequest ->
@@ -376,10 +388,10 @@ update currentRoute msg model =
             in
                 case response of
                     Success resp ->
-                        ({resp_model | status_message = Just (toString resp)}, Cmd.none, Nothing)
+                        (resp_model, Cmd.none, Nothing)
 
                     Failure err ->
-                        handleApiRequestFailure resp_model err
+                        handleApiRequestFailure resp_model err App.Notifications.Types.GetMessageRequest
                     _ ->
                         ({resp_model | api_problem = NotAsked}, Cmd.none, Nothing)
 
@@ -392,6 +404,7 @@ update currentRoute msg model =
             in
                 (resp_model, App.Notifications.Api.deleteMessage model, Nothing)
 
+
         App.Notifications.Types.DeleteMessageResponse response ->
             let
                 resp_model =
@@ -399,13 +412,14 @@ update currentRoute msg model =
             in
                 case response of
                     Success resp ->
-                        ({resp_model | status_message = Just (toString resp)}, Cmd.none, Nothing)
+                        (resp_model, Cmd.none, Nothing)
 
                     Failure err ->
-                        handleApiRequestFailure resp_model err
+                        handleApiRequestFailure resp_model err App.Notifications.Types.DeleteMessageRequest
 
                     _ ->
                         (model, Cmd.none, Nothing)
+
 
         App.Notifications.Types.NewMessageRequest ->
             let
@@ -414,6 +428,7 @@ update currentRoute msg model =
             in
                 (resp_model, App.Notifications.Api.putNewMessage model, Nothing)
 
+
         App.Notifications.Types.NewMessageResponse response ->
             let
                 resp_model =
@@ -421,9 +436,9 @@ update currentRoute msg model =
             in
                 case response of
                     Success resp ->
-                        ({resp_model | status_message = Just (toString resp)}, Cmd.none, Nothing)
+                        (resp_model, Cmd.none, Nothing)
                     Failure err ->
-                        handleApiRequestFailure resp_model err
+                        handleApiRequestFailure resp_model err App.Notifications.Types.NewMessageRequest
                     _ ->
                         (model, Cmd.none, Nothing)
 
@@ -443,9 +458,9 @@ update currentRoute msg model =
             in
                 case response of
                     Success resp ->
-                        ({resp_model | status_message = Just (toString resp)}, Cmd.none, Nothing)
+                        (resp_model, Cmd.none, Nothing)
                     Failure err ->
-                        handleApiRequestFailure resp_model err
+                        handleApiRequestFailure resp_model err App.Notifications.Types.TickTockRequest
                     _ ->
                         (model, Cmd.none, Nothing)
 
@@ -457,6 +472,7 @@ update currentRoute msg model =
             in
                 (resp_model, App.Notifications.Api.getActivePolicies model, Nothing)
 
+
         App.Notifications.Types.GetActivePoliciesResponse response ->
             let
                 resp_model =
@@ -464,39 +480,53 @@ update currentRoute msg model =
             in
                 case response of
                     Success resp ->
-                        ({resp_model |
-                            status_message = Just (toString resp)}, Cmd.none, Nothing)
+                        (resp_model, Cmd.none, Nothing)
 
                     Failure err ->
-                        handleApiRequestFailure resp_model err
+                        handleApiRequestFailure resp_model err App.Notifications.Types.GetActivePoliciesRequest
 
                     _ ->
                         (model, Cmd.none, Nothing)
 
 
-        App.Notifications.Types.OperationFail reason ->
-            ({model
-                | is_service_processing = False
-                , status_message = Just reason}, Cmd.none, Nothing)
+        App.Notifications.Types.OperationFail event reason ->
+            let
+                err =
+                    App.Utils.error event reason
+            in
+                ({model
+                    | is_service_processing = False
+                    , status_html = Just err}, Cmd.none, Nothing)
 
 
-        App.Notifications.Types.HandleProblemJson err ->
+        App.Notifications.Types.ClearStatusMessage ->
+            ({model | status_html = Nothing}, Cmd.none, Nothing)
+
+
+        App.Notifications.Types.HandleProblemJson event err ->
             let
                 problem_json =
                     err.body
                     |> Json.Decode.decodeString App.Notifications.Api.problemDecoder
 
+                problem_fail_err =
+                    App.Utils.error event "Problem decoding ProblemJSON."
+
                 err_return =
                     ({model
-                        | status_message = Just "Problem decoding ProblemJSON."}, Cmd.none, Nothing)
+                        | status_html = Just problem_fail_err}, Cmd.none, Nothing)
 
             in
                 case problem_json of
                     Ok problem ->
                         case problem.detail of
                             Just detail ->
-                                ({model |
-                                    status_message = Just detail}, Cmd.none, Nothing)
+                                let
+                                    api_err =
+                                        App.Utils.error event detail
+                                in
+                                    ({model |
+                                        status_html = Just api_err}, Cmd.none, Nothing)
                             Nothing ->
                                 err_return
                     _ ->
@@ -513,6 +543,11 @@ view :
     -> Html App.Notifications.Types.Msg
 view route scopes model =
     let
+        errtst =
+            case model.status_html of
+                Just some_div -> some_div
+                Nothing -> text ""
+
         main_content_view =
             case route of
                 App.Notifications.Types.BaseRoute ->

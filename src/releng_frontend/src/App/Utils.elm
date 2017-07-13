@@ -72,13 +72,28 @@ error event message =
         [ class "alert alert-danger"
         , attribute "role" "alert"
         ]
-        [ strong [] [ text "Error: " ]
+        [ i [ class "fa fa-exclamation-triangle" ] []
+        , strong [] [ text " Error: " ]
         , span [] [ text message ]
         , a
             [ Utils.onClick event
             , class "alert-link"
             ]
             [ text " Click to retry." ]
+        ]
+
+
+success : a -> String -> Html a
+success event message =
+    div [ class "alert alert-success", attribute "role" "alert" ]
+        [ i [ class "fa fa-check" ] []
+        , strong [] [ text " Success: "]
+        , span [] [ text message ]
+        , a
+            [ Utils.onClick event
+            , class "alert-link"
+            ]
+            [ text " Click to remove." ]
         ]
 
 
