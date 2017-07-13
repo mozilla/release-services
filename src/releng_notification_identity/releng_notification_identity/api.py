@@ -9,7 +9,7 @@ from typing import List, Tuple
 from werkzeug.exceptions import BadRequest, Conflict, NotFound
 from .models import Identity, Preference
 from sqlalchemy.exc import IntegrityError
-import cli_common.taskcluster
+from backend_common.auth import auth
 
 
 AUTHENTICATION_SCOPE_PREFIX = 'project:releng:services/releng_notification_identity/permission/'
