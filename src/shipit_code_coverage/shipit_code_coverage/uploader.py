@@ -67,3 +67,11 @@ def codecov(data, commit_sha, token, flags=None):
 
     if r.status_code != requests.codes.ok:
         raise Exception('Failure to upload data to S3. Response [%s]: %s' % (r.status_code, r.text))
+
+
+def codecov_wait(commit):
+    def check_codecov_job():
+        r = requests.get('https://codecov.io/api/gh/marco-c/gecko-dev/commit/%s' % commit)
+        return True if r.json()['commit']['totals'] is not None else False
+
+    return utils.wait_until(check_codecov_job, 60) is not None
