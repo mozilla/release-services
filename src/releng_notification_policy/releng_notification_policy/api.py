@@ -14,8 +14,12 @@ from .channels import send_notifications
 from requests import get
 from json import JSONDecodeError
 from cli_common import log
+from backend_common.auth import auth
 
 logger = log.get_logger(__name__)
+
+
+AUTHENTICATION_SCOPE_PREFIX = 'project:releng:services/releng_notification_policy/permission/'
 
 
 def get_policies_in_json_serializable_form(notification_policies: List[Policy]) -> List[dict]:
@@ -25,6 +29,7 @@ def get_policies_in_json_serializable_form(notification_policies: List[Policy]) 
     ]
 
 
+@auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'get_message'])
 def get_message_by_uid(uid: str) -> dict:
     session = current_app.db.session
 
@@ -47,6 +52,7 @@ def get_message_by_uid(uid: str) -> dict:
         raise NotFound(err_str)
 
 
+@auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'put_message'])
 def put_message(uid: str, body: dict) -> None:
     '''
     Add a new message to be delivered into the service.
@@ -85,6 +91,7 @@ def put_message(uid: str, body: dict) -> None:
     return None
 
 
+@auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'delete_message'])
 def delete_message(uid: str) -> None:
     '''
     Delete the message with the specified UID
@@ -139,7 +146,8 @@ def get_identity_url_for_actionable_policies(policies: List[Policy]) -> Iterator
         yield policy, identity_preference_url
 
 
-def get_tick_tock() -> dict:
+@auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'ticktock'])
+def post_tick_tock() -> dict:
     '''
     Trigger pending notifications according to their notification policies
 

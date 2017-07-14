@@ -7,6 +7,7 @@ from __future__ import absolute_import
 
 import os
 import backend_common
+import cli_common.taskcluster
 from backend_common.notifications import CHANNELS, URGENCY_LEVELS
 import releng_notification_policy.config
 import releng_notification_policy.models  # noqa
@@ -25,6 +26,14 @@ def create_app(config=None):
             'db',
         ],
     )
+
+    # Add TaskCluster notify to service
+    app.notify = cli_common.taskcluster.get_service(
+        'notify',
+        app.config.get('TASKCLUSTER_CLIENT_ID'),
+        app.config.get('TASKCLUSTER_ACCESS_TOKEN')
+    )
+
     # TODO: add predefined api.yml
     app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'),
                      arguments={
