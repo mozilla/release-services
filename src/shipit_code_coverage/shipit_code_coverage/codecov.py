@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 
 class CodeCov(object):
 
-    def __init__(self, revision, cache_root, coveralls_token, codecov_token, deploy_key):
+    def __init__(self, revision, cache_root, coveralls_token, codecov_token, gecko_dev_user, gecko_dev_pwd):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = []
@@ -30,7 +30,8 @@ class CodeCov(object):
 
         self.coveralls_token = coveralls_token
         self.codecov_token = codecov_token
-        self.deploy_key = deploy_key
+        self.gecko_dev_user = gecko_dev_user
+        self.gecko_dev_pwd = gecko_dev_pwd
 
         if revision is None:
             self.task_id = taskcluster.get_last_task()
@@ -73,15 +74,12 @@ class CodeCov(object):
         self.suites.sort()
 
     def update_github_repo(self):
-        with open('id_rsa', 'w') as f:
-            f.write(self.deploy_key)
-        run_check(['ssh-add', 'id_rsa'])
-
+        repo_url = 'https://%s:%s@github.com/marco-c/gecko-dev' % (self.gecko_dev_user, self.gecko_dev_pwd)
         repo_path = os.path.join(self.cache_root, 'gecko-dev')
         if not os.path.isdir(repo_path):
-            run_check(['git', 'clone', 'git@github.com:marco-c/gecko-dev.git'], cwd=self.cache_root)
-        run_check(['git', 'pull', 'git@github.com:mozilla/gecko-dev.git', 'master'], cwd=repo_path)
-        run_check(['git', 'push'], cwd=repo_path)
+            run_check(['git', 'clone', repo_url], cwd=self.cache_root)
+        run_check(['git', 'pull', 'https://github.com/mozilla/gecko-dev', 'master'], cwd=repo_path)
+        run_check(['git', 'push', repo_url, 'master'], cwd=repo_path)
 
     def get_github_commit(self, mercurial_commit):
         url = 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s'
@@ -201,9 +199,8 @@ class CodeCov(object):
         self.rewrite_jsvm_lcov()
         logger.info('JSVM LCOV files rewritten')
 
-        # TODO: Reenable once https://github.com/mozilla-releng/services/issues/481 is fixed.
-        # if self.deploy_key is not None:
-        #     self.update_github_repo()
+        if self.gecko_dev_user is not None and self.gecko_dev_pwd is not None:
+            self.update_github_repo()
 
         commit_sha = self.get_github_commit(self.revision)
         logger.info('GitHub revision', revision=commit_sha)

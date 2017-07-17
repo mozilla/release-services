@@ -3,7 +3,7 @@
 let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource mkRustPlatform;
-  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl cacert rustStable ;
+  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl cacert rustStable git;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
   inherit (releng_pkgs.tools) pypi2nix mercurial ;
@@ -133,6 +133,7 @@ let
     shellHook = ''
       export PATH="${mercurial}/bin:$PATH"
     '';
+    dockerContents = [ git ];
     passthru = {
       deploy = {
         staging = mkBot "staging";
