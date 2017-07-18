@@ -88,12 +88,6 @@ let
         ];
         deadline = "9 hours";
         maxRunTime = 32400;
-        taskArtifacts = {
-          "public/coverage_by_dir.json" = {
-            type = "file";
-            path = "/coverage_by_dir.json";
-          };
-        };
         workerType = "releng-svc-compute";
       };
     in

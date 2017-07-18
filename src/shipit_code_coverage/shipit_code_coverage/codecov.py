@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from cli_common.log import get_logger
 from cli_common.command import run_check
 
-from shipit_code_coverage import coverage_by_dir, taskcluster, uploader, utils
+from shipit_code_coverage import taskcluster, uploader, utils
 
 
 logger = get_logger(__name__)
@@ -205,8 +205,6 @@ class CodeCov(object):
         commit_sha = self.get_github_commit(self.revision)
         logger.info('GitHub revision', revision=commit_sha)
 
-        coveralls_jobs = []
-
         # TODO: Process suites in parallel.
         # While we are uploading results for a suite, we can start to process the next one.
         # TODO: Reenable when Coveralls and/or Codecov will be able to properly handle the load.
@@ -215,27 +213,11 @@ class CodeCov(object):
 
             logger.info('Suite report generated', suite=suite)
 
-            coveralls_jobs.append(uploader.coveralls(output))
+            uploader.coveralls(output)
             uploader.codecov(output, commit_sha, self.codecov_token, [suite.replace('-', '_')])'''
 
         output = self.generate_info(commit_sha, self.coveralls_token)
         logger.info('Report generated successfully')
 
-        coveralls_jobs.append(uploader.coveralls(output))
+        uploader.coveralls(output)
         uploader.codecov(output, commit_sha, self.codecov_token)
-
-        logger.info('Waiting for build to be injested by Coveralls...')
-        # Wait until the build has been injested by Coveralls.
-        if all([uploader.coveralls_wait(job_url) for job_url in coveralls_jobs]):
-            logger.info('Build injested by coveralls.io')
-        else:
-            logger.info('coveralls.io took too much time to injest data.')
-
-        logger.info('Waiting for build to be injested by Codecov...')
-        # Wait until the build has been injested by Codecov.
-        if uploader.codecov_wait(commit_sha):
-            logger.info('Build injested by codecov.io')
-        else:
-            logger.info('codecov.io took too much time to injest data.')
-
-        coverage_by_dir.generate(self.repo_dir)
