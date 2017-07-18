@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from enum import Enum
 import fnmatch
-import json
-import os
 import re
 import requests
 from libmozdata.bugzilla import Bugzilla

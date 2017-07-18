@@ -15,7 +15,6 @@ from sqlalchemy.exc import IntegrityError
 from backend_common.auth import auth
 from backend_common.db import db
 from cli_common import log
-from cli_common.taskcluster import get_hook_artifact
 from shipit_uplift.helpers import gravatar
 from shipit_uplift.models import (
     BugAnalysis, BugResult, Contributor, BugContributor, PatchStatus
