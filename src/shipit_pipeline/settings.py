@@ -5,6 +5,7 @@
 
 from __future__ import absolute_import
 
+import base64
 import os
 import cli_common.taskcluster
 import shipit_pipeline.config

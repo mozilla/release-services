@@ -5,6 +5,7 @@
 
 from __future__ import absolute_import
 
+import base64
 import os
 import cli_common.taskcluster
 import releng_notification_policy.config
@@ -38,8 +39,7 @@ secrets = cli_common.taskcluster.get_secrets(
 
 locals().update(secrets)
 
-
-SECRET_KEY = secrets['SECRET_KEY_BASE64'].decode('base64')
+SECRET_KEY = base64.b64decode(secrets['SECRET_KEY_BASE64'])
 RELENG_NOTIFICATION_IDENTITY_ENDPOINT = secrets.get('RELENG_NOTIFICATION_IDENTITY_ENDPOINT')
 if not RELENG_NOTIFICATION_IDENTITY_ENDPOINT:
     RELENG_NOTIFICATION_IDENTITY_ENDPOINT = 'https://localhost:8007'
