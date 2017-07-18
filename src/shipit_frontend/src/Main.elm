@@ -11,9 +11,27 @@ import AppCommon.Layout
 import AppCommon.NotFoundPage
 import AppCommon.Taskcluster
 import Html exposing (..)
+import Html.Attributes exposing (..)
 import Navigation
 import RemoteData
 import Task
+
+
+{- TODO
+
+   - Layout (Navbar + Footer)
+   - Login to Tasckluster
+       - page subscriptions needed to add a 5seconds tick to logout
+   - "Login" / "Connect" to Bugzilla on Uplift page
+   - Migrate Uplift
+   - Migrate CodeCoverage
+   - Convert Releng-frontend to new thing (extract even more to AppCommon)
+   - Update BzLite to proved the concept
+   - List Pipelines
+   - Show Pipeline (Tacksluter per-status view)
+   - Show pipeline graph
+
+-}
 
 
 type Page
@@ -34,14 +52,20 @@ type RemotePage
 
 -- VIEW --
 
-withContent : RemotePage -> AppCommon.Layout.Layout Msg -> AppCommon.Layout.Layout Msg
+
+withContent :
+    RemotePage
+    -> AppCommon.Layout.Layout Msg
+    -> AppCommon.Layout.Layout Msg
 withContent page layout =
     case page of
         Empty ->
             layout
+
         Loaded page_ ->
             layout
                 |> AppCommon.Layout.withContent (viewPage page_)
+
         Loading page_ ->
             layout
                 |> AppCommon.Layout.isLoading
@@ -75,11 +99,30 @@ viewPage page =
                 |> Html.map PipelineMsg
 
 
+viewLogo : Html Msg
+viewLogo =
+    text "ShipIt : Mozilla"
+
+
+viewNav : List (Html Msg)
+viewNav =
+    [ button
+          [ id "navbar-login"
+          , type_ "submit"
+          ]
+          [ text "Login" ]
+    ]
+
+
 view : Model -> Html Msg
 view model =
     AppCommon.Layout.init model.session.taskcluster
+        |> AppCommon.Layout.withLogo viewLogo
+        |> AppCommon.Layout.withVersion model.version
+        |> AppCommon.Layout.withHeaderContent viewNav
         |> withContent model.page
         |> AppCommon.Layout.toView
+
 
 
 -- MODEL --
@@ -93,6 +136,7 @@ type alias Session =
 
 type alias Model =
     { page : RemotePage
+    , version : String
     , session : Session
     , shipit_uplift_url : String
     , bugzilla_url : String
@@ -111,6 +155,7 @@ init flags location =
         ( model, cmd ) =
             setRoute (App.Route.locationToRoute location)
                 { page = Empty
+                , version = flags.version
                 , session =
                     { taskcluster = taskcluster
                     , bugzilla = bugzilla
@@ -135,20 +180,22 @@ init flags location =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
-    -- TODO per page subscriptions
 
 
+
+-- TODO per page subscriptions
 -- UPDATE --
 
 
-type Msg
+type
+    Msg
     -- Routing
     = SetRoute (Result Navigation.Location App.Route.Route)
-    --| NavigateTo App.Route.Route
-    -- AppCommon extensions
+      --| NavigateTo App.Route.Route
+      -- AppCommon extensions
     | BugzillaMsg AppCommon.Bugzilla.Msg
     | TaskclusterMsg AppCommon.Taskcluster.Msg
-    -- Pages
+      -- Pages
     | ErrorMsg AppCommon.ErrorPage.Msg
     | HomeLoaded (Result AppCommon.ErrorPage.Model App.Page.Home.Model)
     | HomeMsg App.Page.Home.Msg
@@ -170,7 +217,7 @@ setRoute route model =
     --in
     case route of
         Err location ->
-            ( { model | page = Loaded (NotFound location)}
+            ( { model | page = Loaded (NotFound location) }
             , Cmd.none
             )
 
@@ -181,7 +228,10 @@ setRoute route model =
             )
 
 
-routeHawkResponse : Cmd (RemoteData.WebData String) -> AppCommon.Taskcluster.Request -> ( Cmd Msg )
+routeHawkResponse :
+    Cmd (RemoteData.WebData String)
+    -> AppCommon.Taskcluster.Request
+    -> Cmd Msg
 routeHawkResponse httpCmd request =
     -- TODO: example of hawk routing for subpages
     --if String.startsWith "Uplift" request.id then
@@ -193,15 +243,15 @@ routeHawkResponse httpCmd request =
     Cmd.none
 
 
-pageLoaded
-    : Result AppCommon.ErrorPage.Model a
-    -> Model 
+pageLoaded :
+    Result AppCommon.ErrorPage.Model a
+    -> Model
     -> (a -> Page)
     -> ( Model, Cmd Msg )
 pageLoaded result model page =
     case result of
         Ok model_ ->
-            ( { model | page = Loaded (page model_ ) }
+            ( { model | page = Loaded (page model_) }
             , Cmd.none
             )
 
@@ -210,16 +260,19 @@ pageLoaded result model page =
             , Cmd.none
             )
 
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-
         BugzillaMsg msg_ ->
             let
                 ( newModel, newCmd ) =
                     AppCommon.Bugzilla.update msg_ model.session.bugzilla
-                session = model.session
-                newSession  =
+
+                session =
+                    model.session
+
+                newSession =
                     { session | bugzilla = newModel }
             in
                 ( { model | session = newSession }
@@ -230,8 +283,11 @@ update msg model =
             let
                 ( newModel, newCmd, newHawkCmd ) =
                     AppCommon.Taskcluster.update routeHawkResponse msg_ model.session.taskcluster
-                session = model.session
-                newSession  =
+
+                session =
+                    model.session
+
+                newSession =
                     { session | taskcluster = newModel }
             in
                 ( { model | session = newSession }
@@ -244,7 +300,7 @@ update msg model =
         ErrorMsg msg_ ->
             ( model
             , AppCommon.ErrorPage.update msg_
-                  |> Cmd.map ErrorMsg
+                |> Cmd.map ErrorMsg
             )
 
         SetRoute route ->
@@ -263,6 +319,7 @@ update msg model =
                         ( { model | page = Loaded (Home newModel) }
                         , Cmd.map HomeMsg newCmd
                         )
+
                 _ ->
                     ( model, Cmd.none )
 
@@ -279,6 +336,7 @@ update msg model =
                         ( { model | page = Loaded (CodeCoverage newModel) }
                         , Cmd.map CodeCoverageMsg newCmd
                         )
+
                 _ ->
                     ( model, Cmd.none )
 
@@ -295,6 +353,7 @@ update msg model =
                         ( { model | page = Loaded (Uplift newModel) }
                         , Cmd.map UpliftMsg newCmd
                         )
+
                 _ ->
                     ( model, Cmd.none )
 
@@ -311,15 +370,18 @@ update msg model =
                         ( { model | page = Loaded (Pipeline newModel) }
                         , Cmd.map PipelineMsg newCmd
                         )
+
                 _ ->
                     ( model, Cmd.none )
+
 
 
 -- MAIN --
 
 
 type alias Flags =
-    { taskcluster : Maybe AppCommon.Taskcluster.Credentials
+    { version : String
+    , taskcluster : Maybe AppCommon.Taskcluster.Credentials
     , bugzilla : Maybe AppCommon.Bugzilla.Credentials
     , shipit_uplift_url : String
     , bugzilla_url : String

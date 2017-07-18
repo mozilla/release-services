@@ -32,6 +32,7 @@ var init = function() {
 
     // Start the ELM application
     var app = require('./Main.elm').Main.fullscreen({
+      version: release_version,
       taskcluster: localstorage.load_item(TC_KEY),
       bugzilla: localstorage.load_item(BZ_KEY),
       shipit_uplift_url: getData('shipit-uplift-url', process.env.SHIPIT_UPLIFT_URL),
