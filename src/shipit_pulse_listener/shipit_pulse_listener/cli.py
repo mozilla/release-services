@@ -30,7 +30,7 @@ def main(taskcluster_secret,
                           ),
                           existing=dict(
                               PULSE_LISTENER_HOOKS=[],
-                              ADMINS=['babadie@mozilla.com', ]
+                              ADMINS=['babadie@mozilla.com', 'mcastelluccio@mozilla.com']
                           ),
                           taskcluster_client_id=taskcluster_client_id,
                           taskcluster_access_token=taskcluster_access_token,
