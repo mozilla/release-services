@@ -5,6 +5,7 @@
 
 from __future__ import absolute_import
 
+import base64
 import os
 import cli_common.taskcluster
 import releng_tooltool.config
@@ -16,7 +17,7 @@ DEBUG = bool(os.environ.get('DEBUG', False))
 # -- LOAD SECRETS -------------------------------------------------------------
 
 required = [
-    'SECRET_KEY',
+    'SECRET_KEY_BASE64',
     'DATABASE_URL',
     # https://github.com/mozilla/build-cloud-tools/blob/master/configs/cloudformation/tooltool.py
     'S3_REGIONS',
@@ -45,7 +46,9 @@ secrets = cli_common.taskcluster.get_secrets(
 
 locals().update(secrets)
 
-SECRET_KEY = os.urandom(24)
+CHECK_FOR_RELENGAPI_TOKEN = True
+SECRET_KEY = base64.b64decode(secrets['SECRET_KEY_BASE64'])
+
 
 # -- DATABASE -----------------------------------------------------------------
 

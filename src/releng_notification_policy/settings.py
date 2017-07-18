@@ -16,7 +16,7 @@ DEBUG = bool(os.environ.get('DEBUG', False))
 # -- LOAD SECRETS -------------------------------------------------------------
 
 required = [
-    'SECRET_KEY',
+    'SECRET_KEY_BASE64',
     'DATABASE_URL',
     'TASKCLUSTER_CLIENT_ID',
     'TASKCLUSTER_ACCESS_TOKEN',
@@ -39,6 +39,7 @@ secrets = cli_common.taskcluster.get_secrets(
 locals().update(secrets)
 
 
+SECRET_KEY = secrets['SECRET_KEY_BASE64'].decode('base64')
 RELENG_NOTIFICATION_IDENTITY_ENDPOINT = secrets.get('RELENG_NOTIFICATION_IDENTITY_ENDPOINT')
 if not RELENG_NOTIFICATION_IDENTITY_ENDPOINT:
     RELENG_NOTIFICATION_IDENTITY_ENDPOINT = 'https://localhost:8007'
