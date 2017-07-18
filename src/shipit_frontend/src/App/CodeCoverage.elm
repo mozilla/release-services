@@ -231,7 +231,7 @@ viewDirectory ( path, directory ) =
                         ++ (toString diff)
                     )
                 ]
-            , td [] [ ul [] (List.map viewBug directory.bugs) ]
+            , td [] [ ul [ class "bug-list" ] (List.map viewBug directory.bugs) ]
             ]
 
 
