@@ -68,7 +68,7 @@ def get_coverage_builds():
     return (latest_commit, previous_commit)
 
 
-def get_coverage(commit_sha, directory):
+def get_coverage(commit_sha, prev_commit_sha, directory):
     if COVERAGE_SERVICE == CoverageService.COVERALLS:
         r = requests.get('https://coveralls.io/builds/' + commit_sha + '.json?paths=' + directory + '/*')
 
@@ -87,8 +87,16 @@ def get_coverage(commit_sha, directory):
 
         result = r.json()
         files_num = result['commit']['folder_totals']['files']
-        cur = result['commit']['totals']['c']
-        prev = result['commit']['parent_totals']['c']
+        cur = result['commit']['folder_totals']['coverage']
+
+        r = requests.get('https://codecov.io/api/gh/marco-c/gecko-dev/tree/' + prev_commit_sha + '/' + directory)
+
+        if r.status_code != requests.codes.ok:
+            raise Exception('Error while loading coverage data.')
+
+        result = r.json()
+
+        prev = result['commit']['folder_totals']['coverage']
 
     return {
       'files_num': files_num,
@@ -125,7 +133,7 @@ def generate():
     all_bugs = set()
 
     for directory in directories:
-        d = get_coverage(latest_commit, directory)
+        d = get_coverage(latest_commit, previous_commit, directory)
 
         if d['files_num'] == 0:
             continue
