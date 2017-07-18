@@ -6,6 +6,9 @@
 from __future__ import absolute_import
 
 import pickle
+import json
+import os
+import time
 from flask import abort, request
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
@@ -22,6 +25,7 @@ from shipit_uplift.serializers import (
     serialize_patch_status
 )
 from shipit_uplift.config import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
+from shipit_uplift import coverage_by_dir_impl
 
 
 logger = log.get_logger(__name__)
@@ -368,18 +372,16 @@ def create_patch_status(bugzilla_id):
     return serialize_patch_status(ps)
 
 
-def load_hook_artifact(group, hook, artifact):
-    '''
-    Serve an artifact from the last run of
-    a specified source hook
-    Only support anonymous & public artifacts for now
-    This is a public API: no authentication is needed
-    '''
-    try:
-        artifact = 'public/' + artifact
-        return get_hook_artifact(group, hook, artifact, '', '')  # as anonymous
-    except Exception as e:
-        return {
-            'error_title': 'Failed loading artifact',
-            'error_message': str(e),
-        }, 500
+def coverage_by_dir():
+    fname = 'coverage_by_dir.json'
+
+    if os.path.exists(fname) and os.path.getctime(fname) > (time() - 86400):
+        with open(fname, 'r') as f:
+            return json.load(f)
+
+    data = coverage_by_dir_impl.generate()
+
+    with open(fname, 'w') as f:
+        json.dump(data, f)
+
+    return data

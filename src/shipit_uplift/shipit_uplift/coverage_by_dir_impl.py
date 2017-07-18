@@ -99,20 +99,21 @@ def get_coverage(commit_sha, directory):
     }
 
 
-def get_directories(directory, rootDir, curLevel=0):
+def get_directories(directory='', curLevel=0):
     if curLevel == MAX_LEVEL or '.hg' in directory:
         return []
 
-    dirs = [os.path.relpath(os.path.join(directory, d), rootDir) for d in os.listdir(directory) if os.path.isdir(os.path.join(directory, d))]
+    r = requests.get('https://hg.mozilla.org/mozilla-central/json-file/tip/' + directory)
+    dirs = [d['abspath'].lstrip('/') for d in r.json()['directories']]
 
     subdirs = []
     for d in dirs:
-        subdirs += get_directories(os.path.join(rootDir, d), rootDir, curLevel + 1)
+        subdirs += get_directories(d, curLevel + 1)
 
     return dirs + subdirs
 
 
-def generate(rootDir):
+def generate():
     latest_commit, previous_commit = get_coverage_builds()
 
     latest_mercurial_commit = get_mercurial_commit(latest_commit)
@@ -120,7 +121,7 @@ def generate(rootDir):
 
     changesets = load_changesets(previous_mercurial_commit, latest_mercurial_commit)
 
-    directories = get_directories(rootDir, rootDir)
+    directories = get_directories()
 
     data = dict()
     all_bugs = set()
@@ -162,5 +163,4 @@ def generate(rootDir):
         )
     ).get_data().wait()
 
-    with open('coverage_by_dir.json', 'w') as f:
-        json.dump(data, f)
+    return data

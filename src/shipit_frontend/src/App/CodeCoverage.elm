@@ -89,7 +89,7 @@ loadArtifact model =
             "coverage_by_dir.json"
 
         url =
-            (model.backend_uplift_url ++ "/hook/artifact/" ++ hookGroup ++ "/" ++ hookId ++ "/" ++ artifact)
+            (model.backend_uplift_url ++ "/coverage_by_dir")
 
         request =
             Http.request

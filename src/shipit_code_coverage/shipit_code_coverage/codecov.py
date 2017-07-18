@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from cli_common.log import get_logger
 from cli_common.command import run_check
 
-from shipit_code_coverage import coverage_by_dir, taskcluster, uploader, utils
+from shipit_code_coverage import taskcluster, uploader, utils
 
 
 logger = get_logger(__name__)
@@ -240,5 +240,3 @@ class CodeCov(object):
             logger.info('Build injested by codecov.io')
         else:
             logger.info('codecov.io took too much time to injest data.')
-
-        coverage_by_dir.generate(self.repo_dir)
