@@ -16,7 +16,7 @@ DEBUG = bool(os.environ.get('DEBUG', False))
 # -- LOAD SECRETS -------------------------------------------------------------
 
 required = [
-    'SECRET_KEY',
+    'SECRET_KEY_BASE64',
     'DATABASE_URL',
 ]
 
@@ -31,6 +31,7 @@ secrets = cli_common.taskcluster.get_secrets(
 
 locals().update(secrets)
 
+SECRET_KEY = secrets['SECRET_KEY_BASE64'].decode('base64')
 
 # -- DATABASE -----------------------------------------------------------------
 

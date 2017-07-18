@@ -5,6 +5,7 @@
 
 from __future__ import absolute_import
 
+import base64
 import os
 import cli_common.taskcluster
 import shipit_signoff.config
@@ -22,7 +23,7 @@ LOCAL_AUTH = bool(os.environ.get('LOCAL_AUTH', DEBUG))
 # -- LOAD SECRETS -------------------------------------------------------------
 
 required = [
-    'SECRET_KEY',
+    'SECRET_KEY_BASE64',
     'DATABASE_URL',
     'APP_URL',
     'AUTH0_CLIENT_ID',
@@ -32,9 +33,6 @@ required = [
 ]
 
 existing = {x: os.environ.get(x) for x in required if x in os.environ}
-
-if 'SECRET_KEY' not in existing:
-    existing['SECRET_KEY'] = os.urandom(24)
 
 secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
@@ -46,6 +44,8 @@ secrets = cli_common.taskcluster.get_secrets(
 )
 
 locals().update(secrets)
+
+SECRET_KEY = base64.b64decode(secrets['SECRET_KEY_BASE64'])
 
 
 # -- DATABASE -----------------------------------------------------------------
