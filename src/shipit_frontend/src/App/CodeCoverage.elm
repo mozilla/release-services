@@ -53,7 +53,7 @@ init backend_uplift_url =
             }
     in
         -- Load code coverage data
-        ( model, loadArtifact model )
+        ( model, Cmd.none )
 
 
 
@@ -72,24 +72,20 @@ update msg model user =
 
 setDirectory : Model -> Maybe String -> ( Model, Cmd Msg )
 setDirectory model path =
-    ( { model | path = path }, Cmd.none )
+    ( { model | path = path, directories = NotAsked }, loadArtifact { model | path = path } )
 
 
 loadArtifact : Model -> Cmd Msg
 loadArtifact model =
     let
-        -- TODO: use environment variables here
-        hookGroup =
-            "project-releng"
-
-        hookId =
-            "services-staging-shipit-code-coverage"
-
-        artifact =
-            "coverage_by_dir.json"
-
         url =
-            (model.backend_uplift_url ++ "/coverage_by_dir")
+            (model.backend_uplift_url ++ "/coverage_by_dir" ++ case model.path of
+                Just path ->
+                    "?path=" ++ path
+
+                Nothing ->
+                    ""
+            )
 
         request =
             Http.request
