@@ -79,12 +79,14 @@ loadArtifact : Model -> Cmd Msg
 loadArtifact model =
     let
         url =
-            (model.backend_uplift_url ++ "/coverage_by_dir" ++ case model.path of
-                Just path ->
-                    "?path=" ++ path
+            (model.backend_uplift_url
+                ++ "/coverage_by_dir"
+                ++ case model.path of
+                    Just path ->
+                        "?path=" ++ path
 
-                Nothing ->
-                    ""
+                    Nothing ->
+                        ""
             )
 
         request =
