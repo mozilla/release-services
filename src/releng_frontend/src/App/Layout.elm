@@ -122,7 +122,7 @@ viewFooter model =
         ]
     , div []
         [ text "version: "
-        , a [ href ("https://github.com/mozilla-releng/services/releases/tag/" ++ model.version) ]
+        , a [ href ("https://github.com/mozilla-releng/services/releases/tag/v" ++ model.version) ]
             [ text model.version ]
         ]
     ]
