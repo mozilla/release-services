@@ -749,7 +749,7 @@ in rec {
 
         shellHook = ''
           export APP_SETTINGS="$PWD/${self.src_path}/settings.py"
-          export SECRET_KEY=123
+          export SECRET_KEY_BASE64=`dd if=/dev/urandom bs=24 count=1 | base64`
           export APP_NAME="${name}-${version}"
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 
