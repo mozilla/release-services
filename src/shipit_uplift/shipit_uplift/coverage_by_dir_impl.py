@@ -12,7 +12,6 @@ class CoverageService(Enum):
 
 
 COVERAGE_SERVICE = CoverageService.CODECOV
-MAX_LEVEL = 3
 
 
 def get_mercurial_commit(github_commit):
@@ -105,21 +104,12 @@ def get_coverage(commit_sha, prev_commit_sha, directory):
     }
 
 
-def get_directories(directory='', curLevel=0):
-    if curLevel == MAX_LEVEL or '.hg' in directory:
-        return []
-
+def get_directories(directory=''):
     r = requests.get('https://hg.mozilla.org/mozilla-central/json-file/tip/' + directory)
-    dirs = [d['abspath'].lstrip('/') for d in r.json()['directories']]
-
-    subdirs = []
-    for d in dirs:
-        subdirs += get_directories(d, curLevel + 1)
-
-    return dirs + subdirs
+    return [d['abspath'].lstrip('/') for d in r.json()['directories']]
 
 
-def generate():
+def generate(path):
     latest_commit, previous_commit = get_coverage_builds()
 
     latest_mercurial_commit = get_mercurial_commit(latest_commit)
@@ -127,7 +117,7 @@ def generate():
 
     changesets = load_changesets(previous_mercurial_commit, latest_mercurial_commit)
 
-    directories = get_directories()
+    directories = get_directories(path)
 
     data = dict()
     all_bugs = set()

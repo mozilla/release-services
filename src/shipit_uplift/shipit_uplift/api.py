@@ -6,9 +6,6 @@
 from __future__ import absolute_import
 
 import pickle
-import json
-import os
-import time
 from flask import abort, request
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
@@ -371,16 +368,5 @@ def create_patch_status(bugzilla_id):
     return serialize_patch_status(ps)
 
 
-def coverage_by_dir():
-    fname = 'coverage_by_dir.json'
-
-    if os.path.exists(fname) and os.path.getctime(fname) > (time() - 86400):
-        with open(fname, 'r') as f:
-            return json.load(f)
-
-    data = coverage_by_dir_impl.generate()
-
-    with open(fname, 'w') as f:
-        json.dump(data, f)
-
-    return data
+def coverage_by_dir(path=''):
+    return coverage_by_dir_impl.generate(path)
