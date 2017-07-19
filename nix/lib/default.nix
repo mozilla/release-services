@@ -484,21 +484,21 @@ in rec {
             export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
             pushd "$SERVICES_ROOT"${self.src_path} >> /dev/null
 
-            ${node2nix}/bin/node2nix \
-              --composition node-modules.nix \
-              --input node-modules.json \
-              --output node-modules-generated.nix \
-              --node-env node-env.nix \
-              --flatten \
-              --pkg-name nodejs-6_x
+            #${node2nix}/bin/node2nix \
+            #  --composition node-modules.nix \
+            #  --input node-modules.json \
+            #  --output node-modules-generated.nix \
+            #  --node-env node-env.nix \
+            #  --flatten \
+            #  --pkg-name nodejs-6_x
 
-            # TODO: move this into default.nix
-            ${gnused}/bin/sed -i -e "s| sources.\"elm-0.18| #sources.\"elm-0.18|" node-modules-generated.nix
-            ${gnused}/bin/sed -i -e "s| name = \"elm-webpack-loader\";| dontNpmInstall = true;name = \"elm-webpack-loader\";|" node-modules-generated.nix
+            ## TODO: move this into default.nix
+            #${gnused}/bin/sed -i -e "s| sources.\"elm-0.18| #sources.\"elm-0.18|" node-modules-generated.nix
+            #${gnused}/bin/sed -i -e "s| name = \"elm-webpack-loader\";| dontNpmInstall = true;name = \"elm-webpack-loader\";|" node-modules-generated.nix
 
             rm -rf elm-stuff
             n=0
-            until [ $n -ge 5 ]
+            until [ $n -ge 2 ]
             do
               ${elmPackages.elm}/bin/elm-package install -y
               n=$[$n+1]

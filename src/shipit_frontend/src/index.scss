@@ -1,0 +1,291 @@
+
+// Mozilla colors
+// https://mozilla.ninja/visualelements/
+
+// Primary colort
+$mozilla-color-Black: #000000;
+$mozilla-color-White: #FFFFFF;
+
+// Secondary colors
+$mozilla-color-Blue1: #33525d;
+$mozilla-color-Blue2: #558194;
+$mozilla-color-Blue3: #88d1f1;
+$mozilla-color-Blue4: #c3e8f8;
+$mozilla-color-Green1: #434f12;
+$mozilla-color-Green2: #6d7c23;
+$mozilla-color-Green3: #b7d43f;
+$mozilla-color-Green4: #dbea8e;
+$mozilla-color-Orange1: #5e4812;
+$mozilla-color-Orange1: #c89631;
+$mozilla-color-Orange3: #f8b83e;
+$mozilla-color-Orange4: #fadb8c;
+$mozilla-color-Purple1: #454653;
+$mozilla-color-Purple2: #9194b0;
+$mozilla-color-Purple3: #b0b4e5;
+$mozilla-color-Purple4: #d7d9f2;
+$mozilla-color-Red1: #5d3739;
+$mozilla-color-Red2: #c07578;
+$mozilla-color-Red3: #fb8e92;
+$mozilla-color-Red4: #fdc6c8;
+
+// Tertiary Colors
+$mozilla-color-Gray1: #646363;
+$mozilla-color-NeonBlue1: #3dfefd;
+$mozilla-color-NeonGreen1: #aefb4a;
+$mozilla-color-NeonPurple1: #f793fb;
+$mozilla-color-Gray2: #9d9d9c;
+$mozilla-color-NeonBlue2: #229d9a;
+$mozilla-color-NeonGreen2: #6b9b2b;
+$mozilla-color-NeonPurple2: #ca78cc;
+$mozilla-color-Gray3: #d0d0d0;
+$mozilla-color-NeonBlue3: #116362;
+$mozilla-color-NeonGreen3: #44611a;
+$mozilla-color-NeonPurple3: #603861;
+
+
+$header-height: 4em;
+$footer-height: 6em;
+
+
+// Mozilla fonts
+$font-family-sans-serif: 'Fira Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+$font-family-serif: 'Fira Sans', Georgia, 'Times New Roman', Times, serif;
+$font-family-monospace: 'Fira Sans', Menlo, Monaco, Consolas, 'Courier New', monospace;
+$font-family-base: 'Fira Sans', $font-family-sans-serif;
+$font-size-root: 16px;
+$headings-font-weight: 300;
+
+// Bootstrap
+@import "~bootstrap/scss/bootstrap";
+
+
+// Header
+#navbar {
+    background: $mozilla-color-White;
+    border-bottom: 1px solid #000000;
+    & > .container {
+        height: $header-height;
+        line-height: $header-height;
+    }
+    .navbar-brand {
+        margin: 0;
+        padding: 0;
+        color: $mozilla-color-Black;
+    }
+}
+#navbar-login {
+    @extend .btn;
+    @extend .btn-outline-success;
+    background: $mozilla-color-White;
+    border-color: $mozilla-color-Black;
+    border-radius: 0;
+    color: $mozilla-color-Black;
+    &:active,
+    &:hover {
+        background: $mozilla-color-Black;
+        border-color: $mozilla-color-Black;
+        color: $mozilla-color-White;
+    }
+    &:focus {
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+    }
+}
+#navbar-content {
+    justify-content: right;
+    buttom {
+        align-self: right;
+    }
+}
+
+// Content
+#content > .container {
+    margin: 1em auto;
+}
+
+// Footer
+html {
+    position: relative;
+    min-height: 100%;
+}
+  
+body {
+    margin-bottom: $footer-height;
+}
+  
+#footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: $footer-height;
+    line-height: $footer-height;
+    background: $mozilla-color-White;
+    font-size: 0.8em;
+    ul {
+        text-align: right;
+        display: block-inline;
+        list-style-type: none;
+        li {
+            display: inline-block;
+            margin-left: 20px;
+        }
+    }
+}
+
+/*
+.btn-link {
+  cursor: pointer;
+}
+
+nav {
+
+  // Bugzilla erroneous login link
+  .dropdown-item.text-danger .nav-link {
+    color: #d9534f;
+    font-weight: bold;
+  }
+  .dropdown-item.text-info .nav-link {
+    color: #5bc0de;
+    font-weight: bold;
+  }
+
+  // analysis links
+  .analysis {
+    span.name {
+      text-transform: capitalize;
+      margin-right: 3px;
+    }
+  }
+}
+
+// Uplift requests
+div.bugs {
+  div.bug {
+    margin-bottom: 8px;
+    padding-top: 15px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #EEE;
+
+    h4 {
+      font-weight: bold;
+    }
+
+    div.columns {
+      margin-top: 12px;
+    }
+
+    p.summary, p.actions {
+      margin-bottom: 2px;
+      * {
+        margin-right: 3px;
+        display: inline-block;
+      }
+    }
+
+    div.uplift-request {
+      div.comment {
+        h1 {
+          font-size: 1.1em;
+          margin-bottom: 0;
+        }
+
+        div {
+          margin-bottom: 10px;
+
+          &.no-header {
+            color: #888;
+            display: none;
+          }
+
+        }
+
+        .risky {
+          color: $state-danger-text;
+        }
+      }
+    }
+    
+    div.contributor {
+      margin-bottom: 4px;
+
+      img.avatar {
+        box-shadow: 2px 2px 3px 0px #656565;
+        max-width: 50px;
+        margin: 8px 5px 5px 5px;
+      }
+
+      p {
+        margin-bottom: 0;
+
+        &.lead {
+          * {
+            display: inline-block;
+            margin-right: 2px;
+          }
+
+          .karma {
+            font-size: 1.1em !important;
+            vertical-align: bottom;
+            cursor: context-menu;
+
+            &.positive {
+              color: $brand-success;
+            }
+            &.neutral {
+              color: $gray-light;
+            }
+            &.negative {
+              color: $brand-danger;
+            }
+          }
+          button {
+            padding-left: 0 !important;
+          }
+        }
+
+        .badge {
+          margin-right: 4px;
+        }
+      }
+    }
+
+    div.patches {
+      margin-bottom: 8px;
+
+      span.changes {
+        font-family: $font-family-monospace;
+        font-size: 1em;
+        color: #CCC;
+        margin-left: 2px;
+        display: inline-block;
+        &.additions {
+          color: $state-success-text;
+        }
+        &.deletions {
+          color: $state-danger-text;
+        }
+      }
+
+      span.merge {
+        margin-right: 4px;
+      }
+    }
+
+    div.flags {
+      ul {
+        padding-left: 0;
+        list-style-type: none;
+        li {
+          * {
+            margin-right: 4px;
+          }
+        }
+      }
+    }
+  }
+}
+
+.bug-list {
+  padding-left: 0;
+  list-style-type: none;
+}
+*/

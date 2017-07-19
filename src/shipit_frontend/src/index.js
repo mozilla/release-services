@@ -3,7 +3,7 @@
 require('expose-loader?jQuery!jquery');
 require('expose-loader?Tether!tether');
 require('bootstrap');
-require('./scss/index.scss');
+require('./index.scss');
 
 var url;
 var getData = function(name, _default) {
@@ -18,9 +18,9 @@ var getData = function(name, _default) {
 };
 
 
-var redirect = require('./redirect');
-var localstorage = require('./localstorage');
-var hawk = require('./hawk');
+var redirect = require('./../frontend_common/src/redirect');
+var localstorage = require('./../frontend_common/src/localstorage');
+var hawk = require('./../frontend_common/src/hawk');
 
 var release_version = getData('release-version', process.env.RELEASE_VERSION)
 var release_channel = getData('release-channel', process.env.RELEASE_CHANNEL);
@@ -32,9 +32,10 @@ var init = function() {
 
     // Start the ELM application
     var app = require('./Main.elm').Main.fullscreen({
+      version: release_version,
       taskcluster: localstorage.load_item(TC_KEY),
       bugzilla: localstorage.load_item(BZ_KEY),
-      backend_uplift_url: getData('shipit-uplift-url', process.env.SHIPIT_UPLIFT_URL),
+      shipit_uplift_url: getData('shipit-uplift-url', process.env.SHIPIT_UPLIFT_URL),
       bugzilla_url: getData('bugzilla-url', process.env.BUGZILLA_URL),
     });
 
