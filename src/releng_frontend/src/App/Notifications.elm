@@ -12,6 +12,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode exposing (..)
+import Json.Encode
 import Hawk
 import Http
 import Navigation
@@ -52,7 +53,7 @@ reverseRoute route =
 
 page : (App.Notifications.Types.Route -> a) -> App.Types.Page a b
 page outRoute =
-    { title = "Notification Identity"
+    { title = "RelEng Notifications"
     , description = "Manage RelEng notification preferences for individuals and groups."
     , matcher = UrlParser.map outRoute (UrlParser.s "notifications" </> routeParser)
     }
@@ -69,15 +70,15 @@ init identityUrl policyUrl =
     , identity_name = Nothing
     , preferences = NotAsked
     , api_problem = NotAsked
-    --, status_message = Nothing
     , selected_preference = Nothing
     , is_service_processing = False
     , retrieved_identity = Nothing
     , edit_form = Form.initial [] App.Notifications.Form.editPreferenceValidation
     , new_identity = Form.initial [] App.Notifications.Form.newIdentityValidation
-    , new_message = Form.initial [] App.Notifications.Form.newMessageValidation
+    , new_message = Nothing
     , uid = Nothing
     , status_html = Nothing
+    , policies = NotAsked
     }
 
 
@@ -112,18 +113,36 @@ update currentRoute msg model =
                 ({model | identity_name = newName}, Cmd.none, Nothing)
 
         App.Notifications.Types.GetPreferencesRequest ->
-            case model.identity_name of
-                Just val ->
-                    ({model
-                        | is_service_processing = True
-                        , retrieved_identity = model.identity_name
-                        , selected_preference = Nothing
-                        , preferences = Loading
-                        }, App.Notifications.Api.getPreferences model, Nothing)
+            let
+                identity =
+                    case model.identity_name of
+                        Just name -> name
+                        Nothing -> ""
 
-                Nothing ->
-                    ({model
-                        | status_html = Just (App.Utils.error App.Notifications.Types.GetPreferencesRequest "Please enter an identity.")}, Cmd.none, Nothing)
+                request =
+                    Hawk.Request
+                        "GetPreferences"
+                        "GET"
+                        (model.identityUrl ++ "/identity/" ++ identity)
+                        [Http.header "Accept" "application/json" ]
+                        (Http.emptyBody)
+
+            in
+                case model.identity_name of
+                    Just val ->
+                        ({model
+                            | is_service_processing = True
+                            , retrieved_identity = model.identity_name
+                            , selected_preference = Nothing
+                            , preferences = Loading
+                            , policies = Loading
+                            }
+                        , Cmd.none
+                        , Just request)
+
+                    Nothing ->
+                        ({model
+                            | status_html = Just (App.Utils.error App.Notifications.Types.GetPreferencesRequest "Please enter an identity.")}, Cmd.none, Nothing)
 
         App.Notifications.Types.GetPreferencesResponse response ->
             let
@@ -141,14 +160,25 @@ update currentRoute msg model =
                         Nothing ->
                             Cmd.none
 
+                get_policies_command =
+                    Utils.performMsg App.Notifications.Types.GetActivePoliciesRequest
+
                 err_resp =
                     (resp_model, Cmd.none, Nothing)
             in
                 case response of
                     Success resp ->
-                        ({resp_model
-                            | api_problem = NotAsked
-                            , preferences = response}, navigation_change_command, Nothing)
+                        let
+                            preferences =
+                                case (decodeString App.Notifications.Api.preferenceDecoder resp) of
+                                    Ok prefs -> Success prefs
+                                    _ -> NotAsked
+
+                        in
+                            ({resp_model
+                                | api_problem = NotAsked
+                                , preferences = preferences
+                                }, Cmd.batch [navigation_change_command, get_policies_command], Nothing)
                     Failure err ->
                         handleApiRequestFailure resp_model err App.Notifications.Types.GetPreferencesRequest
                     _ ->
@@ -156,10 +186,26 @@ update currentRoute msg model =
 
 
         App.Notifications.Types.IdentityDeleteRequest ->
-            ({model
-                | status_html = Nothing
-                , is_service_processing = True
-                , status_html = Nothing}, App.Notifications.Api.deleteIdentity model, Nothing)
+            let
+                identity =
+                    case model.retrieved_identity of
+                        Just name -> name
+                        Nothing -> ""
+
+                request =
+                    Hawk.Request
+                        "IdentityDelete"
+                        "DELETE"
+                        (model.identityUrl ++ "/identity/" ++ identity)
+                        [ Http.header "Accept" "application/json" ]
+                        Http.emptyBody
+            in
+                ({model
+                    | status_html = Nothing
+                    , is_service_processing = True
+                    , status_html = Nothing}
+                , Cmd.none
+                , Just request)
 
         App.Notifications.Types.IdentityDeleteResponse response ->
             let
@@ -167,7 +213,7 @@ update currentRoute msg model =
                     {model | is_service_processing = False}
             in
                 case response of
-                    Success resp ->  -- Means the body was null/no body
+                    Success resp ->  -- Means the body was null/body
                         ({resp_model
                             | api_problem = NotAsked
                             , status_html = Just (App.Utils.success App.Notifications.Types.ClearStatusMessage "Identity successfully deleted")
@@ -180,9 +226,29 @@ update currentRoute msg model =
 
 
         App.Notifications.Types.UrgencyDeleteRequest ->
-            ({model
-                | status_html = Nothing
-                , is_service_processing = True}, App.Notifications.Api.deletePreferenceByUrgency model, Nothing)
+            case model.selected_preference of
+                Nothing ->
+                    (model,  Utils.performMsg (App.Notifications.Types.OperationFail App.Notifications.Types.UrgencyDeleteRequest "Please select a preference to delete."), Nothing)
+
+                Just preference ->
+                    let
+                        identity =
+                            case model.identity_name of
+                                Just name -> name
+                                Nothing -> ""
+
+                        request =
+                            Hawk.Request
+                                "UrgencyDelete"
+                                "DELETE"
+                                (model.identityUrl ++ "/identity" ++ identity ++ "/" ++ preference.urgency)
+                                [ Http.header "Accept" "application/json" ]
+                                Http.emptyBody
+
+                    in
+                        ({model
+                            | status_html = Nothing
+                            , is_service_processing = True}, Cmd.none, Just request)
 
 
         App.Notifications.Types.UrgencyDeleteResponse response ->
@@ -219,7 +285,8 @@ update currentRoute msg model =
                     | retrieved_identity = Nothing
                     , preferences = NotAsked
                     , selected_preference = Nothing
-                    , new_identity = App.Notifications.Form.initializeNewIdentityForm}, new_route_command, Nothing)
+                    , new_identity = App.Notifications.Form.initializeNewIdentityForm}
+                , new_route_command, Nothing)
                 
 
         App.Notifications.Types.NewIdentityFormMsg formMsg ->
@@ -241,9 +308,36 @@ update currentRoute msg model =
 
 
         App.Notifications.Types.NewIdentityRequest ->
-            ({model
-                | status_html = Nothing
-                , is_service_processing = True}, App.Notifications.Api.newIdentity model, Nothing)
+            let
+                new_id_output = Form.getOutput model.new_identity
+            in
+                case new_id_output of
+                    Nothing ->
+                        (model
+                        , Utils.performMsg (App.Notifications.Types.OperationFail App.Notifications.Types.NewIdentityRequest "No new identity data.")
+                        , Nothing)
+
+                    Just new_identity ->
+                        let
+                            encoded_pref_list =
+                                Json.Encode.list (List.map App.Notifications.Api.encodeInputPreference new_identity.preferences)
+
+                            msg_body =
+                                Json.Encode.object
+                                    [ ("preferences", encoded_pref_list)
+                                    ]
+
+                            request =
+                                Hawk.Request
+                                    "NewIdentity"
+                                    "PUT"
+                                    (model.identityUrl ++ "/identity/" ++ new_identity.name)
+                                    [ Http.header "Accept" "application/json" ]
+                                    (Http.jsonBody msg_body)
+                        in
+                            ({model
+                                | status_html = Nothing
+                                , is_service_processing = True}, Cmd.none, Just request)
 
 
         App.Notifications.Types.NewIdentityResponse response ->
@@ -281,9 +375,41 @@ update currentRoute msg model =
 
 
         App.Notifications.Types.ModifyIdentityRequest ->
-            ({model
-                | status_html = Nothing
-                , is_service_processing = True}, App.Notifications.Api.modifyIdentity model, Nothing)
+            let
+                modified_preference = Form.getOutput model.edit_form
+            in
+                case modified_preference of
+                    Nothing ->
+                        (model
+                        , Utils.performMsg (App.Notifications.Types.OperationFail App.Notifications.Types.ModifyIdentityRequest "No preference selected.")
+                        , Nothing)
+
+                    Just preference ->
+                        let
+                            id_name =
+                                case model.retrieved_identity of
+                                    Just identity -> identity
+                                    Nothing -> ""
+
+                            encoded_preference_list =
+                                Json.Encode.list (List.map App.Notifications.Api.encodePreference [preference] )
+
+                            msg_body =
+                                Json.Encode.object
+                                    [ ("preferences", encoded_preference_list)
+                                    ]
+
+                            request =
+                                Hawk.Request
+                                    "ModifyIdentity"
+                                    "POST"
+                                    (model.identityUrl ++ "/identity/" ++ id_name)
+                                    [ Http.header "Accept" "application/json" ]
+                                    (Http.jsonBody msg_body)
+                        in
+                            ({model
+                                | status_html = Nothing
+                                , is_service_processing = True}, Cmd.none, Just request)
 
 
         App.Notifications.Types.ModifyIdentityResponse response ->
@@ -350,8 +476,17 @@ update currentRoute msg model =
 
 
         App.Notifications.Types.GetPendingMessagesRequest ->
-            ({model
-                | is_service_processing = True}, App.Notifications.Api.getPendingMessages model, Nothing)
+            let
+                request =
+                    Hawk.Request
+                        "GetPendingMessages"
+                        "GET"
+                        (model.policyUrl ++ "/message")
+                        [ Http.header "Accept" "application/json" ]
+                        Http.emptyBody
+            in
+                ({model
+                    | is_service_processing = True}, Cmd.none, Just request)
 
 
         App.Notifications.Types.GetPendingMessagesResponse response ->
@@ -377,8 +512,21 @@ update currentRoute msg model =
             let
                 resp_model =
                     {model | is_service_processing = True}
+
+                uid =
+                    case model.uid of
+                        Just a -> a
+                        Nothing -> ""
+
+                request =
+                    Hawk.Request
+                        "GetMessage"
+                        "GET"
+                        (model.policyUrl ++ "/message/" ++ uid)
+                        [ Http.header "Accept" "application/json" ]
+                        Http.emptyBody
             in
-                (resp_model, App.Notifications.Api.getMessageByUid model, Nothing)
+                (resp_model, Cmd.none, Just request)
 
 
         App.Notifications.Types.GetMessageResponse response ->
@@ -401,8 +549,21 @@ update currentRoute msg model =
             let
                 resp_model =
                     {model | is_service_processing = True}
+
+                uid =
+                    case model.uid of
+                        Just a -> a
+                        Nothing -> ""
+
+                request =
+                    Hawk.Request
+                        "DeleteMessage"
+                        "DELETE"
+                        (model.policyUrl ++ "/message/" ++ uid)
+                        [ Http.header "Accept" "application/json" ]
+                        Http.emptyBody
             in
-                (resp_model, App.Notifications.Api.deleteMessage model, Nothing)
+                (resp_model, Cmd.none, Just request)
 
 
         App.Notifications.Types.DeleteMessageResponse response ->
@@ -422,11 +583,52 @@ update currentRoute msg model =
 
 
         App.Notifications.Types.NewMessageRequest ->
-            let
-                resp_model =
-                    {model | is_service_processing = True}
-            in
-                (resp_model, App.Notifications.Api.putNewMessage model, Nothing)
+            case (model.new_message, model.uid) of
+                (Just message, Just new_uid) ->
+                    let
+                        resp_model =
+                            {model | is_service_processing = True}
+
+                        new_message_json = Json.Encode.string message
+
+                        request =
+                            Hawk.Request
+                                "NewMessage"
+                                "PUT"
+                                (model.policyUrl ++ "/message/" ++ new_uid)  -- TODO: fix filler uid
+                                [ Http.header "Accept" "application/json" ]
+                                (Http.stringBody "application/json" message)
+
+                    in
+                        (resp_model, Cmd.none, Just request)
+                _ ->
+                    (model, Cmd.none, Nothing)
+--            case model.new_message of
+--                Just message ->
+--                    case model.uid of
+--                        Just new_uid ->
+--                            let
+--                                resp_model =
+--                                    {model | is_service_processing = True}
+--
+--                                new_message_json = Json.Encode.string message
+--
+--                                request =
+--                                    Hawk.Request
+--                                        "NewMessage"
+--                                        "PUT"
+--                                        (model.policyUrl ++ "/message/" ++ new_uid)  -- TODO: fix filler uid
+--                                        [ Http.header "Accept" "application/json" ]
+--                                        (Http.stringBody "application/json" message)
+--
+--                            in
+--                                (resp_model, Cmd.none, Just request)
+--
+--                        Nothing ->
+--                            (model, Cmd.none, Nothing)
+--                Nothing ->
+--                    (model, Cmd.none, Nothing)
+
 
 
         App.Notifications.Types.NewMessageResponse response ->
@@ -443,18 +645,42 @@ update currentRoute msg model =
                         (model, Cmd.none, Nothing)
 
 
+        App.Notifications.Types.NewMessageUpdate new_json ->
+            ({ model | new_message = (if String.isEmpty new_json then
+                                            Nothing
+                                      else Just new_json)}
+             , Cmd.none
+             , Nothing)
+
+
+        App.Notifications.Types.NewMessageUIDUpdate new_uid ->
+            (({ model | uid = (if String.isEmpty new_uid then
+                                            Nothing
+                                      else Just new_uid)}
+             , Cmd.none
+             , Nothing))
+
+
         App.Notifications.Types.TickTockRequest ->
             let
                 resp_model =
-                    {model | is_service_processing = True}
+                    { model | is_service_processing = True }
+
+                request =
+                    Hawk.Request
+                        "TickTock"
+                        "POST"
+                        (model.policyUrl ++ "/ticktock")
+                        [ Http.header "Accept" "application/json"]
+                        Http.emptyBody
             in
-                (resp_model, App.Notifications.Api.tickTock model, Nothing)
+                (resp_model, Cmd.none, Just request)
 
 
         App.Notifications.Types.TickTockResponse response ->
             let
                 resp_model =
-                    {model | is_service_processing = False}
+                    { model | is_service_processing = False }
             in
                 case response of
                     Success resp ->
@@ -469,8 +695,21 @@ update currentRoute msg model =
             let
                 resp_model =
                     {model | is_service_processing = True}
+
+                identity =
+                    case model.identity_name of
+                        Just name -> name
+                        Nothing -> ""
+
+                request =
+                    Hawk.Request
+                        "GetActivePolicies"
+                        "GET"
+                        (model.policyUrl ++ "/policy/" ++ identity)
+                        [ Http.header "Accept" "application/json" ]
+                        Http.emptyBody
             in
-                (resp_model, App.Notifications.Api.getActivePolicies model, Nothing)
+                (resp_model, Cmd.none, Just request)
 
 
         App.Notifications.Types.GetActivePoliciesResponse response ->
@@ -480,7 +719,15 @@ update currentRoute msg model =
             in
                 case response of
                     Success resp ->
-                        (resp_model, Cmd.none, Nothing)
+                        let
+                            decoded_policies =
+                                case (decodeString App.Notifications.Api.policiesDecoder resp) of
+                                    Ok policies -> Success policies
+                                    _ -> NotAsked
+                        in
+                            ({resp_model
+                                | policies = decoded_policies
+                                }, Cmd.none, Nothing)
 
                     Failure err ->
                         handleApiRequestFailure resp_model err App.Notifications.Types.GetActivePoliciesRequest
@@ -533,6 +780,24 @@ update currentRoute msg model =
                         err_return
 
 
+        App.Notifications.Types.NavigateTo route ->
+            case route of
+                App.Notifications.Types.BaseRoute ->
+                    (model, Cmd.none, Nothing)
+
+                App.Notifications.Types.NewIdentityRoute ->
+                    update route App.Notifications.Types.NewIdentityFormDisplay model
+
+                App.Notifications.Types.PolicyRoute ->
+                    update route App.Notifications.Types.PolicyDisplay model
+
+                App.Notifications.Types.ShowPreferencesRoute identity ->
+                    let
+                        newModel = { model | identity_name = Just identity }
+                    in
+                        update route App.Notifications.Types.GetPreferencesRequest newModel
+
+
 --
 -- VIEW
 --
@@ -543,42 +808,40 @@ view :
     -> Html App.Notifications.Types.Msg
 view route scopes model =
     let
-        errtst =
-            case model.status_html of
-                Just some_div -> some_div
-                Nothing -> text ""
-
         main_content_view =
             case route of
                 App.Notifications.Types.BaseRoute ->
                     text ""
 
                 App.Notifications.Types.ShowPreferencesRoute id_name ->
-                    p [ class "lead" ] [ App.Notifications.View.viewPreferences model ]
+                    div [ class "lead" ] [ App.Notifications.View.viewPreferences model ]
 
                 App.Notifications.Types.NewIdentityRoute ->
-                    p [ class "lead" ] [ App.Notifications.Form.viewNewIdentity model ]
+                    div [ class "lead" ] [ App.Notifications.Form.viewNewIdentity model ]
 
                 App.Notifications.Types.PolicyRoute ->
-                    p [ class "lead" ] [ App.Notifications.View.viewPolicies model ]
+                    div [ class "lead" ] [ App.Notifications.View.viewNewMessage model ]
 
     in
         div [ class "container" ]
-            [ h1 [] [ text "RelEng NagBot Preferences" ]
+            [ h1 [] [ text "RelEng Notification Preferences" ]
             , p [ class "lead" ] [ text "Manage preferred notification preferences for RelEng events" ]
             , div []
                 [ p [ class "lead" ] [ App.Notifications.View.viewStatusMessage model ]
                 , div [ class "container" ]
-                    [ input [ placeholder "Enter identity name", onInput App.Notifications.Types.ChangeName ] []
-                    , button [ onClick App.Notifications.Types.GetPreferencesRequest ]
+                    [ input
+                        [ placeholder "Enter identity name"
+                        , onInput App.Notifications.Types.ChangeName
+                        , class "form-control" ] []
+                    , button [ onClick App.Notifications.Types.GetPreferencesRequest, class "btn btn-outline-primary" ]
                         [ i [ class "fa fa-search" ] []
                         , text " Search Identities"
                         ]
-                    , button [ onClick App.Notifications.Types.NewIdentityFormDisplay ]
+                    , button [ onClick App.Notifications.Types.NewIdentityFormDisplay, class "btn btn-outline-primary" ]
                         [ i [ class "fa fa-user-plus" ] []
                         , text " New Identity"
                         ]
-                    , button [ onClick App.Notifications.Types.PolicyDisplay ]
+                    , button [ onClick App.Notifications.Types.PolicyDisplay, class "btn btn-outline-primary" ]
                         [ i [ class "fa fa-list-ol" ] []
                         , text " Policy"
                         ]

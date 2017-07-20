@@ -32,7 +32,9 @@ var init = function() {
       user: localstorage.load_item(TC_KEY),
       treestatusUrl: getData('releng-treestatus-url', process.env.RELENG_TREESTATUS_URL),
       docsUrl: getData('releng-docs-url', process.env.RELENG_DOCS_URL),
-      version: release_version
+      version: release_version,
+      identityUrl: getData('releng-notification-identity-url', process.env.RELENG_NOTIFICATION_IDENTITY_URL),
+      policyUrl: getData('releng-notification-policy-url', process.env.RELENG_NOTIFICATION_POLICY_URL)
     });
 
 

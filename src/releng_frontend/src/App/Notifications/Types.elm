@@ -91,9 +91,10 @@ type alias Model =
     , is_service_processing : Bool                  -- Flag indicating the status of a request to the service
     , new_identity : Form.Form () Identity          -- New identity to be added to service
     , edit_form : Form.Form () Preference           -- Form to edit a notification preference
-    , new_message : Form.Form () MessageInstance    -- New Message create form
+    , new_message : Maybe String                    -- New Message create form
     , uid : Maybe String                            -- String in the UID input field
     , status_html : Maybe (Html Msg)
+    , policies : WebData (List Policy)
     }
 
 -- FrontEnd Actions
@@ -101,13 +102,14 @@ type Msg
     -- Messages for the "Identity" service
     = ChangeName String                             -- Update state with name in input box
     | GetPreferencesRequest                         -- Request preferences from service
-    | GetPreferencesResponse (WebData Preferences)  -- Handle response for preferences request
+    --| GetPreferencesResponse (WebData Preferences)  -- Handle response for preferences request
+    | GetPreferencesResponse (WebData String)
     | IdentityDeleteRequest                         -- Delete identity from service
     | IdentityDeleteResponse (WebData String)       -- Handle identity delete response
     | UrgencyDeleteRequest                          -- Delete identity preference
     | UrgencyDeleteResponse (WebData String)        -- Handle preference delete response
-    | NewIdentityFormDisplay
-    | NewIdentityFormMsg Form.Msg
+    | NewIdentityFormDisplay                        -- Handle onClick event for "New Identity" button
+    | NewIdentityFormMsg Form.Msg                   -- Handle events for "New Identity" form
     | NewIdentityRequest                            -- Add new identity request
     | NewIdentityResponse (WebData String)          -- Handle new identity response
     | ModifyIdentityRequest                         -- Modify identity preference
@@ -118,20 +120,23 @@ type Msg
     -- Message for the "Policy" service
     | PolicyDisplay
     | TickTockRequest
-    | TickTockResponse (WebData NotificationInstances)
+    | TickTockResponse (WebData String)
     | GetPendingMessagesRequest
-    | GetPendingMessagesResponse (WebData (List MessageInstance))
+    | GetPendingMessagesResponse (WebData String)
     | GetMessageRequest
-    | GetMessageResponse (WebData MessageInstance)
+    | GetMessageResponse (WebData String)
     | DeleteMessageRequest
     | DeleteMessageResponse (WebData String)
     | NewMessageRequest
     | NewMessageResponse (WebData String)
+    | NewMessageUpdate String
+    | NewMessageUIDUpdate String
     | GetActivePoliciesRequest
-    | GetActivePoliciesResponse (WebData (List Policy))
+    | GetActivePoliciesResponse (WebData String)
     | UpdateUID String
 
-    -- Error handlers
+    -- Error handlers, other
     | OperationFail Msg String                          -- Operation failed with the given reason
     | HandleProblemJson Msg (Http.Response String)      -- Handle problem JSON
     | ClearStatusMessage
+    | NavigateTo Route

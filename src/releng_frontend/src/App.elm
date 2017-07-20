@@ -63,7 +63,7 @@ reverseRoute : Route -> String
 reverseRoute route =
     case route of
         NotificationRoute route ->
-            "/notifications"
+            App.Notifications.reverseRoute route
 
         NotFoundRoute ->
             "/404"
@@ -109,6 +109,8 @@ type alias Flags =
     , treestatusUrl : String
     , docsUrl : String
     , version : String
+    , identityUrl : String
+    , policyUrl : String
     }
 
 

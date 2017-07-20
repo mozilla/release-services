@@ -5,8 +5,9 @@ import App.Notifications.Types exposing (..)
 import App.Notifications.Form exposing (..)
 import App.Notifications.Utils exposing (preferenceSort, urgencyLevel)
 import App.Utils
+import Date
 import Html exposing (..)
-import Html.Attributes exposing (class, placeholder, id)
+import Html.Attributes exposing (class, placeholder, id, rows, style, type_)
 import Html.Events exposing (onClick, onInput)
 import RemoteData exposing (..)
 
@@ -63,19 +64,6 @@ viewPreferenceItem model preference =
         ]
 
 
-viewPolicies : App.Notifications.Types.Model -> Html App.Notifications.Types.Msg
-viewPolicies model =
-    div [ class "container" ]
-        [ input [ placeholder "Enter a message UID", onInput App.Notifications.Types.UpdateUID ] []
-        , button [ onClick App.Notifications.Types.GetPendingMessagesRequest ] [ text "test '/message' command" ]
-        , button [ onClick App.Notifications.Types.GetMessageRequest ] [ text "test GetMessageRequest command"]
-        , button [ onClick App.Notifications.Types.DeleteMessageRequest ] [ text "test DeleteMessageRequest command" ]
-        , button [ onClick App.Notifications.Types.NewMessageRequest ] [ text "test new message request" ]
-        , button [ onClick App.Notifications.Types.TickTockRequest ] [ text "test manual TickTock trigger"]
-        , button [ onClick App.Notifications.Types.GetActivePoliciesRequest ] [ text "test get active policies" ]
-        ]
-
-
 -- Display view for preferences
 viewPreferences : App.Notifications.Types.Model -> Html App.Notifications.Types.Msg
 viewPreferences model =
@@ -102,17 +90,32 @@ viewPreferences model =
                         Nothing ->
                             ""
 
+                policies_display =
+                    case model.policies of
+                        Success policyList ->
+                            div []
+                                [ hr [] []
+                                , h4 [] [ text "Active Notification Policies" ]
+                                , List.map viewNotificationPolicy policyList
+                                    |> div [ class "list-group" ]
+                                ]
+
+                        _ -> text ""
+
+
             in
                 div [ class "container" ]
                     [    hr [] []
                     ,    div [ class "container justify-content-between" ]
                             [ text display_name
-                            , button [ onClick App.Notifications.Types.IdentityDeleteRequest ]
+                            , button [ onClick App.Notifications.Types.IdentityDeleteRequest, class "btn btn-outline-primary" ]
                                 [ i [ class "fa fa-trash" ] []
                                 , text " Delete identity"
                                 ]
                             ]
+                    , h4 [] [ text "Notification Preferences" ]
                     , pref_display
+                    , policies_display
                     ]
 
 
@@ -126,3 +129,80 @@ viewStatusMessage model =
             case model.status_html of
                 Nothing -> text ""
                 Just html -> html
+
+
+viewNotificationPolicy : App.Notifications.Types.Policy -> Html App.Notifications.Types.Msg
+viewNotificationPolicy policy =
+    let
+        start_date = Date.fromString policy.start_timestamp
+        stop_date = Date.fromString policy.stop_timestamp
+
+        start_time_text =
+            case start_date of
+                Ok date ->
+                    let
+                        start_month = toString (Date.month date)
+                        start_day = toString (Date.day date)
+                        start_year = toString (Date.year date)
+                        start_time_formatted =
+                            (toString (Date.hour date)) ++ ":" ++ (toString (Date.minute date))
+                    in
+                        start_month ++ " " ++ start_day ++ ", " ++ start_year ++ " at " ++ start_time_formatted
+                _ -> ""
+
+
+        stop_time_text =
+            case stop_date of
+                Ok date ->
+                    let
+                        stop_month = toString (Date.month date)
+                        stop_day = toString (Date.day date)
+                        stop_year = toString (Date.year date)
+                        stop_time_formatted =
+                            (toString (Date.hour date)) ++ ":" ++ (toString (Date.minute date))
+                    in
+                        stop_month ++ " " ++ stop_day ++ ", " ++ stop_year ++ " at " ++ stop_time_formatted
+                _ -> ""
+
+        frequency_string =
+            " Alert every "
+                ++ (toString policy.frequency.days) ++ " days, "
+                ++ (toString policy.frequency.hours) ++ " hours and "
+                ++ (toString policy.frequency.minutes) ++ " minutes."
+    in
+        div [ class "list-group-item", style [("display", "flex"), ("flex-direction", "column")] ]
+            [ div [ class "justify-content-between", style [("display", "flex"), ("flex-direction", "row")] ]
+                [ i [ class "fa fa-hourglass-start" ] []
+                , h4 [] [ text (" " ++ start_time_text ++ " ") ]
+                , i [ class "fa fa-long-arrow-right" ] []
+                , text "  "
+                , i [ class "fa fa-hourglass-end" ] []
+                , h4 [] [ text (" " ++ stop_time_text ++ " ") ]
+                , span [ class ("float-xs-right badge badge-" ++ (urgencyLevel policy.urgency)) ] [ text policy.urgency ]
+                ]
+            , div [ class "justify-content-between" ]
+                [ i [ class "fa fa-clock-o" ] []
+                , h4 [] [ text frequency_string ]
+                ]
+            ]
+
+
+viewNewMessage : App.Notifications.Types.Model -> Html App.Notifications.Types.Msg
+viewNewMessage model =
+    div [ class "form-group" ]
+        [ hr [] []
+        , input
+            [ onInput App.Notifications.Types.NewMessageUIDUpdate
+            , placeholder "New Message UID"
+            , type_ "text"
+            , class "form-control" ] []
+        , textarea
+            [ onInput App.Notifications.Types.NewMessageUpdate
+            , placeholder "Enter New Message JSON"
+            , class "form-control"
+            , rows 10] []
+        , button [ class "btn btn-outline-primary", onClick App.Notifications.Types.NewMessageRequest ]
+            [ i [ class "fa fa-check" ] []
+            , text " Submit New Message"
+            ]
+        ]

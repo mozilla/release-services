@@ -60,19 +60,19 @@ problemDecoder =
 --
 -- Commands
 --
-getPreferences : Model -> Cmd Msg
-getPreferences model =
-    let
-        identity =
-            case model.identity_name of
-                Just val ->
-                    val
-                Nothing ->
-                    ""
-    in
-        Http.get (model.identityUrl ++ "/identity/" ++ identity) preferenceDecoder
-            |> RemoteData.sendRequest
-            |> Cmd.map GetPreferencesResponse
+--getPreferences : Model -> Cmd Msg
+--getPreferences model =
+--    let
+--        identity =
+--            case model.identity_name of
+--                Just val ->
+--                    val
+--                Nothing ->
+--                    ""
+--    in
+--        Http.get (model.identityUrl ++ "/identity/" ++ identity) preferenceDecoder
+--            |> RemoteData.sendRequest
+--            |> Cmd.map GetPreferencesResponse
 
 
 deleteIdentity : Model -> Cmd Msg
@@ -274,16 +274,23 @@ encodePolicy policy =
         ]
 
 
+encodeNewMessage : String -> Json.Encode.Value
+encodeNewMessage jsonString =
+    Json.Encode.object
+        [
+        ]
+
+
 -- API Requests
-getPendingMessages : Model -> Cmd Msg
-getPendingMessages model =
-    let
-        request_url =
-            model.policyUrl ++ "/message"
-    in
-        Http.get request_url messagesDecoder
-            |> RemoteData.sendRequest
-            |> Cmd.map GetPendingMessagesResponse
+--getPendingMessages : Model -> Cmd Msg
+--getPendingMessages model =
+--    let
+--        request_url =
+--            model.policyUrl ++ "/message"
+--    in
+--        Http.get request_url messagesDecoder
+--            |> RemoteData.sendRequest
+--            |> Cmd.map GetPendingMessagesResponse
 
 deleteMessage : Model -> Cmd Msg
 deleteMessage model =
@@ -310,81 +317,133 @@ deleteMessage model =
             |> RemoteData.sendRequest
             |> Cmd.map DeleteMessageResponse
 
-getMessageByUid : Model -> Cmd Msg
-getMessageByUid model =
-    let
-        uid =
-            case model.uid of
-                Just val -> val
-                Nothing -> ""
-
-        request_url =
-            model.policyUrl ++ "/message/" ++ uid
-    in
-        Http.get request_url messageDecoder
-            |> RemoteData.sendRequest
-            |> Cmd.map GetMessageResponse
-
-
-putNewMessage : Model -> Cmd Msg
-putNewMessage model =
-    let
-        new_message_output =
-            Form.getOutput model.new_message
-
-    in
-        case new_message_output of
-            Nothing ->
-                Utils.performMsg (OperationFail App.Notifications.Types.NewMessageRequest "No new message data.")
-
-            Just new_message ->
-                let
-                    encoded_policies =
-                        Json.Encode.list (List.map encodePolicy new_message.policies)
-
-                    msg_body =
-                        Json.Encode.object
-                            [ ("deadline", Json.Encode.string new_message.deadline)
-                            , ("message", Json.Encode.string new_message.message)
-                            , ("shortMessage", Json.Encode.string new_message.shortMessage)
-                            , ("policies", encoded_policies)
-                            ]
-
-                    request_params =
-                        { method = "PUT"
-                        , headers = []
-                        , url = model.policyUrl ++ "/message/" ++ "fillerUID"  -- TODO: fix filler uid
-                        , body = Http.jsonBody msg_body
-                        , expect = Http.expectString
-                        , timeout = Nothing
-                        , withCredentials = False
-                        }
-                in
-                    Http.request request_params
-                        |> RemoteData.sendRequest
-                        |> Cmd.map NewMessageResponse
+--getMessageByUid : Model -> Cmd Msg
+--getMessageByUid model =
+--    let
+--        uid =
+--            case model.uid of
+--                Just val -> val
+--                Nothing -> ""
+--
+--        request_url =
+--            model.policyUrl ++ "/message/" ++ uid
+--    in
+--        Http.get request_url messageDecoder
+--            |> RemoteData.sendRequest
+--            |> Cmd.map GetMessageResponse
 
 
-getActivePolicies : Model -> Cmd Msg
-getActivePolicies model =
-    let
-        identity =
-            case model.identity_name of
-                Just name -> name
-                Nothing -> ""
+--putNewMessage : Model -> Cmd Msg
+--putNewMessage model =
+--    let
+--        new_message_output =
+--            Form.getOutput model.new_message
+--
+--    in
+--        case new_message_output of
+--            Nothing ->
+--                Utils.performMsg (OperationFail App.Notifications.Types.NewMessageRequest "No new message data.")
+--
+--            Just new_message ->
+--                let
+--                    encoded_policies =
+--                        Json.Encode.list (List.map encodePolicy new_message.policies)
+--
+--                    msg_body =
+--                        Json.Encode.object
+--                            [ ("deadline", Json.Encode.string new_message.deadline)
+--                            , ("message", Json.Encode.string new_message.message)
+--                            , ("shortMessage", Json.Encode.string new_message.shortMessage)
+--                            , ("policies", encoded_policies)
+--                            ]
+--
+--                    request_params =
+--                        { method = "PUT"
+--                        , headers = []
+--                        , url = model.policyUrl ++ "/message/" ++ "fillerUID"  -- TODO: fix filler uid
+--                        , body = Http.jsonBody msg_body
+--                        , expect = Http.expectString
+--                        , timeout = Nothing
+--                        , withCredentials = False
+--                        }
+--                in
+--                    Http.request request_params
+--                        |> RemoteData.sendRequest
+--                        |> Cmd.map NewMessageResponse
 
-        request_url =
-            model.policyUrl ++ "/policy/" ++ identity
+
+--getActivePolicies : Model -> Cmd Msg
+--getActivePolicies model =
+--    let
+--        identity =
+--            case model.identity_name of
+--                Just name -> name
+--                Nothing -> ""
+--
+--        request_url =
+--            model.policyUrl ++ "/policy/" ++ identity
+--
+--
+--    in
+--        Http.get request_url policiesDecoder
+--            |> RemoteData.sendRequest
+--            |> Cmd.map GetActivePoliciesResponse
 
 
-    in
-        Http.get request_url policiesDecoder
-            |> RemoteData.sendRequest
-            |> Cmd.map GetActivePoliciesResponse
+--tickTock : Model -> Cmd Msg
+--tickTock model =
+--    let
+--        request_params =
+--            { method = "POST"
+--            , headers = []
+--            , url = model.policyUrl ++ "/ticktock"
+--            , body = Http.emptyBody
+--            , expect = Http.expectJson notificationInstancesDecoder
+--            , timeout = Nothing
+--            , withCredentials = False
+--            }
+--    in
+--        Http.request request_params
+--            |> RemoteData.sendRequest
+--            |> Cmd.map TickTockResponse
 
 
-tickTock : Model -> Cmd Msg
-tickTock model =
-    Http.get (model.policyUrl ++ "/ticktock") notificationInstancesDecoder
-        |> RemoteData.sendRequest
-        |> Cmd.map TickTockResponse
+
+hawkResponse : Cmd (WebData String) -> String -> Cmd App.Notifications.Types.Msg
+hawkResponse response route =
+    case route of
+        "DeleteMessage" ->
+            Cmd.map App.Notifications.Types.DeleteMessageResponse response
+
+        "GetActivePolicies" ->
+            Cmd.map App.Notifications.Types.GetActivePoliciesResponse response
+
+        "GetMessage" ->
+            Cmd.map App.Notifications.Types.GetMessageResponse response
+
+        "GetPendingMessages" ->
+            Cmd.map App.Notifications.Types.GetPendingMessagesResponse response
+
+        "GetPreferences" ->
+            Cmd.map App.Notifications.Types.GetPreferencesResponse response
+
+        "IdentityDelete" ->
+            Cmd.map App.Notifications.Types.IdentityDeleteResponse response
+
+        "ModifyIdentity" ->
+            Cmd.map App.Notifications.Types.ModifyIdentityResponse response
+
+        "NewIdentity" ->
+            Cmd.map App.Notifications.Types.NewIdentityResponse response
+
+        "NewMessage" ->
+            Cmd.map App.Notifications.Types.NewMessageResponse response
+
+        "TickTock" ->
+            Cmd.map App.Notifications.Types.TickTockResponse response
+
+        "UrgencyDelete" ->
+            Cmd.map App.Notifications.Types.UrgencyDeleteResponse response
+
+        _ ->
+            Cmd.none

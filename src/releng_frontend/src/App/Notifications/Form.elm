@@ -12,7 +12,9 @@ import Form.Input as Input
 import Form.Init as Init
 import Form.Field
 
-
+--
+-- INITIALIZERS
+--
 initializeFormFromPreference : App.Notifications.Types.Preference -> Form.Form () App.Notifications.Types.Preference
 initializeFormFromPreference preference =
     let
@@ -46,6 +48,9 @@ initializeNewIdentityForm =
         Form.initial [nameField, preferencesList] newIdentityValidation
 
 
+--
+-- VALIDATORS
+--
 editPreferenceValidation : Validation () App.Notifications.Types.Preference
 editPreferenceValidation =
     map4 App.Notifications.Types.Preference
@@ -70,14 +75,6 @@ newIdentityValidation =
         (field "preferences" (list newPreferenceValidation))
 
 
-newMessageValidation : Validation () App.Notifications.Types.MessageInstance
-newMessageValidation =
-    map4 App.Notifications.Types.MessageInstance
-        (field "deadline" string)
-        (field "message" string)
-        (field "shortMessage" string)
-        (field "policies" (list policyValidation))
-
 
 frequencyValidation : Validation () App.Notifications.Types.Frequency
 frequencyValidation =
@@ -95,6 +92,10 @@ policyValidation =
         (field "urgency" string)
         (field "frequency" frequencyValidation)
 
+
+--
+-- FORM VIEWS
+--
 editPreferenceFormView : Form () App.Notifications.Types.Preference -> Html Form.Msg
 editPreferenceFormView form =
     let
@@ -124,14 +125,15 @@ editPreferenceFormView form =
             , ("EMAIL", "EMAIL")
             ]
     in
-        div []
-            [ Input.selectInput channel_options channel []
-            , Input.textInput target []
-            , button [ onClick Form.Submit ]
+        div [ class "justify-content-between form-group form-inline" ]
+            [ hr [] []
+            , Input.selectInput channel_options channel [ class "form-control" ]
+            , Input.textInput target [ class "form-control" ]
+            , button [ onClick Form.Submit, class "form-control" ]
                 [ i [ class "fa fa-floppy-o" ] []
                 , text " Save"
                 ]
-            , button [ onClick (Form.RemoveItem "" 0) ]
+            , button [ onClick (Form.RemoveItem "" 0), class "form-control" ]
                 [ i [ class "fa fa-trash" ] []
                 , text " Delete"
                 ]
@@ -172,9 +174,9 @@ editNewPreferenceFormView form i =
             , ("HIGH", "HIGH")
             ]
     in
-        div [ class "list-group-item justify-content-between" ]
-            [ Input.selectInput channel_options channel []
-            , Input.textInput target []
+        div [ class "list-group-item justify-content-between form-inline" ]
+            [ Input.selectInput channel_options channel [ class "form-control" ]
+            , Input.textInput target [ class "form-control", placeholder "Notification Target" ]
             , span [ class ("float-xs-right badge badge-" ++ (urgencyLevel urgency_string)) ] [ text urgency_string ]
             ]
 
@@ -185,16 +187,14 @@ newIdentityFormView form =
         name = Form.getFieldAsString "name" form
         list_indexes = Form.getListIndexes "preferences" form
     in
-        div []
+        div [ class "form-group" ]
             [ hr [] []
             , h3 [] [ text "Create new identity" ]
-            , Input.textInput name [ placeholder "New Identity Name" ]
-            , div []
-                [ div [ class "list-group" ]
+            , Input.textInput name [ placeholder "New Identity Name", class "form-control" ]
+            , div [ class "list-group" ]
                     <| List.map (editNewPreferenceFormView form) list_indexes
 
-                ]
-            , button [ onClick Form.Submit ]
+            , button [ onClick Form.Submit, class "btn btn-outline-primary" ]
                 [ i [ class "fa fa-floppy-o" ] [ text " Submit Identity" ]
                 ]
             ]

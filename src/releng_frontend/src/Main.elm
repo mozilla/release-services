@@ -5,6 +5,7 @@ import App.Home
 import App.Layout
 import App.Notifications
 import App.Notifications.Types
+import App.Notifications.Api
 import App.TreeStatus
 import App.TreeStatus.Api
 import App.TreeStatus.Types
@@ -43,7 +44,7 @@ init flags location =
             , userScopes = App.UserScopes.init
             , trychooser = App.TryChooser.init
             , treestatus = App.TreeStatus.init flags.treestatusUrl
-            , notifications = App.Notifications.init "https://localhost:8007" "https://localhost:8006" -- TODO: remove hard coded local url, switch to using a flag
+            , notifications = App.Notifications.init flags.identityUrl flags.policyUrl
             }
     in
         initRoute model route
@@ -53,8 +54,10 @@ initRoute : App.Model -> App.Route -> ( App.Model, Cmd App.Msg )
 initRoute model route =
     case route of
         App.NotificationRoute route ->
-            {model | route = App.NotificationRoute App.Notifications.Types.BaseRoute}
-                ! []
+            model
+                ! [ Utils.performMsg (App.NotificationMsg (App.Notifications.Types.NavigateTo route))
+                  , Utils.performMsg (App.UserScopesMsg App.UserScopes.FetchScopes)
+                  ]
 
         App.NotFoundRoute ->
             model ! []
@@ -184,6 +187,11 @@ update msg model =
                             |> String.dropLeft (String.length "UserScopes")
                             |> App.UserScopes.hawkResponse response
                             |> Cmd.map App.UserScopesMsg
+                    else if String.startsWith "Notifications" route then
+                        route
+                            |> String.dropLeft (String.length "Notifications")
+                            |> App.Notifications.Api.hawkResponse response
+                            |> Cmd.map App.NotificationMsg
                     else
                         Cmd.none
 
@@ -247,7 +255,7 @@ update msg model =
                 new_route =
                     case model.route of
                         App.NotificationRoute x ->
-                            App.Notifications.Types.BaseRoute
+                            x
 
                         _ ->
                             App.Notifications.Types.BaseRoute
@@ -256,8 +264,14 @@ update msg model =
                     App.Notifications.update new_route msg_ model.notifications
 
             in
-                ({model |
-                    notifications = newModel}, Cmd.map App.NotificationMsg newCmd)
+                ({model | notifications = newModel},
+                    hawkCmd
+                        |> Maybe.map (\req -> [ hawkSend model.user "Notifications" req ] )
+                        |> Maybe.withDefault []
+                        |> List.append [ Cmd.map App.NotificationMsg newCmd ]
+                        |> Cmd.batch
+                        )
+                        --Cmd.map App.NotificationMsg newCmd)
 
 
 hawkSend :
