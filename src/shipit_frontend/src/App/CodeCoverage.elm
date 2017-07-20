@@ -80,7 +80,7 @@ loadArtifact model =
     let
         url =
             model.backend_uplift_url
-                ++ "/coverage_by_dir"
+                ++ "/coverage/dir"
                 ++ (case model.path of
                         Just path ->
                             "?path=" ++ path
