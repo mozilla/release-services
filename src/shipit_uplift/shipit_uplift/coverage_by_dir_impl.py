@@ -4,7 +4,6 @@ import fnmatch
 import re
 from concurrent.futures import ThreadPoolExecutor
 import requests
-from libmozdata.bugzilla import Bugzilla
 
 
 class CoverageService(Enum):
@@ -148,20 +147,15 @@ def generate(path):
         for directory in directories:
             executor.submit(data_for_directory, directory)
 
-    def _bughandler(bug, *args, **kwargs):
-        for directory in data.values():
-            bug_id = bug['id']
-            for b in directory['bugs']:
-                if b['id'] == bug_id:
-                    b.update(bug)
+    r = requests.get('https://bugzilla.mozilla.org/rest/bug', params={
+      'include_fields': ['id', 'summary'],
+      'id': ','.join([str(b) for b in sorted(all_bugs)])
+    })
 
-    Bugzilla(
-        all_bugs,
-        bughandler=_bughandler,
-        include_fields=(
-            'id',
-            'summary',
-        )
-    ).get_data().wait()
+    for found_bug in r.json()['bugs']:
+        for directory in data.values():
+            for bug in directory['bugs']:
+                if bug['id'] == found_bug['id']:
+                    bug['summary'] = found_bug['summary']
 
     return data
