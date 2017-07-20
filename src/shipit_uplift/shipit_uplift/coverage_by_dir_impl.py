@@ -2,6 +2,7 @@
 from enum import Enum
 import fnmatch
 import re
+from concurrent.futures import ThreadPoolExecutor
 import requests
 from libmozdata.bugzilla import Bugzilla
 
@@ -122,11 +123,11 @@ def generate(path):
     data = dict()
     all_bugs = set()
 
-    for directory in directories:
+    def data_for_directory(directory):
         d = get_coverage(latest_commit, previous_commit, directory)
 
         if d['files_num'] == 0:
-            continue
+            return
 
         data[directory] = {}
         data[directory]['cur'] = float(d['cur']) if d['cur'] is not None else None
@@ -142,6 +143,10 @@ def generate(path):
             }
             for bug in directory_bugs
         ]
+
+    with ThreadPoolExecutor() as executor:
+        for directory in directories:
+            executor.submit(data_for_directory, directory)
 
     def _bughandler(bug, *args, **kwargs):
         for directory in data.values():
