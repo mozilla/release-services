@@ -11,7 +11,7 @@ import os
 import backend_common
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def app():
     '''Load shipit_signoff in test mode
     '''
@@ -27,7 +27,10 @@ def app():
             '123',
             '123',
             'https://APP_URL',
-        )
+        ),
+        'BALROG_API_ROOT': 'https://balrog/api',
+        'BALROG_USERNAME': 'balrogadmin',
+        'BALROG_PASSWORD': 'balrogadmin',
     })
     app = shipit_signoff.create_app(config)
 

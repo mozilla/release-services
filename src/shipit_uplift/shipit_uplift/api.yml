@@ -141,28 +141,18 @@ paths:
           schema:
             $ref: '#/definitions/Contributor'
 
-  /hook/artifact/{group}/{hook}/{artifact}:
+  /coverage_by_dir:
     get:
-      operationId: "shipit_uplift.api.load_hook_artifact"
+      operationId: "shipit_uplift.api.coverage_by_dir"
       parameters:
-      - name: group
-        in: path
-        description: Hook group id
-        required: true
-        type: string
-      - name: hook
-        in: path
-        description: Hook id
-        required: true
-        type: string
-      - name: artifact
-        in: path
-        description: Artifact name to retrieve
-        required: true
+      - name: path
+        in: query
+        description: Path
+        required: false
         type: string
       responses:
         200:
-          description: The artifact as is
+          description: Code coverage information by directory
 
 definitions:
 

@@ -39,6 +39,7 @@ pytest==3.1.2
 python-dateutil==2.6.0
 python-hglib==2.4
 pytz==2017.2
+PyYAML==3.12
 raven==6.1.0
 RBTools==0.7.10
 requests==2.18.1

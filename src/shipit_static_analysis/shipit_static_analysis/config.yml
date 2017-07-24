@@ -1,0 +1,20 @@
+target: obj-x86_64-pc-linux-gnu
+
+# All the clang checks used by the bot
+clang_checkers:
+ - -*
+ - clang-analyzer-deadcode.DeadStores
+ - modernize-loop-convert
+ - modernize-raw-string-literal
+# modernize-use-auto (controversial, see bug 1371052)
+# modernize-use-bool-literals (too noisy because of `while (0)` in many macros)
+ - modernize-use-equals-default
+ - modernize-use-equals-delete
+ - modernize-use-nullptr
+ - modernize-use-override
+ - mozilla-*
+ - performance-faster-string-find
+ - performance-for-range-copy
+ - readability-else-after-return
+ - readability-misleading-indentation
+ - readability-redundant-control-flow

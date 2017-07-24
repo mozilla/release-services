@@ -7,7 +7,7 @@ set -eu
 
 USE_NIX=0
 USE_DOCKER=0
-DOCKER_VOLUME="services_nix_store"
+DOCKER_NAME="mozilla-releng-services"
 
 case "`uname`" in
   Darwin)
@@ -47,7 +47,14 @@ if [ "$USE_NIX" = "1" ]; then
 
 else
   if [ "$USE_DOCKER" = "1" ]; then
-      exec docker run --tty --volume="$(pwd)":/app --volume="${DOCKER_VOLUME}":/nix/store --workdir=/app mozillareleng/services:base-latest ./please "$@"
+    if [ ! "$(docker ps -q -f name=$DOCKER_NAME)" ]; then
+      if [ ! "$(docker ps -qa -f name=$DOCKER_NAME)" ]; then
+        docker run -td --name $DOCKER_NAME --volume="$(pwd)":/app --workdir=/app -p 8000-8100:8000-8100 -e NIX_PATH="nixpkgs=/home/app/nixpkgs" mozillareleng/services@sha256:1835331e726eae803a7207989ed9c7db03e9fa98bab323df357fd27490576c39
+      else
+        docker start $DOCKER_NAME
+      fi
+   fi
+    docker exec --tty --interactive $DOCKER_NAME ./please "$@"
   else
     # TODO: better error message and point to documentation
     echo "ERROR: please install nix or docker!"

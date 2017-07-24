@@ -184,7 +184,7 @@ def get_task(task_group_id,
       'tar zxf {github_commit}.tar.gz',
       'cd services-{github_commit}',
       'env',
-      'rm -rf /root/.cache/nix',
+      'rm -rf /home/app/.cache/nix',
       command
     ])).format(github_commit=github_commit)
     return {
@@ -201,7 +201,7 @@ def get_task(task_group_id,
         'priority': priority,
         'payload': {
             'maxRunTime': 60 * 60 * max_run_time_in_hours,
-            'image': 'mozillareleng/services:base-latest',
+            'image': '{}@sha256:{}'.format(please_cli.config.DOCKER_REPO, please_cli.config.DOCKER_BASE_SHA256),
             'features': {
                 'taskclusterProxy': True,
             },

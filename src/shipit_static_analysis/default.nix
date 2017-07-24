@@ -5,7 +5,7 @@ let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource ;
   inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl dockerTools gcc
-      cacert clang clang-tools gcc-unwrapped glibc glibcLocales xorg;
+      cacert gcc-unwrapped glibc glibcLocales xorg;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
@@ -39,6 +39,7 @@ let
         taskEnv = {
           "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
           "APP_CHANNEL" = branch;
+          "MOZ_AUTOMATION" = "1";
         };
         taskCommand = [
           "/bin/shipit-static-analysis"
@@ -72,8 +73,6 @@ let
       fromRequirementsFile ./requirements.txt python.packages
       ++ [
         # Needed for the static analysis
-        clang
-        clang-tools
 				glibc
 				gcc
 
@@ -85,7 +84,6 @@ let
       mkdir -p $out/tmp
       mkdir -p $out/bin
       ln -s ${mercurial}/bin/hg $out/bin
-      ln -s ${clang-tools}/bin/clang-tidy $out/bin
 
       # Expose gecko env in final output
       ln -s ${releng_pkgs.gecko-env}/bin/gecko-env $out/bin
@@ -93,6 +91,9 @@ let
 
     shellHook = ''
       export PATH="${mercurial}/bin:$PATH"
+
+      # Setup mach automation
+      export MOZ_AUTOMATION=1
 
       # Extras for clang-tidy
       export CPLUS_INCLUDE_PATH=${includes}

@@ -12,7 +12,6 @@ from sqlalchemy.exc import IntegrityError
 from backend_common.auth import auth
 from backend_common.db import db
 from cli_common import log
-from cli_common.taskcluster import get_hook_artifact
 from shipit_uplift.helpers import gravatar
 from shipit_uplift.models import (
     BugAnalysis, BugResult, Contributor, BugContributor, PatchStatus
@@ -22,6 +21,7 @@ from shipit_uplift.serializers import (
     serialize_patch_status
 )
 from shipit_uplift.config import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
+from shipit_uplift import coverage_by_dir_impl
 
 
 logger = log.get_logger(__name__)
@@ -368,18 +368,5 @@ def create_patch_status(bugzilla_id):
     return serialize_patch_status(ps)
 
 
-def load_hook_artifact(group, hook, artifact):
-    '''
-    Serve an artifact from the last run of
-    a specified source hook
-    Only support anonymous & public artifacts for now
-    This is a public API: no authentication is needed
-    '''
-    try:
-        artifact = 'public/' + artifact
-        return get_hook_artifact(group, hook, artifact, '', '')  # as anonymous
-    except Exception as e:
-        return {
-            'error_title': 'Failed loading artifact',
-            'error_message': str(e),
-        }, 500
+def coverage_by_dir(path=''):
+    return coverage_by_dir_impl.generate(path)

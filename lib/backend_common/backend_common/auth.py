@@ -49,6 +49,13 @@ class BaseUser(object):
     def get_id(self):
         raise NotImplementedError
 
+    def has_permissions(self, permissions):
+        if len(permissions) > 0 \
+           and not isinstance(permissions[0], (tuple, list)):
+                permissions = [permissions]
+        user_permissions = self.get_permissions()
+        return all([permission in user_permissions for permission in permissions])
+
     def __str__(self):
         return self.get_id()
 
@@ -81,16 +88,16 @@ class TaskclusterUser(BaseUser):
     def get_permissions(self):
         return self.credentials['scopes']
 
-    def has_permissions(self, required_permissions):
+    def has_permissions(self, permissions):
         '''
         Check user has some required permissions
         Using Taskcluster comparison algorithm
         '''
-        if len(required_permissions) > 0 \
-           and not isinstance(required_permissions[0], (tuple, list)):
-                required_permissions = [required_permissions]
+        if len(permissions) > 0 \
+           and not isinstance(permissions[0], (tuple, list)):
+                permissions = [permissions]
 
-        return taskcluster.utils.scope_match(self.get_permissions(), required_permissions)
+        return taskcluster.utils.scope_match(self.get_permissions(), permissions)
 
 
 class RelengapiTokenUser(BaseUser):
@@ -118,9 +125,6 @@ class RelengapiTokenUser(BaseUser):
 
     def get_permissions(self):
         return self._permissions
-
-    def has_permissions(self, permissions):
-        return all([permission in self._permissions for permission in permissions])
 
 
 class Auth(object):
@@ -227,73 +231,87 @@ class RelengapiToken(backend_common.db.db.Model):
         ]
 
 
-@auth.login_manager.header_loader
-def parse_header(auth_header):
+IS_NOT_RELENAPI_TOKEN_USER = object()
 
-    header = auth_header.split()
-    if len(header) == 2 and header[0].lower() != 'bearer':
 
-        TOKENAUTH_ISSUER = 'ra2'
-        token_str = header[1]
-        tokenauth_serializer = itsdangerous.JSONWebSignatureSerializer(flask.current_app.secret_key)
+def is_relengapi_token(token_str):
+    TOKENAUTH_ISSUER = 'ra2'
+    tokenauth_serializer = itsdangerous.JSONWebSignatureSerializer(flask.current_app.secret_key)
 
-        try:
-            claims = tokenauth_serializer.loads(token_str)
-        except itsdangerous.BadData:
-            logger.warning('Got invalid signature in token %r', token_str)
-            return None
-        except Exception:
-            logger.exception('Error processing signature in token %r', token_str)
-            return None
+    try:
+        claims = tokenauth_serializer.loads(token_str)
 
-        # convert v1 to ra2
-        if claims.get('v') == 1:
-            claims = {'iss': 'ra2', 'typ': 'prm', 'jti': 't%d' % claims['id']}
+    except itsdangerous.BadData as e:
+        logger.warning('Got invalid signature in token %r', token_str)
+        logger.debug(e)
+        return IS_NOT_RELENAPI_TOKEN_USER
 
-        if claims.get('iss') != TOKENAUTH_ISSUER:
+    except Exception as e:
+        logger.error('Error processing signature in token %r', token_str)
+        return
+
+    # convert v1 to ra2
+    if claims.get('v') == 1:
+        claims = {'iss': 'ra2', 'typ': 'prm', 'jti': 't%d' % claims['id']}
+
+    if claims.get('iss') != TOKENAUTH_ISSUER:
+        return
+
+    if claims['typ'] == 'prm':
+        token_id = jti2id(claims['jti'])
+        token_data = RelengapiToken.query.filter_by(id=token_id).first()
+        if token_data:
+            assert token_data.typ == 'prm'
+            return RelengapiTokenUser(claims,
+                                      permissions=token_data.permissions,
+                                      token_data=token_data)
+    elif claims['typ'] == 'tmp':
+        now = time.time()
+        if now < claims['nbf'] or now > claims['exp']:
+            return
+        permissions = [i for i in claims['prm'] if i]
+        return RelengapiTokenUser(claims, permissions=permissions)
+
+    elif claims['typ'] == 'usr':
+        token_id = jti2id(claims['jti'])
+        token_data = RelengapiToken.query.filter_by(id=token_id).first()
+        if token_data and not token_data.disabled:
+            assert token_data.typ == 'usr'
+            return RelengapiTokenUser(claims,
+                                      permissions=token_data.permissions,
+                                      token_data=token_data,
+                                      authenticated_email=token_data.user)
+
+
+@auth.login_manager.request_loader
+def parse_header(request):
+
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return
+
+    if flask.current_app.config.get('CHECK_FOR_RELENGAPI_TOKEN') is True:
+        header = auth_header.split()
+        if len(header) != 2:
             return
 
-        if claims['typ'] == 'prm':
-            token_id = jti2id(claims['jti'])
-            token_data = RelengapiToken.query.filter_by(id=token_id).first()
-            if token_data:
-                assert token_data.typ == 'prm'
-                return RelengapiTokenUser(claims,
-                                          permissions=token_data.permissions,
-                                          token_data=token_data)
-
-        elif claims['typ'] == 'tmp':
-            now = time.time()
-            if now < claims['nbf'] or now > claims['exp']:
-                return
-            permissions = [i for i in claims['prm'] if i]
-            return RelengapiTokenUser(claims, permissions=permissions)
-
-        elif claims['typ'] == 'usr':
-            token_id = jti2id(claims['jti'])
-            token_data = RelengapiToken.query.filter_by(id=token_id).first()
-            if token_data and not token_data.disabled:
-                assert token_data.typ == 'usr'
-                return RelengapiTokenUser(claims,
-                                          permissions=token_data.permissions,
-                                          token_data=token_data,
-                                          authenticated_email=token_data.user)
-        else:
-            return
+        user = is_relengapi_token(header[1])
+        if user != IS_NOT_RELENAPI_TOKEN_USER:
+            return user
 
     # Get Endpoint configuration
-    if ':' in flask.request.host:
-        host, port = flask.request.host.split(':')
+    if ':' in request.host:
+        host, port = request.host.split(':')
     else:
-        host = flask.request.host
-        port = flask.request.environ.get('HTTP_X_FORWARDED_PORT')
+        host = request.host
+        port = request.environ.get('HTTP_X_FORWARDED_PORT')
         if port is None:
-            port = flask.request.scheme == 'https' and 443 or 80
-    method = flask.request.method.lower()
+            port = request.scheme == 'https' and 443 or 80
+    method = request.method.lower()
 
     # Build taskcluster payload
     payload = {
-        'resource': flask.request.path,
+        'resource': request.path,
         'method': method,
         'host': host,
         'port': int(port),

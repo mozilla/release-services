@@ -3,7 +3,7 @@
 let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource mkRustPlatform;
-  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl cacert rustStable ;
+  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl cacert rustStable git;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
   inherit (releng_pkgs.tools) pypi2nix mercurial ;
@@ -15,14 +15,14 @@ let
 
   # Marco grcov
   grcov = rustPlatform.buildRustPackage rec {
-    version = "0.1.21";
+    version = "0.1.25";
     name = "grcov-${version}";
 
     src = releng_pkgs.pkgs.fetchFromGitHub {
       owner = "marco-c";
       repo = "grcov";
       rev = "v${version}";
-      sha256 = "1a7j8b5h1sxvxlbpbp1pg5jps1hvpb1v6p5d1dxikpp9v7pq6srv";
+      sha256 = "1z8ffp22zc7vh8klm4xjpi2mg028a6dwqh5wf725yjaj5g7sbkg0";
     };
 
     # running 4 tests
@@ -46,7 +46,7 @@ let
     # error: test failed
     doCheck = false;
 
-    depsSha256 = "08chiifma5aj4lvvfpv37mhcdsy66fk0kx47bkv57g5fwvczfbh7";
+    depsSha256 = "0ylfc8dxff60piyg1n439nx1q5n8bca6d1x7hq44rd9v0nza01xj";
 
     meta = with releng_pkgs.pkgs.stdenv.lib; {
       description = "grcov collects and aggregates code coverage information for multiple source files.";
@@ -88,12 +88,6 @@ let
         ];
         deadline = "9 hours";
         maxRunTime = 32400;
-        taskArtifacts = {
-          "public/coverage_by_dir.json" = {
-            type = "file";
-            path = "/coverage_by_dir.json";
-          };
-        };
         workerType = "releng-svc-compute";
       };
     in
@@ -133,6 +127,7 @@ let
     shellHook = ''
       export PATH="${mercurial}/bin:$PATH"
     '';
+    dockerContents = [ git ];
     passthru = {
       deploy = {
         staging = mkBot "staging";

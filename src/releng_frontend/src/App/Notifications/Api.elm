@@ -75,30 +75,30 @@ problemDecoder =
 --            |> Cmd.map GetPreferencesResponse
 
 
-deleteIdentity : Model -> Cmd Msg
-deleteIdentity model =
-    let
-        identity =
-            case model.identity_name of
-                Just val ->
-                    val
-
-                Nothing ->
-                    ""
-
-        request_params =
-            { method = "DELETE"
-            , headers = []
-            , url = model.identityUrl ++ "/identity/" ++ identity
-            , body = Http.emptyBody
-            , expect = Http.expectString
-            , timeout = Nothing
-            , withCredentials = False
-            }
-    in
-        Http.request request_params
-            |> RemoteData.sendRequest
-            |> Cmd.map IdentityDeleteResponse
+--deleteIdentity : Model -> Cmd Msg
+--deleteIdentity model =
+--    let
+--        identity =
+--            case model.identity_name of
+--                Just val ->
+--                    val
+--
+--                Nothing ->
+--                    ""
+--
+--        request_params =
+--            { method = "DELETE"
+--            , headers = []
+--            , url = model.identityUrl ++ "/identity/" ++ identity
+--            , body = Http.emptyBody
+--            , expect = Http.expectString
+--            , timeout = Nothing
+--            , withCredentials = False
+--            }
+--    in
+--        Http.request request_params
+--            |> RemoteData.sendRequest
+--            |> Cmd.map IdentityDeleteResponse
 
 
 newIdentity : Model -> Cmd Msg
@@ -173,36 +173,36 @@ modifyIdentity model =
 
 
 
-deletePreferenceByUrgency : Model -> Cmd Msg
-deletePreferenceByUrgency model =
-    case model.selected_preference of
-        Nothing ->
-            Utils.performMsg (OperationFail App.Notifications.Types.UrgencyDeleteRequest "Please select a preference to delete.")
-
-        Just preference ->
-            let
-                identity =
-                    case model.identity_name of
-                        Just val ->
-                            val
-
-                        Nothing ->
-                            ""
-
-                request_params =
-                    { method = "DELETE"
-                    , headers = []
-                    , url = model.identityUrl ++ "/identity/" ++ identity ++ "/" ++ preference.urgency
-                    , body = Http.emptyBody
-                    , expect = Http.expectString
-                    , timeout = Nothing
-                    , withCredentials = False
-                    }
-
-            in
-                Http.request request_params
-                |> RemoteData.sendRequest
-                |> Cmd.map UrgencyDeleteResponse
+--deletePreferenceByUrgency : Model -> Cmd Msg
+--deletePreferenceByUrgency model =
+--    case model.selected_preference of
+--        Nothing ->
+--            Utils.performMsg (OperationFail App.Notifications.Types.UrgencyDeleteRequest "Please select a preference to delete.")
+--
+--        Just preference ->
+--            let
+--                identity =
+--                    case model.identity_name of
+--                        Just val ->
+--                            val
+--
+--                        Nothing ->
+--                            ""
+--
+--                request_params =
+--                    { method = "DELETE"
+--                    , headers = []
+--                    , url = model.identityUrl ++ "/identity/" ++ identity ++ "/" ++ preference.urgency
+--                    , body = Http.emptyBody
+--                    , expect = Http.expectString
+--                    , timeout = Nothing
+--                    , withCredentials = False
+--                    }
+--
+--            in
+--                Http.request request_params
+--                |> RemoteData.sendRequest
+--                |> Cmd.map UrgencyDeleteResponse
 
 
 

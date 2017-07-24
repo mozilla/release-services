@@ -5,11 +5,12 @@ from datetime import datetime
 import zipfile
 import requests
 import hglib
+from concurrent.futures import ThreadPoolExecutor
 
 from cli_common.log import get_logger
-from cli_common.command import run, run_check
+from cli_common.command import run_check
 
-from shipit_code_coverage import coverage_by_dir, taskcluster, uploader, utils
+from shipit_code_coverage import taskcluster, uploader, utils
 
 
 logger = get_logger(__name__)
@@ -17,16 +18,31 @@ logger = get_logger(__name__)
 
 class CodeCov(object):
 
-    def __init__(self, cache_root, coveralls_token, codecov_token):
+    def __init__(self, revision, cache_root, coveralls_token, codecov_token, gecko_dev_user, gecko_dev_pwd):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = []
+
+        self.cache_root = cache_root
 
         assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
         self.repo_dir = os.path.join(cache_root, 'mozilla-central')
 
         self.coveralls_token = coveralls_token
         self.codecov_token = codecov_token
+        self.gecko_dev_user = gecko_dev_user
+        self.gecko_dev_pwd = gecko_dev_pwd
+
+        if revision is None:
+            self.task_id = taskcluster.get_last_task()
+
+            task_data = taskcluster.get_task_details(self.task_id)
+            self.revision = task_data['payload']['env']['GECKO_HEAD_REV']
+        else:
+            self.task_id = taskcluster.get_task('mozilla-central', revision)
+            self.revision = revision
+
+        logger.info('Mercurial revision', revision=self.revision)
 
     def download_coverage_artifacts(self, build_task_id):
         try:
@@ -37,26 +53,33 @@ class CodeCov(object):
 
         task_data = taskcluster.get_task_details(build_task_id)
 
-        artifacts = taskcluster.get_task_artifacts(build_task_id)
-        for artifact in artifacts:
-            if 'target.code-coverage-gcno.zip' in artifact['name']:
-                taskcluster.download_artifact(build_task_id, '', artifact)
-
         all_suites = set()
 
         tasks = taskcluster.get_tasks_in_group(task_data['taskGroupId'])
         test_tasks = [t for t in tasks if taskcluster.is_coverage_task(t)]
         for test_task in test_tasks:
             suite_name = taskcluster.get_suite_name(test_task)
+            # Ignore awsy and talos as they aren't actually suites of tests.
+            if any(to_ignore in suite_name for to_ignore in ['awsy', 'talos']):
+                continue
+
             all_suites.add(suite_name)
             test_task_id = test_task['status']['taskId']
             artifacts = taskcluster.get_task_artifacts(test_task_id)
             for artifact in artifacts:
-                if any(n in artifact['name'] for n in ['code-coverage-gcda.zip', 'code-coverage-jsvm.zip']):
+                if any(n in artifact['name'] for n in ['code-coverage-grcov.zip', 'code-coverage-jsvm.zip']):
                     taskcluster.download_artifact(test_task_id, suite_name, artifact)
 
         self.suites = list(all_suites)
         self.suites.sort()
+
+    def update_github_repo(self):
+        repo_url = 'https://%s:%s@github.com/marco-c/gecko-dev' % (self.gecko_dev_user, self.gecko_dev_pwd)
+        repo_path = os.path.join(self.cache_root, 'gecko-dev')
+        if not os.path.isdir(repo_path):
+            run_check(['git', 'clone', repo_url], cwd=self.cache_root)
+        run_check(['git', 'pull', 'https://github.com/mozilla/gecko-dev', 'master'], cwd=repo_path)
+        run_check(['git', 'push', repo_url, 'master'], cwd=repo_path)
 
     def get_github_commit(self, mercurial_commit):
         url = 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s'
@@ -76,10 +99,8 @@ class CodeCov(object):
 
     def rewrite_jsvm_lcov(self):
         files = os.listdir('ccov-artifacts')
-        for fname in files:
-            if 'jsvm' not in fname or not fname.endswith('.zip'):
-                continue
 
+        def rewrite(fname):
             zip_file_path = 'ccov-artifacts/' + fname
             out_dir = 'ccov-artifacts/' + fname[:-4]
 
@@ -88,7 +109,7 @@ class CodeCov(object):
             zip_file.close()
 
             lcov_files = [os.path.abspath(os.path.join(out_dir, f)) for f in os.listdir(out_dir)]
-            run(['gecko-env', './mach', 'python', 'python/mozbuild/mozbuild/codecoverage/lcov_rewriter.py'] + lcov_files, cwd=self.repo_dir)
+            run_check(['gecko-env', './mach', 'python', 'python/mozbuild/mozbuild/codecoverage/lcov_rewriter.py'] + lcov_files, cwd=self.repo_dir)
 
             for lcov_file in lcov_files:
                 os.remove(lcov_file)
@@ -97,16 +118,23 @@ class CodeCov(object):
             for lcov_out_file in lcov_out_files:
                 os.rename(lcov_out_file, lcov_out_file[:-4])
 
+        with ThreadPoolExecutor() as executor:
+            for fname in files:
+                if 'jsvm' not in fname or not fname.endswith('.zip'):
+                    continue
+
+                executor.submit(rewrite, fname)
+
     def generate_info(self, commit_sha, coveralls_token, suite=None):
         files = os.listdir('ccov-artifacts')
         ordered_files = []
         for fname in files:
-            if ('gcda' in fname or 'gcno' in fname) and not fname.endswith('.zip'):
+            if 'grcov' in fname and not fname.endswith('.zip'):
                 continue
             if 'jsvm' in fname and fname.endswith('.zip'):
                 continue
 
-            if 'gcno' in fname or suite is None or suite in fname:
+            if suite is None or suite in fname:
                 ordered_files.append('ccov-artifacts/' + fname)
 
         cmd = [
@@ -160,16 +188,10 @@ class CodeCov(object):
         run_check(['gecko-env', './mach', 'build-backend', '-b', 'ChromeMap'], cwd=self.repo_dir)
 
     def go(self):
-        task_id = taskcluster.get_last_task()
-
-        task_data = taskcluster.get_task_details(task_id)
-        revision = task_data['payload']['env']['GECKO_HEAD_REV']
-        logger.info('Mercurial revision', revision=revision)
-
-        self.download_coverage_artifacts(task_id)
+        self.download_coverage_artifacts(self.task_id)
         logger.info('Code coverage artifacts downloaded')
 
-        self.clone_mozilla_central(revision)
+        self.clone_mozilla_central(self.revision)
         logger.info('mozilla-central cloned')
         self.build_files()
         logger.info('Build successful')
@@ -177,10 +199,11 @@ class CodeCov(object):
         self.rewrite_jsvm_lcov()
         logger.info('JSVM LCOV files rewritten')
 
-        commit_sha = self.get_github_commit(revision)
-        logger.info('GitHub revision', revision=commit_sha)
+        if self.gecko_dev_user is not None and self.gecko_dev_pwd is not None:
+            self.update_github_repo()
 
-        coveralls_jobs = []
+        commit_sha = self.get_github_commit(self.revision)
+        logger.info('GitHub revision', revision=commit_sha)
 
         # TODO: Process suites in parallel.
         # While we are uploading results for a suite, we can start to process the next one.
@@ -190,20 +213,11 @@ class CodeCov(object):
 
             logger.info('Suite report generated', suite=suite)
 
-            coveralls_jobs.append(uploader.coveralls(output))
+            uploader.coveralls(output)
             uploader.codecov(output, commit_sha, self.codecov_token, [suite.replace('-', '_')])'''
 
         output = self.generate_info(commit_sha, self.coveralls_token)
         logger.info('Report generated successfully')
 
-        coveralls_jobs.append(uploader.coveralls(output))
+        uploader.coveralls(output)
         uploader.codecov(output, commit_sha, self.codecov_token)
-
-        logger.info('Waiting for build to be injested by Coveralls...')
-        # Wait until the build has been injested by Coveralls.
-        if all([uploader.coveralls_wait(job_url) for job_url in coveralls_jobs]):
-            logger.info('Build injested by coveralls')
-        else:
-            logger.info('Coveralls took too much time to injest data.')
-
-        coverage_by_dir.generate(self.repo_dir)

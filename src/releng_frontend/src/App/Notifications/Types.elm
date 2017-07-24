@@ -72,6 +72,7 @@ type alias NotificationInstances =
 type Route
     = BaseRoute
     | ShowPreferencesRoute String
+    | ShowMessageRoute String
     | NewIdentityRoute
     | PolicyRoute
 
@@ -83,7 +84,7 @@ type alias Identity =
 type alias Model =
     { identityUrl : String                          -- URL of notification identity service
     , policyUrl : String                            -- URL of notification policy service
-    , identity_name : Maybe String                  -- Name of identity in the input field
+    , input_value : Maybe String                    -- Name of identity in the input field
     , retrieved_identity : Maybe String             -- Name of identity whose preferences are being displayed
     , preferences : WebData Preferences             -- Preferences retrieved from service for retrieved_identity
     , api_problem : WebData ApiProblem              -- Elm representation of Problem JSON
@@ -93,8 +94,9 @@ type alias Model =
     , edit_form : Form.Form () Preference           -- Form to edit a notification preference
     , new_message : Maybe String                    -- New Message create form
     , uid : Maybe String                            -- String in the UID input field
-    , status_html : Maybe (Html Msg)
-    , policies : WebData (List Policy)
+    , status_html : Maybe (Html Msg)                -- HTML with user interaction feedback
+    , policies : WebData (List Policy)              -- List of policies retrieved from policy service
+    , retrieved_message : WebData MessageInstance   -- Message instance retrieved by pressign "search messages"
     }
 
 -- FrontEnd Actions

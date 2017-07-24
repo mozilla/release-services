@@ -7,7 +7,7 @@ from __future__ import absolute_import
 
 import os
 import backend_common
-import cli_common
+import cli_common.taskcluster
 from backend_common.notifications import CHANNELS, URGENCY_LEVELS
 import releng_notification_policy.config
 import releng_notification_policy.models  # noqa

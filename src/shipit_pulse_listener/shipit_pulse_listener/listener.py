@@ -2,6 +2,7 @@
 from cli_common.pulse import run_consumer
 from cli_common.log import get_logger
 from shipit_pulse_listener.hook import Hook
+from shipit_pulse_listener import task_monitoring
 import requests
 import itertools
 import asyncio
@@ -22,10 +23,14 @@ class HookStaticAnalysis(Hook):
             'mozreview.commits.published',
         )
 
-    def parse_payload(self, payload):
+    def parse(self, body):
         '''
         Extract revisions from payload
         '''
+        if 'payload' not in body:
+            raise Exception('Missing payload in body')
+        payload = body['payload']
+
         # Filter on repo url
         repository_url = payload.get('repository_url')
         if not repository_url:
@@ -60,10 +65,14 @@ class HookRiskAssessment(Hook):
             'mozilla-central',
         )
 
-    def parse_payload(self, payload):
+    def parse(self, body):
         '''
         Extract revisions from payload
         '''
+        if 'payload' not in body:
+            raise Exception('Missing payload in body')
+        payload = body['payload']
+
         # Use only changesets
         if payload.get('type') != 'changegroup.1':
             return
@@ -101,6 +110,8 @@ class HookRiskAssessment(Hook):
         data = resp.json()
 
         def _has_extension(path):
+            if '.' not in path:
+                return False
             pos = path.rindex('.')
             ext = path[pos+1:].lower()
             return ext in self.extensions
@@ -112,6 +123,60 @@ class HookRiskAssessment(Hook):
         ])
 
         return set(filter(_has_extension, all_files))
+
+
+class HookCodeCoverage(Hook):
+    '''
+    Taskcluster hook handling the code coverage
+    '''
+    def __init__(self, configuration):
+        assert 'hookId' in configuration
+        super().__init__(
+            'project-releng',
+            configuration['hookId'],
+            'exchange/taskcluster-queue/v1/task-group-resolved',
+            '*.*.gecko-level-3._'
+        )
+
+    def is_coverage_task(self, task):
+        return task['task']['metadata']['name'].startswith('build-linux64-ccov')
+
+    def get_build_task_in_group(self, group_id):
+        list_url = 'https://queue.taskcluster.net/v1/task-group/' + group_id + '/list'
+
+        r = requests.get(list_url, params={
+            'limit': 200
+        })
+        reply = r.json()
+        for task in reply['tasks']:
+            if self.is_coverage_task(task):
+                return task
+
+        while 'continuationToken' in reply:
+            r = requests.get(list_url, params={
+                'limit': 200,
+                'continuationToken': reply['continuationToken']
+            })
+            reply = r.json()
+            for task in reply['tasks']:
+                if self.is_coverage_task(task):
+                    return task
+
+        return None
+
+    def parse(self, body):
+        '''
+        Extract revisions from payload
+        '''
+        taskGroupId = body['taskGroupId']
+
+        build_task = self.get_build_task_in_group(taskGroupId)
+        if build_task is None:
+            return None
+
+        return {
+            'REVISION': build_task['task']['payload']['env']['GECKO_HEAD_REV'],
+        }
 
 
 class PulseListener(object):
@@ -131,6 +196,11 @@ class PulseListener(object):
         self.pulse_listener_hooks = pulse_listener_hooks
         self.taskcluster_client_id = taskcluster_client_id
         self.taskcluster_access_token = taskcluster_access_token
+
+        task_monitoring.connect_taskcluster(
+            self.taskcluster_client_id,
+            self.taskcluster_access_token,
+        )
 
     def run(self):
 
@@ -152,6 +222,11 @@ class PulseListener(object):
                 self.taskcluster_access_token,
             )
         ]
+
+        # Add monitoring process
+        consumers.append(task_monitoring.run())
+
+        # Run all consumers together
         run_consumer(asyncio.gather(*consumers))
 
     def build_hook(self, conf):
@@ -163,6 +238,7 @@ class PulseListener(object):
         classes = {
             'static-analysis': HookStaticAnalysis,
             'risk-assessment': HookRiskAssessment,
+            'code-coverage': HookCodeCoverage,
         }
         hook_class = classes.get(conf['type'])
         if hook_class is None:

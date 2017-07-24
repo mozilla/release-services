@@ -49,7 +49,7 @@ in gecko.overrideDerivation (old: {
   propagatedBuildInputs = old.propagatedBuildInputs
     ++ [
 
-      # Update rust to 1.15
+      # Update rust to 1.17
       rustStable.rustc
       rustStable.cargo
     ];

@@ -497,7 +497,13 @@ in rec {
             ${gnused}/bin/sed -i -e "s| name = \"elm-webpack-loader\";| dontNpmInstall = true;name = \"elm-webpack-loader\";|" node-modules-generated.nix
 
             rm -rf elm-stuff
-            ${elmPackages.elm}/bin/elm-package install -y
+            n=0
+            until [ $n -ge 5 ]
+            do
+              ${elmPackages.elm}/bin/elm-package install -y
+              n=$[$n+1]
+              sleep 5
+            done
             ${elm2nix}/bin/elm2nix elm-packages.nix
 
             popd
@@ -743,7 +749,7 @@ in rec {
 
         shellHook = ''
           export APP_SETTINGS="$PWD/${self.src_path}/settings.py"
-          export SECRET_KEY=123
+          export SECRET_KEY_BASE64=`dd if=/dev/urandom bs=24 count=1 | base64`
           export APP_NAME="${name}-${version}"
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 

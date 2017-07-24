@@ -5,10 +5,14 @@
 
 from __future__ import absolute_import
 from flask import current_app
-from typing import List, Tuple
+from typing import List
 from werkzeug.exceptions import BadRequest, Conflict, NotFound
 from .models import Identity, Preference
 from sqlalchemy.exc import IntegrityError
+from backend_common.auth import auth
+
+
+AUTHENTICATION_SCOPE_PREFIX = 'project:releng:services/releng_notification_identity/permission/'
 
 
 def _get_identity_preferences(identity_name: str) -> List[Preference]:
@@ -26,6 +30,7 @@ def _get_identity_preferences(identity_name: str) -> List[Preference]:
         raise NotFound('Identity with name {} could not be found.'.format(identity_name))
 
 
+#@auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'put_identity'])
 def put_identity(identity_name: str, body: dict) -> None:
     try:
         session = current_app.db.session
@@ -64,6 +69,7 @@ def modify_existing_preferences(new_preferences_lookup: dict, existing_preferenc
         yield record
 
 
+#@auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'post_identity'])
 def post_identity(identity_name: str, body: dict) -> None:
     session = current_app.db.session
     preference_records = _get_identity_preferences(identity_name)
@@ -86,6 +92,7 @@ def post_identity(identity_name: str, body: dict) -> None:
     return None
 
 
+@auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'get_identity'])
 def get_identity(identity_name: str) -> dict:
     preferences = _get_identity_preferences(identity_name)
     if preferences:
@@ -100,6 +107,7 @@ def get_identity(identity_name: str) -> dict:
         raise NotFound('No preferences found for identity {}.'.format(identity_name))
 
 
+#@auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'get_identity_preferences_by_urgency'])
 def get_identity_preference_by_urgency(identity_name: str, urgency: str) -> dict:
     preferences = _get_identity_preferences(identity_name)
     preference_by_urgency_level = list(filter(lambda pref: pref.urgency == urgency, preferences))
@@ -117,6 +125,7 @@ def get_identity_preference_by_urgency(identity_name: str, urgency: str) -> dict
         raise NotFound('No {} preference found for identity {}.'.format(urgency, identity_name))
 
 
+#@auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'delete_identity_by_name'])
 def delete_identity_by_name(identity_name: str) -> None:
     session = current_app.db.session
     identity = session.query(Identity).filter(Identity.name == identity_name).first()
@@ -130,6 +139,7 @@ def delete_identity_by_name(identity_name: str) -> None:
         raise NotFound('Identity with name {} not found.'.format(identity_name))
 
 
+#@auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'delete_identity_preferences_by_urgency'])
 def delete_identity_preference_by_urgency(identity_name: str, urgency: str) -> None:
     session = current_app.db.session
     identity_key = session.query(Identity).filter(Identity.name == identity_name).value(Identity.id)

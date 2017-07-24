@@ -64,6 +64,16 @@ viewPreferenceItem model preference =
         ]
 
 
+viewPolicies : (List Policy) -> Html App.Notifications.Types.Msg
+viewPolicies policies =
+    div []
+        [ hr [] []
+        , h4 [] [ text "Active Notification Policies" ]
+        , List.map viewNotificationPolicy policies
+            |> div [ class "list-group" ]
+        ]
+
+
 -- Display view for preferences
 viewPreferences : App.Notifications.Types.Model -> Html App.Notifications.Types.Msg
 viewPreferences model =
@@ -165,7 +175,7 @@ viewNotificationPolicy policy =
                 _ -> ""
 
         frequency_string =
-            " Alert every "
+            " Alert " ++ policy.identity ++ " every "
                 ++ (toString policy.frequency.days) ++ " days, "
                 ++ (toString policy.frequency.hours) ++ " hours and "
                 ++ (toString policy.frequency.minutes) ++ " minutes."
@@ -173,18 +183,36 @@ viewNotificationPolicy policy =
         div [ class "list-group-item", style [("display", "flex"), ("flex-direction", "column")] ]
             [ div [ class "justify-content-between", style [("display", "flex"), ("flex-direction", "row")] ]
                 [ i [ class "fa fa-hourglass-start" ] []
-                , h4 [] [ text (" " ++ start_time_text ++ " ") ]
-                , i [ class "fa fa-long-arrow-right" ] []
-                , text "  "
-                , i [ class "fa fa-hourglass-end" ] []
-                , h4 [] [ text (" " ++ stop_time_text ++ " ") ]
+                , h4 [] [ text (" From " ++ start_time_text ++ " ") ]
+                , h4 [] [ text (" to " ++ stop_time_text ++ " ") ]
                 , span [ class ("float-xs-right badge badge-" ++ (urgencyLevel policy.urgency)) ] [ text policy.urgency ]
                 ]
             , div [ class "justify-content-between" ]
-                [ i [ class "fa fa-clock-o" ] []
-                , h4 [] [ text frequency_string ]
+                [ h4 [] [ text frequency_string ]
                 ]
             ]
+
+
+messageJsonExample : String
+messageJsonExample =
+    """{
+  "deadline": "3017-07-20T15:17:46.154Z",
+  "message": "Your signoff is required to advance the release process. Please do X, Y and Z, call your boss, pass go and collect $200. Thank you.",
+  "policies": [
+    {
+      "frequency": {
+        "days": 0,
+        "hours": 0,
+        "minutes": 0
+      },
+      "identity": "fakeidentity123",
+      "start_timestamp": "1917-07-20T15:17:46.154Z",
+      "stop_timestamp": "3017-07-20T15:17:46.154Z",
+      "urgency": "LOW"
+    }
+  ],
+  "shortMessage": "You are needed for a task!"
+}"""
 
 
 viewNewMessage : App.Notifications.Types.Model -> Html App.Notifications.Types.Msg
@@ -198,11 +226,31 @@ viewNewMessage model =
             , class "form-control" ] []
         , textarea
             [ onInput App.Notifications.Types.NewMessageUpdate
-            , placeholder "Enter New Message JSON"
             , class "form-control"
-            , rows 10] []
+            , rows 10
+            ]
+            [ text messageJsonExample ]
         , button [ class "btn btn-outline-primary", onClick App.Notifications.Types.NewMessageRequest ]
             [ i [ class "fa fa-check" ] []
             , text " Submit New Message"
             ]
         ]
+
+
+viewMessage : App.Notifications.Types.Model -> Html App.Notifications.Types.Msg
+viewMessage model =
+    case model.retrieved_message of
+        Success msg ->
+            div []
+                [ hr [] []
+                , div []
+                    [ h5 [] [ text ("Subject: " ++ msg.shortMessage) ]
+                    , blockquote [ class "blockquote" ] [ text msg.message ]
+                    ]
+                , div []
+                    [ i [ class "fa fa-hourglass-end" ] []
+                    , h5 [] [ text ("Deadline: " ++ msg.deadline) ]
+                    ]
+                , viewPolicies msg.policies]
+        _ ->
+            text ""

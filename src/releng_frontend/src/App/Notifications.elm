@@ -33,6 +33,7 @@ routeParser =
         , UrlParser.map App.Notifications.Types.ShowPreferencesRoute (UrlParser.s "identity" </> UrlParser.string)
         , UrlParser.map App.Notifications.Types.NewIdentityRoute (UrlParser.s "new")
         , UrlParser.map App.Notifications.Types.PolicyRoute (UrlParser.s "policy")
+        , UrlParser.map App.Notifications.Types.ShowMessageRoute (UrlParser.s "message" </> UrlParser.string)
         ]
 
 
@@ -44,6 +45,9 @@ reverseRoute route =
 
         App.Notifications.Types.ShowPreferencesRoute identity ->
             "/notifications/identity/" ++ identity
+
+        App.Notifications.Types.ShowMessageRoute message_uid ->
+            "/notifications/message/" ++ message_uid
 
         App.Notifications.Types.NewIdentityRoute ->
             "/notifications/new"
@@ -67,7 +71,7 @@ init : String -> String -> App.Notifications.Types.Model
 init identityUrl policyUrl =
     { identityUrl = identityUrl
     , policyUrl = policyUrl
-    , identity_name = Nothing
+    , input_value = Nothing
     , preferences = NotAsked
     , api_problem = NotAsked
     , selected_preference = Nothing
@@ -79,6 +83,7 @@ init identityUrl policyUrl =
     , uid = Nothing
     , status_html = Nothing
     , policies = NotAsked
+    , retrieved_message = NotAsked
     }
 
 
@@ -110,12 +115,12 @@ update currentRoute msg model =
                     else
                         Just name
             in
-                ({model | identity_name = newName}, Cmd.none, Nothing)
+                ({model | input_value = newName}, Cmd.none, Nothing)
 
         App.Notifications.Types.GetPreferencesRequest ->
             let
                 identity =
-                    case model.identity_name of
+                    case model.input_value of
                         Just name -> name
                         Nothing -> ""
 
@@ -128,11 +133,11 @@ update currentRoute msg model =
                         (Http.emptyBody)
 
             in
-                case model.identity_name of
+                case model.input_value of
                     Just val ->
                         ({model
                             | is_service_processing = True
-                            , retrieved_identity = model.identity_name
+                            , retrieved_identity = model.input_value
                             , selected_preference = Nothing
                             , preferences = Loading
                             , policies = Loading
@@ -202,8 +207,7 @@ update currentRoute msg model =
             in
                 ({model
                     | status_html = Nothing
-                    , is_service_processing = True
-                    , status_html = Nothing}
+                    , is_service_processing = True}
                 , Cmd.none
                 , Just request)
 
@@ -233,7 +237,7 @@ update currentRoute msg model =
                 Just preference ->
                     let
                         identity =
-                            case model.identity_name of
+                            case model.retrieved_identity of
                                 Just name -> name
                                 Nothing -> ""
 
@@ -285,7 +289,8 @@ update currentRoute msg model =
                     | retrieved_identity = Nothing
                     , preferences = NotAsked
                     , selected_preference = Nothing
-                    , new_identity = App.Notifications.Form.initializeNewIdentityForm}
+                    , new_identity = App.Notifications.Form.initializeNewIdentityForm
+                    , status_html = Nothing}
                 , new_route_command, Nothing)
                 
 
@@ -363,7 +368,7 @@ update currentRoute msg model =
                         ({resp_model
                             | api_problem = NotAsked
                             , status_html = Just success
-                            , identity_name = Just name},
+                            , input_value = Just name},
                         Utils.performMsg App.Notifications.Types.GetPreferencesRequest, Nothing)
 
                     Failure err ->
@@ -467,8 +472,12 @@ update currentRoute msg model =
                 new_route_command =
                     (reverseRoute App.Notifications.Types.PolicyRoute)
                         |> Navigation.newUrl
+
+                new_model = { model
+                    | uid = Nothing
+                    , status_html = Nothing}
             in
-                (model, new_route_command, Nothing)
+                (new_model, new_route_command, Nothing)
 
 
         App.Notifications.Types.UpdateUID newUid ->
@@ -511,10 +520,12 @@ update currentRoute msg model =
         App.Notifications.Types.GetMessageRequest ->
             let
                 resp_model =
-                    {model | is_service_processing = True}
+                    {model
+                        | is_service_processing = True
+                        , status_html = Nothing}
 
                 uid =
-                    case model.uid of
+                    case model.input_value of
                         Just a -> a
                         Nothing -> ""
 
@@ -532,11 +543,30 @@ update currentRoute msg model =
         App.Notifications.Types.GetMessageResponse response ->
             let
                 resp_model =
-                    {model | is_service_processing = False}
+                    {model
+                        | is_service_processing = False
+                        , preferences = NotAsked}
+
+                navigation_change_command =
+                    case model.input_value of
+                        Just value ->
+                            (reverseRoute (App.Notifications.Types.ShowMessageRoute value)
+                                |> Navigation.newUrl)
+
+                        Nothing ->
+                            Cmd.none
             in
                 case response of
                     Success resp ->
-                        (resp_model, Cmd.none, Nothing)
+                        let
+                            message =
+                                case (decodeString App.Notifications.Api.messageDecoder resp) of
+                                    Ok msg -> Success msg
+                                    _ -> NotAsked
+                        in
+                            ({resp_model
+                                | retrieved_message = message}
+                            , navigation_change_command, Nothing)
 
                     Failure err ->
                         handleApiRequestFailure resp_model err App.Notifications.Types.GetMessageRequest
@@ -587,7 +617,9 @@ update currentRoute msg model =
                 (Just message, Just new_uid) ->
                     let
                         resp_model =
-                            {model | is_service_processing = True}
+                            {model
+                                | is_service_processing = True
+                                , status_html = Nothing}
 
                         new_message_json = Json.Encode.string message
 
@@ -595,7 +627,7 @@ update currentRoute msg model =
                             Hawk.Request
                                 "NewMessage"
                                 "PUT"
-                                (model.policyUrl ++ "/message/" ++ new_uid)  -- TODO: fix filler uid
+                                (model.policyUrl ++ "/message/" ++ new_uid)
                                 [ Http.header "Accept" "application/json" ]
                                 (Http.stringBody "application/json" message)
 
@@ -603,32 +635,6 @@ update currentRoute msg model =
                         (resp_model, Cmd.none, Just request)
                 _ ->
                     (model, Cmd.none, Nothing)
---            case model.new_message of
---                Just message ->
---                    case model.uid of
---                        Just new_uid ->
---                            let
---                                resp_model =
---                                    {model | is_service_processing = True}
---
---                                new_message_json = Json.Encode.string message
---
---                                request =
---                                    Hawk.Request
---                                        "NewMessage"
---                                        "PUT"
---                                        (model.policyUrl ++ "/message/" ++ new_uid)  -- TODO: fix filler uid
---                                        [ Http.header "Accept" "application/json" ]
---                                        (Http.stringBody "application/json" message)
---
---                            in
---                                (resp_model, Cmd.none, Just request)
---
---                        Nothing ->
---                            (model, Cmd.none, Nothing)
---                Nothing ->
---                    (model, Cmd.none, Nothing)
-
 
 
         App.Notifications.Types.NewMessageResponse response ->
@@ -638,7 +644,8 @@ update currentRoute msg model =
             in
                 case response of
                     Success resp ->
-                        (resp_model, Cmd.none, Nothing)
+                        ({resp_model
+                            | status_html = Just (App.Utils.success App.Notifications.Types.ClearStatusMessage "Message successfully created")}, Cmd.none, Nothing)
                     Failure err ->
                         handleApiRequestFailure resp_model err App.Notifications.Types.NewMessageRequest
                     _ ->
@@ -697,7 +704,7 @@ update currentRoute msg model =
                     {model | is_service_processing = True}
 
                 identity =
-                    case model.identity_name of
+                    case model.input_value of
                         Just name -> name
                         Nothing -> ""
 
@@ -791,9 +798,12 @@ update currentRoute msg model =
                 App.Notifications.Types.PolicyRoute ->
                     update route App.Notifications.Types.PolicyDisplay model
 
+                App.Notifications.Types.ShowMessageRoute message_uid ->
+                    update route App.Notifications.Types.GetMessageRequest model
+
                 App.Notifications.Types.ShowPreferencesRoute identity ->
                     let
-                        newModel = { model | identity_name = Just identity }
+                        newModel = { model | input_value = Just identity }
                     in
                         update route App.Notifications.Types.GetPreferencesRequest newModel
 
@@ -822,28 +832,44 @@ view route scopes model =
                 App.Notifications.Types.PolicyRoute ->
                     div [ class "lead" ] [ App.Notifications.View.viewNewMessage model ]
 
+                App.Notifications.Types.ShowMessageRoute message_uid ->
+                    div [ class "lead" ] [ App.Notifications.View.viewMessage model ]
+
     in
         div [ class "container" ]
             [ h1 [] [ text "RelEng Notification Preferences" ]
             , p [ class "lead" ] [ text "Manage preferred notification preferences for RelEng events" ]
             , div []
                 [ p [ class "lead" ] [ App.Notifications.View.viewStatusMessage model ]
-                , div [ class "container" ]
-                    [ input
-                        [ placeholder "Enter identity name"
-                        , onInput App.Notifications.Types.ChangeName
-                        , class "form-control" ] []
-                    , button [ onClick App.Notifications.Types.GetPreferencesRequest, class "btn btn-outline-primary" ]
-                        [ i [ class "fa fa-search" ] []
-                        , text " Search Identities"
+                , div [ class "btn-toolbar mb-3" ]
+                    [ div [ class "input-group" ]
+                        [ span [ class "input-group-addon" ] [ i [ class "fa fa-search" ] []]
+                        , input
+                            [ placeholder "Identity or Message UID"
+                            , onInput App.Notifications.Types.ChangeName
+                            , class "form-control" ] []
                         ]
-                    , button [ onClick App.Notifications.Types.NewIdentityFormDisplay, class "btn btn-outline-primary" ]
-                        [ i [ class "fa fa-user-plus" ] []
-                        , text " New Identity"
-                        ]
-                    , button [ onClick App.Notifications.Types.PolicyDisplay, class "btn btn-outline-primary" ]
-                        [ i [ class "fa fa-list-ol" ] []
-                        , text " Policy"
+
+                    , div [ class "btn-group btn-group-justified" ]
+                        [  button [ type_ "button", onClick App.Notifications.Types.GetPreferencesRequest, class "btn btn-outline-primary" ]
+                                [ i [ class "fa fa-address-book" ] []
+                                , text " Search Identities"
+                                ]
+
+                        , button [ type_ "button", onClick App.Notifications.Types.GetMessageRequest, class "btn btn-outline-primary" ]
+                                [ i [ class "fa fa-inbox" ] []
+                                , text " Search Messages"
+                                ]
+
+                        , button [ type_ "button", onClick App.Notifications.Types.NewIdentityFormDisplay, class "btn btn-outline-primary" ]
+                                [ i [ class "fa fa-user-plus" ] []
+                                , text " New Identity"
+                                ]
+
+                        , button [ type_ "button", onClick App.Notifications.Types.PolicyDisplay, class "btn btn-outline-primary" ]
+                                [ i [ class "fa fa-envelope" ] []
+                                , text " New Message"
+                                ]
                         ]
                     ]
                 , main_content_view

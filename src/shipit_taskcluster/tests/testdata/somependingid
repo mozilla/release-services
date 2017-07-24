@@ -1,0 +1,86 @@
+{
+  "taskGroupId": "BqoYe8UfRXGCH9DA_niFBA",
+  "tasks": [
+    {
+      "status": {
+        "deadline": "2017-06-09T22:47:06.010Z",
+        "expires": "3017-06-05T22:47:06.087Z",
+        "provisionerId": "null-provisioner",
+        "retriesLeft": 5,
+        "runs": [
+          {
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "resolved": "2017-06-05T23:21:36.246Z",
+            "runId": 0,
+            "scheduled": "2017-06-05T22:48:56.166Z",
+            "started": "2017-06-05T23:18:16.952Z",
+            "state": "completed",
+            "takenUntil": "2017-06-05T23:41:33.979Z",
+            "workerGroup": "buildbot",
+            "workerId": "buildbot"
+          }
+        ],
+        "schedulerId": "task-graph-scheduler",
+        "state": "completed",
+        "taskGroupId": "BqoYe8UfRXGCH9DA_niFBA",
+        "taskId": "-1Ud7GHmRcScy6BPDHLJ6g",
+        "workerType": "buildbot"
+      }
+    },
+    {
+      "status": {
+        "deadline": "2017-06-09T22:47:06.010Z",
+        "expires": "3017-06-05T22:47:06.087Z",
+        "provisionerId": "null-provisioner",
+        "retriesLeft": 5,
+        "runs": [
+          {
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "resolved": "2017-06-05T23:27:40.564Z",
+            "runId": 0,
+            "scheduled": "2017-06-05T22:48:56.291Z",
+            "started": "2017-06-05T23:24:02.109Z",
+            "state": "completed",
+            "takenUntil": "2017-06-05T23:47:38.323Z",
+            "workerGroup": "buildbot",
+            "workerId": "buildbot"
+          }
+        ],
+        "schedulerId": "task-graph-scheduler",
+        "state": "completed",
+        "taskGroupId": "BqoYe8UfRXGCH9DA_niFBA",
+        "taskId": "-4CXWrigSSa8dElv9dqkNw",
+        "workerType": "buildbot"
+      }
+    },
+    {
+      "status": {
+        "deadline": "2017-06-09T22:47:06.010Z",
+        "expires": "3017-06-05T22:47:06.087Z",
+        "provisionerId": "buildbot-bridge",
+        "retriesLeft": 5,
+        "runs": [
+          {
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "resolved": "2017-06-06T00:37:51.506Z",
+            "runId": 0,
+            "scheduled": "2017-06-06T00:25:48.618Z",
+            "started": "2017-06-06T00:26:05.150Z",
+            "state": "completed",
+            "takenUntil": "2017-06-06T00:56:06.783Z",
+            "workerGroup": "buildbot-bridge",
+            "workerId": "buildbot-bridge"
+          }
+        ],
+        "schedulerId": "task-graph-scheduler",
+        "state": "pending",
+        "taskGroupId": "BqoYe8UfRXGCH9DA_niFBA",
+        "taskId": "-6_JVdU6SkWKbsvRqR449g",
+        "workerType": "buildbot-bridge"
+      }
+    }
+  ]
+}

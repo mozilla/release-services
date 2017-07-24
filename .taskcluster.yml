@@ -34,13 +34,13 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-latest"
+      image: "mozillareleng/services@sha256:1835331e726eae803a7207989ed9c7db03e9fa98bab323df357fd27490576c39"
       features:
         taskclusterProxy: true
       command:
         - "/bin/bash"
         - "-c"
-        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /root/.cache/nix && ./please -vv tools decision-task"
+        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
 
   - metadata:
       name: "0. Decision task"
@@ -69,13 +69,13 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-latest"
+      image: "mozillareleng/services@sha256:1835331e726eae803a7207989ed9c7db03e9fa98bab323df357fd27490576c39"
       features:
         taskclusterProxy: true
       command:
         - "/bin/bash"
         - "-c"
-        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /root/.cache/nix && ./please -vv tools decision-task"
+        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
 
   - metadata:
       name: "0. Decision task"
@@ -104,13 +104,13 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-latest"
+      image: "mozillareleng/services@sha256:1835331e726eae803a7207989ed9c7db03e9fa98bab323df357fd27490576c39"
       features:
         taskclusterProxy: true
       command:
         - "/bin/bash"
         - "-c"
-        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /root/.cache/nix && ./please -vv tools decision-task"
+        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
 
   - metadata:
       name: "0. Decision task"
@@ -139,10 +139,10 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-latest"
+      image: "mozillareleng/services@sha256:1835331e726eae803a7207989ed9c7db03e9fa98bab323df357fd27490576c39"
       features:
         taskclusterProxy: true
       command:
         - "/bin/bash"
         - "-c"
-        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /root/.cache/nix && ./please -vv tools decision-task"
+        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"

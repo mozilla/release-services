@@ -1,0 +1,18 @@
+{
+    "releng1": {
+        "groups": ["releng"],
+        "email": "releng1@testing.com"
+    },
+    "releng2": {
+        "groups": ["releng"],
+        "email": "releng2@testing.com"
+    },
+    "relman1": {
+        "groups": ["relman"],
+        "email": "relman1@testing.com"
+    },
+    "relman2": {
+        "groups": ["relman"],
+        "email": "relman2@testing.com"
+    }
+}

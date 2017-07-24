@@ -99,14 +99,6 @@ policyValidation =
 editPreferenceFormView : Form () App.Notifications.Types.Preference -> Html Form.Msg
 editPreferenceFormView form =
     let
-        -- Error presentation
-        errorFor preferenceField =
-            case preferenceField.liveError of
-                Just error ->
-                    div [ class "error" ] [ text (toString error) ]
-                Nothing ->
-                    text ""
-
         -- Field states
         channel =
             Form.getFieldAsString "channel" form
@@ -124,39 +116,42 @@ editPreferenceFormView form =
             [ ("IRC", "IRC")
             , ("EMAIL", "EMAIL")
             ]
+
+        is_missing_target =
+            case target.liveError of
+                Just error -> True
+                Nothing -> False
     in
-        div [ class "justify-content-between form-group form-inline" ]
+        div [ class ("justify-content-between form-group form-inline" ++ (if is_missing_target == True then " has-danger" else "")) ]
             [ hr [] []
             , Input.selectInput channel_options channel [ class "form-control" ]
-            , Input.textInput target [ class "form-control" ]
-            , button [ onClick Form.Submit, class "form-control" ]
-                [ i [ class "fa fa-floppy-o" ] []
-                , text " Save"
+            , Input.textInput target [ class ("form-control" ++ (if is_missing_target == True then " form-control-danger" else "")) ]
+            , button [ onClick Form.Submit, class "btn btn-outline-primary form-control" ]
+                [ i [ class "fa fa-check" ] []
+                , text " Submit"
                 ]
-            , button [ onClick (Form.RemoveItem "" 0), class "form-control" ]
+            , button [ onClick (Form.RemoveItem "" 0), class "btn btn-outline-primary form-control" ]
                 [ i [ class "fa fa-trash" ] []
                 , text " Delete"
                 ]
-            , errorFor channel
-            , errorFor target
             ]
 
 
 editNewPreferenceFormView : Form () App.Notifications.Types.Identity -> Int -> Html Form.Msg
-editNewPreferenceFormView form i =
+editNewPreferenceFormView form_ i =
     let
         -- Field states
         channel =
-            Form.getFieldAsString ("preferences." ++ (toString i) ++ ".channel" ) form
+            Form.getFieldAsString ("preferences." ++ (toString i) ++ ".channel" ) form_
 
         name =
-            Form.getFieldAsString "name" form
+            Form.getFieldAsString "name" form_
 
         target =
-            Form.getFieldAsString ("preferences." ++ (toString i) ++ ".target" ) form
+            Form.getFieldAsString ("preferences." ++ (toString i) ++ ".target" ) form_
 
         urgency =
-            Form.getFieldAsString ("preferences." ++ (toString i) ++ ".urgency" ) form
+            Form.getFieldAsString ("preferences." ++ (toString i) ++ ".urgency" ) form_
 
         urgency_string =
             case urgency.value of
@@ -174,9 +169,9 @@ editNewPreferenceFormView form i =
             , ("HIGH", "HIGH")
             ]
     in
-        div [ class "list-group-item justify-content-between form-inline" ]
+        form [ class "list-group-item form-inline d-inline-flex justify-content-between" ]
             [ Input.selectInput channel_options channel [ class "form-control" ]
-            , Input.textInput target [ class "form-control", placeholder "Notification Target" ]
+            , Input.textInput target [ class "form-control align-self-stretch", placeholder "Notification Target" ]
             , span [ class ("float-xs-right badge badge-" ++ (urgencyLevel urgency_string)) ] [ text urgency_string ]
             ]
 
@@ -194,8 +189,8 @@ newIdentityFormView form =
             , div [ class "list-group" ]
                     <| List.map (editNewPreferenceFormView form) list_indexes
 
-            , button [ onClick Form.Submit, class "btn btn-outline-primary" ]
-                [ i [ class "fa fa-floppy-o" ] [ text " Submit Identity" ]
+            , button [ onClick Form.Submit, class "btn btn-outline-primary form-control" ]
+                [ i [ class "fa fa-check" ] [ text " Submit Identity" ]
                 ]
             ]
 

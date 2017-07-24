@@ -155,7 +155,7 @@ def cmd_S3(ctx,
                 ])),
             )
 
-        os.chmod(index_html_file, 755)
+        os.chmod(index_html_file, 0o755)
         with io.open(index_html_file, 'w', encoding='utf-8') as f:
             f.write(index_html)
     please_cli.utils.check_result(

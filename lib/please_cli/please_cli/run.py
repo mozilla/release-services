@@ -60,7 +60,9 @@ def cmd(ctx, project, quiet, nix_shell):
     if not run_type:
         raise click.ClickException('Application `{}` is not configured to be runnable.')
 
-    host = run_options.get('host', 'localhost')  # TODO: needs to be 0.0.0.0 when inside docker
+    host = run_options.get('host', 'localhost')
+    if please_cli.config.IN_DOCKER:
+        host = run_options.get('host', '0.0.0.0')
     port = str(run_options.get('port', 8000))
     schema = 'https://'
     project_name = project.replace('-', '_')
@@ -183,7 +185,7 @@ def cmd(ctx, project, quiet, nix_shell):
             '--ca-certs={}'.format(ca_cert_file),
             '--certfile={}'.format(server_cert_file),
             '--keyfile={}'.format(server_key_file),
-            '--workers', '1',
+            '--workers', '2',
             '--timeout', '3600',
             '--reload',
             '--reload-engine=poll',

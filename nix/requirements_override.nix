@@ -213,7 +213,7 @@ in skipOverrides {
     patches = [
          (pkgs.fetchurl {
            url = "https://github.com/benoitc/gunicorn/pull/1527.patch";
-           sha256 = "03wpbcn03vf08vc5jz7sbb8xlvhmkas1h1l0wvp2mn0dhcrbipkh";
+           sha256 = "14zvlm4dh432gd5n32i2x60rkq3d8wz1xlj45ldkp2z4qgp7chbk";
          })
       ];
   };

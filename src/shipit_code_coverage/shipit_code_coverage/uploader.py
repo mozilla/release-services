@@ -4,8 +4,6 @@ import requests
 
 from cli_common.log import get_logger
 
-from shipit_code_coverage import utils
-
 
 logger = get_logger(__name__)
 
@@ -24,14 +22,6 @@ def coveralls(data):
         raise Exception('Failure to submit data. Response [%s]: %s' % (r.status_code, r.text))
 
     return result['url'] + '.json'
-
-
-def coveralls_wait(job_url):
-    def check_coveralls_job():
-        r = requests.get(job_url)
-        return True if r.json()['covered_percent'] else False
-
-    return utils.wait_until(check_coveralls_job, 60) is not None
 
 
 def codecov(data, commit_sha, token, flags=None):
