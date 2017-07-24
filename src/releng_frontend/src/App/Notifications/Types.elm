@@ -120,7 +120,7 @@ type Msg
     | EditPreferenceFormMsg Form.Msg
 
     -- Message for the "Policy" service
-    | PolicyDisplay
+    | NewMessageDisplay
     | TickTockRequest
     | TickTockResponse (WebData String)
     | GetPendingMessagesRequest

@@ -467,7 +467,7 @@ update currentRoute msg model =
                 (new_model, command, Nothing)
 
 
-        App.Notifications.Types.PolicyDisplay ->
+        App.Notifications.Types.NewMessageDisplay ->
             let
                 new_route_command =
                     (reverseRoute App.Notifications.Types.PolicyRoute)
@@ -796,7 +796,7 @@ update currentRoute msg model =
                     update route App.Notifications.Types.NewIdentityFormDisplay model
 
                 App.Notifications.Types.PolicyRoute ->
-                    update route App.Notifications.Types.PolicyDisplay model
+                    update route App.Notifications.Types.NewMessageDisplay model
 
                 App.Notifications.Types.ShowMessageRoute message_uid ->
                     update route App.Notifications.Types.GetMessageRequest model
@@ -866,7 +866,7 @@ view route scopes model =
                                 , text " New Identity"
                                 ]
 
-                        , button [ type_ "button", onClick App.Notifications.Types.PolicyDisplay, class "btn btn-outline-primary" ]
+                        , button [ type_ "button", onClick App.Notifications.Types.NewMessageDisplay, class "btn btn-outline-primary" ]
                                 [ i [ class "fa fa-envelope" ] []
                                 , text " New Message"
                                 ]
