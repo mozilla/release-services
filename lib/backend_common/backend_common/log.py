@@ -25,4 +25,5 @@ def init_app(app):
         PAPERTRAIL_PORT=app.config.get('PAPERTRAIL_PORT'),
         SENTRY_DSN=app.config.get('SENTRY_DSN'),
         MOZDEF=app.config.get('MOZDEF'),
+        flask_app=app,
     )
