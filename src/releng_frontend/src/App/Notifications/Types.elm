@@ -27,8 +27,6 @@ type alias ApiProblem =     -- See https://tools.ietf.org/html/rfc7807
 type alias Preferences =
     List Preference
 
---type alias InputPreferences =
---    List InputPreference
 
 type alias MessageInstance =
     { deadline : String
@@ -36,13 +34,7 @@ type alias MessageInstance =
     , shortMessage : String
     , policies : List Policy
     }
---
---type alias NotificationInstance =
---    { channel : String
---    , message : String
---    , target : List String
---    , uid : String
---    }
+
 
 type alias Frequency =
     { minutes : Int
@@ -58,9 +50,6 @@ type alias Policy =
     , urgency : String
     , frequency : Frequency
     }
-
---type alias NotificationInstances =
---    List NotificationInstance
 
 
 type Route
@@ -114,26 +103,25 @@ type Msg
     | EditPreferenceFormMsg Form.Msg
 
     -- Message for the "Policy" service
-    | NewMessageDisplay
-    | TickTockRequest
-    | TickTockResponse (WebData String)
-    | GetPendingMessagesRequest
-    | GetPendingMessagesResponse (WebData String)
-    | GetMessageRequest
-    | GetMessageResponse (WebData String)
-    | DeleteMessageRequest
-    | DeleteMessageResponse (WebData String)
-    | NewMessageRequest
-    | NewMessageResponse (WebData String)
-    | NewMessageUpdate String
-    | NewMessageUIDUpdate String
-    | GetActivePoliciesRequest
-    | GetActivePoliciesResponse (WebData String)
-    | UpdateUID String
+    | NewMessageDisplay                             -- Display new message UI
+    | TickTockRequest                               -- Trigger TickTock
+    | TickTockResponse (WebData String)             -- Handle TickTock response
+    | GetPendingMessagesRequest                     -- Get all pending messages
+    | GetPendingMessagesResponse (WebData String)   -- Handle pending messages response
+    | GetMessageRequest                             -- Get message by uid
+    | GetMessageResponse (WebData String)           -- Handle message by uid response
+    | DeleteMessageRequest                          -- Delete message
+    | DeleteMessageResponse (WebData String)        -- Handle delete message response
+    | NewMessageRequest                             -- Create new message request
+    | NewMessageResponse (WebData String)           -- Handle new message response
+    | NewMessageUpdate String                       -- Update new message textarea
+    | NewMessageUIDUpdate String                    -- Update new message UID text input
+    | GetActivePoliciesRequest                      -- Get all active policies for a user
+    | GetActivePoliciesResponse (WebData String)    -- Handles active policies response
 
     -- Error handlers, other
     | OperationFail Msg String                          -- Operation failed with the given reason
     | HandleProblemJson Msg (Http.Response String)      -- Handle problem JSON
     | ClearStatusMessage                                -- Clear the status indicator message
     | NavigateTo Route                                  -- Change the route
-    | HelpDisplay
+    | HelpDisplay                                       -- Display help menu

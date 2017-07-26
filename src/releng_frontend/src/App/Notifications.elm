@@ -488,10 +488,6 @@ update currentRoute msg model =
                 (new_model, new_route_command, Nothing)
 
 
-        App.Notifications.Types.UpdateUID newUid ->
-            ({model | uid = Just newUid}, Cmd.none, Nothing)
-
-
         App.Notifications.Types.GetPendingMessagesRequest ->
             let
                 request =

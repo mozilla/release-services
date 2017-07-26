@@ -6,9 +6,6 @@ import Json.Encode
 import App.Notifications.Types exposing (..)
 import RemoteData
 import RemoteData exposing (WebData)
-import Http
-import Utils
-import Form
 
 
 -- Decoders / Encoders
@@ -43,156 +40,6 @@ problemDecoder =
         type_ = maybe (field "type" string)
     in
         map5 ApiProblem detail instance status title type_
-
-
---
--- Commands
---
---getPreferences : Model -> Cmd Msg
---getPreferences model =
---    let
---        identity =
---            case model.identity_name of
---                Just val ->
---                    val
---                Nothing ->
---                    ""
---    in
---        Http.get (model.identityUrl ++ "/identity/" ++ identity) preferenceDecoder
---            |> RemoteData.sendRequest
---            |> Cmd.map GetPreferencesResponse
-
-
---deleteIdentity : Model -> Cmd Msg
---deleteIdentity model =
---    let
---        identity =
---            case model.identity_name of
---                Just val ->
---                    val
---
---                Nothing ->
---                    ""
---
---        request_params =
---            { method = "DELETE"
---            , headers = []
---            , url = model.identityUrl ++ "/identity/" ++ identity
---            , body = Http.emptyBody
---            , expect = Http.expectString
---            , timeout = Nothing
---            , withCredentials = False
---            }
---    in
---        Http.request request_params
---            |> RemoteData.sendRequest
---            |> Cmd.map IdentityDeleteResponse
-
-
-newIdentity : Model -> Cmd Msg
-newIdentity model =
-    let
-        new_id_output = Form.getOutput model.new_identity
-    in
-        case new_id_output of
-            Just new_identity ->
-                let
-                    encoded_preference_list = Json.Encode.list (List.map encodePreference new_identity.preferences)
-
-                    msg_body = Json.Encode.object
-                        [ ("preferences", encoded_preference_list)
-                        ]
-
-                    request_params =
-                        { method = "PUT"
-                        , headers = []
-                        , url = model.identityUrl ++ "/identity/" ++ new_identity.name
-                        , body = Http.jsonBody msg_body
-                        , expect = Http.expectString
-                        , timeout = Nothing
-                        , withCredentials = False
-                        }
-
-                in
-                    Http.request request_params
-                        |> RemoteData.sendRequest
-                        |> Cmd.map NewIdentityResponse
-
-            Nothing ->
-                Utils.performMsg (OperationFail App.Notifications.Types.NewIdentityRequest "No new identity data.")
-
-
-modifyIdentity : Model -> Cmd Msg
-modifyIdentity model =
-    let
-        modified_preference = Form.getOutput model.edit_form
-    in
-        case modified_preference of
-            Just selected_preference ->
-                let
-                    encoded_preference_list = Json.Encode.list (List.map encodePreference [selected_preference])
-
-
-                    id_name =  -- TODO remove hard coded name, infer from retrieved_identity
-                        case model.retrieved_identity of
-                            Just identity -> identity
-                            Nothing -> ""
-
-                    msg_body = Json.Encode.object
-                        [ ("preferences", encoded_preference_list)
-                        ]
-
-                    request_params =
-                        { method = "POST"
-                        , headers = []
-                        , url = model.identityUrl ++ "/identity/" ++ id_name
-                        , body = Http.jsonBody msg_body
-                        , expect = Http.expectString
-                        , timeout = Nothing
-                        , withCredentials = False
-                        }
-                in
-                    Http.request request_params
-                        |> RemoteData.sendRequest
-                        |> Cmd.map ModifyIdentityResponse
-
-            Nothing ->
-                Utils.performMsg (OperationFail App.Notifications.Types.ModifyIdentityRequest "No preference selected.")
-
-
-
---deletePreferenceByUrgency : Model -> Cmd Msg
---deletePreferenceByUrgency model =
---    case model.selected_preference of
---        Nothing ->
---            Utils.performMsg (OperationFail App.Notifications.Types.UrgencyDeleteRequest "Please select a preference to delete.")
---
---        Just preference ->
---            let
---                identity =
---                    case model.identity_name of
---                        Just val ->
---                            val
---
---                        Nothing ->
---                            ""
---
---                request_params =
---                    { method = "DELETE"
---                    , headers = []
---                    , url = model.identityUrl ++ "/identity/" ++ identity ++ "/" ++ preference.urgency
---                    , body = Http.emptyBody
---                    , expect = Http.expectString
---                    , timeout = Nothing
---                    , withCredentials = False
---                    }
---
---            in
---                Http.request request_params
---                |> RemoteData.sendRequest
---                |> Cmd.map UrgencyDeleteResponse
-
-
 
 --
 -- NOTIFICATION POLICY COMPONENTS
@@ -230,18 +77,6 @@ messagesDecoder : Decoder (List MessageInstance)
 messagesDecoder =
     at [ "messages" ] (list messageDecoder)
 
---notificationInstancesDecoder : Decoder NotificationInstances
---notificationInstancesDecoder =
---    let
---        channel_field = field "channel" string
---        message_field = field "message" string
---        targets_field = field "targets" (list string)
---        uid_field = field "uid" string
---        dec =
---            map4 NotificationInstance channel_field message_field targets_field uid_field
---    in
---        at [ "notifications" ] (list dec)
-
 
 encodeFrequency : App.Notifications.Types.Frequency -> Json.Encode.Value
 encodeFrequency frequency =
@@ -261,32 +96,6 @@ encodePolicy policy =
         , ("stop_timestamp", Json.Encode.string policy.stop_timestamp)
         , ("urgency", Json.Encode.string policy.urgency)
         ]
-
-
-deleteMessage : Model -> Cmd Msg
-deleteMessage model =
-    let
-        uid =
-            case model.uid of
-                Just val -> val
-                Nothing -> ""
-
-        request_url =
-            model.policyUrl ++ "/message/" ++ uid
-
-        request_params =
-            { method = "DELETE"
-            , headers = []
-            , url = request_url
-            , body = Http.emptyBody
-            , expect = Http.expectString
-            , timeout = Nothing
-            , withCredentials = False
-            }
-    in
-        Http.request request_params
-            |> RemoteData.sendRequest
-            |> Cmd.map DeleteMessageResponse
 
 
 hawkResponse : Cmd (WebData String) -> String -> Cmd App.Notifications.Types.Msg
