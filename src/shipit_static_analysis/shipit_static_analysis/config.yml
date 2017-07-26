@@ -32,3 +32,6 @@ clang_checkers:
    publish: yes
  - name: readability-redundant-control-flow
    publish: yes
+
+# Third party files from mozilla-central
+third_party: tools/rewriting/ThirdPartyPaths.txt

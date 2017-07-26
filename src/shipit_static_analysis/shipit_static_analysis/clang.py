@@ -46,27 +46,6 @@ CLANG_SETUP_CMD = [
     '--from-build', 'linux64-clang-tidy'
 ]
 
-__third_party = None
-
-
-def list_third_party(work_dir, path='tools/rewriting/ThirdPartyPaths.txt'):
-    '''
-    List third party directories using mozilla-central file
-    Uses a local cache to avoid reading every time the file
-    '''
-    global __third_party  # cache
-    if __third_party is not None:
-        return __third_party
-
-    full_path = os.path.join(work_dir, path)
-    assert os.path.exists(full_path), \
-        'Missing third party file {}'.format(full_path)
-    with open(full_path) as f:
-        # Remove new lines
-        __third_party = list(map(lambda l: l.rstrip(), f.readlines()))
-
-    return __third_party
-
 
 class ClangTidy(object):
     '''
@@ -212,7 +191,7 @@ class ClangTidy(object):
                     logger.info('Skipping clang-diagnostic-error: {}'.format(issue))
                 else:
                     issues.append(issue)
-                    mode = issue.is_third_party() and '3rd party' or 'Mozilla'
+                    mode = issue.is_third_party() and '3rd party' or 'in-tree'
                     logger.info('Found {} code issue {}'.format(mode, issue))
 
             elif issues:
@@ -248,7 +227,16 @@ class ClangIssue(object):
         '''
         Is this issue in a third party path ?
         '''
-        for path in list_third_party(self.work_dir):
+
+        # List third party directories using mozilla-central file
+        full_path = os.path.join(self.work_dir, settings.third_party)
+        assert os.path.exists(full_path), \
+            'Missing third party file {}'.format(full_path)
+        with open(full_path) as f:
+            # Remove new lines
+            third_parties = list(map(lambda l: l.rstrip(), f.readlines()))
+
+        for path in third_parties:
             if self.path.startswith(path):
                 return True
         return False
