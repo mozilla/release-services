@@ -373,6 +373,7 @@ PROJECTS = {
         'deploy_options': {
             'staging': {
                 'heroku_app': 'shipit-staging-pulse-listener',
+                'heroku_dyno_type': 'worker',
             },
             # 'production': {
             #     'heroku_app': 'shipit-production-pulse-listener',

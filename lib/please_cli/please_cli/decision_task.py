@@ -122,6 +122,7 @@ def get_deploy_task(index,
             'tools', 'deploy:HEROKU',
             project,
             '--heroku-app=' + deploy_options['heroku_app'],
+            '--heroku-dyno-type=' + deploy_options.get('heroku_dyno_type', 'web'),
             '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
             '--no-interactive',
         ] + extra_attributes
