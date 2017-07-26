@@ -15,5 +15,5 @@ CHANNELS = [
 ]
 
 URGENCY_LEVELS = [
-    'LOW', 'NORMAL', 'HIGH', 'DO_YESTERDAY',
+    'LOW', 'NORMAL', 'HIGH',
 ]

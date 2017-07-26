@@ -217,24 +217,38 @@ messageJsonExample =
 
 viewNewMessage : App.Notifications.Types.Model -> Html App.Notifications.Types.Msg
 viewNewMessage model =
-    div [ class "form-group" ]
-        [ hr [] []
-        , input
-            [ onInput App.Notifications.Types.NewMessageUIDUpdate
-            , placeholder "New Message UID"
-            , type_ "text"
-            , class "form-control" ] []
-        , textarea
-            [ onInput App.Notifications.Types.NewMessageUpdate
-            , class "form-control"
-            , rows 10
+    let
+        is_uid_missing =
+            case model.uid of
+                Just uid -> False
+                Nothing -> True
+
+        is_json_missing =
+            case model.new_message of
+                Just id_json -> False
+                Nothing -> True
+    in
+        div [ class ("form-group"
+                ++ (if is_uid_missing == True then " has-danger" else if is_json_missing == True then " has-danger" else "")) ]
+            [ hr [] []
+            , input
+                [ onInput App.Notifications.Types.NewMessageUIDUpdate
+                , placeholder "New Message UID"
+                , type_ "text"
+                , class ("form-control"
+                    ++ if is_uid_missing == True then " form-control-danger" else "") ] []
+            , textarea
+                [ onInput App.Notifications.Types.NewMessageUpdate
+                , class ("form-control"
+                    ++ if is_json_missing == True then " form-control-danger" else "")
+                , rows 10
+                ]
+                [ text messageJsonExample ]
+            , button [ class "form-control btn btn-outline-primary", onClick App.Notifications.Types.NewMessageRequest ]
+                [ i [ class "fa fa-check" ] []
+                , text " Submit New Message"
+                ]
             ]
-            [ text messageJsonExample ]
-        , button [ class "btn btn-outline-primary", onClick App.Notifications.Types.NewMessageRequest ]
-            [ i [ class "fa fa-check" ] []
-            , text " Submit New Message"
-            ]
-        ]
 
 
 viewMessage : App.Notifications.Types.Model -> Html App.Notifications.Types.Msg
@@ -254,3 +268,26 @@ viewMessage model =
                 , viewPolicies msg.policies]
         _ ->
             text ""
+
+
+viewHelp : Html App.Notifications.Types.Msg
+viewHelp =
+    let
+        infoStr =
+            """
+            RelEng NagBot is a service that sends recurring, escalating notifications for events related to the release process.
+            It is composed of two sub-services; the identity service keeps track of how each party (or "identity") involved in a release
+            prefers to be notified of events depending on how urgent the event is, and the policy service does the work
+            of sending notifications.
+            """
+    in
+        div [ class "jumbotron" ]
+            [ h2 []
+                [ i [ class "fa fa-question-circle" ] []
+                , text " Info"
+                ]
+            , hr [] []
+            , blockquote [ class "blockquote" ]
+                [ text infoStr
+                ]
+            ]

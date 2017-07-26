@@ -18,6 +18,14 @@ import time
 
 logger = cli_common.log.get_logger(__name__)
 
+UNAUTHORIZED_JSON = {
+    'status': 401,
+    'title': '401 Unauthorized: Invalid user scopes',
+    'detail': 'Invalid user scopes',
+    'instance': 'about:blank',
+    'type': 'about:blank',
+}
+
 
 class BaseUser(object):
 
@@ -188,10 +196,7 @@ class Auth(object):
                     return method(*args, **kwargs)
                 else:
                     # Abort with a 401 status code
-                    return flask.jsonify({
-                        'error_title': 'Unauthorized',
-                        'error_message': 'Invalid user scopes',
-                    }), 401
+                    return flask.jsonify(UNAUTHORIZED_JSON), 401
             return wrapper
         return decorator
 
@@ -329,10 +334,7 @@ def parse_header(request):
         logger.error('TC auth details: {}'.format(payload))
 
         # Abort with a 401 status code
-        return {
-            'error_title': 'Unauthorized',
-            'error_message': 'Invalid taskcluster auth.',
-        }, 401
+        return UNAUTHORIZED_JSON, 401
 
     return TaskclusterUser(resp)
 

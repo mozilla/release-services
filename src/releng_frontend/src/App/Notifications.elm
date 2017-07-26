@@ -34,6 +34,7 @@ routeParser =
         , UrlParser.map App.Notifications.Types.NewIdentityRoute (UrlParser.s "new")
         , UrlParser.map App.Notifications.Types.PolicyRoute (UrlParser.s "policy")
         , UrlParser.map App.Notifications.Types.ShowMessageRoute (UrlParser.s "message" </> UrlParser.string)
+        , UrlParser.map App.Notifications.Types.HelpRoute (UrlParser.s "help")
         ]
 
 
@@ -54,6 +55,9 @@ reverseRoute route =
 
         App.Notifications.Types.PolicyRoute ->
             "/notifications/policy"
+
+        App.Notifications.Types.HelpRoute ->
+            "/notifications/help"
 
 page : (App.Notifications.Types.Route -> a) -> App.Types.Page a b
 page outRoute =
@@ -77,9 +81,9 @@ init identityUrl policyUrl =
     , selected_preference = Nothing
     , is_service_processing = False
     , retrieved_identity = Nothing
-    , edit_form = Form.initial [] App.Notifications.Form.editPreferenceValidation
+    , edit_form = Form.initial [] App.Notifications.Form.preferenceValidation
     , new_identity = Form.initial [] App.Notifications.Form.newIdentityValidation
-    , new_message = Nothing
+    , new_message = Just App.Notifications.View.messageJsonExample
     , uid = Nothing
     , status_html = Nothing
     , policies = NotAsked
@@ -325,7 +329,7 @@ update currentRoute msg model =
                     Just new_identity ->
                         let
                             encoded_pref_list =
-                                Json.Encode.list (List.map App.Notifications.Api.encodeInputPreference new_identity.preferences)
+                                Json.Encode.list (List.map App.Notifications.Api.encodePreference new_identity.preferences)
 
                             msg_body =
                                 Json.Encode.object
@@ -450,7 +454,7 @@ update currentRoute msg model =
         App.Notifications.Types.EditPreferenceFormMsg formMsg ->
             let
                 new_model = { model
-                    | edit_form = Form.update App.Notifications.Form.editPreferenceValidation formMsg model.edit_form }
+                    | edit_form = Form.update App.Notifications.Form.preferenceValidation formMsg model.edit_form }
 
                 command =
                     case formMsg of
@@ -743,6 +747,19 @@ update currentRoute msg model =
                         (model, Cmd.none, Nothing)
 
 
+        App.Notifications.Types.HelpDisplay ->
+            let
+                new_route_command =
+                    (reverseRoute App.Notifications.Types.HelpRoute)
+                        |> Navigation.newUrl
+
+                new_model = { model
+                    | uid = Nothing
+                    , status_html = Nothing}
+            in
+                (new_model, new_route_command, Nothing)
+
+
         App.Notifications.Types.OperationFail event reason ->
             let
                 err =
@@ -807,6 +824,9 @@ update currentRoute msg model =
                     in
                         update route App.Notifications.Types.GetPreferencesRequest newModel
 
+                App.Notifications.Types.HelpRoute ->
+                    update route App.Notifications.Types.HelpDisplay model
+
 
 --
 -- VIEW
@@ -834,6 +854,10 @@ view route scopes model =
 
                 App.Notifications.Types.ShowMessageRoute message_uid ->
                     div [ class "lead" ] [ App.Notifications.View.viewMessage model ]
+
+                App.Notifications.Types.HelpRoute ->
+                    div [ class "lead" ] [ App.Notifications.View.viewHelp ]
+
 
     in
         div [ class "container" ]
@@ -870,6 +894,9 @@ view route scopes model =
                                 [ i [ class "fa fa-envelope" ] []
                                 , text " New Message"
                                 ]
+                        , button [ type_ "button", onClick App.Notifications.Types.HelpDisplay, class "btn btn-outline-primary" ]
+                            [ i [ class "fa fa-info-circle" ] []
+                            ]
                         ]
                     ]
                 , main_content_view

@@ -10,16 +10,9 @@ import Html exposing (Html)
 -- Releng Notification Identity FrontEnd Types
 type alias Preference =
     { channel : String          -- Notification channel for preference (IRC, EMAIL etc)
-    , name : String             -- Name of identity
+    , name : Maybe String             -- Name of identity
     , target : String           -- Target on channel (irc chan, irc nick, email)
     , urgency : String          -- Urgency level (LOW, NORMAL etc)
-    }
-
--- Preference without name, for contexts where name is defined elsewhere
-type alias InputPreference =
-    { channel : String
-    , target : String
-    , urgency : String
     }
 
 
@@ -34,8 +27,8 @@ type alias ApiProblem =     -- See https://tools.ietf.org/html/rfc7807
 type alias Preferences =
     List Preference
 
-type alias InputPreferences =
-    List InputPreference
+--type alias InputPreferences =
+--    List InputPreference
 
 type alias MessageInstance =
     { deadline : String
@@ -75,10 +68,11 @@ type Route
     | ShowMessageRoute String
     | NewIdentityRoute
     | PolicyRoute
+    | HelpRoute
 
 type alias Identity =
     { name : String                      -- Name of the identity
-    , preferences: InputPreferences      -- Notification preferences for the identity
+    , preferences: Preferences           -- Notification preferences for the identity
     }
 
 type alias Model =
@@ -104,7 +98,6 @@ type Msg
     -- Messages for the "Identity" service
     = ChangeName String                             -- Update state with name in input box
     | GetPreferencesRequest                         -- Request preferences from service
-    --| GetPreferencesResponse (WebData Preferences)  -- Handle response for preferences request
     | GetPreferencesResponse (WebData String)
     | IdentityDeleteRequest                         -- Delete identity from service
     | IdentityDeleteResponse (WebData String)       -- Handle identity delete response
@@ -140,5 +133,6 @@ type Msg
     -- Error handlers, other
     | OperationFail Msg String                          -- Operation failed with the given reason
     | HandleProblemJson Msg (Http.Response String)      -- Handle problem JSON
-    | ClearStatusMessage
-    | NavigateTo Route
+    | ClearStatusMessage                                -- Clear the status indicator message
+    | NavigateTo Route                                  -- Change the route
+    | HelpDisplay

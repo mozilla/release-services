@@ -20,10 +20,16 @@ initializeFormFromPreference preference =
     let
         channelTuple = Init.setString "channel" preference.channel
         targetTuple = Init.setString "target" preference.target
-        nameTuple = Init.setString "name" preference.name
+        nameTuple =
+            case preference.name of
+                Just name ->
+                    Init.setString "name" name
+                Nothing ->
+                    Init.setString "name" ""
+
         urgencyTuple = Init.setString "urgency" preference.urgency
     in
-        Form.initial [channelTuple, targetTuple, nameTuple, urgencyTuple] editPreferenceValidation
+        Form.initial [channelTuple, targetTuple, nameTuple, urgencyTuple] preferenceValidation
 
 
 initializeNewIdentityForm : Form.Form () App.Notifications.Types.Identity
@@ -51,19 +57,11 @@ initializeNewIdentityForm =
 --
 -- VALIDATORS
 --
-editPreferenceValidation : Validation () App.Notifications.Types.Preference
-editPreferenceValidation =
+preferenceValidation : Validation () App.Notifications.Types.Preference
+preferenceValidation =
     map4 App.Notifications.Types.Preference
         (field "channel" string)
-        (field "name" string)
-        (field "target" string)
-        (field "urgency" string)
-
-
-newPreferenceValidation : Validation () App.Notifications.Types.InputPreference
-newPreferenceValidation =
-    map3 App.Notifications.Types.InputPreference
-        (field "channel" string)
+        (maybe (field "name" string))
         (field "target" string)
         (field "urgency" string)
 
@@ -72,7 +70,7 @@ newIdentityValidation : Validation () App.Notifications.Types.Identity
 newIdentityValidation =
     map2 App.Notifications.Types.Identity
         (field "name" string)
-        (field "preferences" (list newPreferenceValidation))
+        (field "preferences" (list preferenceValidation))
 
 
 
@@ -144,6 +142,19 @@ editNewPreferenceFormView form_ i =
         channel =
             Form.getFieldAsString ("preferences." ++ (toString i) ++ ".channel" ) form_
 
+        placeholderText =
+            case channel.value of
+                Just value ->
+                    case value of
+                        "EMAIL" ->
+                            "Email Address"
+                        "IRC" ->
+                            "IRC Nick or #channel"
+                        _ ->
+                            ""
+                Nothing ->
+                    ""
+
         name =
             Form.getFieldAsString "name" form_
 
@@ -168,10 +179,21 @@ editNewPreferenceFormView form_ i =
             , ("NORMAL", "NORMAL")
             , ("HIGH", "HIGH")
             ]
+
+        is_missing_target =
+            case target.value of
+                Just value ->
+                    if String.isEmpty value then
+                        True
+                    else
+                        False
+                Nothing -> True
     in
-        form [ class "list-group-item form-inline d-inline-flex justify-content-between" ]
+        form [ class ("list-group-item form-inline d-inline-flex justify-content-between"
+                ++ (if is_missing_target == True then " has-danger" else "")) ]
             [ Input.selectInput channel_options channel [ class "form-control" ]
-            , Input.textInput target [ class "form-control align-self-stretch", placeholder "Notification Target" ]
+            , Input.textInput target [ class ("form-control align-self-stretch"
+                                        ++ (if is_missing_target == True then " form-control-danger" else "")), placeholder placeholderText ]
             , span [ class ("float-xs-right badge badge-" ++ (urgencyLevel urgency_string)) ] [ text urgency_string ]
             ]
 
@@ -181,11 +203,19 @@ newIdentityFormView form =
     let
         name = Form.getFieldAsString "name" form
         list_indexes = Form.getListIndexes "preferences" form
+
+        is_missing_name =
+            case name.liveError of
+                Just error -> True
+                Nothing -> False
     in
-        div [ class "form-group" ]
+        div [ class ("form-group"
+                ++ (if is_missing_name == True then " has-danger" else ""))]
             [ hr [] []
             , h3 [] [ text "Create new identity" ]
-            , Input.textInput name [ placeholder "New Identity Name", class "form-control" ]
+            , Input.textInput name [ placeholder "New Identity Name"
+                                   , class ("form-control" ++ (if is_missing_name == True then " form-control-danger" else ""))
+                                   ]
             , div [ class "list-group" ]
                     <| List.map (editNewPreferenceFormView form) list_indexes
 

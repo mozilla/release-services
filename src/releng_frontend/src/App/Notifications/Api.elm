@@ -11,10 +11,7 @@ import Utils
 import Form
 
 
-type alias NoBody = {}
-
 -- Decoders / Encoders
-
 encodePreference : App.Notifications.Types.Preference -> Json.Encode.Value
 encodePreference preference =
     Json.Encode.object
@@ -24,20 +21,11 @@ encodePreference preference =
         ]
 
 
-encodeInputPreference : App.Notifications.Types.InputPreference -> Json.Encode.Value
-encodeInputPreference inputPreference =
-    Json.Encode.object
-        [ ("channel", Json.Encode.string inputPreference.channel)
-        , ("target", Json.Encode.string inputPreference.target)
-        , ("urgency", Json.Encode.string inputPreference.urgency)
-        ]
-
-
 preferenceDecoder : Decoder Preferences
 preferenceDecoder =
     let
         channel_field = (field "channel" string)
-        name_field = (field "name" string)
+        name_field = maybe (field "name" string)
         target_field = (field "target" string)
         urgency_field = (field "urgency" string)
         dec = map4 Preference channel_field name_field target_field urgency_field
@@ -109,7 +97,7 @@ newIdentity model =
         case new_id_output of
             Just new_identity ->
                 let
-                    encoded_preference_list = Json.Encode.list (List.map encodeInputPreference new_identity.preferences)
+                    encoded_preference_list = Json.Encode.list (List.map encodePreference new_identity.preferences)
 
                     msg_body = Json.Encode.object
                         [ ("preferences", encoded_preference_list)
@@ -271,13 +259,6 @@ encodePolicy policy =
         , ("start_timestamp", Json.Encode.string policy.start_timestamp)
         , ("stop_timestamp", Json.Encode.string policy.stop_timestamp)
         , ("urgency", Json.Encode.string policy.urgency)
-        ]
-
-
-encodeNewMessage : String -> Json.Encode.Value
-encodeNewMessage jsonString =
-    Json.Encode.object
-        [
         ]
 
 
