@@ -116,7 +116,6 @@ def setup_sentry(project_name, channel, SENTRY_DSN, flask_app=None):
     if flask_app:
         sentry_flask = raven.contrib.flask.Sentry(app, client=client)
 
-
     sentry_handler = raven.handlers.logbook.SentryHandler(
         sentry_client,
         level=logbook.WARNING,
@@ -132,7 +131,7 @@ def init_logger(project_name,
                 PAPERTRAIL_HOST=None,
                 PAPERTRAIL_PORT=None,
                 SENTRY_DSN=None,
-                MOZDEF=None
+                MOZDEF=None,
                 flask_app=None,
                 ):
 
