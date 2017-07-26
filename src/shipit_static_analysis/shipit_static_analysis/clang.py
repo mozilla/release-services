@@ -23,6 +23,7 @@ ISSUE_MARKDOWN = '''
 **Message**: {message}
 **Location**: {location}
 **Clang check**: {check}
+**Third Party**: {third_party}
 ```
 {body}
 ```
@@ -42,6 +43,27 @@ CLANG_SETUP_CMD = [
     './mach', 'artifact', 'toolchain',
     '--from-build', 'linux64-clang-tidy'
 ]
+
+__third_party = None
+
+
+def list_third_party(work_dir, path='tools/rewriting/ThirdPartyPaths.txt'):
+    '''
+    List third party directories using mozilla-central file
+    Uses a local cache to avoid reading every time the file
+    '''
+    global __third_party  # cache
+    if __third_party is not None:
+        return __third_party
+
+    full_path = os.path.join(work_dir, path)
+    assert os.path.exists(full_path), \
+        'Missing third party file {}'.format(full_path)
+    with open(full_path) as f:
+        # Remove new lines
+        __third_party = list(map(lambda l: l.rstrip(), f.readlines()))
+
+    return __third_party
 
 
 class ClangTidy(object):
@@ -188,7 +210,8 @@ class ClangTidy(object):
                     logger.info('Skipping clang-diagnostic-error: {}'.format(issue))
                 else:
                     issues.append(issue)
-                    logger.info('Found code issue {}'.format(issue))
+                    mode = issue.is_third_party() and '3rd party' or 'Mozilla'
+                    logger.info('Found {} code issue {}'.format(mode, issue))
 
             elif issues:
                 # Link notes to last problem
@@ -205,6 +228,7 @@ class ClangIssue(object):
         assert isinstance(header_data, tuple)
         assert len(header_data) == 6
         self.path, self.line, self.char, self.type, self.message, self.check = header_data  # noqa
+        self.work_dir = work_dir
         if self.path.startswith(work_dir):
             self.path = self.path[len(work_dir):]
         self.line = int(self.line)
@@ -218,6 +242,15 @@ class ClangIssue(object):
     def is_problem(self):
         return self.type in ('warning', 'error')
 
+    def is_third_party(self):
+        '''
+        Is this issue in a third party path ?
+        '''
+        for path in list_third_party(self.work_dir):
+            if self.path.startswith(path):
+                return True
+        return False
+
     def as_markdown(self):
         return ISSUE_MARKDOWN.format(
             type=self.type,
@@ -225,6 +258,7 @@ class ClangIssue(object):
             location='{}:{}:{}'.format(self.path, self.line, self.char),
             body=self.body,
             check=self.check,
+            third_party=self.is_third_party() and 'yes' or 'no',
             notes='\n'.join([
                 ISSUE_NOTE_MARKDOWN.format(
                     message=n.message,
