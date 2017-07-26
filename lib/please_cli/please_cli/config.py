@@ -79,10 +79,12 @@ PROJECTS = {
         'deploy_options': {
             #'staging': {
             #    'heroku_app': 'releng-staging-notification-policy',
+            #    'heroku_dyno_type': 'web',
             #    'url': 'https://policy.notification.staging.mozilla-releng.net',
             #},
             # 'production': {
             #    'heroku_app': 'releng-production-notification-policy',
+            #    'heroku_dyno_type': 'web',
             #    'url': 'https://policy.notification.mozilla-releng.net',
             # },
         },
@@ -103,10 +105,12 @@ PROJECTS = {
         'deploy_options': {
             #'staging': {
             #    'heroku_app': 'releng-staging-notification-identity',
+            #    'heroku_dyno_type': 'web',
             #    'url': 'https://identity.notification.staging.mozilla-releng.net',
             #},
             # 'production': {
             #    'heroku_app': 'releng-production-notification-identity',
+            #    'heroku_dyno_type': 'web',
             #    'url': 'https://identity.notification.mozilla-releng.net',
             # },
         },
@@ -127,10 +131,12 @@ PROJECTS = {
         'deploy_options': {
             'staging': {
                 'heroku_app': 'releng-staging-archiver',
+                'heroku_dyno_type': 'web',
                 'url': 'https://archiver.staging.mozilla-releng.net',
             },
             # 'production': {
             #     'heroku_app': 'releng-production-archiver',
+            #     'heroku_dyno_type': 'web',
             #     'url': 'https://archiver.mozilla-releng.net',
             # },
         },
@@ -151,10 +157,12 @@ PROJECTS = {
         'deploy_options': {
             'staging': {
                 'heroku_app': 'releng-staging-clobberer',
+                'heroku_dyno_type': 'web',
                 'url': 'https://clobberer.staging.mozilla-releng.net',
             },
             # 'production': {
             #     'heroku_app': 'releng-production-clobberer',
+            #     'heroku_dyno_type': 'web',
             #     'url': 'https://clobberer.mozilla-releng.net',
             # },
         },
@@ -224,10 +232,12 @@ PROJECTS = {
         'deploy_options': {
             'staging': {
                 'heroku_app': 'releng-staging-mapper',
+                'heroku_dyno_type': 'web',
                 'url': 'https://mapper.staging.mozilla-releng.net',
             },
             # 'production': {
             #     'heroku_app': 'releng-production-mapper',
+            #     'heroku_dyno_type': 'web',
             #     'url': 'https://mapper.mozilla-releng.net',
             # },
         },
@@ -248,10 +258,12 @@ PROJECTS = {
         'deploy_options': {
             'staging': {
                 'heroku_app': 'releng-staging-tooltool',
+                'heroku_dyno_type': 'web',
                 'url': 'https://tooltool.staging.mozilla-releng.net',
             },
             'production': {
                 'heroku_app': 'releng-production-tooltool',
+                'heroku_dyno_type': 'web',
                 'url': 'https://tooltool.mozilla-releng.net',
             },
         },
@@ -272,10 +284,12 @@ PROJECTS = {
         'deploy_options': {
             'staging': {
                 'heroku_app': 'releng-staging-treestatus',
+                'heroku_dyno_type': 'web',
                 'url': 'https://treestatus.staging.mozilla-releng.net',
             },
             'production': {
                 'heroku_app': 'releng-production-treestatus',
+                'heroku_dyno_type': 'web',
                 'url': 'https://treestatus.mozilla-releng.net',
             },
         },
@@ -355,10 +369,12 @@ PROJECTS = {
         'deploy_options': {
             'staging': {
                 'heroku_app': 'shipit-staging-pipeline',
+                'heroku_dyno_type': 'web',
                 'url': 'https://pipeline.shipit.staging.mozilla-releng.net',
             },
             # 'production': {
             #     'heroku_app': 'shipit-production-pipeline',
+            #     'heroku_dyno_type': 'web',
             #     'url': 'https://pipeline.shipit.mozilla-releng.net',
             # },
         },
@@ -377,6 +393,7 @@ PROJECTS = {
             },
             # 'production': {
             #     'heroku_app': 'shipit-production-pulse-listener',
+            #     'heroku_dyno_type': 'worker',
             # },
         },
     },
@@ -411,10 +428,12 @@ PROJECTS = {
         'deploy_options': {
             'staging': {
                 'heroku_app': 'shipit-staging-signoff',
+                'heroku_dyno_type': 'web',
                 'url': 'https://signoff.shipit.staging.mozilla-releng.net',
             },
             # 'production': {
             #     'heroku_app': 'shipit-production-signoff',
+            #     'heroku_dyno_type': 'web',
             #     'url': 'https://signoff.shipit.mozilla-releng.net',
             # },
         },
@@ -446,10 +465,12 @@ PROJECTS = {
         'deploy_options': {
             'staging': {
                 'heroku_app': 'shipit-staging-taskcluster',
+                'heroku_dyno_type': 'web',
                 'url': 'https://taskcluster.shipit.staging.mozilla-releng.net',
             },
             # 'production': {
             #     'heroku_app': 'shipit-production-taskcluster',
+            #     'heroku_dyno_type': 'web',
             #     'url': 'https://taskcluster.shipit.mozilla-releng.net',
             # },
         },
@@ -470,10 +491,12 @@ PROJECTS = {
         'deploy_options': {
             'staging': {
                 'heroku_app': 'shipit-staging-uplift',
+                'heroku_dyno_type': 'web',
                 'url': 'https://uplift.shipit.staging.mozilla-releng.net',
             },
             'production': {
                 'heroku_app': 'shipit-production-uplift',
+                'heroku_dyno_type': 'web',
                 'url': 'https://uplift.shipit.mozilla-releng.net',
             },
         },
