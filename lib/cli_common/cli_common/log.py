@@ -114,7 +114,7 @@ def setup_sentry(project_name, channel, SENTRY_DSN, flask_app=None):
     )
 
     if flask_app:
-        sentry_flask = raven.contrib.flask.Sentry(app, client=client)
+        raven.contrib.flask.Sentry(flask_app, client=sentry_client)
 
     sentry_handler = raven.handlers.logbook.SentryHandler(
         sentry_client,
