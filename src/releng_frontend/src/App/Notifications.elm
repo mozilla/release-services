@@ -865,7 +865,7 @@ view route scopes model =
 
     in
         div [ class "container" ]
-            [ h1 [] [ text "RelEng Notification Preferences" ]
+            [ h1 [] [ text "RelEng NagBot" ]
             , p [ class "lead" ] [ text "Manage preferred notification preferences for RelEng events" ]
             , div []
                 [ p [ class "lead" ] [ App.Notifications.View.viewStatusMessage model ]
