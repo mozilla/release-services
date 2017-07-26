@@ -3,7 +3,6 @@ module App.Home exposing (..)
 import App
 import App.TreeStatus.Types
 import App.Notifications.Types
---import App.NotificationPolicy.Types
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Utils

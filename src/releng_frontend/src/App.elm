@@ -2,7 +2,6 @@ module App exposing (..)
 
 import App.Notifications
 import App.Notifications.Types
---import App.NotificationPolicy.Types
 import App.TreeStatus
 import App.TreeStatus.Form
 import App.TreeStatus.Types

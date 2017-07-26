@@ -83,7 +83,8 @@ frequencyValidation =
 
 policyValidation : Validation () App.Notifications.Types.Policy
 policyValidation =
-    map5 App.Notifications.Types.Policy
+    map6 App.Notifications.Types.Policy
+        (field "uid" string)
         (field "identity" string)
         (field "start_timestamp" string)
         (field "stop_timestamp" string)
@@ -127,10 +128,6 @@ editPreferenceFormView form =
             , button [ onClick Form.Submit, class "btn btn-outline-primary form-control" ]
                 [ i [ class "fa fa-check" ] []
                 , text " Submit"
-                ]
-            , button [ onClick (Form.RemoveItem "" 0), class "btn btn-outline-primary form-control" ]
-                [ i [ class "fa fa-trash" ] []
-                , text " Delete"
                 ]
             ]
 

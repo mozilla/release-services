@@ -206,7 +206,8 @@ frequencyDecoder =
 
 policyDecoder : Decoder Policy
 policyDecoder =
-    map5 Policy
+    map6 Policy
+        (field "uid" string)
         (field "identity" string)
         (field "start_timestamp" string)
         (field "stop_timestamp" string)
@@ -229,17 +230,17 @@ messagesDecoder : Decoder (List MessageInstance)
 messagesDecoder =
     at [ "messages" ] (list messageDecoder)
 
-notificationInstancesDecoder : Decoder NotificationInstances
-notificationInstancesDecoder =
-    let
-        channel_field = field "channel" string
-        message_field = field "message" string
-        targets_field = field "targets" (list string)
-        uid_field = field "uid" string
-        dec =
-            map4 NotificationInstance channel_field message_field targets_field uid_field
-    in
-        at [ "notifications" ] (list dec)
+--notificationInstancesDecoder : Decoder NotificationInstances
+--notificationInstancesDecoder =
+--    let
+--        channel_field = field "channel" string
+--        message_field = field "message" string
+--        targets_field = field "targets" (list string)
+--        uid_field = field "uid" string
+--        dec =
+--            map4 NotificationInstance channel_field message_field targets_field uid_field
+--    in
+--        at [ "notifications" ] (list dec)
 
 
 encodeFrequency : App.Notifications.Types.Frequency -> Json.Encode.Value
@@ -261,17 +262,6 @@ encodePolicy policy =
         , ("urgency", Json.Encode.string policy.urgency)
         ]
 
-
--- API Requests
---getPendingMessages : Model -> Cmd Msg
---getPendingMessages model =
---    let
---        request_url =
---            model.policyUrl ++ "/message"
---    in
---        Http.get request_url messagesDecoder
---            |> RemoteData.sendRequest
---            |> Cmd.map GetPendingMessagesResponse
 
 deleteMessage : Model -> Cmd Msg
 deleteMessage model =
@@ -297,97 +287,6 @@ deleteMessage model =
         Http.request request_params
             |> RemoteData.sendRequest
             |> Cmd.map DeleteMessageResponse
-
---getMessageByUid : Model -> Cmd Msg
---getMessageByUid model =
---    let
---        uid =
---            case model.uid of
---                Just val -> val
---                Nothing -> ""
---
---        request_url =
---            model.policyUrl ++ "/message/" ++ uid
---    in
---        Http.get request_url messageDecoder
---            |> RemoteData.sendRequest
---            |> Cmd.map GetMessageResponse
-
-
---putNewMessage : Model -> Cmd Msg
---putNewMessage model =
---    let
---        new_message_output =
---            Form.getOutput model.new_message
---
---    in
---        case new_message_output of
---            Nothing ->
---                Utils.performMsg (OperationFail App.Notifications.Types.NewMessageRequest "No new message data.")
---
---            Just new_message ->
---                let
---                    encoded_policies =
---                        Json.Encode.list (List.map encodePolicy new_message.policies)
---
---                    msg_body =
---                        Json.Encode.object
---                            [ ("deadline", Json.Encode.string new_message.deadline)
---                            , ("message", Json.Encode.string new_message.message)
---                            , ("shortMessage", Json.Encode.string new_message.shortMessage)
---                            , ("policies", encoded_policies)
---                            ]
---
---                    request_params =
---                        { method = "PUT"
---                        , headers = []
---                        , url = model.policyUrl ++ "/message/" ++ "fillerUID"  -- TODO: fix filler uid
---                        , body = Http.jsonBody msg_body
---                        , expect = Http.expectString
---                        , timeout = Nothing
---                        , withCredentials = False
---                        }
---                in
---                    Http.request request_params
---                        |> RemoteData.sendRequest
---                        |> Cmd.map NewMessageResponse
-
-
---getActivePolicies : Model -> Cmd Msg
---getActivePolicies model =
---    let
---        identity =
---            case model.identity_name of
---                Just name -> name
---                Nothing -> ""
---
---        request_url =
---            model.policyUrl ++ "/policy/" ++ identity
---
---
---    in
---        Http.get request_url policiesDecoder
---            |> RemoteData.sendRequest
---            |> Cmd.map GetActivePoliciesResponse
-
-
---tickTock : Model -> Cmd Msg
---tickTock model =
---    let
---        request_params =
---            { method = "POST"
---            , headers = []
---            , url = model.policyUrl ++ "/ticktock"
---            , body = Http.emptyBody
---            , expect = Http.expectJson notificationInstancesDecoder
---            , timeout = Nothing
---            , withCredentials = False
---            }
---    in
---        Http.request request_params
---            |> RemoteData.sendRequest
---            |> Cmd.map TickTockResponse
-
 
 
 hawkResponse : Cmd (WebData String) -> String -> Cmd App.Notifications.Types.Msg

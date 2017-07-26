@@ -36,13 +36,13 @@ type alias MessageInstance =
     , shortMessage : String
     , policies : List Policy
     }
-
-type alias NotificationInstance =
-    { channel : String
-    , message : String
-    , target : List String
-    , uid : String
-    }
+--
+--type alias NotificationInstance =
+--    { channel : String
+--    , message : String
+--    , target : List String
+--    , uid : String
+--    }
 
 type alias Frequency =
     { minutes : Int
@@ -51,15 +51,16 @@ type alias Frequency =
     }
 
 type alias Policy =
-    { identity : String
+    { uid : String
+    , identity : String
     , start_timestamp : String
     , stop_timestamp : String
     , urgency : String
     , frequency : Frequency
     }
 
-type alias NotificationInstances =
-    List NotificationInstance
+--type alias NotificationInstances =
+--    List NotificationInstance
 
 
 type Route

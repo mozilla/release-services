@@ -98,8 +98,11 @@ handleApiRequestFailure :
     (App.Notifications.Types.Model, Cmd App.Notifications.Types.Msg, Maybe Hawk.Request)
 handleApiRequestFailure model err event =
     case err of
-        Http.BadStatus err ->
-            (model, Utils.performMsg (App.Notifications.Types.HandleProblemJson event err), Nothing)
+        Http.BadStatus error ->
+            (model, Utils.performMsg (App.Notifications.Types.HandleProblemJson event error), Nothing)
+        Http.NetworkError ->
+            ({model |
+                status_html = Just (App.Utils.error event "A network error occurred.")}, Cmd.none, Nothing)
         _ ->  -- Theoretically this should never happen
             (model, Cmd.none, Nothing)
 
@@ -145,6 +148,7 @@ update currentRoute msg model =
                             , selected_preference = Nothing
                             , preferences = Loading
                             , policies = Loading
+                            , status_html = Nothing
                             }
                         , Cmd.none
                         , Just request)
@@ -625,8 +629,6 @@ update currentRoute msg model =
                                 | is_service_processing = True
                                 , status_html = Nothing}
 
-                        new_message_json = Json.Encode.string message
-
                         request =
                             Hawk.Request
                                 "NewMessage"
@@ -695,7 +697,9 @@ update currentRoute msg model =
             in
                 case response of
                     Success resp ->
-                        (resp_model, Cmd.none, Nothing)
+                        ({ resp_model |
+                            status_html = Just (App.Utils.success App.Notifications.Types.ClearStatusMessage "TickTock successfully triggered")}
+                         , Cmd.none, Nothing)
                     Failure err ->
                         handleApiRequestFailure resp_model err App.Notifications.Types.TickTockRequest
                     _ ->
@@ -816,7 +820,7 @@ update currentRoute msg model =
                     update route App.Notifications.Types.NewMessageDisplay model
 
                 App.Notifications.Types.ShowMessageRoute message_uid ->
-                    update route App.Notifications.Types.GetMessageRequest model
+                    update route App.Notifications.Types.GetMessageRequest { model | input_value = Just message_uid }
 
                 App.Notifications.Types.ShowPreferencesRoute identity ->
                     let
@@ -865,16 +869,15 @@ view route scopes model =
             , p [ class "lead" ] [ text "Manage preferred notification preferences for RelEng events" ]
             , div []
                 [ p [ class "lead" ] [ App.Notifications.View.viewStatusMessage model ]
-                , div [ class "btn-toolbar mb-3" ]
-                    [ div [ class "input-group" ]
-                        [ span [ class "input-group-addon" ] [ i [ class "fa fa-search" ] []]
+                , div [ class "input-group" ]
+                        [ span [ class "input-group-addon" ] [ i [ class "fa fa-search" ] [] ]
                         , input
                             [ placeholder "Identity or Message UID"
                             , onInput App.Notifications.Types.ChangeName
                             , class "form-control" ] []
                         ]
-
-                    , div [ class "btn-group btn-group-justified" ]
+                , div [ class "btn-toolbar mb-3" ]
+                    [ div [ class "btn-group btn-group-justified" ]
                         [  button [ type_ "button", onClick App.Notifications.Types.GetPreferencesRequest, class "btn btn-outline-primary" ]
                                 [ i [ class "fa fa-address-book" ] []
                                 , text " Search Identities"
@@ -893,6 +896,10 @@ view route scopes model =
                         , button [ type_ "button", onClick App.Notifications.Types.NewMessageDisplay, class "btn btn-outline-primary" ]
                                 [ i [ class "fa fa-envelope" ] []
                                 , text " New Message"
+                                ]
+                        , button [ type_ "button", onClick App.Notifications.Types.TickTockRequest, class "btn btn-outline-primary" ]
+                                [ i [ class "fa fa-clock-o" ] []
+                                , text " Trigger TickTock"
                                 ]
                         , button [ type_ "button", onClick App.Notifications.Types.HelpDisplay, class "btn btn-outline-primary" ]
                             [ i [ class "fa fa-info-circle" ] []

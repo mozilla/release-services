@@ -181,7 +181,10 @@ viewNotificationPolicy policy =
                 ++ (toString policy.frequency.minutes) ++ " minutes."
     in
         div [ class "list-group-item", style [("display", "flex"), ("flex-direction", "column")] ]
-            [ div [ class "justify-content-between", style [("display", "flex"), ("flex-direction", "row")] ]
+            [ div []
+                [ text ("Message UID: " ++ policy.uid)
+                ]
+            , div [ class "justify-content-between", style [("display", "flex"), ("flex-direction", "row")] ]
                 [ i [ class "fa fa-hourglass-start" ] []
                 , h4 [] [ text (" From " ++ start_time_text ++ " ") ]
                 , h4 [] [ text (" to " ++ stop_time_text ++ " ") ]
@@ -277,8 +280,9 @@ viewHelp =
             """
             RelEng NagBot is a service that sends recurring, escalating notifications for events related to the release process.
             It is composed of two sub-services; the identity service keeps track of how each party (or "identity") involved in a release
-            prefers to be notified of events depending on how urgent the event is, and the policy service does the work
-            of sending notifications.
+            prefers to be notified of low, medium and high urgency events; the policy service does the work
+            of sending notifications. From this interface you can create identities, search identities (and then edit them),
+            search notifications by their unique identifier, create new notifications and trigger any pending policies.
             """
     in
         div [ class "jumbotron" ]

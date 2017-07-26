@@ -35,7 +35,7 @@ def get_message_by_uid(uid: str) -> dict:
 
     message = session.query(Message).filter(Message.uid == uid).first()
     if message:
-        notification_policies = session.query(Policy).filter(Policy.message_id == message.id).all()
+        notification_policies = session.query(Policy).filter(Policy.uid == message.uid).all()
         policies_dicts = get_policies_in_json_serializable_form(notification_policies)
 
         logger.info('Serving {message}'.format(message=message))
@@ -56,7 +56,7 @@ def get_message_by_uid(uid: str) -> dict:
 def get_policies_as_dict_for_message(message: Message) -> dict:
     session = current_app.db.session
 
-    policies = session.query(Policy).filter(Policy.message_id == message.id).all()
+    policies = session.query(Policy).filter(Policy.uid == message.uid).all()
     serialized_policies = get_policies_in_json_serializable_form(policies)
 
     return {
@@ -126,7 +126,7 @@ def put_message(uid: str, body: dict) -> None:
 
     policies = [
         # Overwrite the frequency object input from the API with a db compatible timedelta object
-        Policy(**{**p, 'frequency': timedelta(**p['frequency']), 'message_id': new_message.id})
+        Policy(**{**p, 'frequency': timedelta(**p['frequency']), 'uid': new_message.uid})
         for p in body['policies']
     ]
 
@@ -218,6 +218,7 @@ def post_tick_tock() -> dict:
         policies = session.query(Policy).filter(Policy.message_id == message.id).all()
         for policy, identity_preference_url in get_identity_url_for_actionable_policies(policies):
             try:
+                # TODO need a way to programmatically set verify=False/True for dev/prod
                 identity_preference = get(identity_preference_url, verify=False).json()['preferences'].pop()
 
                 notification_info = send_notifications(message, identity_preference)
