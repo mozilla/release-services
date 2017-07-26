@@ -13,6 +13,7 @@ import re
 
 from cli_common.log import get_logger
 from cli_common.command import run_check
+from shipit_static_analysis.config import settings
 
 logger = get_logger(__name__)
 
@@ -23,6 +24,7 @@ ISSUE_MARKDOWN = '''
 **Message**: {message}
 **Location**: {location}
 **Clang check**: {check}
+**Publishable check**: {publishable}
 **Third Party**: {third_party}
 ```
 {body}
@@ -120,7 +122,7 @@ class ClangTidy(object):
             for _ in range(workers):
                 t = threading.Thread(
                     target=self.run_clang_tidy,
-                    args=(checks, )
+                    args=([c['name'] for c in checks], )
                 )
                 t.daemon = True
                 t.start()
@@ -251,6 +253,12 @@ class ClangIssue(object):
                 return True
         return False
 
+    def has_publishable_check(self):
+        '''
+        Is this issue using a publishable check ?
+        '''
+        return settings.is_publishable_check(self.check)
+
     def as_markdown(self):
         return ISSUE_MARKDOWN.format(
             type=self.type,
@@ -259,6 +267,7 @@ class ClangIssue(object):
             body=self.body,
             check=self.check,
             third_party=self.is_third_party() and 'yes' or 'no',
+            publishable=self.has_publishable_check() and 'yes' or 'no',
             notes='\n'.join([
                 ISSUE_NOTE_MARKDOWN.format(
                     message=n.message,

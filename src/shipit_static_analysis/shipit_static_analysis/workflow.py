@@ -6,13 +6,13 @@
 from __future__ import absolute_import
 
 import hglib
-import yaml
 import os
 
 from cli_common.taskcluster import get_service
 from cli_common.log import get_logger
 from cli_common.command import run_check
 from shipit_static_analysis.clang import ClangTidy
+from shipit_static_analysis.config import settings
 
 logger = get_logger(__name__)
 
@@ -39,12 +39,6 @@ class Workflow(object):
             access_token=access_token,
         )
 
-        # Read local config
-        config_path = os.path.join(os.path.dirname(__file__), 'config.yml')
-        self.config = yaml.load(open(config_path))
-        assert 'clang_checkers' in self.config
-        assert 'target' in self.config
-
         # Clone mozilla-central
         self.repo_dir = os.path.join(self.cache_root, 'static-analysis/')
         shared_dir = os.path.join(self.cache_root, 'static-analysis-shared')
@@ -66,7 +60,7 @@ class Workflow(object):
         self.hg = hglib.open(self.repo_dir)
 
         # Setup clang
-        self.clang = ClangTidy(self.repo_dir, self.config['target'])
+        self.clang = ClangTidy(self.repo_dir, settings.target)
 
     def run(self, revision, review_request_id, diffset_revision):
         '''
@@ -111,7 +105,7 @@ class Workflow(object):
 
         # Run static analysis through run-clang-tidy.py
         logger.info('Run clang-tidy...')
-        issues = self.clang.run(self.config['clang_checkers'], modified_files)
+        issues = self.clang.run(settings.clang_checkers, modified_files)
 
         logger.info('Detected {} code issue(s)'.format(len(issues)))
 
