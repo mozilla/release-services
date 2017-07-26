@@ -57,6 +57,10 @@ class ClangTidy(object):
         self.work_dir = work_dir
         self.build_dir = os.path.join(work_dir, build_dir)
 
+        # Dirty hack to skip Taskcluster proxy usage when loading artifacts
+        if 'TASK_ID' in os.environ:
+            del os.environ['TASK_ID']
+
         # Check the local clang is available
         logger.info('Loading Mozilla clang-tidy...')
         run_check(CLANG_SETUP_CMD, cwd=work_dir)
