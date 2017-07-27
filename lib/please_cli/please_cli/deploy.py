@@ -206,6 +206,12 @@ def cmd_S3(ctx,
     required=False,
     )
 @click.option(
+    '--heroku-dyno-type',
+    required=False,
+    type=click.Choice(['web', 'worker']),
+    default='web'
+    )
+@click.option(
     '--extra-attribute',
     multiple=True,
     )
@@ -231,6 +237,7 @@ def cmd_HEROKU(ctx,
                heroku_app,
                heroku_username,
                heroku_api_token,
+               heroku_dyno_type,
                extra_attribute,
                nix_build,
                nix_push,
@@ -278,7 +285,7 @@ def cmd_HEROKU(ctx,
             "https://registry.heroku.com",
             heroku_username,
             heroku_api_token,
-            heroku_app + "/web",
+            heroku_app + "/" + heroku_dyno_type,
             "latest",
         )
     please_cli.utils.check_result(

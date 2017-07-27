@@ -745,6 +745,9 @@ in rec {
           done
           find $out -type d -name "__pycache__" -exec 'rm -r "{}"' \;
           find $out -type d -name "*.py" -exec '${python.__old.python.executable} -m compileall -f "{}"' \;
+
+          mkdir -p $out/etc
+          echo "${name}-${version}" > $out/etc/mozilla-releng-services
         '' + postInstall;
 
         shellHook = ''
