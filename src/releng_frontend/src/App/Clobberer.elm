@@ -1,7 +1,8 @@
 module App.Clobberer exposing (..)
 
+import App.Utils exposing (..)
 import Dict exposing (Dict)
-import Focus exposing (set, create, Focus, (=>))
+import Focus exposing ((=>), Focus, create, set)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -9,10 +10,9 @@ import Html.Keyed
 import Http
 import Json.Decode as JsonDecode exposing ((:=))
 import Json.Encode as JsonEncode
-import RemoteData as RemoteData exposing (WebData, RemoteData(..))
+import RemoteData as RemoteData exposing (RemoteData(..), WebData)
 import RouteUrl.Builder exposing (Builder, builder, replacePath)
 import Task exposing (Task)
-import App.Utils exposing (..)
 
 
 -- TYPES
@@ -88,7 +88,7 @@ viewClobberButton backend model =
             List.length <| List.concat <| Dict.values model.selected
 
         buttonText =
-            "Submit clobberer (" ++ (toString buttonNumber) ++ ")"
+            "Submit clobberer (" ++ toString buttonNumber ++ ")"
 
         buttonDisabled =
             if buttonNumber == 0 then
@@ -96,12 +96,12 @@ viewClobberButton backend model =
             else
                 False
     in
-        button
-            [ class "btn btn-primary btn-large"
-            , disabled buttonDisabled
-            , App.Utils.onClick <| Clobber backend
-            ]
-            [ text buttonText ]
+    button
+        [ class "btn btn-primary btn-large"
+        , disabled buttonDisabled
+        , App.Utils.onClick <| Clobber backend
+        ]
+        [ text buttonText ]
 
 
 viewClobberDetails backend model =
@@ -148,16 +148,16 @@ viewClobberDetails backend model =
         items =
             List.concat <| List.map items' <| Dict.toList model.selected
     in
-        if items == [] then
-            []
-        else
-            [ button
-            , ul
-                [ id <| "#clobber-selected-" ++ backendName
-                , class <| "collapse" ++ collapsed
-                ]
-                items
+    if items == [] then
+        []
+    else
+        [ button
+        , ul
+            [ id <| "#clobber-selected-" ++ backendName
+            , class <| "collapse" ++ collapsed
             ]
+            items
+        ]
 
 
 viewBackend : Backend -> ModelBackend -> Html Msg
@@ -165,7 +165,7 @@ viewBackend backend model =
     div []
         [ viewClobberButton backend model
         , div [ class "clobberer-submit-description" ] <| viewClobberDetails backend model
-        , (case model.data of
+        , case model.data of
             Success data ->
                 dropdown (SelectDropdown backend) data model.selected_dropdown
 
@@ -177,8 +177,7 @@ viewBackend backend model =
 
             NotAsked ->
                 div [] []
-          )
-        , (case model.selected_dropdown of
+        , case model.selected_dropdown of
             Nothing ->
                 div [] []
 
@@ -209,103 +208,102 @@ viewBackend backend model =
                                 )
                                 Dict.empty
                 in
-                    table [ class "table table-hover" ]
-                        [ thead []
-                            [ tr []
-                                [ th []
-                                    [ input
-                                        [ type' "checkbox"
-                                        , onCheck
-                                            (\checked ->
-                                                case checked of
-                                                    True ->
-                                                        SelectAll backend selected_dropdown
+                table [ class "table table-hover" ]
+                    [ thead []
+                        [ tr []
+                            [ th []
+                                [ input
+                                    [ type' "checkbox"
+                                    , onCheck
+                                        (\checked ->
+                                            case checked of
+                                                True ->
+                                                    SelectAll backend selected_dropdown
 
-                                                    False ->
-                                                        SelectNone backend selected_dropdown
-                                            )
-                                        , checked
-                                            (let
-                                                all =
-                                                    items
-                                                        |> Dict.keys
+                                                False ->
+                                                    SelectNone backend selected_dropdown
+                                        )
+                                    , checked
+                                        (let
+                                            all =
+                                                items
+                                                    |> Dict.keys
 
-                                                current =
-                                                    Dict.get selected_dropdown model.selected
-                                                        |> Maybe.withDefault []
-                                             in
-                                                if current == all && current /= [] then
-                                                    True
-                                                else
-                                                    False
-                                            )
-                                        ]
-                                        []
-                                    ]
-                                , th []
-                                    [ text
-                                        (case backend of
-                                            TaskclusterBackend ->
-                                                "Worker Type"
-
-                                            BuildbotBackend ->
-                                                "Builder"
+                                            current =
+                                                Dict.get selected_dropdown model.selected
+                                                    |> Maybe.withDefault []
+                                         in
+                                         if current == all && current /= [] then
+                                            True
+                                         else
+                                            False
                                         )
                                     ]
-                                , th []
-                                    [ text
-                                        (case backend of
-                                            TaskclusterBackend ->
-                                                "Caches"
+                                    []
+                                ]
+                            , th []
+                                [ text
+                                    (case backend of
+                                        TaskclusterBackend ->
+                                            "Worker Type"
 
-                                            BuildbotBackend ->
-                                                "Last clobber"
-                                        )
-                                    ]
+                                        BuildbotBackend ->
+                                            "Builder"
+                                    )
+                                ]
+                            , th []
+                                [ text
+                                    (case backend of
+                                        TaskclusterBackend ->
+                                            "Caches"
+
+                                        BuildbotBackend ->
+                                            "Last clobber"
+                                    )
                                 ]
                             ]
-                        , Html.Keyed.node "tbody"
-                            []
-                            (Dict.values <|
-                                Dict.map
-                                    (\builder_name builders ->
-                                        ( builder_name
-                                        , tr []
-                                            [ td []
-                                                [ input
-                                                    [ type' "checkbox"
-                                                    , onCheck
-                                                        (\checked ->
-                                                            case checked of
-                                                                True ->
-                                                                    AddSelected backend selected_dropdown builder_name
-
-                                                                False ->
-                                                                    RemoveSelected backend selected_dropdown builder_name
-                                                        )
-                                                    , checked
-                                                        (case Dict.get selected_dropdown model.selected of
-                                                            Just itemz ->
-                                                                List.member builder_name itemz
-
-                                                            Nothing ->
-                                                                False
-                                                        )
-                                                    ]
-                                                    []
-                                                ]
-                                            , td []
-                                                [ text builder_name ]
-                                            , td []
-                                                [ ul [] <| List.map (\x -> li [] [ text (toString x.lastclobber) ]) builders
-                                                ]
-                                            ]
-                                        )
-                                    )
-                                    items
-                            )
                         ]
-          )
+                    , Html.Keyed.node "tbody"
+                        []
+                        (Dict.values <|
+                            Dict.map
+                                (\builder_name builders ->
+                                    ( builder_name
+                                    , tr []
+                                        [ td []
+                                            [ input
+                                                [ type' "checkbox"
+                                                , onCheck
+                                                    (\checked ->
+                                                        case checked of
+                                                            True ->
+                                                                AddSelected backend selected_dropdown builder_name
+
+                                                            False ->
+                                                                RemoveSelected backend selected_dropdown builder_name
+                                                    )
+                                                , checked
+                                                    (case Dict.get selected_dropdown model.selected of
+                                                        Just itemz ->
+                                                            List.member builder_name itemz
+
+                                                        Nothing ->
+                                                            False
+                                                    )
+                                                ]
+                                                []
+                                            ]
+                                        , td []
+                                            [ text builder_name ]
+                                        , td []
+                                            [ ul [] <| List.map (\x -> li [] [ text (toString x.lastclobber) ]) builders
+                                            ]
+                                        ]
+                                    )
+                                )
+                                items
+                        )
+                    ]
         ]
 
 
@@ -356,7 +354,8 @@ initPage baseUrl model =
       }
     , Cmd.batch
         [ fetchBackend (DataFetched BuildbotBackend) (baseUrl ++ "/buildbot")
-          --XXX, fetchBackend (DataFetched TaskclusterBackend) (baseUrl ++ "/taskcluster")
+
+        --XXX, fetchBackend (DataFetched TaskclusterBackend) (baseUrl ++ "/taskcluster")
         ]
     )
 
@@ -395,7 +394,7 @@ update msg model =
                               --    <| Dict.toList model.buildout.selected
                             )
             in
-                ( model, Cmd.none )
+            ( model, Cmd.none )
 
         --(newModel, clobberBackend (Clobbered backend) backendUrl)
         Clobbered backend newData ->
@@ -410,7 +409,7 @@ update msg model =
                 --    BuildbotBackend ->
                 --        set (buildbot => clobber) NotAsked model
             in
-                ( model, Cmd.none )
+            ( model, Cmd.none )
 
         FetchData backend ->
             let
@@ -426,7 +425,7 @@ update msg model =
                             , model.baseUrl ++ "/buildbot"
                             )
             in
-                ( newModel, fetchBackend (DataFetched backend) backendUrl )
+            ( newModel, fetchBackend (DataFetched backend) backendUrl )
 
         DataFetched backend newData ->
             let
@@ -438,7 +437,7 @@ update msg model =
                         BuildbotBackend ->
                             set (buildbot => data) newData model
             in
-                ( newModel, Cmd.none )
+            ( newModel, Cmd.none )
 
         SelectDropdown backend name ->
             let
@@ -450,7 +449,7 @@ update msg model =
                         BuildbotBackend ->
                             set (buildbot => selected_dropdown) (Just name) model
             in
-                ( newModel, Cmd.none )
+            ( newModel, Cmd.none )
 
         AddSelected backend key value ->
             let
@@ -465,13 +464,13 @@ update msg model =
                                     if List.member value values then
                                         values
                                     else
-                                        (value :: values)
+                                        value :: values
 
                                 values =
                                     Maybe.withDefault [] <|
                                         Dict.get key model.taskcluster.selected
                             in
-                                set (taskcluster => selected) selected' model
+                            set (taskcluster => selected) selected' model
 
                         BuildbotBackend ->
                             let
@@ -482,15 +481,15 @@ update msg model =
                                     if List.member value values then
                                         values
                                     else
-                                        (value :: values)
+                                        value :: values
 
                                 values =
                                     Maybe.withDefault [] <|
                                         Dict.get key model.buildbot.selected
                             in
-                                set (buildbot => selected) selected' model
+                            set (buildbot => selected) selected' model
             in
-                ( newModel, Cmd.none )
+            ( newModel, Cmd.none )
 
         RemoveSelected backend key value ->
             let
@@ -508,7 +507,7 @@ update msg model =
                                     Maybe.withDefault [] <|
                                         Dict.get key model.taskcluster.selected
                             in
-                                set (taskcluster => selected) selected' model
+                            set (taskcluster => selected) selected' model
 
                         BuildbotBackend ->
                             let
@@ -522,9 +521,9 @@ update msg model =
                                     Maybe.withDefault [] <|
                                         Dict.get key model.buildbot.selected
                             in
-                                set (buildbot => selected) selected' model
+                            set (buildbot => selected) selected' model
             in
-                ( newModel, Cmd.none )
+            ( newModel, Cmd.none )
 
         ToggleSelectedDetails backend ->
             let
@@ -535,16 +534,16 @@ update msg model =
                                 toggled_selected_details =
                                     not model.taskcluster.selected_details
                             in
-                                set (taskcluster => selected_details) toggled_selected_details model
+                            set (taskcluster => selected_details) toggled_selected_details model
 
                         BuildbotBackend ->
                             let
                                 toggled_selected_details =
                                     not model.buildbot.selected_details
                             in
-                                set (buildbot => selected_details) toggled_selected_details model
+                            set (buildbot => selected_details) toggled_selected_details model
             in
-                ( newModel, Cmd.none )
+            ( newModel, Cmd.none )
 
         SelectAll backend selected_dropdown ->
             let
@@ -581,7 +580,7 @@ update msg model =
                                 newSelected =
                                     Dict.insert selected_dropdown newItems model.taskcluster.selected
                             in
-                                set (taskcluster => selected) newSelected model
+                            set (taskcluster => selected) newSelected model
 
                         BuildbotBackend ->
                             let
@@ -614,9 +613,9 @@ update msg model =
                                 newSelected =
                                     Dict.insert selected_dropdown newItems model.buildbot.selected
                             in
-                                set (buildbot => selected) newSelected model
+                            set (buildbot => selected) newSelected model
             in
-                ( newModel, Cmd.none )
+            ( newModel, Cmd.none )
 
         SelectNone backend selected_dropdown ->
             let
@@ -627,16 +626,16 @@ update msg model =
                                 newSelected =
                                     Dict.insert selected_dropdown [] model.taskcluster.selected
                             in
-                                set (taskcluster => selected) newSelected model
+                            set (taskcluster => selected) newSelected model
 
                         BuildbotBackend ->
                             let
                                 newSelected =
                                     Dict.insert selected_dropdown [] model.buildbot.selected
                             in
-                                set (buildbot => selected) newSelected model
+                            set (buildbot => selected) newSelected model
             in
-                ( newModel, Cmd.none )
+            ( newModel, Cmd.none )
 
 
 
@@ -684,16 +683,15 @@ decodeFetchData =
         (JsonDecode.object2 BackendBranch
             ("name" := JsonDecode.string)
             ("builders"
-                := (JsonDecode.list
-                        (JsonDecode.object6 BackendBuilder
-                            ("branch" := JsonDecode.string)
-                            ("builddir" := JsonDecode.string)
-                            ("lastclobber" := JsonDecode.int)
-                            ("name" := JsonDecode.string)
-                            ("slave" := JsonDecode.string)
-                            ("who" := JsonDecode.string)
-                        )
-                   )
+                := JsonDecode.list
+                    (JsonDecode.object6 BackendBuilder
+                        ("branch" := JsonDecode.string)
+                        ("builddir" := JsonDecode.string)
+                        ("lastclobber" := JsonDecode.int)
+                        ("name" := JsonDecode.string)
+                        ("slave" := JsonDecode.string)
+                        ("who" := JsonDecode.string)
+                    )
             )
         )
 
@@ -731,8 +729,8 @@ getJson decoder url =
             , body = Http.empty
             }
     in
-        Http.fromJson decoder
-            (Http.send Http.defaultSettings request)
+    Http.fromJson decoder
+        (Http.send Http.defaultSettings request)
 
 
 postJson : JsonDecode.Decoder value -> String -> Http.Body -> Task Http.Error value
@@ -745,5 +743,5 @@ postJson decoder url body =
             , body = body
             }
     in
-        Http.fromJson decoder
-            (Http.send Http.defaultSettings request)
+    Http.fromJson decoder
+        (Http.send Http.defaultSettings request)

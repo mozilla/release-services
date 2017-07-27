@@ -65,13 +65,13 @@ viewUser model =
                 loginMsg =
                     App.TaskclusterLoginMsg <| TaskclusterLogin.Login loginUrl
             in
-                [ a
-                    [ Utils.onClick loginMsg
-                    , href "#"
-                    , class "nav-link"
-                    ]
-                    [ text "Login" ]
+            [ a
+                [ Utils.onClick loginMsg
+                , href "#"
+                , class "nav-link"
                 ]
+                [ text "Login" ]
+            ]
 
 
 viewNavBar : App.Model -> List (Html App.Msg)
@@ -143,13 +143,13 @@ view viewRoute model =
                 |> String.toLower
                 |> String.dropRight (String.length "Route")
     in
-        div [ id ("page-" ++ routeName) ]
-            [ nav
-                [ id "navbar"
-                , class "navbar navbar-toggleable-md bg-faded navbar-inverse"
-                ]
-                [ div [ class "container" ] (viewNavBar model) ]
-            , div [ id "content" ]
-                [ div [ class "container" ] [ viewRoute model ] ]
-            , footer [ class "container" ] (viewFooter model)
+    div [ id ("page-" ++ routeName) ]
+        [ nav
+            [ id "navbar"
+            , class "navbar navbar-toggleable-md bg-faded navbar-inverse"
             ]
+            [ div [ class "container" ] (viewNavBar model) ]
+        , div [ id "content" ]
+            [ div [ class "container" ] [ viewRoute model ] ]
+        , footer [ class "container" ] (viewFooter model)
+        ]

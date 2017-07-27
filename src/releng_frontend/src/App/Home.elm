@@ -1,8 +1,8 @@
 module App.Home exposing (..)
 
 import App
-import App.TreeStatus.Types
 import App.Notifications.Types
+import App.TreeStatus.Types
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Utils

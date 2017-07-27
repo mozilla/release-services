@@ -6,14 +6,13 @@ import App.TreeStatus.Types
 import App.TreeStatus.View
 import App.Types
 import App.Utils
+import Hawk
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Hawk
 import Http
 import Navigation
 import RemoteData
 import Title
-import UrlParser
 import UrlParser exposing ((</>))
 import Utils
 
@@ -129,7 +128,7 @@ update currentRoute msg model =
                     if redirectToTrees then
                         showAllTrees
                     else
-                        (case route of
+                        case route of
                             App.TreeStatus.Types.ShowTreesRoute ->
                                 showAllTrees
 
@@ -166,7 +165,6 @@ update currentRoute msg model =
                                     , fetchRecentChangesIfNotAsked
                                     ]
                                 )
-                        )
 
                 newRoute =
                     if redirectToTrees then
@@ -174,14 +172,14 @@ update currentRoute msg model =
                     else
                         route
             in
-                ( newModel
-                , Cmd.batch
-                    [ (reverseRoute newRoute)
-                        |> Navigation.newUrl
-                    , newCmd
-                    ]
-                , Nothing
-                )
+            ( newModel
+            , Cmd.batch
+                [ reverseRoute newRoute
+                    |> Navigation.newUrl
+                , newCmd
+                ]
+            , Nothing
+            )
 
         App.TreeStatus.Types.GetTreesResult trees ->
             ( { model | trees = trees }, Cmd.none, Nothing )
@@ -209,17 +207,17 @@ update currentRoute msg model =
                 ( newModel, hawkRequest ) =
                     App.TreeStatus.Form.updateAddTree model formMsg
             in
-                ( newModel
-                , Cmd.none
-                , hawkRequest
-                )
+            ( newModel
+            , Cmd.none
+            , hawkRequest
+            )
 
         App.TreeStatus.Types.FormAddTreeResult result ->
             ( { model | treesAlerts = App.Utils.getAlerts result }
             , Cmd.batch
                 [ Utils.performMsg App.TreeStatus.Form.resetAddTree
                     |> Cmd.map App.TreeStatus.Types.FormAddTreeMsg
-                , (reverseRoute App.TreeStatus.Types.ShowTreesRoute)
+                , reverseRoute App.TreeStatus.Types.ShowTreesRoute
                     |> Navigation.newUrl
                 ]
             , Nothing
@@ -230,10 +228,10 @@ update currentRoute msg model =
                 ( newModel, hawkRequest ) =
                     App.TreeStatus.Form.updateUpdateTree currentRoute model formMsg
             in
-                ( newModel
-                , Cmd.none
-                , hawkRequest
-                )
+            ( newModel
+            , Cmd.none
+            , hawkRequest
+            )
 
         App.TreeStatus.Types.FormUpdateTreesResult result ->
             ( { model | treesAlerts = App.Utils.getAlerts result }
@@ -242,7 +240,7 @@ update currentRoute msg model =
                 , App.TreeStatus.Api.fetchRecentChanges model.baseUrl
                 , Utils.performMsg App.TreeStatus.Form.resetUpdateTree
                     |> Cmd.map App.TreeStatus.Types.FormUpdateTreesMsg
-                , (reverseRoute App.TreeStatus.Types.ShowTreesRoute)
+                , reverseRoute App.TreeStatus.Types.ShowTreesRoute
                     |> Navigation.newUrl
                 ]
             , Nothing
@@ -258,10 +256,10 @@ update currentRoute msg model =
                         _ ->
                             []
             in
-                ( { model | treesSelected = treesSelected }
-                , Cmd.none
-                , Nothing
-                )
+            ( { model | treesSelected = treesSelected }
+            , Cmd.none
+            , Nothing
+            )
 
         App.TreeStatus.Types.SelectTree name ->
             let
@@ -271,10 +269,10 @@ update currentRoute msg model =
                     else
                         name :: model.treesSelected
             in
-                ( { model | treesSelected = treesSelected }
-                , Cmd.none
-                , Nothing
-                )
+            ( { model | treesSelected = treesSelected }
+            , Cmd.none
+            , Nothing
+            )
 
         App.TreeStatus.Types.UnselectAllTrees ->
             ( { model | treesSelected = [] }
@@ -287,10 +285,10 @@ update currentRoute msg model =
                 treesSelected =
                     List.filter (\x -> x /= name) model.treesSelected
             in
-                ( { model | treesSelected = treesSelected }
-                , Cmd.none
-                , Nothing
-                )
+            ( { model | treesSelected = treesSelected }
+            , Cmd.none
+            , Nothing
+            )
 
         App.TreeStatus.Types.DeleteTrees ->
             let
@@ -315,23 +313,23 @@ update currentRoute msg model =
                         [ Http.header "Accept" "application/json" ]
                         (Http.jsonBody (App.TreeStatus.Api.encoderTreeNames treesToDelete))
             in
-                if model.deleteTreesConfirm then
-                    ( { model
-                        | treesSelected = []
-                        , trees = RemoteData.map filterOutTrees model.trees
-                      }
-                    , Cmd.none
-                    , Just request
-                    )
-                else
-                    ( { model | deleteError = Just "You need to confirm to be able to delete tree(s)." }
-                    , Cmd.none
-                    , Nothing
-                    )
+            if model.deleteTreesConfirm then
+                ( { model
+                    | treesSelected = []
+                    , trees = RemoteData.map filterOutTrees model.trees
+                  }
+                , Cmd.none
+                , Just request
+                )
+            else
+                ( { model | deleteError = Just "You need to confirm to be able to delete tree(s)." }
+                , Cmd.none
+                , Nothing
+                )
 
         App.TreeStatus.Types.DeleteTreesResult result ->
             ( { model | treesAlerts = App.Utils.getAlerts result }
-            , (reverseRoute App.TreeStatus.Types.ShowTreesRoute)
+            , reverseRoute App.TreeStatus.Types.ShowTreesRoute
                 |> Navigation.newUrl
             , Nothing
             )
@@ -343,7 +341,7 @@ update currentRoute msg model =
                 (Hawk.Request
                     "RevertChange"
                     "DELETE"
-                    (model.baseUrl ++ "/stack2/restore/" ++ (toString stack))
+                    (model.baseUrl ++ "/stack2/restore/" ++ toString stack)
                     [ Http.header "Accept" "application/json" ]
                     Http.emptyBody
                 )
@@ -356,7 +354,7 @@ update currentRoute msg model =
                 (Hawk.Request
                     "DiscardChange"
                     "DELETE"
-                    (model.baseUrl ++ "/stack2/discard/" ++ (toString stack))
+                    (model.baseUrl ++ "/stack2/discard/" ++ toString stack)
                     [ Http.header "Accept" "application/json" ]
                     Http.emptyBody
                 )

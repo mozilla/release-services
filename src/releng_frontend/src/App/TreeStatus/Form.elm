@@ -1,18 +1,18 @@
 module App.TreeStatus.Form exposing (..)
 
+import App.Form
 import App.TreeStatus.Api
 import App.TreeStatus.Types
-import App.Form
 import App.Utils
 import Form
 import Form.Error
 import Form.Field
 import Form.Input
 import Form.Validate
+import Hawk
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
-import Hawk
 import RemoteData
 import Utils
 
@@ -150,13 +150,13 @@ updateAddTree model formMsg =
                 _ ->
                     ( model.trees, model.treesAlerts, Nothing )
     in
-        ( { model
-            | formAddTree = form
-            , treesAlerts = alerts
-            , trees = trees
-          }
-        , hawkRequest
-        )
+    ( { model
+        | formAddTree = form
+        , treesAlerts = alerts
+        , trees = trees
+      }
+    , hawkRequest
+    )
 
 
 updateUpdateTree :
@@ -192,24 +192,22 @@ updateUpdateTree route model formMsg =
                 (model.baseUrl ++ "/trees")
                 [ Http.header "Accept" "application/json" ]
                 ((if List.length model.treesSelected /= 1 then
-                    ({ trees = model.treesSelected
-                     , status = data.status
-                     , reason = data.reason
-                     , tags = tagsToList data.tags
-                     , remember = data.remember
-                     }
+                    { trees = model.treesSelected
+                    , status = data.status
+                    , reason = data.reason
+                    , tags = tagsToList data.tags
+                    , remember = data.remember
+                    }
                         |> App.TreeStatus.Api.encoderUpdateTrees
-                    )
                   else
-                    ({ trees = model.treesSelected
-                     , status = data.status
-                     , reason = data.reason
-                     , tags = tagsToList data.tags
-                     , message_of_the_day = data.message_of_the_day
-                     , remember = data.remember
-                     }
+                    { trees = model.treesSelected
+                    , status = data.status
+                    , reason = data.reason
+                    , tags = tagsToList data.tags
+                    , message_of_the_day = data.message_of_the_day
+                    , remember = data.remember
+                    }
                         |> App.TreeStatus.Api.encoderUpdateTree
-                    )
                  )
                     |> Http.jsonBody
                 )
@@ -228,12 +226,12 @@ updateUpdateTree route model formMsg =
                 _ ->
                     ( model.treesAlerts, Nothing )
     in
-        ( { model
-            | formUpdateTree = form
-            , treesAlerts = alerts
-          }
-        , hawkRequest
-        )
+    ( { model
+        | formUpdateTree = form
+        , treesAlerts = alerts
+      }
+    , hawkRequest
+    )
 
 
 getUpdateTreeErrors : Form.Form e o -> List ( String, Form.Error.ErrorValue e )
@@ -247,18 +245,18 @@ getUpdateTreeErrors form =
                 reason =
                     Form.getFieldAsString "reason" form
             in
-                if
-                    Maybe.withDefault "" status.value
-                        == "closed"
-                        && Maybe.withDefault "" reason.value
-                        == ""
-                then
-                    [ ( "reason", Form.Error.Empty ) ]
-                else
-                    []
+            if
+                Maybe.withDefault "" status.value
+                    == "closed"
+                    && Maybe.withDefault "" reason.value
+                    == ""
+            then
+                [ ( "reason", Form.Error.Empty ) ]
+            else
+                []
     in
-        Form.getErrors form
-            |> List.append (validateReason form)
+    Form.getErrors form
+        |> List.append (validateReason form)
 
 
 fieldClass : { b | error : Maybe a } -> String
@@ -290,31 +288,31 @@ viewAddTree form =
         state =
             Form.getFieldAsString "name" form
     in
-        div
-            [ id "treestatus-form" ]
-            [ Html.form
+    div
+        [ id "treestatus-form" ]
+        [ Html.form
+            []
+            [ App.Form.viewField
+                (if Form.isSubmitted form then
+                    state.error
+                 else
+                    Nothing
+                )
+                (Just "Tree name")
                 []
-                [ App.Form.viewField
-                    (if Form.isSubmitted form then
-                        state.error
-                     else
-                        Nothing
-                    )
-                    (Just "Tree name")
-                    []
-                    (Form.Input.textInput state
-                        [ class "form-control"
-                        , value (Maybe.withDefault "" state.value)
-                        , placeholder "New tree name ..."
-                        ]
-                    )
-                , App.Form.viewButton
-                    "Add"
-                    [ Utils.onClick Form.Submit
+                (Form.Input.textInput state
+                    [ class "form-control"
+                    , value (Maybe.withDefault "" state.value)
+                    , placeholder "New tree name ..."
                     ]
-                , div [ class "clearfix" ] []
+                )
+            , App.Form.viewButton
+                "Add"
+                [ Utils.onClick Form.Submit
                 ]
+            , div [ class "clearfix" ] []
             ]
+        ]
 
 
 viewUpdateTree :
@@ -396,20 +394,18 @@ viewUpdateTree treesSelected trees form =
                         "Remember this change to undo later"
                     ]
                 ]
-            , (if List.length treesSelected /= 1 then
+            , if List.length treesSelected /= 1 then
                 text ""
-               else
+              else
                 hr [] []
-              )
-            , (if List.length treesSelected /= 1 then
+            , if List.length treesSelected /= 1 then
                 text ""
-               else
+              else
                 App.Form.viewTextInput
                     (Form.getFieldAsString "message_of_the_day" form)
                     "Message of the day"
                     []
                     [ placeholder "(no change)" ]
-              )
             , hr [] []
             , App.Form.viewButton
                 "Update"

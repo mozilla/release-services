@@ -11,7 +11,6 @@ import App.UserScopes
 import Hawk
 import Navigation
 import TaskclusterLogin
-import UrlParser
 import UrlParser exposing ((</>), (<?>))
 
 

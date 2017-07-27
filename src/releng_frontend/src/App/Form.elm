@@ -56,7 +56,7 @@ viewField :
     -> Html Form.Msg
 viewField maybeError maybeLabel helpNodes inputNode =
     div
-        [ class ("form-group " ++ (errorClass maybeError)) ]
+        [ class ("form-group " ++ errorClass maybeError) ]
         ([]
             |> List.append helpNodes
             |> maybeAppendError maybeError
