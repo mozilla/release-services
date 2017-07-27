@@ -59,10 +59,10 @@ def get_coverage_builds():
         previous_commit = builds[1]['commit_sha']
     elif COVERAGE_SERVICE == CoverageService.CODECOV:
         r = requests.get('https://codecov.io/api/gh/marco-c/gecko-dev')
-        commits = r.json()['commits']
+        commit = r.json()['commit']
 
-        latest_commit = commits[0]['commitid']
-        previous_commit = commits[1]['commitid']
+        latest_commit = commit['commitid']
+        previous_commit = commit['parent']
 
     return (latest_commit, previous_commit)
 
