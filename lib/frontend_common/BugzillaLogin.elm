@@ -1,12 +1,12 @@
 port module BugzillaLogin exposing (..)
 
-import Http
-import Utils
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onSubmit)
-import RemoteData exposing (WebData, RemoteData(..))
+import Http
 import Json.Decode as JsonDecode
+import RemoteData exposing (RemoteData(..), WebData)
+import Utils
 
 
 type Msg
@@ -50,8 +50,8 @@ update msg model =
                 model_ =
                     { model | credentials = credentials }
             in
-                -- Check credentials when received from storage
-                ( model_, checkCredentials model_ False )
+            -- Check credentials when received from storage
+            ( model_, checkCredentials model_ False )
 
         UpdateLogin login ->
             let
@@ -63,7 +63,7 @@ update msg model =
                         Nothing ->
                             { login = login, token = "" }
             in
-                ( { model | credentials = Just newCreds }, Cmd.none )
+            ( { model | credentials = Just newCreds }, Cmd.none )
 
         UpdateToken token ->
             let
@@ -75,7 +75,7 @@ update msg model =
                         Nothing ->
                             { login = "", token = token }
             in
-                ( { model | credentials = Just newCreds }, Cmd.none )
+            ( { model | credentials = Just newCreds }, Cmd.none )
 
         SaveCredentials ->
             -- Check credentials before saving them
@@ -118,9 +118,9 @@ checkCredentials model save =
                         , withCredentials = False
                         }
             in
-                -- send request as webdata
-                RemoteData.sendRequest request
-                    |> Cmd.map (CheckedCredentials save)
+            -- send request as webdata
+            RemoteData.sendRequest request
+                |> Cmd.map (CheckedCredentials save)
 
         Nothing ->
             Cmd.none

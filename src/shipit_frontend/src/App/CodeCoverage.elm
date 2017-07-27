@@ -1,13 +1,13 @@
 module App.CodeCoverage exposing (..)
 
-import Http
+import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import RemoteData exposing (WebData, RemoteData(..))
-import TaskclusterLogin as User
+import Http
 import Json.Decode as JsonDecode exposing (Decoder)
-import Dict exposing (Dict)
+import RemoteData exposing (RemoteData(..), WebData)
+import TaskclusterLogin as User
 
 
 -- Models
@@ -52,8 +52,8 @@ init backend_uplift_url =
             , path = Nothing
             }
     in
-        -- Load code coverage data
-        ( model, Cmd.none )
+    -- Load code coverage data
+    ( model, Cmd.none )
 
 
 
@@ -79,15 +79,15 @@ loadArtifact : Model -> Cmd Msg
 loadArtifact model =
     let
         url =
-            (model.backend_uplift_url
+            model.backend_uplift_url
                 ++ "/coverage_by_dir"
-                ++ case model.path of
-                    Just path ->
-                        "?path=" ++ path
+                ++ (case model.path of
+                        Just path ->
+                            "?path=" ++ path
 
-                    Nothing ->
-                        ""
-            )
+                        Nothing ->
+                            ""
+                   )
 
         request =
             Http.request
@@ -100,9 +100,9 @@ loadArtifact model =
                 , withCredentials = False
                 }
     in
-        -- send request as webdata
-        RemoteData.sendRequest request
-            |> Cmd.map LoadedArtifact
+    -- send request as webdata
+    RemoteData.sendRequest request
+        |> Cmd.map LoadedArtifact
 
 
 decodeArtifact : Decoder Directories
@@ -146,22 +146,22 @@ view model =
     div [ class "container-fluid" ]
         [ case model.directories of
             Failure err ->
-                div [ class "alert alert-danger" ] [ text ("Error loading code coverage: " ++ (toString err)) ]
+                div [ class "alert alert-danger" ] [ text ("Error loading code coverage: " ++ toString err) ]
 
             Success directories ->
                 let
                     title =
                         case model.path of
                             Just path ->
-                                ("Directiory: " ++ path)
+                                "Directiory: " ++ path
 
                             Nothing ->
                                 "Top Directory"
                 in
-                    div []
-                        [ h1 [] [ text title ]
-                        , viewDirectories (filterDirectories directories model.path)
-                        ]
+                div []
+                    [ h1 [] [ text title ]
+                    , viewDirectories (filterDirectories directories model.path)
+                    ]
 
             _ ->
                 div [ class "alert alert-info" ] [ text "Loading code coverage..." ]
@@ -179,7 +179,7 @@ viewDirectories directories =
             , th [] [ text "Bugs" ]
             ]
          ]
-            ++ (List.map viewDirectory (Dict.toList directories))
+            ++ List.map viewDirectory (Dict.toList directories)
         )
 
 
@@ -215,28 +215,28 @@ viewDirectory ( path, directory ) =
                 Nothing ->
                     "No previous value"
     in
-        tr [ class style ]
-            [ td [] [ span [ class "btn btn-link", onClick (SetDirectory (Just path)) ] [ text path ] ]
-            , td [] [ text previous ]
-            , td [] [ text (toString directory.current) ]
-            , td []
-                [ text
-                    ((if diff > 0 then
-                        "+"
-                      else
-                        ""
-                     )
-                        ++ (toString diff)
-                    )
-                ]
-            , td [] [ ul [ class "bug-list" ] (List.map viewBug directory.bugs) ]
+    tr [ class style ]
+        [ td [] [ span [ class "btn btn-link", onClick (SetDirectory (Just path)) ] [ text path ] ]
+        , td [] [ text previous ]
+        , td [] [ text (toString directory.current) ]
+        , td []
+            [ text
+                ((if diff > 0 then
+                    "+"
+                  else
+                    ""
+                 )
+                    ++ toString diff
+                )
             ]
+        , td [] [ ul [ class "bug-list" ] (List.map viewBug directory.bugs) ]
+        ]
 
 
 viewBug : Bug -> Html Msg
 viewBug bug =
     li []
-        [ a [ href ("https://bugzil.la/" ++ (toString bug.id)), target "_blank" ]
+        [ a [ href ("https://bugzil.la/" ++ toString bug.id), target "_blank" ]
             [ text (toString bug.id)
             ]
         , span [ class "text-muted" ] [ text ": " ]

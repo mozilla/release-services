@@ -1,24 +1,24 @@
 module App.ReleaseDashboard exposing (..)
 
+import App.Contributor as ContribEditor exposing (Contributor, decodeContributor, viewContributor)
+import Basics exposing (Never)
+import BugzillaLogin as Bugzilla
+import Date
+import Dict
+import Hawk
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput, onSubmit, onCheck)
+import Html.Events exposing (onCheck, onClick, onInput, onSubmit)
 import HtmlParser exposing (parse)
 import HtmlParser.Util exposing (toVirtualDom)
-import String
-import Dict
-import Date
+import Http
 import Json.Decode as Json exposing (Decoder)
 import Json.Decode.Extra as JsonExtra exposing ((|:))
 import Json.Encode as JsonEncode
-import RemoteData as RemoteData exposing (WebData, RemoteData(Loading, Success, NotAsked, Failure), isSuccess)
-import Http
-import Basics exposing (Never)
-import Utils exposing (onChange)
+import RemoteData as RemoteData exposing (RemoteData(Failure, Loading, NotAsked, Success), WebData, isSuccess)
+import String
 import TaskclusterLogin as User
-import BugzillaLogin as Bugzilla
-import Hawk
-import App.Contributor as ContribEditor exposing (Contributor, decodeContributor, viewContributor)
+import Utils exposing (onChange)
 
 
 -- Models
@@ -150,15 +150,15 @@ init backend_uplift_url =
         ( contrib_editor, cmd ) =
             ContribEditor.init backend_uplift_url
     in
-        ( { all_analysis = NotAsked
-          , current_analysis = NotAsked
-          , backend_uplift_url = backend_uplift_url
-          , contrib_editor = contrib_editor
-          }
-        , Cmd.batch
-            [ Cmd.map ContribEditorMsg cmd
-            ]
-        )
+    ( { all_analysis = NotAsked
+      , current_analysis = NotAsked
+      , backend_uplift_url = backend_uplift_url
+      , contrib_editor = contrib_editor
+      }
+    , Cmd.batch
+        [ Cmd.map ContribEditorMsg cmd
+        ]
+    )
 
 
 
@@ -221,7 +221,7 @@ update msg model user bugzilla =
                 model_ =
                     updateBug model bug.id (\b -> { b | editor = show, edits = Dict.empty, attachments = Dict.empty })
             in
-                ( model_, Cmd.none )
+            ( model_, Cmd.none )
 
         EditBug bug key value ->
             -- Store a bug edit
@@ -232,7 +232,7 @@ update msg model user bugzilla =
                 model_ =
                     updateBug model bug.id (\b -> { b | edits = edits })
             in
-                ( model_, Cmd.none )
+            ( model_, Cmd.none )
 
         EditUplift bug version checked ->
             -- Store an uplift approval
@@ -263,7 +263,7 @@ update msg model user bugzilla =
                 model_ =
                     updateBug model bug.id (\b -> { b | attachments = attachments })
             in
-                ( model_, Cmd.none )
+            ( model_, Cmd.none )
 
         PublishEdits bug ->
             -- Send edits to backend
@@ -293,13 +293,13 @@ update msg model user bugzilla =
                 model_ =
                     updateBug model bug.id (\b -> { b | update = update, editor = NoEditor })
             in
-                -- Forward update to backend
-                case update of
-                    Success up ->
-                        sendBugUpdate model_ user bug up
+            -- Forward update to backend
+            case update of
+                Success up ->
+                    sendBugUpdate model_ user bug up
 
-                    _ ->
-                        ( model_, Cmd.none )
+                _ ->
+                    ( model_, Cmd.none )
 
         ContribEditorMsg editorMsg ->
             let
@@ -315,9 +315,9 @@ update msg model user bugzilla =
                         _ ->
                             model
             in
-                ( { newModel | contrib_editor = editor }
-                , Cmd.map ContribEditorMsg cmd
-                )
+            ( { newModel | contrib_editor = editor }
+            , Cmd.map ContribEditorMsg cmd
+            )
 
 
 mergeAttachments :
@@ -338,12 +338,12 @@ mergeAttachments aId versions attachments =
 
         -- Remove useless versions
         out_ =
-            Dict.filter (\k v -> (not (v == "?"))) out
+            Dict.filter (\k v -> not (v == "?")) out
     in
-        if out_ == Dict.empty then
-            Dict.remove aId attachments
-        else
-            Dict.insert aId out_ attachments
+    if out_ == Dict.empty then
+        Dict.remove aId attachments
+    else
+        Dict.insert aId out_ attachments
 
 
 updateBugs : Model -> (Bug -> Bug) -> Model
@@ -360,7 +360,7 @@ updateBugs model callback =
                 analysis_ =
                     { analysis | bugs = bugs }
             in
-                { model | current_analysis = Success analysis_ }
+            { model | current_analysis = Success analysis_ }
 
         _ ->
             model
@@ -373,7 +373,7 @@ updateBug model bugId callback =
     updateBugs model
         (\b ->
             if b.id == bugId then
-                (callback b)
+                callback b
             else
                 b
         )
@@ -412,8 +412,8 @@ fetchAllAnalysis model user =
                 request =
                     Hawk.Request "AllAnalysis" "GET" url [] Http.emptyBody
             in
-                Cmd.map HawkRequest
-                    (Hawk.send request credentials)
+            Cmd.map HawkRequest
+                (Hawk.send request credentials)
 
         Nothing ->
             -- No credentials
@@ -428,13 +428,13 @@ fetchAnalysis model user analysis_id =
             let
                 -- Build Taskcluster http request
                 url =
-                    model.backend_uplift_url ++ "/analysis/" ++ (toString analysis_id)
+                    model.backend_uplift_url ++ "/analysis/" ++ toString analysis_id
 
                 request =
                     Hawk.Request "Analysis" "GET" url [] Http.emptyBody
             in
-                Cmd.map HawkRequest
-                    (Hawk.send request credentials)
+            Cmd.map HawkRequest
+                (Hawk.send request credentials)
 
         Nothing ->
             -- No credentials
@@ -455,12 +455,12 @@ publishBugEdits model bugzilla bug =
 
                 -- Send directly status & tracking flags in body
                 cf_flags =
-                    List.map (\( k, v ) -> ( "cf_" ++ k, JsonEncode.string v )) (Dict.toList (Dict.filter (\k v -> (String.startsWith "status_" k) || (String.startsWith "tracking_" k)) edits))
+                    List.map (\( k, v ) -> ( "cf_" ++ k, JsonEncode.string v )) (Dict.toList (Dict.filter (\k v -> String.startsWith "status_" k || String.startsWith "tracking_" k) edits))
 
                 -- Send generic flags separately
                 flags =
-                    List.map (\( k, v ) -> encodeFlag ( (String.dropLeft 8 k), v ))
-                        (Dict.toList (Dict.filter (\k v -> (String.startsWith "generic_" k)) edits))
+                    List.map (\( k, v ) -> encodeFlag ( String.dropLeft 8 k, v ))
+                        (Dict.toList (Dict.filter (\k v -> String.startsWith "generic_" k) edits))
 
                 -- Build payload for bugzilla
                 payload =
@@ -480,7 +480,7 @@ publishBugEdits model bugzilla bug =
                     Http.request
                         { method = "PUT"
                         , headers = Bugzilla.buildHeaders bugzilla []
-                        , url = bugzilla.url ++ "/rest/bug/" ++ (toString bug.bugzilla_id)
+                        , url = bugzilla.url ++ "/rest/bug/" ++ toString bug.bugzilla_id
                         , body = Http.jsonBody payload
                         , expect = Http.expectJson decodeBugUpdate
                         , timeout = Nothing
@@ -495,7 +495,7 @@ publishBugEdits model bugzilla bug =
                 model_ =
                     updateBug model bug.id (\b -> { b | update = Loading })
             in
-                ( model_, cmd )
+            ( model_, cmd )
 
         _ ->
             -- No credentials !
@@ -518,7 +518,7 @@ publishApproval model bugzilla bug =
                 model_ =
                     updateBug model bug.id (\b -> { b | update = Loading })
             in
-                ( model_, Cmd.batch commands )
+            ( model_, Cmd.batch commands )
 
         _ ->
             -- No credentials !
@@ -550,14 +550,14 @@ updateAttachment bug bugzilla comment ( attachment_id, versions ) =
                 , withCredentials = False
                 }
     in
-        RemoteData.sendRequest request
-            |> Cmd.map (SavedBugEdit bug)
+    RemoteData.sendRequest request
+        |> Cmd.map (SavedBugEdit bug)
 
 
 encodeChanges : String -> List Changes -> JsonEncode.Value
 encodeChanges target changes =
     -- Encode bug changes
-    (JsonEncode.list
+    JsonEncode.list
         (List.map
             (\u ->
                 JsonEncode.object
@@ -582,7 +582,6 @@ encodeChanges target changes =
             )
             changes
         )
-    )
 
 
 sendBugUpdate : Model -> User.Model -> Bug -> BugUpdate -> ( Model, Cmd Msg )
@@ -605,15 +604,15 @@ sendBugUpdate model user bug update =
 
                 -- Build Taskcluster http request
                 url =
-                    model.backend_uplift_url ++ "/bugs/" ++ (toString bug.bugzilla_id)
+                    model.backend_uplift_url ++ "/bugs/" ++ toString bug.bugzilla_id
 
                 request =
                     Hawk.Request "BugUpdate" "PUT" url [] (Http.jsonBody payload)
             in
-                ( model
-                , Cmd.map HawkRequest
-                    (Hawk.send request credentials)
-                )
+            ( model
+            , Cmd.map HawkRequest
+                (Hawk.send request credentials)
+            )
 
         Nothing ->
             ( model, Cmd.none )
@@ -672,7 +671,7 @@ buildAnalysisName name version =
             else
                 name
     in
-        name_ ++ " " ++ (toString version)
+    name_ ++ " " ++ toString version
 
 
 decodeAnalysis : Decoder Analysis
@@ -684,44 +683,41 @@ decodeAnalysis =
         version =
             Json.field "version" Json.int
     in
-        Json.map6 Analysis
-            (Json.field "id" Json.int)
-            name
-            version
-            (Json.map2 buildAnalysisName name version)
-            (Json.field "count" Json.int)
-            (Json.field "bugs" (Json.list decodeBug))
+    Json.map6 Analysis
+        (Json.field "id" Json.int)
+        name
+        version
+        (Json.map2 buildAnalysisName name version)
+        (Json.field "count" Json.int)
+        (Json.field "bugs" (Json.list decodeBug))
 
 
 decodeBug : Decoder Bug
 decodeBug =
     Json.succeed Bug
-        |: (Json.field "id" Json.int)
-        |: (Json.field "bugzilla_id" Json.int)
-        |: (Json.field "url" Json.string)
-        |: (Json.field "summary" Json.string)
-        |: (Json.field "product" Json.string)
-        |: (Json.field "component" Json.string)
-        |: (Json.field "status" Json.string)
-        |: (Json.field "keywords" (Json.list Json.string))
-        |: (Json.field "flags_status" (Json.dict Json.string))
-        |: (Json.field "flags_tracking" (Json.dict Json.string))
-        |: (Json.field "flags_generic" (Json.dict Json.string))
-        |: (Json.field "contributors" (Json.list decodeContributor))
-        |: (Json.maybe (Json.field "uplift" decodeUpliftRequest))
-        |: (Json.field "versions" (Json.dict decodeVersion))
-        |: (Json.field "patches" (Json.dict decodePatch))
-        |: (Json.field "landings" (Json.dict JsonExtra.date))
-        |: (Json.succeed NoEditor)
+        |: Json.field "id" Json.int
+        |: Json.field "bugzilla_id" Json.int
+        |: Json.field "url" Json.string
+        |: Json.field "summary" Json.string
+        |: Json.field "product" Json.string
+        |: Json.field "component" Json.string
+        |: Json.field "status" Json.string
+        |: Json.field "keywords" (Json.list Json.string)
+        |: Json.field "flags_status" (Json.dict Json.string)
+        |: Json.field "flags_tracking" (Json.dict Json.string)
+        |: Json.field "flags_generic" (Json.dict Json.string)
+        |: Json.field "contributors" (Json.list decodeContributor)
+        |: Json.maybe (Json.field "uplift" decodeUpliftRequest)
+        |: Json.field "versions" (Json.dict decodeVersion)
+        |: Json.field "patches" (Json.dict decodePatch)
+        |: Json.field "landings" (Json.dict JsonExtra.date)
+        |: Json.succeed NoEditor
         -- not editing at first
-        |:
-            (Json.succeed Dict.empty)
+        |: Json.succeed Dict.empty
         -- not editing at first
-        |:
-            (Json.succeed Dict.empty)
+        |: Json.succeed Dict.empty
         -- not editing at first
-        |:
-            (Json.succeed NotAsked)
+        |: Json.succeed NotAsked
 
 
 
@@ -822,18 +818,17 @@ viewStatusError error =
                     l =
                         Debug.log "Unexpected payload: " data
                 in
-                    span [] [ text "An unexpected payload was received, check your browser logs" ]
+                span [] [ text "An unexpected payload was received, check your browser logs" ]
 
             Http.BadStatus response ->
                 case response.status.code of
                     401 ->
                         p []
-                            ([ p [] [ text "You are not authenticated: please login again." ]
-                             ]
-                            )
+                            [ p [] [ text "You are not authenticated: please login again." ]
+                            ]
 
                     _ ->
-                        span [] [ text ("The backend produced an error " ++ (toString response)) ]
+                        span [] [ text ("The backend produced an error " ++ toString response) ]
 
             Http.BadUrl url ->
                 span [] [ text ("Invalid url : " ++ url) ]
@@ -854,7 +849,7 @@ viewBug editor bugzilla bug =
     div [ class "bug" ]
         [ h4 [] [ text bug.summary ]
         , p [ class "summary" ]
-            [ a [ class "text-muted monospace", href bug.url, target "_blank" ] [ text ("#" ++ (toString bug.bugzilla_id)) ]
+            [ a [ class "text-muted monospace", href bug.url, target "_blank" ] [ text ("#" ++ toString bug.bugzilla_id) ]
             , span [ class "text-muted" ] [ text "is" ]
             , case bug.status of
                 "RESOLVED" ->
@@ -875,8 +870,8 @@ viewBug editor bugzilla bug =
             ]
         , p [ class "summary" ]
             ([ span [ class "text-muted" ] [ text "Versions :" ] ]
-                ++ (List.map viewVersionbadge (Dict.toList bug.uplift_versions))
-                ++ (List.map (\k -> span [ class "badge badge-default" ] [ text k ]) bug.keywords)
+                ++ List.map viewVersionbadge (Dict.toList bug.uplift_versions)
+                ++ List.map (\k -> span [ class "badge badge-default" ] [ text k ]) bug.keywords
             )
         , div [ class "row columns" ]
             [ div [ class "col" ]
@@ -934,40 +929,40 @@ viewBugDetails : Bug -> Html Msg
 viewBugDetails bug =
     let
         uplift_hidden =
-            (Dict.filter (\k v -> v.status == "?") bug.uplift_versions) == Dict.empty
+            Dict.filter (\k v -> v.status == "?") bug.uplift_versions == Dict.empty
     in
-        div [ class "details" ]
-            [ case bug.update of
-                Success update ->
-                    case update of
-                        UpdateFailed error ->
-                            div [ class "alert alert-danger" ]
-                                [ h4 [] [ text "Error during the update" ]
-                                , p [] [ text error ]
-                                ]
+    div [ class "details" ]
+        [ case bug.update of
+            Success update ->
+                case update of
+                    UpdateFailed error ->
+                        div [ class "alert alert-danger" ]
+                            [ h4 [] [ text "Error during the update" ]
+                            , p [] [ text error ]
+                            ]
 
-                        _ ->
-                            div [ class "alert alert-success" ] [ text "Bug updated !" ]
+                    _ ->
+                        div [ class "alert alert-success" ] [ text "Bug updated !" ]
 
-                Failure err ->
-                    div [ class "alert alert-danger" ]
-                        [ h4 [] [ text "Error" ]
-                        , p [] [ text ("An error occurred during the update: " ++ (toString err)) ]
-                        ]
+            Failure err ->
+                div [ class "alert alert-danger" ]
+                    [ h4 [] [ text "Error" ]
+                    , p [] [ text ("An error occurred during the update: " ++ toString err) ]
+                    ]
 
-                _ ->
-                    span [] []
-            , h5 [] [ text "Patches" ]
-            , div [ class "patches" ] (List.map viewPatch (Dict.toList bug.patches))
-            , viewFlags bug
-            , -- Start editing
-              div [ class "actions list-group" ]
-                [ button [ hidden uplift_hidden, class "list-group-item list-group-item-action list-group-item-success", onClick (ShowBugEditor bug ApprovalEditor) ] [ text "Approve uplift" ]
-                , button [ hidden uplift_hidden, class "list-group-item list-group-item-action list-group-item-danger", onClick (ShowBugEditor bug RejectEditor) ] [ text "Reject uplift" ]
-                , button [ class "list-group-item list-group-item-action", onClick (ShowBugEditor bug FlagsEditor) ] [ text "Edit flags" ]
-                , a [ class "list-group-item list-group-item-action", href bug.url, target "_blank" ] [ text "View on Bugzilla" ]
-                ]
+            _ ->
+                span [] []
+        , h5 [] [ text "Patches" ]
+        , div [ class "patches" ] (List.map viewPatch (Dict.toList bug.patches))
+        , viewFlags bug
+        , -- Start editing
+          div [ class "actions list-group" ]
+            [ button [ hidden uplift_hidden, class "list-group-item list-group-item-action list-group-item-success", onClick (ShowBugEditor bug ApprovalEditor) ] [ text "Approve uplift" ]
+            , button [ hidden uplift_hidden, class "list-group-item list-group-item-action list-group-item-danger", onClick (ShowBugEditor bug RejectEditor) ] [ text "Reject uplift" ]
+            , button [ class "list-group-item list-group-item-action", onClick (ShowBugEditor bug FlagsEditor) ] [ text "Edit flags" ]
+            , a [ class "list-group-item list-group-item-action", href bug.url, target "_blank" ] [ text "View on Bugzilla" ]
             ]
+        ]
 
 
 viewPatch : ( String, Patch ) -> Html Msg
@@ -985,28 +980,26 @@ viewPatch ( patchId, patch ) =
                 )
             ]
          , span [ class "changes" ] [ text "(" ]
-         , span [ class "changes additions" ] [ text ("+" ++ (toString patch.additions)) ]
-         , span [ class "changes deletions" ] [ text ("-" ++ (toString patch.deletions)) ]
+         , span [ class "changes additions" ] [ text ("+" ++ toString patch.additions) ]
+         , span [ class "changes deletions" ] [ text ("-" ++ toString patch.deletions) ]
          ]
-            ++ (List.map
-                    (\l ->
-                        span []
-                            [ span [ class "changes" ] [ text "/" ]
-                            , span [ class "text-info" ] [ text l ]
-                            ]
-                    )
-                    patch.languages
-               )
+            ++ List.map
+                (\l ->
+                    span []
+                        [ span [ class "changes" ] [ text "/" ]
+                        , span [ class "text-info" ] [ text l ]
+                        ]
+                )
+                patch.languages
             ++ [ span [ class "changes" ] [ text ")" ] ]
-            ++ (List.map
-                    (\( version, status ) ->
-                        if status then
-                            span [ class "merge badge badge-success", title ("Merge successful on " ++ version) ] [ text version ]
-                        else
-                            span [ class "merge badge badge-danger", title ("Merge failed on " ++ version) ] [ text version ]
-                    )
-                    (Dict.toList patch.merge)
-               )
+            ++ List.map
+                (\( version, status ) ->
+                    if status then
+                        span [ class "merge badge badge-success", title ("Merge successful on " ++ version) ] [ text version ]
+                    else
+                        span [ class "merge badge badge-danger", title ("Merge failed on " ++ version) ] [ text version ]
+                )
+                (Dict.toList patch.merge)
         )
 
 
@@ -1016,13 +1009,13 @@ viewFlagsList all_flags name =
         flags =
             Dict.filter (\k v -> not (v == "---")) all_flags
     in
-        div [ class "col-xs-12 col-sm-6" ]
-            [ h5 [] [ text name ]
-            , if Dict.isEmpty flags then
-                p [ class "text-warning" ] [ text ("No " ++ name ++ " set.") ]
-              else
-                ul [] (List.map viewFlag (Dict.toList flags))
-            ]
+    div [ class "col-xs-12 col-sm-6" ]
+        [ h5 [] [ text name ]
+        , if Dict.isEmpty flags then
+            p [ class "text-warning" ] [ text ("No " ++ name ++ " set.") ]
+          else
+            ul [] (List.map viewFlag (Dict.toList flags))
+        ]
 
 
 viewFlags : Bug -> Html Msg
@@ -1113,29 +1106,29 @@ viewFlagsEditor bugzilla bug =
         status_values =
             [ "affected", "verified", "fixed", "wontfix", "---" ]
     in
-        Html.form [ class "editor", onSubmit (PublishEdits bug) ]
-            [ div [ class "col" ]
-                ([ h4 [] [ text "Status" ] ] ++ (List.map (\x -> editFlag bug "status" status_values x) (Dict.toList bug.flags_status)))
-            , div [ class "col" ]
-                ([ h4 [] [ text "Tracking" ] ] ++ (List.map (\x -> editFlag bug "tracking" values x) (Dict.toList bug.flags_tracking)))
-            , div [ class "col" ]
-                ([ h4 [] [ text "Generic" ] ] ++ (List.map (\x -> editFlag bug "generic" values x) (Dict.toList bug.flags_generic)))
-            , div [ class "form-group" ]
-                [ textarea [ class "form-control", placeholder "Your comment", onInput (EditBug bug "comment") ] []
-                ]
-            , p [ class "text-warning", hidden (isSuccess bugzilla.check) ] [ text "You need to setup your Bugzilla account on the uplift dashboard before using this action." ]
-            , p [ class "actions" ]
-                [ button [ class "btn btn-success", disabled (not (isSuccess bugzilla.check) || bug.update == Loading) ]
-                    [ text
-                        (if bug.update == Loading then
-                            "Loading..."
-                         else
-                            "Update bug"
-                        )
-                    ]
-                , span [ class "btn btn-secondary", onClick (ShowBugEditor bug NoEditor) ] [ text "Cancel" ]
-                ]
+    Html.form [ class "editor", onSubmit (PublishEdits bug) ]
+        [ div [ class "col" ]
+            ([ h4 [] [ text "Status" ] ] ++ List.map (\x -> editFlag bug "status" status_values x) (Dict.toList bug.flags_status))
+        , div [ class "col" ]
+            ([ h4 [] [ text "Tracking" ] ] ++ List.map (\x -> editFlag bug "tracking" values x) (Dict.toList bug.flags_tracking))
+        , div [ class "col" ]
+            ([ h4 [] [ text "Generic" ] ] ++ List.map (\x -> editFlag bug "generic" values x) (Dict.toList bug.flags_generic))
+        , div [ class "form-group" ]
+            [ textarea [ class "form-control", placeholder "Your comment", onInput (EditBug bug "comment") ] []
             ]
+        , p [ class "text-warning", hidden (isSuccess bugzilla.check) ] [ text "You need to setup your Bugzilla account on the uplift dashboard before using this action." ]
+        , p [ class "actions" ]
+            [ button [ class "btn btn-success", disabled (not (isSuccess bugzilla.check) || bug.update == Loading) ]
+                [ text
+                    (if bug.update == Loading then
+                        "Loading..."
+                     else
+                        "Update bug"
+                    )
+                ]
+            , span [ class "btn btn-secondary", onClick (ShowBugEditor bug NoEditor) ] [ text "Cancel" ]
+            ]
+        ]
 
 
 editApproval : Bug -> ( String, UpliftVersion ) -> Html Msg
@@ -1161,43 +1154,43 @@ viewApprovalEditor bugzilla bug =
         btn_disabled =
             not (isSuccess bugzilla.check) || Dict.empty == bug.attachments || bug.update == Loading
     in
-        Html.form [ class "editor", onSubmit (PublishEdits bug) ]
-            [ div [ class "col-xs-12" ]
-                ([ h4 []
+    Html.form [ class "editor", onSubmit (PublishEdits bug) ]
+        [ div [ class "col-xs-12" ]
+            ([ h4 []
+                [ text
+                    (if bug.editor == ApprovalEditor then
+                        "Approve uplift"
+                     else
+                        "Reject uplift"
+                    )
+                ]
+             ]
+                ++ List.map (\x -> editApproval bug x) (Dict.toList versions)
+            )
+        , div [ class "form-group" ]
+            [ textarea [ class "form-control", placeholder "Your comment", onInput (EditBug bug "comment") ] []
+            ]
+        , p [ class "text-warning", hidden (isSuccess bugzilla.check) ] [ text "You need to setup your Bugzilla account on the uplift dashboard before using this action." ]
+        , p [ class "text-warning", hidden (not (Dict.empty == bug.attachments)) ] [ text "You need to pick at least one version." ]
+        , p [ class "actions" ]
+            [ if bug.editor == ApprovalEditor then
+                button [ class "btn btn-success", disabled btn_disabled ]
                     [ text
-                        (if bug.editor == ApprovalEditor then
+                        (if bug.update == Loading then
+                            "Loading..."
+                         else
                             "Approve uplift"
+                        )
+                    ]
+              else
+                button [ class "btn btn-danger", disabled btn_disabled ]
+                    [ text
+                        (if bug.update == Loading then
+                            "Loading..."
                          else
                             "Reject uplift"
                         )
                     ]
-                 ]
-                    ++ (List.map (\x -> editApproval bug x) (Dict.toList versions))
-                )
-            , div [ class "form-group" ]
-                [ textarea [ class "form-control", placeholder "Your comment", onInput (EditBug bug "comment") ] []
-                ]
-            , p [ class "text-warning", hidden (isSuccess bugzilla.check) ] [ text "You need to setup your Bugzilla account on the uplift dashboard before using this action." ]
-            , p [ class "text-warning", hidden (not (Dict.empty == bug.attachments)) ] [ text "You need to pick at least one version." ]
-            , p [ class "actions" ]
-                [ if bug.editor == ApprovalEditor then
-                    button [ class "btn btn-success", disabled btn_disabled ]
-                        [ text
-                            (if bug.update == Loading then
-                                "Loading..."
-                             else
-                                "Approve uplift"
-                            )
-                        ]
-                  else
-                    button [ class "btn btn-danger", disabled btn_disabled ]
-                        [ text
-                            (if bug.update == Loading then
-                                "Loading..."
-                             else
-                                "Reject uplift"
-                            )
-                        ]
-                , span [ class "btn btn-secondary", onClick (ShowBugEditor bug NoEditor) ] [ text "Cancel" ]
-                ]
+            , span [ class "btn btn-secondary", onClick (ShowBugEditor bug NoEditor) ] [ text "Cancel" ]
             ]
+        ]
