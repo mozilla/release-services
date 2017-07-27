@@ -107,6 +107,7 @@ def get_identity(identity_name: str) -> dict:
         raise NotFound('No preferences found for identity {}.'.format(identity_name))
 
 
+@auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'get_identity_preference_by_urgency'])
 def get_identity_preference_by_urgency(identity_name: str, urgency: str) -> dict:
     preferences = _get_identity_preferences(identity_name)
     preference_by_urgency_level = list(filter(lambda pref: pref.urgency == urgency, preferences))

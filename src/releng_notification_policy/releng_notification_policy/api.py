@@ -15,6 +15,8 @@ from requests import get
 from json import JSONDecodeError
 from cli_common import log
 from backend_common.auth import auth
+import os
+import mohawk
 
 logger = log.get_logger(__name__)
 
@@ -215,11 +217,30 @@ def post_tick_tock() -> dict:
             session.delete(message)
             continue
 
-        policies = session.query(Policy).filter(Policy.message_id == message.id).all()
+        policies = session.query(Policy).filter(Policy.uid == message.uid).all()
         for policy, identity_preference_url in get_identity_url_for_actionable_policies(policies):
             try:
-                # TODO need a way to programmatically set verify=False/True for dev/prod
-                identity_preference = get(identity_preference_url, verify=False).json()['preferences'].pop()
+                service_credentials = {
+                    'id': current_app.config.get('TASKCLUSTER_CLIENT_ID'),
+                    'key': current_app.config.get('TASKCLUSTER_ACCESS_TOKEN'),
+                    'algorithm': 'sha256',
+                }
+
+                hawk = mohawk.Sender(service_credentials, identity_preference_url, 'get',
+                                     content='',
+                                     content_type='application/json')
+
+                # Support dev ssl ca cert
+                ssl_dev_ca = os.environ.get('SSL_DEV_CA')
+                if ssl_dev_ca is not None:
+                    assert os.path.isdir(ssl_dev_ca), \
+                        'SSL_DEV_CA must be a dir with hashed dev ca certs'
+
+                headers = {
+                    'Authorization': hawk.request_header,
+                    'Content-Type': 'application/json',
+                }
+                identity_preference = get(identity_preference_url, headers=headers, verify=ssl_dev_ca).json()['preferences'].pop()
 
                 notification_info = send_notifications(message, identity_preference)
                 notifications.append(notification_info)
