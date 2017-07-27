@@ -97,7 +97,7 @@ class Workflow(object):
 
         # mach configure
         logger.info('Mach configure...')
-        run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
+        run_check(['gecko-env', './mach', 'configure', '--enable-clang-plugin'], cwd=self.repo_dir)
 
         # Build CompileDB backend
         logger.info('Mach build backend...')
