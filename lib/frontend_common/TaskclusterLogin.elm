@@ -4,9 +4,9 @@ import Dict exposing (Dict)
 import Json.Decode as JsonDecode
 import Maybe
 import Redirect
+import String
 import Task
 import Time exposing (Time)
-import String
 
 
 type alias Certificate =
@@ -87,7 +87,7 @@ isCertificateExpired time user_ =
         Just user ->
             case user.certificate of
                 Just certificate ->
-                    if time > (toFloat certificate.expiry) then
+                    if time > toFloat certificate.expiry then
                         True
                     else
                         False
@@ -119,16 +119,16 @@ convertUrlQueryToUser query =
                 Nothing ->
                     Nothing
     in
-        case ( clientId, accessToken ) of
-            ( Just value1, Just value2 ) ->
-                Just
-                    { clientId = value1
-                    , accessToken = value2
-                    , certificate = certificate
-                    }
+    case ( clientId, accessToken ) of
+        ( Just value1, Just value2 ) ->
+            Just
+                { clientId = value1
+                , accessToken = value2
+                , certificate = certificate
+                }
 
-            _ ->
-                Nothing
+        _ ->
+            Nothing
 
 
 
@@ -155,13 +155,13 @@ shortUsername username =
         parts =
             String.split "/" username
     in
-        if List.length parts == 2 then
-            parts
-                |> List.reverse
-                |> List.head
-                |> Maybe.withDefault username
-        else
-            username
+    if List.length parts == 2 then
+        parts
+            |> List.reverse
+            |> List.head
+            |> Maybe.withDefault username
+    else
+        username
 
 
 
