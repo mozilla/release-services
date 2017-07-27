@@ -47,7 +47,7 @@ init flags location =
             , notifications = App.Notifications.init flags.identityUrl flags.policyUrl
             }
     in
-    initRoute model route
+        initRoute model route
 
 
 initRoute : App.Model -> App.Route -> ( App.Model, Cmd App.Msg )
@@ -106,16 +106,15 @@ initRoute model route =
                         Nothing ->
                             Cmd.none
             in
-            model
-                ! [ loginCmd
-                  , App.navigateTo App.HomeRoute
-                  ]
+                model
+                    ! [ loginCmd
+                      , App.navigateTo App.HomeRoute
+                      ]
 
         App.LogoutRoute ->
             model
                 ! [ Utils.performMsg (App.TaskclusterLoginMsg TaskclusterLogin.Logout)
-
-                  -- TODO: we should be redirecting to the url that we were loging in from
+                    -- TODO: we should be redirecting to the url that we were loging in from
                   , Utils.performMsg (App.NavigateTo App.HomeRoute)
                   ]
 
@@ -150,12 +149,12 @@ update msg model =
                 ( newModel, newCmd ) =
                     initRoute model route
             in
-            ( newModel
-            , Cmd.batch
-                [ App.navigateTo route
-                , newCmd
-                ]
-            )
+                ( newModel
+                , Cmd.batch
+                    [ App.navigateTo route
+                    , newCmd
+                    ]
+                )
 
         --
         -- LOGIN / LOGOUT
@@ -165,9 +164,9 @@ update msg model =
                 ( newUser, userCmd ) =
                     TaskclusterLogin.update userMsg model.user
             in
-            ( { model | user = newUser }
-            , Cmd.map App.TaskclusterLoginMsg userCmd
-            )
+                ( { model | user = newUser }
+                , Cmd.map App.TaskclusterLoginMsg userCmd
+                )
 
         --
         -- HAWK REQUESTS
@@ -201,34 +200,34 @@ update msg model =
                         |> Maybe.map routeHawkMsg
                         |> Maybe.withDefault Cmd.none
             in
-            ( model
-            , Cmd.batch
-                [ Cmd.map App.HawkMsg cmd
-                , appCmd
-                ]
-            )
+                ( model
+                , Cmd.batch
+                    [ Cmd.map App.HawkMsg cmd
+                    , appCmd
+                    ]
+                )
 
         App.UserScopesMsg msg_ ->
             let
                 ( newModel, newCmd, hawkCmd ) =
                     App.UserScopes.update msg_ model.userScopes
             in
-            ( { model | userScopes = newModel }
-            , hawkCmd
-                |> Maybe.map (\req -> [ hawkSend model.user "UserScopes" req ])
-                |> Maybe.withDefault []
-                |> List.append [ Cmd.map App.UserScopesMsg newCmd ]
-                |> Cmd.batch
-            )
+                ( { model | userScopes = newModel }
+                , hawkCmd
+                    |> Maybe.map (\req -> [ hawkSend model.user "UserScopes" req ])
+                    |> Maybe.withDefault []
+                    |> List.append [ Cmd.map App.UserScopesMsg newCmd ]
+                    |> Cmd.batch
+                )
 
         App.TryChooserMsg msg_ ->
             let
                 ( newModel, newCmd ) =
                     App.TryChooser.update msg_ model.trychooser
             in
-            ( { model | trychooser = newModel }
-            , Cmd.map App.TryChooserMsg newCmd
-            )
+                ( { model | trychooser = newModel }
+                , Cmd.map App.TryChooserMsg newCmd
+                )
 
         App.TreeStatusMsg msg_ ->
             let
@@ -243,13 +242,13 @@ update msg model =
                 ( newModel, newCmd, hawkCmd ) =
                     App.TreeStatus.update route msg_ model.treestatus
             in
-            ( { model | treestatus = newModel }
-            , hawkCmd
-                |> Maybe.map (\req -> [ hawkSend model.user "TreeStatus" req ])
-                |> Maybe.withDefault []
-                |> List.append [ Cmd.map App.TreeStatusMsg newCmd ]
-                |> Cmd.batch
-            )
+                ( { model | treestatus = newModel }
+                , hawkCmd
+                    |> Maybe.map (\req -> [ hawkSend model.user "TreeStatus" req ])
+                    |> Maybe.withDefault []
+                    |> List.append [ Cmd.map App.TreeStatusMsg newCmd ]
+                    |> Cmd.batch
+                )
 
         App.NotificationMsg msg_ ->
             let
@@ -264,13 +263,13 @@ update msg model =
                 ( newModel, newCmd, hawkCmd ) =
                     App.Notifications.update new_route msg_ model.notifications
             in
-            ( { model | notifications = newModel }
-            , hawkCmd
-                |> Maybe.map (\req -> [ hawkSend model.user "Notifications" req ])
-                |> Maybe.withDefault []
-                |> List.append [ Cmd.map App.NotificationMsg newCmd ]
-                |> Cmd.batch
-            )
+                ( { model | notifications = newModel }
+                , hawkCmd
+                    |> Maybe.map (\req -> [ hawkSend model.user "Notifications" req ])
+                    |> Maybe.withDefault []
+                    |> List.append [ Cmd.map App.NotificationMsg newCmd ]
+                    |> Cmd.batch
+                )
 
 
 
@@ -287,13 +286,13 @@ hawkSend user page request =
         pagedRequest =
             { request | id = page ++ request.id }
     in
-    case user of
-        Just user2 ->
-            Hawk.send pagedRequest user2
-                |> Cmd.map App.HawkMsg
+        case user of
+            Just user2 ->
+                Hawk.send pagedRequest user2
+                    |> Cmd.map App.HawkMsg
 
-        Nothing ->
-            Cmd.none
+            Nothing ->
+                Cmd.none
 
 
 viewRoute : App.Model -> Html App.Msg

@@ -63,17 +63,17 @@ update msg model =
                             _ =
                                 Debug.log "XXX" "CACHING"
                         in
-                        ( model, Nothing )
+                            ( model, Nothing )
                     else
                         let
                             _ =
                                 Debug.log "XXX" "FETCHING"
                         in
-                        ( { model | scopes = [] }
-                        , Just request
-                        )
+                            ( { model | scopes = [] }
+                            , Just request
+                            )
             in
-            ( newModel, Cmd.none, hawkCmd )
+                ( newModel, Cmd.none, hawkCmd )
 
         FetchedScopes result ->
             let
@@ -81,10 +81,10 @@ update msg model =
                     Utils.decodeJsonString decoderScopes result
                         |> RemoteData.withDefault []
             in
-            ( { model | scopes = scopes }
-            , Cmd.none
-            , Nothing
-            )
+                ( { model | scopes = scopes }
+                , Cmd.none
+                , Nothing
+                )
 
 
 hawkResponse :

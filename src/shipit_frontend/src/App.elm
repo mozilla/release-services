@@ -50,8 +50,7 @@ type alias Model =
       user : User.Model
     , bugzilla :
         Bugzilla.Model
-
-    -- App code
+        -- App code
     , current_page : Page
     , release_dashboard : ReleaseDashboard.Model
     , code_coverage : CodeCoverage.Model
@@ -91,16 +90,16 @@ init flags =
             , code_coverage = code_coverage
             }
     in
-    ( model
-    , -- Follow through with sub parts init
-      Cmd.batch
-        [ -- Extensions integration
-          Cmd.map BugzillaMsg bzCmd
-        , Cmd.map UserMsg userCmd
-        , Cmd.map CodeCoverageMsg ccCmd
-        , loadAllAnalysis model
-        ]
-    )
+        ( model
+        , -- Follow through with sub parts init
+          Cmd.batch
+            [ -- Extensions integration
+              Cmd.map BugzillaMsg bzCmd
+            , Cmd.map UserMsg userCmd
+            , Cmd.map CodeCoverageMsg ccCmd
+            , loadAllAnalysis model
+            ]
+        )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -112,9 +111,9 @@ update msg model =
                 ( newBz, bzCmd ) =
                     Bugzilla.update bzMsg model.bugzilla
             in
-            ( { model | bugzilla = newBz }
-            , Cmd.map BugzillaMsg bzCmd
-            )
+                ( { model | bugzilla = newBz }
+                , Cmd.map BugzillaMsg bzCmd
+                )
 
         UserMsg userMsg ->
             let
@@ -138,7 +137,7 @@ update msg model =
                                 []
                         ]
             in
-            ( model_, Cmd.batch commands )
+                ( model_, Cmd.batch commands )
 
         HawkRequest hawkMsg ->
             let
@@ -152,12 +151,12 @@ update msg model =
                         |> Maybe.map (ReleaseDashboard.routeHawkRequest response)
                         |> Maybe.withDefault Cmd.none
             in
-            ( model
-            , Cmd.batch
-                [ Cmd.map HawkRequest cmd
-                , Cmd.map ReleaseDashboardMsg dashboardCmd
-                ]
-            )
+                ( model
+                , Cmd.batch
+                    [ Cmd.map HawkRequest cmd
+                    , Cmd.map ReleaseDashboardMsg dashboardCmd
+                    ]
+                )
 
         -- Routing
         ShowCodeCoverage path ->
@@ -165,9 +164,9 @@ update msg model =
                 ( cc, ccCmd ) =
                     CodeCoverage.setDirectory model.code_coverage path
             in
-            ( { model | code_coverage = cc, current_page = CodeCoverage }
-            , Cmd.map CodeCoverageMsg ccCmd
-            )
+                ( { model | code_coverage = cc, current_page = CodeCoverage }
+                , Cmd.map CodeCoverageMsg ccCmd
+                )
 
         ShowReleaseDashboard analysisId ->
             -- Fetch analysis and set page
@@ -175,9 +174,9 @@ update msg model =
                 rdCmd =
                     ReleaseDashboard.fetchAnalysis model.release_dashboard model.user analysisId
             in
-            ( { model | current_page = ReleaseDashboard }
-            , Cmd.map ReleaseDashboardMsg rdCmd
-            )
+                ( { model | current_page = ReleaseDashboard }
+                , Cmd.map ReleaseDashboardMsg rdCmd
+                )
 
         ShowPage page ->
             ( { model | current_page = page }, Cmd.none )
@@ -192,18 +191,18 @@ update msg model =
                 ( dashboard, cmd ) =
                     ReleaseDashboard.update dashMsg model.release_dashboard model.user model.bugzilla
             in
-            ( { model | release_dashboard = dashboard }
-            , Cmd.map ReleaseDashboardMsg cmd
-            )
+                ( { model | release_dashboard = dashboard }
+                , Cmd.map ReleaseDashboardMsg cmd
+                )
 
         CodeCoverageMsg ccMsg ->
             let
                 ( code_coverage, cmd ) =
                     CodeCoverage.update ccMsg model.code_coverage model.user
             in
-            ( { model | code_coverage = code_coverage }
-            , Cmd.map CodeCoverageMsg cmd
-            )
+                ( { model | code_coverage = code_coverage }
+                , Cmd.map CodeCoverageMsg cmd
+                )
 
 
 loadAllAnalysis : Model -> Cmd Msg
@@ -286,8 +285,7 @@ viewUser model =
                     , target "_blank"
                     ]
                     [ text "Manage credentials" ]
-
-                -- Display bugzilla status
+                  -- Display bugzilla status
                 , viewBugzillaCreds model.bugzilla
                 , -- Logout from TC
                   div [ class "dropdown-divider" ] []
@@ -392,8 +390,7 @@ viewFooter =
             [ li [] [ a [ href "https://github.com/mozilla-releng/services" ] [ text "Github" ] ]
             , li [] [ a [ href "#" ] [ text "Contribute" ] ]
             , li [] [ a [ href "#" ] [ text "Contact" ] ]
-
-            -- TODO: add version / revision
+              -- TODO: add version / revision
             ]
         ]
 
@@ -434,68 +431,68 @@ location2messages location =
         builder =
             Builder.fromUrl location.href
     in
-    case Builder.path builder of
-        first :: rest ->
-            -- Extensions integration
-            case first of
-                "login" ->
-                    [ Builder.query builder
-                        |> User.convertUrlQueryToUser
-                        |> Maybe.map
-                            (\x ->
-                                x
-                                    |> User.Logging
-                                    |> UserMsg
-                            )
-                        |> Maybe.withDefault (ShowPage Home)
-                    , ShowPage Home
-                    ]
+        case Builder.path builder of
+            first :: rest ->
+                -- Extensions integration
+                case first of
+                    "login" ->
+                        [ Builder.query builder
+                            |> User.convertUrlQueryToUser
+                            |> Maybe.map
+                                (\x ->
+                                    x
+                                        |> User.Logging
+                                        |> UserMsg
+                                )
+                            |> Maybe.withDefault (ShowPage Home)
+                        , ShowPage Home
+                        ]
 
-                "bugzilla" ->
-                    [ ShowPage Bugzilla
-                    ]
+                    "bugzilla" ->
+                        [ ShowPage Bugzilla
+                        ]
 
-                "code-coverage" ->
-                    let
-                        path =
-                            if List.length rest > 0 then
-                                Just (String.join "/" rest)
-                            else
-                                Nothing
-                    in
-                    [ ShowCodeCoverage path ]
+                    "code-coverage" ->
+                        let
+                            path =
+                                if List.length rest > 0 then
+                                    Just (String.join "/" rest)
+                                else
+                                    Nothing
+                        in
+                            [ ShowCodeCoverage path ]
 
-                "release-dashboard" ->
-                    let
-                        messages =
-                            if List.length rest == 1 then
-                                case List.head rest of
-                                    Just analysisId ->
-                                        case String.toInt analysisId |> Result.toMaybe of
-                                            Just analysisId_ ->
-                                                -- Load specified analysis
-                                                [ ReleaseDashboardMsg (ReleaseDashboard.FetchAnalysis analysisId_) ]
+                    "release-dashboard" ->
+                        let
+                            messages =
+                                if List.length rest == 1 then
+                                    case List.head rest of
+                                        Just analysisId ->
+                                            case String.toInt analysisId |> Result.toMaybe of
+                                                Just analysisId_ ->
+                                                    -- Load specified analysis
+                                                    [ ReleaseDashboardMsg (ReleaseDashboard.FetchAnalysis analysisId_) ]
 
-                                            Nothing ->
-                                                []
+                                                Nothing ->
+                                                    []
 
-                                    -- not a string
-                                    Nothing ->
-                                        []
-                                -- empty string
-                            else
-                                []
+                                        -- not a string
+                                        Nothing ->
+                                            []
+                                    -- empty string
+                                else
+                                    []
 
-                        -- No sub query parts
-                    in
-                    -- Finish by showing the page
-                    messages ++ [ ShowPage ReleaseDashboard ]
+                            -- No sub query parts
+                        in
+                            -- Finish by showing the page
+                            messages ++ [ ShowPage ReleaseDashboard ]
 
-                _ ->
-                    [ ShowPage Home ]
+                    _ ->
+                        [ ShowPage Home ]
 
-        _ ->
-            [ ShowPage Home ]
+            _ ->
+                [ ShowPage Home ]
 
 
 delta2url : Model -> Model -> Maybe UrlChange
@@ -512,9 +509,9 @@ delta2url previous current =
                             _ ->
                                 [ "release-dashboard" ]
                 in
-                Maybe.map
-                    (Builder.prependToPath path)
-                    (Just builder)
+                    Maybe.map
+                        (Builder.prependToPath path)
+                        (Just builder)
 
             Bugzilla ->
                 Maybe.map
@@ -531,9 +528,9 @@ delta2url previous current =
                             Nothing ->
                                 []
                 in
-                Maybe.map
-                    (Builder.prependToPath ([ "code-coverage" ] ++ parts))
-                    (Just builder)
+                    Maybe.map
+                        (Builder.prependToPath ([ "code-coverage" ] ++ parts))
+                        (Just builder)
 
             _ ->
                 Maybe.map

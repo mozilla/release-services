@@ -119,16 +119,16 @@ convertUrlQueryToUser query =
                 Nothing ->
                     Nothing
     in
-    case ( clientId, accessToken ) of
-        ( Just value1, Just value2 ) ->
-            Just
-                { clientId = value1
-                , accessToken = value2
-                , certificate = certificate
-                }
+        case ( clientId, accessToken ) of
+            ( Just value1, Just value2 ) ->
+                Just
+                    { clientId = value1
+                    , accessToken = value2
+                    , certificate = certificate
+                    }
 
-        _ ->
-            Nothing
+            _ ->
+                Nothing
 
 
 
@@ -155,13 +155,13 @@ shortUsername username =
         parts =
             String.split "/" username
     in
-    if List.length parts == 2 then
-        parts
-            |> List.reverse
-            |> List.head
-            |> Maybe.withDefault username
-    else
-        username
+        if List.length parts == 2 then
+            parts
+                |> List.reverse
+                |> List.head
+                |> Maybe.withDefault username
+        else
+            username
 
 
 

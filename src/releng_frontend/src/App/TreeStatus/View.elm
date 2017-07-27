@@ -53,29 +53,28 @@ bugzillaBugAsLink text_ =
             a [ href ("https://bugzilla.mozilla.org/show_bug.cgi?id=" ++ number) ]
                 [ text ("Bug " ++ number) ]
     in
-    List.map2 (\x y -> ( x, y )) previousWords words
-        |> List.filter (\( x, y ) -> y /= "Bug")
-        |> List.map
-            (\( x, y ) ->
-                if x == Just "Bug" then
-                    asLink y
-                else
-                    text (" " ++ y ++ " ")
-            )
+        List.map2 (\x y -> ( x, y )) previousWords words
+            |> List.filter (\( x, y ) -> y /= "Bug")
+            |> List.map
+                (\( x, y ) ->
+                    if x == Just "Bug" then
+                        asLink y
+                    else
+                        text (" " ++ y ++ " ")
+                )
 
 
 viewRecentChange :
     List String
     -> Bool
-    ->
-        { a
-            | id : Int
-            , reason : String
-            , trees : List String
-            , when : String
-            , who : String
-            , status : String
-        }
+    -> { a
+        | id : Int
+        , reason : String
+        , trees : List String
+        , when : String
+        , who : String
+        , status : String
+       }
     -> List (Html App.TreeStatus.Types.Msg)
 viewRecentChange scopes plural recentChange =
     let
@@ -90,10 +89,10 @@ viewRecentChange scopes plural recentChange =
                 words =
                     bugzillaBugAsLink recentChange.reason
             in
-            if List.isEmpty words then
-                []
-            else
-                text " with reason: " :: words
+                if List.isEmpty words then
+                    []
+                else
+                    text " with reason: " :: words
 
         parseTimestamp timestamp =
             timestamp
@@ -110,44 +109,44 @@ viewRecentChange scopes plural recentChange =
                 |> List.head
                 |> Maybe.withDefault timestamp
     in
-    if hasScope "recent_changes/revert" scopes then
-        [ div
-            [ class "list-group-item justify-content-between" ]
+        if hasScope "recent_changes/revert" scopes then
             [ div
-                []
-                (List.append
-                    [ text "At "
-                    , text (parseTimestamp recentChange.when)
-                    , text (" " ++ TaskclusterLogin.shortUsername recentChange.who)
-                    , text " changed "
-                    , text treeLabel
-                    , em [] [ text (String.join ", " recentChange.trees) ]
-                    , text " to "
-                    , span
-                        [ class ("badge badge-" ++ treeStatusLevel recentChange.status) ]
-                        [ text recentChange.status ]
+                [ class "list-group-item justify-content-between" ]
+                [ div
+                    []
+                    (List.append
+                        [ text "At "
+                        , text (parseTimestamp recentChange.when)
+                        , text (" " ++ TaskclusterLogin.shortUsername recentChange.who)
+                        , text " changed "
+                        , text treeLabel
+                        , em [] [ text (String.join ", " recentChange.trees) ]
+                        , text " to "
+                        , span
+                            [ class ("badge badge-" ++ treeStatusLevel recentChange.status) ]
+                            [ text recentChange.status ]
+                        ]
+                        recentChangeReason
+                    )
+                , div
+                    [ class "btn-group" ]
+                    [ button
+                        [ type_ "button"
+                        , class "btn btn-sm btn-outline-success"
+                        , Utils.onClick (App.TreeStatus.Types.RevertChange recentChange.id)
+                        ]
+                        [ text "Restore" ]
+                    , button
+                        [ type_ "button"
+                        , class "btn btn-sm btn-outline-warning"
+                        , Utils.onClick (App.TreeStatus.Types.DiscardChange recentChange.id)
+                        ]
+                        [ text "Discard" ]
                     ]
-                    recentChangeReason
-                )
-            , div
-                [ class "btn-group" ]
-                [ button
-                    [ type_ "button"
-                    , class "btn btn-sm btn-outline-success"
-                    , Utils.onClick (App.TreeStatus.Types.RevertChange recentChange.id)
-                    ]
-                    [ text "Restore" ]
-                , button
-                    [ type_ "button"
-                    , class "btn btn-sm btn-outline-warning"
-                    , Utils.onClick (App.TreeStatus.Types.DiscardChange recentChange.id)
-                    ]
-                    [ text "Discard" ]
                 ]
             ]
-        ]
-    else
-        []
+        else
+            []
 
 
 viewRecentChanges :
@@ -169,15 +168,15 @@ viewRecentChanges scopes recentChanges =
                         |> List.map (viewRecentChange scopes (List.length data > 1))
                         |> List.concat
             in
-            [ div
-                [ id "treestatus-recentchanges"
-                , class "list-group"
+                [ div
+                    [ id "treestatus-recentchanges"
+                    , class "list-group"
+                    ]
+                    ([]
+                        |> App.Utils.appendItems title
+                        |> App.Utils.appendItems recentChanges
+                    )
                 ]
-                ([]
-                    |> App.Utils.appendItems title
-                    |> App.Utils.appendItems recentChanges
-                )
-            ]
 
         _ ->
             []
@@ -257,8 +256,8 @@ viewTreesItem scopes treesSelected tree =
                         ]
                 )
     in
-    div [ class itemClass ]
-        (List.append checkboxItem [ treeItem ])
+        div [ class itemClass ]
+            (List.append checkboxItem [ treeItem ])
 
 
 viewTrees :
@@ -315,103 +314,103 @@ viewButtons route scopes model =
                 _ ->
                     Nothing
     in
-    div
-        [ id "treestatus-trees-buttons"
-        , class "btn-group"
-        ]
-        ([]
-            |> appendIf
-                (route /= App.TreeStatus.Types.ShowTreesRoute)
-                (button
-                    [ class "btn btn-outline-info btn-sm btn-pill"
-                    , onClickGoTo App.TreeStatus.Types.ShowTreesRoute
-                    ]
-                    [ text "Show All Trees" ]
-                )
-            |> appendIf
-                (route
-                    == App.TreeStatus.Types.ShowTreesRoute
-                    && (hasScope "trees/delete" scopes || hasScope "trees/update" scopes)
-                )
-                (button
-                    [ class "btn btn-outline-info btn-sm btn-pill"
-                    , Utils.onClick
-                        (if allSelected then
-                            App.TreeStatus.Types.UnselectAllTrees
-                         else
-                            App.TreeStatus.Types.SelectAllTrees
-                        )
-                    ]
-                    [ text
-                        (if allSelected then
-                            "Unselect all trees"
-                         else
-                            "Select all trees"
-                        )
-                    ]
-                )
-            |> appendIf
-                (route
-                    == App.TreeStatus.Types.ShowTreesRoute
-                    && hasScope "trees/create" scopes
-                )
-                (button
-                    [ class "btn btn-outline-success btn-sm btn-pill"
-                    , onClickGoTo App.TreeStatus.Types.AddTreeRoute
-                    ]
-                    [ text "Add Tree" ]
-                )
-            |> appendIf
-                ((route == App.TreeStatus.Types.ShowTreesRoute || treeRoute /= Nothing)
-                    && hasScope "trees/update" scopes
-                )
-                (button
-                    (if List.isEmpty model.treesSelected then
-                        [ class "btn btn-outline-primary btn-sm btn-pill tooltip2"
-                        , disabled (List.isEmpty model.treesSelected)
-                        , title "You need to select some trees"
+        div
+            [ id "treestatus-trees-buttons"
+            , class "btn-group"
+            ]
+            ([]
+                |> appendIf
+                    (route /= App.TreeStatus.Types.ShowTreesRoute)
+                    (button
+                        [ class "btn btn-outline-info btn-sm btn-pill"
+                        , onClickGoTo App.TreeStatus.Types.ShowTreesRoute
                         ]
-                     else
-                        [ class "btn btn-outline-primary btn-sm btn-pill"
-                        , onClickGoTo App.TreeStatus.Types.UpdateTreesRoute
+                        [ text "Show All Trees" ]
+                    )
+                |> appendIf
+                    (route
+                        == App.TreeStatus.Types.ShowTreesRoute
+                        && (hasScope "trees/delete" scopes || hasScope "trees/update" scopes)
+                    )
+                    (button
+                        [ class "btn btn-outline-info btn-sm btn-pill"
+                        , Utils.onClick
+                            (if allSelected then
+                                App.TreeStatus.Types.UnselectAllTrees
+                             else
+                                App.TreeStatus.Types.SelectAllTrees
+                            )
+                        ]
+                        [ text
+                            (if allSelected then
+                                "Unselect all trees"
+                             else
+                                "Select all trees"
+                            )
                         ]
                     )
-                    [ text
-                        ("Update "
-                            ++ (if treeRoute == Nothing then
-                                    "Tree(s)"
-                                else
-                                    "Tree"
-                               )
-                        )
-                    ]
-                )
-            |> appendIf
-                ((route == App.TreeStatus.Types.ShowTreesRoute || treeRoute /= Nothing)
-                    && hasScope "trees/delete" scopes
-                )
-                (button
-                    (if List.isEmpty model.treesSelected then
-                        [ class "btn btn-outline-danger btn-sm btn-pill tooltip2"
-                        , disabled (List.isEmpty model.treesSelected)
-                        , title "You need to select some trees"
+                |> appendIf
+                    (route
+                        == App.TreeStatus.Types.ShowTreesRoute
+                        && hasScope "trees/create" scopes
+                    )
+                    (button
+                        [ class "btn btn-outline-success btn-sm btn-pill"
+                        , onClickGoTo App.TreeStatus.Types.AddTreeRoute
                         ]
-                     else
-                        [ class "btn btn-outline-danger btn-sm btn-pill"
-                        , onClickGoTo App.TreeStatus.Types.DeleteTreesRoute
+                        [ text "Add Tree" ]
+                    )
+                |> appendIf
+                    ((route == App.TreeStatus.Types.ShowTreesRoute || treeRoute /= Nothing)
+                        && hasScope "trees/update" scopes
+                    )
+                    (button
+                        (if List.isEmpty model.treesSelected then
+                            [ class "btn btn-outline-primary btn-sm btn-pill tooltip2"
+                            , disabled (List.isEmpty model.treesSelected)
+                            , title "You need to select some trees"
+                            ]
+                         else
+                            [ class "btn btn-outline-primary btn-sm btn-pill"
+                            , onClickGoTo App.TreeStatus.Types.UpdateTreesRoute
+                            ]
+                        )
+                        [ text
+                            ("Update "
+                                ++ (if treeRoute == Nothing then
+                                        "Tree(s)"
+                                    else
+                                        "Tree"
+                                   )
+                            )
                         ]
                     )
-                    [ text
-                        ("Delete "
-                            ++ (if treeRoute == Nothing then
-                                    "Tree(s)"
-                                else
-                                    "Tree"
-                               )
+                |> appendIf
+                    ((route == App.TreeStatus.Types.ShowTreesRoute || treeRoute /= Nothing)
+                        && hasScope "trees/delete" scopes
+                    )
+                    (button
+                        (if List.isEmpty model.treesSelected then
+                            [ class "btn btn-outline-danger btn-sm btn-pill tooltip2"
+                            , disabled (List.isEmpty model.treesSelected)
+                            , title "You need to select some trees"
+                            ]
+                         else
+                            [ class "btn btn-outline-danger btn-sm btn-pill"
+                            , onClickGoTo App.TreeStatus.Types.DeleteTreesRoute
+                            ]
                         )
-                    ]
-                )
-        )
+                        [ text
+                            ("Delete "
+                                ++ (if treeRoute == Nothing then
+                                        "Tree(s)"
+                                    else
+                                        "Tree"
+                                   )
+                            )
+                        ]
+                    )
+            )
 
 
 viewConfirmDelete :
@@ -534,38 +533,38 @@ viewTreeLog log =
                 |> List.head
                 |> Maybe.withDefault who2
     in
-    div [ class "timeline-item" ]
-        --TODO: show status in hover of the badge
-        [ div [ class <| "timeline-badge badge-" ++ treeStatusLevel log.status ]
-            [ text " " ]
-        , div [ class "timeline-panel" ]
-            [ div [ class "timeline-time" ]
-                [ text log.when ]
-            , h5 [] [ text who ]
-            , p [] [ text log.reason ]
-            , p
-                []
-                (List.map
-                    (\tag ->
-                        span
-                            [ class "badge badge-default" ]
-                            [ App.TreeStatus.Types.possibleTreeTags
-                                |> List.filterMap
-                                    (\( x, _, y ) ->
-                                        if x == tag then
-                                            Just y
-                                        else
-                                            Nothing
-                                    )
-                                |> List.head
-                                |> Maybe.withDefault tag
-                                |> text
-                            ]
+        div [ class "timeline-item" ]
+            --TODO: show status in hover of the badge
+            [ div [ class <| "timeline-badge badge-" ++ treeStatusLevel log.status ]
+                [ text " " ]
+            , div [ class "timeline-panel" ]
+                [ div [ class "timeline-time" ]
+                    [ text log.when ]
+                , h5 [] [ text who ]
+                , p [] [ text log.reason ]
+                , p
+                    []
+                    (List.map
+                        (\tag ->
+                            span
+                                [ class "badge badge-default" ]
+                                [ App.TreeStatus.Types.possibleTreeTags
+                                    |> List.filterMap
+                                        (\( x, _, y ) ->
+                                            if x == tag then
+                                                Just y
+                                            else
+                                                Nothing
+                                        )
+                                    |> List.head
+                                    |> Maybe.withDefault tag
+                                    |> text
+                                ]
+                        )
+                        log.tags
                     )
-                    log.tags
-                )
+                ]
             ]
-        ]
 
 
 viewTreeLogs :
@@ -609,27 +608,27 @@ viewTreeLogs name treeLogs_ treeLogsAll_ =
                     , []
                     )
     in
-    case treeLogs_ of
-        RemoteData.Success treeLogs ->
-            div [ class "timeline" ]
-                (List.append
+        case treeLogs_ of
+            RemoteData.Success treeLogs ->
+                div [ class "timeline" ]
                     (List.append
-                        (List.map viewTreeLog treeLogs)
-                        (List.map viewTreeLog treeLogsAll)
+                        (List.append
+                            (List.map viewTreeLog treeLogs)
+                            (List.map viewTreeLog treeLogsAll)
+                        )
+                        [ div [ class "timeline-item timeline-more" ]
+                            [ div [ class "timeline-panel" ] moreButton ]
+                        ]
                     )
-                    [ div [ class "timeline-item timeline-more" ]
-                        [ div [ class "timeline-panel" ] moreButton ]
-                    ]
-                )
 
-        RemoteData.Failure message ->
-            App.Utils.error (App.TreeStatus.Types.NavigateTo App.TreeStatus.Types.ShowTreesRoute) (toString message)
+            RemoteData.Failure message ->
+                App.Utils.error (App.TreeStatus.Types.NavigateTo App.TreeStatus.Types.ShowTreesRoute) (toString message)
 
-        RemoteData.Loading ->
-            App.Utils.loading
+            RemoteData.Loading ->
+                App.Utils.loading
 
-        RemoteData.NotAsked ->
-            text ""
+            RemoteData.NotAsked ->
+                text ""
 
 
 viewTree :
