@@ -74,6 +74,7 @@ class CodeCov(object):
         self.suites.sort()
 
     def update_github_repo(self):
+        run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
         repo_url = 'https://%s:%s@github.com/marco-c/gecko-dev' % (self.gecko_dev_user, self.gecko_dev_pwd)
         repo_path = os.path.join(self.cache_root, 'gecko-dev')
         if not os.path.isdir(repo_path):
