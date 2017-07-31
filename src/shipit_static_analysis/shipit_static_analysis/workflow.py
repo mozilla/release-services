@@ -108,11 +108,35 @@ class Workflow(object):
         issues = self.clang.run(settings.clang_checkers, modified_files)
 
         logger.info('Detected {} code issue(s)'.format(len(issues)))
+        if not issues:
+            logger.info('No issues, stopping there.')
+            return
+
+        # Publish on mozreview
+        self.publish_mozreview(issues)
 
         # Notify by email
-        if issues:
-            logger.info('Send email to admins')
-            self.notify_admins(review_request_id, issues)
+        logger.info('Send email to admins')
+        self.notify_admins(review_request_id, issues)
+
+    def publish_mozreview(self, issues):
+        '''
+        Publish comments on mozreview
+        '''
+
+        # Filter issues to keep publishable checks
+        # and non third party
+        def _is_publishable(issue):
+            return issue.has_publishable_check() \
+                and not issue.is_third_party()
+
+        issues = list(filter(_is_publishable, issues))
+        if not issues:
+            logger.info('No issues to publish on MozReview')
+            return
+
+        for issue in issues:
+            logger.info('Will publish about {}'.format(issue))
 
     def notify_admins(self, review_request_id, issues):
         '''
