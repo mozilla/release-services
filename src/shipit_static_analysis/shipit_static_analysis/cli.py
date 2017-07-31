@@ -6,6 +6,7 @@
 from __future__ import absolute_import
 
 from shipit_static_analysis.workflow import Workflow
+from shipit_static_analysis.batchreview import build_api_root
 from shipit_static_analysis import config
 from cli_common.click import taskcluster_options
 from cli_common.log import init_logger
@@ -36,7 +37,12 @@ def main(commits,
 
     secrets = get_secrets(taskcluster_secret,
                           config.PROJECT_NAME,
-                          required=('STATIC_ANALYSIS_NOTIFICATIONS', ),
+                          required=(
+                              'STATIC_ANALYSIS_NOTIFICATIONS',
+                              'MOZREVIEW_URL',
+                              'MOZREVIEW_USER',
+                              'MOZREVIEW_API_KEY',
+                          ),
                           taskcluster_client_id=taskcluster_client_id,
                           taskcluster_access_token=taskcluster_access_token,
                           )
@@ -48,8 +54,15 @@ def main(commits,
                 MOZDEF=secrets.get('MOZDEF'),
                 )
 
+    mozreview = build_api_root(
+        secrets['MOZREVIEW_URL'],
+        secrets['MOZREVIEW_USER'],
+        secrets['MOZREVIEW_API_KEY'],
+    )
+
     w = Workflow(cache_root,
                  secrets['STATIC_ANALYSIS_NOTIFICATIONS'],
+                 mozreview,
                  taskcluster_client_id,
                  taskcluster_access_token,
                  )

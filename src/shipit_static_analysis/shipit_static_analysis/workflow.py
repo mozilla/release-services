@@ -13,6 +13,7 @@ from cli_common.log import get_logger
 from cli_common.command import run_check
 from shipit_static_analysis.clang import ClangTidy
 from shipit_static_analysis.config import settings
+from shipit_static_analysis.batchreview import BatchReview
 
 logger = get_logger(__name__)
 
@@ -26,8 +27,9 @@ class Workflow(object):
     '''
     taskcluster = None
 
-    def __init__(self, cache_root, emails, client_id=None, access_token=None):
+    def __init__(self, cache_root, emails, mozreview, client_id=None, access_token=None):
         self.emails = emails
+        self.mozreview = mozreview
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
             'Cache root {} is not a dir.'.format(self.cache_root)
@@ -113,13 +115,13 @@ class Workflow(object):
             return
 
         # Publish on mozreview
-        self.publish_mozreview(issues)
+        self.publish_mozreview(review_request_id, diffset_revision, issues)
 
         # Notify by email
         logger.info('Send email to admins')
         self.notify_admins(review_request_id, issues)
 
-    def publish_mozreview(self, issues):
+    def publish_mozreview(self, review_request_id, diff_revision, issues):
         '''
         Publish comments on mozreview
         '''
@@ -135,8 +137,21 @@ class Workflow(object):
             logger.info('No issues to publish on MozReview')
             return
 
+        # Create batch review
+        review = BatchReview(
+            self.mozreview,
+            review_request_id,
+            diff_revision,
+        )
+
+        # Comment each issue
         for issue in issues:
             logger.info('Will publish about {}'.format(issue))
+            review.comment(issue.path, issue.line, 1, issue.body)
+
+        # Publish the review
+        # without ship_it to avoid automatically r+
+        return review.publish(ship_it=False)
 
     def notify_admins(self, review_request_id, issues):
         '''
