@@ -140,7 +140,7 @@ class BatchReview(object):
         if len(self.comments) > self.max_comments:
             warning = ('WARNING: Number of comments exceeded maximum, showing '
                        '%d of %d.') % (self.max_comments, len(self.comments))
-            self.body_top = '%s\n%s' % (self.body_top, warning)
+            body_top = '%s\n%s' % (body_top, warning)
             del self.comments[self.max_comments:]
 
         try:
