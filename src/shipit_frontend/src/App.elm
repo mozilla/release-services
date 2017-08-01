@@ -1,20 +1,20 @@
 port module App exposing (..)
 
+import App.CodeCoverage as CodeCoverage
+import App.Home as Home
+import App.ReleaseDashboard as ReleaseDashboard
+import App.Utils exposing (eventLink)
+import BugzillaLogin as Bugzilla
+import Hawk
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import String
+import Navigation exposing (Location)
+import RemoteData exposing (RemoteData(..), WebData)
 import RouteUrl exposing (UrlChange)
 import RouteUrl.Builder as Builder exposing (Builder, builder, replacePath)
-import RemoteData exposing (WebData, RemoteData(..))
-import Navigation exposing (Location)
-import BugzillaLogin as Bugzilla
+import String
 import TaskclusterLogin as User
-import Hawk
 import Utils
-import App.Utils exposing (eventLink)
-import App.Home as Home
-import App.CodeCoverage as CodeCoverage
-import App.ReleaseDashboard as ReleaseDashboard
 
 
 type Page
@@ -350,7 +350,7 @@ viewNavDashboard model =
             ]
 
         Success allAnalysis ->
-            (List.map viewNavAnalysis allAnalysis)
+            List.map viewNavAnalysis allAnalysis
 
 
 viewNavAnalysis : ReleaseDashboard.Analysis -> Html Msg
@@ -504,7 +504,7 @@ delta2url previous current =
                     path =
                         case current.release_dashboard.current_analysis of
                             Success analysis ->
-                                [ "release-dashboard", (toString analysis.id) ]
+                                [ "release-dashboard", toString analysis.id ]
 
                             _ ->
                                 [ "release-dashboard" ]
@@ -546,7 +546,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ -- Extensions integration
-          Sub.map BugzillaMsg (Bugzilla.bugzillalogin_get (Bugzilla.Logged))
+          Sub.map BugzillaMsg (Bugzilla.bugzillalogin_get Bugzilla.Logged)
         , User.subscriptions UserMsg
-        , Sub.map HawkRequest (Hawk.hawk_send_request (Hawk.SendRequest))
+        , Sub.map HawkRequest (Hawk.hawk_send_request Hawk.SendRequest)
         ]

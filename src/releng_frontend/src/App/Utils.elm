@@ -5,9 +5,9 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
 import Json.Decode as JsonDecode
+import RemoteData exposing (RemoteData(..), WebData)
 import Utils
 import VirtualDom
-import RemoteData exposing (WebData, RemoteData(..))
 
 
 dropdown :
@@ -72,13 +72,28 @@ error event message =
         [ class "alert alert-danger"
         , attribute "role" "alert"
         ]
-        [ strong [] [ text "Error: " ]
+        [ i [ class "fa fa-exclamation-triangle" ] []
+        , strong [] [ text " Error: " ]
         , span [] [ text message ]
         , a
             [ Utils.onClick event
             , class "alert-link"
             ]
             [ text " Click to retry." ]
+        ]
+
+
+success : a -> String -> Html a
+success event message =
+    div [ class "alert alert-success", attribute "role" "alert" ]
+        [ i [ class "fa fa-check" ] []
+        , strong [] [ text " Success: " ]
+        , span [] [ text message ]
+        , a
+            [ Utils.onClick event
+            , class "alert-link"
+            ]
+            [ text " Click to remove." ]
         ]
 
 
@@ -98,7 +113,7 @@ getAlerts response =
                 "Error!"
                 (case error of
                     Http.BadUrl url ->
-                        ("Bad Url: " ++ url)
+                        "Bad Url: " ++ url
 
                     Http.Timeout ->
                         "Request Timeout"
@@ -107,7 +122,7 @@ getAlerts response =
                         "A network error occured"
 
                     Http.BadPayload details response ->
-                        ("Bad payload: " ++ details)
+                        "Bad payload: " ++ details
 
                     Http.BadStatus response ->
                         case JsonDecode.decodeString decoderError response.body of
@@ -153,7 +168,7 @@ viewAlerts alerts =
                     "danger"
 
         createAlert alert =
-            div [ class ("alert alert-" ++ (getAlertTypeAsString alert)) ]
+            div [ class ("alert alert-" ++ getAlertTypeAsString alert) ]
                 [ strong [] [ text alert.title ]
                 , text alert.text
                 ]

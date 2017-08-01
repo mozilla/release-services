@@ -197,6 +197,8 @@ PROJECTS = {
             'releng-treestatus',
             'releng-mapper',
             'releng-archiver',
+            'releng-notification-policy',
+            'releng-notification-identity',
         ],
         'deploy': 'S3',
         'deploy_options': {

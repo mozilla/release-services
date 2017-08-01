@@ -1,5 +1,7 @@
 module App exposing (..)
 
+import App.Notifications
+import App.Notifications.Types
 import App.TreeStatus
 import App.TreeStatus.Form
 import App.TreeStatus.Types
@@ -9,7 +11,6 @@ import App.UserScopes
 import Hawk
 import Navigation
 import TaskclusterLogin
-import UrlParser
 import UrlParser exposing ((</>), (<?>))
 
 
@@ -25,6 +26,7 @@ type Route
     | HomeRoute
     | LoginRoute (Maybe String) (Maybe String) (Maybe String)
     | LogoutRoute
+    | NotificationRoute App.Notifications.Types.Route
     | TryChooserRoute
     | TreeStatusRoute App.TreeStatus.Types.Route
 
@@ -33,6 +35,7 @@ pages : List (App.Types.Page Route b)
 pages =
     [ App.TryChooser.page TryChooserRoute
     , App.TreeStatus.page TreeStatusRoute
+    , App.Notifications.page NotificationRoute
     ]
 
 
@@ -57,6 +60,9 @@ routeParser =
 reverseRoute : Route -> String
 reverseRoute route =
     case route of
+        NotificationRoute route ->
+            App.Notifications.reverseRoute route
+
         NotFoundRoute ->
             "/404"
 
@@ -101,6 +107,8 @@ type alias Flags =
     , treestatusUrl : String
     , docsUrl : String
     , version : String
+    , identityUrl : String
+    , policyUrl : String
     }
 
 
@@ -119,6 +127,7 @@ type alias Model =
     , treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
     , docsUrl : String
     , version : String
+    , notifications : App.Notifications.Types.Model
     }
 
 
@@ -136,3 +145,4 @@ type Msg
     | UserScopesMsg App.UserScopes.Msg
     | TryChooserMsg App.TryChooser.Msg
     | TreeStatusMsg App.TreeStatus.Types.Msg
+    | NotificationMsg App.Notifications.Types.Msg

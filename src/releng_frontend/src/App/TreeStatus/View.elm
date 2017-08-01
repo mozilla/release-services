@@ -1,9 +1,9 @@
 module App.TreeStatus.View exposing (..)
 
+import App.Form
 import App.TreeStatus.Form
 import App.TreeStatus.Types
 import App.UserScopes
-import App.Form
 import App.Utils
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -47,7 +47,7 @@ bugzillaBugAsLink text_ =
             String.words text_
 
         previousWords =
-            Nothing :: (List.map Just words)
+            Nothing :: List.map Just words
 
         asLink number =
             a [ href ("https://bugzilla.mozilla.org/show_bug.cgi?id=" ++ number) ]
@@ -92,7 +92,7 @@ viewRecentChange scopes plural recentChange =
                 if List.isEmpty words then
                     []
                 else
-                    (text " with reason: ") :: words
+                    text " with reason: " :: words
 
         parseTimestamp timestamp =
             timestamp
@@ -117,13 +117,13 @@ viewRecentChange scopes plural recentChange =
                     (List.append
                         [ text "At "
                         , text (parseTimestamp recentChange.when)
-                        , text (" " ++ (TaskclusterLogin.shortUsername recentChange.who))
+                        , text (" " ++ TaskclusterLogin.shortUsername recentChange.who)
                         , text " changed "
                         , text treeLabel
                         , em [] [ text (String.join ", " recentChange.trees) ]
                         , text " to "
                         , span
-                            [ class ("badge badge-" ++ (treeStatusLevel recentChange.status)) ]
+                            [ class ("badge badge-" ++ treeStatusLevel recentChange.status) ]
                             [ text recentChange.status ]
                         ]
                         recentChangeReason
@@ -205,7 +205,7 @@ viewTreesItem scopes treesSelected tree =
                 |> App.TreeStatus.Types.NavigateTo
 
         treeTagClass =
-            "float-xs-right badge badge-" ++ (treeStatusLevel tree.status)
+            "float-xs-right badge badge-" ++ treeStatusLevel tree.status
 
         checkboxItem =
             if hasScope "trees/update" scopes || hasScope "trees/delete" scopes then
@@ -436,7 +436,7 @@ viewConfirmDelete model =
             )
         , hr [] []
         , div
-            [ class ("form-group " ++ (App.Form.errorClass model.deleteError)) ]
+            [ class ("form-group " ++ App.Form.errorClass model.deleteError) ]
             ([]
                 |> App.Utils.appendItem
                     (label
@@ -500,7 +500,7 @@ viewTreeDetails remote =
                     [ text tree.name ]
                 , text " status is "
                 , span
-                    [ class ("badge badge-" ++ (treeStatusLevel tree.status)) ]
+                    [ class ("badge badge-" ++ treeStatusLevel tree.status) ]
                     [ text tree.status ]
                 , p [ class "lead" ] (bugzillaBugAsLink tree.message_of_the_day)
                 ]
@@ -535,7 +535,7 @@ viewTreeLog log =
     in
         div [ class "timeline-item" ]
             --TODO: show status in hover of the badge
-            [ div [ class <| "timeline-badge badge-" ++ (treeStatusLevel log.status) ]
+            [ div [ class <| "timeline-badge badge-" ++ treeStatusLevel log.status ]
                 [ text " " ]
             , div [ class "timeline-panel" ]
                 [ div [ class "timeline-time" ]

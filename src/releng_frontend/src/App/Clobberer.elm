@@ -1,7 +1,8 @@
 module App.Clobberer exposing (..)
 
+import App.Utils exposing (..)
 import Dict exposing (Dict)
-import Focus exposing (set, create, Focus, (=>))
+import Focus exposing ((=>), Focus, create, set)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -9,10 +10,9 @@ import Html.Keyed
 import Http
 import Json.Decode as JsonDecode exposing ((:=))
 import Json.Encode as JsonEncode
-import RemoteData as RemoteData exposing (WebData, RemoteData(..))
+import RemoteData as RemoteData exposing (RemoteData(..), WebData)
 import RouteUrl.Builder exposing (Builder, builder, replacePath)
 import Task exposing (Task)
-import App.Utils exposing (..)
 
 
 -- TYPES
@@ -88,7 +88,7 @@ viewClobberButton backend model =
             List.length <| List.concat <| Dict.values model.selected
 
         buttonText =
-            "Submit clobberer (" ++ (toString buttonNumber) ++ ")"
+            "Submit clobberer (" ++ toString buttonNumber ++ ")"
 
         buttonDisabled =
             if buttonNumber == 0 then
@@ -165,7 +165,7 @@ viewBackend backend model =
     div []
         [ viewClobberButton backend model
         , div [ class "clobberer-submit-description" ] <| viewClobberDetails backend model
-        , (case model.data of
+        , case model.data of
             Success data ->
                 dropdown (SelectDropdown backend) data model.selected_dropdown
 
@@ -177,8 +177,7 @@ viewBackend backend model =
 
             NotAsked ->
                 div [] []
-          )
-        , (case model.selected_dropdown of
+        , case model.selected_dropdown of
             Nothing ->
                 div [] []
 
@@ -305,7 +304,6 @@ viewBackend backend model =
                                     items
                             )
                         ]
-          )
         ]
 
 
@@ -465,7 +463,7 @@ update msg model =
                                     if List.member value values then
                                         values
                                     else
-                                        (value :: values)
+                                        value :: values
 
                                 values =
                                     Maybe.withDefault [] <|
@@ -482,7 +480,7 @@ update msg model =
                                     if List.member value values then
                                         values
                                     else
-                                        (value :: values)
+                                        value :: values
 
                                 values =
                                     Maybe.withDefault [] <|
@@ -684,16 +682,15 @@ decodeFetchData =
         (JsonDecode.object2 BackendBranch
             ("name" := JsonDecode.string)
             ("builders"
-                := (JsonDecode.list
-                        (JsonDecode.object6 BackendBuilder
-                            ("branch" := JsonDecode.string)
-                            ("builddir" := JsonDecode.string)
-                            ("lastclobber" := JsonDecode.int)
-                            ("name" := JsonDecode.string)
-                            ("slave" := JsonDecode.string)
-                            ("who" := JsonDecode.string)
-                        )
-                   )
+                := JsonDecode.list
+                    (JsonDecode.object6 BackendBuilder
+                        ("branch" := JsonDecode.string)
+                        ("builddir" := JsonDecode.string)
+                        ("lastclobber" := JsonDecode.int)
+                        ("name" := JsonDecode.string)
+                        ("slave" := JsonDecode.string)
+                        ("who" := JsonDecode.string)
+                    )
             )
         )
 

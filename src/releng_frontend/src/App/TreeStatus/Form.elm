@@ -1,18 +1,18 @@
 module App.TreeStatus.Form exposing (..)
 
+import App.Form
 import App.TreeStatus.Api
 import App.TreeStatus.Types
-import App.Form
 import App.Utils
 import Form
 import Form.Error
 import Form.Field
 import Form.Input
 import Form.Validate
+import Hawk
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
-import Hawk
 import RemoteData
 import Utils
 
@@ -192,24 +192,22 @@ updateUpdateTree route model formMsg =
                 (model.baseUrl ++ "/trees")
                 [ Http.header "Accept" "application/json" ]
                 ((if List.length model.treesSelected /= 1 then
-                    ({ trees = model.treesSelected
-                     , status = data.status
-                     , reason = data.reason
-                     , tags = tagsToList data.tags
-                     , remember = data.remember
-                     }
+                    { trees = model.treesSelected
+                    , status = data.status
+                    , reason = data.reason
+                    , tags = tagsToList data.tags
+                    , remember = data.remember
+                    }
                         |> App.TreeStatus.Api.encoderUpdateTrees
-                    )
                   else
-                    ({ trees = model.treesSelected
-                     , status = data.status
-                     , reason = data.reason
-                     , tags = tagsToList data.tags
-                     , message_of_the_day = data.message_of_the_day
-                     , remember = data.remember
-                     }
+                    { trees = model.treesSelected
+                    , status = data.status
+                    , reason = data.reason
+                    , tags = tagsToList data.tags
+                    , message_of_the_day = data.message_of_the_day
+                    , remember = data.remember
+                    }
                         |> App.TreeStatus.Api.encoderUpdateTree
-                    )
                  )
                     |> Http.jsonBody
                 )
@@ -396,20 +394,18 @@ viewUpdateTree treesSelected trees form =
                         "Remember this change to undo later"
                     ]
                 ]
-            , (if List.length treesSelected /= 1 then
+            , if List.length treesSelected /= 1 then
                 text ""
-               else
+              else
                 hr [] []
-              )
-            , (if List.length treesSelected /= 1 then
+            , if List.length treesSelected /= 1 then
                 text ""
-               else
+              else
                 App.Form.viewTextInput
                     (Form.getFieldAsString "message_of_the_day" form)
                     "Message of the day"
                     []
                     [ placeholder "(no change)" ]
-              )
             , hr [] []
             , App.Form.viewButton
                 "Update"

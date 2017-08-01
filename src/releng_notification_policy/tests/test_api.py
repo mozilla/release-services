@@ -43,7 +43,7 @@ def list_of_policies():
     common = {
         'identity': 'dummy',
         'urgency': 'LOW',
-        'message_id': 12345,
+        'uid': 'dummy uid',
     }
 
     datetime_today = datetime.today()
@@ -108,15 +108,15 @@ def test_get_identity_url_for_actionable_policies(app, list_of_policies):
     results_only_policies = map(itemgetter(0), result)
     results_string_reprs = list(map(str, results_only_policies))
     assert all(val in results_string_reprs for val in [
-        'Policy(id=0, message_uid=12345, identity=dummy, urgency=LOW)',
-        'Policy(id=4, message_uid=12345, identity=dummy, urgency=LOW)',
+        'Policy(id=0, message_uid=dummy uid, identity=dummy, urgency=LOW)',
+        'Policy(id=4, message_uid=dummy uid, identity=dummy, urgency=LOW)',
 
     ]), 'An actionable policy did not register as actionable.'
 
     assert not any(val in results_string_reprs for val in [
-        'Policy(id=1, message_uid=12345, identity=dummy, urgency=LOW)',
-        'Policy(id=2, message_uid=12345, identity=dummy, urgency=LOW)',
-        'Policy(id=3, message_uid=12345, identity=dummy, urgency=LOW)',
+        'Policy(id=1, message_uid=dummy uid, identity=dummy, urgency=LOW)',
+        'Policy(id=2, message_uid=dummy uid, identity=dummy, urgency=LOW)',
+        'Policy(id=3, message_uid=dummy uid, identity=dummy, urgency=LOW)',
 
     ]), 'An unactionable policy registered as actionable.'
 

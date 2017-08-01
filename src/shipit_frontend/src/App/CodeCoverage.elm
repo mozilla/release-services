@@ -1,13 +1,13 @@
 module App.CodeCoverage exposing (..)
 
-import Http
+import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import RemoteData exposing (WebData, RemoteData(..))
-import TaskclusterLogin as User
+import Http
 import Json.Decode as JsonDecode exposing (Decoder)
-import Dict exposing (Dict)
+import RemoteData exposing (RemoteData(..), WebData)
+import TaskclusterLogin as User
 
 
 -- Models
@@ -79,15 +79,15 @@ loadArtifact : Model -> Cmd Msg
 loadArtifact model =
     let
         url =
-            (model.backend_uplift_url
+            model.backend_uplift_url
                 ++ "/coverage_by_dir"
-                ++ case model.path of
-                    Just path ->
-                        "?path=" ++ path
+                ++ (case model.path of
+                        Just path ->
+                            "?path=" ++ path
 
-                    Nothing ->
-                        ""
-            )
+                        Nothing ->
+                            ""
+                   )
 
         request =
             Http.request
@@ -146,14 +146,14 @@ view model =
     div [ class "container-fluid" ]
         [ case model.directories of
             Failure err ->
-                div [ class "alert alert-danger" ] [ text ("Error loading code coverage: " ++ (toString err)) ]
+                div [ class "alert alert-danger" ] [ text ("Error loading code coverage: " ++ toString err) ]
 
             Success directories ->
                 let
                     title =
                         case model.path of
                             Just path ->
-                                ("Directiory: " ++ path)
+                                "Directiory: " ++ path
 
                             Nothing ->
                                 "Top Directory"
@@ -179,7 +179,7 @@ viewDirectories directories =
             , th [] [ text "Bugs" ]
             ]
          ]
-            ++ (List.map viewDirectory (Dict.toList directories))
+            ++ List.map viewDirectory (Dict.toList directories)
         )
 
 
@@ -226,7 +226,7 @@ viewDirectory ( path, directory ) =
                       else
                         ""
                      )
-                        ++ (toString diff)
+                        ++ toString diff
                     )
                 ]
             , td [] [ ul [ class "bug-list" ] (List.map viewBug directory.bugs) ]
@@ -236,7 +236,7 @@ viewDirectory ( path, directory ) =
 viewBug : Bug -> Html Msg
 viewBug bug =
     li []
-        [ a [ href ("https://bugzil.la/" ++ (toString bug.id)), target "_blank" ]
+        [ a [ href ("https://bugzil.la/" ++ toString bug.id), target "_blank" ]
             [ text (toString bug.id)
             ]
         , span [ class "text-muted" ] [ text ": " ]

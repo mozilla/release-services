@@ -4,7 +4,7 @@ import Html
 import Html.Events
 import Http
 import Json.Decode as JsonDecode
-import RemoteData exposing (WebData, RemoteData(..))
+import RemoteData exposing (RemoteData(..), WebData)
 import Task
 
 
@@ -75,10 +75,10 @@ the portion of the URL before the query string, which is assumed to be
 properly encoded already. The second argument is a list of all the
 key/value pairs needed for the query string. Both the keys and values
 will be appropriately encoded, so they can contain spaces, ampersands, etc.
-[qs]: http://en.wikipedia.org/wiki/Query_string
-    url "http://example.com/users" [ ("name", "john doe"), ("age", "30") ]
-    -- http://example.com/users?name=john+doe&age=30
-From: https://github.com/evancz/elm-http/blob/3.0.1/src/Http.elm#L56-L73
+[qs]: <http://en.wikipedia.org/wiki/Query_string>
+url "<http://example.com/users"> [ ("name", "john doe"), ("age", "30") ]
+-- <http://example.com/users?name=john+doe&age=30>
+From: <https://github.com/evancz/elm-http/blob/3.0.1/src/Http.elm#L56-L73>
 as it got removed from http library in Elm 0.18
 -}
 buildUrl : String -> List ( String, String ) -> String

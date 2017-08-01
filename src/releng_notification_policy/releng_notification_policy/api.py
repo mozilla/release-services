@@ -15,6 +15,8 @@ from requests import get
 from json import JSONDecodeError
 from cli_common import log
 from backend_common.auth import auth
+import os
+import mohawk
 
 logger = log.get_logger(__name__)
 
@@ -35,7 +37,7 @@ def get_message_by_uid(uid: str) -> dict:
 
     message = session.query(Message).filter(Message.uid == uid).first()
     if message:
-        notification_policies = session.query(Policy).filter(Policy.message_id == message.id).all()
+        notification_policies = session.query(Policy).filter(Policy.uid == message.uid).all()
         policies_dicts = get_policies_in_json_serializable_form(notification_policies)
 
         logger.info('Serving {message}'.format(message=message))
@@ -46,10 +48,59 @@ def get_message_by_uid(uid: str) -> dict:
             'deadline': message.deadline,
             'policies': policies_dicts,
         }
+
     else:
         err_str = 'Message with uid {} not found.'.format(uid)
         logger.info(err_str)
         raise NotFound(err_str)
+
+
+def get_policies_as_dict_for_message(message: Message) -> dict:
+    session = current_app.db.session
+
+    policies = session.query(Policy).filter(Policy.uid == message.uid).all()
+    serialized_policies = get_policies_in_json_serializable_form(policies)
+
+    return {
+        'policies': serialized_policies,
+    }
+
+
+def get_active_policies_for_identity(identity_name: str) -> dict:
+    session = current_app.db.session
+
+    now = datetime.now()
+
+    active_policies = session.query(Policy).filter(Policy.identity == identity_name)\
+                                           .filter(Policy.start_timestamp < now)\
+                                           .filter(Policy.stop_timestamp > now)\
+                                           .all()
+
+    if active_policies:
+        return {
+            'policies': get_policies_in_json_serializable_form(active_policies),
+        }
+
+    else:
+        raise NotFound('No active policies found for {}.'.format(identity_name))
+
+
+def get_pending_messages() -> dict:
+    session = current_app.db.session
+
+    current_time = datetime.now()
+    messages = session.query(Message).filter(Message.deadline > current_time).all()
+
+    if messages:
+        return {
+            'messages': [
+                {**message.to_dict(), **get_policies_as_dict_for_message(message)}
+                for message in messages
+            ],
+        }
+
+    else:
+        raise NotFound('No pending messages found.')
 
 
 @auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'put_message'])
@@ -77,7 +128,7 @@ def put_message(uid: str, body: dict) -> None:
 
     policies = [
         # Overwrite the frequency object input from the API with a db compatible timedelta object
-        Policy(**{**p, 'frequency': timedelta(**p['frequency']), 'message_id': new_message.id})
+        Policy(**{**p, 'frequency': timedelta(**p['frequency']), 'uid': new_message.uid})
         for p in body['policies']
     ]
 
@@ -166,10 +217,30 @@ def post_tick_tock() -> dict:
             session.delete(message)
             continue
 
-        policies = session.query(Policy).filter(Policy.message_id == message.id).all()
+        policies = session.query(Policy).filter(Policy.uid == message.uid).all()
         for policy, identity_preference_url in get_identity_url_for_actionable_policies(policies):
             try:
-                identity_preference = get(identity_preference_url, verify=False).json()['preferences'].pop()
+                service_credentials = {
+                    'id': current_app.config.get('TASKCLUSTER_CLIENT_ID'),
+                    'key': current_app.config.get('TASKCLUSTER_ACCESS_TOKEN'),
+                    'algorithm': 'sha256',
+                }
+
+                hawk = mohawk.Sender(service_credentials, identity_preference_url, 'get',
+                                     content='',
+                                     content_type='application/json')
+
+                # Support dev ssl ca cert
+                ssl_dev_ca = os.environ.get('SSL_DEV_CA')
+                if ssl_dev_ca is not None:
+                    assert os.path.isdir(ssl_dev_ca), \
+                        'SSL_DEV_CA must be a dir with hashed dev ca certs'
+
+                headers = {
+                    'Authorization': hawk.request_header,
+                    'Content-Type': 'application/json',
+                }
+                identity_preference = get(identity_preference_url, headers=headers, verify=ssl_dev_ca).json()['preferences'].pop()
 
                 notification_info = send_notifications(message, identity_preference)
                 notifications.append(notification_info)

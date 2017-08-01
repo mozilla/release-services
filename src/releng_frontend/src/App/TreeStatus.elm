@@ -6,14 +6,13 @@ import App.TreeStatus.Types
 import App.TreeStatus.View
 import App.Types
 import App.Utils
+import Hawk
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Hawk
 import Http
 import Navigation
 import RemoteData
 import Title
-import UrlParser
 import UrlParser exposing ((</>))
 import Utils
 
@@ -129,7 +128,7 @@ update currentRoute msg model =
                     if redirectToTrees then
                         showAllTrees
                     else
-                        (case route of
+                        case route of
                             App.TreeStatus.Types.ShowTreesRoute ->
                                 showAllTrees
 
@@ -166,7 +165,6 @@ update currentRoute msg model =
                                     , fetchRecentChangesIfNotAsked
                                     ]
                                 )
-                        )
 
                 newRoute =
                     if redirectToTrees then
@@ -176,7 +174,7 @@ update currentRoute msg model =
             in
                 ( newModel
                 , Cmd.batch
-                    [ (reverseRoute newRoute)
+                    [ reverseRoute newRoute
                         |> Navigation.newUrl
                     , newCmd
                     ]
@@ -219,7 +217,7 @@ update currentRoute msg model =
             , Cmd.batch
                 [ Utils.performMsg App.TreeStatus.Form.resetAddTree
                     |> Cmd.map App.TreeStatus.Types.FormAddTreeMsg
-                , (reverseRoute App.TreeStatus.Types.ShowTreesRoute)
+                , reverseRoute App.TreeStatus.Types.ShowTreesRoute
                     |> Navigation.newUrl
                 ]
             , Nothing
@@ -242,7 +240,7 @@ update currentRoute msg model =
                 , App.TreeStatus.Api.fetchRecentChanges model.baseUrl
                 , Utils.performMsg App.TreeStatus.Form.resetUpdateTree
                     |> Cmd.map App.TreeStatus.Types.FormUpdateTreesMsg
-                , (reverseRoute App.TreeStatus.Types.ShowTreesRoute)
+                , reverseRoute App.TreeStatus.Types.ShowTreesRoute
                     |> Navigation.newUrl
                 ]
             , Nothing
@@ -331,7 +329,7 @@ update currentRoute msg model =
 
         App.TreeStatus.Types.DeleteTreesResult result ->
             ( { model | treesAlerts = App.Utils.getAlerts result }
-            , (reverseRoute App.TreeStatus.Types.ShowTreesRoute)
+            , reverseRoute App.TreeStatus.Types.ShowTreesRoute
                 |> Navigation.newUrl
             , Nothing
             )
@@ -343,7 +341,7 @@ update currentRoute msg model =
                 (Hawk.Request
                     "RevertChange"
                     "DELETE"
-                    (model.baseUrl ++ "/stack2/restore/" ++ (toString stack))
+                    (model.baseUrl ++ "/stack2/restore/" ++ toString stack)
                     [ Http.header "Accept" "application/json" ]
                     Http.emptyBody
                 )
@@ -356,7 +354,7 @@ update currentRoute msg model =
                 (Hawk.Request
                     "DiscardChange"
                     "DELETE"
-                    (model.baseUrl ++ "/stack2/discard/" ++ (toString stack))
+                    (model.baseUrl ++ "/stack2/discard/" ++ toString stack)
                     [ Http.header "Accept" "application/json" ]
                     Http.emptyBody
                 )

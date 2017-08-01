@@ -1,10 +1,10 @@
 port module Hawk exposing (..)
 
 import Http
-import TaskclusterLogin as User
-import Json.Encode as JsonEncode
 import Json.Decode as JsonDecode
+import Json.Encode as JsonEncode
 import RemoteData exposing (WebData)
+import TaskclusterLogin as User
 
 
 type alias RequestID =
@@ -89,7 +89,7 @@ requestEncoder request =
         -- We can't access the internal type of the body
         -- so we are forced to send its representation
         body =
-            if (toString request.body) == "EmptyBody" then
+            if toString request.body == "EmptyBody" then
                 JsonEncode.null
             else
                 JsonEncode.string (toString request.body)

@@ -1,6 +1,7 @@
 module App.Home exposing (..)
 
 import App
+import App.Notifications.Types
 import App.TreeStatus.Types
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -33,4 +34,8 @@ view model =
             "TreeStatus"
             "Current status of Mozilla's version-control repositories."
             (Utils.onClick <| App.NavigateTo (App.TreeStatusRoute App.TreeStatus.Types.ShowTreesRoute))
+        , viewCard
+            "RelEng NagBot"
+            "Manage notification policies and preferences for RelEng Notification services (aka NagBot)."
+            (Utils.onClick <| App.NavigateTo (App.NotificationRoute App.Notifications.Types.BaseRoute))
         ]

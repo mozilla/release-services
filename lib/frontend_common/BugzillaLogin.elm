@@ -1,12 +1,12 @@
 port module BugzillaLogin exposing (..)
 
-import Http
-import Utils
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onSubmit)
-import RemoteData exposing (WebData, RemoteData(..))
+import Http
 import Json.Decode as JsonDecode
+import RemoteData exposing (RemoteData(..), WebData)
+import Utils
 
 
 type Msg

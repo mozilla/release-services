@@ -4,9 +4,9 @@ import Dict exposing (Dict)
 import Json.Decode as JsonDecode
 import Maybe
 import Redirect
+import String
 import Task
 import Time exposing (Time)
-import String
 
 
 type alias Certificate =
@@ -87,7 +87,7 @@ isCertificateExpired time user_ =
         Just user ->
             case user.certificate of
                 Just certificate ->
-                    if time > (toFloat certificate.expiry) then
+                    if time > toFloat certificate.expiry then
                         True
                     else
                         False

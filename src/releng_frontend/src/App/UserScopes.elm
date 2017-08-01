@@ -1,13 +1,13 @@
 module App.UserScopes exposing (..)
 
+import Hawk
 import Http
 import Json.Decode as JsonDecode
 import RemoteData exposing (WebData)
 import String
 import Task
-import Hawk
-import Utils
 import Time
+import Utils
 
 
 type alias Model =
@@ -39,7 +39,7 @@ update :
     -> Model
     -> ( Model, Cmd Msg, Maybe Hawk.Request )
 update msg model =
-    case (Debug.log "XXX" msg) of
+    case Debug.log "XXX" msg of
         FetchScopes ->
             ( model
             , Task.perform CacheScopes Time.now
