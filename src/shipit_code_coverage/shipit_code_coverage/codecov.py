@@ -5,6 +5,7 @@ from datetime import datetime
 import zipfile
 import requests
 import hglib
+from threading import Condition
 
 from cli_common.log import get_logger
 from cli_common.command import run_check
@@ -42,6 +43,9 @@ class CodeCov(object):
             self.task_id = taskcluster.get_task('mozilla-central', revision)
             self.revision = revision
 
+        self.build_finished = False
+        self.build_finished_cv = Condition()
+
         logger.info('Mercurial revision', revision=self.revision)
 
     def download_coverage_artifacts(self, build_task_id):
@@ -75,10 +79,10 @@ class CodeCov(object):
                     if 'code-coverage-jsvm.zip' in artifact['name']:
                         executor.submit(lambda: self.rewrite_jsvm_lcov(artifact_path))
 
-        self.suites = list(all_suites)
-        self.suites.sort()
+            self.suites = list(all_suites)
+            self.suites.sort()
 
-        logger.info('Code coverage artifacts downloaded')
+            logger.info('Code coverage artifacts downloaded')
 
     def update_github_repo(self):
         run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
@@ -107,6 +111,10 @@ class CodeCov(object):
         return ret
 
     def rewrite_jsvm_lcov(self, zip_file_path):
+        with self.build_finished_cv:
+            while not self.build_finished:
+                self.build_finished_cv.wait()
+
         out_dir = zip_file_path[:-4]
 
         zip_file = zipfile.ZipFile(zip_file_path, 'r')
@@ -188,6 +196,10 @@ class CodeCov(object):
         run_check(['gecko-env', './mach', 'build-backend', '-b', 'ChromeMap'], cwd=self.repo_dir)
 
         logger.info('Build successful')
+
+        self.build_finished = True
+        with self.build_finished_cv:
+            self.build_finished_cv.notify_all()
 
     def go(self):
         with ThreadPoolExecutorResult(max_workers=2) as executor:
