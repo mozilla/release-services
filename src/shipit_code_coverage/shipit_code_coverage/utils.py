@@ -15,6 +15,17 @@ def wait_until(operation, timeout=30):
     return None
 
 
+def retry(operation, retries=3):
+    successful = False
+    while not successful and retries > 0:
+        try:
+            operation()
+            successful = True
+        except:
+            retries -= 1
+    return successful
+
+
 class ThreadPoolExecutorResult(ThreadPoolExecutor):
     def __init__(self, *args, **kwargs):
         self.futures = []

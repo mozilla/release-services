@@ -10,7 +10,7 @@ from cli_common.log import get_logger
 from cli_common.command import run_check
 
 from shipit_code_coverage import taskcluster, uploader
-from shipit_code_coverage.utils import wait_until, ThreadPoolExecutorResult
+from shipit_code_coverage.utils import wait_until, retry, ThreadPoolExecutorResult
 
 
 logger = get_logger(__name__)
@@ -84,10 +84,11 @@ class CodeCov(object):
         run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
         repo_url = 'https://%s:%s@github.com/marco-c/gecko-dev' % (self.gecko_dev_user, self.gecko_dev_pwd)
         repo_path = os.path.join(self.cache_root, 'gecko-dev')
+
         if not os.path.isdir(repo_path):
-            run_check(['git', 'clone', repo_url], cwd=self.cache_root)
-        run_check(['git', 'pull', 'https://github.com/mozilla/gecko-dev', 'master'], cwd=repo_path)
-        run_check(['git', 'push', repo_url, 'master'], cwd=repo_path)
+            retry(lambda: run_check(['git', 'clone', repo_url], cwd=self.cache_root))
+        retry(lambda: run_check(['git', 'pull', 'https://github.com/mozilla/gecko-dev', 'master'], cwd=repo_path))
+        retry(lambda: run_check(['git', 'push', repo_url, 'master'], cwd=repo_path))
 
     def get_github_commit(self, mercurial_commit):
         url = 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s'
