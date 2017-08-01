@@ -52,7 +52,6 @@ def create_new_nagbot_message(message: str, short_message: str, deadline: dateti
     '''
     Instantiates a new message to be sent repeatedly by NagBot
 
-    :param api_endpoint: HTTP endpoint of policy service
     :param message: Long description of message (ie email body)
     :param short_message: Short description of message (ie email subject, IRC message)
     :param deadline: Message expiry date
@@ -67,7 +66,7 @@ def create_new_nagbot_message(message: str, short_message: str, deadline: dateti
     if uid is None:
         uid = generate_random_uid()
 
-    request_url = current_app.config.get('RELENG_NOTIFICATION_IDENTITY_ENDPOINT') + '/message/' + uid
+    request_url = current_app.config.get('RELENG_NOTIFICATION_POLICY_ENDPOINT') + '/message/' + uid
 
     message_body = json.dumps({
         'deadline': deadline.isoformat(),
