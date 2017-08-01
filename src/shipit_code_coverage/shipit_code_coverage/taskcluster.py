@@ -51,13 +51,15 @@ def download_artifact(task_id, suite, artifact):
     artifact_path = 'ccov-artifacts/' + task_id + '_' + suite + '_' + os.path.basename(artifact['name'])
 
     if os.path.exists(artifact_path):
-        return
+        return artifact_path
 
     r = requests.get(queue_base + 'task/' + task_id + '/artifacts/' + artifact['name'], stream=True)
 
     with open(artifact_path, 'wb') as f:
         r.raw.decode_content = True
         shutil.copyfileobj(r.raw, f)
+
+    return artifact_path
 
 
 def is_coverage_task(task):
