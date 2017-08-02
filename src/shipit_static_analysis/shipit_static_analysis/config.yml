@@ -4,17 +4,22 @@ target: obj-x86_64-pc-linux-gnu
 clang_checkers:
  - -*
  - clang-analyzer-deadcode.DeadStores
+ - clang-analyzer-security.*
+ - misc-assert-side-effect
  - modernize-loop-convert
  - modernize-raw-string-literal
+ - modernize-redundant-void-arg
 # modernize-use-auto (controversial, see bug 1371052)
 # modernize-use-bool-literals (too noisy because of `while (0)` in many macros)
  - modernize-use-equals-default
  - modernize-use-equals-delete
  - modernize-use-nullptr
  - modernize-use-override
+ - modernize-shrink-to-fit
  - mozilla-*
- - performance-faster-string-find
- - performance-for-range-copy
+ - performance-*
  - readability-else-after-return
  - readability-misleading-indentation
  - readability-redundant-control-flow
+ - readability-redundant-smartptr-get
+ - readability-uniqueptr-delete-release
