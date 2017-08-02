@@ -251,4 +251,13 @@ in skipOverrides {
     '';
   };
 
+  "taskcluster" = self: old: {
+    patches = [
+         (pkgs.fetchurl {
+           url = "https://github.com/taskcluster/taskcluster-client.py/pull/76.patch";
+           sha256 = "0vmna61grzys5pshlhilfsdsh8sdh5rv2bc9m3iwvdi322c4yyik";
+         })
+      ];
+  };
+
 }
