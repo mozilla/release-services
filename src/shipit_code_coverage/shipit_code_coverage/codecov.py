@@ -59,6 +59,9 @@ class CodeCov(object):
 
         all_suites = set()
 
+        def rewriting_task(path):
+            return lambda: self.rewrite_jsvm_lcov(path)
+
         tasks = taskcluster.get_tasks_in_group(task_data['taskGroupId'])
         test_tasks = [t for t in tasks if taskcluster.is_coverage_task(t)]
         with ThreadPoolExecutorResult() as executor:
@@ -77,7 +80,7 @@ class CodeCov(object):
 
                     artifact_path = taskcluster.download_artifact(test_task_id, suite_name, artifact)
                     if 'code-coverage-jsvm.zip' in artifact['name']:
-                        executor.submit(lambda: self.rewrite_jsvm_lcov(artifact_path))
+                        executor.submit(rewriting_task(artifact_path))
 
             self.suites = list(all_suites)
             self.suites.sort()
