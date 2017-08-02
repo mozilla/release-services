@@ -59,7 +59,7 @@ AUTH0_DUMMY_USERINFO = {
 def get_app_config(extra_config):
     config = {
         'TESTING': True,
-        'SECRET_KEY': os.urandom(24),
+        'SECRET_KEY': os.urandom(24)
     }
     config.update(extra_config)
     return config

@@ -190,6 +190,7 @@ in skipOverrides {
     patchPhase = ''
       sed -i -e "s|setup_requires=\['flake8'\],||" setup.py
       sed -i -e "s|jsonschema>=2.5.1|jsonschema|" setup.py
+      sed -i -e "s|'pathlib>=1.0.1; python_version < \"3.4\"',||" setup.py
     '';
   };
 
