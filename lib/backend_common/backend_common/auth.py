@@ -15,6 +15,7 @@ import sqlalchemy as sa
 import taskcluster
 import taskcluster.utils
 import time
+import os
 
 logger = cli_common.log.get_logger(__name__)
 
@@ -66,6 +67,35 @@ class BaseUser(object):
 
     def __str__(self):
         return self.get_id()
+
+
+class DevelopmentUser(BaseUser):
+    '''
+    User model for application development
+    '''
+
+    type = 'devuser'
+
+    def get_id(self):
+        return 'devuser:'
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def has_permissions(self, permissions):
+        return True
+
+    def get_permissions(self):
+        return ['*']
 
 
 class AnonymousUser(BaseUser):
@@ -201,8 +231,9 @@ class Auth(object):
         return decorator
 
 
+is_dev_session = bool(os.getenv('DEVELOPMENT', False))
 auth = Auth(
-    anonymous_user=AnonymousUser,
+    anonymous_user=DevelopmentUser if is_dev_session else AnonymousUser,
 )
 
 
@@ -290,7 +321,6 @@ def is_relengapi_token(token_str):
 
 @auth.login_manager.request_loader
 def parse_header(request):
-
     auth_header = request.headers.get('Authorization')
     if not auth_header:
         return
