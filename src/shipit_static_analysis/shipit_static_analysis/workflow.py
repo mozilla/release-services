@@ -12,7 +12,9 @@ import os
 from cli_common.taskcluster import get_service
 from cli_common.log import get_logger
 from cli_common.command import run_check
+from rbtools.api.client import RBClient
 from shipit_static_analysis.clang import ClangTidy
+from shipit_static_analysis.batchreview import BatchReview
 
 logger = get_logger(__name__)
 
@@ -25,6 +27,7 @@ class Workflow(object):
     Static analysis workflow
     '''
     taskcluster = None
+    mozreview = None
 
     def __init__(self, cache_root, emails, client_id=None, access_token=None):
         self.emails = emails
@@ -67,6 +70,18 @@ class Workflow(object):
 
         # Setup clang
         self.clang = ClangTidy(self.repo_dir, self.config['target'])
+
+    def setup_mozreview(self, username, api_key):
+        '''
+        Use mozreview client to post results
+        '''
+        url = 'https://reviewboard.mozilla.org'
+        path = 'extensions/mozreview.extension.MozReviewExtension/bugzilla-api-key-logins/' # noqa
+        rbc = RBClient(url, save_cookies=False, allow_caching=False)
+        login_resource = rbc.get_path(path)
+        login_resource.create(username=username, api_key=api_key)
+        self.mozreview = rbc.get_root()
+        logger.info('Connected to MozReview', username=username)
 
     def run(self, revision, review_request_id, diffset_revision):
         '''
@@ -115,10 +130,15 @@ class Workflow(object):
 
         logger.info('Detected {} code issue(s)'.format(len(issues)))
 
-        # Notify by email
         if issues:
+            # Notify by email
             logger.info('Send email to admins')
             self.notify_admins(review_request_id, issues)
+
+            # Post on MozReview when available
+            if self.mozreview:
+                logger.info('Post issues to MozReview')
+                self.post_review(review_request_id, diffset_revision, issues)
 
     def notify_admins(self, review_request_id, issues):
         '''
@@ -133,3 +153,12 @@ class Workflow(object):
                 'content': content,
                 'template': 'fullscreen',
             })
+
+    def post_review(self, review_request_id, diffset_revision, issues):
+        '''
+        Post review comments to MozReview in a single batch
+        '''
+        review = BatchReview(self.mozreview, review_request_id, diffset_revision)
+        for issue in issues:
+            issue.build_mozreview(review)
+        review.publish(ship_it=False)

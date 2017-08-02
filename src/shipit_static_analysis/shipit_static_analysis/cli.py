@@ -14,7 +14,7 @@ import click
 import logging
 import re
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('shipit_static_analysis')
 
 REGEX_COMMIT = re.compile(r'(\w+):(\d+):(\d+)')
 
@@ -53,6 +53,14 @@ def main(commits,
                  taskcluster_client_id,
                  taskcluster_access_token,
                  )
+
+    if 'MOZREVIEW_USER' in secrets and 'MOZREVIEW_API_KEY' in secrets:
+        w.setup_mozreview(
+            secrets['MOZREVIEW_USER'],
+            secrets['MOZREVIEW_API_KEY'],
+        )
+    else:
+        logger.info('No MozReview credentials, skipping.')
 
     for commit in REGEX_COMMIT.findall(commits):
         w.run(*commit)

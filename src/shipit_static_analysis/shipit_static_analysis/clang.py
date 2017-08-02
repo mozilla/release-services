@@ -129,6 +129,9 @@ class ClangTidy(object):
         '''
         The actual clang-tidy worker, working on the queue
         '''
+        self.all_checks = [c['name'] for c in checks]
+        self.enabled_checks = [c['name'] for c in checks if c['enabled']]
+
         while True:
             # Get new filename to work on
             filename = self.queue_workers.get()
@@ -138,7 +141,7 @@ class ClangTidy(object):
                 self.binary,
                 # Show warnings in all in-project headers by default.
                 '-header-filter=^{}/.*'.format(os.path.basename(self.build_dir)),
-                '-checks={}'.format(','.join(checks)),
+                '-checks={}'.format(','.join(all_checks)),
                 '-p={}'.format(self.build_dir),
                 filename,
             ]
@@ -201,7 +204,7 @@ class ClangIssue(object):
     '''
     An issue reported by clang-tidy
     '''
-    def __init__(self, header_data, work_dir):
+    def __init__(self, header_data, work_dir, enabled_checks):
         assert isinstance(header_data, tuple)
         assert len(header_data) == 6
         self.path, self.line, self.char, self.type, self.message, self.check = header_data  # noqa
@@ -211,6 +214,9 @@ class ClangIssue(object):
         self.char = int(self.char)
         self.body = None
         self.notes = []
+
+        # Will this issue be posted on MozReview ?
+        self.is_mozreview = self.check in enabled_checks and self.is_problem()
 
     def __str__(self):
         return '[{}] {} {}:{}'.format(self.type, self.path, self.line, self.char)
@@ -233,3 +239,22 @@ class ClangIssue(object):
                 ) for n in self.notes
             ]),
         )
+
+    def build_mozreview(self, review):
+        """
+        Build comment for this issue on MozReview
+        """
+        if not self.is_mozreview:
+            return
+
+        # Check this path is not in tools/rewriting/ThirdPartyPaths.txt
+
+        # Is this line in patch ?
+
+        # Convert line
+
+        # Build MozReview Comment
+        message = 'Issue found by static analysis bot:\n{}\n{}'.format(
+            self.message, self.body
+        )
+        review.comment(self.path, line, num_lines, message)
