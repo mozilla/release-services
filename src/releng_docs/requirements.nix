@@ -18,14 +18,12 @@ let
     inherit pkgs;
     inherit (pkgs) stdenv;
     python = pkgs.python35;
+    # patching pip so it does not try to remove files when running nix-shell
     overrides =
       self: super: {
         bootstrapped-pip = super.bootstrapped-pip.overrideDerivation (old: {
           patchPhase = old.patchPhase + ''
-            sed -i \
-              -e "s|paths_to_remove.remove(auto_confirm)|#paths_to_remove.remove(auto_confirm)|"  \
-              -e "s|self.uninstalled = paths_to_remove|#self.uninstalled = paths_to_remove|"  \
-                $out/${pkgs.python35.sitePackages}/pip/req/req_install.py
+            sed -i               -e "s|paths_to_remove.remove(auto_confirm)|#paths_to_remove.remove(auto_confirm)|"                -e "s|self.uninstalled = paths_to_remove|#self.uninstalled = paths_to_remove|"                  $out/${pkgs.python35.sitePackages}/pip/req/req_install.py
           '';
         });
       };
@@ -85,7 +83,7 @@ let
       self."pytz"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://babel.pocoo.org/";
         license = licenses.bsdOriginal;
         description = "Internationalization utilities";
       };
@@ -103,7 +101,7 @@ let
       self."MarkupSafe"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://jinja.pocoo.org/";
         license = licenses.bsdOriginal;
         description = "A small but fast and easy to use stand-alone template engine written in pure python.";
       };
@@ -118,7 +116,7 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://github.com/pallets/markupsafe";
         license = licenses.bsdOriginal;
         description = "Implements a XML/HTML/XHTML Markup safe string for Python";
       };
@@ -127,15 +125,15 @@ let
 
 
     "Pillow" = python.mkDerivation {
-      name = "Pillow-4.1.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/80/38/5cb561c68155834c596018c47caa44da88ed34b09579b921c0e493fb06c7/Pillow-4.1.0.tar.gz"; sha256 = "a0fd487fed4a35717401b7566e51a1520b34e7c0f7f2a315a6509f82bc86299f"; };
+      name = "Pillow-4.2.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/55/aa/f7f983fb72710a9daa4b3374b7c160091d3f94f5c09221f9336ade9027f3/Pillow-4.2.1.tar.gz"; sha256 = "c724f65870e545316f9e82e4c6d608ab5aa9dd82d5185e5b2e72119378740073"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."olefile"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "https://python-pillow.org";
         license = "Standard PIL License";
         description = "Python Imaging Library (Fork)";
       };
@@ -150,7 +148,7 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://pygments.org/";
         license = licenses.bsdOriginal;
         description = "Pygments is a syntax highlighting package written in Python.";
       };
@@ -159,8 +157,8 @@ let
 
 
     "Sphinx" = python.mkDerivation {
-      name = "Sphinx-1.5.5";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/64/78/9d63754981e97c8e7cf14500d262fc573145624d4c765d5047f58e3fdf4e/Sphinx-1.5.5.tar.gz"; sha256 = "4064ea6c56feeb268838cb8fbbee507d0c3d5d92fa63a7df935a916b52c9e2f5"; };
+      name = "Sphinx-1.6.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/10/91/ceb2e0d763e0c626f7afd7e3272a5bb76dd06eed1f0b908270ea31984062/Sphinx-1.6.3.tar.gz"; sha256 = "af8bdb8c714552b77d01d4536e3d6d2879d6cb9d25423d29163d5788e27046e6"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -173,9 +171,10 @@ let
       self."requests"
       self."six"
       self."snowballstemmer"
+      self."sphinxcontrib-websupport"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://sphinx-doc.org/";
         license = licenses.bsdOriginal;
         description = "Python documentation generator";
       };
@@ -193,7 +192,7 @@ let
       self."docutils"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://blockdiag.com/";
         license = licenses.asl20;
         description = "actdiag generates activity-diagram image from text";
       };
@@ -208,24 +207,9 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "https://alabaster.readthedocs.io";
         license = licenses.bsdOriginal;
         description = "A configurable sidebar-enabled Sphinx theme";
-      };
-    };
-
-
-
-    "appdirs" = python.mkDerivation {
-      name = "appdirs-1.4.3";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/48/69/d87c60746b393309ca30761f8e2b49473d43450b150cb08f3c6df5c11be5/appdirs-1.4.3.tar.gz"; sha256 = "9e5896d1372858f8dd3344faf4e5014d21849c756c8d5701f78f8a103b372d92"; };
-      doCheck = commonDoCheck;
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "";
-        license = licenses.mit;
-        description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\".";
       };
     };
 
@@ -243,9 +227,39 @@ let
       self."webcolors"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://blockdiag.com/";
         license = licenses.asl20;
         description = "blockdiag generates block-diagram image from text";
+      };
+    };
+
+
+
+    "certifi" = python.mkDerivation {
+      name = "certifi-2017.7.27.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/20/d0/3f7a84b0c5b89e94abbd073a5f00c7176089f526edb056686751d5064cbd/certifi-2017.7.27.1.tar.gz"; sha256 = "40523d2efb60523e113b44602298f0960e900388cf3bb6043f645cf57ea9e3f5"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://certifi.io/";
+        license = "MPL-2.0";
+        description = "Python package for providing Mozilla's CA Bundle.";
+      };
+    };
+
+
+
+    "chardet" = python.mkDerivation {
+      name = "chardet-3.0.4";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/fc/bb/a5768c230f9ddb03acc9ef3f0d4a3cf93462473795d18e9535498c8f929d/chardet-3.0.4.tar.gz"; sha256 = "84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/chardet/chardet";
+        license = licenses.lgpl2;
+        description = "Universal encoding detector for Python 2 and 3";
       };
     };
 
@@ -258,7 +272,7 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://docutils.sourceforge.net/";
         license = licenses.publicDomain;
         description = "Docutils -- Python Documentation Utilities";
       };
@@ -273,9 +287,24 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://code.google.com/p/funcparserlib/";
         license = licenses.mit;
         description = "Recursive descent parsing library based on functional combinators";
+      };
+    };
+
+
+
+    "idna" = python.mkDerivation {
+      name = "idna-2.5";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/d8/82/28a51052215014efc07feac7330ed758702fc0581347098a81699b5281cb/idna-2.5.tar.gz"; sha256 = "3cb5ce08046c4e3a560fc02f138d0ac63e00f8ce5901a56b32ec8b7994082aab"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/kjd/idna";
+        license = licenses.bsdOriginal;
+        description = "Internationalized Domain Names in Applications (IDNA)";
       };
     };
 
@@ -288,7 +317,7 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "https://github.com/shibukawa/imagesize_py";
         license = licenses.mit;
         description = "Getting image size from png/jpeg/jpeg2000/gif file";
       };
@@ -306,7 +335,7 @@ let
       self."tornado"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "https://github.com/lepture/python-livereload";
         license = licenses.bsdOriginal;
         description = "Python LiveReload is an awesome tool for web developers";
       };
@@ -324,7 +353,7 @@ let
       self."docutils"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://blockdiag.com/";
         license = licenses.asl20;
         description = "nwdiag generates network-diagram image from text";
       };
@@ -339,42 +368,9 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "https://www.decalage.info/python/olefileio";
         license = licenses.bsdOriginal;
         description = "Python package to parse, read and write Microsoft OLE2 files (Structured Storage or Compound Document, Microsoft Office) - Improved version of the OleFileIO module from PIL, the Python Image Library.";
-      };
-    };
-
-
-
-    "packaging" = python.mkDerivation {
-      name = "packaging-16.8";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c6/70/bb32913de251017e266c5114d0a645f262fb10ebc9bf6de894966d124e35/packaging-16.8.tar.gz"; sha256 = "5d50835fdf0a7edf0b55e311b7c887786504efea1177abd7e69329a8e5ea619e"; };
-      doCheck = commonDoCheck;
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [
-      self."pyparsing"
-      self."six"
-    ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "";
-        license = licenses.bsdOriginal;
-        description = "Core utilities for Python packages";
-      };
-    };
-
-
-
-    "pyparsing" = python.mkDerivation {
-      name = "pyparsing-2.2.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3c/ec/a94f8cf7274ea60b5413df054f82a8980523efd712ec55a59e7c3357cf7c/pyparsing-2.2.0.tar.gz"; sha256 = "0832bcf47acd283788593e7a0f542407bd9550a55a8a8435214a1960e04bcb04"; };
-      doCheck = commonDoCheck;
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "";
-        license = licenses.mit;
-        description = "Python parsing module";
       };
     };
 
@@ -387,7 +383,7 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://pythonhosted.org/pytz";
         license = licenses.mit;
         description = "World timezone definitions, modern and historical";
       };
@@ -396,13 +392,18 @@ let
 
 
     "requests" = python.mkDerivation {
-      name = "requests-2.13.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/16/09/37b69de7c924d318e51ece1c4ceb679bf93be9d05973bb30c35babd596e2/requests-2.13.0.tar.gz"; sha256 = "5722cd09762faa01276230270ff16af7acf7c5c45d623868d9ba116f15791ce8"; };
+      name = "requests-2.18.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/07/2e/81fdfdfac91cf3cb2518fb149ac67caf0e081b485eab68e9aee63396f7e8/requests-2.18.2.tar.gz"; sha256 = "5b26fcc5e72757a867e4d562333f841eddcef93548908a1bb1a9207260618da9"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
+      propagatedBuildInputs = [
+      self."certifi"
+      self."chardet"
+      self."idna"
+      self."urllib3"
+    ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://python-requests.org";
         license = licenses.asl20;
         description = "Python HTTP for Humans.";
       };
@@ -420,7 +421,7 @@ let
       self."docutils"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://blockdiag.com/";
         license = licenses.asl20;
         description = "seqdiag generates sequence-diagram image from text";
       };
@@ -435,7 +436,7 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://pypi.python.org/pypi/six/";
         license = licenses.mit;
         description = "Python 2 and 3 compatibility utilities";
       };
@@ -450,7 +451,7 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "https://github.com/shibukawa/snowball_py";
         license = licenses.bsdOriginal;
         description = "This package provides 16 stemmer algorithms (15 + Poerter English stemmer) generated from Snowball algorithms.";
       };
@@ -469,7 +470,7 @@ let
       self."blockdiag"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://github.com/blockdiag/sphinxcontrib-actdiag";
         license = licenses.bsdOriginal;
         description = "Sphinx \"actdiag\" extension";
       };
@@ -487,7 +488,7 @@ let
       self."blockdiag"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "https://github.com/blockdiag/sphinxcontrib-blockdiag";
         license = licenses.bsdOriginal;
         description = "Sphinx \"blockdiag\" extension";
       };
@@ -506,7 +507,7 @@ let
       self."nwdiag"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://github.com/blockdiag/sphinxcontrib-nwdiag";
         license = licenses.bsdOriginal;
         description = "Sphinx \"nwdiag\" extension";
       };
@@ -525,7 +526,7 @@ let
       self."seqdiag"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://github.com/blockdiag/sphinxcontrib-seqdiag";
         license = licenses.bsdOriginal;
         description = "Sphinx \"seqdiag\" extension";
       };
@@ -533,16 +534,49 @@ let
 
 
 
-    "tornado" = python.mkDerivation {
-      name = "tornado-4.4.3";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/5c/0b/2e5cef0d30811532b27ece726fb66a41f63344af8b693c90cec9474d9022/tornado-4.4.3.tar.gz"; sha256 = "f267acc96d5cf3df0fd8a7bfb5a91c2eb4ec81d5962d1a7386ceb34c655634a8"; };
+    "sphinxcontrib-websupport" = python.mkDerivation {
+      name = "sphinxcontrib-websupport-1.0.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c5/6b/f0630436b931ad4f8331a9399ca18a7d447f0fcc0c7178fb56b1aee68d01/sphinxcontrib-websupport-1.0.1.tar.gz"; sha256 = "7a85961326aa3a400cd4ad3c816d70ed6f7c740acd7ce5d78cd0a67825072eb9"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://sphinx-doc.org/";
+        license = licenses.bsdOriginal;
+        description = "Sphinx API for Web Apps";
+      };
+    };
+
+
+
+    "tornado" = python.mkDerivation {
+      name = "tornado-4.5.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/df/42/a180ee540e12e2ec1007ac82a42b09dd92e5461e09c98bf465e98646d187/tornado-4.5.1.tar.gz"; sha256 = "db0904a28253cfe53e7dedc765c71596f3c53bb8a866ae50123320ec1a7b73fd"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://www.tornadoweb.org/";
         license = "License :: OSI Approved :: Apache Software License";
         description = "Tornado is a Python web framework and asynchronous networking library, originally developed at FriendFeed.";
+      };
+    };
+
+
+
+    "urllib3" = python.mkDerivation {
+      name = "urllib3-1.22";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/ee/11/7c59620aceedcc1ef65e156cc5ce5a24ef87be4107c2b74458464e437a5d/urllib3-1.22.tar.gz"; sha256 = "cc44da8e1145637334317feebd728bd869a35285b93cbb4cca2577da7e62db4f"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."certifi"
+      self."idna"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://urllib3.readthedocs.io/";
+        license = licenses.mit;
+        description = "HTTP library with thread-safe connection pooling, file post, and more.";
       };
     };
 
@@ -555,7 +589,7 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "https://github.com/ubernostrum/webcolors";
         license = licenses.bsdOriginal;
         description = "A library for working with color names and color value formats defined by the HTML and CSS specifications for use in documents on the Web.";
       };

@@ -40,12 +40,12 @@
     sha256 = "05sqjd5n8jnq4lv5v0ipcg98b8im1isnnl4wns1zzn4w5nbrjjzi";
   };
   "rgrempel/elm-route-url" = {
-    version = "3.0.0";
-    sha256 = "0rnpkqryzgkcwrbrxnn1aliqazm7ii7dyqg4jgr5iqfkymn4lymy";
+    version = "3.0.1";
+    sha256 = "05g8ghar48mhmaspwh1wj9a6z2ppah9c9xm50mxzf0g7cljx62ja";
   };
   "elm-community/json-extra" = {
-    version = "2.2.0";
-    sha256 = "1cln69v6l64rdgnzmfs7k2yv1fgmfcvqc9xi73zzbbc8a1gk9ihf";
+    version = "2.3.0";
+    sha256 = "0iknlyf1z2snghx3d9xwzkn6sn7z365vghx0gqdw8p7vsf4qbmr0";
   };
   "elm-lang/http" = {
     version = "1.0.0";
@@ -72,8 +72,8 @@
     sha256 = "1pkvqmwljvzcbfqxsa2a4gmrh72nyk598wzhbl8ama30wyxm41fa";
   };
   "ccapndave/elm-update-extra" = {
-    version = "2.3.1";
-    sha256 = "1ns2kknl8zh8w51f5aq7pf48a5y1yhh40fq3ngx7mry708zlccks";
+    version = "3.0.0";
+    sha256 = "0q2mbjfsa707ybxw5kfqp2mv5gb8ccnkf3qin59ha867sdgpc22g";
   };
   "elm-lang/trampoline" = {
     version = "1.0.1";
