@@ -99,7 +99,6 @@ def setup_sentry(project_name, channel, SENTRY_DSN, flask_app=None):
     '''
 
     import raven
-    import raven.contrib.flask
     import raven.handlers.logbook
 
     sentry_client = raven.Client(
@@ -114,6 +113,7 @@ def setup_sentry(project_name, channel, SENTRY_DSN, flask_app=None):
     )
 
     if flask_app:
+        import raven.contrib.flask
         raven.contrib.flask.Sentry(flask_app, client=sentry_client)
 
     sentry_handler = raven.handlers.logbook.SentryHandler(
@@ -154,7 +154,7 @@ def init_logger(project_name,
 
     # Log to sentry
     if channel and SENTRY_DSN:
-        setup_sentry(project_name, channel, SENTRY_DSN)
+        setup_sentry(project_name, channel, SENTRY_DSN, flask_app)
 
     def logbook_factory(*args, **kwargs):
         # Logger given to structlog
