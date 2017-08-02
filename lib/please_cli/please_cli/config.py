@@ -77,16 +77,16 @@ PROJECTS = {
         ],
         'deploy': 'HEROKU',
         'deploy_options': {
-            #'staging': {
-            #    'heroku_app': 'releng-staging-notification-policy',
-            #    'heroku_dyno_type': 'web',
-            #    'url': 'https://policy.notification.staging.mozilla-releng.net',
-            #},
-            # 'production': {
-            #    'heroku_app': 'releng-production-notification-policy',
-            #    'heroku_dyno_type': 'web',
-            #    'url': 'https://policy.notification.mozilla-releng.net',
-            # },
+            'staging': {
+                'heroku_app': 'releng-staging-notif-policy',
+                'heroku_dyno_type': 'web',
+                'url': 'https://policy.notification.staging.mozilla-releng.net',
+            },
+            'production': {
+                'heroku_app': 'releng-production-notif-policy',
+                'heroku_dyno_type': 'web',
+                'url': 'https://policy.notification.mozilla-releng.net',
+            },
         },
     },
     'releng-notification-identity': {
@@ -103,16 +103,16 @@ PROJECTS = {
         ],
         'deploy': 'HEROKU',
         'deploy_options': {
-            #'staging': {
-            #    'heroku_app': 'releng-staging-notification-identity',
-            #    'heroku_dyno_type': 'web',
-            #    'url': 'https://identity.notification.staging.mozilla-releng.net',
-            #},
-            # 'production': {
-            #    'heroku_app': 'releng-production-notification-identity',
-            #    'heroku_dyno_type': 'web',
-            #    'url': 'https://identity.notification.mozilla-releng.net',
-            # },
+            'staging': {
+                'heroku_app': 'releng-staging-notif-identity',
+                'heroku_dyno_type': 'web',
+                'url': 'https://identity.notification.staging.mozilla-releng.net',
+            },
+            'production': {
+                'heroku_app': 'releng-production-notif-ident',
+                'heroku_dyno_type': 'web',
+                'url': 'https://identity.notification.mozilla-releng.net',
+            },
         },
     },
     'releng-archiver': {
