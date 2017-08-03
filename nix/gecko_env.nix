@@ -1,7 +1,7 @@
 { releng_pkgs }:
 
 let
-  inherit (releng_pkgs.pkgs) rustStable clang-tools xorg bash xlibs autoconf213 clang llvm;
+  inherit (releng_pkgs.pkgs) rustStable clang-tools xorg bash xlibs autoconf213 clang llvm llvmPackages;
   inherit (releng_pkgs.mozilla) gecko;
 
 in gecko.overrideDerivation (old: {
@@ -9,6 +9,7 @@ in gecko.overrideDerivation (old: {
   src = ./.;
   configurePhase = ''
     mkdir -p $out/bin
+    mkdir -p $out/conf
   '';
   buildPhase = ''
 
@@ -37,8 +38,18 @@ in gecko.overrideDerivation (old: {
     echo "export CC=${clang}/bin/clang" >> $geckoenv
     echo "export CXX=${clang}/bin/clang++" >> $geckoenv
     echo "export LD=${clang}/bin/ld" >> $geckoenv
-    echo "export LLVMCONFIG=${llvm}/bin/llvm-config" >> $geckoenv
+    echo "export LLVM_CONFIG=${llvm}/bin/llvm-config" >> $geckoenv
+    echo "export LLVMCONFIG=${llvm}/bin/llvm-config" >> $geckoenv # we need both
     echo "export AUTOCONF=${autoconf213}/bin/autoconf" >> $geckoenv
+
+    # Build custom mozconfig
+    mozconfig=$out/conf/mozconfig
+    echo > $mozconfig "
+    ac_add_options --enable-clang-plugin
+    ac_add_options --with-clang-path=${clang}/bin/clang
+    ac_add_options --with-libclang-path=${llvmPackages.clang-unwrapped}/lib
+    "
+    echo "export MOZCONFIG=$mozconfig" >> $geckoenv
 
     # Exec command line from arguments
     echo "set -x" >> $geckoenv
