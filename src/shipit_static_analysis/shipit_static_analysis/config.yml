@@ -2,19 +2,52 @@ target: obj-x86_64-pc-linux-gnu
 
 # All the clang checks used by the bot
 clang_checkers:
- - -*
- - clang-analyzer-deadcode.DeadStores
- - modernize-loop-convert
- - modernize-raw-string-literal
 # modernize-use-auto (controversial, see bug 1371052)
 # modernize-use-bool-literals (too noisy because of `while (0)` in many macros)
- - modernize-use-equals-default
- - modernize-use-equals-delete
- - modernize-use-nullptr
- - modernize-use-override
- - mozilla-*
- - performance-faster-string-find
- - performance-for-range-copy
- - readability-else-after-return
- - readability-misleading-indentation
- - readability-redundant-control-flow
+ - name: -*
+   publish: no
+ - name: clang-analyzer-deadcode.DeadStores
+   publish: no
+ - name: clang-analyzer-security.*
+   publish: no
+ - name: misc-assert-side-effect
+   publish: yes
+ - name: misc-suspicious-missing-comma
+   publish: yes
+ - name: misc-suspicious-semicolon
+   publish: yes
+ - name: modernize-loop-convert
+   publish: yes
+ - name: modernize-raw-string-literal
+   publish: yes
+ - name: modernize-redundant-void-arg
+   publish: no
+ - name: modernize-shrink-to-fit
+   publish: yes
+ - name: modernize-use-equals-default
+   publish: yes
+ - name: modernize-use-equals-delete
+   publish: yes
+ - name: modernize-use-nullptr
+   publish: yes
+ - name: modernize-use-override
+   publish: no
+ - name: mozilla-*
+   publish: yes
+ - name: performance-*
+   publish: yes
+ - name: readability-container-size-empty
+   publish: yes
+ - name: readability-else-after-return
+   publish: yes
+ - name: readability-misleading-indentation
+   publish: yes
+ - name: readability-redundant-control-flow
+   publish: yes
+ - name: readability-redundant-smartptr-get
+   publish: no
+ - name: readability-uniqueptr-delete-release
+   publish: yes
+
+# Third party files from mozilla-central
+third_party: tools/rewriting/ThirdPartyPaths.txt

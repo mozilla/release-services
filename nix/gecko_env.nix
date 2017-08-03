@@ -1,7 +1,7 @@
 { releng_pkgs }:
 
 let
-  inherit (releng_pkgs.pkgs) rustStable clang-tools gcc xorg bash xlibs autoconf213;
+  inherit (releng_pkgs.pkgs) rustStable clang-tools xorg bash xlibs autoconf213 clang llvm llvmPackages;
   inherit (releng_pkgs.mozilla) gecko;
 
 in gecko.overrideDerivation (old: {
@@ -9,6 +9,7 @@ in gecko.overrideDerivation (old: {
   src = ./.;
   configurePhase = ''
     mkdir -p $out/bin
+    mkdir -p $out/conf
   '';
   buildPhase = ''
 
@@ -20,6 +21,7 @@ in gecko.overrideDerivation (old: {
     env | grep -E '^(PATH|PKG_CONFIG_PATH|CMAKE_INCLUDE_PATH)='| sed 's/^/export /' >> $geckoenv
     echo "export CPLUS_INCLUDE_PATH=$CMAKE_INCLUDE_PATH:\$EXTRAS_INCLUDE_PATH" >> $geckoenv
     echo "export C_INCLUDE_PATH=$CMAKE_INCLUDE_PATH:\$EXTRAS_INCLUDE_PATH" >> $geckoenv
+    echo "export INCLUDE_PATH=$CMAKE_INCLUDE_PATH:\$EXTRAS_INCLUDE_PATH" >> $geckoenv
 
     # Add self in PATH, needed to exec
     echo "export PATH=$out/bin:\$PATH" >> $geckoenv
@@ -27,15 +29,27 @@ in gecko.overrideDerivation (old: {
     # Use python2.7 environment
     echo "export PYTHONPATH=$PYTHONPATH" >> $geckoenv
 
-    # Transform LDFLAGS in list of paths for LIBRARY_PATH
-    ldflags=$(env | grep -e '^NIX_LDFLAGS=' | cut -c13-)
-    echo "export LIBRARY_PATH=$(echo $ldflags | sed -E 's,-rpath ([/\.a-zA-Z0-9\-]+) ,,g' | sed -E 's, -L(\s*),:,g')" >> $geckoenv
-    echo  "export LD_LIBRARY_PATH=\$LIBRARY_PATH" >> $geckoenv
+    # Build LDFLAGS and LIBRARY_PATH
+    echo "export LDFLAGS=\"$NIX_LDFLAGS\"" >> $geckoenv
+    echo "export LIBRARY_PATH=\"$CMAKE_LIBRARY_PATH\"" >> $geckoenv
+    echo "export LD_LIBRARY_PATH=\"$CMAKE_LIBRARY_PATH\"" >> $geckoenv
 
-    # Setup CC & Autoconf
-    echo "export CC=${gcc}/bin/gcc" >> $geckoenv
-    echo "export CXX=${gcc}/bin/g++" >> $geckoenv
+    # Setup Clang & Autoconf
+    echo "export CC=${clang}/bin/clang" >> $geckoenv
+    echo "export CXX=${clang}/bin/clang++" >> $geckoenv
+    echo "export LD=${clang}/bin/ld" >> $geckoenv
+    echo "export LLVM_CONFIG=${llvm}/bin/llvm-config" >> $geckoenv
+    echo "export LLVMCONFIG=${llvm}/bin/llvm-config" >> $geckoenv # we need both
     echo "export AUTOCONF=${autoconf213}/bin/autoconf" >> $geckoenv
+
+    # Build custom mozconfig
+    mozconfig=$out/conf/mozconfig
+    echo > $mozconfig "
+    ac_add_options --enable-clang-plugin
+    ac_add_options --with-clang-path=${clang}/bin/clang
+    ac_add_options --with-libclang-path=${llvmPackages.clang-unwrapped}/lib
+    "
+    echo "export MOZCONFIG=$mozconfig" >> $geckoenv
 
     # Exec command line from arguments
     echo "set -x" >> $geckoenv
@@ -48,6 +62,8 @@ in gecko.overrideDerivation (old: {
   '';
   propagatedBuildInputs = old.propagatedBuildInputs
     ++ [
+      # Use clang as compiler
+      clang
 
       # Update rust to 1.17
       rustStable.rustc
