@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import errno
 import os
-from datetime import datetime
 import zipfile
 import requests
 import hglib
@@ -154,7 +153,6 @@ class CodeCov(object):
           '--ignore-dir', 'gcc',
           '--ignore-not-existing',
           '--service-name', 'TaskCluster',
-          '--service-number', datetime.today().strftime('%Y%m%d'),
           '--commit-sha', commit_sha,
           '--token', coveralls_token,
         ]
