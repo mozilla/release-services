@@ -7,6 +7,7 @@ import asyncio
 logger = get_logger(__name__)
 
 GROUP_MD = '''
+
 ## {}
 
 {:.2f}% of all tasks ({}/{})
@@ -91,7 +92,7 @@ class Monitoring(object):
 
         task_status = status['status']['state']
 
-        if task_status in ('failed', 'complete'):
+        if task_status in ('failed', 'completed', 'exception'):
             # Add to report
             stat_name = '{}.{}.{}'.format(group_id, hook_id, task_status)
             if stat_name not in self.stats:
@@ -114,7 +115,7 @@ class Monitoring(object):
 
         # Build markdown
         total = sum([len(s) for s in self.stats.values()])
-        content = '# Pulse listener tasks for the last hour'
+        content = '# Pulse listener tasks for the last hour\n'
         for group_name, tasks in self.stats.items():
             nb_tasks = len(tasks)
             content += GROUP_MD.format(
