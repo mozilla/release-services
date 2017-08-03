@@ -17,7 +17,7 @@ from shipit_static_analysis.config import settings
 
 logger = get_logger(__name__)
 
-REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): ([\w\s\.\'\"^_,-<=>\(\)]+)(?: \[([\.\w-]+)\])?\n', re.MULTILINE)
+REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): ([^\[\]\n]+)(?: \[([\.\w-]+)\])?$', re.MULTILINE)
 
 ISSUE_MARKDOWN = '''
 ## {type}
