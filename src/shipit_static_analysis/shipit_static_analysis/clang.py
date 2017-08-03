@@ -25,8 +25,8 @@ ISSUE_MARKDOWN = '''
 **Location**: {location}
 **Clang check**: {check}
 **Publishable check**: {publishable_check}
-**Publishable on MozReview**: {publishable}
 **Third Party**: {third_party}
+**Publishable on MozReview**: {publishable}
 ```
 {body}
 ```

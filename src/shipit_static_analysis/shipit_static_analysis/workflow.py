@@ -162,10 +162,10 @@ class Workflow(object):
         '''
         Send an email to administrators
         '''
-        content = '{nb_publishable} Publishable issues on Mozreview\nUrl : {url}\n'.format({  # noqa
-            'url': 'https://reviewboard.mozilla.org/r/{}/'.format(review_request_id), # noqa
-            'nb_publishable': sum([i.is_publishable() for i in issues]),
-        })
+        content = '{nb_publishable} Publishable issues on Mozreview\n\nUrl : {url}\n\n'.format(  # noqa
+            url='https://reviewboard.mozilla.org/r/{}/'.format(review_request_id), # noqa
+            nb_publishable=sum([i.is_publishable() for i in issues]),
+        )
         content += '\n'.join([i.as_markdown() for i in issues])
         for email in self.emails:
             self.notify.email({
