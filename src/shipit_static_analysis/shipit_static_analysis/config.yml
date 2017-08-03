@@ -35,19 +35,21 @@ clang_checkers:
  - name: clang-analyzer-security.*
    publish: no
  - name: misc-assert-side-effect
-   publish: no
+   publish: yes
  - name: misc-suspicious-missing-comma
-   publish: no
+   publish: yes
  - name: misc-suspicious-semicolon
-   publish: no
+   publish: yes
  - name: modernize-redundant-void-arg
    publish: no
  - name: modernize-shrink-to-fit
+   publish: yes
+ - name: readability-container-size-empty
    publish: no
  - name: readability-redundant-smartptr-get
    publish: no
  - name: readability-uniqueptr-delete-release
-   publish: no
+   publish: yes
 
 # Third party files from mozilla-central
 third_party: tools/rewriting/ThirdPartyPaths.txt
