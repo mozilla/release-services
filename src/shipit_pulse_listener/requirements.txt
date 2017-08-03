@@ -1,1 +1,4 @@
 -e ./../../lib/cli_common[pulse,taskcluster,sentry] #egg=mozilla-cli-common
+
+python-dateutil
+pytz
