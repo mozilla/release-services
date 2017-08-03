@@ -256,6 +256,11 @@ paths:
       description: |
         Get the status of all trees in a format compatible with the old
         treestatus.
+      parameters:
+        - name: format
+          in: query
+          description: Format type (dummy to keep backwards compatibility)
+          type: string
       responses:
         200:
           description: Status
@@ -275,6 +280,10 @@ paths:
           in: path
           description: Tree name
           required: true
+          type: string
+        - name: format
+          in: query
+          description: Format type (dummy to keep backwards compatibility)
           type: string
       responses:
         200:
