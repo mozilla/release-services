@@ -22,20 +22,14 @@ class Hook(object):
         self.pulse_queue = pulse_queue
         self.pulse_route = pulse_route
         self.queue = None  # TC queue
+        self.hooks = None  # TC hooks
 
     def connect_taskcluster(self, client_id=None, access_token=None):
         '''
-        Load the hook's task definition through Taskcluster
-        Save queue service for later use
+        Save hooks and queue services for later use
         '''
-        logger.info('Loading task definition', hook=self.hook_id, group=self.group_id)  # noqa
-        try:
-            service = get_service('hooks', client_id, access_token)
-            hook_payload = service.hook(self.group_id, self.hook_id)
-            self.hook_definition = hook_payload
-        except Exception as e:
-            logger.warn('Failed to fetch task definition', hook=self.hook_id, group=self.group_id, err=e)  # noqa
-            return False
+        # Get taskcluster hooks
+        self.hooks = get_service('hooks', client_id, access_token)
 
         # Get taskcluster queue
         self.queue = get_service('queue', client_id, access_token)
@@ -104,10 +98,18 @@ class Hook(object):
         '''
         Create a new task on Taskcluster
         '''
+        assert self.hooks is not None
         assert self.queue is not None
 
+        logger.info('Loading task definition', hook=self.hook_id, group=self.group_id)
+        try:
+            hook_definition = self.hooks.hook(self.group_id, self.hook_id)
+        except Exception as e:
+            logger.warn('Failed to fetch task definition', hook=self.hook_id, group=self.group_id, err=e)
+            return False
+
         # Update the env in task
-        task_definition = copy.deepcopy(self.hook_definition['task'])
+        task_definition = copy.deepcopy(hook_definition['task'])
         task_definition['payload']['env'].update(extra_env)
 
         # Build task id
@@ -116,7 +118,7 @@ class Hook(object):
         # Set dates
         now = datetime.utcnow()
         task_definition['created'] = now
-        task_definition['deadline'] = now + self.parse_deadline(self.hook_definition['deadline'])
+        task_definition['deadline'] = now + self.parse_deadline(hook_definition['deadline'])
         logger.info('Creating a new task', id=task_id, name=task_definition['metadata']['name'])  # noqa
 
         # Create a new task
