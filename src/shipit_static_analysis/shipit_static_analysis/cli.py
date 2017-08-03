@@ -43,6 +43,9 @@ def main(commits,
                               'MOZREVIEW_USER',
                               'MOZREVIEW_API_KEY',
                           ),
+                          existing={
+                              'MOZREVIEW_ENABLED': False,
+                          },
                           taskcluster_client_id=taskcluster_client_id,
                           taskcluster_access_token=taskcluster_access_token,
                           )
@@ -63,6 +66,7 @@ def main(commits,
     w = Workflow(cache_root,
                  secrets['STATIC_ANALYSIS_NOTIFICATIONS'],
                  mozreview,
+                 secrets['MOZREVIEW_ENABLED'],
                  taskcluster_client_id,
                  taskcluster_access_token,
                  )

@@ -24,7 +24,8 @@ ISSUE_MARKDOWN = '''
 **Message**: {message}
 **Location**: {location}
 **Clang check**: {check}
-**Publishable check**: {publishable}
+**Publishable check**: {publishable_check}
+**Publishable on MozReview**: {publishable}
 **Third Party**: {third_party}
 ```
 {body}
@@ -223,6 +224,15 @@ class ClangIssue(object):
     def is_problem(self):
         return self.type in ('warning', 'error')
 
+    def is_publishable(self):
+        '''
+        Is this issue publishable on Mozreview ?
+        * not a third party code
+        * check is marked as publishable
+        '''
+        return self.has_publishable_check() \
+            and not self.is_third_party()
+
     def is_third_party(self):
         '''
         Is this issue in a third party path ?
@@ -255,7 +265,8 @@ class ClangIssue(object):
             body=self.body,
             check=self.check,
             third_party=self.is_third_party() and 'yes' or 'no',
-            publishable=self.has_publishable_check() and 'yes' or 'no',
+            publishable_check=self.has_publishable_check() and 'yes' or 'no',
+            publishable=self.is_publishable() and 'yes' or 'no',
             notes='\n'.join([
                 ISSUE_NOTE_MARKDOWN.format(
                     message=n.message,
