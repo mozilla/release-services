@@ -21,7 +21,7 @@ clang_checkers:
  - name: modernize-use-override
    publish: no
  - name: mozilla-*
-   publish: no
+   publish: yes
  - name: performance-faster-string-find
    publish: no
  - name: performance-for-range-copy
@@ -32,6 +32,22 @@ clang_checkers:
    publish: yes
  - name: readability-redundant-control-flow
    publish: yes
+ - name: clang-analyzer-security.*
+   publish: no
+ - name: misc-assert-side-effect
+   publish: no
+ - name: misc-suspicious-missing-comma
+   publish: no
+ - name: misc-suspicious-semicolon
+   publish: no
+ - name: modernize-redundant-void-arg
+   publish: no
+ - name: modernize-shrink-to-fit
+   publish: no
+ - name: readability-redundant-smartptr-get
+   publish: no
+ - name: readability-uniqueptr-delete-release
+   publish: no
 
 # Third party files from mozilla-central
 third_party: tools/rewriting/ThirdPartyPaths.txt
