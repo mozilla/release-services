@@ -8,9 +8,21 @@ clang_checkers:
    publish: no
  - name: clang-analyzer-deadcode.DeadStores
    publish: no
+ - name: clang-analyzer-security.*
+   publish: no
+ - name: misc-assert-side-effect
+   publish: yes
+ - name: misc-suspicious-missing-comma
+   publish: yes
+ - name: misc-suspicious-semicolon
+   publish: yes
  - name: modernize-loop-convert
    publish: yes
  - name: modernize-raw-string-literal
+   publish: yes
+ - name: modernize-redundant-void-arg
+   publish: no
+ - name: modernize-shrink-to-fit
    publish: yes
  - name: modernize-use-equals-default
    publish: yes
@@ -22,9 +34,9 @@ clang_checkers:
    publish: no
  - name: mozilla-*
    publish: yes
- - name: performance-faster-string-find
-   publish: no
- - name: performance-for-range-copy
+ - name: performance-*
+   publish: yes
+ - name: readability-container-size-empty
    publish: yes
  - name: readability-else-after-return
    publish: yes
@@ -32,20 +44,6 @@ clang_checkers:
    publish: yes
  - name: readability-redundant-control-flow
    publish: yes
- - name: clang-analyzer-security.*
-   publish: no
- - name: misc-assert-side-effect
-   publish: yes
- - name: misc-suspicious-missing-comma
-   publish: yes
- - name: misc-suspicious-semicolon
-   publish: yes
- - name: modernize-redundant-void-arg
-   publish: no
- - name: modernize-shrink-to-fit
-   publish: yes
- - name: readability-container-size-empty
-   publish: no
  - name: readability-redundant-smartptr-get
    publish: no
  - name: readability-uniqueptr-delete-release
