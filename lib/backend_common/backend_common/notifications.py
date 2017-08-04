@@ -30,8 +30,8 @@ URGENCY_LEVELS = [
 
 def get_current_app_credentials() -> dict:
     return {
-        'id': current_app.config.get('TASKCLUSTER_CLIENT_ID'),
-        'key': current_app.config.get('TASKCLUSTER_ACCESS_TOKEN'),
+        'id': current_app.config['TASKCLUSTER_CLIENT_ID'],
+        'key': current_app.config['TASKCLUSTER_ACCESS_TOKEN'],
         'algorithm': 'sha256',
     }
 
@@ -48,7 +48,7 @@ def verify_policy_structure(policy: dict) -> None:
         raise KeyError('Policy frequency missing required key')
 
 
-def create_new_nagbot_message(message: str, short_message: str, deadline: datetime, policies: List[dict], uid: str=None) -> str:
+def schedule_nagbot_message(message: str, short_message: str, deadline: datetime, policies: List[dict], uid: str=None) -> str:
     '''
     Instantiates a new message to be sent repeatedly by NagBot
 
@@ -66,7 +66,7 @@ def create_new_nagbot_message(message: str, short_message: str, deadline: dateti
     if uid is None:
         uid = generate_random_uid()
 
-    request_url = current_app.config.get('RELENG_NOTIFICATION_POLICY_ENDPOINT') + '/message/' + uid
+    request_url = current_app.config['RELENG_NOTIFICATION_POLICY_URL'] + '/message/' + uid
 
     message_body = json.dumps({
         'deadline': deadline.isoformat(),
