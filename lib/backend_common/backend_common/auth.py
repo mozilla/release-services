@@ -233,7 +233,7 @@ class Auth(object):
 
 is_dev_session = bool(os.getenv('DEVELOPMENT', False))
 auth = Auth(
-    anonymous_user=DevelopmentUser if is_dev_session else AnonymousUser,
+    anonymous_user=AnonymousUser,
 )
 
 
@@ -321,6 +321,9 @@ def is_relengapi_token(token_str):
 
 @auth.login_manager.request_loader
 def parse_header(request):
+    if is_dev_session:
+        return DevelopmentUser()
+
     auth_header = request.headers.get('Authorization')
     if not auth_header:
         return

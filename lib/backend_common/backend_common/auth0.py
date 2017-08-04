@@ -20,10 +20,14 @@ import flask_oidc
 import functools
 import json
 import requests
+import os
 
 
 logger = cli_common.log.get_logger(__name__)
 auth0 = flask_oidc.OpenIDConnect()
+
+
+IS_DEVELOPMENT_INSTANCE = bool(os.getenv('DEVELOPMENT', False))
 
 
 def mozilla_accept_token(render_errors=True):
@@ -49,6 +53,12 @@ def mozilla_accept_token(render_errors=True):
     def wrapper(view_func):
         @functools.wraps(view_func)
         def decorated(*args, **kwargs):
+            if IS_DEVELOPMENT_INSTANCE:
+                # TODO: set flask.g with mocked userinfo and access_token
+                # flask.g.userinfo = json.loads(str(fake_userinfo, 'utf-8'))
+                # flask.g.access_token = fake_token
+                return view_func(*args, **kwargs)
+
             token = None
             if flask.request.headers.get('Authorization', '').startswith('Bearer'):
                 token = flask.request.headers['Authorization'].split(maxsplit=1)[
