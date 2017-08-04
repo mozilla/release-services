@@ -93,9 +93,12 @@ class Workflow(object):
             modified_files += [f.decode('utf-8') for _, f in status]
         logger.info('Modified files', files=modified_files)
 
+        env = os.environ.copy()
+        env['MOZCONFIG'] = env['CLANG_MOZCONFIG']
+
         # mach configure with mozconfig
         logger.info('Mach configure...')
-        run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
+        run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir, env=env)
 
         # Build CompileDB backend
         logger.info('Mach build backend...')
@@ -104,8 +107,8 @@ class Workflow(object):
 
         # Build exports
         logger.info('Mach build exports...')
-        run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
-        run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
+        run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir, env=env)
+        run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir, env=env)
 
         # Run static analysis through run-clang-tidy.py
         logger.info('Run clang-tidy...')
