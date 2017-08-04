@@ -278,10 +278,15 @@ update msg model =
                         )
 
                     Nothing ->
-                        ({ model | notifications = {
-                            oldModel | status_html =
-                                Just (error App.Notifications.Types.ClearStatusMessage "You must log in to continue.")
-                        }}, Cmd.none)
+                        ( { model
+                            | notifications =
+                                { oldModel
+                                    | status_html =
+                                        Just (error App.Notifications.Types.ClearStatusMessage "You must log in to continue.")
+                                }
+                          }
+                        , Cmd.none
+                        )
 
 
 
