@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from shipit_code_coverage import utils
+import time
 
 
 def do_raise():
@@ -55,3 +56,13 @@ def test_threadpoolexecutorresult():
         assert False
     except:
         assert True
+
+    try:
+        now = time.time()
+        with utils.ThreadPoolExecutorResult() as executor:
+            executor.submit(lambda: time.sleep(10))
+            executor.submit(do_raise)
+        assert False
+    except:
+        assert True
+        assert time.time() - now < 5
