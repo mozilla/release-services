@@ -11,6 +11,7 @@ import App.TreeStatus.Api
 import App.TreeStatus.Types
 import App.TryChooser
 import App.UserScopes
+import App.Utils exposing (error)
 import Hawk
 import Html exposing (..)
 import Navigation
@@ -260,16 +261,32 @@ update msg model =
                         _ ->
                             App.Notifications.Types.BaseRoute
 
+                oldModel =
+                    model.notifications
+
                 ( newModel, newCmd, hawkCmd ) =
                     App.Notifications.update new_route msg_ model.notifications
             in
-                ( { model | notifications = newModel }
-                , hawkCmd
-                    |> Maybe.map (\req -> [ hawkSend model.user "Notifications" req ])
-                    |> Maybe.withDefault []
-                    |> List.append [ Cmd.map App.NotificationMsg newCmd ]
-                    |> Cmd.batch
-                )
+                case model.user of
+                    Just user ->
+                        ( { model | notifications = newModel }
+                        , hawkCmd
+                            |> Maybe.map (\req -> [ hawkSend model.user "Notifications" req ])
+                            |> Maybe.withDefault []
+                            |> List.append [ Cmd.map App.NotificationMsg newCmd ]
+                            |> Cmd.batch
+                        )
+
+                    Nothing ->
+                        ( { model
+                            | notifications =
+                                { oldModel
+                                    | status_html =
+                                        Just (error App.Notifications.Types.ClearStatusMessage "You must log in to continue.")
+                                }
+                          }
+                        , Cmd.none
+                        )
 
 
 
