@@ -2,8 +2,9 @@
 from enum import Enum
 import fnmatch
 import re
-from concurrent.futures import ThreadPoolExecutor
 import requests
+
+from backend_common.cache import cache
 
 
 class CoverageService(Enum):
@@ -67,6 +68,7 @@ def get_coverage_builds():
     return (latest_commit, previous_commit)
 
 
+@cache.memoize()
 def get_coverage(commit_sha, prev_commit_sha, directory):
     if COVERAGE_SERVICE == CoverageService.COVERALLS:
         r = requests.get('https://coveralls.io/builds/' + commit_sha + '.json?paths=' + directory + '/*')
@@ -143,9 +145,12 @@ def generate(path):
             for bug in directory_bugs
         ]
 
-    with ThreadPoolExecutor() as executor:
-        for directory in directories:
-            executor.submit(data_for_directory, directory)
+    for directory in directories:
+        # Ignore hidden directories, as they don't contain any code.
+        if directory.startswith('.'):
+            continue
+
+        data_for_directory(directory)
 
     r = requests.get('https://bugzilla.mozilla.org/rest/bug', params={
       'include_fields': ['id', 'summary'],

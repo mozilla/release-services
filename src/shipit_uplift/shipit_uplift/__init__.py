@@ -22,6 +22,7 @@ def create_app(config=None):
             'api',
             'auth',
             'db',
+            'cache',
         ],
     )
     # TODO: add predefined api.yml

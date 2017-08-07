@@ -209,6 +209,7 @@ let
       self."Jinja2"
       self."SQLAlchemy"
       self."pytest"
+      self."redis"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://logbook.pocoo.org/";
@@ -314,8 +315,8 @@ let
 
 
     "aiohttp" = python.mkDerivation {
-      name = "aiohttp-2.2.3";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/9b/3a/b560a411b97203fb20b5eee084c1e292862b3092029d9d9faaa8714797fa/aiohttp-2.2.3.tar.gz"; sha256 = "997d89e884c6b90a7a891b676f65ca30ca331ceab0b2db6810210b4a984c87f8"; };
+      name = "aiohttp-2.2.5";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/1e/d4/c1206b016b42a0b223aadb559318966b64ec27e5406bed79c36356e62082/aiohttp-2.2.5.tar.gz"; sha256 = "af5bfdd164256118a0a306b3f7046e63207d1f8cba73a67dcc0bd858dcfcd3bc"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -723,6 +724,7 @@ let
       self."PyYAML"
       self."SQLAlchemy"
       self."amqp"
+      self."redis"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://kombu.readthedocs.io";
@@ -1044,9 +1046,24 @@ let
 
 
 
+    "redis" = python.mkDerivation {
+      name = "redis-2.10.5";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/68/44/5efe9e98ad83ef5b742ce62a15bea609ed5a0d1caf35b79257ddb324031a/redis-2.10.5.tar.gz"; sha256 = "5dfbae6acfc54edf0a7a415b99e0b21c0a3c27a7f787b292eea727b1facc5533"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://github.com/andymccurdy/redis-py";
+        license = licenses.mit;
+        description = "Python client for Redis key-value store";
+      };
+    };
+
+
+
     "requests" = python.mkDerivation {
-      name = "requests-2.18.2";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/07/2e/81fdfdfac91cf3cb2518fb149ac67caf0e081b485eab68e9aee63396f7e8/requests-2.18.2.tar.gz"; sha256 = "5b26fcc5e72757a867e4d562333f841eddcef93548908a1bb1a9207260618da9"; };
+      name = "requests-2.18.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c3/38/d95ddb6cc8558930600be088e174a2152261a1e0708a18bf91b5b8c90b22/requests-2.18.3.tar.gz"; sha256 = "fb68a7baef4965c12d9cd67c0f5a46e6e28be3d8c7b6910c758fbcc99880b518"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
