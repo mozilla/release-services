@@ -3,13 +3,13 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 
-def wait_until(operation, timeout=30):
+def wait_until(operation, timeout=30, interval=60):
     elapsed = 0
     while elapsed < timeout:
         ret = operation()
         if ret:
             return ret
-        time.sleep(60)
+        time.sleep(interval)
         elapsed += 1
 
     return None
