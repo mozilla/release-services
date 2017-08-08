@@ -106,6 +106,7 @@ let
     dockerEnv =
       [ "CPLUS_INCLUDE_PATH=${includes}"
         "C_INCLUDE_PATH=${includes}"
+        "MOZCONFIG=${releng_pkgs.gecko-env}/conf/mozconfig"
       ];
     dockerCmd = [];
 
