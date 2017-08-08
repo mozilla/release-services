@@ -95,7 +95,6 @@ class Workflow(object):
             modified_files += [f.decode('utf-8') for _, f in status]
         logger.info('Modified files', files=modified_files)
 
-
         # mach configure with mozconfig
         logger.info('Mach configure...')
         run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
