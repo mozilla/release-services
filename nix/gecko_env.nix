@@ -49,7 +49,7 @@ in gecko.overrideDerivation (old: {
     ac_add_options --with-clang-path=${clang}/bin/clang
     ac_add_options --with-libclang-path=${llvmPackages.clang-unwrapped}/lib
     "
-    echo "export MOZCONFIG=$mozconfig" >> $geckoenv
+    echo "export CLANG_MOZCONFIG=$mozconfig" >> $geckoenv
 
     # Exec command line from arguments
     echo "set -x" >> $geckoenv
