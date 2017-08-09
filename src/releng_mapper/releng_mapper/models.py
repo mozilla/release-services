@@ -14,10 +14,10 @@ logger = log.get_logger(__name__)
 
 
 class Project(db.Model):
-    """
+    '''
     Object-relational mapping between python class Project
     and database table "projects"
-    """
+    '''
     __tablename__ = PROJECT_PATH_NAME + '_projects'
 
     id = Column(Integer, primary_key=True)
@@ -25,10 +25,10 @@ class Project(db.Model):
 
 
 class Hash(db.Model):
-    """
+    '''
     Object-relational mapping between python class Hash
     and database table "hashes"
-    """
+    '''
     __tablename__ = PROJECT_PATH_NAME + '_hashes'
 
     hg_changeset = Column(String(40), nullable=False)

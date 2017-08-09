@@ -46,20 +46,20 @@ def post_hg_git_mapping(project: str, git_commit: str, hg_changeset: str) -> dic
     try:
         session.commit()
         q = Hash.query.join(Project).filter(_project_filter(project))
-        q = q.filter(text("git_commit == :commit")).params(commit=git_commit)
+        q = q.filter(text('git_commit == :commit')).params(commit=git_commit)
         return q.one().as_json()
 
     except IntegrityError:
-        raise Conflict("Provided mapping {} {} for project {} already exists and "
-                       "cannot be reinserted".format(git_commit, hg_changeset, project))
+        raise Conflict('Provided mapping {} {} for project {} already exists and '
+                       'cannot be reinserted'.format(git_commit, hg_changeset, project))
 
     except NoResultFound:
-        raise InternalServerError("Provided mapping {} {} for project {} could not be inserted "
-                                  "into the database".format(git_commit, hg_changeset, project))
+        raise InternalServerError('Provided mapping {} {} for project {} could not be inserted '
+                                  'into the database'.format(git_commit, hg_changeset, project))
 
     except MultipleResultsFound:
-        raise InternalServerError("Provided mapping {git_commit} {hg_changeset} for project {project} has been inserted"
-                                  " into the database multiple times".format(git_commit=git_commit,
+        raise InternalServerError('Provided mapping {git_commit} {hg_changeset} for project {project} has been inserted'
+                                  ' into the database multiple times'.format(git_commit=git_commit,
                                                                              hg_changeset=hg_changeset,
                                                                              project=project))
 
@@ -116,37 +116,37 @@ def get_full_mapfile(projects: str) -> str:
 def get_revision(projects: str, vcs_type: str, commit: str) -> str:
     _check_well_formed_sha(vcs_type, commit, exact_length=None)  # can raise http 400
     q = Hash.query.join(Project).filter(_project_filter(projects))
-    if vcs_type == "git":
-        q = q.filter(text("git_commit like :cspatttern")).params(cspatttern=commit + "%")
+    if vcs_type == 'git':
+        q = q.filter(text('git_commit like :cspatttern')).params(cspatttern=commit + '%')
 
-    elif vcs_type == "hg":
-        q = q.filter(text("hg_changeset like :cspatttern")).params(cspatttern=commit + "%")
+    elif vcs_type == 'hg':
+        q = q.filter(text('hg_changeset like :cspatttern')).params(cspatttern=commit + '%')
 
     try:
         row = q.one()
-        return "%s %s" % (row.git_commit, row.hg_changeset)
+        return '%s %s' % (row.git_commit, row.hg_changeset)
 
     except NoResultFound:
-        if vcs_type == "git":
-            raise NotFound("No hg changeset found for git commit id %s in project(s) %s" % (commit, projects))
+        if vcs_type == 'git':
+            raise NotFound('No hg changeset found for git commit id {} in project(s) {}'.format(commit, projects))
 
-        elif vcs_type == "hg":
-            raise NotFound("No git commit found for hg changeset %s in project(s) %s" % (commit, projects))
+        elif vcs_type == 'hg':
+            raise NotFound('No git commit found for hg changeset {} in project(s) {}'.format(commit, projects))
 
     except MultipleResultsFound:
-        raise InternalServerError("Internal error - multiple results returned for %s commit %s in project %s - "
-                                  "this should not be possible in database" % (vcs_type, commit, projects))
+        raise InternalServerError('Internal error - multiple results returned for {} commit {} in project {} - '
+                                  'this should not be possible in database'.format(vcs_type, commit, projects))
 
 
 def _project_filter(projects_arg):
-    """Helper method that returns the SQLAlchemy filter expression for the
+    '''Helper method that returns the SQLAlchemy filter expression for the
     project name(s) specified. This can be a comma-separated list, which is
     the way we combine queries across multiple projects.
     Args:
         projects_arg: Comma-separated list of project names
     Returns:
         A SQLAlchemy filter expression
-    """
+    '''
     if ',' in projects_arg:
         return Project.name.in_(projects_arg.split(','))
     else:
@@ -154,14 +154,14 @@ def _project_filter(projects_arg):
 
 
 def _stream_mapfile(query) -> Tuple[str, int, dict]:
-    """Helper method to build a map file from a SQLAlchemy query.
+    '''Helper method to build a map file from a SQLAlchemy query.
     Args:
         query: SQLAlchemy query
     Returns:
         * Text output: 40 characters git commit SHA, a space,
           40 characters hg changeset SHA, a newline (streamed); or
         * HTTP 404: if the query returns no results
-    """
+    '''
     # this helps keep memory use down a little, but the DBAPI still loads
     # the entire result set into memory..
     # http://docs.sqlalchemy.org/en/latest/orm/query.html#sqlalchemy.orm.query.Query.yield_per
@@ -172,14 +172,14 @@ def _stream_mapfile(query) -> Tuple[str, int, dict]:
 
     def contents():
         for r in query:
-            yield '%s %s' % (r.git_commit, r.hg_changeset) + "\n"
+            yield '{} {}'.format(r.git_commit, r.hg_changeset) + '\n'
 
     if contents:
         return Response(contents(), mimetype='text/plain')
 
 
 def _check_well_formed_sha(vcs: str, sha: str, exact_length: int=40) -> None:
-    """Helper method to check for a well-formed SHA.
+    '''Helper method to check for a well-formed SHA.
     Args:
         vcs: Name of the vcs system ('hg' or 'git')
         sha: String to check against the well-formed SHA regex
@@ -189,22 +189,22 @@ def _check_well_formed_sha(vcs: str, sha: str, exact_length: int=40) -> None:
         None
     Exceptions:
         HTTP 400: Malformed SHA or unknown vcs
-    """
-    if vcs not in ("git", "hg"):
-        raise BadRequest("Unknown vcs type {}".format(vcs))
+    '''
+    if vcs not in ('git', 'hg'):
+        raise BadRequest('Unknown vcs type {}'.format(vcs))
 
     rev_regex = re.compile('''^[a-f0-9]{1,40}$''')
     if sha is None:
-        raise BadRequest("{} SHA is <None>".format(vcs))
+        raise BadRequest('{} SHA is <None>'.format(vcs))
 
-    elif sha == "":
-        raise BadRequest("{} SHA is an empty string".format(vcs))
+    elif sha == '':
+        raise BadRequest('{} SHA is an empty string'.format(vcs))
 
     elif not rev_regex.match(sha):
-        raise BadRequest("{} SHA contains bad characters: '{}'".format(vcs, str(sha)))
+        raise BadRequest('{} SHA contains bad characters: "{}"'.format(vcs, str(sha)))
 
     if exact_length is not None and len(sha) != exact_length:
-        raise BadRequest("{vcs} SHA should be {correct} characters long, but is {actual} characters long: '{sha}'".format(
+        raise BadRequest('{vcs} SHA should be {correct} characters long, but is {actual} characters long: "{sha}"'.format(
             vcs=vcs,
             correct=exact_length,
             actual=len(sha),
@@ -213,7 +213,7 @@ def _check_well_formed_sha(vcs: str, sha: str, exact_length: int=40) -> None:
 
 
 def _get_project(session, project: str) -> Project:
-    """Helper method to return Project class for a project with the given name.
+    '''Helper method to return Project class for a project with the given name.
     Args:
         session: SQLAlchemy ORM Session object
         project: Name of the project (e.g. 'build-tools')
@@ -222,19 +222,19 @@ def _get_project(session, project: str) -> Project:
     Exceptions:
         HTTP 404: Project could not be found
         HTTP 500: Multiple projects with same name found
-    """
+    '''
     try:
         return session.query(Project).filter(Project.name == project).one()
 
     except MultipleResultsFound:
-        raise InternalServerError("Multiple projects with name {} found in database".format(project))
+        raise InternalServerError('Multiple projects with name {} found in database'.format(project))
 
     except NoResultFound:
-        raise NotFound("Could not find project {} in database".format(project))
+        raise NotFound('Could not find project {} in database'.format(project))
 
 
 def _add_hash(session, git_commit: str, hg_changeset: str, project: str) -> None:
-    """Helper method to add a git-hg mapping into the current SQLAlchemy ORM session.
+    '''Helper method to add a git-hg mapping into the current SQLAlchemy ORM session.
     Args:
         session: SQLAlchemy ORM Session object
         git_commit: String of the 40 character SHA of the git commit
@@ -242,7 +242,7 @@ def _add_hash(session, git_commit: str, hg_changeset: str, project: str) -> None
         project: String of the name of the project (e.g. 'build-tools')
     Exceptions:
         HTTP 400: Malformed SHA
-    """
+    '''
     _check_well_formed_sha('git', git_commit)  # can raise http 400
     _check_well_formed_sha('hg', hg_changeset)  # can raise http 400
     h = Hash(git_commit=git_commit, hg_changeset=hg_changeset, project=project, date_added=time.time())
@@ -250,7 +250,7 @@ def _add_hash(session, git_commit: str, hg_changeset: str, project: str) -> None
 
 
 def _insert_many(project: str, body: bytes, session, ignore_dups: bool=False) -> dict:
-    """Update the database with many git-hg mappings.
+    '''Update the database with many git-hg mappings.
     Args:
         project: Single project name string
         ignore_dups: Boolean; if False, abort on duplicate entries without inserting
@@ -263,9 +263,9 @@ def _insert_many(project: str, body: bytes, session, ignore_dups: bool=False) ->
         HTTP 409: ignore_dups=False and there are duplicate entries
         HTTP 415: Request content-type is not 'text/plain'
         HTTP 500: Multiple projects found with matching project name
-    """
+    '''
     if request.content_type != 'text/plain':
-        raise UnsupportedMediaType("HTTP request header 'Content-Type' must be set to 'text/plain'")
+        raise UnsupportedMediaType('HTTP request header "Content-Type" must be set to "text/plain"')
 
     proj = _get_project(session, project)  # can raise HTTP 404 or HTTP 500
     for line in body.decode('utf-8').split('\n'):
@@ -275,11 +275,11 @@ def _insert_many(project: str, body: bytes, session, ignore_dups: bool=False) ->
             git_commit, hg_changeset = line.split(' ')
 
         except ValueError:
-            logger.error("Received input line: '%s' for project %s", line, project)
-            logger.error("Was expecting an input line such as "
-                         "'686a558fad7954d8481cfd6714cdd56b491d2988 fef90029cb654ad9848337e262078e403baf0c7a'")
-            logger.error("i.e. where the first hash is a git commit SHA and the second hash is a mercurial changeset SHA")
-            raise BadRequest("Input line '%s' received for project %s did not contain a space" % (line, project))
+            logger.error('Received input line: "%s" for project %s', line, project)
+            logger.error('Was expecting an input line such as '
+                         '"686a558fad7954d8481cfd6714cdd56b491d2988 fef90029cb654ad9848337e262078e403baf0c7a"')
+            logger.error('i.e. where the first hash is a git commit SHA and the second hash is a mercurial changeset SHA')
+            raise BadRequest('Input line "{}" received for project {} did not contain a space'.format(line, project))
 
         _add_hash(session, git_commit, hg_changeset, proj)  # can raise HTTP 400
 
@@ -296,6 +296,6 @@ def _insert_many(project: str, body: bytes, session, ignore_dups: bool=False) ->
 
         except IntegrityError:
             session.rollback()
-            raise Conflict("Some of the given mappings for project %s already exist" % project)
+            raise Conflict('Some of the given mappings for project {} already exist'.format(project))
 
     return {}

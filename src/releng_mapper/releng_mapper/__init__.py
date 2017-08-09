@@ -8,10 +8,10 @@ from __future__ import absolute_import
 import os
 import backend_common
 import releng_mapper.config
+import releng_mapper.models  # noqa
 
 
 def create_app(config=None):
-    import releng_mapper.models  # noqa
     app = backend_common.create_app(
         name=releng_mapper.config.PROJECT_NAME,
         config=config,
