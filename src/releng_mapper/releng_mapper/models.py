@@ -6,10 +6,9 @@
 from __future__ import absolute_import
 import time
 import re
-import logging
 from typing import Tuple
 from backend_common.db import db
-from flask import request
+from flask import request, Response
 from .config import PROJECT_PATH_NAME
 from sqlalchemy import orm, Column, ForeignKey, Index, Integer, String
 from sqlalchemy.exc import IntegrityError
@@ -22,20 +21,23 @@ logger = log.get_logger(__name__)
 
 
 class Project(db.Model):
-    """Object-relational mapping between python class Project
+    """
+    Object-relational mapping between python class Project
     and database table "projects"
     """
     __tablename__ = PROJECT_PATH_NAME + '_projects'
+
     id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False, unique=True)
 
 
 class Hash(db.Model):
-
-    """Object-relational mapping between python class Hash
+    """
+    Object-relational mapping between python class Hash
     and database table "hashes"
     """
     __tablename__ = PROJECT_PATH_NAME + '_hashes'
+
     hg_changeset = Column(String(40), nullable=False)
     git_commit = Column(String(40), nullable=False)
     project_id = Column(Integer, ForeignKey(Project.id), nullable=False)
@@ -47,7 +49,7 @@ class Hash(db.Model):
     def as_json(self):
         return {
             n: getattr(self, n)
-            for n in ('git_commit', 'hg_changeset','date_added', 'project_name')
+            for n in ('git_commit', 'hg_changeset', 'date_added', 'project_name',)
         }
 
     __table_args__ = (
@@ -58,10 +60,8 @@ class Hash(db.Model):
         # TODO: this index is a prefix of others and will never be used
         Index('project_id', 'project_id'),
         Index('project_id__date_added', 'project_id', 'date_added'),
-        Index('project_id__hg_changeset', 'project_id',
-                 'hg_changeset', unique=True),
-        Index(
-            'project_id__git_commit', 'project_id', 'git_commit', unique=True),
+        Index('project_id__hg_changeset', 'project_id', 'hg_changeset', unique=True),
+        Index('project_id__git_commit', 'project_id', 'git_commit', unique=True),
     )
 
     __mapper_args__ = {
@@ -101,16 +101,14 @@ def _stream_mapfile(query) -> Tuple[str, int, dict]:
     query = query.yield_per(100)
 
     if query.count() == 0:
-        NotFound('No mappings found.')
+        raise NotFound('No mappings found.')
 
     def contents():
         for r in query:
             yield '%s %s' % (r.git_commit, r.hg_changeset) + "\n"
 
     if contents:
-        return contents(), 200, {
-            'mimetype': 'text/plain',
-        }
+        return Response(contents(), mimetype='text/plain')
 
 
 def _check_well_formed_sha(vcs: str, sha: str, exact_length: int=40) -> None:
@@ -159,7 +157,7 @@ def _get_project(session, project: str) -> Project:
         HTTP 500: Multiple projects with same name found
     """
     try:
-        return session.query(Project).filter_by(Project.name == project).one()
+        return session.query(Project).filter(Project.name == project).one()
 
     except MultipleResultsFound:
         raise InternalServerError("Multiple projects with name {} found in database".format(project))
@@ -184,7 +182,7 @@ def _add_hash(session, git_commit: str, hg_changeset: str, project: str) -> None
     session.add(h)
 
 
-def _insert_many(project: str, body: str, session, ignore_dups: bool=False) -> dict:
+def _insert_many(project: str, body: bytes, session, ignore_dups: bool=False) -> dict:
     """Update the database with many git-hg mappings.
     Args:
         project: Single project name string
@@ -203,17 +201,16 @@ def _insert_many(project: str, body: str, session, ignore_dups: bool=False) -> d
         raise BadRequest("HTTP request header 'Content-Type' must be set to 'text/plain'")
 
     proj = _get_project(session, project)  # can raise HTTP 404 or HTTP 500
-    for line in request.stream.readlines():
+    for line in body.decode('utf-8').split('\n'):
         line = line.rstrip()
 
         try:
-            (git_commit, hg_changeset) = line.split(' ')
+            git_commit, hg_changeset = line.split(' ')
 
         except ValueError:
             logger.error("Received input line: '%s' for project %s", line, project)
             logger.error("Was expecting an input line such as "
-                         "'686a558fad7954d8481cfd6714cdd56b491d2988 "
-                         "fef90029cb654ad9848337e262078e403baf0c7a'")
+                         "'686a558fad7954d8481cfd6714cdd56b491d2988 fef90029cb654ad9848337e262078e403baf0c7a'")
             logger.error("i.e. where the first hash is a git commit SHA and the second hash is a mercurial changeset SHA")
             raise BadRequest("Input line '%s' received for project %s did not contain a space" % (line, project))
 

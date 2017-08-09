@@ -150,11 +150,6 @@ paths:
           schema:
             $ref: '#/definitions/Problem'
 
-        409:
-          description: Mapping already exists for this project.
-          schema:
-            $ref: '#/definitions/Problem'
-
         415:
           description: Request content-type is not 'text/plain'.
           schema:
@@ -169,6 +164,8 @@ paths:
     post:
       summary: Insert many Git-Hg mapping entries and return an error on duplicate SHAs.
       operationId: releng_mapper.api.post_insert_many
+      consumes:
+        - text/plain
       parameters:
         - name: project
           in: path
@@ -238,15 +235,15 @@ paths:
             $ref: '#/definitions/Problem'
 
 
-  '/{project}/mapfile/since/{since}':
+  '/{projects}/mapfile/since/{since}':
     get:
       summary: Get a map file of insertions since the given date
       operationId: releng_mapper.api.get_mapfile_since
       parameters:
-        - name: project
+        - name: projects
           in: path
           type: string
-          description: Project name.
+          description: Comma-delimited project names(s) string
           required: true
 
         - name: since

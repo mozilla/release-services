@@ -5,7 +5,7 @@
 
 from __future__ import absolute_import
 import calendar
-import dateutil
+import dateutil.parser
 from flask import current_app
 from .models import Project, Hash, _get_project, _add_hash, _project_filter, \
     _insert_many, _check_well_formed_sha, _stream_mapfile

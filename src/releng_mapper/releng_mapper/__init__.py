@@ -11,6 +11,7 @@ import releng_mapper.config
 
 
 def create_app(config=None):
+    import releng_mapper.models  # noqa
     app = backend_common.create_app(
         name=releng_mapper.config.PROJECT_NAME,
         config=config,
