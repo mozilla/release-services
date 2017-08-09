@@ -13,7 +13,7 @@ from .config import PROJECT_PATH_NAME
 from sqlalchemy import orm, Column, ForeignKey, Index, Integer, String
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
-from werkzeug.exceptions import Conflict, NotFound, InternalServerError, BadRequest
+from werkzeug.exceptions import Conflict, NotFound, InternalServerError, BadRequest, UnsupportedMediaType
 from cli_common import log
 
 
@@ -198,7 +198,7 @@ def _insert_many(project: str, body: bytes, session, ignore_dups: bool=False) ->
         HTTP 500: Multiple projects found with matching project name
     """
     if request.content_type != 'text/plain':
-        raise BadRequest("HTTP request header 'Content-Type' must be set to 'text/plain'")
+        raise UnsupportedMediaType("HTTP request header 'Content-Type' must be set to 'text/plain'")
 
     proj = _get_project(session, project)  # can raise HTTP 404 or HTTP 500
     for line in body.decode('utf-8').split('\n'):

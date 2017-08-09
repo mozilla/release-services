@@ -6,6 +6,7 @@
 from __future__ import absolute_import
 import calendar
 import dateutil.parser
+from backend_common.auth import auth
 from flask import current_app
 from .models import Project, Hash, _get_project, _add_hash, _project_filter, \
     _insert_many, _check_well_formed_sha, _stream_mapfile
@@ -15,6 +16,10 @@ from sqlalchemy.exc import IntegrityError, ProgrammingError
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 
+AUTHENTICATION_SCOPE_PREFIX = 'project:releng:services/releng_mapper/permission/'
+
+
+@auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'project/insert'])
 def post_project(project: str) -> dict:
     session = current_app.db.session
     p = Project(name=project)
@@ -29,6 +34,7 @@ def post_project(project: str) -> dict:
     return {}
 
 
+@auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'mapping/insert'])
 def post_hg_git_mapping(project: str, git_commit: str, hg_changeset: str) -> dict:
     session = current_app.db.session
     proj = _get_project(session, project)  # can raise HTTP 404 or HTTP 500
@@ -54,11 +60,13 @@ def post_hg_git_mapping(project: str, git_commit: str, hg_changeset: str) -> dic
                                                                              project=project))
 
 
+@auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'mapping/insert'])
 def post_insert_many_ignoredups(project: str, body: str) -> dict:
     session = current_app.db.session
     return _insert_many(project, body, session, ignore_dups=True)
 
 
+@auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'mapping/insert'])
 def post_insert_many(project: str, body: str) -> dict:
     session = current_app.db.session
     return _insert_many(project, body, session, ignore_dups=False)
@@ -102,7 +110,6 @@ def get_full_mapfile(projects: str) -> str:
 
 
 def get_revision(projects: str, vcs_type: str, commit: str) -> str:
-    # (documentation in relengapi/docs/usage/mapper.rst)
     _check_well_formed_sha(vcs_type, commit, exact_length=None)  # can raise http 400
     q = Hash.query.join(Project).filter(_project_filter(projects))
     if vcs_type == "git":

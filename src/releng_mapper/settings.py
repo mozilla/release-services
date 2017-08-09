@@ -32,6 +32,7 @@ secrets = cli_common.taskcluster.get_secrets(
 
 locals().update(secrets)
 
+CHECK_FOR_RELENGAPI_TOKEN = True
 SECRET_KEY = base64.b64decode(secrets['SECRET_KEY_BASE64'])
 
 # -- DATABASE -----------------------------------------------------------------
