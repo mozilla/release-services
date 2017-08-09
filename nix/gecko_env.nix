@@ -1,7 +1,7 @@
 { releng_pkgs }:
 
 let
-  inherit (releng_pkgs.pkgs) rustStable bash autoconf213 clang_4 llvm llvmPackages_4;
+  inherit (releng_pkgs.pkgs) rustChannels bash autoconf213 clang_4 llvm llvmPackages_4;
   inherit (releng_pkgs.mozilla) gecko;
 
 in gecko.overrideDerivation (old: {
@@ -51,6 +51,9 @@ in gecko.overrideDerivation (old: {
     "
     echo "export CLANG_MOZCONFIG=$mozconfig" >> $geckoenv
 
+    # Use updated rust version
+    echo "export PATH=${rustChannels.stable.rust}/bin:${rustChannels.stable.cargo}/bin:\$PATH" >> $geckoenv
+
     # Exec command line from arguments
     echo "set -x" >> $geckoenv
     echo "exec \$@" >> $geckoenv
@@ -62,8 +65,8 @@ in gecko.overrideDerivation (old: {
   '';
   propagatedBuildInputs = old.propagatedBuildInputs
     ++ [
-      # Update rust to 1.17
-      rustStable.rustc
-      rustStable.cargo
+      # Update rust to latest stable
+      rustChannels.stable.rust
+      rustChannels.stable.cargo
     ];
 })
