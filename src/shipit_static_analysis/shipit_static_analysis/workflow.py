@@ -45,8 +45,8 @@ class Workflow(object):
         )
 
         # Clone mozilla-central
-        self.repo_dir = os.path.join(self.cache_root, 'static-analysis/')
-        shared_dir = os.path.join(self.cache_root, 'static-analysis-shared')
+        self.repo_dir = os.path.join(cache_root, 'central')
+        shared_dir = os.path.join(cache_root, 'central-shared')
         logger.info('Clone mozilla central', dir=self.repo_dir)
         cmd = hglib.util.cmdbuilder('robustcheckout',
                                     REPO_CENTRAL,
