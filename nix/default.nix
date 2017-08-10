@@ -3,7 +3,9 @@ let
   nixpkgs = pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs.json));
   nixpkgs-mozilla = pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs-mozilla.json));
 in
-{ pkgs ? import nixpkgs {}
+{ pkgs ? import nixpkgs {
+    overlays = [ (import "${nixpkgs-mozilla}/rust-overlay.nix") ];
+  }
 , mozilla ? import nixpkgs-mozilla {}
 }:
 

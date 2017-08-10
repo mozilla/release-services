@@ -34,6 +34,8 @@ class Workflow(object):
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
             'Cache root {} is not a dir.'.format(self.cache_root)
+        assert 'MOZCONFIG' in os.environ, \
+            'Missing MOZCONFIG in environment'
 
         # Load TC services & secrets
         self.notify = get_service(
@@ -43,8 +45,8 @@ class Workflow(object):
         )
 
         # Clone mozilla-central
-        self.repo_dir = os.path.join(self.cache_root, 'static-analysis/')
-        shared_dir = os.path.join(self.cache_root, 'static-analysis-shared')
+        self.repo_dir = os.path.join(cache_root, 'central')
+        shared_dir = os.path.join(cache_root, 'central-shared')
         logger.info('Clone mozilla central', dir=self.repo_dir)
         cmd = hglib.util.cmdbuilder('robustcheckout',
                                     REPO_CENTRAL,
@@ -93,12 +95,9 @@ class Workflow(object):
             modified_files += [f.decode('utf-8') for _, f in status]
         logger.info('Modified files', files=modified_files)
 
-        env = os.environ.copy()
-        env['MOZCONFIG'] = env['CLANG_MOZCONFIG']
-
         # mach configure with mozconfig
         logger.info('Mach configure...')
-        run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir, env=env)
+        run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
 
         # Build CompileDB backend
         logger.info('Mach build backend...')
@@ -107,8 +106,8 @@ class Workflow(object):
 
         # Build exports
         logger.info('Mach build exports...')
-        run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir, env=env)
-        run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir, env=env)
+        run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
+        run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
 
         # Run static analysis through run-clang-tidy.py
         logger.info('Run clang-tidy...')

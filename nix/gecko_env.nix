@@ -1,7 +1,7 @@
 { releng_pkgs }:
 
 let
-  inherit (releng_pkgs.pkgs) rustStable clang-tools xorg bash xlibs autoconf213 clang llvm llvmPackages;
+  inherit (releng_pkgs.pkgs) rustChannels bash autoconf213 clang_4 llvm llvmPackages_4;
   inherit (releng_pkgs.mozilla) gecko;
 
 in gecko.overrideDerivation (old: {
@@ -35,9 +35,9 @@ in gecko.overrideDerivation (old: {
     echo "export LD_LIBRARY_PATH=\"$CMAKE_LIBRARY_PATH\"" >> $geckoenv
 
     # Setup Clang & Autoconf
-    echo "export CC=${clang}/bin/clang" >> $geckoenv
-    echo "export CXX=${clang}/bin/clang++" >> $geckoenv
-    echo "export LD=${clang}/bin/ld" >> $geckoenv
+    echo "export CC=${clang_4}/bin/clang" >> $geckoenv
+    echo "export CXX=${clang_4}/bin/clang++" >> $geckoenv
+    echo "export LD=${clang_4}/bin/ld" >> $geckoenv
     echo "export LLVM_CONFIG=${llvm}/bin/llvm-config" >> $geckoenv
     echo "export LLVMCONFIG=${llvm}/bin/llvm-config" >> $geckoenv # we need both
     echo "export AUTOCONF=${autoconf213}/bin/autoconf" >> $geckoenv
@@ -46,10 +46,13 @@ in gecko.overrideDerivation (old: {
     mozconfig=$out/conf/mozconfig
     echo > $mozconfig "
     ac_add_options --enable-clang-plugin
-    ac_add_options --with-clang-path=${clang}/bin/clang
-    ac_add_options --with-libclang-path=${llvmPackages.clang-unwrapped}/lib
+    ac_add_options --with-clang-path=${clang_4}/bin/clang
+    ac_add_options --with-libclang-path=${llvmPackages_4.clang-unwrapped}/lib
     "
     echo "export CLANG_MOZCONFIG=$mozconfig" >> $geckoenv
+
+    # Use updated rust version
+    echo "export PATH=${rustChannels.stable.rust}/bin:${rustChannels.stable.cargo}/bin:\$PATH" >> $geckoenv
 
     # Exec command line from arguments
     echo "set -x" >> $geckoenv
@@ -62,11 +65,8 @@ in gecko.overrideDerivation (old: {
   '';
   propagatedBuildInputs = old.propagatedBuildInputs
     ++ [
-      # Use clang as compiler
-      clang
-
-      # Update rust to 1.17
-      rustStable.rustc
-      rustStable.cargo
+      # Update rust to latest stable
+      rustChannels.stable.rust
+      rustChannels.stable.cargo
     ];
 })
