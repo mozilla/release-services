@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-import logging
 from collections import Counter
 
 import taskcluster
+import cli_common.log
 
-log = logging.getLogger(__name__)
+log = cli_common.log.get_logger(__name__)
 
 TC_QUEUE = taskcluster.Queue()
 TC_SCHEDULER = taskcluster.Scheduler()

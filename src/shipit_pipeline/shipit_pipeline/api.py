@@ -5,12 +5,12 @@
 
 from __future__ import absolute_import
 
-import logging
+import cli_common.log
 
 from shipit_pipeline.pipeline import get_runnable_steps, get_running_steps, refresh_pipeline_steps, start_steps,\
     PipelineStep
 
-log = logging.getLogger(__name__)
+log = cli_common.log.get_logger(__name__)
 
 PIPELINES = {}
 MockSteps = {}
