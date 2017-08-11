@@ -4,15 +4,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
-from typing import List
-from datetime import datetime
-from requests import put
-from flask import current_app
-import mohawk
+
+import json
+import os
 import random
 import string
-import os
-import json
+from datetime import datetime
+from typing import List
+
+from requests import put
+
+import mohawk
+from flask import current_app
 
 '''
 Common constants and utilities for releng_notification_* services
@@ -84,7 +87,7 @@ def schedule_nagbot_message(message: str, short_message: str, deadline: datetime
     }
 
     # Support dev ssl ca cert
-    ssl_dev_ca = os.environ.get('SSL_DEV_CA')
+    ssl_dev_ca = current_app.config.get('SSL_DEV_CA')
     if ssl_dev_ca is not None:
         assert os.path.isdir(ssl_dev_ca), 'SSL_DEV_CA must be a dir with hashed dev ca certs'
 
