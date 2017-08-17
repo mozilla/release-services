@@ -99,7 +99,7 @@ def _update_tree_status(session, tree, status=None, reason=None, tags=[],
 
 
 @cache.memoize()
-def v0_get_tree(tree, format):
+def v0_get_tree(tree, format=None):
     t = current_app.db.session.query(Tree).get(tree)
     if not t:
         raise NotFound('No such tree')
