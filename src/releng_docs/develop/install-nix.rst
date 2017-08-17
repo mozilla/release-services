@@ -1,12 +1,10 @@
-.. _prerequirements:
+.. _develop-install-nix:
 
-Prerequirements
-===============
+Install Nix
+===========
 
-To start working with ``mozilla-releng/services`` there is only one tool that
-is required to be installed on your system: Nix_. Nix (package manager) works
-alongside any other package manager and can be used with any Linux
-distribution.
+Nix_ (package manager) works alongside any other package manager and can be
+used with any Linux distribution.
 
 It is important to know that Nix_ can be safely uninstalled by removing
 following folders:
@@ -23,23 +21,17 @@ Bellow instructions should work on any recent enough Linux distribution
 
 A fully automated script is available on the `Github Repository`_. It has been
 succesfully tested on a fresh install of Ubuntu 16.04, and simply does the
-following steps (except LVM optional setup just below)
+following steps.
 
 .. _`Github Repository`: https://raw.githubusercontent.com/mozilla-releng/services/master/nix/setup.sh
 
-0. Optional - Use LVM for Nix
------------------------------
-
-If you already use LVM on your Linux computer, you can create a separate Logical Volume just for the nix installation:
+To quickly install Nix please run the following command:
 
 .. code-block:: bash
 
-    % VG_NAME=$(vgdisplay | grep "VG Name" | awk '{print $3}')
-    % lvcreate -L 15G -n nix $VG_NAME
-    % mkfs.ext4 /dev/$VG_NAME/nix
-    % mkdir /nix
-    % echo "/dev/mapper/$VG_NAME/nix  /nix  ext4    defaults,noatime        0       2" >> /etc/fstab
-    % mount -a
+    % curl https://raw.githubusercontent.com/mozilla-releng/services/master/nix/setup.sh | bash
+
+For those more advance you can execute command manually:
 
 
 1. Installing Nix as single user mode
@@ -315,3 +307,4 @@ Now ``git`` and ``make`` commands are in your ``$PATH``.
 
 .. _Nix: https://nixos.org/nix
 .. _NixOS: https://nixos.org
+

@@ -1,6 +1,3 @@
-Deploying
-=========
-
 Deployment happens **automatically** in :ref:`continuous integration
 <continuous-integration>` when code is pushed / merged to **staging** or
 **production** branch.
@@ -240,75 +237,6 @@ Services Managers
 
 - `Rok Garbas`_
 
-
-.. _service-owners:
-
-Service Owners
---------------
-
-+--------------------------------+---------------------------+
-+ Service                        | Owner(s)                  |
-+================================+===========================+
-+ :ref:`releng_archiver`         | - `Rok Garbas`_           |
-+--------------------------------+---------------------------+
-+ :ref:`releng_clobberer`        | - `Rok Garbas`_           |
-+--------------------------------+---------------------------+
-+ :ref:`releng_docs`             | - `Rok Garbas`_           |
-+--------------------------------+---------------------------+
-+ :ref:`releng_frontend`         | - `Rok Garbas`_           |
-+--------------------------------+---------------------------+
-+ :ref:`releng_mapper`           | - `Rok Garbas`_           |
-+--------------------------------+---------------------------+
-+ :ref:`releng_slavehealth`      | - `Rok Garbas`_           |
-+--------------------------------+---------------------------+
-+ :ref:`releng_tooltool`         | - `Rok Garbas`_           |
-+--------------------------------+---------------------------+
-+ :ref:`releng_treestatus`       | - `Rok Garbas`_           |
-+--------------------------------+---------------------------+
-+ :ref:`shipit_bot_uplift`       | - `Bastien Abadie`_       |
-+--------------------------------+---------------------------+
-+ :ref:`shipit_code_coverage`    + - `Bastien Abadie`_       +
-+                                | - `Marco Castelluccio`_   |
-+--------------------------------+---------------------------+
-+ :ref:`shipit_frontend`         | - `Rok Garbas`_           |
-+                                | - `Bastien Abadie`_       |
-+--------------------------------+---------------------------+
-+ :ref:`shipit_pipeline`         | - (not yet started)       |
-+--------------------------------+---------------------------+
-+ :ref:`shipit_pulse_listener`   + - `Bastien Abadie`_       +
-+                                | - `Marco Castelluccio`_   |
-+--------------------------------+---------------------------+
-+ :ref:`shipit_risk_assessment`  + - `Bastien Abadie`_       +
-+                                | - `Marco Castelluccio`_   |
-+--------------------------------+---------------------------+
-+ :ref:`shipit_signoff`          | - `Ben Hearsum`_          |
-+                                | - `Simon Fraser`_         |
-+--------------------------------+---------------------------+
-+ :ref:`shipit_static_analysis`  + - `Bastien Abadie`_       +
-+                                | - `Marco Castelluccio`_   |
-+--------------------------------+---------------------------+
-+ :ref:`shipit_uplift`           | - `Bastien Abadie`_       |
-+                                | - `Marco Castelluccio`_   |
-+--------------------------------+---------------------------+
-+ :ref:`shipit_taskcluster`      | - `Jordan Lund`_          |
-+                                | - `Nick Thomas`_          |
-+--------------------------------+---------------------------+
-
-
-In case when Owner(s) of services are on PTO or not responsive please follow
-`Contacting Release Engineering`_ wiki page.
-
-
-.. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
-.. _`Ben Hearsum`: https://phonebook.mozilla.org/?search/Ben%20Hearsum
-.. _`Simon Fraser`: https://phonebook.mozilla.org/?search/Simon%20Fraser
-.. _`Jordan Lund`: https://phonebook.mozilla.org/?search/Jordan%20Lund
-.. _`Nick Thomas`: https://phonebook.mozilla.org/?search/Nick%20Thomas
-.. _`Marco Castelluccio`: https://phonebook.mozilla.org/?search/Marco%20Castelluccio
-.. _`Bastien Abadie`: https://github.com/La0
-.. _`Contacting Release Engineering`: https://wiki.mozilla.org/ReleaseEngineering#Contacting_Release_Engineering
-
-
 .. _continuous-integration:
 
 Continuos Integration
@@ -328,3 +256,4 @@ TODO: where can we deploy
 - building docker
 - via ssh
 
+.. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
