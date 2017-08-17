@@ -1,47 +1,7 @@
-.. _backend_docs:
+.. _develop-flask-project:
 
-
-Every project's code is located in ``src/<project>``.
-
-Look at contribution guide (TODO:link) how to enter project's development
-environment and how to work with different projects.
-
-TODO: quickly explain all types of projects
-
-- configuration??
-
-Python project
---------------
-
-- Runtime dependencies (install_requires) are listed in
-  ``src/<project>/requirements.txt``
-
-- Buildtime dependencies (tests_require) are listed in 
-  ``src/<project>/requirements-dev.txt``
-
-- Like every python project also our project has a ``src/<project>/setup.py``
-
-  Use ``requirements.txt`` and ``requirements-dev.txt`` to list dependencies.
-  That way we only change
-
-  Every time you add/remove/update dependencies rereun::
-
-      % ./please update-dependencies <project>
-
-  More information about updating dependencies you can find here (TODO: link)
-
-- Your python module should be named the same as the project, that means that
-  the code for your  python module will be located in
-  ``src/<project>/<project>/``
-
-- (TODO: needs to be implemented) to create an empty python project
-
-- different helper modules in cli_common
-
-
-
-Backend project
----------------
+Flask project
+=============
 
 - Every backend project is also a python project. Make sure you read everything
   about python project (TODO: link) since everything applies also for backend
@@ -82,8 +42,8 @@ Backend project
 - testing backend applications
 
 
-Backend extensions
-^^^^^^^^^^^^^^^^^^
+Extensions
+----------
 
 Backend extensions are simple glue code of a recognized flask pattern (TODO:
 link) that describes how to extend flask application.
@@ -119,8 +79,8 @@ Current extensions are:
 - templates
 
 
-Create new backend extension
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Create new extension
+--------------------
 
 - Create a python in ``lib/backend_common/backend_common/<extension_name>.py``
 
@@ -154,7 +114,4 @@ Create new backend extension
   ``EXTENTIONS`` list in ``lib/backend_common/backend_common/__init__.py``
 
 
-Frontend project
-----------------
-
-- testing frontend applications
+.. _connexion: https://github.com/zalando/connexion
