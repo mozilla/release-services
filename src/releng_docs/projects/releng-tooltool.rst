@@ -26,7 +26,7 @@ and application is running on Heroku (
 guide <develop-flask-project>`.
 
 **To (re)deploy** ``releng-tooltool`` to Heroku please follow :ref:`deployment
-guide <deploy-heroku-project>`.
+guide <deploy-heroku-target>`.
 
 **To test (verify)** that ``releng-tooltool`` is running correctly please follow the
 following steps:
