@@ -5,6 +5,8 @@ If you like to get involved in the development of project mentioned in
 ``mozilla-releng/services``, there’re lots of areas where we could use some
 help.
 
+.. _develop-requirements:
+
 Requirements
 ------------
 

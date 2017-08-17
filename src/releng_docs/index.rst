@@ -58,6 +58,8 @@ Deploy
 .. toctree::
     :maxdepth: 2
 
-    deploy/index
-
+    deploy/weekly_releases
+    deploy/heroku-target
+    deploy/s3-target
+    deploy/taskluster-hook-target
 
