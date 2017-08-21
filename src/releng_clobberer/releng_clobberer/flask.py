@@ -5,15 +5,6 @@
 
 from __future__ import absolute_import
 
-import click
-import json
 import releng_clobberer
 
-
 app = releng_clobberer.create_app()
-
-
-@app.cli.command()
-def taskcluster_cache():
-    workertypes = releng_clobberer.cli.taskcluster_cache()
-    click.echo(json.dumps(workertypes, indent=2, sort_keys=True))
