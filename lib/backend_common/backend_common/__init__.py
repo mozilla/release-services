@@ -34,7 +34,10 @@ def create_app(name, extensions=[], config=None, redirect_root_to_api=True, **kw
     app = flask.Flask(name, **kw)
     app.__extensions = extensions
 
-    if os.environ.get('APP_SETTINGS'):
+    if config:
+        app.config.update(**config)
+
+    if not app.config.get('TESTING') and os.environ.get('APP_SETTINGS'):
         app.config.from_envvar('APP_SETTINGS')
 
     if config:
