@@ -36,7 +36,7 @@ class Build(ClobbererBase, UniqueMixin):
 
     @classmethod
     def unique_hash(cls, branch, builddir, buildername, *args, **kwargs):
-        return "{}:{}:{}".format(branch, builddir, buildername)
+        return '{}:{}:{}'.format(branch, builddir, buildername)
 
     @classmethod
     def unique_filter(cls, query, branch, builddir, buildername, *args, **kwargs):
@@ -61,7 +61,7 @@ class ClobberTime(ClobbererBase, UniqueMixin):
 
     @classmethod
     def unique_hash(cls, branch, slave, builddir, *args, **kwargs):
-        return "{}:{}:{}".format(branch, slave, builddir)
+        return '{}:{}:{}'.format(branch, slave, builddir)
 
     @classmethod
     def unique_filter(cls, query, branch, slave, builddir, *args, **kwargs):

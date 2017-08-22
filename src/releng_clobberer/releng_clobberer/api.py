@@ -199,11 +199,11 @@ def get_lastclobber():
 
 
 def get_forceclobber():
-    """
+    '''
     Coerce the client to clobber by always returning a future clobber time.
     This works because the client decides to clobber based on a timestamp
     comparison.
-    """
+    '''
     future_time = int(time.time()) + 3600
     builddir = request.args.get('builddir')
     return '{}:{}:forceclobber'.format(builddir, future_time)
