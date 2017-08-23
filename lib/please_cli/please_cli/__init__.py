@@ -20,6 +20,7 @@ import please_cli.nagios_config
 import please_cli.nixify
 import please_cli.run
 import please_cli.shell
+import please_cli.terraform_route53_config
 import please_cli.update_dependencies
 import please_cli.utils
 
@@ -101,18 +102,19 @@ def cmd_tools(ctx):
 
 
 cmd.add_command(cmd_tools, "tools")
+cmd_tools.add_command(please_cli.base_image.cmd, "base-image")
 cmd_tools.add_command(please_cli.build.cmd, "build")
 cmd_tools.add_command(please_cli.check_cache.cmd, "check-cache")
 cmd_tools.add_command(please_cli.create_certs.cmd, "create-certs")
+cmd_tools.add_command(please_cli.decision_task.cmd, "decision-task")
 cmd_tools.add_command(please_cli.deploy.cmd_HEROKU, "deploy:HEROKU")
 cmd_tools.add_command(please_cli.deploy.cmd_S3, "deploy:S3")
 cmd_tools.add_command(please_cli.deploy.cmd_TASKCLUSTER_HOOK, "deploy:TASKCLUSTER_HOOK")
-cmd_tools.add_command(please_cli.decision_task.cmd, "decision-task")
 cmd_tools.add_command(please_cli.maintanance.cmd_off, "maintanance:off")
 cmd_tools.add_command(please_cli.maintanance.cmd_on, "maintanance:on")
-cmd_tools.add_command(please_cli.nixify.cmd, "nixify")
-cmd_tools.add_command(please_cli.base_image.cmd, "base-image")
 cmd_tools.add_command(please_cli.nagios_config.cmd, "nagios-config")
+cmd_tools.add_command(please_cli.nixify.cmd, "nixify")
+cmd_tools.add_command(please_cli.terraform_route53_config.cmd, "terraform-route53-config")
 cmd_tools.add_command(please_cli.update_dependencies.cmd, "update-dependencies")
 
 
