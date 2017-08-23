@@ -31,22 +31,52 @@ The tree status tool provides an interface for **anyone to see the current
 status of all trees**. It also allows "sheriffs" to manipulate tree status.
 
 
-**To start developing** ``releng-treestatus`` please follow :ref:`development guide
-<develop-flask-project>`.
+Troubleshooting
+---------------
 
-**To (re)deploy** ``releng-treestatus`` to Heroku please follow :ref:`deployment
-guide <deploy-heroku-target>`.
+#. Look at `Heroku monitoring
+   <https://dashboard.heroku.com/apps/releng-production-treestatus/metrics/web>`_
+   to get birds view on the running application.
+
+#. Install `Heroku CLI <https://devcenter.heroku.com/articles/heroku-cli>`_ and
+   use it to dig deeper into running Heroku application.
+
+#. To see more logs (from past) look at Papertrails.
+
+
+Digging deeper
+--------------
+
+**To start developing** ``releng-treestatus`` please follow :ref:`development
+guide <develop-flask-project>`.
+
+**To (re)deploy** ``releng-treestatus`` to Heroku please follow
+:ref:`deployment guide <deploy-heroku-target>`.
 
 .. _verify-releng-treestatus:
 
-**To test (verify)** that ``releng-treestatus`` is running correctly please follow the
-following steps:
+**To test (verify)** that ``releng-treestatus`` is running correctly please
+follow the following steps:
+
+#. Select which environement (production or staging).
+
+   For production:
+
+   .. code-block:: console
+
+       $ export URL=https://treestatus.mozilla-releng.net
+
+   For staging:
+
+   .. code-block:: console
+
+       $ export URL=https://treestatus.staging.mozilla-releng.net
 
 #. List all trees
 
    .. code-block:: console
 
-       $ curl -X GET --header 'Accept: application/json' 'https://treestatus.mozilla-releng.net/trees'
+       $ curl -X GET --header 'Accept: application/json' '$URL/trees'
        {
           "result": {
             "ash": {
@@ -63,7 +93,7 @@ following steps:
 
    .. code-block:: console
 
-       $ curl -X GET --header 'Accept: application/json' 'https://treestatus.mozilla-releng.net/trees/mozilla-beta'
+       $ curl -X GET --header 'Accept: application/json' '$URL/trees/mozilla-beta'
        {
          "result": {
            "message_of_the_day": "",
@@ -78,7 +108,7 @@ following steps:
 
    .. code-block:: console
 
-       $ curl -X GET --header 'Accept: application/json' 'https://treestatus.mozilla-releng.net/trees/invalid'
+       $ curl -X GET --header 'Accept: application/json' '$URL/trees/invalid'
        {
          "detail": "No such tree",
          "instance": "about:blank",
