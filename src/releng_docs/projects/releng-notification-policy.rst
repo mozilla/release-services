@@ -7,12 +7,13 @@ Project: releng-notification-policy
 :staging: https://notification-policy.staging.mozilla-releng.net
 :contact: `Rok Garbas`_, (backup `Release Engineering`_)
 
-RelEng Notification Policy is a tool to send RelEng related notifications based
-on periodic policies, and escalate unacknowledged notifications to higher
-urgency levels. Message requests are sent to the service with details on who to
-notify and how urgent the message is. Policies for how to notify these
-stakeholders are retrieved from the RelEng Notification Identity service.
-
+RelEng Notification Policy is a tool to schedule notifications requiring an "escalation path". Message requests are
+sent to the service with the message contents and a list of "policies". Each policy contains a start and end time, a
+notification frequency, an urgency and an identity to notify (retrieved from the RelEng Notification Identity service).
+Escalation paths can be formed by increasing the urgency level of messages over time, increasing message urgency or
+sending messages to more individuals if the message is not acknowledged by a certain time. Notifications are triggered
+via a hook/ticktock endpoint. When the endpoint is triggered, the service will retrieve all unacknowledged messages
+and send notifications according to any policy with a valid start/end time.
 
 
 .. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
