@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
+import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
 
@@ -37,6 +38,6 @@ class ThreadPoolExecutorResult(ThreadPoolExecutor):
         return future
 
     def __exit__(self, *args):
-        for future in self.futures:
+        for future in concurrent.futures.as_completed(self.futures):
             future.result()
         return super(ThreadPoolExecutorResult, self).__exit__(*args)
