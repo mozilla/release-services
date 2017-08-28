@@ -16,7 +16,7 @@ Python project
 
   Every time you add/remove/update dependencies rereun::
 
-      % ./please update-dependencies <project>
+      % ./please tools update-dependencies <project>
 
   More information about updating dependencies you can find here (TODO: link)
 
