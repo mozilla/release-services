@@ -7109,6 +7109,14 @@ in
       url = "https://registry.npmjs.org/webpack-dev-server/-/webpack-dev-server-2.6.1.tgz";
       sha1 = "0b292a9da96daf80a65988f69f87b4166e5defe7";
     };
+    preRebuild = ''
+      patch -p1 < ${
+        fetchurl
+          { url = "https://github.com/webpack/webpack-dev-server/commit/e6ccbaffc30bdcbc74285d30d1d93c0109019654.patch";
+            sha256 = "116v5nmjs7jdaavr3dn169wkpwcdlpiwjkkw99dwxyh8qjprjlvw";
+          }
+      }
+    '';
     dependencies = [
       sources."ansi-html-0.0.7"
       sources."bonjour-3.5.0"
