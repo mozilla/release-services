@@ -145,6 +145,9 @@ class CodeCov(object):
             if suite is None or suite in fname:
                 ordered_files.append('ccov-artifacts/' + fname)
 
+        r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % self.revision)
+        push_id = r.json()['pushid']
+
         cmd = [
           'grcov',
           '-t', 'coveralls',
@@ -153,6 +156,7 @@ class CodeCov(object):
           '--ignore-dir', 'gcc',
           '--ignore-not-existing',
           '--service-name', 'TaskCluster',
+          '--service-number', str(push_id),
           '--commit-sha', commit_sha,
           '--token', coveralls_token,
         ]
