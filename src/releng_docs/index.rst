@@ -61,5 +61,5 @@ Deploy
     deploy/weekly_releases
     deploy/heroku-target
     deploy/s3-target
-    deploy/taskluster-hook-target
+    deploy/taskcluster-hook-target
     deploy/configure-dns
