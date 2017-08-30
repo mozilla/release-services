@@ -63,4 +63,4 @@ Deploy
     deploy/heroku-target
     deploy/s3-target
     deploy/taskluster-hook-target
-
+    deploy/configure-dns
