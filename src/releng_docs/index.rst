@@ -6,20 +6,19 @@ A goal of *Release Engineering Services* is to *converge efforts* to
 **document** all projects that *Release Engineering Team* is providing or
 supporting.
 
-Currently supported development platform are **Linux** (via Nix) or any
-platform that runs **Docker**.
-
 :Code: https://github.com/mozilla-releng/services
 :Issues: https://github.com/mozilla-releng/services/issues
 :Documentation: https://docs.mozilla-releng.net
 
 
-Introduction
-------------
-
-.. raw:: html
-
-    <iframe src="https://player.vimeo.com/video/218952258" width="640" height="480" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+.. Introduction
+.. ------------
+.. 
+.. .. raw:: html
+.. 
+..     <iframe src="https://player.vimeo.com/video/218952258"
+..             width="640" height="480" frameborder="0"
+..             webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
 
 Projects
