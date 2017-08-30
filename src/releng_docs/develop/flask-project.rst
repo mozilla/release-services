@@ -55,6 +55,8 @@ variable in ``lib/backend_common/backend_common/__init__.py``.
 
 Current extensions are:
 
+.. _develop-flask-api-extension:
+
 - **api**: Provides a well defined way how to create JSON API backend servies
   by integrating connexion_ python package.
 
@@ -68,15 +70,41 @@ Current extensions are:
           app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
           return app
 
-- auth
-- auth0
-- cache
-- cors
-- db
-- log:
-- pulse
-- security
-- templates
+.. _develop-flask-auth-extension:
+
+- **auth**
+
+.. _develop-flask-auth0-extension:
+
+- **auth0**
+
+.. _develop-flask-cache-extension:
+
+- **cache**
+
+.. _develop-flask-cors-extension:
+
+- **cors**
+
+.. _develop-flask-db-extension:
+
+- **db**
+
+.. _develop-flask-log-extension:
+
+- **log**
+
+.. _develop-flask-pulse-extension:
+
+- **pulse**
+
+.. _develop-flask-security-extension:
+
+- **security**
+
+.. _develop-flask-templates-extension:
+
+- **templates**
 
 
 Create new extension
@@ -89,10 +117,10 @@ Create new extension
 
 - Extention needs to implement ``init_app`` method which accepts one argument
   ``app`` (flask application object). The ``init_app`` method must return an
-  extention object, which can be then accessed in any backend application via
+  extension object, which can be then accessed in any backend application via
   ``app.<extension_name>``.
 
-  Example for cache extention:
+  Example for cache extension:
 
   .. code-block:: python
 
@@ -110,7 +138,7 @@ Create new extension
         cache.init_app(app, config=cache_config)
         return cache
 
-- Add the extention name of the file (without the ``.py``) extention to the
+- Add the extension name of the file (without the ``.py``) extension to the
   ``EXTENTIONS`` list in ``lib/backend_common/backend_common/__init__.py``
 
 

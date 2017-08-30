@@ -83,7 +83,11 @@ Now all you need to do is load image and run it:
     ...
     mozilla-releng-treestatus   1.0.0   7a7c7882c4a3   47 years ago   262 MB
     ...
-    $ docker run mozilla-releng-treestatus:1.0.0
+    $ docker run \
+        -e TASKCLUSTER_SECRET=repo:github.com/mozilla-releng/services:branch:staging \
+        -e TASKCLUSTER_CLIENT_ID=... \
+        -e TASKCLUSTER_ACCESS_TOKEN=... \
+            mozilla-releng-treestatus:1.0.0
 
 
 .. _`Takcluster's Client Manager`: https://tools.taskcluster.net/auth/clients/
