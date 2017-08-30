@@ -1,3 +1,5 @@
+.. _develop-contribute:
+
 Contribute
 ==========
 
@@ -14,7 +16,7 @@ These instructions assume you have the following installed (if not, you can
 follow the links for installation instructions).
 
 - `Git <https://git-scm.com/book/en/v2/Getting-Started-Installing-Git>`_
-- `Docker <https://docs.docker.com/get-started>`_ or ref:`Nix <develop-install-nix>`_
+- `Docker <https://docs.docker.com/get-started>`_ or :ref:`Nix <develop-install-nix>`
 
 
 Cloning the Repository
@@ -36,18 +38,27 @@ Usage
 -----
 
 Once these prerequisites are installed, run the following command to start the
-desired project locally:
+desired project locally (eg. running locally in development mode):
 
 
 .. code-block:: console
 
     $ ./please run <PROJECT>
 
+To enter the development bash environment (eg. like virtualenv) use the
+following command:
+
+.. code-block:: console
+
+    $ ./please shell <PROJECT>
+    (nix-shell) $ which python
+    /nix/store/.../bin/python
+
 
 Running Tests
 -------------
 
-It is a good idea to run all tests to see if you project is running properly.
+It is a good idea to run all tests to see if your project is running properly.
 
 To execute all project's tests, run
 
