@@ -670,6 +670,7 @@ in rec {
               "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
             ] ++ dockerEnv;
             Cmd = dockerCmd;
+            WorkingDir = "/";
           };
       };
 
