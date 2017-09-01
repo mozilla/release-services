@@ -218,6 +218,10 @@ $(document).ready(function() {
             args.push('--no-retry');
         }
 
+        if ($('.buildbot').is(':checked')) {
+            args.push('--buildbot');
+        }
+
         if ($('.rebuild-talos').is(':checked')) {
             args.push('--rebuild-talos 5');
         }
