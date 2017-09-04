@@ -3,6 +3,8 @@ import os
 import shutil
 import requests
 
+from shipit_code_coverage.utils import retry
+
 index_base = 'https://index.taskcluster.net/v1/'
 queue_base = 'https://queue.taskcluster.net/v1/'
 
@@ -53,11 +55,15 @@ def download_artifact(task_id, suite, artifact):
     if os.path.exists(artifact_path):
         return artifact_path
 
-    r = requests.get(queue_base + 'task/' + task_id + '/artifacts/' + artifact['name'], stream=True)
+    def perform_download():
+        r = requests.get(queue_base + 'task/' + task_id + '/artifacts/' + artifact['name'], stream=True)
 
-    with open(artifact_path, 'wb') as f:
-        r.raw.decode_content = True
-        shutil.copyfileobj(r.raw, f)
+        with open(artifact_path, 'wb') as f:
+            r.raw.decode_content = True
+            shutil.copyfileobj(r.raw, f)
+
+    if not retry(perform_download):
+        raise Exception('Failed downloading artifact in %s' % artifact_path)
 
     return artifact_path
 
