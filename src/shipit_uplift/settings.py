@@ -39,3 +39,24 @@ SECRET_KEY = base64.b64decode(secrets['SECRET_KEY_BASE64'])
 
 SQLALCHEMY_DATABASE_URI = secrets['DATABASE_URL']
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
+# -- CACHE --------------------------------------------------------------------
+
+CACHE = {
+    x: os.environ.get(x)
+    for x in os.environ.keys()
+    if x.startswith('CACHE_')
+}
+
+if 'CACHE_DEFAULT_TIMEOUT' not in CACHE:
+    CACHE['CACHE_DEFAULT_TIMEOUT'] = 60 * 5
+else:
+    CACHE['CACHE_DEFAULT_TIMEOUT'] = float(CACHE['CACHE_DEFAULT_TIMEOUT'])
+
+if 'CACHE_KEY_PREFIX' not in CACHE:
+    CACHE['CACHE_KEY_PREFIX'] = shipit_uplift.config.PROJECT_NAME + '-'
+
+if not DEBUG:
+    CACHE['CACHE_TYPE'] = 'redis'
+    CACHE['CACHE_REDIS_URL'] = secrets['REDIS_URL']

@@ -33,7 +33,7 @@
                 <label id="build_type-none"><input type="radio" name="build_type" value="none" CHECKED>None</label>
             </span>
             <p><label><input type="checkbox" class="artifact-build">Use artifact build</label>
-            <p>Looking for PGO builds? See <a href="https://wiki.mozilla.org/ReleaseEngineering/TryChooser#What_if_I_want_PGO_for_my_build">this page</a>.</p>
+            <p>Looking for PGO builds? Pick "Opt only" (or "Both") and select PGO platforms below</a>.</p>
 
             <h4>Platforms</h4>
             <div class='option-group' id='platforms' try-section='p'>
@@ -45,6 +45,9 @@
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="linux64">linux64</label>
+            </li>
+            <li>
+                <label><input type="checkbox" name="platform" value="linux64-pgo">linux64-pgo</label>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="linux64-asan">linux64-asan</label>
@@ -74,25 +77,25 @@
                 <label><input type="checkbox" name="platform" value="win32">win32</label>
             </li>
             <li>
+                <label><input type="checkbox" name="platform" value="win32-pgo">win32-pgo</label>
+            </li>
+            <li>
                 <label><input type="checkbox" name="platform" value="win32-st-an">win32 static analysis</label>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="win64">win64</label>
             </li>
             <li>
+                <label><input type="checkbox" name="platform" value="win64-pgo">win64-pgo</label>
+            </li>
+            <li>
                 <label><input type="checkbox" name="platform" value="win64-st-an">win64 static analysis</label>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="android-api-15">android api 15+</label>
+                <label><input type="checkbox" name="platform" value="android-api-16">android api-16+</label>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="android-api-15-gradle">android api 15+ gradle</label>
-            </li>
-            <li>
-                <label><input type="checkbox" name="platform" value="android-api-15-gradle-dependencies">android api 15+ gradle deps</label>
-            </li>
-            <li>
-                <label><input type="checkbox" name="platform" value="android-api-15-frontend">android api 15+ frontend</label>
+                <label><input type="checkbox" name="platform" value="android-api-16-gradle">android api-16+ gradle</label>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="android-x86">android-x86 (Android 4.2)</label>
@@ -400,7 +403,9 @@
                 <li><label><input type="checkbox" name="talos_suite" value="g2-e10s">g2 (e10s)</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="svgr-e10s">svgr (e10s)</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="tp5o-e10s">tp5o (e10s)</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="quantum-pageload-e10s">quantum-pageload (e10s)</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="tp6-e10s">tp6 (e10s)</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="tp6-stylo-e10s">tp6-stylo (e10s)</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="tp6-stylo-threads-e10s">tp6-stylo-threads (e10s)</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="xperf-e10s">xperf (e10s)<span class="info"> (win7 only)</span></label></li>
             </ul>
             </div>

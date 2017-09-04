@@ -13,16 +13,20 @@ import re
 
 from cli_common.log import get_logger
 from cli_common.command import run_check
+from shipit_static_analysis.config import settings
 
 logger = get_logger(__name__)
 
-REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): ([\w\s\.\'\"^_,-<=>\(\)]+)(?: \[([\.\w-]+)\])?\n', re.MULTILINE)
+REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): ([^\[\]\n]+)(?: \[([\.\w-]+)\])?$', re.MULTILINE)
 
 ISSUE_MARKDOWN = '''
 ## {type}
 **Message**: {message}
 **Location**: {location}
 **Clang check**: {check}
+**Publishable check**: {publishable_check}
+**Third Party**: {third_party}
+**Publishable on MozReview**: {publishable}
 ```
 {body}
 ```
@@ -98,7 +102,7 @@ class ClangTidy(object):
             for _ in range(workers):
                 t = threading.Thread(
                     target=self.run_clang_tidy,
-                    args=(checks, )
+                    args=([c['name'] for c in checks], )
                 )
                 t.daemon = True
                 t.start()
@@ -188,7 +192,8 @@ class ClangTidy(object):
                     logger.info('Skipping clang-diagnostic-error: {}'.format(issue))
                 else:
                     issues.append(issue)
-                    logger.info('Found code issue {}'.format(issue))
+                    mode = issue.is_third_party() and '3rd party' or 'in-tree'
+                    logger.info('Found {} code issue {}'.format(mode, issue))
 
             elif issues:
                 # Link notes to last problem
@@ -205,6 +210,7 @@ class ClangIssue(object):
         assert isinstance(header_data, tuple)
         assert len(header_data) == 6
         self.path, self.line, self.char, self.type, self.message, self.check = header_data  # noqa
+        self.work_dir = work_dir
         if self.path.startswith(work_dir):
             self.path = self.path[len(work_dir):]
         self.line = int(self.line)
@@ -218,6 +224,39 @@ class ClangIssue(object):
     def is_problem(self):
         return self.type in ('warning', 'error')
 
+    def is_publishable(self):
+        '''
+        Is this issue publishable on Mozreview ?
+        * not a third party code
+        * check is marked as publishable
+        '''
+        return self.has_publishable_check() \
+            and not self.is_third_party()
+
+    def is_third_party(self):
+        '''
+        Is this issue in a third party path ?
+        '''
+
+        # List third party directories using mozilla-central file
+        full_path = os.path.join(self.work_dir, settings.third_party)
+        assert os.path.exists(full_path), \
+            'Missing third party file {}'.format(full_path)
+        with open(full_path) as f:
+            # Remove new lines
+            third_parties = list(map(lambda l: l.rstrip(), f.readlines()))
+
+        for path in third_parties:
+            if self.path.startswith(path):
+                return True
+        return False
+
+    def has_publishable_check(self):
+        '''
+        Is this issue using a publishable check ?
+        '''
+        return settings.is_publishable_check(self.check)
+
     def as_markdown(self):
         return ISSUE_MARKDOWN.format(
             type=self.type,
@@ -225,6 +264,9 @@ class ClangIssue(object):
             location='{}:{}:{}'.format(self.path, self.line, self.char),
             body=self.body,
             check=self.check,
+            third_party=self.is_third_party() and 'yes' or 'no',
+            publishable_check=self.has_publishable_check() and 'yes' or 'no',
+            publishable=self.is_publishable() and 'yes' or 'no',
             notes='\n'.join([
                 ISSUE_NOTE_MARKDOWN.format(
                     message=n.message,

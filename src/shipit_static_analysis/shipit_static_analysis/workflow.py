@@ -6,13 +6,14 @@
 from __future__ import absolute_import
 
 import hglib
-import yaml
 import os
 
 from cli_common.taskcluster import get_service
 from cli_common.log import get_logger
 from cli_common.command import run_check
 from shipit_static_analysis.clang import ClangTidy
+from shipit_static_analysis.config import settings
+from shipit_static_analysis.batchreview import BatchReview
 
 logger = get_logger(__name__)
 
@@ -26,11 +27,15 @@ class Workflow(object):
     '''
     taskcluster = None
 
-    def __init__(self, cache_root, emails, client_id=None, access_token=None):
+    def __init__(self, cache_root, emails, mozreview, mozreview_enabled=False, client_id=None, access_token=None):  # noqa
         self.emails = emails
+        self.mozreview = mozreview
+        self.mozreview_enabled = mozreview_enabled
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
             'Cache root {} is not a dir.'.format(self.cache_root)
+        assert 'MOZCONFIG' in os.environ, \
+            'Missing MOZCONFIG in environment'
 
         # Load TC services & secrets
         self.notify = get_service(
@@ -39,15 +44,9 @@ class Workflow(object):
             access_token=access_token,
         )
 
-        # Read local config
-        config_path = os.path.join(os.path.dirname(__file__), 'config.yml')
-        self.config = yaml.load(open(config_path))
-        assert 'clang_checkers' in self.config
-        assert 'target' in self.config
-
         # Clone mozilla-central
-        self.repo_dir = os.path.join(self.cache_root, 'static-analysis/')
-        shared_dir = os.path.join(self.cache_root, 'static-analysis-shared')
+        self.repo_dir = os.path.join(cache_root, 'central')
+        shared_dir = os.path.join(cache_root, 'central-shared')
         logger.info('Clone mozilla central', dir=self.repo_dir)
         cmd = hglib.util.cmdbuilder('robustcheckout',
                                     REPO_CENTRAL,
@@ -66,7 +65,7 @@ class Workflow(object):
         self.hg = hglib.open(self.repo_dir)
 
         # Setup clang
-        self.clang = ClangTidy(self.repo_dir, self.config['target'])
+        self.clang = ClangTidy(self.repo_dir, settings.target)
 
     def run(self, revision, review_request_id, diffset_revision):
         '''
@@ -74,6 +73,7 @@ class Workflow(object):
          * Pull revision from review
          * Checkout revision
          * Run static analysis
+         * Publish results
         '''
         # Force cleanup to reset tip
         # otherwise previous pull are there
@@ -95,9 +95,9 @@ class Workflow(object):
             modified_files += [f.decode('utf-8') for _, f in status]
         logger.info('Modified files', files=modified_files)
 
-        # mach configure
+        # mach configure with mozconfig
         logger.info('Mach configure...')
-        run_check(['gecko-env', './mach', 'configure', '--enable-clang-plugin'], cwd=self.repo_dir)
+        run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
 
         # Build CompileDB backend
         logger.info('Mach build backend...')
@@ -111,21 +111,64 @@ class Workflow(object):
 
         # Run static analysis through run-clang-tidy.py
         logger.info('Run clang-tidy...')
-        issues = self.clang.run(self.config['clang_checkers'], modified_files)
+        issues = self.clang.run(settings.clang_checkers, modified_files)
 
         logger.info('Detected {} code issue(s)'.format(len(issues)))
+        if not issues:
+            logger.info('No issues, stopping there.')
+            return
+
+        # Publish on mozreview
+        self.publish_mozreview(review_request_id, diffset_revision, issues)
 
         # Notify by email
-        if issues:
-            logger.info('Send email to admins')
-            self.notify_admins(review_request_id, issues)
+        logger.info('Send email to admins')
+        self.notify_admins(review_request_id, issues)
+
+    def publish_mozreview(self, review_request_id, diff_revision, issues):
+        '''
+        Publish comments on mozreview
+        '''
+
+        # Filter issues to keep publishable checks
+        # and non third party
+        issues = list(filter(lambda i: i.is_publishable(), issues))
+        if not issues:
+            logger.info('No issues to publish on MozReview')
+            return
+
+        # Create batch review
+        review = BatchReview(
+            self.mozreview,
+            review_request_id,
+            diff_revision,
+        )
+
+        # Comment each issue
+        for issue in issues:
+            if self.mozreview_enabled:
+                logger.info('Will publish about {}'.format(issue))
+                review.comment(issue.path, issue.line, 1, issue.body)
+            else:
+                logger.info('Should publish about {}'.format(issue))
+
+        if not self.mozreview_enabled:
+            logger.info('Skipping Mozreview publication')
+            return
+
+        # Publish the review
+        # without ship_it to avoid automatically r+
+        return review.publish(ship_it=False)
 
     def notify_admins(self, review_request_id, issues):
         '''
         Send an email to administrators
         '''
-        review_url = 'https://reviewboard.mozilla.org/r/' + review_request_id + '/'
-        content = review_url + '\n\n' + '\n'.join([i.as_markdown() for i in issues])
+        content = '{nb_publishable} Publishable issues on Mozreview\n\nUrl : {url}\n\n'.format(  # noqa
+            url='https://reviewboard.mozilla.org/r/{}/'.format(review_request_id), # noqa
+            nb_publishable=sum([i.is_publishable() for i in issues]),
+        )
+        content += '\n'.join([i.as_markdown() for i in issues])
         for email in self.emails:
             self.notify.email({
                 'address': email,

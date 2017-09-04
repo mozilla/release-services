@@ -39,6 +39,7 @@ secrets = cli_common.taskcluster.get_secrets(
 
 locals().update(secrets)
 
+SSL_DEV_CA = os.getenv('SSL_DEV_CA')  # should be set in development environments
 SECRET_KEY = base64.b64decode(secrets['SECRET_KEY_BASE64'])
 RELENG_NOTIFICATION_IDENTITY_ENDPOINT = secrets.get('RELENG_NOTIFICATION_IDENTITY_ENDPOINT')
 if not RELENG_NOTIFICATION_IDENTITY_ENDPOINT:

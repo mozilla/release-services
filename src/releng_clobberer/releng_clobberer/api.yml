@@ -2,119 +2,273 @@
 swagger: "2.0"
 info:
   version: "1.0.0"
-  title: "Clobberer"
+  title: "RelEng Clobberer"
+  description: |
+    Wipes a build worker clean to start a new build.
+  contact:
+    name: Mozilla Release Engineering
+    url: 'https://wiki.mozilla.org/ReleaseEngineering'
+    email: release@mozilla.com
+  license:
+    name: Mozilla Public License Version 2.0
+    url: 'https://www.mozilla.org/en-US/MPL/2.0/'
+
 consumes:
   - application/json
 produces:
   - application/json
 paths:
-
-  /buildbot:
-
-    get:
-      operationId: "releng_clobberer.api.get_buildbot"
-      responses:
-        200:
-          description: An array of branches
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Branch'
-
+  '/clobber':
     post:
-      operationId: "releng_clobberer.api.post_buildbot"
+      summary: Request clobbers for particular branches and build directories.
+      operationId: releng_clobberer.api.post_clobber
       parameters:
         - name: body
           in: body
-          description: List of Builds to clobber.
+          description: Array of clobber requests.
           required: true
           schema:
             type: array
             items:
-              type: object
-              properties:
-                branch:
-                  type: string
-                builddir:
-                  type: string
-                slave:
-                  type: string
+              $ref: '#/definitions/ClobberRequest'
+
       responses:
         200:
-          description: Builders clobbered
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Message'
-        500:
-          description: Something went wrong when clobbering builders
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Message'
+          description: Clobber requests successfully added.
 
-  /taskcluster:
-
-    get:
-      operationId: "releng_clobberer.api.get_taskcluster"
-      responses:
-        200:
-          description: An array of branches
-
+  '/clobber/by-builder':
     post:
-      operationId: "releng_clobberer.api.post_taskcluster"
+      summary: Request clobbers for app builddirs associated with a particular buildername.
+      operationId: releng_clobberer.api.post_clobber_by_builder
+      parameters:
+        - name: body
+          in: body
+          description: Array of Clobber-by-builder requests.
+          required: true
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ClobberRequestByBuilder'
+
       responses:
         200:
-          description: Branches clobbered
+          description: Clobber requests successfully added.
+
+  '/branches':
+    get:
+      summary: Return a list of all the branches clobberer knows about.
+      operationId: releng_clobberer.api.get_branches
+      responses:
+        200:
+          description: List of branches successfully retrieved.
+          schema:
+            type: array
+            items:
+              type: string
+
+  '/lastclobber/all':
+    get:
+      summary: Return a sorted list of all clobbers.
+      operationId: releng_clobberer.api.get_lastclobber_all
+      responses:
+        200:
+          description: List of clobbers successfully retrieved.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ClobberTime'
+
+  '/lastclobber/branch/by-builder/{branch}':
+    get:
+      summary: Return a dictionary of most recent ClobberTimes grouped by buildername.
+      operationId: releng_clobberer.api.get_lastclobber_by_builder
+      parameters:
+        - name: branch
+          in: path
+          type: string
+          description: Branch to retrieve ClobberTimes for.
+          required: true
+
+      responses:
+        200:
+          description: ClobberTimes successfully retrieved.
+          schema:
+            type: object
+            additionalProperties:
+              $ref: '#/definitions/ClobberTime'
+
+  '/lastclobber':
+    get:
+      summary: Get the max/last clobber time for a particular builddir and branch.
+      operationId: releng_clobberer.api.get_lastclobber
+      parameters:
+        - name: branch
+          in: query
+          type: string
+          description: Branch to retrieve last clobber time for.
+          required: true
+
+        - name: slave
+          in: query
+          type: string
+          description: Slave to retrieve last clobber time for.
+          required: true
+
+        - name: builddir
+          in: query
+          type: string
+          description: Build dir to retrieve last clobber time for.
+          required: true
+
+        - name: buildername
+          in: query
+          type: string
+          description: Builder name to retrieve last clobber time for.
+          required: true
+
+      responses:
+        200:
+          description: Last clobber time successfully retrieved.
+          schema:
+            type: string
+
+  '/forceclobber':
+    get:
+      summary: Force a build clobber.
+      description: |
+        Coerce the client to clobber by always returning a future clobber time.
+        This works because the client decides to clobber based on a timestamp
+        comparison.
+      operationId: releng_clobberer.api.get_forceclobber
+      parameters:
+        - name: builddir
+          in: query
+          type: string
+          description: Build dir to force a clobber for.
+          required: true
+
+      responses:
+        200:
+          description: Clobber successfully forced.
+          schema:
+            type: string
+
+  '/tc/branches':
+    get:
+      summary: Retrieve list of all the gecko branches with their worker types.
+      operationId: releng_clobberer.api.get_tc_branches_cached
+      responses:
+        200:
+          description: List of branches successfully retrieved.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/TCBranch'
+
+  '/tc/purgecache':
+    post:
+      summary: Purge cache on taskcluster.
+      operationId: releng_clobberer.api.post_tc_purgecache
+      parameters:
+        - name: body
+          in: body
+          description: Array of TaskCluster purge cache requests.
+          required: true
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/TCPurgeCacheRequest'
+      responses:
+        200:
+          description: TaskCluster cache successfully purged.
+
 
 definitions:
-
-  Message:
+  ClobberRequest:
+    description: Represents a clobber request for a branch and build directory.
     required:
-      - title
-      - message
+      - builddir
     properties:
-      title:
+      branch:
         type: string
-      message:
+        description: The branch for this clobber request.
+      builddir:
         type: string
-      extra:
+        description: The build directory to be clobbered.
+      slave:
         type: string
+        description: A specific slave to clobber (defaults to all slaves).
 
-
-  Branch:
-    type: object
+  ClobberRequestByBuilder:
+    description: Represents a clobber request for a branch and buildername.
     required:
-      - name
-      - builders
+      - buildername
     properties:
-      name:
+      branch:
         type: string
-      builders:
-        type: array
-        description: Builders per branch
-        items:
-          $ref: '#/definitions/Builder'
+        description: The branch for this clobber request (defaults to all branches).
+      buildername:
+        type: string
+        description: A buildername whose associated builddirs will be clobbered.
+      slave:
+        type: string
+        description: A specific slave to clobber (defaults to all slaves).
 
-  Builder:
-    type: object
+  ClobberTime:
+    description: Represents the most recent data pertaining to a particular clobber.
     required:
-      - name
       - branch
       - builddir
       - slave
       - lastclobber
       - who
     properties:
-      name:
-        type: string
       branch:
         type: string
+        description: The branch associated with this clobber.
       builddir:
         type: string
+        description: The clobbered directory.
       slave:
         type: string
+        description: A particular slave (null means all slaves).
       lastclobber:
         type: integer
+        description: Timestamp associated with the last clobber request.
       who:
+        type: string
+        description: User who initiated the last clobber.
+
+  TCWorkerType:
+    description: Represents worker type of taskcluster.
+    required:
+      - name
+    properties:
+      name:
+        type: string
+      caches:
+        type: array
+        items:
+          type: string
+
+  TCBranch:
+    description: Represents branches of taskcluster.
+    required:
+      - name
+    properties:
+      name:
+        type: string
+      provisionerId:
+        type: string
+      workerTypes:
+        type: object
+
+  TCPurgeCacheRequest:
+    description: A clobber request for purging cache on taskcluster. http://docs.taskcluster.net/services/purge-cache
+    properties:
+      provisionerId:
+        type: string
+      workerType:
+        type: string
+      cacheName:
         type: string

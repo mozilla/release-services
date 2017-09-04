@@ -6,15 +6,15 @@
 from __future__ import absolute_import
 
 from shipit_static_analysis.workflow import Workflow
+from shipit_static_analysis.batchreview import build_api_root
+from shipit_static_analysis.lock import LockDir
 from shipit_static_analysis import config
 from cli_common.click import taskcluster_options
 from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
 import click
-import logging
 import re
 
-logger = logging.getLogger(__name__)
 
 REGEX_COMMIT = re.compile(r'(\w+):(\d+):(\d+)')
 
@@ -36,7 +36,15 @@ def main(commits,
 
     secrets = get_secrets(taskcluster_secret,
                           config.PROJECT_NAME,
-                          required=('STATIC_ANALYSIS_NOTIFICATIONS', ),
+                          required=(
+                              'STATIC_ANALYSIS_NOTIFICATIONS',
+                              'MOZREVIEW_URL',
+                              'MOZREVIEW_USER',
+                              'MOZREVIEW_API_KEY',
+                          ),
+                          existing={
+                              'MOZREVIEW_ENABLED': False,
+                          },
                           taskcluster_client_id=taskcluster_client_id,
                           taskcluster_access_token=taskcluster_access_token,
                           )
@@ -48,14 +56,23 @@ def main(commits,
                 MOZDEF=secrets.get('MOZDEF'),
                 )
 
-    w = Workflow(cache_root,
-                 secrets['STATIC_ANALYSIS_NOTIFICATIONS'],
-                 taskcluster_client_id,
-                 taskcluster_access_token,
-                 )
+    mozreview = build_api_root(
+        secrets['MOZREVIEW_URL'],
+        secrets['MOZREVIEW_USER'],
+        secrets['MOZREVIEW_API_KEY'],
+    )
 
-    for commit in REGEX_COMMIT.findall(commits):
-        w.run(*commit)
+    with LockDir(cache_root, 'shipit-sa-') as work_dir:
+        w = Workflow(work_dir,
+                     secrets['STATIC_ANALYSIS_NOTIFICATIONS'],
+                     mozreview,
+                     secrets['MOZREVIEW_ENABLED'],
+                     taskcluster_client_id,
+                     taskcluster_access_token,
+                     )
+
+        for commit in REGEX_COMMIT.findall(commits):
+            w.run(*commit)
 
 
 if __name__ == '__main__':

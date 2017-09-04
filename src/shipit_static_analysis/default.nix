@@ -95,6 +95,9 @@ let
       # Setup mach automation
       export MOZ_AUTOMATION=1
 
+      # Use clang mozconfig from gecko-env
+      export MOZCONFIG=${releng_pkgs.gecko-env}/conf/mozconfig
+
       # Extras for clang-tidy
       export CPLUS_INCLUDE_PATH=${includes}
       export C_INCLUDE_PATH=${includes}
@@ -103,6 +106,7 @@ let
     dockerEnv =
       [ "CPLUS_INCLUDE_PATH=${includes}"
         "C_INCLUDE_PATH=${includes}"
+        "MOZCONFIG=${releng_pkgs.gecko-env}/conf/mozconfig"
       ];
     dockerCmd = [];
 

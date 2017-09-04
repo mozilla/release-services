@@ -5,7 +5,6 @@
 
 from __future__ import absolute_import
 
-import logging
 import datetime
 
 from flask import abort
@@ -13,10 +12,11 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 
 from backend_common.db import db
+import cli_common.log
 from shipit_taskcluster.models import TaskclusterStatus, TaskclusterStep
 from shipit_taskcluster.taskcluster_utils import get_taskcluster_tasks_state
 
-log = logging.getLogger(__name__)
+log = cli_common.log.get_logger(__name__)
 
 
 # api

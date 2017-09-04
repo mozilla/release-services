@@ -221,8 +221,8 @@ def post_tick_tock() -> dict:
         for policy, identity_preference_url in get_identity_url_for_actionable_policies(policies):
             try:
                 service_credentials = {
-                    'id': current_app.config.get('TASKCLUSTER_CLIENT_ID'),
-                    'key': current_app.config.get('TASKCLUSTER_ACCESS_TOKEN'),
+                    'id': current_app.config['TASKCLUSTER_CLIENT_ID'],
+                    'key': current_app.config['TASKCLUSTER_ACCESS_TOKEN'],
                     'algorithm': 'sha256',
                 }
 
@@ -231,7 +231,7 @@ def post_tick_tock() -> dict:
                                      content_type='application/json')
 
                 # Support dev ssl ca cert
-                ssl_dev_ca = os.environ.get('SSL_DEV_CA')
+                ssl_dev_ca = current_app.config.get('SSL_DEV_CA')
                 if ssl_dev_ca is not None:
                     assert os.path.isdir(ssl_dev_ca), \
                         'SSL_DEV_CA must be a dir with hashed dev ca certs'

@@ -7,7 +7,6 @@ from __future__ import absolute_import
 
 import datetime
 import json
-import logging
 import pytz
 import sqlalchemy as sa
 
@@ -15,6 +14,7 @@ from flask import current_app
 from flask_login import current_user
 from werkzeug.exceptions import NotFound, BadRequest
 
+import cli_common.log
 from backend_common.cache import cache
 from backend_common.auth import auth
 from releng_treestatus.models import (
@@ -25,7 +25,7 @@ from releng_treestatus.models import (
 UNSET = object()
 TREE_SUMMARY_LOG_LIMIT = 5
 
-log = logging.getLogger(__name__)
+log = cli_common.log.get_logger(__name__)
 
 
 def _get(item, field, default=UNSET):
@@ -99,7 +99,7 @@ def _update_tree_status(session, tree, status=None, reason=None, tags=[],
 
 
 @cache.memoize()
-def v0_get_tree(tree):
+def v0_get_tree(tree, format=None):
     t = current_app.db.session.query(Tree).get(tree)
     if not t:
         raise NotFound('No such tree')
@@ -232,7 +232,7 @@ def get_logs(tree, all=0):
     return dict(result=logs)
 
 
-def v0_get_trees():
+def v0_get_trees(format):
     return get_trees()
 
 

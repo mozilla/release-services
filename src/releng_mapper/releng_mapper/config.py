@@ -7,3 +7,4 @@ from __future__ import absolute_import
 
 
 PROJECT_NAME = 'releng-mapper'
+PROJECT_PATH_NAME = PROJECT_NAME.replace('-', '_')

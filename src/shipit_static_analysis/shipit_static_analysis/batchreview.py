@@ -6,8 +6,24 @@
 import json
 from cli_common import log
 from rbtools.api.errors import APIError
+from rbtools.api.client import RBClient
 
 logger = log.get_logger(__name__)
+
+
+def build_api_root(url, username, api_key):
+    '''
+    Helper to build an RBTools api root
+    used by BatchReview
+    '''
+    logger.info('Authenticate on Mozreview', url=url, username=username)
+    client = RBClient(url, save_cookies=False, allow_caching=False)
+    login_resource = client.get_path(
+        'extensions/mozreview.extension.MozReviewExtension/'
+        'bugzilla-api-key-logins/'
+    )
+    login_resource.create(username=username, api_key=api_key)
+    return client.get_root()
 
 
 class BatchReview(object):
@@ -124,7 +140,7 @@ class BatchReview(object):
         if len(self.comments) > self.max_comments:
             warning = ('WARNING: Number of comments exceeded maximum, showing '
                        '%d of %d.') % (self.max_comments, len(self.comments))
-            self.body_top = '%s\n%s' % (self.body_top, warning)
+            body_top = '%s\n%s' % (body_top, warning)
             del self.comments[self.max_comments:]
 
         try:
