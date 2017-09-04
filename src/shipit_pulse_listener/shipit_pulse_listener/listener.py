@@ -6,6 +6,9 @@ from shipit_pulse_listener import task_monitoring
 import requests
 import itertools
 import asyncio
+from datetime import datetime, timedelta
+import dateutil.parser
+import pytz
 
 logger = get_logger(__name__)
 
@@ -131,6 +134,7 @@ class HookCodeCoverage(Hook):
     '''
     def __init__(self, configuration):
         assert 'hookId' in configuration
+        self.triggered_groups = set()
         super().__init__(
             'project-releng',
             configuration['hookId'],
@@ -141,7 +145,23 @@ class HookCodeCoverage(Hook):
     def is_coverage_task(self, task):
         return task['task']['metadata']['name'].startswith('build-linux64-ccov')
 
+    def as_utc(self, d):
+        if d.tzinfo is None or d.tzinfo.utcoffset(d) is None:
+            return pytz.utc.localize(d)
+        return d.astimezone(pytz.utc)
+
+    def is_old_task(self, task):
+        for run in task['status']['runs']:
+            run_date = self.as_utc(dateutil.parser.parse(run['resolved']))
+            if run_date < self.as_utc(datetime.utcnow() - timedelta(1)):
+                return True
+        return False
+
     def get_build_task_in_group(self, group_id):
+        if group_id in self.triggered_groups:
+            logger.info('Received duplicated groupResolved notification', group=group_id)
+            return None
+
         list_url = 'https://queue.taskcluster.net/v1/task-group/' + group_id + '/list'
 
         r = requests.get(list_url, params={
@@ -150,6 +170,7 @@ class HookCodeCoverage(Hook):
         reply = r.json()
         for task in reply['tasks']:
             if self.is_coverage_task(task):
+                self.triggered_groups.add(group_id)
                 return task
 
         while 'continuationToken' in reply:
@@ -160,6 +181,7 @@ class HookCodeCoverage(Hook):
             reply = r.json()
             for task in reply['tasks']:
                 if self.is_coverage_task(task):
+                    self.triggered_groups.add(group_id)
                     return task
 
         return None
@@ -173,6 +195,12 @@ class HookCodeCoverage(Hook):
         build_task = self.get_build_task_in_group(taskGroupId)
         if build_task is None:
             return None
+
+        if self.is_old_task(build_task):
+            logger.info('Received groupResolved notification for an old task', group=taskGroupId)
+            return None
+
+        logger.info('Received groupResolved notification for a linux64-ccov build', revision=build_task['task']['payload']['env']['GECKO_HEAD_REV'], group=taskGroupId)  # noqa
 
         return {
             'REVISION': build_task['task']['payload']['env']['GECKO_HEAD_REV'],
