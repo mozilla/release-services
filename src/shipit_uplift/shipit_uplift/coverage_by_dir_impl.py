@@ -157,7 +157,10 @@ def generate(path):
       'id': ','.join([str(b) for b in sorted(all_bugs)])
     })
 
-    for found_bug in r.json()['bugs']:
+    response = r.json()
+    found_bugs = response['bugs'] if 'bugs' in response else []
+
+    for found_bug in found_bugs:
         for directory in data.values():
             for bug in directory['bugs']:
                 if bug['id'] == found_bug['id']:
