@@ -167,6 +167,19 @@ paths:
         200:
           description: Code coverage information by changeset
 
+  /coverage/changeset_summary/{changeset}:
+    get:
+      operationId: "shipit_uplift.api.coverage_summary_by_changeset"
+      parameters:
+      - name: changeset
+        in: path
+        description: Changeset
+        required: true
+        type: string
+      responses:
+        200:
+          description: Code coverage summary by changeset
+
 definitions:
 
   Success:

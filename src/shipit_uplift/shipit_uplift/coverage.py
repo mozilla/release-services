@@ -19,7 +19,7 @@ def get_github_commit(mercurial_commit):
 class Coverage(ABC):
     @staticmethod
     @abstractmethod
-    def has_coverage(changeset):
+    def get_coverage(changeset):
         pass
 
     @staticmethod
@@ -42,9 +42,19 @@ class CoverallsCoverage(Coverage):
     URL = 'https://coveralls.io'
 
     @staticmethod
-    def has_coverage(changeset):
+    @cache.memoize()
+    def get_coverage(changeset):
         r = requests.get(CoverallsCoverage.URL + '/builds/%s.json' % get_github_commit(changeset))
-        return r.status_code == requests.codes.ok
+
+        if r.status_code != requests.codes.ok:
+            raise Exception('Error while loading coverage data.')
+
+        result = r.json()
+
+        return {
+          'cur': result['covered_percent'],
+          'prev': result['covered_percent'] + result['coverage_change'],
+        }
 
     @staticmethod
     def get_file_coverage(changeset, filename):
@@ -85,9 +95,19 @@ class CodecovCoverage(Coverage):
     URL = 'https://codecov.io/api/gh/marco-c/gecko-dev'
 
     @staticmethod
-    def has_coverage(changeset):
+    @cache.memoize()
+    def get_coverage(changeset):
         r = requests.get(CodecovCoverage.URL + '/commit/%s' % get_github_commit(changeset))
-        return r.status_code == requests.codes.ok
+
+        if r.status_code != requests.codes.ok:
+            raise Exception('Error while loading coverage data.')
+
+        result = r.json()
+
+        return {
+          'cur': result['commit']['totals']['c'],
+          'prev': result['commit']['parent_totals']['c'],
+        }
 
     @staticmethod
     def get_file_coverage(changeset, filename):
@@ -138,23 +158,8 @@ class ActiveDataCoverage(Coverage):
     URL = 'https://activedata.allizom.org/query'
 
     @staticmethod
-    def has_coverage(changeset):
-        r = requests.post(ActiveDataCoverage.URL, data=json.dumps({
-            'from': 'coverage-summary',
-            'where': {
-                'and': [
-                    {
-                        'eq': {
-                            'repo.changeset.id12': changeset[:12],
-                        }
-                    }
-                ]
-            },
-            'select': {
-                'aggregate': 'count'
-            }
-        }))
-        return r.json()['data']['count'] > 0
+    def get_coverage(changeset):
+        assert False, 'Not implemented'
 
     @staticmethod
     def get_file_coverage(changeset, filename):
@@ -196,3 +201,54 @@ class ActiveDataCoverage(Coverage):
 
 
 coverage_service = CodecovCoverage()
+
+
+def get_coverage_builds(changeset, before=True, after=True):
+    '''
+    This function returns the last successful build before a given
+    changeset and the first successful coverage build after the same
+    changeset.
+    '''
+    r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % changeset)
+    push_id = int(r.json()['pushid'])
+
+    # In a span of 15 pushes, we hope we will find successful coverage builds.
+    r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?startID=%s&endID=%s' % (push_id - 8, push_id + 7))
+    data = r.json()
+
+    before_changeset = None
+    before_changeset_overall = None
+    after_changeset = None
+    after_changeset_overall = None
+
+    pushes = data.items()
+    pushes_before = [(pushid, pushdata) for pushid, pushdata in pushes if int(pushid) < push_id]
+    pushes_after = [(pushid, pushdata) for pushid, pushdata in pushes if int(pushid) >= push_id]
+
+    if before:
+        # Find the last coverage build before the changeset.
+        for pushid, pushdata in sorted(pushes_before, reverse=True):
+            changeset = pushdata['changesets'][-1]
+            try:
+                before_changeset_overall = coverage_service.get_coverage(changeset)
+                before_changeset = changeset
+                break
+            except:
+                pass
+
+        assert before_changeset is not None, 'Couldn\'t find a build before the changeset'
+
+    if after:
+        # Find the first coverage build after the changeset.
+        for pushid, pushdata in sorted(pushes_after):
+            changeset = pushdata['changesets'][-1]
+            try:
+                after_changeset_overall = coverage_service.get_coverage(changeset)
+                after_changeset = changeset
+                break
+            except:
+                pass
+
+        assert after_changeset is not None, 'Couldn\'t find a build after the changeset'
+
+    return (before_changeset, before_changeset_overall, after_changeset, after_changeset_overall)
