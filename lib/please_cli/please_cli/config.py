@@ -147,6 +147,37 @@ PROJECTS = {
             # },
         },
     },
+
+    'releng-channel-status': {
+        'checks': [
+            ('Checking code quality', 'flake8'),
+            ('Running tests', 'pytest tests/'),
+        ],
+        'run': 'FLASK',
+        'run_options': {
+            'port': 8015,
+        },
+        'requires': [
+        ],
+        'deploy': 'HEROKU',
+        'deploy_options': {
+            'staging': {
+                'heroku_app': 'releng-staging-channel-status',
+                'heroku_dyno_type': 'web',
+                'url': 'https://channels.staging.mozilla-releng.net',
+                # TODO: switch to SSL Endpoint
+                'dns': 'channels.staging.mozilla-releng.net.herokudns.com',
+            },
+            # 'production': {
+            #     'heroku_app': 'releng-production-archiver',
+            #     'heroku_dyno_type': 'web',
+            #     'url': 'https://archiver.mozilla-releng.net',
+            #     # TODO: switch to SSL Endpoint
+            #     'dns': 'archiver.mozilla-releng.net.herokudns.com',
+            # },
+        },
+    },
+
     'releng-clobberer': {
         'checks': [
             ('Checking code quality', 'flake8'),
