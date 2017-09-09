@@ -1,5 +1,5 @@
 from backend_common.cache import cache
-from flask import current_app, request
+from flask import abort, current_app, request
 from flask.views import MethodView
 from .util import HttpRequestHelper
 
@@ -25,7 +25,7 @@ class ChannelStatusView(BaseView):
     def get(self, rule_alias, product, channel):
         rule = self._get_rule(rule_alias, product, channel)
         if not rule:
-            return 404, 'Rule not found'
+            abort(404)
         release = self._get_release(rule['mapping'])
         return self._create_response(release)
 
@@ -47,6 +47,4 @@ class ChannelStatusView(BaseView):
         return release
 
     def _create_response(self, release):
-        if not release:
-            return 404, 'Release not found'
         return str(release)
