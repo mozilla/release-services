@@ -153,7 +153,7 @@ view model =
                     title =
                         case model.path of
                             Just path ->
-                                "Directiory: " ++ path
+                                "Directory: " ++ path
 
                             Nothing ->
                                 "Top Directory"
