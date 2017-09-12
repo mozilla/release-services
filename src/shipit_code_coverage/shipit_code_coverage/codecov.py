@@ -19,9 +19,11 @@ logger = get_logger(__name__)
 class CodeCov(object):
 
     def __init__(self, revision, cache_root, coveralls_token, codecov_token, gecko_dev_user, gecko_dev_pwd):
-        # List of test-suite, sorted alphabetically.
-        # This way, the index of a suite in the array should be stable enough.
-        self.suites = []
+        # TODO: Enable more suites when Coveralls and/or Codecov will be able to properly handle the load.
+        self.suites = {
+            'web-platform-tests': set(),
+            'other': set(),
+        }
 
         self.cache_root = cache_root
 
@@ -47,6 +49,16 @@ class CodeCov(object):
 
         logger.info('Mercurial revision', revision=self.revision)
 
+    def add_to_suites(self, suite_name):
+        added = False
+        for name, suites in self.suites.items():
+            if name != 'other' and suite_name.startswith(name):
+                suites.add(suite_name)
+                added = True
+
+        if not added:
+            self.suites['other'].add(suite_name)
+
     def download_coverage_artifacts(self, build_task_id):
         try:
             os.mkdir('ccov-artifacts')
@@ -55,8 +67,6 @@ class CodeCov(object):
                 raise e
 
         task_data = taskcluster.get_task_details(build_task_id)
-
-        all_suites = set()
 
         def rewriting_task(path):
             return lambda: self.rewrite_jsvm_lcov(path)
@@ -70,7 +80,7 @@ class CodeCov(object):
                 if any(to_ignore in suite_name for to_ignore in ['awsy', 'talos']):
                     continue
 
-                all_suites.add(suite_name)
+                self.add_to_suites(suite_name)
 
                 test_task_id = test_task['status']['taskId']
                 for artifact in taskcluster.get_task_artifacts(test_task_id):
@@ -80,9 +90,6 @@ class CodeCov(object):
                     artifact_path = taskcluster.download_artifact(test_task_id, suite_name, artifact)
                     if 'code-coverage-jsvm.zip' in artifact['name']:
                         executor.submit(rewriting_task(artifact_path))
-
-            self.suites = list(all_suites)
-            self.suites.sort()
 
             logger.info('Code coverage artifacts downloaded')
 
@@ -133,7 +140,7 @@ class CodeCov(object):
         for lcov_out_file in lcov_out_files:
             os.rename(lcov_out_file, lcov_out_file[:-4])
 
-    def generate_info(self, commit_sha, coveralls_token, suite=None):
+    def generate_info(self, commit_sha, coveralls_token, suite_name=None, suites=None):
         files = os.listdir('ccov-artifacts')
         ordered_files = []
         for fname in files:
@@ -142,7 +149,7 @@ class CodeCov(object):
             if 'jsvm' in fname and fname.endswith('.zip'):
                 continue
 
-            if suite is None or suite in fname:
+            if suites is None or any([suite in fname for suite in suites]):
                 ordered_files.append('ccov-artifacts/' + fname)
 
         r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % self.revision)
@@ -161,8 +168,8 @@ class CodeCov(object):
           '--token', coveralls_token,
         ]
 
-        if suite is not None:
-            cmd.extend(['--service-job-number', str(self.suites.index(suite) + 1)])
+        if suites is not None:
+            cmd.extend(['--service-job-number', str(sorted(self.suites.keys()).index(suite_name) + 1)])
         else:
             cmd.extend(['--service-job-number', '1'])
 
@@ -223,18 +230,11 @@ class CodeCov(object):
 
         # TODO: Process suites in parallel.
         # While we are uploading results for a suite, we can start to process the next one.
-        # TODO: Reenable when Coveralls and/or Codecov will be able to properly handle the load.
-        '''for suite in self.suites:
-            output = self.generate_info(commit_sha, self.coveralls_token, suite)
+        for name, suites in self.suites.items():
+            output = self.generate_info(commit_sha, self.coveralls_token, name, suites)
 
-            logger.info('Suite report generated', suite=suite)
+            logger.info('Suites report generated successfully', name=name, suites=suites)
 
-            uploader.coveralls(output)
-            uploader.codecov(output, commit_sha, self.codecov_token, [suite.replace('-', '_')])'''
-
-        output = self.generate_info(commit_sha, self.coveralls_token)
-        logger.info('Report generated successfully')
-
-        with ThreadPoolExecutorResult(max_workers=2) as executor:
-            executor.submit(lambda: uploader.coveralls(output))
-            executor.submit(lambda: uploader.codecov(output, commit_sha, self.codecov_token))
+            with ThreadPoolExecutorResult(max_workers=2) as executor:
+                executor.submit(lambda: uploader.coveralls(output))
+                executor.submit(lambda: uploader.codecov(output, commit_sha, self.codecov_token, [name.replace('-', '_')]))
