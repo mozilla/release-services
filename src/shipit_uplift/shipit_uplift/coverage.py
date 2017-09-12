@@ -213,7 +213,7 @@ def get_coverage_builds(changeset, before=True, after=True):
     push_id = int(r.json()['pushid'])
 
     # In a span of 15 pushes, we hope we will find successful coverage builds.
-    r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?startID=%s&endID=%s' % (push_id - 8, push_id + 7))
+    r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?tipsonly=1&startID=%s&endID=%s' % (push_id - 8, push_id + 7))
     data = r.json()
 
     before_changeset = None
@@ -222,13 +222,12 @@ def get_coverage_builds(changeset, before=True, after=True):
     after_changeset_overall = None
 
     pushes = data.items()
-    pushes_before = [(pushid, pushdata) for pushid, pushdata in pushes if int(pushid) < push_id]
-    pushes_after = [(pushid, pushdata) for pushid, pushdata in pushes if int(pushid) >= push_id]
+    pushes_before = [(pushid, pushdata['changesets'][0]) for pushid, pushdata in pushes if int(pushid) < push_id]
+    pushes_after = [(pushid, pushdata['changesets'][0]) for pushid, pushdata in pushes if int(pushid) >= push_id]
 
     if before:
         # Find the last coverage build before the changeset.
-        for pushid, pushdata in sorted(pushes_before, reverse=True):
-            changeset = pushdata['changesets'][-1]
+        for pushid, changeset in sorted(pushes_before, reverse=True):
             try:
                 before_changeset_overall = coverage_service.get_coverage(changeset)
                 before_changeset = changeset
@@ -240,8 +239,7 @@ def get_coverage_builds(changeset, before=True, after=True):
 
     if after:
         # Find the first coverage build after the changeset.
-        for pushid, pushdata in sorted(pushes_after):
-            changeset = pushdata['changesets'][-1]
+        for pushid, changeset in sorted(pushes_after):
             try:
                 after_changeset_overall = coverage_service.get_coverage(changeset)
                 after_changeset = changeset
