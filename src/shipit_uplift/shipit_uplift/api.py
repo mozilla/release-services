@@ -21,7 +21,10 @@ from shipit_uplift.serializers import (
     serialize_patch_status
 )
 from shipit_uplift.config import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
-from shipit_uplift import coverage_by_dir_impl, coverage_by_changeset_impl
+from shipit_uplift import (
+    coverage_by_dir_impl, coverage_by_changeset_impl,
+    coverage_summary_by_changeset_impl
+)
 
 
 logger = log.get_logger(__name__)
@@ -375,6 +378,15 @@ def coverage_by_dir(path=''):
 def coverage_by_changeset(changeset):
     try:
         return coverage_by_changeset_impl.generate(changeset)
+    except Exception as e:
+        return {
+          'error': str(e)
+        }, 500
+
+
+def coverage_summary_by_changeset(changeset):
+    try:
+        return coverage_summary_by_changeset_impl.generate(changeset)
     except Exception as e:
         return {
           'error': str(e)
