@@ -144,7 +144,7 @@ class ClangTidy(object):
             # Build command line for a filename
             cmd = [
                 self.binary,
-                # Show warnings in all in-project headers by default.
+                # Limit warnings to current file
                 '-header-filter={}'.format(os.path.basename(filename)),
                 '-checks={}'.format(','.join(checks)),
                 '-p={}'.format(self.build_dir),
