@@ -63,6 +63,7 @@ let
       hook = mkTaskclusterHook {
         name = "Shipit task aggregating code coverage data";
         owner = "mcastelluccio@mozilla.com";
+        schedule = [ "0 0 0 * * 0" ]; # every week
         taskImage = self.docker;
         scopes = [
           # Used by taskclusterProxy
@@ -117,6 +118,7 @@ let
       ln -s ${releng_pkgs.pkgs.gcc}/bin/gcc $out/bin
       ln -s ${releng_pkgs.pkgs.gcc.cc}/bin/gcov $out/bin
       ln -s ${releng_pkgs.pkgs.lcov}/bin/lcov $out/bin
+      ln -s ${releng_pkgs.pkgs.lcov}/bin/genhtml $out/bin
       ln -s ${rustStable.rustc}/bin/rustc $out/bin
       ln -s ${rustStable.cargo}/bin/cargo $out/bin
 
