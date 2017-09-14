@@ -107,7 +107,7 @@ class CodecovCoverage(Coverage):
 
         return {
           'cur': result['commit']['totals']['c'],
-          'prev': result['commit']['parent_totals']['c'],
+          'prev': result['commit']['parent_totals']['c'] if result['commit']['parent_totals'] else '?',
         }
 
     @staticmethod
