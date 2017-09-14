@@ -235,3 +235,16 @@ def get_coverage_build(changeset):
     assert after_changeset is not None, 'Couldn\'t find a build after the changeset'
 
     return (after_changeset, after_changeset_overall)
+
+
+def coverage_supported(path):
+    COVERAGE_EXTENSIONS = [
+        # C
+        'c', 'h',
+        # C++
+        'cpp', 'hh', 'hpp',
+        # JavaScript
+        'js', 'jsm',
+    ]
+
+    return any([path.endswith('.' + ext) for ext in COVERAGE_EXTENSIONS])

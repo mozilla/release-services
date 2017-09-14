@@ -5,7 +5,7 @@
 
 import requests
 import whatthepatch
-from shipit_uplift.coverage import coverage_service, get_coverage_build
+from shipit_uplift.coverage import coverage_service, get_coverage_build, coverage_supported
 
 
 def generate(changeset):
@@ -28,6 +28,11 @@ def generate(changeset):
         if diff.changes is None:
             continue
 
+        # If the file is not a source file, we skip it (as we already know
+        # we have no coverage information for it).
+        if not coverage_supported(new_path):
+            continue
+
         # Retrieve coverage of added lines.
         coverage = coverage_service.get_file_coverage(build_changeset, new_path)
 
@@ -37,19 +42,18 @@ def generate(changeset):
 
         changes = []
         for old_line, new_line, _ in diff.changes:
-            if old_line is None and new_line is not None:
-                # Added line.
-                if new_line not in coverage or coverage[new_line] is None:
-                    # We have no coverage information for this line (e.g. a definition, like
-                    # a variable in a header file).
-                    covered = '?'
-                elif coverage[new_line] > 0:
-                    covered = 'Y'
-                else:
-                    covered = 'N'
-            else:
-                # Unmodified or removed line.
+            # Only consider added lines.
+            if old_line is not None or new_line is None:
                 continue
+
+            if new_line not in coverage or coverage[new_line] is None:
+                # We have no coverage information for this line (e.g. a definition, like
+                # a variable in a header file).
+                covered = '?'
+            elif coverage[new_line] > 0:
+                covered = 'Y'
+            else:
+                covered = 'N'
 
             changes.append({
                 'coverage': covered,
