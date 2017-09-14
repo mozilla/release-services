@@ -5,7 +5,7 @@
 
 import requests
 import whatthepatch
-from shipit_uplift.coverage import coverage_service, get_coverage_builds
+from shipit_uplift.coverage import coverage_service, get_coverage_build
 
 
 def generate(changeset):
@@ -13,7 +13,7 @@ def generate(changeset):
     This function generates a summary of the overall coverage information for a changeset and
     of the diff introduced by a changeset.
     '''
-    _, _, next_build_changeset, overall = get_coverage_builds(changeset, before=False)
+    next_build_changeset, overall = get_coverage_build(changeset)
 
     r = requests.get('https://hg.mozilla.org/mozilla-central/raw-rev/%s' % changeset)
     patch = r.text
