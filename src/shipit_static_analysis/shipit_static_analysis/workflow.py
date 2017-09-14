@@ -148,7 +148,12 @@ class Workflow(object):
         for issue in issues:
             if self.mozreview_enabled:
                 logger.info('Will publish about {}'.format(issue))
-                review.comment(issue.path, issue.line, 1, issue.body)
+                body = '{}: {} [clang-tidy: {}]'.format(
+                    issue.type.capitalize(),
+                    issue.message.capitalize(),
+                    issue.check,
+                )
+                review.comment(issue.path, issue.line, 1, body)
             else:
                 logger.info('Should publish about {}'.format(issue))
 

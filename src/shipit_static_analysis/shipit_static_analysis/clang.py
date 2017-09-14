@@ -21,21 +21,25 @@ REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): ([^\[\]\n]+
 
 ISSUE_MARKDOWN = '''
 ## {type}
-**Message**: {message}
-**Location**: {location}
-**Clang check**: {check}
-**Publishable check**: {publishable_check}
-**Third Party**: {third_party}
-**Publishable on MozReview**: {publishable}
+
+- **Message**: {message}
+- **Location**: {location}
+- **Clang check**: {check}
+- **Publishable check**: {publishable_check}
+- **Third Party**: {third_party}
+- **Publishable on MozReview**: {publishable}
+
 ```
 {body}
 ```
+
 {notes}
 '''
 
 ISSUE_NOTE_MARKDOWN = '''
-**Note**: {message}
-**Location**: {location}
+- **Note**: {message}
+- **Location**: {location}
+
 ```
 {body}
 ```
@@ -140,8 +144,8 @@ class ClangTidy(object):
             # Build command line for a filename
             cmd = [
                 self.binary,
-                # Show warnings in all in-project headers by default.
-                '-header-filter=^{}/.*'.format(os.path.basename(self.build_dir)),
+                # Limit warnings to current file
+                '-header-filter={}'.format(os.path.basename(filename)),
                 '-checks={}'.format(','.join(checks)),
                 '-p={}'.format(self.build_dir),
                 filename,
@@ -209,10 +213,11 @@ class ClangIssue(object):
     def __init__(self, header_data, work_dir):
         assert isinstance(header_data, tuple)
         assert len(header_data) == 6
+        assert not work_dir.endswith('/')
         self.path, self.line, self.char, self.type, self.message, self.check = header_data  # noqa
         self.work_dir = work_dir
         if self.path.startswith(work_dir):
-            self.path = self.path[len(work_dir):]
+            self.path = self.path[len(work_dir)+1:]  # skip heading /
         self.line = int(self.line)
         self.char = int(self.char)
         self.body = None
