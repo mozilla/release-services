@@ -37,6 +37,15 @@ class Workflow(object):
         assert 'MOZCONFIG' in os.environ, \
             'Missing MOZCONFIG in environment'
 
+        # Save Taskcluster ID as it's removed from env in clang.py
+        if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
+            self.taskcluster_id = '{} run:{}'.format(
+                os.environ['TASK_ID'],
+                os.environ['RUN_ID'],
+            )
+        else:
+            self.taskcluster_id = 'local instance'
+
         # Load TC services & secrets
         self.notify = get_service(
             'notify',
@@ -64,9 +73,6 @@ class Workflow(object):
         # Open new hg client
         self.hg = hglib.open(self.repo_dir)
 
-        # Setup clang
-        self.clang = ClangTidy(self.repo_dir, settings.target)
-
     def run(self, revision, review_request_id, diffset_revision):
         '''
         Run the static analysis workflow:
@@ -75,12 +81,23 @@ class Workflow(object):
          * Run static analysis
          * Publish results
         '''
+        # Add log to find Taskcluster task in papertrail
+        logger.info(
+            'New static analysis',
+            taskcluster=self.taskcluster_id,
+            revision=revision,
+            review_request_id=review_request_id,
+            diffset_revision=diffset_revision,
+        )
+
+        # Setup clang
+        clang = ClangTidy(self.repo_dir, settings.target)
+
         # Force cleanup to reset tip
         # otherwise previous pull are there
         self.hg.update(rev=b'tip', clean=True)
 
         # Pull revision from review
-        logger.info('Pull from review', revision=revision)
         self.hg.pull(source=REPO_REVIEW, rev=revision, update=True, force=True)
 
         # Get the parents revisions
@@ -111,7 +128,7 @@ class Workflow(object):
 
         # Run static analysis through run-clang-tidy.py
         logger.info('Run clang-tidy...')
-        issues = self.clang.run(settings.clang_checkers, modified_files)
+        issues = clang.run(settings.clang_checkers, modified_files)
 
         logger.info('Detected {} code issue(s)'.format(len(issues)))
         if not issues:
@@ -129,7 +146,6 @@ class Workflow(object):
         '''
         Publish comments on mozreview
         '''
-
         # Filter issues to keep publishable checks
         # and non third party
         issues = list(filter(lambda i: i.is_publishable(), issues))
@@ -153,7 +169,11 @@ class Workflow(object):
                     issue.message.capitalize(),
                     issue.check,
                 )
-                review.comment(issue.path, issue.line, 1, body)
+
+                # Open an issue only for lines in patch
+                new_issue = issue.line in review.changed_lines_for_file(issue.path)  # noqa
+
+                review.comment(issue.path, issue.line, 1, body, new_issue)
             else:
                 logger.info('Should publish about {}'.format(issue))
 

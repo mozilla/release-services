@@ -17,7 +17,6 @@ let
 
   mkBot = branch:
     let
-      cacheKey = "services-" + branch + "-shipit-static-analysis";
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
       hook = mkTaskclusterHook {
         name = "Static analysis automated tests";
@@ -29,13 +28,7 @@ let
 
           # Send emails to relman
           "notify:email:*"
-
-          # Used by cache
-          ("docker-worker:cache:" + cacheKey)
         ];
-        cache = {
-          "${cacheKey}" = "/cache";
-        };
         taskEnv = {
           "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
           "APP_CHANNEL" = branch;
@@ -46,8 +39,10 @@ let
           "--taskcluster-secret"
           secretsKey
           "--cache-root"
-          "/cache"
+          "/tmp"
         ];
+        deadline = "3 hours";
+        maxRunTime = 10800;
       };
     in
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);

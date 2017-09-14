@@ -64,6 +64,13 @@ class ClangTidy(object):
 
         self.work_dir = work_dir
         self.build_dir = os.path.join(work_dir, build_dir)
+        self.binary = os.path.join(
+            work_dir,
+            'clang/bin/clang-tidy',
+        )
+        if os.path.exists(self.binary):
+            logger.info('Reuse existing clang-tidy')
+            return
 
         # Dirty hack to skip Taskcluster proxy usage when loading artifacts
         if 'TASK_ID' in os.environ:
@@ -72,10 +79,6 @@ class ClangTidy(object):
         # Check the local clang is available
         logger.info('Loading Mozilla clang-tidy...')
         run_check(CLANG_SETUP_CMD, cwd=work_dir)
-        self.binary = os.path.join(
-            work_dir,
-            'clang/bin/clang-tidy',
-        )
         assert os.path.exists(self.binary), \
             'Missing clang tidy in {}'.format(self.binary)
 
@@ -224,7 +227,7 @@ class ClangIssue(object):
         self.notes = []
 
     def __str__(self):
-        return '[{}] {} {}:{}'.format(self.type, self.path, self.line, self.char)
+        return '[{}] {} {} {}:{}'.format(self.type, self.check, self.path, self.line, self.char)
 
     def is_problem(self):
         return self.type in ('warning', 'error')

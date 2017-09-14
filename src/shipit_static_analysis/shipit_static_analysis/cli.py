@@ -14,7 +14,9 @@ from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
 import click
 import re
+from cli_common.log import get_logger
 
+logger = get_logger(__name__)
 
 REGEX_COMMIT = re.compile(r'(\w+):(\d+):(\d+)')
 
@@ -72,7 +74,15 @@ def main(commits,
                      )
 
         for commit in REGEX_COMMIT.findall(commits):
-            w.run(*commit)
+            try:
+                w.run(*commit)
+            except Exception as e:
+                # Log errors to papertrail
+                logger.error(
+                    'Static analysis failure',
+                    commit=commit,
+                    error=e,
+                )
 
 
 if __name__ == '__main__':
