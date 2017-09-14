@@ -206,50 +206,32 @@ class ActiveDataCoverage(Coverage):
 coverage_service = CodecovCoverage()
 
 
-def get_coverage_builds(changeset, before=True, after=True):
+def get_coverage_build(changeset):
     '''
-    This function returns the last successful build before a given
-    changeset and the first successful coverage build after the same
+    This function returns the first successful coverage build after a given
     changeset.
     '''
     r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % changeset)
     push_id = int(r.json()['pushid'])
 
-    # In a span of 15 pushes, we hope we will find successful coverage builds.
-    r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?tipsonly=1&startID=%s&endID=%s' % (push_id - 8, push_id + 7))
+    # In a span of 8 pushes, we hope we will find a successful coverage build.
+    r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?tipsonly=1&startID=%s&endID=%s' % (push_id - 1, push_id + 7))
     data = r.json()
 
-    before_changeset = None
-    before_changeset_overall = None
     after_changeset = None
     after_changeset_overall = None
 
-    pushes = data.items()
-    pushes_before = [(pushid, pushdata['changesets'][0]) for pushid, pushdata in pushes if int(pushid) < push_id]
-    pushes_after = [(pushid, pushdata['changesets'][0]) for pushid, pushdata in pushes if int(pushid) >= push_id]
+    pushes = [(pushid, pushdata['changesets'][0]) for pushid, pushdata in data.items()]
 
-    if before:
-        # Find the last coverage build before the changeset.
-        for pushid, changeset in sorted(pushes_before, reverse=True):
-            try:
-                before_changeset_overall = coverage_service.get_coverage(changeset)
-                before_changeset = changeset
-                break
-            except:
-                pass
+    # Find the first coverage build after the changeset.
+    for pushid, changeset in sorted(pushes):
+        try:
+            after_changeset_overall = coverage_service.get_coverage(changeset)
+            after_changeset = changeset
+            break
+        except:
+            pass
 
-        assert before_changeset is not None, 'Couldn\'t find a build before the changeset'
+    assert after_changeset is not None, 'Couldn\'t find a build after the changeset'
 
-    if after:
-        # Find the first coverage build after the changeset.
-        for pushid, changeset in sorted(pushes_after):
-            try:
-                after_changeset_overall = coverage_service.get_coverage(changeset)
-                after_changeset = changeset
-                break
-            except:
-                pass
-
-        assert after_changeset is not None, 'Couldn\'t find a build after the changeset'
-
-    return (before_changeset, before_changeset_overall, after_changeset, after_changeset_overall)
+    return (after_changeset, after_changeset_overall)
