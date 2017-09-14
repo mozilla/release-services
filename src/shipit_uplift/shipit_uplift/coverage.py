@@ -57,6 +57,7 @@ class CoverallsCoverage(Coverage):
         }
 
     @staticmethod
+    @cache.memoize()
     def get_file_coverage(changeset, filename):
         r = requests.get(CoverallsCoverage.URL + '/builds/%s/source.json' % get_github_commit(changeset), params={
             'filename': filename,
@@ -110,6 +111,7 @@ class CodecovCoverage(Coverage):
         }
 
     @staticmethod
+    @cache.memoize()
     def get_file_coverage(changeset, filename):
         r = requests.get(CodecovCoverage.URL + '/src/%s/%s' % (get_github_commit(changeset), filename))
 
@@ -162,6 +164,7 @@ class ActiveDataCoverage(Coverage):
         assert False, 'Not implemented'
 
     @staticmethod
+    @cache.memoize()
     def get_file_coverage(changeset, filename):
         r = requests.post(ActiveDataCoverage.URL, data=json.dumps({
             'from': 'coverage-summary',
