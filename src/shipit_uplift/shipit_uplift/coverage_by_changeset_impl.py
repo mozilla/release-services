@@ -13,7 +13,7 @@ def generate(changeset):
     This function generates a report containing the coverage information of the diff
     introduced by a changeset.
     '''
-    build_changeset, _ = get_coverage_build(changeset)
+    build_changeset, overall = get_coverage_build(changeset)
 
     r = requests.get('https://hg.mozilla.org/mozilla-central/raw-rev/%s' % changeset)
     patch = r.text
@@ -64,5 +64,7 @@ def generate(changeset):
 
     return {
         'build_changeset': build_changeset,
+        'overall_cur': overall['cur'],
+        'overall_prev': overall['prev'],
         'diffs': diffs,
     }
