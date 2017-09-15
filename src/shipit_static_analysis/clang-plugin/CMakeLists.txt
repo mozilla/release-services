@@ -34,6 +34,7 @@ add_clang_library(clangTidyMozillaModule
 	ScopeChecker.cpp
 	SprintfLiteralChecker.cpp
 	TrivialCtorDtorChecker.cpp
+  ThirdPartyPaths.cpp
 	VariableUsageHelpers.cpp
 
   LINK_LIBS
