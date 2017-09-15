@@ -26,6 +26,12 @@ let
       cp -rf $plugin/* $dest
     '';
 
+    # Just build clang-tidy
+    buildPhase = ''
+      cd tools/extra/clang-tidy
+      make
+    '';
+
     # Patch Cmake files, as is described in
     # https://dxr.mozilla.org/mozilla-central/source/build/clang-plugin/import_mozilla_checks.py
     postPatch = old.postPatch + ''
