@@ -5,7 +5,7 @@ let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource ;
   inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl dockerTools gcc
-      cacert gcc-unwrapped glibc glibcLocales xorg;
+      cacert gcc-unwrapped glibc glibcLocales xorg llvmPackages_4;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
@@ -79,13 +79,14 @@ let
       mkdir -p $out/tmp
       mkdir -p $out/bin
       ln -s ${mercurial}/bin/hg $out/bin
+      ln -s ${llvmPackages_4.clang-unwrapped}/bin/clang-tidy $out/bin
 
       # Expose gecko env in final output
       ln -s ${releng_pkgs.gecko-env}/bin/gecko-env $out/bin
     '';
 
     shellHook = ''
-      export PATH="${mercurial}/bin:$PATH"
+      export PATH="${mercurial}/bin:${llvmPackages_4.clang-unwrapped}/bin:$PATH"
 
       # Setup mach automation
       export MOZ_AUTOMATION=1
