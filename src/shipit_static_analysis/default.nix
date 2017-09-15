@@ -15,6 +15,45 @@ let
   name = "mozilla-shipit-static-analysis";
   dirname = "shipit_static_analysis";
 
+  clang = llvmPackages_4.clang-unwrapped;
+
+  moz_clang = clang.overrideDerivation (old: {
+    # Add mozilla clang-plugin source for clang-tidy
+    plugin = filterSource ./clang-plugin { inherit name; };
+    unpackPhase = old.unpackPhase + ''
+      dest=$sourceRoot/tools/extra/clang-tidy/mozilla
+      mkdir $dest
+      cp -rf $plugin/* $dest
+    '';
+
+    # Patch Cmake files, as is described in
+    # https://dxr.mozilla.org/mozilla-central/source/build/clang-plugin/import_mozilla_checks.py
+    postPatch = old.postPatch + ''
+
+      # TODO: generate CMakeLists.txt with list of cpp (write_cmake)
+      # TODO: generate ThirdPartyPaths.cpp & restore in local CMakeLists.txt
+
+      # Add clangTidyMozillaModule to LINK_LIBS
+      target=$sourceRoot/tools/extra/clang-tidy/plugin/CMakeLists.txt
+      sed '/LINK_LIBS/a \ \ clangTidyMozillaModule' -i $target
+
+      # Add clangTidyMozillaModule to target_link_libraries
+      target=$sourceRoot/tools/extra/clang-tidy/tool/CMakeLists.txt
+      sed '/target_link_libraries(clang-tidy/a \ \ clangTidyMozillaModule' -i $target
+
+      # Activate plugin
+      target=$sourceRoot/tools/extra/clang-tidy/CMakeLists.txt
+      echo 'add_subdirectory(mozilla)' >> $target
+
+      # Add inline patch
+      target=$sourceRoot/tools/extra/clang-tidy/tool/ClangTidyMain.cpp
+      echo '// This anchor is used to force the linker to link the MozillaModule.' >> $target
+      echo 'extern volatile int MozillaModuleAnchorSource;' >> $target
+      echo 'static int LLVM_ATTRIBUTE_UNUSED MozillaModuleAnchorDestination = MozillaModuleAnchorSource;' >> $target
+    '';
+
+  });
+
   mkBot = branch:
     let
       secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
@@ -79,14 +118,14 @@ let
       mkdir -p $out/tmp
       mkdir -p $out/bin
       ln -s ${mercurial}/bin/hg $out/bin
-      ln -s ${llvmPackages_4.clang-unwrapped}/bin/clang-tidy $out/bin
+      ln -s ${moz_clang}/bin/clang-tidy $out/bin
 
       # Expose gecko env in final output
       ln -s ${releng_pkgs.gecko-env}/bin/gecko-env $out/bin
     '';
 
     shellHook = ''
-      export PATH="${mercurial}/bin:${llvmPackages_4.clang-unwrapped}/bin:$PATH"
+      export PATH="${mercurial}/bin:${moz_clang}/bin:$PATH"
 
       # Setup mach automation
       export MOZ_AUTOMATION=1
