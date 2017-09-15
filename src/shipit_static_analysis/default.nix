@@ -58,6 +58,10 @@ let
       echo 'static int LLVM_ATTRIBUTE_UNUSED MozillaModuleAnchorDestination = MozillaModuleAnchorSource;' >> $target
     '';
 
+    # Skip postinstall step
+    postInstall = ''
+      echo "Skip post install"
+    '';
   });
 
   mkBot = branch:
@@ -118,8 +122,8 @@ let
       fromRequirementsFile ./requirements.txt python.packages
       ++ [
         # Needed for the static analysis
-				glibc
-				gcc
+        glibc
+        gcc
 
         # Gecko environment
         releng_pkgs.gecko-env
