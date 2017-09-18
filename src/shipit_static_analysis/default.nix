@@ -26,12 +26,6 @@ let
       cp -rf $plugin/* $dest
     '';
 
-    # Just build clang-tidy
-    buildPhase = ''
-      cd tools/extra/clang-tidy
-      make
-    '';
-
     # Patch Cmake files, as is described in
     # https://dxr.mozilla.org/mozilla-central/source/build/clang-plugin/import_mozilla_checks.py
     postPatch = old.postPatch + ''
@@ -56,11 +50,6 @@ let
       echo '// This anchor is used to force the linker to link the MozillaModule.' >> $target
       echo 'extern volatile int MozillaModuleAnchorSource;' >> $target
       echo 'static int LLVM_ATTRIBUTE_UNUSED MozillaModuleAnchorDestination = MozillaModuleAnchorSource;' >> $target
-    '';
-
-    # Skip postinstall step
-    postInstall = ''
-      echo "Skip post install"
     '';
   });
 
@@ -134,6 +123,7 @@ let
       mkdir -p $out/bin
       ln -s ${mercurial}/bin/hg $out/bin
       ln -s ${moz_clang}/bin/clang-tidy $out/bin
+      ln -s ${moz_clang}/bin/clang-format $out/bin
 
       # Expose gecko env in final output
       ln -s ${releng_pkgs.gecko-env}/bin/gecko-env $out/bin

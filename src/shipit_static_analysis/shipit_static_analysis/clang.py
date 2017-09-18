@@ -12,7 +12,6 @@ import os
 import re
 
 from cli_common.log import get_logger
-from cli_common.command import run_check
 from shipit_static_analysis.config import settings
 
 logger = get_logger(__name__)
@@ -64,23 +63,6 @@ class ClangTidy(object):
 
         self.work_dir = work_dir
         self.build_dir = os.path.join(work_dir, build_dir)
-        self.binary = os.path.join(
-            work_dir,
-            'clang/bin/clang-tidy',
-        )
-        if os.path.exists(self.binary):
-            logger.info('Reuse existing clang-tidy')
-            return
-
-        # Dirty hack to skip Taskcluster proxy usage when loading artifacts
-        if 'TASK_ID' in os.environ:
-            del os.environ['TASK_ID']
-
-        # Check the local clang is available
-        logger.info('Loading Mozilla clang-tidy...')
-        run_check(CLANG_SETUP_CMD, cwd=work_dir)
-        assert os.path.exists(self.binary), \
-            'Missing clang tidy in {}'.format(self.binary)
 
     def run(self, checks, files):
         '''
@@ -146,7 +128,9 @@ class ClangTidy(object):
 
             # Build command line for a filename
             cmd = [
-                self.binary,
+                # Use system clang tidy
+                'clang-tidy',
+
                 # Limit warnings to current file
                 '-header-filter={}'.format(os.path.basename(filename)),
                 '-checks={}'.format(','.join(checks)),
