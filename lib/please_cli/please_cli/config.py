@@ -344,6 +344,24 @@ PROJECTS = {
             # 'production': {},
         },
     },
+    'shipit-code-coverage-worker': {
+        'checks': [
+            ('Checking code quality', 'flake8'),
+            ('Running tests', 'pytest tests/'),
+        ],
+        'requires': [],
+        'deploy': 'HEROKU',
+        'deploy_options': {
+            'staging': {
+                'heroku_app': 'shipit-staging-uplift',
+                'heroku_dyno_type': 'worker',
+            },
+            # 'production': {
+            #     'heroku_app': 'shipit-staging-uplift',
+            #     'heroku_dyno_type': 'worker',
+            # },
+        },
+    },
     'shipit-frontend': {
         'run': 'ELM',
         'run_options': {
