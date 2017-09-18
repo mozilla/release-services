@@ -253,14 +253,14 @@ PROJECTS = {
                 'heroku_dyno_type': 'web',
                 'url': 'https://mapper.staging.mozilla-releng.net',
                 # TODO: switch to SSL Endpoint
-                'dns': 'mapper.staging.mozilla-releng.net.herokudns.com', 
+                'dns': 'mapper.staging.mozilla-releng.net.herokudns.com',
             },
             # 'production': {
             #     'heroku_app': 'releng-production-mapper',
             #     'heroku_dyno_type': 'web',
             #      # TODO: switch to SSL Endpoint
             #     'url': 'https://mapper.mozilla-releng.net',
-            #     'dns': 'mapper.mozilla-releng.net.herokudns.com', 
+            #     'dns': 'mapper.mozilla-releng.net.herokudns.com',
             # },
         },
     },
@@ -350,6 +350,8 @@ PROJECTS = {
             'port': 8010,
             'envs': {
                 'bugzilla-url': 'https://bugzilla-dev.allizom.org',
+                'auth-domain': 'https://auth.mozilla.auth0.com',
+                'auth-client-id': 'FK1mJkHhwjulTYBGklxn8W4Fhd1pgT4t', # TRASHME
             }
         },
         'requires': [
@@ -363,6 +365,7 @@ PROJECTS = {
                 'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
                 'envs': {
                     'bugzilla-url': 'https://bugzilla.mozilla.org',
+                    'auth-domain': 'https://auth.mozilla.auth0.com',
                 },
                 'csp': [
                     'https://auth.taskcluster.net',
@@ -375,6 +378,7 @@ PROJECTS = {
                 'dns': 'dve8yd1431ifz.cloudfront.net.',
                 'envs': {
                     'bugzilla-url': 'https://bugzilla.mozilla.org',
+                    'auth-domain': 'https://auth.mozilla.auth0.com',
                 },
                 'csp': [
                     'https://auth.taskcluster.net',

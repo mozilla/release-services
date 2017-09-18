@@ -116,7 +116,7 @@ update msg model user =
 sendUpdate : Model -> User.Model -> Cmd Msg
 sendUpdate model user =
     -- Send updated contributor to backend
-    case user of
+    case user.credentials of
         Just credentials ->
             case model.contributor of
                 Just contributor ->

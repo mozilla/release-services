@@ -402,7 +402,7 @@ updateContributor model contributor =
 fetchAllAnalysis : Model -> User.Model -> Cmd Msg
 fetchAllAnalysis model user =
     -- Fetch all analysis summary
-    case user of
+    case user.credentials of
         Just credentials ->
             let
                 -- Build Taskcluster http request
@@ -423,7 +423,7 @@ fetchAllAnalysis model user =
 fetchAnalysis : Model -> User.Model -> Int -> Cmd Msg
 fetchAnalysis model user analysis_id =
     -- Fetch a specific analysis with details
-    case user of
+    case user.credentials of
         Just credentials ->
             let
                 -- Build Taskcluster http request
@@ -588,7 +588,7 @@ sendBugUpdate : Model -> User.Model -> Bug -> BugUpdate -> ( Model, Cmd Msg )
 sendBugUpdate model user bug update =
     -- Send a bug update to the backend
     -- so it can update the bug payload
-    case user of
+    case user.credentials of
         Just credentials ->
             let
                 payload =
@@ -769,7 +769,7 @@ subscriptions analysis =
 
 view : Model -> User.Model -> Bugzilla.Model -> Html Msg
 view model user bugzilla =
-    case user of
+    case user.credentials of
         Just user ->
             div [ class "container-fluid" ]
                 [ viewStatus model bugzilla

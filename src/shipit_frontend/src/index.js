@@ -36,6 +36,9 @@ var init = function() {
       bugzilla: localstorage.load_item(BZ_KEY),
       backend_uplift_url: getData('shipit-uplift-url', process.env.SHIPIT_UPLIFT_URL),
       bugzilla_url: getData('bugzilla-url', process.env.BUGZILLA_URL),
+
+      auth_domain: getData('auth-domain', process.env.AUTH_DOMAIN),
+      auth_client_id: getData('auth-client-id', process.env.AUTH_CLIENT_ID),
     });
 
     // Setup ports

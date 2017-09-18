@@ -62,6 +62,8 @@ type alias Flags =
     , bugzilla : Maybe Bugzilla.Credentials
     , backend_uplift_url : String
     , bugzilla_url : String
+        , auth_domain: String
+        , auth_client_id : String
     }
 
 
@@ -73,7 +75,7 @@ init flags =
             Bugzilla.init flags.bugzilla_url flags.bugzilla
 
         ( user, userCmd ) =
-            User.init flags.taskcluster
+            User.init flags.auth_domain flags.auth_client_id flags.taskcluster
 
         -- App init
         ( dashboard, dashboardCmd ) =
@@ -209,7 +211,7 @@ loadAllAnalysis : Model -> Cmd Msg
 loadAllAnalysis model =
     -- (Re)Load all dashboard analysis
     -- when user is loaded or is logged in
-    case model.user of
+    case model.user.credentials of
         Just user ->
             Cmd.map ReleaseDashboardMsg (ReleaseDashboard.fetchAllAnalysis model.release_dashboard model.user)
 
@@ -275,7 +277,7 @@ viewNavBar model =
 
 viewUser : Model -> List (Html Msg)
 viewUser model =
-    case model.user of
+    case model.user.credentials of
         Just user ->
             viewDropdown user.clientId
                 [ -- Link to TC manager
@@ -298,7 +300,7 @@ viewUser model =
                 ]
 
         Nothing ->
-            viewLogin
+            viewLogin model.user
 
 
 viewBugzillaCreds : Bugzilla.Model -> Html Msg
@@ -367,15 +369,10 @@ viewNavAnalysis analysis =
         ]
 
 
-viewLogin : List (Html Msg)
-viewLogin =
+viewLogin : User.Model -> List (Html Msg)
+viewLogin user =
     [ a
-        [ Utils.onClick
-            (User.redirectToLogin
-                UserMsg
-                "/login"
-                "Uplift dashboard helps Mozilla Release Management team in their workflow."
-            )
+        [ Utils.onClick (UserMsg <| User.buildLoginMsg user )
         , href "#"
         , class "nav-link"
         ]

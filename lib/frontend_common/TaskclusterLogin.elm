@@ -5,6 +5,7 @@ import Json.Decode as JsonDecode
 import Maybe
 import Redirect
 import String
+import Utils
 import Task
 import Time exposing (Time)
 
@@ -27,21 +28,32 @@ type alias Credentials =
     }
 
 
-type alias Model =
-    Maybe Credentials
+type alias Model ={
+       
+    credentials : Maybe Credentials
+    , domain : String
+    , client_id : String
+}
 
 
 type Msg
     = Login Redirect.Model
     | Logging Credentials
-    | Logged Model
+    | Logged (Maybe Credentials)
     | Logout
     | CheckCertificate Time
 
 
-init : Maybe Credentials -> ( Model, Cmd Msg )
-init credentials =
-    ( credentials, Task.perform CheckCertificate Time.now )
+init : String -> String -> Maybe Credentials -> ( Model, Cmd Msg )
+init domain client_id credentials =
+  let
+    model = {
+        credentials = credentials,
+        domain = domain,
+        client_id = client_id
+        }
+  in
+    (model , Task.perform CheckCertificate Time.now )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -53,15 +65,15 @@ update msg model =
         Logging credentials ->
             ( model, taskclusterlogin_set credentials )
 
-        Logged model ->
-            ( model, Cmd.none )
+        Logged credentials ->
+            ( { model | credentials = credentials}, Cmd.none )
 
         Logout ->
             ( model, taskclusterlogin_remove True )
 
         CheckCertificate time ->
-            if isCertificateExpired time model then
-                ( Nothing, taskclusterlogin_remove True )
+            if isCertificateExpired time model.credentials then
+                ( {model | credentials = Nothing }, taskclusterlogin_remove True )
             else
                 ( model, Cmd.none )
 
@@ -81,11 +93,11 @@ decodeCertificate text =
         text
 
 
-isCertificateExpired : Float -> Model -> Bool
-isCertificateExpired time user_ =
-    case user_ of
-        Just user ->
-            case user.certificate of
+isCertificateExpired : Float -> Maybe Credentials -> Bool
+isCertificateExpired time credentials =
+    case credentials of
+        Just credentials_ ->
+            case credentials_.certificate of
                 Just certificate ->
                     if time > toFloat certificate.expiry then
                         True
@@ -134,16 +146,24 @@ convertUrlQueryToUser query =
 
 -- VIEWS
 
-
-redirectToLogin : (Msg -> a) -> String -> String -> a
-redirectToLogin outMsg returnRoute description =
-    { url = "https://login.taskcluster.net"
-    , target = Just ( returnRoute, description )
-    , targetName = "target"
+buildLoginMsg : Model -> Msg
+buildLoginMsg user =
+  let 
+    url = Utils.buildUrl (user.domain ++ "/authorize") [
+        ( "audience", "login.taskcluster.net")
+        , ( "scope", "full-user-credentials openid")
+        , ( "response_type", "code")
+        , ( "client_id", user.client_id)
+        -- TODO: redirect to backend ?
+        , ( "redirect_uri", "https://localhost:8010/login")
+        -- TODO: add state for CSRF protection ?
+    ]
+  in
+    Login {
+        url = url,
+        target = Nothing,
+        targetName = ""
     }
-        |> Login
-        |> outMsg
-
 
 
 -- UTILS
