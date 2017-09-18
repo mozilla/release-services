@@ -5,7 +5,7 @@
 
 import requests
 import whatthepatch
-from shipit_uplift.coverage import coverage_service, get_coverage_build, coverage_supported
+from shipit_uplift.coverage import coverage_service, get_coverage_build, coverage_supported, get_github_commit
 
 
 def generate(changeset):
@@ -68,6 +68,7 @@ def generate(changeset):
 
     return {
         'build_changeset': build_changeset,
+        'git_build_changeset': get_github_commit(build_changeset),
         'overall_cur': overall['cur'],
         'overall_prev': overall['prev'],
         'diffs': diffs,
