@@ -5,12 +5,11 @@
 
 from abc import ABC, abstractmethod
 import json
+from functools import lru_cache
 import requests
 
-from backend_common.cache import cache
 
-
-@cache.memoize()
+@lru_cache(maxsize=128)
 def get_github_commit(mercurial_commit):
     r = requests.get('https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s' % mercurial_commit)
     return r.text.split(' ')[0]
@@ -42,7 +41,7 @@ class CoverallsCoverage(Coverage):
     URL = 'https://coveralls.io'
 
     @staticmethod
-    @cache.memoize()
+    @lru_cache(maxsize=32)
     def get_coverage(changeset):
         r = requests.get(CoverallsCoverage.URL + '/builds/%s.json' % get_github_commit(changeset))
 
@@ -57,7 +56,6 @@ class CoverallsCoverage(Coverage):
         }
 
     @staticmethod
-    @cache.memoize()
     def get_file_coverage(changeset, filename):
         r = requests.get(CoverallsCoverage.URL + '/builds/%s/source.json' % get_github_commit(changeset), params={
             'filename': filename,
@@ -76,7 +74,7 @@ class CoverallsCoverage(Coverage):
         return builds[0]['commit_sha'], builds[1]['commit_sha']
 
     @staticmethod
-    @cache.memoize()
+    @lru_cache(maxsize=32)
     def get_directory_coverage(changeset, prev_changeset, directory):
         r = requests.get(CoverallsCoverage.URL + '/builds/' + get_github_commit(changeset) + '.json?paths=' + directory + '/*')
 
@@ -96,7 +94,7 @@ class CodecovCoverage(Coverage):
     URL = 'https://codecov.io/api/gh/marco-c/gecko-dev'
 
     @staticmethod
-    @cache.memoize()
+    @lru_cache(maxsize=32)
     def get_coverage(changeset):
         r = requests.get(CodecovCoverage.URL + '/commit/%s' % get_github_commit(changeset))
 
@@ -111,7 +109,6 @@ class CodecovCoverage(Coverage):
         }
 
     @staticmethod
-    @cache.memoize()
     def get_file_coverage(changeset, filename):
         r = requests.get(CodecovCoverage.URL + '/src/%s/%s' % (get_github_commit(changeset), filename))
 
@@ -133,7 +130,7 @@ class CodecovCoverage(Coverage):
         return commit['commitid'], commit['parent']
 
     @staticmethod
-    @cache.memoize()
+    @lru_cache(maxsize=32)
     def get_directory_coverage(changeset, prev_changeset, directory):
         r = requests.get(CodecovCoverage.URL + '/tree/' + get_github_commit(changeset) + '/' + directory)
 
@@ -160,11 +157,11 @@ class ActiveDataCoverage(Coverage):
     URL = 'https://activedata.allizom.org/query'
 
     @staticmethod
+    @lru_cache(maxsize=32)
     def get_coverage(changeset):
         assert False, 'Not implemented'
 
     @staticmethod
-    @cache.memoize()
     def get_file_coverage(changeset, filename):
         r = requests.post(ActiveDataCoverage.URL, data=json.dumps({
             'from': 'coverage-summary',
@@ -199,11 +196,19 @@ class ActiveDataCoverage(Coverage):
         assert False, 'Not implemented'
 
     @staticmethod
+    @lru_cache(maxsize=32)
     def get_directory_coverage(changeset, prev_changeset, directory):
         assert False, 'Not implemented'
 
 
 coverage_service = CodecovCoverage()
+
+
+@lru_cache(maxsize=32)
+def get_push_range(push_id):
+    r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?tipsonly=1&startID=%s&endID=%s' % (push_id - 1, push_id + 7))
+    data = r.json()
+    return [(pushid, pushdata['changesets'][0]) for pushid, pushdata in data.items()]
 
 
 def get_coverage_build(changeset):
@@ -215,13 +220,10 @@ def get_coverage_build(changeset):
     push_id = int(r.json()['pushid'])
 
     # In a span of 8 pushes, we hope we will find a successful coverage build.
-    r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?tipsonly=1&startID=%s&endID=%s' % (push_id - 1, push_id + 7))
-    data = r.json()
+    pushes = get_push_range(push_id)
 
     after_changeset = None
     after_changeset_overall = None
-
-    pushes = [(pushid, pushdata['changesets'][0]) for pushid, pushdata in data.items()]
 
     # Find the first coverage build after the changeset.
     for pushid, changeset in sorted(pushes):

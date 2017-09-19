@@ -3,6 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 import requests
 import whatthepatch
 from backend_common.cache import cache
@@ -22,25 +24,25 @@ def generate(changeset):
 
     diffs = []
 
-    for diff in whatthepatch.parse_patch(patch):
+    def parse_diff(diff):
         # Get old and new path, for files that have been renamed.
         new_path = diff.header.new_path[2:] if diff.header.new_path.startswith('b/') else diff.header.new_path
 
         # If the diff doesn't contain any changes, we skip it.
         if diff.changes is None:
-            continue
+            return None
 
         # If the file is not a source file, we skip it (as we already know
         # we have no coverage information for it).
         if not coverage_supported(new_path):
-            continue
+            return None
 
         # Retrieve coverage of added lines.
         coverage = coverage_service.get_file_coverage(build_changeset, new_path)
 
         # If we don't have coverage for this file, we skip it.
         if coverage is None:
-            continue
+            return None
 
         changes = []
         for old_line, new_line, _ in diff.changes:
@@ -63,10 +65,21 @@ def generate(changeset):
                 'new_line': new_line,
             })
 
-        diffs.append({
-            'name': new_path,
-            'changes': changes,
-        })
+        return {
+          'name': new_path,
+          'changes': changes,
+        }
+
+    with ThreadPoolExecutor() as executor:
+        futures = []
+
+        for diff in whatthepatch.parse_patch(patch):
+            futures.append(executor.submit(lambda: parse_diff(diff)))
+
+        for future in concurrent.futures.as_completed(futures):
+            res = future.result()
+            if res is not None:
+                diffs.append(res)
 
     return {
         'build_changeset': build_changeset,
