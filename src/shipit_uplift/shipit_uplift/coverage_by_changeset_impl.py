@@ -5,9 +5,11 @@
 
 import requests
 import whatthepatch
+from backend_common.cache import cache
 from shipit_uplift.coverage import coverage_service, get_coverage_build, coverage_supported, get_github_commit
 
 
+@cache.memoize()
 def generate(changeset):
     '''
     This function generates a report containing the coverage information of the diff
