@@ -25,6 +25,11 @@ from shipit_uplift import (
     coverage_by_dir_impl, coverage_by_changeset_impl,
     coverage_summary_by_changeset_impl
 )
+from rq import Queue
+from shipit_uplift.worker import conn
+
+
+q = Queue(connection=conn)
 
 
 logger = log.get_logger(__name__)
@@ -376,18 +381,25 @@ def coverage_by_dir(path=''):
 
 
 def coverage_by_changeset(changeset):
-    try:
-        return coverage_by_changeset_impl.generate(changeset)
-    except Exception as e:
+    job = q.fetch_job(changeset)
+
+    if job is None:
+        job = q.enqueue(coverage_by_changeset_impl.generate, changeset, job_id=changeset, result_ttl=86400)
+
+    if job.result is not None:
+        return job.result, 200
+
+    if job.exc_info is not None:
         return {
-          'error': str(e)
+          'error': str(job.exc_info)
         }, 500
+
+    return '', 202
 
 
 def coverage_summary_by_changeset(changeset):
-    try:
-        return coverage_summary_by_changeset_impl.generate(changeset)
-    except Exception as e:
-        return {
-          'error': str(e)
-        }, 500
+    result, code = coverage_by_changeset(changeset)
+    if code != 200:
+        return result, code
+    else:
+        return coverage_summary_by_changeset_impl.generate(result), 200

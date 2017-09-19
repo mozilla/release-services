@@ -133,6 +133,10 @@ def cmd(ctx, project, quiet, nix_shell):
             pg_host, pg_port, dbname
         )
 
+    if 'redis' in project_config.get('requires', []):
+        # TODO: Support checking if redis is running and support starting redis using please.
+        os.environ['REDIS_URL'] = 'redis://localhost:6379'
+
     if run_type == 'POSTGRESQL':
         data_dir = run_options.get('data_dir', os.path.join(please_cli.config.TMP_DIR, 'postgresql'))
 
