@@ -238,3 +238,22 @@ class CodeCov(object):
         with ThreadPoolExecutorResult(max_workers=2) as executor:
             executor.submit(lambda: uploader.coveralls(output))
             executor.submit(lambda: uploader.codecov(output, commit_sha, self.codecov_token))
+
+        logger.info('Waiting for build to be injested by Codecov...')
+        # Wait until the build has been injested by Codecov.
+        if uploader.codecov_wait(commit_sha):
+            logger.info('Build injested by codecov.io')
+        else:
+            logger.info('codecov.io took too much time to injest data.')
+
+        # Get pushlog and ask the backend to generate the coverage by changeset
+        # data, which will be cached.
+        r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % self.revision)
+        push_id = int(r.json()['pushid'])
+
+        r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?startID=%s&endID=%s' % (push_id - 1, push_id))
+        data = r.json()
+        changesets = data[str(push_id)]['changesets']
+
+        for changeset in changesets:
+            requests.get('https://uplift.shipit.staging.mozilla-releng.net/coverage/changeset/%s' % changeset)
