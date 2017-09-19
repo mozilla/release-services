@@ -60,7 +60,7 @@ def get_build_task(index,
             'source': 'https://github.com/mozilla-releng/services/tree/' + channel,
 
         },
-        max_run_time_in_hours=3,
+        max_run_time_in_hours=5,
     )
 
 
