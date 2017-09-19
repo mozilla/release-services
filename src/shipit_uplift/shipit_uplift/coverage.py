@@ -204,6 +204,13 @@ class ActiveDataCoverage(Coverage):
 coverage_service = CodecovCoverage()
 
 
+@lru_cache(maxsize=32)
+def get_push_range(push_id):
+    r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?tipsonly=1&startID=%s&endID=%s' % (push_id - 1, push_id + 7))
+    data = r.json()
+    return [(pushid, pushdata['changesets'][0]) for pushid, pushdata in data.items()]
+
+
 def get_coverage_build(changeset):
     '''
     This function returns the first successful coverage build after a given
@@ -213,13 +220,10 @@ def get_coverage_build(changeset):
     push_id = int(r.json()['pushid'])
 
     # In a span of 8 pushes, we hope we will find a successful coverage build.
-    r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?tipsonly=1&startID=%s&endID=%s' % (push_id - 1, push_id + 7))
-    data = r.json()
+    pushes = get_push_range(push_id)
 
     after_changeset = None
     after_changeset_overall = None
-
-    pushes = [(pushid, pushdata['changesets'][0]) for pushid, pushdata in data.items()]
 
     # Find the first coverage build after the changeset.
     for pushid, changeset in sorted(pushes):
