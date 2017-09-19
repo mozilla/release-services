@@ -239,12 +239,12 @@ class CodeCov(object):
             executor.submit(lambda: uploader.coveralls(output))
             executor.submit(lambda: uploader.codecov(output, commit_sha, self.codecov_token))
 
-        logger.info('Waiting for build to be injested by Codecov...')
-        # Wait until the build has been injested by Codecov.
+        logger.info('Waiting for build to be ingested by Codecov...')
+        # Wait until the build has been ingested by Codecov.
         if uploader.codecov_wait(commit_sha):
-            logger.info('Build injested by codecov.io')
+            logger.info('Build ingested by codecov.io')
         else:
-            logger.info('codecov.io took too much time to injest data.')
+            logger.info('codecov.io took too much time to ingest data.')
 
         # Get pushlog and ask the backend to generate the coverage by changeset
         # data, which will be cached.
