@@ -250,12 +250,9 @@ class CodeCov(object):
 
             # Get pushlog and ask the backend to generate the coverage by changeset
             # data, which will be cached.
-            r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % self.revision)
-            push_id = int(r.json()['pushid'])
-
-            r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?startID=%s&endID=%s' % (push_id - 1, push_id))
+            r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?changeset=%s&version=2' % self.revision)
             data = r.json()
-            changesets = data[str(push_id)]['changesets']
+            changesets = data['pushes'][data['lastpushid']]['changesets']
 
             for changeset in changesets:
                 requests.get('https://uplift.shipit.staging.mozilla-releng.net/coverage/changeset/%s' % changeset)
