@@ -61,8 +61,7 @@ def generate(changeset):
 
             changes.append({
                 'coverage': covered,
-                'old_line': old_line,
-                'new_line': new_line,
+                'line': new_line,
             })
 
         return {
