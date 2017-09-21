@@ -249,6 +249,25 @@ class ClangIssue(object):
         '''
         return settings.is_publishable_check(self.check)
 
+    @property
+    def mozreview_body(self):
+        '''
+        Build the text body published on MozReview
+        '''
+        body = '{}: {} [clang-tidy: {}]'.format(
+            self.type.capitalize(),
+            self.message.capitalize(),
+            self.check,
+        )
+
+        # Add body when it's more than 2 lines
+        # it generally contains useful info
+        lines = len(list(filter(None, self.body.split('\n'))))
+        if lines > 2:
+            body += '\n{}'.format(self.body)
+
+        return body
+
     def as_markdown(self):
         return ISSUE_MARKDOWN.format(
             type=self.type,
