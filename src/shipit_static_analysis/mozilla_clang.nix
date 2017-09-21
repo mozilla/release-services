@@ -14,7 +14,7 @@ let
 
     src = fetchurl {
       url = "https://hg.mozilla.org/mozilla-central/archive/${revision}.tar.bz2/build/clang-plugin";
-      sha256 = "1wc5zbaaq86gqkwim3xwp7100qbl9fiznn3q8jc2xzapv7c7vlvh";
+      sha256 = "0nxzk08sz7vpqmxcvhxf12immdflvsg1yhmlkr5smmvjv0bmm0s5";
     };
 
     third_party = fetchurl {
