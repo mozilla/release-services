@@ -27,9 +27,9 @@ class Workflow(object):
     '''
     taskcluster = None
 
-    def __init__(self, cache_root, emails, mozreview, mozreview_enabled=False, client_id=None, access_token=None):  # noqa
+    def __init__(self, cache_root, emails, mozreview_api_root, mozreview_enabled=False, client_id=None, access_token=None):  # noqa
         self.emails = emails
-        self.mozreview = mozreview
+        self.mozreview_api_root = mozreview_api_root
         self.mozreview_enabled = mozreview_enabled
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
@@ -37,7 +37,7 @@ class Workflow(object):
         assert 'MOZCONFIG' in os.environ, \
             'Missing MOZCONFIG in environment'
 
-        # Save Taskcluster ID as it's removed from env in clang.py
+        # Save Taskcluster ID for logging
         if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
             self.taskcluster_id = '{} run:{}'.format(
                 os.environ['TASK_ID'],
@@ -90,8 +90,15 @@ class Workflow(object):
             diffset_revision=diffset_revision,
         )
 
+        # Create batch review
+        self.mozreview = BatchReview(
+            self.mozreview_api_root,
+            review_request_id,
+            diffset_revision,
+        )
+
         # Setup clang
-        clang = ClangTidy(self.repo_dir, settings.target)
+        clang = ClangTidy(self.repo_dir, settings.target, self.mozreview)
 
         # Force cleanup to reset tip
         # otherwise previous pull are there
@@ -153,26 +160,11 @@ class Workflow(object):
             logger.info('No issues to publish on MozReview')
             return
 
-        # Create batch review
-        review = BatchReview(
-            self.mozreview,
-            review_request_id,
-            diff_revision,
-        )
-
         # Comment each issue
         for issue in issues:
-
-            # Skip issues not in patch
-            # We need mozreview to do this cleanly :/
-            in_patch = issue.line in review.changed_lines_for_file(issue.path)  # noqa
-            if not in_patch:
-                logger.info('Skip issue not in patch {}'.format(issue))
-                continue
-
             if self.mozreview_enabled:
                 logger.info('Will publish about {}'.format(issue))
-                review.comment(issue.path, issue.line, 1, issue.mozreview_body)
+                self.mozreview.comment(issue.path, issue.line, 1, issue.mozreview_body)
             else:
                 logger.info('Should publish about {}'.format(issue))
 
@@ -182,7 +174,7 @@ class Workflow(object):
 
         # Publish the review
         # without ship_it to avoid automatically r+
-        return review.publish(ship_it=False)
+        return self.mozreview.publish(ship_it=False)
 
     def notify_admins(self, review_request_id, issues):
         '''
