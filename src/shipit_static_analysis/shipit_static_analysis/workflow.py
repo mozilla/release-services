@@ -192,11 +192,12 @@ class Workflow(object):
             url='https://reviewboard.mozilla.org/r/{}/'.format(review_request_id), # noqa
             nb_publishable=sum([i.is_publishable() for i in issues]),
         )
-        content += '\n'.join([i.as_markdown() for i in issues])
+        content += '\n\n'.join([i.as_markdown() for i in issues])
+        subject = 'New Static Analysis Review #{}'.format(review_request_id)
         for email in self.emails:
             self.notify.email({
                 'address': email,
-                'subject': 'New Static Analysis Review',
+                'subject': subject,
                 'content': content,
                 'template': 'fullscreen',
             })
