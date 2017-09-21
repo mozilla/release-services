@@ -31,7 +31,7 @@ let
       # generate ThirdPartyPaths.cpp
       # No trailing /
       # Embed in quotes for cpp array
-      third=$(sed "s/\/$//" ${third_party} | sed -e "s/\(.*\)$/'\1',/")
+      third=$(sed "s/\/$//" ${third_party} | sed -e "s/\(.*\)$/\"\1\",/")
       nb_third=$(wc -l ${third_party} | awk '{print $1}')
       echo "#include <stdint.h>
 const char* MOZ_THIRD_PARTY_PATHS[] = { $third };
