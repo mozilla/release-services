@@ -4,54 +4,14 @@
 let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource ;
-  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl dockerTools gcc
-      cacert gcc-unwrapped glibc glibcLocales xorg llvmPackages_4;
-  inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
-  inherit (releng_pkgs.pkgs.lib) fileContents optional licenses concatStringsSep ;
+  inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg;
+  inherit (releng_pkgs.pkgs.lib) fileContents concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
-  inherit (releng_pkgs.pkgs.pythonPackages) setuptools;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  moz_clang = import ./mozilla_clang.nix { inherit releng_pkgs ; };
   name = "mozilla-shipit-static-analysis";
   dirname = "shipit_static_analysis";
-
-  clang = llvmPackages_4.clang-unwrapped;
-
-  moz_clang = clang.overrideDerivation (old: {
-    # Add mozilla clang-plugin source for clang-tidy
-    plugin = filterSource ./clang-plugin { inherit name; };
-    unpackPhase = old.unpackPhase + ''
-      dest=$sourceRoot/tools/extra/clang-tidy/mozilla
-      mkdir $dest
-      cp -rf $plugin/* $dest
-    '';
-
-    # Patch Cmake files, as is described in
-    # https://dxr.mozilla.org/mozilla-central/source/build/clang-plugin/import_mozilla_checks.py
-    postPatch = old.postPatch + ''
-
-      # TODO: generate CMakeLists.txt with list of cpp (write_cmake)
-      # TODO: generate ThirdPartyPaths.cpp & restore in local CMakeLists.txt
-
-      # Add clangTidyMozillaModule to LINK_LIBS
-      target=$sourceRoot/tools/extra/clang-tidy/plugin/CMakeLists.txt
-      sed '/LINK_LIBS/a \ \ clangTidyMozillaModule' -i $target
-
-      # Add clangTidyMozillaModule to target_link_libraries
-      target=$sourceRoot/tools/extra/clang-tidy/tool/CMakeLists.txt
-      sed '/target_link_libraries(clang-tidy/a \ \ clangTidyMozillaModule' -i $target
-
-      # Activate plugin
-      target=$sourceRoot/tools/extra/clang-tidy/CMakeLists.txt
-      echo 'add_subdirectory(mozilla)' >> $target
-
-      # Add inline patch
-      target=$sourceRoot/tools/extra/clang-tidy/tool/ClangTidyMain.cpp
-      echo '// This anchor is used to force the linker to link the MozillaModule.' >> $target
-      echo 'extern volatile int MozillaModuleAnchorSource;' >> $target
-      echo 'static int LLVM_ATTRIBUTE_UNUSED MozillaModuleAnchorDestination = MozillaModuleAnchorSource;' >> $target
-    '';
-  });
 
   mkBot = branch:
     let
@@ -75,7 +35,7 @@ let
           "${cacheKey}" = "/cache";
         };
         taskEnv = {
-          "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+          "SSL_CERT_FILE" = "${cacert}/etc/ssl/certs/ca-bundle.crt";
           "APP_CHANNEL" = branch;
           "MOZ_AUTOMATION" = "1";
         };
