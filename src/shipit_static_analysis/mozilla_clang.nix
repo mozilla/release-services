@@ -22,9 +22,9 @@ let
       sha256 = "1fna1577clw6sm6x28mz8pdkhs4hzi1xycjynpbq8xi5v3n9zhj9";
     };
 
-    # Skip first directory with revision
+    # Skip first two directories with revision
     unpackCmd = ''
-      ${gnutar}/bin/tar -xzf $curSrc --strip 1
+      ${gnutar}/bin/tar -xf $curSrc --strip 2
     '';
 
     patchPhase = ''
