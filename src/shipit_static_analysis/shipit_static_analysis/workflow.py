@@ -162,6 +162,14 @@ class Workflow(object):
 
         # Comment each issue
         for issue in issues:
+
+            # Skip issues not in patch
+            # We need mozreview to do this cleanly :/
+            in_patch = issue.line in review.changed_lines_for_file(issue.path)  # noqa
+            if not in_patch:
+                logger.info('Skip issue not in patch {}'.format(issue))
+                continue
+
             if self.mozreview_enabled:
                 logger.info('Will publish about {}'.format(issue))
                 body = '{}: {} [clang-tidy: {}]'.format(
@@ -169,11 +177,7 @@ class Workflow(object):
                     issue.message.capitalize(),
                     issue.check,
                 )
-
-                # Open an issue only for lines in patch
-                new_issue = issue.line in review.changed_lines_for_file(issue.path)  # noqa
-
-                review.comment(issue.path, issue.line, 1, body, new_issue)
+                review.comment(issue.path, issue.line, 1, body)
             else:
                 logger.info('Should publish about {}'.format(issue))
 
