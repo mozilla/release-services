@@ -69,14 +69,12 @@ def get_tasks_in_group(group_id):
     return tasks
 
 
-def download_artifact(task_id, chunk, platform, artifact):
-    artifact_path = 'ccov-artifacts/%s_%s_%s' % (platform, chunk, os.path.basename(artifact['name']))
-
+def download_artifact(artifact_path, task_id, artifact_name):
     if os.path.exists(artifact_path):
         return artifact_path
 
     def perform_download():
-        r = requests.get(queue_base + 'task/%s/artifacts/%s' % (task_id, artifact['name']), stream=True)
+        r = requests.get(queue_base + 'task/%s/artifacts/%s' % (task_id, artifact_name), stream=True)
 
         with open(artifact_path, 'wb') as f:
             r.raw.decode_content = True
@@ -84,8 +82,6 @@ def download_artifact(task_id, chunk, platform, artifact):
 
     if not retry(perform_download):
         raise Exception('Failed downloading artifact in %s' % artifact_path)
-
-    return artifact_path
 
 
 TEST_PLATFORMS = ['test-linux64-ccov/opt', 'test-windows10-64-ccov/debug']
