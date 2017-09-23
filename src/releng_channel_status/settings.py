@@ -60,3 +60,4 @@ RULES_ENDPOINT = 'rules'
 SINGLE_RULE_ENDPOINT = 'rules/{alias}'
 RELEASE_ENDPOINT = 'releases/{release}'
 DEFAULT_ALIAS = 'firefox-nightly'
+UPDATE_MAPPINGS = ['Firefox-mozilla-central-nightly-latest']

@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<div>
+    <span>CHANNEL STATUS PAGE</span>
+</div>
+
+<ul>
+{% for platform in channel_status.release.platforms %}
+    <li>
+        {{platform.name}}
+    </li>
+{% endfor %}
+<li>{{channel_status.comment}}</li>
+</ul>
+
+
+Fallback
+
+<ul>
+{% for platform in channel_status.fallback_release.platforms %}
+    <li>
+        {{platform.name}}
+    </li>
+{% endfor %}
+<li>{{channel_status.comment}}</li>
+</ul>
+
+
+
+{% endblock %}

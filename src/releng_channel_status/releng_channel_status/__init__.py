@@ -17,6 +17,7 @@ def create_app(config=None):
             'log',
             'cache'
         ],
-        redirect_root_to_api=False
+        redirect_root_to_api=False,
+        template_folder='releng_channel_status/templates'
     )
     return app
