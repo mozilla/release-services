@@ -15,15 +15,27 @@ issues with validating tokens for certain application types.
 from __future__ import absolute_import
 
 import cli_common.log
+from urllib.parse import urlencode
+import time
+import requests
 import flask
 import flask_oidc
 import functools
 import json
-import requests
-
+import hmac
+import base64
+import os
 
 logger = cli_common.log.get_logger(__name__)
 auth0 = flask_oidc.OpenIDConnect()
+
+SETTINGS_REQUIRED = (
+    'SECRET_KEY',
+    'AUTH_CLIENT_ID',
+    'AUTH_CLIENT_SECRET',
+    'AUTH_REDIRECT_URI',
+    'AUTH_DOMAIN',
+)
 
 
 def mozilla_accept_token(render_errors=True):
@@ -82,8 +94,98 @@ def mozilla_accept_token(render_errors=True):
     return wrapper
 
 
+def build_state(seed=None, size=8):
+    '''
+    Build a unique opaque value, used by Auth0
+    as XSRF protection, using HMAC algorithm
+    '''
+    if seed is None:
+        seed = os.urandom(size)
+    else:
+        assert isinstance(seed, bytes)
+    assert len(seed) == size
+
+    h = hmac.new(
+        msg=seed,
+        key=flask.current_app.config.get('SECRET_KEY'),
+    )
+    return base64.urlsafe_b64encode(b''.join([seed, h.digest()]))
+
+
+def check_state(state, size=8):
+    '''
+    Check a previously created state value is valid
+    for this website
+    '''
+    data = base64.urlsafe_b64decode(state)
+    return hmac.compare_digest(
+        state.encode('utf-8'),
+        build_state(data[:size], size),
+    )
+
+
+def auth0_login():
+    '''
+    API Endpoint: Build Url to login on Auth0 server
+    '''
+    params = {
+        'audience': 'login.taskcluster.net',
+        'scope': 'full-user-credentials openid',
+        'response_type': 'code',
+        'client_id': flask.current_app.config.get('AUTH_CLIENT_ID'),
+        'redirect_uri': flask.current_app.config.get('AUTH_REDIRECT_URI'),
+        'state': build_state(),
+    }
+    return 'https://{}/authorize?{}'.format(
+        flask.current_app.config.get('AUTH_DOMAIN'),
+        urlencode(params),
+    )
+
+
+def auth0_check():
+    '''
+    Echange auth0 login code for long lasting tokens
+    access_token & id_token
+    '''
+    # Check state
+    state = flask.request.json.get('state')
+    assert state is not None, \
+        'Missing state in payload'
+    assert check_state(state), \
+        'Invalid state value'
+
+    code = flask.request.json.get('code')
+    assert code is not None, \
+        'Missing code in payload'
+
+    # Exchange code for tokens
+    url = 'https://{}/oauth/token'.format(
+        flask.current_app.config.get('AUTH_DOMAIN')
+    )
+    payload = {
+        'grant_type': 'authorization_code',
+        'code': code,
+        'client_id': flask.current_app.config.get('AUTH_CLIENT_ID'),
+        'client_secret': flask.current_app.config.get('AUTH_CLIENT_SECRET'),
+        'redirect_uri': flask.current_app.config.get('AUTH_REDIRECT_URI'),
+    }
+    auth = requests.post(url, payload)
+    if not auth.ok:
+        # Forward error
+        return auth.json(), auth.status_code
+
+    # Export values
+    data = auth.json()
+    return {
+        'expires': int(time.time()) + data['expires_in'],
+        'access_token': data['access_token'],
+        'id_token': data['id_token'],
+    }
+
+
 def init_app(app):
-    if app.config.get('SECRET_KEY') is None:
-        raise Exception('When using `auth0` extention you need to specify SECRET_KEY.')
+    for setting in SETTINGS_REQUIRED:
+        if app.config.get(setting) is None:
+            raise Exception('When using `auth0` extention you need to specify {}.'.format(setting))  # noqa
     auth0.init_app(app)
     return auth0

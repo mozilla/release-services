@@ -350,8 +350,6 @@ PROJECTS = {
             'port': 8010,
             'envs': {
                 'bugzilla-url': 'https://bugzilla-dev.allizom.org',
-                'auth-domain': 'https://auth.mozilla.auth0.com',
-                'auth-client-id': 'FK1mJkHhwjulTYBGklxn8W4Fhd1pgT4t', # TRASHME
             }
         },
         'requires': [
@@ -365,7 +363,6 @@ PROJECTS = {
                 'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
                 'envs': {
                     'bugzilla-url': 'https://bugzilla.mozilla.org',
-                    'auth-domain': 'https://auth.mozilla.auth0.com',
                 },
                 'csp': [
                     'https://auth.taskcluster.net',
@@ -378,7 +375,6 @@ PROJECTS = {
                 'dns': 'dve8yd1431ifz.cloudfront.net.',
                 'envs': {
                     'bugzilla-url': 'https://bugzilla.mozilla.org',
-                    'auth-domain': 'https://auth.mozilla.auth0.com',
                 },
                 'csp': [
                     'https://auth.taskcluster.net',

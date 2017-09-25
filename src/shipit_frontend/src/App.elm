@@ -58,12 +58,10 @@ type alias Model =
 
 
 type alias Flags =
-    { taskcluster : Maybe User.Credentials
+    { auth0 : Maybe User.Tokens
     , bugzilla : Maybe Bugzilla.Credentials
     , backend_uplift_url : String
     , bugzilla_url : String
-        , auth_domain: String
-        , auth_client_id : String
     }
 
 
@@ -75,7 +73,7 @@ init flags =
             Bugzilla.init flags.bugzilla_url flags.bugzilla
 
         ( user, userCmd ) =
-            User.init flags.auth_domain flags.auth_client_id flags.taskcluster
+            User.init flags.backend_uplift_url flags.auth0
 
         -- App init
         ( dashboard, dashboardCmd ) =
@@ -132,7 +130,7 @@ update msg model =
                     List.concat
                         [ [ Cmd.map UserMsg userCmd ]
                         , case userMsg of
-                            User.Logged _ ->
+                            User.LoadedTaskclusterCredentials _ ->
                                 [ loadAllAnalysis model_ ]
 
                             _ ->
@@ -372,7 +370,7 @@ viewNavAnalysis analysis =
 viewLogin : User.Model -> List (Html Msg)
 viewLogin user =
     [ a
-        [ Utils.onClick (UserMsg <| User.buildLoginMsg user )
+        [ Utils.onClick (UserMsg <| User.Login)
         , href "#"
         , class "nav-link"
         ]
