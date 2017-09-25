@@ -27,15 +27,24 @@ class Workflow(object):
     '''
     taskcluster = None
 
-    def __init__(self, cache_root, emails, mozreview, mozreview_enabled=False, client_id=None, access_token=None):  # noqa
+    def __init__(self, cache_root, emails, mozreview_api_root, mozreview_enabled=False, client_id=None, access_token=None):  # noqa
         self.emails = emails
-        self.mozreview = mozreview
+        self.mozreview_api_root = mozreview_api_root
         self.mozreview_enabled = mozreview_enabled
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
             'Cache root {} is not a dir.'.format(self.cache_root)
         assert 'MOZCONFIG' in os.environ, \
             'Missing MOZCONFIG in environment'
+
+        # Save Taskcluster ID for logging
+        if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
+            self.taskcluster_id = '{} run:{}'.format(
+                os.environ['TASK_ID'],
+                os.environ['RUN_ID'],
+            )
+        else:
+            self.taskcluster_id = 'local instance'
 
         # Load TC services & secrets
         self.notify = get_service(
@@ -64,9 +73,6 @@ class Workflow(object):
         # Open new hg client
         self.hg = hglib.open(self.repo_dir)
 
-        # Setup clang
-        self.clang = ClangTidy(self.repo_dir, settings.target)
-
     def run(self, revision, review_request_id, diffset_revision):
         '''
         Run the static analysis workflow:
@@ -75,12 +81,30 @@ class Workflow(object):
          * Run static analysis
          * Publish results
         '''
+        # Add log to find Taskcluster task in papertrail
+        logger.info(
+            'New static analysis',
+            taskcluster=self.taskcluster_id,
+            revision=revision,
+            review_request_id=review_request_id,
+            diffset_revision=diffset_revision,
+        )
+
+        # Create batch review
+        self.mozreview = BatchReview(
+            self.mozreview_api_root,
+            review_request_id,
+            diffset_revision,
+        )
+
+        # Setup clang
+        clang = ClangTidy(self.repo_dir, settings.target, self.mozreview)
+
         # Force cleanup to reset tip
         # otherwise previous pull are there
         self.hg.update(rev=b'tip', clean=True)
 
         # Pull revision from review
-        logger.info('Pull from review', revision=revision)
         self.hg.pull(source=REPO_REVIEW, rev=revision, update=True, force=True)
 
         # Get the parents revisions
@@ -111,7 +135,7 @@ class Workflow(object):
 
         # Run static analysis through run-clang-tidy.py
         logger.info('Run clang-tidy...')
-        issues = self.clang.run(settings.clang_checkers, modified_files)
+        issues = clang.run(settings.clang_checkers, modified_files)
 
         logger.info('Detected {} code issue(s)'.format(len(issues)))
         if not issues:
@@ -129,7 +153,6 @@ class Workflow(object):
         '''
         Publish comments on mozreview
         '''
-
         # Filter issues to keep publishable checks
         # and non third party
         issues = list(filter(lambda i: i.is_publishable(), issues))
@@ -137,23 +160,11 @@ class Workflow(object):
             logger.info('No issues to publish on MozReview')
             return
 
-        # Create batch review
-        review = BatchReview(
-            self.mozreview,
-            review_request_id,
-            diff_revision,
-        )
-
         # Comment each issue
         for issue in issues:
             if self.mozreview_enabled:
                 logger.info('Will publish about {}'.format(issue))
-                body = '{}: {} [clang-tidy: {}]'.format(
-                    issue.type.capitalize(),
-                    issue.message.capitalize(),
-                    issue.check,
-                )
-                review.comment(issue.path, issue.line, 1, body)
+                self.mozreview.comment(issue.path, issue.line, 1, issue.mozreview_body)
             else:
                 logger.info('Should publish about {}'.format(issue))
 
@@ -163,7 +174,7 @@ class Workflow(object):
 
         # Publish the review
         # without ship_it to avoid automatically r+
-        return review.publish(ship_it=False)
+        return self.mozreview.publish(ship_it=False)
 
     def notify_admins(self, review_request_id, issues):
         '''
@@ -173,11 +184,12 @@ class Workflow(object):
             url='https://reviewboard.mozilla.org/r/{}/'.format(review_request_id), # noqa
             nb_publishable=sum([i.is_publishable() for i in issues]),
         )
-        content += '\n'.join([i.as_markdown() for i in issues])
+        content += '\n\n'.join([i.as_markdown() for i in issues])
+        subject = 'New Static Analysis Review #{}'.format(review_request_id)
         for email in self.emails:
             self.notify.email({
                 'address': email,
-                'subject': 'New Static Analysis Review',
+                'subject': subject,
                 'content': content,
                 'template': 'fullscreen',
             })

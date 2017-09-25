@@ -4,14 +4,12 @@
 let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource ;
-  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl dockerTools gcc
-      cacert gcc-unwrapped glibc glibcLocales xorg;
-  inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
-  inherit (releng_pkgs.pkgs.lib) fileContents optional licenses concatStringsSep ;
+  inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg;
+  inherit (releng_pkgs.pkgs.lib) fileContents concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
-  inherit (releng_pkgs.pkgs.pythonPackages) setuptools;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
+  moz_clang = import ./mozilla_clang.nix { inherit releng_pkgs ; };
   name = "mozilla-shipit-static-analysis";
   dirname = "shipit_static_analysis";
 
@@ -37,7 +35,7 @@ let
           "${cacheKey}" = "/cache";
         };
         taskEnv = {
-          "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+          "SSL_CERT_FILE" = "${cacert}/etc/ssl/certs/ca-bundle.crt";
           "APP_CHANNEL" = branch;
           "MOZ_AUTOMATION" = "1";
         };
@@ -73,8 +71,8 @@ let
       fromRequirementsFile ./requirements.txt python.packages
       ++ [
         # Needed for the static analysis
-				glibc
-				gcc
+        glibc
+        gcc
 
         # Gecko environment
         releng_pkgs.gecko-env
@@ -84,13 +82,15 @@ let
       mkdir -p $out/tmp
       mkdir -p $out/bin
       ln -s ${mercurial}/bin/hg $out/bin
+      ln -s ${moz_clang}/bin/clang-tidy $out/bin
+      ln -s ${moz_clang}/bin/clang-format $out/bin
 
       # Expose gecko env in final output
       ln -s ${releng_pkgs.gecko-env}/bin/gecko-env $out/bin
     '';
 
     shellHook = ''
-      export PATH="${mercurial}/bin:$PATH"
+      export PATH="${mercurial}/bin:${moz_clang}/bin:$PATH"
 
       # Setup mach automation
       export MOZ_AUTOMATION=1

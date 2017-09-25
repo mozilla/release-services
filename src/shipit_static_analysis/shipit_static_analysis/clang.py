@@ -12,7 +12,6 @@ import os
 import re
 
 from cli_common.log import get_logger
-from cli_common.command import run_check
 from shipit_static_analysis.config import settings
 
 logger = get_logger(__name__)
@@ -24,6 +23,7 @@ ISSUE_MARKDOWN = '''
 
 - **Message**: {message}
 - **Location**: {location}
+- **In patch**: {in_patch}
 - **Clang check**: {check}
 - **Publishable check**: {publishable_check}
 - **Third Party**: {third_party}
@@ -59,25 +59,12 @@ class ClangTidy(object):
     '''
     db_path = 'compile_commands.json'
 
-    def __init__(self, work_dir, build_dir):
+    def __init__(self, work_dir, build_dir, mozreview):
         assert os.path.isdir(work_dir)
 
         self.work_dir = work_dir
         self.build_dir = os.path.join(work_dir, build_dir)
-
-        # Dirty hack to skip Taskcluster proxy usage when loading artifacts
-        if 'TASK_ID' in os.environ:
-            del os.environ['TASK_ID']
-
-        # Check the local clang is available
-        logger.info('Loading Mozilla clang-tidy...')
-        run_check(CLANG_SETUP_CMD, cwd=work_dir)
-        self.binary = os.path.join(
-            work_dir,
-            'clang/bin/clang-tidy',
-        )
-        assert os.path.exists(self.binary), \
-            'Missing clang tidy in {}'.format(self.binary)
+        self.mozreview = mozreview
 
     def run(self, checks, files):
         '''
@@ -143,7 +130,9 @@ class ClangTidy(object):
 
             # Build command line for a filename
             cmd = [
-                self.binary,
+                # Use system clang tidy
+                'clang-tidy',
+
                 # Limit warnings to current file
                 '-header-filter={}'.format(os.path.basename(filename)),
                 '-checks={}'.format(','.join(checks)),
@@ -189,6 +178,9 @@ class ClangTidy(object):
             else:
                 issue.body = clang_output[header.end():]
 
+            # Detect if issue is in patch
+            issue.in_patch = issue.line in self.mozreview.changed_lines_for_file(issue.path)  # noqa
+
             if issue.is_problem():
                 # Save problem to append notes
                 # Skip diagnostic errors
@@ -221,10 +213,11 @@ class ClangIssue(object):
         self.line = int(self.line)
         self.char = int(self.char)
         self.body = None
+        self.in_patch = False
         self.notes = []
 
     def __str__(self):
-        return '[{}] {} {}:{}'.format(self.type, self.path, self.line, self.char)
+        return '[{}] {} {} {}:{}'.format(self.type, self.check, self.path, self.line, self.char)
 
     def is_problem(self):
         return self.type in ('warning', 'error')
@@ -234,9 +227,11 @@ class ClangIssue(object):
         Is this issue publishable on Mozreview ?
         * not a third party code
         * check is marked as publishable
+        * is in modified lines (in patch)
         '''
         return self.has_publishable_check() \
-            and not self.is_third_party()
+            and not self.is_third_party() \
+            and self.in_patch
 
     def is_third_party(self):
         '''
@@ -262,6 +257,25 @@ class ClangIssue(object):
         '''
         return settings.is_publishable_check(self.check)
 
+    @property
+    def mozreview_body(self):
+        '''
+        Build the text body published on MozReview
+        '''
+        body = '{}: {} [clang-tidy: {}]'.format(
+            self.type.capitalize(),
+            self.message.capitalize(),
+            self.check,
+        )
+
+        # Add body when it's more than 2 lines
+        # it generally contains useful info
+        lines = len(list(filter(None, self.body.split('\n'))))
+        if lines > 2:
+            body += '\n{}'.format(self.body)
+
+        return body
+
     def as_markdown(self):
         return ISSUE_MARKDOWN.format(
             type=self.type,
@@ -269,6 +283,7 @@ class ClangIssue(object):
             location='{}:{}:{}'.format(self.path, self.line, self.char),
             body=self.body,
             check=self.check,
+            in_patch=self.in_patch and 'yes' or 'no',
             third_party=self.is_third_party() and 'yes' or 'no',
             publishable_check=self.has_publishable_check() and 'yes' or 'no',
             publishable=self.is_publishable() and 'yes' or 'no',

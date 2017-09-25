@@ -9,7 +9,7 @@ clang_checkers:
  - name: clang-analyzer-deadcode.DeadStores
    publish: no
  - name: clang-analyzer-security.*
-   publish: no
+   publish: yes
  - name: misc-assert-side-effect
    publish: yes
  - name: misc-suspicious-missing-comma
