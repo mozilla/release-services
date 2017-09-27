@@ -9,6 +9,24 @@ info:
   title: "TreeStatus"
 paths:
 
+  /auth0/login:
+    get:
+      operationId: "backend_common.auth0.auth0_login"
+      responses:
+        200:
+          description: A login URL to redirect the user to
+          schema:
+            type: string
+
+  /auth0/check:
+    post:
+      operationId: "backend_common.auth0.auth0_check"
+      responses:
+        200:
+          description: Auth0 tokens
+          schema:
+            $ref: '#/definitions/Auth0Tokens'
+
   /stack:
     get:
       operationId: "releng_treestatus.api.get_stack"
@@ -420,3 +438,17 @@ definitions:
         description: |
           if true, add the change to the status and reason to the undo stack.
           Note that updates to the message of the day are not recorded.
+
+  Auth0Tokens:
+    type: object
+    required:
+      - expires
+      - access_token
+      - id_token
+    properties:
+      expires:
+        type: integer
+      access_token:
+        type: string
+      id_token:
+        type: string
