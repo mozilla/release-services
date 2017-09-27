@@ -36,19 +36,30 @@ init flags location =
         route =
             App.parseLocation location
 
+        ( user, userCmd ) =
+            TaskclusterLogin.init flags.treestatusUrl flags.auth0
+
         model =
             { history = [ location ]
             , route = route
             , docsUrl = flags.docsUrl
             , version = flags.version
-            , user = flags.user
+            , user = user
             , userScopes = App.UserScopes.init
             , trychooser = App.TryChooser.init
             , treestatus = App.TreeStatus.init flags.treestatusUrl
             , notifications = App.Notifications.init flags.identityUrl flags.policyUrl
             }
+
+        ( model_, appCmd ) =
+            initRoute model route
     in
-        initRoute model route
+        ( model_
+        , Cmd.batch
+            [ appCmd
+            , Cmd.map App.TaskclusterLoginMsg userCmd
+            ]
+        )
 
 
 initRoute : App.Model -> App.Route -> ( App.Model, Cmd App.Msg )
@@ -71,38 +82,14 @@ initRoute model route =
             }
                 ! [ Utils.performMsg (App.UserScopesMsg App.UserScopes.FetchScopes) ]
 
-        App.LoginRoute clientId accessToken certificate ->
+        App.LoginRoute code state ->
             let
-                -- TODO: parsing of the arguments should go into TaskclusterLogin.elm
-                certificate_ =
-                    case certificate of
-                        Just text ->
-                            TaskclusterLogin.decodeCertificate text
-                                |> Result.toMaybe
-
-                        Nothing ->
-                            Nothing
-
-                credentials =
-                    case ( clientId, accessToken ) of
-                        ( Just clientId_, Just accessToken_ ) ->
-                            Just
-                                (TaskclusterLogin.Credentials
-                                    clientId_
-                                    accessToken_
-                                    certificate_
-                                )
-
-                        _ ->
-                            Nothing
-
                 loginCmd =
-                    case credentials of
-                        Just credentials_ ->
-                            Utils.performMsg
-                                (App.TaskclusterLoginMsg
-                                    (TaskclusterLogin.Logging credentials_)
-                                )
+                    case (TaskclusterLogin.convertUrlParametersToCode code state) of
+                        Just code_ ->
+                            TaskclusterLogin.Logging code_
+                                |> App.TaskclusterLoginMsg
+                                |> Utils.performMsg
 
                         Nothing ->
                             Cmd.none
@@ -267,8 +254,8 @@ update msg model =
                 ( newModel, newCmd, hawkCmd ) =
                     App.Notifications.update new_route msg_ model.notifications
             in
-                case model.user of
-                    Just user ->
+                case model.user.credentials of
+                    Just credentials ->
                         ( { model | notifications = newModel }
                         , hawkCmd
                             |> Maybe.map (\req -> [ hawkSend model.user "Notifications" req ])
@@ -303,9 +290,9 @@ hawkSend user page request =
         pagedRequest =
             { request | id = page ++ request.id }
     in
-        case user of
-            Just user2 ->
-                Hawk.send pagedRequest user2
+        case user.credentials of
+            Just credentials ->
+                Hawk.send pagedRequest credentials
                     |> Cmd.map App.HawkMsg
 
             Nothing ->
@@ -328,7 +315,7 @@ viewRoute model =
         App.HomeRoute ->
             App.Home.view model
 
-        App.LoginRoute _ _ _ ->
+        App.LoginRoute _ _ ->
             -- TODO: this should be already a view on TaskclusterLogin
             text "Logging you in ..."
 

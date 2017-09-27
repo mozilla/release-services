@@ -31,7 +31,7 @@ viewDropdown title pages =
 
 viewUser : App.Model -> List (Html App.Msg)
 viewUser model =
-    case model.user of
+    case model.user.credentials of
         Just user ->
             viewDropdown user.clientId
                 [ a
@@ -50,20 +50,8 @@ viewUser model =
 
         Nothing ->
             let
-                loginTarget =
-                    Just
-                        ( "/login"
-                        , "Release Engineering services"
-                        )
-
-                loginUrl =
-                    { url = "https://login.taskcluster.net"
-                    , target = loginTarget
-                    , targetName = "target"
-                    }
-
                 loginMsg =
-                    App.TaskclusterLoginMsg <| TaskclusterLogin.Login loginUrl
+                    App.TaskclusterLoginMsg <| TaskclusterLogin.Login
             in
                 [ a
                     [ Utils.onClick loginMsg

@@ -432,7 +432,7 @@ location2messages location =
                 case first of
                     "login" ->
                         [ Builder.query builder
-                            |> User.convertUrlQueryToUser
+                            |> User.convertUrlQueryToCode
                             |> Maybe.map
                                 (\x ->
                                     x

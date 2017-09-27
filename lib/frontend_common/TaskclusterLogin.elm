@@ -245,24 +245,24 @@ isCertificateExpired time credentials =
             False
 
 
-convertUrlQueryToUser : Dict String String -> Maybe Code
-convertUrlQueryToUser query =
-    let
-        code =
-            Dict.get "code" query
+convertUrlQueryToCode : Dict String String -> Maybe Code
+convertUrlQueryToCode query =
+    convertUrlParametersToCode
+        (Dict.get "code" query)
+        (Dict.get "state" query)
 
-        state =
-            Dict.get "state" query
-    in
-        case ( code, state ) of
-            ( Just value1, Just value2 ) ->
-                Just
-                    { code = value1
-                    , state = value2
-                    }
 
-            _ ->
-                Nothing
+convertUrlParametersToCode : Maybe String -> Maybe String -> Maybe Code
+convertUrlParametersToCode code state =
+    case ( code, state ) of
+        ( Just value1, Just value2 ) ->
+            Just
+                { code = value1
+                , state = value2
+                }
+
+        _ ->
+            Nothing
 
 
 

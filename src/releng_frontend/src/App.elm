@@ -24,7 +24,7 @@ import UrlParser exposing ((</>), (<?>))
 type Route
     = NotFoundRoute
     | HomeRoute
-    | LoginRoute (Maybe String) (Maybe String) (Maybe String)
+    | LoginRoute (Maybe String) (Maybe String)
     | LogoutRoute
     | NotificationRoute App.Notifications.Types.Route
     | TryChooserRoute
@@ -48,9 +48,8 @@ routeParser =
             , UrlParser.map NotFoundRoute (UrlParser.s "404")
             , UrlParser.map LoginRoute
                 (UrlParser.s "login"
-                    <?> UrlParser.stringParam "clientId"
-                    <?> UrlParser.stringParam "accessToken"
-                    <?> UrlParser.stringParam "certificate"
+                    <?> UrlParser.stringParam "code"
+                    <?> UrlParser.stringParam "state"
                 )
             , UrlParser.map LogoutRoute (UrlParser.s "logout")
             ]
@@ -69,7 +68,7 @@ reverseRoute route =
         HomeRoute ->
             "/"
 
-        LoginRoute _ _ _ ->
+        LoginRoute _ _ ->
             "/login"
 
         LogoutRoute ->
@@ -103,7 +102,7 @@ navigateTo route =
 
 
 type alias Flags =
-    { user : TaskclusterLogin.Model
+    { auth0 : Maybe TaskclusterLogin.Tokens
     , treestatusUrl : String
     , docsUrl : String
     , version : String
