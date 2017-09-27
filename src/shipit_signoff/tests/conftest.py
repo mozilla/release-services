@@ -31,6 +31,10 @@ def app():
         'BALROG_API_ROOT': 'https://balrog/api',
         'BALROG_USERNAME': 'balrogadmin',
         'BALROG_PASSWORD': 'balrogadmin',
+        'AUTH_CLIENT_ID': 'dummy_id',
+        'AUTH_CLIENT_SECRET': 'dummy_secret',
+        'AUTH_DOMAIN': 'auth.localhost',
+        'AUTH_REDIRECT_URI': 'http://localhost/login',
     })
     app = shipit_signoff.create_app(config)
 
