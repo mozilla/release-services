@@ -24,7 +24,7 @@ MOZREVIEW_COMMENT_SUCCESS = '''
 Static analysis didn't find any C/C++ defects in this patch. Hooray!
 '''
 MOZREVIEW_COMMENT_FAILURE = '''
-Static analysis found {} C/C++ defects in this patch{}.
+Static analysis found {} C/C++ defect{} in this patch{}.
 
 You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp`
 
@@ -176,6 +176,7 @@ class Workflow(object):
             extras = ' (only the first {} are reported here)'.format(MAX_COMMENTS)
             comment = MOZREVIEW_COMMENT_FAILURE.format(
                 nb,
+                nb != 1 and 's' or '',
                 nb > MAX_COMMENTS and extras or ''
             )
 
