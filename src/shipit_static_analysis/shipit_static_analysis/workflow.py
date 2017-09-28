@@ -21,10 +21,10 @@ REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
 MAX_COMMENTS = 30
 MOZREVIEW_COMMENT_SUCCESS = '''
-Static analysis didn't find any C/C++ defects in this patch. Hooray!
+C/C++ Static analysis didn't find any defects in this patch. Hooray!
 '''
 MOZREVIEW_COMMENT_FAILURE = '''
-Static analysis found {} C/C++ defect{} in this patch{}.
+C/C++ Static analysis found {} defect{} in this patch{}.
 
 You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp`
 
