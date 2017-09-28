@@ -423,10 +423,10 @@ PROJECTS = {
                 'heroku_app': 'shipit-staging-pulse-listener',
                 'heroku_dyno_type': 'worker',
             },
-            # 'production': {
-            #     'heroku_app': 'shipit-production-pulse-listener',
-            #     'heroku_dyno_type': 'worker',
-            # },
+            'production': {
+                'heroku_app': 'shipit-production-pulse-listener',
+                'heroku_dyno_type': 'worker',
+            },
         },
     },
     'shipit-risk-assessment': {
