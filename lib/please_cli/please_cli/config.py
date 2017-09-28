@@ -480,7 +480,7 @@ PROJECTS = {
         'deploy': 'TASKCLUSTER_HOOK',
         'deploy_options': {
             'staging': {},
-            # 'production': {},
+            'production': {},
         },
     },
     'shipit-taskcluster': {
