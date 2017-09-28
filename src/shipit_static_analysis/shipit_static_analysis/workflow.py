@@ -20,11 +20,15 @@ logger = get_logger(__name__)
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
 MAX_COMMENTS = 30
-MOZREVIEW_COMMENT = '''
-Static analysis found {} code defects in this patch{}.
+MOZREVIEW_COMMENT_SUCCESS = '''
+Static analysis didn't find any C/C++ defects in this patch. Hooray!
+'''
+MOZREVIEW_COMMENT_FAILURE = '''
+Static analysis found {} C/C++ defects in this patch{}.
 
-- You can run this analysis locally with: ./mach static-analysis check path/to/file.cpp
-- If you notice a problem in this automated review, please report it here : http://bit.ly/2y9N9Vx
+You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp`
+
+If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx
 '''
 
 
@@ -169,8 +173,8 @@ class Workflow(object):
         if issues:
             # Build general comment
             nb = len(issues)
-            extras = ' (only the first 30 are reported here)'.format(MAX_COMMENTS)
-            comment = MOZREVIEW_COMMENT.format(
+            extras = ' (only the first {} are reported here)'.format(MAX_COMMENTS)
+            comment = MOZREVIEW_COMMENT_FAILURE.format(
                 nb,
                 nb > MAX_COMMENTS and extras or ''
             )
@@ -184,7 +188,7 @@ class Workflow(object):
                     logger.info('Should publish about {}'.format(issue))
 
         else:
-            comment = "The static analysis bot didn't find any code issues in this patch. Good job!"  # noqa
+            comment = MOZREVIEW_COMMENT_SUCCESS
             logger.info('No issues to publish, send kudos.')
 
         if not self.mozreview_enabled:
