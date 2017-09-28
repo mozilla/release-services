@@ -79,6 +79,10 @@ class BatchReview(object):
     def changed_lines_for_file(self, filename):
         '''Determine which lines changed in a file'''
         f = self.destfile_to_file(filename)
+        if f is None:
+            logger.error('File not in patch {}'.format(filename))
+            return []
+
         diff_data = self._file_to_diffdata.setdefault(f, f.get_diff_data())
 
         chunks = diff_data.rsp['diff_data']['chunks']
@@ -138,9 +142,6 @@ class BatchReview(object):
         # Truncate comments to the maximum permitted amount to avoid
         # overloading the review and freezing the browser.
         if len(self.comments) > self.max_comments:
-            warning = ('WARNING: Number of comments exceeded maximum, showing '
-                       '%d of %d.') % (self.max_comments, len(self.comments))
-            body_top = '%s\n%s' % (body_top, warning)
             del self.comments[self.max_comments:]
 
         try:
