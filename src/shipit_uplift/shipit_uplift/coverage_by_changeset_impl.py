@@ -69,11 +69,14 @@ def generate(changeset):
           'changes': changes,
         }
 
+    def parse_diff_task(diff):
+        return lambda: parse_diff(diff)
+
     with ThreadPoolExecutor() as executor:
         futures = []
 
         for diff in whatthepatch.parse_patch(patch):
-            futures.append(executor.submit(lambda: parse_diff(diff)))
+            futures.append(executor.submit(parse_diff_task(diff)))
 
         for future in concurrent.futures.as_completed(futures):
             res = future.result()
