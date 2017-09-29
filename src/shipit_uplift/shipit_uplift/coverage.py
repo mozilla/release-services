@@ -244,9 +244,9 @@ def coverage_supported(path):
         # C
         'c', 'h',
         # C++
-        'cpp', 'hh', 'hpp',
+        'cpp', 'cc', 'cxx', 'hh', 'hpp', 'hxx',
         # JavaScript
-        'js', 'jsm',
+        'js', 'jsm', 'xul', 'xml', 'html', 'xhtml',
     ]
 
     return any([path.endswith('.' + ext) for ext in COVERAGE_EXTENSIONS])
