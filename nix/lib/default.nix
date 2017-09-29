@@ -525,7 +525,12 @@ in rec {
     , checkPhase ? null
     , postInstall ? ""
     , shellHook ? ""
-    , dockerCmd ? []
+    , dockerCmd ? [
+        "gunicorn"
+        "${dirname}.flask:app"
+        "--log-file"
+        "-"
+      ]
     , dockerEnv ? []
     , dockerContents ? []
     , passthru ? {}
@@ -590,12 +595,7 @@ in rec {
           "APP_SETTINGS=${self}/etc/settings.py"
           "FLASK_APP=${dirname}.flask:app"
         ];
-        dockerCmd = [
-          "gunicorn"
-          "${dirname}.flask:app"
-          "--log-file"
-          "-"
-        ];
+        dockerCmd = dockerCmd;
 
       });
     in self;
@@ -741,6 +741,7 @@ in rec {
         postInstall = ''
           mkdir -p $out/bin
           ln -s ${python.__old.python.interpreter} $out/bin
+          ln -s ${python.__old.python.interpreter} $out/bin/python
           for i in $out/bin/*; do
             wrapProgram $i --set PYTHONPATH $PYTHONPATH
           done

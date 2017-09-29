@@ -355,8 +355,8 @@ let
 
 
     "amqp" = python.mkDerivation {
-      name = "amqp-2.2.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/cc/6b/7573935fe6021a89e8b1a74fabae1a9050701b8cf7075ca217b8d3e361a6/amqp-2.2.1.tar.gz"; sha256 = "7ababb2c28672c2a48b907095bc79104531217a98807751b51e0d8c0fa831aff"; };
+      name = "amqp-2.2.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e0/70/9ab9ccd8247fb7d2adb717e9f6a0ed358c9e1ab2c349048b0352f9e80ee2/amqp-2.2.2.tar.gz"; sha256 = "cba1ace9d4ff6049b190d8b7991f9c1006b443a5238021aca96dd6ad2ac9da22"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -372,8 +372,8 @@ let
 
 
     "async-timeout" = python.mkDerivation {
-      name = "async-timeout-1.3.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/57/e9/52dfa4243a5b796f5a9c74452b43156ae5fbd45b125cc2dd3e1635797f2c/async-timeout-1.3.0.tar.gz"; sha256 = "f4651f122a9877049930ce31a8422bc202a47937627295fe5e411b2c2083481f"; };
+      name = "async-timeout-1.4.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/6f/cc/ff80612164fe68bf97767052c5c783a033165df7d47a41ae5c1cc5ea480b/async-timeout-1.4.0.tar.gz"; sha256 = "983891535b1eca6ba82b9df671c8abff53c804fce3fa630058da5bbbda500340"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -465,8 +465,8 @@ let
 
 
     "connexion" = python.mkDerivation {
-      name = "connexion-1.1.14";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/84/ef/732b95bcf3cb9c7abf7d361abc69d0ada894ecb4cfa2d7fd5efd4c36bc26/connexion-1.1.14.tar.gz"; sha256 = "7f9648d8dda7972556210879f2d80ee9fdd2a9d0c6db9a7c1709609c24f3c165"; };
+      name = "connexion-1.1.15";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/6b/bd/c89a35b80744ccc0c77836fe0418a7f8ed2f85a1930e23157088c1560cec/connexion-1.1.15.tar.gz"; sha256 = "5dd022488438f4b75d8fa0435cd95b402f1bce1a6bb3599a0d568ba2c3e70afe"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -594,8 +594,8 @@ let
 
 
     "flask-talisman" = python.mkDerivation {
-      name = "flask-talisman-0.3.2";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/38/24/33c4ee0a85eac55fa05a92e5477c563d603e362b5a3b6250563031f6b1d3/flask-talisman-0.3.2.tar.gz"; sha256 = "d7e0773910cfe2cadfa97b01d094fe6e70c5ea4d9f2fe5d3e81c589acf5a0133"; };
+      name = "flask-talisman-0.4.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/ad/9f/1bf427261d566d879aad9d845cdb66dd90fb6fa3f9fdbf3fa8b5e79606cf/flask-talisman-0.4.0.tar.gz"; sha256 = "3ba3f7292bb75d152ea817a02600478c27ae5bdda24229b2248c0ac1d614ba72"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -827,8 +827,8 @@ let
 
 
     "multidict" = python.mkDerivation {
-      name = "multidict-3.1.3";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/eb/f3/9c3d916a9b83a4b6cff0843177f2940d5cc57835d4bc0bc781df352715c6/multidict-3.1.3.tar.gz"; sha256 = "875f80a046e7799b40df4b015b8fc5dae91697936872a8d7362c909a02ec6d12"; };
+      name = "multidict-3.2.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/68/a6/d241f9d1ed5ca55a819329c2f98c6833a2d8f25463bc03c44039cd13639c/multidict-3.2.0.tar.gz"; sha256 = "e27a7a95317371c15ecda7206f6e8c144f10a337bb2c3e61b5176deafbb88cb2"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -912,8 +912,8 @@ let
 
 
     "pyasn1" = python.mkDerivation {
-      name = "pyasn1-0.3.3";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/33/4b/b3838af9a0bd1d17463031cf28cb1c196618900ccf80b62979f48c42768b/pyasn1-0.3.3.tar.gz"; sha256 = "01c20ade412088b42dcd5f0fef6149f6b7377297c5c5f222bb5ef0331ee3517c"; };
+      name = "pyasn1-0.3.5";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/bc/85/029f5f4d4fa8a487538ce597932cf3601bba3392c85d74eae148fe6ac5d3/pyasn1-0.3.5.tar.gz"; sha256 = "c7a1186416bcdaf19b56f5b2506200306d7d4cf222d3d7c2d4cb600ccacdaf1b"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -927,8 +927,8 @@ let
 
 
     "pyasn1-modules" = python.mkDerivation {
-      name = "pyasn1-modules-0.1.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/1f/e5/dd41092cc5128419e1442f7dd98210e07fd3584e3e8973775924903efe0d/pyasn1-modules-0.1.1.tar.gz"; sha256 = "017b6a20725c79f1329e9f446d90ebbeab9d9b322bde0c26d46840b367fb915d"; };
+      name = "pyasn1-modules-0.1.4";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/66/6b/f5582cbf3b920896ce1b97bde3894599b3dec31301ef79ae7ea0022f5577/pyasn1-modules-0.1.4.tar.gz"; sha256 = "b07c17bdb34d6f64aafea6269f2e8fb306a57473f0f38d9a6ca389d6ab30ac4a"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -974,8 +974,8 @@ let
 
 
     "pytest" = python.mkDerivation {
-      name = "pytest-3.2.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/6d/9f/1fbd50be4deaa4007ef4ed8f84f888c6613c629e1f46e979ffb9d82a7324/pytest-3.2.1.tar.gz"; sha256 = "4c2159d2be2b4e13fa293e7a72bdf2f06848a017150d5c6d35112ce51cfd74ce"; };
+      name = "pytest-3.2.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/63/4a/db317d848325ba77e4ed498860b40ab53a8b49f1ae13612bc8aee75634f0/pytest-3.2.2.tar.gz"; sha256 = "f46e49e0340a532764991c498244a60e3a37d7424a532b3ff1a6a7653f1a403a"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -1102,6 +1102,24 @@ let
 
 
 
+    "rq" = python.mkDerivation {
+      name = "rq-0.8.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/2b/6b/4b0b41b356bad12f2927d412508f8ca17dc85a113bb951b1f1b39f089989/rq-0.8.2.tar.gz"; sha256 = "1d93356c1c3073b543506cc3662f50744af8e28848eb65dffb06e0c2628b89f6"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."click"
+      self."redis"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/nvie/rq/";
+        license = licenses.bsdOriginal;
+        description = "RQ is a simple, lightweight, library for creating background jobs, and processing them.";
+      };
+    };
+
+
+
     "rsa" = python.mkDerivation {
       name = "rsa-3.4.2";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/14/89/adf8b72371e37f3ca69c6cb8ab6319d009c4a24b04a31399e5bd77d9bb57/rsa-3.4.2.tar.gz"; sha256 = "25df4e10c263fb88b5ace923dd84bf9aa7f5019687b5e55382ffcdb8bede9db5"; };
@@ -1120,8 +1138,8 @@ let
 
 
     "six" = python.mkDerivation {
-      name = "six-1.10.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/b3/b2/238e2590826bfdd113244a40d9d3eb26918bd798fc187e2360a8367068db/six-1.10.0.tar.gz"; sha256 = "105f8d68616f8248e24bf0e9372ef04d3cc10104f1980f54d57b2ce73a5ad56a"; };
+      name = "six-1.11.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/16/d8/bc6316cf98419719bd59c91742194c111b6f2e85abac88e496adefaf7afe/six-1.11.0.tar.gz"; sha256 = "70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
