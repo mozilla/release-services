@@ -28,6 +28,10 @@ def app():
         'APP_TEMPLATES_FOLDER': '',
         'SQLALCHEMY_DATABASE_URI': 'sqlite://',
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'AUTH_CLIENT_ID': 'dummy_id',
+        'AUTH_CLIENT_SECRET': 'dummy_secret',
+        'AUTH_DOMAIN': 'auth.localhost',
+        'AUTH_REDIRECT_URI': 'http://localhost/login',
     })
 
     app = backend_common.create_app(

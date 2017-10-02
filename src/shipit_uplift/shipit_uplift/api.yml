@@ -18,6 +18,24 @@ paths:
           schema:
             type: string
 
+  /auth0/login:
+    get:
+      operationId: "backend_common.auth0.auth0_login"
+      responses:
+        200:
+          description: A login URL to redirect the user to
+          schema:
+            type: string
+
+  /auth0/check:
+    post:
+      operationId: "backend_common.auth0.auth0_check"
+      responses:
+        200:
+          description: Auth0 tokens
+          schema:
+            $ref: '#/definitions/Auth0Tokens'
+
   /analysis:
     get:
       operationId: "shipit_uplift.api.list_analysis"
@@ -343,3 +361,16 @@ definitions:
       created:
         type: string
 
+  Auth0Tokens:
+    type: object
+    required:
+      - expires
+      - access_token
+      - id_token
+    properties:
+      expires:
+        type: integer
+      access_token:
+        type: string
+      id_token:
+        type: string

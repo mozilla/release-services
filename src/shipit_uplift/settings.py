@@ -19,6 +19,10 @@ DEBUG = bool(os.environ.get('DEBUG', False))
 required = [
     'SECRET_KEY_BASE64',
     'DATABASE_URL',
+    'AUTH_DOMAIN',
+    'AUTH_CLIENT_ID',
+    'AUTH_CLIENT_SECRET',
+    'AUTH_REDIRECT_URI',
     'REDIS_URL',
 ]
 

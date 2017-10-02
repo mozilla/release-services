@@ -25,22 +25,22 @@ var hawk = require('./hawk');
 var release_version = getData('release-version', process.env.RELEASE_VERSION)
 var release_channel = getData('release-channel', process.env.RELEASE_CHANNEL);
 
-var TC_KEY = 'taskclusterlogin';
 var BZ_KEY = 'bugzillalogin';
+var AUTH_KEY = 'auth';
 
 var init = function() {
 
     // Start the ELM application
     var app = require('./Main.elm').Main.fullscreen({
-      taskcluster: localstorage.load_item(TC_KEY),
+      auth0: localstorage.load_item(AUTH_KEY),
       bugzilla: localstorage.load_item(BZ_KEY),
       backend_uplift_url: getData('shipit-uplift-url', process.env.SHIPIT_UPLIFT_URL),
       bugzilla_url: getData('bugzilla-url', process.env.BUGZILLA_URL),
     });
 
     // Setup ports
-    localstorage.init(app, TC_KEY);
     localstorage.init(app, BZ_KEY);
+    localstorage.init(app, AUTH_KEY);
     hawk(app);
     redirect(app);
 }

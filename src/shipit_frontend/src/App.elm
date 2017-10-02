@@ -58,7 +58,7 @@ type alias Model =
 
 
 type alias Flags =
-    { taskcluster : Maybe User.Credentials
+    { auth0 : Maybe User.Tokens
     , bugzilla : Maybe Bugzilla.Credentials
     , backend_uplift_url : String
     , bugzilla_url : String
@@ -73,7 +73,7 @@ init flags =
             Bugzilla.init flags.bugzilla_url flags.bugzilla
 
         ( user, userCmd ) =
-            User.init flags.taskcluster
+            User.init flags.backend_uplift_url flags.auth0
 
         -- App init
         ( dashboard, dashboardCmd ) =
@@ -130,7 +130,7 @@ update msg model =
                     List.concat
                         [ [ Cmd.map UserMsg userCmd ]
                         , case userMsg of
-                            User.Logged _ ->
+                            User.LoadedTaskclusterCredentials _ ->
                                 [ loadAllAnalysis model_ ]
 
                             _ ->
@@ -209,7 +209,7 @@ loadAllAnalysis : Model -> Cmd Msg
 loadAllAnalysis model =
     -- (Re)Load all dashboard analysis
     -- when user is loaded or is logged in
-    case model.user of
+    case model.user.credentials of
         Just user ->
             Cmd.map ReleaseDashboardMsg (ReleaseDashboard.fetchAllAnalysis model.release_dashboard model.user)
 
@@ -275,7 +275,7 @@ viewNavBar model =
 
 viewUser : Model -> List (Html Msg)
 viewUser model =
-    case model.user of
+    case model.user.credentials of
         Just user ->
             viewDropdown user.clientId
                 [ -- Link to TC manager
@@ -298,7 +298,7 @@ viewUser model =
                 ]
 
         Nothing ->
-            viewLogin
+            viewLogin model.user
 
 
 viewBugzillaCreds : Bugzilla.Model -> Html Msg
@@ -367,15 +367,10 @@ viewNavAnalysis analysis =
         ]
 
 
-viewLogin : List (Html Msg)
-viewLogin =
+viewLogin : User.Model -> List (Html Msg)
+viewLogin user =
     [ a
-        [ Utils.onClick
-            (User.redirectToLogin
-                UserMsg
-                "/login"
-                "Uplift dashboard helps Mozilla Release Management team in their workflow."
-            )
+        [ Utils.onClick (UserMsg <| User.Login)
         , href "#"
         , class "nav-link"
         ]
@@ -437,7 +432,7 @@ location2messages location =
                 case first of
                     "login" ->
                         [ Builder.query builder
-                            |> User.convertUrlQueryToUser
+                            |> User.convertUrlQueryToCode
                             |> Maybe.map
                                 (\x ->
                                     x
