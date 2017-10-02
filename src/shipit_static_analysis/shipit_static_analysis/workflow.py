@@ -19,6 +19,17 @@ logger = get_logger(__name__)
 
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
+MAX_COMMENTS = 30
+MOZREVIEW_COMMENT_SUCCESS = '''
+C/C++ Static analysis didn't find any defects in this patch. Hooray!
+'''
+MOZREVIEW_COMMENT_FAILURE = '''
+C/C++ Static analysis found {} defect{} in this patch{}.
+
+You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp`
+
+If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx
+'''
 
 
 class Workflow(object):
@@ -27,8 +38,9 @@ class Workflow(object):
     '''
     taskcluster = None
 
-    def __init__(self, cache_root, emails, mozreview_api_root, mozreview_enabled=False, client_id=None, access_token=None):  # noqa
+    def __init__(self, cache_root, emails, app_channel, mozreview_api_root, mozreview_enabled=False, client_id=None, access_token=None):  # noqa
         self.emails = emails
+        self.app_channel = app_channel
         self.mozreview_api_root = mozreview_api_root
         self.mozreview_enabled = mozreview_enabled
         self.cache_root = cache_root
@@ -85,6 +97,7 @@ class Workflow(object):
         logger.info(
             'New static analysis',
             taskcluster=self.taskcluster_id,
+            channel=self.app_channel,
             revision=revision,
             review_request_id=review_request_id,
             diffset_revision=diffset_revision,
@@ -95,6 +108,7 @@ class Workflow(object):
             self.mozreview_api_root,
             review_request_id,
             diffset_revision,
+            max_comments=MAX_COMMENTS,
         )
 
         # Setup clang
@@ -156,17 +170,27 @@ class Workflow(object):
         # Filter issues to keep publishable checks
         # and non third party
         issues = list(filter(lambda i: i.is_publishable(), issues))
-        if not issues:
-            logger.info('No issues to publish on MozReview')
-            return
+        if issues:
+            # Build general comment
+            nb = len(issues)
+            extras = ' (only the first {} are reported here)'.format(MAX_COMMENTS)
+            comment = MOZREVIEW_COMMENT_FAILURE.format(
+                nb,
+                nb != 1 and 's' or '',
+                nb > MAX_COMMENTS and extras or ''
+            )
 
-        # Comment each issue
-        for issue in issues:
-            if self.mozreview_enabled:
-                logger.info('Will publish about {}'.format(issue))
-                self.mozreview.comment(issue.path, issue.line, 1, issue.mozreview_body)
-            else:
-                logger.info('Should publish about {}'.format(issue))
+            # Comment each issue
+            for issue in issues:
+                if self.mozreview_enabled:
+                    logger.info('Will publish about {}'.format(issue))
+                    self.mozreview.comment(issue.path, issue.line, 1, issue.mozreview_body)
+                else:
+                    logger.info('Should publish about {}'.format(issue))
+
+        else:
+            comment = MOZREVIEW_COMMENT_SUCCESS
+            logger.info('No issues to publish, send kudos.')
 
         if not self.mozreview_enabled:
             logger.info('Skipping Mozreview publication')
@@ -174,7 +198,7 @@ class Workflow(object):
 
         # Publish the review
         # without ship_it to avoid automatically r+
-        return self.mozreview.publish(ship_it=False)
+        return self.mozreview.publish(body_top=comment, ship_it=False)
 
     def notify_admins(self, review_request_id, issues):
         '''
@@ -185,7 +209,7 @@ class Workflow(object):
             nb_publishable=sum([i.is_publishable() for i in issues]),
         )
         content += '\n\n'.join([i.as_markdown() for i in issues])
-        subject = 'New Static Analysis Review #{}'.format(review_request_id)
+        subject = '[{}] New Static Analysis Review #{}'.format(self.app_channel, review_request_id)
         for email in self.emails:
             self.notify.email({
                 'address': email,

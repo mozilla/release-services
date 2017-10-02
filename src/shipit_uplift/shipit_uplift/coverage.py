@@ -112,13 +112,17 @@ class CodecovCoverage(Coverage):
     def get_file_coverage(changeset, filename):
         r = requests.get(CodecovCoverage.URL + '/src/%s/%s' % (get_github_commit(changeset), filename))
 
-        data = r.json()
+        try:
+            data = r.json()
+        except Exception as e:
+            print('Can\'t parse codecov.io report for %s@%s (response: %s)' % (filename, changeset, r.text))
+            raise e
 
         if r.status_code != requests.codes.ok:
             if data['error']['reason'] == 'File not found in report':
                 return None
 
-            raise Exception('Can\'t load codecov.io report')
+            raise Exception('Can\'t load codecov.io report for %s@%s (response: %s)' % (filename, changeset, r.text))
 
         return dict([(int(l), v) for l, v in data['commit']['report']['files'][filename]['l'].items()])
 
@@ -244,9 +248,9 @@ def coverage_supported(path):
         # C
         'c', 'h',
         # C++
-        'cpp', 'hh', 'hpp',
+        'cpp', 'cc', 'cxx', 'hh', 'hpp', 'hxx',
         # JavaScript
-        'js', 'jsm',
+        'js', 'jsm', 'xul', 'xml', 'html', 'xhtml',
     ]
 
     return any([path.endswith('.' + ext) for ext in COVERAGE_EXTENSIONS])

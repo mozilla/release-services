@@ -522,6 +522,7 @@ PROJECTS = {
         },
         'requires': [
             'postgresql',
+            'redis',
         ],
         'deploy': 'HEROKU',
         'deploy_options': {

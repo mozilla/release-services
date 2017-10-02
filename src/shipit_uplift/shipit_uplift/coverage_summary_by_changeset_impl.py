@@ -3,16 +3,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from shipit_uplift import coverage_by_changeset_impl
 
-
-def generate(changeset):
+def generate(data):
     '''
     This function generates a summary of the overall coverage information for a changeset and
     of the diff introduced by a changeset.
     '''
-    data = coverage_by_changeset_impl.generate(changeset)
-
     commit_added = 0
     commit_covered = 0
     for diff in data['diffs']:

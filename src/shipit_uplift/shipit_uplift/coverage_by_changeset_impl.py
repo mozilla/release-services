@@ -7,11 +7,9 @@ import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 import requests
 import whatthepatch
-from backend_common.cache import cache
 from shipit_uplift.coverage import coverage_service, get_coverage_build, coverage_supported, get_github_commit
 
 
-@cache.memoize(timeout=86400)
 def generate(changeset):
     '''
     This function generates a report containing the coverage information of the diff
@@ -69,11 +67,14 @@ def generate(changeset):
           'changes': changes,
         }
 
-    with ThreadPoolExecutor() as executor:
+    def parse_diff_task(diff):
+        return lambda: parse_diff(diff)
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
         futures = []
 
         for diff in whatthepatch.parse_patch(patch):
-            futures.append(executor.submit(lambda: parse_diff(diff)))
+            futures.append(executor.submit(parse_diff_task(diff)))
 
         for future in concurrent.futures.as_completed(futures):
             res = future.result()

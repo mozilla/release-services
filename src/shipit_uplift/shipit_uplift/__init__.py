@@ -5,13 +5,13 @@
 
 from __future__ import absolute_import
 
-import os
-import backend_common
-import shipit_uplift.config
-import shipit_uplift.models  # noqa
-
 
 def create_app(config=None):
+    import os
+    import backend_common
+    import shipit_uplift.config
+    import shipit_uplift.models  # noqa
+
     app = backend_common.create_app(
         name=shipit_uplift.config.PROJECT_NAME,
         config=config,
