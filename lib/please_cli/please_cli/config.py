@@ -220,6 +220,7 @@ PROJECTS = {
                 'url': 'https://staging.mozilla-releng.net',
                 'dns': 'dpwmwa9tge2p3.cloudfront.net.',
                 'csp': [
+                    'https://login.taskcluster.net',
                     'https://auth.taskcluster.net',
                 ],
             },
@@ -365,6 +366,7 @@ PROJECTS = {
                     'bugzilla-url': 'https://bugzilla.mozilla.org',
                 },
                 'csp': [
+                    'https://login.taskcluster.net',
                     'https://auth.taskcluster.net',
                     'https://bugzilla.mozilla.org',
                 ],
