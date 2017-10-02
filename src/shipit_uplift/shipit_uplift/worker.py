@@ -33,5 +33,7 @@ def exc_handler(job, *exc_info):
 
 if __name__ == '__main__':
     with Connection(conn):
-        worker = Worker(map(Queue, ['default']), exception_handlers=[Worker.move_to_failed_queue, exc_handler])
+        worker = Worker(map(Queue, ['default']), exception_handlers=[])
+        worker.push_exc_handler(exc_handler)
+        worker.push_exc_handler(worker.move_to_failed_queue)
         worker.work()
