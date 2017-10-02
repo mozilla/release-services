@@ -70,7 +70,7 @@ def generate(changeset):
     def parse_diff_task(diff):
         return lambda: parse_diff(diff)
 
-    with ThreadPoolExecutor() as executor:
+    with ThreadPoolExecutor(max_workers=4) as executor:
         futures = []
 
         for diff in whatthepatch.parse_patch(patch):
