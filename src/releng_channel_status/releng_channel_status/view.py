@@ -1,3 +1,4 @@
+import re
 import cli_common.log
 from backend_common.cache import cache
 from flask import abort, current_app, render_template, request
@@ -17,10 +18,8 @@ class BaseView(MethodView):
     @property
     def user_agent_locale(self):
         locale = None
-        if request.user_agent.language:
-            ll = request.user_agent.language.split('-')
-            if len(ll) > 1:
-                locale = ll[1]
+        if request.accept_languages:
+            locale = request.accept_languages.best
         return locale
 
 
@@ -47,22 +46,22 @@ class ChannelStatusView(BaseView):
             rule = self.http.get(
                 self.single_rule_endpoint.format(alias=rule_alias))
         elif product and channel:
-            rules = self.http.get(self.rules_endpoint, product=product)
-            if rules['count'] > 0:
-                rule = next(
-                    (r for r in rules['rules']
-                     if r['channel'] == channel), None)
+            rules_response = self.http.get(self.rules_endpoint, product=product)
+            if rules_response['count'] > 0:
+                rules = sorted([r for r in rules_response['rules'] if r['channel'] == channel],
+                               key=lambda k: k.get('priority', 0), reverse=True)
+                rule = next(iter(rules), None)
         return rule
 
     def _get_release(self, mapping):
         return self.http.get(self.release_endpoint.format(release=mapping))
 
     def _create_response(self, rule):
-        channel_status = ChannelStatus(rule, self.user_agent_platform, self.user_agent_locale, self.update_mappings)
+        channel_status = ChannelStatus(rule, self.update_mappings)
         if channel_status.is_throttled:
             fallback_release = self._get_release(rule['fallbackMapping'])
-            channel_status.fallback_release = Release(fallback_release)
+            channel_status.fallback_release = Release(fallback_release, self.user_agent_platform, self.user_agent_locale)
         if not channel_status.is_latest_build_update:
             release = self._get_release(rule['mapping'])
-            channel_status.release = Release(release)
+            channel_status.release = Release(release, self.user_agent_platform, self.user_agent_locale)
         return render_template('channel_status.html', channel_status=channel_status)

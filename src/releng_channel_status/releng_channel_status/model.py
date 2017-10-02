@@ -9,7 +9,8 @@ class Platform:
         self._name = name
         self.locales = locales
         self.aliased_platforms = aliased_platforms
-    
+        self.is_user_platform = False
+
     @property
     def name(self):
         names = [self._name]
@@ -19,9 +20,11 @@ class Platform:
 
 
 class Release:
-    def __init__(self, release):
+    def __init__(self, release, user_platform, user_locale):
         self._release = release
         self.alias_key = 'alias'
+        self.user_platform = user_platform
+        self.user_locale = user_locale
 
     def _get_aliased_platforms(self, release_platforms):
         aliased_platforms = {}
@@ -40,18 +43,21 @@ class Release:
         aliased_platforms = self._get_aliased_platforms(release_platforms)
         for platform, platform_value in release_platforms.items():
             if self.alias_key not in platform_value:
-                platforms.append(Platform(platform, platform_value['locales'], aliased_platforms.get(platform)))
+                platform = Platform(platform, platform_value['locales'], aliased_platforms.get(platform))
+                platform.is_user_platform = self.user_platform.lower() in platform.name.lower()
+                platforms.append(platform)
         return platforms
 
+    @property
+    def name(self):
+        return self._release['name']
 
 class ChannelStatus:
-    def __init__(self, rule, user_platform, user_locale, update_mappings):
+    def __init__(self, rule, update_mappings):
         self.rule = rule
-        self.user_platform = user_platform
-        self.user_locale = user_locale
         self.update_mappings = update_mappings
         self.release = None
-        self.fallback_release = None        
+        self.fallback_release = None
 
     @property
     def is_latest_build_update(self):
@@ -68,3 +74,11 @@ class ChannelStatus:
     @property
     def background_rate(self):
         return self.rule['backgroundRate']
+
+    @property
+    def product(self):
+        return self.rule['product']
+
+    @property
+    def channel(self):
+        return self.rule['channel']

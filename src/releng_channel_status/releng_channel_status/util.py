@@ -1,5 +1,4 @@
 import requests
-from flask import abort
 from urllib.parse import urljoin
 
 
@@ -16,4 +15,4 @@ class HttpRequestHelper():
         resp = requests.get(url, params=qs_parameters)
         if resp.status_code == requests.codes.ok:
             return resp.json()
-        abort(resp.status_code)
+        return None
