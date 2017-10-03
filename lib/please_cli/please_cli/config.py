@@ -426,7 +426,7 @@ PROJECTS = {
                 'heroku_dyno_type': 'worker',
             },
             'production': {
-                'heroku_app': 'shipit-production-pulse-listener',
+                'heroku_app': 'shipit-production-pulse-listen',
                 'heroku_dyno_type': 'worker',
             },
         },
