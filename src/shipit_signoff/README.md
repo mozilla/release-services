@@ -13,8 +13,8 @@ Set environment variables:
     * export FLASK_APP=shipit_signoff.flask:app
     * export DATABASE_URL=postgresql://localhost:5432/
     * export APP_URL=123
-    * export AUTH0_CLIENT_ID=123
-    * export AUTH0_CLIENT_SECRET=123
+    * export AUTH_CLIENT_ID=123
+    * export AUTH_CLIENT_SECRET=123
 
 Run the app:
 

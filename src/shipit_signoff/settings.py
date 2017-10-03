@@ -26,8 +26,10 @@ required = [
     'SECRET_KEY_BASE64',
     'DATABASE_URL',
     'APP_URL',
-    'AUTH0_CLIENT_ID',
-    'AUTH0_CLIENT_SECRET',
+    'AUTH_DOMAIN',
+    'AUTH_CLIENT_ID',
+    'AUTH_CLIENT_SECRET',
+    'AUTH_REDIRECT_URI',
     'BALROG_USERNAME',
     'BALROG_PASSWORD',
 ]
@@ -54,14 +56,14 @@ SQLALCHEMY_DATABASE_URI = secrets['DATABASE_URL']
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
-# -- AUTH0 --------------------------------------------------------------------
+# -- AUTH --------------------------------------------------------------------
 
 
 # OIDC_CALLBACK_ROUTE='/redirect_url'
 OIDC_USER_INFO_ENABLED = True
 args = [
-    secrets['AUTH0_CLIENT_ID'],
-    secrets['AUTH0_CLIENT_SECRET'],
+    secrets['AUTH_CLIENT_ID'],
+    secrets['AUTH_CLIENT_SECRET'],
     secrets['APP_URL'],
 ]
 if LOCAL_AUTH:
