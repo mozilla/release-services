@@ -20,6 +20,10 @@ logger = get_logger(__name__)
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
 MAX_COMMENTS = 30
+MOZREVIEW_SKIP_ON_SUCCESS = True
+MOZREVIEW_COMMENT_SUCCESS = '''
+C/C++ static analysis didn't find any defects in this patch. Hooray!
+'''
 MOZREVIEW_COMMENT_FAILURE = '''
 C/C++ static analysis found {} defect{} in this patch{}.
 
@@ -185,12 +189,16 @@ class Workflow(object):
                 else:
                     logger.info('Should publish about {}'.format(issue))
 
-        else:
-            logger.info('No issues to publish.')
+        else if MOZREVIEW_SKIP_ON_SUCCESS:
+            logger.info('No issues to publish, skip MozReview publication.')
             return
+        
+        else
+            comment = MOZREVIEW_COMMENT_SUCCESS
+            logger.info('No issues to publish, send kudos.')
 
         if not self.mozreview_enabled:
-            logger.info('Skipping Mozreview publication')
+            logger.info('Skipping MozReview publication.')
             return
 
         # Publish the review
