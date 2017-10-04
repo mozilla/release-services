@@ -114,7 +114,7 @@ follow the following steps:
 
    .. code-block:: console
 
-      $ curl $URL/sha512/edf96781042db513700c4a092ef367c05933967b036db9b0f716b75da613a7eaea055d0f60b1e12f6e41a545962cec97a7b78c6b86363ee1ec7a9f42699a5531
+      $ curl $URL/sha512/06a1cf7b1918ffd94210e8089cf48985fbf9af95f15cd9dd5007df76b934c2b825147334ba176c3f19a9f7d86585c58e017bc23a606e8831872c8b40560be874
       {
          "detail": "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server.", 
          "instance": "about:blank", 
