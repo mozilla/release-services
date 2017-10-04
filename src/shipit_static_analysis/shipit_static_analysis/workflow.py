@@ -38,11 +38,12 @@ class Workflow(object):
     '''
     taskcluster = None
 
-    def __init__(self, cache_root, emails, app_channel, mozreview_api_root, mozreview_enabled=False, client_id=None, access_token=None):  # noqa
+    def __init__(self, cache_root, emails, app_channel, mozreview_api_root, mozreview_enabled=False, mozreview_publish_success=False, client_id=None, access_token=None):  # noqa
         self.emails = emails
         self.app_channel = app_channel
         self.mozreview_api_root = mozreview_api_root
         self.mozreview_enabled = mozreview_enabled
+        self.mozreview_publish_success = mozreview_publish_success
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
             'Cache root {} is not a dir.'.format(self.cache_root)
@@ -188,12 +189,16 @@ class Workflow(object):
                 else:
                     logger.info('Should publish about {}'.format(issue))
 
-        else:
+        elif self.mozreview_publish_success:
             comment = MOZREVIEW_COMMENT_SUCCESS
             logger.info('No issues to publish, send kudos.')
 
+        else:
+            logger.info('No issues to publish, skipping MozReview publication.')
+            return
+
         if not self.mozreview_enabled:
-            logger.info('Skipping Mozreview publication')
+            logger.info('Skipping MozReview publication.')
             return
 
         # Publish the review
