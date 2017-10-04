@@ -20,7 +20,6 @@ logger = get_logger(__name__)
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
 MAX_COMMENTS = 30
-MOZREVIEW_SKIP_ON_SUCCESS = True
 MOZREVIEW_COMMENT_SUCCESS = '''
 C/C++ static analysis didn't find any defects in this patch. Hooray!
 '''
