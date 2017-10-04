@@ -190,10 +190,10 @@ class Workflow(object):
                     logger.info('Should publish about {}'.format(issue))
 
         else if MOZREVIEW_SKIP_ON_SUCCESS:
-            logger.info('No issues to publish, skip MozReview publication.')
+            logger.info('No issues to publish, skipping MozReview publication.')
             return
         
-        else
+        else:
             comment = MOZREVIEW_COMMENT_SUCCESS
             logger.info('No issues to publish, send kudos.')
 
