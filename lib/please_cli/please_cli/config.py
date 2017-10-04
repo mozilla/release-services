@@ -230,6 +230,7 @@ PROJECTS = {
                 'dns': 'd1qqwps52z1e12.cloudfront.net.',
                 'dns_domain': 'www.mozilla-releng.net',
                 'csp': [
+                    'https://login.taskcluster.net',
                     'https://auth.taskcluster.net',
                 ],
             },
@@ -379,6 +380,7 @@ PROJECTS = {
                     'bugzilla-url': 'https://bugzilla.mozilla.org',
                 },
                 'csp': [
+                    'https://login.taskcluster.net',
                     'https://auth.taskcluster.net',
                     'https://bugzilla.mozilla.org',
                 ],
