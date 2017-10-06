@@ -4,18 +4,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
-import os
+from cli_common.log import get_logger
 import yaml
+import requests
 
 
 PROJECT_NAME = 'shipit-static-analysis'
+CONFIG_URL = 'https://hg.mozilla.org/mozilla-central/raw-file/tip/tools/clang-tidy/config.yaml'
+
+logger = get_logger(__name__)
 
 
 class Settings(object):
     def __init__(self):
-        # Read local config from yaml
-        config_path = os.path.join(os.path.dirname(__file__), 'config.yml')
-        self.config = yaml.load(open(config_path))
+        self.config = None
+        self.download()
         assert 'clang_checkers' in self.config
         assert 'target' in self.config
 
@@ -23,6 +26,20 @@ class Settings(object):
         if key not in self.config:
             raise AttributeError
         return self.config[key]
+
+    def download(self):
+        '''
+        Configuration is stored on mozilla central
+        It has to be downloaded on each run
+        '''
+        assert self.config is None, \
+            'Config already set.'
+        resp = requests.get(CONFIG_URL)
+        assert resp.ok, \
+            'Failed to retrieve configuration from mozilla-central #{}'.format(resp.status_code)  # noqa
+
+        self.config = yaml.load(resp.content)
+        logger.info('Loaded configuration from mozilla-central')
 
     def is_publishable_check(self, check):
         '''
