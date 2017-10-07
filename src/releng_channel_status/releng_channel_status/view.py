@@ -1,6 +1,9 @@
-import re
+# -*- coding: utf-8 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import cli_common.log
-from backend_common.cache import cache
 from flask import abort, current_app, render_template, request
 from flask.views import MethodView
 from .util import HttpRequestHelper
@@ -27,18 +30,17 @@ class ChannelStatusView(BaseView):
     def __init__(self, *args, **kwargs):
         super(ChannelStatusView, self).__init__(*args, **kwargs)
         self.http = HttpRequestHelper(current_app.config.get('BALROG_API_URL'))
-        self.single_rule_endpoint = current_app.config.get(
-            'SINGLE_RULE_ENDPOINT')
+        self.single_rule_endpoint = current_app.config.get('SINGLE_RULE_ENDPOINT')
         self.rules_endpoint = current_app.config.get('RULES_ENDPOINT')
         self.release_endpoint = current_app.config.get('RELEASE_ENDPOINT')
         self.update_mappings = current_app.config.get('UPDATE_MAPPINGS')
 
-    # @cache.memoize()
     def get(self, rule_alias, product, channel):
         rule = self._get_rule(rule_alias, product, channel)
         if not rule:
             abort(404)
-        return self._create_response(rule)
+        model = self._get_channel_status(rule)
+        return render_template('channel_status.html', channel_status=model)
 
     def _get_rule(self, rule_alias=None, product=None, channel=None):
         rule = None
@@ -56,12 +58,12 @@ class ChannelStatusView(BaseView):
     def _get_release(self, mapping):
         return self.http.get(self.release_endpoint.format(release=mapping))
 
-    def _create_response(self, rule):
+    def _get_channel_status(self, rule):
         channel_status = ChannelStatus(rule, self.update_mappings)
         if channel_status.is_throttled:
             fallback_release = self._get_release(rule['fallbackMapping'])
             channel_status.fallback_release = Release(fallback_release, self.user_agent_platform, self.user_agent_locale)
-        if not channel_status.is_latest_build_update:
+        if not channel_status.is_latest_build_update or channel_status.is_throttled:
             release = self._get_release(rule['mapping'])
             channel_status.release = Release(release, self.user_agent_platform, self.user_agent_locale)
-        return render_template('channel_status.html', channel_status=channel_status)
+        return channel_status

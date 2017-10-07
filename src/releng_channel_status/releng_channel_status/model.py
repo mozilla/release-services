@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import cli_common.log
 
 
@@ -43,7 +48,8 @@ class Release:
         aliased_platforms = self._get_aliased_platforms(release_platforms)
         for platform, platform_value in release_platforms.items():
             if self.alias_key not in platform_value:
-                platform = Platform(platform, platform_value['locales'], aliased_platforms.get(platform))
+                platform = Platform(
+                    platform, platform_value['locales'], aliased_platforms.get(platform))
                 platform.is_user_platform = self.user_platform.lower() in platform.name.lower()
                 platforms.append(platform)
         return platforms
@@ -51,6 +57,7 @@ class Release:
     @property
     def name(self):
         return self._release['name']
+
 
 class ChannelStatus:
     def __init__(self, rule, update_mappings):
@@ -69,11 +76,7 @@ class ChannelStatus:
 
     @property
     def is_throttled(self):
-        return self.background_rate < 100
-
-    @property
-    def background_rate(self):
-        return self.rule['backgroundRate']
+        return self.rule['backgroundRate'] < 100
 
     @property
     def product(self):

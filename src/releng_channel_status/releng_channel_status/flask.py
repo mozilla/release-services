@@ -11,7 +11,8 @@ from releng_channel_status.view import ChannelStatusView
 
 app = releng_channel_status.create_app()
 app.add_url_rule('/',
-                 defaults={'rule_alias': app.config.get('DEFAULT_ALIAS'), 'product': None, 'channel': None},
+                 defaults={'rule_alias': app.config.get(
+                     'DEFAULT_ALIAS'), 'product': None, 'channel': None},
                  view_func=ChannelStatusView.as_view('channel_status_default'))
 
 app.add_url_rule('/<rule_alias>',
