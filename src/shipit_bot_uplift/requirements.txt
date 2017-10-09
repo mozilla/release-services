@@ -3,6 +3,4 @@
 click
 mohawk
 python-dateutil
-
-# Use libmozdata dual ESR patch awaiting next release (0.1.32)
-https://github.com/mozilla/libmozdata/archive/13644a4547d6782d7d54fb3e3ecb6111a183e7b6.tar.gz#egg=libmozdata
+libmozdata
