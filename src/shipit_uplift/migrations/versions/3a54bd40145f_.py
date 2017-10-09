@@ -14,11 +14,13 @@ from alembic import op
 import sqlalchemy as sa
 import os
 import json
-from shipit_uplift.flask import HERE
 
 from sqlalchemy.schema import CreateTable
 from sqlalchemy.ext.compiler import compiles
 import re
+
+
+HERE = os.path.dirname(__file__)
 
 
 @compiles(CreateTable)
