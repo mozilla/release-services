@@ -7,6 +7,7 @@ from __future__ import absolute_import
 
 
 PROJECT_NAME = 'shipit-uplift'
+APP_NAME = 'shipit_uplift'
 
 # Tasckcluster scopes
 SCOPES_USER = [
