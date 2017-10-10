@@ -12,7 +12,8 @@ import shipit_pipeline.config
 
 def create_app(config=None):
     app = backend_common.create_app(
-        name=shipit_pipeline.config.PROJECT_NAME,
+        project_name=shipit_pipeline.config.PROJECT_NAME,
+        app_name=shipit_pipeline.config.APP_NAME,
         config=config,
         extensions=[
             'log',
