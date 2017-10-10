@@ -39,8 +39,11 @@ def main(bugzilla_id,
                               'BUGZILLA_URL',
                               'BUGZILLA_TOKEN',
                               'API_URL',
+                              'APP_CHANNEL',
+                              'UPLIFT_NOTIFICATIONS',
                           ),
                           existing=dict(
+                              APP_CHANNEL='development',
                               UPLIFT_NOTIFICATIONS=['babadie@mozilla.com'],
                           ),
                           taskcluster_client_id=taskcluster_client_id,
@@ -62,7 +65,7 @@ def main(bugzilla_id,
         secrets.get('TASKCLUSTER_ACCESS_TOKEN', taskcluster_access_token),
     )
 
-    bot = Bot(secrets.get('UPLIFT_NOTIFICATIONS'))
+    bot = Bot(secrets['APP_CHANNEL'], secrets['UPLIFT_NOTIFICATIONS'])
     bot.use_bugzilla(
         secrets['BUGZILLA_URL'],
         secrets['BUGZILLA_TOKEN'],

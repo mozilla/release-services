@@ -25,7 +25,7 @@ class Report(object):
         '''
         self.merges.add(merge_test)
 
-    def send(self):
+    def send(self, app_channel):
         '''
         Build and send report using Taskcluster notification service
         '''
@@ -52,7 +52,10 @@ class Report(object):
 
         # Build markdown output
         # Sorting failed merge tests by bugzilla id & branch
-        subject = 'Uplift bot detected some merge failures'
+        subject = '[{}] Uplift bot detected {} merge failures'.format(
+            app_channel,
+            len(self.merges),
+        )
         mail = [
             '# Failed automated merge test',
             ''

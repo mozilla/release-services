@@ -206,7 +206,8 @@ class Bot(object):
     '''
     Update all analysis data
     '''
-    def __init__(self, notification_emails=[]):
+    def __init__(self, app_channel, notification_emails=[]):
+        self.app_channel = app_channel
         self.sync = {}
 
         # Init report
@@ -360,7 +361,7 @@ class Bot(object):
                 self.run_merge_test(merge_test)
 
         # Send report
-        self.report.send()
+        self.report.send(self.app_channel)
 
     def update_bug(self, sync):
         '''
