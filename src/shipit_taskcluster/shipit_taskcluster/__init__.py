@@ -13,7 +13,8 @@ import shipit_taskcluster.models  # noqa
 
 def create_app(config=None):
     app = backend_common.create_app(
-        name=shipit_taskcluster.config.PROJECT_NAME,
+        project_name=shipit_taskcluster.config.PROJECT_NAME,
+        app_name=shipit_taskcluster.config.APP_NAME,
         config=config,
         extensions=[
             'log',
