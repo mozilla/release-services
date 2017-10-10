@@ -6,13 +6,13 @@
 from __future__ import absolute_import
 from backend_common.db import db
 from backend_common.notifications import URGENCY_LEVELS
-from .config import PROJECT_PATH_NAME
+from .config import APP_NAME
 from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, Interval, String, Text
 from datetime import timedelta
 
 
 class Message(db.Model):
-    __tablename__ = PROJECT_PATH_NAME + '_messages'
+    __tablename__ = APP_NAME + '_messages'
 
     id = Column(Integer, primary_key=True)
     uid = Column(String(32), unique=True)
@@ -36,7 +36,7 @@ class Message(db.Model):
 
 
 class Policy(db.Model):
-    __tablename__ = PROJECT_PATH_NAME + '_policies'
+    __tablename__ = APP_NAME + '_policies'
 
     id = Column(Integer, primary_key=True)
     identity = Column(String, nullable=False)
