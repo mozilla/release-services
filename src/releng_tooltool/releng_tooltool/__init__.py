@@ -14,7 +14,8 @@ import releng_tooltool.models  # noqa
 
 def create_app(config=None):
     app = backend_common.create_app(
-        name=releng_tooltool.config.PROJECT_NAME,
+        project_name=releng_tooltool.config.PROJECT_NAME,
+        app_name=releng_tooltool.config.APP_NAME,
         config=config,
         extensions=[
             'log',
