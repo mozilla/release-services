@@ -35,7 +35,8 @@ def app():
     })
 
     app = backend_common.create_app(
-        'test',
+        app_name='test',
+        project_name='Test',
         extensions=backend_common.EXTENSIONS,
         config=config,
     )

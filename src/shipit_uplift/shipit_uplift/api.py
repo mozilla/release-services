@@ -280,8 +280,9 @@ def delete_bug(bugzilla_id):
     # Load bug
     try:
         bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
-    except:
-        raise Exception('Missing bug {}'.format(bugzilla_id))
+    except NoResultFound:
+        logger.warn('Missing bug {}'.format(bugzilla_id))
+        abort(404)
 
     bug.delete()
 
@@ -294,8 +295,9 @@ def update_contributor(contributor_id):
     # Load contributor
     try:
         contributor = Contributor.query.filter_by(id=contributor_id).one()
-    except:
-        raise Exception('Missing contributor {}'.format(contributor_id))
+    except NoResultFound:
+        logger.warn('Missing contributor {}'.format(contributor_id))
+        abort(404)
 
     # Update karma & comment
     if 'karma' in request.json:
@@ -334,8 +336,9 @@ def create_patch_status(bugzilla_id):
     '''
     try:
         bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
-    except:
-        raise Exception('Missing bug {}'.format(bugzilla_id))
+    except NoResultFound:
+        logger.warn('Missing bug {}'.format(bugzilla_id))
+        abort(404)
 
     # Build new patch status
     ps = PatchStatus(bug_id=bug.id)

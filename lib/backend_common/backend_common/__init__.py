@@ -27,11 +27,23 @@ EXTENSIONS = [
 logger = cli_common.log.get_logger(__name__)
 
 
-def create_app(name, extensions=[], config=None, redirect_root_to_api=True, **kw):
+def create_app(
+            project_name,
+            app_name,
+            extensions=[],
+            config=None,
+            redirect_root_to_api=True,
+            **kw
+        ):
+    '''
+    Create a new Flask backend application
+    app_name is the Python application name, used as Flask import_name
+    project_name is a "nice" name, used to identify the application
+    '''
+    logger.debug('Initializing', app=app_name)
 
-    logger.debug('Initializing', app=name)
-
-    app = flask.Flask(name, **kw)
+    app = flask.Flask(import_name=app_name, **kw)
+    app.name = project_name
     app.__extensions = extensions
 
     if config:
@@ -50,7 +62,7 @@ def create_app(name, extensions=[], config=None, redirect_root_to_api=True, **kw
         if extension_name not in extensions:
             continue
 
-        logger.debug('Initializing extension', extension=extension_name, app=name)
+        logger.debug('Initializing extension', extension=extension_name, app=app.name)
 
         extension_init_app = None
         try:
@@ -65,10 +77,10 @@ def create_app(name, extensions=[], config=None, redirect_root_to_api=True, **kw
         if extension and extension_name is not None:
             setattr(app, extension_name, extension)
 
-        logger.debug('Extension initialized', extension=extension_name, app=name)
+        logger.debug('Extension initialized', extension=extension_name, app=app.name)
 
     if redirect_root_to_api:
         app.add_url_rule('/', 'root', lambda: flask.redirect(app.api.swagger_url))
 
-    logger.debug('Initialized', app=name)
+    logger.debug('Initialized', app=app.name)
     return app

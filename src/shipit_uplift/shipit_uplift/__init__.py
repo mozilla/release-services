@@ -13,7 +13,8 @@ def create_app(config=None):
     import shipit_uplift.models  # noqa
 
     app = backend_common.create_app(
-        name=shipit_uplift.config.PROJECT_NAME,
+        app_name=shipit_uplift.config.APP_NAME,
+        project_name=shipit_uplift.config.PROJECT_NAME,
         config=config,
         extensions=[
             'log',

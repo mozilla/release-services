@@ -5,7 +5,7 @@
 
 from __future__ import absolute_import
 from backend_common.db import db
-from .config import PROJECT_PATH_NAME
+from .config import APP_NAME
 from sqlalchemy import orm, Column, ForeignKey, Index, Integer, String
 from cli_common import log
 
@@ -18,7 +18,7 @@ class Project(db.Model):
     Object-relational mapping between python class Project
     and database table "projects"
     '''
-    __tablename__ = PROJECT_PATH_NAME + '_projects'
+    __tablename__ = APP_NAME + '_projects'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False, unique=True)
@@ -29,7 +29,7 @@ class Hash(db.Model):
     Object-relational mapping between python class Hash
     and database table "hashes"
     '''
-    __tablename__ = PROJECT_PATH_NAME + '_hashes'
+    __tablename__ = APP_NAME + '_hashes'
 
     hg_changeset = Column(String(40), nullable=False)
     git_commit = Column(String(40), nullable=False)

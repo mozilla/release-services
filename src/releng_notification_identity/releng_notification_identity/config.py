@@ -7,4 +7,4 @@ from __future__ import absolute_import
 
 
 PROJECT_NAME = 'releng-notification-identity'
-PROJECT_PATH_NAME = PROJECT_NAME.replace('-', '_')
+APP_NAME = 'releng_notification_identity'

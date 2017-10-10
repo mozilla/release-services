@@ -13,7 +13,8 @@ import releng_mapper.models  # noqa
 
 def create_app(config=None):
     app = backend_common.create_app(
-        name=releng_mapper.config.PROJECT_NAME,
+        project_name=releng_mapper.config.PROJECT_NAME,
+        app_name=releng_mapper.config.APP_NAME,
         config=config,
         extensions=[
             'log',
