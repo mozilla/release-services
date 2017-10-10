@@ -6,4 +6,4 @@
 from __future__ import absolute_import
 
 PROJECT_NAME = 'releng-clobberer'
-PROJECT_PATH_NAME = PROJECT_NAME.replace('-', '_')
+APP_NAME = 'releng_clobberer'

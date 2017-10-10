@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 from backend_common.db import UniqueMixin, db
 
-from .config import PROJECT_PATH_NAME
+from .config import APP_NAME
 
 
 class ClobbererBase(db.Model):
@@ -25,7 +25,7 @@ class ClobbererBase(db.Model):
 class Build(ClobbererBase, UniqueMixin):
     '''A clobberable build.'''
 
-    __tablename__ = PROJECT_PATH_NAME + '_builds'
+    __tablename__ = APP_NAME + '_builds'
 
     buildername = sa.Column(sa.String(100))
     last_build_time = sa.Column(
@@ -50,7 +50,7 @@ class Build(ClobbererBase, UniqueMixin):
 class ClobberTime(ClobbererBase, UniqueMixin):
     '''A clobber request.'''
 
-    __tablename__ = PROJECT_PATH_NAME + '_times'
+    __tablename__ = APP_NAME + '_times'
     __table_args__ = (
         # Index to speed up lastclobber lookups
         sa.Index('ix_get_clobber_times', 'slave', 'builddir', 'branch'),
