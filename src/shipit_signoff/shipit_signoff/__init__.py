@@ -13,7 +13,8 @@ import shipit_signoff.models  # noqa
 
 def create_app(config=None):
     app = backend_common.create_app(
-        name=shipit_signoff.config.PROJECT_NAME,
+        project_name=shipit_signoff.config.PROJECT_NAME,
+        app_name=shipit_signoff.config.APP_NAME,
         config=config,
         extensions=[
             'log',
