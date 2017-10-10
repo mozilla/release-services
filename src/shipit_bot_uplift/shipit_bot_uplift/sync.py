@@ -8,7 +8,7 @@ import os
 
 from shipit_bot_uplift.helpers import compute_dict_hash
 from shipit_bot_uplift.mercurial import Repository
-from shipit_bot_uplift.api import api_client
+from shipit_bot_uplift.api import api_client, NotFound
 from shipit_bot_uplift.merge import MergeTest
 from shipit_bot_uplift.report import Report
 from cli_common.log import get_logger
@@ -380,6 +380,8 @@ class Bot(object):
             payload = sync.build_payload(self.bugzilla_url)
             api_client.create_bug(payload)
             logger.info('Added bug', bz_id=sync.bugzilla_id, analysis=[a['name'] for a in sync.on_bugzilla])  # noqa
+        except NotFound:
+            logger.warning('Bug not found, not updated.', bz_id=sync.bugzilla_id)
         except Exception as e:
             logger.error('Failed to add bug #{} : {}'.format(sync.bugzilla_id, e))  # noqa
             return False
@@ -414,5 +416,7 @@ class Bot(object):
         try:
             api_client.delete_bug(sync.bugzilla_id)
             logger.info('Deleted bug', bz_id=sync.bugzilla_id, analysis=sync.on_remote)  # noqa
+        except NotFound:
+            logger.warning('Bug not found, not deleted.', bz_id=sync.bugzilla_id)
         except Exception as e:
             logger.warning('Failed to delete bug #{} : {}'.format(sync.bugzilla_id, e))  # noqa

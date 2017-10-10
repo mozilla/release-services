@@ -3,7 +3,17 @@ import mohawk
 import requests
 import json
 import os
+from cli_common.log import get_logger
 from shipit_bot_uplift.helpers import ShipitJSONEncoder
+
+
+logger = get_logger(__name__)
+
+
+class NotFound(Exception):
+    '''
+    API 404 exception
+    '''
 
 
 class ApiClient(object):
@@ -104,6 +114,9 @@ class ApiClient(object):
         }
         response = request(url, data=data, headers=headers, verify=ssl_dev_ca)
         if not response.ok:
+            if response.status_code == 404:
+                logger.warn('Not found response on {}'.format(url))
+                raise NotFound
             raise Exception('Invalid response from {} {} : {}'.format(
                 method, url, response.content))
 
