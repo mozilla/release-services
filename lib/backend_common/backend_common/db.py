@@ -84,7 +84,7 @@ def init_database(app):
         # Needed to init potential migrations later on
         # Use a separate alembic_version table per app
         options = {
-            'version_table': '{}_alembic_version'.format(app.db_prefix),
+            'version_table': '{}_alembic_version'.format(app.import_name),
         }
         migrate.init_app(app, directory=migrations_dir, **options)
 
@@ -107,13 +107,12 @@ ALLOWED_TABLES = [
 
 
 def init_app(app):
-    app.db_prefix = app.name.replace('-', '_')
     db.init_app(app)
 
-    # Check every table starts with app.db_prefix
+    # Check every table starts with app.import_name
     for table_name in db.metadata.tables.keys():
-        if not table_name.startswith(app.db_prefix) and table_name not in ALLOWED_TABLES:
-            raise Exception('DB table {} should start with {}'.format(table_name, app.db_prefix))
+        if not table_name.startswith(app.import_name) and table_name not in ALLOWED_TABLES:
+            raise Exception('DB table {} should start with {}'.format(table_name, app.import_name))
 
     # Try to run migrations on the app
     # or direct db creation
