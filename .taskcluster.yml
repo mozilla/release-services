@@ -34,7 +34,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services@sha256:1835331e726eae803a7207989ed9c7db03e9fa98bab323df357fd27490576c39"
+      image: "mozillareleng/services:base-27"
       features:
         taskclusterProxy: true
       command:
@@ -69,7 +69,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services@sha256:1835331e726eae803a7207989ed9c7db03e9fa98bab323df357fd27490576c39"
+      image: "mozillareleng/services:base-27"
       features:
         taskclusterProxy: true
       command:
@@ -104,7 +104,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services@sha256:1835331e726eae803a7207989ed9c7db03e9fa98bab323df357fd27490576c39"
+      image: "mozillareleng/services:base-27"
       features:
         taskclusterProxy: true
       command:
@@ -139,7 +139,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services@sha256:1835331e726eae803a7207989ed9c7db03e9fa98bab323df357fd27490576c39"
+      image: "mozillareleng/services:base-27"
       features:
         taskclusterProxy: true
       command:
