@@ -202,7 +202,8 @@ def get_task(task_group_id,
         'priority': priority,
         'payload': {
             'maxRunTime': 60 * 60 * max_run_time_in_hours,
-            'image': '{}@sha256:{}'.format(please_cli.config.DOCKER_REPO, please_cli.config.DOCKER_BASE_SHA256),
+            'image': '{}:{}'.format(please_cli.config.DOCKER_REPO,
+                                    please_cli.config.DOCKER_BASE_TAG),
             'features': {
                 'taskclusterProxy': True,
             },
