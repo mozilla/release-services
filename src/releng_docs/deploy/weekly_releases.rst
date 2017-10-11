@@ -111,6 +111,7 @@ Protocal that we follow is:
         $ git clone git@github.com/mozilla-releng/services.git
         $ cd services
         $ echo "$((($(cat VERSION)) + 1))" | tee VERSION2
+        $ sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
         $ mv VERSION2 VERSION
         $ git commit VERSION -m "setup: bumping to v$(cat ./VERSION)"
         $ git push origin master
