@@ -16,7 +16,7 @@ Current administrators that perform this weekly release are:
 Protocal that we follow is:
 
 
-#. A day prior to release a push to ``staging`` branch must happen. This will
+#. Prior to release a push to ``staging`` branch must happen. This will
    trigger a deploy of all projects to staging environments.
 
    .. code-block:: console
@@ -26,67 +26,39 @@ Protocal that we follow is:
         $ git checkout -b staging origin/staging
         $ git push origin staging -f 
 
-#. Verify the production project in staging that they are functioning properly.
-   Each project should have a list of steps that you can easily verify that
-   a deployment was sucessful.
+#. Verify that all the production projects in staging that they are functioning
+   properly. Each project should have a list of steps that you can easily
+   verify that a deployment was sucessful.
 
-   Example: :ref:`verify releng-tooltool project <verify-releng-treestatus>`
+    . todo:: ref to list of production projects.
+    .
+   Example: :ref:`verify releng-tooltool project <verify-releng-tooltool>`
 
-#. Once a everything works on staging an email to ??? (relevant places) should
-   be send announcing changes and when final release actually happens.
+   Only proceed further once production projects work in staging environment.
 
-   This email should announce and remind everybody that release is going to
-   happen to avoid surprises.
+   .. todo:: explain that some projects are only enabled on staging, but you
+             only need to check projects which are enabled on production.
+
+#. Announce that new deployment to production is going to happen
+
+   - announce in ``#releng`` channel that a push to production is about to
+     happen.
+
+     Example message::
+
+         I am about to release a new version of mozilla-releng/services (*.mozilla-releng.net). Any alerts coming up soon will be best directed to me. I'll let you know when it's all done. Thank you!
+
+   - inform MOC person on duty (in ``#moc`` channel) that new deployment of
+     ``mozilla-releng/services`` is going to be happen. The channel subject
+     should contain ``on duty sysadmin:`` followed by the IRC nickname you need
+     to contact.
    
-   Email subject::
+     Example message::
 
-       mozilla-releng/services release v<VERSION> is going to happen on
-       <RELEASE_DATETIME_WITH_TIMEZONE>
+         nickname: I am about to release a new version of mozilla-releng/services (*.mozilla-releng.net). Any alerts coming up soon will be best directed to me. I'll let you know when it's all done. Thank you!
 
-   Email body::
-
-       Hi,
-
-       Next planned mozilla-releng/services relase is going to happen tomorrow.
-       
-       <RELEASE_DATETIME>
-         Release date and time in multiple timezones.
-         Example:
-           2017-04-27 11:00 UTC
-           2017-04-27 04:00 PDT  (UTC-7)
-           2017-04-27 07:00 EDT  (UTC-4)
-           2017-04-27 13:00 CEST (UTC+2)
-       </RELEASE_DATETIME>
-
-       We encurage everybody that contributed to this release to join "#shipit"
-       channel where release is going to be coordinated. 
-
-       Please follow the link bellow for more details.
-
-           <LINK-TO-RELEASE-PR>
-
-       For any question please contact
-
-           <CURRENT-RELEASE-MANAGER>
-
-       Thank you!
-
-
-#. Before starting a release to production we inform MOC person on duty (in
-   ``#moc`` channel) that new deployment of ``mozilla-releng/services`` is
-   going to be happen.  The channel subject should contain ``on duty
-   sysadmin:`` followed by the IRC nickname to contact.
-   
-   If some monitoring alert goes off then kindly ask to ping you directly.
-
-   Example message::
-
-       nickname: I am about to release a new version of mozilla-releng/services (*.mozilla-releng.net). Any alerts coming up soon will be best directed to me. I'll let you know when it's all done. Thank you!
-
-
-#. Push to ``production`` branch and do (if needed) some manual checks.
-   
-   Create a merge comming (Example of merge commit) of master branch and tag it.
+#. Push to ``production``. Create a merge commit of master branch and tag it.
+   Don't forget to push just created tag.
 
    .. code-block:: console
 
@@ -98,23 +70,13 @@ Protocal that we follow is:
         $ git tag v$(cat ./VERSION)
         $ git push origin v$(cat ./VERSION)
 
-#. Verify that all projects are now deployed and working properly in production
-   environment. Use the same checks as we did before when we were checking if
-   projects are working on staging.
+#. Verify that all production projects are now deployed and working properly in
+   production environment. Use the same checks as we did before when we were
+   checking if projects are working on staging, but now use production URLs.
 
    Example: :ref:`verify releng-tooltool project <verify-releng-treestatus>`
 
-#. Bump version in master
-
-   .. code-block:: console
-   
-        $ git clone git@github.com/mozilla-releng/services.git
-        $ cd services
-        $ echo "$((($(cat VERSION)) + 1))" | tee VERSION2
-        $ sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
-        $ mv VERSION2 VERSION
-        $ git commit VERSION -m "setup: bumping to v$(cat ./VERSION)"
-        $ git push origin master
+   .. todo:: need to explain how to revert when a deployment goes bad.
 
 #. Fill in the release notes on GitHub
 
@@ -129,6 +91,44 @@ Protocal that we follow is:
            | sort \
            | grep -v 'setup: bumping to'
 
+#. Bump version, but **DO NOT** push upstream
+
+   .. code-block:: console
+   
+        $ git clone git@github.com/mozilla-releng/services.git
+        $ cd services
+        $ echo "$((($(cat VERSION)) + 1))" | tee VERSION2
+        $ sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
+        $ mv VERSION2 VERSION
+
+#. Push new base image for new version
+
+   .. code-block:: console
+
+        $ ./please -vv tools base-image \
+            --docker-repo="mozillareleng/services" \
+            --docker-tag="base-$(cat ./VERSION)" \
+            --docker-username="..." \
+            --docker-password="..."
+
+   Docker username and password you get in `staging secrets`_ or `production
+   secrets`_ secrets.
+
+   It might happen that push to docker hub will fail since the resulting docker
+   image is quite big (~1.5GB). When it fails you can only retrigger the
+   ``docker push`` command.
+
+   .. code-block:: console
+
+       $ docker push mozillareleng/services:base-$(cat ./VERSION)
+
+#. Once base image is pushed to docker hub, commit the version bump and push it
+   to upstream repository.
+
+   .. code-block:: console
+
+        $ git commit VERSION -m "setup: bumping to v$(cat ./VERSION)"
+        $ git push origin master
 
 #. Notify MOC person on duty (in ``#moc`` channel) that release is done.
 
@@ -138,3 +138,5 @@ Protocal that we follow is:
 .. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
 .. _`Bastien Abadie`: https://github.com/La0
 .. _`New GitHub Release`: https://github.com/mozilla-releng/services/releases/new
+.. _`staging secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Astaging
+.. _`production secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Aproduction
