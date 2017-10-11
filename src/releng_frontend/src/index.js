@@ -17,6 +17,7 @@ var getData = function(name, _default) {
   return url;
 };
 
+var title = require('./title');
 var redirect = require('./redirect');
 var localstorage = require('./localstorage');
 var hawk = require('./hawk');

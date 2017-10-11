@@ -158,7 +158,7 @@ viewRecentChanges scopes recentChanges =
         RemoteData.Success data ->
             let
                 title =
-                    if List.isEmpty (data |> Debug.log "XXX") then
+                    if List.isEmpty data then
                         []
                     else
                         [ h2 [] [ text "Recent Changes" ] ]
