@@ -127,7 +127,7 @@ Protocal that we follow is:
 
    .. code-block:: console
 
-        $ git commit VERSION -m "setup: bumping to v$(cat ./VERSION)"
+        $ git commit VERSION .taskcluster.yml -m "setup: bumping to v$(cat ./VERSION)"
         $ git push origin master
 
 #. Notify MOC person on duty (in ``#moc`` channel) that release is done.
@@ -136,7 +136,7 @@ Protocal that we follow is:
 
 
 .. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
-.. _`Bastien Abadie`: https://github.com/La0
+.. _`Bastien Abadie`: https://phonebook.mozilla.org/?search/Bastien%20Abadie
 .. _`New GitHub Release`: https://github.com/mozilla-releng/services/releases/new
 .. _`staging secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Astaging
 .. _`production secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Aproduction
