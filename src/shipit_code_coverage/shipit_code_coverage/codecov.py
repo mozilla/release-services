@@ -22,7 +22,7 @@ class CodeCov(object):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = [
-            'cppunit', 'gtest', 'web-platform-tests',
+            'cppunit', 'gtest', 'web-platform-tests', 'talos',
         ]
 
         self.cache_root = cache_root
@@ -49,6 +49,11 @@ class CodeCov(object):
         self.build_finished = False
         self.build_finished_cv = Condition()
 
+        if self.from_pulse:
+            self.suites_to_ignore = ['awsy', 'talos']
+        else:
+            self.suites_to_ignore = []
+
         logger.info('Mercurial revision', revision=self.revision)
 
     def download_coverage_artifacts(self, build_task_id):
@@ -69,7 +74,7 @@ class CodeCov(object):
             for test_task in test_tasks:
                 suite_name = taskcluster.get_suite_name(test_task)
                 # Ignore awsy and talos as they aren't actually suites of tests.
-                if any(to_ignore in suite_name for to_ignore in ['awsy', 'talos']):
+                if any(to_ignore in suite_name for to_ignore in self.suites_to_ignore):
                     continue
 
                 test_task_id = test_task['status']['taskId']
