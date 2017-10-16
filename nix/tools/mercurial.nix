@@ -37,6 +37,7 @@ in mercurial.overrideDerivation (old: {
     purge =
     robustcheckout = ${hg_tools}/hgext/robustcheckout/__init__.py
     reviewboard = ${hg_tools}/hgext/reviewboard/client.py
+    mq =
     EOF
   '';
 })
