@@ -27,6 +27,7 @@ ISSUE_MARKDOWN = '''
 - **Clang check**: {check}
 - **Publishable check**: {publishable_check}
 - **Third Party**: {third_party}
+- **Expanded Macro**: {expanded_macro}
 - **Publishable on MozReview**: {publishable}
 
 ```
@@ -44,6 +45,8 @@ ISSUE_NOTE_MARKDOWN = '''
 {body}
 ```
 '''
+
+CLANG_MACRO_DETECTION = re.compile(r'^expanded from macro')
 
 CLANG_SETUP_CMD = [
     'gecko-env',
@@ -228,9 +231,11 @@ class ClangIssue(object):
         * not a third party code
         * check is marked as publishable
         * is in modified lines (in patch)
+        * is not from an expanded macro
         '''
         return self.has_publishable_check() \
             and not self.is_third_party() \
+            and not self.is_expanded_macro() \
             and self.in_patch
 
     def is_third_party(self):
@@ -250,6 +255,17 @@ class ClangIssue(object):
             if self.path.startswith(path):
                 return True
         return False
+
+    def is_expanded_macro(self):
+        '''
+        Is the issue only found in an expanded macro ?
+        '''
+        if not self.notes:
+            return False
+
+        # Only consider first note
+        note = self.notes[0]
+        return CLANG_MACRO_DETECTION.match(note.message) is not None
 
     def has_publishable_check(self):
         '''
@@ -287,6 +303,7 @@ class ClangIssue(object):
             third_party=self.is_third_party() and 'yes' or 'no',
             publishable_check=self.has_publishable_check() and 'yes' or 'no',
             publishable=self.is_publishable() and 'yes' or 'no',
+            expanded_macro=self.is_expanded_macro() and 'yes' or 'no',
             notes='\n'.join([
                 ISSUE_NOTE_MARKDOWN.format(
                     message=n.message,
