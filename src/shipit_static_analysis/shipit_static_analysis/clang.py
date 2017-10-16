@@ -263,10 +263,9 @@ class ClangIssue(object):
         if not self.notes:
             return False
 
-        return all([
-            CLANG_MACRO_DETECTION.match(note.message) is not None
-            for note in self.notes
-        ])
+        # Only consider first note
+        note = self.notes[0]
+        return CLANG_MACRO_DETECTION.match(note.message) is not None
 
     def has_publishable_check(self):
         '''
