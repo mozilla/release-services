@@ -114,7 +114,7 @@ def cmd(project, zsh, quiet, command, nix_shell):
         )
     else:
         log.debug('Running command using os.system', command=_command)
-        return os.system(' '.join(_command)) / 256, '', ''
+        return os.system('PYTHONPATH="" ' + ' '.join(_command)) / 256, '', ''
 
 
 if __name__ == "__main__":
