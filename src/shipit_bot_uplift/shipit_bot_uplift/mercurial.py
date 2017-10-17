@@ -108,7 +108,7 @@ class Repository(object):
             self.client.rawcommand(cmd)
             logger.info('Merge success', revision=revision)
         except hglib.error.CommandError as e:
-            logger.warning('Auto merge failed', revision=revision, error=e)  # noqa
+            logger.info('Auto merge failed', revision=revision, error=e)  # noqa
             message = '{} {}'.format(
                 e.out.decode('utf-8'),
                 e.err.decode('utf-8')

@@ -214,6 +214,9 @@ class Workflow(object):
             nb_publishable=sum([i.is_publishable() for i in issues]),
         )
         content += '\n\n'.join([i.as_markdown() for i in issues])
+        if len(content) > 102400:
+            # Content is 102400 chars max
+            content = content[:102000] + '\n\n... Content max limit reached!'
         subject = '[{}] New Static Analysis Review #{}'.format(self.app_channel, review_request_id)
         for email in self.emails:
             self.notify.email({

@@ -80,7 +80,7 @@ class BatchReview(object):
         '''Determine which lines changed in a file'''
         f = self.destfile_to_file(filename)
         if f is None:
-            logger.error('File not in patch {}'.format(filename))
+            logger.info('File not in patch {}'.format(filename))
             return []
 
         diff_data = self._file_to_diffdata.setdefault(f, f.get_diff_data())

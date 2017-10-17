@@ -43,7 +43,7 @@ class MergeTest(object):
             and ps['revision'] == top_revision.decode('utf-8')
         ]
         if not patch_statuses:
-            logger.warn('No patch status', bz_id=self.bugzilla_id)
+            logger.info('No patch status', bz_id=self.bugzilla_id)
             return True  # initial test
         last_status = patch_statuses[0]
 
@@ -97,12 +97,12 @@ class MergeTest(object):
         # List all revisions, sorted by local id
         self.revisions = self.list_revisions(repository)
         if not self.revisions:
-            logger.warn('Skiping merge test : no patch revisions.')
+            logger.info('Skipping merge test : no patch revisions.')
             return False
 
         # Run test only when needed
         if not self.is_needed():
-            logger.info('Skiping merge test : same parent', revisions=self.revisions, branch=self.branch, parent=self.parent)  # noqa
+            logger.info('Skipping merge test : same parent', revisions=self.revisions, branch=self.branch, parent=self.parent)  # noqa
             return False
 
         parent = self.parent  # Start from repo parent

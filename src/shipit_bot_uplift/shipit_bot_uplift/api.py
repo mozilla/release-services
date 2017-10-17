@@ -115,10 +115,13 @@ class ApiClient(object):
         response = request(url, data=data, headers=headers, verify=ssl_dev_ca)
         if not response.ok:
             if response.status_code == 404:
-                logger.warn('Not found response on {}'.format(url))
+                logger.debug('Not found response on {}'.format(url))
                 raise NotFound
             raise Exception('Invalid response from {} {} : {}'.format(
                 method, url, response.content))
+
+        if not response.content:
+            return  # avoid empty json parsing
 
         return response.json()
 
