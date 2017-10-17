@@ -381,7 +381,7 @@ class Bot(object):
             api_client.create_bug(payload)
             logger.info('Added bug', bz_id=sync.bugzilla_id, analysis=[a['name'] for a in sync.on_bugzilla])  # noqa
         except NotFound:
-            logger.warning('Bug not found, not updated.', bz_id=sync.bugzilla_id)
+            logger.info('Bug not found, not updated.', bz_id=sync.bugzilla_id)
         except Exception as e:
             logger.error('Failed to add bug #{} : {}'.format(sync.bugzilla_id, e))  # noqa
             return False
@@ -417,6 +417,6 @@ class Bot(object):
             api_client.delete_bug(sync.bugzilla_id)
             logger.info('Deleted bug', bz_id=sync.bugzilla_id, analysis=sync.on_remote)  # noqa
         except NotFound:
-            logger.warning('Bug not found, not deleted.', bz_id=sync.bugzilla_id)
+            logger.info('Bug not found, not deleted.', bz_id=sync.bugzilla_id)
         except Exception as e:
             logger.warning('Failed to delete bug #{} : {}'.format(sync.bugzilla_id, e))  # noqa
