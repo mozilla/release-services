@@ -120,6 +120,9 @@ class ApiClient(object):
             raise Exception('Invalid response from {} {} : {}'.format(
                 method, url, response.content))
 
+        if not response.content:
+            return  # avoid empty json parsing
+
         return response.json()
 
 
