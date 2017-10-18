@@ -221,7 +221,8 @@ def get_coverage_build(changeset):
     changeset.
     '''
     r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % changeset)
-    push_id = int(r.json()['pushid'])
+    rev = r.json()
+    push_id = int(rev['pushid'])
 
     # In a span of 8 pushes, we hope we will find a successful coverage build.
     pushes = get_push_range(push_id)
@@ -240,7 +241,7 @@ def get_coverage_build(changeset):
 
     assert after_changeset is not None, 'Couldn\'t find a build after the changeset'
 
-    return (after_changeset, after_changeset_overall)
+    return (rev['desc'], after_changeset, after_changeset_overall)
 
 
 def coverage_supported(path):
