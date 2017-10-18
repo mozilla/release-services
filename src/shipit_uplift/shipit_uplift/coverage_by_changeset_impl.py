@@ -15,7 +15,9 @@ def generate(changeset):
     This function generates a report containing the coverage information of the diff
     introduced by a changeset.
     '''
-    build_changeset, overall = get_coverage_build(changeset)
+    desc, build_changeset, overall = get_coverage_build(changeset)
+    if any(text in desc for text in ['r=merge', 'a=merge']):
+        raise Exception('Retrieving coverage for merge commits is not supported.')
 
     r = requests.get('https://hg.mozilla.org/mozilla-central/raw-rev/%s' % changeset)
     patch = r.text
