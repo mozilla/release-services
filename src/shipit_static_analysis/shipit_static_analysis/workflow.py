@@ -11,7 +11,8 @@ import os
 from cli_common.taskcluster import get_service
 from cli_common.log import get_logger
 from cli_common.command import run_check
-from shipit_static_analysis.clang import ClangTidy
+from shipit_static_analysis.clang.tidy import ClangTidy
+from shipit_static_analysis.clang.format import ClangFormat
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.batchreview import BatchReview
 
@@ -113,7 +114,8 @@ class Workflow(object):
         )
 
         # Setup clang
-        clang = ClangTidy(self.repo_dir, settings.target, self.mozreview)
+        clang_tidy = ClangTidy(self.repo_dir, settings.target, self.mozreview)
+        clang_format = ClangFormat(self.repo_dir, self.mozreview)
 
         # Force cleanup to reset tip
         # otherwise previous pull are there
@@ -148,11 +150,15 @@ class Workflow(object):
         run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
         run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
 
-        # Run static analysis through run-clang-tidy.py
+        # Run static analysis through clang-tidy
         logger.info('Run clang-tidy...')
-        issues = clang.run(settings.clang_checkers, modified_files)
+        issues = clang_tidy.run(settings.clang_checkers, modified_files)
 
-        logger.info('Detected {} code issue(s)'.format(len(issues)))
+        # Run clang-format on modified files
+        logger.info('Run clang-format...')
+        issues += clang_format.run(modified_files)
+
+        logger.info('Detected {} issue(s)'.format(len(issues)))
         if not issues:
             logger.info('No issues, stopping there.')
             return

@@ -73,7 +73,7 @@ class ClangTidy(object):
         '''
         Run modified files with specified checks through clang-tidy
         using threaded workers (communicate through queues)
-        Output a list of ClangIssue
+        Output a list of ClangTidyIssue
         '''
         # Load the database and extract all files.
         database = json.load(open(os.path.join(self.build_dir, self.db_path)))
@@ -172,7 +172,7 @@ class ClangTidy(object):
 
         issues = []
         for i, header in enumerate(headers):
-            issue = ClangIssue(header.groups(), self.work_dir)
+            issue = ClangTidyIssue(header.groups(), self.work_dir)
 
             # Get next header
             if i+1 < len(headers):
@@ -201,7 +201,7 @@ class ClangTidy(object):
         return issues
 
 
-class ClangIssue(object):
+class ClangTidyIssue(object):
     '''
     An issue reported by clang-tidy
     '''
