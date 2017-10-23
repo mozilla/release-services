@@ -105,6 +105,10 @@ class Workflow(object):
             diffset_revision=diffset_revision,
         )
 
+        # Setup clang
+        clang_tidy = ClangTidy(self.repo_dir, settings.target)
+        clang_format = ClangFormat(self.repo_dir)
+
         # Create batch review
         self.mozreview = BatchReview(
             self.mozreview_api_root,
@@ -112,10 +116,6 @@ class Workflow(object):
             diffset_revision,
             max_comments=MAX_COMMENTS,
         )
-
-        # Setup clang
-        clang_tidy = ClangTidy(self.repo_dir, settings.target, self.mozreview)
-        clang_format = ClangFormat(self.repo_dir, self.mozreview)
 
         # Force cleanup to reset tip
         # otherwise previous pull are there
@@ -136,6 +136,12 @@ class Workflow(object):
             modified_files += [f.decode('utf-8') for _, f in status]
         logger.info('Modified files', files=modified_files)
 
+        # List all modified lines
+        modified_lines = {
+            f: self.mozreview.changed_lines_for_file(f)
+            for f in modified_files
+        }
+
         # mach configure with mozconfig
         logger.info('Mach configure...')
         run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
@@ -152,11 +158,11 @@ class Workflow(object):
 
         # Run static analysis through clang-tidy
         logger.info('Run clang-tidy...')
-        issues = clang_tidy.run(settings.clang_checkers, modified_files)
+        issues = clang_tidy.run(settings.clang_checkers, modified_lines)
 
         # Run clang-format on modified files
         logger.info('Run clang-format...')
-        issues += clang_format.run(modified_files)
+        issues += clang_format.run(modified_lines)
 
         logger.info('Detected {} issue(s)'.format(len(issues)))
         if not issues:

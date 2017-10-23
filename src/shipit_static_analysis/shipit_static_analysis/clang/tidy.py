@@ -63,19 +63,21 @@ class ClangTidy(object):
     '''
     db_path = 'compile_commands.json'
 
-    def __init__(self, work_dir, build_dir, mozreview):
+    def __init__(self, work_dir, build_dir):
         assert os.path.isdir(work_dir)
 
         self.work_dir = work_dir
         self.build_dir = os.path.join(work_dir, build_dir)
-        self.mozreview = mozreview
 
-    def run(self, checks, files):
+    def run(self, checks, modified_lines):
         '''
         Run modified files with specified checks through clang-tidy
         using threaded workers (communicate through queues)
         Output a list of ClangTidyIssue
         '''
+        assert isinstance(modified_lines, dict)
+        self.modified_lines = modified_lines
+
         # Load the database and extract all files.
         database = json.load(open(os.path.join(self.build_dir, self.db_path)))
         self.database_files = [entry['file'] for entry in database]
@@ -89,6 +91,7 @@ class ClangTidy(object):
         self.queue_issues = queue.Queue()
 
         # Build up a big regexy filter from all modified files
+        files = modified_lines.keys()
         file_name_re = re.compile('(' + ')|('.join(files) + ')')
 
         issues = []
@@ -183,7 +186,7 @@ class ClangTidy(object):
                 issue.body = clang_output[header.end():]
 
             # Detect if issue is in patch
-            issue.in_patch = issue.line in self.mozreview.changed_lines_for_file(issue.path)  # noqa
+            issue.in_patch = issue.line in self.modified_lines.get(issue.path, [])  # noqa
 
             if issue.is_problem():
                 # Save problem to append notes

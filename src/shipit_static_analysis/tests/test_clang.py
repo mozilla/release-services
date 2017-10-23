@@ -46,8 +46,10 @@ def test_clang_format(tmpdir):
     bad_file.write('''#include <demo>\nint \tmain(void){\n printf("plop");return 42;    \n}''')
 
     # Get formatting issues
-    cf = ClangFormat(str(tmpdir.realpath()), None)
-    issues = cf.run(['bad.cpp', ])
+    cf = ClangFormat(str(tmpdir.realpath()))
+    issues = cf.run({
+        'bad.cpp': [1, 2, 3],
+    })
 
     # Small file, only one issue which group changes
     assert isinstance(issues, list)

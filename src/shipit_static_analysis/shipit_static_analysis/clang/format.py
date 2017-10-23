@@ -39,22 +39,21 @@ class ClangFormat(object):
     List potential issues on modified files
     from a patch
     '''
-    def __init__(self, work_dir, mozreview):
+    def __init__(self, work_dir):
         assert os.path.isdir(work_dir)
-
         self.work_dir = work_dir
-        self.mozreview = mozreview
 
-    def run(self, modified_files):
+    def run(self, modified_lines):
         '''
         Run clang-format on those modified files
         '''
+        assert isinstance(modified_lines, dict)
         issues = []
-        for path in modified_files:
-            issues += self.run_clang_format(path)
+        for path, lines in modified_lines.items():
+            issues += self.run_clang_format(path, lines)
         return issues
 
-    def run_clang_format(self, filename):
+    def run_clang_format(self, filename, modified_lines):
         '''
         Clang-format is very fast, no need for a worker queue here
         '''
@@ -87,7 +86,7 @@ class ClangFormat(object):
             b=clang_lines,
         )
         return [
-            ClangFormatIssue(filename, src_lines, clang_lines, *opcode)
+            ClangFormatIssue(filename, src_lines, clang_lines, modified_lines, *opcode)
             for opcode in diff.get_opcodes()
             if opcode[0] in OPCODES
         ]
@@ -97,7 +96,7 @@ class ClangFormatIssue(ClangIssue):
     '''
     An issue created by Clang Format tool
     '''
-    def __init__(self, path, a, b, mode, i1, i2, j1, j2):
+    def __init__(self, path, a, b, modified_lines, mode, i1, i2, j1, j2):
         assert mode in OPCODES
         assert isinstance(i1, int)
         assert isinstance(i2, int)
@@ -111,6 +110,7 @@ class ClangFormatIssue(ClangIssue):
         # delete: a[i1:i2] should be deleted.
         # insert: b[j1:j2] should be inserted at a[i1:i1].
         # These indexes are starting from 1
+        # need to offset them
         self.old = '\n'.join(a[i1 - 1:i2])
         self.new = self.mode != OPCODE_DELETE and '\n'.join(b[j1 - 1:j2])
 
@@ -122,11 +122,23 @@ class ClangFormatIssue(ClangIssue):
             assert i2 > i1
             self.nb_lines = i2 - i1 + 1
 
+        # Detect if isssue is in the patch
+        lines = set(range(self.line, self.line + self.nb_lines))
+        self.in_patch = not lines.isdisjoint(modified_lines)
+
+    def __str__(self):
+        return 'clang-format issue {} {} line {}-{}'.format(
+            self.path,
+            self.mode,
+            self.line,
+            self.nb_lines,
+        )
+
     def is_publishable(self):
         '''
-        Clang format issues are always published
+        Publish issues when they affect a line in the patch
         '''
-        return True
+        return self.in_patch
 
     @property
     def mozreview_body(self):
