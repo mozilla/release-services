@@ -1,8 +1,36 @@
+# -*- coding: utf-8 -*-
 import os
+import difflib
 import subprocess
 from cli_common.log import get_logger
+from shipit_static_analysis.clang import ClangIssue
 
 logger = get_logger(__name__)
+
+OPCODE_REPLACE = 'replace'
+OPCODE_INSERT = 'insert'
+OPCODE_DELETE = 'delete'
+OPCODES = (OPCODE_REPLACE, OPCODE_INSERT, OPCODE_DELETE,)
+
+ISSUE_MARKDOWN = '''
+## clang-format
+
+- **Path**: {path}
+- **Mode**: {mode}
+- **Lines**: from {line}, on {nb_lines} lines
+
+Old lines:
+
+```
+{old}
+```
+
+New lines:
+
+```
+{new}
+```
+'''
 
 
 class ClangFormat(object):
@@ -21,18 +49,18 @@ class ClangFormat(object):
         '''
         Run clang-format on those modified files
         '''
+        issues = []
         for path in modified_files:
-            full_path = os.path.join(self.work_dir, path)
-            assert os.path.exists(full_path), \
-                'Modified file not found {}'.format(full_path)
+            issues += self.run_clang_format(path)
+        return issues
 
-            self.run_clang_format(full_path)
-
-
-    def run_clang_format(self, path):
+    def run_clang_format(self, filename):
         '''
         Clang-format is very fast, no need for a worker queue here
         '''
+        full_path = os.path.join(self.work_dir, filename)
+        assert os.path.exists(full_path), \
+            'Modified file not found {}'.format(full_path)
 
         # Build command line for a filename
         cmd = [
@@ -42,56 +70,93 @@ class ClangFormat(object):
             # Use style from directories
             '-style=file',
 
-            path,
+            full_path,
         ]
         logger.info('Running clang-format', cmd=' '.join(cmd))
 
         # Run command
         clang_output = subprocess.check_output(cmd, cwd=self.work_dir)
 
-        print('raw', clang_output)
-
         # Compare output with original file
-        src_lines = [x.rstrip('\n') for x in open(path).readlines()]
+        src_lines = [x.rstrip('\n') for x in open(full_path).readlines()]
         clang_lines = clang_output.decode('utf-8').split('\n')
 
-
-        import difflib
+        # Build issues from diff of diff !
         diff = difflib.SequenceMatcher(
             a=src_lines,
             b=clang_lines,
         )
-        for tag, i1, i2, j1, j2 in diff.get_opcodes():
-
-            # Check that i1:i2 is in modified lines
-
-            if tag == 'equal':
-                continue
-            elif tag == 'replace':
-                # a[i1:i2] should be replaced by b[j1:j2].
-            # delete: a[i1:i2] should be deleted.
-            # insert: b[j1:j2] should be inserted at a[i1:i1].
-
-            print(tag, i1, i2, j1, j2)
+        return [
+            ClangFormatIssue(filename, src_lines, clang_lines, *opcode)
+            for opcode in diff.get_opcodes()
+            if opcode[0] in OPCODES
+        ]
 
 
+class ClangFormatIssue(ClangIssue):
+    '''
+    An issue created by Clang Format tool
+    '''
+    def __init__(self, path, a, b, mode, i1, i2, j1, j2):
+        assert mode in OPCODES
+        assert isinstance(i1, int)
+        assert isinstance(i2, int)
+        assert isinstance(j1, int)
+        assert isinstance(j2, int)
+        self.path = path
+        self.mode = mode
 
-        print(src_lines)
-        print(clang_lines)
+        # Lines used to make the diff
+        # replace: a[i1:i2] should be replaced by b[j1:j2].
+        # delete: a[i1:i2] should be deleted.
+        # insert: b[j1:j2] should be inserted at a[i1:i1].
+        # These indexes are starting from 1
+        self.old = '\n'.join(a[i1 - 1:i2])
+        self.new = self.mode != OPCODE_DELETE and '\n'.join(b[j1 - 1:j2])
 
-        return []
+        # i1 is alsways the starting point
+        self.line = i1
+        if self.mode == OPCODE_INSERT:
+            self.nb_lines = 1
+        else:
+            assert i2 > i1
+            self.nb_lines = i2 - i1 + 1
 
+    def is_publishable(self):
+        '''
+        Clang format issues are always published
+        '''
+        return True
 
-        for i in range(len(src_lines)):
-            src_line = src_lines[i]
-            clang_line = clang_lines[i]
+    @property
+    def mozreview_body(self):
+        '''
+        Build the text body published on MozReview
+        According to diff mode
+        '''
+        if self.mode == OPCODE_REPLACE:
+            return 'Replace by: \n\n```\n{}\n```'.format(self.new)
 
-            if src_line != clang_line:
-                print('woops', clang_line)
+        elif self.mode == OPCODE_INSERT:
+            return 'Insert at this line: \n\n```\n{}\n```'.format(self.new)
 
+        elif self.mode == OPCODE_DELETE:
+            if self.nb_lines > 1:
+                return 'Delete these {} lines'.format(self.nb_lines)
+            return 'Delete this line.'
 
+        else:
+            raise Exception('Unsupported mode')
 
-        print('CLANG OUTPUT', clang_output)
-
-
-        return []
+    def as_markdown(self):
+        '''
+        Build the Markdown content for debug email
+        '''
+        return ISSUE_MARKDOWN.format(
+            path=self.path,
+            mode=self.mode,
+            line=self.line,
+            nb_lines=self.nb_lines,
+            old=self.old,
+            new=self.new,
+        )

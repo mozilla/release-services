@@ -13,13 +13,14 @@ import re
 
 from cli_common.log import get_logger
 from shipit_static_analysis.config import settings
+from shipit_static_analysis.clang import ClangIssue
 
 logger = get_logger(__name__)
 
 REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): ([^\[\]\n]+)(?: \[([\.\w-]+)\])?$', re.MULTILINE)
 
 ISSUE_MARKDOWN = '''
-## {type}
+## clang-tidy {type}
 
 - **Message**: {message}
 - **Location**: {location}
@@ -201,7 +202,7 @@ class ClangTidy(object):
         return issues
 
 
-class ClangTidyIssue(object):
+class ClangTidyIssue(ClangIssue):
     '''
     An issue reported by clang-tidy
     '''
@@ -214,6 +215,7 @@ class ClangTidyIssue(object):
         if self.path.startswith(work_dir):
             self.path = self.path[len(work_dir)+1:]  # skip heading /
         self.line = int(self.line)
+        self.nb_lines = 1  # Only 1 line affected on clang-tidy
         self.char = int(self.char)
         self.body = None
         self.in_patch = False

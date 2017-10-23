@@ -191,7 +191,12 @@ class Workflow(object):
             for issue in issues:
                 if self.mozreview_enabled:
                     logger.info('Will publish about {}'.format(issue))
-                    self.mozreview.comment(issue.path, issue.line, 1, issue.mozreview_body)
+                    self.mozreview.comment(
+                        issue.path,
+                        issue.line,
+                        issue.nb_lines,
+                        issue.mozreview_body,
+                    )
                 else:
                     logger.info('Should publish about {}'.format(issue))
 

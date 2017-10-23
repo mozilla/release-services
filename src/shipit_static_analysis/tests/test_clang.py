@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 from shipit_static_analysis.clang.tidy import ClangTidyIssue
-from shipit_static_analysis.clang.format import ClangFormat
+from shipit_static_analysis.clang.format import ClangFormat, ClangFormatIssue
+
+BAD_CPP_OLD = '#include <demo>\nint \tmain(void){\n printf("plop");return 42;    '
+BAD_CPP_NEW = '''#include <demo>
+int main(void) {
+  printf("plop");
+  return 42;'''
 
 
 def test_expanded_macros():
@@ -29,18 +35,29 @@ def test_expanded_macros():
     issue.notes.reverse()
     assert issue.is_expanded_macro() is False
 
+
 def test_clang_format(tmpdir):
     '''
     Test clang-format runner
     '''
 
     # Write badly formatted c file
-    bad_file  = tmpdir.join("bad.cpp")
+    bad_file = tmpdir.join('bad.cpp')
     bad_file.write('''#include <demo>\nint \tmain(void){\n printf("plop");return 42;    \n}''')
 
+    # Get formatting issues
     cf = ClangFormat(str(tmpdir.realpath()), None)
-
     issues = cf.run(['bad.cpp', ])
 
-    print(issues)
-    assert 0
+    # Small file, only one issue which group changes
+    assert isinstance(issues, list)
+    assert len(issues) == 1
+    issue = issues[0]
+    assert isinstance(issue, ClangFormatIssue)
+    assert issue.is_publishable()
+
+    assert issue.path == 'bad.cpp'
+    assert issue.line == 1
+    assert issue.nb_lines == 3
+    assert issue.old == BAD_CPP_OLD
+    assert issue.new == BAD_CPP_NEW
