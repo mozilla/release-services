@@ -73,6 +73,7 @@ let
         # Needed for the static analysis
         glibc
         gcc
+        moz_clang
 
         # Gecko environment
         releng_pkgs.gecko-env
