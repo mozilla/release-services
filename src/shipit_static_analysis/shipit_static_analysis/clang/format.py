@@ -48,9 +48,19 @@ class ClangFormat(object):
         Run clang-format on those modified files
         '''
         assert isinstance(modified_lines, dict)
-        issues = []
+        out = []
         for path, lines in modified_lines.items():
-            issues += self.run_clang_format(path, lines)
+
+            # Build issues for modified file
+            issues = self.run_clang_format(path, lines)
+            if not issues:
+                continue
+
+            # Build and apply patch
+            self.apply_patch(path, issues)
+            out += issues
+
+        # Gives all issues
         return issues
 
     def run_clang_format(self, filename, modified_lines):
@@ -85,25 +95,62 @@ class ClangFormat(object):
             a=src_lines,
             b=clang_lines,
         )
-        return [
+        issues = [
             ClangFormatIssue(filename, src_lines, clang_lines, modified_lines, *opcode)
             for opcode in diff.get_opcodes()
             if opcode[0] in OPCODES
         ]
+
+        return issues
+
+    def apply_patch(self, filename, issues):
+        '''
+        Apply patch
+        '''
+        assert isinstance(issues, list)
+        full_path = os.path.join(self.work_dir, filename)
+        assert os.path.exists(full_path), \
+            'Modified file not found {}'.format(full_path)
+
+        # Build patch with publishable issues
+        patch = '\n'.join([
+            issue.as_diff()
+            for issue in issues
+            if issue.is_publishable()
+        ])
+        if not patch:
+            return
+
+        # Write patch in tmp
+        import tempfile
+        _, patch_path = tempfile.mkstemp(suffix='.diff')
+        with open(patch_path, 'w') as f:
+            f.write(patch)
+
+        # Apply patch on repository file
+        cmd = [
+            'patch',
+            '-i', patch_path,
+            full_path,
+        ]
+        exit = subprocess.run(cmd)
+        assert exit.returncode == 0
+
+        # Cleanup
+        os.unlink(patch_path)
 
 
 class ClangFormatIssue(ClangIssue):
     '''
     An issue created by Clang Format tool
     '''
-    def __init__(self, path, a, b, modified_lines, mode, i1, i2, j1, j2):
+    def __init__(self, path, a, b, modified_lines, mode, *positions):
         assert mode in OPCODES
-        assert isinstance(i1, int)
-        assert isinstance(i2, int)
-        assert isinstance(j1, int)
-        assert isinstance(j2, int)
+        assert isinstance(positions, tuple)
+        assert len(positions) == 4
         self.path = path
         self.mode = mode
+        self.positions = positions
 
         # Lines used to make the diff
         # replace: a[i1:i2] should be replaced by b[j1:j2].
@@ -111,10 +158,12 @@ class ClangFormatIssue(ClangIssue):
         # insert: b[j1:j2] should be inserted at a[i1:i1].
         # These indexes are starting from 1
         # need to offset them
+        i1, i2, j1, j2 = self.positions
         self.old = '\n'.join(a[i1 - 1:i2])
         self.new = self.mode != OPCODE_DELETE and '\n'.join(b[j1 - 1:j2])
 
         # i1 is alsways the starting point
+        i1, i2, j1, j2 = self.positions
         self.line = i1
         if self.mode == OPCODE_INSERT:
             self.nb_lines = 1
@@ -147,18 +196,20 @@ class ClangFormatIssue(ClangIssue):
         According to diff mode
         '''
         if self.mode == OPCODE_REPLACE:
-            return 'Replace by: \n\n```\n{}\n```'.format(self.new)
+            out = 'Replace by: \n\n{}\n'.format(self.new)
 
         elif self.mode == OPCODE_INSERT:
-            return 'Insert at this line: \n\n```\n{}\n```'.format(self.new)
+            out = 'Insert at this line: \n\n{}\n'.format(self.new)
 
         elif self.mode == OPCODE_DELETE:
             if self.nb_lines > 1:
                 return 'Delete these {} lines'.format(self.nb_lines)
-            return 'Delete this line.'
+            out = 'Delete this line.'
 
         else:
             raise Exception('Unsupported mode')
+
+        return 'Incorrect coding style - {}'.format(out)
 
     def as_markdown(self):
         '''
@@ -172,3 +223,39 @@ class ClangFormatIssue(ClangIssue):
             old=self.old,
             new=self.new,
         )
+
+    def as_diff(self):
+        '''
+        Build the standard diff output
+        '''
+        def _prefix_lines(content, char):
+            return '\n'.join([
+                '{} {}'.format(char, line)
+                for line in content.split('\n')
+            ])
+
+        i1, i2, j1, j2 = self.positions
+        if self.mode == OPCODE_REPLACE:
+            patch = [
+                '{},{}c{},{}'.format(i1, i2, j1, j2),
+                _prefix_lines(self.old, '<'),
+                '---',
+                _prefix_lines(self.new, '>')
+            ]
+
+        elif self.mode == OPCODE_INSERT:
+            patch = [
+                '{}a{},{}'.format(i1, j1, j2),
+                _prefix_lines(self.new, '>'),
+            ]
+
+        elif self.mode == OPCODE_DELETE:
+            patch = [
+                '{},{}d{},{}'.format(i1, i2, j1, j2),
+                _prefix_lines(self.old, '<'),
+            ]
+
+        else:
+            raise Exception('Invalid mode')
+
+        return '\n'.join(patch) + '\n'

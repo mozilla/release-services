@@ -2,11 +2,27 @@
 from shipit_static_analysis.clang.tidy import ClangTidyIssue
 from shipit_static_analysis.clang.format import ClangFormat, ClangFormatIssue
 
-BAD_CPP_OLD = '#include <demo>\nint \tmain(void){\n printf("plop");return 42;    '
-BAD_CPP_NEW = '''#include <demo>
+BAD_CPP_SRC = '''#include <demo>
+int \tmain(void){
+ printf("plop");return 42;
+}'''
+
+BAD_CPP_DIFF = '''1,3c1,4
+< #include <demo>
+< int \tmain(void){
+<  printf("plop");return 42;
+---
+> #include <demo>
+> int main(void) {
+>   printf("plop");
+>   return 42;
+'''
+
+BAD_CPP_VALID = '''#include <demo>
 int main(void) {
   printf("plop");
-  return 42;'''
+  return 42;
+}'''
 
 
 def test_expanded_macros():
@@ -43,7 +59,7 @@ def test_clang_format(tmpdir):
 
     # Write badly formatted c file
     bad_file = tmpdir.join('bad.cpp')
-    bad_file.write('''#include <demo>\nint \tmain(void){\n printf("plop");return 42;    \n}''')
+    bad_file.write(BAD_CPP_SRC)
 
     # Get formatting issues
     cf = ClangFormat(str(tmpdir.realpath()))
@@ -61,5 +77,7 @@ def test_clang_format(tmpdir):
     assert issue.path == 'bad.cpp'
     assert issue.line == 1
     assert issue.nb_lines == 3
-    assert issue.old == BAD_CPP_OLD
-    assert issue.new == BAD_CPP_NEW
+    assert issue.as_diff() == BAD_CPP_DIFF
+
+    # At the end of the process, original file is patched
+    assert bad_file.read() == BAD_CPP_VALID
