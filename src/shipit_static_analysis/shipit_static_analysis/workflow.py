@@ -124,6 +124,9 @@ class Workflow(object):
         # Pull revision from review
         self.hg.pull(source=REPO_REVIEW, rev=revision, update=True, force=True)
 
+        # Update to the target revision
+        self.hg.update(rev=revision, clean=True)
+
         # Get the parents revisions
         parent_rev = 'parents({})'.format(revision)
         parents = self.hg.identify(id=True, rev=parent_rev).decode('utf-8').strip()
@@ -162,7 +165,13 @@ class Workflow(object):
 
         # Run clang-format on modified files
         logger.info('Run clang-format...')
-        issues += clang_format.run(modified_lines)
+        format_issues, patched = clang_format.run(modified_lines)
+        issues += format_issues
+        format_diff = None
+        if patched:
+            # Get current diff on these files
+            files = list(map(lambda x: os.path.join(self.repo_dir, x).encode('utf-8'), patched))
+            format_diff = self.hg.diff(files)
 
         logger.info('Detected {} issue(s)'.format(len(issues)))
         if not issues:
@@ -170,13 +179,18 @@ class Workflow(object):
             return
 
         # Publish on mozreview
-        self.publish_mozreview(review_request_id, diffset_revision, issues)
+        self.publish_mozreview(
+            review_request_id,
+            diffset_revision,
+            issues,
+            format_diff,
+        )
 
         # Notify by email
         logger.info('Send email to admins')
         self.notify_admins(review_request_id, issues)
 
-    def publish_mozreview(self, review_request_id, diff_revision, issues):
+    def publish_mozreview(self, review_request_id, diff_revision, issues, format_diff=None):  # noqa
         '''
         Publish comments on mozreview
         '''
@@ -220,7 +234,12 @@ class Workflow(object):
 
         # Publish the review
         # without ship_it to avoid automatically r+
-        return self.mozreview.publish(body_top=comment, ship_it=False)
+        bottom = format_diff is not None and format_diff.decode('utf-8')
+        return self.mozreview.publish(
+            body_top=comment,
+            body_bottom=bottom,
+            ship_it=False,
+        )
 
     def notify_admins(self, review_request_id, issues):
         '''

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import difflib
+import tempfile
 import subprocess
 from cli_common.log import get_logger
 from shipit_static_analysis.clang import ClangIssue
@@ -48,7 +49,7 @@ class ClangFormat(object):
         Run clang-format on those modified files
         '''
         assert isinstance(modified_lines, dict)
-        out = []
+        all_issues, patched = [], []
         for path, lines in modified_lines.items():
 
             # Build issues for modified file
@@ -57,11 +58,12 @@ class ClangFormat(object):
                 continue
 
             # Build and apply patch
-            self.apply_patch(path, issues)
-            out += issues
+            if self.apply_patch(path, issues):
+                patched.append(path)
 
-        # Gives all issues
-        return issues
+            all_issues += issues
+
+        return all_issues, patched
 
     def run_clang_format(self, filename, modified_lines):
         '''
@@ -119,10 +121,9 @@ class ClangFormat(object):
             if issue.is_publishable()
         ])
         if not patch:
-            return
+            return False
 
         # Write patch in tmp
-        import tempfile
         _, patch_path = tempfile.mkstemp(suffix='.diff')
         with open(patch_path, 'w') as f:
             f.write(patch)
@@ -138,6 +139,8 @@ class ClangFormat(object):
 
         # Cleanup
         os.unlink(patch_path)
+
+        return True
 
 
 class ClangFormatIssue(ClangIssue):
@@ -166,6 +169,7 @@ class ClangFormatIssue(ClangIssue):
         i1, i2, j1, j2 = self.positions
         self.line = i1
         if self.mode == OPCODE_INSERT:
+            self.line -= 1
             self.nb_lines = 1
         else:
             assert i2 > i1
