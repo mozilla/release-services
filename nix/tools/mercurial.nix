@@ -5,15 +5,15 @@ let
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) licenses ;
 
-  robustcheckout = mkDerivation {
-    name = "robustcheckout";
+  hg_tools = mkDerivation {
+    name = "mozilla-hg-tools";
     src = fetchurl {
-      url = "https://hg.mozilla.org/hgcustom/version-control-tools/archive/1a8415be17e8.tar.bz2";
-      sha256 = "005n7ar8cn7162s1qx970x1aabv263zp7mxm38byxc23nzym37kn";
+      url = "https://hg.mozilla.org/hgcustom/version-control-tools/archive/e05bed1064ed.tar.bz2";
+      sha256 = "1icg8cvjpw5x0xapryhmjqsmm2amzh57pnqd7r0idf6h8mphpimp";
     };
     installPhase = ''
       mkdir -p $out
-      cp -rf hgext/robustcheckout $out
+      cp -rf * $out
     '';
     doCheck = false;
     buildInputs = [];
@@ -21,9 +21,10 @@ let
     meta = {
       homepage = "https://hg.mozilla.org/hgcustom/version-control-tools";
       license = licenses.mit;
-      description = "Mozilla Version Control Tools: robustcheckout";
+      description = "Mozilla Version Control Tools";
     };
   };
+
 
 in mercurial.overrideDerivation (old: {
   postInstall = old.postInstall + ''
@@ -33,7 +34,8 @@ cacerts = ${cacert}/etc/ssl/certs/ca-bundle.crt
 
 [extensions]
 purge =
-robustcheckout = ${robustcheckout}/robustcheckout/__init__.py
+robustcheckout = ${hg_tools}/hgext/robustcheckout/__init__.py
+reviewboard = ${hg_tools}/hgext/reviewboard/client.py
 EOF
   '';
 })
