@@ -244,14 +244,15 @@ def get_coverage_build(changeset):
     return (rev['desc'], after_changeset, after_changeset_overall)
 
 
-def coverage_supported(path):
-    COVERAGE_EXTENSIONS = [
-        # C
-        'c', 'h',
-        # C++
-        'cpp', 'cc', 'cxx', 'hh', 'hpp', 'hxx',
-        # JavaScript
-        'js', 'jsm', 'xul', 'xml', 'html', 'xhtml',
-    ]
+COVERAGE_EXTENSIONS = [
+    # C
+    'c', 'h',
+    # C++
+    'cpp', 'cc', 'cxx', 'hh', 'hpp', 'hxx',
+    # JavaScript
+    'js', 'jsm', 'xul', 'xml', 'html', 'xhtml',
+]
 
+
+def coverage_supported(path):
     return any([path.endswith('.' + ext) for ext in COVERAGE_EXTENSIONS])

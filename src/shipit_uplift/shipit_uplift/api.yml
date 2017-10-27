@@ -198,6 +198,13 @@ paths:
         200:
           description: Code coverage summary by changeset
 
+  /coverage/supported_extensions:
+    get:
+      operationId: "shipit_uplift.api.coverage_supported_extensions"
+      responses:
+        200:
+          description: File extensions supported for code coverage
+
 definitions:
 
   Success:
