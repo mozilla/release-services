@@ -46,6 +46,12 @@ let
           "--cache-root"
           "/cache"
         ];
+        taskArtifacts = {
+          "public/results" = {
+            path = "/tmp/results";
+            type = "directory";
+          };
+        };
       };
     in
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);

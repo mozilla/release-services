@@ -6,6 +6,7 @@
 from __future__ import absolute_import
 
 import itertools
+import tempfile
 import hglib
 import os
 
@@ -21,11 +22,12 @@ logger = get_logger(__name__)
 
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
+ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{task_id}/runs/{run_id}/artifacts/public/results/{diff_name}'
 MAX_COMMENTS = 30
 MOZREVIEW_COMMENT_SUCCESS = '''
 C/C++ static analysis didn't find any defects in this patch. Hooray!
 '''
-MOZREVIEW_COMMENT_FAILURE_TOP = '''
+MOZREVIEW_COMMENT_FAILURE = '''
 C/C++ static analysis found {total} defect{total_s} in this patch{extras_comments}.
  - {nb_clang_tidy} defects found by clang-tidy
  - {nb_clang_format} defects found by clang-format
@@ -34,11 +36,11 @@ You can run this analysis locally with: `./mach static-analysis check path/to/fi
 
 If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx
 '''
-MOZREVIEW_COMMENT_FAILURE_BOTTOM = '''
-----
-A full diff for the formatting issues found by clang-format is provided below (you can use it with `hg import`) :
+MOZREVIEW_COMMENT_DIFF_DOWNLOAD = '''
 
-{diff}
+A full diff for the formatting issues found by clang-format is provided here: {url}
+
+You can use it in your repository with `hg import`
 '''
 
 
@@ -63,12 +65,13 @@ class Workflow(object):
 
         # Save Taskcluster ID for logging
         if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
-            self.taskcluster_id = '{} run:{}'.format(
-                os.environ['TASK_ID'],
-                os.environ['RUN_ID'],
-            )
+            self.taskcluster_task_id = os.environ['TASK_ID']
+            self.taskcluster_run_id = os.environ['RUN_ID']
+            self.taskcluster_results_dir = '/tmp/results'
         else:
-            self.taskcluster_id = 'local instance'
+            self.taskcluster_task_id = 'local instance'
+            self.taskcluster_run_id = 0
+            self.taskcluster_results_dir = tempfile.gettempdir()
 
         # Load TC services & secrets
         self.notify = get_service(
@@ -108,7 +111,8 @@ class Workflow(object):
         # Add log to find Taskcluster task in papertrail
         logger.info(
             'New static analysis',
-            taskcluster=self.taskcluster_id,
+            taskcluster_task=self.taskcluster_task_id,
+            taskcluster_run=self.taskcluster_run_id,
             channel=self.app_channel,
             revision=revision,
             review_request_id=review_request_id,
@@ -174,7 +178,7 @@ class Workflow(object):
         issues = clang_tidy.run(settings.clang_checkers, modified_lines)
 
         # Run clang-format on modified files
-        format_diff = None
+        diff_url = None
         if self.clang_format_enabled:
             logger.info('Run clang-format...')
             format_issues, patched = clang_format.run(modified_lines)
@@ -182,7 +186,23 @@ class Workflow(object):
             if patched:
                 # Get current diff on these files
                 files = list(map(lambda x: os.path.join(self.repo_dir, x).encode('utf-8'), patched))
-                format_diff = self.hg.diff(files)
+                diff = self.hg.diff(files)
+
+                # Write diff in results directory
+                diff_name = '{}-{}-clang-format.diff'.format(
+                    review_request_id, diffset_revision
+                )
+                diff_path = os.path.join(self.taskcluster_results_dir, diff_name)
+                with open(diff_path, 'w') as f:
+                    f.write(diff.decode('utf-8'))
+
+                # Build diff download url
+                diff_url = ARTIFACT_URL.format(
+                    task_id=self.taskcluster_task_id,
+                    run_id=self.taskcluster_run_id,
+                    diff_name=diff_name,
+                )
+
         else:
             logger.info('Skip clang-format')
 
@@ -196,14 +216,14 @@ class Workflow(object):
             review_request_id,
             diffset_revision,
             issues,
-            format_diff,
+            diff_url,
         )
 
         # Notify by email
         logger.info('Send email to admins')
         self.notify_admins(review_request_id, issues)
 
-    def publish_mozreview(self, review_request_id, diff_revision, issues, format_diff=None):  # noqa
+    def publish_mozreview(self, review_request_id, diff_revision, issues, diff_url=None):  # noqa
         '''
         Publish comments on mozreview
         '''
@@ -220,22 +240,20 @@ class Workflow(object):
                 ], key=lambda x: str(x)))
             }
 
-            # Build top & bottom comments
+            # Build top comment
             nb = len(issues)
             extras = ' (only the first {} are reported here)'.format(MAX_COMMENTS)
-            comment_top = MOZREVIEW_COMMENT_FAILURE_TOP.format(
+            comment = MOZREVIEW_COMMENT_FAILURE.format(
                 total=nb,
                 total_s=nb != 1 and 's' or '',
                 extras_comments=nb > MAX_COMMENTS and extras or '',
                 nb_clang_format=stats.get(ClangFormatIssue, 0),
                 nb_clang_tidy=stats.get(ClangTidyIssue, 0),
             )
-            if format_diff is not None:
-                comment_bottom = MOZREVIEW_COMMENT_FAILURE_BOTTOM.format(
-                    diff=format_diff.decode('utf-8'),
+            if diff_url is not None:
+                comment += MOZREVIEW_COMMENT_DIFF_DOWNLOAD.format(
+                    url=diff_url,
                 )
-            else:
-                comment_bottom = None
 
             # Comment each issue
             for issue in issues:
@@ -252,8 +270,7 @@ class Workflow(object):
                     logger.info('Should publish about {}'.format(issue))
 
         elif self.mozreview_publish_success:
-            comment_top = MOZREVIEW_COMMENT_SUCCESS
-            comment_bottom = None
+            comment = MOZREVIEW_COMMENT_SUCCESS
             logger.info('No issues to publish, send kudos.')
 
         else:
@@ -267,8 +284,7 @@ class Workflow(object):
         # Publish the review
         # without ship_it to avoid automatically r+
         return self.mozreview.publish(
-            body_top=comment_top,
-            body_bottom=comment_bottom,
+            body_top=comment,
             ship_it=False,
         )
 
