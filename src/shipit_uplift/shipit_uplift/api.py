@@ -22,7 +22,7 @@ from shipit_uplift.serializers import (
 from shipit_uplift.config import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
 from shipit_uplift import (
     coverage_by_dir_impl, coverage_by_changeset_impl,
-    coverage_summary_by_changeset_impl
+    coverage_summary_by_changeset_impl, coverage
 )
 from rq import Queue
 from shipit_uplift.worker import conn
@@ -409,3 +409,7 @@ def coverage_summary_by_changeset(changeset):
         return result, code
     else:
         return coverage_summary_by_changeset_impl.generate(result), 200
+
+
+def coverage_supported_extensions():
+    return coverage.COVERAGE_EXTENSIONS
