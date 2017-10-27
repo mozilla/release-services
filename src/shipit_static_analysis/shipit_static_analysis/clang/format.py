@@ -199,21 +199,22 @@ class ClangFormatIssue(ClangIssue):
         Build the text body published on MozReview
         According to diff mode
         '''
+        out = 'Warning: Incorrect coding style [clang-format]\n'
         if self.mode == OPCODE_REPLACE:
-            out = 'Replace by: \n\n{}\n'.format(self.new)
+            out += 'Replace by: \n\n{}\n'.format(self.new)
 
         elif self.mode == OPCODE_INSERT:
-            out = 'Insert at this line: \n\n{}\n'.format(self.new)
+            out += 'Insert at this line: \n\n{}\n'.format(self.new)
 
         elif self.mode == OPCODE_DELETE:
             if self.nb_lines > 1:
-                return 'Delete these {} lines'.format(self.nb_lines)
-            out = 'Delete this line.'
+                out += 'Delete these {} lines'.format(self.nb_lines)
+            out += 'Delete this line.'
 
         else:
             raise Exception('Unsupported mode')
 
-        return 'Incorrect coding style - {}'.format(out)
+        return out
 
     def as_markdown(self):
         '''
