@@ -71,7 +71,9 @@ class Workflow(object):
         else:
             self.taskcluster_task_id = 'local instance'
             self.taskcluster_run_id = 0
-            self.taskcluster_results_dir = tempfile.gettempdir()
+            self.taskcluster_results_dir = tempfile.mkdtemp()
+        if not os.path.isdir(self.taskcluster_results_dir):
+            os.makedirs(self.taskcluster_results_dir)
 
         # Load TC services & secrets
         self.notify = get_service(
@@ -185,6 +187,7 @@ class Workflow(object):
             issues += format_issues
             if patched:
                 # Get current diff on these files
+                logger.info('Found clang-format issues', files=patched)
                 files = list(map(lambda x: os.path.join(self.repo_dir, x).encode('utf-8'), patched))
                 diff = self.hg.diff(files)
 
@@ -195,6 +198,7 @@ class Workflow(object):
                 diff_path = os.path.join(self.taskcluster_results_dir, diff_name)
                 with open(diff_path, 'w') as f:
                     f.write(diff.decode('utf-8'))
+                    logger.info('Diff from clang-format dumped', path=diff_path)
 
                 # Build diff download url
                 diff_url = ARTIFACT_URL.format(
@@ -202,6 +206,8 @@ class Workflow(object):
                     run_id=self.taskcluster_run_id,
                     diff_name=diff_name,
                 )
+            else:
+                logger.info('No clang-format issues')
 
         else:
             logger.info('Skip clang-format')
