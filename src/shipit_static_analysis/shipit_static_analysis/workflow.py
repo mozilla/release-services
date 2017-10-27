@@ -5,14 +5,15 @@
 
 from __future__ import absolute_import
 
+import itertools
 import hglib
 import os
 
 from cli_common.taskcluster import get_service
 from cli_common.log import get_logger
 from cli_common.command import run_check
-from shipit_static_analysis.clang.tidy import ClangTidy
-from shipit_static_analysis.clang.format import ClangFormat
+from shipit_static_analysis.clang.tidy import ClangTidy, ClangTidyIssue
+from shipit_static_analysis.clang.format import ClangFormat, ClangFormatIssue
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.batchreview import BatchReview
 
@@ -24,12 +25,20 @@ MAX_COMMENTS = 30
 MOZREVIEW_COMMENT_SUCCESS = '''
 C/C++ static analysis didn't find any defects in this patch. Hooray!
 '''
-MOZREVIEW_COMMENT_FAILURE = '''
-C/C++ static analysis found {} defect{} in this patch{}.
+MOZREVIEW_COMMENT_FAILURE_TOP = '''
+C/C++ static analysis found {total} defect{total_s} in this patch{extras_comments}.
+ - {nb_clang_tidy} defects found by clang-tidy
+ - {nb_clang_format} defects found by clang-format
 
-You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp`
+You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp` and `./mach clan-format path/to/file.cpp`
 
 If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx
+'''
+MOZREVIEW_COMMENT_FAILURE_BOTTOM = '''
+----
+A full diff for the formatting issues found by clang-format is provided below (you can use it with `hg import`) :
+
+{diff}
 '''
 
 
@@ -39,12 +48,13 @@ class Workflow(object):
     '''
     taskcluster = None
 
-    def __init__(self, cache_root, emails, app_channel, mozreview_api_root, mozreview_enabled=False, mozreview_publish_success=False, client_id=None, access_token=None):  # noqa
+    def __init__(self, cache_root, emails, app_channel, mozreview_api_root, mozreview_enabled=False, mozreview_publish_success=False, clang_format_enabled=False, client_id=None, access_token=None):  # noqa
         self.emails = emails
         self.app_channel = app_channel
         self.mozreview_api_root = mozreview_api_root
         self.mozreview_enabled = mozreview_enabled
         self.mozreview_publish_success = mozreview_publish_success
+        self.clang_format_enabled = clang_format_enabled
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
             'Cache root {} is not a dir.'.format(self.cache_root)
@@ -164,14 +174,17 @@ class Workflow(object):
         issues = clang_tidy.run(settings.clang_checkers, modified_lines)
 
         # Run clang-format on modified files
-        logger.info('Run clang-format...')
-        format_issues, patched = clang_format.run(modified_lines)
-        issues += format_issues
         format_diff = None
-        if patched:
-            # Get current diff on these files
-            files = list(map(lambda x: os.path.join(self.repo_dir, x).encode('utf-8'), patched))
-            format_diff = self.hg.diff(files)
+        if self.clang_format_enabled:
+            logger.info('Run clang-format...')
+            format_issues, patched = clang_format.run(modified_lines)
+            issues += format_issues
+            if patched:
+                # Get current diff on these files
+                files = list(map(lambda x: os.path.join(self.repo_dir, x).encode('utf-8'), patched))
+                format_diff = self.hg.diff(files)
+        else:
+            logger.info('Skip clang-format')
 
         logger.info('Detected {} issue(s)'.format(len(issues)))
         if not issues:
@@ -198,14 +211,31 @@ class Workflow(object):
         # and non third party
         issues = list(filter(lambda i: i.is_publishable(), issues))
         if issues:
-            # Build general comment
+            # Calc stats for issues, grouped by class
+            stats = {
+                cls: len(list(items))
+                for cls, items in itertools.groupby(sorted([
+                    issue.__class__
+                    for issue in issues
+                ], key=lambda x: str(x)))
+            }
+
+            # Build top & bottom comments
             nb = len(issues)
             extras = ' (only the first {} are reported here)'.format(MAX_COMMENTS)
-            comment = MOZREVIEW_COMMENT_FAILURE.format(
-                nb,
-                nb != 1 and 's' or '',
-                nb > MAX_COMMENTS and extras or ''
+            comment_top = MOZREVIEW_COMMENT_FAILURE_TOP.format(
+                total=nb,
+                total_s=nb != 1 and 's' or '',
+                extras_comments=nb > MAX_COMMENTS and extras or '',
+                nb_clang_format=stats.get(ClangFormatIssue, 0),
+                nb_clang_tidy=stats.get(ClangTidyIssue, 0),
             )
+            if format_diff is not None:
+                comment_bottom = MOZREVIEW_COMMENT_FAILURE_BOTTOM.format(
+                    diff=format_diff.decode('utf-8'),
+                )
+            else:
+                comment_bottom = None
 
             # Comment each issue
             for issue in issues:
@@ -216,12 +246,14 @@ class Workflow(object):
                         issue.line,
                         issue.nb_lines,
                         issue.mozreview_body,
+                        issue_opened=isinstance(issue, ClangTidyIssue),
                     )
                 else:
                     logger.info('Should publish about {}'.format(issue))
 
         elif self.mozreview_publish_success:
-            comment = MOZREVIEW_COMMENT_SUCCESS
+            comment_top = MOZREVIEW_COMMENT_SUCCESS
+            comment_bottom = None
             logger.info('No issues to publish, send kudos.')
 
         else:
@@ -234,10 +266,9 @@ class Workflow(object):
 
         # Publish the review
         # without ship_it to avoid automatically r+
-        bottom = format_diff is not None and format_diff.decode('utf-8')
         return self.mozreview.publish(
-            body_top=comment,
-            body_bottom=bottom,
+            body_top=comment_top,
+            body_bottom=comment_bottom,
             ship_it=False,
         )
 
