@@ -19,7 +19,7 @@ class Settings(object):
     def __init__(self):
         self.config = None
         self.download({
-            'cpp_extensions' : ['.cpp', '.c', '.h'],
+            'cpp_extensions': ['.cpp', '.c', '.h'],
         })
         assert 'clang_checkers' in self.config
         assert 'target' in self.config

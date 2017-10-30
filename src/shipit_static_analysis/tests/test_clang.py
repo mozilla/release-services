@@ -63,9 +63,12 @@ def test_clang_format(tmpdir):
 
     # Get formatting issues
     cf = ClangFormat(str(tmpdir.realpath()))
-    issues, patched = cf.run({
-        'bad.cpp': [1, 2, 3],
-    })
+    issues, patched = cf.run(
+        ['.cpp', ],
+        {
+            'bad.cpp': [1, 2, 3],
+        },
+    )
 
     # Small file, only one issue which group changes
     assert patched == ['bad.cpp', ]
