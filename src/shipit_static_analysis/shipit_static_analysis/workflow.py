@@ -42,6 +42,11 @@ A full diff for the formatting issues found by clang-format is provided here: {u
 
 You can use it in your repository with `hg import`
 '''
+EMAIL_HEADER = '''{nb_publishable} Publishable issues on Mozreview
+
+Review Url : {review_url}
+Diff Url : {diff_url}
+'''
 
 
 class Workflow(object):
@@ -190,10 +195,14 @@ class Workflow(object):
                 logger.info('Found clang-format issues', files=patched)
                 files = list(map(lambda x: os.path.join(self.repo_dir, x).encode('utf-8'), patched))
                 diff = self.hg.diff(files)
+                assert diff is not None, \
+                    'Empty diff'
 
                 # Write diff in results directory
-                diff_name = '{}-{}-clang-format.diff'.format(
-                    review_request_id, diffset_revision
+                diff_name = '{}-{}-{}-clang-format.diff'.format(
+                    revision[:8],
+                    review_request_id,
+                    diffset_revision,
                 )
                 diff_path = os.path.join(self.taskcluster_results_dir, diff_name)
                 with open(diff_path, 'w') as f:
@@ -206,6 +215,7 @@ class Workflow(object):
                     run_id=self.taskcluster_run_id,
                     diff_name=diff_name,
                 )
+                logger.info('Diff available online', url=diff_url)
             else:
                 logger.info('No clang-format issues')
 
@@ -227,7 +237,7 @@ class Workflow(object):
 
         # Notify by email
         logger.info('Send email to admins')
-        self.notify_admins(review_request_id, issues)
+        self.notify_admins(review_request_id, issues, diff_url)
 
     def publish_mozreview(self, review_request_id, diff_revision, issues, diff_url=None):  # noqa
         '''
@@ -294,12 +304,13 @@ class Workflow(object):
             ship_it=False,
         )
 
-    def notify_admins(self, review_request_id, issues):
+    def notify_admins(self, review_request_id, issues, diff_url):
         '''
         Send an email to administrators
         '''
-        content = '{nb_publishable} Publishable issues on Mozreview\n\nUrl : {url}\n\n'.format(  # noqa
-            url='https://reviewboard.mozilla.org/r/{}/'.format(review_request_id), # noqa
+        content = EMAIL_HEADER.format(
+            review_url='https://reviewboard.mozilla.org/r/{}/'.format(review_request_id), # noqa
+            diff_url=diff_url or 'no clang-format diff',
             nb_publishable=sum([i.is_publishable() for i in issues]),
         )
         content += '\n\n'.join([i.as_markdown() for i in issues])
