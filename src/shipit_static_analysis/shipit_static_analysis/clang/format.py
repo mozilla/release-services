@@ -44,13 +44,20 @@ class ClangFormat(object):
         assert os.path.isdir(work_dir)
         self.work_dir = work_dir
 
-    def run(self, modified_lines):
+    def run(self, extensions, modified_lines):
         '''
         Run clang-format on those modified files
         '''
+        assert isinstance(extensions, list)
         assert isinstance(modified_lines, dict)
         all_issues, patched = [], []
         for path, lines in modified_lines.items():
+
+            # Check file extension is supported
+            _, ext = os.path.splitext(path)
+            if ext not in extensions:
+                logger.info('Skip clang-format for non C/C++ file', path=path)
+                continue
 
             # Build issues for modified file
             issues = self.run_clang_format(path, lines)

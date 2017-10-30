@@ -32,7 +32,7 @@ C/C++ static analysis found {total} defect{total_s} in this patch{extras_comment
  - {nb_clang_tidy} defects found by clang-tidy
  - {nb_clang_format} defects found by clang-format
 
-You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp` and `./mach clan-format path/to/file.cpp`
+You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp` and `./mach clang-format path/to/file.cpp`
 
 If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx
 '''
@@ -188,14 +188,14 @@ class Workflow(object):
         diff_url = None
         if self.clang_format_enabled:
             logger.info('Run clang-format...')
-            format_issues, patched = clang_format.run(modified_lines)
+            format_issues, patched = clang_format.run(settings.cpp_extensions, modified_lines)
             issues += format_issues
             if patched:
                 # Get current diff on these files
                 logger.info('Found clang-format issues', files=patched)
                 files = list(map(lambda x: os.path.join(self.repo_dir, x).encode('utf-8'), patched))
                 diff = self.hg.diff(files)
-                assert diff is not None, \
+                assert diff is not None and diff != b'', \
                     'Empty diff'
 
                 # Write diff in results directory
@@ -206,8 +206,8 @@ class Workflow(object):
                 )
                 diff_path = os.path.join(self.taskcluster_results_dir, diff_name)
                 with open(diff_path, 'w') as f:
-                    f.write(diff.decode('utf-8'))
-                    logger.info('Diff from clang-format dumped', path=diff_path)
+                    length = f.write(diff.decode('utf-8'))
+                    logger.info('Diff from clang-format dumped', path=diff_path, length=length)  # noqa
 
                 # Build diff download url
                 diff_url = ARTIFACT_URL.format(
