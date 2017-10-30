@@ -246,7 +246,7 @@ class Workflow(object):
         def pluralize(word, nb):
             assert isinstance(word, str)
             assert isinstance(nb, int)
-            return nb == 1 and word or word + 's'
+            return '{} {}'.format(nb, nb == 1 and word or word + 's')
 
         # Filter issues to keep publishable checks
         # and non third party
