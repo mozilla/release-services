@@ -262,13 +262,13 @@ $(document).ready(function() {
             $('#platforms-none').removeClass('attention');
         }
 
-        if (value.match(/mochitest-browser-screenshots/) && !value.match(/MOZSCREENSHOTS_SETS=./)) {
-            $('#setenv').addClass('attention');
-            $('#mochitest-browser-screenshots').addClass('attention');
+        if (value.match(/browser-screenshots-e10s/) && !value.match(/browser-screenshots-e10s\[/)) {
+            $('#tee-platforms').addClass('attention');
+            $('#browser-screenshots-e10s').addClass('attention');
             incomplete = true;
         } else {
-            $('#setenv').removeClass('attention');
-            $('#mochitest-browser-screenshots').removeClass('attention');
+            $('#tee-platforms').removeClass('attention');
+            $('#browser-screenshots-e10s').removeClass('attention');
         }
 
         if (incomplete) {

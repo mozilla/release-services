@@ -219,6 +219,11 @@
                 <li><label><input type="checkbox" value="jittests">jittests</label></li>
                 <li><label><input type="checkbox" value="jittest-1">jittest-1 <span class="info">(linux only)</span></label></li>
                 <li><label><input type="checkbox" value="jittest-2">jittest-2 <span class="info">(linux only)</span></label></li>
+                <li>
+                  <label id="browser-screenshots-e10s" title="Test platforms must be specified. Override what is captured with the MOZSCREENSHOTS_SETS environment variable">
+                    <input type="checkbox" value="browser-screenshots-e10s">browser-screenshots-e10s
+                  </label>
+                </li>
                 <div class='option-subgroup'>
                 <li><label><input type="checkbox" class="subgroup-selector subgroup-all-selector" value="mochitests">mochitests (all)</label></li>
                     <ul>OR
@@ -234,11 +239,6 @@
                     <li><label><input type="checkbox" value="mochitest-10">mochitest-10</label></li>
                     <li><label><input type="checkbox" value="mochitest-gl">mochitest-gl (webgl)</label></li>
                     <li><label><input type="checkbox" value="mochitest-bc">mochitest-bc (browser chrome)</label></li>
-                    <li>
-                        <label id="mochitest-browser-screenshots" title="Requires the MOZSCREENSHOTS_SET environment variable to be specified">
-                            <input type="checkbox" value="mochitest-browser-screenshots">mochitest-browser-screenshots
-                        </label>
-                    </li>
                     <li><label><input type="checkbox" value="mochitest-clipboard">mochitest-clipboard</label></li>
                     <li><label><input type="checkbox" value="mochitest-dt">mochitest-dt (devtools)</label></li>
                     <li><label><input type="checkbox" value="mochitest-a11y">mochitest-ally</label></li>
