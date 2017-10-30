@@ -28,11 +28,11 @@ MOZREVIEW_COMMENT_SUCCESS = '''
 C/C++ static analysis didn't find any defects in this patch. Hooray!
 '''
 MOZREVIEW_COMMENT_FAILURE = '''
-C/C++ static analysis found {total} defect{total_s} in this patch{extras_comments}.
- - {nb_clang_tidy} defects found by clang-tidy
- - {nb_clang_format} defects found by clang-format
+C/C++ static analysis found {defects_total} in this patch{extras_comments}.
+ - {defects_tidy} found by clang-tidy
+ - {defects_format} found by clang-format
 
-You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp` and `./mach clang-format path/to/file.cpp`
+You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp` and `./mach clang-format -p path/to/file.cpp`
 
 If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx
 '''
@@ -243,6 +243,11 @@ class Workflow(object):
         '''
         Publish comments on mozreview
         '''
+        def pluralize(word, nb):
+            assert isinstance(word, str)
+            assert isinstance(nb, int)
+            return nb == 1 and word or word + 's'
+
         # Filter issues to keep publishable checks
         # and non third party
         issues = list(filter(lambda i: i.is_publishable(), issues))
@@ -260,11 +265,10 @@ class Workflow(object):
             nb = len(issues)
             extras = ' (only the first {} are reported here)'.format(MAX_COMMENTS)
             comment = MOZREVIEW_COMMENT_FAILURE.format(
-                total=nb,
-                total_s=nb != 1 and 's' or '',
                 extras_comments=nb > MAX_COMMENTS and extras or '',
-                nb_clang_format=stats.get(ClangFormatIssue, 0),
-                nb_clang_tidy=stats.get(ClangTidyIssue, 0),
+                defects_total=pluralize('defect', nb),
+                defects_format=pluralize('defect', stats.get(ClangFormatIssue, 0)),
+                defects_tidy=pluralize('defect', stats.get(ClangTidyIssue, 0)),
             )
             if diff_url is not None:
                 comment += MOZREVIEW_COMMENT_DIFF_DOWNLOAD.format(
