@@ -277,6 +277,10 @@ class Workflow(object):
 
             # Comment each issue
             for issue in issues:
+                if isinstance(issue, ClangFormatIssue):
+                    logger.info('Skip clang-format issue on mozreview', issue=issue)
+                    continue
+
                 if self.mozreview_enabled:
                     logger.info('Will publish about {}'.format(issue))
                     self.mozreview.comment(
@@ -284,7 +288,6 @@ class Workflow(object):
                         issue.line,
                         issue.nb_lines,
                         issue.mozreview_body,
-                        issue_opened=isinstance(issue, ClangTidyIssue),
                     )
                 else:
                     logger.info('Should publish about {}'.format(issue))
