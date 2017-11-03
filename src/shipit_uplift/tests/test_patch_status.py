@@ -12,7 +12,7 @@ def test_patch_status(client, bugs, header_bot):
     '''
     Fetch detailled analysis, with bugs
     '''
-    from shipit_uplift.models import BugResult
+    from shipit_uplift.models import BugResult, PatchStatus
     url = '/bugs/1139560/patches'
     revision = '80c32af73390'  # existing patch revision
     branch = 'test'
@@ -72,3 +72,18 @@ def test_patch_status(client, bugs, header_bot):
     assert patches[revision]['merge'] == {
         branch: False,
     }
+
+    # Update existing patch status
+    data['status'] = 'merged'
+    data['message'] = 'Succesful merge!'
+    resp = client.post(
+        url,
+        data=json.dumps(data),
+        headers=[
+            ('Authorization', header_bot),
+            ('Content-Type', 'application/json'),
+        ],
+    )
+    assert resp.status_code == 200
+    ps = PatchStatus.query.filter_by(bug_id=bug.id, status='merged').one()
+    assert ps.message == data['message']

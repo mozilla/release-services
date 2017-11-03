@@ -536,6 +536,7 @@ in rec {
     , passthru ? {}
     , inStaging ? true
     , inProduction ? false
+    , gunicornWorkers ? 3
     }:
     let
       self = mkPython (args // {
@@ -594,6 +595,7 @@ in rec {
         dockerEnv = [
           "APP_SETTINGS=${self}/etc/settings.py"
           "FLASK_APP=${dirname}.flask:app"
+          "WEB_CONCURRENCY=${builtins.toString gunicornWorkers}"
         ];
         dockerCmd = dockerCmd;
 

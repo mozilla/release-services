@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import errno
+import json
 import os
 import zipfile
 import requests
@@ -24,7 +25,7 @@ class CodeCov(object):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = [
-            'cppunit', 'gtest', 'web-platform-tests',
+            'cppunit', 'gtest', 'web-platform-tests', 'talos',
         ]
 
         self.cache_root = cache_root
@@ -32,8 +33,6 @@ class CodeCov(object):
         assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
         self.repo_dir = os.path.join(cache_root, 'mozilla-central')
 
-        self.coveralls_token = coveralls_token
-        self.codecov_token = codecov_token
         self.gecko_dev_user = gecko_dev_user
         self.gecko_dev_pwd = gecko_dev_pwd
         self.client_id = client_id
@@ -44,14 +43,23 @@ class CodeCov(object):
 
             task_data = taskcluster.get_task_details(self.task_id)
             self.revision = task_data['payload']['env']['GECKO_HEAD_REV']
+            self.coveralls_token = 'NONE'
+            self.codecov_token = 'NONE'
             self.from_pulse = False
         else:
             self.task_id = taskcluster.get_task('mozilla-central', revision)
             self.revision = revision
+            self.coveralls_token = coveralls_token
+            self.codecov_token = codecov_token
             self.from_pulse = True
 
         self.build_finished = False
         self.build_finished_cv = Condition()
+
+        if self.from_pulse:
+            self.suites_to_ignore = ['awsy', 'talos']
+        else:
+            self.suites_to_ignore = []
 
         logger.info('Mercurial revision', revision=self.revision)
 
@@ -73,7 +81,7 @@ class CodeCov(object):
             for test_task in test_tasks:
                 suite_name = taskcluster.get_suite_name(test_task)
                 # Ignore awsy and talos as they aren't actually suites of tests.
-                if any(to_ignore in suite_name for to_ignore in ['awsy', 'talos']):
+                if any(to_ignore in suite_name for to_ignore in self.suites_to_ignore):
                     continue
 
                 test_task_id = test_task['status']['taskId']
@@ -140,7 +148,7 @@ class CodeCov(object):
         for lcov_out_file in lcov_out_files:
             os.rename(lcov_out_file, lcov_out_file[:-4])
 
-    def generate_info(self, commit_sha, coveralls_token=None, suite=None, out_format='coveralls'):
+    def generate_info(self, commit_sha, suite=None, out_format='coveralls'):
         files = os.listdir('ccov-artifacts')
         ordered_files = []
         for fname in files:
@@ -170,7 +178,7 @@ class CodeCov(object):
               '--service-name', 'TaskCluster',
               '--service-number', str(push_id),
               '--commit-sha', commit_sha,
-              '--token', coveralls_token,
+              '--token', self.coveralls_token,
             ])
 
             if suite is not None:
@@ -244,15 +252,29 @@ class CodeCov(object):
 
             # Get pushlog and ask the backend to generate the coverage by changeset
             # data, which will be cached.
-            r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?changeset=%s&version=2' % self.revision)
+            r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?changeset=%s&version=2&full' % self.revision)
             r.raise_for_status()
             data = r.json()
             changesets = data['pushes'][data['lastpushid']]['changesets']
 
             for changeset in changesets:
-                requests.get('https://uplift.shipit.staging.mozilla-releng.net/coverage/changeset/%s' % changeset)
+                if any(text in changeset['desc'] for text in ['r=merge', 'a=merge']):
+                    continue
+
+                requests.get('https://uplift.shipit.staging.mozilla-releng.net/coverage/changeset/%s' % changeset['node'])
         except Exception as e:
             logger.warn('Error while requesting coverage data: ' + str(e))
+
+    def generate_zero_coverage_report(self, report):
+        report = json.loads(report.decode('utf-8'))  # Decoding is only necessary until Python 3.6.
+
+        zero_coverage_files = []
+        for sf in report['source_files']:
+            if all(c is None or c == 0 for c in sf['coverage']):
+                zero_coverage_files.append(sf['name'])
+
+        with open('code-coverage-reports/zero_coverage_files.json', 'w') as f:
+            json.dump(zero_coverage_files, f)
 
     def go(self):
         with ThreadPoolExecutorResult(max_workers=2) as executor:
@@ -273,7 +295,7 @@ class CodeCov(object):
             if self.gecko_dev_user is not None and self.gecko_dev_pwd is not None:
                 self.post_github_status(commit_sha)
 
-            output = self.generate_info(commit_sha, self.coveralls_token)
+            output = self.generate_info(commit_sha)
             logger.info('Report generated successfully')
 
             with ThreadPoolExecutorResult(max_workers=2) as executor:
@@ -303,6 +325,8 @@ class CodeCov(object):
             for suite in self.suites:
                 with ThreadPoolExecutorResult() as executor:
                     executor.submit(generate_suite_report_task(suite))
+
+            self.generate_zero_coverage_report(self.generate_info(self.revision))
 
             os.chdir('code-coverage-reports')
             run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])

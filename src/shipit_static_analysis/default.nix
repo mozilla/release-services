@@ -4,7 +4,7 @@
 let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource ;
-  inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg;
+  inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch;
   inherit (releng_pkgs.pkgs.lib) fileContents concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
 
@@ -46,6 +46,12 @@ let
           "--cache-root"
           "/cache"
         ];
+        taskArtifacts = {
+          "public/results" = {
+            path = "/tmp/results";
+            type = "directory";
+          };
+        };
       };
     in
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
@@ -73,6 +79,8 @@ let
         # Needed for the static analysis
         glibc
         gcc
+        moz_clang
+        patch
 
         # Gecko environment
         releng_pkgs.gecko-env
@@ -84,6 +92,7 @@ let
       ln -s ${mercurial}/bin/hg $out/bin
       ln -s ${moz_clang}/bin/clang-tidy $out/bin
       ln -s ${moz_clang}/bin/clang-format $out/bin
+      ln -s ${patch}/bin/patch $out/bin
 
       # Expose gecko env in final output
       ln -s ${releng_pkgs.gecko-env}/bin/gecko-env $out/bin

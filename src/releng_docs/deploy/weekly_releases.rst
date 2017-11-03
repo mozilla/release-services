@@ -30,7 +30,7 @@ Protocal that we follow is:
    properly. Each project should have a list of steps that you can easily
    verify that a deployment was sucessful.
 
-    . todo:: ref to list of production projects.
+    .. todo:: ref to list of production projects.
     .
    Example: :ref:`verify releng-tooltool project <verify-releng-tooltool>`
 
@@ -130,9 +130,23 @@ Protocal that we follow is:
         $ git commit VERSION .taskcluster.yml -m "setup: bumping to v$(cat ./VERSION)"
         $ git push origin master
 
-#. Notify MOC person on duty (in ``#moc`` channel) that release is done.
+    Make sure that commit gets properly build before proceeding. This will
+    ensure that docker base image created in previous steps is working.
 
-#. Reply on announcement email that the release was done.
+#. Announce that deployment to production is done.
+
+   - announce in ``#releng`` channel that a push to production is complete.
+
+     Example message::
+
+         Previously annonced release of mozilla-releng/services (*.mozilla-releng.net) to productions is now complete. If you see anything behaving weird please let me know. Changes -> <link-to-release-notes>.
+
+   - inform MOC person on duty (in ``#moc`` channel) that deployment of
+     ``mozilla-releng/services`` is complete.
+
+     Example message::
+
+         nickname: Previously annonced release of mozilla-releng/services (*.mozilla-releng.net) to productions is now complete. Changes -> <link-to-release-notes>.
 
 
 .. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas

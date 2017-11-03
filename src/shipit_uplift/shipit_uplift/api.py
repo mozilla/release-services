@@ -8,7 +8,6 @@ from __future__ import absolute_import
 import pickle
 from flask import abort, request
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.exc import IntegrityError
 from backend_common.auth import auth
 from backend_common.db import db
 from cli_common import log
@@ -23,7 +22,7 @@ from shipit_uplift.serializers import (
 from shipit_uplift.config import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
 from shipit_uplift import (
     coverage_by_dir_impl, coverage_by_changeset_impl,
-    coverage_summary_by_changeset_impl
+    coverage_summary_by_changeset_impl, coverage
 )
 from rq import Queue
 from shipit_uplift.worker import conn
@@ -332,7 +331,7 @@ def list_patch_status(bugzilla_id):
 @auth.require_scopes(SCOPES_BOT)
 def create_patch_status(bugzilla_id):
     '''
-    Create a patch status for a bug
+    Create or Update a patch status for a bug
     '''
     try:
         bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
@@ -340,13 +339,24 @@ def create_patch_status(bugzilla_id):
         logger.warn('Missing bug {}'.format(bugzilla_id))
         abort(404)
 
-    # Build new patch status
-    ps = PatchStatus(bug_id=bug.id)
+    try:
+        # Retrieve existing patch status
+        ps = PatchStatus.query.filter_by(
+            bug_id=bug.id,
+            revision=request.json['revision'],
+            revision_parent=request.json['revision_parent'],
+            branch=request.json['branch'],
+        ).one()
+    except NoResultFound:
+        # Build new patch status
+        ps = PatchStatus(bug_id=bug.id)
+        ps.revision = request.json['revision']
+        ps.revision_parent = request.json['revision_parent']
+        ps.branch = request.json['branch']
+
+    # Update data
     ps.group = request.json['group']  # link between graft tests
-    ps.revision = request.json['revision']
-    ps.revision_parent = request.json['revision_parent']
     ps.status = request.json['status']
-    ps.branch = request.json['branch']
     ps.message = request.json['message']
 
     # Update bug payload to use new patch status
@@ -367,14 +377,7 @@ def create_patch_status(bugzilla_id):
 
     # Commit changes
     db.session.add(ps)
-
-    try:
-        db.session.commit()
-    except IntegrityError as e:
-        return {
-            'error_title': 'Patch status already exist',
-            'error_message': str(e),
-        }, 409  # Conflict
+    db.session.commit()
 
     return serialize_patch_status(ps)
 
@@ -406,3 +409,7 @@ def coverage_summary_by_changeset(changeset):
         return result, code
     else:
         return coverage_summary_by_changeset_impl.generate(result), 200
+
+
+def coverage_supported_extensions():
+    return coverage.COVERAGE_EXTENSIONS
