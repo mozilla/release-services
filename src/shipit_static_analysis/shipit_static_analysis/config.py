@@ -18,7 +18,9 @@ logger = get_logger(__name__)
 class Settings(object):
     def __init__(self):
         self.config = None
-        self.download()
+        self.download({
+            'cpp_extensions': ['.cpp', '.c', '.h'],
+        })
         assert 'clang_checkers' in self.config
         assert 'target' in self.config
 
@@ -27,18 +29,20 @@ class Settings(object):
             raise AttributeError
         return self.config[key]
 
-    def download(self):
+    def download(self, defaults={}):
         '''
         Configuration is stored on mozilla central
         It has to be downloaded on each run
         '''
+        assert isinstance(defaults, dict)
         assert self.config is None, \
             'Config already set.'
         resp = requests.get(CONFIG_URL)
         assert resp.ok, \
             'Failed to retrieve configuration from mozilla-central #{}'.format(resp.status_code)  # noqa
 
-        self.config = yaml.load(resp.content)
+        self.config = defaults
+        self.config.update(yaml.load(resp.content))
         logger.info('Loaded configuration from mozilla-central')
 
     def is_publishable_check(self, check):
