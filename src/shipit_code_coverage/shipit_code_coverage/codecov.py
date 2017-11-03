@@ -9,6 +9,7 @@ from threading import Condition
 
 from cli_common.log import get_logger
 from cli_common.command import run_check
+from cli_common.taskcluster import get_service
 
 from shipit_code_coverage import taskcluster, uploader
 from shipit_code_coverage.utils import wait_until, retry, ThreadPoolExecutorResult
@@ -19,7 +20,8 @@ logger = get_logger(__name__)
 
 class CodeCov(object):
 
-    def __init__(self, revision, cache_root, coveralls_token, codecov_token, gecko_dev_user, gecko_dev_pwd):
+    def __init__(self, revision, cache_root, coveralls_token, codecov_token,
+                 gecko_dev_user, gecko_dev_pwd, client_id, access_token):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = [
@@ -33,6 +35,8 @@ class CodeCov(object):
 
         self.gecko_dev_user = gecko_dev_user
         self.gecko_dev_pwd = gecko_dev_pwd
+        self.client_id = client_id
+        self.access_token = access_token
 
         if revision is None:
             self.task_id = taskcluster.get_last_task()
@@ -100,6 +104,12 @@ class CodeCov(object):
             retry(lambda: run_check(['git', 'clone', repo_url], cwd=self.cache_root))
         retry(lambda: run_check(['git', 'pull', 'https://github.com/mozilla/gecko-dev', 'master'], cwd=repo_path))
         retry(lambda: run_check(['git', 'push', repo_url, 'master'], cwd=repo_path))
+
+    def post_github_status(self, commit_sha):
+        tcGithub = get_service('github', self.client_id, self.access_token)
+        tcGithub.createStatus('marco-c', 'gecko-dev', commit_sha, {
+            'state': 'success',
+        })
 
     def get_github_commit(self, mercurial_commit):
         url = 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s'
@@ -281,6 +291,9 @@ class CodeCov(object):
 
             commit_sha = self.get_github_commit(self.revision)
             logger.info('GitHub revision', revision=commit_sha)
+
+            if self.gecko_dev_user is not None and self.gecko_dev_pwd is not None:
+                self.post_github_status(commit_sha)
 
             output = self.generate_info(commit_sha)
             logger.info('Report generated successfully')
