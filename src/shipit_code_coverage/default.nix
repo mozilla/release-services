@@ -71,6 +71,9 @@ let
 
           # Used by cache
           ("docker-worker:cache:" + cacheKey)
+
+          # Needed to post build status to GitHub
+          ("github:create-status:marco-c/gecko-dev")
         ];
         cache = {
           "${cacheKey}" = "/cache";
