@@ -27,6 +27,11 @@ MAX_COMMENTS = 30
 MOZREVIEW_COMMENT_SUCCESS = '''
 C/C++ static analysis didn't find any defects in this patch. Hooray!
 '''
+MOZREVIEW_COMMENT_FAILURE_SHORT = '''
+C/C++ static analysis found {defects_total} in this patch{extras_comments}.
+
+You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp`
+'''
 MOZREVIEW_COMMENT_FAILURE = '''
 C/C++ static analysis found {defects_total} in this patch{extras_comments}.
  - {defects_tidy} found by clang-tidy
@@ -55,12 +60,13 @@ class Workflow(object):
     '''
     taskcluster = None
 
-    def __init__(self, cache_root, emails, app_channel, mozreview_api_root, mozreview_enabled=False, mozreview_publish_success=False, clang_format_enabled=False, client_id=None, access_token=None):  # noqa
+    def __init__(self, cache_root, emails, app_channel, mozreview_api_root, mozreview_enabled=False, mozreview_publish_success=False, clang_format_enabled=False, mozreview_short_comment=True, client_id=None, access_token=None):  # noqa
         self.emails = emails
         self.app_channel = app_channel
         self.mozreview_api_root = mozreview_api_root
         self.mozreview_enabled = mozreview_enabled
         self.mozreview_publish_success = mozreview_publish_success
+        self.mozreview_short_comment = mozreview_short_comment
         self.clang_format_enabled = clang_format_enabled
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
@@ -264,13 +270,14 @@ class Workflow(object):
             # Build top comment
             nb = len(issues)
             extras = ' (only the first {} are reported here)'.format(MAX_COMMENTS)
-            comment = MOZREVIEW_COMMENT_FAILURE.format(
+            body = self.mozreview_short_comment and MOZREVIEW_COMMENT_FAILURE_SHORT or MOZREVIEW_COMMENT_FAILURE
+            comment = body.format(
                 extras_comments=nb > MAX_COMMENTS and extras or '',
                 defects_total=pluralize('defect', nb),
                 defects_format=pluralize('defect', stats.get(ClangFormatIssue, 0)),
                 defects_tidy=pluralize('defect', stats.get(ClangTidyIssue, 0)),
             )
-            if diff_url is not None:
+            if not self.mozreview_short_comment and diff_url is not None:
                 comment += MOZREVIEW_COMMENT_DIFF_DOWNLOAD.format(
                     url=diff_url,
                 )
