@@ -66,17 +66,20 @@ type Msg
 init : String -> Maybe Tokens -> ( Model, Cmd Msg )
 init backend_url tokens =
     let
-        model =
+        model_ =
             { code = Nothing
             , tokens = tokens
             , credentials = Nothing
             , -- TODO : switch to tokens ?
               backend_url = backend_url
             }
+
+        ( model, cmd ) =
+            loadTaskclusterCredentials model_
     in
         ( model
         , Cmd.batch
-            [ loadTaskclusterCredentials model
+            [ cmd
             , Task.perform CheckTaskclusterCredentials Time.now
             ]
         )
@@ -130,37 +133,58 @@ update msg model =
                         }
             in
                 -- Exchange code for tokens through backend
-                ( model, Http.send ExchangedTokens request )
+                ( { model | code = Just code }
+                , Http.send ExchangedTokens request
+                )
 
         ExchangedTokens response ->
             -- Received tokens from backend
             -- Store in localstorage
             case response of
                 Ok tokens ->
-                    let
-                        x =
-                            Debug.log "tokens" tokens
-                    in
-                        ( { model | tokens = Just tokens }, auth_set tokens )
+                    ( { model | tokens = Just tokens }
+                    , auth_set tokens
+                    )
 
                 Err error ->
                     -- TODO: display error ?
                     ( model, Cmd.none )
 
         Logged tokens ->
-            let
-                model_ =
-                    { model | tokens = tokens }
-            in
-                ( model_, loadTaskclusterCredentials model_ )
+            loadTaskclusterCredentials { model | tokens = tokens }
 
         Logout ->
             ( model, auth_remove True )
 
         CheckTaskclusterCredentials time ->
+            -- TODO: can we renew tokens? we would need to store model.code
+            --       in localStorage
+            --if isTokenExpired time model.tokens then
+            --   case model.code of
+            --       Just code ->
+            --           let
+            --                payload =
+            --                    JsonEncode.object
+            --                        [ ( "code", JsonEncode.string code.code )
+            --                        , ( "state", JsonEncode.string code.state )
+            --                        ]
+            --                request =
+            --                    Http.request
+            --                        { method = "POST"
+            --                        , headers = []
+            --                        , url = (model.backend_url ++ "/auth0/check")
+            --                        , body = Http.jsonBody payload
+            --                        , expect = Http.expectJson decodeTokens
+            --                        , timeout = Nothing
+            --                        , withCredentials = False
+            --                        }
+            --            in
+            --                ( model, Http.send ExchangedTokens request )
+            --       Nothing ->
+            --           ( model, Cmd.none )
             -- Renew automatically certificate
             if isCertificateExpired time model.credentials then
-                ( model, loadTaskclusterCredentials model )
+                loadTaskclusterCredentials model
             else
                 ( model, Cmd.none )
 
@@ -173,7 +197,7 @@ update msg model =
                     ( { model | credentials = Nothing }, Cmd.none )
 
 
-loadTaskclusterCredentials : Model -> Cmd Msg
+loadTaskclusterCredentials : Model -> ( Model, Cmd Msg )
 loadTaskclusterCredentials model =
     case model.tokens of
         Just tokens ->
@@ -194,10 +218,18 @@ loadTaskclusterCredentials model =
                         , withCredentials = False
                         }
             in
-                Http.send LoadedTaskclusterCredentials request
+                ( model
+                , Http.send LoadedTaskclusterCredentials request
+                )
 
         Nothing ->
-            Cmd.none
+            ( { model
+                | code = Nothing
+                , tokens = Nothing
+                , credentials = Nothing
+              }
+            , Cmd.none
+            )
 
 
 decodeTokens : Decoder Tokens
@@ -232,11 +264,24 @@ decodeDate =
         JsonDecode.string
 
 
+isTokenExpired : Float -> Maybe Tokens -> Bool
+isTokenExpired time tokens =
+    case tokens of
+        Just tokens_ ->
+            if time > ((toFloat tokens_.expires) * 1000) then
+                True
+            else
+                False
+
+        Nothing ->
+            False
+
+
 isCertificateExpired : Float -> Maybe Credentials -> Bool
 isCertificateExpired time credentials =
     case credentials of
         Just credentials_ ->
-            if time > credentials_.expires then
+            if time > (credentials_.expires * 1000) then
                 True
             else
                 False

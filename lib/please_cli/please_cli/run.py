@@ -50,8 +50,27 @@ PROJECTS:
     default=please_cli.config.NIX_BIN_DIR + 'nix-shell',
     help='`nix-shell` command',
     )
+@click.option(
+    '--taskcluster-secrets',
+    default='repo:github.com/mozilla-releng/services:branch:master',
+    help='Taskcluster secrets',
+    )
+@click.option(
+    '--taskcluster-client-id',
+    default=None,
+    help='Taskcluster client id',
+    )
+@click.option(
+    '--taskcluster-access-token',
+    default=None,
+    help='Taskcluster access token',
+    )
 @click.pass_context
-def cmd(ctx, project, quiet, nix_shell):
+def cmd(ctx, project, quiet, nix_shell,
+        taskcluster_secrets,
+        taskcluster_client_id,
+        taskcluster_access_token,
+        ):
 
     project_config = please_cli.config.PROJECTS.get(project, {})
     run_type = project_config.get('run')
@@ -247,6 +266,9 @@ def cmd(ctx, project, quiet, nix_shell):
                                            quiet=quiet,
                                            command=' '.join(command),
                                            nix_shell=nix_shell,
+                                           taskcluster_secrets=taskcluster_secrets,
+                                           taskcluster_client_id=taskcluster_client_id,
+                                           taskcluster_access_token=taskcluster_access_token,
                                            )
     sys.exit(returncode)
 

@@ -299,7 +299,7 @@ PROJECTS = {
         ],
         'run': 'FLASK',
         'run_options': {
-            'port': 8003,
+            'port': 8010,
         },
         'requires': [
             'postgresql',
