@@ -82,7 +82,26 @@ EXAMPLES:
         please_cli.config.NIX_BIN_DIR + 'nix-shell',
         ),
     )
-def cmd(project, zsh, quiet, command, nix_shell):
+@click.option(
+    '--taskcluster-secrets',
+    default='repo:github.com/mozilla-releng/services:branch:master',
+    help='Taskcluster secrets',
+    )
+@click.option(
+    '--taskcluster-client-id',
+    default=None,
+    help='Taskcluster client id',
+    )
+@click.option(
+    '--taskcluster-access-token',
+    default=None,
+    help='Taskcluster access token',
+    )
+def cmd(project, zsh, quiet, command, nix_shell,
+        taskcluster_secrets,
+        taskcluster_client_id,
+        taskcluster_access_token,
+        ):
 
     run = []
     if zsh or command:
@@ -101,6 +120,12 @@ def cmd(project, zsh, quiet, command, nix_shell):
 
     os.environ['SERVICES_ROOT'] = please_cli.config.ROOT_DIR + '/'
     os.environ['SSL_DEV_CA'] = os.path.join(please_cli.config.TMP_DIR, 'certs')
+    os.environ['PYTHONPATH'] = ""
+    os.environ['TASKCLUSTER_SECRET'] = taskcluster_secrets
+    if taskcluster_client_id:
+        os.environ['TASKCLUSTER_CLIENT_ID'] = taskcluster_client_id
+    if taskcluster_access_token:
+        os.environ['TASKCLUSTER_ACCESS_TOKEN'] = taskcluster_access_token
 
     if command:
         handle_stream_line = None
@@ -114,7 +139,7 @@ def cmd(project, zsh, quiet, command, nix_shell):
         )
     else:
         log.debug('Running command using os.system', command=_command)
-        return os.system('PYTHONPATH="" ' + ' '.join(_command)) / 256, '', ''
+        return os.system(' '.join(_command)) / 256, '', ''
 
 
 if __name__ == "__main__":
