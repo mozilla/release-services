@@ -73,7 +73,9 @@ init backend_url tokens =
             , -- TODO : switch to tokens ?
               backend_url = backend_url
             }
-        ( model, cmd ) = loadTaskclusterCredentials model_
+
+        ( model, cmd ) =
+            loadTaskclusterCredentials model_
     in
         ( model
         , Cmd.batch
@@ -178,10 +180,8 @@ update msg model =
             --                        }
             --            in
             --                ( model, Http.send ExchangedTokens request )
-
             --       Nothing ->
             --           ( model, Cmd.none )
-
             -- Renew automatically certificate
             if isCertificateExpired time model.credentials then
                 loadTaskclusterCredentials model
@@ -223,9 +223,10 @@ loadTaskclusterCredentials model =
                 )
 
         Nothing ->
-            ( { model | code = Nothing
-                      , tokens = Nothing
-                      , credentials = Nothing
+            ( { model
+                | code = Nothing
+                , tokens = Nothing
+                , credentials = Nothing
               }
             , Cmd.none
             )
@@ -264,12 +265,13 @@ decodeDate =
 
 
 isTokenExpired : Float -> Maybe Tokens -> Bool
-isTokenExpired time tokens = 
+isTokenExpired time tokens =
     case tokens of
         Just tokens_ ->
-            if time > ((toFloat tokens_.expires) * 1000)
-               then True
-               else False
+            if time > ((toFloat tokens_.expires) * 1000) then
+                True
+            else
+                False
 
         Nothing ->
             False
