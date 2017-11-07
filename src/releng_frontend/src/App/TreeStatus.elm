@@ -5,6 +5,7 @@ import App.TreeStatus.Form
 import App.TreeStatus.Types
 import App.TreeStatus.View
 import App.Types
+import App.UserScopes
 import App.Utils
 import Hawk
 import Html exposing (..)
@@ -12,6 +13,7 @@ import Html.Attributes exposing (..)
 import Http
 import Navigation
 import RemoteData
+import TaskclusterLogin
 import Title
 import UrlParser exposing ((</>))
 import Utils
@@ -378,46 +380,100 @@ update currentRoute msg model =
 
 view :
     App.TreeStatus.Types.Route
+    -> TaskclusterLogin.Model
+    -> App.UserScopes.Model
+    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
+    -> Html App.TreeStatus.Types.Msg
+view route user scopes model =
+    let
+        isLoadingRemoteData remotedata =
+            RemoteData.isLoading remotedata || RemoteData.isNotAsked remotedata
+
+        isLoadingScopes =
+            case user.tokens of
+                Just _ ->
+                    case user.credentials of
+                        Just _ ->
+                            if List.length scopes.scopes == 0 then
+                                True
+                            else
+                                False
+
+                        _ ->
+                            True
+
+                _ ->
+                    False
+
+        isLoading =
+            case route of
+                App.TreeStatus.Types.ShowTreesRoute ->
+                    isLoadingRemoteData model.trees
+                        || isLoadingScopes
+
+                App.TreeStatus.Types.AddTreeRoute ->
+                    False
+
+                App.TreeStatus.Types.UpdateTreesRoute ->
+                    isLoadingRemoteData model.trees
+
+                App.TreeStatus.Types.DeleteTreesRoute ->
+                    False
+
+                App.TreeStatus.Types.ShowTreeRoute name ->
+                    isLoadingRemoteData model.tree
+                        || isLoadingRemoteData model.treeLogs
+                        || RemoteData.isLoading model.treeLogsAll
+                        || isLoadingScopes
+    in
+        div [ class "container" ]
+            [ h1 [] [ text "TreeStatus" ]
+            , p [ class "lead" ]
+                [ text "Current status of Mozilla's version-control repositories." ]
+            , if isLoading then
+                App.Utils.loading
+              else
+                viewLoaded route scopes.scopes model
+            ]
+
+
+viewLoaded :
+    App.TreeStatus.Types.Route
     -> List String
     -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
     -> Html App.TreeStatus.Types.Msg
-view route scopes model =
-    div [ class "container" ]
-        [ h1 [] [ text "TreeStatus" ]
-        , p [ class "lead" ]
-            [ text "Current status of Mozilla's version-control repositories." ]
-        , div []
-            ([]
-                |> App.Utils.appendItem
-                    (App.Utils.viewAlerts model.recentChangesAlerts)
-                |> App.Utils.appendItems
-                    (App.TreeStatus.View.viewRecentChanges scopes model.recentChanges)
-                |> App.Utils.appendItem
-                    (App.Utils.viewAlerts model.treesAlerts)
-                |> App.Utils.appendItem
-                    (App.TreeStatus.View.viewTreesTitle route)
-                |> App.Utils.appendItem
-                    (App.TreeStatus.View.viewButtons route scopes model)
-                |> App.Utils.appendItems
-                    (case route of
-                        App.TreeStatus.Types.ShowTreesRoute ->
-                            App.TreeStatus.View.viewTrees scopes model
+viewLoaded route scopes model =
+    div []
+        ([]
+            |> App.Utils.appendItem
+                (App.Utils.viewAlerts model.recentChangesAlerts)
+            |> App.Utils.appendItems
+                (App.TreeStatus.View.viewRecentChanges scopes model.recentChanges)
+            |> App.Utils.appendItem
+                (App.Utils.viewAlerts model.treesAlerts)
+            |> App.Utils.appendItem
+                (App.TreeStatus.View.viewTreesTitle route)
+            |> App.Utils.appendItem
+                (App.TreeStatus.View.viewButtons route scopes model)
+            |> App.Utils.appendItems
+                (case route of
+                    App.TreeStatus.Types.ShowTreesRoute ->
+                        App.TreeStatus.View.viewTrees scopes model.trees model.treesSelected
 
-                        App.TreeStatus.Types.AddTreeRoute ->
-                            [ App.TreeStatus.Form.viewAddTree model.formAddTree
-                                |> Html.map App.TreeStatus.Types.FormAddTreeMsg
-                            ]
+                    App.TreeStatus.Types.AddTreeRoute ->
+                        [ App.TreeStatus.Form.viewAddTree model.formAddTree
+                            |> Html.map App.TreeStatus.Types.FormAddTreeMsg
+                        ]
 
-                        App.TreeStatus.Types.UpdateTreesRoute ->
-                            [ App.TreeStatus.Form.viewUpdateTree model.treesSelected model.trees model.formUpdateTree
-                                |> Html.map App.TreeStatus.Types.FormUpdateTreesMsg
-                            ]
+                    App.TreeStatus.Types.UpdateTreesRoute ->
+                        [ App.TreeStatus.Form.viewUpdateTree model.treesSelected model.trees model.formUpdateTree
+                            |> Html.map App.TreeStatus.Types.FormUpdateTreesMsg
+                        ]
 
-                        App.TreeStatus.Types.DeleteTreesRoute ->
-                            App.TreeStatus.View.viewConfirmDelete model
+                    App.TreeStatus.Types.DeleteTreesRoute ->
+                        App.TreeStatus.View.viewConfirmDelete model.deleteError model.deleteTreesConfirm model.treesSelected
 
-                        App.TreeStatus.Types.ShowTreeRoute name ->
-                            App.TreeStatus.View.viewTree scopes model name
-                    )
-            )
-        ]
+                    App.TreeStatus.Types.ShowTreeRoute name ->
+                        App.TreeStatus.View.viewTree scopes model.tree model.treeLogs model.treeLogsAll name
+                )
+        )

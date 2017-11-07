@@ -151,9 +151,19 @@ update msg model =
             let
                 ( newUser, userCmd ) =
                     TaskclusterLogin.update userMsg model.user
+
+                fetchScopes =
+                    case userMsg of
+                        TaskclusterLogin.LoadedTaskclusterCredentials response ->
+                            [ Utils.performMsg (App.UserScopesMsg App.UserScopes.FetchScopes) ]
+
+                        _ ->
+                            []
             in
                 ( { model | user = newUser }
-                , Cmd.map App.TaskclusterLoginMsg userCmd
+                , [ Cmd.map App.TaskclusterLoginMsg userCmd ]
+                    |> List.append fetchScopes
+                    |> Cmd.batch
                 )
 
         --
@@ -305,7 +315,7 @@ viewRoute model =
         App.NotificationRoute route ->
             App.Notifications.view
                 route
-                model.userScopes.scopes
+                model.userScopes
                 model.notifications
                 |> Html.map App.NotificationMsg
 
@@ -329,7 +339,8 @@ viewRoute model =
         App.TreeStatusRoute route ->
             App.TreeStatus.view
                 route
-                model.userScopes.scopes
+                model.user
+                model.userScopes
                 model.treestatus
                 |> Html.map App.TreeStatusMsg
 

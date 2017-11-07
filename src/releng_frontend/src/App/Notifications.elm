@@ -7,6 +7,7 @@ import App.Notifications.Api
 import App.Notifications.Form
 import App.Notifications.Types
 import App.Notifications.View
+import App.UserScopes
 import App.Types
 import App.Utils
 import Form
@@ -970,7 +971,7 @@ update currentRoute msg model =
 
 view :
     App.Notifications.Types.Route
-    -> List String
+    -> App.UserScopes.Model
     -> App.Notifications.Types.Model
     -> Html App.Notifications.Types.Msg
 view route scopes model =
