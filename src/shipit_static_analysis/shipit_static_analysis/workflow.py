@@ -257,6 +257,9 @@ class Workflow(object):
         # Filter issues to keep publishable checks
         # and non third party
         issues = list(filter(lambda i: i.is_publishable(), issues))
+        if self.mozreview_short_comment:
+            # Only consider clang-tidy issue when using short comment
+            issues = [i for i in issues if isinstance(i, ClangTidyIssue)]
         if issues:
             # Calc stats for issues, grouped by class
             stats = {
