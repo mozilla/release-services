@@ -28,7 +28,7 @@ MOZREVIEW_COMMENT_SUCCESS = '''
 C/C++ static analysis didn't find any defects in this patch. Hooray!
 '''
 MOZREVIEW_COMMENT_FAILURE_SHORT = '''
-C/C++ static analysis found {defects_total} in this patch{extras_comments}.
+C/C++ static analysis found {defects_tidy} in this patch{extras_comments}.
 
 You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp`
 '''
