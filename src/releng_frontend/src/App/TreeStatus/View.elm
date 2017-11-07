@@ -262,14 +262,15 @@ viewTreesItem scopes treesSelected tree =
 
 viewTrees :
     List String
-    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
+    -> RemoteData.WebData App.TreeStatus.Types.Trees
+    -> List String
     -> List (Html App.TreeStatus.Types.Msg)
-viewTrees scopes model =
-    case model.trees of
+viewTrees scopes trees treesSelected =
+    case trees of
         RemoteData.Success trees ->
             trees
                 |> List.sortBy .name
-                |> List.map (viewTreesItem scopes model.treesSelected)
+                |> List.map (viewTreesItem scopes treesSelected)
                 |> div
                     [ id "treestatus-trees"
                     , class "list-group"
@@ -414,13 +415,11 @@ viewButtons route scopes model =
 
 
 viewConfirmDelete :
-    { a
-        | deleteError : Maybe error
-        , deleteTreesConfirm : Bool
-        , treesSelected : List String
-    }
+    Maybe String
+    -> Bool
+    -> List String
     -> List (Html App.TreeStatus.Types.Msg)
-viewConfirmDelete model =
+viewConfirmDelete deleteError deleteTreesConfirm treesSelected =
     [ div
         [ id "treestatus-form" ]
         [ div
@@ -429,14 +428,14 @@ viewConfirmDelete model =
                 |> App.Utils.appendItem
                     (text "You are about to delete the following trees:")
                 |> App.Utils.appendItem
-                    (model.treesSelected
+                    (treesSelected
                         |> List.map (\x -> li [] [ text x ])
                         |> ul []
                     )
             )
         , hr [] []
         , div
-            [ class ("form-group " ++ App.Form.errorClass model.deleteError) ]
+            [ class ("form-group " ++ App.Form.errorClass deleteError) ]
             ([]
                 |> App.Utils.appendItem
                     (label
@@ -444,7 +443,7 @@ viewConfirmDelete model =
                         [ input
                             [ type_ "checkbox"
                             , class "custom-control-input"
-                            , checked model.deleteTreesConfirm
+                            , checked deleteTreesConfirm
                             , onCheck (\x -> App.TreeStatus.Types.DeleteTreesConfirmToggle)
                             ]
                             []
@@ -633,14 +632,16 @@ viewTreeLogs name treeLogs_ treeLogsAll_ =
 
 viewTree :
     List String
-    -> App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
+    -> RemoteData.WebData App.TreeStatus.Types.Tree
+    -> RemoteData.WebData App.TreeStatus.Types.TreeLogs
+    -> RemoteData.WebData App.TreeStatus.Types.TreeLogs
     -> String
     -> List (Html App.TreeStatus.Types.Msg)
-viewTree scopes model name =
+viewTree scopes tree treeLogs treeLogsAll name =
     [ div
         [ id "treestatus-form" ]
-        [ viewTreeDetails model.tree
+        [ viewTreeDetails tree
         , hr [] []
-        , viewTreeLogs name model.treeLogs model.treeLogsAll
+        , viewTreeLogs name treeLogs treeLogsAll
         ]
     ]

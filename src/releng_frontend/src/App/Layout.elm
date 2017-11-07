@@ -1,6 +1,7 @@
 module App.Layout exposing (..)
 
 import App
+import App.Utils
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import String
@@ -130,6 +131,22 @@ view viewRoute model =
                 |> toString
                 |> String.toLower
                 |> String.dropRight (String.length "Route")
+
+        isLoading =
+            case model.user.tokens of
+                Just _ ->
+                    case model.user.credentials of
+                        Just _ ->
+                            if List.length model.userScopes.scopes == 0 then
+                                True
+                            else
+                                False
+
+                        _ ->
+                            True
+
+                _ ->
+                    False
     in
         div [ id ("page-" ++ routeName) ]
             [ nav
@@ -138,6 +155,12 @@ view viewRoute model =
                 ]
                 [ div [ class "container" ] (viewNavBar model) ]
             , div [ id "content" ]
-                [ div [ class "container" ] [ viewRoute model ] ]
+                [ div [ class "container" ]
+                    [ if isLoading then
+                        App.Utils.loading
+                      else
+                        viewRoute model
+                    ]
+                ]
             , footer [ class "container" ] (viewFooter model)
             ]
