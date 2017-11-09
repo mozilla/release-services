@@ -16,7 +16,7 @@ def wait_until(operation, timeout=30, interval=60):
     return None
 
 
-def retry(operation, retries=3):
+def retry(operation, retries=5, wait_between_retries=120):
     successful = False
     while not successful and retries > 0:
         try:
@@ -24,6 +24,7 @@ def retry(operation, retries=3):
             successful = True
         except:
             retries -= 1
+            time.sleep(wait_between_retries)
     return successful
 
 

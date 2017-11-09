@@ -41,7 +41,7 @@ def test_retry():
             i['tried'] = True
             raise Exception('Please try again.')
 
-    assert utils.retry(try_twice)
+    assert utils.retry(try_twice, wait_between_retries=0)
 
 
 def test_threadpoolexecutorresult():
