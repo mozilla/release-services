@@ -44,10 +44,16 @@ def generate(changeset):
         if coverage is None:
             return None
 
+        # Use hg annotate to report lines in their correct positions and to avoid
+        # reporting lines that have been modified by a successive patch in the same push.
+        r = requests.get('https://hg.mozilla.org/mozilla-central/json-annotate/%s/%s' % (build_changeset, new_path))
+        annotate = r.json()['annotate']
+
         changes = []
-        for old_line, new_line, _ in diff.changes:
-            # Only consider added lines.
-            if old_line is not None or new_line is None:
+        for new_line, data in enumerate(annotate):
+            # Skip lines that were not added by this changeset or were overwritten by
+            # another changeset.
+            if data['node'] != changeset:
                 continue
 
             if new_line not in coverage or coverage[new_line] is None:
