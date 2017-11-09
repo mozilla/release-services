@@ -231,8 +231,8 @@ class CodeCov(object):
             f.write('ac_add_options --enable-debug\n')
             f.write('ac_add_options --enable-artifact-builds\n')
 
-        run_check(['gecko-env', './mach', 'build'], cwd=self.repo_dir)
-        run_check(['gecko-env', './mach', 'build-backend', '-b', 'ChromeMap'], cwd=self.repo_dir)
+        retry(lambda: run_check(['gecko-env', './mach', 'build'], cwd=self.repo_dir))
+        retry(lambda: run_check(['gecko-env', './mach', 'build-backend', '-b', 'ChromeMap'], cwd=self.repo_dir))
 
         logger.info('Build successful')
 
