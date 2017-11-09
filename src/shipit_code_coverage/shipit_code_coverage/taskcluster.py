@@ -18,7 +18,13 @@ def get_last_task():
 def get_task(branch, revision):
     r = requests.get(index_base + 'task/gecko.v2.%s.revision.%s.firefox.linux64-ccov-opt' % (branch, revision))
     task = r.json()
-    return task['taskId']
+    if r.status_code == requests.codes.ok:
+        return task['taskId']
+    else:
+        if task['code'] == 'ResourceNotFound':
+            raise Exception('Code coverage build failed and was not indexed.')
+        else:
+            raise Exception('Unknown TaskCluster index error.')
 
 
 def get_task_details(task_id):
