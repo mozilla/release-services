@@ -50,11 +50,13 @@ def generate(changeset):
         annotate = r.json()['annotate']
 
         changes = []
-        for new_line, data in enumerate(annotate):
+        for data in annotate:
             # Skip lines that were not added by this changeset or were overwritten by
             # another changeset.
             if data['node'] != changeset:
                 continue
+
+            new_line = data['lineno']
 
             if new_line not in coverage or coverage[new_line] is None:
                 # We have no coverage information for this line (e.g. a definition, like
@@ -67,7 +69,7 @@ def generate(changeset):
 
             changes.append({
                 'coverage': covered,
-                'line': new_line,
+                'line': data['targetline'],
             })
 
         return {
