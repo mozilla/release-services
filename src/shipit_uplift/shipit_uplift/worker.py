@@ -7,7 +7,7 @@ from __future__ import absolute_import
 
 import os
 import redis
-from rq import Worker, Queue, Connection
+from rq import SimpleWorker, Queue, Connection
 
 import cli_common.taskcluster
 import shipit_uplift.config
@@ -33,7 +33,7 @@ def exc_handler(job, *exc_info):
 
 if __name__ == '__main__':
     with Connection(conn):
-        worker = Worker(map(Queue, ['default']), exception_handlers=[])
+        worker = SimpleWorker(map(Queue, ['default']), exception_handlers=[])
         worker.push_exc_handler(exc_handler)
         worker.push_exc_handler(worker.move_to_failed_queue)
         worker.work()
