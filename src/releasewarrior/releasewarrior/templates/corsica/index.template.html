@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Releases In-flight</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=2, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <link href="/assets/open-iconic/font/css/open-iconic-bootstrap.css" rel="stylesheet">
+  </head>
+  <body class="bg-dark bg-gradient-dark text-white p-0">
+    <!-- generated from jinja -->
+    <div class="container border border-secondary rounded mt-5 p-5">
+      <div>
+        <h1>Desktop Releases In-flight</h1>
+      </div>
+      <!-- release -->
+      <div class="pt-3 pb-3">
+        {% if releases.get("firefox", {}).get("release") %}
+          {% macro release_status() %}
+          {% include "corsica/firefox_release_progress.template.html" %}
+          {% endmacro %}
+          {{ release_status()|indent(4) }}
+        {% else %}
+        <h2>Desktop Firefox Quantum <small class="text-muted"> no release in-flight</small></h2>
+        <div class="progress" style="height: 40px;"></div>
+        {% endif %}
+      </div>
+      <!-- -->
+
+      <!-- beta -->
+      <div class="pt-3 pb-3">
+        {% if releases.get("firefox", {}).get("beta") %}
+        {% macro beta_status() %}
+        {% include "corsica/firefox_beta_progress.template.html" %}
+        {% endmacro %}
+        {{ beta_status()|indent(4) }}
+        {% else %}
+          <h2>Desktop Firefox Beta <small class="text-muted">no release in-flight</small></h2>
+          <div class="progress" style="height: 40px;"></div>
+        {% endif %}
+      </div>
+      <!-- -->
+
+      <!-- devedition -->
+      <div class="pt-3 pb-3">
+        {% if releases.get("devedition", {}).get("devedition") %}
+        {% macro devedition_status() %}
+        {% include "corsica/firefox_devedition_progress.template.html" %}
+        {% endmacro %}
+        {{ devedition_status()|indent(4) }}
+        {% else %}
+          <h2>Desktop Firefox Devedition <small class="text-muted">no release in-flight</small></h2>
+          <div class="progress" style="height: 40px;"></div>
+        {% endif %}
+      </div>
+    </div>
+
+  <div class="container border border-secondary rounded mt-5 mb-5 p-5">
+    <div>
+      <h1>Mobile Releases In-flight</h1>
+    </div>
+    <!-- release -->
+    <div class="pt-3 pb-3">
+      {% if releases.get("fennec", {}).get("release") %}
+      {% macro release_status() %}
+      {% include "corsica/fennec_release_progress.template.html" %}
+      {% endmacro %}
+      {{ release_status()|indent(4) }}
+      {% else %}
+      <h2>Desktop Firefox Quantum <small class="text-muted"> no release in-flight</small></h2>
+      <div class="progress" style="height: 40px;"></div>
+      {% endif %}
+    </div>
+    <!-- -->
+
+    <!-- beta -->
+    <div class="pt-3 pb-3">
+      {% if releases.get("fennec", {}).get("beta") %}
+      {% macro beta_status() %}
+      {% include "corsica/fennec_beta_progress.template.html" %}
+      {% endmacro %}
+      {{ beta_status()|indent(4) }}
+      {% else %}
+      <h2>Desktop Firefox Beta <small class="text-muted">no release in-flight</small></h2>
+      <div class="progress" style="height: 40px;"></div>
+      {% endif %}
+    </div>
+    <!-- -->
+  </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+  </body>
+</html>

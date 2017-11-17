@@ -1,0 +1,57 @@
+### data repo
+releasewarrior_data_repo: ...
+upstream_repo_url_pattern: ((?:https|ssh)://|git@)github\.com[:/]mozilla-releng/releasewarrior-data(\.git)?
+simplified_repo_url: github.com/mozilla-releng/releasewarrior-data # Used only to simplify what's logged out###
+###
+
+###
+# releasewarrior-data paths
+releases:
+  upcoming:
+    firefox: upcoming/firefox
+    devedition: upcoming/devedition
+    fennec: upcoming/fennec
+    thunderbird: upcoming/thunderbird
+  inflight:
+    firefox: inflight/firefox
+    devedition: inflight/devedition
+    fennec: inflight/fennec
+    thunderbird: inflight/thunderbird
+  archive:
+    firefox: archive/firefox
+    devedition: archive/devedition
+    fennec: archive/fennec
+    thunderbird: archive/thunderbird
+
+postmortems: postmortems
+corsica: index.html
+###
+
+###
+# template paths
+templates:
+  # input
+  data:
+    firefox:
+      beta: firefox/beta.json.tmpl
+      release-rc: firefox/release-rc.json.tmpl
+      release: firefox/release.json.tmpl
+      esr: firefox/esr.json.tmpl
+    devedition:
+      devedition: firefox/devedition.json.tmpl
+    fennec:
+      beta: fennec/beta.json.tmpl
+      release: fennec/release.json.tmpl
+    thunderbird:
+      beta: thunderbird/beta.json.tmpl
+      release: thunderbird/release.json.tmpl
+  # output
+  wiki:
+    generic: markdown/generic.md.tmpl
+  corsica:
+    index: corsica/index.template.html
+
+
+### location of release cmd output artifacts
+releasewarrior_artifacts:
+  logs: logs
