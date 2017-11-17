@@ -61,7 +61,7 @@ PROJECTS = {
             'data_dir': os.path.join(TMP_DIR, 'postgresql'),
         },
     },
-    'releasewarriror': {
+    'releasewarrior': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
