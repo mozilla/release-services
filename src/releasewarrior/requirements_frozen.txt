@@ -1,0 +1,15 @@
+appdirs==1.4.3
+arrow==0.10.0
+click==6.7
+gitdb2==2.0.3
+GitPython==2.1.7
+Jinja2==2.10
+MarkupSafe==1.0
+packaging==16.8
+py==1.5.2
+pyparsing==2.2.0
+pytest==3.2.5
+python-dateutil==2.6.1
+PyYAML==3.12
+six==1.11.0
+smmap2==2.0.3
