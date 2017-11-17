@@ -1,6 +1,8 @@
 from setuptools import setup, find_packages
 
-version = open("version.txt").readline()
+
+with open('VERSION') as f:
+    version = f.read().strip()
 
 
 def read_requirements(file_):
@@ -22,8 +24,7 @@ setup(
     version=version,
     packages=find_packages(),
     include_package_data=True,
-    tests_require=read_requirements('requirements-dev.txt'),
-    install_requires=read_requirements('requirements.txt'),
+    install_requires=requirements,
     entry_points="""
         [console_scripts]
         release=releasewarrior.cli:cli
