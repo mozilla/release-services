@@ -24,7 +24,8 @@ setup(
     version=version,
     packages=find_packages(),
     include_package_data=True,
-    install_requires=requirements,
+    tests_require=read_requirements('requirements-dev.txt'),
+    install_requires=read_requirements('requirements.txt'),
     entry_points="""
         [console_scripts]
         release=releasewarrior.cli:cli
