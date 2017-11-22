@@ -39,15 +39,21 @@ class CodeCov(object):
         self.access_token = access_token
 
         if revision is None:
-            self.task_id = taskcluster.get_last_task()
+            self.task_ids = [
+                taskcluster.get_last_task('linux'),
+                taskcluster.get_last_task('win'),
+            ]
 
-            task_data = taskcluster.get_task_details(self.task_id)
+            task_data = taskcluster.get_task_details(self.task_ids[0])
             self.revision = task_data['payload']['env']['GECKO_HEAD_REV']
             self.coveralls_token = 'NONE'
             self.codecov_token = 'NONE'
             self.from_pulse = False
         else:
-            self.task_id = taskcluster.get_task('mozilla-central', revision)
+            self.task_ids = [
+                taskcluster.get_task('mozilla-central', revision, 'linux'),
+                taskcluster.get_task('mozilla-central', revision, 'win'),
+            ]
             self.revision = revision
             self.coveralls_token = coveralls_token
             self.codecov_token = codecov_token
@@ -63,20 +69,23 @@ class CodeCov(object):
 
         logger.info('Mercurial revision', revision=self.revision)
 
-    def download_coverage_artifacts(self, build_task_id):
+    def download_coverage_artifacts(self, build_task_ids):
         try:
             os.mkdir('ccov-artifacts')
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise e
 
-        task_data = taskcluster.get_task_details(build_task_id)
-
         def rewriting_task(path):
             return lambda: self.rewrite_jsvm_lcov(path)
 
-        tasks = taskcluster.get_tasks_in_group(task_data['taskGroupId'])
-        test_tasks = [t for t in tasks if taskcluster.is_coverage_task(t)]
+        test_tasks = []
+
+        for build_task_id in build_task_ids:
+            task_data = taskcluster.get_task_details(build_task_id)
+            tasks = taskcluster.get_tasks_in_group(task_data['taskGroupId'])
+            test_tasks += [t for t in tasks if taskcluster.is_coverage_task(t)]
+
         with ThreadPoolExecutorResult() as executor:
             for test_task in test_tasks:
                 suite_name = taskcluster.get_suite_name(test_task)
@@ -279,7 +288,7 @@ class CodeCov(object):
     def go(self):
         with ThreadPoolExecutorResult(max_workers=2) as executor:
             # Thread 1 - Download coverage artifacts.
-            executor.submit(lambda: self.download_coverage_artifacts(self.task_id))
+            executor.submit(lambda: self.download_coverage_artifacts(self.task_ids))
 
             # Thread 2 - Clone and build mozilla-central
             clone_future = executor.submit(lambda: self.clone_mozilla_central(self.revision))
