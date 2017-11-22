@@ -7,7 +7,7 @@ from cli_common.log import get_logger
 logger = get_logger(__name__)
 
 # Status can be: merged, failed, skipped
-MergeResult = namedtuple('MergeResult', 'status, message, parent')
+MergeResult = namedtuple('MergeResult', 'revision, status, message, parent')
 
 
 class MergeTest(object):
@@ -15,14 +15,24 @@ class MergeTest(object):
     A merge test for a set of patches
     against a branch
     '''
-    def __init__(self, bugzilla_id, branch, patches):
+    def __init__(self, bugzilla_id, branch, status, patches, reviewer=None):
         self.bugzilla_id = bugzilla_id
         self.branch = branch
+        self.status = status
+        self.branch_rebased = None
         self.patches = patches
         self.parent = None  # Current parent revision
         self.revisions = None  # Listed revisions from patches
         self.results = OrderedDict()  # all the graft results
         self.group = 1  # Group used for every result
+
+        # Parse email from reviewer name (from libmozdata)
+        name = reviewer and reviewer.get('name')
+        if name:
+            self.reviewer_nick = '@' in name and name[:name.index('@')] or name
+        else:
+            self.reviewer_nick = None
+        logger.info('New merge test', bz_id=self.bugzilla_id, branch=self.branch, reviewer=self.reviewer_nick)
 
     def is_needed(self):
         '''
@@ -32,6 +42,10 @@ class MergeTest(object):
         '''
         assert self.parent is not None
         assert self.revisions is not None
+
+        # Always run test for approved merge tests
+        if self.status == '+':
+            return True
 
         # Load last patch status for first patch
         # Only use the ones for this branch + revision
@@ -105,6 +119,14 @@ class MergeTest(object):
             logger.info('Skipping merge test : same parent', revisions=self.revisions, branch=self.branch, parent=self.parent)  # noqa
             return False
 
+        # Create a new branch to work on
+        if self.status == '+':
+            self.branch_rebased = 'uplift-{}-{}'.format(
+                self.branch.decode('utf-8'),
+                self.bugzilla_id
+            ).encode('utf-8')
+            repository.create_branch(self.branch_rebased)
+
         parent = self.parent  # Start from repo parent
         for revision, num in self.revisions:
             logger.info('Attempting new graft', revision=revision, num=num, group=self.group)  # noqa
@@ -112,22 +134,27 @@ class MergeTest(object):
             # Try to merge revision in repository
             # Only when previous merge test passed
             previous = self.results.get(parent)
-            if previous is None or previous.status == 'merged':
+            if previous is None or previous.status != 'failed':
                 merged, message = repository.is_mergeable(revision)
                 status = merged and 'merged' or 'failed'
-                result = MergeResult(status, message, parent)
+                result = MergeResult(revision, status, message, parent)
+
             else:
                 # Create default invalid result
                 # And do not try to run the merge test
                 # as the previous one failed
                 msg = u'Graft skipped: parent merge failed'
-                result = MergeResult('skipped', msg, parent)
+                result = MergeResult(revision, 'skipped', msg, parent)
+
+            # Rewrite commit message to append RelMan reviewer nickname
+            if result.status != 'failed' and self.status == '+' and self.reviewer_nick:
+                repository.amend(' a={}'.format(self.reviewer_nick))
 
             # Save result in backend
             self.save_result(revision, result)
 
             # Next parent is current revision (commit chain)
-            parent = revision
+            parent = revision.decode('utf-8')
 
         return True
 
@@ -136,6 +163,14 @@ class MergeTest(object):
         Store a new patch status on backend
         '''
         assert isinstance(result, MergeResult)
+        assert isinstance(result.parent, str)
+
+        # Store result
+        self.results[revision] = result
+
+        # Skip for approved patches
+        if self.status == '+':
+            return
 
         # Publish as a new patch status
         data = {
@@ -151,6 +186,3 @@ class MergeTest(object):
             logger.info('Created new patch status', **data)
         except Exception as err:
             logger.error('Failed to create patch status', err=err)
-
-        # Store result
-        self.results[revision] = result

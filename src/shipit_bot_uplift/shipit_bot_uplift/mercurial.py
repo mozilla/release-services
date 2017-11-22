@@ -6,7 +6,7 @@ from cli_common.log import get_logger
 
 
 logger = get_logger(__name__)
-REGEX_TIP = re.compile(r'(\w+)\s*(tip)? (\w+)')
+REGEX_IDENTIFY = re.compile(r'([abcdef0-9]+) \(?([\w\-_]+)\)? (?:tip )?(\w+)')
 
 
 class Repository(object):
@@ -17,6 +17,8 @@ class Repository(object):
     def __init__(self, url, directory):
         self.url = url
         self.directory = directory
+        self.remote_uri = None  # used to publish uplifts
+        self.remote_ssh_config = {}
         self.client = None
         self.branch = None
         self.parent = None
@@ -62,9 +64,12 @@ class Repository(object):
             return b'u\n'
         self.client.setcbprompt(_cb)
 
+        # Clean update to branch
+        self.client.update(branch, clean=True)
+
         # Check branch has been successfull checkout
         identify = self.client.identify().decode('utf-8')
-        self.parent, _, current_branch = REGEX_TIP.search(identify).groups()
+        self.parent, _, current_branch = REGEX_IDENTIFY.search(identify).groups()
         assert current_branch == branch.decode('utf-8'), \
             'Current branch {} is not expected branch {}'.format(current_branch, branch)  # noqa
         logger.info('Checkout success', branch=branch, tip=self.parent)
@@ -108,12 +113,16 @@ class Repository(object):
             self.client.rawcommand(cmd)
             logger.info('Merge success', revision=revision)
         except hglib.error.CommandError as e:
-            logger.info('Auto merge failed', revision=revision, error=e)  # noqa
-            message = '{} {}'.format(
+            message = ' '.join([
                 e.out.decode('utf-8'),
                 e.err.decode('utf-8')
-            )
+            ])
+            if 'already grafted to' in message:
+                logger.info('Skipped merge', revision=revision, error=message)  # noqa
+                return True, message
+
             message = message.replace('\r', '\n')
+            logger.info('Auto merge failed', revision=revision, error=message)  # noqa
             return False, message
 
         # If `hg graft` exits code 0, there are no merge conflicts.
@@ -124,10 +133,81 @@ class Repository(object):
         Cleanup the client state, used after a graft
         '''
         try:
-            self.client.update(rev=self.parent, clean=True)
+            self.client.update(rev=self.branch, clean=True)
+            self.client.branch(self.branch)
         except hglib.error.CommandError as e:
             logger.warning('Cleanup failed', error=e)
 
         # Check parent revision got reverted
-        assert self.parent in self.client.identify().decode('utf-8'), \
+        ids = self.client.identify().decode('utf-8')
+        assert self.parent in ids or self.branch.decode('utf-8') in ids, \
             'Failed to revert to parent revision'
+
+    def create_branch(self, branch_name):
+        '''
+        Always create a new branch
+        Reset existing branch with same name to main branch tip
+        '''
+        assert isinstance(branch_name, bytes)
+
+        branches = [
+            branch
+            for branch, _, _ in self.client.branches()
+        ]
+        if branch_name in branches:
+            # Cleanup existing branch
+            self.client.rawcommand([b'strip', self.branch])
+            self.client.update(branch_name, clean=True)
+        else:
+            # New branch, created on next commit/graft
+            self.client.branch(branch_name)
+        logger.info('Switched to branch', branch=branch_name)
+
+    def push(self, branch_name):
+        '''
+        Push a single branch to configured remote server
+        through SSH
+        Outputs push status
+        '''
+        assert isinstance(branch_name, bytes)
+        assert self.remote_uri is not None
+        assert isinstance(self.remote_uri, bytes)
+        assert isinstance(self.remote_ssh_config, dict)
+
+        # Build ssh config command line
+        ssh_conf = 'ssh {}'.format(' '.join([
+            '-o {}="{}"'.format(k, v)
+            for k, v in self.remote_ssh_config.items()
+        ])).encode('utf-8')
+
+        try:
+            return self.client.push(
+                dest=self.remote_uri,
+                rev=[branch_name, ],
+                newbranch=True,
+                ssh=ssh_conf,
+                force=True,
+            )
+        except Exception as e:
+            logger.error('Mercurial push failed', dest=self.remote_uri, branch=branch_name, error=e)  # noqa
+            return False
+
+    def amend(self, append_message):
+        '''
+        Amend the commit message from current revision
+        by appending to current commit message
+        '''
+        assert isinstance(append_message, str)
+
+        # Get tip revision
+        tip = self.client.tip()
+
+        # Modify it
+        new_message = tip.desc + append_message.encode('utf-8')
+
+        # Mark commit as draft
+        self.client.phase(force=True, draft=True)
+
+        # Amend the message
+        logger.info('Amending last commit', message=new_message)
+        return self.client.commit(message=new_message, amend=True)
