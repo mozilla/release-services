@@ -200,10 +200,9 @@ class ClangFormatIssue(ClangIssue):
         '''
         return self.in_patch
 
-    @property
-    def mozreview_body(self):
+    def as_text(self):
         '''
-        Build the text body published on MozReview
+        Build the text body published on reporters
         According to diff mode
         '''
         out = 'Warning: Incorrect coding style [clang-format]\n'

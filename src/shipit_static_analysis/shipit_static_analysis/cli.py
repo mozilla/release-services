@@ -6,7 +6,7 @@
 from __future__ import absolute_import
 
 from shipit_static_analysis.workflow import Workflow
-from shipit_static_analysis.batchreview import build_api_root
+from shipit_static_analysis.config import settings
 from shipit_static_analysis.lock import LockDir
 from shipit_static_analysis import config
 from cli_common.click import taskcluster_options
@@ -40,16 +40,11 @@ def main(commits,
                           config.PROJECT_NAME,
                           required=(
                               'APP_CHANNEL',
-                              'STATIC_ANALYSIS_NOTIFICATIONS',
-                              'MOZREVIEW_URL',
-                              'MOZREVIEW_USER',
-                              'MOZREVIEW_API_KEY',
+                              'REPORTERS',
                           ),
                           existing={
                               'APP_CHANNEL': 'development',
-                              'MOZREVIEW_ENABLED': False,
-                              'MOZREVIEW_PUBLISH_SUCCESS': False,
-                              'MOZREVIEW_SHORT_COMMENT': True,
+                              'REPORTERS': [],
                               'CLANG_FORMAT_ENABLED': True,
                           },
                           taskcluster_client_id=taskcluster_client_id,
@@ -63,21 +58,12 @@ def main(commits,
                 MOZDEF=secrets.get('MOZDEF'),
                 )
 
-    mozreview = build_api_root(
-        secrets['MOZREVIEW_URL'],
-        secrets['MOZREVIEW_USER'],
-        secrets['MOZREVIEW_API_KEY'],
-    )
+    settings.setup(secrets['APP_CHANNEL'])
 
     with LockDir(cache_root, 'shipit-sa-') as work_dir:
         w = Workflow(work_dir,
-                     secrets['STATIC_ANALYSIS_NOTIFICATIONS'],
-                     secrets['APP_CHANNEL'],
-                     mozreview,
-                     secrets['MOZREVIEW_ENABLED'],
-                     secrets['MOZREVIEW_PUBLISH_SUCCESS'],
+                     secrets['REPORTERS'],
                      secrets['CLANG_FORMAT_ENABLED'],
-                     secrets['MOZREVIEW_SHORT_COMMENT'],
                      taskcluster_client_id,
                      taskcluster_access_token,
                      )

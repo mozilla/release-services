@@ -278,10 +278,9 @@ class ClangTidyIssue(ClangIssue):
         '''
         return settings.is_publishable_check(self.check)
 
-    @property
-    def mozreview_body(self):
+    def as_text(self):
         '''
-        Build the text body published on MozReview
+        Build the text body published on reporters
         '''
         body = '{}: {} [clang-tidy: {}]'.format(
             self.type.capitalize(),
