@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from shipit_static_analysis.clang.tidy import ClangTidyIssue
-from shipit_static_analysis.clang.format import ClangFormat, ClangFormatIssue
 
 BAD_CPP_SRC = '''#include <demo>
 int \tmain(void){
@@ -29,6 +27,7 @@ def test_expanded_macros():
     '''
     Test expanded macros are detected by clang issue
     '''
+    from shipit_static_analysis.clang.tidy import ClangTidyIssue
     parts = ('src/test.cpp', '42', '51', 'error', 'dummy message', 'dummy-check')
     issue = ClangTidyIssue(parts, '/workdir')
     assert issue.is_problem()
@@ -56,6 +55,7 @@ def test_clang_format(tmpdir):
     '''
     Test clang-format runner
     '''
+    from shipit_static_analysis.clang.format import ClangFormat, ClangFormatIssue
 
     # Write badly formatted c file
     bad_file = tmpdir.join('bad.cpp')

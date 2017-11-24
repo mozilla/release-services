@@ -1,0 +1,9 @@
+---
+target: obj-x86_64-pc-linux-gnu
+clang_checkers:
+ - name: clang-analyzer-deadcode.DeadStores
+   publish: !!bool yes
+ - name: clang-analyzer-security.*
+   publish: !!bool no
+
+third_party: tools/rewriting/ThirdPartyPaths.txt
