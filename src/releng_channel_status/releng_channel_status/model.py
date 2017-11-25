@@ -25,11 +25,13 @@ class Platform:
 
 
 class Release:
-    def __init__(self, release, user_platform, user_locale):
+    def __init__(self, release, default_platform, default_locale, user_platform, user_locale):
         self._release = release
         self.alias_key = 'alias'
         self.user_platform = user_platform
         self.user_locale = user_locale
+        self.default_platform = default_platform
+        self.default_locale = default_locale
 
     def _get_aliased_platforms(self, release_platforms):
         aliased_platforms = {}
@@ -55,6 +57,14 @@ class Release:
         return platforms
 
     @property
+    def default_build_id(self):
+        platform = next(iter([p for p in self.platforms if self.default_platform in p.name]), None)
+        if platform:
+            locale = next(iter([v for l, v in platform.locales.items() if self.default_locale == l]), None)
+            return locale['buildID']
+        return None
+
+    @property
     def name(self):
         return self._release['name']
 
@@ -68,15 +78,19 @@ class ChannelStatus:
 
     @property
     def is_latest_build_update(self):
-        return self.rule['mapping'] in self.update_mappings
+        return self.rule['mapping'] in self.update_mappings and self.background_rate != 0
 
     @property
     def comment(self):
         return self.rule['comment']
 
     @property
+    def background_rate(self):
+        return self.rule['backgroundRate']
+
+    @property
     def is_throttled(self):
-        return self.rule['backgroundRate'] < 100
+        return self.background_rate > 0 and self.background_rate < 100
 
     @property
     def product(self):

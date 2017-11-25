@@ -2,13 +2,19 @@
 {% block body %}
     <div class="row">
         <div class="col">
-            <h1 class="display-4">{{ channel_status.product }}/{{ channel_status.channel }}</h1>
+            <h1 class="display-4">
+                {{ channel_status.product }} {{ channel_status.channel }} {{'channel is currently.' if channel_status.is_latest_build_update else ''}}
+            </h1>
         </div>
     </div>
 
     {% if channel_status.is_latest_build_update %}
         <div class="alert alert-success" role="alert">
-            <span class="text-capitalize"> {{ channel_status.channel }}</span> updates are currently.
+            <span>Serving the latest {{ channel_status.channel }} {{channel_status.release.default_build_id}}.</span>
+        </div>
+    {% elif channel_status.background_rate == 0 %}
+        <div class="alert alert-warning" role="alert">
+            WIP
         </div>
     {% else %}
         <div class="alert alert-warning" role="alert">
@@ -23,12 +29,6 @@
         <div class="alert alert-warning" role="alert">
             Updates are <span class="badge badge-warning">{{ channel_status.background_rate }}%</span> throttled. See below for additional information.
         </div>
-    {% endif %}
-
-    {% if not channel_status.is_latest_build_update %}
-        {% with release=channel_status.release, label='Current release:' %}
-            {% include 'release.html' %}
-        {% endwith %}
     {% endif %}
 
 {% endblock %}

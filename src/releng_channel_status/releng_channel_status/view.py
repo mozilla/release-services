@@ -6,8 +6,8 @@
 import cli_common.log
 from flask import abort, current_app, render_template, request
 from flask.views import MethodView
-from .util import HttpRequestHelper
-from .model import ChannelStatus, Release
+from releng_channel_status.util import HttpRequestHelper
+from releng_channel_status.model import ChannelStatus, Release
 
 
 log = cli_common.log.get_logger(__name__)
@@ -34,6 +34,8 @@ class ChannelStatusView(BaseView):
         self.rules_endpoint = current_app.config.get('RULES_ENDPOINT')
         self.release_endpoint = current_app.config.get('RELEASE_ENDPOINT')
         self.update_mappings = current_app.config.get('UPDATE_MAPPINGS')
+        self.default_locale = current_app.config.get('DEFAULT_LOCALE')
+        self.default_platform = current_app.config.get('DEFAULT_PLATFORM')
 
     def get(self, rule_alias, product, channel):
         rule = self._get_rule(rule_alias, product, channel)
@@ -59,11 +61,12 @@ class ChannelStatusView(BaseView):
         return self.http.get(self.release_endpoint.format(release=mapping))
 
     def _get_channel_status(self, rule):
+        release = self._get_release(rule['mapping'])
         channel_status = ChannelStatus(rule, self.update_mappings)
-        if channel_status.is_throttled:
+        channel_status.release = Release(
+            release, self.default_platform, self.default_locale, self.user_agent_platform, self.user_agent_locale)
+        if channel_status.is_throttled or channel_status.background_rate == 0:
             fallback_release = self._get_release(rule['fallbackMapping'])
-            channel_status.fallback_release = Release(fallback_release, self.user_agent_platform, self.user_agent_locale)
-        if not channel_status.is_latest_build_update or channel_status.is_throttled:
-            release = self._get_release(rule['mapping'])
-            channel_status.release = Release(release, self.user_agent_platform, self.user_agent_locale)
+            channel_status.fallback_release = Release(
+                fallback_release, self.default_platform, self.default_locale, self.user_agent_platform, self.user_agent_locale)
         return channel_status

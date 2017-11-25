@@ -14,11 +14,3 @@ app.add_url_rule('/',
                  defaults={'rule_alias': app.config.get(
                      'DEFAULT_ALIAS'), 'product': None, 'channel': None},
                  view_func=ChannelStatusView.as_view('channel_status_default'))
-
-app.add_url_rule('/<rule_alias>',
-                 defaults={'product': None, 'channel': None},
-                 view_func=ChannelStatusView.as_view('channel_status_alias'))
-
-app.add_url_rule('/<product>/<channel>',
-                 defaults={'rule_alias': None},
-                 view_func=ChannelStatusView.as_view('channel_status_product_channel'))

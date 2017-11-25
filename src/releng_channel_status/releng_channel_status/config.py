@@ -7,3 +7,4 @@ from __future__ import absolute_import
 
 
 PROJECT_NAME = 'releng-channel-status'
+APP_NAME = 'releng_channel_status'

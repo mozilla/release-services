@@ -11,13 +11,13 @@ import releng_channel_status.config
 
 def create_app(config=None):
     app = backend_common.create_app(
-        name=releng_channel_status.config.PROJECT_NAME,
+        project_name=releng_channel_status.config.PROJECT_NAME,
+        app_name=releng_channel_status.config.APP_NAME,
         config=config,
         extensions=[
-            'log',
-            'cache'
+            'log'
         ],
         redirect_root_to_api=False,
-        template_folder='releng_channel_status/templates'
+        template_folder='templates'
     )
     return app
