@@ -10,7 +10,7 @@ import os
 DEBUG = bool(os.environ.get('DEBUG', False))
 
 # -- Balrog Public API settings -----------------------------------------------
-BALROG_API_URL = 'http://172.18.0.3:9090/api/v1/'
+BALROG_API_URL = 'https://aus-api.mozilla.org/api/v1/'
 RULES_ENDPOINT = 'rules'
 SINGLE_RULE_ENDPOINT = 'rules/{alias}'
 RELEASE_ENDPOINT = 'releases/{release}'
