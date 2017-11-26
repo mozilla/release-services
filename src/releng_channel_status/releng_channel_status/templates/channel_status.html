@@ -3,7 +3,7 @@
     <div class="row">
         <div class="col">
             <h1 class="display-4">
-                {{ channel_status.product }} {{ channel_status.channel }} {{'channel is currently.' if channel_status.is_latest_build_update else ''}}
+                {{ channel_status.product }} {{ channel_status.channel }} {{'channel is currently!' if channel_status.is_latest_build_update else ''}}
             </h1>
         </div>
     </div>
@@ -12,22 +12,32 @@
         <div class="alert alert-success" role="alert">
             <span>Serving the latest {{ channel_status.channel }} {{channel_status.release.default_build_id}}.</span>
         </div>
-    {% elif channel_status.background_rate == 0 %}
+    {% elif channel_status.is_not_serving_latest_update_mapping %}
         <div class="alert alert-warning" role="alert">
-            WIP
+            <span>Updates are configured to latest build, but currently the {{channel_status.fallback_release.name}} (Build Id: {{channel_status.fallback_release.default_build_id}}) is served.</span>
+            <hr>
+            <span>Reason: Background Rate is 0.</span>
         </div>
     {% else %}
-        <div class="alert alert-warning" role="alert">
-          <h2 class="alert-heading">Frozen to [Build ID]/Serving the latest {{ channel_status.channel }} {{channel_status.rule['buildID']}}</h3>
-          <p>Frozen because of: {{ channel_status.rule['comment'] }}</p>
-          <hr>
-          <p class="mb-0">See below to additional information.</p>
+        <div class="alert alert-danger" role="alert">
+            <h2 class="alert-heading">
+                Frozen to {{channel_status.default_release.default_build_id}}/Serving the latest {{ channel_status.channel }} {{channel_status.release.default_build_id}}.
+            </h2>
+
+            {% if channel_status.frozen_reason %}
+                <hr>
+                <p>Frozen because of: {{ channel_status.frozen_reason }}</p>
+            {% endif %}
         </div>
     {% endif %}
 
     {%  if channel_status.is_throttled %}
         <div class="alert alert-warning" role="alert">
-            Updates are <span class="badge badge-warning">{{ channel_status.background_rate }}%</span> throttled. See below for additional information.
+            <span>Updates are <strong>{{ channel_status.background_rate }}%</strong> throttled:</span>
+            <ul>
+                <li><strong>{{ channel_status.background_rate }}%</strong> of update requests will falls at current build.</li>
+                <li><strong>{{ 100 - channel_status.background_rate }}%</strong> of update requests will falls at <strong>{{channel_status.fallback_release.name}} (Build Id: {{channel_status.fallback_release.default_build_id}}).</strong></li>
+            </ul>
         </div>
     {% endif %}
 

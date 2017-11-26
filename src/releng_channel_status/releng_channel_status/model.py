@@ -27,7 +27,6 @@ class Platform:
 class Release:
     def __init__(self, release, default_platform, default_locale, user_platform, user_locale):
         self._release = release
-        self.alias_key = 'alias'
         self.user_platform = user_platform
         self.user_locale = user_locale
         self.default_platform = default_platform
@@ -36,7 +35,7 @@ class Release:
     def _get_aliased_platforms(self, release_platforms):
         aliased_platforms = {}
         for aliased_platform, platform_value in release_platforms.items():
-            platform = platform_value.get(self.alias_key)
+            platform = platform_value.get('alias')
             if platform:
                 if platform not in aliased_platforms:
                     aliased_platforms[platform] = set()
@@ -49,7 +48,7 @@ class Release:
         release_platforms = self._release['platforms']
         aliased_platforms = self._get_aliased_platforms(release_platforms)
         for platform, platform_value in release_platforms.items():
-            if self.alias_key not in platform_value:
+            if 'alias' not in platform_value:
                 platform = Platform(
                     platform, platform_value['locales'], aliased_platforms.get(platform))
                 platform.is_user_platform = self.user_platform.lower() in platform.name.lower()
@@ -58,9 +57,11 @@ class Release:
 
     @property
     def default_build_id(self):
-        platform = next(iter([p for p in self.platforms if self.default_platform in p.name]), None)
+        platform = next(iter([p for p in self.platforms if p.is_user_platform]),
+                        next(iter([p for p in self.platforms if self.default_platform in p.name]), None))
         if platform:
-            locale = next(iter([v for l, v in platform.locales.items() if self.default_locale == l]), None)
+            locale = next(iter([v for l, v in platform.locales.items() if self.user_locale == l]),
+                          next(iter([v for l, v in platform.locales.items() if self.default_locale == l]), None))
             return locale['buildID']
         return None
 
@@ -74,6 +75,7 @@ class ChannelStatus:
         self.rule = rule
         self.update_mappings = update_mappings
         self.release = None
+        self.default_release = None
         self.fallback_release = None
 
     @property
@@ -81,7 +83,11 @@ class ChannelStatus:
         return self.rule['mapping'] in self.update_mappings and self.background_rate != 0
 
     @property
-    def comment(self):
+    def is_not_serving_latest_update_mapping(self):
+        return self.rule['mapping'] in self.update_mappings and self.background_rate == 0
+
+    @property
+    def frozen_reason(self):
         return self.rule['comment']
 
     @property

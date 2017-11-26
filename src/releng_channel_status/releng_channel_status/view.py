@@ -40,7 +40,7 @@ class ChannelStatusView(BaseView):
     def get(self, rule_alias, product, channel):
         rule = self._get_rule(rule_alias, product, channel)
         if not rule:
-            abort(404)
+            abort(404, 'Rule not found')
         model = self._get_channel_status(rule)
         return render_template('channel_status.html', channel_status=model)
 
@@ -58,14 +58,23 @@ class ChannelStatusView(BaseView):
         return rule
 
     def _get_release(self, mapping):
-        return self.http.get(self.release_endpoint.format(release=mapping))
+        release = self.http.get(self.release_endpoint.format(release=mapping))
+        if not release:
+            abort(404, 'Release {} not found'.format(mapping))
+        return release
 
     def _get_channel_status(self, rule):
-        release = self._get_release(rule['mapping'])
         channel_status = ChannelStatus(rule, self.update_mappings)
+
+        release = self._get_release(rule['mapping'])
+        default_release = self._get_release(self.update_mappings[0])
+
         channel_status.release = Release(
             release, self.default_platform, self.default_locale, self.user_agent_platform, self.user_agent_locale)
-        if channel_status.is_throttled or channel_status.background_rate == 0:
+        channel_status.default_release = Release(
+            default_release, self.default_platform, self.default_locale, self.user_agent_platform, self.user_agent_locale)
+
+        if channel_status.is_throttled or channel_status.is_not_serving_latest_update_mapping:
             fallback_release = self._get_release(rule['fallbackMapping'])
             channel_status.fallback_release = Release(
                 fallback_release, self.default_platform, self.default_locale, self.user_agent_platform, self.user_agent_locale)

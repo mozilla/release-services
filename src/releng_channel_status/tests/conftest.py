@@ -15,10 +15,14 @@ from templatecontext import captured_templates
 
 
 CURRENTLY_UPDATE_RULE_JSON = 'currently_update_rule.json'
+CURRENTLY_RELEASE_JSON = 'currently_release.json'
 FROZEN_RULE_JSON = 'frozen_rule.json'
 FROZEN_RELEASE_JSON = 'frozen_release.json'
 PRODUCT_CHANNEL_RULES_JSON = 'product_channel_rules.json'
 THROTTLED_RULE_JSON = 'throttled_rule.json'
+THROTTLED_FALLBACK_MAPPING_JSON = 'throttled_fallback_mapping_release.json'
+BGRATE_ZERO_CURRENTLY_UPDATE_RULE_JSON = 'bgrate_zero_currently_update_rule.json'
+
 
 config = {'BALROG_API_URL': 'https://aus-api.mozilla.org/api/v1/',
           'SINGLE_RULE_ENDPOINT': 'rules/{alias}',
@@ -28,34 +32,81 @@ config = {'BALROG_API_URL': 'https://aus-api.mozilla.org/api/v1/',
           'UPDATE_MAPPINGS': ['Firefox-mozilla-central-nightly-latest']}
 
 
-def create_responses_mock():
+@pytest.fixture
+def templates():
+    with captured_templates(app) as templ:
+        yield templ
+
+
+@pytest.fixture(scope='session')
+def client():
+    with app.test_client() as client:
+        yield client
+
+
+@pytest.fixture
+def updates_are_currently_requests_mock():
     resp = responses.RequestsMock(assert_all_requests_are_fired=False)
     resp.add(responses.GET, single_rule_endpoint(config['DEFAULT_ALIAS']),
              body=get_json('resources/mocks/{}'.format(CURRENTLY_UPDATE_RULE_JSON)),
              status=200,
              content_type='application/json')
-    resp.add(responses.GET, single_rule_endpoint('firefox-nightly-froozen'),
+    resp.add(responses.GET, release_endpoint(config['UPDATE_MAPPINGS'][0]),
+             body=get_json('resources/mocks/{}'.format(CURRENTLY_RELEASE_JSON)),
+             status=200,
+             content_type='application/json')
+    return resp
+
+
+@pytest.fixture
+def updates_are_frozen_requests_mock():
+    resp = responses.RequestsMock(assert_all_requests_are_fired=False)
+    resp.add(responses.GET, single_rule_endpoint(config['DEFAULT_ALIAS']),
              body=get_json('resources/mocks/{}'.format(FROZEN_RULE_JSON)),
              status=200,
              content_type='application/json')
-    resp.add(responses.GET, release_endpoint('Firefox-nightly-frozen'),
+    resp.add(responses.GET, release_endpoint(config['UPDATE_MAPPINGS'][0]),
+             body=get_json('resources/mocks/{}'.format(CURRENTLY_RELEASE_JSON)),
+             status=200,
+             content_type='application/json')
+    resp.add(responses.GET, release_endpoint('Firefox-55.0-build3'),
              body=get_json('resources/mocks/{}'.format(FROZEN_RELEASE_JSON)),
              status=200,
              content_type='application/json')
-    resp.add(responses.GET, rules_endpoint('firefox', 'nightly'),
-             body=get_json('resources/mocks/{}'.format(PRODUCT_CHANNEL_RULES_JSON)),
-             status=200,
-             content_type='application/json')
-    resp.add(responses.GET, single_rule_endpoint('firefox-nightly-throttled'),
+    return resp
+
+
+@pytest.fixture
+def updates_are_throttled_requests_mock():
+    resp = responses.RequestsMock(assert_all_requests_are_fired=False)
+    resp.add(responses.GET, single_rule_endpoint(config['DEFAULT_ALIAS']),
              body=get_json('resources/mocks/{}'.format(THROTTLED_RULE_JSON)),
              status=200,
              content_type='application/json')
-    resp.add(responses.GET, release_endpoint('Firefox-mozilla-central-nightly-latest'),
-             body=get_json('resources/mocks/{}'.format(THROTTLED_RULE_JSON)),
+    resp.add(responses.GET, release_endpoint(config['UPDATE_MAPPINGS'][0]),
+             body=get_json('resources/mocks/{}'.format(CURRENTLY_RELEASE_JSON)),
              status=200,
              content_type='application/json')
-    resp.add(responses.GET, release_endpoint('Firefox-55.0.3-build2'),
-             body=get_json('resources/mocks/{}'.format(FROZEN_RELEASE_JSON)),
+    resp.add(responses.GET, release_endpoint('Firefox-56.0-build6'),
+             body=get_json('resources/mocks/{}'.format(THROTTLED_FALLBACK_MAPPING_JSON)),
+             status=200,
+             content_type='application/json')
+    return resp
+
+
+@pytest.fixture
+def updates_are_latest_bg_rate_zero_requests_mock():
+    resp = responses.RequestsMock(assert_all_requests_are_fired=False)
+    resp.add(responses.GET, single_rule_endpoint(config['DEFAULT_ALIAS']),
+             body=get_json('resources/mocks/{}'.format(BGRATE_ZERO_CURRENTLY_UPDATE_RULE_JSON)),
+             status=200,
+             content_type='application/json')
+    resp.add(responses.GET, release_endpoint(config['UPDATE_MAPPINGS'][0]),
+             body=get_json('resources/mocks/{}'.format(CURRENTLY_RELEASE_JSON)),
+             status=200,
+             content_type='application/json')
+    resp.add(responses.GET, release_endpoint('Firefox-56.0-build6'),
+             body=get_json('resources/mocks/{}'.format(THROTTLED_FALLBACK_MAPPING_JSON)),
              status=200,
              content_type='application/json')
     return resp
@@ -74,24 +125,6 @@ def single_rule_endpoint(alias):
         config['BALROG_API_URL'], config['SINGLE_RULE_ENDPOINT'].format(alias=alias))
 
 
-def rules_endpoint(product, channel):
-    return urljoin(
-        config['BALROG_API_URL'], config['RULES_ENDPOINT']) + '?product={}&channel={}'.format(product, channel)
-
-
 def release_endpoint(name):
     return urljoin(
         config['BALROG_API_URL'], config['RELEASE_ENDPOINT'].format(release=name))
-
-
-@pytest.fixture
-def templates():
-    with captured_templates(app) as templ:
-        yield templ
-
-
-@pytest.fixture(scope='session')
-def client():
-    with app.test_client() as client:
-        with create_responses_mock():
-            yield client
