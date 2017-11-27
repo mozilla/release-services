@@ -4,9 +4,9 @@ Static Analysis
 Configuration
 -------------
 
-As every other services in `mozilla-releng/services`, the static analysis bot is configured through the [Taskcluster secrest service](https://tools.taskcluster.net/secrets)
+As every other services in `mozilla-releng/services`, the static analysis bot is configured through the [Taskcluster secrets service](https://tools.taskcluster.net/secrets)
 
-Those configuration variable are currenlty supported:
+The following configuration variables are currently supported:
 
 * `APP_CHANNEL` **[required]** is provided by the common configuration (staging or production)
 * `REPORTERS` **[required]** lists all the reporting tools to use when a static analysis is completed (details below)
