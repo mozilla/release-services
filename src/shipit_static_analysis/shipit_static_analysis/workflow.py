@@ -15,6 +15,7 @@ from shipit_static_analysis.clang.tidy import ClangTidy
 from shipit_static_analysis.clang.format import ClangFormat
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.report import get_reporters
+from parsepatch.patch import Patch
 
 logger = get_logger(__name__)
 
@@ -70,7 +71,7 @@ class Workflow(object):
             raise hglib.error.CommandError(cmd, proc.returncode, out, err)
 
         # Open new hg client
-        self.hg = hglib.open(self.repo_dir, client_id, access_token)
+        self.hg = hglib.open(self.repo_dir)
 
     def run(self, revision, review_request_id, diffset_revision):
         '''
@@ -117,11 +118,14 @@ class Workflow(object):
             modified_files += [f.decode('utf-8') for _, f in status]
         logger.info('Modified files', files=modified_files)
 
-        # List all modified lines
-        # TODO: do this differently !!
+        # List all modified lines from current revision changes
+        patch = Patch.parse_patch(
+            self.hg.diff(change=revision, git=True).decode('utf-8')
+        )
         modified_lines = {
-            f: self.mozreview.changed_lines_for_file(f)
-            for f in modified_files
+            # Use all changes in new files
+            filename: diff['touched'] + diff['added']
+            for filename, diff in patch.items()
         }
 
         # mach configure with mozconfig

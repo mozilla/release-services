@@ -62,7 +62,6 @@ class MozReviewReporter(Reporter):
         )
         login_resource.create(username=username, api_key=api_key)
         self.api = client.get_root()
-        print('DONE')
 
         # Optional parameters
         self.style = configuration.get('style', 'clang-tidy')

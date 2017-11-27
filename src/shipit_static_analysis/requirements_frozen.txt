@@ -26,6 +26,7 @@ mozilla-cli-common==1.0.0
 multidict==3.3.2
 oauth2client==4.1.2
 packaging==16.8
+parsepatch==0.1.0
 py==1.5.2
 pyasn1==0.3.4
 pyasn1-modules==0.1.5

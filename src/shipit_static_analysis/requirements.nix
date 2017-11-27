@@ -560,6 +560,23 @@ let
 
 
 
+    "parsepatch" = python.mkDerivation {
+      name = "parsepatch-0.1.0";
+      src = pkgs.fetchurl { url = "https://github.com/La0/parsepatch/archive/f8fdc661c42edbd09dd613812a3dfac50209b9bb.tar.gz"; sha256 = "09hdn0h02gb1baj0pb5pzq130pxbjg2hgkzfzh260bk7q3pl8rm4"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."requests"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/mozilla/parsepatch";
+        license = "MPL";
+        description = "Library to parse patches in an efficient manner";
+      };
+    };
+
+
+
     "py" = python.mkDerivation {
       name = "py-1.5.2";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/90/e3/e075127d39d35f09a500ebb4a90afd10f9ef0a1d28a6d09abeec0e444fdd/py-1.5.2.tar.gz"; sha256 = "ca18943e28235417756316bfada6cd96b23ce60dd532642690dcfdaba988a76d"; };

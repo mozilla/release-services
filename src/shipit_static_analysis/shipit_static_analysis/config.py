@@ -38,7 +38,6 @@ class Settings(object):
         Configuration is stored on mozilla central
         It has to be downloaded on each run
         '''
-        print('DOWNLOAD')
         assert isinstance(defaults, dict)
         assert self.config is None, \
             'Config already set.'
