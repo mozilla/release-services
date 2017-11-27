@@ -38,7 +38,8 @@ C/C++ static analysis found {defects_total} in this patch{extras_comments}.
  - {defects_format} found by clang-format
 
 You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp` and `./mach clang-format -p path/to/file.cpp`
-
+'''
+MOZREVIEW_BUG_REPORT = '''
 If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx
 '''
 MOZREVIEW_COMMENT_DIFF_DOWNLOAD = '''
@@ -280,6 +281,7 @@ class Workflow(object):
                 defects_format=pluralize('defect', stats.get(ClangFormatIssue, 0)),
                 defects_tidy=pluralize('defect', stats.get(ClangTidyIssue, 0)),
             )
+            comment += MOZREVIEW_BUG_REPORT
             if not self.mozreview_short_comment and diff_url is not None:
                 comment += MOZREVIEW_COMMENT_DIFF_DOWNLOAD.format(
                     url=diff_url,
