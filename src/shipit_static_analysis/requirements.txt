@@ -5,7 +5,7 @@ RBTools
 PyYAML
 
 # Parsepatch before release
-https://github.com/La0/parsepatch/archive/master.tar.gz#egg=parsepatch
+https://github.com/mozilla/parsepatch/archive/master.tar.gz#egg=parsepatch
 
 # Fixed versions
 six==1.10.0

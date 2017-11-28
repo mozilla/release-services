@@ -562,7 +562,7 @@ let
 
     "parsepatch" = python.mkDerivation {
       name = "parsepatch-0.1.0";
-      src = pkgs.fetchurl { url = "https://github.com/La0/parsepatch/archive/f8fdc661c42edbd09dd613812a3dfac50209b9bb.tar.gz"; sha256 = "09hdn0h02gb1baj0pb5pzq130pxbjg2hgkzfzh260bk7q3pl8rm4"; };
+      src = pkgs.fetchurl { url = "https://github.com/mozilla/parsepatch/archive/4de8e82417a3d02f1a7b86f699b91e50eb256d39.tar.gz"; sha256 = "0wm27ln8c7q7xcdqc33d351nbp86fv7yy09sl1m316ccqv14idic"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
