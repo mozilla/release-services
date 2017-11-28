@@ -52,6 +52,8 @@ class Workflow(object):
 
         # Load reporters to use
         self.reporters = get_reporters(reporters_conf, client_id, access_token)
+        if not self.reporters:
+            logger.warn('No reporters configured, this analysis will not be published')
 
         # Clone mozilla-central
         self.repo_dir = os.path.join(cache_root, 'central')

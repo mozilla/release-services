@@ -54,7 +54,6 @@ class MozReviewReporter(Reporter):
         url, api_key, username = self.requires(configuration, 'url', 'api_key', 'username')
 
         # Authenticate client
-        logger.info('Authenticate on Mozreview', url=url, username=username)
         client = RBClient(url, save_cookies=False, allow_caching=False)
         login_resource = client.get_path(
             'extensions/mozreview.extension.MozReviewExtension/'
@@ -68,6 +67,8 @@ class MozReviewReporter(Reporter):
         assert self.style in ('clang-tidy', 'full')
         self.publish_success = configuration.get('publish_success', False)
         assert isinstance(self.publish_success, bool)
+
+        logger.info('Mozreview report enabled', url=url, username=username)
 
     def publish(self, issues, review_request_id, diff_revision, diff_url=None):  # noqa
         '''
