@@ -22,8 +22,16 @@ from cli_common.click import taskcluster_options
     default=config.DEFAULT_CACHE,
     help='Cache for repository clones.',
 )
+@click.option(
+    '--uplift-status',
+    type=click.Choice(config.UPLIFT_STATUS),
+    multiple=True,
+    default=config.UPLIFT_STATUS,
+    help='Filter execution to approved and/or pending uplifts',
+)
 def main(bugzilla_id,
          cache_root,
+         uplift_status,
          taskcluster_secret,
          taskcluster_client_id,
          taskcluster_access_token,
@@ -78,7 +86,7 @@ def main(bugzilla_id,
     if bugzilla_id:
         bot.run(only=[bugzilla_id, ])
     else:
-        bot.run()
+        bot.run(uplift_status=uplift_status)
 
 
 if __name__ == '__main__':

@@ -65,15 +65,24 @@ class Repository(object):
         self.client.setcbprompt(_cb)
 
         # Clean update to branch
+        # In two steps to be thorough
+        # (hglib does not authorize both at same execution)
         self.client.update(branch, clean=True)
+        self.client.update(branch, check=True)
 
         # Check branch has been successfull checkout
         identify = self.client.identify().decode('utf-8')
-        self.parent, _, current_branch = REGEX_IDENTIFY.search(identify).groups()
-        assert current_branch == branch.decode('utf-8'), \
-            'Current branch {} is not expected branch {}'.format(current_branch, branch)  # noqa
-        logger.info('Checkout success', branch=branch, tip=self.parent)
-        self.branch = branch  # store
+        match = REGEX_IDENTIFY.search(identify)
+        if match:
+            self.parent, _, current_branch = match.groups()
+            assert current_branch == branch.decode('utf-8'), \
+                'Current branch {} is not expected branch {}'.format(current_branch, branch)  # noqa
+            self.branch = branch  # store
+            logger.info('Checkout success', branch=self.branch, tip=self.parent)
+        else:
+            # Force update
+            logger.warn('Repository was not updated cleanly', identify=identify)
+            self.branch = branch
 
         return self.parent
 
@@ -121,6 +130,12 @@ class Repository(object):
                 logger.info('Skipped merge', revision=revision, error=message)  # noqa
                 return True, message
 
+            if 'abort: unresolved conflicts' in message:
+                # Abort graft
+                logger.info('Unresolved conflicrs', revision=revision, error=message)  # noqa
+                self.client.update(clean=True)
+                return False, message
+
             message = message.replace('\r', '\n')
             logger.info('Auto merge failed', revision=revision, error=message)  # noqa
             return False, message
@@ -150,14 +165,15 @@ class Repository(object):
         '''
         assert isinstance(branch_name, bytes)
 
-        branches = [
-            branch
-            for branch, _, _ in self.client.branches()
-        ]
+        branches = list(map(lambda x: x[0], self.client.branches()))
         if branch_name in branches:
             # Cleanup existing branch
+            print('Update to', branch_name, '>', self.branch)
             self.client.rawcommand([b'strip', self.branch])
-            self.client.update(branch_name, clean=True)
+            try:
+                self.client.update(branch_name, clean=True)
+            except:
+                self.client.branch(branch_name)
         else:
             # New branch, created on next commit/graft
             self.client.branch(branch_name)
@@ -198,12 +214,18 @@ class Repository(object):
         by appending to current commit message
         '''
         assert isinstance(append_message, str)
+        append_message = append_message.encode('utf-8')
 
         # Get tip revision
         tip = self.client.tip()
 
+        # Check tip does not already have this message
+        if append_message in tip.desc:
+            logger.info('Skip amend last commit. Message is already present', message=append_message, commit=tip.desc)
+            return
+
         # Modify it
-        new_message = tip.desc + append_message.encode('utf-8')
+        new_message = tip.desc + append_message
 
         # Mark commit as draft
         self.client.phase(force=True, draft=True)

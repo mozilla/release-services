@@ -11,3 +11,4 @@ import tempfile
 
 PROJECT_NAME = 'shipit-bot-uplift'
 DEFAULT_CACHE = os.path.join(tempfile.gettempdir(), 'shipit_bot_cache')
+UPLIFT_STATUS = ('approved', 'pending')

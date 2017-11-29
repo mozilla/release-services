@@ -12,6 +12,7 @@ from shipit_bot_uplift.mercurial import Repository
 from shipit_bot_uplift.api import api_client, NotFound
 from shipit_bot_uplift.merge import MergeTest
 from shipit_bot_uplift.report import Report
+from shipit_bot_uplift.config import UPLIFT_STATUS
 from cli_common.log import get_logger
 from libmozdata import bugzilla, versions
 from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment, uplift_info
@@ -104,12 +105,8 @@ class BugSync(object):
         ])
         self.uplifts = {}
         for branch in branches:
-            try:
-                logger.info('Retrieves uplift infos', bz_id=self.bugzilla_id, branch=branch)
-                self.uplifts[branch] = uplift_info(self.bugzilla_id, branch)
-            except Exception as e:
-                logger.info('No uplift info', branch=branch, err=e)
-                raise
+            logger.info('Retrieves uplift infos', bz_id=self.bugzilla_id, branch=branch)
+            self.uplifts[branch] = uplift_info(self.bugzilla_id, branch)
 
         return True
 
@@ -347,11 +344,16 @@ class Bot(object):
 
         return self.sync[bugzilla_id]
 
-    def run(self, only=None):
+    def run(self, uplift_status=UPLIFT_STATUS, only=None):
         '''
         Build bug analysis for a specified Bugzilla query
         Used by taskcluster - no db interaction
         '''
+        assert isinstance(uplift_status, tuple)
+        assert len(uplift_status) > 0, \
+            'No uplift status'
+        assert set(UPLIFT_STATUS).issuperset(uplift_status), \
+            'Invalid uplift status'
         assert self.repository is not None, \
             'Missing mozilla repository'
 
@@ -383,18 +385,24 @@ class Bot(object):
                 sync.setup_remote(analysis)
 
             # Get bugs from bugzilla for this analysis
-            logger.info('List bugzilla pending bugs', name=analysis['name'])
-            raw_bugs = self.list_bugs(analysis['parameters_pending'])
-            for bugzilla_id, bug_data in raw_bugs.items():
-                sync = self.get_bug_sync(bugzilla_id)
-                sync.setup_bugzilla(analysis, bug_data, STATUS_PENDING)
+            if 'pending' in uplift_status:
+                logger.info('List bugzilla pending bugs', name=analysis['name'])
+                raw_bugs = self.list_bugs(analysis['parameters_pending'])
+                for bugzilla_id, bug_data in raw_bugs.items():
+                    sync = self.get_bug_sync(bugzilla_id)
+                    sync.setup_bugzilla(analysis, bug_data, STATUS_PENDING)
+            else:
+                logger.info('Skipped bugzilla pending bugs', name=analysis['name'])
 
             # Load approved bugs, to be tested for merges
-            logger.info('List bugzilla approved bugs', name=analysis['name'])
-            raw_bugs = self.list_bugs(analysis['parameters_approved'])
-            for bugzilla_id, bug_data in raw_bugs.items():
-                sync = self.get_bug_sync(bugzilla_id)
-                sync.setup_bugzilla(analysis, bug_data, STATUS_APPROVED)
+            if 'approved' in uplift_status:
+                logger.info('List bugzilla approved bugs', name=analysis['name'])
+                raw_bugs = self.list_bugs(analysis['parameters_approved'])
+                for bugzilla_id, bug_data in raw_bugs.items():
+                    sync = self.get_bug_sync(bugzilla_id)
+                    sync.setup_bugzilla(analysis, bug_data, STATUS_APPROVED)
+            else:
+                logger.info('Skipped bugzilla approved bugs', name=analysis['name'])
 
         merge_tests = []
         for sync in self.sync.values():
