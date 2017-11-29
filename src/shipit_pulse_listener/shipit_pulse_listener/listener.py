@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from cli_common.pulse import run_consumer
 from cli_common.log import get_logger
-from shipit_pulse_listener.hook import Hook
+from shipit_pulse_listener.hook import Hook, PulseHook
 from shipit_pulse_listener import task_monitoring
 import requests
 import itertools
@@ -13,9 +13,91 @@ import pytz
 logger = get_logger(__name__)
 
 
-class HookStaticAnalysis(Hook):
+class HookPhabricator(Hook):
     '''
     Taskcluster hook handling the static analysis
+    for Phabricator differentials
+    '''
+    def __init__(self, configuration):
+        assert 'hookId' in configuration
+        super().__init__(
+            'project-releng',
+            configuration['hookId'],
+        )
+
+        # Save phabricator connection data
+        assert 'phabricator_url' in configuration
+        assert 'phabricator_token' in configuration
+        self.api_url = configuration['phabricator_url']
+        self.api_token = configuration['phabricator_token']
+
+        # Start on first page
+        self.before = None
+
+    def list_differential(self):
+        '''
+        List new differential items
+        '''
+        url = '{}/differential.revision.search'.format(self.api_url)
+        after = None
+        while True:
+            logger.info('Loading phabricator differentials', after=after, before=self.before)
+            payload = {
+                'api.token': self.api_token,
+                'after': after,
+                'limit': 20,
+            }
+            if after is None and self.before:
+                # Initial page
+                payload['before'] = self.before
+            response = requests.post(url, payload)
+            response.raise_for_status()
+            data = response.json()
+            assert data['error_code'] is None, \
+                'Conduit error: {} - {}'.format(
+                    data['error_code'],
+                    data['error_info'],
+                )
+
+            # Pass results
+            diffs = data['result']['data']
+            for diff in diffs:
+                yield diff
+
+            # Save first id for future executions
+            if after is None and diffs:
+                self.before = diffs[0]['id']
+
+            # Load next page
+            after = data['result']['cursor']['after']
+            if after is None:
+                break
+
+    async def build_consumer(self, *args, **kwargs):
+        '''
+        Query phabricator differentials regularly
+        '''
+        while True:
+
+            # Get new differential ids
+            for diff in self.list_differential():
+                if diff['type'] != 'DREV':
+                    logger.info('Skipping differential', id=diff['id'], type=diff['type'])
+                    continue
+
+                # Create new task
+                await self.create_task({
+                    'PHABRICATOR': '{id}:{phid}'.format(**diff)
+                })
+
+            # Sleep a bit before trying new diffs
+            await asyncio.sleep(60)
+
+
+class HookStaticAnalysis(PulseHook):
+    '''
+    Taskcluster hook handling the static analysis
+    for MozReview
     '''
     def __init__(self, configuration):
         assert 'hookId' in configuration
@@ -49,11 +131,11 @@ class HookStaticAnalysis(Hook):
         ]
         logger.info('Received new commits', commits=commits)
         return {
-            'COMMITS': ' '.join(commits),
+            'MOZREVIEW': ' '.join(commits),
         }
 
 
-class HookRiskAssessment(Hook):
+class HookRiskAssessment(PulseHook):
     '''
     Taskcluster hook handling the risk assessment
     '''
@@ -128,7 +210,7 @@ class HookRiskAssessment(Hook):
         return set(filter(_has_extension, all_files))
 
 
-class HookCodeCoverage(Hook):
+class HookCodeCoverage(PulseHook):
     '''
     Taskcluster hook handling the code coverage
     '''
@@ -214,14 +296,14 @@ class PulseListener(object):
     def __init__(self,
                  pulse_user,
                  pulse_password,
-                 pulse_listener_hooks,
+                 hooks_configuration,
                  taskcluster_client_id=None,
                  taskcluster_access_token=None,
                  ):
 
         self.pulse_user = pulse_user
         self.pulse_password = pulse_password
-        self.pulse_listener_hooks = pulse_listener_hooks
+        self.hooks_configuration = hooks_configuration
         self.taskcluster_client_id = taskcluster_client_id
         self.taskcluster_access_token = taskcluster_access_token
 
@@ -235,15 +317,15 @@ class PulseListener(object):
         # Build hooks for each conf
         hooks = [
             self.build_hook(conf)
-            for conf in self.pulse_listener_hooks
+            for conf in self.hooks_configuration
         ]
         if not hooks:
             raise Exception('No hooks created')
 
         # Run hooks pulse listeners together
-        # but only use hoks with active definitions
+        # but only use hooks with active definitions
         consumers = [
-            hook.connect_pulse(self.pulse_user, self.pulse_password)
+            hook.build_consumer(self.pulse_user, self.pulse_password)
             for hook in hooks
             if hook.connect_taskcluster(
                 self.taskcluster_client_id,
@@ -264,7 +346,8 @@ class PulseListener(object):
         assert isinstance(conf, dict)
         assert 'type' in conf
         classes = {
-            'static-analysis': HookStaticAnalysis,
+            'static-analysis-mozreview': HookStaticAnalysis,
+            'static-analysis-phabricator': HookPhabricator,
             'risk-assessment': HookRiskAssessment,
             'code-coverage': HookCodeCoverage,
         }

@@ -25,11 +25,11 @@ def main(taskcluster_secret,
                           required=(
                               'PULSE_USER',
                               'PULSE_PASSWORD',
-                              'PULSE_LISTENER_HOOKS',
+                              'HOOKS',
                               'ADMINS',
                           ),
                           existing=dict(
-                              PULSE_LISTENER_HOOKS=[],
+                              HOOKS=[],
                               ADMINS=['babadie@mozilla.com', 'mcastelluccio@mozilla.com']
                           ),
                           taskcluster_client_id=taskcluster_client_id,
@@ -47,7 +47,7 @@ def main(taskcluster_secret,
 
     pl = PulseListener(secrets['PULSE_USER'],
                        secrets['PULSE_PASSWORD'],
-                       secrets['PULSE_LISTENER_HOOKS'],
+                       secrets['HOOKS'],
                        taskcluster_client_id,
                        taskcluster_access_token,
                        )
