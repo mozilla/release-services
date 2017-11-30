@@ -8,6 +8,7 @@ import itertools
 from cli_common import log
 from rbtools.api.errors import APIError
 from rbtools.api.client import RBClient
+from shipit_static_analysis.revisions import MozReviewRevision
 from shipit_static_analysis.report.base import Reporter
 from shipit_static_analysis.clang.tidy import ClangTidyIssue
 from shipit_static_analysis.clang.format import ClangFormatIssue
@@ -70,17 +71,19 @@ class MozReviewReporter(Reporter):
 
         logger.info('Mozreview report enabled', url=url, username=username)
 
-    def publish(self, issues, review_request_id, diff_revision, diff_url=None):  # noqa
+    def publish(self, issues, revision, diff_url=None):  # noqa
         '''
         Publish comments on mozreview
         '''
+        assert isinstance(revision, MozReviewRevision)
+
         def pluralize(word, nb):
             assert isinstance(word, str)
             assert isinstance(nb, int)
             return '{} {}'.format(nb, nb == 1 and word or word + 's')
 
         # Start a new review
-        review = MozReview(self.api, review_request_id, diff_revision)
+        review = MozReview(self.api, revision.review_request_id, revision.diffset_revision)
 
         # Filter issues to keep publishable checks
         # and non third party

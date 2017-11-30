@@ -6,35 +6,45 @@
 from __future__ import absolute_import
 
 from shipit_static_analysis.workflow import Workflow
+from shipit_static_analysis.revisions import PhabricatorRevision, MozReviewRevision
 from shipit_static_analysis.config import settings
+from shipit_static_analysis.report import get_reporters
 from shipit_static_analysis.lock import LockDir
 from shipit_static_analysis import config
 from cli_common.click import taskcluster_options
 from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
 import click
-import re
 from cli_common.log import get_logger
 
 logger = get_logger(__name__)
 
-REGEX_COMMIT = re.compile(r'(\w+):(\d+):(\d+)')
-
 
 @click.command()
 @taskcluster_options
-@click.argument('commits', envvar='COMMITS')
+@click.option(
+    '--phabricator',
+    envvar='PHABRICATOR',
+)
+@click.option(
+    '--mozreview',
+    envvar='MOZREVIEW',
+)
 @click.option(
     '--cache-root',
     required=True,
     help='Cache root, used to pull changesets'
 )
-def main(commits,
+def main(phabricator,
+         mozreview,
          cache_root,
          taskcluster_secret,
          taskcluster_client_id,
          taskcluster_access_token,
          ):
+
+    assert (phabricator is None) ^ (mozreview is None), \
+        'Specify a phabricator XOR mozreview parameters'
 
     secrets = get_secrets(taskcluster_secret,
                           config.PROJECT_NAME,
@@ -58,24 +68,44 @@ def main(commits,
                 MOZDEF=secrets.get('MOZDEF'),
                 )
 
+    # Load reporters
+    reporters = get_reporters(
+        secrets['REPORTERS'],
+        taskcluster_client_id,
+        taskcluster_access_token,
+    )
+
+    # Load revisions
+    revisions = []
+    if phabricator:
+        # Only one phabricator revision at a time
+        api = reporters['phabricator']
+        assert api is not None, \
+            'Cannot use a phabricator revision without a phabricator reporter'
+        revisions.append(PhabricatorRevision(phabricator, api))
+    if mozreview:
+        # Multiple mozreview revisions are possible
+        revisions += [
+            MozReviewRevision(r)
+            for r in mozreview.split(' ')
+        ]
+
     settings.setup(secrets['APP_CHANNEL'])
 
     with LockDir(cache_root, 'shipit-sa-') as work_dir:
         w = Workflow(work_dir,
-                     secrets['REPORTERS'],
+                     reporters,
                      secrets['CLANG_FORMAT_ENABLED'],
-                     taskcluster_client_id,
-                     taskcluster_access_token,
                      )
 
-        for commit in REGEX_COMMIT.findall(commits):
+        for revision in revisions:
             try:
-                w.run(*commit)
+                w.run(revision)
             except Exception as e:
                 # Log errors to papertrail
                 logger.error(
                     'Static analysis failure',
-                    commit=commit,
+                    revision=revision,
                     error=e,
                 )
 

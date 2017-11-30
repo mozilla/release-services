@@ -28,11 +28,12 @@ def test_conf(mock_mozreview):
     assert r.api is not None
 
 
-def test_review_publication(mock_mozreview, mock_issues):
+def test_review_publication(mock_mozreview, mock_issues, mock_phabricator):
     '''
     Test publication of a single review
     '''
     from shipit_static_analysis.report.mozreview import MozReviewReporter
+    from shipit_static_analysis.revisions import MozReviewRevision
 
     # Add mock files listing
     httpretty.register_uri(
@@ -48,5 +49,6 @@ def test_review_publication(mock_mozreview, mock_issues):
         'url': 'http://mozreview.test',
     }
     r = MozReviewReporter(conf, 'test_tc', 'token_tc')
-    out = r.publish(mock_issues, '12345', '1', diff_url=None)
+    mrev = MozReviewRevision('abcdef:12345:1')
+    out = r.publish(mock_issues, mrev, diff_url=None)
     assert out is None  # no publication (no clang-tidy)

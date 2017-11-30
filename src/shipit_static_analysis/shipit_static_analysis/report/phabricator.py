@@ -6,6 +6,8 @@
 from cli_common import log
 from shipit_static_analysis.clang import ClangIssue
 from shipit_static_analysis.report.base import Reporter
+from shipit_static_analysis.revisions import PhabricatorRevision
+from urllib.parse import urlparse
 import requests
 
 logger = log.get_logger(__name__)
@@ -46,17 +48,38 @@ class PhabricatorReporter(Reporter):
         assert self.url.endswith('/api/'), \
             'Phabricator API must end with /api/'
 
-        # Create a unique session for all requests
-        self.session = requests.Session()
-        out = self.request('user.whoami')
+        # Test authentication
+        user = self.request('user.whoami')
+        logger.info('Authenticated on phabricator', url=self.url, user=user['realName'])
 
-        from pprint import pprint
-        pprint(out)
+    @property
+    def hostname(self):
+        parts = urlparse(self.url)
+        return parts.netloc
 
-    def publish(self, issues, review_request_id, diffset_revision, diff_url):
+    def load_diff(self, phid):
         '''
-        Send an email to administrators
+        Find a differential diff
         '''
+        out = self.request(
+            'differential.diff.search',
+            constraints={
+                'phids': [phid, ],
+            },
+        )
+
+        data = out['data']
+        assert len(data) == 1, \
+            'Not found'
+        return data[0]
+
+    def publish(self, issues, revision, diff_url=None):
+        '''
+        Publish inline comments for each issues
+        '''
+        assert isinstance(revision, PhabricatorRevision)
+
+        # TODO !
 
     def comment(self, revision_id, message):
         '''
@@ -133,7 +156,7 @@ class PhabricatorReporter(Reporter):
         payload['api.token'] = self.api_key
 
         # Run POST request on api
-        response = self.session.post(
+        response = requests.post(
             self.url + path,
             data=flatten_params(payload),
         )

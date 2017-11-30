@@ -14,7 +14,6 @@ from cli_common.command import run_check
 from shipit_static_analysis.clang.tidy import ClangTidy
 from shipit_static_analysis.clang.format import ClangFormat
 from shipit_static_analysis.config import settings
-from shipit_static_analysis.report import get_reporters
 from parsepatch.patch import Patch
 
 logger = get_logger(__name__)
@@ -28,9 +27,7 @@ class Workflow(object):
     '''
     Static analysis workflow
     '''
-    taskcluster = None
-
-    def __init__(self, cache_root, reporters_conf, clang_format_enabled=False, client_id=None, access_token=None):  # noqa
+    def __init__(self, cache_root, reporters, clang_format_enabled=False):
         self.clang_format_enabled = clang_format_enabled
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
@@ -51,7 +48,7 @@ class Workflow(object):
             os.makedirs(self.taskcluster_results_dir)
 
         # Load reporters to use
-        self.reporters = get_reporters(reporters_conf, client_id, access_token)
+        self.reporters = reporters
         if not self.reporters:
             logger.warn('No reporters configured, this analysis will not be published')
 
@@ -75,7 +72,7 @@ class Workflow(object):
         # Open new hg client
         self.hg = hglib.open(self.repo_dir)
 
-    def run(self, revision, review_request_id, diffset_revision):
+    def run(self, rev):
         '''
         Run the static analysis workflow:
          * Pull revision from review
@@ -89,9 +86,7 @@ class Workflow(object):
             taskcluster_task=self.taskcluster_task_id,
             taskcluster_run=self.taskcluster_run_id,
             channel=settings.app_channel,
-            revision=revision,
-            review_request_id=review_request_id,
-            diffset_revision=diffset_revision,
+            revision=rev,
         )
 
         # Setup clang
@@ -103,26 +98,26 @@ class Workflow(object):
         self.hg.update(rev=b'tip', clean=True)
 
         # Pull revision from review
-        self.hg.pull(source=REPO_REVIEW, rev=revision, update=True, force=True)
+        self.hg.pull(source=REPO_REVIEW, rev=rev.mercurial, update=True, force=True)
 
         # Update to the target revision
-        self.hg.update(rev=revision, clean=True)
+        self.hg.update(rev=rev.mercurial, clean=True)
 
         # Get the parents revisions
-        parent_rev = 'parents({})'.format(revision)
+        parent_rev = 'parents({})'.format(rev.mercurial)
         parents = self.hg.identify(id=True, rev=parent_rev).decode('utf-8').strip()
 
         # Find modified files by this revision
         modified_files = []
         for parent in parents.split('\n'):
-            changeset = '{}:{}'.format(parent, revision)
+            changeset = '{}:{}'.format(parent, rev.mercurial)
             status = self.hg.status(change=[changeset, ])
             modified_files += [f.decode('utf-8') for _, f in status]
         logger.info('Modified files', files=modified_files)
 
         # List all modified lines from current revision changes
         patch = Patch.parse_patch(
-            self.hg.diff(change=revision, git=True).decode('utf-8')
+            self.hg.diff(change=rev.mercurial, git=True).decode('utf-8')
         )
         modified_lines = {
             # Use all changes in new files
@@ -163,12 +158,7 @@ class Workflow(object):
                     'Empty diff'
 
                 # Write diff in results directory
-                diff_name = '{}-{}-{}-clang-format.diff'.format(
-                    revision[:8],
-                    review_request_id,
-                    diffset_revision,
-                )
-                diff_path = os.path.join(self.taskcluster_results_dir, diff_name)
+                diff_path = os.path.join(self.taskcluster_results_dir, rev.build_diff_name())
                 with open(diff_path, 'w') as f:
                     length = f.write(diff.decode('utf-8'))
                     logger.info('Diff from clang-format dumped', path=diff_path, length=length)  # noqa
@@ -177,7 +167,7 @@ class Workflow(object):
                 diff_url = ARTIFACT_URL.format(
                     task_id=self.taskcluster_task_id,
                     run_id=self.taskcluster_run_id,
-                    diff_name=diff_name,
+                    diff_name=rev.build_diff_name(),
                 )
                 logger.info('Diff available online', url=diff_url)
             else:
@@ -192,10 +182,5 @@ class Workflow(object):
             return
 
         # Publish reports about these issues
-        for reporter in self.reporters:
-            reporter.publish(
-                issues,
-                review_request_id,
-                diffset_revision,
-                diff_url,
-            )
+        for reporter in self.reporters.values():
+            reporter.publish(issues, rev, diff_url)

@@ -21,17 +21,16 @@ def get_reporters(configuration, client_id=None, access_token=None):
         'mozreview': MozReviewReporter,
         'phabricator': PhabricatorReporter,
     }
-    out = []
+    out = {}
     for conf in configuration:
         try:
             if 'reporter' not in conf:
                 raise Exception('Missing reporter declaration')
-            cls = reporters.get(conf['reporter'])
+            name = conf['reporter']
+            cls = reporters.get(name)
             if cls is None:
                 raise Exception('Missing reporter class {}'.format(conf['reporter']))
-            out.append(
-                cls(conf, client_id, access_token)
-            )
+            out[name] = cls(conf, client_id, access_token)
         except Exception as e:
             logger.warning('Failed to create reporter: {}'.format(e))
 

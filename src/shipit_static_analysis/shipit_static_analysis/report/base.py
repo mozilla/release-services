@@ -15,7 +15,7 @@ class Reporter(object):
         '''
         raise NotImplementedError
 
-    def publish(self, issues, review_request_id, revision, diff_url):
+    def publish(self, issues, revision, diff_url):
         '''
         Publish a new report
         '''

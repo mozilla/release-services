@@ -35,12 +35,12 @@ class MailReporter(Reporter):
 
         logger.info('Mail report enabled', emails=self.emails)
 
-    def publish(self, issues, review_request_id, diffset_revision, diff_url):
+    def publish(self, issues, revision, diff_url=None):
         '''
         Send an email to administrators
         '''
         content = EMAIL_HEADER.format(
-            review_url='https://reviewboard.mozilla.org/r/{}/'.format(review_request_id), # noqa
+            review_url=revision.url,
             diff_url=diff_url or 'no clang-format diff',
             nb_publishable=sum([i.is_publishable() for i in issues]),
         )
@@ -48,7 +48,7 @@ class MailReporter(Reporter):
         if len(content) > 102400:
             # Content is 102400 chars max
             content = content[:102000] + '\n\n... Content max limit reached!'
-        subject = '[{}] New Static Analysis Review #{}'.format(settings.app_channel, review_request_id)
+        subject = '[{}] New Static Analysis {}'.format(settings.app_channel, revision)
         for email in self.emails:
             self.notify.email({
                 'address': email,

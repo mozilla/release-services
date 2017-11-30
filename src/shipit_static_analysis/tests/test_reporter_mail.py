@@ -47,18 +47,26 @@ def test_conf(mock_config):
 
 
 @responses.activate
-def test_mail(mock_config, mock_issues):
+def test_mail(mock_issues, mock_phabricator):
     '''
     Test mail sending through Taskcluster
     '''
     from shipit_static_analysis.report.mail import MailReporter
-    from shipit_static_analysis.config import settings
-    settings.setup('test')  # app channel used in title
+    from shipit_static_analysis.revisions import MozReviewRevision, PhabricatorRevision
+    from shipit_static_analysis.report.phabricator import PhabricatorReporter
+
+    phab = PhabricatorReporter({
+        'url': 'http://phabricator.test/api/',
+        'api_key': 'deadbeef',
+    })
 
     def _check_email(request):
         payload = json.loads(request.body)
 
-        assert payload['subject'] == '[test] New Static Analysis Review #12345'
+        assert payload['subject'] in (
+            '[test] New Static Analysis MozReview #12345 - 1',
+            '[test] New Static Analysis Phabricator #42 - PHID-DIFF-test',
+        )
         assert payload['address'] == 'test@mozilla.com'
         assert payload['template'] == 'fullscreen'
         assert payload['content'].startswith('3 Publishable issues on Mozreview')
@@ -79,4 +87,10 @@ def test_mail(mock_config, mock_issues):
         ],
     }
     r = MailReporter(conf, 'test_tc', 'token_tc')
-    r.publish(mock_issues, '12345', '1', diff_url=None)
+
+    # Publish for mozreview
+    mrev = MozReviewRevision('abcdef:12345:1')
+    r.publish(mock_issues, mrev, diff_url=None)
+
+    prev = PhabricatorRevision('42:PHID-DIFF-test', phab)
+    r.publish(mock_issues, prev, diff_url=None)

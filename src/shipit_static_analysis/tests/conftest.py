@@ -13,18 +13,23 @@ import re
 MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
 
 
+@responses.activate
 @pytest.fixture()
 def mock_config():
     '''
     Mock configuration for bot
     '''
     path = os.path.join(MOCK_DIR, 'config.yaml')
-    return responses.add(
+    responses.add(
         responses.GET,
         'https://hg.mozilla.org/mozilla-central/raw-file/tip/tools/clang-tidy/config.yaml',
         body=open(path).read(),
         content_type='text/plain',
     )
+
+    from shipit_static_analysis.config import settings
+    settings.setup('test')
+    return settings
 
 
 @pytest.fixture
@@ -114,3 +119,28 @@ def mock_mozreview():
 
     # Close httpretty session
     httpretty.disable()
+
+
+@pytest.fixture
+def mock_phabricator():
+    '''
+    Mock phabricator authentication process
+    '''
+    def _response(name):
+        path = os.path.join(MOCK_DIR, 'phabricator_{}.json'.format(name))
+        assert os.path.exists(path)
+        return open(path).read()
+
+    responses.add(
+        responses.POST,
+        'http://phabricator.test/api/user.whoami',
+        body=_response('auth'),
+        content_type='application/json',
+    )
+
+    responses.add(
+        responses.POST,
+        'http://phabricator.test/api/differential.diff.search',
+        body=_response('diff_search'),
+        content_type='application/json',
+    )
