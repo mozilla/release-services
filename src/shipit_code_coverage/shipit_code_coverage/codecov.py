@@ -169,7 +169,7 @@ class CodeCov(object):
           '--ignore-not-existing',
         ]
 
-        if out_format == 'coveralls':
+        if 'coveralls' in out_format:
             r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % self.revision)
             r.raise_for_status()
             push_id = r.json()['pushid']
@@ -326,7 +326,7 @@ class CodeCov(object):
                 with ThreadPoolExecutorResult() as executor:
                     executor.submit(generate_suite_report_task(suite))
 
-            self.generate_zero_coverage_report(self.generate_info(self.revision))
+            self.generate_zero_coverage_report(self.generate_info(self.revision, out_format='coveralls+'))
 
             os.chdir('code-coverage-reports')
             run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
