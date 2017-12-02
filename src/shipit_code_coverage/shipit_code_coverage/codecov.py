@@ -270,7 +270,14 @@ class CodeCov(object):
 
         zero_coverage_files = []
         for sf in report['source_files']:
-            if all(c is None or c == 0 for c in sf['coverage']):
+            # For C/C++ source files, we can consider a file as being uncovered
+            # when all its source lines are uncovered.
+            all_lines_uncovered = all(c is None or c == 0 for c in sf['coverage'])
+            # For JavaScript files, we can't do the same, as the top-level is always
+            # executed, even if it just contains declarations. So, we need to check if
+            # all its functions, except the top-level, are uncovered.
+            all_functions_uncovered = all(f['exec'] is False or f['name'] == 'top-level' for f in sf['functions'])
+            if all_lines_uncovered or (len(sf['functions']) > 1 and all_functions_uncovered):
                 zero_coverage_files.append(sf['name'])
 
         with open('code-coverage-reports/zero_coverage_files.json', 'w') as f:
