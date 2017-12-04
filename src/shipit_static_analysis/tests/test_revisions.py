@@ -34,7 +34,9 @@ def test_phabricator(mock_phabricator):
 
     r = PhabricatorRevision('42:PHID-DIFF-testABcd12', api)
     assert r.mercurial == 'coffeedeadbeef123456789'
-    assert r.id == 42
-    assert r.phid == 'PHID-DIFF-testABcd12'
+    assert r.diff_id == 42
+    assert r.diff_phid == 'PHID-DIFF-testABcd12'
     assert r.url == 'https://phabricator.test/PHID-DIFF-testABcd12/'
     assert r.build_diff_name() == 'PHID-DIFF-testABcd12-clang-format.diff'
+    assert r.id == 51  # revision
+    assert r.phid == 'PHID-DREV-zzzzz'

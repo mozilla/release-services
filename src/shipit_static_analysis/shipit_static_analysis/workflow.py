@@ -72,7 +72,7 @@ class Workflow(object):
         # Open new hg client
         self.hg = hglib.open(self.repo_dir)
 
-    def run(self, rev):
+    def run(self, revision):
         '''
         Run the static analysis workflow:
          * Pull revision from review
@@ -80,13 +80,16 @@ class Workflow(object):
          * Run static analysis
          * Publish results
         '''
+        assert revision.mercurial is not None, \
+            'Cannot run without a mercurial revision'
+
         # Add log to find Taskcluster task in papertrail
         logger.info(
             'New static analysis',
             taskcluster_task=self.taskcluster_task_id,
             taskcluster_run=self.taskcluster_run_id,
             channel=settings.app_channel,
-            revision=rev,
+            revision=revision,
         )
 
         # Setup clang
@@ -98,26 +101,26 @@ class Workflow(object):
         self.hg.update(rev=b'tip', clean=True)
 
         # Pull revision from review
-        self.hg.pull(source=REPO_REVIEW, rev=rev.mercurial, update=True, force=True)
+        self.hg.pull(source=REPO_REVIEW, rev=revision.mercurial, update=True, force=True)
 
         # Update to the target revision
-        self.hg.update(rev=rev.mercurial, clean=True)
+        self.hg.update(rev=revision.mercurial, clean=True)
 
         # Get the parents revisions
-        parent_rev = 'parents({})'.format(rev.mercurial)
+        parent_rev = 'parents({})'.format(revision.mercurial)
         parents = self.hg.identify(id=True, rev=parent_rev).decode('utf-8').strip()
 
         # Find modified files by this revision
         modified_files = []
         for parent in parents.split('\n'):
-            changeset = '{}:{}'.format(parent, rev.mercurial)
+            changeset = '{}:{}'.format(parent, revision.mercurial)
             status = self.hg.status(change=[changeset, ])
             modified_files += [f.decode('utf-8') for _, f in status]
         logger.info('Modified files', files=modified_files)
 
         # List all modified lines from current revision changes
         patch = Patch.parse_patch(
-            self.hg.diff(change=rev.mercurial, git=True).decode('utf-8')
+            self.hg.diff(change=revision.mercurial, git=True).decode('utf-8')
         )
         modified_lines = {
             # Use all changes in new files
@@ -158,7 +161,7 @@ class Workflow(object):
                     'Empty diff'
 
                 # Write diff in results directory
-                diff_path = os.path.join(self.taskcluster_results_dir, rev.build_diff_name())
+                diff_path = os.path.join(self.taskcluster_results_dir, revision.build_diff_name())
                 with open(diff_path, 'w') as f:
                     length = f.write(diff.decode('utf-8'))
                     logger.info('Diff from clang-format dumped', path=diff_path, length=length)  # noqa
@@ -167,7 +170,7 @@ class Workflow(object):
                 diff_url = ARTIFACT_URL.format(
                     task_id=self.taskcluster_task_id,
                     run_id=self.taskcluster_run_id,
-                    diff_name=rev.build_diff_name(),
+                    diff_name=revision.build_diff_name(),
                 )
                 logger.info('Diff available online', url=diff_url)
             else:
@@ -183,4 +186,4 @@ class Workflow(object):
 
         # Publish reports about these issues
         for reporter in self.reporters.values():
-            reporter.publish(issues, rev, diff_url)
+            reporter.publish(issues, revision, diff_url)

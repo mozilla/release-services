@@ -79,7 +79,7 @@ def main(phabricator,
     revisions = []
     if phabricator:
         # Only one phabricator revision at a time
-        api = reporters['phabricator']
+        api = reporters.get('phabricator')
         assert api is not None, \
             'Cannot use a phabricator revision without a phabricator reporter'
         revisions.append(PhabricatorRevision(phabricator, api))

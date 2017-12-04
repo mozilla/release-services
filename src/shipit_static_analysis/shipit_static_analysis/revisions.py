@@ -18,36 +18,46 @@ class PhabricatorRevision(object):
     def __init__(self, description, api):
         self.api = api
 
-        # Parse description
+        # Parse Diff description
         match = self.regex.match(description)
         if match is None:
             raise Exception('Invalid Phabricator description')
         groups = match.groups()
-        self.id = int(groups[0])
-        self.phid = groups[1]
+        self.diff_id = int(groups[0])
+        self.diff_phid = groups[1]
 
-        # Load mercurial revision from diff
-        diff = self.api.load_diff(self.phid)
+        # Load diff details to get the diff revision
+        # and the mercurial revision
+        diff = self.api.load_diff(self.diff_phid)
+        assert 'fields' in diff
+        self.phid = diff['fields']['revisionPHID']
+        assert self.phid.startswith('PHID-DREV')
         refs = {
             ref['type']: ref
             for ref in diff['fields']['refs']
         }
-        assert 'base' in refs, \
-            'Failed to find mercurial revision'
-        self.mercurial = refs['base']['identifier']
-        logger.info('Phabricator found revision', rev=self.mercurial)
+        if 'base' in refs:
+            self.mercurial = refs['base']['identifier']
+            logger.info('Phabricator found revision', id=self.diff_id, rev=self.mercurial)
+        else:
+            self.mercurial = None
+            logger.warn('No phabricator revision', id=self.diff_id)
+
+        # Load revision details to get its id
+        rev = self.api.load_revision(self.phid)
+        self.id = rev['id']
 
     def __str__(self):
-        return 'Phabricator #{} - {}'.format(self.id, self.phid)
+        return 'Phabricator #{} - {}'.format(self.diff_id, self.diff_phid)
 
     def build_diff_name(self):
         return '{}-clang-format.diff'.format(
-            self.phid,
+            self.diff_phid,
         )
 
     @property
     def url(self):
-        return 'https://{}/{}/'.format(self.api.hostname, self.phid)
+        return 'https://{}/{}/'.format(self.api.hostname, self.diff_phid)
 
 
 class MozReviewRevision(object):

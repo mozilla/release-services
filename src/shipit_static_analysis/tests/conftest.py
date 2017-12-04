@@ -144,3 +144,10 @@ def mock_phabricator():
         body=_response('diff_search'),
         content_type='application/json',
     )
+
+    responses.add(
+        responses.POST,
+        'http://phabricator.test/api/differential.revision.search',
+        body=_response('revision_search'),
+        content_type='application/json',
+    )

@@ -59,10 +59,26 @@ class PhabricatorReporter(Reporter):
 
     def load_diff(self, phid):
         '''
-        Find a differential diff
+        Find a differential diff details
         '''
         out = self.request(
             'differential.diff.search',
+            constraints={
+                'phids': [phid, ],
+            },
+        )
+
+        data = out['data']
+        assert len(data) == 1, \
+            'Not found'
+        return data[0]
+
+    def load_revision(self, phid):
+        '''
+        Find a differential revision details
+        '''
+        out = self.request(
+            'differential.revision.search',
             constraints={
                 'phids': [phid, ],
             },
@@ -79,47 +95,67 @@ class PhabricatorReporter(Reporter):
         '''
         assert isinstance(revision, PhabricatorRevision)
 
-        # TODO !
+        # Use only publishable issues
+        issues = list(filter(lambda i: i.is_publishable(), issues))
+        if issues:
 
-    def comment(self, revision_id, message):
+            # First publish inlines as drafts
+            inlines = [
+                self.comment_inline(revision, issue)
+                for issue in issues
+            ]
+            logger.info('Added inline comments', ids=[i['id'] for i in inlines])
+
+            # Then publish top comment
+            self.comment(
+                revision,
+                self.build_comment(
+                    issues=issues,
+                    diff_url=diff_url,
+                ),
+            )
+            logger.info('Published phabricator comment')
+
+        else:
+            # TODO: Publish a validated comment ?
+            logger.info('No issues to publish on phabricator')
+
+    def comment(self, revision, message):
         '''
-        Comment on a revision
+        Comment on a Differential revision
+        Using a frozen method as new transactions does not
+        seem to support inlines publication
         '''
-        transactions = [
-            {
-                'type': 'comment',
-                'value': message,
-            }
-        ]
-        out = self.request(
-            'diffusion.commit.edit',
-            objectIdentifier=revision_id,
-            transactions=transactions,
+        assert isinstance(revision, PhabricatorRevision)
+
+        return self.request(
+            'differential.createcomment',
+            revision_id=revision.id,
+            message=message,
+            attach_inlines=1,
         )
 
-        from pprint import pprint
-        pprint(out)
-
-        return out
-
-    def comment_inline(self, revision_id, issue):
+    def comment_inline(self, revision, issue):
         '''
         Post an inline comment on a diff
         '''
+        assert isinstance(revision, PhabricatorRevision)
         assert isinstance(issue, ClangIssue)
-        # TODO: check issue is instance of Issue
-        out = self.request(
+        # TODO: check issue is instance of base Issue
+
+        inline = self.request(
             'differential.createinline',
-            revisionID=revision_id,
+            diffID=revision.diff_id,
             filePath=issue.path,
             lineNumber=issue.line,
             lineLength=issue.nb_lines,
-            isNewFile=False,  # ?
             content=issue.as_text(),
-        )
 
-        from pprint import pprint
-        pprint(out)
+            # This displays on the new file (right side)
+            # Python boolean is not recognized by Conduit :/
+            isNewFile=1,
+        )
+        return inline
 
     def request(self, path, **payload):
         '''

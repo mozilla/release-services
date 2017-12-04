@@ -4,7 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
-import itertools
 from cli_common import log
 from rbtools.api.errors import APIError
 from rbtools.api.client import RBClient
@@ -18,27 +17,6 @@ logger = log.get_logger(__name__)
 MAX_COMMENTS = 30
 COMMENT_SUCCESS = '''
 C/C++ static analysis didn't find any defects in this patch. Hooray!
-'''
-COMMENT_FAILURE_SHORT = '''
-C/C++ static analysis found {defects_tidy} in this patch{extras_comments}.
-
-You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp`
-'''
-COMMENT_FAILURE = '''
-C/C++ static analysis found {defects_total} in this patch{extras_comments}.
- - {defects_tidy} found by clang-tidy
- - {defects_format} found by clang-format
-
-You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp` and `./mach clang-format -p path/to/file.cpp`
-'''
-BUG_REPORT = '''
-If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx
-'''
-COMMENT_DIFF_DOWNLOAD = '''
-
-A full diff for the formatting issues found by clang-format is provided here: {url}
-
-You can use it in your repository with `hg import`
 '''
 
 
@@ -77,11 +55,6 @@ class MozReviewReporter(Reporter):
         '''
         assert isinstance(revision, MozReviewRevision)
 
-        def pluralize(word, nb):
-            assert isinstance(word, str)
-            assert isinstance(nb, int)
-            return '{} {}'.format(nb, nb == 1 and word or word + 's')
-
         # Start a new review
         review = MozReview(self.api, revision.review_request_id, revision.diffset_revision)
 
@@ -93,30 +66,13 @@ class MozReviewReporter(Reporter):
             issues = [i for i in issues if isinstance(i, ClangTidyIssue)]
 
         if issues:
-            # Calc stats for issues, grouped by class
-            stats = {
-                cls: len(list(items))
-                for cls, items in itertools.groupby(sorted([
-                    issue.__class__
-                    for issue in issues
-                ], key=lambda x: str(x)))
-            }
-
-            # Build top comment
-            nb = len(issues)
-            extras = ' (only the first {} are reported here)'.format(MAX_COMMENTS)
-            body = self.style == 'clang-tidy' and COMMENT_FAILURE_SHORT or COMMENT_FAILURE
-            comment = body.format(
-                extras_comments=nb > MAX_COMMENTS and extras or '',
-                defects_total=pluralize('defect', nb),
-                defects_format=pluralize('defect', stats.get(ClangFormatIssue, 0)),
-                defects_tidy=pluralize('defect', stats.get(ClangTidyIssue, 0)),
+            # Build complex top comment
+            comment = self.build_comment(
+                issues=issues,
+                diff_url=diff_url,
+                style=self.style,
+                max_comments=MAX_COMMENTS
             )
-            comment += BUG_REPORT
-            if self.style == 'full' and diff_url is not None:
-                comment += COMMENT_DIFF_DOWNLOAD.format(
-                    url=diff_url,
-                )
 
             # Comment each issue
             for issue in issues:
