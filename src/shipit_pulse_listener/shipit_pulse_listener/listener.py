@@ -143,7 +143,7 @@ class HookCodeCoverage(Hook):
         )
 
     def is_coverage_task(self, task):
-        return task['task']['metadata']['name'].startswith('build-linux64-ccov')
+        return any(task['task']['metadata']['name'].startswith(s) for s in ['build-linux64-ccov', 'build-win64-ccov'])
 
     def as_utc(self, d):
         if d.tzinfo is None or d.tzinfo.utcoffset(d) is None:
@@ -162,29 +162,31 @@ class HookCodeCoverage(Hook):
             logger.info('Received duplicated groupResolved notification', group=group_id)
             return None
 
+        def maybe_trigger(tasks):
+            for task in tasks:
+                if self.is_coverage_task(task):
+                    self.triggered_groups.add(group_id)
+                    return task
+
+            return None
+
         list_url = 'https://queue.taskcluster.net/v1/task-group/' + group_id + '/list'
 
         r = requests.get(list_url, params={
             'limit': 200
         })
         reply = r.json()
-        for task in reply['tasks']:
-            if self.is_coverage_task(task):
-                self.triggered_groups.add(group_id)
-                return task
+        task = maybe_trigger(reply['tasks'])
 
-        while 'continuationToken' in reply:
+        while task is None and 'continuationToken' in reply:
             r = requests.get(list_url, params={
                 'limit': 200,
                 'continuationToken': reply['continuationToken']
             })
             reply = r.json()
-            for task in reply['tasks']:
-                if self.is_coverage_task(task):
-                    self.triggered_groups.add(group_id)
-                    return task
+            task = maybe_trigger(reply['tasks'])
 
-        return None
+        return task
 
     def parse(self, body):
         '''
@@ -200,7 +202,7 @@ class HookCodeCoverage(Hook):
             logger.info('Received groupResolved notification for an old task', group=taskGroupId)
             return None
 
-        logger.info('Received groupResolved notification for a linux64-ccov build', revision=build_task['task']['payload']['env']['GECKO_HEAD_REV'], group=taskGroupId)  # noqa
+        logger.info('Received groupResolved notification for coverage builds', revision=build_task['task']['payload']['env']['GECKO_HEAD_REV'], group=taskGroupId)  # noqa
 
         return {
             'REVISION': build_task['task']['payload']['env']['GECKO_HEAD_REV'],

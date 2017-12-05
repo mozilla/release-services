@@ -9,14 +9,23 @@ index_base = 'https://index.taskcluster.net/v1/'
 queue_base = 'https://queue.taskcluster.net/v1/'
 
 
-def get_last_task():
-    r = requests.get(index_base + 'task/gecko.v2.mozilla-central.latest.firefox.linux64-ccov-opt')
+def _get_build_platform_name(platform):
+    if platform == 'linux':
+        return 'linux64-ccov-opt'
+    elif platform == 'win':
+        return 'win64-ccov-debug'
+    else:
+        raise Exception('Unsupported platform: %s' % platform)
+
+
+def get_last_task(platform):
+    r = requests.get(index_base + 'task/gecko.v2.mozilla-central.latest.firefox.' + _get_build_platform_name(platform))
     last_task = r.json()
     return last_task['taskId']
 
 
-def get_task(branch, revision):
-    r = requests.get(index_base + 'task/gecko.v2.%s.revision.%s.firefox.linux64-ccov-opt' % (branch, revision))
+def get_task(branch, revision, platform):
+    r = requests.get(index_base + 'task/gecko.v2.%s.revision.%s.firefox.%s' % (branch, revision, _get_build_platform_name(platform)))
     task = r.json()
     if r.status_code == requests.codes.ok:
         return task['taskId']
