@@ -83,9 +83,8 @@ class Reporter(object):
 
         # Build top comment
         nb = len(issues)
-        if max_comments is None:
-            extras = ''
-        elif nb > max_comments:
+        extras = ''
+        if max_comments is not None and nb > max_comments:
             extras = ' (only the first {} are reported here)'.format(max_comments)
 
         body = style == 'clang-tidy' and COMMENT_FAILURE_SHORT or COMMENT_FAILURE

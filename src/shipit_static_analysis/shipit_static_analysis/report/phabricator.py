@@ -93,7 +93,9 @@ class PhabricatorReporter(Reporter):
         '''
         Publish inline comments for each issues
         '''
-        assert isinstance(revision, PhabricatorRevision)
+        if not isinstance(revision, PhabricatorRevision):
+            logger.info('Phabricator reporter only publishes Phabricator revisions. Skipping.')
+            return
 
         # Use only publishable issues
         issues = list(filter(lambda i: i.is_publishable(), issues))

@@ -53,7 +53,9 @@ class MozReviewReporter(Reporter):
         '''
         Publish comments on mozreview
         '''
-        assert isinstance(revision, MozReviewRevision)
+        if not isinstance(revision, MozReviewRevision):
+            logger.info('Mozreview reporter only publishes Mozreview revisions. Skipping.')
+            return
 
         # Start a new review
         review = MozReview(self.api, revision.review_request_id, revision.diffset_revision)
