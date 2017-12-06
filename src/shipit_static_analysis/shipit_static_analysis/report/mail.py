@@ -13,8 +13,8 @@ logger = log.get_logger(__name__)
 
 EMAIL_HEADER = '''{nb_publishable} Publishable issues on Mozreview
 
-Review Url : {review_url}
-Diff Url : {diff_url}
+Review Url: {review_url}
+Diff Url: {diff_url}
 '''
 
 

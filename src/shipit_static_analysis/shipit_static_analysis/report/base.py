@@ -26,7 +26,7 @@ COMMENT_DIFF_DOWNLOAD = '''
 
 A full diff for the formatting issues found by clang-format is provided here: {url}
 
-You can use it in your repository with `hg import`
+You can use it in your repository with `hg import` or `git apply`
 '''
 
 
