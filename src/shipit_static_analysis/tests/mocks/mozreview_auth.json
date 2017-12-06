@@ -1,0 +1,1 @@
+{"stat": "ok", "links": {"self": {"href": "http://mozreview.test/api/extensions/mozreview.extension.MozReviewExtension/bugzilla-api-key-logins/", "method": "GET"}, "create": {"href": "http://mozreview.test/api/extensions/mozreview.extension.MozReviewExtension/bugzilla-api-key-logins/", "method": "POST"}}}

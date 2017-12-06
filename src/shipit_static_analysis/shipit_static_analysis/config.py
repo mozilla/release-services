@@ -18,6 +18,10 @@ logger = get_logger(__name__)
 class Settings(object):
     def __init__(self):
         self.config = None
+        self.app_channel = None
+
+    def setup(self, app_channel):
+        self.app_channel = app_channel
         self.download({
             'cpp_extensions': ['.cpp', '.c', '.h'],
         })

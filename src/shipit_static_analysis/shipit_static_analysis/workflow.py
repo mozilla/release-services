@@ -5,69 +5,29 @@
 
 from __future__ import absolute_import
 
-import itertools
 import tempfile
 import hglib
 import os
 
-from cli_common.taskcluster import get_service
 from cli_common.log import get_logger
 from cli_common.command import run_check
-from shipit_static_analysis.clang.tidy import ClangTidy, ClangTidyIssue
-from shipit_static_analysis.clang.format import ClangFormat, ClangFormatIssue
+from shipit_static_analysis.clang.tidy import ClangTidy
+from shipit_static_analysis.clang.format import ClangFormat
 from shipit_static_analysis.config import settings
-from shipit_static_analysis.batchreview import BatchReview
+from parsepatch.patch import Patch
 
 logger = get_logger(__name__)
 
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{task_id}/runs/{run_id}/artifacts/public/results/{diff_name}'
-MAX_COMMENTS = 30
-MOZREVIEW_COMMENT_SUCCESS = '''
-C/C++ static analysis didn't find any defects in this patch. Hooray!
-'''
-MOZREVIEW_COMMENT_FAILURE_SHORT = '''
-C/C++ static analysis found {defects_tidy} in this patch{extras_comments}.
-
-You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp`
-'''
-MOZREVIEW_COMMENT_FAILURE = '''
-C/C++ static analysis found {defects_total} in this patch{extras_comments}.
- - {defects_tidy} found by clang-tidy
- - {defects_format} found by clang-format
-
-You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp` and `./mach clang-format -p path/to/file.cpp`
-'''
-MOZREVIEW_BUG_REPORT = '''
-If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx
-'''
-MOZREVIEW_COMMENT_DIFF_DOWNLOAD = '''
-
-A full diff for the formatting issues found by clang-format is provided here: {url}
-
-You can use it in your repository with `hg import`
-'''
-EMAIL_HEADER = '''{nb_publishable} Publishable issues on Mozreview
-
-Review Url : {review_url}
-Diff Url : {diff_url}
-'''
 
 
 class Workflow(object):
     '''
     Static analysis workflow
     '''
-    taskcluster = None
-
-    def __init__(self, cache_root, emails, app_channel, mozreview_api_root, mozreview_enabled=False, mozreview_publish_success=False, clang_format_enabled=False, mozreview_short_comment=True, client_id=None, access_token=None):  # noqa
-        self.emails = emails
-        self.app_channel = app_channel
-        self.mozreview_api_root = mozreview_api_root
-        self.mozreview_enabled = mozreview_enabled
-        self.mozreview_publish_success = mozreview_publish_success
-        self.mozreview_short_comment = mozreview_short_comment
+    def __init__(self, cache_root, reporters, clang_format_enabled=False):
         self.clang_format_enabled = clang_format_enabled
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
@@ -87,12 +47,10 @@ class Workflow(object):
         if not os.path.isdir(self.taskcluster_results_dir):
             os.makedirs(self.taskcluster_results_dir)
 
-        # Load TC services & secrets
-        self.notify = get_service(
-            'notify',
-            client_id=client_id,
-            access_token=access_token,
-        )
+        # Load reporters to use
+        self.reporters = reporters
+        if not self.reporters:
+            logger.warn('No reporters configured, this analysis will not be published')
 
         # Clone mozilla-central
         self.repo_dir = os.path.join(cache_root, 'central')
@@ -114,7 +72,7 @@ class Workflow(object):
         # Open new hg client
         self.hg = hglib.open(self.repo_dir)
 
-    def run(self, revision, review_request_id, diffset_revision):
+    def run(self, revision):
         '''
         Run the static analysis workflow:
          * Pull revision from review
@@ -122,55 +80,52 @@ class Workflow(object):
          * Run static analysis
          * Publish results
         '''
+        assert revision.mercurial is not None, \
+            'Cannot run without a mercurial revision'
+
         # Add log to find Taskcluster task in papertrail
         logger.info(
             'New static analysis',
             taskcluster_task=self.taskcluster_task_id,
             taskcluster_run=self.taskcluster_run_id,
-            channel=self.app_channel,
+            channel=settings.app_channel,
             revision=revision,
-            review_request_id=review_request_id,
-            diffset_revision=diffset_revision,
         )
 
         # Setup clang
         clang_tidy = ClangTidy(self.repo_dir, settings.target)
         clang_format = ClangFormat(self.repo_dir)
 
-        # Create batch review
-        self.mozreview = BatchReview(
-            self.mozreview_api_root,
-            review_request_id,
-            diffset_revision,
-            max_comments=MAX_COMMENTS,
-        )
-
         # Force cleanup to reset tip
         # otherwise previous pull are there
         self.hg.update(rev=b'tip', clean=True)
 
         # Pull revision from review
-        self.hg.pull(source=REPO_REVIEW, rev=revision, update=True, force=True)
+        self.hg.pull(source=REPO_REVIEW, rev=revision.mercurial, update=True, force=True)
 
         # Update to the target revision
-        self.hg.update(rev=revision, clean=True)
+        self.hg.update(rev=revision.mercurial, clean=True)
 
         # Get the parents revisions
-        parent_rev = 'parents({})'.format(revision)
+        parent_rev = 'parents({})'.format(revision.mercurial)
         parents = self.hg.identify(id=True, rev=parent_rev).decode('utf-8').strip()
 
         # Find modified files by this revision
         modified_files = []
         for parent in parents.split('\n'):
-            changeset = '{}:{}'.format(parent, revision)
+            changeset = '{}:{}'.format(parent, revision.mercurial)
             status = self.hg.status(change=[changeset, ])
             modified_files += [f.decode('utf-8') for _, f in status]
         logger.info('Modified files', files=modified_files)
 
-        # List all modified lines
+        # List all modified lines from current revision changes
+        patch = Patch.parse_patch(
+            self.hg.diff(change=revision.mercurial, git=True).decode('utf-8')
+        )
         modified_lines = {
-            f: self.mozreview.changed_lines_for_file(f)
-            for f in modified_files
+            # Use all changes in new files
+            filename: diff['touched'] + diff['added']
+            for filename, diff in patch.items()
         }
 
         # mach configure with mozconfig
@@ -206,12 +161,7 @@ class Workflow(object):
                     'Empty diff'
 
                 # Write diff in results directory
-                diff_name = '{}-{}-{}-clang-format.diff'.format(
-                    revision[:8],
-                    review_request_id,
-                    diffset_revision,
-                )
-                diff_path = os.path.join(self.taskcluster_results_dir, diff_name)
+                diff_path = os.path.join(self.taskcluster_results_dir, revision.build_diff_name())
                 with open(diff_path, 'w') as f:
                     length = f.write(diff.decode('utf-8'))
                     logger.info('Diff from clang-format dumped', path=diff_path, length=length)  # noqa
@@ -220,7 +170,7 @@ class Workflow(object):
                 diff_url = ARTIFACT_URL.format(
                     task_id=self.taskcluster_task_id,
                     run_id=self.taskcluster_run_id,
-                    diff_name=diff_name,
+                    diff_name=revision.build_diff_name(),
                 )
                 logger.info('Diff available online', url=diff_url)
             else:
@@ -234,113 +184,6 @@ class Workflow(object):
             logger.info('No issues, stopping there.')
             return
 
-        # Publish on mozreview
-        self.publish_mozreview(
-            review_request_id,
-            diffset_revision,
-            issues,
-            diff_url,
-        )
-
-        # Notify by email
-        logger.info('Send email to admins')
-        self.notify_admins(review_request_id, issues, diff_url)
-
-    def publish_mozreview(self, review_request_id, diff_revision, issues, diff_url=None):  # noqa
-        '''
-        Publish comments on mozreview
-        '''
-        def pluralize(word, nb):
-            assert isinstance(word, str)
-            assert isinstance(nb, int)
-            return '{} {}'.format(nb, nb == 1 and word or word + 's')
-
-        # Filter issues to keep publishable checks
-        # and non third party
-        issues = list(filter(lambda i: i.is_publishable(), issues))
-        if self.mozreview_short_comment:
-            # Only consider clang-tidy issue when using short comment
-            issues = [i for i in issues if isinstance(i, ClangTidyIssue)]
-        if issues:
-            # Calc stats for issues, grouped by class
-            stats = {
-                cls: len(list(items))
-                for cls, items in itertools.groupby(sorted([
-                    issue.__class__
-                    for issue in issues
-                ], key=lambda x: str(x)))
-            }
-
-            # Build top comment
-            nb = len(issues)
-            extras = ' (only the first {} are reported here)'.format(MAX_COMMENTS)
-            body = self.mozreview_short_comment and MOZREVIEW_COMMENT_FAILURE_SHORT or MOZREVIEW_COMMENT_FAILURE
-            comment = body.format(
-                extras_comments=nb > MAX_COMMENTS and extras or '',
-                defects_total=pluralize('defect', nb),
-                defects_format=pluralize('defect', stats.get(ClangFormatIssue, 0)),
-                defects_tidy=pluralize('defect', stats.get(ClangTidyIssue, 0)),
-            )
-            comment += MOZREVIEW_BUG_REPORT
-            if not self.mozreview_short_comment and diff_url is not None:
-                comment += MOZREVIEW_COMMENT_DIFF_DOWNLOAD.format(
-                    url=diff_url,
-                )
-
-            # Comment each issue
-            for issue in issues:
-                if isinstance(issue, ClangFormatIssue):
-                    logger.info('Skip clang-format issue on mozreview', issue=issue)
-                    continue
-
-                if self.mozreview_enabled:
-                    logger.info('Will publish about {}'.format(issue))
-                    self.mozreview.comment(
-                        issue.path,
-                        issue.line,
-                        issue.nb_lines,
-                        issue.mozreview_body,
-                    )
-                else:
-                    logger.info('Should publish about {}'.format(issue))
-
-        elif self.mozreview_publish_success:
-            comment = MOZREVIEW_COMMENT_SUCCESS
-            logger.info('No issues to publish, send kudos.')
-
-        else:
-            logger.info('No issues to publish, skipping MozReview publication.')
-            return
-
-        if not self.mozreview_enabled:
-            logger.info('Skipping MozReview publication.')
-            return
-
-        # Publish the review
-        # without ship_it to avoid automatically r+
-        return self.mozreview.publish(
-            body_top=comment,
-            ship_it=False,
-        )
-
-    def notify_admins(self, review_request_id, issues, diff_url):
-        '''
-        Send an email to administrators
-        '''
-        content = EMAIL_HEADER.format(
-            review_url='https://reviewboard.mozilla.org/r/{}/'.format(review_request_id), # noqa
-            diff_url=diff_url or 'no clang-format diff',
-            nb_publishable=sum([i.is_publishable() for i in issues]),
-        )
-        content += '\n\n'.join([i.as_markdown() for i in issues])
-        if len(content) > 102400:
-            # Content is 102400 chars max
-            content = content[:102000] + '\n\n... Content max limit reached!'
-        subject = '[{}] New Static Analysis Review #{}'.format(self.app_channel, review_request_id)
-        for email in self.emails:
-            self.notify.email({
-                'address': email,
-                'subject': subject,
-                'content': content,
-                'template': 'fullscreen',
-            })
+        # Publish reports about these issues
+        for reporter in self.reporters.values():
+            reporter.publish(issues, revision, diff_url)

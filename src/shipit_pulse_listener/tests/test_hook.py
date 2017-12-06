@@ -4,7 +4,7 @@ from datetime import timedelta
 
 
 def test_parse_deadline():
-    hook = Hook('gid', 'hid', 'q', 'r')
+    hook = Hook('gid', 'hid')
     assert hook.parse_deadline('1 second') == timedelta(seconds=1)
     assert hook.parse_deadline('2 seconds') == timedelta(seconds=2)
     assert hook.parse_deadline('1 minute') == timedelta(minutes=1)

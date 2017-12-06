@@ -7,35 +7,115 @@ import json
 from cli_common import log
 from rbtools.api.errors import APIError
 from rbtools.api.client import RBClient
+from shipit_static_analysis.revisions import MozReviewRevision
+from shipit_static_analysis.report.base import Reporter
+from shipit_static_analysis.clang.tidy import ClangTidyIssue
+from shipit_static_analysis.clang.format import ClangFormatIssue
 
 logger = log.get_logger(__name__)
 
+MAX_COMMENTS = 30
+COMMENT_SUCCESS = '''
+C/C++ static analysis didn't find any defects in this patch. Hooray!
+'''
 
-def build_api_root(url, username, api_key):
+
+class MozReviewReporter(Reporter):
     '''
-    Helper to build an RBTools api root
-    used by BatchReview
+    API connector to MozReview
     '''
-    logger.info('Authenticate on Mozreview', url=url, username=username)
-    client = RBClient(url, save_cookies=False, allow_caching=False)
-    login_resource = client.get_path(
-        'extensions/mozreview.extension.MozReviewExtension/'
-        'bugzilla-api-key-logins/'
-    )
-    login_resource.create(username=username, api_key=api_key)
-    return client.get_root()
+
+    def __init__(self, configuration, *args):
+        '''
+        Helper to build an RBTools api root
+        used by MozReview below
+        '''
+        url, api_key, username = self.requires(configuration, 'url', 'api_key', 'username')
+
+        # Authenticate client
+        client = RBClient(url, save_cookies=False, allow_caching=False)
+        login_resource = client.get_path(
+            'extensions/mozreview.extension.MozReviewExtension/'
+            'bugzilla-api-key-logins/'
+        )
+        login_resource.create(username=username, api_key=api_key)
+        self.api = client.get_root()
+
+        # Optional parameters
+        self.style = configuration.get('style', 'clang-tidy')
+        assert self.style in ('clang-tidy', 'full')
+        self.publish_success = configuration.get('publish_success', False)
+        assert isinstance(self.publish_success, bool)
+
+        logger.info('Mozreview report enabled', url=url, username=username)
+
+    def publish(self, issues, revision, diff_url=None):  # noqa
+        '''
+        Publish comments on mozreview
+        '''
+        if not isinstance(revision, MozReviewRevision):
+            logger.info('Mozreview reporter only publishes Mozreview revisions. Skipping.')
+            return
+
+        # Start a new review
+        review = MozReview(self.api, revision.review_request_id, revision.diffset_revision)
+
+        # Filter issues to keep publishable checks
+        # and non third party
+        issues = list(filter(lambda i: i.is_publishable(), issues))
+        if self.style == 'clang-tidy':
+            # Only consider clang-tidy issue when using clang-tidy comment
+            issues = [i for i in issues if isinstance(i, ClangTidyIssue)]
+
+        if issues:
+            # Build complex top comment
+            comment = self.build_comment(
+                issues=issues,
+                diff_url=diff_url,
+                style=self.style,
+                max_comments=MAX_COMMENTS
+            )
+
+            # Comment each issue
+            for issue in issues:
+                if isinstance(issue, ClangFormatIssue):
+                    logger.info('Skip clang-format issue on mozreview', issue=issue)
+                    continue
+
+                logger.info('Will publish about {}'.format(issue))
+                review.comment(
+                    issue.path,
+                    issue.line,
+                    issue.nb_lines,
+                    issue.as_text(),
+                )
+
+        elif self.publish_success:
+            comment = COMMENT_SUCCESS
+            logger.info('No issues to publish, send kudos.')
+
+        else:
+            logger.info('No issues to publish, skipping MozReview publication.')
+            return
+
+        # Publish the review
+        # without ship_it to avoid automatically r+
+        return review.publish(
+            body_top=comment,
+            ship_it=False,
+        )
 
 
-class BatchReview(object):
-    '''Create a review and comments with a single API call
+class MozReview(object):
+    '''Create a review and comments with a single API call (batch mode)
 
-    Using BatchReview is much faster than creating a review and comments
+    Using batch publication is much faster than creating a review and comments
     with individual API calls.
     '''
 
     def __init__(self, api_root, review_request_id, diff_revision,
                  max_comments=100):
-        '''Initialize BatchReview
+        '''Initialize MozReview
 
         The ``api_root`` is the result of calling get_root on a Reviewboard
         client.
@@ -47,7 +127,7 @@ class BatchReview(object):
         revision for which to leave the review.
 
         The ``max_comments`` provides a limit on the number of comments
-        which can be made as part of the BatchReview.
+        which can be made as part of the MozReview.
         '''
 
         self.api_root = api_root
@@ -75,25 +155,6 @@ class BatchReview(object):
                     break
 
         return self._destfile_to_file.get(destfile)
-
-    def changed_lines_for_file(self, filename):
-        '''Determine which lines changed in a file'''
-        f = self.destfile_to_file(filename)
-        if f is None:
-            logger.info('File not in patch {}'.format(filename))
-            return []
-
-        diff_data = self._file_to_diffdata.setdefault(f, f.get_diff_data())
-
-        chunks = diff_data.rsp['diff_data']['chunks']
-        changed_lines = set()
-        for chunk in chunks:
-            if chunk['change'] not in ('insert', 'replace'):
-                continue
-            for line in chunk['lines']:
-                changed_lines.add(int(line[4]))
-
-        return changed_lines
 
     def translate_line_num(self, filename, line_num, original=False):
         '''Convert a file line number to a filediff line number.
