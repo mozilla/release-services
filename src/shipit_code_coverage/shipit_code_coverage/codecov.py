@@ -228,14 +228,18 @@ class CodeCov(object):
                                     branch=b'tip')
 
         cmd.insert(0, hglib.HGPATH)
-        proc = hglib.util.popen(cmd)
-        out, err = proc.communicate()
-        if proc.returncode:
-            raise hglib.error.CommandError(cmd, proc.returncode, out, err)
 
-        hg = hglib.open(self.repo_dir)
+        def do_clone():
+            proc = hglib.util.popen(cmd)
+            out, err = proc.communicate()
+            if proc.returncode:
+                raise hglib.error.CommandError(cmd, proc.returncode, out, err)
 
-        hg.update(rev=revision, clean=True)
+            hg = hglib.open(self.repo_dir)
+
+            hg.update(rev=revision, clean=True)
+
+        retry(lambda: do_clone())
 
         logger.info('mozilla-central cloned')
 
