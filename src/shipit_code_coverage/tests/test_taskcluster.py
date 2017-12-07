@@ -59,12 +59,34 @@ def test_is_coverage_task():
     }
     assert not taskcluster.is_coverage_task(nocov_task)
 
+    cov_task = {
+        'task': {
+            'metadata': {
+                'name': 'test-windows10-64-ccov/debug-cppunit'
+            }
+        }
+    }
+    assert taskcluster.is_coverage_task(cov_task)
+
+    nocov_task = {
+        'task': {
+            'metadata': {
+                'name': 'test-windows10-64/debug-cppunit'
+            }
+        }
+    }
+    assert not taskcluster.is_coverage_task(nocov_task)
+
 
 def test_get_suite_name():
     tests = [
         ('test-linux64-ccov/opt-mochitest-1', 'mochitest'),
         ('test-linux64-ccov/opt-mochitest-e10s-7', 'mochitest'),
-        ('test-linux64-ccov/opt-firefox-ui-functional-remote-e10s', 'firefox-ui-functional-remote')
+        ('test-linux64-ccov/opt-cppunit', 'cppunit'),
+        ('test-linux64-ccov/opt-firefox-ui-functional-remote-e10s', 'firefox-ui-functional-remote'),
+        ('test-windows10-64-ccov/debug-mochitest-1', 'mochitest'),
+        ('test-windows10-64-ccov/debug-mochitest-e10s-7', 'mochitest'),
+        ('test-windows10-64-ccov/debug-cppunit', 'cppunit'),
     ]
 
     for (name, suite) in tests:
