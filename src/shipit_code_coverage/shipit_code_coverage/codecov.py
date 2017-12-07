@@ -277,7 +277,7 @@ class CodeCov(object):
 
                 requests.get('https://uplift.shipit.staging.mozilla-releng.net/coverage/changeset/%s' % changeset['node'])
         except Exception as e:
-            logger.warn('Error while requesting coverage data: ' + str(e))
+            logger.warn('Error while requesting coverage data', error=str(e))
 
     def generate_zero_coverage_report(self, report):
         report = json.loads(report.decode('utf-8'))  # Decoding is only necessary until Python 3.6.
