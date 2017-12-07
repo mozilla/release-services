@@ -178,7 +178,7 @@ class CodeCov(object):
           '--ignore-not-existing',
         ]
 
-        if out_format == 'coveralls':
+        if 'coveralls' in out_format:
             r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % self.revision)
             r.raise_for_status()
             push_id = r.json()['pushid']
@@ -279,7 +279,14 @@ class CodeCov(object):
 
         zero_coverage_files = []
         for sf in report['source_files']:
-            if all(c is None or c == 0 for c in sf['coverage']):
+            # For C/C++ source files, we can consider a file as being uncovered
+            # when all its source lines are uncovered.
+            all_lines_uncovered = all(c is None or c == 0 for c in sf['coverage'])
+            # For JavaScript files, we can't do the same, as the top-level is always
+            # executed, even if it just contains declarations. So, we need to check if
+            # all its functions, except the top-level, are uncovered.
+            all_functions_uncovered = all(f['exec'] is False or f['name'] == 'top-level' for f in sf['functions'])
+            if all_lines_uncovered or (len(sf['functions']) > 1 and all_functions_uncovered):
                 zero_coverage_files.append(sf['name'])
 
         with open('code-coverage-reports/zero_coverage_files.json', 'w') as f:
@@ -335,7 +342,7 @@ class CodeCov(object):
                 with ThreadPoolExecutorResult() as executor:
                     executor.submit(generate_suite_report_task(suite))
 
-            self.generate_zero_coverage_report(self.generate_info(self.revision))
+            self.generate_zero_coverage_report(self.generate_info(self.revision, out_format='coveralls+'))
 
             os.chdir('code-coverage-reports')
             run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
