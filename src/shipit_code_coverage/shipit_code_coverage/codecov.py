@@ -79,12 +79,16 @@ class CodeCov(object):
         def rewriting_task(path):
             return lambda: self.rewrite_jsvm_lcov(path)
 
-        test_tasks = []
-
-        for build_task_id in build_task_ids:
-            task_data = taskcluster.get_task_details(build_task_id)
-            tasks = taskcluster.get_tasks_in_group(task_data['taskGroupId'])
-            test_tasks += [t for t in tasks if taskcluster.is_coverage_task(t)]
+        # The test tasks for the Linux and Windows builds are in the same group,
+        # but the following code is generic and supports build tasks split in
+        # separate groups.
+        groups = set([taskcluster.get_task_details(build_task_id)['taskGroupId'] for build_task_id in build_task_ids])
+        test_tasks = [
+            task
+            for group in groups
+            for task in taskcluster.get_tasks_in_group(group)
+            if taskcluster.is_coverage_task(task)
+        ]
 
         with ThreadPoolExecutorResult() as executor:
             for test_task in test_tasks:
