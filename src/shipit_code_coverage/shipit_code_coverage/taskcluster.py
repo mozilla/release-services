@@ -83,11 +83,17 @@ def download_artifact(task_id, suite, artifact):
     return artifact_path
 
 
+TEST_PLATFORMS = ['test-linux64-ccov/opt', 'test-windows10-64-ccov/debug']
+
+
 def is_coverage_task(task):
-    return task['task']['metadata']['name'].startswith('test-linux64-ccov')
+    return any(task['task']['metadata']['name'].startswith(t) for t in TEST_PLATFORMS)
 
 
 def get_suite_name(task):
     name = task['task']['metadata']['name']
-    name = name[len('test-linux64-ccov/opt-'):]
+    for t in TEST_PLATFORMS:
+        if name.startswith(t):
+            name = name[len(t) + 1:]
+            break
     return '-'.join([p for p in name.split('-') if p != 'e10s' and not p.isdigit()])
