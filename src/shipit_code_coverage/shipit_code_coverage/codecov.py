@@ -6,6 +6,7 @@ import zipfile
 import requests
 import hglib
 from threading import Condition
+from concurrent.futures import ThreadPoolExecutor
 
 from cli_common.log import get_logger
 from cli_common.command import run_check
@@ -342,8 +343,8 @@ class CodeCov(object):
             def generate_suite_report_task(suite):
                 return lambda: generate_suite_report(suite)
 
-            for suite in self.suites:
-                with ThreadPoolExecutorResult() as executor:
+            with ThreadPoolExecutor() as executor:
+                for suite in self.suites:
                     executor.submit(generate_suite_report_task(suite))
 
             self.generate_zero_coverage_report(self.generate_info(self.revision, out_format='coveralls+'))
