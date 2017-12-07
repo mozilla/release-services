@@ -1,7 +1,7 @@
 {
   "url": "https://github.com/rust-lang/crates.io-index",
-  "rev": "fb45baa83a02ec13a3a1b4b98cdb38932bb0fd38",
-  "date": "2017-05-22T08:38:44+00:00",
-  "sha256": "01mjp28a9lipfhdw8w7di1k42bnfid6wssbisdzcajlvfkhjplsc",
+  "rev": "7799ede0b5eb0dec39887be6b165a70d19d8c373",
+  "date": "2017-12-07T19:55:27+00:00",
+  "sha256": "0kyny74yxkk1hsgx2wixqsrajzcn54s8591b1xw63miy9z9p465z",
   "fetchSubmodules": true
 }
