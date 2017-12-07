@@ -69,7 +69,7 @@ class CodeCov(object):
 
         logger.info('Mercurial revision', revision=self.revision)
 
-    def download_coverage_artifacts(self, build_task_ids):
+    def download_coverage_artifacts(self):
         try:
             os.mkdir('ccov-artifacts')
         except OSError as e:
@@ -82,7 +82,7 @@ class CodeCov(object):
         # The test tasks for the Linux and Windows builds are in the same group,
         # but the following code is generic and supports build tasks split in
         # separate groups.
-        groups = set([taskcluster.get_task_details(build_task_id)['taskGroupId'] for build_task_id in build_task_ids])
+        groups = set([taskcluster.get_task_details(build_task_id)['taskGroupId'] for build_task_id in self.task_ids])
         test_tasks = [
             task
             for group in groups
@@ -299,7 +299,7 @@ class CodeCov(object):
     def go(self):
         with ThreadPoolExecutorResult(max_workers=2) as executor:
             # Thread 1 - Download coverage artifacts.
-            executor.submit(lambda: self.download_coverage_artifacts(self.task_ids))
+            executor.submit(lambda: self.download_coverage_artifacts())
 
             # Thread 2 - Clone and build mozilla-central
             clone_future = executor.submit(lambda: self.clone_mozilla_central(self.revision))
