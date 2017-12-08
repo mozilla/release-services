@@ -1,0 +1,19 @@
+---
+swagger: "2.0"
+# TODO: version and title in api.yml should be provided from python code
+# dynamicaly. also additional fields should be picked up from setup.py somehow:
+# - contact (maintainer)
+# - license
+info:
+  version: "1.0"
+  title: "Ship-It Workflow"
+paths:
+
+  /ping:
+    get:
+      operationId: "shipit_workflow.api.ping"
+      description: |
+        Ping me
+      responses:
+        200:
+          description: Nothing to say...

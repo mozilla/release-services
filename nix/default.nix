@@ -71,6 +71,7 @@ let
     "shipit-pipeline" = import ./../src/shipit_pipeline { inherit releng_pkgs; };
     "shipit-signoff" = import ./../src/shipit_signoff { inherit releng_pkgs; };
     "shipit-taskcluster" = import ./../src/shipit_taskcluster { inherit releng_pkgs; };
+    "shipit-workflow" = import ./../src/shipit_workflow { inherit releng_pkgs; };
 
   };
 

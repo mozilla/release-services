@@ -545,4 +545,17 @@ PROJECTS = {
             },
         },
     },
+    'shipit-workflow': {
+        'checks': [
+            ('Checking code quality', 'flake8'),
+            ('Running tests', 'pytest tests/'),
+        ],
+        'run': 'FLASK',
+        'run_options': {
+            'port': 8015,
+        },
+        'requires': [
+            'postgresql',
+        ],
+    },
 }
