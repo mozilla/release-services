@@ -347,7 +347,7 @@ class CodeCov(object):
             def generate_suite_report_task(suite):
                 return lambda: generate_suite_report(suite)
 
-            with ThreadPoolExecutor() as executor:
+            with ThreadPoolExecutor(max_workers=2) as executor:
                 for suite in self.suites:
                     executor.submit(generate_suite_report_task(suite))
 
