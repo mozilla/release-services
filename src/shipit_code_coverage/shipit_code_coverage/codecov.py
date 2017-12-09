@@ -2,6 +2,7 @@
 import errno
 import json
 import os
+import shutil
 import zipfile
 import requests
 import hglib
@@ -339,8 +340,10 @@ class CodeCov(object):
                 output = self.generate_info(self.revision, suite=suite, out_format='lcov')
 
                 self.generate_report(output, suite)
+                os.remove('%s.info' % suite)
 
                 run_check(['tar', '-cjf', 'code-coverage-reports/%s.tar.bz2' % suite, suite])
+                shutil.rmtree(os.path.join(os.getcwd(), suite))
 
                 logger.info('Suite report generated', suite=suite)
 
