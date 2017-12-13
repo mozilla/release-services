@@ -557,5 +557,14 @@ PROJECTS = {
         'requires': [
             'postgresql',
         ],
+        'deploy_options': {
+            'staging': {
+                'heroku_app': 'releng-staging-shipit-workflow',
+                'heroku_dyno_type': 'web',
+                'url': 'https://shipit-workflow.staging.mozilla-releng.net',
+                # TODO: we need to change this to SSL Endpoint
+                'dns': 'shipit-workflow.staging.mozilla-releng.net.herokudns.com',
+            },
+        },
     },
 }
