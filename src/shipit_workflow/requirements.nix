@@ -1,4 +1,4 @@
-# generated using pypi2nix tool (version: 1.8.0)
+# generated using pypi2nix tool (version: 1.8.1)
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
@@ -55,6 +55,7 @@ let
           done
           pushd $out/bin
           ln -s ${pythonPackages.python.executable} python
+          ln -s ${pythonPackages.python.executable}               python3
           popd
         '';
         passthru.interpreter = pythonPackages.python;
@@ -65,7 +66,7 @@ let
       mkDerivation = pythonPackages.buildPythonPackage;
       packages = pkgs;
       overrideDerivation = drv: f:
-        pythonPackages.buildPythonPackage (drv.drvAttrs // f drv.drvAttrs);
+        pythonPackages.buildPythonPackage (drv.drvAttrs // f drv.drvAttrs //                                            { meta = drv.meta; });
       withPackages = pkgs'':
         withPackages (pkgs // pkgs'');
     };
@@ -209,7 +210,6 @@ let
       self."Jinja2"
       self."SQLAlchemy"
       self."pytest"
-      self."redis"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://logbook.pocoo.org/";
@@ -426,7 +426,7 @@ let
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://certifi.io/";
-        license = "MPL-2.0";
+        license = licenses.mpl20;
         description = "Python package for providing Mozilla's CA Bundle.";
       };
     };
@@ -741,7 +741,6 @@ let
       self."PyYAML"
       self."SQLAlchemy"
       self."amqp"
-      self."redis"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://kombu.readthedocs.io";
@@ -1097,21 +1096,6 @@ let
 
 
 
-    "redis" = python.mkDerivation {
-      name = "redis-2.10.6";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/09/8d/6d34b75326bf96d4139a2ddd8e74b80840f800a0a79f9294399e212cb9a7/redis-2.10.6.tar.gz"; sha256 = "a22ca993cea2962dbb588f9f30d0015ac4afcc45bee27d3978c0dbe9e97c6c0f"; };
-      doCheck = commonDoCheck;
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "http://github.com/andymccurdy/redis-py";
-        license = licenses.mit;
-        description = "Python client for Redis key-value store";
-      };
-    };
-
-
-
     "requests" = python.mkDerivation {
       name = "requests-2.18.4";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/b0/e1/eab4fc3752e3d240468a8c0b284607899d2fbfb236a56b7377a329aa8d09/requests-2.18.4.tar.gz"; sha256 = "9c443e7324ba5b85070c4a818ade28bfabedf16ea10206da1132edaa6dda237e"; };
@@ -1336,15 +1320,19 @@ let
     };
 
   };
-  overrides = import ./requirements_override.nix { inherit pkgs python; };
+  localOverridesFile = ./requirements_override.nix;
+  overrides = import localOverridesFile { inherit pkgs python; };
   commonOverrides = [
 
   ];
+  allOverrides =
+    (if (builtins.pathExists localOverridesFile)
+     then [overrides] else [] ) ++ commonOverrides;
 
 in python.withPackages
    (fix' (pkgs.lib.fold
             extends
             generated
-            ([overrides] ++ commonOverrides)
+            allOverrides
          )
    )
