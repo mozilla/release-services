@@ -53,7 +53,7 @@ def generate(changeset):
         for data in annotate:
             # Skip lines that were not added by this changeset or were overwritten by
             # another changeset.
-            if data['node'] != changeset:
+            if data['node'][:len(changeset)] != changeset:
                 continue
 
             new_line = data['lineno']
