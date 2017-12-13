@@ -143,5 +143,74 @@ def cmd(project,
         please_cli.utils.check_result(result, output)
 
 
+@click.command()
+@cli_common.click.taskcluster_options
+@click.argument(
+    'project',
+    required=True,
+    type=click.Choice(please_cli.config.PROJECTS),
+    )
+@click.option(
+    '--nix-build',
+    required=True,
+    default=please_cli.config.NIX_BIN_DIR + 'nix-build',
+    help='`nix-build` command',
+    )
+@click.option(
+    '--interactive/--no-interactive',
+    default=True,
+    )
+def cmd_docker(project,
+        nix_build,
+        taskcluster_secret,
+        taskcluster_client_id,
+        taskcluster_access_token,
+        interactive,
+    ):
+
+    docker_path = please_cli.config.TMP_DIR + '/result-docker-{project}'.format(project=project)
+
+    # Build docker image for project
+    print('Building docker image for {}'.format(project))
+    command = [
+        nix_build,
+        please_cli.config.ROOT_DIR + '/nix/default.nix',
+        '-A', '{}.docker'.format(project),
+        '-o', docker_path
+    ]
+    result, output, error = cli_common.command.run(
+        command,
+        stream=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    if result != 0:
+        raise Exception('Failed to build docker image')
+
+    please_cli.utils.check_result(
+        result,
+        output,
+        ask_for_details=interactive,
+    )
+
+    # Loading docker image
+    print('Import docker image from {}'.format(docker_path))
+    command = [
+        'docker',
+        'load',
+        '-i', docker_path,
+    ]
+    result, output, error = cli_common.command.run(
+        command,
+        stream=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    if result != 0:
+        raise Exception('Failed to build docker image')
+
+    print('Image loaded')
+
+
 if __name__ == "__main__":
     cmd()
