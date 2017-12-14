@@ -1,0 +1,6 @@
+-e ./../../lib/cli_common[sentry] #egg=mozilla-cli-common
+-e ./../../lib/backend_common[log,security,cors,api,auth,db,auth0] #egg=mozilla-backend-common
+
+pytz
+psycopg2
+gunicorn

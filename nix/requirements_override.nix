@@ -194,6 +194,12 @@ in skipOverrides {
     '';
   };
 
+  "fancycompleter" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['setuptools_scm'\],||" setup.py
+    '';
+  };
+
   "flake8" = self: old: {
     patchPhase = ''
       sed -i -e "s|setup_requires=\['pytest-runner'\],||" setup.py
@@ -241,7 +247,10 @@ in skipOverrides {
 
   "pdbpp" = self: old: {
     patchPhase = ''
-      sed -i -e "s|setup_requires=\['setuptools_scm'\],||" setup.py
+      sed -i \
+        -e "s|setup_requires=\['setuptools_scm'\],||" \
+        -e "s|fancycompleter>=0.8|fancycompleter|" \
+        setup.py
     '';
   };
 
