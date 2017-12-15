@@ -14,13 +14,14 @@ let
 
   mercurial' = mercurial.overrideDerivation (old: {
     postInstall = old.postInstall + ''
+      mkdir -p $out/etc/mercurial
       cat > $out/etc/mercurial/hgrc <<EOF
-[web]
-cacerts = ${cacert}/etc/ssl/certs/ca-bundle.crt
-
-[extensions]
-purge =
-EOF
+      [web]
+      cacerts = ${cacert}/etc/ssl/certs/ca-bundle.crt
+      
+      [extensions]
+      purge =
+      EOF
     '';
   });
 
