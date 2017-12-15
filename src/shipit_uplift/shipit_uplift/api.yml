@@ -172,6 +172,24 @@ paths:
         200:
           description: Code coverage information by directory
 
+  /coverage/file:
+    get:
+      operationId: "shipit_uplift.api.coverage_for_file"
+      parameters:
+      - name: changeset
+        in: query
+        description: Changeset
+        required: true
+        type: string
+      - name: path
+        in: query
+        description: File
+        required: true
+        type: string
+      responses:
+        200:
+          description: Code coverage information for a given file at a given changeset
+
   /coverage/changeset/{changeset}:
     get:
       operationId: "shipit_uplift.api.coverage_by_changeset"
