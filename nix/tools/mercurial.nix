@@ -28,14 +28,15 @@ let
 
 in mercurial.overrideDerivation (old: {
   postInstall = old.postInstall + ''
+    mkdir -p $out/etc/mercurial
     cat > $out/etc/mercurial/hgrc <<EOF
-[web]
-cacerts = ${cacert}/etc/ssl/certs/ca-bundle.crt
-
-[extensions]
-purge =
-robustcheckout = ${hg_tools}/hgext/robustcheckout/__init__.py
-reviewboard = ${hg_tools}/hgext/reviewboard/client.py
-EOF
+    [web]
+    cacerts = ${cacert}/etc/ssl/certs/ca-bundle.crt
+    
+    [extensions]
+    purge =
+    robustcheckout = ${hg_tools}/hgext/robustcheckout/__init__.py
+    reviewboard = ${hg_tools}/hgext/reviewboard/client.py
+    EOF
   '';
 })

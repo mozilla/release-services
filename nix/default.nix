@@ -1,38 +1,20 @@
 let
   pkgs' = import <nixpkgs> {};
-  nixpkgs = pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs.json));
-  nixpkgs-mozilla = pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs-mozilla.json));
+  src-nixpkgs = pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs.json));
+  src-nixpkgs-mozilla = pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs-mozilla.json));
 in
-{ pkgs ? import nixpkgs {
-    overlays = [ (import "${nixpkgs-mozilla}/rust-overlay.nix") ];
+{ pkgs ? import src-nixpkgs {
+    overlays = [
+      (import "${src-nixpkgs-mozilla}/rust-overlay.nix")
+      (import "${src-nixpkgs-mozilla}/firefox-overlay.nix")
+    ];
   }
-, mozilla ? import nixpkgs-mozilla {}
 }:
 
 let
 
   releng_pkgs = {
-
-    pkgs = pkgs // {
-      name = "nixpkgs";
-      update = releng_pkgs.lib.updateFromGitHub {
-        owner = "NixOS";
-        repo = "nixpkgs-channels";
-        branch = "nixos-unstable";
-        path = "nix/nixpkgs.json";
-      };
-    };
-
-    mozilla = mozilla // {
-      name = "nixpkgs-mozilla";
-      update = releng_pkgs.lib.updateFromGitHub {
-        owner = "mozilla";
-        repo = "nixpkgs-mozilla";
-        branch = "master";
-        path = "nix/nixpkgs-mozilla.json";
-      };
-    };
-
+    inherit pkgs;
     lib = import ./lib/default.nix { inherit releng_pkgs; };
     tools = import ./tools/default.nix { inherit releng_pkgs; };
     gecko-env = import ./gecko_env.nix { inherit releng_pkgs; };
