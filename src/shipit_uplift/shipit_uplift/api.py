@@ -387,6 +387,8 @@ def coverage_by_dir(path=''):
 
 
 def coverage_by_changeset(changeset):
+    changeset = changeset[:12]
+
     job = q.fetch_job(changeset)
 
     if job is None:
