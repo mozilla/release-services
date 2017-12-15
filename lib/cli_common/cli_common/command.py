@@ -75,7 +75,7 @@ def run_check(command, **kwargs):
     returncode, output, error = run(command, **kwargs)
 
     if returncode != 0:
-        log.critical(
+        log.info(
             'Command failed with code: {}'.format(returncode),
             command=command_as_string,
             output=output,
