@@ -9,6 +9,24 @@ logger = get_logger(__name__)
 REGEX_IDENTIFY = re.compile(r'([abcdef0-9]+) \(?([\w\-_]+)\)? (?:tip )?(\w+)')
 
 
+class MergeConflicts(Exception):
+    '''
+    Mercurial merge conflicts detected
+    '''
+
+
+class MergeFailure(Exception):
+    '''
+    Mercurial generic merge failure
+    '''
+
+
+class MergeSkipped(Exception):
+    '''
+    Mercurial merge skipped, code already present
+    '''
+
+
 class Repository(object):
     '''
     Maintains an updated mercurial repository
@@ -100,10 +118,10 @@ class Repository(object):
         except hglib.error.CommandError as e:
             logger.warn('Failed to identify revision', rev=revision, error=e)
 
-    def is_mergeable(self, revision):
+    def merge(self, revision):
         '''
         Test if a revision is mergeable on current branch
-        Returns merge status and message (as tuple)
+        Raises Specific exceptions for different failures
         '''
         # Use revision in bytes (needed by hglib)
         if isinstance(revision, int):
@@ -125,23 +143,23 @@ class Repository(object):
             message = ' '.join([
                 e.out.decode('utf-8'),
                 e.err.decode('utf-8')
-            ])
+            ]).replace('\r', '\n')
+
             if 'already grafted to' in message:
-                logger.info('Skipped merge', revision=revision, error=message)  # noqa
-                return True, message
+                # Not an error, merge can continue
+                logger.info('Skipped merge', revision=revision, info=message)  # noqa
+                raise MergeSkipped(message)
 
             if 'abort: unresolved conflicts' in message:
                 # Abort graft
-                logger.info('Unresolved conflicrs', revision=revision, error=message)  # noqa
-                self.client.update(clean=True)
-                return False, message
+                logger.info('Unresolved conflicts', revision=revision, error=message)  # noqa
+                raise MergeConflicts(message)
 
-            message = message.replace('\r', '\n')
             logger.info('Auto merge failed', revision=revision, error=message)  # noqa
-            return False, message
+            raise MergeFailure(message)
 
         # If `hg graft` exits code 0, there are no merge conflicts.
-        return True, 'merge success'
+        return 'merge success'
 
     def cleanup(self):
         '''
@@ -149,9 +167,21 @@ class Repository(object):
         '''
         try:
             self.client.update(rev=self.branch, clean=True)
-            self.client.branch(self.branch)
+            # self.client.branch(self.branch)
         except hglib.error.CommandError as e:
             logger.warning('Cleanup failed', error=e)
+
+        # Check there are no left over files
+        for status, path in self.client.status():
+            assert status == b'?', \
+                'Weird state, repo should only have unknown files'
+            full_path = os.path.join(
+                self.directory,
+                'repo',
+                path.decode('utf-8'),
+            )
+            os.unlink(full_path)
+            logger.info('Deleted unknown file', path=path)
 
         # Check parent revision got reverted
         ids = self.client.identify().decode('utf-8')
@@ -168,7 +198,7 @@ class Repository(object):
         branches = list(map(lambda x: x[0], self.client.branches()))
         if branch_name in branches:
             # Cleanup existing branch
-            print('Update to', branch_name, '>', self.branch)
+            logger.info('Cleaning up existing branch', base=self.branch, branch=branch_name)
             self.client.rawcommand([b'strip', self.branch])
             try:
                 self.client.update(branch_name, clean=True)
@@ -219,17 +249,40 @@ class Repository(object):
         # Get tip revision
         tip = self.client.tip()
 
-        # Check tip does not already have this message
-        if append_message in tip.desc:
-            logger.info('Skip amend last commit. Message is already present', message=append_message, commit=tip.desc)
-            return
+        # Modify first line of message
+        lines = tip.desc.split(b'\n')
+        assert len(lines) > 0, \
+            'No commit message'
+        top_line = lines[0]
 
-        # Modify it
-        new_message = tip.desc + append_message
+        # Check top line does not already have this message
+        if append_message in top_line:
+            logger.info('Skip amend last commit. Message is already present', message=append_message, commit=top_line)
+            return
+        lines[0] = top_line + append_message
+        new_message = b'\n'.join(lines)
 
         # Mark commit as draft
         self.client.phase(force=True, draft=True)
 
         # Amend the message
         logger.info('Amending last commit', message=new_message)
-        return self.client.commit(message=new_message, amend=True)
+        try:
+            # 99% of the cases
+            return self.client.commit(message=new_message, amend=True)
+        except hglib.error.CommandError as e:
+            message = ' '.join([
+                e.out.decode('utf-8'),
+                e.err.decode('utf-8')
+            ]).replace('\r', '\n')
+
+            if 'abort: cannot amend changeset with children' in message:
+                print('Try to set public mode')
+
+                # TODO: hg phase --draft --force .
+                print(tip)
+                print(dir(tip))
+                self.client.phase(revs=(tip.revision, ), draft=True, force=True)
+
+            # Retry commit
+            return self.client.commit(message=new_message, amend=True)

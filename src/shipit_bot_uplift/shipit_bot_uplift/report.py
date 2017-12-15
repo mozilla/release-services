@@ -42,7 +42,7 @@ class Report(object):
         def _commit_report(revision, result):
             fail_fmt = ' * Merge failed for commit `{}` (parent `{}`)\n\n```\n{}```'  # noqa
             default_fmt = ' * Merge {} for commit `{}`'
-            if result.status == 'failed':
+            if result.status.value == 'failed':
                 return fail_fmt.format(
                     _str(revision),
                     _str(result.parent),

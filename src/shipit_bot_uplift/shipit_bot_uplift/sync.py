@@ -503,9 +503,6 @@ class Bot(object):
             # Save invalid merge in report
             self.report.add_invalid_merge(merge_test)
 
-        # Always cleanup
-        self.repository.cleanup()
-
         # No push
         return False
 

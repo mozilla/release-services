@@ -1,13 +1,23 @@
 # -*- coding: utf-8 -*-
 from shipit_bot_uplift.api import api_client
+from shipit_bot_uplift.mercurial import MergeSkipped
 from collections import OrderedDict, namedtuple
 from cli_common.log import get_logger
+import enum
+import os.path
+import json
 
 
 logger = get_logger(__name__)
 
 # Status can be: merged, failed, skipped
 MergeResult = namedtuple('MergeResult', 'revision, status, message, parent')
+
+
+class MergeStatus(enum.Enum):
+    Merged = 'merged'
+    Skipped = 'skipped'
+    Failed = 'failed'
 
 
 class MergeTest(object):
@@ -33,6 +43,30 @@ class MergeTest(object):
         else:
             self.reviewer_nick = None
         logger.info('New merge test', bz_id=self.bugzilla_id, branch=self.branch, reviewer=self.reviewer_nick)
+
+    @staticmethod
+    def from_json(path):
+        assert os.path.exists(path)
+        with open(path) as f:
+            payload = json.load(f)
+
+        mt = MergeTest(
+            payload['bugzilla_id'],
+            payload['branch'].encode('utf-8'),
+            payload['status'],
+            payload['patches'],
+        )
+        mt.reviewer_nick = payload['reviewer_nick']
+        return mt
+
+    def to_json(self):
+        return json.dumps({
+            'bugzilla_id': self.bugzilla_id,
+            'branch': self.branch.decode('utf-8'),
+            'status': self.status,
+            'patches': self.patches,
+            'reviewer_nick': self.reviewer_nick,
+        }, indent=4)
 
     def is_needed(self):
         '''
@@ -73,7 +107,10 @@ class MergeTest(object):
         '''
         assert len(self.results) > 0, \
             'Merge test must be run before using is_valid'
-        return all([r.status == 'merged' for r in self.results.values()])
+        return all([
+            r.status in (MergeStatus.Merged, MergeStatus.Skipped)
+            for r in self.results.values()
+        ])
 
     def list_revisions(self, repository):
         '''
@@ -129,41 +166,51 @@ class MergeTest(object):
 
         parent = self.parent  # Start from repo parent
         for revision, num in self.revisions:
-            logger.info('Attempting new graft', revision=revision, num=num, group=self.group)  # noqa
+            assert isinstance(parent, str)
 
             # Try to merge revision in repository
             # Only when previous merge test passed
             previous = self.results.get(parent)
-            if previous is None or previous.status != 'failed':
-                merged, message = repository.is_mergeable(revision)
-                status = merged and 'merged' or 'failed'
-                result = MergeResult(revision, status, message, parent)
+            if previous is None or previous.status != MergeStatus.Failed:
+                logger.info('Attempting new graft', revision=revision, num=num, group=self.group)  # noqa
+                try:
+                    message = repository.merge(revision)
+                    result = MergeResult(revision, MergeStatus.Merged, message, parent)
+                except MergeSkipped as e:
+                    result = MergeResult(revision, MergeStatus.Skipped, str(e), parent)
+                except Exception as e:
+                    result = MergeResult(revision, MergeStatus.Failed, str(e), parent)
 
             else:
                 # Create default invalid result
                 # And do not try to run the merge test
                 # as the previous one failed
                 msg = u'Graft skipped: parent merge failed'
-                result = MergeResult(revision, 'skipped', msg, parent)
+                result = MergeResult(revision, MergeStatus.Failed, msg, parent)
+                logger.info('Skipped graft', revision=revision, num=num, group=self.group)  # noqa
 
             # Rewrite commit message to append RelMan reviewer nickname
-            if result.status != 'failed' and self.status == '+' and self.reviewer_nick:
+            if result.status == MergeStatus.Merged and self.status == '+' and self.reviewer_nick:
                 repository.amend(' a={}'.format(self.reviewer_nick))
 
             # Save result in backend
-            self.save_result(revision, result)
+            self.save_result(result)
 
             # Next parent is current revision (commit chain)
             parent = revision.decode('utf-8')
 
+        # Always cleanup
+        repository.cleanup()
+
         return True
 
-    def save_result(self, revision, result):
+    def save_result(self, result):
         '''
         Store a new patch status on backend
         '''
         assert isinstance(result, MergeResult)
         assert isinstance(result.parent, str)
+        revision = result.revision.decode('utf-8')
 
         # Store result
         self.results[revision] = result
@@ -175,9 +222,9 @@ class MergeTest(object):
         # Publish as a new patch status
         data = {
             'group': self.group,
-            'revision': revision.decode('utf-8'),
+            'revision': revision,
             'revision_parent': result.parent,
-            'status': result.status,
+            'status': result.status.value,
             'branch': self.branch.decode('utf-8'),
             'message': result.message,
         }
