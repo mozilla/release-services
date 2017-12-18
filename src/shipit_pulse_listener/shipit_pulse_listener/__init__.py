@@ -7,4 +7,4 @@ from __future__ import absolute_import
 from shipit_pulse_listener.monitoring import Monitoring
 
 # Shared monitoring manager
-task_monitoring = Monitoring(3600)
+task_monitoring = Monitoring(7 * 3600)

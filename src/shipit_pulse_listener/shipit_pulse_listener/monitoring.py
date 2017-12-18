@@ -61,7 +61,7 @@ class Monitoring(object):
         '''
         Watch task status by using an async queue
         to communicate with other processes
-        A report is send every hour about failed tasks
+        A report is sent periodically about failed tasks
         '''
         for report_date in self.next_report():
             while datetime.utcnow() < report_date:
@@ -115,7 +115,7 @@ class Monitoring(object):
 
         # Build markdown
         total = sum([len(s) for s in self.stats.values()])
-        content = '# Pulse listener tasks for the last hour\n'
+        content = '# Pulse listener tasks for the last period\n'
         for group_name, tasks in self.stats.items():
             nb_tasks = len(tasks)
             content += GROUP_MD.format(
