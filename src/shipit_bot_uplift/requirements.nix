@@ -926,7 +926,7 @@ let
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://cheeseshop.python.org/pypi/simplegeneric";
-        license = licenses.zpt21;
+        license = licenses.zpl21;
         description = "Simple generic functions (similar to Python's own len(), pickle.dump(), etc.)";
       };
     };

@@ -2,7 +2,7 @@
 
 let
   inherit (releng_pkgs.pkgs) rustChannels bash autoconf213 clang_4 llvm llvmPackages_4;
-  inherit (releng_pkgs.mozilla) gecko;
+  inherit (releng_pkgs.pkgs.devEnv) gecko;
 
 in gecko.overrideDerivation (old: {
   # Dummy src, cannot be null
