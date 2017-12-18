@@ -153,9 +153,9 @@ class CodeCov(object):
         zip_file.extractall(out_dir)
         zip_file.close()
 
-        lcov_files = [os.path.abspath(os.path.join(out_dir, f)) for f in os.listdir(out_dir)]
-        run_check(['gecko-env', './mach', 'python', 'python/mozbuild/mozbuild/codecoverage/lcov_rewriter.py'] + lcov_files, cwd=self.repo_dir)
+        run_check(['gecko-env', './mach', 'python', 'python/mozbuild/mozbuild/codecoverage/lcov_rewriter.py', os.path.abspath(out_dir)], cwd=self.repo_dir)
 
+        lcov_files = [os.path.abspath(os.path.join(out_dir, f)) for f in os.listdir(out_dir)]
         for lcov_file in lcov_files:
             os.remove(lcov_file)
 
