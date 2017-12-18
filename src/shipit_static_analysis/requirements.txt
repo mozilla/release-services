@@ -3,9 +3,7 @@
 libmozdata
 RBTools
 PyYAML
-
-# Parsepatch before release
-https://github.com/mozilla/parsepatch/archive/master.tar.gz#egg=parsepatch
+parsepatch
 
 # Fixed versions
 six==1.10.0
