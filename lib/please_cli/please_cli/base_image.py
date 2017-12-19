@@ -80,10 +80,13 @@ RUN wget -O- http://nixos.org/releases/nix/nix-1.11.9/nix-1.11.9-x86_64-linux.ta
  && rm -r /home/app/nix-*-x86_64-linux \\
  && . /home/app/.profile \\
  && nix-env -iA nixpkgs.cacert \\
- && nix-env -u \\
  && nix-collect-garbage -d \\
  && rm -rf /home/app/.cache/nix
 
+# This command from above breaks since Services release v30
+# After next nixkpgs.json update, try to enable it again
+# See commit right after v30
+# && nix-env -u \\
 
 #
 # Copy project into /app
