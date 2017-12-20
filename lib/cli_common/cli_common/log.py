@@ -124,6 +124,12 @@ def setup_sentry(project_name, channel, SENTRY_DSN, flask_app=None):
     sentry_handler.push_application()
 
 
+def structlog_taskcluster_env_processor(logger, log_method, event_dict):
+    event_dict['taskcluster_task_id'] = os.environ.get('TASK_ID')
+    event_dict['taskcluster_run_id'] = os.environ.get('RUN_ID')
+    return event_dict
+
+
 def init_logger(project_name,
                 channel=None,
                 level=logbook.INFO,
@@ -166,6 +172,7 @@ def init_logger(project_name,
         structlog.stdlib.PositionalArgumentsFormatter(),
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
+        structlog_taskcluster_env_processor,
     ]
 
     # send to mozdef before formatting into a string
