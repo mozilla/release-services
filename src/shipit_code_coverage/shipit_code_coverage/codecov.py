@@ -309,6 +309,9 @@ class CodeCov(object):
 
             # Thread 2 - Clone and build mozilla-central
             clone_future = executor.submit(lambda: self.clone_mozilla_central(self.revision))
+            # Make sure cloning mozilla-central didn't fail before building.
+            clone_future.add_done_callback(lambda f: f.result())
+            # Now we can build.
             clone_future.add_done_callback(lambda f: self.build_files())
 
         if self.from_pulse:
