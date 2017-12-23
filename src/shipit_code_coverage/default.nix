@@ -15,7 +15,7 @@ let
 
   # Marco grcov
   grcov = rustPlatform.buildRustPackage rec {
-    version = "0.1.29";
+    version = "0.1.30";
     name = "grcov-${version}";
 
     buildInputs = [
@@ -26,7 +26,7 @@ let
       owner = "marco-c";
       repo = "grcov";
       rev = "v${version}";
-      sha256 = "1bzr6c433pl5wfjkzvq16kx6w5swss5xywbgfnxhs5lklxx11pn4";
+      sha256 = "16bvwi128yhy7kmzxnd17k3gss73p3ljn8ill8sfdsc9g2a3q1rp";
     };
 
     # running 4 tests
@@ -50,7 +50,7 @@ let
     # error: test failed
     doCheck = false;
 
-    depsSha256 = "0r22pxmlzzpcj1plxc3qjvk0dxsm7q18l2x6kp5bam9i8zlrcnbi";
+    depsSha256 = "0ac0wzbn4shxmzad2m4i69gw7smyyrr612smphblzkn5n60zqb3y";
 
     meta = with releng_pkgs.pkgs.stdenv.lib; {
       description = "grcov collects and aggregates code coverage information for multiple source files.";
