@@ -4,7 +4,7 @@
 let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource ;
-  inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch;
+  inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch nodejs git python27 python35 coreutils;
   inherit (releng_pkgs.pkgs.lib) fileContents concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
 
@@ -82,6 +82,9 @@ let
         moz_clang
         patch
 
+        # Needed for linters
+        nodejs
+
         # Gecko environment
         releng_pkgs.gecko-env
       ];
@@ -89,17 +92,26 @@ let
     postInstall = ''
       mkdir -p $out/tmp
       mkdir -p $out/bin
+      mkdir -p $out/usr/bin
       ln -s ${mercurial}/bin/hg $out/bin
       ln -s ${moz_clang}/bin/clang-tidy $out/bin
       ln -s ${moz_clang}/bin/clang-format $out/bin
       ln -s ${patch}/bin/patch $out/bin
+
+      # Mozlint deps
+      ln -s ${nodejs}/bin/node $out/bin
+      ln -s ${nodejs}/bin/npm $out/bin
+      ln -s ${git}/bin/git $out/bin
+      ln -s ${python27}/bin/python2.7 $out/bin/python2.7
+      ln -s ${python35}/bin/python3.5 $out/bin/python3.5
+      ln -s ${coreutils}/bin/env $out/usr/bin/env
 
       # Expose gecko env in final output
       ln -s ${releng_pkgs.gecko-env}/bin/gecko-env $out/bin
     '';
 
     shellHook = ''
-      export PATH="${mercurial}/bin:${moz_clang}/bin:$PATH"
+      export PATH="${mercurial}/bin:${git}/bin:${python27}/bin:${python35}/bin:${moz_clang}/bin:${nodejs}/bin:$PATH"
 
       # Setup mach automation
       export MOZ_AUTOMATION=1
