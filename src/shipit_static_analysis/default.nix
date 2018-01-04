@@ -103,7 +103,9 @@ let
       ln -s ${nodejs}/bin/npm $out/bin
       ln -s ${git}/bin/git $out/bin
       ln -s ${python27}/bin/python2.7 $out/bin/python2.7
+      ln -s ${python27}/bin/python2.7 $out/bin/python2
       ln -s ${python35}/bin/python3.5 $out/bin/python3.5
+      ln -s ${python35}/bin/python3.5 $out/bin/python3
       ln -s ${coreutils}/bin/env $out/usr/bin/env
 
       # Expose gecko env in final output
@@ -128,6 +130,7 @@ let
       [ "CPLUS_INCLUDE_PATH=${includes}"
         "C_INCLUDE_PATH=${includes}"
         "MOZCONFIG=${releng_pkgs.gecko-env}/conf/mozconfig"
+        "SHELL=xterm"
       ];
     dockerCmd = [];
 

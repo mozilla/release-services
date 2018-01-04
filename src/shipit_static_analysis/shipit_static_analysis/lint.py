@@ -72,6 +72,11 @@ class MozLint(object):
     def __init__(self, repo_dir):
         self.repo_dir = repo_dir
 
+        # Check we have a Shell set in env
+        # This is needed for mach + mozlint execution
+        assert 'SHELL' in os.environ, \
+            'Missing SHELL environment variable'
+
     def run(self, files):
         '''
         List all issues found by mozlint on specified files
