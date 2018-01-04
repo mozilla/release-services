@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from cli_common import log
-from shipit_static_analysis.clang import ClangIssue
+from shipit_static_analysis import Issue
 from shipit_static_analysis.report.base import Reporter
 from shipit_static_analysis.revisions import PhabricatorRevision
 from urllib.parse import urlparse
@@ -142,7 +142,7 @@ class PhabricatorReporter(Reporter):
         Post an inline comment on a diff
         '''
         assert isinstance(revision, PhabricatorRevision)
-        assert isinstance(issue, ClangIssue)
+        assert isinstance(issue, Issue)
         # TODO: check issue is instance of base Issue
 
         inline = self.request(

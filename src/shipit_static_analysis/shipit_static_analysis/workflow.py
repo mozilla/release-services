@@ -14,6 +14,7 @@ from cli_common.command import run_check
 from shipit_static_analysis.clang.tidy import ClangTidy
 from shipit_static_analysis.clang.format import ClangFormat
 from shipit_static_analysis.config import settings
+from shipit_static_analysis.lint import MozLint
 from parsepatch.patch import Patch
 
 logger = get_logger(__name__)
@@ -92,9 +93,10 @@ class Workflow(object):
             revision=revision,
         )
 
-        # Setup clang
+        # Setup tools (clang & mozlint)
         clang_tidy = ClangTidy(self.repo_dir, settings.target)
         clang_format = ClangFormat(self.repo_dir)
+        mozlint = MozLint(self.repo_dir)
 
         # Force cleanup to reset tip
         # otherwise previous pull are there
@@ -178,6 +180,10 @@ class Workflow(object):
 
         else:
             logger.info('Skip clang-format')
+
+        # Run linter
+        logger.info('Run linter...')
+        issues += mozlint.run(modified_lines)
 
         logger.info('Detected {} issue(s)'.format(len(issues)))
         if not issues:

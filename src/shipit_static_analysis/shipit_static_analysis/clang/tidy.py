@@ -13,7 +13,7 @@ import re
 
 from cli_common.log import get_logger
 from shipit_static_analysis.config import settings
-from shipit_static_analysis.clang import ClangIssue
+from shipit_static_analysis import Issue
 
 logger = get_logger(__name__)
 
@@ -205,7 +205,7 @@ class ClangTidy(object):
         return issues
 
 
-class ClangTidyIssue(ClangIssue):
+class ClangTidyIssue(Issue):
     '''
     An issue reported by clang-tidy
     '''

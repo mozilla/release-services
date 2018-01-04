@@ -4,7 +4,7 @@ import difflib
 import tempfile
 import subprocess
 from cli_common.log import get_logger
-from shipit_static_analysis.clang import ClangIssue
+from shipit_static_analysis import Issue
 
 logger = get_logger(__name__)
 
@@ -150,7 +150,7 @@ class ClangFormat(object):
         return True
 
 
-class ClangFormatIssue(ClangIssue):
+class ClangFormatIssue(Issue):
     '''
     An issue created by Clang Format tool
     '''
