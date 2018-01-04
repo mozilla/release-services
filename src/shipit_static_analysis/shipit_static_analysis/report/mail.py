@@ -11,10 +11,21 @@ from cli_common.taskcluster import get_service
 logger = log.get_logger(__name__)
 
 
-EMAIL_HEADER = '''{nb_publishable} Publishable issues on Mozreview
+EMAIL_STATS_LINE = '|{source}|{total}|{publishable}|'
+
+EMAIL_HEADER = '''
+# Found {total} issues
+
+| Source | Issues | Publishable |
+|--------|--------|-------------|
+{stats_table}
+
+## Links
 
 Review Url: {review_url}
 Diff Url: {diff_url}
+
+## Issues
 '''
 
 
@@ -39,7 +50,21 @@ class MailReporter(Reporter):
         '''
         Send an email to administrators
         '''
+
+        # Build stats table for all issues
+        # One line per issues class
+        table = '\n'.join([
+            EMAIL_STATS_LINE.format(
+                source=str(cls.__name__),
+                total=stat['total'],
+                publishable=stat['publishable'],
+            )
+            for cls, stat in self.calc_stats(issues).items()
+        ])
+
         content = EMAIL_HEADER.format(
+            total=len(issues),
+            stats_table=table,
             review_url=revision.url,
             diff_url=diff_url or 'no clang-format diff',
             nb_publishable=sum([i.is_publishable() for i in issues]),

@@ -6,6 +6,7 @@
 import itertools
 from shipit_static_analysis.clang.tidy import ClangTidyIssue
 from shipit_static_analysis.clang.format import ClangFormatIssue
+from shipit_static_analysis.lint import MozLintIssue
 
 COMMENT_FAILURE_SHORT = '''
 C/C++ static analysis found {defects_tidy} in this patch{extras_comments}.
@@ -16,6 +17,7 @@ COMMENT_FAILURE = '''
 C/C++ static analysis found {defects_total} in this patch{extras_comments}.
  - {defects_tidy} found by clang-tidy
  - {defects_format} found by clang-format
+ - {defects_linter} found by mozlint
 
 You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp` and `./mach clang-format -p path/to/file.cpp`
 '''
@@ -61,25 +63,48 @@ class Reporter(object):
 
         return out
 
+    def calc_stats(self, issues):
+        '''
+        Calc stats about issues:
+        * group issues by class name
+        * count their total number
+        * count their publishable number
+        '''
+        groups = itertools.groupby(
+            sorted(issues, key=lambda x: str(x.__class__)),
+            lambda x: x.__class__,
+        )
+
+        def stats(items):
+            _items = list(items)
+            return {
+                'total': len(_items),
+                'publishable': sum([i.is_publishable() for i in _items])
+            }
+
+        return {
+            cls: stats(items)
+            for cls, items in groups
+        }
+
     def build_comment(self, issues, style='full', diff_url=None, max_comments=None):
         '''
         Build a human readable comment about published issues
         '''
         assert style in ('full', 'clang-tidy')
 
+        # Calc stats for issues, grouped by class
+        stats = self.calc_stats(issues)
+
         def pluralize(word, nb):
             assert isinstance(word, str)
             assert isinstance(nb, int)
             return '{} {}'.format(nb, nb == 1 and word or word + 's')
 
-        # Calc stats for issues, grouped by class
-        stats = {
-            cls: len(list(items))
-            for cls, items in itertools.groupby(sorted([
-                issue.__class__
-                for issue in issues
-            ], key=lambda x: str(x)))
-        }
+        def publishable(cls):
+            if cls not in stats:
+                return 0
+            return stats[cls]['publishable']
 
         # Build top comment
         nb = len(issues)
@@ -91,12 +116,14 @@ class Reporter(object):
         comment = body.format(
             extras_comments=extras,
             defects_total=pluralize('defect', nb),
-            defects_format=pluralize('defect', stats.get(ClangFormatIssue, 0)),
-            defects_tidy=pluralize('defect', stats.get(ClangTidyIssue, 0)),
+            defects_format=pluralize('defect', publishable(ClangFormatIssue)),
+            defects_tidy=pluralize('defect', publishable(ClangTidyIssue)),
+            defects_linter=pluralize('defect', publishable(MozLintIssue)),
         )
         comment += BUG_REPORT
         if style == 'full' and diff_url is not None:
             comment += COMMENT_DIFF_DOWNLOAD.format(
                 url=diff_url,
             )
+
         return comment
