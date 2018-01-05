@@ -161,9 +161,7 @@ class CodeCov(object):
             '--output-file', os.path.abspath(out_file)
         ], cwd=self.repo_dir)
 
-        lcov_files = [os.path.join(out_dir, f) for f in os.listdir(out_dir)]
-        for lcov_file in lcov_files:
-            os.remove(lcov_file)
+        shutil.rmtree(out_dir)
 
     def generate_info(self, commit_sha, suite=None, out_format='coveralls'):
         files = os.listdir('ccov-artifacts')
