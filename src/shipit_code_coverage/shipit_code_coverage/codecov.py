@@ -147,9 +147,8 @@ class CodeCov(object):
             while not self.build_finished:
                 self.build_finished_cv.wait()
 
-        out_name = zip_file_path[:-4]
-        out_dir = out_name
-        out_file = out_name + '.info'
+        out_dir = zip_file_path[:-4]
+        out_file = out_dir + '.info'
 
         zip_file = zipfile.ZipFile(zip_file_path, 'r')
         zip_file.extractall(out_dir)
