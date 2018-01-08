@@ -99,6 +99,7 @@ let
       ln -s ${patch}/bin/patch $out/bin
 
       # Mozlint deps
+      ln -s ${gcc}/bin/gcc $out/bin
       ln -s ${nodejs}/bin/node $out/bin
       ln -s ${nodejs}/bin/npm $out/bin
       ln -s ${git}/bin/git $out/bin
@@ -107,6 +108,8 @@ let
       ln -s ${python35}/bin/python3.5 $out/bin/python3.5
       ln -s ${python35}/bin/python3.5 $out/bin/python3
       ln -s ${coreutils}/bin/env $out/usr/bin/env
+      ln -s ${coreutils}/bin/ld $out/bin
+      ln -s ${coreutils}/bin/as $out/bin
 
       # Expose gecko env in final output
       ln -s ${releng_pkgs.gecko-env}/bin/gecko-env $out/bin

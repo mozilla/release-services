@@ -95,6 +95,7 @@ class MozLint(object):
         command = [
             './mach', 'lint',
             '-f', 'json',
+            '--no-ignore',
             path
         ]
         returncode, output, error = run(' '.join(command), cwd=self.repo_dir)
@@ -103,16 +104,21 @@ class MozLint(object):
             return
 
         # Load output as json
-        output = json.loads(output.decode('utf-8'))
-        if not output:
+        # Only consider last line, as ./mach lint may output
+        # linter setup output on stdout :/
+        try:
+            lines = list(filter(None, output.decode('utf-8').split('\n')))
+            payload = json.loads(lines[-1])
+        except json.decoder.JSONDecodeError:
             logger.warn('Invalid json output', path=path)
             return
+
         full_path = os.path.join(self.repo_dir, path)
-        if full_path not in output:
+        if full_path not in payload:
             logger.warn('Missing path in linter output', path=path)
             return
 
         return [
             MozLintIssue(path, modified_lines, **issue)
-            for issue in output[full_path]
+            for issue in payload[full_path]
         ]
