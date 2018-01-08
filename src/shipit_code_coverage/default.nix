@@ -3,7 +3,7 @@
 let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource mkRustPlatform;
-  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl cacert rustStable git;
+  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl cacert rustStable git llvm_4;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
   inherit (releng_pkgs.tools) pypi2nix mercurial ;
@@ -15,14 +15,18 @@ let
 
   # Marco grcov
   grcov = rustPlatform.buildRustPackage rec {
-    version = "0.1.27";
+    version = "0.1.31";
     name = "grcov-${version}";
+
+    buildInputs = [
+        llvm_4
+    ];
 
     src = releng_pkgs.pkgs.fetchFromGitHub {
       owner = "marco-c";
       repo = "grcov";
       rev = "v${version}";
-      sha256 = "0nspwgdmyjxsjnir6s75lw3n07bz4wsmgwi8100jlfma8i0idxd4";
+      sha256 = "1pjk7f94k4spsz5m12jl7n6s9gphjxdm7al2q4bc1ckzdyzhafdk";
     };
 
     # running 4 tests
@@ -46,7 +50,7 @@ let
     # error: test failed
     doCheck = false;
 
-    depsSha256 = "0x2ifziimfpkr1w05pg8x44j6g7mazi2xlpr4p6iijfxa6k531i7";
+    depsSha256 = "07gm4i3pbzycch6pb44sxgbasdfp68p3gvrnifg5nzbwvf95i1wb";
 
     meta = with releng_pkgs.pkgs.stdenv.lib; {
       description = "grcov collects and aggregates code coverage information for multiple source files.";
