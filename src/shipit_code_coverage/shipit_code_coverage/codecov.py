@@ -148,20 +148,20 @@ class CodeCov(object):
                 self.build_finished_cv.wait()
 
         out_dir = zip_file_path[:-4]
+        out_file = out_dir + '.info'
 
         zip_file = zipfile.ZipFile(zip_file_path, 'r')
         zip_file.extractall(out_dir)
         zip_file.close()
 
-        lcov_files = [os.path.abspath(os.path.join(out_dir, f)) for f in os.listdir(out_dir)]
-        run_check(['gecko-env', './mach', 'python', 'python/mozbuild/mozbuild/codecoverage/lcov_rewriter.py'] + lcov_files, cwd=self.repo_dir)
+        run_check([
+            'gecko-env', './mach', 'python',
+            'python/mozbuild/mozbuild/codecoverage/lcov_rewriter.py',
+            os.path.abspath(out_dir),
+            '--output-file', os.path.abspath(out_file)
+        ], cwd=self.repo_dir)
 
-        for lcov_file in lcov_files:
-            os.remove(lcov_file)
-
-        lcov_out_files = [os.path.abspath(os.path.join(out_dir, f)) for f in os.listdir(out_dir)]
-        for lcov_out_file in lcov_out_files:
-            os.rename(lcov_out_file, lcov_out_file[:-4])
+        shutil.rmtree(out_dir)
 
     def generate_info(self, commit_sha, suite=None, out_format='coveralls'):
         files = os.listdir('ccov-artifacts')
