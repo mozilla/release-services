@@ -93,8 +93,8 @@ let
           "--cache-root"
           "/cache"
         ];
-        deadline = "9 hours";
-        maxRunTime = 32400;
+        deadline = "4 hours";
+        maxRunTime = 4 * 60 * 60;
         workerType = "releng-svc-compute";
       };
     in
