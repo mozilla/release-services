@@ -157,7 +157,18 @@ def cmd(project,
     help='`nix-build` command',
     )
 @click.option(
+    '--docker',
+    required=True,
+    default='/usr/bin/docker',
+    help='Path to docker binary on your host',
+    )
+@click.option(
     '--interactive/--no-interactive',
+    default=True,
+    )
+@click.option(
+    '--load-image/--no-load-image',
+    help='Load the generated image into docker',
     default=True,
     )
 def cmd_docker(project,
@@ -165,27 +176,28 @@ def cmd_docker(project,
         taskcluster_secret,
         taskcluster_client_id,
         taskcluster_access_token,
+        docker,
         interactive,
+        load_image,
     ):
 
     docker_path = please_cli.config.TMP_DIR + '/result-docker-{project}'.format(project=project)
 
     # Build docker image for project
-    print('Building docker image for {}'.format(project))
-    command = [
-        nix_build,
-        please_cli.config.ROOT_DIR + '/nix/default.nix',
-        '-A', '{}.docker'.format(project),
-        '-o', docker_path
-    ]
-    result, output, error = cli_common.command.run(
-        command,
-        stream=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
-    if result != 0:
-        raise Exception('Failed to build docker image')
+    click.echo(' => Building docker image for {}'.format(project))
+    with click_spinner.spinner():
+        command = [
+            nix_build,
+            please_cli.config.ROOT_DIR + '/nix/default.nix',
+            '-A', '{}.docker'.format(project),
+            '-o', docker_path
+        ]
+        result, output, error = cli_common.command.run(
+            command,
+            stream=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
 
     please_cli.utils.check_result(
         result,
@@ -194,22 +206,30 @@ def cmd_docker(project,
     )
 
     # Loading docker image
-    print('Import docker image from {}'.format(docker_path))
-    command = [
-        'docker',
-        'load',
-        '-i', docker_path,
-    ]
-    result, output, error = cli_common.command.run(
-        command,
-        stream=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
-    if result != 0:
-        raise Exception('Failed to build docker image')
+    if load_image:
+        click.echo(' => Importing docker image from {}'.format(docker_path))
+        with click_spinner.spinner():
+            command = [
+                docker,
+                'load',
+                '-i', docker_path,
+            ]
+            result, output, error = cli_common.command.run(
+                command,
+                stream=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
 
-    print('Image loaded')
+        please_cli.utils.check_result(
+            result,
+            output,
+            ask_for_details=interactive,
+        )
+
+        click.echo(' => Image loaded')
+    else:
+        click.echo('You can load the image with this command: \n$ docker load -i {}'.format(docker_path))
 
 
 if __name__ == "__main__":
