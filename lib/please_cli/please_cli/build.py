@@ -18,7 +18,9 @@ import please_cli.config
 import please_cli.utils
 
 
-@click.command()
+@click.command(
+    short_help="Build a project.",
+)
 @cli_common.click.taskcluster_options
 @click.argument(
     'project',
@@ -143,7 +145,9 @@ def cmd(project,
         please_cli.utils.check_result(result, output)
 
 
-@click.command()
+@click.command(
+    short_help="Build the docker image of a project.",
+)
 @cli_common.click.taskcluster_options
 @click.argument(
     'project',
@@ -159,7 +163,7 @@ def cmd(project,
 @click.option(
     '--docker',
     required=True,
-    default='/usr/bin/docker',
+    default='docker',
     help='Path to docker binary on your host',
     )
 @click.option(
@@ -181,7 +185,7 @@ def cmd_docker(project,
         load_image,
     ):
 
-    docker_path = please_cli.config.TMP_DIR + '/result-docker-{project}'.format(project=project)
+    image_path = please_cli.config.TMP_DIR + '/result-docker-{project}'.format(project=project)
 
     # Build docker image for project
     click.echo(' => Building docker image for {}'.format(project))
@@ -190,7 +194,7 @@ def cmd_docker(project,
             nix_build,
             please_cli.config.ROOT_DIR + '/nix/default.nix',
             '-A', '{}.docker'.format(project),
-            '-o', docker_path
+            '-o', image_path
         ]
         result, output, error = cli_common.command.run(
             command,
@@ -205,31 +209,35 @@ def cmd_docker(project,
         ask_for_details=interactive,
     )
 
-    # Loading docker image
-    if load_image:
-        click.echo(' => Importing docker image from {}'.format(docker_path))
-        with click_spinner.spinner():
-            command = [
-                docker,
-                'load',
-                '-i', docker_path,
-            ]
-            result, output, error = cli_common.command.run(
-                command,
-                stream=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-            )
+    if not load_image:
+        click.echo('You can load the image with this command: \n$ {docker} load -i {image_path}'.format(
+            docker=docker,
+            image_path=image_path,
+        ))
+        return
 
-        please_cli.utils.check_result(
-            result,
-            output,
-            ask_for_details=interactive,
+    # Loading docker image
+    click.echo(' => Importing docker image from {}'.format(image_path))
+    with click_spinner.spinner():
+        command = [
+            docker,
+            'load',
+            '-i', image_path,
+        ]
+        result, output, error = cli_common.command.run(
+            command,
+            stream=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
         )
 
-        click.echo(' => Image loaded')
-    else:
-        click.echo('You can load the image with this command: \n$ docker load -i {}'.format(docker_path))
+    please_cli.utils.check_result(
+        result,
+        output,
+        ask_for_details=interactive,
+    )
+
+    click.echo(' => Image loaded')
 
 
 if __name__ == "__main__":
