@@ -50,7 +50,11 @@ class MozLintIssue(Issue):
         '''
         Build the text content for reporters
         '''
-        return '[{}] Linting issue from {} :\n\n{}'.format(self.level, self.linter, self.message)
+        return '{}: Linting issue [mozlint: {}]\n\n{}'.format(
+            self.level.capitalize(),
+            self.linter,
+            self.message,
+        )
 
     def as_markdown(self):
         '''
