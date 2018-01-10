@@ -51,11 +51,12 @@ def main(phabricator,
                           required=(
                               'APP_CHANNEL',
                               'REPORTERS',
+                              'ANALYZERS',
                           ),
                           existing={
                               'APP_CHANNEL': 'development',
                               'REPORTERS': [],
-                              'CLANG_FORMAT_ENABLED': True,
+                              'ANALYZERS': ['clang-tidy', ],
                           },
                           taskcluster_client_id=taskcluster_client_id,
                           taskcluster_access_token=taskcluster_access_token,
@@ -93,11 +94,7 @@ def main(phabricator,
     settings.setup(secrets['APP_CHANNEL'])
 
     with LockDir(cache_root, 'shipit-sa-') as work_dir:
-        w = Workflow(work_dir,
-                     reporters,
-                     secrets['CLANG_FORMAT_ENABLED'],
-                     )
-
+        w = Workflow(work_dir, reporters, secrets['ANALYZERS'])
         for revision in revisions:
             try:
                 w.run(revision)
