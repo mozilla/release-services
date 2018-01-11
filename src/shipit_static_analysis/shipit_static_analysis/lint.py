@@ -14,6 +14,8 @@ ISSUE_MARKDOWN = '''
 - **Path**: {path}
 - **Level**: {level}
 - **Line**: {line}
+- **In patch**: {in_patch}
+- **Publishable**: {publishable}
 
 ```
 {message}
@@ -66,6 +68,8 @@ class MozLintIssue(Issue):
             level=self.level,
             line=self.line,
             message=self.message,
+            in_patch=self.line in self.modified_lines and 'yes' or 'no',
+            publishable=self.is_publishable() and 'yes' or 'no',
         )
 
 

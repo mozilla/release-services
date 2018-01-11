@@ -69,7 +69,7 @@ def test_mail(mock_issues, mock_phabricator):
         )
         assert payload['address'] == 'test@mozilla.com'
         assert payload['template'] == 'fullscreen'
-        assert payload['content'].startswith('\n# Found 5 issues')
+        assert payload['content'].startswith('\n# Found 3 publishable issues (5 total)')
 
         return (200, {}, '')  # ack
 

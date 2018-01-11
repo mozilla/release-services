@@ -11,21 +11,16 @@ from cli_common.taskcluster import get_service
 logger = log.get_logger(__name__)
 
 
-EMAIL_STATS_LINE = '|{source}|{total}|{publishable}|'
+EMAIL_STATS_LINE = '* **{source}**: {publishable} publishable ({total} total)'
 
 EMAIL_HEADER = '''
-# Found {total} issues
+# Found {publishable} publishable issues ({total} total)
 
-| Source | Issues | Publishable |
-|--------|--------|-------------|
-{stats_table}
-
-## Links
+{stats}
 
 Review Url: {review_url}
 Diff Url: {diff_url}
 
-## Issues
 '''
 
 
@@ -51,9 +46,9 @@ class MailReporter(Reporter):
         Send an email to administrators
         '''
 
-        # Build stats table for all issues
+        # Build stats display for all issues
         # One line per issues class
-        table = '\n'.join([
+        stats = '\n'.join([
             EMAIL_STATS_LINE.format(
                 source=str(cls.__name__),
                 total=stat['total'],
@@ -64,10 +59,10 @@ class MailReporter(Reporter):
 
         content = EMAIL_HEADER.format(
             total=len(issues),
-            stats_table=table,
+            publishable=sum([i.is_publishable() for i in issues]),
+            stats=stats,
             review_url=revision.url,
             diff_url=diff_url or 'no clang-format diff',
-            nb_publishable=sum([i.is_publishable() for i in issues]),
         )
         content += '\n\n'.join([i.as_markdown() for i in issues])
         if len(content) > 102400:

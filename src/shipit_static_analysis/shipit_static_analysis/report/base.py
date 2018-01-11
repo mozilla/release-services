@@ -9,17 +9,20 @@ from shipit_static_analysis.clang.format import ClangFormatIssue
 from shipit_static_analysis.lint import MozLintIssue
 
 COMMENT_FAILURE_SHORT = '''
-C/C++ static analysis found {defects_tidy} in this patch{extras_comments}.
+Static analysis found {defects_tidy} in this patch{extras_comments}.
 
 You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp`
 '''
 COMMENT_FAILURE = '''
-C/C++ static analysis found {defects_total} in this patch{extras_comments}.
+Static analysis found {defects_total} in this patch{extras_comments}.
  - {defects_tidy} found by clang-tidy
  - {defects_format} found by clang-format
  - {defects_linter} found by mozlint
 
-You can run this analysis locally with: `./mach static-analysis check path/to/file.cpp` and `./mach clang-format -p path/to/file.cpp`
+You can run this analysis locally with:
+ - `./mach static-analysis check path/to/file.cpp` (C/C++)
+ - `./mach clang-format -p path/to/file.cpp` (C/C++)
+ - `./mach lint path/to/file.cpp` (JS/Python/wpt)
 '''
 BUG_REPORT = '''
 If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx
