@@ -7,8 +7,10 @@ import json
 from cli_common import log
 from rbtools.api.errors import APIError
 from rbtools.api.client import RBClient
+from shipit_static_analysis import CLANG_TIDY, CLANG_FORMAT, MOZLINT
 from shipit_static_analysis.revisions import MozReviewRevision
 from shipit_static_analysis.report.base import Reporter
+from shipit_static_analysis.lint import MozLintIssue
 from shipit_static_analysis.clang.tidy import ClangTidyIssue
 from shipit_static_analysis.clang.format import ClangFormatIssue
 
@@ -41,13 +43,17 @@ class MozReviewReporter(Reporter):
         login_resource.create(username=username, api_key=api_key)
         self.api = client.get_root()
 
-        # Optional parameters
-        self.style = configuration.get('style', 'clang-tidy')
-        assert self.style in ('clang-tidy', 'full')
+        # Report issues from specific analyzers
+        self.analyzers = list(filter(
+            lambda a: a in (CLANG_TIDY, CLANG_FORMAT, MOZLINT),
+            configuration.get('analyzers', [CLANG_TIDY, ]),
+        ))
+        assert len(self.analyzers) > 0, \
+            'No valid analyzers for mozreview'
         self.publish_success = configuration.get('publish_success', False)
         assert isinstance(self.publish_success, bool)
 
-        logger.info('Mozreview report enabled', url=url, username=username)
+        logger.info('Mozreview report enabled', url=url, username=username, analyzers=self.analyzers)
 
     def publish(self, issues, revision, diff_url=None):  # noqa
         '''
@@ -60,28 +66,32 @@ class MozReviewReporter(Reporter):
         # Start a new review
         review = MozReview(self.api, revision.review_request_id, revision.diffset_revision)
 
-        # Filter issues to keep publishable checks
-        # and non third party
-        issues = list(filter(lambda i: i.is_publishable(), issues))
-        if self.style == 'clang-tidy':
-            # Only consider clang-tidy issue when using clang-tidy comment
-            issues = [i for i in issues if isinstance(i, ClangTidyIssue)]
+        # Filter issues to keep publishable issues
+        # for configured analyzers
+        def mozreview_publish(issue):
+            if not issue.is_publishable():
+                return False
+
+            issue_classes = {
+                ClangTidyIssue: CLANG_TIDY,
+                ClangFormatIssue: CLANG_FORMAT,
+                MozLintIssue: MOZLINT,
+            }
+            issue_cls = issue_classes.get(issue.__class__)
+            return issue_cls is not None and issue_cls in self.analyzers
+
+        issues = list(filter(mozreview_publish, issues))
 
         if issues:
             # Build complex top comment
             comment = self.build_comment(
                 issues=issues,
                 diff_url=diff_url,
-                style=self.style,
                 max_comments=MAX_COMMENTS
             )
 
             # Comment each issue
             for issue in issues:
-                if isinstance(issue, ClangFormatIssue):
-                    logger.info('Skip clang-format issue on mozreview', issue=issue)
-                    continue
-
                 logger.info('Will publish about {}'.format(issue))
                 review.comment(
                     issue.path,

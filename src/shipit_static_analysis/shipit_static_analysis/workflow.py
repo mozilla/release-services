@@ -15,6 +15,7 @@ from shipit_static_analysis.clang.tidy import ClangTidy
 from shipit_static_analysis.clang.format import ClangFormat
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.lint import MozLint
+from shipit_static_analysis import CLANG_TIDY, CLANG_FORMAT, MOZLINT
 from parsepatch.patch import Patch
 
 logger = get_logger(__name__)
@@ -22,10 +23,6 @@ logger = get_logger(__name__)
 REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
 REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{task_id}/runs/{run_id}/artifacts/public/results/{diff_name}'
-
-CLANG_TIDY = 'clang-tidy'
-CLANG_FORMAT = 'clang-format'
-MOZLINT = 'mozlint'
 
 
 class Workflow(object):

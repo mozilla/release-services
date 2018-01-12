@@ -30,6 +30,8 @@ The emails are sent through Taskcluster notify service, the hook must have `noti
 
 Only one configuration is required: `emails` is a list of emails addresses receiving the admin output for each analysis.
 
+This reporter will send detailed informations about every issue.
+
 Reporter: MozReview
 -------------------
 
@@ -40,7 +42,7 @@ Configuration:
  * `url` : The Mozreview api url
  * `username` : The Mozreview account's username
  * `api_key` : The Mozreview account's api key 
- * `style` : Comment style to use, `clang-tidy` only reports issues found with this tool, `full` reports all errors found.
+ * `analyzers` : Limit the reported issues to those produced by specified analyzers. Choices are: `clang-tidy`, `clang-format`, `mozlint`.
  * `publish_success` : a boolean describing if a successfull analysis must be reported (disabled by default)
 
 
@@ -53,6 +55,8 @@ Configuration:
 
  * `url` : The Phabricator api url
  * `api_key` : The Phabricator account's api key 
+
+This reporter will send detailed informations about every **publishable** issue.
 
 Analyzer: Clang Tidy
 --------------------
@@ -104,7 +108,7 @@ Example configuration
         "url": "https://reviewboard.mozilla.org",
         "api_key": "coffee123456",
         "username": "sa-bot-staging",
-        "style": "full"
+        "analyzers": ["clang-tidy", "clang-format", "mozlint"]
       }
     ],
     "ANALYZERS": [

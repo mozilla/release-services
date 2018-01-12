@@ -6,6 +6,10 @@ from __future__ import absolute_import
 from shipit_static_analysis.config import settings
 import os
 
+CLANG_TIDY = 'clang-tidy'
+CLANG_FORMAT = 'clang-format'
+MOZLINT = 'mozlint'
+
 
 class Issue(object):
     '''
