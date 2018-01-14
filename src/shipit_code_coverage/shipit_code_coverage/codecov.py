@@ -3,11 +3,14 @@ import errno
 import json
 import os
 import shutil
-import zipfile
+import tarfile
+from zipfile import ZipFile
 import requests
 import hglib
 from threading import Condition
+import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
+import sqlite3
 
 from cli_common.log import get_logger
 from cli_common.command import run_check
@@ -71,6 +74,35 @@ class CodeCov(object):
 
         logger.info('Mercurial revision', revision=self.revision)
 
+    def get_chunks(self):
+        return list(set([f.split('_')[1] for f in os.listdir('ccov-artifacts')]))
+
+    def get_coverage_artifacts(self, suite=None, chunk=None):
+        files = os.listdir('ccov-artifacts')
+
+        # If suite and chunk are None, return all artifacts.
+        # Otherwise, only return the ones which have suite or chunk in their name.
+        if suite is None and chunk is None:
+            search_substring = ''
+        elif suite is not None:
+            search_substring = '%s' % suite
+        elif chunk is not None:
+            search_substring = '%s_code-coverage' % chunk
+
+        filtered_files = []
+        for fname in files:
+            # grcov artifacts always have 'grcov' in the name and are ZIP files.
+            if 'grcov' in fname and not fname.endswith('.zip'):
+                continue
+            # jsvm artifacts always have 'jsvm' in the name and are not ZIP files.
+            if 'jsvm' in fname and fname.endswith('.zip'):
+                continue
+
+            if search_substring in fname:
+                filtered_files.append('ccov-artifacts/' + fname)
+
+        return filtered_files
+
     def download_coverage_artifacts(self):
         try:
             os.mkdir('ccov-artifacts')
@@ -94,9 +126,10 @@ class CodeCov(object):
 
         with ThreadPoolExecutorResult() as executor:
             for test_task in test_tasks:
-                suite_name = taskcluster.get_suite_name(test_task)
+                chunk_name = taskcluster.get_chunk_name(test_task)
+                platform_name = taskcluster.get_platform_name(test_task)
                 # Ignore awsy and talos as they aren't actually suites of tests.
-                if any(to_ignore in suite_name for to_ignore in self.suites_to_ignore):
+                if any(to_ignore in chunk_name for to_ignore in self.suites_to_ignore):
                     continue
 
                 test_task_id = test_task['status']['taskId']
@@ -104,7 +137,7 @@ class CodeCov(object):
                     if not any(n in artifact['name'] for n in ['code-coverage-grcov.zip', 'code-coverage-jsvm.zip']):
                         continue
 
-                    artifact_path = taskcluster.download_artifact(test_task_id, suite_name, artifact)
+                    artifact_path = taskcluster.download_artifact(test_task_id, chunk_name, platform_name, artifact)
                     if 'code-coverage-jsvm.zip' in artifact['name']:
                         executor.submit(rewriting_task(artifact_path))
 
@@ -150,9 +183,8 @@ class CodeCov(object):
         out_dir = zip_file_path[:-4]
         out_file = out_dir + '.info'
 
-        zip_file = zipfile.ZipFile(zip_file_path, 'r')
-        zip_file.extractall(out_dir)
-        zip_file.close()
+        with ZipFile(zip_file_path, 'r') as z:
+            z.extractall(out_dir)
 
         run_check([
             'gecko-env', './mach', 'python',
@@ -163,18 +195,7 @@ class CodeCov(object):
 
         shutil.rmtree(out_dir)
 
-    def generate_info(self, commit_sha, suite=None, out_format='coveralls'):
-        files = os.listdir('ccov-artifacts')
-        ordered_files = []
-        for fname in files:
-            if 'grcov' in fname and not fname.endswith('.zip'):
-                continue
-            if 'jsvm' in fname and fname.endswith('.zip'):
-                continue
-
-            if suite is None or suite in fname:
-                ordered_files.append('ccov-artifacts/' + fname)
-
+    def generate_info(self, commit_sha=None, suite=None, chunk=None, out_format='coveralls', options=[]):
         cmd = [
           'grcov',
           '-t', out_format,
@@ -201,7 +222,8 @@ class CodeCov(object):
             else:
                 cmd.extend(['--service-job-number', '1'])
 
-        cmd.extend(ordered_files)
+        cmd.extend(self.get_coverage_artifacts(suite, chunk))
+        cmd.extend(options)
 
         return run_check(cmd)
 
@@ -284,7 +306,27 @@ class CodeCov(object):
         except Exception as e:
             logger.warn('Error while requesting coverage data', error=str(e))
 
-    def generate_zero_coverage_report(self, report):
+    def generate_per_suite_reports(self):
+        def generate_suite_report(suite):
+            output = self.generate_info(suite=suite, out_format='lcov')
+
+            self.generate_report(output, suite)
+            os.remove('%s.info' % suite)
+
+            run_check(['tar', '-cjf', 'code-coverage-reports/%s.tar.bz2' % suite, suite])
+            shutil.rmtree(os.path.join(os.getcwd(), suite))
+
+            logger.info('Suite report generated', suite=suite)
+
+        def generate_suite_report_task(suite):
+            return lambda: generate_suite_report(suite)
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            for suite in self.suites:
+                executor.submit(generate_suite_report_task(suite))
+
+    def generate_zero_coverage_report(self):
+        report = self.generate_info(self.revision, out_format='coveralls+')
         report = json.loads(report.decode('utf-8'))  # Decoding is only necessary until Python 3.6.
 
         zero_coverage_files = []
@@ -301,6 +343,32 @@ class CodeCov(object):
 
         with open('code-coverage-reports/zero_coverage_files.json', 'w') as f:
             json.dump(zero_coverage_files, f)
+
+    def generate_files_list(self, covered=True, chunk=None):
+        options = ['--filter-covered', '--threads', '2']
+        files = self.generate_info(chunk=chunk, out_format='files', options=options)
+        return files.splitlines()
+
+    def generate_chunk_mapping(self):
+        def get_files_task(chunk):
+            return lambda: (chunk, self.generate_files_list(True, chunk=chunk))
+
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = []
+            for chunk in self.get_chunks():
+                futures.append(executor.submit(get_files_task(chunk)))
+
+            with sqlite3.connect('chunk_mapping.db') as conn:
+                c = conn.cursor()
+                c.execute('CREATE TABLE files (path text, chunk text)')
+
+                for future in concurrent.futures.as_completed(futures):
+                    (chunk, files) = future.result()
+                    c.executemany('INSERT INTO files VALUES (?,?)', [(f, chunk) for f in files])
+
+        tar = tarfile.open('code-coverage-reports/chunk_mapping.tar.xz', 'w:xz')
+        tar.add('chunk_mapping.db')
+        tar.close()
 
     def go(self):
         with ThreadPoolExecutorResult(max_workers=2) as executor:
@@ -339,25 +407,11 @@ class CodeCov(object):
                 if e.errno != errno.EEXIST:
                     raise e
 
-            def generate_suite_report(suite):
-                output = self.generate_info(self.revision, suite=suite, out_format='lcov')
+            self.generate_per_suite_reports()
 
-                self.generate_report(output, suite)
-                os.remove('%s.info' % suite)
+            self.generate_zero_coverage_report()
 
-                run_check(['tar', '-cjf', 'code-coverage-reports/%s.tar.bz2' % suite, suite])
-                shutil.rmtree(os.path.join(os.getcwd(), suite))
-
-                logger.info('Suite report generated', suite=suite)
-
-            def generate_suite_report_task(suite):
-                return lambda: generate_suite_report(suite)
-
-            with ThreadPoolExecutor(max_workers=2) as executor:
-                for suite in self.suites:
-                    executor.submit(generate_suite_report_task(suite))
-
-            self.generate_zero_coverage_report(self.generate_info(self.revision, out_format='coveralls+'))
+            self.generate_chunk_mapping()
 
             os.chdir('code-coverage-reports')
             run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
