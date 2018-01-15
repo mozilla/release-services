@@ -23,29 +23,26 @@ class PhabricatorRevision(object):
         if match is None:
             raise Exception('Invalid Phabricator description')
         groups = match.groups()
-        self.diff_id = int(groups[0])
+        self.id = int(groups[0])
         self.diff_phid = groups[1]
 
         # Load diff details to get the diff revision
-        # and the mercurial revision
         diff = self.api.load_diff(self.diff_phid)
+        self.diff_id = diff['id']
         assert 'fields' in diff
         self.phid = diff['fields']['revisionPHID']
         assert self.phid.startswith('PHID-DREV')
-        refs = {
-            ref['type']: ref
-            for ref in diff['fields']['refs']
-        }
-        if 'base' in refs:
-            self.mercurial = refs['base']['identifier']
-            logger.info('Phabricator found revision', id=self.diff_id, rev=self.mercurial)
-        else:
-            self.mercurial = None
-            logger.warn('No phabricator revision', id=self.diff_id)
 
-        # Load revision details to get its id
+        # Load revision details to get mercurial id
         rev = self.api.load_revision(self.phid)
-        self.id = rev['id']
+        hashes = rev['hashes']
+        assert len(hashes) > 0, 'No mercurial revisions'
+
+        # Use last revision
+        rev_type, rev_id = hashes[-1]
+        assert rev_type == 'hgcm', 'Not a mercurial revision'
+        self.mercurial = rev_id
+        logger.info('Found mercurial revision', id=self.mercurial, diff=self.diff_id)
 
     def __str__(self):
         return 'Phabricator #{} - {}'.format(self.diff_id, self.diff_phid)

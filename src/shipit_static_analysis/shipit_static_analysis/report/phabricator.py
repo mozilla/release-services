@@ -76,15 +76,13 @@ class PhabricatorReporter(Reporter):
     def load_revision(self, phid):
         '''
         Find a differential revision details
+        Uses the old style API - only way to get a mercurial hash
         '''
-        out = self.request(
-            'differential.revision.search',
-            constraints={
-                'phids': [phid, ],
-            },
+        data = self.request(
+            'differential.query',
+            phids=[phid, ],
         )
 
-        data = out['data']
         assert len(data) == 1, \
             'Not found'
         return data[0]
@@ -143,7 +141,6 @@ class PhabricatorReporter(Reporter):
         '''
         assert isinstance(revision, PhabricatorRevision)
         assert isinstance(issue, Issue)
-        # TODO: check issue is instance of base Issue
 
         inline = self.request(
             'differential.createinline',
