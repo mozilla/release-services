@@ -130,7 +130,7 @@ class Workflow(object):
         )
         modified_lines = {
             # Use all changes in new files
-            filename: diff['touched'] + diff['added']
+            filename: diff.get('touched', []) + diff.get('added', [])
             for filename, diff in patch.items()
         }
 
