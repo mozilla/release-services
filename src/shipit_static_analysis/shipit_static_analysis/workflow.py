@@ -126,7 +126,8 @@ class Workflow(object):
 
         # List all modified lines from current revision changes
         patch = Patch.parse_patch(
-            self.hg.diff(change=revision.mercurial, git=True).decode('utf-8')
+            self.hg.diff(change=revision.mercurial, git=True).decode('utf-8'),
+            skip_comments=False,
         )
         modified_lines = {
             # Use all changes in new files
