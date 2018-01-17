@@ -32,7 +32,7 @@ def test_phabricator(mock_phabricator):
         'api_key': 'deadbeef',
     })
 
-    r = PhabricatorRevision('42:PHID-DIFF-testABcd12', api)
+    r = PhabricatorRevision('51:PHID-DIFF-testABcd12', api)
     assert r.mercurial == 'coffeedeadbeef123456789'
     assert r.diff_id == 42
     assert r.diff_phid == 'PHID-DIFF-testABcd12'

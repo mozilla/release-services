@@ -4,7 +4,7 @@ import difflib
 import tempfile
 import subprocess
 from cli_common.log import get_logger
-from shipit_static_analysis.clang import ClangIssue
+from shipit_static_analysis import Issue
 
 logger = get_logger(__name__)
 
@@ -40,9 +40,9 @@ class ClangFormat(object):
     List potential issues on modified files
     from a patch
     '''
-    def __init__(self, work_dir):
-        assert os.path.isdir(work_dir)
-        self.work_dir = work_dir
+    def __init__(self, repo_dir):
+        assert os.path.isdir(repo_dir)
+        self.repo_dir = repo_dir
 
     def run(self, extensions, modified_lines):
         '''
@@ -76,7 +76,7 @@ class ClangFormat(object):
         '''
         Clang-format is very fast, no need for a worker queue here
         '''
-        full_path = os.path.join(self.work_dir, filename)
+        full_path = os.path.join(self.repo_dir, filename)
         assert os.path.exists(full_path), \
             'Modified file not found {}'.format(full_path)
 
@@ -93,7 +93,7 @@ class ClangFormat(object):
         logger.info('Running clang-format', cmd=' '.join(cmd))
 
         # Run command
-        clang_output = subprocess.check_output(cmd, cwd=self.work_dir)
+        clang_output = subprocess.check_output(cmd, cwd=self.repo_dir)
 
         # Compare output with original file
         src_lines = [x.rstrip('\n') for x in open(full_path).readlines()]
@@ -117,7 +117,7 @@ class ClangFormat(object):
         Apply patch
         '''
         assert isinstance(issues, list)
-        full_path = os.path.join(self.work_dir, filename)
+        full_path = os.path.join(self.repo_dir, filename)
         assert os.path.exists(full_path), \
             'Modified file not found {}'.format(full_path)
 
@@ -150,7 +150,7 @@ class ClangFormat(object):
         return True
 
 
-class ClangFormatIssue(ClangIssue):
+class ClangFormatIssue(Issue):
     '''
     An issue created by Clang Format tool
     '''

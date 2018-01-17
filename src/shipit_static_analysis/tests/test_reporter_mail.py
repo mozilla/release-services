@@ -69,7 +69,7 @@ def test_mail(mock_issues, mock_phabricator):
         )
         assert payload['address'] == 'test@mozilla.com'
         assert payload['template'] == 'fullscreen'
-        assert payload['content'].startswith('3 Publishable issues on Mozreview')
+        assert payload['content'].startswith('\n# Found 3 publishable issues (5 total)')
 
         return (200, {}, '')  # ack
 
@@ -94,3 +94,12 @@ def test_mail(mock_issues, mock_phabricator):
 
     prev = PhabricatorRevision('42:PHID-DIFF-test', phab)
     r.publish(mock_issues, prev, diff_url=None)
+
+    # Check stats
+    mock_cls = mock_issues[0].__class__
+    assert r.calc_stats(mock_issues) == {
+        mock_cls: {
+            'total': 5,
+            'publishable': 3,
+        }
+    }

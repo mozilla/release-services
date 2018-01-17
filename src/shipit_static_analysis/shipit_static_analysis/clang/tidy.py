@@ -13,7 +13,7 @@ import re
 
 from cli_common.log import get_logger
 from shipit_static_analysis.config import settings
-from shipit_static_analysis.clang import ClangIssue
+from shipit_static_analysis import Issue
 
 logger = get_logger(__name__)
 
@@ -63,11 +63,11 @@ class ClangTidy(object):
     '''
     db_path = 'compile_commands.json'
 
-    def __init__(self, work_dir, build_dir):
-        assert os.path.isdir(work_dir)
+    def __init__(self, repo_dir, build_dir):
+        assert os.path.isdir(repo_dir)
 
-        self.work_dir = work_dir
-        self.build_dir = os.path.join(work_dir, build_dir)
+        self.repo_dir = repo_dir
+        self.build_dir = os.path.join(repo_dir, build_dir)
 
     def run(self, checks, modified_lines):
         '''
@@ -149,7 +149,7 @@ class ClangTidy(object):
             logger.info('Running clang-tidy', cmd=' '.join(cmd))
 
             # Run command
-            clang_output = subprocess.check_output(cmd, cwd=self.work_dir)
+            clang_output = subprocess.check_output(cmd, cwd=self.repo_dir)
 
             # Push output
             for issue in self.parse_issues(clang_output.decode('utf-8')):
@@ -176,7 +176,7 @@ class ClangTidy(object):
 
         issues = []
         for i, header in enumerate(headers):
-            issue = ClangTidyIssue(header.groups(), self.work_dir)
+            issue = ClangTidyIssue(header.groups(), self.repo_dir)
 
             # Get next header
             if i+1 < len(headers):
@@ -205,18 +205,18 @@ class ClangTidy(object):
         return issues
 
 
-class ClangTidyIssue(ClangIssue):
+class ClangTidyIssue(Issue):
     '''
     An issue reported by clang-tidy
     '''
-    def __init__(self, header_data, work_dir):
+    def __init__(self, header_data, repo_dir):
         assert isinstance(header_data, tuple)
         assert len(header_data) == 6
-        assert not work_dir.endswith('/')
+        assert not repo_dir.endswith('/')
         self.path, self.line, self.char, self.type, self.message, self.check = header_data  # noqa
-        self.work_dir = work_dir
-        if self.path.startswith(work_dir):
-            self.path = self.path[len(work_dir)+1:]  # skip heading /
+        self.repo_dir = repo_dir
+        if self.path.startswith(repo_dir):
+            self.path = self.path[len(repo_dir)+1:]  # skip heading /
         self.line = int(self.line)
         self.nb_lines = 1  # Only 1 line affected on clang-tidy
         self.char = int(self.char)
@@ -242,24 +242,6 @@ class ClangTidyIssue(ClangIssue):
             and not self.is_third_party() \
             and not self.is_expanded_macro() \
             and self.in_patch
-
-    def is_third_party(self):
-        '''
-        Is this issue in a third party path ?
-        '''
-
-        # List third party directories using mozilla-central file
-        full_path = os.path.join(self.work_dir, settings.third_party)
-        assert os.path.exists(full_path), \
-            'Missing third party file {}'.format(full_path)
-        with open(full_path) as f:
-            # Remove new lines
-            third_parties = list(map(lambda l: l.rstrip(), f.readlines()))
-
-        for path in third_parties:
-            if self.path.startswith(path):
-                return True
-        return False
 
     def is_expanded_macro(self):
         '''

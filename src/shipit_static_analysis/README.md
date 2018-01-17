@@ -10,7 +10,7 @@ The following configuration variables are currently supported:
 
 * `APP_CHANNEL` **[required]** is provided by the common configuration (staging or production)
 * `REPORTERS` **[required]** lists all the reporting tools to use when a static analysis is completed (details below)
-* `CLANG_FORMAT_ENABLED` is a boolean controlling if `clang-format` should be run on the patches (enabled by default)
+* `ANALYZERS` **[required]** lists all the analysis tool to run on specified revisions. These tools will produce the reported issues.
 * `PAPERTRAIL_HOST` is the optional Papertrail host configuration, used for logging.
 * `PAPERTRAIL_PORT` is the optional Papertrail port configuration, used for logging.
 * `SENTRY_DSN` is the optional Sentry full url to report runtime errors.
@@ -30,6 +30,8 @@ The emails are sent through Taskcluster notify service, the hook must have `noti
 
 Only one configuration is required: `emails` is a list of emails addresses receiving the admin output for each analysis.
 
+This reporter will send detailed informations about every issue.
+
 Reporter: MozReview
 -------------------
 
@@ -40,7 +42,7 @@ Configuration:
  * `url` : The Mozreview api url
  * `username` : The Mozreview account's username
  * `api_key` : The Mozreview account's api key 
- * `style` : Comment style to use, `clang-tidy` only reports issues found with this tool, `full` reports all errors found.
+ * `analyzers` : Limit the reported issues to those produced by specified analyzers. Choices are: `clang-tidy`, `clang-format`, `mozlint`.
  * `publish_success` : a boolean describing if a successfull analysis must be reported (disabled by default)
 
 
@@ -53,6 +55,29 @@ Configuration:
 
  * `url` : The Phabricator api url
  * `api_key` : The Phabricator account's api key 
+
+This reporter will send detailed informations about every **publishable** issue.
+
+Analyzer: Clang Tidy
+--------------------
+
+Key is `clang-tidy`
+
+Detect static analysis issues on C/C++ code
+
+Analyzer: Clang Format
+--------------------
+
+Key is `clang-format`
+
+Detect linting issues on C/C++ code
+
+Analyzer: MozLint
+-----------------
+
+Key is `mozlint`
+
+Detect linting issues on Python and Javascript code
 
 Example configuration
 ---------------------
@@ -83,8 +108,13 @@ Example configuration
         "url": "https://reviewboard.mozilla.org",
         "api_key": "coffee123456",
         "username": "sa-bot-staging",
-        "style": "full"
+        "analyzers": ["clang-tidy", "clang-format", "mozlint"]
       }
+    ],
+    "ANALYZERS": [
+      "clang-tidy",
+      "clang-format",
+      "mozlint"
     ]
   }
 }

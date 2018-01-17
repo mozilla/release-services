@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from cli_common import log
-from shipit_static_analysis.clang import ClangIssue
+from shipit_static_analysis import Issue
 from shipit_static_analysis.report.base import Reporter
 from shipit_static_analysis.revisions import PhabricatorRevision
 from urllib.parse import urlparse
@@ -76,15 +76,13 @@ class PhabricatorReporter(Reporter):
     def load_revision(self, phid):
         '''
         Find a differential revision details
+        Uses the old style API - only way to get a mercurial hash
         '''
-        out = self.request(
-            'differential.revision.search',
-            constraints={
-                'phids': [phid, ],
-            },
+        data = self.request(
+            'differential.query',
+            phids=[phid, ],
         )
 
-        data = out['data']
         assert len(data) == 1, \
             'Not found'
         return data[0]
@@ -142,8 +140,7 @@ class PhabricatorReporter(Reporter):
         Post an inline comment on a diff
         '''
         assert isinstance(revision, PhabricatorRevision)
-        assert isinstance(issue, ClangIssue)
-        # TODO: check issue is instance of base Issue
+        assert isinstance(issue, Issue)
 
         inline = self.request(
             'differential.createinline',

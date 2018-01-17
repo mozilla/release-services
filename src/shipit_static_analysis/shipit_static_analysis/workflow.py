@@ -14,6 +14,8 @@ from cli_common.command import run_check
 from shipit_static_analysis.clang.tidy import ClangTidy
 from shipit_static_analysis.clang.format import ClangFormat
 from shipit_static_analysis.config import settings
+from shipit_static_analysis.lint import MozLint
+from shipit_static_analysis import CLANG_TIDY, CLANG_FORMAT, MOZLINT
 from parsepatch.patch import Patch
 
 logger = get_logger(__name__)
@@ -27,8 +29,11 @@ class Workflow(object):
     '''
     Static analysis workflow
     '''
-    def __init__(self, cache_root, reporters, clang_format_enabled=False):
-        self.clang_format_enabled = clang_format_enabled
+    def __init__(self, cache_root, reporters, analyzers):
+        assert isinstance(analyzers, list)
+        assert len(analyzers) > 0, \
+            'No analyzers specified, will not run.'
+        self.analyzers = analyzers
         self.cache_root = cache_root
         assert os.path.isdir(self.cache_root), \
             'Cache root {} is not a dir.'.format(self.cache_root)
@@ -92,9 +97,10 @@ class Workflow(object):
             revision=revision,
         )
 
-        # Setup clang
-        clang_tidy = ClangTidy(self.repo_dir, settings.target)
-        clang_format = ClangFormat(self.repo_dir)
+        # Setup tools (clang & mozlint)
+        clang_tidy = CLANG_TIDY in self.analyzers and ClangTidy(self.repo_dir, settings.target)
+        clang_format = CLANG_FORMAT in self.analyzers and ClangFormat(self.repo_dir)
+        mozlint = MOZLINT in self.analyzers and MozLint(self.repo_dir)
 
         # Force cleanup to reset tip
         # otherwise previous pull are there
@@ -124,7 +130,7 @@ class Workflow(object):
         )
         modified_lines = {
             # Use all changes in new files
-            filename: diff['touched'] + diff['added']
+            filename: diff.get('touched', []) + diff.get('added', [])
             for filename, diff in patch.items()
         }
 
@@ -143,12 +149,16 @@ class Workflow(object):
         run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
 
         # Run static analysis through clang-tidy
-        logger.info('Run clang-tidy...')
-        issues = clang_tidy.run(settings.clang_checkers, modified_lines)
+        issues = []
+        if clang_tidy:
+            logger.info('Run clang-tidy...')
+            issues += clang_tidy.run(settings.clang_checkers, modified_lines)
+        else:
+            logger.info('Skip clang-tidy')
 
         # Run clang-format on modified files
         diff_url = None
-        if self.clang_format_enabled:
+        if clang_format:
             logger.info('Run clang-format...')
             format_issues, patched = clang_format.run(settings.cpp_extensions, modified_lines)
             issues += format_issues
@@ -178,6 +188,13 @@ class Workflow(object):
 
         else:
             logger.info('Skip clang-format')
+
+        # Run linter
+        if mozlint:
+            logger.info('Run mozlint...')
+            issues += mozlint.run(modified_lines)
+        else:
+            logger.info('Skip mozlint')
 
         logger.info('Detected {} issue(s)'.format(len(issues)))
         if not issues:
