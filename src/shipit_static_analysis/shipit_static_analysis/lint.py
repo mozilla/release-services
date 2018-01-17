@@ -25,7 +25,7 @@ ISSUE_MARKDOWN = '''
 
 
 class MozLintIssue(Issue):
-    def __init__(self, repo_dir, repo_path, modified_lines, column, level, lineno, linter, message, **kwargs):
+    def __init__(self, repo_dir, repo_path, modified_lines, column, level, lineno, linter, message, rule, **kwargs):
         self.nb_lines = 1
         self.repo_dir = repo_dir
         self.path = repo_path
@@ -34,6 +34,7 @@ class MozLintIssue(Issue):
         self.line = lineno
         self.linter = linter
         self.message = message
+        self.rule = rule
         self.in_patch = self.line in modified_lines
 
     def __str__(self):
@@ -56,10 +57,11 @@ class MozLintIssue(Issue):
         '''
         Build the text content for reporters
         '''
-        return '{}: Linting issue [mozlint: {}]\n\n{}'.format(
+        return '{}: {} [{}: {}]'.format(
             self.level.capitalize(),
-            self.linter,
             self.message,
+            self.linter,
+            self.rule,
         )
 
     def as_markdown(self):
