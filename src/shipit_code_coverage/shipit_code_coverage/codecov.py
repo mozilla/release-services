@@ -80,14 +80,8 @@ class CodeCov(object):
     def get_coverage_artifacts(self, suite=None, chunk=None):
         files = os.listdir('ccov-artifacts')
 
-        # If suite and chunk are None, return all artifacts.
-        # Otherwise, only return the ones which have suite or chunk in their name.
-        if suite is None and chunk is None:
-            search_substring = ''
-        elif suite is not None:
-            search_substring = '%s' % suite
-        elif chunk is not None:
-            search_substring = '%s_code-coverage' % chunk
+        if suite is not None and chunk is not None:
+            raise Exception('suite and chunk can\'t both have a value')
 
         filtered_files = []
         for fname in files:
@@ -98,7 +92,13 @@ class CodeCov(object):
             if 'jsvm' in fname and fname.endswith('.zip'):
                 continue
 
-            if search_substring in fname:
+            # If suite and chunk are None, return all artifacts.
+            # Otherwise, only return the ones which have suite or chunk in their name.
+            if (
+                   (suite is None and chunk is None) or
+                   (suite is not None and ('%s' % suite) in fname) or
+                   (chunk is not None and ('%s_code-coverage' % chunk) in fname)
+               ):
                 filtered_files.append('ccov-artifacts/' + fname)
 
         return filtered_files
@@ -108,7 +108,7 @@ class CodeCov(object):
             os.mkdir('ccov-artifacts')
         except OSError as e:
             if e.errno != errno.EEXIST:
-                raise e
+                raise
 
         def rewriting_task(path):
             return lambda: self.rewrite_jsvm_lcov(path)
