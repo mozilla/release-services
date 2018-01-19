@@ -64,14 +64,14 @@ def get_tasks_in_group(group_id):
     return tasks
 
 
-def download_artifact(task_id, suite, artifact):
-    artifact_path = 'ccov-artifacts/' + task_id + '_' + suite + '_' + os.path.basename(artifact['name'])
+def download_artifact(task_id, chunk, platform, artifact):
+    artifact_path = 'ccov-artifacts/%s_%s_%s' % (platform, chunk, os.path.basename(artifact['name']))
 
     if os.path.exists(artifact_path):
         return artifact_path
 
     def perform_download():
-        r = requests.get(queue_base + 'task/' + task_id + '/artifacts/' + artifact['name'], stream=True)
+        r = requests.get(queue_base + 'task/%s/artifacts/%s' % (task_id, artifact['name']), stream=True)
 
         with open(artifact_path, 'wb') as f:
             r.raw.decode_content = True
@@ -90,10 +90,24 @@ def is_coverage_task(task):
     return any(task['task']['metadata']['name'].startswith(t) for t in TEST_PLATFORMS)
 
 
-def get_suite_name(task):
+def get_chunk_name(task):
     name = task['task']['metadata']['name']
     for t in TEST_PLATFORMS:
         if name.startswith(t):
             name = name[len(t) + 1:]
             break
-    return '-'.join([p for p in name.split('-') if p != 'e10s' and not p.isdigit()])
+    return '-'.join([p for p in name.split('-') if p != 'e10s'])
+
+
+def get_suite_name(chunk_name):
+    return '-'.join([p for p in chunk_name.split('-') if not p.isdigit()])
+
+
+def get_platform_name(task):
+    name = task['task']['metadata']['name']
+    if 'linux' in name:
+        return 'linux'
+    elif 'windows' in name:
+        return 'windows'
+    else:
+        raise Exception('Unknown platform')
