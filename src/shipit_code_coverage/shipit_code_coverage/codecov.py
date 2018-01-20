@@ -7,7 +7,7 @@ import tarfile
 from zipfile import ZipFile
 import requests
 import hglib
-from threading import Condition
+from threading import Condition, Lock
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 import sqlite3
@@ -125,6 +125,22 @@ class CodeCov(object):
         FINISHED_STATUSES = ['completed', 'failed', 'exception']
         ALL_STATUSES = FINISHED_STATUSES + ['unscheduled', 'pending', 'running']
 
+        downloaded_tasks = {}
+        downloaded_tasks_lock = Lock()
+
+        def should_download(status, chunk_name, platform_name):
+            with downloaded_tasks_lock:
+                if (chunk_name, platform_name) not in downloaded_tasks:
+                    return True
+
+                other_status = downloaded_tasks[(chunk_name, platform_name)]
+
+                if (status == 'failed' and other_status == 'exception') or (status == 'completed' and other_status != 'completed'):
+                    downloaded_tasks[(chunk_name, platform_name)] = status
+                    return True
+                else:
+                    return False
+
         def download_artifact(test_task):
             status = test_task['status']['state']
             assert status in ALL_STATUSES
@@ -137,6 +153,11 @@ class CodeCov(object):
             platform_name = taskcluster.get_platform_name(test_task)
             # Ignore awsy and talos as they aren't actually suites of tests.
             if any(to_ignore in chunk_name for to_ignore in self.suites_to_ignore):
+                return
+
+            # If we have already downloaded this chunk from another task, check if the
+            # other task has a better status than this one.
+            if not should_download(status, chunk_name, platform_name):
                 return
 
             test_task_id = test_task['status']['taskId']
