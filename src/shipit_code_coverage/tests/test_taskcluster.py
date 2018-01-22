@@ -8,6 +8,14 @@ def test_last_task():
     assert taskcluster.get_last_task('win') is not None
 
 
+def test_get_task_status():
+    task_id = taskcluster.get_last_task('linux')
+    task_status = taskcluster.get_task_status(task_id)
+    assert task_status is not None
+    assert 'status' in task_status
+    assert 'state' in task_status['status']
+
+
 def test_get_task_details():
     task_id = taskcluster.get_last_task('linux')
     task_data = taskcluster.get_task_details(task_id)

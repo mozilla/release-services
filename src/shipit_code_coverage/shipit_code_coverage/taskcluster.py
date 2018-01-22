@@ -41,6 +41,11 @@ def get_task_details(task_id):
     return r.json()
 
 
+def get_task_status(task_id):
+    r = requests.get(queue_base + 'task/' + task_id + '/status')
+    return r.json()
+
+
 def get_task_artifacts(task_id):
     r = requests.get(queue_base + 'task/' + task_id + '/artifacts')
     return r.json()['artifacts']

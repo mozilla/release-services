@@ -11,6 +11,7 @@ from threading import Condition
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 import sqlite3
+import time
 
 from cli_common.log import get_logger
 from cli_common.command import run_check
@@ -110,9 +111,6 @@ class CodeCov(object):
             if e.errno != errno.EEXIST:
                 raise
 
-        def rewriting_task(path):
-            return lambda: self.rewrite_jsvm_lcov(path)
-
         # The test tasks for the Linux and Windows builds are in the same group,
         # but the following code is generic and supports build tasks split in
         # separate groups.
@@ -124,24 +122,42 @@ class CodeCov(object):
             if taskcluster.is_coverage_task(task)
         ]
 
-        with ThreadPoolExecutorResult() as executor:
-            for test_task in test_tasks:
-                chunk_name = taskcluster.get_chunk_name(test_task)
-                platform_name = taskcluster.get_platform_name(test_task)
-                # Ignore awsy and talos as they aren't actually suites of tests.
-                if any(to_ignore in chunk_name for to_ignore in self.suites_to_ignore):
+        FINISHED_STATUSES = ['completed', 'failed', 'exception']
+        ALL_STATUSES = FINISHED_STATUSES + ['unscheduled', 'pending', 'running']
+
+        def download_artifact(test_task):
+            status = test_task['status']['state']
+            assert status in ALL_STATUSES
+            while status not in FINISHED_STATUSES:
+                time.sleep(60)
+                status = taskcluster.get_task_status(test_task['status']['taskId'])['status']['state']
+                assert status in ALL_STATUSES
+
+            chunk_name = taskcluster.get_chunk_name(test_task)
+            platform_name = taskcluster.get_platform_name(test_task)
+            # Ignore awsy and talos as they aren't actually suites of tests.
+            if any(to_ignore in chunk_name for to_ignore in self.suites_to_ignore):
+                return
+
+            test_task_id = test_task['status']['taskId']
+            for artifact in taskcluster.get_task_artifacts(test_task_id):
+                if not any(n in artifact['name'] for n in ['code-coverage-grcov.zip', 'code-coverage-jsvm.zip']):
                     continue
 
-                test_task_id = test_task['status']['taskId']
-                for artifact in taskcluster.get_task_artifacts(test_task_id):
-                    if not any(n in artifact['name'] for n in ['code-coverage-grcov.zip', 'code-coverage-jsvm.zip']):
-                        continue
+                artifact_path = taskcluster.download_artifact(test_task_id, chunk_name, platform_name, artifact)
+                logger.info('%s artifact downloaded' % artifact_path)
+                if 'code-coverage-jsvm.zip' in artifact['name']:
+                    self.rewrite_jsvm_lcov(artifact_path)
+                    logger.info('%s artifact rewritten' % artifact_path)
 
-                    artifact_path = taskcluster.download_artifact(test_task_id, chunk_name, platform_name, artifact)
-                    if 'code-coverage-jsvm.zip' in artifact['name']:
-                        executor.submit(rewriting_task(artifact_path))
+        def download_artifact_task(test_task):
+            return lambda: download_artifact(test_task)
 
-            logger.info('Code coverage artifacts downloaded')
+        with ThreadPoolExecutorResult() as executor:
+            for test_task in test_tasks:
+                executor.submit(download_artifact_task(test_task))
+
+        logger.info('Code coverage artifacts downloaded')
 
     def update_github_repo(self):
         run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
