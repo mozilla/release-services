@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import errno
 import os
+from shipit_code_coverage import utils
 from shipit_code_coverage.codecov import CodeCov
 
 
@@ -17,11 +17,7 @@ FILES = ['ccov-artifacts/%s' % f for f in [
 
 
 def test_get_chunks():
-    try:
-        os.mkdir('ccov-artifacts')
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
+    utils.mkdir('ccov-artifacts')
 
     for f in FILES:
         open(f, 'w')
@@ -37,11 +33,7 @@ def test_get_chunks():
 
 
 def test_get_coverage_artifacts():
-    try:
-        os.mkdir('ccov-artifacts')
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
+    utils.mkdir('ccov-artifacts')
 
     for f in FILES:
         open(f, 'w')

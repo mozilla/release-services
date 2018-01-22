@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import errno
+import os
 import time
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
@@ -26,6 +28,14 @@ def retry(operation, retries=5, wait_between_retries=120):
             retries -= 1
             time.sleep(wait_between_retries)
     return successful
+
+
+def mkdir(path):
+    try:
+        os.mkdir(path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise e
 
 
 class ThreadPoolExecutorResult(ThreadPoolExecutor):
