@@ -59,7 +59,7 @@ class MozLintIssue(Issue):
         '''
         return '{}: {} [{}: {}]'.format(
             self.level.capitalize(),
-            self.message,
+            self.message.capitalize(),
             self.linter,
             self.rule,
         )
