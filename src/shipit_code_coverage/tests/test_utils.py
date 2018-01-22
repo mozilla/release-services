@@ -30,7 +30,7 @@ def test_wait_until():
 def test_retry():
     assert utils.retry(lambda: True)
     assert utils.retry(lambda: False)
-    assert not utils.retry(do_raise)
+    assert not utils.retry(do_raise, wait_between_retries=0)
 
     i = {}
 
