@@ -57,9 +57,9 @@ let
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
 
   includes = concatStringsSep ":" [
-    "${gcc-unwrapped}/include/c++/5.4.0"
-    "${gcc-unwrapped}/include/c++/5.4.0/backward"
-    "${gcc-unwrapped}/include/c++/5.4.0/x86_64-unknown-linux-gnu"
+    "${gcc-unwrapped}/include/c++/${gcc-unwrapped.version}"
+    "${gcc-unwrapped}/include/c++/${gcc-unwrapped.version}/backward"
+    "${gcc-unwrapped}/include/c++/${gcc-unwrapped.version}/x86_64-unknown-linux-gnu"
     "${glibc.dev}/include/"
     "${xorg.libX11.dev}/include"
     "${xorg.xproto}/include"
