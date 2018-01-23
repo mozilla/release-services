@@ -306,6 +306,9 @@ class CodeCov(object):
 
         retry(lambda: run_check(['gecko-env', './mach', 'build'], cwd=self.repo_dir))
         retry(lambda: run_check(['gecko-env', './mach', 'build-backend', '-b', 'ChromeMap'], cwd=self.repo_dir))
+        # XXX: Temporarily copy the chrome-map.json to the working directory of the lcov rewriter
+        # to avoid issues when bug 1431349 lands.
+        shutil.copyfile(os.path.join(self.repo_dir, 'obj-firefox/chrome-map.json'), os.path.join(self.repo_dir, 'chrome-map.json'))
 
         logger.info('Build successful')
 
