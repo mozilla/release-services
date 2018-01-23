@@ -1,0 +1,40 @@
+# {{ product }} {{ version }}
+
+### Date of go-to-build: {{ date }}
+
+## Preflight tasks (pre go-to-build)
+{% for task in preflight["human_tasks"] %}
+- [{% if task["resolved"] %}x{% else %} {% endif %}] {{ loop.index }}. due:{{ task["deadline"] }} - [bug {{ task["bug"] }}](http://bugzilla/{{ task["bug"] }}): {{ task["description"] }}
+{% endfor %}
+{% if not preflight["human_tasks"] %}
+- none
+{% endif %}
+
+{% for build in inflight %}
+## Build {{ build['buildnum'] }} {% if build['aborted'] %} :bomb: _aborted release. starting new build num_ :bomb:{% endif %} 
+
+### Graphs
+{% for graphid in build['graphids'] %}
+[task group](https://tools.taskcluster.net/push-inspector/#/{{ graphid }})
+{% endfor %}
+{% if not build["graphids"] %}
+task graph url: unknown
+{% endif %}
+
+
+#### Status
+{% for task in build["human_tasks"] %}
+- [{% if task['resolved'] %}x{% else %} {% endif %}] {{ loop.index }}. {% if task["docs"] %} [how-to]({{ task["docs"] }}) {% endif %} - {{ task["description"] }}
+{% endfor %}
+
+### Issues
+| Who                 | ID               | Bug                                                                 | Descripiton                | Release Unblocked       | Future Threat                |
+| ------------------- | ---------------- | ------------------------------------------------------------------- | -------------------------- | ----------------------- | ---------------------------- |
+{% for issue in build['issues'] %}
+| {{ issue["who"] }}  | {{ loop.index }} | [bug {{ issue["bug"] }}](http://bugzilla/{{ issue["bug"] }})        | {{ issue["description"] }} | {{ issue["resolved"] }} | {{ issue["future_threat"] }} |
+{% endfor %}
+{% if not build["issues"] %}
+| none | | | | | |
+{% endif %}
+
+{% endfor %}

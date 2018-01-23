@@ -61,6 +61,18 @@ PROJECTS = {
             'data_dir': os.path.join(TMP_DIR, 'postgresql'),
         },
     },
+    'releasewarrior': {
+        'checks': [
+            ('Checking code quality', 'flake8'),
+            ('Running tests', 'pytest tests/'),
+        ],
+        'run': 'CLI',
+        'deploy': 'TASKCLUSTER_HOOK',
+        'deploy_options': {
+            #'staging': {},
+            #'production': {},
+        },
+    },
     'releng-notification-policy': {
         'checks': [
             ('Checking code quality', 'flake8'),

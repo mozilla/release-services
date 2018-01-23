@@ -31,6 +31,7 @@ let
     # TODO: backend_common_example = import ./../lib/backend_common/example { inherit releng_pkgs; };
     "frontend-common-example" = import ./../lib/frontend_common/example { inherit releng_pkgs; };
 
+    "releasewarrior" = import ./../src/releasewarrior { inherit releng_pkgs; };
 
     "releng-docs" = import ./../src/releng_docs { inherit releng_pkgs; };
     "releng-frontend" = import ./../src/releng_frontend { inherit releng_pkgs; };
