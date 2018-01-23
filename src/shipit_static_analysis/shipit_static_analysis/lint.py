@@ -16,7 +16,7 @@ ISSUE_MARKDOWN = '''
 - **Line**: {line}
 - **In patch**: {in_patch}
 - **Third Party**: {third_party}
-- **Valid rule**: {valid_rule}
+- **Disabled rule**: {disabled_rule}
 - **Publishable**: {publishable}
 
 ```
@@ -46,7 +46,7 @@ class MozLintIssue(Issue):
             self.line,
         )
 
-    def is_valid_rule(self):
+    def is_disabled_rule(self):
         '''
         Some rules are disabled:
         * Python "bad" quotes
@@ -54,18 +54,18 @@ class MozLintIssue(Issue):
 
         # See https://github.com/mozilla-releng/services/issues/777
         if self.linter == 'flake8' and self.rule == 'Q000':
-            return False
+            return True
 
-        return True
+        return False
 
     def is_publishable(self):
         '''
         Publishable when:
         * line is modified by dev.
         * file is not 3rd party
-        * is a valid rule
+        * rule is not disabled
         '''
-        return self.in_patch and not self.is_third_party() and self.is_valid_rule()
+        return self.in_patch and not self.is_third_party() and not self.is_disabled_rule()
 
     def as_text(self):
         '''
@@ -91,7 +91,7 @@ class MozLintIssue(Issue):
             third_party=self.is_third_party() and 'yes' or 'no',
             in_patch=self.in_patch and 'yes' or 'no',
             publishable=self.is_publishable() and 'yes' or 'no',
-            valid_rule=self.is_valid_rule() and 'yes' or 'no',
+            disabled_rule=self.is_disabled_rule() and 'yes' or 'no',
         )
 
 

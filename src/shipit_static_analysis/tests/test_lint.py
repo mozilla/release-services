@@ -18,16 +18,16 @@ def test_flake8_rules(tmpdir, mock_config):
     # Valid issue
     modified = [1, 2, 3]
     issue = MozLintIssue(str(repo), 'test.py', modified, 1, 'error', 1, 'flake8', 'Dummy test', 'dummy rule')
-    assert issue.is_valid_rule()
+    assert not issue.is_disabled_rule()
     assert issue.is_publishable()
 
     # 3rd party
     issue = MozLintIssue(str(repo), 'test/dummy/XXX.py', modified, 1, 'error', 1, 'flake8', 'Dummy test', 'dummy rule')
-    assert issue.is_valid_rule()
+    assert not issue.is_disabled_rule()
     assert issue.is_third_party()
     assert not issue.is_publishable()
 
     # Flake8 bad quotes
     issue = MozLintIssue(str(repo), 'test.py', modified, 1, 'error', 1, 'flake8', 'Remove bad quotes or whatever.', 'Q000')
-    assert not issue.is_valid_rule()
+    assert issue.is_disabled_rule()
     assert not issue.is_publishable()
