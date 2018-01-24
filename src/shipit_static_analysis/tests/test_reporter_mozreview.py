@@ -77,7 +77,7 @@ def test_comment(mock_mozreview):
     issues = [clang_tidy_publishable, ]
 
     assert reporter.build_comment(issues) == '''
-Static analysis found 1 defect in this patch.
+Code analysis found 1 defect in this patch:
  - 1 defect found by clang-tidy
 
 You can run this analysis locally with:
@@ -94,7 +94,7 @@ If you see a problem in this automated review, please report it here: http://bit
     issues.append(clang_format_publishable)
 
     assert reporter.build_comment(issues) == '''
-Static analysis found 2 defects in this patch.
+Code analysis found 2 defects in this patch:
  - 1 defect found by clang-format
  - 1 defect found by clang-tidy
 
@@ -113,7 +113,7 @@ If you see a problem in this automated review, please report it here: http://bit
     issues.append(mozlint_publishable)
 
     assert reporter.build_comment(issues) == '''
-Static analysis found 3 defects in this patch.
+Code analysis found 3 defects in this patch:
  - 1 defect found by clang-format
  - 1 defect found by clang-tidy
  - 1 defect found by mozlint
@@ -121,7 +121,7 @@ Static analysis found 3 defects in this patch.
 You can run this analysis locally with:
  - `./mach clang-format -p path/to/file.cpp` (C/C++)
  - `./mach static-analysis check path/to/file.cpp` (C/C++)
- - `./mach lint check path/to/file` (Python/Javascript/wpt)
+ - `./mach lint path/to/file` (JS/Python)
 
 
 If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx

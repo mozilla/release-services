@@ -19,11 +19,11 @@ COMMENT_PARTS = {
     },
     MozLintIssue: {
         'defect': ' - {nb} found by mozlint',
-        'analyzer': ' - `./mach lint check path/to/file` (Python/Javascript/wpt)',
+        'analyzer': ' - `./mach lint path/to/file` (JS/Python)',
     },
 }
 COMMENT_FAILURE = '''
-Static analysis found {defects_total} in this patch{extras_comments}.
+Code analysis found {defects_total} in this patch{extras_comments}:
 {defects}
 
 You can run this analysis locally with:
