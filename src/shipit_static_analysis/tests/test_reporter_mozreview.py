@@ -121,7 +121,7 @@ Static analysis found 3 defects in this patch.
 You can run this analysis locally with:
  - `./mach clang-format -p path/to/file.cpp` (C/C++)
  - `./mach static-analysis check path/to/file.cpp` (C/C++)
- - `./mach lint check path/to/file` (Python/Javascript/wpt)
+ - `./mach lint path/to/file` (Python/Javascript/wpt)
 
 
 If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx
