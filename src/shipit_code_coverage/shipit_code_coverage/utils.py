@@ -49,6 +49,11 @@ class ThreadPoolExecutorResult(ThreadPoolExecutor):
         return future
 
     def __exit__(self, *args):
-        for future in concurrent.futures.as_completed(self.futures):
-            future.result()
+        try:
+            for future in concurrent.futures.as_completed(self.futures):
+                future.result()
+        except Exception as e:
+            for future in self.futures:
+                future.cancel()
+            raise
         return super(ThreadPoolExecutorResult, self).__exit__(*args)
