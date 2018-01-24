@@ -14,7 +14,7 @@ MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
 
 
 @responses.activate
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def mock_config():
     '''
     Mock configuration for bot

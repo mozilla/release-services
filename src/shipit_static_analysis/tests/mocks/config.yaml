@@ -6,4 +6,4 @@ clang_checkers:
  - name: clang-analyzer-security.*
    publish: !!bool no
 
-third_party: tools/rewriting/ThirdPartyPaths.txt
+third_party: 3rdparty.txt
