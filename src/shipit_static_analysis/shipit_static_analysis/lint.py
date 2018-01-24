@@ -125,7 +125,7 @@ class MozLint(object):
         command = [
             './mach', 'lint',
             '-f', 'json',
-            '--no-ignore',
+            '--quiet',
             path
         ]
         returncode, output, error = run(' '.join(command), cwd=self.repo_dir)
