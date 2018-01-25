@@ -54,7 +54,9 @@ class CodeCov(object):
             self.coveralls_token = 'NONE'
             self.codecov_token = 'NONE'
             self.from_pulse = False
+            logger.info('Mercurial revision', revision=self.revision)
         else:
+            logger.info('Mercurial revision', revision=revision)
             self.task_ids = [
                 taskcluster.get_task('mozilla-central', revision, 'linux'),
                 taskcluster.get_task('mozilla-central', revision, 'win'),
@@ -71,8 +73,6 @@ class CodeCov(object):
             self.suites_to_ignore = ['awsy', 'talos']
         else:
             self.suites_to_ignore = []
-
-        logger.info('Mercurial revision', revision=self.revision)
 
     def get_chunks(self):
         return list(set([f.split('_')[1] for f in os.listdir('ccov-artifacts')]))
