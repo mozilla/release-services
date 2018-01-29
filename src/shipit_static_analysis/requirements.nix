@@ -249,7 +249,18 @@ let
       };
     };
 
-
+    "codespell" = python.mkDerivation {
+      name = "codespell-1.11.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/01/3d/f00eeb4b513ce5724366026a60867920a63d6d4362977bc18f05816ae740/codespell-1.11.0.tar.gz"; sha256 = "259ad215acc3b3406d65490224d70c6c85068b0b14d997728ed5b1d2ef275b6e"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/lucasdemarchi/codespell/";
+        license = "License :: OSI Approved";
+        description = "Codespell";
+      };
+    };
 
     "cookies" = python.mkDerivation {
       name = "cookies-2.2.1";
