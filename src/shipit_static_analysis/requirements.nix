@@ -588,6 +588,21 @@ let
 
 
 
+    "pathspec" = python.mkDerivation {
+      name = "pathspec-0.5.5";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/9f/b/5a901a3b1eeebf83af6da74ecca69d7daf5189e450f0f4cccf9c19132651/pathspec-0.5.5.tar.gz"; sha256 = "72c495d1bbe76674219e307f6d1c6062f2e1b0b483a5e4886435127d0df3d0d3"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/cpburnz/python-path-specification";
+        license = licenses.mpl20;
+        description = "Utility library for gitignore style pattern matching of file paths.";
+      };
+    };
+
+
+
     "py" = python.mkDerivation {
       name = "py-1.5.2";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/90/e3/e075127d39d35f09a500ebb4a90afd10f9ef0a1d28a6d09abeec0e444fdd/py-1.5.2.tar.gz"; sha256 = "ca18943e28235417756316bfada6cd96b23ce60dd532642690dcfdaba988a76d"; };
@@ -991,6 +1006,24 @@ let
         homepage = "https://github.com/cscorley/whatthepatch";
         license = licenses.mit;
         description = "A patch parsing library.";
+      };
+    };
+
+
+
+    "yamllint" = python.mkDerivation {
+      name = "yamllint-1.10.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/47/b9/512bbd1b8ee92196548d56eba7ca1242f5eb14255fa44f772399abdb9bde/yamllint-1.10.0.tar.gz"; sha256 = "056d634bba39e34cb367a810af6abd534d5b97b0bdd9f8f116616bf26ef379b3"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."PyYAML"
+      self."pathspec"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/adrienverge/yamllint";
+        license = licenses.gpl3;
+        description = "A linter for YAML files.";
       };
     };
 
