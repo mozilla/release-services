@@ -4,6 +4,7 @@ libmozdata
 RBTools
 PyYAML
 parsepatch
+codespell
 
 # Fixed versions
 six==1.10.0
