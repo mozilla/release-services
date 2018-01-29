@@ -224,14 +224,18 @@ class CodeCov(object):
 
         with ZipFile(zip_file_path, 'r') as z:
             z.extractall(out_dir)
-
-        run_check([
-            'gecko-env', './mach', 'python',
-            'python/mozbuild/mozbuild/codecoverage/lcov_rewriter.py',
-            os.path.abspath(out_dir),
-            '--output-file', os.path.abspath(out_file),
-            '--chrome-map-path', os.path.abspath('%s_chrome-map.json' % platform_name),
-        ], cwd=self.repo_dir)
+            files = z.namelist()
+            if len(files) == 1 and files[0] == 'jsvm_lcov_output.info':
+                # The file was rewritten on the test machine.
+                os.rename(os.path.join(out_dir, 'jsvm_lcov_output.info'), out_file)
+            else:
+                run_check([
+                    'gecko-env', './mach', 'python',
+                    'python/mozbuild/mozbuild/codecoverage/lcov_rewriter.py',
+                    os.path.abspath(out_dir),
+                    '--output-file', os.path.abspath(out_file),
+                    '--chrome-map-path', os.path.abspath('%s_chrome-map.json' % platform_name),
+                ], cwd=self.repo_dir)
 
         shutil.rmtree(out_dir)
 
