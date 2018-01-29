@@ -5,6 +5,7 @@ RBTools
 PyYAML
 parsepatch
 codespell
+yamllint
 
 # Fixed versions
 six==1.10.0

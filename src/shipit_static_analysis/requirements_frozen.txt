@@ -28,6 +28,7 @@ multidict==3.3.2
 oauth2client==4.1.2
 packaging==16.8
 parsepatch==1.0.0
+pathspec==0.5.5
 py==1.5.2
 pyasn1==0.3.4
 pyasn1-modules==0.1.5
@@ -55,4 +56,5 @@ tqdm==4.19.4
 uritemplate==3.0.0
 urllib3==1.22
 whatthepatch==0.0.5
+yamllint==1.10.0
 yarl==0.15.0
