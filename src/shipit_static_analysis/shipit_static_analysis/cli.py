@@ -11,11 +11,13 @@ from shipit_static_analysis.config import settings
 from shipit_static_analysis.report import get_reporters
 from shipit_static_analysis.lock import LockDir
 from shipit_static_analysis import config
+from shipit_static_analysis import stats
 from cli_common.click import taskcluster_options
 from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
-import click
 from cli_common.log import get_logger
+import click
+import time
 
 logger = get_logger(__name__)
 
@@ -46,6 +48,8 @@ def main(phabricator,
     assert (phabricator is None) ^ (mozreview is None), \
         'Specify a phabricator XOR mozreview parameters'
 
+    start_time = time.time()
+
     secrets = get_secrets(taskcluster_secret,
                           config.PROJECT_NAME,
                           required=(
@@ -62,12 +66,20 @@ def main(phabricator,
                           taskcluster_access_token=taskcluster_access_token,
                           )
 
+    import logging
     init_logger(config.PROJECT_NAME,
+
+                level=logging.DEBUG,
                 PAPERTRAIL_HOST=secrets.get('PAPERTRAIL_HOST'),
                 PAPERTRAIL_PORT=secrets.get('PAPERTRAIL_PORT'),
                 SENTRY_DSN=secrets.get('SENTRY_DSN'),
                 MOZDEF=secrets.get('MOZDEF'),
                 )
+
+    # Setup statistics
+    datadog_api_key = secrets.get('DATADOG_API_KEY')
+    if datadog_api_key:
+        stats.auth(datadog_api_key)
 
     # Load reporters
     reporters = get_reporters(
@@ -96,15 +108,21 @@ def main(phabricator,
     with LockDir(cache_root, 'shipit-sa-') as work_dir:
         w = Workflow(work_dir, reporters, secrets['ANALYZERS'])
         for revision in revisions:
+            continue
             try:
                 w.run(revision)
             except Exception as e:
                 # Log errors to papertrail
+                raise
                 logger.error(
                     'Static analysis failure',
                     revision=revision,
                     error=e,
                 )
+
+    # Force flush of stats
+    stats.api.timing('analysis.runtime', time.time() - start_time)
+    stats.stop()
 
 
 if __name__ == '__main__':

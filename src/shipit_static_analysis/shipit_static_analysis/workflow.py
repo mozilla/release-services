@@ -16,6 +16,7 @@ from shipit_static_analysis.clang.format import ClangFormat
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.lint import MozLint
 from shipit_static_analysis import CLANG_TIDY, CLANG_FORMAT, MOZLINT
+from shipit_static_analysis import stats
 from parsepatch.patch import Patch
 
 logger = get_logger(__name__)
@@ -96,6 +97,7 @@ class Workflow(object):
             channel=settings.app_channel,
             revision=revision,
         )
+        stats.increment('analysis')
 
         # Setup tools (clang & mozlint)
         clang_tidy = CLANG_TIDY in self.analyzers and ClangTidy(self.repo_dir, settings.target)
@@ -198,6 +200,7 @@ class Workflow(object):
             logger.info('Skip mozlint')
 
         logger.info('Detected {} issue(s)'.format(len(issues)))
+        stats.report_issues('all', issues)
         if not issues:
             logger.info('No issues, stopping there.')
             return

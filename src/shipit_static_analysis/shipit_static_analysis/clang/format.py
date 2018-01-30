@@ -4,7 +4,7 @@ import difflib
 import tempfile
 import subprocess
 from cli_common.log import get_logger
-from shipit_static_analysis import Issue
+from shipit_static_analysis import Issue, stats
 
 logger = get_logger(__name__)
 
@@ -110,6 +110,7 @@ class ClangFormat(object):
             if opcode[0] in OPCODES
         ]
 
+        stats.report_issues('clang-format', issues)
         return issues
 
     def apply_patch(self, filename, issues):

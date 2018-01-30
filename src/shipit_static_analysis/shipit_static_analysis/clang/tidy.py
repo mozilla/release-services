@@ -13,7 +13,7 @@ import re
 
 from cli_common.log import get_logger
 from shipit_static_analysis.config import settings
-from shipit_static_analysis import Issue
+from shipit_static_analysis import Issue, stats
 
 logger = get_logger(__name__)
 
@@ -125,6 +125,7 @@ class ClangTidy(object):
             logger.warn('Ctrl-C detected, exiting...')
             os.kill(0, 9)
 
+        stats.report_issues('clang-tidy', issues)
         return issues
 
     def run_clang_tidy(self, checks):
