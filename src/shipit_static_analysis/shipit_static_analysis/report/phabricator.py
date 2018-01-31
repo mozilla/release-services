@@ -98,7 +98,7 @@ class PhabricatorReporter(Reporter):
         # Use only publishable issues
         issues = list(filter(lambda i: i.is_publishable(), issues))
         if issues:
-            stats.increment('report.phabricator.issues', len(issues))
+            stats.api.increment('report.phabricator.issues', len(issues))
 
             # First publish inlines as drafts
             inlines = [
@@ -115,7 +115,7 @@ class PhabricatorReporter(Reporter):
                     diff_url=diff_url,
                 ),
             )
-            stats.increment('report.phabricator')
+            stats.api.increment('report.phabricator')
             logger.info('Published phabricator comment')
 
         else:

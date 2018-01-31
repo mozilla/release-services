@@ -84,7 +84,7 @@ class MozReviewReporter(Reporter):
         issues = list(filter(mozreview_publish, issues))
 
         if issues:
-            stats.increment('report.mozreview.issues', len(issues))
+            stats.api.increment('report.mozreview.issues', len(issues))
 
             # Build complex top comment
             comment = self.build_comment(
@@ -113,8 +113,7 @@ class MozReviewReporter(Reporter):
 
         # Publish the review
         # without ship_it to avoid automatically r+
-        stats.increment('report.mozreview')
-        return # TRASHME
+        stats.api.increment('report.mozreview')
         return review.publish(
             body_top=comment,
             ship_it=False,

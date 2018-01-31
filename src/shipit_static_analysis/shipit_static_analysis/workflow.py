@@ -97,7 +97,7 @@ class Workflow(object):
             channel=settings.app_channel,
             revision=revision,
         )
-        stats.increment('analysis')
+        stats.api.increment('analysis')
 
         # Setup tools (clang & mozlint)
         clang_tidy = CLANG_TIDY in self.analyzers and ClangTidy(self.repo_dir, settings.target)

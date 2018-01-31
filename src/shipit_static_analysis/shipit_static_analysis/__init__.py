@@ -58,5 +58,6 @@ class Issue(object):
                 return True
         return False
 
+
 # Create common stats instance
 stats = Datadog()

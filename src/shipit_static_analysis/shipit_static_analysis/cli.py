@@ -66,10 +66,7 @@ def main(phabricator,
                           taskcluster_access_token=taskcluster_access_token,
                           )
 
-    import logging
     init_logger(config.PROJECT_NAME,
-
-                level=logging.DEBUG,
                 PAPERTRAIL_HOST=secrets.get('PAPERTRAIL_HOST'),
                 PAPERTRAIL_PORT=secrets.get('PAPERTRAIL_PORT'),
                 SENTRY_DSN=secrets.get('SENTRY_DSN'),
@@ -79,7 +76,7 @@ def main(phabricator,
     # Setup statistics
     datadog_api_key = secrets.get('DATADOG_API_KEY')
     if datadog_api_key:
-        stats.auth(datadog_api_key)
+        stats.auth(datadog_api_key, secrets.get('DATADOG_APP_KEY'))
 
     # Load reporters
     reporters = get_reporters(
@@ -108,21 +105,20 @@ def main(phabricator,
     with LockDir(cache_root, 'shipit-sa-') as work_dir:
         w = Workflow(work_dir, reporters, secrets['ANALYZERS'])
         for revision in revisions:
-            continue
             try:
                 w.run(revision)
             except Exception as e:
                 # Log errors to papertrail
-                raise
                 logger.error(
                     'Static analysis failure',
                     revision=revision,
                     error=e,
                 )
 
-    # Force flush of stats
-    stats.api.timing('analysis.runtime', time.time() - start_time)
-    stats.stop()
+    # Publish all stats at once
+    end_time = time.time()
+    stats.api.timing('analysis.runtime', end_time - start_time)
+    stats.api.flush(end_time + 5)  # force send last metrics
 
 
 if __name__ == '__main__':
