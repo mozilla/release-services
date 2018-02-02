@@ -115,10 +115,9 @@ def main(phabricator,
                     error=e,
                 )
 
-    # Publish all stats at once
+    # Publish full runtime
     end_time = time.time()
     stats.api.timing('analysis.runtime', end_time - start_time)
-    stats.api.flush(end_time + 5)  # force send last metrics
 
 
 if __name__ == '__main__':

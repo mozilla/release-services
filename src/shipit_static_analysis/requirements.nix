@@ -300,7 +300,8 @@ let
 
     "datadog" = python.mkDerivation {
       name = "datadog-0.18.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/b2/75/0ace6926ffbc39195ff3cca0dfcfccf4ea85a9532d5c8f6be48539ef423b/datadog-0.18.0.tar.gz"; sha256 = "8e2818dac1f5d742a14dc177c9eaffbc6538c9587131709bfa47cdb47ac93a23"; };
+      # Next update, make sure the datagog PR #221 is in release (should be OK for 0.19.0)
+      src = pkgs.fetchurl { url = "https://github.com/DataDog/datadogpy/archive/9b4b6ae2b6a2e1472caa201f3077bce1081aa43b.tar.gz"; sha256 = "00a391cmd9ajhnl3llnq9jv2648xxnq9qycp1j8ny4gfxvcf78ng"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
