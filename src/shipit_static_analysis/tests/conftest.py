@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import responses
+import itertools
 import httpretty
 import os.path
 import pytest
@@ -158,3 +159,43 @@ def mock_phabricator():
         body=_response('diff_query'),
         content_type='application/json',
     )
+
+
+@pytest.fixture(scope='session')
+def mock_stats():
+    '''
+    Mock Datadog authentication and stats management
+    '''
+    from shipit_static_analysis import stats
+
+    # Configure Datadog with a dummy token
+    stats.auth('test_token', use_thread=False)
+    assert not stats.api._disabled
+    assert not stats.api._is_auto_flushing
+
+    class MemoryReporter(object):
+        '''
+        A reporting class that reports to memory for testing.
+        Used in datadog unit tests:
+        https://github.com/DataDog/datadogpy/blob/master/tests/unit/threadstats/test_threadstats.py
+        '''
+        def __init__(self):
+            self.metrics = []
+            self.events = []
+
+        def flush_metrics(self, metrics):
+            self.metrics += metrics
+
+        def flush_events(self, events):
+            self.events += events
+
+        def get_metrics(self, metric_name):
+            return list(itertools.chain(*[
+                m['points']
+                for m in self.metrics
+                if m['metric'] == metric_name
+            ]))
+
+    # Gives stats & reporter access to unit tests
+    stats.api.reporter = MemoryReporter()
+    return stats, stats.api.reporter

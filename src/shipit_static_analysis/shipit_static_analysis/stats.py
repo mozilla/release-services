@@ -14,7 +14,7 @@ class Datadog(object):
     '''
     api = None
 
-    def auth(self, api_key):
+    def auth(self, api_key, use_thread=True):
         datadog.initialize(
             api_key=api_key,
             host_name='{}.code-review'.format(settings.app_channel),
@@ -22,14 +22,15 @@ class Datadog(object):
         self.api = datadog.ThreadStats(
             constant_tags=[settings.app_channel, ],
         )
-        self.api.start()
+        self.api.start(
+            flush_in_thread=use_thread,
+        )
 
     def report_issues(self, name, issues):
         '''
         Aggregate statistics about found issues
         '''
-        if self.api is None:
-            return
+        assert self.api is not None, 'Stats not configured'
 
         # Report all issues found
         self.api.increment(

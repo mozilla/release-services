@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import time
 
 BAD_CPP_SRC = '''#include <demo>
 int \tmain(void){
@@ -51,7 +52,7 @@ def test_expanded_macros():
     assert issue.is_expanded_macro() is False
 
 
-def test_clang_format(tmpdir):
+def test_clang_format(tmpdir, mock_stats):
     '''
     Test clang-format runner
     '''
@@ -85,3 +86,15 @@ def test_clang_format(tmpdir):
 
     # At the end of the process, original file is patched
     assert bad_file.read() == BAD_CPP_VALID
+
+    # Test stats
+    stats, reporter = mock_stats
+    stats.api.flush(time.time() + 20)
+
+    metrics = reporter.get_metrics('issues.clang-format')
+    assert len(metrics) == 1
+    assert metrics[0][1]
+
+    metrics = reporter.get_metrics('issues.clang-format.publishable')
+    assert len(metrics) == 1
+    assert metrics[0][1]
