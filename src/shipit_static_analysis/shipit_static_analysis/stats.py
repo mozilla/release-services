@@ -14,10 +14,9 @@ class Datadog(object):
     '''
     api = None
 
-    def auth(self, api_key, app_key=None):
+    def auth(self, api_key):
         datadog.initialize(
             api_key=api_key,
-            app_key=app_key,
             host_name='{}.code-review'.format(settings.app_channel),
         )
         self.api = datadog.ThreadStats(

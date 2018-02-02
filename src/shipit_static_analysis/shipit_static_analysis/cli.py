@@ -76,7 +76,7 @@ def main(phabricator,
     # Setup statistics
     datadog_api_key = secrets.get('DATADOG_API_KEY')
     if datadog_api_key:
-        stats.auth(datadog_api_key, secrets.get('DATADOG_APP_KEY'))
+        stats.auth(datadog_api_key)
 
     # Load reporters
     reporters = get_reporters(

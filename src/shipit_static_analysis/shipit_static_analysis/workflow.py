@@ -200,7 +200,6 @@ class Workflow(object):
             logger.info('Skip mozlint')
 
         logger.info('Detected {} issue(s)'.format(len(issues)))
-        stats.report_issues('all', issues)
         if not issues:
             logger.info('No issues, stopping there.')
             return
