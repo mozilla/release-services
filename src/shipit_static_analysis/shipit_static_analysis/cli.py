@@ -17,7 +17,6 @@ from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
 from cli_common.log import get_logger
 import click
-import time
 
 logger = get_logger(__name__)
 
@@ -37,6 +36,7 @@ logger = get_logger(__name__)
     required=True,
     help='Cache root, used to pull changesets'
 )
+@stats.api.timer('runtime.analysis')
 def main(phabricator,
          mozreview,
          cache_root,
@@ -47,8 +47,6 @@ def main(phabricator,
 
     assert (phabricator is None) ^ (mozreview is None), \
         'Specify a phabricator XOR mozreview parameters'
-
-    start_time = time.time()
 
     secrets = get_secrets(taskcluster_secret,
                           config.PROJECT_NAME,
@@ -114,10 +112,6 @@ def main(phabricator,
                     revision=revision,
                     error=e,
                 )
-
-    # Publish full runtime
-    end_time = time.time()
-    stats.api.timing('runtime.analysis', end_time - start_time)
 
 
 if __name__ == '__main__':

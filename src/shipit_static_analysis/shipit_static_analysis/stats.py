@@ -12,26 +12,25 @@ class Datadog(object):
     '''
     Log metrics using Datadog REST api
     '''
-    api = None
+    def __init__(self):
+        self.api = datadog.ThreadStats(
+            constant_tags=[settings.app_channel, ],
+        )
 
     def auth(self, api_key):
         datadog.initialize(
             api_key=api_key,
             host_name='{}.code-review'.format(settings.app_channel),
         )
-        self.api = datadog.ThreadStats(
-            constant_tags=[settings.app_channel, ],
-        )
         self.api.start(
             flush_in_thread=True,
         )
+        assert not self.api._disabled
 
     def report_issues(self, name, issues):
         '''
         Aggregate statistics about found issues
         '''
-        assert self.api is not None, 'Stats not configured'
-
         # Report all issues found
         self.api.increment(
             'issues.{}'.format(name),
