@@ -58,9 +58,16 @@ class Workflow(object):
         if not self.reporters:
             logger.warn('No reporters configured, this analysis will not be published')
 
-        # Clone mozilla-central
-        self.repo_dir = os.path.join(cache_root, 'central')
-        shared_dir = os.path.join(cache_root, 'central-shared')
+        # Finally, clone the mercurial repository
+        self.hg = self.clone()
+
+    @stats.api.timed('runtime.clone')
+    def clone(self):
+        '''
+        Clone mozilla-central
+        '''
+        self.repo_dir = os.path.join(self.cache_root, 'central')
+        shared_dir = os.path.join(self.cache_root, 'central-shared')
         logger.info('Clone mozilla central', dir=self.repo_dir)
         cmd = hglib.util.cmdbuilder('robustcheckout',
                                     REPO_CENTRAL,
@@ -76,7 +83,7 @@ class Workflow(object):
             raise hglib.error.CommandError(cmd, proc.returncode, out, err)
 
         # Open new hg client
-        self.hg = hglib.open(self.repo_dir)
+        return hglib.open(self.repo_dir)
 
     def run(self, revision):
         '''
@@ -104,27 +111,29 @@ class Workflow(object):
         clang_format = CLANG_FORMAT in self.analyzers and ClangFormat(self.repo_dir)
         mozlint = MOZLINT in self.analyzers and MozLint(self.repo_dir)
 
-        # Force cleanup to reset tip
-        # otherwise previous pull are there
-        self.hg.update(rev=b'tip', clean=True)
+        with stats.api.timer('runtime.mercurial'):
 
-        # Pull revision from review
-        self.hg.pull(source=REPO_REVIEW, rev=revision.mercurial, update=True, force=True)
+            # Force cleanup to reset tip
+            # otherwise previous pull are there
+            self.hg.update(rev=b'tip', clean=True)
 
-        # Update to the target revision
-        self.hg.update(rev=revision.mercurial, clean=True)
+            # Pull revision from review
+            self.hg.pull(source=REPO_REVIEW, rev=revision.mercurial, update=True, force=True)
 
-        # Get the parents revisions
-        parent_rev = 'parents({})'.format(revision.mercurial)
-        parents = self.hg.identify(id=True, rev=parent_rev).decode('utf-8').strip()
+            # Update to the target revision
+            self.hg.update(rev=revision.mercurial, clean=True)
 
-        # Find modified files by this revision
-        modified_files = []
-        for parent in parents.split('\n'):
-            changeset = '{}:{}'.format(parent, revision.mercurial)
-            status = self.hg.status(change=[changeset, ])
-            modified_files += [f.decode('utf-8') for _, f in status]
-        logger.info('Modified files', files=modified_files)
+            # Get the parents revisions
+            parent_rev = 'parents({})'.format(revision.mercurial)
+            parents = self.hg.identify(id=True, rev=parent_rev).decode('utf-8').strip()
+
+            # Find modified files by this revision
+            modified_files = []
+            for parent in parents.split('\n'):
+                changeset = '{}:{}'.format(parent, revision.mercurial)
+                status = self.hg.status(change=[changeset, ])
+                modified_files += [f.decode('utf-8') for _, f in status]
+            logger.info('Modified files', files=modified_files)
 
         # List all modified lines from current revision changes
         patch = Patch.parse_patch(
@@ -137,19 +146,20 @@ class Workflow(object):
             for filename, diff in patch.items()
         }
 
-        # mach configure with mozconfig
-        logger.info('Mach configure...')
-        run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
+        with stats.api.timer('runtime.mach'):
+            # mach configure with mozconfig
+            logger.info('Mach configure...')
+            run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
 
-        # Build CompileDB backend
-        logger.info('Mach build backend...')
-        cmd = ['gecko-env', './mach', 'build-backend', '--backend=CompileDB']
-        run_check(cmd, cwd=self.repo_dir)
+            # Build CompileDB backend
+            logger.info('Mach build backend...')
+            cmd = ['gecko-env', './mach', 'build-backend', '--backend=CompileDB']
+            run_check(cmd, cwd=self.repo_dir)
 
-        # Build exports
-        logger.info('Mach build exports...')
-        run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
-        run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
+            # Build exports
+            logger.info('Mach build exports...')
+            run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
+            run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
 
         # Run static analysis through clang-tidy
         issues = []
@@ -205,5 +215,6 @@ class Workflow(object):
             return
 
         # Publish reports about these issues
-        for reporter in self.reporters.values():
-            reporter.publish(issues, revision, diff_url)
+        with stats.api.timer('runtime.reports'):
+            for reporter in self.reporters.values():
+                reporter.publish(issues, revision, diff_url)

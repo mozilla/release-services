@@ -44,6 +44,7 @@ class ClangFormat(object):
         assert os.path.isdir(repo_dir)
         self.repo_dir = repo_dir
 
+    @stats.api.timed('runtime.clang-format')
     def run(self, extensions, modified_lines):
         '''
         Run clang-format on those modified files

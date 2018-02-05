@@ -41,5 +41,5 @@ class Datadog(object):
         # Report publishable issues
         self.api.increment(
             'issues.{}.publishable'.format(name),
-            sum([i.is_publishable() for i in issues]),
+            sum(i.is_publishable() for i in issues),
         )

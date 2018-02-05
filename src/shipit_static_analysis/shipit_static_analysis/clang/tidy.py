@@ -69,6 +69,7 @@ class ClangTidy(object):
         self.repo_dir = repo_dir
         self.build_dir = os.path.join(repo_dir, build_dir)
 
+    @stats.api.timed('runtime.clang-tidy')
     def run(self, checks, modified_lines):
         '''
         Run modified files with specified checks through clang-tidy

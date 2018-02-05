@@ -117,7 +117,7 @@ def main(phabricator,
 
     # Publish full runtime
     end_time = time.time()
-    stats.api.timing('analysis.runtime', end_time - start_time)
+    stats.api.timing('runtime.analysis', end_time - start_time)
 
 
 if __name__ == '__main__':

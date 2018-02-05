@@ -107,6 +107,7 @@ class MozLint(object):
         assert 'SHELL' in os.environ, \
             'Missing SHELL environment variable'
 
+    @stats.api.timed('runtime.mozlint')
     def run(self, files):
         '''
         List all issues found by mozlint on specified files
