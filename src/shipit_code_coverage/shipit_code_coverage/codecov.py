@@ -3,10 +3,9 @@ import json
 import os
 import shutil
 import tarfile
-from zipfile import ZipFile
 import requests
 import hglib
-from threading import Condition, Lock
+from threading import Lock
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 import sqlite3
@@ -66,9 +65,6 @@ class CodeCov(object):
             self.codecov_token = codecov_token
             self.from_pulse = True
 
-        self.configure_finished = False
-        self.configure_finished_cv = Condition()
-
         if self.from_pulse:
             self.suites_to_ignore = ['awsy', 'talos']
         else:
@@ -88,13 +84,6 @@ class CodeCov(object):
 
         filtered_files = []
         for fname in files:
-            # grcov artifacts always have 'grcov' in the name and are ZIP files.
-            if 'grcov' in fname and not fname.endswith('.zip'):
-                continue
-            # jsvm artifacts always have 'jsvm' in the name and are not ZIP files.
-            if 'jsvm' in fname and fname.endswith('.zip'):
-                continue
-
             # If suite and chunk are None, return all artifacts.
             # Otherwise, only return the ones which have suite or chunk in their name.
             if (
@@ -119,9 +108,6 @@ class CodeCov(object):
             for task in taskcluster.get_tasks_in_group(group)
             if taskcluster.is_coverage_task(task)
         ]
-
-        for platform, build_task_id in self.task_ids.items():
-            taskcluster.download_artifact('%s_chrome-map.json' % platform, build_task_id, 'public/build/chrome-map.json')
 
         FINISHED_STATUSES = ['completed', 'failed', 'exception']
         ALL_STATUSES = FINISHED_STATUSES + ['unscheduled', 'pending', 'running']
@@ -169,9 +155,6 @@ class CodeCov(object):
                 artifact_path = self.get_artifact_path(platform_name, chunk_name, artifact)
                 taskcluster.download_artifact(artifact_path, test_task_id, artifact['name'])
                 logger.info('%s artifact downloaded' % artifact_path)
-                if 'code-coverage-jsvm.zip' in artifact['name']:
-                    self.rewrite_jsvm_lcov(platform_name, artifact_path)
-                    logger.info('%s artifact rewritten' % artifact_path)
 
         def download_artifact_task(test_task):
             return lambda: download_artifact(test_task)
@@ -213,31 +196,6 @@ class CodeCov(object):
         if ret is None:
             raise Exception('Mercurial commit is not available yet on mozilla/gecko-dev.')
         return ret
-
-    def rewrite_jsvm_lcov(self, platform_name, zip_file_path):
-        with self.configure_finished_cv:
-            while not self.configure_finished:
-                self.configure_finished_cv.wait()
-
-        out_dir = zip_file_path[:-4]
-        out_file = out_dir + '.info'
-
-        with ZipFile(zip_file_path, 'r') as z:
-            z.extractall(out_dir)
-            files = z.namelist()
-            if len(files) == 1 and files[0] == 'jsvm_lcov_output.info':
-                # The file was rewritten on the test machine.
-                os.rename(os.path.join(out_dir, 'jsvm_lcov_output.info'), out_file)
-            else:
-                run_check([
-                    'gecko-env', './mach', 'python',
-                    'python/mozbuild/mozbuild/codecoverage/lcov_rewriter.py',
-                    os.path.abspath(out_dir),
-                    '--output-file', os.path.abspath(out_file),
-                    '--chrome-map-path', os.path.abspath('%s_chrome-map.json' % platform_name),
-                ], cwd=self.repo_dir)
-
-        shutil.rmtree(out_dir)
 
     def generate_info(self, commit_sha=None, suite=None, chunk=None, out_format='coveralls', options=[]):
         cmd = [
@@ -309,16 +267,6 @@ class CodeCov(object):
         retry(lambda: do_clone())
 
         logger.info('mozilla-central cloned')
-
-    def configure_repo(self):
-        # Run ./mach python --version to create the virtualenv.
-        run_check(['gecko-env', './mach', 'python', '--version'], cwd=self.repo_dir)
-
-        logger.info('Configured successfully')
-
-        self.configure_finished = True
-        with self.configure_finished_cv:
-            self.configure_finished_cv.notify_all()
 
     def prepopulate_cache(self, commit_sha):
         try:
@@ -444,12 +392,8 @@ class CodeCov(object):
             # Thread 1 - Download coverage artifacts.
             executor.submit(lambda: self.download_coverage_artifacts())
 
-            # Thread 2 - Clone and configure mozilla-central
-            clone_future = executor.submit(lambda: self.clone_mozilla_central(self.revision))
-            # Make sure cloning mozilla-central didn't fail before configuring.
-            clone_future.add_done_callback(lambda f: f.result())
-            # Now we can configure.
-            clone_future.add_done_callback(lambda f: self.configure_repo())
+            # Thread 2 - Clone mozilla-central.
+            executor.submit(lambda: self.clone_mozilla_central(self.revision))
 
         if self.from_pulse:
             if self.gecko_dev_user is not None and self.gecko_dev_pwd is not None:
