@@ -8,6 +8,7 @@ import itertools
 import httpretty
 import os.path
 import pytest
+import time
 import json
 import re
 
@@ -169,9 +170,12 @@ def mock_stats():
     from shipit_static_analysis import stats
 
     # Configure Datadog with a dummy token
-    stats.auth('test_token', use_thread=False)
+    # and an ultra fast flushing cycle
+    stats.auth('test_token')
+    stats.api.stop()
+    stats.api.start(flush_interval=0.001)
     assert not stats.api._disabled
-    assert not stats.api._is_auto_flushing
+    assert stats.api._is_auto_flushing
 
     class MemoryReporter(object):
         '''
@@ -179,15 +183,20 @@ def mock_stats():
         Used in datadog unit tests:
         https://github.com/DataDog/datadogpy/blob/master/tests/unit/threadstats/test_threadstats.py
         '''
-        def __init__(self):
+        def __init__(self, api):
             self.metrics = []
             self.events = []
+            self.api = api
 
         def flush_metrics(self, metrics):
             self.metrics += metrics
 
         def flush_events(self, events):
             self.events += events
+
+        def flush(self):
+            # Helper for unit tests to force flush
+            self.api.flush(time.time() + 20)
 
         def get_metrics(self, metric_name):
             return list(itertools.chain(*[
@@ -196,6 +205,6 @@ def mock_stats():
                 if m['metric'] == metric_name
             ]))
 
-    # Gives stats & reporter access to unit tests
-    stats.api.reporter = MemoryReporter()
-    return stats, stats.api.reporter
+    # Gives reporter access to unit tests to access metrics
+    stats.api.reporter = MemoryReporter(stats.api)
+    yield stats.api.reporter

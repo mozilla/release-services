@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import time
 import json
 
 BAD_CPP_SRC = '''#include <demo>
@@ -100,18 +99,16 @@ def test_clang_format(tmpdir, mock_stats):
     assert bad_file.read() == BAD_CPP_VALID
 
     # Test stats
-    stats, reporter = mock_stats
-    stats.api.flush(time.time() + 20)
-
-    metrics = reporter.get_metrics('issues.clang-format')
+    mock_stats.flush()
+    metrics = mock_stats.get_metrics('issues.clang-format')
     assert len(metrics) == 1
     assert metrics[0][1]
 
-    metrics = reporter.get_metrics('issues.clang-format.publishable')
+    metrics = mock_stats.get_metrics('issues.clang-format.publishable')
     assert len(metrics) == 1
     assert metrics[0][1]
 
-    metrics = reporter.get_metrics('runtime.clang-format.avg')
+    metrics = mock_stats.get_metrics('runtime.clang-format.avg')
     assert len(metrics) == 1
     assert metrics[0][1] > 0
 
@@ -165,17 +162,15 @@ def test_clang_tidy(tmpdir, mock_config, mock_stats):
     assert issues[1].line == 8
 
     # Test stats
-    stats, reporter = mock_stats
-    stats.api.flush(time.time() + 20)
-
-    metrics = reporter.get_metrics('issues.clang-tidy')
+    mock_stats.flush()
+    metrics = mock_stats.get_metrics('issues.clang-tidy')
     assert len(metrics) == 1
     assert metrics[0][1] == 2
 
-    metrics = reporter.get_metrics('issues.clang-tidy.publishable')
+    metrics = mock_stats.get_metrics('issues.clang-tidy.publishable')
     assert len(metrics) == 1
     assert metrics[0][1] == 0
 
-    metrics = reporter.get_metrics('runtime.clang-tidy.avg')
+    metrics = mock_stats.get_metrics('runtime.clang-tidy.avg')
     assert len(metrics) == 1
     assert metrics[0][1] > 0

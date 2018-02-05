@@ -14,7 +14,7 @@ class Datadog(object):
     '''
     api = None
 
-    def auth(self, api_key, use_thread=True):
+    def auth(self, api_key):
         datadog.initialize(
             api_key=api_key,
             host_name='{}.code-review'.format(settings.app_channel),
@@ -23,7 +23,7 @@ class Datadog(object):
             constant_tags=[settings.app_channel, ],
         )
         self.api.start(
-            flush_in_thread=use_thread,
+            flush_in_thread=True,
         )
 
     def report_issues(self, name, issues):
