@@ -111,22 +111,36 @@ class CodeCov(object):
 
         FINISHED_STATUSES = ['completed', 'failed', 'exception']
         ALL_STATUSES = FINISHED_STATUSES + ['unscheduled', 'pending', 'running']
+        STATUS_VALUE = {
+            'exception': 1,
+            'failed': 2,
+            'completed': 3,
+        }
 
         downloaded_tasks = {}
         downloaded_tasks_lock = Lock()
 
         def should_download(status, chunk_name, platform_name):
             with downloaded_tasks_lock:
+                # If the chunk hasn't been downloaded before, this is obviously the best task
+                # to download it from.
                 if (chunk_name, platform_name) not in downloaded_tasks:
-                    return True
-
-                other_status = downloaded_tasks[(chunk_name, platform_name)]
-
-                if (status == 'failed' and other_status == 'exception') or (status == 'completed' and other_status != 'completed'):
-                    downloaded_tasks[(chunk_name, platform_name)] = status
-                    return True
+                    download_lock = Lock()
+                    downloaded_tasks[(chunk_name, platform_name)] = {
+                        'status': status,
+                        'lock': download_lock,
+                    }
                 else:
-                    return False
+                    task = downloaded_tasks[(chunk_name, platform_name)]
+
+                    if STATUS_VALUE[status] > STATUS_VALUE[task['status']]:
+                        task['status'] = status
+                        download_lock = task['lock']
+                    else:
+                        return None
+
+                download_lock.acquire()
+                return download_lock
 
         def download_artifact(test_task):
             status = test_task['status']['state']
@@ -144,7 +158,8 @@ class CodeCov(object):
 
             # If we have already downloaded this chunk from another task, check if the
             # other task has a better status than this one.
-            if not should_download(status, chunk_name, platform_name):
+            download_lock = should_download(status, chunk_name, platform_name)
+            if download_lock is None:
                 return
 
             test_task_id = test_task['status']['taskId']
@@ -155,6 +170,8 @@ class CodeCov(object):
                 artifact_path = self.get_artifact_path(platform_name, chunk_name, artifact)
                 taskcluster.download_artifact(artifact_path, test_task_id, artifact['name'])
                 logger.info('%s artifact downloaded' % artifact_path)
+
+            download_lock.release()
 
         def download_artifact_task(test_task):
             return lambda: download_artifact(test_task)
