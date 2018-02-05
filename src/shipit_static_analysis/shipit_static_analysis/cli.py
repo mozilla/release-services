@@ -10,8 +10,7 @@ from shipit_static_analysis.revisions import PhabricatorRevision, MozReviewRevis
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.report import get_reporters
 from shipit_static_analysis.lock import LockDir
-from shipit_static_analysis import config
-from shipit_static_analysis import stats
+from shipit_static_analysis import config, stats
 from cli_common.click import taskcluster_options
 from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets

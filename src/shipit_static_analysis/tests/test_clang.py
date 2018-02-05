@@ -143,7 +143,7 @@ def test_clang_tidy(tmpdir, mock_config, mock_stats):
         }
     ]))
 
-    # Get issues found by clang-tody
+    # Get issues found by clang-tidy
     issues = ct.run(
         checks=[{
             'name': 'modernize-use-nullptr',

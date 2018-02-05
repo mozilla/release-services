@@ -112,7 +112,6 @@ class Workflow(object):
         mozlint = MOZLINT in self.analyzers and MozLint(self.repo_dir)
 
         with stats.api.timer('runtime.mercurial'):
-
             # Force cleanup to reset tip
             # otherwise previous pull are there
             self.hg.update(rev=b'tip', clean=True)
