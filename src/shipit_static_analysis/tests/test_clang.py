@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
+import json
 
 BAD_CPP_SRC = '''#include <demo>
 int \tmain(void){
@@ -23,8 +24,19 @@ int main(void) {
   return 42;
 }'''
 
+BAD_CPP_TIDY = '''
+void assignment() {
+  char *a = 0;
+  char x = 0;
+}
 
-def test_expanded_macros():
+int *ret_ptr() {
+  return 0;
+}
+'''
+
+
+def test_expanded_macros(mock_stats):
     '''
     Test expanded macros are detected by clang issue
     '''
@@ -98,3 +110,72 @@ def test_clang_format(tmpdir, mock_stats):
     metrics = reporter.get_metrics('issues.clang-format.publishable')
     assert len(metrics) == 1
     assert metrics[0][1]
+
+    metrics = reporter.get_metrics('runtime.clang-format.avg')
+    assert len(metrics) == 1
+    assert metrics[0][1] > 0
+
+
+def test_clang_tidy(tmpdir, mock_config, mock_stats):
+    '''
+    Test clang-tidy runner
+    '''
+    from shipit_static_analysis.clang.tidy import ClangTidy, ClangTidyIssue
+
+    # Init clang tidy runner
+    repo_dir = tmpdir.mkdir('repo')
+    build_dir = tmpdir.mkdir('build')
+    ct = ClangTidy(str(repo_dir), str(build_dir))
+
+    # Write dummy 3rd party file
+    third_party = repo_dir.join(mock_config.third_party)
+    third_party.write('test/dummy')
+
+    # Write badly formatted c file
+    bad_file = repo_dir.join('bad.cpp')
+    bad_file_output = repo_dir.join('bad.bin')
+    bad_file.write(BAD_CPP_TIDY)
+
+    # Create dummy json commands file
+    commands = build_dir.join('compile_commands.json')
+    commands.write(json.dumps([
+        {
+            'command': 'g++ -o {} {}'.format(bad_file_output, bad_file),
+            'directory': str(repo_dir),
+            'file': str(bad_file),
+        }
+    ]))
+
+    # Get issues found by clang-tody
+    issues = ct.run(
+        checks=[{
+            'name': 'modernize-use-nullptr',
+            'publish': True,
+        }],
+        modified_lines={
+            'bad.cpp': range(len(BAD_CPP_TIDY.split('\n'))),
+        },
+    )
+    assert len(issues) == 2
+    assert isinstance(issues[0], ClangTidyIssue)
+    assert issues[0].check == 'modernize-use-nullptr'
+    assert issues[0].line == 3
+    assert isinstance(issues[1], ClangTidyIssue)
+    assert issues[1].check == 'modernize-use-nullptr'
+    assert issues[1].line == 8
+
+    # Test stats
+    stats, reporter = mock_stats
+    stats.api.flush(time.time() + 20)
+
+    metrics = reporter.get_metrics('issues.clang-tidy')
+    assert len(metrics) == 1
+    assert metrics[0][1] == 2
+
+    metrics = reporter.get_metrics('issues.clang-tidy.publishable')
+    assert len(metrics) == 1
+    assert metrics[0][1] == 0
+
+    metrics = reporter.get_metrics('runtime.clang-tidy.avg')
+    assert len(metrics) == 1
+    assert metrics[0][1] > 0
