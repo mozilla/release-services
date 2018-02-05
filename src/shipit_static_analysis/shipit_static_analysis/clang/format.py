@@ -4,7 +4,7 @@ import difflib
 import tempfile
 import subprocess
 from cli_common.log import get_logger
-from shipit_static_analysis import Issue
+from shipit_static_analysis import Issue, stats
 
 logger = get_logger(__name__)
 
@@ -44,6 +44,7 @@ class ClangFormat(object):
         assert os.path.isdir(repo_dir)
         self.repo_dir = repo_dir
 
+    @stats.api.timed('runtime.clang-format')
     def run(self, extensions, modified_lines):
         '''
         Run clang-format on those modified files
@@ -110,6 +111,7 @@ class ClangFormat(object):
             if opcode[0] in OPCODES
         ]
 
+        stats.report_issues('clang-format', issues)
         return issues
 
     def apply_patch(self, filename, issues):

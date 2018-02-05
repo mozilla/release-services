@@ -10,12 +10,12 @@ from shipit_static_analysis.revisions import PhabricatorRevision, MozReviewRevis
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.report import get_reporters
 from shipit_static_analysis.lock import LockDir
-from shipit_static_analysis import config
+from shipit_static_analysis import config, stats
 from cli_common.click import taskcluster_options
 from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
-import click
 from cli_common.log import get_logger
+import click
 
 logger = get_logger(__name__)
 
@@ -35,6 +35,7 @@ logger = get_logger(__name__)
     required=True,
     help='Cache root, used to pull changesets'
 )
+@stats.api.timer('runtime.analysis')
 def main(phabricator,
          mozreview,
          cache_root,
@@ -68,6 +69,11 @@ def main(phabricator,
                 SENTRY_DSN=secrets.get('SENTRY_DSN'),
                 MOZDEF=secrets.get('MOZDEF'),
                 )
+
+    # Setup statistics
+    datadog_api_key = secrets.get('DATADOG_API_KEY')
+    if datadog_api_key:
+        stats.auth(datadog_api_key)
 
     # Load reporters
     reporters = get_reporters(

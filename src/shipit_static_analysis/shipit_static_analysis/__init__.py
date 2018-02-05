@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import
 from shipit_static_analysis.config import settings
+from shipit_static_analysis.stats import Datadog
 import os
 
 CLANG_TIDY = 'clang-tidy'
@@ -56,3 +57,7 @@ class Issue(object):
             if self.path.startswith(path):
                 return True
         return False
+
+
+# Create common stats instance
+stats = Datadog()

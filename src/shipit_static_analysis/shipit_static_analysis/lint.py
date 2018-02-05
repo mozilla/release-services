@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from shipit_static_analysis import Issue
+from shipit_static_analysis import Issue, stats
 from cli_common.command import run
 from cli_common.log import get_logger
 import itertools
@@ -107,14 +107,19 @@ class MozLint(object):
         assert 'SHELL' in os.environ, \
             'Missing SHELL environment variable'
 
+    @stats.api.timed('runtime.mozlint')
     def run(self, files):
         '''
         List all issues found by mozlint on specified files
         '''
-        return list(itertools.chain.from_iterable([
+        issues = list(itertools.chain.from_iterable([
             self.find_issues(path, lines) or []
             for path, lines in files.items()
         ]))
+
+        stats.report_issues('mozlint', issues)
+
+        return issues
 
     def find_issues(self, path, modified_lines):
         '''

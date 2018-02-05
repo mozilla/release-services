@@ -4,7 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from cli_common import log
-from shipit_static_analysis import Issue
+from shipit_static_analysis import Issue, stats
 from shipit_static_analysis.report.base import Reporter
 from shipit_static_analysis.revisions import PhabricatorRevision
 from urllib.parse import urlparse
@@ -98,6 +98,7 @@ class PhabricatorReporter(Reporter):
         # Use only publishable issues
         issues = list(filter(lambda i: i.is_publishable(), issues))
         if issues:
+            stats.api.increment('report.phabricator.issues', len(issues))
 
             # First publish inlines as drafts
             inlines = [
@@ -114,6 +115,7 @@ class PhabricatorReporter(Reporter):
                     diff_url=diff_url,
                 ),
             )
+            stats.api.increment('report.phabricator')
             logger.info('Published phabricator comment')
 
         else:

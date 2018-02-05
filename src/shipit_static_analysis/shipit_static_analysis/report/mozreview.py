@@ -13,6 +13,7 @@ from shipit_static_analysis.report.base import Reporter
 from shipit_static_analysis.lint import MozLintIssue
 from shipit_static_analysis.clang.tidy import ClangTidyIssue
 from shipit_static_analysis.clang.format import ClangFormatIssue
+from shipit_static_analysis import stats
 
 logger = log.get_logger(__name__)
 
@@ -83,6 +84,8 @@ class MozReviewReporter(Reporter):
         issues = list(filter(mozreview_publish, issues))
 
         if issues:
+            stats.api.increment('report.mozreview.issues', len(issues))
+
             # Build complex top comment
             comment = self.build_comment(
                 issues=issues,
@@ -110,6 +113,7 @@ class MozReviewReporter(Reporter):
 
         # Publish the review
         # without ship_it to avoid automatically r+
+        stats.api.increment('report.mozreview')
         return review.publish(
             body_top=comment,
             ship_it=False,
