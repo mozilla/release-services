@@ -15,7 +15,7 @@ def test_base_stats(mock_stats):
 
     mock_stats.flush()
     assert mock_stats.events == [
-        {'text': 'Dummy text...', 'title': 'Test Event', 'tags': [None]}
+        {'text': 'Dummy text...', 'title': 'Test Event', 'tags': ['code-review', 'env:test', ]}
     ]
     metrics = mock_stats.get_metrics('test.a.b.c')
     assert len(metrics) == 1
