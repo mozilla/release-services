@@ -105,7 +105,7 @@ class Workflow(object):
             revision=revision,
         )
         stats.api.event(
-            title='Static analysis on {} for {}'.format(settings.app_channel, revision.mercurial[:8]),
+            title='Static analysis on {} for {}'.format(settings.app_channel, revision.mercurial[:12]),
             text='Task {} #{}\n{}'.format(self.taskcluster_task_id, self.taskcluster_run_id, revision),
         )
         stats.api.increment('analysis')
