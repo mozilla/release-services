@@ -70,6 +70,9 @@ def main(phabricator,
                 MOZDEF=secrets.get('MOZDEF'),
                 )
 
+    # Setup settings before stats
+    settings.setup(secrets['APP_CHANNEL'])
+
     # Setup statistics
     datadog_api_key = secrets.get('DATADOG_API_KEY')
     if datadog_api_key:
@@ -96,8 +99,6 @@ def main(phabricator,
             MozReviewRevision(r)
             for r in mozreview.split(' ')
         ]
-
-    settings.setup(secrets['APP_CHANNEL'])
 
     with LockDir(cache_root, 'shipit-sa-') as work_dir:
         w = Workflow(work_dir, reporters, secrets['ANALYZERS'])

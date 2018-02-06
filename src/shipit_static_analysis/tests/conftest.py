@@ -163,7 +163,7 @@ def mock_phabricator():
 
 
 @pytest.fixture(scope='session')
-def mock_stats():
+def mock_stats(mock_config):
     '''
     Mock Datadog authentication and stats management
     '''

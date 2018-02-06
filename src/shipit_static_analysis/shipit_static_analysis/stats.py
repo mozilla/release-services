@@ -13,15 +13,19 @@ class Datadog(object):
     Log metrics using Datadog REST api
     '''
     def __init__(self):
-        self.api = datadog.ThreadStats(
-            constant_tags=[settings.app_channel, ],
-        )
+        self.api = datadog.ThreadStats()
 
     def auth(self, api_key):
+        assert settings.app_channel is not None, \
+            'Missing app channel'
         datadog.initialize(
             api_key=api_key,
-            host_name='{}.code-review'.format(settings.app_channel),
+            host_name='{}.code-review.allizom.org'.format(settings.app_channel),
         )
+        self.api.constant_tags = [
+            'code-review',
+            'env:{}'.format(settings.app_channel),
+        ]
         self.api.start(
             flush_in_thread=True,
         )
