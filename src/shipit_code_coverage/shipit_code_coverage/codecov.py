@@ -150,8 +150,8 @@ class CodeCov(object):
                 status = taskcluster.get_task_status(test_task['status']['taskId'])['status']['state']
                 assert status in ALL_STATUSES
 
-            chunk_name = taskcluster.get_chunk_name(test_task)
-            platform_name = taskcluster.get_platform_name(test_task)
+            chunk_name = taskcluster.get_chunk_name(test_task['task']['metadata']['name'])
+            platform_name = taskcluster.get_platform_name(test_task['task']['metadata']['name'])
             # Ignore awsy and talos as they aren't actually suites of tests.
             if any(to_ignore in chunk_name for to_ignore in self.suites_to_ignore):
                 return
@@ -394,11 +394,34 @@ class CodeCov(object):
 
             with sqlite3.connect('chunk_mapping.db') as conn:
                 c = conn.cursor()
-                c.execute('CREATE TABLE files (path text, chunk text)')
+                c.execute('CREATE TABLE file_to_chunk (path text, chunk text)')
+                c.execute('CREATE TABLE chunk_to_test (chunk text, path text)')
 
                 for future in concurrent.futures.as_completed(futures):
                     (chunk, files) = future.result()
-                    c.executemany('INSERT INTO files VALUES (?,?)', [(f, chunk) for f in files])
+                    c.executemany('INSERT INTO file_to_chunk VALUES (?,?)', ((f, chunk) for f in files))
+
+                # Retrieve chunk -> tests mapping from ActiveData.
+                r = requests.post('https://activedata.allizom.org/query', data=json.dumps({
+                    'from': 'unittest',
+                    'where': {'and': [
+                        {'eq': {'repo.branch.name': 'mozilla-central'}},
+                        {'eq': {'repo.changeset.id12': self.revision[:12]}},
+                        {'or': [
+                            {'prefix': {'run.key': 'test-linux64-ccov'}},
+                            {'prefix': {'run.key': 'test-windows10-64-ccov'}}
+                        ]}
+                    ]},
+                    'limit': 50000,
+                    'select': ['result.test', 'run.key']
+                }))
+
+                tests_data = r.json()['data']
+
+                task_names = tests_data['run.key']
+                test_iter = enumerate(tests_data['result.test'])
+                chunk_test_iter = ((taskcluster.get_chunk_name(task_names[i]), test) for i, test in test_iter)
+                c.executemany('INSERT INTO chunk_to_test VALUES (?,?)', chunk_test_iter)
 
         tar = tarfile.open('code-coverage-reports/chunk_mapping.tar.xz', 'w:xz')
         tar.add('chunk_mapping.db')

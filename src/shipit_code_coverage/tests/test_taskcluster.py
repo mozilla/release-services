@@ -98,15 +98,7 @@ def test_get_chunk_name():
     ]
 
     for (name, chunk) in tests:
-        task = {
-            'task': {
-                'metadata': {
-                    'name': name
-                }
-            }
-        }
-
-        assert taskcluster.get_chunk_name(task) == chunk
+        assert taskcluster.get_chunk_name(name) == chunk
 
 
 def test_get_suite_name():
@@ -128,12 +120,4 @@ def test_get_platform_name():
     ]
 
     for (name, platform) in tests:
-        task = {
-            'task': {
-                'metadata': {
-                    'name': name
-                }
-            }
-        }
-
-        assert taskcluster.get_platform_name(task) == platform
+        assert taskcluster.get_platform_name(name) == platform

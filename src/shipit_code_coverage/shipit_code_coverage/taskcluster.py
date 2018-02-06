@@ -91,8 +91,7 @@ def is_coverage_task(task):
     return any(task['task']['metadata']['name'].startswith(t) for t in TEST_PLATFORMS)
 
 
-def get_chunk_name(task):
-    name = task['task']['metadata']['name']
+def get_chunk_name(name):
     for t in TEST_PLATFORMS:
         if name.startswith(t):
             name = name[len(t) + 1:]
@@ -104,8 +103,7 @@ def get_suite_name(chunk_name):
     return '-'.join([p for p in chunk_name.split('-') if not p.isdigit()])
 
 
-def get_platform_name(task):
-    name = task['task']['metadata']['name']
+def get_platform_name(name):
     if 'linux' in name:
         return 'linux'
     elif 'windows' in name:
