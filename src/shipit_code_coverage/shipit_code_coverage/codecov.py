@@ -392,7 +392,7 @@ class CodeCov(object):
             for chunk in self.get_chunks():
                 futures.append(executor.submit(get_files_task(chunk)))
 
-            with sqlite3.connect('chunk_mapping.db') as conn:
+            with sqlite3.connect('chunk_mapping.sqlite') as conn:
                 c = conn.cursor()
                 c.execute('CREATE TABLE file_to_chunk (path text, chunk text)')
                 c.execute('CREATE TABLE chunk_to_test (chunk text, path text)')
@@ -424,7 +424,7 @@ class CodeCov(object):
                 c.executemany('INSERT INTO chunk_to_test VALUES (?,?)', chunk_test_iter)
 
         tar = tarfile.open('code-coverage-reports/chunk_mapping.tar.xz', 'w:xz')
-        tar.add('chunk_mapping.db')
+        tar.add('chunk_mapping.sqlite')
         tar.close()
 
     def go(self):
