@@ -208,3 +208,14 @@ def mock_stats(mock_config):
     # Gives reporter access to unit tests to access metrics
     stats.api.reporter = MemoryReporter(stats.api)
     yield stats.api.reporter
+
+
+@pytest.fixture
+def mock_revision():
+    '''
+    Mock a mercurial revision
+    '''
+    from shipit_static_analysis.revisions import Revision
+    rev = Revision()
+    rev.mercurial = 'a6ce14f59749c3388ffae2459327a323b6179ef0'
+    return rev

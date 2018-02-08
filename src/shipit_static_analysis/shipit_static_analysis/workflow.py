@@ -17,7 +17,6 @@ from shipit_static_analysis.config import settings
 from shipit_static_analysis.lint import MozLint
 from shipit_static_analysis import CLANG_TIDY, CLANG_FORMAT, MOZLINT
 from shipit_static_analysis import stats
-from parsepatch.patch import Patch
 
 logger = get_logger(__name__)
 
@@ -126,57 +125,41 @@ class Workflow(object):
             # Update to the target revision
             self.hg.update(rev=revision.mercurial, clean=True)
 
-            # Get the parents revisions
-            parent_rev = 'parents({})'.format(revision.mercurial)
-            parents = self.hg.identify(id=True, rev=parent_rev).decode('utf-8').strip()
+            # Analyze files in revision
+            revision.analyze_files(self.hg)
 
-            # Find modified files by this revision
-            modified_files = []
-            for parent in parents.split('\n'):
-                changeset = '{}:{}'.format(parent, revision.mercurial)
-                status = self.hg.status(change=[changeset, ])
-                modified_files += [f.decode('utf-8') for _, f in status]
-            logger.info('Modified files', files=modified_files)
+        # Only run mach if revision has any C/C++ files
+        if revision.has_clang_files:
+            with stats.api.timer('runtime.mach'):
+                # mach configure with mozconfig
+                logger.info('Mach configure...')
+                run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
 
-        # List all modified lines from current revision changes
-        patch = Patch.parse_patch(
-            self.hg.diff(change=revision.mercurial, git=True).decode('utf-8'),
-            skip_comments=False,
-        )
-        modified_lines = {
-            # Use all changes in new files
-            filename: diff.get('touched', []) + diff.get('added', [])
-            for filename, diff in patch.items()
-        }
+                # Build CompileDB backend
+                logger.info('Mach build backend...')
+                cmd = ['gecko-env', './mach', 'build-backend', '--backend=CompileDB']
+                run_check(cmd, cwd=self.repo_dir)
 
-        with stats.api.timer('runtime.mach'):
-            # mach configure with mozconfig
-            logger.info('Mach configure...')
-            run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
-
-            # Build CompileDB backend
-            logger.info('Mach build backend...')
-            cmd = ['gecko-env', './mach', 'build-backend', '--backend=CompileDB']
-            run_check(cmd, cwd=self.repo_dir)
-
-            # Build exports
-            logger.info('Mach build exports...')
-            run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
-            run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
+                # Build exports
+                logger.info('Mach build exports...')
+                run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
+                run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
+        else:
+            logger.info('No clang files detected, skipping mach')
 
         # Run static analysis through clang-tidy
         issues = []
-        if clang_tidy:
+        if clang_tidy and revision.has_clang_files:
             logger.info('Run clang-tidy...')
-            issues += clang_tidy.run(settings.clang_checkers, modified_lines)
+            issues += clang_tidy.run(settings.clang_checkers, revision)
         else:
             logger.info('Skip clang-tidy')
 
         # Run clang-format on modified files
         diff_url = None
-        if clang_format:
+        if clang_format and revision.has_clang_files:
             logger.info('Run clang-format...')
-            format_issues, patched = clang_format.run(settings.cpp_extensions, modified_lines)
+            format_issues, patched = clang_format.run(settings.cpp_extensions, revision)
             issues += format_issues
             if patched:
                 # Get current diff on these files
@@ -208,7 +191,7 @@ class Workflow(object):
         # Run linter
         if mozlint:
             logger.info('Run mozlint...')
-            issues += mozlint.run(modified_lines)
+            issues += mozlint.run(revision)
         else:
             logger.info('Skip mozlint')
 
