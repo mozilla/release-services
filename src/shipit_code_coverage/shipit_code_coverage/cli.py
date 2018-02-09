@@ -50,6 +50,7 @@ def main(revision,
                 secrets[config.CODECOV_TOKEN_FIELD],
                 secrets.get(config.GECKO_DEV_USER_FIELD),
                 secrets.get(config.GECKO_DEV_PWD_FIELD),
+                secrets.get(config.EMAIL_ADDRESSES_FIELD),
                 taskcluster_client_id,
                 taskcluster_access_token,
                 )
