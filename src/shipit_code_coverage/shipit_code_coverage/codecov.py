@@ -16,6 +16,7 @@ from cli_common.command import run_check
 from cli_common.taskcluster import get_service
 
 from shipit_code_coverage import taskcluster, uploader
+from shipit_code_coverage.notifier import Notifier
 from shipit_code_coverage.utils import mkdir, wait_until, retry, ThreadPoolExecutorResult
 
 
@@ -64,13 +65,12 @@ class CodeCov(object):
             self.coveralls_token = coveralls_token
             self.codecov_token = codecov_token
             self.from_pulse = True
+            self.notifier = Notifier(revision, emails, client_id, access_token)
 
         if self.from_pulse:
             self.suites_to_ignore = ['awsy', 'talos']
         else:
             self.suites_to_ignore = []
-
-        self.notifier = Notifier(revision, emails, client_id, access_token)
 
     def get_artifact_path(self, platform, chunk, artifact):
         return 'ccov-artifacts/%s_%s_%s' % (platform, chunk, os.path.basename(artifact['name']))
@@ -406,7 +406,13 @@ class CodeCov(object):
                 executor.submit(lambda: uploader.coveralls(output))
                 executor.submit(lambda: uploader.codecov(output, commit_sha, self.codecov_token))
 
-            self.prepopulate_cache(commit_sha)
+            logger.info('Waiting for build to be ingested by Codecov...')
+            # Wait until the build has been ingested by Codecov.
+            if uploader.codecov_wait(commit_sha):
+                logger.info('Build ingested by codecov.io')
+                self.notifier.notify()
+            else:
+                logger.info('codecov.io took too much time to ingest data.')
         else:
             mkdir('code-coverage-reports')
 

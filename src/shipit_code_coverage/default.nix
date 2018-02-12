@@ -73,6 +73,9 @@ let
           # Used by taskclusterProxy
           ("secrets:get:" + secretsKey)
 
+          # Needed to notify about patches with low coverage
+          ("notify:email:*")
+
           # Used by cache
           ("docker-worker:cache:" + cacheKey)
 
