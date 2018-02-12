@@ -79,7 +79,7 @@ def test_clang_format(tmpdir, mock_stats, mock_revision):
     mock_revision.lines = {
         'bad.cpp': [1, 2, 3],
     }
-    issues, patched = cf.run(['.cpp', ], mock_revision)
+    issues, patched = cf.run(frozenset(['.cpp', ]), mock_revision)
 
     # Small file, only one issue which group changes
     assert patched == ['bad.cpp', ]
