@@ -153,8 +153,8 @@ class CodeCov(object):
                 status = taskcluster.get_task_status(test_task['status']['taskId'])['status']['state']
                 assert status in ALL_STATUSES
 
-            chunk_name = taskcluster.get_chunk_name(test_task['task']['metadata']['name'])
-            platform_name = taskcluster.get_platform_name(test_task['task']['metadata']['name'])
+            chunk_name = taskcluster.get_chunk(test_task['task']['metadata']['name'])
+            platform_name = taskcluster.get_platform(test_task['task']['metadata']['name'])
             # Ignore awsy and talos as they aren't actually suites of tests.
             if any(to_ignore in chunk_name for to_ignore in self.suites_to_ignore):
                 return
@@ -424,7 +424,7 @@ class CodeCov(object):
 
                 task_names = tests_data['run.key']
                 test_iter = enumerate(tests_data['result.test'])
-                chunk_test_iter = ((taskcluster.get_platform_name(task_names[i]), taskcluster.get_chunk_name(task_names[i]), test) for i, test in test_iter)
+                chunk_test_iter = ((taskcluster.get_platform(task_names[i]), taskcluster.get_chunk(task_names[i]), test) for i, test in test_iter)
                 c.executemany('INSERT INTO chunk_to_test VALUES (?,?,?)', chunk_test_iter)
 
         tar = tarfile.open('code-coverage-reports/chunk_mapping.tar.xz', 'w:xz')
