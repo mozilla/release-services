@@ -128,19 +128,25 @@ class Workflow(object):
             # Analyze files in revision
             revision.analyze_files(self.hg)
 
-        # Only run mach if revision has any C/C++ files
-        if revision.has_clang_files:
-            with stats.api.timer('runtime.mach'):
-                # mach configure with mozconfig
-                logger.info('Mach configure...')
-                run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
+        with stats.api.timer('runtime.mach'):
+            # Only run mach if revision has any C/C++ files
+            if revision.has_clang_files:
+                    # mach configure with mozconfig
+                    logger.info('Mach configure...')
+                    run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
 
-                # Build CompileDB backend
-                logger.info('Mach build backend...')
-                cmd = ['gecko-env', './mach', 'build-backend', '--backend=CompileDB']
-                run_check(cmd, cwd=self.repo_dir)
-        else:
-            logger.info('No clang files detected, skipping mach')
+                    # Build CompileDB backend
+                    logger.info('Mach build backend...')
+                    cmd = ['gecko-env', './mach', 'build-backend', '--backend=CompileDB']
+                    run_check(cmd, cwd=self.repo_dir)
+
+            else:
+                logger.info('No clang files detected, skipping mach')
+
+            # Setup python environment
+            logger.info('Mach python setup...')
+            cmd = ['gecko-env', './mach', 'python', '--version']
+            run_check(cmd, cwd=self.repo_dir)
 
         # Run static analysis through clang-tidy
         issues = []

@@ -50,7 +50,7 @@ class ClangFormat(object):
         '''
         Run clang-format on those modified files
         '''
-        assert isinstance(extensions, list)
+        assert isinstance(extensions, frozenset)
         assert isinstance(revision, Revision)
         all_issues, patched = [], []
         for path, lines in revision.lines.items():

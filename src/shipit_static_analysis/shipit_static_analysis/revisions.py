@@ -60,7 +60,7 @@ class Revision(object):
             _, ext = os.path.splitext(filename)
             return ext.lower() in settings.cpp_extensions
 
-        return any(map(_is_clang, self.files))
+        return any(_is_clang(f) for f in self.files)
 
 
 class PhabricatorRevision(Revision):
