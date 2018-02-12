@@ -51,6 +51,20 @@ def test_get_coverage_artifacts():
     assert set(c.get_coverage_artifacts(chunk='cppunit')) == set([
         'ccov-artifacts/windows_cppunit_code-coverage-grcov.zip'
     ])
+    assert set(c.get_coverage_artifacts(platform='windows')) == set([
+        'ccov-artifacts/windows_mochitest-1_code-coverage-jsvm.info',
+        'ccov-artifacts/windows_xpcshell-7_code-coverage-jsvm.info',
+        'ccov-artifacts/windows_cppunit_code-coverage-grcov.zip',
+    ])
+    assert set(c.get_coverage_artifacts(platform='linux', chunk='xpcshell-7')) == set([
+        'ccov-artifacts/linux_xpcshell-7_code-coverage-grcov.zip'
+    ])
+
+    try:
+        c.get_coverage_artifacts(chunk='xpcshell-7', suite='mochitest')
+        assert False, 'An exception should have been thrown'
+    except:
+        pass
 
     for f in FILES:
         os.remove(f)
