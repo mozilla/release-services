@@ -139,11 +139,6 @@ class Workflow(object):
                 logger.info('Mach build backend...')
                 cmd = ['gecko-env', './mach', 'build-backend', '--backend=CompileDB']
                 run_check(cmd, cwd=self.repo_dir)
-
-                # Build exports
-                logger.info('Mach build exports...')
-                run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
-                run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
         else:
             logger.info('No clang files detected, skipping mach')
 
