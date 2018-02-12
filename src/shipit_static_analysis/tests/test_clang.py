@@ -63,7 +63,7 @@ def test_expanded_macros(mock_stats):
     assert issue.is_expanded_macro() is False
 
 
-def test_clang_format(tmpdir, mock_stats):
+def test_clang_format(tmpdir, mock_stats, mock_revision):
     '''
     Test clang-format runner
     '''
@@ -75,12 +75,11 @@ def test_clang_format(tmpdir, mock_stats):
 
     # Get formatting issues
     cf = ClangFormat(str(tmpdir.realpath()))
-    issues, patched = cf.run(
-        ['.cpp', ],
-        {
-            'bad.cpp': [1, 2, 3],
-        },
-    )
+    mock_revision.files = ['bad.cpp', ]
+    mock_revision.lines = {
+        'bad.cpp': [1, 2, 3],
+    }
+    issues, patched = cf.run(frozenset(['.cpp', ]), mock_revision)
 
     # Small file, only one issue which group changes
     assert patched == ['bad.cpp', ]
@@ -113,7 +112,7 @@ def test_clang_format(tmpdir, mock_stats):
     assert metrics[0][1] > 0
 
 
-def test_clang_tidy(tmpdir, mock_config, mock_stats):
+def test_clang_tidy(tmpdir, mock_config, mock_stats, mock_revision):
     '''
     Test clang-tidy runner
     '''
@@ -144,15 +143,15 @@ def test_clang_tidy(tmpdir, mock_config, mock_stats):
     ]))
 
     # Get issues found by clang-tidy
-    issues = ct.run(
-        checks=[{
-            'name': 'modernize-use-nullptr',
-            'publish': True,
-        }],
-        modified_lines={
-            'bad.cpp': range(len(BAD_CPP_TIDY.split('\n'))),
-        },
-    )
+    mock_revision.files = ['bad.cpp', ]
+    mock_revision.lines = {
+        'bad.cpp': range(len(BAD_CPP_TIDY.split('\n'))),
+    }
+    checks = [{
+        'name': 'modernize-use-nullptr',
+        'publish': True,
+    }]
+    issues = ct.run(checks, mock_revision)
     assert len(issues) == 2
     assert isinstance(issues[0], ClangTidyIssue)
     assert issues[0].check == 'modernize-use-nullptr'

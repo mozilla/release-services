@@ -5,6 +5,7 @@ import tempfile
 import subprocess
 from cli_common.log import get_logger
 from shipit_static_analysis import Issue, stats
+from shipit_static_analysis.revisions import Revision
 
 logger = get_logger(__name__)
 
@@ -45,14 +46,14 @@ class ClangFormat(object):
         self.repo_dir = repo_dir
 
     @stats.api.timed('runtime.clang-format')
-    def run(self, extensions, modified_lines):
+    def run(self, extensions, revision):
         '''
         Run clang-format on those modified files
         '''
-        assert isinstance(extensions, list)
-        assert isinstance(modified_lines, dict)
+        assert isinstance(extensions, frozenset)
+        assert isinstance(revision, Revision)
         all_issues, patched = [], []
-        for path, lines in modified_lines.items():
+        for path, lines in revision.lines.items():
 
             # Check file extension is supported
             _, ext = os.path.splitext(path)

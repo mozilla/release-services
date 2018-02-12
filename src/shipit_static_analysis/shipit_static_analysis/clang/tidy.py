@@ -13,6 +13,7 @@ import re
 
 from cli_common.log import get_logger
 from shipit_static_analysis.config import settings
+from shipit_static_analysis.revisions import Revision
 from shipit_static_analysis import Issue, stats
 
 logger = get_logger(__name__)
@@ -70,14 +71,14 @@ class ClangTidy(object):
         self.build_dir = os.path.join(repo_dir, build_dir)
 
     @stats.api.timed('runtime.clang-tidy')
-    def run(self, checks, modified_lines):
+    def run(self, checks, revision):
         '''
         Run modified files with specified checks through clang-tidy
         using threaded workers (communicate through queues)
         Output a list of ClangTidyIssue
         '''
-        assert isinstance(modified_lines, dict)
-        self.modified_lines = modified_lines
+        assert isinstance(revision, Revision)
+        self.revision = revision
 
         # Load the database and extract all files.
         database = json.load(open(os.path.join(self.build_dir, self.db_path)))
@@ -92,8 +93,7 @@ class ClangTidy(object):
         self.queue_issues = queue.Queue()
 
         # Build up a big regexy filter from all modified files
-        files = modified_lines.keys()
-        file_name_re = re.compile('(' + ')|('.join(files) + ')')
+        file_name_re = re.compile('(' + ')|('.join(revision.files) + ')')
 
         issues = []
         try:
@@ -188,7 +188,7 @@ class ClangTidy(object):
                 issue.body = clang_output[header.end():]
 
             # Detect if issue is in patch
-            issue.in_patch = issue.line in self.modified_lines.get(issue.path, [])  # noqa
+            issue.in_patch = issue.line in self.revision.lines.get(issue.path, [])  # noqa
 
             if issue.is_problem():
                 # Save problem to append notes

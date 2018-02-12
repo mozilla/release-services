@@ -3,13 +3,67 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import re
+from shipit_static_analysis.config import settings
+from parsepatch.patch import Patch
 from cli_common import log
+import hglib
+import os
+import re
 
 logger = log.get_logger(__name__)
 
 
-class PhabricatorRevision(object):
+class Revision(object):
+    '''
+    A common mercurial revision
+    '''
+    mercurial = None
+    files = []
+    lines = {}
+
+    def analyze_files(self, repo):
+        '''
+        Analyze modified files/lines
+        '''
+        assert isinstance(repo, hglib.client.hgclient)
+
+        # Get the parents revisions
+        parent_rev = 'parents({})'.format(self.mercurial)
+        parents = repo.identify(id=True, rev=parent_rev).decode('utf-8').strip()
+
+        # Find modified files by this revision
+        self.files = []
+        for parent in parents.split('\n'):
+            changeset = '{}:{}'.format(parent, self.mercurial)
+            status = repo.status(change=[changeset, ])
+            self.files += [f.decode('utf-8') for _, f in status]
+        logger.info('Modified files', files=self.files)
+
+        # List all modified lines from current revision changes
+        patch = Patch.parse_patch(
+            repo.diff(change=self.mercurial, git=True).decode('utf-8'),
+            skip_comments=False,
+        )
+        self.lines = {
+            # Use all changes in new files
+            filename: diff.get('touched', []) + diff.get('added', [])
+            for filename, diff in patch.items()
+        }
+
+    @property
+    def has_clang_files(self):
+        '''
+        Check if this revision has any file that might
+        be a C/C++ file
+        '''
+        def _is_clang(filename):
+            _, ext = os.path.splitext(filename)
+            return ext.lower() in settings.cpp_extensions
+
+        return any(_is_clang(f) for f in self.files)
+
+
+class PhabricatorRevision(Revision):
     '''
     A phabricator revision to process
     '''
@@ -57,7 +111,7 @@ class PhabricatorRevision(object):
         return 'https://{}/{}/'.format(self.api.hostname, self.diff_phid)
 
 
-class MozReviewRevision(object):
+class MozReviewRevision(Revision):
     '''
     A mozreview revision to process
     '''

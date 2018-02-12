@@ -40,3 +40,23 @@ def test_phabricator(mock_phabricator):
     assert r.build_diff_name() == 'PHID-DIFF-testABcd12-clang-format.diff'
     assert r.id == 51  # revision
     assert r.phid == 'PHID-DREV-zzzzz'
+
+
+def test_clang_files(mock_revision):
+    '''
+    Test clang files detection
+    '''
+    assert mock_revision.files == []
+    assert not mock_revision.has_clang_files
+
+    mock_revision.files = ['test.cpp', 'test.h']
+    assert mock_revision.has_clang_files
+
+    mock_revision.files = ['test.py', 'test.js']
+    assert not mock_revision.has_clang_files
+
+    mock_revision.files = ['test.cpp', 'test.js', 'xxx.txt']
+    assert mock_revision.has_clang_files
+
+    mock_revision.files = ['test.h', 'test.js', 'xxx.txt']
+    assert mock_revision.has_clang_files

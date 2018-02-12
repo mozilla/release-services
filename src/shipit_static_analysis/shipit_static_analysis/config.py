@@ -23,7 +23,7 @@ class Settings(object):
     def setup(self, app_channel):
         self.app_channel = app_channel
         self.download({
-            'cpp_extensions': ['.cpp', '.c', '.h'],
+            'cpp_extensions': frozenset(['.c', '.h', '.cpp', '.cc', '.cxx', '.hh', '.hpp', '.hxx', '.m', '.mm']),
         })
         assert 'clang_checkers' in self.config
         assert 'target' in self.config
