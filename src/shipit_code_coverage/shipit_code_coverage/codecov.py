@@ -88,7 +88,7 @@ class CodeCov(object):
             if platform is not None and not fname.startswith('%s_' % platform):
                 continue
 
-            if suite is not None and ('%s' % suite) not in fname:
+            if suite is not None and suite not in fname:
                 continue
 
             if chunk is not None and ('%s_code-coverage' % chunk) not in fname:
