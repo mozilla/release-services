@@ -16,6 +16,10 @@ def get_github_commit(mercurial_commit):
     return r.text.split(' ')[0]
 
 
+class CoverageException(Exception):
+    pass
+
+
 class Coverage(ABC):
     @staticmethod
     @abstractmethod
@@ -47,7 +51,7 @@ class CoverallsCoverage(Coverage):
         r = requests.get(CoverallsCoverage.URL + '/builds/%s.json' % get_github_commit(changeset))
 
         if r.status_code != requests.codes.ok:
-            raise Exception('Error while loading coverage data.')
+            raise CoverageException('Error while loading coverage data.')
 
         result = r.json()
 
@@ -80,7 +84,7 @@ class CoverallsCoverage(Coverage):
         r = requests.get(CoverallsCoverage.URL + '/builds/' + get_github_commit(changeset) + '.json?paths=' + directory + '/*')
 
         if r.status_code != requests.codes.ok:
-            raise Exception('Error while loading coverage data.')
+            raise CoverageException('Error while loading coverage data.')
 
         result = r.json()
 
@@ -100,7 +104,7 @@ class CodecovCoverage(Coverage):
         r = requests.get(CodecovCoverage.URL + '/commit/%s' % get_github_commit(changeset))
 
         if r.status_code != requests.codes.ok:
-            raise Exception('Error while loading coverage data.')
+            raise CoverageException('Error while loading coverage data.')
 
         result = r.json()
 
@@ -116,14 +120,13 @@ class CodecovCoverage(Coverage):
         try:
             data = r.json()
         except Exception as e:
-            print('Can\'t parse codecov.io report for %s@%s (response: %s)' % (filename, changeset, r.text))
-            raise e
+            raise CoverageException('Can\'t parse codecov.io report for %s@%s (response: %s)' % (filename, changeset, r.text))
 
         if r.status_code != requests.codes.ok:
             if data['error']['reason'] == 'File not found in report':
                 return None
 
-            raise Exception('Can\'t load codecov.io report for %s@%s (response: %s)' % (filename, changeset, r.text))
+            raise CoverageException('Can\'t load codecov.io report for %s@%s (response: %s)' % (filename, changeset, r.text))
 
         return dict([(int(l), v) for l, v in data['commit']['report']['files'][filename]['l'].items()])
 
@@ -140,14 +143,14 @@ class CodecovCoverage(Coverage):
         r = requests.get(CodecovCoverage.URL + '/tree/' + get_github_commit(changeset) + '/' + directory)
 
         if r.status_code != requests.codes.ok:
-            raise Exception('Error while loading coverage data.')
+            raise CoverageException('Error while loading coverage data.')
 
         cur_result = r.json()
 
         r = requests.get(CodecovCoverage.URL + '/tree/' + get_github_commit(prev_changeset) + '/' + directory)
 
         if r.status_code != requests.codes.ok:
-            raise Exception('Error while loading coverage data.')
+            raise CoverageException('Error while loading coverage data.')
 
         prev_result = r.json()
 
@@ -276,7 +279,7 @@ def get_coverage_build(changeset):
         try:
             overall = coverage_service.get_coverage(build_changeset)
             return (changeset_data, build_changeset, overall)
-        except:
+        except CoverageException:
             pass
 
     assert False, 'Couldn\'t find a build after the changeset'
