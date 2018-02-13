@@ -13,12 +13,12 @@ import time
 
 from cli_common.log import get_logger
 from cli_common.command import run_check
-from cli_common.taskcluster import get_service
 
 from shipit_code_coverage import taskcluster, uploader
-from shipit_code_coverage.secrets import secrets
+from shipit_code_coverage.github import GitHubUtils
 from shipit_code_coverage.notifier import Notifier
-from shipit_code_coverage.utils import mkdir, wait_until, retry, ThreadPoolExecutorResult
+from shipit_code_coverage.secrets import secrets
+from shipit_code_coverage.utils import mkdir, retry, ThreadPoolExecutorResult
 
 
 logger = get_logger(__name__)
@@ -38,8 +38,6 @@ class CodeCov(object):
         assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
         self.repo_dir = os.path.join(cache_root, 'mozilla-central')
 
-        self.gecko_dev_user = secrets.get(secrets.GECKO_DEV_USER)
-        self.gecko_dev_pwd = secrets.get(secrets.GECKO_DEV_PWD)
         self.client_id = client_id
         self.access_token = access_token
 
@@ -52,9 +50,7 @@ class CodeCov(object):
             task_data = taskcluster.get_task_details(self.task_ids['linux'])
             self.revision = task_data['payload']['env']['GECKO_HEAD_REV']
             self.from_pulse = False
-            logger.info('Mercurial revision', revision=self.revision)
         else:
-            logger.info('Mercurial revision', revision=revision)
             self.task_ids = {
                 'linux': taskcluster.get_task('mozilla-central', revision, 'linux'),
                 'windows': taskcluster.get_task('mozilla-central', revision, 'win'),
@@ -67,6 +63,10 @@ class CodeCov(object):
             self.suites_to_ignore = ['awsy', 'talos']
         else:
             self.suites_to_ignore = []
+
+        logger.info('Mercurial revision', revision=self.revision)
+
+        self.githubUtils = GitHubUtils(cache_root, client_id, access_token)
 
     def get_artifact_path(self, platform, chunk, artifact):
         return 'ccov-artifacts/%s_%s_%s' % (platform, chunk, os.path.basename(artifact['name']))
@@ -182,38 +182,6 @@ class CodeCov(object):
                 executor.submit(download_artifact_task(test_task))
 
         logger.info('Code coverage artifacts downloaded')
-
-    def update_github_repo(self):
-        run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
-        repo_url = 'https://%s:%s@github.com/marco-c/gecko-dev' % (self.gecko_dev_user, self.gecko_dev_pwd)
-        repo_path = os.path.join(self.cache_root, 'gecko-dev')
-
-        if not os.path.isdir(repo_path):
-            retry(lambda: run_check(['git', 'clone', repo_url], cwd=self.cache_root))
-        retry(lambda: run_check(['git', 'pull', 'https://github.com/mozilla/gecko-dev', 'master'], cwd=repo_path))
-        retry(lambda: run_check(['git', 'push', repo_url, 'master'], cwd=repo_path))
-
-    def post_github_status(self, commit_sha):
-        tcGithub = get_service('github', self.client_id, self.access_token)
-        tcGithub.createStatus('marco-c', 'gecko-dev', commit_sha, {
-            'state': 'success',
-        })
-
-    def get_github_commit(self, mercurial_commit):
-        url = 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s'
-
-        def get_commit():
-            r = requests.get(url % mercurial_commit)
-
-            if r.status_code == requests.codes.ok:
-                return r.text.split(' ')[0]
-
-            return None
-
-        ret = wait_until(get_commit)
-        if ret is None:
-            raise Exception('Mercurial commit is not available yet on mozilla/gecko-dev.')
-        return ret
 
     def generate_info(self, commit_sha=None, platform=None, suite=None, chunk=None, out_format='coveralls', options=[]):
         cmd = [
@@ -413,14 +381,12 @@ class CodeCov(object):
             executor.submit(lambda: self.clone_mozilla_central(self.revision))
 
         if self.from_pulse:
-            if self.gecko_dev_user is not None and self.gecko_dev_pwd is not None:
-                self.update_github_repo()
+            self.githubUtils.update_geckodev_repo()
 
-            commit_sha = self.get_github_commit(self.revision)
+            commit_sha = self.githubUtils.get_commit(self.revision)
             logger.info('GitHub revision', revision=commit_sha)
 
-            if self.gecko_dev_user is not None and self.gecko_dev_pwd is not None:
-                self.post_github_status(commit_sha)
+            self.githubUtils.post_github_status(commit_sha)
 
             output = self.generate_info(commit_sha)
             logger.info('Report generated successfully')
@@ -446,11 +412,4 @@ class CodeCov(object):
             self.generate_chunk_mapping()
 
             os.chdir('code-coverage-reports')
-            run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
-            run_check(['git', 'config', '--global', 'user.email', 'report@upload.it'])
-            run_check(['git', 'config', '--global', 'user.name', 'Report Uploader'])
-            repo_url = 'https://%s:%s@github.com/marco-c/code-coverage-reports' % (self.gecko_dev_user, self.gecko_dev_pwd)
-            run_check(['git', 'init'])
-            run_check(['git', 'add', '*'])
-            run_check(['git', 'commit', '-m', 'Coverage reports upload'])
-            retry(lambda: run_check(['git', 'push', repo_url, 'master', '--force']))
+            self.githubUtils.update_codecoveragereports_repo()
