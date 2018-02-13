@@ -76,22 +76,25 @@ class CodeCov(object):
     def get_chunks(self):
         return list(set([f.split('_')[1] for f in os.listdir('ccov-artifacts')]))
 
-    def get_coverage_artifacts(self, suite=None, chunk=None):
+    def get_coverage_artifacts(self, platform=None, suite=None, chunk=None):
         files = os.listdir('ccov-artifacts')
 
         if suite is not None and chunk is not None:
             raise Exception('suite and chunk can\'t both have a value')
 
+        # Filter artifacts according to platform, suite and chunk.
         filtered_files = []
         for fname in files:
-            # If suite and chunk are None, return all artifacts.
-            # Otherwise, only return the ones which have suite or chunk in their name.
-            if (
-                   (suite is None and chunk is None) or
-                   (suite is not None and ('%s' % suite) in fname) or
-                   (chunk is not None and ('%s_code-coverage' % chunk) in fname)
-               ):
-                filtered_files.append('ccov-artifacts/' + fname)
+            if platform is not None and not fname.startswith('%s_' % platform):
+                continue
+
+            if suite is not None and suite not in fname:
+                continue
+
+            if chunk is not None and ('%s_code-coverage' % chunk) not in fname:
+                continue
+
+            filtered_files.append('ccov-artifacts/' + fname)
 
         return filtered_files
 
@@ -150,8 +153,8 @@ class CodeCov(object):
                 status = taskcluster.get_task_status(test_task['status']['taskId'])['status']['state']
                 assert status in ALL_STATUSES
 
-            chunk_name = taskcluster.get_chunk_name(test_task)
-            platform_name = taskcluster.get_platform_name(test_task)
+            chunk_name = taskcluster.get_chunk(test_task['task']['metadata']['name'])
+            platform_name = taskcluster.get_platform(test_task['task']['metadata']['name'])
             # Ignore awsy and talos as they aren't actually suites of tests.
             if any(to_ignore in chunk_name for to_ignore in self.suites_to_ignore):
                 return
@@ -214,7 +217,7 @@ class CodeCov(object):
             raise Exception('Mercurial commit is not available yet on mozilla/gecko-dev.')
         return ret
 
-    def generate_info(self, commit_sha=None, suite=None, chunk=None, out_format='coveralls', options=[]):
+    def generate_info(self, commit_sha=None, platform=None, suite=None, chunk=None, out_format='coveralls', options=[]):
         cmd = [
           'grcov',
           '-t', out_format,
@@ -241,7 +244,7 @@ class CodeCov(object):
             else:
                 cmd.extend(['--service-job-number', '1'])
 
-        cmd.extend(self.get_coverage_artifacts(suite, chunk))
+        cmd.extend(self.get_coverage_artifacts(platform, suite, chunk))
         cmd.extend(options)
 
         return run_check(cmd)
@@ -378,30 +381,54 @@ class CodeCov(object):
         with open('code-coverage-reports/zero_coverage_functions.json', 'w') as f:
             json.dump(zero_coverage_function_counts, f)
 
-    def generate_files_list(self, covered=True, chunk=None):
+    def generate_files_list(self, covered=True, platform=None, chunk=None):
         options = ['--filter-covered', '--threads', '2']
-        files = self.generate_info(chunk=chunk, out_format='files', options=options)
+        files = self.generate_info(platform=platform, chunk=chunk, out_format='files', options=options)
         return files.splitlines()
 
     def generate_chunk_mapping(self):
-        def get_files_task(chunk):
-            return lambda: (chunk, self.generate_files_list(True, chunk=chunk))
+        def get_files_task(platform, chunk):
+            return lambda: (platform, chunk, self.generate_files_list(True, platform=platform, chunk=chunk))
 
         with ThreadPoolExecutor(max_workers=4) as executor:
             futures = []
-            for chunk in self.get_chunks():
-                futures.append(executor.submit(get_files_task(chunk)))
+            for platform in ['linux', 'windows']:
+                for chunk in self.get_chunks():
+                    futures.append(executor.submit(get_files_task(platform, chunk)))
 
-            with sqlite3.connect('chunk_mapping.db') as conn:
+            with sqlite3.connect('chunk_mapping.sqlite') as conn:
                 c = conn.cursor()
-                c.execute('CREATE TABLE files (path text, chunk text)')
+                c.execute('CREATE TABLE file_to_chunk (path text, platform text, chunk text)')
+                c.execute('CREATE TABLE chunk_to_test (platform text, chunk text, path text)')
 
                 for future in concurrent.futures.as_completed(futures):
-                    (chunk, files) = future.result()
-                    c.executemany('INSERT INTO files VALUES (?,?)', [(f, chunk) for f in files])
+                    (platform, chunk, files) = future.result()
+                    c.executemany('INSERT INTO file_to_chunk VALUES (?,?,?)', ((f, platform, chunk) for f in files))
+
+                # Retrieve chunk -> tests mapping from ActiveData.
+                r = requests.post('https://activedata.allizom.org/query', data=json.dumps({
+                    'from': 'unittest',
+                    'where': {'and': [
+                        {'eq': {'repo.branch.name': 'mozilla-central'}},
+                        {'eq': {'repo.changeset.id12': self.revision[:12]}},
+                        {'or': [
+                            {'prefix': {'run.key': 'test-linux64-ccov'}},
+                            {'prefix': {'run.key': 'test-windows10-64-ccov'}}
+                        ]}
+                    ]},
+                    'limit': 50000,
+                    'select': ['result.test', 'run.key']
+                }))
+
+                tests_data = r.json()['data']
+
+                task_names = tests_data['run.key']
+                test_iter = enumerate(tests_data['result.test'])
+                chunk_test_iter = ((taskcluster.get_platform(task_names[i]), taskcluster.get_chunk(task_names[i]), test) for i, test in test_iter)
+                c.executemany('INSERT INTO chunk_to_test VALUES (?,?,?)', chunk_test_iter)
 
         tar = tarfile.open('code-coverage-reports/chunk_mapping.tar.xz', 'w:xz')
-        tar.add('chunk_mapping.db')
+        tar.add('chunk_mapping.sqlite')
         tar.close()
 
     def go(self):

@@ -86,7 +86,7 @@ def test_is_coverage_task():
     assert not taskcluster.is_coverage_task(nocov_task)
 
 
-def test_get_chunk_name():
+def test_get_chunk():
     tests = [
         ('test-linux64-ccov/opt-mochitest-1', 'mochitest-1'),
         ('test-linux64-ccov/opt-mochitest-e10s-7', 'mochitest-7'),
@@ -98,18 +98,10 @@ def test_get_chunk_name():
     ]
 
     for (name, chunk) in tests:
-        task = {
-            'task': {
-                'metadata': {
-                    'name': name
-                }
-            }
-        }
-
-        assert taskcluster.get_chunk_name(task) == chunk
+        assert taskcluster.get_chunk(name) == chunk
 
 
-def test_get_suite_name():
+def test_get_suite():
     tests = [
         ('mochitest-1', 'mochitest'),
         ('mochitest-7', 'mochitest'),
@@ -118,22 +110,14 @@ def test_get_suite_name():
     ]
 
     for (chunk, suite) in tests:
-        assert taskcluster.get_suite_name(chunk) == suite
+        assert taskcluster.get_suite(chunk) == suite
 
 
-def test_get_platform_name():
+def test_get_platform():
     tests = [
         ('test-linux64-ccov/opt-mochitest-1', 'linux'),
         ('test-windows10-64-ccov/debug-mochitest-1', 'windows'),
     ]
 
     for (name, platform) in tests:
-        task = {
-            'task': {
-                'metadata': {
-                    'name': name
-                }
-            }
-        }
-
-        assert taskcluster.get_platform_name(task) == platform
+        assert taskcluster.get_platform(name) == platform
