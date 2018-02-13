@@ -6,6 +6,7 @@
 from abc import ABC, abstractmethod
 import json
 from functools import lru_cache
+from cachetools import LRUCache
 import requests
 
 
@@ -208,11 +209,58 @@ class ActiveDataCoverage(Coverage):
 coverage_service = CodecovCoverage()
 
 
-@lru_cache(maxsize=32)
-def get_push_range(push_id):
-    r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?tipsonly=1&startID=%s&endID=%s' % (push_id - 1, push_id + 7))
+# Push ID to build changeset
+MAX_PUSHES = 2048
+push_to_changeset_cache = LRUCache(maxsize=MAX_PUSHES)
+# Changeset to changeset data (files and push ID)
+MAX_CHANGESETS = 2048
+changeset_cache = LRUCache(maxsize=MAX_CHANGESETS)
+
+
+def get_pushes(push_id):
+    r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?version=2&full=1&startID=%s&endID=%s' % (push_id - 1, push_id + 7))
     data = r.json()
-    return [(pushid, pushdata['changesets'][0]) for pushid, pushdata in data.items()]
+
+    for pushid, pushdata in data['pushes'].items():
+        pushid = int(pushid)
+
+        push_to_changeset_cache[pushid] = pushdata['changesets'][-1]['node']
+
+        for changeset in pushdata['changesets']:
+            is_merge = any(text in changeset['desc'] for text in ['r=merge', 'a=merge'])
+
+            if not is_merge:
+                changeset_cache[changeset['node'][:12]] = {
+                  'files': changeset['files'],
+                  'push': pushid,
+                }
+            else:
+                changeset_cache[changeset['node'][:12]] = {
+                  'merge': True,
+                  'push': pushid,
+                }
+
+
+def get_pushes_changesets(push_id, push_id_end):
+    if push_id not in push_to_changeset_cache:
+        get_pushes(push_id)
+
+    for i in range(push_id, push_id_end):
+        if i not in push_to_changeset_cache:
+            continue
+
+        yield push_to_changeset_cache[i]
+
+
+def get_changeset_data(changeset):
+    if changeset not in changeset_cache:
+        r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % changeset)
+        rev = r.json()
+        push_id = int(rev['pushid'])
+
+        get_pushes(push_id)
+
+    return changeset_cache[changeset]
 
 
 def get_coverage_build(changeset):
@@ -220,28 +268,18 @@ def get_coverage_build(changeset):
     This function returns the first successful coverage build after a given
     changeset.
     '''
-    r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % changeset)
-    rev = r.json()
-    push_id = int(rev['pushid'])
-
-    # In a span of 8 pushes, we hope we will find a successful coverage build.
-    pushes = get_push_range(push_id)
-
-    after_changeset = None
-    after_changeset_overall = None
+    changeset_data = get_changeset_data(changeset)
+    push_id = changeset_data['push']
 
     # Find the first coverage build after the changeset.
-    for pushid, changeset in sorted(pushes):
+    for build_changeset in get_pushes_changesets(push_id, push_id + 8):
         try:
-            after_changeset_overall = coverage_service.get_coverage(changeset)
-            after_changeset = changeset
-            break
+            overall = coverage_service.get_coverage(build_changeset)
+            return (changeset_data, build_changeset, overall)
         except:
             pass
 
-    assert after_changeset is not None, 'Couldn\'t find a build after the changeset'
-
-    return (rev['desc'], after_changeset, after_changeset_overall)
+    assert False, 'Couldn\'t find a build after the changeset'
 
 
 COVERAGE_EXTENSIONS = [

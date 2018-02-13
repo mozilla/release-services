@@ -388,6 +388,7 @@ def coverage_by_dir(path=''):
 
 
 def coverage_for_file(changeset, path):
+    changeset = changeset[:12]
     return coverage_for_file_impl.generate(changeset, path)
 
 
