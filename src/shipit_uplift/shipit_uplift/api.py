@@ -23,7 +23,7 @@ from shipit_uplift.config import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
 from shipit_uplift import (
     coverage_by_dir_impl, coverage_for_file_impl,
     coverage_by_changeset_impl, coverage_summary_by_changeset_impl,
-    coverage_chunks_for_patch_impl, coverage
+    coverage
 )
 from rq import Queue
 from shipit_uplift.worker import conn
@@ -388,6 +388,7 @@ def coverage_by_dir(path=''):
 
 
 def coverage_for_file(changeset, path):
+    changeset = changeset[:12]
     return coverage_for_file_impl.generate(changeset, path)
 
 
@@ -420,7 +421,3 @@ def coverage_summary_by_changeset(changeset):
 
 def coverage_supported_extensions():
     return coverage.COVERAGE_EXTENSIONS
-
-
-def coverage_chunks_for_patch(patch):
-    return coverage_chunks_for_patch_impl.generate(patch)

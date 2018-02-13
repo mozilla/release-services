@@ -5,26 +5,12 @@
 
 from __future__ import absolute_import
 
-import os
 import redis
 from rq import SimpleWorker, Queue, Connection
 
-import cli_common.taskcluster
-import shipit_uplift.config
+from shipit_uplift import secrets
 
-
-secrets = cli_common.taskcluster.get_secrets(
-    os.environ.get('TASKCLUSTER_SECRET'),
-    shipit_uplift.config.PROJECT_NAME,
-    required=[],
-    existing={x: os.environ.get(x) for x in ['REDIS_URL'] if x in os.environ},
-    taskcluster_client_id=os.environ.get('TASKCLUSTER_CLIENT_ID'),
-    taskcluster_access_token=os.environ.get('TASKCLUSTER_ACCESS_TOKEN'),
-)
-
-REDIS_URL = secrets['REDIS_URL'] if 'REDIS_URL' in secrets else 'redis://localhost:6379'
-
-conn = redis.from_url(REDIS_URL)
+conn = redis.from_url(secrets.REDIS_URL)
 
 
 def exc_handler(job, *exc_info):

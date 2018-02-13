@@ -24,6 +24,7 @@ required = [
     'AUTH_CLIENT_SECRET',
     'AUTH_REDIRECT_URI',
     'REDIS_URL',
+    'CODECOV_TOKEN',
 ]
 
 secrets = cli_common.taskcluster.get_secrets(

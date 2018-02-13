@@ -6,7 +6,6 @@
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 import requests
-import whatthepatch
 from shipit_uplift.coverage import coverage_service, get_coverage_build, coverage_supported, get_github_commit
 
 
@@ -15,39 +14,33 @@ def generate(changeset):
     This function generates a report containing the coverage information of the diff
     introduced by a changeset.
     '''
-    desc, build_changeset, overall = get_coverage_build(changeset)
-    if any(text in desc for text in ['r=merge', 'a=merge']):
+    changeset_data, build_changeset, overall = get_coverage_build(changeset)
+    if 'merge' in changeset_data:
         raise Exception('Retrieving coverage for merge commits is not supported.')
-
-    r = requests.get('https://hg.mozilla.org/mozilla-central/raw-rev/%s' % changeset)
-    patch = r.text
 
     diffs = []
 
-    def parse_diff(diff):
-        # Get old and new path, for files that have been renamed.
-        new_path = diff.header.new_path[2:] if diff.header.new_path.startswith('b/') else diff.header.new_path
-
-        # If the diff doesn't contain any changes, we skip it.
-        if diff.changes is None:
-            return None
-
+    def retrieve_coverage(path):
         # If the file is not a source file, we skip it (as we already know
         # we have no coverage information for it).
-        if not coverage_supported(new_path):
-            return None
-
-        # Retrieve coverage of added lines.
-        coverage = coverage_service.get_file_coverage(build_changeset, new_path)
-
-        # If we don't have coverage for this file, we skip it.
-        if coverage is None:
+        if not coverage_supported(path):
             return None
 
         # Use hg annotate to report lines in their correct positions and to avoid
         # reporting lines that have been modified by a successive patch in the same push.
-        r = requests.get('https://hg.mozilla.org/mozilla-central/json-annotate/%s/%s' % (build_changeset, new_path))
+        r = requests.get('https://hg.mozilla.org/mozilla-central/json-annotate/%s/%s' % (build_changeset, path))
+        data = r.json()
+        if 'not found in manifest' in data:
+            # The file was removed.
+            return None
         annotate = r.json()['annotate']
+
+        # Retrieve coverage of added lines.
+        coverage = coverage_service.get_file_coverage(build_changeset, path)
+
+        # If we don't have coverage for this file, we skip it.
+        if coverage is None:
+            return None
 
         changes = []
         for data in annotate:
@@ -73,18 +66,18 @@ def generate(changeset):
             })
 
         return {
-          'name': new_path,
+          'name': path,
           'changes': changes,
         }
 
-    def parse_diff_task(diff):
-        return lambda: parse_diff(diff)
+    def retrieve_coverage_task(path):
+        return lambda: retrieve_coverage(path)
 
     with ThreadPoolExecutor(max_workers=4) as executor:
         futures = []
 
-        for diff in whatthepatch.parse_patch(patch):
-            futures.append(executor.submit(parse_diff_task(diff)))
+        for path in changeset_data['files']:
+            futures.append(executor.submit(retrieve_coverage_task(path)))
 
         for future in concurrent.futures.as_completed(futures):
             res = future.result()
