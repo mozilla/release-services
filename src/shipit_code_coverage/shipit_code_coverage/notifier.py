@@ -5,6 +5,7 @@ import requests
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
 
+from shipit_code_coverage.secrets import secrets
 from shipit_code_coverage.utils import wait_until
 
 
@@ -13,9 +14,8 @@ logger = get_logger(__name__)
 
 class Notifier(object):
 
-    def __init__(self, revision, emails, client_id, access_token):
+    def __init__(self, revision, client_id, access_token):
         self.revision = revision
-        self.emails = emails
         self.notify_service = get_service('notify', client_id, access_token)
 
     def get_coverage_summary(self, changeset):
@@ -58,7 +58,7 @@ class Notifier(object):
             # Content is 102400 chars max
             content = content[:102000] + '\n\n... Content max limit reached!'
 
-        for email in self.emails:
+        for email in secrets[secrets.EMAIL_ADDRESSES]:
             self.notify_service.email({
                 'address': email,
                 'subject': 'Coverage patches for %s' % self.revision,

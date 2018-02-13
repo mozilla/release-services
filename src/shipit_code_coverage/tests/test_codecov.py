@@ -22,7 +22,7 @@ def test_get_chunks():
     for f in FILES:
         open(f, 'w')
 
-    c = CodeCov(None, 'ccov-artifacts', '', '', '', '', [], None, None)
+    c = CodeCov(None, 'ccov-artifacts', None, None)
     assert set(c.get_chunks()) == set([
         'mochitest-1', 'mochitest-2', 'xpcshell-3', 'xpcshell-7',
         'cppunit', 'firefox-ui-functional-remote',
@@ -38,7 +38,7 @@ def test_get_coverage_artifacts():
     for f in FILES:
         open(f, 'w')
 
-    c = CodeCov(None, 'ccov-artifacts', '', '', '', '', [], None, None)
+    c = CodeCov(None, 'ccov-artifacts', None, None)
     assert set(c.get_coverage_artifacts()) == set(FILES)
     assert set(c.get_coverage_artifacts(suite='mochitest')) == set([
         'ccov-artifacts/windows_mochitest-1_code-coverage-jsvm.info',

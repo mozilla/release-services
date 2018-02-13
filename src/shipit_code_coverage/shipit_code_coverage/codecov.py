@@ -16,6 +16,7 @@ from cli_common.command import run_check
 from cli_common.taskcluster import get_service
 
 from shipit_code_coverage import taskcluster, uploader
+from shipit_code_coverage.secrets import secrets
 from shipit_code_coverage.notifier import Notifier
 from shipit_code_coverage.utils import mkdir, wait_until, retry, ThreadPoolExecutorResult
 
@@ -25,8 +26,7 @@ logger = get_logger(__name__)
 
 class CodeCov(object):
 
-    def __init__(self, revision, cache_root, coveralls_token, codecov_token,
-                 gecko_dev_user, gecko_dev_pwd, emails, client_id, access_token):
+    def __init__(self, revision, cache_root, client_id, access_token):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = [
@@ -38,8 +38,8 @@ class CodeCov(object):
         assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
         self.repo_dir = os.path.join(cache_root, 'mozilla-central')
 
-        self.gecko_dev_user = gecko_dev_user
-        self.gecko_dev_pwd = gecko_dev_pwd
+        self.gecko_dev_user = secrets.get(secrets.GECKO_DEV_USER)
+        self.gecko_dev_pwd = secrets.get(secrets.GECKO_DEV_PWD)
         self.client_id = client_id
         self.access_token = access_token
 
@@ -51,8 +51,6 @@ class CodeCov(object):
 
             task_data = taskcluster.get_task_details(self.task_ids['linux'])
             self.revision = task_data['payload']['env']['GECKO_HEAD_REV']
-            self.coveralls_token = 'NONE'
-            self.codecov_token = 'NONE'
             self.from_pulse = False
             logger.info('Mercurial revision', revision=self.revision)
         else:
@@ -62,10 +60,8 @@ class CodeCov(object):
                 'windows': taskcluster.get_task('mozilla-central', revision, 'win'),
             }
             self.revision = revision
-            self.coveralls_token = coveralls_token
-            self.codecov_token = codecov_token
             self.from_pulse = True
-            self.notifier = Notifier(revision, emails, client_id, access_token)
+            self.notifier = Notifier(revision, client_id, access_token)
 
         if self.from_pulse:
             self.suites_to_ignore = ['awsy', 'talos']
@@ -238,7 +234,7 @@ class CodeCov(object):
               '--service-name', 'TaskCluster',
               '--service-number', str(push_id),
               '--commit-sha', commit_sha,
-              '--token', self.coveralls_token,
+              '--token', secrets[secrets.COVERALLS_TOKEN] if self.from_pulse else 'NONE',
             ])
 
             if suite is not None:
@@ -431,7 +427,7 @@ class CodeCov(object):
 
             with ThreadPoolExecutorResult(max_workers=2) as executor:
                 executor.submit(lambda: uploader.coveralls(output))
-                executor.submit(lambda: uploader.codecov(output, commit_sha, self.codecov_token))
+                executor.submit(lambda: uploader.codecov(output, commit_sha))
 
             logger.info('Waiting for build to be ingested by Codecov...')
             # Wait until the build has been ingested by Codecov.

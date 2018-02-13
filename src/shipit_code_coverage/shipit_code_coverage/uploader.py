@@ -4,6 +4,7 @@ import requests
 
 from cli_common.log import get_logger
 from shipit_code_coverage import utils
+from shipit_code_coverage.secrets import secrets
 
 
 logger = get_logger(__name__)
@@ -25,12 +26,12 @@ def coveralls(data):
     return result['url'] + '.json'
 
 
-def codecov(data, commit_sha, token, flags=None):
+def codecov(data, commit_sha, flags=None):
     logger.info('Upload report to Codecov')
 
     params = {
         'commit': commit_sha,
-        'token': token,
+        'token': secrets[secrets.CODECOV_TOKEN],
         'service': 'custom',
     }
 
