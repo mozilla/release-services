@@ -10,7 +10,7 @@ from cachetools import LRUCache
 import requests
 
 
-@lru_cache(maxsize=128)
+@lru_cache(maxsize=2048)
 def get_github_commit(mercurial_commit):
     r = requests.get('https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s' % mercurial_commit)
     return r.text.split(' ')[0]
@@ -42,7 +42,7 @@ class CoverallsCoverage(Coverage):
     URL = 'https://coveralls.io'
 
     @staticmethod
-    @lru_cache(maxsize=32)
+    @lru_cache(maxsize=2048)
     def get_coverage(changeset):
         r = requests.get(CoverallsCoverage.URL + '/builds/%s.json' % get_github_commit(changeset))
 
@@ -75,7 +75,7 @@ class CoverallsCoverage(Coverage):
         return builds[0]['commit_sha'], builds[1]['commit_sha']
 
     @staticmethod
-    @lru_cache(maxsize=32)
+    @lru_cache(maxsize=2048)
     def get_directory_coverage(changeset, prev_changeset, directory):
         r = requests.get(CoverallsCoverage.URL + '/builds/' + get_github_commit(changeset) + '.json?paths=' + directory + '/*')
 
@@ -95,7 +95,7 @@ class CodecovCoverage(Coverage):
     URL = 'https://codecov.io/api/gh/marco-c/gecko-dev'
 
     @staticmethod
-    @lru_cache(maxsize=32)
+    @lru_cache(maxsize=2048)
     def get_coverage(changeset):
         r = requests.get(CodecovCoverage.URL + '/commit/%s' % get_github_commit(changeset))
 
@@ -135,7 +135,7 @@ class CodecovCoverage(Coverage):
         return commit['commitid'], commit['parent']
 
     @staticmethod
-    @lru_cache(maxsize=32)
+    @lru_cache(maxsize=2048)
     def get_directory_coverage(changeset, prev_changeset, directory):
         r = requests.get(CodecovCoverage.URL + '/tree/' + get_github_commit(changeset) + '/' + directory)
 
@@ -162,7 +162,7 @@ class ActiveDataCoverage(Coverage):
     URL = 'https://activedata.allizom.org/query'
 
     @staticmethod
-    @lru_cache(maxsize=32)
+    @lru_cache(maxsize=2048)
     def get_coverage(changeset):
         assert False, 'Not implemented'
 
@@ -201,7 +201,7 @@ class ActiveDataCoverage(Coverage):
         assert False, 'Not implemented'
 
     @staticmethod
-    @lru_cache(maxsize=32)
+    @lru_cache(maxsize=2048)
     def get_directory_coverage(changeset, prev_changeset, directory):
         assert False, 'Not implemented'
 
