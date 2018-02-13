@@ -9,6 +9,8 @@ from functools import lru_cache
 from cachetools import LRUCache
 import requests
 
+from shipit_uplift import secrets
+
 
 @lru_cache(maxsize=2048)
 def get_github_commit(mercurial_commit):
@@ -99,9 +101,13 @@ class CodecovCoverage(Coverage):
     URL = 'https://codecov.io/api/gh/marco-c/gecko-dev'
 
     @staticmethod
+    def _get(url):
+        return requests.get(CodecovCoverage.URL + url + '?access_token=%s' % secrets.CODECOV_TOKEN)
+
+    @staticmethod
     @lru_cache(maxsize=2048)
     def get_coverage(changeset):
-        r = requests.get(CodecovCoverage.URL + '/commit/%s' % get_github_commit(changeset))
+        r = CodecovCoverage._get('/commit/%s' % get_github_commit(changeset))
 
         if r.status_code != requests.codes.ok:
             raise CoverageException('Error while loading coverage data.')
@@ -115,7 +121,7 @@ class CodecovCoverage(Coverage):
 
     @staticmethod
     def get_file_coverage(changeset, filename):
-        r = requests.get(CodecovCoverage.URL + '/src/%s/%s' % (get_github_commit(changeset), filename))
+        r = CodecovCoverage._get('/src/%s/%s' % (get_github_commit(changeset), filename))
 
         try:
             data = r.json()
@@ -140,7 +146,7 @@ class CodecovCoverage(Coverage):
     @staticmethod
     @lru_cache(maxsize=2048)
     def get_directory_coverage(changeset, prev_changeset, directory):
-        r = requests.get(CodecovCoverage.URL + '/tree/' + get_github_commit(changeset) + '/' + directory)
+        r = CodecovCoverage._get('/tree/%s/%s' % (get_github_commit(changeset), directory))
 
         if r.status_code != requests.codes.ok:
             raise CoverageException('Error while loading coverage data.')
