@@ -16,6 +16,7 @@ from cli_common.command import run_check
 from cli_common.taskcluster import get_service
 
 from shipit_code_coverage import taskcluster, uploader
+from shipit_code_coverage.notifier import Notifier
 from shipit_code_coverage.utils import mkdir, wait_until, retry, ThreadPoolExecutorResult
 
 
@@ -25,7 +26,7 @@ logger = get_logger(__name__)
 class CodeCov(object):
 
     def __init__(self, revision, cache_root, coveralls_token, codecov_token,
-                 gecko_dev_user, gecko_dev_pwd, client_id, access_token):
+                 gecko_dev_user, gecko_dev_pwd, emails, client_id, access_token):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = [
@@ -64,6 +65,7 @@ class CodeCov(object):
             self.coveralls_token = coveralls_token
             self.codecov_token = codecov_token
             self.from_pulse = True
+            self.notifier = Notifier(revision, emails, client_id, access_token)
 
         if self.from_pulse:
             self.suites_to_ignore = ['awsy', 'talos']
@@ -288,31 +290,6 @@ class CodeCov(object):
 
         logger.info('mozilla-central cloned')
 
-    def prepopulate_cache(self, commit_sha):
-        try:
-            logger.info('Waiting for build to be ingested by Codecov...')
-            # Wait until the build has been ingested by Codecov.
-            if uploader.codecov_wait(commit_sha):
-                logger.info('Build ingested by codecov.io')
-            else:
-                logger.info('codecov.io took too much time to ingest data.')
-                return
-
-            # Get pushlog and ask the backend to generate the coverage by changeset
-            # data, which will be cached.
-            r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?changeset=%s&version=2&full' % self.revision)
-            r.raise_for_status()
-            data = r.json()
-            changesets = data['pushes'][data['lastpushid']]['changesets']
-
-            for changeset in changesets:
-                if any(text in changeset['desc'] for text in ['r=merge', 'a=merge']):
-                    continue
-
-                requests.get('https://uplift.shipit.staging.mozilla-releng.net/coverage/changeset/%s' % changeset['node'])
-        except Exception as e:
-            logger.warn('Error while requesting coverage data', error=str(e))
-
     def generate_per_suite_reports(self):
         def generate_suite_report(suite):
             output = self.generate_info(suite=suite, out_format='lcov')
@@ -456,7 +433,13 @@ class CodeCov(object):
                 executor.submit(lambda: uploader.coveralls(output))
                 executor.submit(lambda: uploader.codecov(output, commit_sha, self.codecov_token))
 
-            self.prepopulate_cache(commit_sha)
+            logger.info('Waiting for build to be ingested by Codecov...')
+            # Wait until the build has been ingested by Codecov.
+            if uploader.codecov_wait(commit_sha):
+                logger.info('Build ingested by codecov.io')
+                self.notifier.notify()
+            else:
+                logger.info('codecov.io took too much time to ingest data.')
         else:
             mkdir('code-coverage-reports')
 
