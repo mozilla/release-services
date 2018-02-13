@@ -98,11 +98,9 @@ class CoverallsCoverage(Coverage):
 
 
 class CodecovCoverage(Coverage):
-    URL = 'https://codecov.io/api/gh/marco-c/gecko-dev'
-
     @staticmethod
-    def _get(url):
-        return requests.get(CodecovCoverage.URL + url + '?access_token=%s' % secrets.CODECOV_TOKEN)
+    def _get(url=''):
+        return requests.get('https://codecov.io/api/gh/marco-c/gecko-dev%s?access_token=%s' % (url, secrets.CODECOV_TOKEN))
 
     @staticmethod
     @lru_cache(maxsize=2048)
@@ -138,7 +136,7 @@ class CodecovCoverage(Coverage):
 
     @staticmethod
     def get_latest_build():
-        r = requests.get(CodecovCoverage.URL)
+        r = CodecovCoverage._get()
         commit = r.json()['commit']
 
         return commit['commitid'], commit['parent']
@@ -153,7 +151,7 @@ class CodecovCoverage(Coverage):
 
         cur_result = r.json()
 
-        r = requests.get(CodecovCoverage.URL + '/tree/' + get_github_commit(prev_changeset) + '/' + directory)
+        r = CodecovCoverage._get('/tree/%s/%s' % (get_github_commit(prev_changeset), directory))
 
         if r.status_code != requests.codes.ok:
             raise CoverageException('Error while loading coverage data.')
