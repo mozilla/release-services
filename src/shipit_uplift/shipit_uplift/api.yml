@@ -223,22 +223,6 @@ paths:
         200:
           description: File extensions supported for code coverage
 
-  /coverage/chunks_for_patch:
-    post:
-      operationId: "shipit_uplift.api.coverage_chunks_for_patch"
-      consumes:
-        - "text/plain"
-      parameters:
-      - name: patch
-        in: body
-        description: Paths of the files
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: List of test suite chunks
-
 definitions:
 
   Success:
