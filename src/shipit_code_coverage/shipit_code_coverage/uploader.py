@@ -63,7 +63,7 @@ def codecov(data, commit_sha, flags=None):
 
 def codecov_wait(commit):
     def check_codecov_job():
-        r = requests.get('https://codecov.io/api/gh/marco-c/gecko-dev/commit/%s' % commit)
+        r = requests.get('https://codecov.io/api/gh/marco-c/gecko-dev/commit/{}?access_token={}'.format(commit, secrets[secrets.CODECOV_ACCESS_TOKEN]))
         return True if r.json()['commit']['totals'] is not None else False
 
     return utils.wait_until(check_codecov_job, 30) is not None

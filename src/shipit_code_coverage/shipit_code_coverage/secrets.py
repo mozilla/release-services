@@ -11,6 +11,7 @@ from shipit_code_coverage import config
 class Secrets(dict):
     COVERALLS_TOKEN = 'COVERALLS_TOKEN'
     CODECOV_TOKEN = 'CODECOV_TOKEN'
+    CODECOV_ACCESS_TOKEN = 'CODECOV_ACCESS_TOKEN'
     GECKO_DEV_USER = 'GECKO_DEV_USER'
     GECKO_DEV_PWD = 'GECKO_DEV_PWD'
     EMAIL_ADDRESSES = 'EMAIL_ADDRESSES'
@@ -22,6 +23,7 @@ class Secrets(dict):
             required=(
                 Secrets.COVERALLS_TOKEN,
                 Secrets.CODECOV_TOKEN,
+                Secrets.CODECOV_ACCESS_TOKEN,
             ),
             taskcluster_client_id=taskcluster_client_id,
             taskcluster_access_token=taskcluster_access_token,
