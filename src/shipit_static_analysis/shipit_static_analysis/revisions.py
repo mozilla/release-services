@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from shipit_static_analysis.config import settings
+from shipit_static_analysis import stats
 from parsepatch.patch import Patch
 from cli_common import log
 import hglib
@@ -49,6 +50,10 @@ class Revision(object):
             filename: diff.get('touched', []) + diff.get('added', [])
             for filename, diff in patch.items()
         }
+
+        # Report nb of files and lines analyzed
+        stats.api.increment('analysis.files', len(self.files))
+        stats.api.increment('analysis.lines', sum(len(line) for line in self.lines.values()))
 
     @property
     def has_clang_files(self):
