@@ -19,4 +19,4 @@ secrets = cli_common.taskcluster.get_secrets(
 )
 
 REDIS_URL = secrets['REDIS_URL'] if 'REDIS_URL' in secrets else 'redis://localhost:6379'
-CODECOV_TOKEN = secrets['CODECOV_TOKEN'] if 'CODECOV_TOKEN' in secrets else ''
+CODECOV_ACCESS_TOKEN = secrets['CODECOV_ACCESS_TOKEN'] if 'CODECOV_ACCESS_TOKEN' in secrets else ''

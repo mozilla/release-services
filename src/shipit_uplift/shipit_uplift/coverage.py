@@ -100,7 +100,7 @@ class CoverallsCoverage(Coverage):
 class CodecovCoverage(Coverage):
     @staticmethod
     def _get(url=''):
-        return requests.get('https://codecov.io/api/gh/marco-c/gecko-dev%s?access_token=%s' % (url, secrets.CODECOV_TOKEN))
+        return requests.get('https://codecov.io/api/gh/marco-c/gecko-dev%s?access_token=%s' % (url, secrets.CODECOV_ACCESS_TOKEN))
 
     @staticmethod
     @lru_cache(maxsize=2048)
