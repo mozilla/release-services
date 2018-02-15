@@ -231,27 +231,31 @@ class CodeCov(object):
                     (platform, chunk, files) = future.result()
                     c.executemany('INSERT INTO file_to_chunk VALUES (?,?,?)', ((f, platform, chunk) for f in files))
 
-                # Retrieve chunk -> tests mapping from ActiveData.
-                r = requests.post('https://activedata.allizom.org/query', data=json.dumps({
-                    'from': 'unittest',
-                    'where': {'and': [
-                        {'eq': {'repo.branch.name': 'mozilla-central'}},
-                        {'eq': {'repo.changeset.id12': self.revision[:12]}},
-                        {'or': [
-                            {'prefix': {'run.key': 'test-linux64-ccov'}},
-                            {'prefix': {'run.key': 'test-windows10-64-ccov'}}
-                        ]}
-                    ]},
-                    'limit': 50000,
-                    'select': ['result.test', 'run.key']
-                }))
+                try:
+                    # Retrieve chunk -> tests mapping from ActiveData.
+                    r = requests.post('https://activedata.allizom.org/query', data=json.dumps({
+                        'from': 'unittest',
+                        'where': {'and': [
+                            {'eq': {'repo.branch.name': 'mozilla-central'}},
+                            {'eq': {'repo.changeset.id12': self.revision[:12]}},
+                            {'or': [
+                                {'prefix': {'run.key': 'test-linux64-ccov'}},
+                                {'prefix': {'run.key': 'test-windows10-64-ccov'}}
+                            ]}
+                        ]},
+                        'limit': 50000,
+                        'select': ['result.test', 'run.key']
+                    }))
 
-                tests_data = r.json()['data']
+                    tests_data = r.json()['data']
 
-                task_names = tests_data['run.key']
-                test_iter = enumerate(tests_data['result.test'])
-                chunk_test_iter = ((taskcluster.get_platform(task_names[i]), taskcluster.get_chunk(task_names[i]), test) for i, test in test_iter)
-                c.executemany('INSERT INTO chunk_to_test VALUES (?,?,?)', chunk_test_iter)
+                    task_names = tests_data['run.key']
+                    test_iter = enumerate(tests_data['result.test'])
+                    chunk_test_iter = ((taskcluster.get_platform(task_names[i]), taskcluster.get_chunk(task_names[i]), test) for i, test in test_iter)
+                    c.executemany('INSERT INTO chunk_to_test VALUES (?,?,?)', chunk_test_iter)
+                except:
+                    # ActiveData is failing too often, so we need to ignore the error here.
+                    pass
 
         tar = tarfile.open('code-coverage-reports/chunk_mapping.tar.xz', 'w:xz')
         tar.add('chunk_mapping.sqlite')
