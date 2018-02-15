@@ -16,18 +16,17 @@ def test_flake8_rules(tmpdir, mock_config):
     third_party.write('test/dummy')
 
     # Valid issue
-    modified = [1, 2, 3]
-    issue = MozLintIssue(str(repo), 'test.py', modified, 1, 'error', 1, 'flake8', 'Dummy test', 'dummy rule')
+    issue = MozLintIssue(str(repo), 'test.py', 1, 'error', 1, 'flake8', 'Dummy test', 'dummy rule')
     assert not issue.is_disabled_rule()
     assert issue.is_publishable()
 
     # 3rd party
-    issue = MozLintIssue(str(repo), 'test/dummy/XXX.py', modified, 1, 'error', 1, 'flake8', 'Dummy test', 'dummy rule')
+    issue = MozLintIssue(str(repo), 'test/dummy/XXX.py', 1, 'error', 1, 'flake8', 'Dummy test', 'dummy rule')
     assert not issue.is_disabled_rule()
     assert issue.is_third_party()
     assert not issue.is_publishable()
 
     # Flake8 bad quotes
-    issue = MozLintIssue(str(repo), 'test.py', modified, 1, 'error', 1, 'flake8', 'Remove bad quotes or whatever.', 'Q000')
+    issue = MozLintIssue(str(repo), 'test.py', 1, 'error', 1, 'flake8', 'Remove bad quotes or whatever.', 'Q000')
     assert issue.is_disabled_rule()
     assert not issue.is_publishable()

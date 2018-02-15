@@ -107,7 +107,7 @@ If you see a problem in this automated review, please report it here: http://bit
 '''
 
     # Now add a mozlint issue
-    mozlint_publishable = MozLintIssue('/tmp', 'test.cpp', [1, 2], 1, 'error', 1, 'test', 'Dummy test', 'dummy rule')
+    mozlint_publishable = MozLintIssue('/tmp', 'test.cpp', 1, 'error', 1, 'test', 'Dummy test', 'dummy rule')
     mozlint_publishable.is_publishable = lambda: True
     assert mozlint_publishable.is_publishable()
     issues.append(mozlint_publishable)
