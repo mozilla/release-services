@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-from threading import Lock
-import time
 
 from cli_common.log import get_logger
 
@@ -25,8 +23,6 @@ class ArtifactsHandler(object):
     def __init__(self, task_ids, suites_to_ignore):
         self.task_ids = task_ids
         self.suites_to_ignore = suites_to_ignore
-        self.download_tasks = {}
-        self.download_tasks_lock = Lock()
 
     def generate_path(self, platform, chunk, artifact):
         return 'ccov-artifacts/%s_%s_%s' % (platform, chunk, os.path.basename(artifact['name']))
@@ -56,45 +52,11 @@ class ArtifactsHandler(object):
 
         return filtered_files
 
-    def should_download(self, status, chunk_name, platform_name):
-        with self.download_tasks_lock:
-            # If the chunk hasn't been downloaded before, this is obviously the best task
-            # to download it from.
-            if (chunk_name, platform_name) not in self.download_tasks:
-                download_lock = Lock()
-                self.download_tasks[(chunk_name, platform_name)] = {
-                    'status': status,
-                    'lock': download_lock,
-                }
-            else:
-                task = self.download_tasks[(chunk_name, platform_name)]
-
-                if STATUS_VALUE[status] > STATUS_VALUE[task['status']]:
-                    task['status'] = status
-                    download_lock = task['lock']
-                else:
-                    return None
-
-            download_lock.acquire()
-            return download_lock
-
     def download(self, test_task):
-        status = test_task['status']['state']
-        assert status in ALL_STATUSES
-
         chunk_name = taskcluster.get_chunk(test_task['task']['metadata']['name'])
         platform_name = taskcluster.get_platform(test_task['task']['metadata']['name'])
-        # Ignore awsy and talos as they aren't actually suites of tests.
-        if any(to_ignore in chunk_name for to_ignore in self.suites_to_ignore):
-            return
-
-        # If we have already downloaded this chunk from another task, check if the
-        # other task has a better status than this one.
-        download_lock = self.should_download(status, chunk_name, platform_name)
-        if download_lock is None:
-            return
-
         test_task_id = test_task['status']['taskId']
+
         for artifact in taskcluster.get_task_artifacts(test_task_id):
             if not any(n in artifact['name'] for n in ['code-coverage-grcov.zip', 'code-coverage-jsvm.zip']):
                 continue
@@ -102,8 +64,6 @@ class ArtifactsHandler(object):
             artifact_path = self.generate_path(platform_name, chunk_name, artifact)
             taskcluster.download_artifact(artifact_path, test_task_id, artifact['name'])
             logger.info('%s artifact downloaded' % artifact_path)
-
-        download_lock.release()
 
     def download_all(self):
         mkdir('ccov-artifacts')
@@ -118,6 +78,29 @@ class ArtifactsHandler(object):
             for task in taskcluster.get_tasks_in_group(group)
             if taskcluster.is_coverage_task(task)
         ]
+
+        # Choose best tasks to download (e.g. 'completed' is better than 'failed')
+        download_tasks = {}
+        for test_task in test_tasks:
+            status = test_task['status']['state']
+            assert status in ALL_STATUSES
+
+            chunk_name = taskcluster.get_chunk(test_task['task']['metadata']['name'])
+            platform_name = taskcluster.get_platform(test_task['task']['metadata']['name'])
+            # Ignore awsy and talos as they aren't actually suites of tests.
+            if any(to_ignore in chunk_name for to_ignore in self.suites_to_ignore):
+                continue
+
+            if (chunk_name, platform_name) not in download_tasks:
+                # If the chunk hasn't been downloaded before, this is obviously the best task
+                # to download it from.
+                download_tasks[(chunk_name, platform_name)] = test_task
+            else:
+                # Otherwise, compare the status of this task with the previously selected task.
+                prev_task = download_tasks[(chunk_name, platform_name)]
+
+                if STATUS_VALUE[status] > STATUS_VALUE[prev_task['status']['state']]:
+                    download_tasks[(chunk_name, platform_name)] = test_task
 
         def download_task(test_task):
             return lambda: self.download(test_task)
