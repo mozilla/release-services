@@ -12,8 +12,7 @@ from shipit_code_coverage.utils import mkdir, ThreadPoolExecutorResult
 logger = get_logger(__name__)
 
 
-FINISHED_STATUSES = ['completed', 'failed', 'exception']
-ALL_STATUSES = FINISHED_STATUSES + ['unscheduled', 'pending', 'running']
+ALL_STATUSES = ['completed', 'failed', 'exception', 'unscheduled', 'pending', 'running']
 STATUS_VALUE = {
     'exception': 1,
     'failed': 2,
@@ -82,10 +81,6 @@ class ArtifactsHandler(object):
     def download(self, test_task):
         status = test_task['status']['state']
         assert status in ALL_STATUSES
-        while status not in FINISHED_STATUSES:
-            time.sleep(60)
-            status = taskcluster.get_task_status(test_task['status']['taskId'])['status']['state']
-            assert status in ALL_STATUSES
 
         chunk_name = taskcluster.get_chunk(test_task['task']['metadata']['name'])
         platform_name = taskcluster.get_platform(test_task['task']['metadata']['name'])
