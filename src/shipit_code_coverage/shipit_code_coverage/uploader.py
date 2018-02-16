@@ -61,6 +61,12 @@ def codecov(data, commit_sha, flags=None):
         raise Exception('Failure to upload data to S3. Response [%s]: %s' % (r.status_code, r.text))
 
 
+def get_latest_codecov():
+    r = requests.get('https://codecov.io/api/gh/marco-c/gecko-dev?access_token={}'.format(secrets[secrets.CODECOV_ACCESS_TOKEN]))
+    r.raise_for_status()
+    return r.json()['commit']['commitid']
+
+
 def codecov_wait(commit):
     def check_codecov_job():
         r = requests.get('https://codecov.io/api/gh/marco-c/gecko-dev/commit/{}?access_token={}'.format(commit, secrets[secrets.CODECOV_ACCESS_TOKEN]))
