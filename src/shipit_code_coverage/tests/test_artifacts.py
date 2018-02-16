@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from shipit_code_coverage import utils
+from cli_common import utils
 from shipit_code_coverage.artifacts import ArtifactsHandler
 
 

@@ -4,9 +4,9 @@ import requests
 
 from cli_common.command import run_check
 from cli_common.taskcluster import get_service
+from cli_common.utils import wait_until, retry
 
 from shipit_code_coverage.secrets import secrets
-from shipit_code_coverage.utils import wait_until, retry
 
 
 class GitHubUtils(object):

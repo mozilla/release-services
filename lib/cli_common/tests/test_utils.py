@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from shipit_code_coverage import utils
+from cli_common import utils
 import time
 
 
@@ -28,9 +28,13 @@ def test_wait_until():
 
 
 def test_retry():
-    assert utils.retry(lambda: True)
-    assert utils.retry(lambda: False)
-    assert not utils.retry(do_raise, wait_between_retries=0)
+    assert utils.retry(lambda: True) is True
+    assert utils.retry(lambda: False) is False
+    try:
+        utils.retry(do_raise, wait_between_retries=0)
+        assert False
+    except Exception:
+        pass
 
     i = {}
 
@@ -41,7 +45,7 @@ def test_retry():
             i['tried'] = True
             raise Exception('Please try again.')
 
-    assert utils.retry(try_twice, wait_between_retries=0)
+    assert utils.retry(try_twice, wait_between_retries=0) is None
 
 
 def test_threadpoolexecutorresult():
@@ -55,7 +59,7 @@ def test_threadpoolexecutorresult():
             executor.submit(lambda: True)
             executor.submit(do_raise)
         assert False
-    except:
+    except Exception:
         assert True
 
     # Tast that ThreadPoolExecutorResult's context returns as soon as a task fails.
@@ -65,7 +69,7 @@ def test_threadpoolexecutorresult():
             executor.submit(lambda: time.sleep(5))
             executor.submit(do_raise)
         assert False
-    except:
+    except Exception:
         assert time.time() - now < 2
 
     # Test that futures that were not scheduled yet are cancelled.
@@ -78,7 +82,7 @@ def test_threadpoolexecutorresult():
             f5 = executor.submit(lambda: time.sleep(1))
             f6 = executor.submit(lambda: time.sleep(1))
         assert False
-    except:
+    except Exception:
         assert f1.done() and not f1.cancelled()
         assert f2.exception() is not None
         # Not enough time to cancel the third future, scheduled right after the one which raises an exception.

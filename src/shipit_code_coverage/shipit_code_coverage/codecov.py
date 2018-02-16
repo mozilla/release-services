@@ -11,13 +11,13 @@ import sqlite3
 
 from cli_common.log import get_logger
 from cli_common.command import run_check
+from cli_common.utils import mkdir, retry, ThreadPoolExecutorResult
 
 from shipit_code_coverage import taskcluster, uploader
 from shipit_code_coverage.artifacts import ArtifactsHandler
 from shipit_code_coverage.github import GitHubUtils
 from shipit_code_coverage.notifier import Notifier
 from shipit_code_coverage.secrets import secrets
-from shipit_code_coverage.utils import mkdir, retry, ThreadPoolExecutorResult
 
 
 logger = get_logger(__name__)
@@ -130,7 +130,7 @@ class CodeCov(object):
 
             hg.update(rev=revision, clean=True)
 
-        retry(lambda: do_clone())
+        retry(do_clone)
 
         logger.info('mozilla-central cloned')
 

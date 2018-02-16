@@ -4,9 +4,9 @@ import requests
 
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
+from cli_common.utils import wait_until
 
 from shipit_code_coverage.secrets import secrets
-from shipit_code_coverage.utils import wait_until
 
 
 logger = get_logger(__name__)

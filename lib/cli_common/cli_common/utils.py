@@ -19,15 +19,14 @@ def wait_until(operation, timeout=30, interval=30):
 
 
 def retry(operation, retries=5, wait_between_retries=30):
-    successful = False
-    while not successful and retries > 0:
+    while True:
         try:
-            operation()
-            successful = True
-        except:
+            return operation()
+        except Exception:
             retries -= 1
+            if retries == 0:
+                raise
             time.sleep(wait_between_retries)
-    return successful
 
 
 def mkdir(path):
