@@ -6,7 +6,7 @@ import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
 
-def wait_until(operation, timeout=30, interval=60):
+def wait_until(operation, timeout=30, interval=30):
     elapsed = 0
     while elapsed < timeout:
         ret = operation()
@@ -18,7 +18,7 @@ def wait_until(operation, timeout=30, interval=60):
     return None
 
 
-def retry(operation, retries=5, wait_between_retries=120):
+def retry(operation, retries=5, wait_between_retries=30):
     successful = False
     while not successful and retries > 0:
         try:
