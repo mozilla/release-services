@@ -34,7 +34,7 @@ def mkdir(path):
         os.mkdir(path)
     except OSError as e:
         if e.errno != errno.EEXIST:
-            raise e
+            raise
 
 
 class ThreadPoolExecutorResult(ThreadPoolExecutor):

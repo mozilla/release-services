@@ -256,8 +256,10 @@ class HookCodeCoverage(PulseHook):
 
             return None
 
+        list_url = 'https://queue.taskcluster.net/v1/task-group/{}/list'.format(group_id)
+
         def retrieve_coverage_task():
-            r = requests.get('https://queue.taskcluster.net/v1/task-group/{}/list'.format(group_id), params={
+            r = requests.get(list_url, params={
                 'limit': 200
             })
             reply = r.json()
