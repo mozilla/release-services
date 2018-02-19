@@ -8,8 +8,8 @@ from __future__ import absolute_import
 import click
 from cli_common.click import taskcluster_options
 from cli_common.log import init_logger
-from cli_common.taskcluster import get_secrets
 from shipit_code_coverage.codecov import CodeCov
+from shipit_code_coverage.secrets import secrets
 from shipit_code_coverage import config
 
 
@@ -27,15 +27,7 @@ def main(revision,
          taskcluster_client_id,
          taskcluster_access_token,
          ):
-    secrets = get_secrets(taskcluster_secret,
-                          config.PROJECT_NAME,
-                          required=(
-                              config.COVERALLS_TOKEN_FIELD,
-                              config.CODECOV_TOKEN_FIELD,
-                          ),
-                          taskcluster_client_id=taskcluster_client_id,
-                          taskcluster_access_token=taskcluster_access_token,
-                          )
+    secrets.load(taskcluster_secret, taskcluster_client_id, taskcluster_access_token)
 
     init_logger(config.PROJECT_NAME,
                 PAPERTRAIL_HOST=secrets.get('PAPERTRAIL_HOST'),
@@ -44,16 +36,7 @@ def main(revision,
                 MOZDEF=secrets.get('MOZDEF'),
                 )
 
-    c = CodeCov(revision,
-                cache_root,
-                secrets[config.COVERALLS_TOKEN_FIELD],
-                secrets[config.CODECOV_TOKEN_FIELD],
-                secrets.get(config.GECKO_DEV_USER_FIELD),
-                secrets.get(config.GECKO_DEV_PWD_FIELD),
-                secrets.get(config.EMAIL_ADDRESSES_FIELD),
-                taskcluster_client_id,
-                taskcluster_access_token,
-                )
+    c = CodeCov(revision, cache_root, taskcluster_client_id, taskcluster_access_token)
     c.go()
 
 

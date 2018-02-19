@@ -5,19 +5,19 @@ import shutil
 import tarfile
 import requests
 import hglib
-from threading import Lock
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 import sqlite3
-import time
 
 from cli_common.log import get_logger
 from cli_common.command import run_check
-from cli_common.taskcluster import get_service
 
 from shipit_code_coverage import taskcluster, uploader
+from shipit_code_coverage.artifacts import ArtifactsHandler
+from shipit_code_coverage.github import GitHubUtils
 from shipit_code_coverage.notifier import Notifier
-from shipit_code_coverage.utils import mkdir, wait_until, retry, ThreadPoolExecutorResult
+from shipit_code_coverage.secrets import secrets
+from shipit_code_coverage.utils import mkdir, retry, ThreadPoolExecutorResult
 
 
 logger = get_logger(__name__)
@@ -25,8 +25,7 @@ logger = get_logger(__name__)
 
 class CodeCov(object):
 
-    def __init__(self, revision, cache_root, coveralls_token, codecov_token,
-                 gecko_dev_user, gecko_dev_pwd, emails, client_id, access_token):
+    def __init__(self, revision, cache_root, client_id, access_token):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = [
@@ -38,186 +37,36 @@ class CodeCov(object):
         assert os.path.isdir(cache_root), 'Cache root {} is not a dir.'.format(cache_root)
         self.repo_dir = os.path.join(cache_root, 'mozilla-central')
 
-        self.gecko_dev_user = gecko_dev_user
-        self.gecko_dev_pwd = gecko_dev_pwd
         self.client_id = client_id
         self.access_token = access_token
 
         if revision is None:
-            self.task_ids = {
+            task_ids = {
                 'linux': taskcluster.get_last_task('linux'),
                 'windows': taskcluster.get_last_task('win'),
             }
 
-            task_data = taskcluster.get_task_details(self.task_ids['linux'])
+            task_data = taskcluster.get_task_details(task_ids['linux'])
             self.revision = task_data['payload']['env']['GECKO_HEAD_REV']
-            self.coveralls_token = 'NONE'
-            self.codecov_token = 'NONE'
             self.from_pulse = False
-            logger.info('Mercurial revision', revision=self.revision)
         else:
-            logger.info('Mercurial revision', revision=revision)
-            self.task_ids = {
+            task_ids = {
                 'linux': taskcluster.get_task('mozilla-central', revision, 'linux'),
                 'windows': taskcluster.get_task('mozilla-central', revision, 'win'),
             }
             self.revision = revision
-            self.coveralls_token = coveralls_token
-            self.codecov_token = codecov_token
             self.from_pulse = True
-            self.notifier = Notifier(revision, emails, client_id, access_token)
+            self.notifier = Notifier(revision, client_id, access_token)
 
         if self.from_pulse:
-            self.suites_to_ignore = ['awsy', 'talos']
+            suites_to_ignore = ['awsy', 'talos']
         else:
-            self.suites_to_ignore = []
+            suites_to_ignore = []
 
-    def get_artifact_path(self, platform, chunk, artifact):
-        return 'ccov-artifacts/%s_%s_%s' % (platform, chunk, os.path.basename(artifact['name']))
+        logger.info('Mercurial revision', revision=self.revision)
 
-    def get_chunks(self):
-        return list(set([f.split('_')[1] for f in os.listdir('ccov-artifacts')]))
-
-    def get_coverage_artifacts(self, platform=None, suite=None, chunk=None):
-        files = os.listdir('ccov-artifacts')
-
-        if suite is not None and chunk is not None:
-            raise Exception('suite and chunk can\'t both have a value')
-
-        # Filter artifacts according to platform, suite and chunk.
-        filtered_files = []
-        for fname in files:
-            if platform is not None and not fname.startswith('%s_' % platform):
-                continue
-
-            if suite is not None and suite not in fname:
-                continue
-
-            if chunk is not None and ('%s_code-coverage' % chunk) not in fname:
-                continue
-
-            filtered_files.append('ccov-artifacts/' + fname)
-
-        return filtered_files
-
-    def download_coverage_artifacts(self):
-        mkdir('ccov-artifacts')
-
-        # The test tasks for the Linux and Windows builds are in the same group,
-        # but the following code is generic and supports build tasks split in
-        # separate groups.
-        groups = set([taskcluster.get_task_details(build_task_id)['taskGroupId'] for build_task_id in self.task_ids.values()])
-        test_tasks = [
-            task
-            for group in groups
-            for task in taskcluster.get_tasks_in_group(group)
-            if taskcluster.is_coverage_task(task)
-        ]
-
-        FINISHED_STATUSES = ['completed', 'failed', 'exception']
-        ALL_STATUSES = FINISHED_STATUSES + ['unscheduled', 'pending', 'running']
-        STATUS_VALUE = {
-            'exception': 1,
-            'failed': 2,
-            'completed': 3,
-        }
-
-        downloaded_tasks = {}
-        downloaded_tasks_lock = Lock()
-
-        def should_download(status, chunk_name, platform_name):
-            with downloaded_tasks_lock:
-                # If the chunk hasn't been downloaded before, this is obviously the best task
-                # to download it from.
-                if (chunk_name, platform_name) not in downloaded_tasks:
-                    download_lock = Lock()
-                    downloaded_tasks[(chunk_name, platform_name)] = {
-                        'status': status,
-                        'lock': download_lock,
-                    }
-                else:
-                    task = downloaded_tasks[(chunk_name, platform_name)]
-
-                    if STATUS_VALUE[status] > STATUS_VALUE[task['status']]:
-                        task['status'] = status
-                        download_lock = task['lock']
-                    else:
-                        return None
-
-                download_lock.acquire()
-                return download_lock
-
-        def download_artifact(test_task):
-            status = test_task['status']['state']
-            assert status in ALL_STATUSES
-            while status not in FINISHED_STATUSES:
-                time.sleep(60)
-                status = taskcluster.get_task_status(test_task['status']['taskId'])['status']['state']
-                assert status in ALL_STATUSES
-
-            chunk_name = taskcluster.get_chunk(test_task['task']['metadata']['name'])
-            platform_name = taskcluster.get_platform(test_task['task']['metadata']['name'])
-            # Ignore awsy and talos as they aren't actually suites of tests.
-            if any(to_ignore in chunk_name for to_ignore in self.suites_to_ignore):
-                return
-
-            # If we have already downloaded this chunk from another task, check if the
-            # other task has a better status than this one.
-            download_lock = should_download(status, chunk_name, platform_name)
-            if download_lock is None:
-                return
-
-            test_task_id = test_task['status']['taskId']
-            for artifact in taskcluster.get_task_artifacts(test_task_id):
-                if not any(n in artifact['name'] for n in ['code-coverage-grcov.zip', 'code-coverage-jsvm.zip']):
-                    continue
-
-                artifact_path = self.get_artifact_path(platform_name, chunk_name, artifact)
-                taskcluster.download_artifact(artifact_path, test_task_id, artifact['name'])
-                logger.info('%s artifact downloaded' % artifact_path)
-
-            download_lock.release()
-
-        def download_artifact_task(test_task):
-            return lambda: download_artifact(test_task)
-
-        with ThreadPoolExecutorResult() as executor:
-            for test_task in test_tasks:
-                executor.submit(download_artifact_task(test_task))
-
-        logger.info('Code coverage artifacts downloaded')
-
-    def update_github_repo(self):
-        run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
-        repo_url = 'https://%s:%s@github.com/marco-c/gecko-dev' % (self.gecko_dev_user, self.gecko_dev_pwd)
-        repo_path = os.path.join(self.cache_root, 'gecko-dev')
-
-        if not os.path.isdir(repo_path):
-            retry(lambda: run_check(['git', 'clone', repo_url], cwd=self.cache_root))
-        retry(lambda: run_check(['git', 'pull', 'https://github.com/mozilla/gecko-dev', 'master'], cwd=repo_path))
-        retry(lambda: run_check(['git', 'push', repo_url, 'master'], cwd=repo_path))
-
-    def post_github_status(self, commit_sha):
-        tcGithub = get_service('github', self.client_id, self.access_token)
-        tcGithub.createStatus('marco-c', 'gecko-dev', commit_sha, {
-            'state': 'success',
-        })
-
-    def get_github_commit(self, mercurial_commit):
-        url = 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s'
-
-        def get_commit():
-            r = requests.get(url % mercurial_commit)
-
-            if r.status_code == requests.codes.ok:
-                return r.text.split(' ')[0]
-
-            return None
-
-        ret = wait_until(get_commit)
-        if ret is None:
-            raise Exception('Mercurial commit is not available yet on mozilla/gecko-dev.')
-        return ret
+        self.artifactsHandler = ArtifactsHandler(task_ids, suites_to_ignore)
+        self.githubUtils = GitHubUtils(cache_root, client_id, access_token)
 
     def generate_info(self, commit_sha=None, platform=None, suite=None, chunk=None, out_format='coveralls', options=[]):
         cmd = [
@@ -238,7 +87,7 @@ class CodeCov(object):
               '--service-name', 'TaskCluster',
               '--service-number', str(push_id),
               '--commit-sha', commit_sha,
-              '--token', self.coveralls_token,
+              '--token', secrets[secrets.COVERALLS_TOKEN] if self.from_pulse else 'NONE',
             ])
 
             if suite is not None:
@@ -246,7 +95,7 @@ class CodeCov(object):
             else:
                 cmd.extend(['--service-job-number', '1'])
 
-        cmd.extend(self.get_coverage_artifacts(platform, suite, chunk))
+        cmd.extend(self.artifactsHandler.get(platform, suite, chunk))
         cmd.extend(options)
 
         return run_check(cmd)
@@ -370,7 +219,7 @@ class CodeCov(object):
         with ThreadPoolExecutor(max_workers=4) as executor:
             futures = []
             for platform in ['linux', 'windows']:
-                for chunk in self.get_chunks():
+                for chunk in self.artifactsHandler.get_chunks():
                     futures.append(executor.submit(get_files_task(platform, chunk)))
 
             with sqlite3.connect('chunk_mapping.sqlite') as conn:
@@ -382,27 +231,31 @@ class CodeCov(object):
                     (platform, chunk, files) = future.result()
                     c.executemany('INSERT INTO file_to_chunk VALUES (?,?,?)', ((f, platform, chunk) for f in files))
 
-                # Retrieve chunk -> tests mapping from ActiveData.
-                r = requests.post('https://activedata.allizom.org/query', data=json.dumps({
-                    'from': 'unittest',
-                    'where': {'and': [
-                        {'eq': {'repo.branch.name': 'mozilla-central'}},
-                        {'eq': {'repo.changeset.id12': self.revision[:12]}},
-                        {'or': [
-                            {'prefix': {'run.key': 'test-linux64-ccov'}},
-                            {'prefix': {'run.key': 'test-windows10-64-ccov'}}
-                        ]}
-                    ]},
-                    'limit': 50000,
-                    'select': ['result.test', 'run.key']
-                }))
+                try:
+                    # Retrieve chunk -> tests mapping from ActiveData.
+                    r = requests.post('https://activedata.allizom.org/query', data=json.dumps({
+                        'from': 'unittest',
+                        'where': {'and': [
+                            {'eq': {'repo.branch.name': 'mozilla-central'}},
+                            {'eq': {'repo.changeset.id12': self.revision[:12]}},
+                            {'or': [
+                                {'prefix': {'run.key': 'test-linux64-ccov'}},
+                                {'prefix': {'run.key': 'test-windows10-64-ccov'}}
+                            ]}
+                        ]},
+                        'limit': 50000,
+                        'select': ['result.test', 'run.key']
+                    }))
 
-                tests_data = r.json()['data']
+                    tests_data = r.json()['data']
 
-                task_names = tests_data['run.key']
-                test_iter = enumerate(tests_data['result.test'])
-                chunk_test_iter = ((taskcluster.get_platform(task_names[i]), taskcluster.get_chunk(task_names[i]), test) for i, test in test_iter)
-                c.executemany('INSERT INTO chunk_to_test VALUES (?,?,?)', chunk_test_iter)
+                    task_names = tests_data['run.key']
+                    test_iter = enumerate(tests_data['result.test'])
+                    chunk_test_iter = ((taskcluster.get_platform(task_names[i]), taskcluster.get_chunk(task_names[i]), test) for i, test in test_iter)
+                    c.executemany('INSERT INTO chunk_to_test VALUES (?,?,?)', chunk_test_iter)
+                except:
+                    # ActiveData is failing too often, so we need to ignore the error here.
+                    pass
 
         tar = tarfile.open('code-coverage-reports/chunk_mapping.tar.xz', 'w:xz')
         tar.add('chunk_mapping.sqlite')
@@ -411,27 +264,25 @@ class CodeCov(object):
     def go(self):
         with ThreadPoolExecutorResult(max_workers=2) as executor:
             # Thread 1 - Download coverage artifacts.
-            executor.submit(lambda: self.download_coverage_artifacts())
+            executor.submit(lambda: self.artifactsHandler.download_all())
 
             # Thread 2 - Clone mozilla-central.
             executor.submit(lambda: self.clone_mozilla_central(self.revision))
 
         if self.from_pulse:
-            if self.gecko_dev_user is not None and self.gecko_dev_pwd is not None:
-                self.update_github_repo()
+            self.githubUtils.update_geckodev_repo()
 
-            commit_sha = self.get_github_commit(self.revision)
+            commit_sha = self.githubUtils.get_commit(self.revision)
             logger.info('GitHub revision', revision=commit_sha)
 
-            if self.gecko_dev_user is not None and self.gecko_dev_pwd is not None:
-                self.post_github_status(commit_sha)
+            self.githubUtils.post_github_status(commit_sha)
 
             output = self.generate_info(commit_sha)
             logger.info('Report generated successfully')
 
             with ThreadPoolExecutorResult(max_workers=2) as executor:
                 executor.submit(lambda: uploader.coveralls(output))
-                executor.submit(lambda: uploader.codecov(output, commit_sha, self.codecov_token))
+                executor.submit(lambda: uploader.codecov(output, commit_sha))
 
             logger.info('Waiting for build to be ingested by Codecov...')
             # Wait until the build has been ingested by Codecov.
@@ -450,11 +301,4 @@ class CodeCov(object):
             self.generate_chunk_mapping()
 
             os.chdir('code-coverage-reports')
-            run_check(['git', 'config', '--global', 'http.postBuffer', '12M'])
-            run_check(['git', 'config', '--global', 'user.email', 'report@upload.it'])
-            run_check(['git', 'config', '--global', 'user.name', 'Report Uploader'])
-            repo_url = 'https://%s:%s@github.com/marco-c/code-coverage-reports' % (self.gecko_dev_user, self.gecko_dev_pwd)
-            run_check(['git', 'init'])
-            run_check(['git', 'add', '*'])
-            run_check(['git', 'commit', '-m', 'Coverage reports upload'])
-            retry(lambda: run_check(['git', 'push', repo_url, 'master', '--force']))
+            self.githubUtils.update_codecoveragereports_repo()
