@@ -18,6 +18,8 @@ class HookPhabricator(Hook):
     Taskcluster hook handling the static analysis
     for Phabricator differentials
     '''
+    top_id = None
+
     def __init__(self, configuration):
         assert 'hookId' in configuration
         super().__init__(
@@ -31,47 +33,49 @@ class HookPhabricator(Hook):
         self.api_url = configuration['phabricator_url']
         self.api_token = configuration['phabricator_token']
 
-        # Start on first page
-        self.before = None
+        # Start by getting top id
+        diffs, _ = self.request_phabricator(limit=1)
+        assert len(diffs) == 1
+        self.top_id = diffs[0]['id']
+
+    def request_phabricator(self, after=None, limit=20, order='newest'):
+        '''
+        Load raw differential objects from the api
+        '''
+        logger.debug('Loading phabricator differentials', after=after, limit=limit, order=order)
+        url = '{}/differential.diff.search'.format(self.api_url)
+        payload = {
+            'api.token': self.api_token,
+            'after': after,
+            'order': order,
+            'limit': limit,
+        }
+        response = requests.post(url, payload)
+        response.raise_for_status()
+        data = response.json()
+        assert data['error_code'] is None, \
+            'Conduit error: {} - {}'.format(
+                data['error_code'],
+                data['error_info'],
+            )
+
+        after = data['result']['cursor']['after']
+        after = after and int(after)
+        return data['result']['data'], after
 
     def list_differential(self):
         '''
-        List new differential items
+        List new differential items using pagination
+        using an iterator
         '''
-        url = '{}/differential.diff.search'.format(self.api_url)
-        after = None
-        while True:
-            logger.info('Loading phabricator differentials', after=after, before=self.before)
-            payload = {
-                'api.token': self.api_token,
-                'after': after,
-                'limit': 20,
-            }
-            if after is None and self.before:
-                # Initial page
-                payload['before'] = self.before
-            response = requests.post(url, payload)
-            response.raise_for_status()
-            data = response.json()
-            assert data['error_code'] is None, \
-                'Conduit error: {} - {}'.format(
-                    data['error_code'],
-                    data['error_info'],
-                )
-
-            # Pass results
-            diffs = data['result']['data']
+        after = self.top_id
+        while after is not None:
+            diffs, after = self.request_phabricator(after=after, order='oldest')
             for diff in diffs:
                 yield diff
 
-            # Save first id for future executions
-            if after is None and diffs:
-                self.before = diffs[0]['id']
-
-            # Load next page
-            after = data['result']['cursor']['after']
-            if after is None:
-                break
+                # Update the top id
+                self.top_id = max(self.top_id, diff['id'])
 
     async def build_consumer(self, *args, **kwargs):
         '''
