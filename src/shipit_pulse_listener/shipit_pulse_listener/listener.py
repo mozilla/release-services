@@ -38,7 +38,7 @@ class HookPhabricator(Hook):
         '''
         List new differential items
         '''
-        url = '{}/differential.revision.search'.format(self.api_url)
+        url = '{}/differential.diff.search'.format(self.api_url)
         after = None
         while True:
             logger.info('Loading phabricator differentials', after=after, before=self.before)
@@ -81,7 +81,7 @@ class HookPhabricator(Hook):
 
             # Get new differential ids
             for diff in self.list_differential():
-                if diff['type'] != 'DREV':
+                if diff['type'] != 'DIFF':
                     logger.info('Skipping differential', id=diff['id'], type=diff['type'])
                     continue
 
@@ -355,6 +355,6 @@ class PulseListener(object):
         }
         hook_class = classes.get(conf['type'])
         if hook_class is None:
-            raise Exception('Unsupported hook {}'.format(conf['hook']))
+            raise Exception('Unsupported hook {}'.format(conf['type']))
 
         return hook_class(conf)
