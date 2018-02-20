@@ -389,7 +389,12 @@ def coverage_by_dir(path=''):
 
 def coverage_for_file(changeset, path):
     changeset = changeset[:12]
-    return coverage_for_file_impl.generate(changeset, path)
+    try:
+        return coverage_for_file_impl.generate(changeset, path)
+    except Exception as e:
+        return {
+            'error': str(e)
+        }, 500
 
 
 def coverage_by_changeset(changeset):
@@ -405,7 +410,7 @@ def coverage_by_changeset(changeset):
 
     if job.exc_info is not None:
         return {
-          'error': str(job.exc_info)
+            'error': str(job.exc_info)
         }, 500
 
     return '', 202
