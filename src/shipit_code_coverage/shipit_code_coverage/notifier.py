@@ -38,7 +38,9 @@ class Notifier(object):
         changesets = sum((data['changesets'] for data in push_data['pushes'].values()), [])
 
         for changeset in changesets:
-            if any(text in changeset['desc'] for text in ['r=merge', 'a=merge']):
+            desc = changeset['desc'].split('\n')[0]
+
+            if any(text in desc for text in ['r=merge', 'a=merge']):
                 continue
 
             try:
@@ -48,7 +50,7 @@ class Notifier(object):
                     continue
 
                 if coverage['commit_covered'] < 0.2 * coverage['commit_added']:
-                    content += '* [%s](https://firefox-code-coverage.herokuapp.com/#/changeset/%s): %d covered out of %d added.\n' % (rev, rev, coverage['commit_covered'], coverage['commit_added'])  # noqa
+                    content += '* [%s](https://firefox-code-coverage.herokuapp.com/#/changeset/%s): %d covered out of %d added.\n' % (desc, rev, coverage['commit_covered'], coverage['commit_added'])  # noqa
             except HTTPError as e:
                 continue
 
