@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
+from zipfile import BadZipFile, is_zipfile
 import requests
 
 from shipit_code_coverage.utils import retry
@@ -79,6 +80,9 @@ def download_artifact(artifact_path, task_id, artifact_name):
         with open(artifact_path, 'wb') as f:
             r.raw.decode_content = True
             shutil.copyfileobj(r.raw, f)
+
+        if artifact_path.endswith('.zip') and not is_zipfile(artifact_path):
+            raise BadZipFile('File is not a zip file')
 
     if not retry(perform_download):
         raise Exception('Failed downloading artifact in %s' % artifact_path)
