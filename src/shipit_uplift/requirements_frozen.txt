@@ -71,6 +71,5 @@ typing==3.6.2
 urllib3==1.22
 vine==1.1.4
 Werkzeug==0.12.2
-whatthepatch==0.0.5
 wmctrl==0.3
 yarl==0.12.0
