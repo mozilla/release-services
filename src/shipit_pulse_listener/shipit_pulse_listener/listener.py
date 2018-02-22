@@ -18,7 +18,7 @@ class HookPhabricator(Hook):
     Taskcluster hook handling the static analysis
     for Phabricator differentials
     '''
-    top_id = None
+    latest_id = None
 
     def __init__(self, configuration):
         assert 'hookId' in configuration
@@ -36,17 +36,17 @@ class HookPhabricator(Hook):
         # Start by getting top id
         diffs, _ = self.request_phabricator(limit=1)
         assert len(diffs) == 1
-        self.top_id = diffs[0]['id']
+        self.latest_id = diffs[0]['id']
 
-    def request_phabricator(self, after=None, limit=20, order='newest'):
+    def request_phabricator(self, limit=20, order='newest'):
         '''
         Load raw differential objects from the api
         '''
-        logger.debug('Loading phabricator differentials', after=after, limit=limit, order=order)
+        logger.info('Loading phabricator differentials', after=self.latest_id, limit=limit, order=order)
         url = '{}/differential.diff.search'.format(self.api_url)
         payload = {
             'api.token': self.api_token,
-            'after': after,
+            'after': self.latest_id,
             'order': order,
             'limit': limit,
         }
@@ -59,23 +59,22 @@ class HookPhabricator(Hook):
                 data['error_info'],
             )
 
-        after = data['result']['cursor']['after']
-        after = after and int(after)
-        return data['result']['data'], after
+        return data['result']['data'], data['result']['cursor']['after']
 
     def list_differential(self):
         '''
         List new differential items using pagination
         using an iterator
         '''
-        after = self.top_id
-        while after is not None:
-            diffs, after = self.request_phabricator(after=after, order='oldest')
+        cursor = self.latest_id
+        while cursor is not None:
+            diffs, cursor = self.request_phabricator(order='oldest')
             for diff in diffs:
                 yield diff
+                diff_id = diff['id']
 
-                # Update the top id
-                self.top_id = max(self.top_id, diff['id'])
+            # Update the latest id
+            self.latest_id = cursor or diff_id
 
     async def build_consumer(self, *args, **kwargs):
         '''
