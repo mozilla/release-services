@@ -44,7 +44,7 @@ class GitHubUtils(object):
         def get_commit():
             r = requests.get('https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s' % mercurial_commit)
 
-            if r.status_code == requests.codes.ok:
+            if r.ok:
                 return r.text.split(' ')[0]
 
             return None
@@ -58,7 +58,7 @@ class GitHubUtils(object):
         def get_commit():
             r = requests.get('https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/%s' % github_commit)
 
-            if r.status_code == requests.codes.ok:
+            if r.ok:
                 return r.text.split(' ')[1]
 
             return None
