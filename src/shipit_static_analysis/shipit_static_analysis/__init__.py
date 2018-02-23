@@ -5,6 +5,9 @@
 
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.stats import Datadog
+import itertools
+import hashlib
+import json
 import os
 import abc
 
@@ -23,6 +26,54 @@ class Issue(abc.ABC):
     - line: Line where the issue begins
     - nb_lines: Number of lines affected by the issue
     '''
+    lines_hash = None
+    is_new = False
+
+    def __eq__(self, other):
+        return self.__hash__() == other.__hash__()
+
+    def __hash__(self):
+        '''
+        Unique issue identifier, used to compare issues
+        '''
+        if self.lines_hash is None:
+            self.build_lines_hash()
+
+        payload = {
+            'class': self.__class__.__name__,
+            'path': self.path,
+            'lines_hash': self.lines_hash,
+        }
+        payload.update(self.build_extra_identifiers())
+        return hash(json.dumps(payload, sort_keys=True))
+
+    def build_lines_hash(self):
+        '''
+        Build a unique hash to identify lines related to this issue
+        Skip leading spaces to have same hashes when only the indentation changes
+        '''
+        # Read issue related content here to build an hash
+        full_path = os.path.join(settings.repo_dir, self.path)
+        assert os.path.exists(full_path), \
+            'Missing file {}'.format(full_path)
+
+        # Only read necessary lines
+        with open(full_path) as source:
+            start = self.line - 1
+            end = start + self.nb_lines
+            lines = itertools.islice(source, start, end)
+            content = ''.join(l.lstrip() for l in lines)
+
+        # Build the content hash
+        self.lines_hash = hashlib.sha256(content.encode('utf-8')).hexdigest()
+        return self.lines_hash
+
+    def build_extra_identifiers(self):
+        '''
+        Used to compare with same-class issues
+        '''
+        return {}
+
     @abc.abstractmethod
     def is_publishable(self):
         '''

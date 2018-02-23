@@ -3,6 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import itertools
 import os
 import subprocess
@@ -110,11 +112,15 @@ class Workflow(object):
             # Force cleanup to reset tip
             # otherwise previous pull are there
             self.hg.update(rev=b'tip', clean=True)
-            logger.info('Set repo back to tip', rev=self.hg.tip().node)
+            tip = self.hg.tip().node
+            logger.info('Set repo back to tip', rev=tip)
 
             # Apply and analyze revision patch
             revision.apply(self.hg)
             revision.analyze_patch()
+
+            # Revert to tip
+            self.hg.update(rev=tip, clean=True)
 
         with stats.api.timer('runtime.mach'):
             # Only run mach if revision has any C/C++ files
@@ -164,6 +170,44 @@ class Workflow(object):
             logger.error('No analyzers to use on revision')
             return
 
+        with stats.api.timer('runtime.issues'):
+            # Detect initial issues
+            before_patch = self.detect_issues(analyzers, revision)
+            logger.info('Detected {} issue(s) before patch'.format(len(before_patch)))
+
+            # Apply patch
+            revision.apply(self.hg)
+
+            # Detect new issues
+            issues = self.detect_issues(analyzers, revision)
+            logger.info('Detected {} issue(s) after patch'.format(len(issues)))
+
+            # Mark newly found issues
+            for issue in issues:
+                issue.is_new = issue not in before_patch
+
+        if not issues:
+            logger.info('No issues, stopping there.')
+            return
+
+        # Report issues publication stats
+        stats.api.increment('analysis.issues.before', len(before_patch))
+        stats.api.increment('analysis.issues.after', len(issues))
+        stats.api.increment('analysis.issues.publishable', len(i for i in issues if i.is_publishable()))
+        stats.api.increment('analysis.issues.is_new', len(i for i in issues if i.is_new))
+
+        # Build patch to help developper improve their code
+        self.build_improvement_patch(revision, issues)
+
+        # Publish reports about these issues
+        with stats.api.timer('runtime.reports'):
+            for reporter in self.reporters.values():
+                reporter.publish(issues, revision)
+
+    def detect_issues(self, analyzers, revision):
+        '''
+        Detect issues for this revision
+        '''
         issues = []
         for analyzer_class in analyzers:
             # Build analyzer
@@ -173,18 +217,7 @@ class Workflow(object):
             # Run analyzer on version and store generated issues
             issues += analyzer.run(revision)
 
-        logger.info('Detected {} issue(s)'.format(len(issues)))
-        if not issues:
-            logger.info('No issues, stopping there.')
-            return
-
-        # Build a potential improvement patch
-        self.build_improvement_patch(revision, issues)
-
-        # Publish reports about these issues
-        with stats.api.timer('runtime.reports'):
-            for reporter in self.reporters.values():
-                reporter.publish(issues, revision)
+        return issues
 
     def build_improvement_patch(self, revision, issues):
         '''

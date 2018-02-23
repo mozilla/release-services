@@ -19,8 +19,7 @@ import responses
 
 MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
 
-TEST_CPP = '''
-include <cstdio>
+TEST_CPP = '''include <cstdio>
 
 int main(void){
     printf("Hello world!");

@@ -29,7 +29,8 @@ ISSUE_MARKDOWN = '''
 - **Publishable check**: {publishable_check}
 - **Third Party**: {third_party}
 - **Expanded Macro**: {expanded_macro}
-- **Publishable on MozReview**: {publishable}
+- **Publishable **: {publishable}
+- **Is new**: {is_new}
 
 ```
 {body}
@@ -212,6 +213,16 @@ class ClangTidyIssue(Issue):
     def __str__(self):
         return '[{}] {} {} {}:{}'.format(self.type, self.check, self.path, self.line, self.char)
 
+    def build_extra_identifiers(self):
+        '''
+        Used to compare with same-class issues
+        '''
+        return {
+            'type': self.type,
+            'check': self.check,
+            'char': self.char,
+        }
+
     def is_problem(self):
         return self.type in ('warning', 'error')
 
@@ -275,6 +286,7 @@ class ClangTidyIssue(Issue):
             publishable_check=self.has_publishable_check() and 'yes' or 'no',
             publishable=self.is_publishable() and 'yes' or 'no',
             expanded_macro=self.is_expanded_macro() and 'yes' or 'no',
+            is_new=self.is_new and 'yes' or 'no',
             notes='\n'.join([
                 ISSUE_NOTE_MARKDOWN.format(
                     message=n.message,

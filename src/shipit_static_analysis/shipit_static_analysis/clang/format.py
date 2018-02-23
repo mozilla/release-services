@@ -22,6 +22,7 @@ ISSUE_MARKDOWN = '''
 - **Path**: {path}
 - **Mode**: {mode}
 - **Lines**: from {line}, on {nb_lines} lines
+- **Is new**: {is_new}
 
 Old lines:
 
@@ -75,9 +76,11 @@ class ClangFormat(object):
         '''
         Clang-format is very fast, no need for a worker queue here
         '''
+        # Check file exists (before mode)
         full_path = os.path.join(settings.repo_dir, filename)
-        assert os.path.exists(full_path), \
-            'Modified file not found {}'.format(full_path)
+        if not os.path.exists(full_path):
+            logger.info('Modified file not found {}'.format(full_path))
+            return []
 
         # Build command line for a filename
         cmd = [
@@ -148,6 +151,14 @@ class ClangFormatIssue(Issue):
         lines = set(range(self.line, self.line + self.nb_lines))
         self.in_patch = not lines.isdisjoint(modified_lines)
 
+    def build_extra_identifiers(self):
+        '''
+        Used to compare with same-class issues
+        '''
+        return {
+            'mode': self.mode,
+        }
+
     def __str__(self):
         return 'clang-format issue {} {} line {}-{}'.format(
             self.path,
@@ -193,6 +204,7 @@ class ClangFormatIssue(Issue):
             mode=self.mode,
             line=self.line,
             nb_lines=self.nb_lines,
+            is_new=self.is_new and 'yes' or 'no',
             old=self.old,
             new=self.new,
         )

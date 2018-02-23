@@ -21,6 +21,7 @@ ISSUE_MARKDOWN = '''
 - **Third Party**: {third_party}
 - **Disabled rule**: {disabled_rule}
 - **Publishable**: {publishable}
+- **Is new**: {is_new}
 
 ```
 {message}
@@ -52,6 +53,17 @@ class MozLintIssue(Issue):
             self.path,
             self.line,
         )
+
+    def build_extra_identifiers(self):
+        '''
+        Used to compare with same-class issues
+        '''
+        return {
+            'level': self.level,
+            'rule': self.rule,
+            'linter': self.linter,
+            'column': self.column,
+        }
 
     def is_disabled_rule(self):
         '''
@@ -97,6 +109,7 @@ class MozLintIssue(Issue):
             third_party=self.is_third_party() and 'yes' or 'no',
             publishable=self.is_publishable() and 'yes' or 'no',
             disabled_rule=self.is_disabled_rule() and 'yes' or 'no',
+            is_new=self.is_new and 'yes' or 'no',
         )
 
     def as_diff(self):
@@ -136,6 +149,11 @@ class MozLint(object):
         '''
         Run mozlint through mach, using gecko-env
         '''
+        # Check file exists (before mode)
+        full_path = os.path.join(settings.repo_dir, path)
+        if not os.path.exists(full_path):
+            logger.info('Modified file not found {}'.format(full_path))
+            return
 
         # Run mozlint on a file
         command = [
@@ -160,7 +178,6 @@ class MozLint(object):
             logger.warn('Invalid json output', path=path, lines=lines)
             raise
 
-        full_path = os.path.join(settings.repo_dir, path)
         if full_path not in payload and path not in payload:
             logger.warn('Missing path in linter output', path=path)
             return
