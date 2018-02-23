@@ -40,33 +40,28 @@ class CodeCov(object):
         self.client_id = client_id
         self.access_token = access_token
 
-        if revision is None:
-            task_ids = {
-                'linux': taskcluster.get_last_task('linux'),
-                'windows': taskcluster.get_last_task('win'),
-            }
+        self.githubUtils = GitHubUtils(cache_root, client_id, access_token)
 
-            task_data = taskcluster.get_task_details(task_ids['linux'])
-            self.revision = task_data['payload']['env']['GECKO_HEAD_REV']
+        if revision is None:
+            # Retrieve revision of latest codecov build
+            github_revision = uploader.get_latest_codecov()
+            self.revision = self.githubUtils.get_mercurial(github_revision)
             self.from_pulse = False
+            suites_to_ignore = []
         else:
-            task_ids = {
-                'linux': taskcluster.get_task('mozilla-central', revision, 'linux'),
-                'windows': taskcluster.get_task('mozilla-central', revision, 'win'),
-            }
             self.revision = revision
             self.from_pulse = True
-            self.notifier = Notifier(revision, client_id, access_token)
-
-        if self.from_pulse:
             suites_to_ignore = ['awsy', 'talos']
-        else:
-            suites_to_ignore = []
+            self.notifier = Notifier(revision, client_id, access_token)
 
         logger.info('Mercurial revision', revision=self.revision)
 
+        task_ids = {
+            'linux': taskcluster.get_task('mozilla-central', self.revision, 'linux'),
+            'windows': taskcluster.get_task('mozilla-central', self.revision, 'win'),
+        }
+
         self.artifactsHandler = ArtifactsHandler(task_ids, suites_to_ignore)
-        self.githubUtils = GitHubUtils(cache_root, client_id, access_token)
 
     def generate_info(self, commit_sha=None, platform=None, suite=None, chunk=None, out_format='coveralls', options=[]):
         cmd = [
