@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import asyncio
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
@@ -23,9 +24,7 @@ def generate(changeset):
     if 'merge' in changeset_data:
         raise Exception('Retrieving coverage for merge commits is not supported.')
 
-    diffs = []
-
-    def retrieve_coverage(path):
+    async def retrieve_coverage(loop, path):
         # If the file is not a source file, we skip it (as we already know
         # we have no coverage information for it).
         if not coverage_supported(path):
@@ -75,19 +74,21 @@ def generate(changeset):
           'changes': changes,
         }
 
-    def retrieve_coverage_task(path):
-        return lambda: retrieve_coverage(path)
-
-    with ThreadPoolExecutor(max_workers=4) as executor:
+    async def retrieve_all(loop):
         futures = []
-
         for path in changeset_data['files']:
-            futures.append(executor.submit(retrieve_coverage_task(path)))
+            futures.append(retrieve_coverage(loop, path))
 
-        for future in concurrent.futures.as_completed(futures):
-            res = future.result()
+        diffs = []
+        for f in asyncio.as_completed(futures):
+            res = await f
             if res is not None:
                 diffs.append(res)
+
+        return diffs
+
+    loop = asyncio.get_event_loop()
+    diffs = loop.run_until_complete(retrieve_all(loop))
 
     return {
         'build_changeset': build_changeset,
