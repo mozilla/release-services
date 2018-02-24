@@ -37,7 +37,7 @@ def generate(changeset):
         if 'not found in manifest' in data:
             # The file was removed.
             return None
-        annotate = r.json()['annotate']
+        annotate = data['annotate']
 
         # Retrieve coverage of added lines.
         coverage = coverage_service.get_file_coverage(build_changeset, path)
