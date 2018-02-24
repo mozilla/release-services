@@ -30,17 +30,22 @@ def generate(changeset):
         if not coverage_supported(path):
             return None
 
+        # Retrieve annotate data.
+        annotate_future = loop.run_in_executor(None, requests.get, 'https://hg.mozilla.org/mozilla-central/json-annotate/{}/{}'.format(build_changeset, path))
+
+        # Retrieve coverage data.
+        coverage_future = loop.run_in_executor(None, coverage_service.get_file_coverage, build_changeset, path)
+
         # Use hg annotate to report lines in their correct positions and to avoid
         # reporting lines that have been modified by a successive patch in the same push.
-        r = requests.get('https://hg.mozilla.org/mozilla-central/json-annotate/{}/{}'.format(build_changeset, path))
-        data = r.json()
+        data = (await annotate_future).json()
         if 'not found in manifest' in data:
             # The file was removed.
             return None
         annotate = data['annotate']
 
         # Retrieve coverage of added lines.
-        coverage = coverage_service.get_file_coverage(build_changeset, path)
+        coverage = await coverage_future
 
         # If we don't have coverage for this file, we skip it.
         if coverage is None:
