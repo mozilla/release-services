@@ -43,8 +43,27 @@ PROJECTS:
         please_cli.config.NIX_BIN_DIR + 'nix-shell',
         ),
     )
+@click.option(
+    '--taskcluster-secrets',
+    default='repo:github.com/mozilla-releng/services:branch:master',
+    help='Taskcluster secrets',
+    )
+@click.option(
+    '--taskcluster-client-id',
+    default=None,
+    help='Taskcluster client id',
+    )
+@click.option(
+    '--taskcluster-access-token',
+    default=None,
+    help='Taskcluster access token',
+    )
 @click.pass_context
-def cmd(ctx, project, nix_shell):
+def cmd(ctx, project, nix_shell,
+        taskcluster_secrets,
+        taskcluster_client_id,
+        taskcluster_access_token,
+    ):
     checks = please_cli.config.PROJECTS.get(project, {}).get('checks')
 
     if not checks:
@@ -58,6 +77,9 @@ def cmd(ctx, project, nix_shell):
                                                    quiet=True,
                                                    command=check_command,
                                                    nix_shell=nix_shell,
+                                                   taskcluster_secrets=taskcluster_secrets,
+                                                   taskcluster_client_id=taskcluster_client_id,
+                                                   taskcluster_access_token=taskcluster_access_token,
                                                    )
         please_cli.utils.check_result(returncode, output, raise_exception=False)
 
