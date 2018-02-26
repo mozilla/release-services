@@ -11,8 +11,8 @@ from shipit_uplift.coverage import coverage_service
 
 
 def get_mercurial_commit(github_commit):
-    url = 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/%s'
-    r = requests.get(url % github_commit)
+    url = 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/{}'
+    r = requests.get(url.format(github_commit))
 
     return r.text.split(' ')[1]
 
