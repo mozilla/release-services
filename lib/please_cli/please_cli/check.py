@@ -7,6 +7,7 @@ from __future__ import absolute_import
 import click
 import click_spinner
 
+import cli_common.click
 import please_cli.config
 import please_cli.utils
 import please_cli.shell
@@ -43,8 +44,13 @@ PROJECTS:
         please_cli.config.NIX_BIN_DIR + 'nix-shell',
         ),
     )
+@cli_common.click.taskcluster_options
 @click.pass_context
-def cmd(ctx, project, nix_shell):
+def cmd(ctx, project, nix_shell,
+        taskcluster_secret,
+        taskcluster_client_id,
+        taskcluster_access_token,
+    ):
     checks = please_cli.config.PROJECTS.get(project, {}).get('checks')
 
     if not checks:
@@ -58,6 +64,9 @@ def cmd(ctx, project, nix_shell):
                                                    quiet=True,
                                                    command=check_command,
                                                    nix_shell=nix_shell,
+                                                   taskcluster_secret=taskcluster_secret,
+                                                   taskcluster_client_id=taskcluster_client_id,
+                                                   taskcluster_access_token=taskcluster_access_token,
                                                    )
         please_cli.utils.check_result(returncode, output, raise_exception=False)
 

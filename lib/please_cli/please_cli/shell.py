@@ -8,6 +8,7 @@ import click
 import os
 import subprocess
 
+import cli_common.click
 import cli_common.log
 import please_cli.config
 
@@ -82,23 +83,9 @@ EXAMPLES:
         please_cli.config.NIX_BIN_DIR + 'nix-shell',
         ),
     )
-@click.option(
-    '--taskcluster-secrets',
-    default='repo:github.com/mozilla-releng/services:branch:master',
-    help='Taskcluster secrets',
-    )
-@click.option(
-    '--taskcluster-client-id',
-    default=None,
-    help='Taskcluster client id',
-    )
-@click.option(
-    '--taskcluster-access-token',
-    default=None,
-    help='Taskcluster access token',
-    )
+@cli_common.click.taskcluster_options
 def cmd(project, zsh, quiet, command, nix_shell,
-        taskcluster_secrets,
+        taskcluster_secret,
         taskcluster_client_id,
         taskcluster_access_token,
         ):
@@ -121,7 +108,7 @@ def cmd(project, zsh, quiet, command, nix_shell,
     os.environ['SERVICES_ROOT'] = please_cli.config.ROOT_DIR + '/'
     os.environ['SSL_DEV_CA'] = os.path.join(please_cli.config.TMP_DIR, 'certs')
     os.environ['PYTHONPATH'] = ""
-    os.environ['TASKCLUSTER_SECRET'] = taskcluster_secrets
+    os.environ['TASKCLUSTER_SECRET'] = taskcluster_secret
     if taskcluster_client_id:
         os.environ['TASKCLUSTER_CLIENT_ID'] = taskcluster_client_id
     if taskcluster_access_token:

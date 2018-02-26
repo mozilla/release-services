@@ -10,6 +10,7 @@ import sys
 import click
 import click_spinner
 
+import cli_common.click
 import please_cli.config
 import please_cli.create_certs
 import please_cli.shell
@@ -50,24 +51,10 @@ PROJECTS:
     default=please_cli.config.NIX_BIN_DIR + 'nix-shell',
     help='`nix-shell` command',
     )
-@click.option(
-    '--taskcluster-secrets',
-    default='repo:github.com/mozilla-releng/services:branch:master',
-    help='Taskcluster secrets',
-    )
-@click.option(
-    '--taskcluster-client-id',
-    default=None,
-    help='Taskcluster client id',
-    )
-@click.option(
-    '--taskcluster-access-token',
-    default=None,
-    help='Taskcluster access token',
-    )
+@cli_common.click.taskcluster_options
 @click.pass_context
 def cmd(ctx, project, quiet, nix_shell,
-        taskcluster_secrets,
+        taskcluster_secret,
         taskcluster_client_id,
         taskcluster_access_token,
         ):
@@ -266,7 +253,7 @@ def cmd(ctx, project, quiet, nix_shell,
                                            quiet=quiet,
                                            command=' '.join(command),
                                            nix_shell=nix_shell,
-                                           taskcluster_secrets=taskcluster_secrets,
+                                           taskcluster_secret=taskcluster_secret,
                                            taskcluster_client_id=taskcluster_client_id,
                                            taskcluster_access_token=taskcluster_access_token,
                                            )
