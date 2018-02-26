@@ -260,14 +260,14 @@ def get_pushes_changesets(push_id, push_id_end):
 
 
 def get_changeset_data(changeset):
-    if changeset not in changeset_cache:
+    if changeset[:12] not in changeset_cache:
         r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % changeset)
         rev = r.json()
         push_id = int(rev['pushid'])
 
         get_pushes(push_id)
 
-    return changeset_cache[changeset]
+    return changeset_cache[changeset[:12]]
 
 
 def get_coverage_build(changeset):

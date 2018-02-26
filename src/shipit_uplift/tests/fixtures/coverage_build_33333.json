@@ -1,0 +1,34 @@
+{
+	"info": {
+        	"8a389e3576db8de5050999777d82aead0a8c62a9": {
+        	    "build_changeset": "474d58c9137360c0fa1c85cdd11e3313b33b7cad",
+        	    "diffs": [],
+        	    "git_build_changeset": "0d9139ed76e220465d06de7c4f6c2658115387a4",
+        	    "overall_cur": "59.62965",
+        	    "overall_prev": "59.62246"
+        	},
+        	"6d6882f5e95d7a46da4f48d903766114a4a9cc06": {
+        	    "build_changeset": "474d58c9137360c0fa1c85cdd11e3313b33b7cad",
+        	    "diffs": [],
+        	    "git_build_changeset": "0d9139ed76e220465d06de7c4f6c2658115387a4",
+        	    "overall_cur": "59.62965",
+        	    "overall_prev": "59.62246"
+        	}
+	},
+	"summary": {
+        	"8a389e3576db8de5050999777d82aead0a8c62a9": {
+        	    "build_changeset": "474d58c9137360c0fa1c85cdd11e3313b33b7cad",
+        	    "commit_added": 0,
+        	    "commit_covered": 0,
+        	    "overall_cur": "59.62965",
+        	    "overall_prev": "59.62246"
+        	},
+        	"6d6882f5e95d7a46da4f48d903766114a4a9cc06": {
+        	    "build_changeset": "474d58c9137360c0fa1c85cdd11e3313b33b7cad",
+        	    "commit_added": 0,
+        	    "commit_covered": 0,
+        	    "overall_cur": "59.62965",
+        	    "overall_prev": "59.62246"
+        	}
+	}
+}

@@ -11,9 +11,12 @@ import json
 import os
 import pickle
 import pytest
+import subprocess
+import io
 
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
+WORKER_MODULE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'shipit_uplift', 'worker.py')
 
 
 @pytest.fixture(scope='session')
@@ -118,3 +121,43 @@ def header_bot(app):
     '''
     from shipit_uplift.config import SCOPES_BOT
     return hawk_header(SCOPES_BOT)
+
+
+@pytest.fixture(scope='session')
+def coverage_changeset_by_file():
+    with open(os.path.join(FIXTURES_DIR, 'coverage_changeset_by_file.json')) as f:
+        changeset_by_file_info = json.load(f)
+
+    for entry in changeset_by_file_info:
+        entry['data'] = {int(key): value for key, value in entry['data'].items()}
+
+    return changeset_by_file_info
+
+
+@pytest.fixture(scope='session')
+def coverage_builds():
+    paths = glob.glob(os.path.join(FIXTURES_DIR, 'coverage_build_*.json'))
+    builds = {'info': {}, 'summary': {}}
+    for path in sorted(paths):
+        with open(path) as f:
+            build_data = json.load(f)
+        builds['info'].update(build_data['info'])
+        builds['summary'].update(build_data['summary'])
+
+    return builds
+
+
+@pytest.yield_fixture(scope='session', autouse=True)
+def run_worker():
+    '''
+    Run a worker in the background during the tests
+    '''
+    with subprocess.Popen(
+            ['python', '-u', WORKER_MODULE],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT) as proc:
+        for stdout_line in io.TextIOWrapper(proc.stdout, encoding='utf-8'):
+            if 'Listening on' in stdout_line:
+                break
+        yield
+        proc.terminate()
