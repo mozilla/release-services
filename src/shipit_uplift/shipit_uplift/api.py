@@ -112,7 +112,7 @@ def update_bug(bugzilla_id):
     # Load bug
     try:
         bug = BugResult.query.filter_by(bugzilla_id=bugzilla_id).one()
-    except:
+    except NoResultFound:
         raise Exception('Missing bug {}'.format(bugzilla_id))
 
     # Browse changes
@@ -247,7 +247,7 @@ def create_bug():
         # Get or create user in db
         try:
             contrib = Contributor.query.filter_by(bugzilla_id=user['id']).one()
-        except:
+        except NoResultFound:
             contrib = Contributor(bugzilla_id=user['id'])
             contrib.name = user.get('real_name', user['name'])
             contrib.email = user['email']

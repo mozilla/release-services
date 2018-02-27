@@ -260,6 +260,19 @@ in skipOverrides {
     '';
   };
 
+  "attrs" = self: old: {
+    propagatedBuildInputs =
+      builtins.filter
+        (x: (builtins.parseDrvName x.name).name != "${python.__old.python.libPrefix}-${python.__old.python.libPrefix}-pytest")
+        old.propagatedBuildInputs;
+  };
+
+  "taskcluster" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|six>=1.10.0,<1.11|six|" setup.py
+    '';
+  };
+
   "RBTools" = self: old: {
     patches = [
          (pkgs.fetchurl {
