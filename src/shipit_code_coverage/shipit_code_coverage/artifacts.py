@@ -2,9 +2,9 @@
 import os
 
 from cli_common.log import get_logger
+from cli_common.utils import mkdir, ThreadPoolExecutorResult
 
 from shipit_code_coverage import taskcluster
-from shipit_code_coverage.utils import mkdir, ThreadPoolExecutorResult
 
 
 logger = get_logger(__name__)

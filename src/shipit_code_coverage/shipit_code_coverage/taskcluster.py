@@ -4,7 +4,7 @@ import shutil
 from zipfile import BadZipFile, is_zipfile
 import requests
 
-from shipit_code_coverage.utils import retry
+from cli_common.utils import retry
 
 index_base = 'https://index.taskcluster.net/v1/'
 queue_base = 'https://queue.taskcluster.net/v1/'
@@ -84,8 +84,7 @@ def download_artifact(artifact_path, task_id, artifact_name):
         if artifact_path.endswith('.zip') and not is_zipfile(artifact_path):
             raise BadZipFile('File is not a zip file')
 
-    if not retry(perform_download):
-        raise Exception('Failed downloading artifact in %s' % artifact_path)
+    retry(perform_download)
 
 
 TEST_PLATFORMS = ['test-linux64-ccov/opt', 'test-windows10-64-ccov/debug']

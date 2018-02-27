@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from cli_common.pulse import run_consumer
 from cli_common.log import get_logger
+from cli_common.utils import retry
 from shipit_pulse_listener.hook import Hook, PulseHook
 from shipit_pulse_listener import task_monitoring
 import requests
@@ -255,23 +256,31 @@ class HookCodeCoverage(PulseHook):
 
             return None
 
-        list_url = 'https://queue.taskcluster.net/v1/task-group/' + group_id + '/list'
+        list_url = 'https://queue.taskcluster.net/v1/task-group/{}/list'.format(group_id)
 
-        r = requests.get(list_url, params={
-            'limit': 200
-        })
-        reply = r.json()
-        task = maybe_trigger(reply['tasks'])
-
-        while task is None and 'continuationToken' in reply:
+        def retrieve_coverage_task():
             r = requests.get(list_url, params={
-                'limit': 200,
-                'continuationToken': reply['continuationToken']
+                'limit': 200
             })
+            r.raise_for_status()
             reply = r.json()
             task = maybe_trigger(reply['tasks'])
 
-        return task
+            while task is None and 'continuationToken' in reply:
+                r = requests.get(list_url, params={
+                    'limit': 200,
+                    'continuationToken': reply['continuationToken']
+                })
+                r.raise_for_status()
+                reply = r.json()
+                task = maybe_trigger(reply['tasks'])
+
+            return task
+
+        try:
+            return retry(retrieve_coverage_task)
+        except Exception:
+            return None
 
     def parse(self, body):
         '''
