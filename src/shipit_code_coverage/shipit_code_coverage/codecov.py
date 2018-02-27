@@ -248,7 +248,7 @@ class CodeCov(object):
                     test_iter = enumerate(tests_data['result.test'])
                     chunk_test_iter = ((taskcluster.get_platform(task_names[i]), taskcluster.get_chunk(task_names[i]), test) for i, test in test_iter)
                     c.executemany('INSERT INTO chunk_to_test VALUES (?,?,?)', chunk_test_iter)
-                except:
+                except KeyError:
                     # ActiveData is failing too often, so we need to ignore the error here.
                     pass
 
