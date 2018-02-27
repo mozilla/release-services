@@ -260,6 +260,13 @@ in skipOverrides {
     '';
   };
 
+  "attrs" = self: old: {
+    propagatedBuildInputs =
+      builtins.filter
+        (x: (builtins.parseDrvName x.name).name != "${python.__old.python.libPrefix}-${python.__old.python.libPrefix}-pytest")
+        old.propagatedBuildInputs;
+  };
+
   "RBTools" = self: old: {
     patches = [
          (pkgs.fetchurl {
