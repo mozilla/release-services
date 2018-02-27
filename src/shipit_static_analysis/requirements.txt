@@ -1,6 +1,5 @@
 -e ./../../lib/cli_common[sentry,pulse,taskcluster,mercurial] #egg=mozilla-cli-common
 
-libmozdata
 RBTools
 PyYAML
 parsepatch
