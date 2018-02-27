@@ -262,6 +262,7 @@ class HookCodeCoverage(PulseHook):
             r = requests.get(list_url, params={
                 'limit': 200
             })
+            r.raise_for_status()
             reply = r.json()
             task = maybe_trigger(reply['tasks'])
 
@@ -270,6 +271,7 @@ class HookCodeCoverage(PulseHook):
                     'limit': 200,
                     'continuationToken': reply['continuationToken']
                 })
+                r.raise_for_status()
                 reply = r.json()
                 task = maybe_trigger(reply['tasks'])
 
