@@ -232,9 +232,8 @@ in skipOverrides {
   };
 
   "libmozdata" = self: old: {
-    # Remove useless dependencies
+    # Remove useless dependency
     patchPhase = ''
-      sed -i -e "s|mercurial>=3.9.1; python_version < '3.0'||" requirements.txt
       sed -i -e "s|setuptools>=28.6.1||" requirements.txt
     '';
   };
