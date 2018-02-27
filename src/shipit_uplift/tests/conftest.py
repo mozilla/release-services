@@ -11,12 +11,9 @@ import json
 import os
 import pickle
 import pytest
-import subprocess
-import io
 
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
-WORKER_MODULE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'shipit_uplift', 'worker.py')
 
 
 @pytest.fixture(scope='session')
@@ -145,19 +142,3 @@ def coverage_builds():
         builds['summary'].update(build_data['summary'])
 
     return builds
-
-
-@pytest.yield_fixture(scope='session', autouse=True)
-def run_worker():
-    '''
-    Run a worker in the background during the tests
-    '''
-    with subprocess.Popen(
-            ['python', '-u', WORKER_MODULE],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT) as proc:
-        for stdout_line in io.TextIOWrapper(proc.stdout, encoding='utf-8'):
-            if 'Listening on' in stdout_line:
-                break
-        yield
-        proc.terminate()
