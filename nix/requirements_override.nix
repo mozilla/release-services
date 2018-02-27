@@ -267,6 +267,12 @@ in skipOverrides {
         old.propagatedBuildInputs;
   };
 
+  "taskcluster" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|six>=1.10.0,<1.11|six|" setup.py
+    '';
+  };
+
   "RBTools" = self: old: {
     patches = [
          (pkgs.fetchurl {
