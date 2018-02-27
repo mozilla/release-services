@@ -71,7 +71,7 @@ def main(phabricator,
                 )
 
     # Setup settings before stats
-    settings.setup(secrets['APP_CHANNEL'])
+    settings.setup(secrets['APP_CHANNEL'], cache_root)
 
     # Setup statistics
     datadog_api_key = secrets.get('DATADOG_API_KEY')
@@ -100,7 +100,7 @@ def main(phabricator,
             for r in mozreview.split(' ')
         ]
 
-    w = Workflow(cache_root, reporters, secrets['ANALYZERS'])
+    w = Workflow(reporters, secrets['ANALYZERS'])
     for revision in revisions:
         try:
             w.run(revision)

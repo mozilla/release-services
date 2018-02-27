@@ -3,6 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
+import os
+
 import requests
 import yaml
 
@@ -23,13 +27,23 @@ class Settings(object):
         self.config = None
         self.app_channel = None
 
-    def setup(self, app_channel):
+        # Paths
+        self.cache_root = None
+        self.repo_dir = None
+        self.repo_shared_dir = None
+
+    def setup(self, app_channel, cache_root):
         self.app_channel = app_channel
         self.download({
             'cpp_extensions': frozenset(['.c', '.h', '.cpp', '.cc', '.cxx', '.hh', '.hpp', '.hxx', '.m', '.mm']),
         })
         assert 'clang_checkers' in self.config
         assert 'target' in self.config
+
+        assert os.path.isdir(cache_root)
+        self.cache_root = cache_root
+        self.repo_dir = os.path.join(self.cache_root, 'sa-central')
+        self.repo_shared_dir = os.path.join(self.cache_root, 'sa-central-shared')
 
     def __getattr__(self, key):
         if key not in self.config:

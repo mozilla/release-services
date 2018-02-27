@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os.path
 
 BAD_CPP_SRC = '''#include <demo>
 int \tmain(void){
@@ -34,13 +35,13 @@ int *ret_ptr() {
 '''
 
 
-def test_expanded_macros(mock_stats):
+def test_expanded_macros(mock_stats, test_cpp):
     '''
     Test expanded macros are detected by clang issue
     '''
     from shipit_static_analysis.clang.tidy import ClangTidyIssue
-    parts = ('src/test.cpp', '42', '51', 'error', 'dummy message', 'dummy-check')
-    issue = ClangTidyIssue(parts, '/workdir')
+    parts = ('test.cpp', '42', '51', 'error', 'dummy message', 'dummy-check')
+    issue = ClangTidyIssue(parts)
     assert issue.is_problem()
     assert issue.line == 42
     assert issue.char == 51
@@ -48,13 +49,13 @@ def test_expanded_macros(mock_stats):
     assert issue.is_expanded_macro() is False
 
     # Add a note starting with "expanded from macro..."
-    parts = ('src/test.cpp', '42', '51', 'note', 'expanded from macro Blah dummy.cpp', 'dummy-check-note')
-    issue.notes.append(ClangTidyIssue(parts, '/workdir'))
+    parts = ('test.cpp', '42', '51', 'note', 'expanded from macro Blah dummy.cpp', 'dummy-check-note')
+    issue.notes.append(ClangTidyIssue(parts))
     assert issue.is_expanded_macro() is True
 
     # Add another note does not change it
-    parts = ('src/test.cpp', '42', '51', 'note', 'This is not an expanded macro', 'dummy-check-note')
-    issue.notes.append(ClangTidyIssue(parts, '/workdir'))
+    parts = ('test.cpp', '42', '51', 'note', 'This is not an expanded macro', 'dummy-check-note')
+    issue.notes.append(ClangTidyIssue(parts))
     assert issue.is_expanded_macro() is True
 
     # But if we swap them, it does not work anymore
@@ -62,18 +63,19 @@ def test_expanded_macros(mock_stats):
     assert issue.is_expanded_macro() is False
 
 
-def test_clang_format(mock_repository, mock_stats, mock_clang, mock_revision, mock_workflow):
+def test_clang_format(mock_config, mock_repository, mock_stats, mock_clang, mock_revision, mock_workflow):
     '''
     Test clang-format runner
     '''
     from shipit_static_analysis.clang.format import ClangFormat, ClangFormatIssue
 
     # Write badly formatted c file
-    bad_file = mock_repository.directory.join('bad.cpp')
-    bad_file.write(BAD_CPP_SRC)
+    bad_file = os.path.join(mock_config.repo_dir, 'bad.cpp')
+    with open(bad_file, 'w') as f:
+        f.write(BAD_CPP_SRC)
 
     # Get formatting issues
-    cf = ClangFormat(str(mock_repository.directory.realpath()))
+    cf = ClangFormat()
     mock_revision.files = ['bad.cpp', ]
     mock_revision.lines = {
         'bad.cpp': [1, 2, 3],
@@ -94,7 +96,7 @@ def test_clang_format(mock_repository, mock_stats, mock_clang, mock_revision, mo
 
     # At the end of the process, original file is patched
     mock_workflow.build_improvement_patch(mock_revision, issues)
-    assert bad_file.read() == BAD_CPP_VALID
+    assert open(bad_file).read() == BAD_CPP_VALID
 
     # Test stats
     mock_stats.flush()
@@ -118,20 +120,12 @@ def test_clang_tidy(mock_repository, mock_config, mock_clang, mock_stats, mock_r
     from shipit_static_analysis.clang.tidy import ClangTidy, ClangTidyIssue
 
     # Init clang tidy runner
-    repo_dir = mock_repository.directory
-    build_dir = repo_dir.mkdir('../build')
-    ct = ClangTidy(
-        str(repo_dir.realpath()),
-        str(build_dir.realpath())
-    )
-
-    # Write dummy 3rd party file
-    third_party = repo_dir.join(mock_config.third_party)
-    third_party.write('test/dummy')
+    ct = ClangTidy()
 
     # Write badly formatted c file
-    bad_file = repo_dir.join('bad.cpp')
-    bad_file.write(BAD_CPP_TIDY)
+    bad_file = os.path.join(mock_config.repo_dir, 'bad.cpp')
+    with open(bad_file, 'w') as f:
+        f.write(BAD_CPP_TIDY)
 
     # Get issues found by clang-tidy
     mock_revision.files = ['bad.cpp', ]
@@ -162,7 +156,7 @@ def test_clang_tidy(mock_repository, mock_config, mock_clang, mock_stats, mock_r
     assert metrics[0][1] > 0
 
 
-def test_clang_tidy_checks(mock_repository, mock_clang):
+def test_clang_tidy_checks(mock_config, mock_repository, mock_clang):
     '''
     Test that all our clang-tidy checks actually exist
     '''
@@ -170,11 +164,7 @@ def test_clang_tidy_checks(mock_repository, mock_clang):
     from shipit_static_analysis.config import CONFIG_URL, settings
 
     # Get the set of all available checks that the local clang-tidy offers
-    repo_dir = mock_repository.directory
-    clang_tidy = ClangTidy(
-        str(repo_dir.realpath()),
-        validate_checks=False,
-    )
+    clang_tidy = ClangTidy(validate_checks=False)
 
     # Verify that Firefox's clang-tidy configuration actually specifies checks
     assert len(settings.clang_checkers) > 0, \

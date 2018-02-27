@@ -43,9 +43,7 @@ class ClangFormat(object):
     List potential issues on modified files
     from a patch
     '''
-    def __init__(self, repo_dir):
-        assert os.path.isdir(repo_dir)
-        self.repo_dir = repo_dir
+    def __init__(self):
         self.binary = os.path.join(
             os.environ['MOZBUILD_STATE_PATH'],
             'clang-tools', 'clang', 'bin', 'clang-format',
@@ -77,7 +75,7 @@ class ClangFormat(object):
         '''
         Clang-format is very fast, no need for a worker queue here
         '''
-        full_path = os.path.join(self.repo_dir, filename)
+        full_path = os.path.join(settings.repo_dir, filename)
         assert os.path.exists(full_path), \
             'Modified file not found {}'.format(full_path)
 
@@ -93,7 +91,7 @@ class ClangFormat(object):
         logger.info('Running clang-format', cmd=' '.join(cmd))
 
         # Run command
-        clang_output = subprocess.check_output(cmd, cwd=self.repo_dir)
+        clang_output = subprocess.check_output(cmd, cwd=settings.repo_dir)
 
         # Compare output with original file
         src_lines = [x.rstrip('\n') for x in open(full_path).readlines()]

@@ -32,14 +32,11 @@ class Workflow(object):
     '''
     Static analysis workflow
     '''
-    def __init__(self, cache_root, reporters, analyzers):
+    def __init__(self, reporters, analyzers):
         assert isinstance(analyzers, list)
         assert len(analyzers) > 0, \
             'No analyzers specified, will not run.'
         self.analyzers = analyzers
-        self.cache_root = cache_root
-        assert os.path.isdir(self.cache_root), \
-            'Cache root {} is not a dir.'.format(self.cache_root)
         assert 'MOZCONFIG' in os.environ, \
             'Missing MOZCONFIG in environment'
 
@@ -68,14 +65,12 @@ class Workflow(object):
         '''
         Clone mozilla-central
         '''
-        self.repo_dir = os.path.join(self.cache_root, 'sa-central')
-        shared_dir = os.path.join(self.cache_root, 'sa-central-shared')
-        logger.info('Clone mozilla central', dir=self.repo_dir)
+        logger.info('Clone mozilla central', dir=settings.repo_dir)
         cmd = hglib.util.cmdbuilder('robustcheckout',
                                     REPO_CENTRAL,
-                                    self.repo_dir,
+                                    settings.repo_dir,
                                     purge=True,
-                                    sharebase=shared_dir,
+                                    sharebase=settings.repo_shared_dir,
                                     branch=b'tip')
 
         cmd.insert(0, hglib.HGPATH)
@@ -85,7 +80,7 @@ class Workflow(object):
             raise hglib.error.CommandError(cmd, proc.returncode, out, err)
 
         # Open new hg client
-        return hglib.open(self.repo_dir)
+        return hglib.open(settings.repo_dir)
 
     def run(self, revision):
         '''
@@ -126,16 +121,16 @@ class Workflow(object):
             if revision.has_clang_files:
                 # Mach pre-setup with mozconfig
                 logger.info('Mach configure...')
-                run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
+                run_check(['gecko-env', './mach', 'configure'], cwd=settings.repo_dir)
 
                 logger.info('Mach compile db...')
-                run_check(['gecko-env', './mach', 'build-backend', '--backend=CompileDB'], cwd=self.repo_dir)
+                run_check(['gecko-env', './mach', 'build-backend', '--backend=CompileDB'], cwd=settings.repo_dir)
 
                 logger.info('Mach pre-export...')
-                run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
+                run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=settings.repo_dir)
 
                 logger.info('Mach export...')
-                run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
+                run_check(['gecko-env', './mach', 'build', 'export'], cwd=settings.repo_dir)
 
                 # Download clang build from Taskcluster
                 logger.info('Setup Taskcluster clang build...')
@@ -157,7 +152,7 @@ class Workflow(object):
             # Setup python environment
             logger.info('Mach lint setup...')
             cmd = ['gecko-env', './mach', 'lint', '--list']
-            run_check(cmd, cwd=self.repo_dir)
+            run_check(cmd, cwd=settings.repo_dir)
 
             # Always use mozlint
             if MOZLINT in self.analyzers:
@@ -173,7 +168,7 @@ class Workflow(object):
         for analyzer_class in analyzers:
             # Build analyzer
             logger.info('Run {}'.format(analyzer_class.__name__))
-            analyzer = analyzer_class(self.repo_dir)
+            analyzer = analyzer_class(settings.repo_dir)
 
             # Run analyzer on version and store generated issues
             issues += analyzer.run(revision)
@@ -206,7 +201,7 @@ class Workflow(object):
 
         # Apply a patch on each modified file
         for filename, file_issues in itertools.groupby(issues, lambda i: i.path):
-            full_path = os.path.join(self.repo_dir, filename)
+            full_path = os.path.join(settings.repo_dir, filename)
             assert os.path.exists(full_path), \
                 'Modified file not found {}'.format(full_path)
 
@@ -227,7 +222,7 @@ class Workflow(object):
                     'Generated patch {} application failed on {}'.format(patch_path, full_path)
 
         # Get clean Mercurial diff on modified files
-        files = list(map(lambda x: os.path.join(self.repo_dir, x).encode('utf-8'), revision.files))
+        files = list(map(lambda x: os.path.join(settings.repo_dir, x).encode('utf-8'), revision.files))
         diff = self.hg.diff(files)
         if diff is None or diff == b'':
             logger.info('No improvement patch')
