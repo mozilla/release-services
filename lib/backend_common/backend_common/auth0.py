@@ -130,7 +130,7 @@ def auth0_login():
     '''
     params = {
         'audience': 'login.taskcluster.net',
-        'scope': 'full-user-credentials openid',
+        'scope': 'taskcluster-credentials openid',
         'response_type': 'code',
         'client_id': flask.current_app.config.get('AUTH_CLIENT_ID'),
         'redirect_uri': flask.current_app.config.get('AUTH_REDIRECT_URI'),
