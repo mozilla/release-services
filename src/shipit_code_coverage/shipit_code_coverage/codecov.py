@@ -147,12 +147,9 @@ class CodeCov(object):
 
             logger.info('Suite report generated', suite=suite)
 
-        def generate_suite_report_task(suite):
-            return lambda: generate_suite_report(suite)
-
         with ThreadPoolExecutor(max_workers=2) as executor:
             for suite in self.suites:
-                executor.submit(generate_suite_report_task(suite))
+                executor.submit(generate_suite_report, suite)
 
     def generate_zero_coverage_report(self):
         report = self.generate_info(self.revision, out_format='coveralls+')
@@ -209,14 +206,12 @@ class CodeCov(object):
         return files.splitlines()
 
     def generate_chunk_mapping(self):
-        def get_files_task(platform, chunk):
-            return lambda: (platform, chunk, self.generate_files_list(True, platform=platform, chunk=chunk))
-
         with ThreadPoolExecutor(max_workers=4) as executor:
-            futures = []
+            futures = {}
             for platform in ['linux', 'windows']:
                 for chunk in self.artifactsHandler.get_chunks():
-                    futures.append(executor.submit(get_files_task(platform, chunk)))
+                    future = executor.submit(self.generate_files_list, True, platform=platform, chunk=chunk)
+                    futures[future] = (platform, chunk)
 
             with sqlite3.connect('chunk_mapping.sqlite') as conn:
                 c = conn.cursor()
@@ -224,7 +219,8 @@ class CodeCov(object):
                 c.execute('CREATE TABLE chunk_to_test (platform text, chunk text, path text)')
 
                 for future in concurrent.futures.as_completed(futures):
-                    (platform, chunk, files) = future.result()
+                    (platform, chunk) = futures[future]
+                    files = future.result()
                     c.executemany('INSERT INTO file_to_chunk VALUES (?,?,?)', ((f, platform, chunk) for f in files))
 
                 try:
@@ -259,10 +255,10 @@ class CodeCov(object):
     def go(self):
         with ThreadPoolExecutorResult(max_workers=2) as executor:
             # Thread 1 - Download coverage artifacts.
-            executor.submit(lambda: self.artifactsHandler.download_all())
+            executor.submit(self.artifactsHandler.download_all)
 
             # Thread 2 - Clone mozilla-central.
-            executor.submit(lambda: self.clone_mozilla_central(self.revision))
+            executor.submit(self.clone_mozilla_central, self.revision)
 
         if self.from_pulse:
             self.githubUtils.update_geckodev_repo()
@@ -276,8 +272,8 @@ class CodeCov(object):
             logger.info('Report generated successfully')
 
             with ThreadPoolExecutorResult(max_workers=2) as executor:
-                executor.submit(lambda: uploader.coveralls(output))
-                executor.submit(lambda: uploader.codecov(output, commit_sha))
+                executor.submit(uploader.coveralls, output)
+                executor.submit(uploader.codecov, output, commit_sha)
 
             logger.info('Waiting for build to be ingested by Codecov...')
             # Wait until the build has been ingested by Codecov.
