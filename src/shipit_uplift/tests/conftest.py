@@ -118,3 +118,27 @@ def header_bot(app):
     '''
     from shipit_uplift.config import SCOPES_BOT
     return hawk_header(SCOPES_BOT)
+
+
+@pytest.fixture(scope='session')
+def coverage_changeset_by_file():
+    with open(os.path.join(FIXTURES_DIR, 'coverage_changeset_by_file.json')) as f:
+        changeset_by_file_info = json.load(f)
+
+    for entry in changeset_by_file_info:
+        entry['data'] = {int(key): value for key, value in entry['data'].items()}
+
+    return changeset_by_file_info
+
+
+@pytest.fixture(scope='session')
+def coverage_builds():
+    paths = glob.glob(os.path.join(FIXTURES_DIR, 'coverage_build_*.json'))
+    builds = {'info': {}, 'summary': {}}
+    for path in sorted(paths):
+        with open(path) as f:
+            build_data = json.load(f)
+        builds['info'].update(build_data['info'])
+        builds['summary'].update(build_data['summary'])
+
+    return builds
