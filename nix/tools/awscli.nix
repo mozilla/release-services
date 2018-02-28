@@ -1,4 +1,4 @@
-# generated using pypi2nix tool (version: 1.8.0)
+# generated using pypi2nix tool (version: 1.8.1)
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
@@ -18,6 +18,18 @@ let
     inherit pkgs;
     inherit (pkgs) stdenv;
     python = pkgs.python35;
+    # patching pip so it does not try to remove files when running nix-shell
+    overrides =
+      self: super: {
+        bootstrapped-pip = super.bootstrapped-pip.overrideDerivation (old: {
+          patchPhase = old.patchPhase + ''
+            sed -i \
+              -e "s|paths_to_remove.remove(auto_confirm)|#paths_to_remove.remove(auto_confirm)|"  \
+              -e "s|self.uninstalled = paths_to_remove|#self.uninstalled = paths_to_remove|"  \
+                $out/${pkgs.python35.sitePackages}/pip/req/req_install.py
+          '';
+        });
+      };
   };
 
   commonBuildInputs = [];
@@ -31,11 +43,13 @@ let
         buildInputs = [ makeWrapper ] ++ (builtins.attrValues pkgs);
         buildCommand = ''
           mkdir -p $out/bin
-          ln -s ${pythonPackages.python.interpreter}               $out/bin/${pythonPackages.python.executable}
-          for dep in ${builtins.concatStringsSep " "               (builtins.attrValues pkgs)}; do
+          ln -s ${pythonPackages.python.interpreter} \
+              $out/bin/${pythonPackages.python.executable}
+          for dep in ${builtins.concatStringsSep " "
+              (builtins.attrValues pkgs)}; do
             if [ -d "$dep/bin" ]; then
               for prog in "$dep/bin/"*; do
-                if [ -f $prog ]; then
+                if [ -x "$prog" ] && [ -f "$prog" ]; then
                   ln -s $prog $out/bin/`basename $prog`
                 fi
               done
@@ -46,6 +60,8 @@ let
           done
           pushd $out/bin
           ln -s ${pythonPackages.python.executable} python
+          ln -s ${pythonPackages.python.executable} \
+              python3
           popd
         '';
         passthru.interpreter = pythonPackages.python;
@@ -56,7 +72,9 @@ let
       mkDerivation = pythonPackages.buildPythonPackage;
       packages = pkgs;
       overrideDerivation = drv: f:
-        pythonPackages.buildPythonPackage (drv.drvAttrs // f drv.drvAttrs);
+        pythonPackages.buildPythonPackage (
+          drv.drvAttrs // f drv.drvAttrs // { meta = drv.meta; }
+        );
       withPackages = pkgs'':
         withPackages (pkgs // pkgs'');
     };
@@ -64,7 +82,6 @@ let
   python = withPackages {};
 
   generated = self: {
-
     "PyYAML" = python.mkDerivation {
       name = "PyYAML-3.12";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/4a/85/db5a2df477072b2902b0eb892feb37d88ac635d36245a72a6a69b23b383a/PyYAML-3.12.tar.gz"; sha256 = "592766c6303207a20efc445587778322d7f73b161bd994f227adaa341ba212ab"; };
@@ -72,17 +89,15 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://pyyaml.org/wiki/PyYAML";
         license = licenses.mit;
         description = "YAML parser and emitter for Python";
       };
     };
 
-
-
     "awscli" = python.mkDerivation {
-      name = "awscli-1.11.76";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/66/21/44b38c0373e0d1765addce0c3e49f0a3f9abcf0be2929111dafc7a4dc19b/awscli-1.11.76.tar.gz"; sha256 = "8f19e13e2741e40054be641e0bd2fce75ea336e694f809c6717a21ad03bf349c"; };
+      name = "awscli-1.14.48";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/67/3c/837be8ec0e5a7dc5a87bdc8c139e1421b80b9749906a03ca8e14d350f8fb/awscli-1.14.48.tar.gz"; sha256 = "d81c6c85a477c90fa607ce07c98249ab70b04fa660135242003366f4be8f6472"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -94,17 +109,15 @@ let
       self."s3transfer"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://aws.amazon.com/cli/";
         license = licenses.asl20;
         description = "Universal Command Line Environment for AWS.";
       };
     };
 
-
-
     "botocore" = python.mkDerivation {
-      name = "botocore-1.5.39";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/8e/7c/d30801e93b84846a2383ad1767bb0510a598c42c17df3dab5720a780f475/botocore-1.5.39.tar.gz"; sha256 = "d89c3d79beaf4555885f5c0f756e287c10075d4534ad61b9072420402157e813"; };
+      name = "botocore-1.9.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3f/f4/331e9e7a19b0474061254d40bcdfa69435adbff03e42ea35a2fae13d5f29/botocore-1.9.1.tar.gz"; sha256 = "2a673d9289fc5d14b45fa904673d8f6d226ebfc238c0f354ac8d4e8955329152"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -113,13 +126,11 @@ let
       self."python-dateutil"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "https://github.com/boto/botocore";
         license = licenses.asl20;
         description = "Low-level, data-driven core of boto 3.";
       };
     };
-
-
 
     "colorama" = python.mkDerivation {
       name = "colorama-0.3.7";
@@ -128,75 +139,65 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "https://github.com/tartley/colorama";
         license = licenses.bsdOriginal;
         description = "Cross-platform colored terminal text.";
       };
     };
 
-
-
     "docutils" = python.mkDerivation {
-      name = "docutils-0.13.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/05/25/7b5484aca5d46915493f1fd4ecb63c38c333bd32aa9ad6e19da8d08895ae/docutils-0.13.1.tar.gz"; sha256 = "718c0f5fb677be0f34b781e04241c4067cbd9327b66bdd8e763201130f5175be"; };
+      name = "docutils-0.14";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/84/f4/5771e41fdf52aabebbadecc9381d11dea0fa34e4759b4071244fa094804c/docutils-0.14.tar.gz"; sha256 = "51e64ef2ebfb29cae1faa133b3710143496eca21c530f3f71424d77687764274"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://docutils.sourceforge.net/";
         license = licenses.publicDomain;
         description = "Docutils -- Python Documentation Utilities";
       };
     };
 
-
-
     "jmespath" = python.mkDerivation {
-      name = "jmespath-0.9.2";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/96/6e/0723cccec195a37de6a428ad8879fe063b6debe5c855444e9285b27d253e/jmespath-0.9.2.tar.gz"; sha256 = "54c441e2e08b23f12d7fa7d8e6761768c47c969e6aed10eead57505ba760aee9"; };
+      name = "jmespath-0.9.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e5/21/795b7549397735e911b032f255cff5fb0de58f96da794274660bca4f58ef/jmespath-0.9.3.tar.gz"; sha256 = "6a81d4c9aa62caf061cb517b4d9ad1dd300374cd4706997aff9cd6aedd61fc64"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "https://github.com/jmespath/jmespath.py";
         license = licenses.mit;
         description = "JSON Matching Expressions";
       };
     };
 
-
-
     "pyasn1" = python.mkDerivation {
-      name = "pyasn1-0.2.3";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/69/17/eec927b7604d2663fef82204578a0056e11e0fc08d485fdb3b6199d9b590/pyasn1-0.2.3.tar.gz"; sha256 = "738c4ebd88a718e700ee35c8d129acce2286542daa80a82823a7073644f706ad"; };
+      name = "pyasn1-0.4.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/eb/3d/b7d0fdf4a882e26674c68c20f40682491377c4db1439870f5b6f862f76ed/pyasn1-0.4.2.tar.gz"; sha256 = "d258b0a71994f7770599835249cece1caef3c70def868c4915e6e5ca49b67d15"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "https://github.com/etingof/pyasn1";
         license = licenses.bsdOriginal;
         description = "ASN.1 types and codecs";
       };
     };
 
-
-
     "python-dateutil" = python.mkDerivation {
-      name = "python-dateutil-2.6.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/51/fc/39a3fbde6864942e8bb24c93663734b74e281b984d1b8c4f95d64b0c21f6/python-dateutil-2.6.0.tar.gz"; sha256 = "62a2f8df3d66f878373fd0072eacf4ee52194ba302e00082828e0d263b0418d2"; };
+      name = "python-dateutil-2.6.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/54/bb/f1db86504f7a49e1d9b9301531181b00a1c7325dc85a29160ee3eaa73a54/python-dateutil-2.6.1.tar.gz"; sha256 = "891c38b2a02f5bb1be3e4793866c8df49c7d19baabf9c1bad62547e0b4866aca"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."six"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "https://dateutil.readthedocs.io";
         license = licenses.bsdOriginal;
         description = "Extensions to the standard Python datetime module";
       };
     };
-
-
 
     "rsa" = python.mkDerivation {
       name = "rsa-3.4.2";
@@ -207,54 +208,53 @@ let
       self."pyasn1"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "https://stuvel.eu/rsa";
         license = "License :: OSI Approved :: Apache Software License";
         description = "Pure-Python RSA implementation";
       };
     };
 
-
-
     "s3transfer" = python.mkDerivation {
-      name = "s3transfer-0.1.10";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/8b/13/517e8ec7c13f0bb002be33fbf53c4e3198c55bb03148827d72064426fe6e/s3transfer-0.1.10.tar.gz"; sha256 = "ba1a9104939b7c0331dc4dd234d79afeed8b66edce77bbeeecd4f56de74a0fc1"; };
+      name = "s3transfer-0.1.13";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/9a/66/c6a5ae4dbbaf253bd662921b805e4972451a6d214d0dc9fb3300cb642320/s3transfer-0.1.13.tar.gz"; sha256 = "90dc18e028989c609146e241ea153250be451e05ecc0c2832565231dacdf59c1"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."botocore"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "https://github.com/boto/s3transfer";
         license = licenses.asl20;
         description = "An Amazon S3 Transfer Manager";
       };
     };
 
-
-
     "six" = python.mkDerivation {
-      name = "six-1.10.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/b3/b2/238e2590826bfdd113244a40d9d3eb26918bd798fc187e2360a8367068db/six-1.10.0.tar.gz"; sha256 = "105f8d68616f8248e24bf0e9372ef04d3cc10104f1980f54d57b2ce73a5ad56a"; };
+      name = "six-1.11.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/16/d8/bc6316cf98419719bd59c91742194c111b6f2e85abac88e496adefaf7afe/six-1.11.0.tar.gz"; sha256 = "70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "";
+        homepage = "http://pypi.python.org/pypi/six/";
         license = licenses.mit;
         description = "Python 2 and 3 compatibility utilities";
       };
     };
-
   };
-  overrides = import ./awscli_override.nix { inherit pkgs python; };
+  localOverridesFile = ./awscli_override.nix;
+  overrides = import localOverridesFile { inherit pkgs python; };
   commonOverrides = [
-
+    
   ];
+  allOverrides =
+    (if (builtins.pathExists localOverridesFile)
+     then [overrides] else [] ) ++ commonOverrides;
 
 in python.withPackages
    (fix' (pkgs.lib.fold
             extends
             generated
-            ([overrides] ++ commonOverrides)
+            allOverrides
          )
    )
