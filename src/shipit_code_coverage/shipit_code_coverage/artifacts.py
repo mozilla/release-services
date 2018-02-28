@@ -102,11 +102,8 @@ class ArtifactsHandler(object):
                 if STATUS_VALUE[status] > STATUS_VALUE[prev_task['status']['state']]:
                     download_tasks[(chunk_name, platform_name)] = test_task
 
-        def download_task(test_task):
-            return lambda: self.download(test_task)
-
         with ThreadPoolExecutorResult() as executor:
             for test_task in test_tasks:
-                executor.submit(download_task(test_task))
+                executor.submit(self.download, test_task)
 
         logger.info('Code coverage artifacts downloaded')
