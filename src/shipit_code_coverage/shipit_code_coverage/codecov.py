@@ -141,7 +141,8 @@ class CodeCov(object):
             self.generate_report(output, suite)
             os.remove('%s.info' % suite)
 
-            run_check(['tar', '-cjf', 'code-coverage-reports/%s.tar.bz2' % suite, suite])
+            with tarfile.open('code-coverage-reports/%s.tar.bz2' % suite, 'w:bz2') as tar:
+                tar.add(suite)
             shutil.rmtree(os.path.join(os.getcwd(), suite))
 
             logger.info('Suite report generated', suite=suite)
@@ -252,9 +253,8 @@ class CodeCov(object):
                     # ActiveData is failing too often, so we need to ignore the error here.
                     pass
 
-        tar = tarfile.open('code-coverage-reports/chunk_mapping.tar.xz', 'w:xz')
-        tar.add('chunk_mapping.sqlite')
-        tar.close()
+        with tarfile.open('code-coverage-reports/chunk_mapping.tar.xz', 'w:xz') as tar:
+            tar.add('chunk_mapping.sqlite')
 
     def go(self):
         with ThreadPoolExecutorResult(max_workers=2) as executor:
