@@ -3,7 +3,7 @@
 let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource mkRustPlatform;
-  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl cacert rustStable git llvm_4;
+  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl cacert rust git llvm_4;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
   inherit (releng_pkgs.tools) pypi2nix mercurial ;
@@ -114,8 +114,8 @@ let
       ++ [
         releng_pkgs.pkgs.gcc
         releng_pkgs.pkgs.lcov
-        rustStable.rustc
-        rustStable.cargo
+        rust.rustc
+        rust.cargo
         grcov
         releng_pkgs.gecko-env
       ];
@@ -129,8 +129,8 @@ let
       ln -s ${releng_pkgs.pkgs.gcc.cc}/bin/gcov $out/bin
       ln -s ${releng_pkgs.pkgs.lcov}/bin/lcov $out/bin
       ln -s ${releng_pkgs.pkgs.lcov}/bin/genhtml $out/bin
-      ln -s ${rustStable.rustc}/bin/rustc $out/bin
-      ln -s ${rustStable.cargo}/bin/cargo $out/bin
+      ln -s ${rust.rustc}/bin/rustc $out/bin
+      ln -s ${rust.cargo}/bin/cargo $out/bin
 
       # Gecko env
       ln -s ${releng_pkgs.gecko-env}/bin/gecko-env $out/bin
