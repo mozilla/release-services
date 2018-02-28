@@ -28,7 +28,7 @@ def generate(changeset):
 
         # Use hg annotate to report lines in their correct positions and to avoid
         # reporting lines that have been modified by a successive patch in the same push.
-        r = requests.get('https://hg.mozilla.org/mozilla-central/json-annotate/%s/%s' % (build_changeset, path))
+        r = requests.get('https://hg.mozilla.org/mozilla-central/json-annotate/{}/{}'.format(build_changeset, path))
         data = r.json()
         if 'not found in manifest' in data:
             # The file was removed.

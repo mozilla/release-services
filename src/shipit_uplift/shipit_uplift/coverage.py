@@ -14,7 +14,7 @@ from shipit_uplift import secrets
 
 @lru_cache(maxsize=2048)
 def get_github_commit(mercurial_commit):
-    r = requests.get('https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s' % mercurial_commit)
+    r = requests.get('https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/{}'.format(mercurial_commit))
     return r.text.split(' ')[0]
 
 
@@ -50,7 +50,7 @@ class CoverallsCoverage(Coverage):
     @staticmethod
     @lru_cache(maxsize=2048)
     def get_coverage(changeset):
-        r = requests.get(CoverallsCoverage.URL + '/builds/%s.json' % get_github_commit(changeset))
+        r = requests.get(CoverallsCoverage.URL + '/builds/{}.json'.format(get_github_commit(changeset)))
 
         if r.status_code != requests.codes.ok:
             raise CoverageException('Error while loading coverage data.')
@@ -64,7 +64,7 @@ class CoverallsCoverage(Coverage):
 
     @staticmethod
     def get_file_coverage(changeset, filename):
-        r = requests.get(CoverallsCoverage.URL + '/builds/%s/source.json' % get_github_commit(changeset), params={
+        r = requests.get(CoverallsCoverage.URL + '/builds/{}/source.json'.format(get_github_commit(changeset)), params={
             'filename': filename,
         })
 
@@ -100,12 +100,12 @@ class CoverallsCoverage(Coverage):
 class CodecovCoverage(Coverage):
     @staticmethod
     def _get(url=''):
-        return requests.get('https://codecov.io/api/gh/marco-c/gecko-dev%s?access_token=%s' % (url, secrets.CODECOV_ACCESS_TOKEN))
+        return requests.get('https://codecov.io/api/gh/marco-c/gecko-dev{}?access_token={}'.format(url, secrets.CODECOV_ACCESS_TOKEN))
 
     @staticmethod
     @lru_cache(maxsize=2048)
     def get_coverage(changeset):
-        r = CodecovCoverage._get('/commit/%s' % get_github_commit(changeset))
+        r = CodecovCoverage._get('/commit/{}'.format(get_github_commit(changeset)))
 
         if r.status_code != requests.codes.ok:
             raise CoverageException('Error while loading coverage data.')
@@ -119,18 +119,18 @@ class CodecovCoverage(Coverage):
 
     @staticmethod
     def get_file_coverage(changeset, filename):
-        r = CodecovCoverage._get('/src/%s/%s' % (get_github_commit(changeset), filename))
+        r = CodecovCoverage._get('/src/{}/{}'.format(get_github_commit(changeset), filename))
 
         try:
             data = r.json()
         except Exception as e:
-            raise CoverageException('Can\'t parse codecov.io report for %s@%s (response: %s)' % (filename, changeset, r.text))
+            raise CoverageException('Can\'t parse codecov.io report for {}@{} (response: {})'.format(filename, changeset, r.text))
 
         if r.status_code != requests.codes.ok:
             if data['error']['reason'] == 'File not found in report':
                 return None
 
-            raise CoverageException('Can\'t load codecov.io report for %s@%s (response: %s)' % (filename, changeset, r.text))
+            raise CoverageException('Can\'t load codecov.io report for {}@{} (response: {})'.format(filename, changeset, r.text))
 
         return dict([(int(l), v) for l, v in data['commit']['report']['files'][filename]['l'].items()])
 
@@ -144,14 +144,14 @@ class CodecovCoverage(Coverage):
     @staticmethod
     @lru_cache(maxsize=2048)
     def get_directory_coverage(changeset, prev_changeset, directory):
-        r = CodecovCoverage._get('/tree/%s/%s' % (get_github_commit(changeset), directory))
+        r = CodecovCoverage._get('/tree/{}/{}'.format(get_github_commit(changeset), directory))
 
         if r.status_code != requests.codes.ok:
             raise CoverageException('Error while loading coverage data.')
 
         cur_result = r.json()
 
-        r = CodecovCoverage._get('/tree/%s/%s' % (get_github_commit(prev_changeset), directory))
+        r = CodecovCoverage._get('/tree/{}/{}'.format(get_github_commit(prev_changeset), directory))
 
         if r.status_code != requests.codes.ok:
             raise CoverageException('Error while loading coverage data.')
@@ -225,7 +225,7 @@ changeset_cache = LRUCache(maxsize=MAX_CHANGESETS)
 
 
 def get_pushes(push_id):
-    r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?version=2&full=1&startID=%s&endID=%s' % (push_id - 1, push_id + 7))
+    r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?version=2&full=1&startID={}&endID={}'.format(push_id - 1, push_id + 7))
     data = r.json()
 
     for pushid, pushdata in data['pushes'].items():
@@ -261,7 +261,7 @@ def get_pushes_changesets(push_id, push_id_end):
 
 def get_changeset_data(changeset):
     if changeset[:12] not in changeset_cache:
-        r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % changeset)
+        r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/{}'.format(changeset))
         rev = r.json()
         push_id = int(rev['pushid'])
 
