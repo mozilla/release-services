@@ -33,7 +33,7 @@ andThen update msg ( model, cmd ) =
         ( model_, cmd_ ) =
             update msg model
     in
-        ( model_, Cmd.batch [ cmd, cmd_ ] )
+    ( model_, Cmd.batch [ cmd, cmd_ ] )
 
 
 onChange : (String -> msg) -> Html.Attribute msg
