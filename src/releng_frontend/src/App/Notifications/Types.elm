@@ -15,16 +15,20 @@ import RemoteData exposing (WebData)
 type alias Preference =
     { channel :
         String
-        -- Notification channel for preference (IRC, EMAIL etc)
+
+    -- Notification channel for preference (IRC, EMAIL etc)
     , name :
         Maybe String
-        -- Name of identity
+
+    -- Name of identity
     , target :
         String
-        -- Target on channel (irc chan, irc nick, email)
+
+    -- Target on channel (irc chan, irc nick, email)
     , urgency :
         String
-        -- Urgency level (LOW, NORMAL etc)
+
+    -- Urgency level (LOW, NORMAL etc)
     }
 
 
@@ -79,59 +83,76 @@ type Route
 type alias Identity =
     { name :
         String
-        -- Name of the identity
+
+    -- Name of the identity
     , preferences :
         Preferences
-        -- Notification preferences for the identity
+
+    -- Notification preferences for the identity
     }
 
 
 type alias Model =
     { identityUrl :
         String
-        -- URL of notification identity service
+
+    -- URL of notification identity service
     , policyUrl :
         String
-        -- URL of notification policy service
+
+    -- URL of notification policy service
     , input_value :
         Maybe String
-        -- Name of identity in the input field
+
+    -- Name of identity in the input field
     , retrieved_identity :
         Maybe String
-        -- Name of identity whose preferences are being displayed
+
+    -- Name of identity whose preferences are being displayed
     , preferences :
         WebData Preferences
-        -- Preferences retrieved from service for retrieved_identity
+
+    -- Preferences retrieved from service for retrieved_identity
     , api_problem :
         WebData ApiProblem
-        -- Elm representation of Problem JSON
+
+    -- Elm representation of Problem JSON
     , selected_preference :
         Maybe Preference
-        -- Currently selected preference, in case of editing
+
+    -- Currently selected preference, in case of editing
     , is_service_processing :
         Bool
-        -- Flag indicating the status of a request to the service
+
+    -- Flag indicating the status of a request to the service
     , new_identity :
         Form.Form () Identity
-        -- New identity to be added to service
+
+    -- New identity to be added to service
     , edit_form :
         Form.Form () Preference
-        -- Form to edit a notification preference
+
+    -- Form to edit a notification preference
     , new_message :
         Maybe String
-        -- New Message create form
+
+    -- New Message create form
     , uid :
         Maybe String
-        -- String in the UID input field
+
+    -- String in the UID input field
     , status_html :
         Maybe (Html Msg)
-        -- HTML with user interaction feedback
+
+    -- HTML with user interaction feedback
     , policies :
         WebData (List Policy)
-        -- List of policies retrieved from policy service
+
+    -- List of policies retrieved from policy service
     , retrieved_message :
         WebData MessageInstance
-        -- Message instance retrieved by pressign "search messages"
+
+    -- Message instance retrieved by pressign "search messages"
     }
 
 

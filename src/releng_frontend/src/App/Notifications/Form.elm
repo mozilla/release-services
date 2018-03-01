@@ -40,7 +40,7 @@ initializeFormFromPreference preference =
         urgencyTuple =
             Init.setString "urgency" preference.urgency
     in
-        Form.initial [ channelTuple, targetTuple, nameTuple, urgencyTuple ] preferenceValidation
+    Form.initial [ channelTuple, targetTuple, nameTuple, urgencyTuple ] preferenceValidation
 
 
 initializeNewIdentityForm : Form.Form () App.Notifications.Types.Identity
@@ -74,7 +74,7 @@ initializeNewIdentityForm =
                 , Form.Field.group [ channelTuple, targetTuple, nameTuple, highUrgencyTuple ]
                 ]
     in
-        Form.initial [ nameField, preferencesList ] newIdentityValidation
+    Form.initial [ nameField, preferencesList ] newIdentityValidation
 
 
 
@@ -153,33 +153,33 @@ editPreferenceFormView form =
                 Nothing ->
                     False
     in
-        div
+    div
+        [ class
+            ("justify-content-between form-group form-inline"
+                ++ (if is_missing_target == True then
+                        " has-danger"
+                    else
+                        ""
+                   )
+            )
+        ]
+        [ hr [] []
+        , Input.selectInput channel_options channel [ class "form-control" ]
+        , Input.textInput target
             [ class
-                ("justify-content-between form-group form-inline"
+                ("form-control"
                     ++ (if is_missing_target == True then
-                            " has-danger"
+                            " form-control-danger"
                         else
                             ""
                        )
                 )
             ]
-            [ hr [] []
-            , Input.selectInput channel_options channel [ class "form-control" ]
-            , Input.textInput target
-                [ class
-                    ("form-control"
-                        ++ (if is_missing_target == True then
-                                " form-control-danger"
-                            else
-                                ""
-                           )
-                    )
-                ]
-            , button [ onClick Form.Submit, class "btn btn-outline-primary form-control" ]
-                [ i [ class "fa fa-check" ] []
-                , text " Submit"
-                ]
+        , button [ onClick Form.Submit, class "btn btn-outline-primary form-control" ]
+            [ i [ class "fa fa-check" ] []
+            , text " Submit"
             ]
+        ]
 
 
 editNewPreferenceFormView : Form () App.Notifications.Types.Identity -> Int -> Html Form.Msg
@@ -244,30 +244,30 @@ editNewPreferenceFormView form_ i =
                 Nothing ->
                     True
     in
-        form
+    form
+        [ class
+            ("list-group-item form-inline d-inline-flex justify-content-between"
+                ++ (if is_missing_target == True then
+                        " has-danger"
+                    else
+                        ""
+                   )
+            )
+        ]
+        [ Input.selectInput channel_options channel [ class "form-control" ]
+        , Input.textInput target
             [ class
-                ("list-group-item form-inline d-inline-flex justify-content-between"
+                ("form-control align-self-stretch"
                     ++ (if is_missing_target == True then
-                            " has-danger"
+                            " form-control-danger"
                         else
                             ""
                        )
                 )
+            , placeholder placeholderText
             ]
-            [ Input.selectInput channel_options channel [ class "form-control" ]
-            , Input.textInput target
-                [ class
-                    ("form-control align-self-stretch"
-                        ++ (if is_missing_target == True then
-                                " form-control-danger"
-                            else
-                                ""
-                           )
-                    )
-                , placeholder placeholderText
-                ]
-            , span [ class ("float-xs-right badge badge-" ++ urgencyLevel urgency_string) ] [ text urgency_string ]
-            ]
+        , span [ class ("float-xs-right badge badge-" ++ urgencyLevel urgency_string) ] [ text urgency_string ]
+        ]
 
 
 newIdentityFormView : Form () App.Notifications.Types.Identity -> Html Form.Msg
@@ -287,35 +287,35 @@ newIdentityFormView form =
                 Nothing ->
                     False
     in
-        div
-            [ class
-                ("form-group"
+    div
+        [ class
+            ("form-group"
+                ++ (if is_missing_name == True then
+                        " has-danger"
+                    else
+                        ""
+                   )
+            )
+        ]
+        [ hr [] []
+        , h3 [] [ text "Create new identity" ]
+        , Input.textInput name
+            [ placeholder "New Identity Name"
+            , class
+                ("form-control"
                     ++ (if is_missing_name == True then
-                            " has-danger"
+                            " form-control-danger"
                         else
                             ""
                        )
                 )
             ]
-            [ hr [] []
-            , h3 [] [ text "Create new identity" ]
-            , Input.textInput name
-                [ placeholder "New Identity Name"
-                , class
-                    ("form-control"
-                        ++ (if is_missing_name == True then
-                                " form-control-danger"
-                            else
-                                ""
-                           )
-                    )
-                ]
-            , div [ class "list-group" ] <|
-                List.map (editNewPreferenceFormView form) list_indexes
-            , button [ onClick Form.Submit, class "btn btn-outline-primary form-control" ]
-                [ i [ class "fa fa-check" ] [ text " Submit Identity" ]
-                ]
+        , div [ class "list-group" ] <|
+            List.map (editNewPreferenceFormView form) list_indexes
+        , button [ onClick Form.Submit, class "btn btn-outline-primary form-control" ]
+            [ i [ class "fa fa-check" ] [ text " Submit Identity" ]
             ]
+        ]
 
 
 viewEditPreference : App.Notifications.Types.Model -> Html App.Notifications.Types.Msg

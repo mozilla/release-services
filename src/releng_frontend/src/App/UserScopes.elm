@@ -65,7 +65,7 @@ update msg model =
                         , Just request
                         )
             in
-                ( newModel, Cmd.none, hawkCmd )
+            ( newModel, Cmd.none, hawkCmd )
 
         FetchedScopes result ->
             let
@@ -73,10 +73,10 @@ update msg model =
                     Utils.decodeJsonString decoderScopes result
                         |> RemoteData.withDefault []
             in
-                ( { model | scopes = scopes }
-                , Cmd.none
-                , Nothing
-                )
+            ( { model | scopes = scopes }
+            , Cmd.none
+            , Nothing
+            )
 
 
 hawkResponse :

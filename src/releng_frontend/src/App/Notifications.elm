@@ -7,8 +7,8 @@ import App.Notifications.Api
 import App.Notifications.Form
 import App.Notifications.Types
 import App.Notifications.View
-import App.UserScopes
 import App.Types
+import App.UserScopes
 import App.Utils
 import Form
 import Hawk
@@ -136,7 +136,7 @@ update currentRoute msg model =
                     else
                         Just name
             in
-                ( { model | input_value = newName }, Cmd.none, Nothing )
+            ( { model | input_value = newName }, Cmd.none, Nothing )
 
         App.Notifications.Types.GetPreferencesRequest ->
             let
@@ -156,27 +156,27 @@ update currentRoute msg model =
                         [ Http.header "Accept" "application/json" ]
                         Http.emptyBody
             in
-                case model.input_value of
-                    Just val ->
-                        ( { model
-                            | is_service_processing = True
-                            , retrieved_identity = model.input_value
-                            , selected_preference = Nothing
-                            , preferences = Loading
-                            , policies = Loading
-                            , status_html = Nothing
-                          }
-                        , Cmd.none
-                        , Just request
-                        )
+            case model.input_value of
+                Just val ->
+                    ( { model
+                        | is_service_processing = True
+                        , retrieved_identity = model.input_value
+                        , selected_preference = Nothing
+                        , preferences = Loading
+                        , policies = Loading
+                        , status_html = Nothing
+                      }
+                    , Cmd.none
+                    , Just request
+                    )
 
-                    Nothing ->
-                        ( { model
-                            | status_html = Just (App.Utils.error App.Notifications.Types.GetPreferencesRequest "Please enter an identity.")
-                          }
-                        , Cmd.none
-                        , Nothing
-                        )
+                Nothing ->
+                    ( { model
+                        | status_html = Just (App.Utils.error App.Notifications.Types.GetPreferencesRequest "Please enter an identity.")
+                      }
+                    , Cmd.none
+                    , Nothing
+                    )
 
         App.Notifications.Types.GetPreferencesResponse response ->
             let
@@ -201,30 +201,30 @@ update currentRoute msg model =
                 err_resp =
                     ( resp_model, Cmd.none, Nothing )
             in
-                case response of
-                    Success resp ->
-                        let
-                            preferences =
-                                case decodeString App.Notifications.Api.preferenceDecoder resp of
-                                    Ok prefs ->
-                                        Success prefs
+            case response of
+                Success resp ->
+                    let
+                        preferences =
+                            case decodeString App.Notifications.Api.preferenceDecoder resp of
+                                Ok prefs ->
+                                    Success prefs
 
-                                    _ ->
-                                        NotAsked
-                        in
-                            ( { resp_model
-                                | api_problem = NotAsked
-                                , preferences = preferences
-                              }
-                            , Cmd.batch [ navigation_change_command, get_policies_command ]
-                            , Nothing
-                            )
+                                _ ->
+                                    NotAsked
+                    in
+                    ( { resp_model
+                        | api_problem = NotAsked
+                        , preferences = preferences
+                      }
+                    , Cmd.batch [ navigation_change_command, get_policies_command ]
+                    , Nothing
+                    )
 
-                    Failure err ->
-                        handleApiRequestFailure resp_model err App.Notifications.Types.GetPreferencesRequest
+                Failure err ->
+                    handleApiRequestFailure resp_model err App.Notifications.Types.GetPreferencesRequest
 
-                    _ ->
-                        err_resp
+                _ ->
+                    err_resp
 
         App.Notifications.Types.IdentityDeleteRequest ->
             let
@@ -244,41 +244,41 @@ update currentRoute msg model =
                         [ Http.header "Accept" "application/json" ]
                         Http.emptyBody
             in
-                ( { model
-                    | status_html = Nothing
-                    , is_service_processing = True
-                  }
-                , Cmd.none
-                , Just request
-                )
+            ( { model
+                | status_html = Nothing
+                , is_service_processing = True
+              }
+            , Cmd.none
+            , Just request
+            )
 
         App.Notifications.Types.IdentityDeleteResponse response ->
             let
                 resp_model =
                     { model | is_service_processing = False }
             in
-                case response of
-                    Success resp ->
-                        -- Means the body was null/body
-                        ( { resp_model
-                            | api_problem = NotAsked
-                            , status_html = Just (App.Utils.success App.Notifications.Types.ClearStatusMessage "Identity successfully deleted")
-                            , preferences = NotAsked
-                          }
-                        , Cmd.none
-                        , Nothing
-                        )
+            case response of
+                Success resp ->
+                    -- Means the body was null/body
+                    ( { resp_model
+                        | api_problem = NotAsked
+                        , status_html = Just (App.Utils.success App.Notifications.Types.ClearStatusMessage "Identity successfully deleted")
+                        , preferences = NotAsked
+                      }
+                    , Cmd.none
+                    , Nothing
+                    )
 
-                    Failure err ->
-                        handleApiRequestFailure resp_model err App.Notifications.Types.IdentityDeleteRequest
+                Failure err ->
+                    handleApiRequestFailure resp_model err App.Notifications.Types.IdentityDeleteRequest
 
-                    _ ->
-                        ( { resp_model
-                            | api_problem = NotAsked
-                          }
-                        , Cmd.none
-                        , Nothing
-                        )
+                _ ->
+                    ( { resp_model
+                        | api_problem = NotAsked
+                      }
+                    , Cmd.none
+                    , Nothing
+                    )
 
         App.Notifications.Types.UrgencyDeleteRequest ->
             case model.selected_preference of
@@ -303,13 +303,13 @@ update currentRoute msg model =
                                 [ Http.header "Accept" "application/json" ]
                                 Http.emptyBody
                     in
-                        ( { model
-                            | status_html = Nothing
-                            , is_service_processing = True
-                          }
-                        , Cmd.none
-                        , Just request
-                        )
+                    ( { model
+                        | status_html = Nothing
+                        , is_service_processing = True
+                      }
+                    , Cmd.none
+                    , Just request
+                    )
 
         App.Notifications.Types.UrgencyDeleteResponse response ->
             let
@@ -319,21 +319,21 @@ update currentRoute msg model =
                 success_status =
                     App.Utils.success App.Notifications.Types.ClearStatusMessage "Preference deleted!"
             in
-                case response of
-                    Success resp ->
-                        ( { resp_model
-                            | api_problem = NotAsked
-                            , status_html = Just success_status
-                          }
-                        , Utils.performMsg App.Notifications.Types.GetPreferencesRequest
-                        , Nothing
-                        )
+            case response of
+                Success resp ->
+                    ( { resp_model
+                        | api_problem = NotAsked
+                        , status_html = Just success_status
+                      }
+                    , Utils.performMsg App.Notifications.Types.GetPreferencesRequest
+                    , Nothing
+                    )
 
-                    Failure err ->
-                        handleApiRequestFailure resp_model err App.Notifications.Types.UrgencyDeleteRequest
+                Failure err ->
+                    handleApiRequestFailure resp_model err App.Notifications.Types.UrgencyDeleteRequest
 
-                    _ ->
-                        ( resp_model, Cmd.none, Nothing )
+                _ ->
+                    ( resp_model, Cmd.none, Nothing )
 
         App.Notifications.Types.NewIdentityFormDisplay ->
             let
@@ -341,16 +341,16 @@ update currentRoute msg model =
                     reverseRoute App.Notifications.Types.NewIdentityRoute
                         |> Navigation.newUrl
             in
-                ( { model
-                    | retrieved_identity = Nothing
-                    , preferences = NotAsked
-                    , selected_preference = Nothing
-                    , new_identity = App.Notifications.Form.initializeNewIdentityForm
-                    , status_html = Nothing
-                  }
-                , new_route_command
-                , Nothing
-                )
+            ( { model
+                | retrieved_identity = Nothing
+                , preferences = NotAsked
+                , selected_preference = Nothing
+                , new_identity = App.Notifications.Form.initializeNewIdentityForm
+                , status_html = Nothing
+              }
+            , new_route_command
+            , Nothing
+            )
 
         App.Notifications.Types.NewIdentityFormMsg formMsg ->
             let
@@ -359,56 +359,56 @@ update currentRoute msg model =
                         | new_identity = Form.update App.Notifications.Form.newIdentityValidation formMsg model.new_identity
                     }
             in
-                case formMsg of
-                    Form.Submit ->
-                        -- Submit new identity
-                        ( new_model, Utils.performMsg App.Notifications.Types.NewIdentityRequest, Nothing )
+            case formMsg of
+                Form.Submit ->
+                    -- Submit new identity
+                    ( new_model, Utils.performMsg App.Notifications.Types.NewIdentityRequest, Nothing )
 
-                    Form.Append pref ->
-                        -- New preference for ID
-                        ( new_model, Cmd.none, Nothing )
+                Form.Append pref ->
+                    -- New preference for ID
+                    ( new_model, Cmd.none, Nothing )
 
-                    _ ->
-                        -- Catchall
-                        ( new_model, Cmd.none, Nothing )
+                _ ->
+                    -- Catchall
+                    ( new_model, Cmd.none, Nothing )
 
         App.Notifications.Types.NewIdentityRequest ->
             let
                 new_id_output =
                     Form.getOutput model.new_identity
             in
-                case new_id_output of
-                    Nothing ->
-                        ( model
-                        , Utils.performMsg (App.Notifications.Types.OperationFail App.Notifications.Types.NewIdentityRequest "No new identity data.")
-                        , Nothing
-                        )
+            case new_id_output of
+                Nothing ->
+                    ( model
+                    , Utils.performMsg (App.Notifications.Types.OperationFail App.Notifications.Types.NewIdentityRequest "No new identity data.")
+                    , Nothing
+                    )
 
-                    Just new_identity ->
-                        let
-                            encoded_pref_list =
-                                Json.Encode.list (List.map App.Notifications.Api.encodePreference new_identity.preferences)
+                Just new_identity ->
+                    let
+                        encoded_pref_list =
+                            Json.Encode.list (List.map App.Notifications.Api.encodePreference new_identity.preferences)
 
-                            msg_body =
-                                Json.Encode.object
-                                    [ ( "preferences", encoded_pref_list )
-                                    ]
+                        msg_body =
+                            Json.Encode.object
+                                [ ( "preferences", encoded_pref_list )
+                                ]
 
-                            request =
-                                Hawk.Request
-                                    "NewIdentity"
-                                    "PUT"
-                                    (model.identityUrl ++ "/identity/" ++ new_identity.name)
-                                    [ Http.header "Accept" "application/json" ]
-                                    (Http.jsonBody msg_body)
-                        in
-                            ( { model
-                                | status_html = Nothing
-                                , is_service_processing = True
-                              }
-                            , Cmd.none
-                            , Just request
-                            )
+                        request =
+                            Hawk.Request
+                                "NewIdentity"
+                                "PUT"
+                                (model.identityUrl ++ "/identity/" ++ new_identity.name)
+                                [ Http.header "Accept" "application/json" ]
+                                (Http.jsonBody msg_body)
+                    in
+                    ( { model
+                        | status_html = Nothing
+                        , is_service_processing = True
+                      }
+                    , Cmd.none
+                    , Just request
+                    )
 
         App.Notifications.Types.NewIdentityResponse response ->
             let
@@ -432,73 +432,73 @@ update currentRoute msg model =
                 success =
                     App.Utils.success App.Notifications.Types.ClearStatusMessage success_message
             in
-                case response of
-                    Success resp ->
-                        ( { resp_model
-                            | api_problem = NotAsked
-                            , status_html = Just success
-                            , input_value = Just name
-                          }
-                        , Utils.performMsg App.Notifications.Types.GetPreferencesRequest
-                        , Nothing
-                        )
+            case response of
+                Success resp ->
+                    ( { resp_model
+                        | api_problem = NotAsked
+                        , status_html = Just success
+                        , input_value = Just name
+                      }
+                    , Utils.performMsg App.Notifications.Types.GetPreferencesRequest
+                    , Nothing
+                    )
 
-                    Failure err ->
-                        handleApiRequestFailure resp_model err App.Notifications.Types.NewIdentityRequest
+                Failure err ->
+                    handleApiRequestFailure resp_model err App.Notifications.Types.NewIdentityRequest
 
-                    _ ->
-                        ( { resp_model
-                            | api_problem = NotAsked
-                          }
-                        , Cmd.none
-                        , Nothing
-                        )
+                _ ->
+                    ( { resp_model
+                        | api_problem = NotAsked
+                      }
+                    , Cmd.none
+                    , Nothing
+                    )
 
         App.Notifications.Types.ModifyIdentityRequest ->
             let
                 modified_preference =
                     Form.getOutput model.edit_form
             in
-                case modified_preference of
-                    Nothing ->
-                        ( model
-                        , Utils.performMsg (App.Notifications.Types.OperationFail App.Notifications.Types.ModifyIdentityRequest "No preference selected.")
-                        , Nothing
-                        )
+            case modified_preference of
+                Nothing ->
+                    ( model
+                    , Utils.performMsg (App.Notifications.Types.OperationFail App.Notifications.Types.ModifyIdentityRequest "No preference selected.")
+                    , Nothing
+                    )
 
-                    Just preference ->
-                        let
-                            id_name =
-                                case model.retrieved_identity of
-                                    Just identity ->
-                                        identity
+                Just preference ->
+                    let
+                        id_name =
+                            case model.retrieved_identity of
+                                Just identity ->
+                                    identity
 
-                                    Nothing ->
-                                        ""
+                                Nothing ->
+                                    ""
 
-                            encoded_preference_list =
-                                Json.Encode.list (List.map App.Notifications.Api.encodePreference [ preference ])
+                        encoded_preference_list =
+                            Json.Encode.list (List.map App.Notifications.Api.encodePreference [ preference ])
 
-                            msg_body =
-                                Json.Encode.object
-                                    [ ( "preferences", encoded_preference_list )
-                                    ]
+                        msg_body =
+                            Json.Encode.object
+                                [ ( "preferences", encoded_preference_list )
+                                ]
 
-                            request =
-                                Hawk.Request
-                                    "ModifyIdentity"
-                                    "POST"
-                                    (model.identityUrl ++ "/identity/" ++ id_name)
-                                    [ Http.header "Accept" "application/json" ]
-                                    (Http.jsonBody msg_body)
-                        in
-                            ( { model
-                                | status_html = Nothing
-                                , is_service_processing = True
-                              }
-                            , Cmd.none
-                            , Just request
-                            )
+                        request =
+                            Hawk.Request
+                                "ModifyIdentity"
+                                "POST"
+                                (model.identityUrl ++ "/identity/" ++ id_name)
+                                [ Http.header "Accept" "application/json" ]
+                                (Http.jsonBody msg_body)
+                    in
+                    ( { model
+                        | status_html = Nothing
+                        , is_service_processing = True
+                      }
+                    , Cmd.none
+                    , Just request
+                    )
 
         App.Notifications.Types.ModifyIdentityResponse response ->
             let
@@ -510,26 +510,26 @@ update currentRoute msg model =
                 success_message =
                     App.Utils.success App.Notifications.Types.ClearStatusMessage "Identity modified."
             in
-                case response of
-                    Success resp ->
-                        ( { resp_model
-                            | api_problem = NotAsked
-                            , status_html = Just success_message
-                          }
-                        , Utils.performMsg App.Notifications.Types.GetPreferencesRequest
-                        , Nothing
-                        )
+            case response of
+                Success resp ->
+                    ( { resp_model
+                        | api_problem = NotAsked
+                        , status_html = Just success_message
+                      }
+                    , Utils.performMsg App.Notifications.Types.GetPreferencesRequest
+                    , Nothing
+                    )
 
-                    Failure err ->
-                        handleApiRequestFailure resp_model err App.Notifications.Types.ModifyIdentityRequest
+                Failure err ->
+                    handleApiRequestFailure resp_model err App.Notifications.Types.ModifyIdentityRequest
 
-                    _ ->
-                        ( { resp_model
-                            | api_problem = NotAsked
-                          }
-                        , Cmd.none
-                        , Nothing
-                        )
+                _ ->
+                    ( { resp_model
+                        | api_problem = NotAsked
+                      }
+                    , Cmd.none
+                    , Nothing
+                    )
 
         App.Notifications.Types.SelectPreference preference ->
             ( { model
@@ -558,7 +558,7 @@ update currentRoute msg model =
                         _ ->
                             Cmd.none
             in
-                ( new_model, command, Nothing )
+            ( new_model, command, Nothing )
 
         App.Notifications.Types.NewMessageDisplay ->
             let
@@ -572,7 +572,7 @@ update currentRoute msg model =
                         , status_html = Nothing
                     }
             in
-                ( new_model, new_route_command, Nothing )
+            ( new_model, new_route_command, Nothing )
 
         App.Notifications.Types.GetPendingMessagesRequest ->
             let
@@ -584,32 +584,32 @@ update currentRoute msg model =
                         [ Http.header "Accept" "application/json" ]
                         Http.emptyBody
             in
-                ( { model
-                    | is_service_processing = True
-                  }
-                , Cmd.none
-                , Just request
-                )
+            ( { model
+                | is_service_processing = True
+              }
+            , Cmd.none
+            , Just request
+            )
 
         App.Notifications.Types.GetPendingMessagesResponse response ->
             let
                 resp_model =
                     { model | is_service_processing = False }
             in
-                case response of
-                    Success resp ->
-                        ( resp_model, Cmd.none, Nothing )
+            case response of
+                Success resp ->
+                    ( resp_model, Cmd.none, Nothing )
 
-                    Failure err ->
-                        handleApiRequestFailure resp_model err App.Notifications.Types.GetPendingMessagesRequest
+                Failure err ->
+                    handleApiRequestFailure resp_model err App.Notifications.Types.GetPendingMessagesRequest
 
-                    _ ->
-                        ( { resp_model
-                            | api_problem = NotAsked
-                          }
-                        , Cmd.none
-                        , Nothing
-                        )
+                _ ->
+                    ( { resp_model
+                        | api_problem = NotAsked
+                      }
+                    , Cmd.none
+                    , Nothing
+                    )
 
         App.Notifications.Types.GetMessageRequest ->
             let
@@ -635,7 +635,7 @@ update currentRoute msg model =
                         [ Http.header "Accept" "application/json" ]
                         Http.emptyBody
             in
-                ( resp_model, Cmd.none, Just request )
+            ( resp_model, Cmd.none, Just request )
 
         App.Notifications.Types.GetMessageResponse response ->
             let
@@ -654,29 +654,29 @@ update currentRoute msg model =
                         Nothing ->
                             Cmd.none
             in
-                case response of
-                    Success resp ->
-                        let
-                            message =
-                                case decodeString App.Notifications.Api.messageDecoder resp of
-                                    Ok msg ->
-                                        Success msg
+            case response of
+                Success resp ->
+                    let
+                        message =
+                            case decodeString App.Notifications.Api.messageDecoder resp of
+                                Ok msg ->
+                                    Success msg
 
-                                    _ ->
-                                        NotAsked
-                        in
-                            ( { resp_model
-                                | retrieved_message = message
-                              }
-                            , navigation_change_command
-                            , Nothing
-                            )
+                                _ ->
+                                    NotAsked
+                    in
+                    ( { resp_model
+                        | retrieved_message = message
+                      }
+                    , navigation_change_command
+                    , Nothing
+                    )
 
-                    Failure err ->
-                        handleApiRequestFailure resp_model err App.Notifications.Types.GetMessageRequest
+                Failure err ->
+                    handleApiRequestFailure resp_model err App.Notifications.Types.GetMessageRequest
 
-                    _ ->
-                        ( { resp_model | api_problem = NotAsked }, Cmd.none, Nothing )
+                _ ->
+                    ( { resp_model | api_problem = NotAsked }, Cmd.none, Nothing )
 
         App.Notifications.Types.DeleteMessageRequest ->
             let
@@ -699,22 +699,22 @@ update currentRoute msg model =
                         [ Http.header "Accept" "application/json" ]
                         Http.emptyBody
             in
-                ( resp_model, Cmd.none, Just request )
+            ( resp_model, Cmd.none, Just request )
 
         App.Notifications.Types.DeleteMessageResponse response ->
             let
                 resp_model =
                     { model | is_service_processing = False }
             in
-                case response of
-                    Success resp ->
-                        ( resp_model, Cmd.none, Nothing )
+            case response of
+                Success resp ->
+                    ( resp_model, Cmd.none, Nothing )
 
-                    Failure err ->
-                        handleApiRequestFailure resp_model err App.Notifications.Types.DeleteMessageRequest
+                Failure err ->
+                    handleApiRequestFailure resp_model err App.Notifications.Types.DeleteMessageRequest
 
-                    _ ->
-                        ( model, Cmd.none, Nothing )
+                _ ->
+                    ( model, Cmd.none, Nothing )
 
         App.Notifications.Types.NewMessageRequest ->
             case ( model.new_message, model.uid ) of
@@ -734,7 +734,7 @@ update currentRoute msg model =
                                 [ Http.header "Accept" "application/json" ]
                                 (Http.stringBody "application/json" message)
                     in
-                        ( resp_model, Cmd.none, Just request )
+                    ( resp_model, Cmd.none, Just request )
 
                 _ ->
                     ( model, Cmd.none, Nothing )
@@ -744,20 +744,20 @@ update currentRoute msg model =
                 resp_model =
                     { model | is_service_processing = False }
             in
-                case response of
-                    Success resp ->
-                        ( { resp_model
-                            | status_html = Just (App.Utils.success App.Notifications.Types.ClearStatusMessage "Message successfully created")
-                          }
-                        , Cmd.none
-                        , Nothing
-                        )
+            case response of
+                Success resp ->
+                    ( { resp_model
+                        | status_html = Just (App.Utils.success App.Notifications.Types.ClearStatusMessage "Message successfully created")
+                      }
+                    , Cmd.none
+                    , Nothing
+                    )
 
-                    Failure err ->
-                        handleApiRequestFailure resp_model err App.Notifications.Types.NewMessageRequest
+                Failure err ->
+                    handleApiRequestFailure resp_model err App.Notifications.Types.NewMessageRequest
 
-                    _ ->
-                        ( model, Cmd.none, Nothing )
+                _ ->
+                    ( model, Cmd.none, Nothing )
 
         App.Notifications.Types.NewMessageUpdate new_json ->
             ( { model
@@ -796,27 +796,27 @@ update currentRoute msg model =
                         [ Http.header "Accept" "application/json" ]
                         Http.emptyBody
             in
-                ( resp_model, Cmd.none, Just request )
+            ( resp_model, Cmd.none, Just request )
 
         App.Notifications.Types.TickTockResponse response ->
             let
                 resp_model =
                     { model | is_service_processing = False }
             in
-                case response of
-                    Success resp ->
-                        ( { resp_model
-                            | status_html = Just (App.Utils.success App.Notifications.Types.ClearStatusMessage "TickTock successfully triggered")
-                          }
-                        , Cmd.none
-                        , Nothing
-                        )
+            case response of
+                Success resp ->
+                    ( { resp_model
+                        | status_html = Just (App.Utils.success App.Notifications.Types.ClearStatusMessage "TickTock successfully triggered")
+                      }
+                    , Cmd.none
+                    , Nothing
+                    )
 
-                    Failure err ->
-                        handleApiRequestFailure resp_model err App.Notifications.Types.TickTockRequest
+                Failure err ->
+                    handleApiRequestFailure resp_model err App.Notifications.Types.TickTockRequest
 
-                    _ ->
-                        ( model, Cmd.none, Nothing )
+                _ ->
+                    ( model, Cmd.none, Nothing )
 
         App.Notifications.Types.GetActivePoliciesRequest ->
             let
@@ -839,36 +839,36 @@ update currentRoute msg model =
                         [ Http.header "Accept" "application/json" ]
                         Http.emptyBody
             in
-                ( resp_model, Cmd.none, Just request )
+            ( resp_model, Cmd.none, Just request )
 
         App.Notifications.Types.GetActivePoliciesResponse response ->
             let
                 resp_model =
                     { model | is_service_processing = False }
             in
-                case response of
-                    Success resp ->
-                        let
-                            decoded_policies =
-                                case decodeString App.Notifications.Api.policiesDecoder resp of
-                                    Ok policies ->
-                                        Success policies
+            case response of
+                Success resp ->
+                    let
+                        decoded_policies =
+                            case decodeString App.Notifications.Api.policiesDecoder resp of
+                                Ok policies ->
+                                    Success policies
 
-                                    _ ->
-                                        NotAsked
-                        in
-                            ( { resp_model
-                                | policies = decoded_policies
-                              }
-                            , Cmd.none
-                            , Nothing
-                            )
+                                _ ->
+                                    NotAsked
+                    in
+                    ( { resp_model
+                        | policies = decoded_policies
+                      }
+                    , Cmd.none
+                    , Nothing
+                    )
 
-                    Failure err ->
-                        handleApiRequestFailure resp_model err App.Notifications.Types.GetActivePoliciesRequest
+                Failure err ->
+                    handleApiRequestFailure resp_model err App.Notifications.Types.GetActivePoliciesRequest
 
-                    _ ->
-                        ( model, Cmd.none, Nothing )
+                _ ->
+                    ( model, Cmd.none, Nothing )
 
         App.Notifications.Types.HelpDisplay ->
             let
@@ -882,20 +882,20 @@ update currentRoute msg model =
                         , status_html = Nothing
                     }
             in
-                ( new_model, new_route_command, Nothing )
+            ( new_model, new_route_command, Nothing )
 
         App.Notifications.Types.OperationFail event reason ->
             let
                 err =
                     App.Utils.error event reason
             in
-                ( { model
-                    | is_service_processing = False
-                    , status_html = Just err
-                  }
-                , Cmd.none
-                , Nothing
-                )
+            ( { model
+                | is_service_processing = False
+                , status_html = Just err
+              }
+            , Cmd.none
+            , Nothing
+            )
 
         App.Notifications.Types.ClearStatusMessage ->
             ( { model | status_html = Nothing }, Cmd.none, Nothing )
@@ -917,26 +917,26 @@ update currentRoute msg model =
                     , Nothing
                     )
             in
-                case problem_json of
-                    Ok problem ->
-                        case problem.detail of
-                            Just detail ->
-                                let
-                                    api_err =
-                                        App.Utils.error event detail
-                                in
-                                    ( { model
-                                        | status_html = Just api_err
-                                      }
-                                    , Cmd.none
-                                    , Nothing
-                                    )
+            case problem_json of
+                Ok problem ->
+                    case problem.detail of
+                        Just detail ->
+                            let
+                                api_err =
+                                    App.Utils.error event detail
+                            in
+                            ( { model
+                                | status_html = Just api_err
+                              }
+                            , Cmd.none
+                            , Nothing
+                            )
 
-                            Nothing ->
-                                err_return
+                        Nothing ->
+                            err_return
 
-                    _ ->
-                        err_return
+                _ ->
+                    err_return
 
         App.Notifications.Types.NavigateTo route ->
             case route of
@@ -957,7 +957,7 @@ update currentRoute msg model =
                         newModel =
                             { model | input_value = Just identity }
                     in
-                        update route App.Notifications.Types.GetPreferencesRequest newModel
+                    update route App.Notifications.Types.GetPreferencesRequest newModel
 
                 App.Notifications.Types.HelpRoute ->
                     update route App.Notifications.Types.HelpDisplay model
@@ -996,47 +996,47 @@ view route scopes model =
                 App.Notifications.Types.HelpRoute ->
                     div [ class "lead" ] [ App.Notifications.View.viewHelp ]
     in
-        div [ class "container" ]
-            [ h1 [] [ text "RelEng NagBot" ]
-            , p [ class "lead" ] [ text "Manage preferred notification preferences for RelEng events" ]
-            , div []
-                [ p [ class "lead" ] [ App.Notifications.View.viewStatusMessage model ]
-                , div [ class "input-group" ]
-                    [ span [ class "input-group-addon" ] [ i [ class "fa fa-search" ] [] ]
-                    , input
-                        [ placeholder "Identity or Message UID"
-                        , onInput App.Notifications.Types.ChangeName
-                        , class "form-control"
-                        ]
-                        []
+    div [ class "container" ]
+        [ h1 [] [ text "RelEng NagBot" ]
+        , p [ class "lead" ] [ text "Manage preferred notification preferences for RelEng events" ]
+        , div []
+            [ p [ class "lead" ] [ App.Notifications.View.viewStatusMessage model ]
+            , div [ class "input-group" ]
+                [ span [ class "input-group-addon" ] [ i [ class "fa fa-search" ] [] ]
+                , input
+                    [ placeholder "Identity or Message UID"
+                    , onInput App.Notifications.Types.ChangeName
+                    , class "form-control"
                     ]
-                , div [ class "btn-toolbar mb-3" ]
-                    [ div [ class "btn-group btn-group-justified" ]
-                        [ button [ type_ "button", onClick App.Notifications.Types.GetPreferencesRequest, class "btn btn-outline-primary" ]
-                            [ i [ class "fa fa-address-book" ] []
-                            , text " Search Identities"
-                            ]
-                        , button [ type_ "button", onClick App.Notifications.Types.GetMessageRequest, class "btn btn-outline-primary" ]
-                            [ i [ class "fa fa-inbox" ] []
-                            , text " Search Messages"
-                            ]
-                        , button [ type_ "button", onClick App.Notifications.Types.NewIdentityFormDisplay, class "btn btn-outline-primary" ]
-                            [ i [ class "fa fa-user-plus" ] []
-                            , text " New Identity"
-                            ]
-                        , button [ type_ "button", onClick App.Notifications.Types.NewMessageDisplay, class "btn btn-outline-primary" ]
-                            [ i [ class "fa fa-envelope" ] []
-                            , text " New Message"
-                            ]
-                        , button [ type_ "button", onClick App.Notifications.Types.TickTockRequest, class "btn btn-outline-primary" ]
-                            [ i [ class "fa fa-clock-o" ] []
-                            , text " Trigger TickTock"
-                            ]
-                        , button [ type_ "button", onClick App.Notifications.Types.HelpDisplay, class "btn btn-outline-primary" ]
-                            [ i [ class "fa fa-info-circle" ] []
-                            ]
-                        ]
-                    ]
-                , main_content_view
+                    []
                 ]
+            , div [ class "btn-toolbar mb-3" ]
+                [ div [ class "btn-group btn-group-justified" ]
+                    [ button [ type_ "button", onClick App.Notifications.Types.GetPreferencesRequest, class "btn btn-outline-primary" ]
+                        [ i [ class "fa fa-address-book" ] []
+                        , text " Search Identities"
+                        ]
+                    , button [ type_ "button", onClick App.Notifications.Types.GetMessageRequest, class "btn btn-outline-primary" ]
+                        [ i [ class "fa fa-inbox" ] []
+                        , text " Search Messages"
+                        ]
+                    , button [ type_ "button", onClick App.Notifications.Types.NewIdentityFormDisplay, class "btn btn-outline-primary" ]
+                        [ i [ class "fa fa-user-plus" ] []
+                        , text " New Identity"
+                        ]
+                    , button [ type_ "button", onClick App.Notifications.Types.NewMessageDisplay, class "btn btn-outline-primary" ]
+                        [ i [ class "fa fa-envelope" ] []
+                        , text " New Message"
+                        ]
+                    , button [ type_ "button", onClick App.Notifications.Types.TickTockRequest, class "btn btn-outline-primary" ]
+                        [ i [ class "fa fa-clock-o" ] []
+                        , text " Trigger TickTock"
+                        ]
+                    , button [ type_ "button", onClick App.Notifications.Types.HelpDisplay, class "btn btn-outline-primary" ]
+                        [ i [ class "fa fa-info-circle" ] []
+                        ]
+                    ]
+                ]
+            , main_content_view
             ]
+        ]

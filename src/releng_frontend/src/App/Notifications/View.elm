@@ -67,9 +67,9 @@ viewPreferenceItem model preference =
                         []
                     )
     in
-        div div_attributes
-            [ h5 [ class "list-group-item-heading list-group-item-action" ] item_content
-            ]
+    div div_attributes
+        [ h5 [ class "list-group-item-heading list-group-item-action" ] item_content
+        ]
 
 
 viewPolicies : List Policy -> Html App.Notifications.Types.Msg
@@ -127,19 +127,19 @@ viewPreferences model =
                         _ ->
                             text ""
             in
-                div [ class "container" ]
-                    [ hr [] []
-                    , div [ class "container justify-content-between" ]
-                        [ text display_name
-                        , button [ onClick App.Notifications.Types.IdentityDeleteRequest, class "btn btn-outline-primary" ]
-                            [ i [ class "fa fa-trash" ] []
-                            , text " Delete identity"
-                            ]
+            div [ class "container" ]
+                [ hr [] []
+                , div [ class "container justify-content-between" ]
+                    [ text display_name
+                    , button [ onClick App.Notifications.Types.IdentityDeleteRequest, class "btn btn-outline-primary" ]
+                        [ i [ class "fa fa-trash" ] []
+                        , text " Delete identity"
                         ]
-                    , h4 [] [ text "Notification Preferences" ]
-                    , pref_display
-                    , policies_display
                     ]
+                , h4 [] [ text "Notification Preferences" ]
+                , pref_display
+                , policies_display
+                ]
 
 
 viewStatusMessage : App.Notifications.Types.Model -> Html App.Notifications.Types.Msg
@@ -182,7 +182,7 @@ viewNotificationPolicy policy =
                         start_time_formatted =
                             toString (Date.hour date) ++ ":" ++ toString (Date.minute date)
                     in
-                        start_month ++ " " ++ start_day ++ ", " ++ start_year ++ " at " ++ start_time_formatted
+                    start_month ++ " " ++ start_day ++ ", " ++ start_year ++ " at " ++ start_time_formatted
 
                 _ ->
                     ""
@@ -203,7 +203,7 @@ viewNotificationPolicy policy =
                         stop_time_formatted =
                             toString (Date.hour date) ++ ":" ++ toString (Date.minute date)
                     in
-                        stop_month ++ " " ++ stop_day ++ ", " ++ stop_year ++ " at " ++ stop_time_formatted
+                    stop_month ++ " " ++ stop_day ++ ", " ++ stop_year ++ " at " ++ stop_time_formatted
 
                 _ ->
                     ""
@@ -219,20 +219,20 @@ viewNotificationPolicy policy =
                 ++ toString policy.frequency.minutes
                 ++ " minutes."
     in
-        div [ class "list-group-item", style [ ( "display", "flex" ), ( "flex-direction", "column" ) ] ]
-            [ div []
-                [ text ("Message UID: " ++ policy.uid)
-                ]
-            , div [ class "justify-content-between", style [ ( "display", "flex" ), ( "flex-direction", "row" ) ] ]
-                [ i [ class "fa fa-hourglass-start" ] []
-                , h4 [] [ text (" From " ++ start_time_text ++ " ") ]
-                , h4 [] [ text (" to " ++ stop_time_text ++ " ") ]
-                , span [ class ("float-xs-right badge badge-" ++ urgencyLevel policy.urgency) ] [ text policy.urgency ]
-                ]
-            , div [ class "justify-content-between" ]
-                [ h4 [] [ text frequency_string ]
-                ]
+    div [ class "list-group-item", style [ ( "display", "flex" ), ( "flex-direction", "column" ) ] ]
+        [ div []
+            [ text ("Message UID: " ++ policy.uid)
             ]
+        , div [ class "justify-content-between", style [ ( "display", "flex" ), ( "flex-direction", "row" ) ] ]
+            [ i [ class "fa fa-hourglass-start" ] []
+            , h4 [] [ text (" From " ++ start_time_text ++ " ") ]
+            , h4 [] [ text (" to " ++ stop_time_text ++ " ") ]
+            , span [ class ("float-xs-right badge badge-" ++ urgencyLevel policy.urgency) ] [ text policy.urgency ]
+            ]
+        , div [ class "justify-content-between" ]
+            [ h4 [] [ text frequency_string ]
+            ]
+        ]
 
 
 messageJsonExample : String
@@ -276,51 +276,51 @@ viewNewMessage model =
                 Nothing ->
                     True
     in
-        div
-            [ class
-                ("form-group"
+    div
+        [ class
+            ("form-group"
+                ++ (if is_uid_missing == True then
+                        " has-danger"
+                    else if is_json_missing == True then
+                        " has-danger"
+                    else
+                        ""
+                   )
+            )
+        ]
+        [ hr [] []
+        , input
+            [ onInput App.Notifications.Types.NewMessageUIDUpdate
+            , placeholder "New Message UID"
+            , type_ "text"
+            , class
+                ("form-control"
                     ++ (if is_uid_missing == True then
-                            " has-danger"
-                        else if is_json_missing == True then
-                            " has-danger"
+                            " form-control-danger"
                         else
                             ""
                        )
                 )
             ]
-            [ hr [] []
-            , input
-                [ onInput App.Notifications.Types.NewMessageUIDUpdate
-                , placeholder "New Message UID"
-                , type_ "text"
-                , class
-                    ("form-control"
-                        ++ (if is_uid_missing == True then
-                                " form-control-danger"
-                            else
-                                ""
-                           )
-                    )
-                ]
-                []
-            , textarea
-                [ onInput App.Notifications.Types.NewMessageUpdate
-                , class
-                    ("form-control"
-                        ++ (if is_json_missing == True then
-                                " form-control-danger"
-                            else
-                                ""
-                           )
-                    )
-                , rows 10
-                ]
-                [ text messageJsonExample ]
-            , button [ class "form-control btn btn-outline-primary", onClick App.Notifications.Types.NewMessageRequest ]
-                [ i [ class "fa fa-check" ] []
-                , text " Submit New Message"
-                ]
+            []
+        , textarea
+            [ onInput App.Notifications.Types.NewMessageUpdate
+            , class
+                ("form-control"
+                    ++ (if is_json_missing == True then
+                            " form-control-danger"
+                        else
+                            ""
+                       )
+                )
+            , rows 10
             ]
+            [ text messageJsonExample ]
+        , button [ class "form-control btn btn-outline-primary", onClick App.Notifications.Types.NewMessageRequest ]
+            [ i [ class "fa fa-check" ] []
+            , text " Submit New Message"
+            ]
+        ]
 
 
 viewMessage : App.Notifications.Types.Model -> Html App.Notifications.Types.Msg
@@ -356,13 +356,13 @@ viewHelp =
             search notifications by their unique identifier, create new notifications and trigger any pending policies.
             """
     in
-        div [ class "jumbotron" ]
-            [ h2 []
-                [ i [ class "fa fa-question-circle" ] []
-                , text " Info"
-                ]
-            , hr [] []
-            , blockquote [ class "blockquote" ]
-                [ text infoStr
-                ]
+    div [ class "jumbotron" ]
+        [ h2 []
+            [ i [ class "fa fa-question-circle" ] []
+            , text " Info"
             ]
+        , hr [] []
+        , blockquote [ class "blockquote" ]
+            [ text infoStr
+            ]
+        ]
