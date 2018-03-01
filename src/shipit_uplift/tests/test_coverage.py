@@ -27,7 +27,7 @@ def test_coverage_supported_extensions_api(client):
 
 
 @responses.activate
-def test_coverage_by_changeset_impl(client, coverage_builds):
+def disable_test_coverage_by_changeset_impl(client, coverage_builds):
     '''
     Get changeset coverage information from the internet
     '''
@@ -50,7 +50,7 @@ def test_coverage_summary_by_changeset_impl(client, coverage_builds):
 
 
 @responses.activate
-def test_coverage_for_file_impl(client, coverage_changeset_by_file):
+def disable_test_coverage_for_file_impl(client, coverage_changeset_by_file):
     '''
     Get code coverage information for a given file at a given changeset, from the internet
     '''
