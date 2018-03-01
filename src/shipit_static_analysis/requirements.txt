@@ -1,12 +1,11 @@
 -e ./../../lib/cli_common[sentry,pulse,taskcluster,mercurial] #egg=mozilla-cli-common
 
-libmozdata
 RBTools
 PyYAML
 parsepatch
 codespell
 yamllint
-datadog
+datadog==0.18.0
 
 # Fixed versions
 six==1.10.0
