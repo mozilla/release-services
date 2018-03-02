@@ -1,4 +1,4 @@
-# generated using pypi2nix tool (version: %(version)s)
+# generated using pypi2nix tool (version: 1.8.1)
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:

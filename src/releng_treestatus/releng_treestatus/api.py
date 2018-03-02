@@ -87,13 +87,13 @@ def _update_tree_status(session, tree, status=None, reason=None, tags=[],
             status = 'no change'
         if reason is None:
             reason = 'no change'
-        l = Log(tree=tree.tree,
-                when=_now(),
-                who=str(current_user),
-                status=status,
-                reason=reason,
-                tags=tags)
-        session.add(l)
+        log = Log(tree=tree.tree,
+                  when=_now(),
+                  who=str(current_user),
+                  status=status,
+                  reason=reason,
+                  tags=tags)
+        session.add(log)
 
     cache.delete_memoized(v0_get_tree, tree.tree)
 

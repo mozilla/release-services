@@ -161,7 +161,8 @@ def delete_step(uid):
     logger.info('Deleting step %s', uid)
     try:
         step = SignoffStep.query.filter_by(uid=uid).one()
-    except:
+    except Exception as e:
+        logger.exception(e)
         logger.error('Missing step when deleting: %s', uid)
         abort(404)
 

@@ -134,18 +134,18 @@ getAlerts response =
                 )
             ]
     in
-        case response of
-            Success r ->
-                []
+    case response of
+        Success r ->
+            []
 
-            Loading ->
-                []
+        Loading ->
+            []
 
-            NotAsked ->
-                []
+        NotAsked ->
+            []
 
-            Failure e ->
-                handleError e
+        Failure e ->
+            handleError e
 
 
 viewAlerts :
@@ -173,9 +173,9 @@ viewAlerts alerts =
                 , text alert.text
                 ]
     in
-        alerts
-            |> List.map createAlert
-            |> div []
+    alerts
+        |> List.map createAlert
+        |> div []
 
 
 appendItem : a -> List a -> List a

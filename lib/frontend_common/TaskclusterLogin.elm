@@ -1,14 +1,14 @@
 port module TaskclusterLogin exposing (..)
 
+import Date
 import Dict exposing (Dict)
+import Http
 import Json.Decode as JsonDecode exposing (Decoder)
 import Json.Encode as JsonEncode
 import Maybe
 import Redirect
-import Http
 import String
 import Task
-import Date
 import Time exposing (Time)
 
 
@@ -77,12 +77,12 @@ init backend_url tokens =
         ( model, cmd ) =
             loadTaskclusterCredentials model_
     in
-        ( model
-        , Cmd.batch
-            [ cmd
-            , Task.perform CheckTaskclusterCredentials Time.now
-            ]
-        )
+    ( model
+    , Cmd.batch
+        [ cmd
+        , Task.perform CheckTaskclusterCredentials Time.now
+        ]
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -94,7 +94,7 @@ update msg model =
                 request =
                     Http.get (model.backend_url ++ "/auth0/login") JsonDecode.string
             in
-                ( model, Http.send LoginRedirect request )
+            ( model, Http.send LoginRedirect request )
 
         LoginRedirect response ->
             -- Redirect user to login url
@@ -107,7 +107,7 @@ update msg model =
                             , targetName = ""
                             }
                     in
-                        ( model, Redirect.redirect redirection )
+                    ( model, Redirect.redirect redirection )
 
                 Err error ->
                     -- TODO: display error ?
@@ -125,17 +125,17 @@ update msg model =
                     Http.request
                         { method = "POST"
                         , headers = []
-                        , url = (model.backend_url ++ "/auth0/check")
+                        , url = model.backend_url ++ "/auth0/check"
                         , body = Http.jsonBody payload
                         , expect = Http.expectJson decodeTokens
                         , timeout = Nothing
                         , withCredentials = False
                         }
             in
-                -- Exchange code for tokens through backend
-                ( { model | code = Just code }
-                , Http.send ExchangedTokens request
-                )
+            -- Exchange code for tokens through backend
+            ( { model | code = Just code }
+            , Http.send ExchangedTokens request
+            )
 
         ExchangedTokens response ->
             -- Received tokens from backend
@@ -218,9 +218,9 @@ loadTaskclusterCredentials model =
                         , withCredentials = False
                         }
             in
-                ( model
-                , Http.send LoadedTaskclusterCredentials request
-                )
+            ( model
+            , Http.send LoadedTaskclusterCredentials request
+            )
 
         Nothing ->
             ( { model
@@ -268,7 +268,7 @@ isTokenExpired : Float -> Maybe Tokens -> Bool
 isTokenExpired time tokens =
     case tokens of
         Just tokens_ ->
-            if time > ((toFloat tokens_.expires) * 1000) then
+            if time > (toFloat tokens_.expires * 1000) then
                 True
             else
                 False
@@ -320,13 +320,13 @@ shortUsername username =
         parts =
             String.split "/" username
     in
-        if List.length parts == 2 then
-            parts
-                |> List.reverse
-                |> List.head
-                |> Maybe.withDefault username
-        else
-            username
+    if List.length parts == 2 then
+        parts
+            |> List.reverse
+            |> List.head
+            |> Maybe.withDefault username
+    else
+        username
 
 
 

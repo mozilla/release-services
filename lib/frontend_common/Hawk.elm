@@ -39,7 +39,7 @@ update msg =
                         _ =
                             Debug.log "Request decoding error" error
                     in
-                        ( Nothing, Cmd.none, Cmd.none )
+                    ( Nothing, Cmd.none, Cmd.none )
 
 
 
@@ -52,7 +52,7 @@ send request credentials =
         requestJson =
             requestEncoder request
     in
-        hawk_add_header ( requestJson, credentials )
+    hawk_add_header ( requestJson, credentials )
 
 
 
@@ -71,12 +71,13 @@ sendRequest request =
                 , body = request.body
                 , expect =
                     Http.expectString
-                    -- Always receive a string to be later decoded
+
+                -- Always receive a string to be later decoded
                 , timeout = Nothing
                 , withCredentials = False
                 }
     in
-        RemoteData.sendRequest httpRequest
+    RemoteData.sendRequest httpRequest
 
 
 
@@ -94,14 +95,14 @@ requestEncoder request =
             else
                 JsonEncode.string (toString request.body)
     in
-        JsonEncode.encode 0 <|
-            JsonEncode.object
-                [ ( "id", JsonEncode.string request.id )
-                , ( "method", JsonEncode.string request.method )
-                , ( "url", JsonEncode.string request.url )
-                , ( "headers", JsonEncode.list (List.map requestHeadersEncoder request.headers) )
-                , ( "body", body )
-                ]
+    JsonEncode.encode 0 <|
+        JsonEncode.object
+            [ ( "id", JsonEncode.string request.id )
+            , ( "method", JsonEncode.string request.method )
+            , ( "url", JsonEncode.string request.url )
+            , ( "headers", JsonEncode.list (List.map requestHeadersEncoder request.headers) )
+            , ( "body", body )
+            ]
 
 
 requestHeadersEncoder : Http.Header -> JsonEncode.Value

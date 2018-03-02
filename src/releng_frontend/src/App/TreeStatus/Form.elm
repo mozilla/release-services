@@ -150,13 +150,13 @@ updateAddTree model formMsg =
                 _ ->
                     ( model.trees, model.treesAlerts, Nothing )
     in
-        ( { model
-            | formAddTree = form
-            , treesAlerts = alerts
-            , trees = trees
-          }
-        , hawkRequest
-        )
+    ( { model
+        | formAddTree = form
+        , treesAlerts = alerts
+        , trees = trees
+      }
+    , hawkRequest
+    )
 
 
 updateUpdateTree :
@@ -226,12 +226,12 @@ updateUpdateTree route model formMsg =
                 _ ->
                     ( model.treesAlerts, Nothing )
     in
-        ( { model
-            | formUpdateTree = form
-            , treesAlerts = alerts
-          }
-        , hawkRequest
-        )
+    ( { model
+        | formUpdateTree = form
+        , treesAlerts = alerts
+      }
+    , hawkRequest
+    )
 
 
 getUpdateTreeErrors : Form.Form e o -> List ( String, Form.Error.ErrorValue e )
@@ -245,18 +245,18 @@ getUpdateTreeErrors form =
                 reason =
                     Form.getFieldAsString "reason" form
             in
-                if
-                    Maybe.withDefault "" status.value
-                        == "closed"
-                        && Maybe.withDefault "" reason.value
-                        == ""
-                then
-                    [ ( "reason", Form.Error.Empty ) ]
-                else
-                    []
+            if
+                Maybe.withDefault "" status.value
+                    == "closed"
+                    && Maybe.withDefault "" reason.value
+                    == ""
+            then
+                [ ( "reason", Form.Error.Empty ) ]
+            else
+                []
     in
-        Form.getErrors form
-            |> List.append (validateReason form)
+    Form.getErrors form
+        |> List.append (validateReason form)
 
 
 fieldClass : { b | error : Maybe a } -> String
@@ -288,31 +288,31 @@ viewAddTree form =
         state =
             Form.getFieldAsString "name" form
     in
-        div
-            [ id "treestatus-form" ]
-            [ Html.form
+    div
+        [ id "treestatus-form" ]
+        [ Html.form
+            []
+            [ App.Form.viewField
+                (if Form.isSubmitted form then
+                    state.error
+                 else
+                    Nothing
+                )
+                (Just "Tree name")
                 []
-                [ App.Form.viewField
-                    (if Form.isSubmitted form then
-                        state.error
-                     else
-                        Nothing
-                    )
-                    (Just "Tree name")
-                    []
-                    (Form.Input.textInput state
-                        [ class "form-control"
-                        , value (Maybe.withDefault "" state.value)
-                        , placeholder "New tree name ..."
-                        ]
-                    )
-                , App.Form.viewButton
-                    "Add"
-                    [ Utils.onClick Form.Submit
+                (Form.Input.textInput state
+                    [ class "form-control"
+                    , value (Maybe.withDefault "" state.value)
+                    , placeholder "New tree name ..."
                     ]
-                , div [ class "clearfix" ] []
+                )
+            , App.Form.viewButton
+                "Add"
+                [ Utils.onClick Form.Submit
                 ]
+            , div [ class "clearfix" ] []
             ]
+        ]
 
 
 viewUpdateTree :

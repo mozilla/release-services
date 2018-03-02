@@ -174,14 +174,14 @@ update currentRoute msg model =
                     else
                         route
             in
-                ( newModel
-                , Cmd.batch
-                    [ reverseRoute newRoute
-                        |> Navigation.newUrl
-                    , newCmd
-                    ]
-                , Nothing
-                )
+            ( newModel
+            , Cmd.batch
+                [ reverseRoute newRoute
+                    |> Navigation.newUrl
+                , newCmd
+                ]
+            , Nothing
+            )
 
         App.TreeStatus.Types.GetTreesResult trees ->
             ( { model | trees = trees }, Cmd.none, Nothing )
@@ -209,10 +209,10 @@ update currentRoute msg model =
                 ( newModel, hawkRequest ) =
                     App.TreeStatus.Form.updateAddTree model formMsg
             in
-                ( newModel
-                , Cmd.none
-                , hawkRequest
-                )
+            ( newModel
+            , Cmd.none
+            , hawkRequest
+            )
 
         App.TreeStatus.Types.FormAddTreeResult result ->
             ( { model | treesAlerts = App.Utils.getAlerts result }
@@ -230,10 +230,10 @@ update currentRoute msg model =
                 ( newModel, hawkRequest ) =
                     App.TreeStatus.Form.updateUpdateTree currentRoute model formMsg
             in
-                ( newModel
-                , Cmd.none
-                , hawkRequest
-                )
+            ( newModel
+            , Cmd.none
+            , hawkRequest
+            )
 
         App.TreeStatus.Types.FormUpdateTreesResult result ->
             ( { model | treesAlerts = App.Utils.getAlerts result }
@@ -258,10 +258,10 @@ update currentRoute msg model =
                         _ ->
                             []
             in
-                ( { model | treesSelected = treesSelected }
-                , Cmd.none
-                , Nothing
-                )
+            ( { model | treesSelected = treesSelected }
+            , Cmd.none
+            , Nothing
+            )
 
         App.TreeStatus.Types.SelectTree name ->
             let
@@ -271,10 +271,10 @@ update currentRoute msg model =
                     else
                         name :: model.treesSelected
             in
-                ( { model | treesSelected = treesSelected }
-                , Cmd.none
-                , Nothing
-                )
+            ( { model | treesSelected = treesSelected }
+            , Cmd.none
+            , Nothing
+            )
 
         App.TreeStatus.Types.UnselectAllTrees ->
             ( { model | treesSelected = [] }
@@ -287,10 +287,10 @@ update currentRoute msg model =
                 treesSelected =
                     List.filter (\x -> x /= name) model.treesSelected
             in
-                ( { model | treesSelected = treesSelected }
-                , Cmd.none
-                , Nothing
-                )
+            ( { model | treesSelected = treesSelected }
+            , Cmd.none
+            , Nothing
+            )
 
         App.TreeStatus.Types.DeleteTrees ->
             let
@@ -315,19 +315,19 @@ update currentRoute msg model =
                         [ Http.header "Accept" "application/json" ]
                         (Http.jsonBody (App.TreeStatus.Api.encoderTreeNames treesToDelete))
             in
-                if model.deleteTreesConfirm then
-                    ( { model
-                        | treesSelected = []
-                        , trees = RemoteData.map filterOutTrees model.trees
-                      }
-                    , Cmd.none
-                    , Just request
-                    )
-                else
-                    ( { model | deleteError = Just "You need to confirm to be able to delete tree(s)." }
-                    , Cmd.none
-                    , Nothing
-                    )
+            if model.deleteTreesConfirm then
+                ( { model
+                    | treesSelected = []
+                    , trees = RemoteData.map filterOutTrees model.trees
+                  }
+                , Cmd.none
+                , Just request
+                )
+            else
+                ( { model | deleteError = Just "You need to confirm to be able to delete tree(s)." }
+                , Cmd.none
+                , Nothing
+                )
 
         App.TreeStatus.Types.DeleteTreesResult result ->
             ( { model | treesAlerts = App.Utils.getAlerts result }
@@ -426,15 +426,15 @@ view route user scopes model =
                         || RemoteData.isLoading model.treeLogsAll
                         || isLoadingScopes
     in
-        div [ class "container" ]
-            [ h1 [] [ text "TreeStatus" ]
-            , p [ class "lead" ]
-                [ text "Current status of Mozilla's version-control repositories." ]
-            , if isLoading then
-                App.Utils.loading
-              else
-                viewLoaded route scopes.scopes model
-            ]
+    div [ class "container" ]
+        [ h1 [] [ text "TreeStatus" ]
+        , p [ class "lead" ]
+            [ text "Current status of Mozilla's version-control repositories." ]
+        , if isLoading then
+            App.Utils.loading
+          else
+            viewLoaded route scopes.scopes model
+        ]
 
 
 viewLoaded :

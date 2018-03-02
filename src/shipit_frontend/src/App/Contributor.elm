@@ -98,9 +98,9 @@ update msg model user =
                         Nothing ->
                             Nothing
             in
-                ( { model | contributor = newContributor }
-                , Cmd.none
-                )
+            ( { model | contributor = newContributor }
+            , Cmd.none
+            )
 
         UpdateContributor ->
             ( model
@@ -130,8 +130,8 @@ sendUpdate model user =
                         request =
                             Hawk.Request "Contributor" "PUT" url [] body
                     in
-                        Cmd.map HawkRequest
-                            (Hawk.send request credentials)
+                    Cmd.map HawkRequest
+                        (Hawk.send request credentials)
 
                 Nothing ->
                     Cmd.none
@@ -155,7 +155,8 @@ decodeContributor =
         (Json.oneOf
             [ Json.field "roles" (Json.list Json.string)
             , Json.succeed []
-              -- no roles on updates
+
+            -- no roles on updates
             ]
         )
         (Json.field "karma" Json.int)
@@ -260,38 +261,38 @@ viewForm contributor =
             , ( "1", "Positive" )
             ]
     in
-        case contributor.comment_private of
-            Just comment_private ->
-                Html.form [ class "form", onSubmit UpdateContributor ]
-                    [ div [ class "row" ]
-                        [ div [ class "col-sm-2 hidden-xs" ]
-                            [ img [ class "avatar img-fluid img-rounded", src contributor.avatar ] [] ]
-                        , div [ class "col-xs-8 col-sm-10" ]
-                            [ text contributor.name ]
-                        ]
-                    , div [ class "form-group row" ]
-                        [ label [ class "col-sm-4 col-form-label" ] [ text "Karma" ]
-                        , div [ class "col-sm-8" ]
-                            [ select [ class "form-control form-control-sm", onChange (SetValue Karma) ]
-                                (List.map (\( x, name ) -> option [ selected (x == toString contributor.karma), value x ] [ text name ]) possible_values)
-                            ]
-                        ]
-                    , div [ class "form-group row" ]
-                        [ label [ class "col-sm-4 col-form-label" ] [ text "Public comment" ]
-                        , div [ class "col-sm-8" ]
-                            [ textarea [ class "form-control", placeholder "A public comment, visible by everyone on RelMan.", onInput (SetValue CommentPublic) ] [ text contributor.comment_public ]
-                            ]
-                        ]
-                    , div [ class "form-group row" ]
-                        [ label [ class "col-sm-4 col-form-label" ] [ text "Private comment" ]
-                        , div [ class "col-sm-8" ]
-                            [ textarea [ class "form-control", placeholder "A private comment, visible only by admins.", onInput (SetValue CommentPrivate) ] [ text comment_private ]
-                            ]
+    case contributor.comment_private of
+        Just comment_private ->
+            Html.form [ class "form", onSubmit UpdateContributor ]
+                [ div [ class "row" ]
+                    [ div [ class "col-sm-2 hidden-xs" ]
+                        [ img [ class "avatar img-fluid img-rounded", src contributor.avatar ] [] ]
+                    , div [ class "col-xs-8 col-sm-10" ]
+                        [ text contributor.name ]
+                    ]
+                , div [ class "form-group row" ]
+                    [ label [ class "col-sm-4 col-form-label" ] [ text "Karma" ]
+                    , div [ class "col-sm-8" ]
+                        [ select [ class "form-control form-control-sm", onChange (SetValue Karma) ]
+                            (List.map (\( x, name ) -> option [ selected (x == toString contributor.karma), value x ] [ text name ]) possible_values)
                         ]
                     ]
+                , div [ class "form-group row" ]
+                    [ label [ class "col-sm-4 col-form-label" ] [ text "Public comment" ]
+                    , div [ class "col-sm-8" ]
+                        [ textarea [ class "form-control", placeholder "A public comment, visible by everyone on RelMan.", onInput (SetValue CommentPublic) ] [ text contributor.comment_public ]
+                        ]
+                    ]
+                , div [ class "form-group row" ]
+                    [ label [ class "col-sm-4 col-form-label" ] [ text "Private comment" ]
+                    , div [ class "col-sm-8" ]
+                        [ textarea [ class "form-control", placeholder "A private comment, visible only by admins.", onInput (SetValue CommentPrivate) ] [ text comment_private ]
+                        ]
+                    ]
+                ]
 
-            Nothing ->
-                div [ class "alert alert-danger" ] [ text "You are not an admin" ]
+        Nothing ->
+            div [ class "alert alert-danger" ] [ text "You are not an admin" ]
 
 
 

@@ -63,7 +63,7 @@ def test_get_coverage_artifacts():
     try:
         a.get(chunk='xpcshell-7', suite='mochitest')
         assert False, 'An exception should have been thrown'
-    except:
+    except Exception:
         pass
 
     for f in FILES:

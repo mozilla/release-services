@@ -39,7 +39,7 @@ preferenceDecoder =
         dec =
             map4 Preference channel_field name_field target_field urgency_field
     in
-        at [ "preferences" ] (list dec)
+    at [ "preferences" ] (list dec)
 
 
 problemDecoder : Decoder ApiProblem
@@ -60,7 +60,7 @@ problemDecoder =
         type_ =
             maybe (field "type" string)
     in
-        map5 ApiProblem detail instance status title type_
+    map5 ApiProblem detail instance status title type_
 
 
 

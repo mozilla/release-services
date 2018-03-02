@@ -52,8 +52,8 @@ init backend_uplift_url =
             , path = Nothing
             }
     in
-        -- Load code coverage data
-        ( model, Cmd.none )
+    -- Load code coverage data
+    ( model, Cmd.none )
 
 
 
@@ -100,9 +100,9 @@ loadArtifact model =
                 , withCredentials = False
                 }
     in
-        -- send request as webdata
-        RemoteData.sendRequest request
-            |> Cmd.map LoadedArtifact
+    -- send request as webdata
+    RemoteData.sendRequest request
+        |> Cmd.map LoadedArtifact
 
 
 decodeArtifact : Decoder Directories
@@ -158,10 +158,10 @@ view model =
                             Nothing ->
                                 "Top Directory"
                 in
-                    div []
-                        [ h1 [] [ text title ]
-                        , viewDirectories (filterDirectories directories model.path)
-                        ]
+                div []
+                    [ h1 [] [ text title ]
+                    , viewDirectories (filterDirectories directories model.path)
+                    ]
 
             _ ->
                 div [ class "alert alert-info" ] [ text "Loading code coverage..." ]
@@ -215,22 +215,22 @@ viewDirectory ( path, directory ) =
                 Nothing ->
                     "No previous value"
     in
-        tr [ class style ]
-            [ td [] [ span [ class "btn btn-link", onClick (SetDirectory (Just path)) ] [ text path ] ]
-            , td [] [ text previous ]
-            , td [] [ text (toString directory.current) ]
-            , td []
-                [ text
-                    ((if diff > 0 then
-                        "+"
-                      else
-                        ""
-                     )
-                        ++ toString diff
-                    )
-                ]
-            , td [] [ ul [ class "bug-list" ] (List.map viewBug directory.bugs) ]
+    tr [ class style ]
+        [ td [] [ span [ class "btn btn-link", onClick (SetDirectory (Just path)) ] [ text path ] ]
+        , td [] [ text previous ]
+        , td [] [ text (toString directory.current) ]
+        , td []
+            [ text
+                ((if diff > 0 then
+                    "+"
+                  else
+                    ""
+                 )
+                    ++ toString diff
+                )
             ]
+        , td [] [ ul [ class "bug-list" ] (List.map viewBug directory.bugs) ]
+        ]
 
 
 viewBug : Bug -> Html Msg
