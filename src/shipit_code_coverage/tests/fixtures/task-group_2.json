@@ -1,0 +1,1439 @@
+{
+  "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+  "tasks": [
+    {
+      "status": {
+        "taskId": "frUpdQOESjSt6oTkVms-8Q",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-win7-32-gpu",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "deadline": "2018-03-03T10:18:44.516Z",
+        "expires": "2019-03-02T10:18:44.516Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "us-west-2",
+            "workerId": "i-0ade1397df834894b",
+            "takenUntil": "2018-03-02T12:18:02.866Z",
+            "scheduled": "2018-03-02T11:58:02.266Z",
+            "started": "2018-03-02T11:58:02.943Z",
+            "resolved": "2018-03-02T12:03:55.159Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-win7-32-gpu",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "dependencies": [
+          "JOznx6cYQdK6RyBeomoZ7g"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.mozilla-central.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.33546"
+        ],
+        "priority": "medium",
+        "retries": 5,
+        "created": "2018-03-02T10:18:44.516Z",
+        "deadline": "2018-03-03T10:18:44.516Z",
+        "expires": "2019-03-02T10:18:44.516Z",
+        "scopes": [],
+        "payload": {
+          "env": {
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-central",
+            "MOZ_AUTOMATION": "1",
+            "SCCACHE_DISABLE": "1",
+            "GECKO_HEAD_REV": "b2a9a4bb5c94de179ae7a3f52fde58c0e2897498"
+          },
+          "artifacts": [
+            {
+              "path": "logs",
+              "expires": "2019-03-02T10:18:44.516Z",
+              "type": "directory",
+              "name": "public/logs"
+            },
+            {
+              "path": "build/blobber_upload_dir",
+              "expires": "2019-03-02T10:18:44.516Z",
+              "type": "directory",
+              "name": "public/test_info"
+            }
+          ],
+          "maxRunTime": 3600,
+          "command": [
+            "c:\\mozilla-build\\python\\python.exe -u mozharness\\scripts\\desktop_unittest.py --cfg mozharness\\configs\\unittests\\win_taskcluster_unittest.py --reftest-suite=reftest --e10s --no-read-buildbot-config --installer-url https://queue.taskcluster.net/v1/task/JOznx6cYQdK6RyBeomoZ7g/artifacts/public/build/target.zip --test-packages-url https://queue.taskcluster.net/v1/task/JOznx6cYQdK6RyBeomoZ7g/artifacts/public/build/target.test_packages.json --download-symbols ondemand --reftest-suite=reftest --e10s --total-chunk=32 --this-chunk=13"
+          ],
+          "osGroups": [],
+          "mounts": [
+            {
+              "directory": ".",
+              "content": {
+                "taskId": "JOznx6cYQdK6RyBeomoZ7g",
+                "artifact": "public/build/mozharness.zip"
+              },
+              "format": "zip"
+            }
+          ]
+        },
+        "metadata": {
+          "owner": "aciure@mozilla.com",
+          "source": "https://hg.mozilla.org/mozilla-central/file/b2a9a4bb5c94de179ae7a3f52fde58c0e2897498/taskcluster/ci/test",
+          "description": "Reftest run ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=mozilla-central&revision=b2a9a4bb5c94de179ae7a3f52fde58c0e2897498))",
+          "name": "test-windows7-32-pgo/opt-reftest-e10s-13"
+        },
+        "tags": {
+          "kind": "test",
+          "worker-implementation": "generic-worker",
+          "createdForUser": "aciure@mozilla.com",
+          "label": "test-windows7-32-pgo/opt-reftest-e10s-13",
+          "test-type": "reftest",
+          "os": "windows"
+        },
+        "extra": {
+          "chunks": {
+            "current": 13,
+            "total": 32
+          },
+          "suite": {
+            "flavor": "reftest",
+            "name": "reftest"
+          },
+          "treeherder": {
+            "jobKind": "test",
+            "groupSymbol": "R-e10s",
+            "collection": {
+              "pgo": true
+            },
+            "machine": {
+              "platform": "windows7-32"
+            },
+            "groupName": "Reftests with e10s",
+            "tier": 1,
+            "symbol": "R13"
+          },
+          "parent": "aPt9FbIdQwmhwDIPDYLuaw",
+          "index": {
+            "rank": 1519985797
+          }
+        }
+      }
+    },
+    {
+      "status": {
+        "taskId": "fsIivL37Sr6DEdM997fM3g",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-3-b-win2012",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "deadline": "2018-03-03T10:18:14.345Z",
+        "expires": "2019-03-02T10:18:14.345Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "us-east-1",
+            "workerId": "i-0469bb027a7d3fff0",
+            "takenUntil": "2018-03-02T11:48:18.808Z",
+            "scheduled": "2018-03-02T10:20:17.503Z",
+            "started": "2018-03-02T10:20:17.979Z",
+            "resolved": "2018-03-02T11:36:37.449Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-3-b-win2012",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "dependencies": [
+          "DLUcu9WSRgyVKIrzT5A1Ow",
+          "Kl8tCuSVT2yAGWgzOxo4JA",
+          "aPt9FbIdQwmhwDIPDYLuaw"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "index.gecko.v2.mozilla-central.latest.firefox.sm-plain-win32-opt",
+          "index.gecko.v2.mozilla-central.pushdate.2018.03.02.20180302101637.firefox.sm-plain-win32-opt",
+          "index.gecko.v2.mozilla-central.pushlog-id.33546.firefox.sm-plain-win32-opt",
+          "index.gecko.v2.mozilla-central.revision.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.firefox.sm-plain-win32-opt",
+          "index.gecko.v2.trunk.revision.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.firefox.sm-plain-win32-opt",
+          "tc-treeherder.v2.mozilla-central.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.33546"
+        ],
+        "priority": "medium",
+        "retries": 5,
+        "created": "2018-03-02T10:18:14.345Z",
+        "deadline": "2018-03-03T10:18:14.345Z",
+        "expires": "2019-03-02T10:18:14.345Z",
+        "scopes": [],
+        "payload": {
+          "env": {
+            "UPLOAD_DIR": "./public/build",
+            "SCCACHE_DISABLE": "1",
+            "WORK": ".",
+            "MOZ_BUILD_DATE": "20180302101637",
+            "GECKO_HEAD_REV": "b2a9a4bb5c94de179ae7a3f52fde58c0e2897498",
+            "MOZ_TOOLCHAINS": "public/build/clang.tar.bz2@DLUcu9WSRgyVKIrzT5A1Ow public/build/rustc.tar.bz2@Kl8tCuSVT2yAGWgzOxo4JA",
+            "MOZ_SCM_LEVEL": "3",
+            "SPIDERMONKEY_VARIANT": "plain",
+            "GECKO_BASE_REPOSITORY": "https://hg.mozilla.org/mozilla-unified",
+            "MOZHARNESS_DISABLE": "true",
+            "SRCDIR": "./src",
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-central",
+            "TOOLTOOL_MANIFEST": "browser/config/tooltool-manifests/win32/releng.manifest",
+            "GECKO_HEAD_REF": "b2a9a4bb5c94de179ae7a3f52fde58c0e2897498",
+            "MOZ_AUTOMATION": "1"
+          },
+          "artifacts": [
+            {
+              "path": "public/build",
+              "expires": "2019-03-02T10:18:14.345Z",
+              "type": "directory",
+              "name": "public/build"
+            }
+          ],
+          "maxRunTime": 36000,
+          "command": [
+            "\"c:\\Program Files\\Mercurial\\hg.exe\" robustcheckout --sharebase y:\\hg-shared --purge --upstream https://hg.mozilla.org/mozilla-unified --revision b2a9a4bb5c94de179ae7a3f52fde58c0e2897498 https://hg.mozilla.org/mozilla-central .\\src",
+            "c:\\mozilla-build\\msys\\bin\\bash.exe \"./src/taskcluster/scripts/builder/build-sm.sh\""
+          ],
+          "osGroups": [],
+          "mounts": []
+        },
+        "metadata": {
+          "owner": "aciure@mozilla.com",
+          "source": "https://hg.mozilla.org/mozilla-central/file/b2a9a4bb5c94de179ae7a3f52fde58c0e2897498/taskcluster/ci/spidermonkey",
+          "description": "Spidermonkey Plain ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=mozilla-central&revision=b2a9a4bb5c94de179ae7a3f52fde58c0e2897498))",
+          "name": "spidermonkey-sm-plain-win32/opt"
+        },
+        "tags": {
+          "os": "windows",
+          "createdForUser": "aciure@mozilla.com",
+          "worker-implementation": "generic-worker",
+          "kind": "spidermonkey",
+          "label": "spidermonkey-sm-plain-win32/opt"
+        },
+        "extra": {
+          "index": {
+            "rank": 1519985797
+          },
+          "treeherder": {
+            "jobKind": "build",
+            "groupSymbol": "SM",
+            "collection": {
+              "opt": true
+            },
+            "machine": {
+              "platform": "windows2012-32"
+            },
+            "groupName": "Spidermonkey builds",
+            "tier": 1,
+            "symbol": "p"
+          },
+          "parent": "aPt9FbIdQwmhwDIPDYLuaw"
+        }
+      }
+    },
+    {
+      "status": {
+        "taskId": "fumtwESXSXOBWqrIMgoIUA",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-win7-32",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "deadline": "2018-03-03T10:18:46.998Z",
+        "expires": "2019-03-02T10:18:46.998Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "us-east-1",
+            "workerId": "i-0160584f961e974b1",
+            "takenUntil": "2018-03-02T11:52:54.935Z",
+            "scheduled": "2018-03-02T11:30:43.106Z",
+            "started": "2018-03-02T11:32:55.012Z",
+            "resolved": "2018-03-02T11:43:22.373Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-win7-32",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "dependencies": [
+          "R010rAsMSpef09QXWgsSaw"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.mozilla-central.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.33546"
+        ],
+        "priority": "medium",
+        "retries": 5,
+        "created": "2018-03-02T10:18:46.998Z",
+        "deadline": "2018-03-03T10:18:46.998Z",
+        "expires": "2019-03-02T10:18:46.998Z",
+        "scopes": [],
+        "payload": {
+          "env": {
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-central",
+            "MOZ_AUTOMATION": "1",
+            "SCCACHE_DISABLE": "1",
+            "GECKO_HEAD_REV": "b2a9a4bb5c94de179ae7a3f52fde58c0e2897498"
+          },
+          "artifacts": [
+            {
+              "path": "logs",
+              "expires": "2019-03-02T10:18:46.998Z",
+              "type": "directory",
+              "name": "public/logs"
+            },
+            {
+              "path": "build/blobber_upload_dir",
+              "expires": "2019-03-02T10:18:46.998Z",
+              "type": "directory",
+              "name": "public/test_info"
+            }
+          ],
+          "maxRunTime": 3600,
+          "command": [
+            "c:\\mozilla-build\\python\\python.exe -u mozharness\\scripts\\desktop_unittest.py --cfg mozharness\\configs\\unittests\\win_taskcluster_unittest.py --reftest-suite=crashtest --e10s --no-read-buildbot-config --installer-url https://queue.taskcluster.net/v1/task/R010rAsMSpef09QXWgsSaw/artifacts/public/build/target.zip --test-packages-url https://queue.taskcluster.net/v1/task/R010rAsMSpef09QXWgsSaw/artifacts/public/build/target.test_packages.json --download-symbols ondemand --reftest-suite=crashtest --e10s"
+          ],
+          "osGroups": [],
+          "mounts": [
+            {
+              "directory": ".",
+              "content": {
+                "taskId": "R010rAsMSpef09QXWgsSaw",
+                "artifact": "public/build/mozharness.zip"
+              },
+              "format": "zip"
+            }
+          ]
+        },
+        "metadata": {
+          "owner": "aciure@mozilla.com",
+          "source": "https://hg.mozilla.org/mozilla-central/file/b2a9a4bb5c94de179ae7a3f52fde58c0e2897498/taskcluster/ci/test",
+          "description": "Crashtest run ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=mozilla-central&revision=b2a9a4bb5c94de179ae7a3f52fde58c0e2897498))",
+          "name": "test-windows7-32/opt-crashtest-e10s"
+        },
+        "tags": {
+          "kind": "test",
+          "worker-implementation": "generic-worker",
+          "createdForUser": "aciure@mozilla.com",
+          "label": "test-windows7-32/opt-crashtest-e10s",
+          "test-type": "reftest",
+          "os": "windows"
+        },
+        "extra": {
+          "chunks": {
+            "current": 1,
+            "total": 1
+          },
+          "suite": {
+            "flavor": "crashtest",
+            "name": "reftest"
+          },
+          "treeherder": {
+            "jobKind": "test",
+            "groupSymbol": "R-e10s",
+            "collection": {
+              "opt": true
+            },
+            "machine": {
+              "platform": "windows7-32"
+            },
+            "groupName": "Reftests with e10s",
+            "tier": 1,
+            "symbol": "C"
+          },
+          "parent": "aPt9FbIdQwmhwDIPDYLuaw",
+          "index": {
+            "rank": 1519985797
+          }
+        }
+      }
+    },
+    {
+      "status": {
+        "taskId": "fw2EHrU1RLWI_6_U8-SCeA",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-win7-32-gpu",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "deadline": "2018-03-03T10:18:52.624Z",
+        "expires": "2019-03-02T10:18:52.624Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "us-west-1",
+            "workerId": "i-024a350f3fffdc4b9",
+            "takenUntil": "2018-03-02T11:56:48.693Z",
+            "scheduled": "2018-03-02T11:30:42.959Z",
+            "started": "2018-03-02T11:36:48.770Z",
+            "resolved": "2018-03-02T11:43:14.401Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-win7-32-gpu",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "dependencies": [
+          "R010rAsMSpef09QXWgsSaw"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.mozilla-central.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.33546"
+        ],
+        "priority": "medium",
+        "retries": 5,
+        "created": "2018-03-02T10:18:52.624Z",
+        "deadline": "2018-03-03T10:18:52.624Z",
+        "expires": "2019-03-02T10:18:52.624Z",
+        "scopes": [],
+        "payload": {
+          "env": {
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-central",
+            "MOZ_AUTOMATION": "1",
+            "SCCACHE_DISABLE": "1",
+            "GECKO_HEAD_REV": "b2a9a4bb5c94de179ae7a3f52fde58c0e2897498"
+          },
+          "artifacts": [
+            {
+              "path": "logs",
+              "expires": "2019-03-02T10:18:52.624Z",
+              "type": "directory",
+              "name": "public/logs"
+            },
+            {
+              "path": "build/blobber_upload_dir",
+              "expires": "2019-03-02T10:18:52.624Z",
+              "type": "directory",
+              "name": "public/test_info"
+            }
+          ],
+          "maxRunTime": 3600,
+          "command": [
+            "c:\\mozilla-build\\python\\python.exe -u mozharness\\scripts\\desktop_unittest.py --cfg mozharness\\configs\\unittests\\win_taskcluster_unittest.py --reftest-suite=reftest --e10s --no-read-buildbot-config --installer-url https://queue.taskcluster.net/v1/task/R010rAsMSpef09QXWgsSaw/artifacts/public/build/target.zip --test-packages-url https://queue.taskcluster.net/v1/task/R010rAsMSpef09QXWgsSaw/artifacts/public/build/target.test_packages.json --download-symbols ondemand --reftest-suite=reftest --e10s --total-chunk=32 --this-chunk=31"
+          ],
+          "osGroups": [],
+          "mounts": [
+            {
+              "directory": ".",
+              "content": {
+                "taskId": "R010rAsMSpef09QXWgsSaw",
+                "artifact": "public/build/mozharness.zip"
+              },
+              "format": "zip"
+            }
+          ]
+        },
+        "metadata": {
+          "owner": "aciure@mozilla.com",
+          "source": "https://hg.mozilla.org/mozilla-central/file/b2a9a4bb5c94de179ae7a3f52fde58c0e2897498/taskcluster/ci/test",
+          "description": "Reftest run ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=mozilla-central&revision=b2a9a4bb5c94de179ae7a3f52fde58c0e2897498))",
+          "name": "test-windows7-32/opt-reftest-e10s-31"
+        },
+        "tags": {
+          "kind": "test",
+          "worker-implementation": "generic-worker",
+          "createdForUser": "aciure@mozilla.com",
+          "label": "test-windows7-32/opt-reftest-e10s-31",
+          "test-type": "reftest",
+          "os": "windows"
+        },
+        "extra": {
+          "chunks": {
+            "current": 31,
+            "total": 32
+          },
+          "suite": {
+            "flavor": "reftest",
+            "name": "reftest"
+          },
+          "treeherder": {
+            "jobKind": "test",
+            "groupSymbol": "R-e10s",
+            "collection": {
+              "opt": true
+            },
+            "machine": {
+              "platform": "windows7-32"
+            },
+            "groupName": "Reftests with e10s",
+            "tier": 1,
+            "symbol": "R31"
+          },
+          "parent": "aPt9FbIdQwmhwDIPDYLuaw",
+          "index": {
+            "rank": 1519985797
+          }
+        }
+      }
+    },
+    {
+      "status": {
+        "taskId": "fwvx7SD0SHqoQyO95RsqrA",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-win7-32",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "deadline": "2018-03-03T10:18:45.942Z",
+        "expires": "2019-03-02T10:18:45.942Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "eu-central-1",
+            "workerId": "i-094aeb61b90bdac4f",
+            "takenUntil": "2018-03-02T11:57:06.338Z",
+            "scheduled": "2018-03-02T11:20:03.691Z",
+            "started": "2018-03-02T11:20:04.114Z",
+            "resolved": "2018-03-02T11:44:31.026Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-win7-32",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "dependencies": [
+          "PqRbFBeDRCi5maoBCsBFaw"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.mozilla-central.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.33546"
+        ],
+        "priority": "medium",
+        "retries": 5,
+        "created": "2018-03-02T10:18:45.942Z",
+        "deadline": "2018-03-03T10:18:45.942Z",
+        "expires": "2019-03-02T10:18:45.942Z",
+        "scopes": [],
+        "payload": {
+          "env": {
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-central",
+            "MOZ_AUTOMATION": "1",
+            "SCCACHE_DISABLE": "1",
+            "GECKO_HEAD_REV": "b2a9a4bb5c94de179ae7a3f52fde58c0e2897498"
+          },
+          "artifacts": [
+            {
+              "path": "logs",
+              "expires": "2019-03-02T10:18:45.942Z",
+              "type": "directory",
+              "name": "public/logs"
+            },
+            {
+              "path": "build/blobber_upload_dir",
+              "expires": "2019-03-02T10:18:45.942Z",
+              "type": "directory",
+              "name": "public/test_info"
+            }
+          ],
+          "maxRunTime": 5400,
+          "command": [
+            "c:\\mozilla-build\\python\\python.exe -u mozharness\\scripts\\desktop_unittest.py --cfg mozharness\\configs\\unittests\\win_taskcluster_unittest.py --mochitest-suite=mochitest-devtools-chrome-chunked --e10s --no-read-buildbot-config --installer-url https://queue.taskcluster.net/v1/task/PqRbFBeDRCi5maoBCsBFaw/artifacts/public/build/target.zip --test-packages-url https://queue.taskcluster.net/v1/task/PqRbFBeDRCi5maoBCsBFaw/artifacts/public/build/target.test_packages.json --download-symbols true --mochitest-suite=mochitest-devtools-chrome-chunked --e10s --total-chunk=8 --this-chunk=4"
+          ],
+          "osGroups": [],
+          "mounts": [
+            {
+              "directory": ".",
+              "content": {
+                "taskId": "PqRbFBeDRCi5maoBCsBFaw",
+                "artifact": "public/build/mozharness.zip"
+              },
+              "format": "zip"
+            }
+          ]
+        },
+        "metadata": {
+          "owner": "aciure@mozilla.com",
+          "source": "https://hg.mozilla.org/mozilla-central/file/b2a9a4bb5c94de179ae7a3f52fde58c0e2897498/taskcluster/ci/test",
+          "description": "Mochitest devtools-chrome run ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=mozilla-central&revision=b2a9a4bb5c94de179ae7a3f52fde58c0e2897498))",
+          "name": "test-windows7-32/debug-mochitest-devtools-chrome-e10s-4"
+        },
+        "tags": {
+          "kind": "test",
+          "worker-implementation": "generic-worker",
+          "createdForUser": "aciure@mozilla.com",
+          "label": "test-windows7-32/debug-mochitest-devtools-chrome-e10s-4",
+          "test-type": "mochitest",
+          "os": "windows"
+        },
+        "extra": {
+          "chunks": {
+            "current": 4,
+            "total": 8
+          },
+          "suite": {
+            "flavor": "mochitest-devtools-chrome-chunked",
+            "name": "mochitest"
+          },
+          "treeherder": {
+            "jobKind": "test",
+            "groupSymbol": "M-e10s",
+            "collection": {
+              "debug": true
+            },
+            "machine": {
+              "platform": "windows7-32"
+            },
+            "groupName": "Mochitests with e10s",
+            "tier": 1,
+            "symbol": "dt4"
+          },
+          "parent": "aPt9FbIdQwmhwDIPDYLuaw",
+          "index": {
+            "rank": 1519985797
+          }
+        }
+      }
+    },
+    {
+      "status": {
+        "taskId": "fx1bImywTUiTbEl3bhG2gg",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "deadline": "2018-03-03T10:18:34.350Z",
+        "expires": "2019-03-02T10:18:34.350Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "us-west-2",
+            "workerId": "i-0a900c3567c79a4f8",
+            "takenUntil": "2018-03-02T12:11:47.047Z",
+            "scheduled": "2018-03-02T11:01:44.319Z",
+            "started": "2018-03-02T11:05:36.836Z",
+            "resolved": "2018-03-02T11:52:12.768Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "dependencies": [
+          "NP_XYKXKQda0NjqgHuSd3g",
+          "Xf2CPtHgQmWUedLw3FcJYg"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.mozilla-central.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.33546",
+          "coalesce.v1.mozilla-central.4475f2ff485e44039f66"
+        ],
+        "priority": "medium",
+        "retries": 5,
+        "created": "2018-03-02T10:18:34.350Z",
+        "deadline": "2018-03-03T10:18:34.350Z",
+        "expires": "2019-03-02T10:18:34.350Z",
+        "scopes": [
+          "docker-worker:relengapi-proxy:tooltool.download.public",
+          "docker-worker:relengapi-proxy:tooltool.download.internal",
+          "secrets:get:project/taskcluster/gecko/hgfingerprint",
+          "docker-worker:feature:allowPtrace",
+          "docker-worker:capability:device:loopbackVideo",
+          "docker-worker:cache:level-3-mozilla-central-test-workspace-v3-697eee6c304d222fdb39",
+          "docker-worker:cache:level-3-tooltool-cache-v3-697eee6c304d222fdb39",
+          "docker-worker:cache:level-3-checkouts-v3-697eee6c304d222fdb39"
+        ],
+        "payload": {
+          "supersederUrl": "https://coalesce.mozilla-releng.net/v1/list/3600/5/mozilla-central.4475f2ff485e44039f66",
+          "onExitStatus": {
+            "retry": [
+              4
+            ]
+          },
+          "maxRunTime": 7200,
+          "image": {
+            "path": "public/image.tar.zst",
+            "type": "task-image",
+            "taskId": "Xf2CPtHgQmWUedLw3FcJYg"
+          },
+          "cache": {
+            "level-3-checkouts-v3-697eee6c304d222fdb39": "/builds/worker/checkouts",
+            "level-3-mozilla-central-test-workspace-v3-697eee6c304d222fdb39": "/builds/worker/workspace",
+            "level-3-tooltool-cache-v3-697eee6c304d222fdb39": "/builds/worker/tooltool-cache"
+          },
+          "capabilities": {
+            "devices": {
+              "loopbackVideo": true
+            }
+          },
+          "artifacts": {
+            "public/logs/": {
+              "path": "/builds/worker/workspace/build/upload/logs/",
+              "expires": "2019-03-02T10:18:34.350Z",
+              "type": "directory"
+            },
+            "public/test": {
+              "path": "/builds/worker/artifacts/",
+              "expires": "2019-03-02T10:18:34.350Z",
+              "type": "directory"
+            },
+            "public/test_info/": {
+              "path": "/builds/worker/workspace/build/blobber_upload_dir/",
+              "expires": "2019-03-02T10:18:34.350Z",
+              "type": "directory"
+            }
+          },
+          "command": [
+            "/builds/worker/bin/run-task",
+            "--",
+            "/builds/worker/bin/test-linux.sh",
+            "--no-read-buildbot-config",
+            "--installer-url=https://queue.taskcluster.net/v1/task/NP_XYKXKQda0NjqgHuSd3g/artifacts/public/build/target.apk",
+            "--test-packages-url=https://queue.taskcluster.net/v1/task/NP_XYKXKQda0NjqgHuSd3g/artifacts/public/build/target.test_packages.json",
+            "--test-suite=reftest",
+            "--total-chunk=28",
+            "--this-chunk=15",
+            "--download-symbols=ondemand"
+          ],
+          "env": {
+            "SCCACHE_DISABLE": "1",
+            "TASKCLUSTER_CACHES": "/builds/worker/checkouts;/builds/worker/tooltool-cache;/builds/worker/workspace",
+            "HG_STORE_PATH": "/builds/worker/checkouts/hg-store",
+            "GECKO_HEAD_REV": "b2a9a4bb5c94de179ae7a3f52fde58c0e2897498",
+            "MOZ_AUTOMATION": "1",
+            "MOZHARNESS_ACTIONS": "get-secrets",
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-central",
+            "MOZHARNESS_URL": "https://queue.taskcluster.net/v1/task/NP_XYKXKQda0NjqgHuSd3g/artifacts/public/build/mozharness.zip",
+            "NEED_PULSEAUDIO": "true",
+            "TOOLTOOL_CACHE": "/builds/worker/tooltool-cache",
+            "ENABLE_E10S": "false",
+            "NEED_WINDOW_MANAGER": "true",
+            "TASKCLUSTER_VOLUMES": "/builds/worker/.cache;/builds/worker/checkouts;/builds/worker/tooltool-cache;/builds/worker/workspace",
+            "MOZHARNESS_CONFIG": "android/android_common.py android/androidarm_4_3.py",
+            "MOZHARNESS_SCRIPT": "android_emulator_unittest.py",
+            "GECKO_BASE_REPOSITORY": "https://hg.mozilla.org/mozilla-unified",
+            "MOZILLA_BUILD_URL": "https://queue.taskcluster.net/v1/task/NP_XYKXKQda0NjqgHuSd3g/artifacts/public/build/target.apk"
+          },
+          "features": {
+            "taskclusterProxy": true,
+            "allowPtrace": true,
+            "relengAPIProxy": true
+          }
+        },
+        "metadata": {
+          "owner": "aciure@mozilla.com",
+          "source": "https://hg.mozilla.org/mozilla-central/file/b2a9a4bb5c94de179ae7a3f52fde58c0e2897498/taskcluster/ci/test",
+          "description": "Reftest run ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=mozilla-central&revision=b2a9a4bb5c94de179ae7a3f52fde58c0e2897498))",
+          "name": "test-android-4.3-arm7-api-16/opt-reftest-15"
+        },
+        "tags": {
+          "kind": "test",
+          "worker-implementation": "docker-worker",
+          "createdForUser": "aciure@mozilla.com",
+          "label": "test-android-4.3-arm7-api-16/opt-reftest-15",
+          "test-type": "reftest",
+          "os": "linux"
+        },
+        "extra": {
+          "chunks": {
+            "current": 15,
+            "total": 28
+          },
+          "suite": {
+            "flavor": "reftest",
+            "name": "reftest"
+          },
+          "treeherder": {
+            "jobKind": "test",
+            "groupSymbol": "R",
+            "collection": {
+              "opt": true
+            },
+            "machine": {
+              "platform": "android-4-3-armv7-api16"
+            },
+            "groupName": "Reftests",
+            "tier": 1,
+            "symbol": "R15"
+          },
+          "parent": "aPt9FbIdQwmhwDIPDYLuaw",
+          "index": {
+            "rank": 1519985797
+          }
+        }
+      }
+    },
+    {
+      "status": {
+        "taskId": "fx560WVUQNOVmPDZ4kMulA",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "deadline": "2018-03-03T10:18:50.329Z",
+        "expires": "2019-03-02T10:18:50.329Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "us-east-1",
+            "workerId": "i-04996fc944f577920",
+            "takenUntil": "2018-03-02T12:28:09.740Z",
+            "scheduled": "2018-03-02T11:21:42.192Z",
+            "started": "2018-03-02T11:22:00.396Z",
+            "resolved": "2018-03-02T12:13:52.404Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "dependencies": [
+          "J8fuSOrLR_mgy573ek9Ysw",
+          "Xf2CPtHgQmWUedLw3FcJYg"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.mozilla-central.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.33546",
+          "coalesce.v1.mozilla-central.f9780f4e3f7bc2e30016"
+        ],
+        "priority": "medium",
+        "retries": 5,
+        "created": "2018-03-02T10:18:50.329Z",
+        "deadline": "2018-03-03T10:18:50.329Z",
+        "expires": "2019-03-02T10:18:50.329Z",
+        "scopes": [
+          "docker-worker:relengapi-proxy:tooltool.download.public",
+          "docker-worker:relengapi-proxy:tooltool.download.internal",
+          "secrets:get:project/taskcluster/gecko/hgfingerprint",
+          "docker-worker:feature:allowPtrace",
+          "docker-worker:capability:device:loopbackVideo",
+          "docker-worker:cache:level-3-mozilla-central-test-workspace-v3-697eee6c304d222fdb39",
+          "docker-worker:cache:level-3-tooltool-cache-v3-697eee6c304d222fdb39",
+          "docker-worker:cache:level-3-checkouts-v3-697eee6c304d222fdb39"
+        ],
+        "payload": {
+          "supersederUrl": "https://coalesce.mozilla-releng.net/v1/list/3600/5/mozilla-central.f9780f4e3f7bc2e30016",
+          "onExitStatus": {
+            "retry": [
+              4
+            ]
+          },
+          "maxRunTime": 7200,
+          "image": {
+            "path": "public/image.tar.zst",
+            "type": "task-image",
+            "taskId": "Xf2CPtHgQmWUedLw3FcJYg"
+          },
+          "cache": {
+            "level-3-checkouts-v3-697eee6c304d222fdb39": "/builds/worker/checkouts",
+            "level-3-mozilla-central-test-workspace-v3-697eee6c304d222fdb39": "/builds/worker/workspace",
+            "level-3-tooltool-cache-v3-697eee6c304d222fdb39": "/builds/worker/tooltool-cache"
+          },
+          "capabilities": {
+            "devices": {
+              "loopbackVideo": true
+            }
+          },
+          "artifacts": {
+            "public/logs/": {
+              "path": "/builds/worker/workspace/build/upload/logs/",
+              "expires": "2019-03-02T10:18:50.329Z",
+              "type": "directory"
+            },
+            "public/test": {
+              "path": "/builds/worker/artifacts/",
+              "expires": "2019-03-02T10:18:50.329Z",
+              "type": "directory"
+            },
+            "public/test_info/": {
+              "path": "/builds/worker/workspace/build/blobber_upload_dir/",
+              "expires": "2019-03-02T10:18:50.329Z",
+              "type": "directory"
+            }
+          },
+          "command": [
+            "/builds/worker/bin/run-task",
+            "--",
+            "/builds/worker/bin/test-linux.sh",
+            "--no-read-buildbot-config",
+            "--installer-url=https://queue.taskcluster.net/v1/task/J8fuSOrLR_mgy573ek9Ysw/artifacts/public/build/target.apk",
+            "--test-packages-url=https://queue.taskcluster.net/v1/task/J8fuSOrLR_mgy573ek9Ysw/artifacts/public/build/target.test_packages.json",
+            "--test-suite=jsreftest",
+            "--total-chunk=100",
+            "--this-chunk=10",
+            "--download-symbols=true"
+          ],
+          "env": {
+            "SCCACHE_DISABLE": "1",
+            "TASKCLUSTER_CACHES": "/builds/worker/checkouts;/builds/worker/tooltool-cache;/builds/worker/workspace",
+            "HG_STORE_PATH": "/builds/worker/checkouts/hg-store",
+            "GECKO_HEAD_REV": "b2a9a4bb5c94de179ae7a3f52fde58c0e2897498",
+            "MOZ_AUTOMATION": "1",
+            "MOZHARNESS_ACTIONS": "get-secrets",
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-central",
+            "MOZHARNESS_URL": "https://queue.taskcluster.net/v1/task/J8fuSOrLR_mgy573ek9Ysw/artifacts/public/build/mozharness.zip",
+            "NEED_PULSEAUDIO": "true",
+            "TOOLTOOL_CACHE": "/builds/worker/tooltool-cache",
+            "ENABLE_E10S": "false",
+            "NEED_WINDOW_MANAGER": "true",
+            "TASKCLUSTER_VOLUMES": "/builds/worker/.cache;/builds/worker/checkouts;/builds/worker/tooltool-cache;/builds/worker/workspace",
+            "MOZHARNESS_CONFIG": "android/android_common.py android/androidarm_4_3.py",
+            "MOZHARNESS_SCRIPT": "android_emulator_unittest.py",
+            "GECKO_BASE_REPOSITORY": "https://hg.mozilla.org/mozilla-unified",
+            "MOZILLA_BUILD_URL": "https://queue.taskcluster.net/v1/task/J8fuSOrLR_mgy573ek9Ysw/artifacts/public/build/target.apk"
+          },
+          "features": {
+            "taskclusterProxy": true,
+            "allowPtrace": true,
+            "relengAPIProxy": true
+          }
+        },
+        "metadata": {
+          "owner": "aciure@mozilla.com",
+          "source": "https://hg.mozilla.org/mozilla-central/file/b2a9a4bb5c94de179ae7a3f52fde58c0e2897498/taskcluster/ci/test",
+          "description": "JS Reftest run ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=mozilla-central&revision=b2a9a4bb5c94de179ae7a3f52fde58c0e2897498))",
+          "name": "test-android-4.3-arm7-api-16/debug-jsreftest-10"
+        },
+        "tags": {
+          "kind": "test",
+          "worker-implementation": "docker-worker",
+          "createdForUser": "aciure@mozilla.com",
+          "label": "test-android-4.3-arm7-api-16/debug-jsreftest-10",
+          "test-type": "reftest",
+          "os": "linux"
+        },
+        "extra": {
+          "chunks": {
+            "current": 10,
+            "total": 100
+          },
+          "suite": {
+            "flavor": "jsreftest",
+            "name": "reftest"
+          },
+          "treeherder": {
+            "jobKind": "test",
+            "groupSymbol": "R",
+            "collection": {
+              "debug": true
+            },
+            "machine": {
+              "platform": "android-4-3-armv7-api16"
+            },
+            "groupName": "Reftests",
+            "tier": 1,
+            "symbol": "J10"
+          },
+          "parent": "aPt9FbIdQwmhwDIPDYLuaw",
+          "index": {
+            "rank": 1519985797
+          }
+        }
+      }
+    },
+    {
+      "status": {
+        "taskId": "fxtgMRsRTYaJYrcr6jzRmg",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-win7-32-gpu",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "deadline": "2018-03-03T10:18:53.697Z",
+        "expires": "2019-03-02T10:18:53.697Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "us-east-1",
+            "workerId": "i-0baa4335a20d05d88",
+            "takenUntil": "2018-03-02T12:18:03.203Z",
+            "scheduled": "2018-03-02T11:58:02.200Z",
+            "started": "2018-03-02T11:58:03.285Z",
+            "resolved": "2018-03-02T12:06:49.709Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-win7-32-gpu",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "dependencies": [
+          "JOznx6cYQdK6RyBeomoZ7g"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.mozilla-central.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.33546"
+        ],
+        "priority": "medium",
+        "retries": 5,
+        "created": "2018-03-02T10:18:53.697Z",
+        "deadline": "2018-03-03T10:18:53.697Z",
+        "expires": "2019-03-02T10:18:53.697Z",
+        "scopes": [],
+        "payload": {
+          "env": {
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-central",
+            "MOZ_AUTOMATION": "1",
+            "SCCACHE_DISABLE": "1",
+            "GECKO_HEAD_REV": "b2a9a4bb5c94de179ae7a3f52fde58c0e2897498"
+          },
+          "artifacts": [
+            {
+              "path": "logs",
+              "expires": "2019-03-02T10:18:53.697Z",
+              "type": "directory",
+              "name": "public/logs"
+            },
+            {
+              "path": "build/blobber_upload_dir",
+              "expires": "2019-03-02T10:18:53.697Z",
+              "type": "directory",
+              "name": "public/test_info"
+            }
+          ],
+          "maxRunTime": 3600,
+          "command": [
+            "c:\\mozilla-build\\python\\python.exe -u mozharness\\scripts\\desktop_unittest.py --cfg mozharness\\configs\\unittests\\win_taskcluster_unittest.py --reftest-suite=reftest-gpu --e10s --no-read-buildbot-config --installer-url https://queue.taskcluster.net/v1/task/JOznx6cYQdK6RyBeomoZ7g/artifacts/public/build/target.zip --test-packages-url https://queue.taskcluster.net/v1/task/JOznx6cYQdK6RyBeomoZ7g/artifacts/public/build/target.test_packages.json --download-symbols ondemand --reftest-suite=reftest-gpu --e10s --total-chunk=32 --this-chunk=12"
+          ],
+          "osGroups": [],
+          "mounts": [
+            {
+              "directory": ".",
+              "content": {
+                "taskId": "JOznx6cYQdK6RyBeomoZ7g",
+                "artifact": "public/build/mozharness.zip"
+              },
+              "format": "zip"
+            }
+          ]
+        },
+        "metadata": {
+          "owner": "aciure@mozilla.com",
+          "source": "https://hg.mozilla.org/mozilla-central/file/b2a9a4bb5c94de179ae7a3f52fde58c0e2897498/taskcluster/ci/test",
+          "description": "Reftest GPU run ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=mozilla-central&revision=b2a9a4bb5c94de179ae7a3f52fde58c0e2897498))",
+          "name": "test-windows7-32-pgo/opt-reftest-gpu-e10s-12"
+        },
+        "tags": {
+          "kind": "test",
+          "worker-implementation": "generic-worker",
+          "createdForUser": "aciure@mozilla.com",
+          "label": "test-windows7-32-pgo/opt-reftest-gpu-e10s-12",
+          "test-type": "reftest",
+          "os": "windows"
+        },
+        "extra": {
+          "chunks": {
+            "current": 12,
+            "total": 32
+          },
+          "suite": {
+            "flavor": "reftest-gpu",
+            "name": "reftest"
+          },
+          "treeherder": {
+            "jobKind": "test",
+            "groupSymbol": "R-e10s",
+            "collection": {
+              "pgo": true
+            },
+            "machine": {
+              "platform": "windows7-32"
+            },
+            "groupName": "Reftests with e10s",
+            "tier": 1,
+            "symbol": "Rg12"
+          },
+          "parent": "aPt9FbIdQwmhwDIPDYLuaw",
+          "index": {
+            "rank": 1519985797
+          }
+        }
+      }
+    },
+    {
+      "status": {
+        "taskId": "fyzzUDcPSbWM8FgTQKUo3w",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-large",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "deadline": "2018-03-03T10:19:04.082Z",
+        "expires": "2019-03-02T10:19:04.082Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "us-west-1",
+            "workerId": "i-06c41afe1ebec3437",
+            "takenUntil": "2018-03-02T11:20:40.163Z",
+            "scheduled": "2018-03-02T10:55:21.096Z",
+            "started": "2018-03-02T11:00:40.241Z",
+            "resolved": "2018-03-02T11:09:57.512Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-large",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "dependencies": [
+          "Xf2CPtHgQmWUedLw3FcJYg",
+          "ZBDaiffGQaW_KpZs8ejYMw"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.mozilla-central.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.33546",
+          "coalesce.v1.mozilla-central.82206034d04b6be5d313"
+        ],
+        "priority": "medium",
+        "retries": 5,
+        "created": "2018-03-02T10:19:04.082Z",
+        "deadline": "2018-03-03T10:19:04.082Z",
+        "expires": "2019-03-02T10:19:04.082Z",
+        "scopes": [
+          "secrets:get:project/taskcluster/gecko/hgfingerprint",
+          "docker-worker:feature:allowPtrace",
+          "docker-worker:capability:device:loopbackVideo",
+          "docker-worker:cache:level-3-mozilla-central-test-workspace-v3-697eee6c304d222fdb39",
+          "docker-worker:cache:level-3-checkouts-v3-697eee6c304d222fdb39"
+        ],
+        "payload": {
+          "supersederUrl": "https://coalesce.mozilla-releng.net/v1/list/3600/5/mozilla-central.82206034d04b6be5d313",
+          "onExitStatus": {
+            "retry": [
+              4
+            ]
+          },
+          "maxRunTime": 3600,
+          "image": {
+            "path": "public/image.tar.zst",
+            "type": "task-image",
+            "taskId": "Xf2CPtHgQmWUedLw3FcJYg"
+          },
+          "cache": {
+            "level-3-checkouts-v3-697eee6c304d222fdb39": "/builds/worker/checkouts",
+            "level-3-mozilla-central-test-workspace-v3-697eee6c304d222fdb39": "/builds/worker/workspace"
+          },
+          "capabilities": {
+            "devices": {
+              "loopbackVideo": true
+            }
+          },
+          "artifacts": {
+            "public/logs/": {
+              "path": "/builds/worker/workspace/build/upload/logs/",
+              "expires": "2019-03-02T10:19:04.082Z",
+              "type": "directory"
+            },
+            "public/test": {
+              "path": "/builds/worker/artifacts/",
+              "expires": "2019-03-02T10:19:04.082Z",
+              "type": "directory"
+            },
+            "public/test_info/": {
+              "path": "/builds/worker/workspace/build/blobber_upload_dir/",
+              "expires": "2019-03-02T10:19:04.082Z",
+              "type": "directory"
+            }
+          },
+          "command": [
+            "/builds/worker/bin/run-task",
+            "--",
+            "/builds/worker/bin/test-linux.sh",
+            "--no-read-buildbot-config",
+            "--installer-url=https://queue.taskcluster.net/v1/task/ZBDaiffGQaW_KpZs8ejYMw/artifacts/public/build/target.tar.bz2",
+            "--test-packages-url=https://queue.taskcluster.net/v1/task/ZBDaiffGQaW_KpZs8ejYMw/artifacts/public/build/target.test_packages.json",
+            "--mochitest-suite=a11y",
+            "--allow-software-gl-layers",
+            "--disable-stylo",
+            "--download-symbols=true"
+          ],
+          "env": {
+            "SCCACHE_DISABLE": "1",
+            "MOZ_NODE_PATH": "/usr/local/bin/node",
+            "TASKCLUSTER_CACHES": "/builds/worker/checkouts;/builds/worker/workspace",
+            "HG_STORE_PATH": "/builds/worker/checkouts/hg-store",
+            "GECKO_HEAD_REV": "b2a9a4bb5c94de179ae7a3f52fde58c0e2897498",
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-central",
+            "MOCHITEST_FLAVOR": "a11y",
+            "TASKCLUSTER_VOLUMES": "/builds/worker/.cache;/builds/worker/checkouts;/builds/worker/tooltool-cache;/builds/worker/workspace",
+            "MOZHARNESS_URL": "https://queue.taskcluster.net/v1/task/ZBDaiffGQaW_KpZs8ejYMw/artifacts/public/build/mozharness.zip",
+            "NEED_PULSEAUDIO": "true",
+            "MOZ_AUTOMATION": "1",
+            "NEED_WINDOW_MANAGER": "true",
+            "MOZHARNESS_CONFIG": "unittests/linux_unittest.py remove_executables.py",
+            "ENABLE_E10S": "false",
+            "MOZHARNESS_SCRIPT": "desktop_unittest.py",
+            "GECKO_BASE_REPOSITORY": "https://hg.mozilla.org/mozilla-unified",
+            "MOZILLA_BUILD_URL": "https://queue.taskcluster.net/v1/task/ZBDaiffGQaW_KpZs8ejYMw/artifacts/public/build/target.tar.bz2"
+          },
+          "features": {
+            "taskclusterProxy": true,
+            "allowPtrace": true
+          }
+        },
+        "metadata": {
+          "owner": "aciure@mozilla.com",
+          "source": "https://hg.mozilla.org/mozilla-central/file/b2a9a4bb5c94de179ae7a3f52fde58c0e2897498/taskcluster/ci/test",
+          "description": "Mochitest a11y run ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=mozilla-central&revision=b2a9a4bb5c94de179ae7a3f52fde58c0e2897498))",
+          "name": "test-linux64-stylo-disabled/debug-mochitest-a11y"
+        },
+        "tags": {
+          "kind": "test",
+          "worker-implementation": "docker-worker",
+          "createdForUser": "aciure@mozilla.com",
+          "label": "test-linux64-stylo-disabled/debug-mochitest-a11y",
+          "test-type": "mochitest",
+          "os": "linux"
+        },
+        "extra": {
+          "chunks": {
+            "current": 1,
+            "total": 1
+          },
+          "suite": {
+            "flavor": "a11y",
+            "name": "mochitest"
+          },
+          "treeherder": {
+            "jobKind": "test",
+            "groupSymbol": "M",
+            "collection": {
+              "debug": true
+            },
+            "machine": {
+              "platform": "linux64-stylo-disabled"
+            },
+            "groupName": "Mochitests",
+            "tier": 1,
+            "symbol": "a11y"
+          },
+          "parent": "aPt9FbIdQwmhwDIPDYLuaw",
+          "index": {
+            "rank": 1519985797
+          }
+        }
+      }
+    },
+    {
+      "status": {
+        "taskId": "fzKfGLk-SA6ggUxHRvVsBQ",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "deadline": "2018-03-03T10:18:58.925Z",
+        "expires": "2019-03-02T10:18:58.925Z",
+        "retriesLeft": 5,
+        "state": "completed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "completed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "completed",
+            "workerGroup": "us-west-2",
+            "workerId": "i-0adb2cae5b6ceeeea",
+            "takenUntil": "2018-03-02T12:12:36.139Z",
+            "scheduled": "2018-03-02T11:21:42.150Z",
+            "started": "2018-03-02T11:21:49.148Z",
+            "resolved": "2018-03-02T12:06:32.362Z"
+          }
+        ]
+      },
+      "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "dependencies": [
+          "J8fuSOrLR_mgy573ek9Ysw",
+          "Xf2CPtHgQmWUedLw3FcJYg"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.mozilla-central.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.33546",
+          "coalesce.v1.mozilla-central.6edad79e1274ba8a08c6"
+        ],
+        "priority": "medium",
+        "retries": 5,
+        "created": "2018-03-02T10:18:58.925Z",
+        "deadline": "2018-03-03T10:18:58.925Z",
+        "expires": "2019-03-02T10:18:58.925Z",
+        "scopes": [
+          "docker-worker:relengapi-proxy:tooltool.download.public",
+          "docker-worker:relengapi-proxy:tooltool.download.internal",
+          "secrets:get:project/taskcluster/gecko/hgfingerprint",
+          "docker-worker:feature:allowPtrace",
+          "docker-worker:capability:device:loopbackVideo",
+          "docker-worker:cache:level-3-mozilla-central-test-workspace-v3-697eee6c304d222fdb39",
+          "docker-worker:cache:level-3-tooltool-cache-v3-697eee6c304d222fdb39",
+          "docker-worker:cache:level-3-checkouts-v3-697eee6c304d222fdb39"
+        ],
+        "payload": {
+          "supersederUrl": "https://coalesce.mozilla-releng.net/v1/list/3600/5/mozilla-central.6edad79e1274ba8a08c6",
+          "onExitStatus": {
+            "retry": [
+              4
+            ]
+          },
+          "maxRunTime": 7200,
+          "image": {
+            "path": "public/image.tar.zst",
+            "type": "task-image",
+            "taskId": "Xf2CPtHgQmWUedLw3FcJYg"
+          },
+          "cache": {
+            "level-3-checkouts-v3-697eee6c304d222fdb39": "/builds/worker/checkouts",
+            "level-3-mozilla-central-test-workspace-v3-697eee6c304d222fdb39": "/builds/worker/workspace",
+            "level-3-tooltool-cache-v3-697eee6c304d222fdb39": "/builds/worker/tooltool-cache"
+          },
+          "capabilities": {
+            "devices": {
+              "loopbackVideo": true
+            }
+          },
+          "artifacts": {
+            "public/logs/": {
+              "path": "/builds/worker/workspace/build/upload/logs/",
+              "expires": "2019-03-02T10:18:58.925Z",
+              "type": "directory"
+            },
+            "public/test": {
+              "path": "/builds/worker/artifacts/",
+              "expires": "2019-03-02T10:18:58.925Z",
+              "type": "directory"
+            },
+            "public/test_info/": {
+              "path": "/builds/worker/workspace/build/blobber_upload_dir/",
+              "expires": "2019-03-02T10:18:58.925Z",
+              "type": "directory"
+            }
+          },
+          "command": [
+            "/builds/worker/bin/run-task",
+            "--",
+            "/builds/worker/bin/test-linux.sh",
+            "--no-read-buildbot-config",
+            "--installer-url=https://queue.taskcluster.net/v1/task/J8fuSOrLR_mgy573ek9Ysw/artifacts/public/build/target.apk",
+            "--test-packages-url=https://queue.taskcluster.net/v1/task/J8fuSOrLR_mgy573ek9Ysw/artifacts/public/build/target.test_packages.json",
+            "--test-suite=reftest",
+            "--total-chunk=56",
+            "--this-chunk=36",
+            "--download-symbols=true"
+          ],
+          "env": {
+            "SCCACHE_DISABLE": "1",
+            "TASKCLUSTER_CACHES": "/builds/worker/checkouts;/builds/worker/tooltool-cache;/builds/worker/workspace",
+            "HG_STORE_PATH": "/builds/worker/checkouts/hg-store",
+            "GECKO_HEAD_REV": "b2a9a4bb5c94de179ae7a3f52fde58c0e2897498",
+            "MOZ_AUTOMATION": "1",
+            "MOZHARNESS_ACTIONS": "get-secrets",
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-central",
+            "MOZHARNESS_URL": "https://queue.taskcluster.net/v1/task/J8fuSOrLR_mgy573ek9Ysw/artifacts/public/build/mozharness.zip",
+            "NEED_PULSEAUDIO": "true",
+            "TOOLTOOL_CACHE": "/builds/worker/tooltool-cache",
+            "ENABLE_E10S": "false",
+            "NEED_WINDOW_MANAGER": "true",
+            "TASKCLUSTER_VOLUMES": "/builds/worker/.cache;/builds/worker/checkouts;/builds/worker/tooltool-cache;/builds/worker/workspace",
+            "MOZHARNESS_CONFIG": "android/android_common.py android/androidarm_4_3.py",
+            "MOZHARNESS_SCRIPT": "android_emulator_unittest.py",
+            "GECKO_BASE_REPOSITORY": "https://hg.mozilla.org/mozilla-unified",
+            "MOZILLA_BUILD_URL": "https://queue.taskcluster.net/v1/task/J8fuSOrLR_mgy573ek9Ysw/artifacts/public/build/target.apk"
+          },
+          "features": {
+            "taskclusterProxy": true,
+            "allowPtrace": true,
+            "relengAPIProxy": true
+          }
+        },
+        "metadata": {
+          "owner": "aciure@mozilla.com",
+          "source": "https://hg.mozilla.org/mozilla-central/file/b2a9a4bb5c94de179ae7a3f52fde58c0e2897498/taskcluster/ci/test",
+          "description": "Reftest run ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=mozilla-central&revision=b2a9a4bb5c94de179ae7a3f52fde58c0e2897498))",
+          "name": "test-android-4.3-arm7-api-16/debug-reftest-36"
+        },
+        "tags": {
+          "kind": "test",
+          "worker-implementation": "docker-worker",
+          "createdForUser": "aciure@mozilla.com",
+          "label": "test-android-4.3-arm7-api-16/debug-reftest-36",
+          "test-type": "reftest",
+          "os": "linux"
+        },
+        "extra": {
+          "chunks": {
+            "current": 36,
+            "total": 56
+          },
+          "suite": {
+            "flavor": "reftest",
+            "name": "reftest"
+          },
+          "treeherder": {
+            "jobKind": "test",
+            "groupSymbol": "R",
+            "collection": {
+              "debug": true
+            },
+            "machine": {
+              "platform": "android-4-3-armv7-api16"
+            },
+            "groupName": "Reftests",
+            "tier": 1,
+            "symbol": "R36"
+          },
+          "parent": "aPt9FbIdQwmhwDIPDYLuaw",
+          "index": {
+            "rank": 1519985797
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "status": {
+    "taskId": "MCIO1RWTRu2GhiE7_jILBw",
+    "provisionerId": "aws-provisioner-v1",
+    "workerType": "gecko-3-b-linux",
+    "schedulerId": "gecko-level-3",
+    "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+    "deadline": "2018-03-03T10:18:14.371Z",
+    "expires": "2019-03-02T10:18:14.371Z",
+    "retriesLeft": 5,
+    "state": "completed",
+    "runs": [
+      {
+        "runId": 0,
+        "state": "completed",
+        "reasonCreated": "scheduled",
+        "reasonResolved": "completed",
+        "workerGroup": "us-west-2",
+        "workerId": "i-0a2461ba551e87759",
+        "takenUntil": "2018-03-02T11:26:49.230Z",
+        "scheduled": "2018-03-02T10:20:17.163Z",
+        "started": "2018-03-02T10:20:38.406Z",
+        "resolved": "2018-03-02T11:08:30.352Z"
+      }
+    ]
+  }
+}

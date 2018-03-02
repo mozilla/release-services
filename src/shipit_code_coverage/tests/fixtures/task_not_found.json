@@ -1,0 +1,12 @@
+{
+  "code": "ResourceNotFound",
+  "message": "Indexed task not found\n----\nmethod:     findTask\nerrorCode:  ResourceNotFound\nstatusCode: 404\ntime:       2018-03-02T14:42:52.985Z",
+  "requestInfo": {
+    "method": "findTask",
+    "params": {
+      "indexPath": "gecko.v2.mozilla-central.latest.firefox.linux64-ccov-opta"
+    },
+    "payload": {},
+    "time": "2018-03-02T14:42:52.985Z"
+  }
+}
