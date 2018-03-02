@@ -1,0 +1,15 @@
+{
+"node": "3800f2c5af262050c8bddfd999efffb46afcb081",
+"date": [1517117884.0, 21600],
+"desc": "servo: Merge #19884 - Fix mutation test in CI by passing env vars correctly (from aneeshusa:fix-mutation-test); r=jdm\n\nOriginally, buildbot would try to directly execute `RUSTFLAGS=` as a binary\nsince it was the first token in the command string, which won't work.\n\nFix this by using the `env` command to set the environment variables,\nas there is currently no support for setting per-step environment variables\nin the `buildbot_steps.yml` file.\n\n\u003c!-- Thank you for contributing to Servo! Please replace each `[ ]` by `[X]` when the step is complete, and replace `__` with appropriate data: --\u003e\n- [ ] `./mach build -d` does not report any errors\n- [x] `./mach test-tidy` does not report any errors\n- [x] These changes should fix #19821 (github issue number if applicable).\n\n\u003c!-- Either: --\u003e\n- [ ] There are tests for these changes OR\n- [x] These changes do not require tests because they change the CI configuration\n\n\u003c!-- Also, please make sure that \"Allow edits from maintainers\" checkbox is checked, so that we can help you if you get stuck somewhere along the way.--\u003e\n\n\u003c!-- Pull requests that do not address these steps are welcome, but they will require additional verification as part of the review process. --\u003e\n\nSource-Repo: https://github.com/servo/servo\nSource-Revision: 025e5d773313e16ffe73ae63efc068b79b82d531",
+"backedoutby": "",
+"branch": "default",
+"bookmarks": [],
+"tags": [],
+"user": "Aneesh Agrawal \u003caneeshusa@gmail.com\u003e",
+"parents": ["30d915de546242961f2f3ce4e1cfbee5ec9e54bb"],
+"phase": "public",
+"pushid": 33334,
+"pushdate": [1517175935, 0],
+"pushuser": "apavel@mozilla.com"
+}

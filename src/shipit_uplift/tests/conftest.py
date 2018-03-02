@@ -11,6 +11,7 @@ import json
 import os
 import pickle
 import pytest
+import responses
 
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
@@ -118,6 +119,54 @@ def header_bot(app):
     '''
     from shipit_uplift.config import SCOPES_BOT
     return hawk_header(SCOPES_BOT)
+
+
+@pytest.fixture
+def coverage_responses():
+    directories = [
+        {
+            'path': 'hgmo_json_revs',
+            'url': lambda fname: 'https://hg.mozilla.org/mozilla-central/json-rev/{}'.format(fname),
+        },
+        {
+            'path': 'hgmo_json_pushes',
+            'url': lambda fname: 'https://hg.mozilla.org/mozilla-central/json-pushes?version=2&full=1&startID={}&endID={}'.format(int(fname), int(fname) + 8),
+            'match_querystring': True,
+        },
+        {
+            'path': 'hg_git_map',
+            'url': lambda fname: 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/{}'.format(fname),
+        },
+        {
+            'path': 'codecov_commits',
+            'url': lambda fname: 'https://codecov.io/api/gh/marco-c/gecko-dev/commit/{}'.format(fname),
+            'status': lambda data: json.loads(data)['meta']['status'],
+        },
+        {
+            'path': 'codecov_src',
+            'url': lambda fname: 'https://codecov.io/api/gh/marco-c/gecko-dev/src/{}'.format(fname.replace('_', '/')),
+            'status': lambda data: json.loads(data)['meta']['status'],
+        },
+        {
+            'path': 'hgmo_json_annotate',
+            'url': lambda fname: 'https://hg.mozilla.org/mozilla-central/json-annotate/{}'.format(fname.replace('_', '/')),
+        },
+    ]
+
+    for directory in directories:
+        dir_path = os.path.join(FIXTURES_DIR, directory['path'])
+        for fname in os.listdir(dir_path):
+            with open(os.path.join(dir_path, fname)) as f:
+                data = f.read()
+                match_querystring = directory['match_querystring'] if 'match_querystring' in directory else False
+                content_type = 'application/json' if fname.endswith('.json') else 'text/plain'
+                status = directory['status'](data) if 'status' in directory else 200
+                responses.add(responses.GET,
+                              directory['url'](os.path.splitext(fname)[0]),
+                              body=data,
+                              content_type=content_type,
+                              status=status,
+                              match_querystring=match_querystring)
 
 
 @pytest.fixture(scope='session')

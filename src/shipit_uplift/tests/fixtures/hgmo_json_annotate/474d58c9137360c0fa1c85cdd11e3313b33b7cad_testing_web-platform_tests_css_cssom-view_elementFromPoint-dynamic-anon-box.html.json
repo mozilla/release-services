@@ -1,0 +1,407 @@
+{
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"node": "474d58c9137360c0fa1c85cdd11e3313b33b7cad",
+"author": "shindli \u003cshindli@mozilla.com\u003e",
+"date": [1517219494.0, -7200],
+"desc": "Merge inbound to mozilla-central.  a=merge",
+"parents": ["30d915de546242961f2f3ce4e1cfbee5ec9e54bb"],
+"children": [],
+"permissions": "",
+"annotate": [{
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 1,
+"line": "\u003c!doctype html\u003e\n",
+"lineno": 1,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 2,
+"line": "\u003cmeta charset=\"utf-8\"\u003e\n",
+"lineno": 2,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 3,
+"line": "\u003ctitle\u003eCSS Test: Hit testing on element previously hidden by an anonymous scroll box\u003c/title\u003e\n",
+"lineno": 3,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 4,
+"line": "\u003clink rel=\"author\" title=\"Emilio Cobos \u00c1lvarez\" href=\"mailto:emilio@crisal.io\"\u003e\n",
+"lineno": 4,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 5,
+"line": "\u003clink rel=\"help\" href=\"https://bugzilla.mozilla.org/show_bug.cgi?id=1433591\"\u003e\n",
+"lineno": 5,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 6,
+"line": "\u003cscript src=\"/resources/testharness.js\"\u003e\u003c/script\u003e\n",
+"lineno": 6,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 7,
+"line": "\u003cscript src=\"/resources/testharnessreport.js\"\u003e\u003c/script\u003e\n",
+"lineno": 7,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 8,
+"line": "\u003cstyle\u003e\n",
+"lineno": 8,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 9,
+"line": "html, body {\n",
+"lineno": 9,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 10,
+"line": "  margin: 0;\n",
+"lineno": 10,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 11,
+"line": "  padding: 0;\n",
+"lineno": 11,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 12,
+"line": "}\n",
+"lineno": 12,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 13,
+"line": "/*\n",
+"lineno": 13,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 14,
+"line": "  Create a hidden scrollbox that occupies the whole viewport, then give it\n",
+"lineno": 14,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 15,
+"line": "  visibility: hidden dynamically. The link previously under the scrollbox\n",
+"lineno": 15,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 16,
+"line": "  should be clickable.\n",
+"lineno": 16,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 17,
+"line": " */\n",
+"lineno": 17,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 18,
+"line": ".scrollable {\n",
+"lineno": 18,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 19,
+"line": "  position: absolute;\n",
+"lineno": 19,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 20,
+"line": "  top: 0;\n",
+"lineno": 20,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 21,
+"line": "  left: 0;\n",
+"lineno": 21,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 22,
+"line": "  width: 100vw;\n",
+"lineno": 22,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 23,
+"line": "  height: 100vh;\n",
+"lineno": 23,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 24,
+"line": "  overflow: scroll;\n",
+"lineno": 24,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 25,
+"line": "}\n",
+"lineno": 25,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 26,
+"line": "\n",
+"lineno": 26,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 27,
+"line": ".scrollable .inner {\n",
+"lineno": 27,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 28,
+"line": "  display: table-cell;\n",
+"lineno": 28,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 29,
+"line": "  width: 100vw;\n",
+"lineno": 29,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 30,
+"line": "  height: 100vh;\n",
+"lineno": 30,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 31,
+"line": "}\n",
+"lineno": 31,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 32,
+"line": "\u003c/style\u003e\n",
+"lineno": 32,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 33,
+"line": "\u003cdiv class=\"scrollable\"\u003e\n",
+"lineno": 33,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 34,
+"line": "  \u003cdiv class=\"inner\"\u003e\u003c/div\u003e\n",
+"lineno": 34,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 35,
+"line": "\u003c/div\u003e\n",
+"lineno": 35,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 36,
+"line": "\u003ca href=\"#\"\u003eShould be clickable\u003c/a\u003e\n",
+"lineno": 36,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 37,
+"line": "\u003cscript\u003e\n",
+"lineno": 37,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 38,
+"line": "test(function() {\n",
+"lineno": 38,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 39,
+"line": "  assert_equals(document.elementFromPoint(10, 10).tagName, \"DIV\",\n",
+"lineno": 39,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 40,
+"line": "                \"Should hit the scrollbox contents\");\n",
+"lineno": 40,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 41,
+"line": "  document.querySelector('div').style.visibility = \"hidden\";\n",
+"lineno": 41,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 42,
+"line": "  assert_equals(document.elementFromPoint(10, 10), document.querySelector('a'));\n",
+"lineno": 42,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 43,
+"line": "}, \"Link should be clickable after hiding a scrollbox with an anonymous table inside\");\n",
+"lineno": 43,
+"revdate": [1517112440.0, -3600]
+}, {
+"node": "30d915de546242961f2f3ce4e1cfbee5ec9e54bb",
+"author": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"desc": "Bug 1433591: Test that dynamic changes properly affect hit-testing for elements that have anon boxes. r=bz\n\nMozReview-Commit-ID: 3NfL4Lf7yOu\n",
+"abspath": "testing/web-platform/tests/css/cssom-view/elementFromPoint-dynamic-anon-box.html",
+"targetline": 44,
+"line": "\u003c/script\u003e\n",
+"lineno": 44,
+"revdate": [1517112440.0, -3600]
+}]
+}
