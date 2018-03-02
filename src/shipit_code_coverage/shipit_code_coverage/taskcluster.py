@@ -20,13 +20,14 @@ def _get_build_platform_name(platform):
 
 
 def get_last_task(platform):
-    r = requests.get(index_base + 'task/gecko.v2.mozilla-central.latest.firefox.' + _get_build_platform_name(platform))
+    r = requests.get(index_base + 'task/gecko.v2.mozilla-central.latest.firefox.{}'.format(_get_build_platform_name(platform)))
+    r.raise_for_status()
     last_task = r.json()
     return last_task['taskId']
 
 
 def get_task(branch, revision, platform):
-    r = requests.get(index_base + 'task/gecko.v2.%s.revision.%s.firefox.%s' % (branch, revision, _get_build_platform_name(platform)))
+    r = requests.get(index_base + 'task/gecko.v2.{}.revision.{}.firefox.{}'.format(branch, revision, _get_build_platform_name(platform)))
     task = r.json()
     if r.status_code == requests.codes.ok:
         return task['taskId']
@@ -38,26 +39,30 @@ def get_task(branch, revision, platform):
 
 
 def get_task_details(task_id):
-    r = requests.get(queue_base + 'task/' + task_id)
+    r = requests.get(queue_base + 'task/{}'.format(task_id))
+    r.raise_for_status()
     return r.json()
 
 
 def get_task_status(task_id):
-    r = requests.get(queue_base + 'task/' + task_id + '/status')
+    r = requests.get(queue_base + 'task/{}/status'.format(task_id))
+    r.raise_for_status()
     return r.json()
 
 
 def get_task_artifacts(task_id):
-    r = requests.get(queue_base + 'task/' + task_id + '/artifacts')
+    r = requests.get(queue_base + 'task/{}/artifacts'.format(task_id))
+    r.raise_for_status()
     return r.json()['artifacts']
 
 
 def get_tasks_in_group(group_id):
-    list_url = queue_base + 'task-group/' + group_id + '/list'
+    list_url = queue_base + 'task-group/{}/list'.format(group_id)
 
     r = requests.get(list_url, params={
         'limit': 200
     })
+    r.raise_for_status()
     reply = r.json()
     tasks = reply['tasks']
     while 'continuationToken' in reply:
@@ -65,6 +70,7 @@ def get_tasks_in_group(group_id):
             'limit': 200,
             'continuationToken': reply['continuationToken']
         })
+        r.raise_for_status()
         reply = r.json()
         tasks += reply['tasks']
     return tasks
@@ -75,7 +81,7 @@ def download_artifact(artifact_path, task_id, artifact_name):
         return artifact_path
 
     def perform_download():
-        r = requests.get(queue_base + 'task/%s/artifacts/%s' % (task_id, artifact_name), stream=True)
+        r = requests.get(queue_base + 'task/{}/artifacts/{}'.format(task_id, artifact_name), stream=True)
 
         with open(artifact_path, 'wb') as f:
             r.raw.decode_content = True
