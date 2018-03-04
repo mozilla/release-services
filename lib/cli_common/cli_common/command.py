@@ -82,8 +82,8 @@ def run_check(command, **kwargs):
             error=error,
         )
         raise click.ClickException(
-            'Command (`{}`) failed with code: {}.'.format(
-                command_as_string,
+            '`{}` failed with code: {}.'.format(
+                command[0],
                 returncode,
             )
         )
