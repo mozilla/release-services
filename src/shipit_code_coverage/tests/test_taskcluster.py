@@ -1,54 +1,86 @@
 # -*- coding: utf-8 -*-
 
+import pytest
+import requests
+import responses
+
 from shipit_code_coverage import taskcluster
 
 
-def disable_test_last_task():
-    assert taskcluster.get_last_task('linux') is not None
-    assert taskcluster.get_last_task('win') is not None
+@responses.activate
+def test_last_task_linux(LINUX_TASK_ID, LATEST_LINUX):
+    responses.add(responses.GET, 'https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.latest.firefox.linux64-ccov-opt', json=LATEST_LINUX, status=200)  # noqa
+    assert taskcluster.get_last_task('linux') == LINUX_TASK_ID
 
 
-def disable_test_get_task_status():
-    task_id = taskcluster.get_last_task('linux')
-    task_status = taskcluster.get_task_status(task_id)
-    assert task_status is not None
-    assert 'status' in task_status
-    assert 'state' in task_status['status']
+@responses.activate
+def test_last_task_windows(WIN_TASK_ID, LATEST_WIN):
+    responses.add(responses.GET, 'https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.latest.firefox.win64-ccov-debug', json=LATEST_WIN, status=200)
+    assert taskcluster.get_last_task('win') == WIN_TASK_ID
 
 
-def disable_test_get_task_details():
-    task_id = taskcluster.get_last_task('linux')
-    task_data = taskcluster.get_task_details(task_id)
-    assert task_data is not None
-    assert 'payload' in task_data
+@responses.activate
+def test_last_task_failure(TASK_NOT_FOUND):
+    responses.add(responses.GET, 'https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.latest.firefox.linux64-ccov-opt', json=TASK_NOT_FOUND, status=404)  # noqa
+
+    with pytest.raises(requests.exceptions.HTTPError):
+        taskcluster.get_last_task('linux')
 
 
-def disable_test_get_task():
-    task_id = taskcluster.get_last_task('linux')
-    task_data = taskcluster.get_task_details(task_id)
-    revision = task_data['payload']['env']['GECKO_HEAD_REV']
-    assert taskcluster.get_task('mozilla-central', revision, 'linux') == taskcluster.get_last_task('linux')
-
-    task_id = taskcluster.get_last_task('win')
-    task_data = taskcluster.get_task_details(task_id)
-    revision = task_data['payload']['env']['GECKO_HEAD_REV']
-    assert taskcluster.get_task('mozilla-central', revision, 'win') == taskcluster.get_last_task('win')
+@responses.activate
+def test_get_task_status(LINUX_TASK_ID, LINUX_TASK_STATUS):
+    responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task/{}/status'.format(LINUX_TASK_ID), json=LINUX_TASK_STATUS, status=200)
+    assert taskcluster.get_task_status(LINUX_TASK_ID) == LINUX_TASK_STATUS
 
 
-def disable_test_get_task_artifacts():
-    task_id = taskcluster.get_last_task('linux')
-    artifacts = taskcluster.get_task_artifacts(task_id)
-    assert len(artifacts) > 0
+@responses.activate
+def test_get_task_details(LINUX_TASK_ID, LINUX_TASK):
+    responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task/{}'.format(LINUX_TASK_ID), json=LINUX_TASK, status=200)
+    assert taskcluster.get_task_details(LINUX_TASK_ID) == LINUX_TASK
 
 
-def disable_test_get_tasks_in_group():
-    task_id = taskcluster.get_last_task('linux')
-    task_data = taskcluster.get_task_details(task_id)
-    tasks = taskcluster.get_tasks_in_group(task_data['taskGroupId'])
-    assert len(tasks) > 0
+@responses.activate
+def test_get_task(LINUX_TASK_ID, LATEST_LINUX, WIN_TASK_ID, LATEST_WIN):
+    responses.add(responses.GET, 'https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.revision.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.firefox.linux64-ccov-opt', json=LATEST_LINUX, status=200)  # noqa
+    assert taskcluster.get_task('mozilla-central', 'b2a9a4bb5c94de179ae7a3f52fde58c0e2897498', 'linux') == LINUX_TASK_ID
+
+    responses.add(responses.GET, 'https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.revision.916103b8675d9fdb28b891cac235d74f9f475942.firefox.win64-ccov-debug', json=LATEST_WIN, status=200)  # noqa
+    assert taskcluster.get_task('mozilla-central', '916103b8675d9fdb28b891cac235d74f9f475942', 'win') == WIN_TASK_ID
 
 
-def disable_test_is_coverage_task():
+@responses.activate
+def test_get_task_not_found(TASK_NOT_FOUND):
+    responses.add(responses.GET, 'https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.revision.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.firefox.linux64-ccov-opt', json=TASK_NOT_FOUND, status=404)  # noqa
+
+    with pytest.raises(Exception, message='Code coverage build failed and was not indexed.'):
+        taskcluster.get_task('mozilla-central', 'b2a9a4bb5c94de179ae7a3f52fde58c0e2897498', 'linux')
+
+
+@responses.activate
+def test_get_task_failure(TASK_NOT_FOUND):
+    err = TASK_NOT_FOUND.copy()
+    err['code'] = 'RandomError'
+    responses.add(responses.GET, 'https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.revision.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.firefox.linux64-ccov-opt', json=err, status=500)  # noqa
+
+    with pytest.raises(Exception, message='Unknown TaskCluster index error.'):
+        taskcluster.get_task('mozilla-central', 'b2a9a4bb5c94de179ae7a3f52fde58c0e2897498', 'linux')
+
+
+@responses.activate
+def test_get_task_artifacts(LINUX_TASK_ID, LINUX_TASK_ARTIFACTS):
+    responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task/{}/artifacts'.format(LINUX_TASK_ID), json=LINUX_TASK_ARTIFACTS, status=200)
+    assert taskcluster.get_task_artifacts(LINUX_TASK_ID) == LINUX_TASK_ARTIFACTS['artifacts']
+
+
+@responses.activate
+def test_get_tasks_in_group(GROUP_TASKS_1, GROUP_TASKS_2):
+    responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/aPt9FbIdQwmhwDIPDYLuaw/list?limit=200', json=GROUP_TASKS_1, status=200, match_querystring=True)  # noqa
+    responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/aPt9FbIdQwmhwDIPDYLuaw/list?continuationToken=1%2132%21YVB0OUZiSWRRd21od0RJUERZTHVhdw--~1%2132%21ZnJVcGRRT0VTalN0Nm9Ua1Ztcy04UQ--&limit=200', json=GROUP_TASKS_2, status=200, match_querystring=True)  # noqa
+
+    assert taskcluster.get_tasks_in_group('aPt9FbIdQwmhwDIPDYLuaw') == GROUP_TASKS_1['tasks'] + GROUP_TASKS_2['tasks']
+
+
+def test_is_coverage_task():
     cov_task = {
         'task': {
             'metadata': {
@@ -86,7 +118,7 @@ def disable_test_is_coverage_task():
     assert not taskcluster.is_coverage_task(nocov_task)
 
 
-def disable_test_get_chunk():
+def test_get_chunk():
     tests = [
         ('test-linux64-ccov/opt-mochitest-1', 'mochitest-1'),
         ('test-linux64-ccov/opt-mochitest-e10s-7', 'mochitest-7'),
@@ -101,7 +133,7 @@ def disable_test_get_chunk():
         assert taskcluster.get_chunk(name) == chunk
 
 
-def disable_test_get_suite():
+def test_get_suite():
     tests = [
         ('mochitest-1', 'mochitest'),
         ('mochitest-7', 'mochitest'),
@@ -113,7 +145,7 @@ def disable_test_get_suite():
         assert taskcluster.get_suite(chunk) == suite
 
 
-def disable_test_get_platform():
+def test_get_platform():
     tests = [
         ('test-linux64-ccov/opt-mochitest-1', 'linux'),
         ('test-windows10-64-ccov/debug-mochitest-1', 'windows'),

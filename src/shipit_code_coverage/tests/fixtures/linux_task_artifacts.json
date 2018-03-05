@@ -1,0 +1,202 @@
+{
+  "artifacts": [
+    {
+      "storageType": "s3",
+      "name": "public/build/chrome-map.json",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/json"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/host/bin/mar",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/host/bin/mbsdiff",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/mozharness.zip",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/zip"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.awsy.tests.zip",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/zip"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.checksums",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.code-coverage-gcno.zip",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/zip"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.common.tests.zip",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/zip"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.cppunittest.tests.zip",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/zip"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.crashreporter-symbols-full.zip",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/zip"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.crashreporter-symbols.zip",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/zip"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.generated-files.tar.gz",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.gtest.tests.zip",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/zip"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.json",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/json"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.jsshell.zip",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/zip"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.langpack.xpi",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/x-xpinstall"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.mochitest.tests.zip",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/zip"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.mozinfo.json",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/json"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.reftest.tests.zip",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/zip"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.stylo-bindings.zip",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/zip"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.talos.tests.zip",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/zip"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.tar.bz2",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/x-bzip2"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.test_packages.json",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/json"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.txt",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "text/plain"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.web-platform.tests.tar.gz",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target.xpcshell.tests.zip",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/zip"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/target_info.txt",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "text/plain"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/toolchains.json",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/json"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/xvfb/xvfb.log",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "text/plain"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/chainOfTrust.json.asc",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "text/plain"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/logs/certified.log",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "text/plain"
+    },
+    {
+      "storageType": "reference",
+      "name": "public/logs/live.log",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "text/plain"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/logs/live_backing.log",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "text/plain"
+    }
+  ]
+}

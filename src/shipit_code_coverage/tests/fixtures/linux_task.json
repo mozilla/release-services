@@ -1,0 +1,130 @@
+{
+  "provisionerId": "aws-provisioner-v1",
+  "workerType": "gecko-3-b-linux",
+  "schedulerId": "gecko-level-3",
+  "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+  "dependencies": [
+    "AnwvCI3tSGqR4I8SqZvEBg",
+    "HIg1jSgbSyaUZyWafuGdcw",
+    "Jy_gY39mT9WElML0ug71yg",
+    "LpT4Gd1LQU2LTHx6LRKIrQ",
+    "aPt9FbIdQwmhwDIPDYLuaw"
+  ],
+  "requires": "all-completed",
+  "routes": [
+    "index.gecko.v2.mozilla-central.latest.firefox.linux64-ccov-opt",
+    "index.gecko.v2.mozilla-central.pushdate.2018.03.02.20180302101637.firefox.linux64-ccov-opt",
+    "index.gecko.v2.mozilla-central.pushlog-id.33546.firefox.linux64-ccov-opt",
+    "index.gecko.v2.mozilla-central.revision.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.firefox.linux64-ccov-opt",
+    "index.gecko.v2.trunk.revision.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.firefox.linux64-ccov-opt",
+    "tc-treeherder.v2.mozilla-central.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.33546"
+  ],
+  "priority": "medium",
+  "retries": 5,
+  "created": "2018-03-02T10:18:14.371Z",
+  "deadline": "2018-03-03T10:18:14.371Z",
+  "expires": "2019-03-02T10:18:14.371Z",
+  "scopes": [
+    "secrets:get:project/taskcluster/gecko/hgfingerprint",
+    "docker-worker:relengapi-proxy:tooltool.download.public",
+    "secrets:get:project/releng/gecko/build/level-3/*",
+    "docker-worker:cache:level-3-mozilla-central-build-linux64-ccov-opt-workspace-v3-697eee6c304d222fdb39",
+    "docker-worker:cache:level-3-checkouts-v3-697eee6c304d222fdb39",
+    "docker-worker:cache:level-3-tooltool-cache-v3-697eee6c304d222fdb39"
+  ],
+  "payload": {
+    "onExitStatus": {
+      "retry": [
+        4
+      ]
+    },
+    "maxRunTime": 36000,
+    "image": {
+      "path": "public/image.tar.zst",
+      "type": "task-image",
+      "taskId": "AnwvCI3tSGqR4I8SqZvEBg"
+    },
+    "cache": {
+      "level-3-checkouts-v3-697eee6c304d222fdb39": "/builds/worker/checkouts",
+      "level-3-mozilla-central-build-linux64-ccov-opt-workspace-v3-697eee6c304d222fdb39": "/builds/worker/workspace",
+      "level-3-tooltool-cache-v3-697eee6c304d222fdb39": "/builds/worker/tooltool-cache"
+    },
+    "artifacts": {
+      "public/build": {
+        "path": "/builds/worker/artifacts/",
+        "expires": "2019-03-02T10:18:14.371Z",
+        "type": "directory"
+      }
+    },
+    "command": [
+      "/builds/worker/bin/run-task",
+      "--vcs-checkout",
+      "/builds/worker/workspace/build/src",
+      "--tools-checkout",
+      "/builds/worker/workspace/build/tools",
+      "--",
+      "/builds/worker/workspace/build/src/taskcluster/scripts/builder/build-linux.sh"
+    ],
+    "env": {
+      "SCCACHE_DISABLE": "1",
+      "MH_BRANCH": "mozilla-central",
+      "MOZ_BUILD_DATE": "20180302101637",
+      "TASKCLUSTER_CACHES": "/builds/worker/checkouts;/builds/worker/tooltool-cache;/builds/worker/workspace",
+      "MH_BUILD_POOL": "taskcluster",
+      "HG_STORE_PATH": "/builds/worker/checkouts/hg-store",
+      "GECKO_HEAD_REV": "b2a9a4bb5c94de179ae7a3f52fde58c0e2897498",
+      "MOZ_TOOLCHAINS": "public/build/clang.tar.xz@Jy_gY39mT9WElML0ug71yg public/build/rustc.tar.xz@LpT4Gd1LQU2LTHx6LRKIrQ public/build/gcc.tar.xz@HIg1jSgbSyaUZyWafuGdcw",
+      "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-central",
+      "MOZ_SCM_LEVEL": "3",
+      "MOZHARNESS_SCRIPT": "mozharness/scripts/fx_desktop_build.py",
+      "MOZHARNESS_ACTIONS": "get-secrets build check-test update",
+      "NEED_XVFB": "true",
+      "GECKO_BASE_REPOSITORY": "https://hg.mozilla.org/mozilla-unified",
+      "TOOLTOOL_CACHE": "/builds/worker/tooltool-cache",
+      "TASKCLUSTER_VOLUMES": "/builds/worker/checkouts;/builds/worker/tooltool-cache;/builds/worker/workspace",
+      "MOZHARNESS_CONFIG": "builds/releng_base_firefox.py builds/releng_base_linux_64_builds.py",
+      "MH_CUSTOM_BUILD_VARIANT_CFG": "code-coverage",
+      "MOZ_AUTOMATION": "1"
+    },
+    "features": {
+      "taskclusterProxy": true,
+      "relengAPIProxy": true,
+      "chainOfTrust": true
+    }
+  },
+  "metadata": {
+    "owner": "aciure@mozilla.com",
+    "source": "https://hg.mozilla.org/mozilla-central/file/b2a9a4bb5c94de179ae7a3f52fde58c0e2897498/taskcluster/ci/build",
+    "description": "Linux64-CCov Opt ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=mozilla-central&revision=b2a9a4bb5c94de179ae7a3f52fde58c0e2897498))",
+    "name": "build-linux64-ccov/opt"
+  },
+  "tags": {
+    "os": "linux",
+    "createdForUser": "aciure@mozilla.com",
+    "worker-implementation": "docker-worker",
+    "kind": "build",
+    "label": "build-linux64-ccov/opt"
+  },
+  "extra": {
+    "index": {
+      "rank": 0
+    },
+    "treeherder": {
+      "machine": {
+        "platform": "linux64-ccov"
+      },
+      "tier": 2,
+      "symbol": "B",
+      "jobKind": "build",
+      "collection": {
+        "opt": true
+      }
+    },
+    "chainOfTrust": {
+      "inputs": {
+        "docker-image": "AnwvCI3tSGqR4I8SqZvEBg"
+      }
+    },
+    "parent": "aPt9FbIdQwmhwDIPDYLuaw"
+  }
+}

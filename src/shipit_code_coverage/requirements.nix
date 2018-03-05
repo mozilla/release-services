@@ -197,6 +197,19 @@ let
       };
     };
 
+    "cookies" = python.mkDerivation {
+      name = "cookies-2.2.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/f3/95/b66a0ca09c5ec9509d8729e0510e4b078d2451c5e33f47bd6fc33c01517c/cookies-2.2.1.tar.gz"; sha256 = "d6b698788cae4cfa4e62ef8643a9ca332b79bd96cb314294b864ae8d7eb3ee8e"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/sashahart/cookies";
+        license = licenses.mit;
+        description = "Friendlier RFC 6265-compliant cookie parser/renderer";
+      };
+    };
+
     "flake8" = python.mkDerivation {
       name = "flake8-3.5.0";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/1e/ab/7730f6d6cdf73a3b7f98a2fe3b2cdf68e9e760a4a133e083607497d4c3a6/flake8-3.5.0.tar.gz"; sha256 = "7253265f7abd8b313e3892944044a365e3f4ac3fcdcfb4298f55ee9ddf188ba0"; };
@@ -418,8 +431,8 @@ let
     };
 
     "raven" = python.mkDerivation {
-      name = "raven-6.5.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e0/26/1bdd4431f59ff92fee7f2378b7d54eb175eb69f68c40c6c9b15161f6774f/raven-6.5.0.tar.gz"; sha256 = "84da75114739191bdf2388f296ffd6177e83567a7fbaf2701e034ad6026e4f3b"; };
+      name = "raven-6.6.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/03/8a/f28e01894cbd34c9c33dce88fc9e1a39c8930f9d1ed8e35a8d5499083af8/raven-6.6.0.tar.gz"; sha256 = "92bf4c4819472ed20f1b9905eeeafe1bc6fe5f273d7c14506fdb8fb3a6ab2074"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -451,6 +464,25 @@ let
         homepage = "http://python-requests.org";
         license = licenses.asl20;
         description = "Python HTTP for Humans.";
+      };
+    };
+
+    "responses" = python.mkDerivation {
+      name = "responses-0.8.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/2e/18/20a4a96365d42f02363ec0062b70ff93f7b6639e569fd0cb174209d59a3a/responses-0.8.1.tar.gz"; sha256 = "a64029dbc6bed7133e2c971ee52153f30e779434ad55a5abf40322bcff91d029"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."cookies"
+      self."flake8"
+      self."pytest"
+      self."requests"
+      self."six"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/getsentry/responses";
+        license = licenses.asl20;
+        description = "A utility library for mocking out the `requests` Python library.";
       };
     };
 
