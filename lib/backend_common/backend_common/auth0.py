@@ -77,7 +77,7 @@ def mozilla_accept_token(render_errors=True):
             response = requests.get(url, params=payload)
 
             # Because auth0 returns http 200 even if the token is invalid.
-            if response.content == b'Unauthorized':
+            if response.content == b'Unauthorized' or not response.ok:
                 response_body = {'error': 'invalid_token',
                                  'error_description': str(response.content, 'utf-8')}
                 if render_errors:
