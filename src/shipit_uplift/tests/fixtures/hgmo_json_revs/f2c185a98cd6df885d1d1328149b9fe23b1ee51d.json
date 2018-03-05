@@ -1,0 +1,15 @@
+{
+"node": "f2c185a98cd6df885d1d1328149b9fe23b1ee51d",
+"date": [1519588411.0, 28800],
+"desc": "No bug, Automated HPKP preload list update from host bld-linux64-spot-302 - a=hpkp-update",
+"backedoutby": "",
+"branch": "default",
+"bookmarks": [],
+"tags": [],
+"user": "ffxbld",
+"parents": ["484a423fd48b1a4804a4d8238de70a141c44afce"],
+"phase": "public",
+"pushid": 33511,
+"pushdate": [1519588417, 0],
+"pushuser": "ffxbld"
+}

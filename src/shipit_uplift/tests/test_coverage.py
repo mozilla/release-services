@@ -14,9 +14,7 @@ from shipit_uplift import (
 
 
 def test_coverage_supported_extensions_api(client):
-    '''
-    List supported extensions for coverage analysis through api
-    '''
+    # List supported extensions for coverage analysis through the API
     resp = client.get('/coverage/supported_extensions')
     assert resp.status_code == 200
     data = json.loads(resp.data.decode('utf-8'))
@@ -27,22 +25,16 @@ def test_coverage_supported_extensions_api(client):
 
 
 @responses.activate
-def disable_test_coverage_by_changeset_impl(client, coverage_builds):
-    '''
-    Get changeset coverage information from the internet
-    '''
-    responses.add_passthru('https://hg.mozilla.org/mozilla-central/')
-    responses.add_passthru('https://api.pub.build.mozilla.org/mapper/gecko-dev/rev')
-    responses.add_passthru('https://codecov.io/api/gh/marco-c/gecko-dev')
+def test_coverage_by_changeset_impl(coverage_responses, coverage_builds):
+    # Get changeset coverage information
     for changeset in coverage_builds['info']:
         data = coverage_by_changeset_impl.generate(changeset)
         assert data == coverage_builds['info'][changeset]
 
 
-def test_coverage_summary_by_changeset_impl(client, coverage_builds):
-    '''
-    Get changeset coverage summary from coverage information
-    '''
+@responses.activate
+def test_coverage_summary_by_changeset_impl(coverage_responses, coverage_builds):
+    # Get changeset coverage summary from coverage information
     for changeset in coverage_builds['summary']:
         coverage_data = coverage_builds['info'][changeset]
         summary = coverage_summary_by_changeset_impl.generate(coverage_data)
@@ -50,13 +42,8 @@ def test_coverage_summary_by_changeset_impl(client, coverage_builds):
 
 
 @responses.activate
-def disable_test_coverage_for_file_impl(client, coverage_changeset_by_file):
-    '''
-    Get code coverage information for a given file at a given changeset, from the internet
-    '''
-    responses.add_passthru('https://hg.mozilla.org/mozilla-central/')
-    responses.add_passthru('https://api.pub.build.mozilla.org/mapper/gecko-dev/rev')
-    responses.add_passthru('https://codecov.io/api/gh/marco-c/gecko-dev')
+def test_coverage_for_file_impl(coverage_responses, coverage_changeset_by_file):
+    # Get code coverage information for a given file at a given changeset
     for file_coverage in coverage_changeset_by_file:
         data = coverage_for_file_impl.generate(file_coverage['changeset'], file_coverage['path'])
         assert data == file_coverage['data']
