@@ -112,13 +112,15 @@ class Monitoring(object):
         if not self.stats:
             return
 
+        content = ''
+
         # Build markdown
         for hook_id, tasks_per_status in self.stats.items():
             total = sum([len(tasks) for tasks in tasks_per_status.values()])
             if len(tasks_per_status['completed']) == total:
                 continue
 
-            content = '# {} tasks for the last period\n' % hook_id
+            content += '# {} tasks for the last period\n'.format(hook_id)
             for status, tasks in tasks_per_status.items():
                 nb_tasks = len(tasks)
                 content += GROUP_MD.format(
