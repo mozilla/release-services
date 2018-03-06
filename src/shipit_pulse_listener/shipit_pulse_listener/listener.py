@@ -70,12 +70,17 @@ class HookPhabricator(Hook):
         cursor = self.latest_id
         while cursor is not None:
             diffs, cursor = self.request_phabricator(order='oldest')
+            if not diffs:
+                break
+
             for diff in diffs:
                 yield diff
-                diff_id = diff['id']
 
             # Update the latest id
-            self.latest_id = cursor or diff_id
+            if cursor:
+                self.latest_id = cursor
+            elif len(diffs) > 0:
+                self.latest_id = diffs[-1]['id']
 
     async def build_consumer(self, *args, **kwargs):
         '''
