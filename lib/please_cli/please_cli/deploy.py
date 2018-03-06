@@ -33,6 +33,39 @@ log = cli_common.log.get_logger(__name__)
     required=True,
     type=click.Choice(please_cli.config.PROJECTS),
     )
+@click.pass_context
+def cmd_COVERAGE(ctx,
+                 project,
+                 nix_build,
+                 ):
+    '''
+    '''
+
+    secrets = cli_common.taskcluster.get_secrets(
+        taskcluster_secret,
+        project,
+        required=(
+            'DEPLOY_S3_ACCESS_KEY_ID',
+            'DEPLOY_S3_SECRET_ACCESS_KEY',
+        ),
+        taskcluster_client_id=taskcluster_client_id,
+        taskcluster_access_token=taskcluster_access_token,
+    )
+
+    # TODO:
+    # nix-build nix/default.nix -A tools.codecov -o codecov
+    # nix-build nix/default.nix -A <project>.coverage -o .coverage
+    # codecov/bin/codecov  -t <CODECOV_TOKEN> -F <project> 
+
+
+
+@click.command()
+@cli_common.click.taskcluster_options
+@click.argument(
+    'project',
+    required=True,
+    type=click.Choice(please_cli.config.PROJECTS),
+    )
 @click.option(
     '--s3-bucket',
     required=True,
