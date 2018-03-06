@@ -606,28 +606,6 @@ in rec {
           fi
         '' + postInstall;
 
-
-        checkPhase =
-          if checkPhase != null
-            then checkPhase
-            else ''
-              export LANG=en_US.UTF-8
-              export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
-              export APP_TESTING=${name}
-
-              echo "################################################################"
-              echo "## flake8 ######################################################"
-              echo "################################################################"
-              flake8 -v
-              echo "################################################################"
-
-              echo "################################################################"
-              echo "## pytest ######################################################"
-              echo "################################################################"
-              pytest tests/ -vvv
-              echo "################################################################"
-            '';
-
         shellHook = ''
           export CACHE_DEFAULT_TIMEOUT=3600
           export CACHE_TYPE=filesystem
@@ -690,6 +668,7 @@ in rec {
     , version
     , src
     , python
+    , outputs ? [ "out" "coverage" ]
     , buildInputs ? []
     , propagatedBuildInputs ? []
     , doCheck ? true
@@ -729,7 +708,7 @@ in rec {
         namePrefix = "";
         name = "${name}-${version}";
 
-        inherit src;
+        inherit src outputs;
 
         buildInputs =
           [ makeWrapper
@@ -774,6 +753,7 @@ in rec {
             else ''
               export LANG=en_US.UTF-8
               export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
+              export APP_TESTING=${name}
 
               echo "################################################################"
               echo "## flake8 ######################################################"
@@ -784,7 +764,11 @@ in rec {
               echo "################################################################"
               echo "## pytest ######################################################"
               echo "################################################################"
-              pytest tests/ -vvv -s
+              pytest -vvv \
+                --cov-report term \
+                --cov=${dirname} \
+                tests/
+              mv .coverage $coverage
               echo "################################################################"
             '';
 
