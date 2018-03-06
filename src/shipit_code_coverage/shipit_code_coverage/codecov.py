@@ -16,6 +16,7 @@ from cli_common.utils import mkdir, retry, ThreadPoolExecutorResult
 from shipit_code_coverage import taskcluster, uploader
 from shipit_code_coverage.artifacts import ArtifactsHandler
 from shipit_code_coverage.github import GitHubUtils
+from shipit_code_coverage import grcov
 from shipit_code_coverage.notifier import Notifier
 from shipit_code_coverage.secrets import secrets
 
@@ -63,38 +64,6 @@ class CodeCov(object):
 
         self.artifactsHandler = ArtifactsHandler(task_ids, suites_to_ignore)
 
-    def generate_info(self, commit_sha=None, platform=None, suite=None, chunk=None, out_format='coveralls', options=[]):
-        cmd = [
-          'grcov',
-          '-t', out_format,
-          '-s', self.repo_dir,
-          '-p', '/home/worker/workspace/build/src/',
-          '--ignore-dir', 'gcc',
-          '--ignore-not-existing',
-        ]
-
-        if 'coveralls' in out_format:
-            r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % self.revision)
-            r.raise_for_status()
-            push_id = r.json()['pushid']
-
-            cmd.extend([
-              '--service-name', 'TaskCluster',
-              '--service-number', str(push_id),
-              '--commit-sha', commit_sha,
-              '--token', secrets[secrets.COVERALLS_TOKEN] if self.from_pulse else 'NONE',
-            ])
-
-            if suite is not None:
-                cmd.extend(['--service-job-number', str(self.suites.index(suite) + 1)])
-            else:
-                cmd.extend(['--service-job-number', '1'])
-
-        cmd.extend(self.artifactsHandler.get(platform, suite, chunk))
-        cmd.extend(options)
-
-        return run_check(cmd)
-
     def generate_report(self, output, suite):
         info_file = '%s.info' % suite
 
@@ -136,7 +105,7 @@ class CodeCov(object):
 
     def generate_per_suite_reports(self):
         def generate_suite_report(suite):
-            output = self.generate_info(suite=suite, out_format='lcov')
+            output = grcov.report(self.artifactsHandler.get(suite=suite), out_format='lcov')
 
             self.generate_report(output, suite)
             os.remove('%s.info' % suite)
@@ -152,7 +121,7 @@ class CodeCov(object):
                 executor.submit(generate_suite_report, suite)
 
     def generate_zero_coverage_report(self):
-        report = self.generate_info(self.revision, out_format='coveralls+')
+        report = grcov.report(self.artifactsHandler.get(), out_format='coveralls+')
         report = json.loads(report.decode('utf-8'))  # Decoding is only necessary until Python 3.6.
 
         zero_coverage_files = []
@@ -200,17 +169,12 @@ class CodeCov(object):
         with open('code-coverage-reports/zero_coverage_functions.json', 'w') as f:
             json.dump(zero_coverage_function_counts, f)
 
-    def generate_files_list(self, covered=True, platform=None, chunk=None):
-        options = ['--filter-covered', '--threads', '2']
-        files = self.generate_info(platform=platform, chunk=chunk, out_format='files', options=options)
-        return files.decode('utf-8').splitlines()
-
     def generate_chunk_mapping(self):
         with ThreadPoolExecutor(max_workers=4) as executor:
             futures = {}
             for platform in ['linux', 'windows']:
                 for chunk in self.artifactsHandler.get_chunks():
-                    future = executor.submit(self.generate_files_list, True, platform=platform, chunk=chunk)
+                    future = executor.submit(grcov.files_list, self.artifactsHandler.get(platform=platform, chunk=chunk))
                     futures[future] = (platform, chunk)
 
             with sqlite3.connect('chunk_mapping.sqlite') as conn:
@@ -268,7 +232,17 @@ class CodeCov(object):
 
             self.githubUtils.post_github_status(commit_sha)
 
-            output = self.generate_info(commit_sha)
+            r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/%s' % self.revision)
+            r.raise_for_status()
+            push_id = r.json()['pushid']
+
+            output = grcov.report(
+                self.artifactsHandler.get(),
+                source_dir=self.repo_dir,
+                service_number=push_id,
+                commit_sha=commit_sha,
+                token=secrets[secrets.COVERALLS_TOKEN]
+            )
             logger.info('Report generated successfully')
 
             with ThreadPoolExecutorResult(max_workers=2) as executor:
