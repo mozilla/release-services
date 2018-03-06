@@ -26,6 +26,9 @@ def run(command, stream=False, handle_stream_line=None, log_command=True,
     else:
         command_as_string = ' ' .join(command)
 
+    if len(command) == 0:
+        raise click.ClickException('Can\'t run an empty command.')
+
     _kwargs = dict(
         stdin=subprocess.DEVNULL,  # no interactions
         stdout=subprocess.PIPE,
@@ -82,8 +85,8 @@ def run_check(command, **kwargs):
             error=error,
         )
         raise click.ClickException(
-            'Command (`{}`) failed with code: {}.'.format(
-                command_as_string,
+            '`{}` failed with code: {}.'.format(
+                command[0],
                 returncode,
             )
         )

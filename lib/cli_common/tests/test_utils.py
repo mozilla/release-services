@@ -2,6 +2,7 @@
 
 from cli_common import utils
 import time
+import pytest
 
 
 def do_raise():
@@ -30,11 +31,8 @@ def test_wait_until():
 def test_retry():
     assert utils.retry(lambda: True) is True
     assert utils.retry(lambda: False) is False
-    try:
+    with pytest.raises(Exception):
         utils.retry(do_raise, wait_between_retries=0)
-        assert False
-    except Exception:
-        pass
 
     i = {}
 
@@ -54,26 +52,22 @@ def test_threadpoolexecutorresult():
         executor.submit(lambda: False)
 
     # Test that ThreadPoolExecutorResult throws an exception when one of the tasks fails.
-    try:
+    with pytest.raises(Exception):
         with utils.ThreadPoolExecutorResult() as executor:
             executor.submit(lambda: True)
             executor.submit(do_raise)
-        assert False
-    except Exception:
-        assert True
 
     # Tast that ThreadPoolExecutorResult's context returns as soon as a task fails.
-    try:
+    with pytest.raises(Exception):
         now = time.time()
         with utils.ThreadPoolExecutorResult() as executor:
             executor.submit(lambda: time.sleep(5))
             executor.submit(do_raise)
-        assert False
-    except Exception:
-        assert time.time() - now < 2
+
+    assert time.time() - now < 2
 
     # Test that futures that were not scheduled yet are cancelled.
-    try:
+    with pytest.raises(Exception):
         with utils.ThreadPoolExecutorResult(max_workers=1) as executor:
             f1 = executor.submit(lambda: time.sleep(1))
             f2 = executor.submit(do_raise)
@@ -81,12 +75,11 @@ def test_threadpoolexecutorresult():
             f4 = executor.submit(lambda: time.sleep(1))
             f5 = executor.submit(lambda: time.sleep(1))
             f6 = executor.submit(lambda: time.sleep(1))
-        assert False
-    except Exception:
-        assert f1.done() and not f1.cancelled()
-        assert f2.exception() is not None
-        # Not enough time to cancel the third future, scheduled right after the one which raises an exception.
-        # When we try to cancel it, it's already running, so the cancellation fails.
-        assert f4.cancelled()
-        assert f5.cancelled()
-        assert f6.cancelled()
+
+    assert f1.done() and not f1.cancelled()
+    assert f2.exception() is not None
+    # Not enough time to cancel the third future, scheduled right after the one which raises an exception.
+    # When we try to cancel it, it's already running, so the cancellation fails.
+    assert f4.cancelled()
+    assert f5.cancelled()
+    assert f6.cancelled()
