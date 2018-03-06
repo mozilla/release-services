@@ -22,6 +22,14 @@ in {
     '';
   };
 
+  codecov = (import ./codecov.nix { inherit (releng_pkgs) pkgs; }).packages."codecov" // {
+    update = writeScript "update-tools-codecov" ''
+      pushd nix/tools
+      ${releng_pkgs.tools.pypi2nix}/bin/pypi2nix --basename "codecov" -V "3.5" -e codecov -v
+      popd
+    '';
+  };
+
   push = (import ./push.nix { inherit (releng_pkgs) pkgs; }).packages."push" // {
     update = writeScript "update-tools-push" ''
       pushd nix/tools
