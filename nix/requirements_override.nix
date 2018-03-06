@@ -160,22 +160,28 @@ in skipOverrides {
     '';
   };
 
+<<<<<<< HEAD
   "pytest-asyncio" = self: old: {
     patchPhase = ''
       sed -i -e "s|pytest >= 3.0.6|pytest|" setup.py
     '';
   };
 
+=======
+>>>>>>> adding pytest-cov as testing extra dependency of backend_common
   "pytest-cov" = self: old: {
     patchPhase = ''
       sed -i -e "s|pytest>=2.6.0|pytest|" setup.py
     '';
+<<<<<<< HEAD
   };
 
   "python-dateutil" = self: old: {
     patchPhase = ''
       sed -i -e "s|setup_requires=\['setuptools_scm'\],||" setup.py
     '';
+=======
+>>>>>>> adding pytest-cov as testing extra dependency of backend_common
   };
 
   "taskcluster" = self: old: {
