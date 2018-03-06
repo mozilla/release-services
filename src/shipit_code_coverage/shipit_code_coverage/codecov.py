@@ -203,7 +203,7 @@ class CodeCov(object):
     def generate_files_list(self, covered=True, platform=None, chunk=None):
         options = ['--filter-covered', '--threads', '2']
         files = self.generate_info(platform=platform, chunk=chunk, out_format='files', options=options)
-        return files.splitlines()
+        return files.decode('utf-8').splitlines()
 
     def generate_chunk_mapping(self):
         with ThreadPoolExecutor(max_workers=4) as executor:
