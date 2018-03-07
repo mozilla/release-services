@@ -64,20 +64,6 @@ class CodeCov(object):
 
         self.artifactsHandler = ArtifactsHandler(task_ids, suites_to_ignore)
 
-    def generate_report(self, output, suite):
-        info_file = '%s.info' % suite
-
-        with open(info_file, 'wb') as f:
-            f.write(output)
-
-        run_check([
-            'genhtml',
-            '-o', os.path.join(os.getcwd(), suite),
-            '--show-details', '--highlight', '--ignore-errors', 'source',
-            '--legend', os.path.join(os.getcwd(), info_file),
-            '--prefix', self.repo_dir
-        ], cwd=self.repo_dir)
-
     def clone_mozilla_central(self, revision):
         shared_dir = self.repo_dir + '-shared'
         cmd = hglib.util.cmdbuilder('robustcheckout',
@@ -102,6 +88,20 @@ class CodeCov(object):
         retry(do_clone)
 
         logger.info('mozilla-central cloned')
+
+    def generate_report(self, output, suite):
+        info_file = '%s.info' % suite
+
+        with open(info_file, 'wb') as f:
+            f.write(output)
+
+        run_check([
+            'genhtml',
+            '-o', os.path.join(os.getcwd(), suite),
+            '--show-details', '--highlight', '--ignore-errors', 'source',
+            '--legend', os.path.join(os.getcwd(), info_file),
+            '--prefix', self.repo_dir
+        ], cwd=self.repo_dir)
 
     def generate_per_suite_reports(self):
         def generate_suite_report(suite):
