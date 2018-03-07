@@ -103,7 +103,6 @@ let
         rustPlatform.rust.rustc
         rustPlatform.rust.cargo
         grcov
-        releng_pkgs.gecko-env
       ];
     postInstall = ''
       mkdir -p $out/tmp
@@ -117,9 +116,6 @@ let
       ln -s ${releng_pkgs.pkgs.lcov}/bin/genhtml $out/bin
       ln -s ${rustPlatform.rust.rustc}/bin/rustc $out/bin
       ln -s ${rustPlatform.rust.cargo}/bin/cargo $out/bin
-
-      # Gecko env
-      ln -s ${releng_pkgs.gecko-env}/bin/gecko-env $out/bin
     '';
     shellHook = ''
       export PATH="${mercurial}/bin:$PATH"
