@@ -89,7 +89,9 @@ class CodeCov(object):
 
         logger.info('mozilla-central cloned')
 
-    def generate_report(self, output, suite):
+    def generate_suite_report(self, suite):
+        output = grcov.report(self.artifactsHandler.get(suite=suite), out_format='lcov')
+
         info_file = '%s.info' % suite
 
         with open(info_file, 'wb') as f:
@@ -103,22 +105,18 @@ class CodeCov(object):
             '--prefix', self.repo_dir
         ], cwd=self.repo_dir)
 
-    def generate_per_suite_reports(self):
-        def generate_suite_report(suite):
-            output = grcov.report(self.artifactsHandler.get(suite=suite), out_format='lcov')
+        os.remove('%s.info' % suite)
 
-            self.generate_report(output, suite)
-            os.remove('%s.info' % suite)
+        with tarfile.open('code-coverage-reports/%s.tar.bz2' % suite, 'w:bz2') as tar:
+            tar.add(suite)
+        shutil.rmtree(os.path.join(os.getcwd(), suite))
 
-            with tarfile.open('code-coverage-reports/%s.tar.bz2' % suite, 'w:bz2') as tar:
-                tar.add(suite)
-            shutil.rmtree(os.path.join(os.getcwd(), suite))
+        logger.info('Suite report generated', suite=suite)
 
-            logger.info('Suite report generated', suite=suite)
-
+    def generate_suite_reports(self):
         with ThreadPoolExecutor(max_workers=2) as executor:
             for suite in self.suites:
-                executor.submit(generate_suite_report, suite)
+                executor.submit(self.generate_suite_report, suite)
 
     def generate_zero_coverage_report(self):
         report = grcov.report(self.artifactsHandler.get(), out_format='coveralls+')
@@ -259,7 +257,7 @@ class CodeCov(object):
         else:
             mkdir('code-coverage-reports')
 
-            self.generate_per_suite_reports()
+            self.generate_suite_reports()
 
             self.generate_zero_coverage_report()
 
