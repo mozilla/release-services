@@ -4,7 +4,7 @@
 let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource;
-  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl;
+  inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl openssh;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
@@ -57,16 +57,18 @@ let
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
-      fromRequirementsFile ./requirements-dev.txt python.packages;
+      [releng_pkgs.pkgs.mercurial ]
+      ++ fromRequirementsFile ./requirements-dev.txt python.packages;
     propagatedBuildInputs =
-      fromRequirementsFile ./requirements.txt python.packages;
+      fromRequirementsFile ./requirements.txt python.packages
+      ++ [openssh ];
     postInstall = ''
       mkdir -p $out/bin
       ln -s ${mercurial}/bin/hg $out/bin
     '';
-		shellHook = ''
-			export PATH="${mercurial}/bin:$PATH"
-		'';
+    shellHook = ''
+      export PATH="${mercurial}/bin:$PATH"
+    '';
     passthru = {
       deploy = {
         staging = mkBot "staging";
