@@ -61,7 +61,7 @@ class Monitoring(object):
         '''
         Watch task status by using an async queue
         to communicate with other processes
-        A report is send every hour about failed tasks
+        A report is sent periodically about failed tasks
         '''
         for report_date in self.next_report():
             while datetime.utcnow() < report_date:
@@ -94,10 +94,9 @@ class Monitoring(object):
 
         if task_status in ('failed', 'completed', 'exception'):
             # Add to report
-            stat_name = '{}.{}.{}'.format(group_id, hook_id, task_status)
-            if stat_name not in self.stats:
-                self.stats[stat_name] = []
-            self.stats[stat_name].append(task_id)
+            if hook_id not in self.stats:
+                self.stats[hook_id] = {'failed': [], 'completed': [], 'exception': []}
+            self.stats[hook_id][task_status].append(task_id)
             logger.info('Got a task status', id=task_id, status=task_status)
         else:
             # Push back into queue so it get checked later on
@@ -113,31 +112,38 @@ class Monitoring(object):
         if not self.stats:
             return
 
-        # Build markdown
-        total = sum([len(s) for s in self.stats.values()])
-        content = '# Pulse listener tasks for the last hour\n'
-        for group_name, tasks in self.stats.items():
-            nb_tasks = len(tasks)
-            content += GROUP_MD.format(
-                group_name,
-                100.0 * nb_tasks / total,
-                nb_tasks,
-                total,
-            )
-            content += '\n'.join([
-                TASK_MD.format(task)
-                for task in tasks
-            ])
+        content = ''
 
-        # Send to admins
-        logger.info('Sending email to admins')
-        for email in self.emails:
-            self.notify.email({
-                'address': email,
-                'subject': 'Pulse listener tasks',
-                'content': content,
-                'template': 'fullscreen',
-            })
+        # Build markdown
+        for hook_id, tasks_per_status in self.stats.items():
+            total = sum([len(tasks) for tasks in tasks_per_status.values()])
+            if len(tasks_per_status['completed']) == total:
+                continue
+
+            content += '# {} tasks for the last period\n'.format(hook_id)
+            for status, tasks in tasks_per_status.items():
+                nb_tasks = len(tasks)
+                content += GROUP_MD.format(
+                    status,
+                    100.0 * nb_tasks / total,
+                    nb_tasks,
+                    total,
+                )
+                content += '\n'.join([
+                    TASK_MD.format(task)
+                    for task in tasks
+                ])
+
+        if content:
+            # Send to admins
+            logger.info('Sending email to admins')
+            for email in self.emails:
+                self.notify.email({
+                    'address': email,
+                    'subject': 'Pulse listener tasks',
+                    'content': content,
+                    'template': 'fullscreen',
+                })
 
         # Reset stats
         self.stats = {}

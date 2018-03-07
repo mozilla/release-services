@@ -266,6 +266,12 @@ in skipOverrides {
         old.propagatedBuildInputs;
   };
 
+  "pytest-asyncio" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|pytest >= 3.0.6|pytest|" setup.py
+    '';
+  };
+
   "taskcluster" = self: old: {
     patchPhase = ''
       sed -i -e "s|six>=1.10.0,<1.11|six|" setup.py
