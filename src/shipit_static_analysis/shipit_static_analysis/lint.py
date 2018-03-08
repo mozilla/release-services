@@ -122,9 +122,8 @@ class MozLint(object):
 
     def find_issues(self, path):
         '''
-        Run mozlint through mach, without gecko-env
+        Run mozlint through mach, using gecko-env
         '''
-        full_path = os.path.join(self.repo_dir, path)
 
         # Run mozlint on a file
         command = [
@@ -132,7 +131,7 @@ class MozLint(object):
             './mach', 'lint',
             '-f', 'json',
             '--quiet',
-            full_path
+            path
         ]
         returncode, output, error = run(' '.join(command), cwd=self.repo_dir)
         if returncode == 0:
@@ -149,6 +148,7 @@ class MozLint(object):
             logger.warn('Invalid json output', path=path, lines=lines)
             raise
 
+        full_path = os.path.join(self.repo_dir, path)
         if full_path not in payload and path not in payload:
             logger.warn('Missing path in linter output', path=path)
             return

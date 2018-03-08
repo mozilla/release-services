@@ -138,6 +138,7 @@ let
 
       # Export linters tools
       export CODESPELL=${python.packages.codespell}/bin/codespell
+      export SHELLCHECK=${shellcheck}/bin/shellcheck
     '';
 
     dockerEnv =
@@ -145,6 +146,7 @@ let
         "C_INCLUDE_PATH=${includes}"
         "MOZCONFIG=${gecko-env}/conf/mozconfig"
         "CODESPELL=${python.packages.codespell}/bin/codespell"
+        "SHELLCHECK=${shellcheck}/bin/shellcheck"
         "SHELL=xterm"
       ];
     dockerCmd = [];
