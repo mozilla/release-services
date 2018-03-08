@@ -64,28 +64,9 @@ class Hook(object):
         assert self.hooks is not None
         assert self.queue is not None
 
-        logger.info('Loading task definition', hook=self.hook_id, group=self.group_id)
-        try:
-            hook_definition = self.hooks.hook(self.group_id, self.hook_id)
-        except Exception as e:
-            logger.warn('Failed to fetch task definition', hook=self.hook_id, group=self.group_id, err=e)
-            return False
-
-        # Update the env in task
-        task_definition = copy.deepcopy(hook_definition['task'])
-        task_definition['payload']['env'].update(extra_env)
-
-        # Build task id
-        task_id = slugId().decode('utf-8')
-
-        # Set dates
-        now = datetime.utcnow()
-        task_definition['created'] = now
-        task_definition['deadline'] = now + self.parse_deadline(hook_definition['deadline'])
-        logger.info('Creating a new task', id=task_id, name=task_definition['metadata']['name'])  # noqa
-
-        # Create a new task
-        self.queue.createTask(task_id, task_definition)
+        task_status = self.hooks.triggerHook(self.group_id, self.hook_id, {"extra_env": extra_env})
+        task_id = task_status['taskId']
+        logger.info('Triggered a new task', id=task_id)
 
         # Send task to monitoring
         await task_monitoring.add_task(self.group_id, self.hook_id, task_id)
