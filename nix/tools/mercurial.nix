@@ -1,9 +1,9 @@
 { releng_pkgs }:
 
 let
-  inherit (releng_pkgs.pkgs) fetchurl mercurial cacert ;
+  inherit (releng_pkgs.pkgs) fetchurl mercurial cacert python2Packages makeWrapper docutils unzip;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
-  inherit (releng_pkgs.pkgs.lib) licenses ;
+  inherit (releng_pkgs.pkgs.lib) licenses platforms maintainers ;
 
   hg_tools = mkDerivation {
     name = "mozilla-hg-tools";
@@ -25,15 +25,26 @@ let
     };
   };
 
-  mercurial_version = "4.4";
+  # Stick to 4.4 so that robustcheckout works fine
+  version = "4.4";
+  name = "mercurial-${version}";
 
-in mercurial.overrideDerivation (old: {
-  name = "mercurial-${mercurial_version}";
+in python2Packages.buildPythonApplication {
+  inherit name;
+  format = "other";
+
   src = fetchurl {
-    url = "https://mercurial-scm.org/release/mercurial-${mercurial_version}.tar.gz";
+    url = "https://mercurial-scm.org/release/${name}.tar.gz";
     sha256 = "1pl77mb7d1r0hwk571cvyq9cyjxl99q0r4d1n0imkj35fnkg8ji3";
   };
-  postInstall = old.postInstall + ''
+
+  buildInputs = [ makeWrapper docutils unzip ];
+
+  propagatedBuildInputs = []; # no git deps
+
+  makeFlags = [ "PREFIX=$(out)" ];
+
+  postInstall = ''
     mkdir -p $out/etc/mercurial
     cat > $out/etc/mercurial/hgrc <<EOF
     [web]
@@ -44,4 +55,15 @@ in mercurial.overrideDerivation (old: {
     robustcheckout = ${hg_tools}/hgext/robustcheckout/__init__.py
     EOF
   '';
-})
+
+  meta = {
+    inherit version;
+    description = "A fast, lightweight SCM system for very large distributed projects";
+    homepage = http://mercurial.selenic.com/;
+    downloadPage = "http://mercurial.selenic.com/release/";
+    license = licenses.gpl2;
+    maintainers = [ maintainers.eelco ];
+    updateWalker = true;
+    platforms = platforms.unix;
+  };
+}
