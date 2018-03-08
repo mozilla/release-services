@@ -148,6 +148,11 @@ class Workflow(object):
             cmd = ['gecko-env', './mach', 'python', '--version']
             run_check(cmd, cwd=self.repo_dir)
 
+            # Setup python environment
+            logger.info('Mach lint setup...')
+            cmd = ['gecko-env', './mach', 'lint', '--setup']
+            run_check(cmd, cwd=self.repo_dir)
+
         # Run static analysis through clang-tidy
         issues = []
         if clang_tidy and revision.has_clang_files:
