@@ -13,6 +13,13 @@ let
   name = "mozilla-shipit-static-analysis";
   dirname = "shipit_static_analysis";
 
+  # Customize gecko environment with Nodejs & Python 3 for linters
+  gecko-env = releng_pkgs.gecko-env.overrideDerivation(old : {
+    buildPhase = old.buildPhase + ''
+      echo "export PATH=${nodejs}/bin:${python35}/bin:\$PATH" >> $out/bin/gecko-env
+    '';
+ } );
+
   mkBot = branch:
     let
       cacheKey = "services-" + branch + "-shipit-static-analysis";
@@ -87,7 +94,7 @@ let
         nodejs
 
         # Gecko environment
-        releng_pkgs.gecko-env
+        gecko-env
       ];
 
     postInstall = ''
@@ -113,7 +120,7 @@ let
       ln -s ${coreutils}/bin/as $out/bin
 
       # Expose gecko env in final output
-      ln -s ${releng_pkgs.gecko-env}/bin/gecko-env $out/bin
+      ln -s ${gecko-env}/bin/gecko-env $out/bin
     '';
 
     shellHook = ''
@@ -123,17 +130,21 @@ let
       export MOZ_AUTOMATION=1
 
       # Use clang mozconfig from gecko-env
-      export MOZCONFIG=${releng_pkgs.gecko-env}/conf/mozconfig
+      export MOZCONFIG=${gecko-env}/conf/mozconfig
 
       # Extras for clang-tidy
       export CPLUS_INCLUDE_PATH=${includes}
       export C_INCLUDE_PATH=${includes}
+
+      # Export linters tools
+      export CODESPELL=${python.packages.codespell}/bin/codespell
     '';
 
     dockerEnv =
       [ "CPLUS_INCLUDE_PATH=${includes}"
         "C_INCLUDE_PATH=${includes}"
-        "MOZCONFIG=${releng_pkgs.gecko-env}/conf/mozconfig"
+        "MOZCONFIG=${gecko-env}/conf/mozconfig"
+        "CODESPELL=${python.packages.codespell}/bin/codespell"
         "SHELL=xterm"
       ];
     dockerCmd = [];

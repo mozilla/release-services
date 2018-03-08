@@ -127,6 +127,7 @@ class MozLint(object):
 
         # Run mozlint on a file
         command = [
+            'gecko-env',
             './mach', 'lint',
             '-f', 'json',
             '--quiet',
