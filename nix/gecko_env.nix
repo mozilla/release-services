@@ -26,8 +26,8 @@ in gecko.overrideDerivation (old: {
     # Add self in PATH, needed to exec
     echo "export PATH=$out/bin:\$PATH" >> $geckoenv
 
-    # Use python2.7 environment
-    echo "export PYTHONPATH=$PYTHONPATH" >> $geckoenv
+    # Clean python environment
+    echo "export PYTHONPATH=" >> $geckoenv
 
     # Build LDFLAGS and LIBRARY_PATH
     echo "export LDFLAGS=\"$NIX_LDFLAGS\"" >> $geckoenv
@@ -53,15 +53,15 @@ in gecko.overrideDerivation (old: {
 
     # Use updated rust version
     echo "export PATH=${rustChannels.stable.rust}/bin:${rustChannels.stable.cargo}/bin:\$PATH" >> $geckoenv
+  '';
+  installPhase = ''
+    geckoenv=$out/bin/gecko-env
 
     # Exec command line from arguments
     echo "set -x" >> $geckoenv
     echo "exec \$@" >> $geckoenv
 
     chmod +x $geckoenv
-  '';
-  installPhase = ''
-    echo "Skip install"
   '';
   propagatedBuildInputs = old.propagatedBuildInputs
     ++ [
