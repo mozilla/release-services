@@ -1,7 +1,7 @@
 { releng_pkgs }:
 
 let
-  inherit (releng_pkgs.pkgs) rustChannels bash autoconf213 clang_4 llvm llvmPackages_4;
+  inherit (releng_pkgs.pkgs) rustChannels bash autoconf213 clang_4 llvm_4 llvmPackages_4;
   inherit (releng_pkgs.pkgs.devEnv) gecko;
 
 in gecko.overrideDerivation (old: {
@@ -26,8 +26,8 @@ in gecko.overrideDerivation (old: {
     # Add self in PATH, needed to exec
     echo "export PATH=$out/bin:\$PATH" >> $geckoenv
 
-    # Use python2.7 environment
-    echo "export PYTHONPATH=$PYTHONPATH" >> $geckoenv
+    # Clean python environment
+    echo "export PYTHONPATH=" >> $geckoenv
 
     # Build LDFLAGS and LIBRARY_PATH
     echo "export LDFLAGS=\"$NIX_LDFLAGS\"" >> $geckoenv
@@ -38,8 +38,8 @@ in gecko.overrideDerivation (old: {
     echo "export CC=${clang_4}/bin/clang" >> $geckoenv
     echo "export CXX=${clang_4}/bin/clang++" >> $geckoenv
     echo "export LD=${clang_4}/bin/ld" >> $geckoenv
-    echo "export LLVM_CONFIG=${llvm}/bin/llvm-config" >> $geckoenv
-    echo "export LLVMCONFIG=${llvm}/bin/llvm-config" >> $geckoenv # we need both
+    echo "export LLVM_CONFIG=${llvm_4}/bin/llvm-config" >> $geckoenv
+    echo "export LLVMCONFIG=${llvm_4}/bin/llvm-config" >> $geckoenv # we need both
     echo "export AUTOCONF=${autoconf213}/bin/autoconf" >> $geckoenv
 
     # Build custom mozconfig
@@ -47,21 +47,21 @@ in gecko.overrideDerivation (old: {
     echo > $mozconfig "
     ac_add_options --enable-clang-plugin
     ac_add_options --with-clang-path=${clang_4}/bin/clang
-    ac_add_options --with-libclang-path=${llvmPackages_4.clang-unwrapped}/lib
+    ac_add_options --with-libclang-path=${llvmPackages_4.libclang}/lib
     "
     echo "export CLANG_MOZCONFIG=$mozconfig" >> $geckoenv
 
     # Use updated rust version
     echo "export PATH=${rustChannels.stable.rust}/bin:${rustChannels.stable.cargo}/bin:\$PATH" >> $geckoenv
+  '';
+  installPhase = ''
+    geckoenv=$out/bin/gecko-env
 
     # Exec command line from arguments
     echo "set -x" >> $geckoenv
     echo "exec \$@" >> $geckoenv
 
     chmod +x $geckoenv
-  '';
-  installPhase = ''
-    echo "Skip install"
   '';
   propagatedBuildInputs = old.propagatedBuildInputs
     ++ [

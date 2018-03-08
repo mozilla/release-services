@@ -144,8 +144,8 @@ class Workflow(object):
                 logger.info('No clang files detected, skipping mach')
 
             # Setup python environment
-            logger.info('Mach python setup...')
-            cmd = ['gecko-env', './mach', 'python', '--version']
+            logger.info('Mach lint setup...')
+            cmd = ['gecko-env', './mach', 'lint', '--setup']
             run_check(cmd, cwd=self.repo_dir)
 
         # Run static analysis through clang-tidy
