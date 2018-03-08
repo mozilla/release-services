@@ -8,8 +8,8 @@ let
   hg_tools = mkDerivation {
     name = "mozilla-hg-tools";
     src = fetchurl {
-      url = "https://hg.mozilla.org/hgcustom/version-control-tools/archive/e05bed1064ed.tar.bz2";
-      sha256 = "1icg8cvjpw5x0xapryhmjqsmm2amzh57pnqd7r0idf6h8mphpimp";
+      url = "https://hg.mozilla.org/hgcustom/version-control-tools/archive/825b151d379c.tar.bz2";
+      sha256 = "0l4i3x20irshf4xa2xy64nvqi04wrj2h92bn24v2j72nqmg6379x";
     };
     installPhase = ''
       mkdir -p $out
@@ -25,8 +25,14 @@ let
     };
   };
 
+  mercurial_version = "4.4";
 
 in mercurial.overrideDerivation (old: {
+  name = "mercurial-${mercurial_version}";
+  src = fetchurl {
+    url = "https://mercurial-scm.org/release/mercurial-${mercurial_version}.tar.gz";
+    sha256 = "1pl77mb7d1r0hwk571cvyq9cyjxl99q0r4d1n0imkj35fnkg8ji3";
+  };
   postInstall = old.postInstall + ''
     mkdir -p $out/etc/mercurial
     cat > $out/etc/mercurial/hgrc <<EOF
