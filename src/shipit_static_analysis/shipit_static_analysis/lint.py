@@ -124,6 +124,7 @@ class MozLint(object):
         '''
         Run mozlint through mach, without gecko-env
         '''
+        full_path = os.path.join(self.repo_dir, path)
 
         # Run mozlint on a file
         command = [
@@ -131,7 +132,7 @@ class MozLint(object):
             './mach', 'lint',
             '-f', 'json',
             '--quiet',
-            path
+            full_path
         ]
         returncode, output, error = run(' '.join(command), cwd=self.repo_dir)
         if returncode == 0:
@@ -145,15 +146,16 @@ class MozLint(object):
             lines = list(filter(None, output.decode('utf-8').split('\n')))
             payload = json.loads(lines[-1])
         except json.decoder.JSONDecodeError:
-            logger.warn('Invalid json output', path=path)
-            return
+            logger.warn('Invalid json output', path=path, lines=lines)
+            raise
 
-        full_path = os.path.join(self.repo_dir, path)
-        if full_path not in payload:
+        if full_path not in payload and path not in payload:
             logger.warn('Missing path in linter output', path=path)
             return
 
+        # Mozlint uses both full & relative path to index issues
         return [
             MozLintIssue(self.repo_dir, path, **issue)
-            for issue in payload[full_path]
+            for p in (path, full_path)
+            for issue in payload[p]
         ]
