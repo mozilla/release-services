@@ -3,7 +3,7 @@
 let
   inherit (releng_pkgs.pkgs) fetchurl mercurial cacert python2Packages makeWrapper docutils unzip;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
-  inherit (releng_pkgs.pkgs.lib) licenses platforms maintainers ;
+  inherit (releng_pkgs.pkgs.lib) licenses;
 
   hg_tools = mkDerivation {
     name = "mozilla-hg-tools";
@@ -40,8 +40,6 @@ in python2Packages.buildPythonApplication {
 
   buildInputs = [ makeWrapper docutils unzip ];
 
-  propagatedBuildInputs = []; # no git deps
-
   makeFlags = [ "PREFIX=$(out)" ];
 
   postInstall = ''
@@ -55,15 +53,4 @@ in python2Packages.buildPythonApplication {
     robustcheckout = ${hg_tools}/hgext/robustcheckout/__init__.py
     EOF
   '';
-
-  meta = {
-    inherit version;
-    description = "A fast, lightweight SCM system for very large distributed projects";
-    homepage = http://mercurial.selenic.com/;
-    downloadPage = "http://mercurial.selenic.com/release/";
-    license = licenses.gpl2;
-    maintainers = [ maintainers.eelco ];
-    updateWalker = true;
-    platforms = platforms.unix;
-  };
 }
