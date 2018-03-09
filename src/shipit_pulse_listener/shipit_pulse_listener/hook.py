@@ -19,7 +19,6 @@ class Hook(object):
     def __init__(self, group_id, hook_id):
         self.group_id = group_id
         self.hook_id = hook_id
-        self.queue = None  # TC queue
         self.hooks = None  # TC hooks
 
     def connect_taskcluster(self, client_id=None, access_token=None):
@@ -28,9 +27,6 @@ class Hook(object):
         '''
         # Get taskcluster hooks
         self.hooks = get_service('hooks', client_id, access_token)
-
-        # Get taskcluster queue
-        self.queue = get_service('queue', client_id, access_token)
 
         return True
 
@@ -45,7 +41,6 @@ class Hook(object):
         Create a new task on Taskcluster
         '''
         assert self.hooks is not None
-        assert self.queue is not None
 
         task_status = self.hooks.triggerHook(self.group_id, self.hook_id, {"extra_env": extra_env})
         task_id = task_status['taskId']
