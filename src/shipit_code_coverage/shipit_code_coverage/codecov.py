@@ -17,6 +17,7 @@ from shipit_code_coverage import taskcluster, uploader
 from shipit_code_coverage.artifacts import ArtifactsHandler
 from shipit_code_coverage.github import GitHubUtils
 from shipit_code_coverage import grcov
+from shipit_code_coverage import report_generators
 from shipit_code_coverage.notifier import Notifier
 from shipit_code_coverage.secrets import secrets
 
@@ -118,55 +119,6 @@ class CodeCov(object):
             for suite in self.suites:
                 executor.submit(self.generate_suite_report, suite)
 
-    def generate_zero_coverage_report(self):
-        report = grcov.report(self.artifactsHandler.get(), out_format='coveralls+')
-        report = json.loads(report.decode('utf-8'))  # Decoding is only necessary until Python 3.6.
-
-        zero_coverage_files = []
-        zero_coverage_functions = {}
-        for sf in report['source_files']:
-            name = sf['name']
-
-            # For C/C++ source files, we can consider a file as being uncovered
-            # when all its source lines are uncovered.
-            all_lines_uncovered = all(c is None or c == 0 for c in sf['coverage'])
-            # For JavaScript files, we can't do the same, as the top-level is always
-            # executed, even if it just contains declarations. So, we need to check if
-            # all its functions, except the top-level, are uncovered.
-            all_functions_uncovered = True
-            for f in sf['functions']:
-                f_name = f['name']
-                if f_name == 'top-level':
-                    continue
-
-                if not f['exec']:
-                    if name in zero_coverage_functions:
-                        zero_coverage_functions[name].append(f['name'])
-                    else:
-                        zero_coverage_functions[name] = [f['name']]
-                else:
-                    all_functions_uncovered = False
-
-            if all_lines_uncovered or (len(sf['functions']) > 1 and all_functions_uncovered):
-                zero_coverage_files.append(name)
-
-        with open('code-coverage-reports/zero_coverage_files.json', 'w') as f:
-            json.dump(zero_coverage_files, f)
-
-        mkdir('code-coverage-reports/zero_coverage_functions')
-
-        zero_coverage_function_counts = []
-        for fname, functions in zero_coverage_functions.items():
-            zero_coverage_function_counts.append({
-                'name': fname,
-                'funcs': len(functions),
-            })
-            with open('code-coverage-reports/zero_coverage_functions/%s.json' % fname.replace('/', '_'), 'w') as f:
-                json.dump(functions, f)
-
-        with open('code-coverage-reports/zero_coverage_functions.json', 'w') as f:
-            json.dump(zero_coverage_function_counts, f)
-
     def generate_chunk_mapping(self):
         with ThreadPoolExecutor(max_workers=4) as executor:
             futures = {}
@@ -259,7 +211,7 @@ class CodeCov(object):
 
             self.generate_suite_reports()
 
-            self.generate_zero_coverage_report()
+            report_generators.zero_coverage(self.artifactsHandler.get())
 
             self.generate_chunk_mapping()
 
