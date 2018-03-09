@@ -84,6 +84,8 @@ async def test_monitoring(QueueMock, NotifyMock):
 
 0.00% of all tasks (0/1)
 
+
+
 # Hook1 tasks for the last period
 
 
@@ -131,4 +133,75 @@ async def test_report_all_completed(QueueMock, NotifyMock):
     # No email sent, since all tasks were successful.
     monitoring.send_report()
     assert NotifyMock.email_obj == {}
+    assert monitoring.stats == {}
+
+
+@pytest.mark.asyncio
+async def test_monitoring_whiteline_between_failed_and_hook(QueueMock, NotifyMock):
+    monitoring = Monitoring(1)
+    monitoring.emails = ['pinco@pallino']
+    await monitoring.add_task('Group1', 'Hook1', 'Task-failed')
+    await monitoring.add_task('Group1', 'Hook2', 'Task-failed')
+    assert monitoring.tasks.qsize() == 2
+
+    monitoring.queue = QueueMock
+    monitoring.notify = NotifyMock
+
+    # Task exception.
+    await monitoring.check_task()
+    assert monitoring.stats['Hook1']['failed'] == ['Task-failed']
+    assert monitoring.tasks.qsize() == 1
+
+    # Task failed.
+    await monitoring.check_task()
+    assert monitoring.stats['Hook2']['failed'] == ['Task-failed']
+    assert monitoring.tasks.qsize() == 0
+
+    content = '''# Hook2 tasks for the last period
+
+
+## exception
+
+0.00% of all tasks (0/1)
+
+
+
+## completed
+
+0.00% of all tasks (0/1)
+
+
+
+## failed
+
+100.00% of all tasks (1/1)
+
+* [Task-failed](https://tools.taskcluster.net/task-inspector/#Task-failed)
+
+# Hook1 tasks for the last period
+
+
+## exception
+
+0.00% of all tasks (0/1)
+
+
+
+## completed
+
+0.00% of all tasks (0/1)
+
+
+
+## failed
+
+100.00% of all tasks (1/1)
+
+* [Task-failed](https://tools.taskcluster.net/task-inspector/#Task-failed)'''
+
+    monitoring.send_report()
+    assert NotifyMock.email_obj['address'] == 'pinco@pallino'
+    assert NotifyMock.email_obj['subject'] == 'Pulse listener tasks'
+    assert NotifyMock.email_obj['content'] == content
+    assert NotifyMock.email_obj['template'] == 'fullscreen'
     assert monitoring.stats == {}
