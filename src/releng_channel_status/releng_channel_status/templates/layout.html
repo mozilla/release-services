@@ -1,0 +1,42 @@
+<html>
+    <head>
+        <title>
+            Nightly status
+        </title>
+        <link rel=stylesheet type=text/css href="{{ url_for('static', filename='site.css') }}">
+    </head>
+    <body>
+        <div id="page-home">
+            <nav id="navbar" class="navbar navbar-toggleable-md bg-faded navbar-inverse">
+                <div class="container">
+                    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <a href="#" class="navbar-brand">Release Engineering</a>
+                    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                        <ul class="navbar-nav">
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">Login</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <div id="content" >
+                <div class="container">
+                    {% block body %} {% endblock %}
+                </div>
+            </div>
+            
+            <footer class="container"><hr><ul><li><a href="https://docs.mozilla-releng.net">Documentation</a></li><li><a href="https://github.com/mozilla-releng/services/blob/master/CONTRIBUTING.rst">Contribute</a></li><li><a href="https://github.com/mozilla-releng/services/issues/new">Contact</a></li></ul><div>version: <a href="https://github.com/mozilla-releng/services/releases/tag/v29">29</a></div></footer>
+        </div>
+    </body>
+</html>
+
+
+
+
+
+
+
