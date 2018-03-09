@@ -1,0 +1,12 @@
+SF:js/src/jit/JIT.cpp
+FN:1,aCoveredFunction
+FNDA:1,aCoveredFunction
+FN:2,anUncoveredFunction
+FNDA:0,anUncoveredFunction
+FNF:2
+FNH:1
+DA:1,42
+DA:2,0
+LF:2
+LH:1
+end_of_record

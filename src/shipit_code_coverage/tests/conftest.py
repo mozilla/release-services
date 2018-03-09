@@ -102,3 +102,21 @@ def grcov_existing_file_artifact():
 def grcov_uncovered_artifact():
     with generate_coverage_artifact('grcov_uncovered_file.info') as f:
         yield f
+
+
+@pytest.fixture(scope='session')
+def jsvm_uncovered_artifact():
+    with generate_coverage_artifact('jsvm_uncovered_file.info') as f:
+        yield f
+
+
+@pytest.fixture(scope='session')
+def grcov_uncovered_function_artifact():
+    with generate_coverage_artifact('grcov_uncovered_function.info') as f:
+        yield f
+
+
+@pytest.fixture(scope='session')
+def jsvm_uncovered_function_artifact():
+    with generate_coverage_artifact('jsvm_uncovered_function.info') as f:
+        yield f
