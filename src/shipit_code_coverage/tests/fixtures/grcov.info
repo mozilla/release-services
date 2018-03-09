@@ -1,0 +1,10 @@
+SF:js/src/jit/BitSet.cpp
+FN:1,_ZNK2js3jit6BitSet5emptyEv
+FNDA:1,_ZNK2js3jit6BitSet5emptyEv
+FNF:1
+FNH:1
+DA:1,42
+DA:2,42
+LF:2
+LH:2
+end_of_record
