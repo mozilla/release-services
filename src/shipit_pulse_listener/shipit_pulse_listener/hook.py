@@ -40,23 +40,6 @@ class Hook(object):
         '''
         raise NotImplementedError
 
-    def parse_deadline(self, deadline):
-        parts = deadline.split(' ')
-
-        num = int(parts[0])
-        unit = parts[1]
-
-        if unit.startswith('second'):
-            return timedelta(seconds=num)
-        elif unit.startswith('minute'):
-            return timedelta(minutes=num)
-        elif unit.startswith('hour'):
-            return timedelta(minutes=num * 60)
-        elif unit.startswith('day'):
-            return timedelta(days=num)
-        else:
-            raise Exception('Error while parsing: ' % deadline)
-
     async def create_task(self, extra_env={}):
         '''
         Create a new task on Taskcluster
