@@ -124,7 +124,7 @@ class CodeCov(object):
             futures = {}
             for platform in ['linux', 'windows']:
                 for chunk in self.artifactsHandler.get_chunks():
-                    future = executor.submit(grcov.files_list, self.artifactsHandler.get(platform=platform, chunk=chunk))
+                    future = executor.submit(grcov.files_list, self.artifactsHandler.get(platform=platform, chunk=chunk), source_dir=self.repo_dir)
                     futures[future] = (platform, chunk)
 
             with sqlite3.connect('chunk_mapping.sqlite') as conn:
