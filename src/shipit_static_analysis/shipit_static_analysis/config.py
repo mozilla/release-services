@@ -11,6 +11,10 @@ import requests
 
 PROJECT_NAME = 'shipit-static-analysis'
 CONFIG_URL = 'https://hg.mozilla.org/mozilla-central/raw-file/tip/tools/clang-tidy/config.yaml'
+REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
+REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
+ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{task_id}/runs/{run_id}/artifacts/public/results/{diff_name}'
+
 
 logger = get_logger(__name__)
 

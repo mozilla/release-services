@@ -161,6 +161,13 @@ def mock_phabricator():
         content_type='application/json',
     )
 
+    responses.add(
+        responses.POST,
+        'http://phabricator.test/api/differential.getrawdiff',
+        body=_response('diff_raw'),
+        content_type='application/json',
+    )
+
 
 @pytest.fixture(scope='session')
 def mock_stats(mock_config):

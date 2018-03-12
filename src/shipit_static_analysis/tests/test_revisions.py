@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import responses
+from parsepatch.patch import Patch
 
 
 def test_mozreview():
@@ -33,13 +34,27 @@ def test_phabricator(mock_phabricator):
     })
 
     r = PhabricatorRevision('51:PHID-DIFF-testABcd12', api)
-    assert r.mercurial == 'coffeedeadbeef123456789'
+    assert not hasattr(r, 'mercurial')
     assert r.diff_id == 42
     assert r.diff_phid == 'PHID-DIFF-testABcd12'
     assert r.url == 'https://phabricator.test/PHID-DIFF-testABcd12/'
     assert r.build_diff_name() == 'PHID-DIFF-testABcd12-clang-format.diff'
     assert r.id == 51  # revision
     assert r.phid == 'PHID-DREV-zzzzz'
+
+    # Load full patch
+    raw_patch = r.load_raw_patch()
+    assert isinstance(raw_patch, str)
+    assert len(raw_patch.split('\n')) == 7
+    patch = Patch.parse_patch(raw_patch)
+    assert patch == {
+        'src/test.txt': {
+            'touched': [],
+            'deleted': [],
+            'added': [2],
+            'new': False
+        }
+    }
 
 
 def test_clang_files(mock_revision):
