@@ -1,6 +1,7 @@
 let
   pkgs' = import <nixpkgs> {};
-  src-nixpkgs = pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs.json));
+  nixpkgs-json = builtins.fromJSON (builtins.readFile ./nixpkgs.json);
+  src-nixpkgs = pkgs'.fetchFromGitHub { inherit (nixpkgs-json) owner repo rev sha256; };
   src-nixpkgs-mozilla = pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs-mozilla.json));
 in
 { pkgs ? import src-nixpkgs {

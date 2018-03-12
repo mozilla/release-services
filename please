@@ -49,7 +49,7 @@ else
   if [ "$USE_DOCKER" = "1" ]; then
     if [ ! "$(docker ps -q -f name=$DOCKER_NAME)" ]; then
       if [ ! "$(docker ps -qa -f name=$DOCKER_NAME)" ]; then
-        docker run -td --name $DOCKER_NAME --volume="$(pwd)":/app --workdir=/app -p 8000-8100:8000-8100 -e NIX_PATH="nixpkgs=/home/app/nixpkgs" mozillareleng/services:base-`cat ./VERSION`
+        docker run --privileged -td --name $DOCKER_NAME --volume="$(pwd)":/app --workdir=/app -p 8000-8100:8000-8100 -e NIX_PATH="nixpkgs=/home/app/nixpkgs" mozillareleng/services:base-`cat ./VERSION`
       else
         docker start $DOCKER_NAME
       fi
