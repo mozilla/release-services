@@ -194,6 +194,10 @@ in rec {
           scopes = scopes;
           workerType = workerType;
         });
+        triggerSchema = {
+          type = "object";
+          additionalProperties = true;
+        };
       };
 
   mkTaskclusterGithubTask =
