@@ -91,7 +91,7 @@ PROJECTS = {
                 'heroku_app': 'releng-production-notif-policy',
                 'heroku_dyno_type': 'web',
                 'url': 'https://policy.notification.mozilla-releng.net',
-                'dns': 'policy.notification..mozilla-releng.net.herokudns.com',
+                'dns': 'policy.notification.mozilla-releng.net.herokudns.com',
             },
         },
     },
@@ -125,7 +125,7 @@ PROJECTS = {
                 'heroku_app': 'releng-production-notif-ident',
                 'heroku_dyno_type': 'web',
                 'url': 'https://identity.notification.mozilla-releng.net',
-                'dns': 'identity.notification..mozilla-releng.net.herokudns.com',
+                'dns': 'identity.notification.mozilla-releng.net.herokudns.com',
             },
         },
     },
@@ -338,13 +338,12 @@ PROJECTS = {
                 'url': 'https://tooltool.staging.mozilla-releng.net',
                 'dns': 'shizuoka-60622.herokussl.com',
             },
-            # TODO: remove comment after freeze period
-            # 'production': {
-            #     'heroku_app': 'releng-production-tooltool',
-            #     'heroku_dyno_type': 'web',
-            #     'url': 'https://tooltool.mozilla-releng.net',
-            #     'dns': 'kochi-11433.herokussl.com',
-            # },
+            'production': {
+                'heroku_app': 'releng-production-tooltool',
+                'heroku_dyno_type': 'web',
+                'url': 'https://tooltool.mozilla-releng.net',
+                'dns': 'kochi-11433.herokussl.com',
+            },
         },
     },
     'releng-treestatus': {
@@ -375,14 +374,13 @@ PROJECTS = {
                 # TODO: we need to change this to SSL Endpoint
                 'dns': 'treestatus.staging.mozilla-releng.net.herokudns.com',
             },
-            # TODO: remove comment after freeze period
-            # 'production': {
-            #     'heroku_app': 'releng-production-treestatus',
-            #     'heroku_dyno_type': 'web',
-            #     'url': 'https://treestatus.mozilla-releng.net',
-            #     # TODO: this needs to be updated in mozilla-releng/build-cloud-tools
-            #     'dns': 'kochi-31413.herokussl.com',
-            # },
+            'production': {
+                'heroku_app': 'releng-production-treestatus',
+                'heroku_dyno_type': 'web',
+                'url': 'https://treestatus.mozilla-releng.net',
+                # TODO: this needs to be updated in mozilla-releng/build-cloud-tools
+                'dns': 'kochi-31413.herokussl.com',
+            },
         },
     },
     'shipit-bot-uplift': {
