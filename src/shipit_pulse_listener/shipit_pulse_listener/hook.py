@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime, timedelta
-from taskcluster.utils import slugId
 from shipit_pulse_listener import task_monitoring
 from cli_common.taskcluster import get_service
 from cli_common.pulse import create_consumer
 from cli_common.log import get_logger
-import copy
 import json
 
 
@@ -19,7 +16,6 @@ class Hook(object):
     def __init__(self, group_id, hook_id):
         self.group_id = group_id
         self.hook_id = hook_id
-        self.queue = None  # TC queue
         self.hooks = None  # TC hooks
 
     def connect_taskcluster(self, client_id=None, access_token=None):
@@ -29,9 +25,6 @@ class Hook(object):
         # Get taskcluster hooks
         self.hooks = get_service('hooks', client_id, access_token)
 
-        # Get taskcluster queue
-        self.queue = get_service('queue', client_id, access_token)
-
         return True
 
     def build_consumer(self, *args, **kwargs):
@@ -40,52 +33,15 @@ class Hook(object):
         '''
         raise NotImplementedError
 
-    def parse_deadline(self, deadline):
-        parts = deadline.split(' ')
-
-        num = int(parts[0])
-        unit = parts[1]
-
-        if unit.startswith('second'):
-            return timedelta(seconds=num)
-        elif unit.startswith('minute'):
-            return timedelta(minutes=num)
-        elif unit.startswith('hour'):
-            return timedelta(minutes=num * 60)
-        elif unit.startswith('day'):
-            return timedelta(days=num)
-        else:
-            raise Exception('Error while parsing: ' % deadline)
-
     async def create_task(self, extra_env={}):
         '''
         Create a new task on Taskcluster
         '''
         assert self.hooks is not None
-        assert self.queue is not None
 
-        logger.info('Loading task definition', hook=self.hook_id, group=self.group_id)
-        try:
-            hook_definition = self.hooks.hook(self.group_id, self.hook_id)
-        except Exception as e:
-            logger.warn('Failed to fetch task definition', hook=self.hook_id, group=self.group_id, err=e)
-            return False
-
-        # Update the env in task
-        task_definition = copy.deepcopy(hook_definition['task'])
-        task_definition['payload']['env'].update(extra_env)
-
-        # Build task id
-        task_id = slugId().decode('utf-8')
-
-        # Set dates
-        now = datetime.utcnow()
-        task_definition['created'] = now
-        task_definition['deadline'] = now + self.parse_deadline(hook_definition['deadline'])
-        logger.info('Creating a new task', id=task_id, name=task_definition['metadata']['name'])  # noqa
-
-        # Create a new task
-        self.queue.createTask(task_id, task_definition)
+        task_status = self.hooks.triggerHook(self.group_id, self.hook_id, {'extra_env': extra_env})
+        task_id = task_status['taskId']
+        logger.info('Triggered a new task', id=task_id)
 
         # Send task to monitoring
         await task_monitoring.add_task(self.group_id, self.hook_id, task_id)

@@ -2,7 +2,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource mkRustPlatform;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkPython fromRequirementsFile filterSource mkRustPlatform;
   inherit (releng_pkgs.pkgs) writeScript makeWrapper fetchurl cacert git llvm_4;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.pkgs.lib) fileContents optional licenses;
@@ -71,9 +71,11 @@ let
         cache = {
           "${cacheKey}" = "/cache";
         };
-        taskEnv = {
-          "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
-          "APP_CHANNEL" = branch;
+        taskEnv = mkTaskclusterMergeEnv {
+          env = {
+            "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+            "APP_CHANNEL" = branch;
+          };
         };
         taskCommand = [
           "/bin/shipit-code-coverage"

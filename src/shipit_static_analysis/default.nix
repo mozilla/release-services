@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource ;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkPython fromRequirementsFile filterSource ;
   inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch nodejs git python27 python35 coreutils shellcheck;
   inherit (releng_pkgs.pkgs.lib) fileContents concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
@@ -41,10 +41,12 @@ let
         cache = {
           "${cacheKey}" = "/cache";
         };
-        taskEnv = {
-          "SSL_CERT_FILE" = "${cacert}/etc/ssl/certs/ca-bundle.crt";
-          "APP_CHANNEL" = branch;
-          "MOZ_AUTOMATION" = "1";
+        taskEnv = mkTaskclusterMergeEnv {
+          env = {
+            "SSL_CERT_FILE" = "${cacert}/etc/ssl/certs/ca-bundle.crt";
+            "APP_CHANNEL" = branch;
+            "MOZ_AUTOMATION" = "1";
+          };
         };
         taskCommand = [
           "/bin/shipit-static-analysis"

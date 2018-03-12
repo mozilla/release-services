@@ -34,3 +34,22 @@ def NotifyMock():
             self.email_obj.update(obj)
 
     return Mock()
+
+
+@pytest.fixture
+def HooksMock():
+    class Mock():
+        def __init__(self):
+            self.obj = {}
+
+        def triggerHook(self, group_id, hook_id, payload):
+            self.obj = {
+              'group_id': group_id,
+              'hook_id': hook_id,
+              'payload': payload,
+            }
+            return {
+              'taskId': 'fake_task_id',
+            }
+
+    return Mock()

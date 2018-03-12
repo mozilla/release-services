@@ -104,6 +104,16 @@ in rec {
       inherit contents config;
     };
 
+    mkTaskclusterMergeEnv =
+      { env
+      }:
+      {
+        "$merge" = [
+          env
+          { "$eval" = "extra_env"; }
+        ];
+      };
+
     mkTaskclusterTaskMetadata =
       { name
       , description ? ""
@@ -125,6 +135,9 @@ in rec {
 
     mkTaskclusterTask =
       { extra ? {}
+      , created ? "0 seconds"
+      , expires ? "1 month"
+      , deadline ? "1 hour"
       , metadata ? {}
       , payload ? {}
       , priority ? "normal"
@@ -140,6 +153,9 @@ in rec {
            tags workerType;
         payload = mkTaskclusterTaskPayload payload;
         metadata = mkTaskclusterTaskMetadata metadata;
+        created = { "$fromNow" = created; };
+        deadline = { "$fromNow" = deadline; };
+        expires = { "$fromNow" = expires; };
       };
 
     mkTaskclusterHook =
@@ -148,6 +164,7 @@ in rec {
       , owner
       , emailOnError ? true
       , schedule ? []
+      , created ? "0 seconds"
       , expires ? "1 month"
       , deadline ? "1 hour"
       , taskImage
@@ -159,9 +176,12 @@ in rec {
       , maxRunTime ? 3600
       , workerType ? "releng-svc"
       }:
-      { inherit schedule expires deadline;
+      { inherit schedule;
         metadata = { inherit name description owner emailOnError; };
         task = mkTaskclusterTask ({
+          created = created;
+          deadline = deadline;
+          expires = expires;
           metadata = { inherit name description owner; };
           payload = mkTaskclusterTaskPayload {
             image = taskImage;
