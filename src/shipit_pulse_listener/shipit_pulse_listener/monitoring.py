@@ -112,7 +112,7 @@ class Monitoring(object):
         if not self.stats:
             return
 
-        content = ''
+        contents = []
 
         # Build markdown
         for hook_id, tasks_per_status in self.stats.items():
@@ -120,7 +120,7 @@ class Monitoring(object):
             if len(tasks_per_status['completed']) == total:
                 continue
 
-            content += '# {} tasks for the last period\n'.format(hook_id)
+            content = '# {} tasks for the last period\n'.format(hook_id)
             for status, tasks in tasks_per_status.items():
                 nb_tasks = len(tasks)
                 content += GROUP_MD.format(
@@ -133,15 +133,16 @@ class Monitoring(object):
                     TASK_MD.format(task)
                     for task in tasks
                 ])
+            contents.append(content)
 
-        if content:
+        if len(contents):
             # Send to admins
             logger.info('Sending email to admins')
             for email in self.emails:
                 self.notify.email({
                     'address': email,
                     'subject': 'Pulse listener tasks',
-                    'content': content,
+                    'content': '\n\n'.join(contents),
                     'template': 'fullscreen',
                 })
 
