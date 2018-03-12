@@ -110,7 +110,7 @@ in rec {
       {
         "$merge" = [
           env
-          { "$eval" = "extra_env"; }
+          { "$eval" = "payload.extra_env"; }
         ];
       };
 
