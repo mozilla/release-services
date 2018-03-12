@@ -115,7 +115,10 @@ def cmd_S3(ctx,
                )
     project_path = os.path.realpath(os.path.join(
         please_cli.config.TMP_DIR,
-        'result-build-{}-1'.format(project),
+        'result-build-{}-{}'.format(
+            project,
+            extra_attribute[0].lstrip(project + '.'),
+        )
     ))
 
     # 2. create temporary copy of project
@@ -401,7 +404,10 @@ def cmd_TASKCLUSTER_HOOK(ctx,
                )
     project_path = os.path.realpath(os.path.join(
         please_cli.config.TMP_DIR,
-        'result-build-{}-1'.format(project),
+        'result-build-{}-{}'.format(
+            project,
+            extra_attribute[0].lstrip(project + '.'),
+        ),
     ))
 
     with open(project_path) as f:

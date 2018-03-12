@@ -78,12 +78,15 @@ def cmd(project,
 
     click.echo(' => Building {} project ... '.format(project), nl=False)
     with click_spinner.spinner():
-        for index, attribute in enumerate([project] + list(extra_attribute)):
+        for attribute in [project] + list(extra_attribute):
             command = [
                 nix_build,
                 please_cli.config.ROOT_DIR + '/nix/default.nix',
                 '-A', attribute,
-                '-o', please_cli.config.TMP_DIR + '/result-build-{project}-{index}'.format(project=project, index=index),
+                '-o', please_cli.config.TMP_DIR + '/result-build-{project}-{attribute}'.format(
+                    project=project,
+                    attribute=attribute.lstrip(project + '.'),
+                ),
             ]
             result, output, error = cli_common.command.run(
                 command,
