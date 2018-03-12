@@ -5,7 +5,6 @@ from cli_common.utils import retry
 from shipit_pulse_listener.hook import Hook, PulseHook
 from shipit_pulse_listener import task_monitoring
 import requests
-import itertools
 import asyncio
 from datetime import datetime, timedelta
 import dateutil.parser
