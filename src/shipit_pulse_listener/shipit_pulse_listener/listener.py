@@ -144,81 +144,6 @@ class HookStaticAnalysis(PulseHook):
         }
 
 
-class HookRiskAssessment(PulseHook):
-    '''
-    Taskcluster hook handling the risk assessment
-    '''
-    extensions =  ('c', 'cc', 'cpp', 'cxx', 'h', 'hxx', 'hpp', 'hh', 'idl', 'ipdl', 'webidl')  # noqa
-
-    def __init__(self, configuration):
-        assert 'hookId' in configuration
-        super().__init__(
-            'project-releng',
-            configuration['hookId'],
-            'exchange/hgpushes/v2',
-            'mozilla-central',
-        )
-
-    def parse(self, body):
-        '''
-        Extract revisions from payload
-        '''
-        if 'payload' not in body:
-            raise Exception('Missing payload in body')
-        payload = body['payload']
-
-        # Use only changesets
-        if payload.get('type') != 'changegroup.1':
-            return
-
-        # TODO: filter on pushlog ?
-        data = payload.get('data')
-        assert isinstance(data, dict)
-        assert 'heads' in data
-        assert 'pushlog_pushes' in data
-        logger.info('Received new pushes', revisions=data['heads'])
-
-        # Check pushlog has a list of supported files
-        supported_files = [
-            len(self.list_pushlog_files(pushlog['push_full_json_url'])) > 0
-            for pushlog in data['pushlog_pushes']
-        ]
-        if supported_files and not any(supported_files):
-            logger.info('No supported file detected, skipping task')
-            return
-
-        return {
-            # Most of the time only one revision is pushed
-            # http://mozilla-version-control-tools.readthedocs.io/en/latest/hgmo/notifications.html#changegroup-1  # noqa
-            'REVISIONS': ' '.join(data['heads'])
-        }
-
-    def list_pushlog_files(self, pushlog_url):
-        '''
-        Fetch a pushlog detailed file and list all its files
-        Only list files with a supported extension
-        '''
-        resp = requests.get(pushlog_url)
-        assert resp.ok, \
-            'Invalid Pushlog response : {}'.format(resp.content)
-        data = resp.json()
-
-        def _has_extension(path):
-            if '.' not in path:
-                return False
-            pos = path.rindex('.')
-            ext = path[pos+1:].lower()
-            return ext in self.extensions
-
-        all_files = itertools.chain(*[
-            changeset['files']
-            for push in data['pushes'].values()
-            for changeset in push['changesets']
-        ])
-
-        return set(filter(_has_extension, all_files))
-
-
 class HookCodeCoverage(PulseHook):
     '''
     Taskcluster hook handling the code coverage
@@ -367,7 +292,6 @@ class PulseListener(object):
         classes = {
             'static-analysis-mozreview': HookStaticAnalysis,
             'static-analysis-phabricator': HookPhabricator,
-            'risk-assessment': HookRiskAssessment,
             'code-coverage': HookCodeCoverage,
         }
         hook_class = classes.get(conf['type'])
