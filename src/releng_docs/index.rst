@@ -49,7 +49,8 @@ Develop
     develop/python-project
     develop/flask-project
     develop/install-nix
-    develop/defending_design
+    develop/branching-policy
+    develop/defending-design
 
 
 Deploy
@@ -58,7 +59,7 @@ Deploy
 .. toctree::
     :maxdepth: 2
 
-    deploy/weekly_releases
+    deploy/weekly-releases
     deploy/heroku-target
     deploy/s3-target
     deploy/taskcluster-hook-target

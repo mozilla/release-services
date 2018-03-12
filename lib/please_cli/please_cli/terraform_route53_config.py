@@ -73,6 +73,8 @@ def to_route53_name(project_id, channel):
         channel_short = 'prod'
     elif channel == 'staging':
         channel_short = 'stage'
+    elif channel == 'testing':
+        channel_short = 'test'
 
     project_name = project_id
     if 'releng-' in project_id:
