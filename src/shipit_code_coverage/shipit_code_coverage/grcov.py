@@ -27,6 +27,7 @@ def report(artifacts, source_dir=None, service_number=None, commit_sha='unused',
 
     if source_dir is not None:
         cmd.extend(['-s', source_dir])
+        cmd.append('--ignore-not-existing')
 
     cmd.extend(artifacts)
     cmd.extend(options)

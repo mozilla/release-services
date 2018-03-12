@@ -124,7 +124,7 @@ class CodeCov(object):
             futures = {}
             for platform in ['linux', 'windows']:
                 for chunk in self.artifactsHandler.get_chunks():
-                    future = executor.submit(grcov.files_list, self.artifactsHandler.get(platform=platform, chunk=chunk))
+                    future = executor.submit(grcov.files_list, self.artifactsHandler.get(platform=platform, chunk=chunk), source_dir=self.repo_dir)
                     futures[future] = (platform, chunk)
 
             with sqlite3.connect('chunk_mapping.sqlite') as conn:
@@ -209,7 +209,8 @@ class CodeCov(object):
         else:
             mkdir('code-coverage-reports')
 
-            self.generate_suite_reports()
+            # XXX: Disabled as it is unused for now.
+            # self.generate_suite_reports()
 
             report_generators.zero_coverage(self.artifactsHandler.get())
 
