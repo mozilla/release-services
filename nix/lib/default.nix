@@ -110,7 +110,7 @@ in rec {
       {
         "$merge" = [
           env
-          { "$eval" = "extra_env"; }
+          { "$eval" = "payload.extra_env"; }
         ];
       };
 
@@ -194,6 +194,10 @@ in rec {
           scopes = scopes;
           workerType = workerType;
         });
+        triggerSchema = {
+          type = "object";
+          additionalProperties = true;
+        };
       };
 
   mkTaskclusterGithubTask =
