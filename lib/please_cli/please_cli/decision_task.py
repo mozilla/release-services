@@ -199,6 +199,7 @@ def get_task(task_group_id,
         'deadline': now + datetime.timedelta(**deadline),
         'scopes': [
           'secrets:get:repo:github.com/mozilla-releng/services:branch:' + channel,
+          'docker-worker:capability:privileged',
         ] + scopes,
         'priority': priority,
         'payload': {
