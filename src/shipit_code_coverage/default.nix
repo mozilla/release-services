@@ -125,6 +125,7 @@ let
     dockerContents = [ git ];
     passthru = {
       deploy = {
+        testing = mkBot "testing";
         staging = mkBot "staging";
         production = mkBot "production";
       };
