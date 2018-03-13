@@ -93,6 +93,7 @@ RUN wget -nv "https://nixos.org/releases/nix/nix-$NIX_VERSION/nix-$NIX_VERSION-x
  && rm -rf $HOME/.cache/nix \
  && nix-build /app/nix/default.nix -A please-cli --no-out-link
 
+
 USER root
 
 
@@ -102,6 +103,7 @@ RUN chown -R root:root /nix \
  && mv /nix/var/nix/profiles/per-user/app/profile-1-link /nix/var/nix/profiles/default-1-link \
  && cd /nix/var/nix/profiles && ln -s default-1-link default && cd $HOME \
  && /nix/var/nix/profiles/default/bin/nix-env -iA bash -p /nix/var/nix/profiles/sandbox -f /etc/nix/nixpkgs \
+ && /nix/var/nix/profiles/default/bin/nix-env -iA cacert -p /nix/var/nix/profiles/default -f /etc/nix/nixpkgs \
  && BASH_PATH=$(realpath /nix/var/nix/profiles/sandbox/bin/bash) \
  && BASH_DEPS=$(sudo "/nix/var/nix/profiles/default/bin/nix-store" -qR "$BASH_PATH" | tr '\n' ' ') \
  && echo "sandbox = true" >> /etc/nix/nix.conf \
@@ -129,8 +131,7 @@ WORKDIR /app
 #
 # install please command
 #
-ENV \
- GIT_SSL_CAINFO=$HOME/.nix-profile/etc/ssl/certs/ca-bundle.crt \
- NIX_SSL_CERT_FILE=$HOME/.nix-profile/etc/ssl/certs/ca-bundle.crt \
- LANG=en_US.UTF-8
+ENV GIT_SSL_CAINFO=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt
+ENV NIX_SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt
+ENV LANG=en_US.UTF-8
 
