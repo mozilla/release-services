@@ -21,7 +21,7 @@ def test_mozreview():
 
 
 @responses.activate
-def test_phabricator(mock_phabricator):
+def test_phabricator(mock_phabricator, mock_repository):
     '''
     Test a phabricator revision
     '''
@@ -43,12 +43,14 @@ def test_phabricator(mock_phabricator):
     assert r.phid == 'PHID-DREV-zzzzz'
 
     # Load full patch
-    raw_patch = r.load_raw_patch()
-    assert isinstance(raw_patch, str)
-    assert len(raw_patch.split('\n')) == 7
-    patch = Patch.parse_patch(raw_patch)
+    assert r.patch is None
+    r.apply(mock_repository)
+    assert r.patch is not None
+    assert isinstance(r.patch, str)
+    assert len(r.patch.split('\n')) == 7
+    patch = Patch.parse_patch(r.patch)
     assert patch == {
-        'src/test.txt': {
+        'test.txt': {
             'touched': [],
             'deleted': [],
             'added': [2],

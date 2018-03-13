@@ -119,8 +119,9 @@ class Workflow(object):
             self.hg.update(rev=self.tip, clean=True)
             logger.info('Set repo back to tip', rev=self.tip)
 
-            # Update to the target revision
-            revision.apply(self.repo_dir)
+            # Apply and analyze revision patch
+            revision.apply(self.hg)
+            revision.analyze_patch()
 
         with stats.api.timer('runtime.mach'):
             # Only run mach if revision has any C/C++ files

@@ -21,22 +21,22 @@ class Revision(object):
     '''
     files = []
     lines = {}
-    repo = None
+    patch = None
 
-    def apply(self, repo_dir):
+    def analyze_patch(self):
         '''
-        Apply revision to Mercurial local repository
+        Analyze loaded patch to extract modified lines
+        and statistics
         '''
-        self.repo = hglib.open(repo_dir)
-
-        # Load raw patch
-        raw_patch = self.load_raw_patch()
-        assert isinstance(raw_patch, str)
-        assert raw_patch is not None and raw_patch != '', \
-            'Empty raw patch'
+        assert self.patch is not None, \
+            'Missing patch'
+        assert isinstance(self.patch, str), \
+            'Invalid patch type'
 
         # List all modified lines from current revision changes
-        patch = Patch.parse_patch(raw_patch, skip_comments=False)
+        patch = Patch.parse_patch(self.patch, skip_comments=False)
+        assert patch != {}, \
+            'Empty patch'
         self.lines = {
             # Use all changes in new files
             filename: diff.get('touched', []) + diff.get('added', [])
@@ -45,12 +45,6 @@ class Revision(object):
 
         # Shortcut to files modified
         self.files = self.lines.keys()
-
-        # Apply the patch on top of repository
-        self.repo.import_(
-            patches=io.BytesIO(raw_patch.encode('utf-8')),
-            nocommit=True,
-        )
 
         # Report nb of files and lines analyzed
         stats.api.increment('analysis.files', len(self.files))
@@ -105,11 +99,20 @@ class PhabricatorRevision(Revision):
     def url(self):
         return 'https://{}/{}/'.format(self.api.hostname, self.diff_phid)
 
-    def load_raw_patch(self):
+    def apply(self, repo):
         '''
-        Load patch using Phabricator API
+        Apply patch from Phabricator to Mercurial local repository
         '''
-        return self.api.load_raw_diff(self.diff_id)
+        assert isinstance(repo, hglib.client.hgclient)
+
+        # Load raw patch
+        self.patch = self.api.load_raw_diff(self.diff_id)
+
+        # Apply the patch on top of repository
+        repo.import_(
+            patches=io.BytesIO(self.patch.encode('utf-8')),
+            nocommit=True,
+        )
 
 
 class MozReviewRevision(Revision):
@@ -142,39 +145,25 @@ class MozReviewRevision(Revision):
             self.diffset_revision,
         )
 
-    def load_raw_patch(self):
+    def apply(self, repo):
         '''
-        Load patch using Mercurial diff
+        Load required revision from mercurial remote repo
         '''
-        assert self.repo is not None, \
-            'No local mercurial repository instance'
-
-        # Save current parent revision
-        parent = self.repo.tip().node
+        assert isinstance(repo, hglib.client.hgclient)
 
         # Pull revision from review
-        self.repo.pull(
+        repo.pull(
             source=REPO_REVIEW,
             rev=self.mercurial,
+            update=True,
             force=True,
         )
 
-        # Find common ancestor between parent and required commit
-        # in order to produce a mergeable patch
-        ancestors = self.repo.log(
-            revrange='ancestor({}, {})'.format(self.mercurial, parent.decode('utf-8')),
-        )
-        assert len(ancestors) == 1, \
-            'Unsupported multiple ancestors'
-        ancestor = ancestors[0].node.decode('utf-8')
-
-        # Build patch
-        patch = self.repo.diff(
-            revs=[ancestor, self.mercurial],
-            git=True,
+        # Update to the target revision
+        repo.update(
+            rev=self.mercurial,
+            clean=True,
         )
 
-        # Restore repo to parent revision to allow merge
-        self.repo.update(rev=parent, clean=True)
-
-        return patch.decode('utf-8')
+        # Load patch from hg diff
+        self.patch = repo.diff(change=self.mercurial, git=True).decode('utf-8')
