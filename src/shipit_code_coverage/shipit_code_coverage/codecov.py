@@ -108,7 +108,7 @@ class CodeCov(object):
 
         os.remove('%s.info' % suite)
 
-        with tarfile.open('code-coverage-reports/%s.tar.bz2' % suite, 'w:bz2') as tar:
+        with tarfile.open('code-coverage-reports/%s.tar.xz' % suite, 'w:xz') as tar:
             tar.add(suite)
         shutil.rmtree(os.path.join(os.getcwd(), suite))
 
