@@ -46,6 +46,7 @@ RUN wget -nv "https://github.com/$NIXPKGS_OWNER/$NIXPKGS_REPO/archive/$NIXPKGS_R
       exit 1; \
     fi \
  && tar zxf "$NIXPKGS_REV.tar.gz" \
+ && mkdir /etc/services \
  && mkdir -p /etc/nix \
  && mv "$NIXPKGS_REPO-$NIXPKGS_REV" /etc/nix/nixpkgs
 
