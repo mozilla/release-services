@@ -179,6 +179,7 @@ def get_task(task_group_id,
         priority = 'very-high'
     now = datetime.datetime.utcnow()
     command = (' && '.join([
+      'source /etc/nix/profile.sh',
       'mkdir -p /tmp/app',
       'cd /tmp/app',
       'wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/mozilla-releng/services/archive/{github_commit}.tar.gz',
@@ -206,6 +207,9 @@ def get_task(task_group_id,
                                     please_cli.config.DOCKER_BASE_TAG),
             'features': {
                 'taskclusterProxy': True,
+            },
+            'capabilities': {
+                'privileged': True,
             },
             'command': [
                 '/bin/bash',
