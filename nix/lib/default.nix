@@ -566,6 +566,7 @@ in rec {
     , dockerEnv ? []
     , dockerContents ? []
     , passthru ? {}
+    , inTesting ? true
     , inStaging ? true
     , inProduction ? false
     , gunicornWorkers ? 3
@@ -687,6 +688,7 @@ in rec {
     , dockerEnv ? []
     , dockerContents ? []
     , passthru ? {}
+    , inTesting ? true
     , inStaging ? true
     , inProduction ? false
     }:
