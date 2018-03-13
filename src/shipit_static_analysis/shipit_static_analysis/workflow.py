@@ -78,12 +78,7 @@ class Workflow(object):
             raise hglib.error.CommandError(cmd, proc.returncode, out, err)
 
         # Open new hg client
-        client = hglib.open(self.repo_dir)
-
-        # Save tip
-        self.tip = client.tip().node
-
-        return client
+        return hglib.open(self.repo_dir)
 
     def run(self, revision):
         '''
@@ -116,8 +111,8 @@ class Workflow(object):
         with stats.api.timer('runtime.mercurial'):
             # Force cleanup to reset tip
             # otherwise previous pull are there
-            self.hg.update(rev=self.tip, clean=True)
-            logger.info('Set repo back to tip', rev=self.tip)
+            self.hg.update(rev=b'tip', clean=True)
+            logger.info('Set repo back to tip', rev=self.hg.tip().node)
 
             # Apply and analyze revision patch
             revision.apply(self.hg)
@@ -139,7 +134,6 @@ class Workflow(object):
                 logger.info('No clang files detected, skipping mach')
 
             # Setup python environment
-            # --setup has been removed, --list still triggers the setup
             logger.info('Mach lint setup...')
             cmd = ['gecko-env', './mach', 'lint', '--list']
             run_check(cmd, cwd=self.repo_dir)

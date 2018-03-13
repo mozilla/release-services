@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import responses
+import os
 from parsepatch.patch import Patch
 
 
@@ -40,7 +41,10 @@ def test_phabricator(mock_phabricator, mock_repository):
     assert r.url == 'https://phabricator.test/PHID-DIFF-testABcd12/'
     assert r.build_diff_name() == 'PHID-DIFF-testABcd12-clang-format.diff'
     assert r.id == 51  # revision
-    assert r.phid == 'PHID-DREV-zzzzz'
+
+    # Check test.txt content
+    test_txt = os.path.join(mock_repository.directory, 'test.txt')
+    assert open(test_txt).read() == 'Hello World\n'
 
     # Load full patch
     assert r.patch is None
@@ -57,6 +61,9 @@ def test_phabricator(mock_phabricator, mock_repository):
             'new': False
         }
     }
+
+    # Check file is updated
+    assert open(test_txt).read() == 'Hello World\nSecond line\n'
 
 
 def test_clang_files(mock_revision):

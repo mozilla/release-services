@@ -46,11 +46,12 @@ def mock_repository(tmpdir):
 
     # Init clean client
     client = hglib.open(repo_dir)
+    client.directory = repo_dir
 
     # Add test.txt file
     path = os.path.join(repo_dir, 'test.txt')
     with open(path, 'w') as f:
-        f.write('Hello World')
+        f.write('Hello World\n')
 
     # Initiall commit
     client.add(path.encode('utf-8'))
