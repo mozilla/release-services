@@ -31,7 +31,7 @@ class CodeCov(object):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = [
-            'cppunit', 'gtest', 'web-platform-tests', 'talos',
+            'web-platform-tests',
         ]
 
         self.cache_root = cache_root
@@ -108,7 +108,7 @@ class CodeCov(object):
 
         os.remove('%s.info' % suite)
 
-        with tarfile.open('code-coverage-reports/%s.tar.bz2' % suite, 'w:bz2') as tar:
+        with tarfile.open('code-coverage-reports/%s.tar.xz' % suite, 'w:xz') as tar:
             tar.add(suite)
         shutil.rmtree(os.path.join(os.getcwd(), suite))
 
@@ -209,8 +209,7 @@ class CodeCov(object):
         else:
             mkdir('code-coverage-reports')
 
-            # XXX: Disabled as it is unused for now.
-            # self.generate_suite_reports()
+            self.generate_suite_reports()
 
             report_generators.zero_coverage(self.artifactsHandler.get())
 
