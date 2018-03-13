@@ -179,6 +179,7 @@ def get_task(task_group_id,
         priority = 'very-high'
     now = datetime.datetime.utcnow()
     command = (' && '.join([
+      'ls -la /etc/services',
       'source /etc/nix/profile.sh',
       'mkdir -p /tmp/app',
       'cd /tmp/app',
