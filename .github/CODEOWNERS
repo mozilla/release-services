@@ -13,7 +13,6 @@
 /src/shipit_frontend                  @mozilla/Releng @mozilla/release-management
 /src/shipit_pipeline                  @mozilla/Releng
 /src/shipit_pulse_listener            @mozilla/release-management
-/src/shipit_risk_assessment           @mozilla/release-management
 /src/shipit_signoff                   @mozilla/Releng
 /src/shipit_static_analysis           @mozilla/release-management
 /src/shipit_taskcluster               @mozilla/Releng

@@ -517,18 +517,6 @@ PROJECTS = {
             },
         },
     },
-    #'shipit-risk-assessment': {
-    #    'checks': [
-    #        ('Checking code quality', 'flake8'),
-    #        ('Running tests', 'pytest tests/'),
-    #    ],
-    #    'deploy': 'TASKCLUSTER_HOOK',
-    #    'deploy_options': {
-    #        'testing': {},
-    #        'staging': {},
-    #        # 'production': {},
-    #    },
-    #},
     'shipit-signoff': {
         'checks': [
             ('Checking code quality', 'flake8'),
