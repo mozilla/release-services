@@ -110,33 +110,33 @@ def cmd(docker_username, docker_password, docker, docker_repo, docker_tag):
             )
         please_cli.utils.check_result(result, output)
 
-        #click.echo(' => Logging into hub.docker.com ... ', nl=False)
-        #with click_spinner.spinner():
-        #    result, output, error = cli_common.command.run(
-        #        [
-        #            docker,
-        #            'login',
-        #            '--username', docker_username,
-        #            '--password', docker_password,
-        #        ],
-        #        stream=True,
-        #        stderr=subprocess.STDOUT,
-        #        log_command=False,
-        #    )
-        #please_cli.utils.check_result(result, output)
+        click.echo(' => Logging into hub.docker.com ... ', nl=False)
+        with click_spinner.spinner():
+            result, output, error = cli_common.command.run(
+                [
+                    docker,
+                    'login',
+                    '--username', docker_username,
+                    '--password', docker_password,
+                ],
+                stream=True,
+                stderr=subprocess.STDOUT,
+                log_command=False,
+            )
+        please_cli.utils.check_result(result, output)
 
-        #click.echo(' => Pushing base docker image ... ', nl=False)
-        #with click_spinner.spinner():
-        #    result, output, error = cli_common.command.run(
-        #        [
-        #            docker,
-        #            'push',
-        #            '{}:{}'.format(docker_repo, docker_tag),
-        #        ],
-        #        stream=True,
-        #        stderr=subprocess.STDOUT,
-        #    )
-        #please_cli.utils.check_result(result, output)
+        click.echo(' => Pushing base docker image ... ', nl=False)
+        with click_spinner.spinner():
+            result, output, error = cli_common.command.run(
+                [
+                    docker,
+                    'push',
+                    '{}:{}'.format(docker_repo, docker_tag),
+                ],
+                stream=True,
+                stderr=subprocess.STDOUT,
+            )
+        please_cli.utils.check_result(result, output)
     finally:
         if os.path.exists(temp_docker_file):
             os.unlink(temp_docker_file)
