@@ -54,8 +54,8 @@ def mozilla_accept_token(render_errors=True):
         unmodified for later rendering.
     :type render_errors: bool
 
-    Side effects: flask.g gets the 'userinfo' attribute containing the data
-    from the response
+    Side effects: flask.g gets the 'userinfo' and 'access_token' attributes
+    containing the data from the response
 
     .. versionadded:: 1.0
     '''
@@ -72,7 +72,7 @@ def mozilla_accept_token(render_errors=True):
                 token = flask.request.args['access_token']
 
             url = auth0.client_secrets.get(
-                'userinfo_uri', 'https://auth.mozilla.auth0.com/userinfo')
+                'userinfo_uri', 'https://{}/userinfo'.format(flask.current_app.config.get('AUTH_DOMAIN')))
             payload = {'access_token': token}
             response = requests.get(url, params=payload)
 
