@@ -157,5 +157,5 @@ class MozLint(object):
         return [
             MozLintIssue(self.repo_dir, path, **issue)
             for p in (path, full_path)
-            for issue in payload[p]
+            for issue in payload.get(p, [])
         ]
