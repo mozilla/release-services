@@ -111,6 +111,9 @@ def main(phabricator,
                 error=e,
             )
 
+            # Then raise to mark task as erroneous
+            raise
+
 
 if __name__ == '__main__':
     main()

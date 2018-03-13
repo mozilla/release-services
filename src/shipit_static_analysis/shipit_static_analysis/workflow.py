@@ -78,7 +78,12 @@ class Workflow(object):
             raise hglib.error.CommandError(cmd, proc.returncode, out, err)
 
         # Open new hg client
-        return hglib.open(self.repo_dir)
+        client = hglib.open(self.repo_dir)
+
+        # Save tip
+        self.tip = client.tip().node
+
+        return client
 
     def run(self, revision):
         '''
@@ -111,7 +116,8 @@ class Workflow(object):
         with stats.api.timer('runtime.mercurial'):
             # Force cleanup to reset tip
             # otherwise previous pull are there
-            self.hg.update(rev=b'tip', clean=True)
+            self.hg.update(rev=self.tip, clean=True)
+            logger.info('Set repo back to tip', rev=self.tip)
 
             # Update to the target revision
             revision.apply(self.repo_dir)

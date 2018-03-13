@@ -149,14 +149,32 @@ class MozReviewRevision(Revision):
         assert self.repo is not None, \
             'No local mercurial repository instance'
 
+        # Save current parent revision
+        parent = self.repo.tip().node
+
         # Pull revision from review
         self.repo.pull(
             source=REPO_REVIEW,
             rev=self.mercurial,
-            update=True,
             force=True,
         )
 
+        # Find common ancestor between parent and required commit
+        # in order to produce a mergeable patch
+        ancestors = self.repo.log(
+            revrange='ancestor({}, {})'.format(self.mercurial, parent.decode('utf-8')),
+        )
+        assert len(ancestors) == 1, \
+            'Unsupported multiple ancestors'
+        ancestor = ancestors[0].node.decode('utf-8')
+
         # Build patch
-        patch = self.repo.diff(change=self.mercurial, git=True)
+        patch = self.repo.diff(
+            revs=[ancestor, self.mercurial],
+            git=True,
+        )
+
+        # Restore repo to parent revision to allow merge
+        self.repo.update(rev=parent, clean=True)
+
         return patch.decode('utf-8')
