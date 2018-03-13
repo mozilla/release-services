@@ -81,7 +81,7 @@ let
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
-      fromRequirementsFile ./requirements-dev.txt python.packages;
+      [ mercurial ] ++ fromRequirementsFile ./requirements-dev.txt python.packages;
     propagatedBuildInputs =
       fromRequirementsFile ./requirements.txt python.packages
       ++ [
