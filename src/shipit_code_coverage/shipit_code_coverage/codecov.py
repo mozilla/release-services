@@ -209,8 +209,7 @@ class CodeCov(object):
         else:
             mkdir('code-coverage-reports')
 
-            # XXX: Disabled as it is unused for now.
-            # self.generate_suite_reports()
+            self.generate_suite_reports()
 
             report_generators.zero_coverage(self.artifactsHandler.get())
 
