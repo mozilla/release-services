@@ -31,7 +31,7 @@ class CodeCov(object):
         # List of test-suite, sorted alphabetically.
         # This way, the index of a suite in the array should be stable enough.
         self.suites = [
-            'cppunit', 'gtest', 'web-platform-tests', 'talos',
+            'web-platform-tests',
         ]
 
         self.cache_root = cache_root
