@@ -22,6 +22,7 @@ tasks:
       - queue:scheduler-id:taskcluster-github
       - queue:route:index.project.releng.services.requests.pull-request.*
       - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - docker-worker:capability:privileged
     extra:
       github:
         env: true
@@ -29,14 +30,16 @@ tasks:
           - pull_request.*
         branches:
           - master
-    provisionerId: "{{ taskcluster.docker.provisionerId }}"
-    workerType: "{{ taskcluster.docker.workerType }}"
+    provisionerId: "aws-provisioner-v1"
+    workerType: "releng-svc"
     priority: high
     payload:
       maxRunTime: 1800  # 30min
       image: "mozillareleng/services:base-new-36"
       features:
         taskclusterProxy: true
+      capabilities:
+        privileged: true
       command:
         - "/bin/bash"
         - "-l"
@@ -66,8 +69,8 @@ tasks:
           - push
         branches:
           - master
-    provisionerId: "{{ taskcluster.docker.provisionerId }}"
-    workerType: "{{ taskcluster.docker.workerType }}"
+    provisionerId: "aws-provisioner-v1"
+    workerType: "releng-svc"
     priority: high
     payload:
       maxRunTime: 1800  # 30min
@@ -105,8 +108,8 @@ tasks:
           - push
         branches:
           - testing
-    provisionerId: "{{ taskcluster.docker.provisionerId }}"
-    workerType: "{{ taskcluster.docker.workerType }}"
+    provisionerId: "aws-provisioner-v1"
+    workerType: "releng-svc"
     priority: high
     payload:
       maxRunTime: 1800  # 30min
@@ -144,8 +147,8 @@ tasks:
           - push
         branches:
           - staging
-    provisionerId: "{{ taskcluster.docker.provisionerId }}"
-    workerType: "{{ taskcluster.docker.workerType }}"
+    provisionerId: "aws-provisioner-v1"
+    workerType: "releng-svc"
     priority: high
     payload:
       maxRunTime: 1800  # 30min
@@ -183,8 +186,8 @@ tasks:
           - push
         branches:
           - production
-    provisionerId: "{{ taskcluster.docker.provisionerId }}"
-    workerType: "{{ taskcluster.docker.workerType }}"
+    provisionerId: "aws-provisioner-v1"
+    workerType: "releng-svc"
     priority: high
     payload:
       maxRunTime: 1800  # 30min
