@@ -37,6 +37,8 @@ tasks:
       image: "mozillareleng/services:base-new-36"
       features:
         taskclusterProxy: true
+      capabilities:
+        privileged: true
       command:
         - "/bin/bash"
         - "-l"
@@ -73,6 +75,8 @@ tasks:
       image: "mozillareleng/services:base-new-36"
       features:
         taskclusterProxy: true
+      capabilities:
+        privileged: true
       command:
         - "/bin/bash"
         - "-l"
@@ -109,6 +113,8 @@ tasks:
       image: "mozillareleng/services:base-new-36"
       features:
         taskclusterProxy: true
+      capabilities:
+        privileged: true
       command:
         - "/bin/bash"
         - "-l"
@@ -145,6 +151,8 @@ tasks:
       image: "mozillareleng/services:base-new-36"
       features:
         taskclusterProxy: true
+      capabilities:
+        privileged: true
       command:
         - "/bin/bash"
         - "-l"
@@ -181,6 +189,8 @@ tasks:
       image: "mozillareleng/services:base-new-36"
       features:
         taskclusterProxy: true
+      capabilities:
+        privileged: true
       command:
         - "/bin/bash"
         - "-l"
