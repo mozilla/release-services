@@ -1,9 +1,16 @@
 let
+  requiredNixVersion = '2.0';
   pkgs' = import <nixpkgs> {};
   nixpkgs-json = builtins.fromJSON (builtins.readFile ./nixpkgs.json);
   src-nixpkgs = pkgs'.fetchFromGitHub { inherit (nixpkgs-json) owner repo rev sha256; };
   src-nixpkgs-mozilla = pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs-mozilla.json));
 in
+
+# ensure we are using correct version of Nix
+if ! builtins ? nixVersion || builtins.compareVersions requiredNixVersion builtins.nixVersion == 1
+then abort "mozilla-releng/services requires Nix >= ${requiredNixVersion}, please upgrade."
+else
+
 { pkgs ? import src-nixpkgs {
     overlays = [
       (import "${src-nixpkgs-mozilla}/rust-overlay.nix")
