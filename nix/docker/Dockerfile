@@ -58,7 +58,16 @@ RUN wget -nv "https://github.com/$NIXPKGS_OWNER/$NIXPKGS_REPO/archive/$NIXPKGS_R
 # Install nix
 # TODO: make nix.json into variables and use them here via `docker build --build-arg`
 RUN mkdir -m 0755 /nix \
- && chown app:app /nix
+ && chown app:app /nix \
+ && mkdir -p /etc/nix \
+ && echo "substituters = https://cache.mozilla-releng.net https://cache.nixos.org" >> /etc/nix/nix.conf \
+ # TODO: sign nix cache and then required signatured
+ #       and configure trusted-public-keys and secret-key-files accordingly
+ && echo "require-sigs = false" >> /etc/nix/nix.conf \
+ && echo "trusted-users = app" >> /etc/nix/nix.conf \
+ && echo "allowed-users = app" >> /etc/nix/nix.conf \
+ && echo "build-users-group =" > /etc/nix/nix.conf
+
 
 USER app
 WORKDIR /home/app
@@ -71,13 +80,13 @@ COPY lib/ /app/lib/
 COPY src/ /app/src/
 
 RUN wget -nv "https://nixos.org/releases/nix/nix-$NIX_VERSION/nix-$NIX_VERSION-x86_64-linux.tar.bz2" \
- && nix_sha256=$(sha256sum "nix-$NIX_VERSION/nix-$NIX_VERSION-x86_64-linux.tar.gz" | cut -d' ' -f1) \
+ && nix_sha256=$(sha256sum "nix-$NIX_VERSION-x86_64-linux.tar.bz2" | cut -d' ' -f1) \
  && if [ "$nix_sha256" != "$NIX_SHA256" ]; then \
       echo "nix sha256 doesn't match. Expecting '$NIX_SHA256', but we got is '$nix_sha256'"; \
       exit 1; \
     fi \
- && tar zxf "nix-$NIX_VERSION/nix-$NIX_VERSION-x86_64-linux.tar.gz" \
- && sh ./nix-*-x86_64-linux/install \
+ && tar jxf "nix-$NIX_VERSION-x86_64-linux.tar.bz2" \
+ && sh ./nix-$NIX_VERSION-x86_64-linux/install \
  && . $HOME/.nix-profile/etc/profile.d/nix.sh \
  && rm -r $HOME/nix-*-x86_64-linux \
  && nix-collect-garbage -d \
@@ -86,15 +95,6 @@ RUN wget -nv "https://nixos.org/releases/nix/nix-$NIX_VERSION/nix-$NIX_VERSION-x
 
 USER root
 
-
-RUN mkdir -p /etc/nix \
- && echo 'substituters = https://cache.mozilla-releng.net https://cache.nixos.org' >> /etc/nix/nix.conf \
- # TODO: sign nix cache and then required signatured
- #       and configure trusted-public-keys and secret-key-files accordingly
- && echo 'require-sigs = false' >> /etc/nix/nix.conf \
- && echo 'trusted-users = app' >> /etc/nix/nix.conf \
- && echo 'allowed-users = app' >> /etc/nix/nix.conf \
- && echo "build-users-group =" > /etc/nix/nix.conf
 
 RUN chown -R root:root /nix \
  && chmod 1777 /nix/var/nix/profiles/per-user /nix/var/nix/gcroots/per-user \
@@ -125,7 +125,6 @@ ENTRYPOINT ["/entrypoint.sh"]
 
 CMD /bin/bash
 WORKDIR /app
-releng/services
 
 #
 # install please command
