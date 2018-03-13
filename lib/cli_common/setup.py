@@ -7,7 +7,6 @@ from __future__ import absolute_import
 from setuptools import find_packages, setup
 
 
-# TODO: remove this line
 with open('VERSION') as f:
     version = f.read().strip()
 
