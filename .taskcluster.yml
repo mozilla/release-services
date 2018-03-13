@@ -22,7 +22,6 @@ tasks:
       - queue:scheduler-id:taskcluster-github
       - queue:route:index.project.releng.services.requests.pull-request.*
       - secrets:get:repo:github.com/mozilla-releng/services:branch:master
-      - docker-worker:capability:privileged
     extra:
       github:
         env: true
@@ -38,8 +37,6 @@ tasks:
       image: "mozillareleng/services:base-new-36"
       features:
         taskclusterProxy: true
-      capabilities:
-        privileged: true
       command:
         - "/bin/bash"
         - "-l"
