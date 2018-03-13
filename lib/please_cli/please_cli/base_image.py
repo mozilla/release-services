@@ -91,9 +91,9 @@ def cmd(docker_username, docker_password, docker, docker_repo, docker_tag):
                 [
                     docker,
                     'build',
-                    #'--no-cache',
-                    #'--pull',
-                    #'--force-rm',
+                    '--no-cache',
+                    '--pull',
+                    '--force-rm',
                     '--build-arg', 'NIXPKGS_OWNER=' + nixpkgs_json['owner'],
                     '--build-arg', 'NIXPKGS_REPO=' + nixpkgs_json['repo'],
                     '--build-arg', 'NIXPKGS_REV=' + nixpkgs_json['rev'],
