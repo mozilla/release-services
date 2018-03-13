@@ -7,7 +7,6 @@ from __future__ import absolute_import
 import os
 import subprocess
 
-import awscli.clidriver
 import click
 import click_spinner
 
@@ -38,10 +37,10 @@ import please_cli.utils
     help='`nix-build` command',
     )
 @click.option(
-    '--nix-push',
+    '--nix',
     required=True,
-    default=please_cli.config.NIX_BIN_DIR + 'nix-push',
-    help='`nix-push` command',
+    default=please_cli.config.NIX_BIN_DIR + 'nix',
+    help='`nix` command',
     )
 @click.option(
     '--cache-bucket',
@@ -55,7 +54,7 @@ import please_cli.utils
 def cmd(project,
         extra_attribute,
         nix_build,
-        nix_push,
+        nix,
         cache_bucket,
         taskcluster_secret,
         taskcluster_client_id,
@@ -113,10 +112,11 @@ def cmd(project,
             if item.startswith('result-build-' + project)
         ]
 
+        os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY_ID
+        os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
         command = [
-            nix_push,
-            '--dest', tmp_cache_dir,
-            '--force',
+            nix, 'copy',
+            '--to', 's3://' + cache_bucket,
         ] + build_results
         click.echo(' => Creating cache artifacts for {} project... '.format(project), nl=False)
         with click_spinner.spinner():
@@ -130,22 +130,6 @@ def cmd(project,
             output,
             ask_for_details=interactive,
         )
-
-        os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY_ID
-        os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
-        aws = awscli.clidriver.create_clidriver().main
-        click.echo(' => Pushing cache artifacts of {} to S3 ... '.format(project), nl=False)
-        with click_spinner.spinner():
-            result = aws([
-                's3',
-                'sync',
-                '--quiet',
-                '--size-only',
-                '--acl', 'public-read',
-                tmp_cache_dir,
-                's3://' + cache_bucket,
-            ])
-        please_cli.utils.check_result(result, output)
 
 
 @click.command(
