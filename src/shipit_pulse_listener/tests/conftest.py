@@ -49,7 +49,9 @@ def HooksMock():
               'payload': payload,
             }
             return {
-              'taskId': 'fake_task_id',
+                'status': {
+                    'taskId': 'fake_task_id',
+                },
             }
 
     return Mock()
