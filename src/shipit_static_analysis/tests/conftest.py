@@ -8,6 +8,7 @@ import itertools
 import httpretty
 import os.path
 import pytest
+import hglib
 import time
 import json
 import re
@@ -32,6 +33,31 @@ def mock_config():
     from shipit_static_analysis.config import settings
     settings.setup('test')
     return settings
+
+
+@pytest.fixture
+def mock_repository(tmpdir):
+    '''
+    Create a dummy mercurial repository
+    '''
+    # Init repo
+    repo_dir = str(tmpdir.mkdir('repo').realpath())
+    hglib.init(repo_dir)
+
+    # Init clean client
+    client = hglib.open(repo_dir)
+    client.directory = repo_dir
+
+    # Add test.txt file
+    path = os.path.join(repo_dir, 'test.txt')
+    with open(path, 'w') as f:
+        f.write('Hello World\n')
+
+    # Initiall commit
+    client.add(path.encode('utf-8'))
+    client.commit(b'Hello World', user=b'Tester')
+
+    return client
 
 
 @pytest.fixture
@@ -158,6 +184,13 @@ def mock_phabricator():
         responses.POST,
         'http://phabricator.test/api/differential.query',
         body=_response('diff_query'),
+        content_type='application/json',
+    )
+
+    responses.add(
+        responses.POST,
+        'http://phabricator.test/api/differential.getrawdiff',
+        body=_response('diff_raw'),
         content_type='application/json',
     )
 

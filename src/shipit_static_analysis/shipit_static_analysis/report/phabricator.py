@@ -73,19 +73,14 @@ class PhabricatorReporter(Reporter):
             'Not found'
         return data[0]
 
-    def load_revision(self, phid):
+    def load_raw_diff(self, diff_id):
         '''
-        Find a differential revision details
-        Uses the old style API - only way to get a mercurial hash
+        Load the raw diff content
         '''
-        data = self.request(
-            'differential.query',
-            phids=[phid, ],
+        return self.request(
+            'differential.getrawdiff',
+            diffID=diff_id,
         )
-
-        assert len(data) == 1, \
-            'Not found'
-        return data[0]
 
     def publish(self, issues, revision, diff_url=None):
         '''

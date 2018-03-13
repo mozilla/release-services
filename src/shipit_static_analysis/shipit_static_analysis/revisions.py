@@ -3,10 +3,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from shipit_static_analysis.config import settings
+from shipit_static_analysis.config import settings, REPO_REVIEW
 from shipit_static_analysis import stats
 from parsepatch.patch import Patch
 from cli_common import log
+import io
 import hglib
 import os
 import re
@@ -16,40 +17,34 @@ logger = log.get_logger(__name__)
 
 class Revision(object):
     '''
-    A common mercurial revision
+    A common DCM revision
     '''
-    mercurial = None
     files = []
     lines = {}
+    patch = None
 
-    def analyze_files(self, repo):
+    def analyze_patch(self):
         '''
-        Analyze modified files/lines
+        Analyze loaded patch to extract modified lines
+        and statistics
         '''
-        assert isinstance(repo, hglib.client.hgclient)
-
-        # Get the parents revisions
-        parent_rev = 'parents({})'.format(self.mercurial)
-        parents = repo.identify(id=True, rev=parent_rev).decode('utf-8').strip()
-
-        # Find modified files by this revision
-        self.files = []
-        for parent in parents.split('\n'):
-            changeset = '{}:{}'.format(parent, self.mercurial)
-            status = repo.status(change=[changeset, ])
-            self.files += [f.decode('utf-8') for _, f in status]
-        logger.info('Modified files', files=self.files)
+        assert self.patch is not None, \
+            'Missing patch'
+        assert isinstance(self.patch, str), \
+            'Invalid patch type'
 
         # List all modified lines from current revision changes
-        patch = Patch.parse_patch(
-            repo.diff(change=self.mercurial, git=True).decode('utf-8'),
-            skip_comments=False,
-        )
+        patch = Patch.parse_patch(self.patch, skip_comments=False)
+        assert patch != {}, \
+            'Empty patch'
         self.lines = {
             # Use all changes in new files
             filename: diff.get('touched', []) + diff.get('added', [])
             for filename, diff in patch.items()
         }
+
+        # Shortcut to files modified
+        self.files = self.lines.keys()
 
         # Report nb of files and lines analyzed
         stats.api.increment('analysis.files', len(self.files))
@@ -88,20 +83,6 @@ class PhabricatorRevision(Revision):
         # Load diff details to get the diff revision
         diff = self.api.load_diff(self.diff_phid)
         self.diff_id = diff['id']
-        assert 'fields' in diff
-        self.phid = diff['fields']['revisionPHID']
-        assert self.phid.startswith('PHID-DREV')
-
-        # Load revision details to get mercurial id
-        rev = self.api.load_revision(self.phid)
-        hashes = rev['hashes']
-        assert len(hashes) > 0, 'No mercurial revisions'
-
-        # Use last revision
-        rev_type, rev_id = hashes[-1]
-        assert rev_type == 'hgcm', 'Not a mercurial revision'
-        self.mercurial = rev_id
-        logger.info('Found mercurial revision', id=self.mercurial, diff=self.diff_id)
 
     def __str__(self):
         return 'Phabricator #{} - {}'.format(self.diff_id, self.diff_phid)
@@ -114,6 +95,21 @@ class PhabricatorRevision(Revision):
     @property
     def url(self):
         return 'https://{}/{}/'.format(self.api.hostname, self.diff_phid)
+
+    def apply(self, repo):
+        '''
+        Apply patch from Phabricator to Mercurial local repository
+        '''
+        assert isinstance(repo, hglib.client.hgclient)
+
+        # Load raw patch
+        self.patch = self.api.load_raw_diff(self.diff_id)
+
+        # Apply the patch on top of repository
+        repo.import_(
+            patches=io.BytesIO(self.patch.encode('utf-8')),
+            nocommit=True,
+        )
 
 
 class MozReviewRevision(Revision):
@@ -145,3 +141,26 @@ class MozReviewRevision(Revision):
             self.review_request_id,
             self.diffset_revision,
         )
+
+    def apply(self, repo):
+        '''
+        Load required revision from mercurial remote repo
+        '''
+        assert isinstance(repo, hglib.client.hgclient)
+
+        # Pull revision from review
+        repo.pull(
+            source=REPO_REVIEW,
+            rev=self.mercurial,
+            update=True,
+            force=True,
+        )
+
+        # Update to the target revision
+        repo.update(
+            rev=self.mercurial,
+            clean=True,
+        )
+
+        # Load patch from hg diff
+        self.patch = repo.diff(change=self.mercurial, git=True).decode('utf-8')

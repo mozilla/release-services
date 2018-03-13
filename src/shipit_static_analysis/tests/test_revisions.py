@@ -3,6 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import responses
+import os
+from parsepatch.patch import Patch
 
 
 def test_mozreview():
@@ -20,7 +22,7 @@ def test_mozreview():
 
 
 @responses.activate
-def test_phabricator(mock_phabricator):
+def test_phabricator(mock_phabricator, mock_repository):
     '''
     Test a phabricator revision
     '''
@@ -33,13 +35,35 @@ def test_phabricator(mock_phabricator):
     })
 
     r = PhabricatorRevision('51:PHID-DIFF-testABcd12', api)
-    assert r.mercurial == 'coffeedeadbeef123456789'
+    assert not hasattr(r, 'mercurial')
     assert r.diff_id == 42
     assert r.diff_phid == 'PHID-DIFF-testABcd12'
     assert r.url == 'https://phabricator.test/PHID-DIFF-testABcd12/'
     assert r.build_diff_name() == 'PHID-DIFF-testABcd12-clang-format.diff'
     assert r.id == 51  # revision
-    assert r.phid == 'PHID-DREV-zzzzz'
+
+    # Check test.txt content
+    test_txt = os.path.join(mock_repository.directory, 'test.txt')
+    assert open(test_txt).read() == 'Hello World\n'
+
+    # Load full patch
+    assert r.patch is None
+    r.apply(mock_repository)
+    assert r.patch is not None
+    assert isinstance(r.patch, str)
+    assert len(r.patch.split('\n')) == 7
+    patch = Patch.parse_patch(r.patch)
+    assert patch == {
+        'test.txt': {
+            'touched': [],
+            'deleted': [],
+            'added': [2],
+            'new': False
+        }
+    }
+
+    # Check file is updated
+    assert open(test_txt).read() == 'Hello World\nSecond line\n'
 
 
 def test_clang_files(mock_revision):

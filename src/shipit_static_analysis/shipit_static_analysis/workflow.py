@@ -13,16 +13,12 @@ from cli_common.log import get_logger
 from cli_common.command import run_check
 from shipit_static_analysis.clang.tidy import ClangTidy
 from shipit_static_analysis.clang.format import ClangFormat
-from shipit_static_analysis.config import settings
+from shipit_static_analysis.config import settings, REPO_CENTRAL, ARTIFACT_URL
 from shipit_static_analysis.lint import MozLint
 from shipit_static_analysis import CLANG_TIDY, CLANG_FORMAT, MOZLINT
 from shipit_static_analysis import stats
 
 logger = get_logger(__name__)
-
-REPO_CENTRAL = b'https://hg.mozilla.org/mozilla-central'
-REPO_REVIEW = b'https://reviewboard-hg.mozilla.org/gecko'
-ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{task_id}/runs/{run_id}/artifacts/public/results/{diff_name}'
 
 
 class Workflow(object):
@@ -92,8 +88,6 @@ class Workflow(object):
          * Run static analysis
          * Publish results
         '''
-        assert revision.mercurial is not None, \
-            'Cannot run without a mercurial revision'
 
         # Add log to find Taskcluster task in papertrail
         logger.info(
@@ -101,11 +95,11 @@ class Workflow(object):
             taskcluster_task=self.taskcluster_task_id,
             taskcluster_run=self.taskcluster_run_id,
             channel=settings.app_channel,
-            revision=revision,
+            revision=str(revision),
         )
         stats.api.event(
-            title='Static analysis on {} for {}'.format(settings.app_channel, revision.mercurial[:12]),
-            text='Task {} #{}\n{}'.format(self.taskcluster_task_id, self.taskcluster_run_id, revision),
+            title='Static analysis on {} for {}'.format(settings.app_channel, revision),
+            text='Task {} #{}'.format(self.taskcluster_task_id, self.taskcluster_run_id),
         )
         stats.api.increment('analysis')
 
@@ -118,15 +112,11 @@ class Workflow(object):
             # Force cleanup to reset tip
             # otherwise previous pull are there
             self.hg.update(rev=b'tip', clean=True)
+            logger.info('Set repo back to tip', rev=self.hg.tip().node)
 
-            # Pull revision from review
-            self.hg.pull(source=REPO_REVIEW, rev=revision.mercurial, update=True, force=True)
-
-            # Update to the target revision
-            self.hg.update(rev=revision.mercurial, clean=True)
-
-            # Analyze files in revision
-            revision.analyze_files(self.hg)
+            # Apply and analyze revision patch
+            revision.apply(self.hg)
+            revision.analyze_patch()
 
         with stats.api.timer('runtime.mach'):
             # Only run mach if revision has any C/C++ files
@@ -145,7 +135,7 @@ class Workflow(object):
 
             # Setup python environment
             logger.info('Mach lint setup...')
-            cmd = ['gecko-env', './mach', 'lint', '--setup']
+            cmd = ['gecko-env', './mach', 'lint', '--list']
             run_check(cmd, cwd=self.repo_dir)
 
         # Run static analysis through clang-tidy
