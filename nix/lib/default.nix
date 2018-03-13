@@ -221,6 +221,7 @@ in rec {
           - secrets:get:${secrets}
           - hooks:modify-hook:project-releng/services-${branch}-${name'}-*
           - assume:hook-id:project-releng/services-${branch}-${name'}-*
+          - docker-worker:capability:privileged
         extra:
           github:
             env: true
@@ -244,6 +245,7 @@ in rec {
             TASKCLUSTER_SECRETS: "taskcluster/secrets/v1/secret/${secrets}"
           command:
             - "/bin/bash"
+            - "-l"
             - "-c"
             - "nix-env -iA nixpkgs.gnumake nixpkgs.curl nixpkgs.cacert && export SSL_CERT_FILE=$HOME/.nix-profile/etc/ssl/certs/ca-bundle.crt && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
     '';

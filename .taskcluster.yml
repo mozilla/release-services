@@ -22,6 +22,7 @@ tasks:
       - queue:scheduler-id:taskcluster-github
       - queue:route:index.project.releng.services.requests.pull-request.*
       - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - docker-worker:capability:privileged
     extra:
       github:
         env: true
@@ -60,6 +61,7 @@ tasks:
       - queue:scheduler-id:taskcluster-github
       - queue:route:index.project.releng.services.requests.{{ event.base.repo.branch }}.*
       - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - docker-worker:capability:privileged
     extra:
       github:
         env: true
@@ -98,6 +100,7 @@ tasks:
       - queue:scheduler-id:taskcluster-github
       - queue:route:index.project.releng.services.requests.{{ event.base.repo.branch }}.*
       - secrets:get:repo:github.com/mozilla-releng/services:branch:testing
+      - docker-worker:capability:privileged
     extra:
       github:
         env: true
@@ -136,6 +139,7 @@ tasks:
       - queue:scheduler-id:taskcluster-github
       - queue:route:index.project.releng.services.requests.{{ event.base.repo.branch }}.*
       - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
+      - docker-worker:capability:privileged
     extra:
       github:
         env: true
@@ -174,6 +178,7 @@ tasks:
       - queue:scheduler-id:taskcluster-github
       - queue:route:index.project.releng.services.requests.{{ event.base.repo.branch }}.*
       - secrets:get:repo:github.com/mozilla-releng/services:branch:production
+      - docker-worker:capability:privileged
     extra:
       github:
         env: true
