@@ -16,9 +16,13 @@ import pytest
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
 
-def load_json(path):
+def load_file(path):
     with open(os.path.join(FIXTURES_DIR, path)) as f:
-        return json.load(f)
+        return f.read()
+
+
+def load_json(path):
+    return json.loads(load_file(path))
 
 
 @pytest.fixture(scope='session')
@@ -72,13 +76,23 @@ def GROUP_TASKS_2():
 
 
 @pytest.fixture(scope='session')
+def MERCURIAL_COMMIT_RESPONSE():
+    return load_file('rev_hg_0d1e55d87931fe70ec1d007e886bcd58015ff770')
+
+
+@pytest.fixture(scope='session')
+def GITHUB_COMMIT_RESPONSE():
+    return load_file('rev_git_876c7dd30586f9c6f9c99ef7444f2d73c7acfe7c')
+
+
+@pytest.fixture(scope='session')
 def MERCURIAL_COMMIT():
-    return '82e55d328c8c'
+    return '40e8eb46609dcb8780764774ec550afff1eed3a5'
 
 
 @pytest.fixture(scope='session')
 def GITHUB_COMMIT():
-    return '6a693ac'
+    return 'f229b7e5d91eb70d23d3e31db7caff9d69a2ef04'
 
 
 @contextmanager
