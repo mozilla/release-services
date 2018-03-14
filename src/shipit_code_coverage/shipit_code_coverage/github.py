@@ -46,7 +46,7 @@ class GitHubUtils(object):
             if not r.ok:
                 raise Exception('Mercurial commit is not available yet on mozilla/gecko-dev.')
             return r.text.split(' ')[0]
-        return retry(get_commit)
+        return retry(get_commit, retries=30)
 
     def get_mercurial(self, github_commit):
         def get_commit():
@@ -54,7 +54,7 @@ class GitHubUtils(object):
             if not r.ok:
                 raise Exception('Failed mapping git commit to mercurial commit.')
             return r.text.split(' ')[1]
-        return retry(get_commit)
+        return retry(get_commit, retries=30)
 
     def update_codecoveragereports_repo(self):
         if self.gecko_dev_user is None or self.gecko_dev_pwd is None:

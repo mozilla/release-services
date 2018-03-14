@@ -80,6 +80,6 @@ def codecov_wait(commit):
         return True
 
     try:
-        return utils.retry(check_codecov_job)
+        return utils.retry(check_codecov_job, retries=30)
     except TotalsNoneError:
         return False

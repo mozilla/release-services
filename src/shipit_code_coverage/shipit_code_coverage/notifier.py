@@ -56,7 +56,7 @@ class Notifier(object):
                     return summary
 
                 try:
-                    coverage = retry(get_coverage)
+                    coverage = retry(get_coverage, retries=10)
                 except (requests.HTTPError, ResponseAcceptedError):
                     continue
 
