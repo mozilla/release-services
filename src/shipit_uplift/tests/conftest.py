@@ -94,7 +94,7 @@ def hawk_header(scopes):
     return backend_common.testing.build_header(client_id, ext_data)
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def header_user(app):
     '''
     Build an Hawk header for user role
@@ -103,7 +103,7 @@ def header_user(app):
     return hawk_header(SCOPES_USER)
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def header_admin(app):
     '''
     Build an Hawk header for admin role
@@ -112,7 +112,7 @@ def header_admin(app):
     return hawk_header(SCOPES_ADMIN)
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def header_bot(app):
     '''
     Build an Hawk header for bot role
