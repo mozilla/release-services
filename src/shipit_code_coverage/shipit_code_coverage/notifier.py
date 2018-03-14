@@ -4,7 +4,6 @@ import requests
 
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
-from cli_common.utils import wait_until
 
 from shipit_code_coverage.secrets import secrets
 
@@ -45,7 +44,7 @@ class Notifier(object):
 
             try:
                 rev = changeset['node']
-                coverage = wait_until(lambda: self.get_coverage_summary(rev), 10)
+                coverage = retry(lambda: self.get_coverage_summary(rev))
                 if coverage is None:
                     continue
 

@@ -4,7 +4,7 @@ import requests
 
 from cli_common.command import run_check
 from cli_common.taskcluster import get_service
-from cli_common.utils import wait_until, retry
+from cli_common.utils import retry
 
 from shipit_code_coverage.secrets import secrets
 
@@ -49,7 +49,7 @@ class GitHubUtils(object):
 
             return None
 
-        ret = wait_until(get_commit)
+        ret = retry(get_commit)
         if ret is None:
             raise Exception('Mercurial commit is not available yet on mozilla/gecko-dev.')
         return ret
@@ -63,7 +63,7 @@ class GitHubUtils(object):
 
             return None
 
-        ret = wait_until(get_commit)
+        ret = retry(get_commit)
         if ret is None:
             raise Exception('Failed mapping git commit to mercurial commit.')
         return ret
