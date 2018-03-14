@@ -45,8 +45,19 @@ class Notifier(object):
 
             try:
                 rev = changeset['node']
-                coverage = retry(lambda: self.get_coverage_summary(rev))
-                if coverage is None:
+
+                class ResponseAcceptedError(Exception):
+                    pass
+
+                def get_coverage():
+                    summary = self.get_coverage_summary(rev)
+                    if not summary:
+                        raise ResponseAcceptedError()
+                    return summary
+
+                try:
+                    coverage = retry(get_coverage)
+                except (requests.HTTPError, ResponseAcceptedError):
                     continue
 
                 if coverage['commit_covered'] < 0.2 * coverage['commit_added']:

@@ -43,30 +43,24 @@ class GitHubUtils(object):
     def get_commit(self, mercurial_commit):
         def get_commit():
             r = requests.get('https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s' % mercurial_commit)
+            r.raise_for_status()
+            return r.text.split(' ')[0]
 
-            if r.ok:
-                return r.text.split(' ')[0]
-
-            return None
-
-        ret = retry(get_commit)
-        if ret is None:
+        try:
+            return retry(get_commit)
+        except requests.HTTPError:
             raise Exception('Mercurial commit is not available yet on mozilla/gecko-dev.')
-        return ret
 
     def get_mercurial(self, github_commit):
         def get_commit():
             r = requests.get('https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/%s' % github_commit)
+            r.raise_for_status()
+            return r.text.split(' ')[1]
 
-            if r.ok:
-                return r.text.split(' ')[1]
-
-            return None
-
-        ret = retry(get_commit)
-        if ret is None:
+        try:
+            return retry(get_commit)
+        except requests.HTTPError:
             raise Exception('Failed mapping git commit to mercurial commit.')
-        return ret
 
     def update_codecoveragereports_repo(self):
         if self.gecko_dev_user is None or self.gecko_dev_pwd is None:
