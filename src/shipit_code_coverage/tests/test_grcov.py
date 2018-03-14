@@ -116,3 +116,8 @@ def test_report_options(grcov_artifact, jsvm_artifact):
 def test_files_list(grcov_artifact, grcov_uncovered_artifact):
     files = grcov.files_list([grcov_artifact, grcov_uncovered_artifact])
     assert set(files) == set(['js/src/jit/BitSet.cpp'])
+
+
+def test_files_list_source_dir(grcov_artifact, grcov_existing_file_artifact):
+    files = grcov.files_list([grcov_artifact, grcov_existing_file_artifact], source_dir=os.getcwd())
+    assert set(files) == set(['shipit_code_coverage/cli.py'])
