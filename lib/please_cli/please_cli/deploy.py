@@ -9,7 +9,7 @@ import os
 import shutil
 import tempfile
 
-import awscli
+import awscli.clidriver
 import click
 import click_spinner
 import push.image
@@ -169,6 +169,7 @@ def cmd_S3(ctx,
 
     # 4. sync to S3
     click.echo(' => Syncing to S3  ... ', nl=False)
+    __import__('ipdb').set_trace()
     with click_spinner.spinner():
         os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY_ID
         os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
