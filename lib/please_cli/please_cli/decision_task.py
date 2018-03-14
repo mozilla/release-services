@@ -28,6 +28,7 @@ def get_build_task(index,
                    github_commit,
                    owner,
                    channel,
+                   cache_bucket,
                    ):
 
     project_config = please_cli.config.PROJECTS.get(project, {})
@@ -40,7 +41,7 @@ def get_build_task(index,
 
     command = [
         './please', '-vv', 'tools', 'build', project,
-        '--cache-bucket="releng-cache"',
+        '--cache-bucket="{}"'.format(cache_bucket),
         '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
         '--no-interactive',
     ] + extra_attributes
@@ -286,8 +287,8 @@ def cmd(ctx,
     """A tool to be ran on each commit.
     """
 
+    taskcluster_secret = 'repo:github.com/mozilla-releng/services:branch:' + channel
     taskcluster_queue = cli_common.taskcluster.get_service('queue')
-
     click.echo(' => Retriving taskGroupId ... ', nl=False)
     with click_spinner.spinner():
         task = taskcluster_queue.task(task_id)
@@ -341,6 +342,15 @@ def cmd(ctx,
     build_tasks = {}
     for index, project in enumerate(sorted(build_projects)):
         project_uuid = slugid.nice().decode('utf-8')
+        secrets = cli_common.taskcluster.get_secrets(
+            taskcluster_secret,
+            project,
+            required=(
+                'CACHE_BUCKET',
+            ),
+            taskcluster_client_id=taskcluster_client_id,
+            taskcluster_access_token=taskcluster_access_token,
+        )
         build_tasks[project_uuid] = get_build_task(
             index,
             project,
@@ -349,6 +359,7 @@ def cmd(ctx,
             github_commit,
             owner,
             channel,
+            secrets['CACHE_BUCKET'],
         )
         tasks.append((project_uuid, build_tasks[project_uuid]))
 
