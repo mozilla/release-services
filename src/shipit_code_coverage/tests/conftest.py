@@ -71,6 +71,16 @@ def GROUP_TASKS_2():
     return load_json('task-group_2.json')
 
 
+@pytest.fixture(scope='session')
+def MERCURIAL_COMMIT():
+    return '82e55d328c8c'
+
+
+@pytest.fixture(scope='session')
+def GITHUB_COMMIT():
+    return '6a693ac'
+
+
 @contextmanager
 def generate_coverage_artifact(name):
     with tempfile.TemporaryDirectory() as tmp_dir:
