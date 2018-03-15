@@ -60,11 +60,8 @@ def test_get_coverage_artifacts():
         'ccov-artifacts/linux_xpcshell-7_code-coverage-grcov.zip'
     ])
 
-    try:
+    with pytest.raises(Exception, message='suite and chunk can\'t both have a value'):
         a.get(chunk='xpcshell-7', suite='mochitest')
-        assert False, 'An exception should have been thrown'
-    except Exception:
-        pass
 
     for f in FILES:
         os.remove(f)
