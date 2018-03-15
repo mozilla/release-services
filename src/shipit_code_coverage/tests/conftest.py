@@ -8,6 +8,7 @@ from __future__ import absolute_import
 from contextlib import contextmanager
 import json
 import os
+import responses
 import tempfile
 import zipfile
 import pytest
@@ -69,6 +70,32 @@ def GROUP_TASKS_1():
 @pytest.fixture(scope='session')
 def GROUP_TASKS_2():
     return load_json('task-group_2.json')
+
+
+@pytest.fixture()
+def MERCURIAL_COMMIT():
+    hg_commit = '0d1e55d87931fe70ec1d007e886bcd58015ff770'
+
+    responses.add(
+        responses.GET,
+        'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/{}'.format(hg_commit),
+        body='40e8eb46609dcb8780764774ec550afff1eed3a5 {}'.format(hg_commit),
+        status=200)
+
+    return hg_commit
+
+
+@pytest.fixture()
+def GITHUB_COMMIT():
+    git_commit = '40e8eb46609dcb8780764774ec550afff1eed3a5'
+
+    responses.add(
+        responses.GET,
+        'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/{}'.format(git_commit),
+        body='{} 0d1e55d87931fe70ec1d007e886bcd58015ff770'.format(git_commit),
+        status=200)
+
+    return git_commit
 
 
 @contextmanager
