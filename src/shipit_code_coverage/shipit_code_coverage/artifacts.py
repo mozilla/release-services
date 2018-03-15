@@ -20,18 +20,20 @@ STATUS_VALUE = {
 
 class ArtifactsHandler(object):
 
-    def __init__(self, task_ids, suites_to_ignore):
+    def __init__(self, task_ids, suites_to_ignore, parent_dir='ccov-artifacts'):
         self.task_ids = task_ids
         self.suites_to_ignore = suites_to_ignore
+        self.parent_dir = parent_dir
 
     def generate_path(self, platform, chunk, artifact):
-        return 'ccov-artifacts/%s_%s_%s' % (platform, chunk, os.path.basename(artifact['name']))
+        file_name = '%s_%s_%s' % (platform, chunk, os.path.basename(artifact['name']))
+        return os.path.join(self.parent_dir, file_name)
 
     def get_chunks(self):
-        return list(set([f.split('_')[1] for f in os.listdir('ccov-artifacts')]))
+        return list(set([f.split('_')[1] for f in os.listdir(self.parent_dir)]))
 
     def get(self, platform=None, suite=None, chunk=None):
-        files = os.listdir('ccov-artifacts')
+        files = os.listdir(self.parent_dir)
 
         if suite is not None and chunk is not None:
             raise Exception('suite and chunk can\'t both have a value')
@@ -48,7 +50,7 @@ class ArtifactsHandler(object):
             if chunk is not None and ('%s_code-coverage' % chunk) not in fname:
                 continue
 
-            filtered_files.append('ccov-artifacts/' + fname)
+            filtered_files.append(os.path.join(self.parent_dir, fname))
 
         return filtered_files
 
@@ -66,7 +68,7 @@ class ArtifactsHandler(object):
             logger.info('%s artifact downloaded' % artifact_path)
 
     def download_all(self):
-        mkdir('ccov-artifacts')
+        mkdir(self.parent_dir)
 
         # The test tasks for the Linux and Windows builds are in the same group,
         # but the following code is generic and supports build tasks split in
