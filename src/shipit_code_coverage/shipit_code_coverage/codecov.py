@@ -205,7 +205,7 @@ class CodeCov(object):
                 logger.info('Build ingested by codecov.io')
                 self.notifier.notify()
             else:
-                logger.info('codecov.io took too much time to ingest data.')
+                logger.error('codecov.io took too much time to ingest data.')
         else:
             mkdir('code-coverage-reports')
 
