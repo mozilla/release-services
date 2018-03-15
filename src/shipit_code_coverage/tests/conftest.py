@@ -74,26 +74,12 @@ def GROUP_TASKS_2():
 
 @pytest.fixture(scope='session')
 def MERCURIAL_COMMIT():
-    hg_commit = '0d1e55d87931fe70ec1d007e886bcd58015ff770'
-    responses.add(
-        responses.GET,
-        'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/{}'.format(hg_commit),
-        body='40e8eb46609dcb8780764774ec550afff1eed3a5 {}'.format(hg_commit),
-        status=200)
-
-    return hg_commit
+    return '0d1e55d87931fe70ec1d007e886bcd58015ff770'
 
 
 @pytest.fixture(scope='session')
 def GITHUB_COMMIT():
-    git_commit = 'a5abf843f8fac8530aa5de6fb40e16547bb4a47a'
-    responses.add(
-        responses.GET,
-        'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/{}'.format(git_commit),
-        body='{} 0ac953fcddf10132eaecdb753d72b2ba5a43c32a'.format(git_commit),
-        status=200)
-
-    return git_commit
+    return '40e8eb46609dcb8780764774ec550afff1eed3a5'
 
 
 @contextmanager
