@@ -74,12 +74,26 @@ def GROUP_TASKS_2():
 
 @pytest.fixture(scope='session')
 def MERCURIAL_COMMIT():
-    return '40e8eb46609dcb8780764774ec550afff1eed3a5'
+    hg_commit = '0d1e55d87931fe70ec1d007e886bcd58015ff770'
+    responses.add(
+        responses.GET,
+        'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/{}'.format(hg_commit),
+        body='40e8eb46609dcb8780764774ec550afff1eed3a5 {}'.format(hg_commit),
+        status=200)
+
+    return hg_commit
 
 
 @pytest.fixture(scope='session')
 def GITHUB_COMMIT():
-    return 'f229b7e5d91eb70d23d3e31db7caff9d69a2ef04'
+    git_commit = 'a5abf843f8fac8530aa5de6fb40e16547bb4a47a'
+    responses.add(
+        responses.GET,
+        'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/{}'.format(git_commit),
+        body='{} 0ac953fcddf10132eaecdb753d72b2ba5a43c32a'.format(git_commit),
+        status=200)
+
+    return git_commit
 
 
 @contextmanager
@@ -131,21 +145,3 @@ def grcov_uncovered_function_artifact():
 def jsvm_uncovered_function_artifact():
     with generate_coverage_artifact('jsvm_uncovered_function.info') as f:
         yield f
-
-
-@pytest.fixture(scope='session')
-def mock_get_commit(MERCURIAL_COMMIT):
-    responses.add(
-        responses.GET,
-        'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/{}'.format(MERCURIAL_COMMIT),
-        body='{} 0d1e55d87931fe70ec1d007e886bcd58015ff770'.format(MERCURIAL_COMMIT),
-        status=200)
-
-
-@pytest.fixture(scope='session')
-def mock_get_mercurial(GITHUB_COMMIT):
-    responses.add(
-        responses.GET,
-        'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/{}'.format(GITHUB_COMMIT),
-        body='876c7dd30586f9c6f9c99ef7444f2d73c7acfe7c {}'.format(GITHUB_COMMIT),
-        status=200)

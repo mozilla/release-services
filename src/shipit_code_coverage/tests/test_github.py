@@ -6,12 +6,12 @@ from shipit_code_coverage.github import GitHubUtils
 
 
 @responses.activate
-def test_get_commit(MERCURIAL_COMMIT, mock_get_commit):
+def test_get_commit(GITHUB_COMMIT):
     gu = GitHubUtils('', '', '')
-    assert gu.get_commit(MERCURIAL_COMMIT) == MERCURIAL_COMMIT
+    assert gu.get_commit(GITHUB_COMMIT) == GITHUB_COMMIT
 
 
 @responses.activate
-def test_get_mercurial(GITHUB_COMMIT, mock_get_mercurial):
+def test_get_mercurial(MERCURIAL_COMMIT):
     gu = GitHubUtils('', '', '')
-    assert gu.get_mercurial(GITHUB_COMMIT) == GITHUB_COMMIT
+    assert gu.get_mercurial(MERCURIAL_COMMIT) == MERCURIAL_COMMIT
