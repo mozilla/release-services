@@ -69,8 +69,17 @@ def get_latest_codecov():
 
 
 def codecov_wait(commit):
+    class TotalsNoneError(Exception):
+        pass
+
     def check_codecov_job():
         r = requests.get('https://codecov.io/api/gh/marco-c/gecko-dev/commit/{}?access_token={}'.format(commit, secrets[secrets.CODECOV_ACCESS_TOKEN]))
-        return True if r.json()['commit']['totals'] is not None else False
+        totals = r.json()['commit']['totals']
+        if totals is None:
+            raise TotalsNoneError()
+        return True
 
-    return utils.wait_until(check_codecov_job, 30) is not None
+    try:
+        return utils.retry(check_codecov_job, retries=30)
+    except TotalsNoneError:
+        return False
