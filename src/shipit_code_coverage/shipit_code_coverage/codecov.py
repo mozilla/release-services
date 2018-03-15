@@ -161,7 +161,7 @@ class CodeCov(object):
                     c.executemany('INSERT INTO chunk_to_test VALUES (?,?,?)', chunk_test_iter)
                 except KeyError:
                     # ActiveData is failing too often, so we need to ignore the error here.
-                    pass
+                    logger.error('Failed to retrieve chunk to tests mapping from ActiveData.')
 
         with tarfile.open('code-coverage-reports/chunk_mapping.tar.xz', 'w:xz') as tar:
             tar.add('chunk_mapping.sqlite')
