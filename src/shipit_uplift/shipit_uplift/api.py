@@ -403,7 +403,8 @@ def coverage_by_changeset(changeset):
     job = q.fetch_job(changeset)
 
     if job is None:
-        job = q.enqueue(coverage_by_changeset_impl.generate, changeset, job_id=changeset, result_ttl=86400)
+        RESULT_TTL = 2 * 24 * 60 * 60
+        job = q.enqueue(coverage_by_changeset_impl.generate, changeset, job_id=changeset, result_ttl=RESULT_TTL)
 
     if job.result is not None:
         return job.result, 200
