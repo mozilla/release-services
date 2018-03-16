@@ -164,7 +164,7 @@ class CodeCov(object):
                     # ActiveData is failing too often, so we need to ignore the error here.
                     logger.error('Failed to retrieve chunk to tests mapping from ActiveData.')
 
-        with tarfile.open('code-coverage-reports/chunk_mapping.tar.xz', 'w:xz') as tar:
+        with tarfile.open('chunk_mapping.tar.xz', 'w:xz') as tar:
             tar.add('chunk_mapping.sqlite')
 
     def go(self):

@@ -88,6 +88,12 @@ let
         deadline = "4 hours";
         maxRunTime = 4 * 60 * 60;
         workerType = "releng-svc-compute";
+        taskArtifacts = {
+          "chunk_mapping.tar.xz" = {
+            type = "file";
+            path = "/chunk_mapping.tar.xz";
+          };
+        };
       };
     in
       releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
