@@ -21,10 +21,9 @@ def create_app(config=None):
             'security',
             'cors',
             'api',
-            'auth',
+            'auth0',
             'db',
         ],
     )
-    # TODO: add predefined api.yml
     app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
     return app

@@ -9,7 +9,7 @@ import base64
 import os
 import cli_common.taskcluster
 import shipit_signoff.config
-import shipit_signoff.util
+import backend_common.auth0
 
 
 DEBUG = bool(os.environ.get('DEBUG', False))
@@ -68,7 +68,7 @@ args = [
 ]
 if LOCAL_AUTH:
     args.append(secrets['APP_URL'] + 'fake_auth')
-OIDC_CLIENT_SECRETS = shipit_signoff.util.create_auth0_secrets_file(*args)
+OIDC_CLIENT_SECRETS = backend_common.auth0.create_auth0_secrets_file(*args)
 
 # -- BALROG -------------------------------------------------------------------
 

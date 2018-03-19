@@ -1,19 +1,125 @@
 ---
-swagger: "2.0"
-# TODO: version and title in api.yml should be provided from python code
-# dynamicaly. also additional fields should be picked up from setup.py somehow:
-# - contact (maintainer)
-# - license
+swagger: '2.0'
 info:
-  version: "1.0"
-  title: "Ship-It Workflow"
+  title: Ship-It API
+  description: |
+    Find  out more about Ship-it at
+    [https://github.com/mozilla-releng/ship-it](https://github.com/mozilla-releng/ship-it)
+  version: 1.0.0
+  license:
+    name: MPL 2.0
+    url: https://www.mozilla.org/MPL/2.0/
+
 paths:
 
-  /ping:
+  /releases:
+    post:
+      summary: Add a new release
+      operationId: shipit_workflow.api.add_release
+      consumes:
+      - "application/json"
+      parameters:
+      - in: body
+        name: body
+        description: Release object
+        required: true
+        schema:
+          $ref: '#/definitions/Release'
+      responses:
+        405:
+          description: Invalid input
     get:
-      operationId: "shipit_workflow.api.ping"
-      description: |
-        Ping me
+      summary: List releases
+      operationId: shipit_workflow.api.list_releases
+      parameters:
+      - in: query
+        name: full
+        type: boolean
       responses:
         200:
-          description: Nothing to say...
+          description: all good
+
+  /releases/{name}:
+    get:
+      summary: Release info
+      operationId: shipit_workflow.api.get_release
+      parameters:
+      - name: name
+        in: path
+        required: true
+        type: string
+        description: release name
+      responses:
+        200:
+          description: all good
+
+  /releases/{name}/{phase}:
+    get:
+      summary: Release info
+      operationId: shipit_workflow.api.get_phase
+      parameters:
+      - name: name
+        in: path
+        required: true
+        type: string
+        description: release name
+      - name: phase
+        in: path
+        required: true
+        type: string
+      responses:
+        200:
+          description: all good
+    put:
+      summary: act on phase
+      operationId: shipit_workflow.api.schedule_phase
+      parameters:
+      - name: name
+        in: path
+        required: true
+        type: string
+        description: release name
+      - name: phase
+        in: path
+        required: true
+        type: string
+        required: true
+      responses:
+        409:
+          description: In case it was submitted already
+
+definitions:
+  Release:
+    type: object
+    required:
+    - product
+    - version
+    - branch
+    - revision
+    - build_number
+    properties:
+      product:
+        type: string
+        example: firefox
+        enum:
+        - firefox
+        - fennec
+        - devedition
+      version:
+        type: string
+        example: 56.0b12
+      branch:
+        type: string
+        example: projects/maple
+      revision:
+        type: string
+        example: abcd1234
+      build_number:
+        type: integer
+        example: 12
+      release_eta:
+        type: string
+        format: dateTime
+        example: 2006-08-14T02:34:56-06:00
+      partial_updates:
+        type: object

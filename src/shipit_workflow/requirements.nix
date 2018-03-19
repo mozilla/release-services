@@ -682,6 +682,19 @@ let
       };
     };
 
+    "json-e" = python.mkDerivation {
+      name = "json-e-2.5.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/4f/8f/13ffbae3327362410719cd6ae89296281e68e3102e1ac042c47795e10bc2/json-e-2.5.0.tar.gz"; sha256 = "f9114a25ed4b575395fbb2daa1183c5b781a647b387fdf28596220bb114673e8"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://taskcluster.github.io/json-e/";
+        license = "MPL2";
+        description = "A data-structure parameterization system written for embedding context in JSON objects";
+      };
+    };
+
     "kombu" = python.mkDerivation {
       name = "kombu-4.1.0";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/03/5e/1a47d1e543d4943d65330af4e4406049f443878818fb65bfdc651bb93a96/kombu-4.1.0.tar.gz"; sha256 = "4249d9dd9dbf1fcec471d1c2def20653c9310dd1a217272d77e4844f9d5273cb"; };
@@ -1224,7 +1237,7 @@ let
   localOverridesFile = ./requirements_override.nix;
   overrides = import localOverridesFile { inherit pkgs python; };
   commonOverrides = [
-    
+
   ];
   allOverrides =
     (if (builtins.pathExists localOverridesFile)
