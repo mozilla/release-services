@@ -178,6 +178,8 @@ class MozReview(object):
 
         TODO: Convert to a faster search algorithm.
         '''
+        assert isinstance(line_num, int), \
+            'Line number must be an integer'
         f = self.destfile_to_file(filename)
         diff_data = self._file_to_diffdata.setdefault(f, f.get_diff_data())
 
@@ -189,6 +191,9 @@ class MozReview(object):
             for row in chunk.lines:
                 if row[line_num_index] == line_num:
                     return row[0]
+
+        # MozReview needs a line number to allow comment publication
+        raise Exception('No translated line number found: {} #{}'.format(filename, line_num))
 
     def comment(self, filename, first_line, num_lines, text,
                 issue_opened=True):
