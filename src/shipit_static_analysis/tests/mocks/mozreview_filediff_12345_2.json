@@ -2,7 +2,7 @@
     "file": {
         "dest_attachment": null,
         "dest_detail": "(working copy)",
-        "dest_file": "/trunk/reviewboard/settings_local.py.tmpl",
+        "dest_file": "test.cpp",
         "extra_data": {
             "delete_count": 5,
             "equal_count": 35,
@@ -38,7 +38,7 @@
             }
         },
         "source_attachment": null,
-        "source_file": "/trunk/reviewboard/settings_local.py.tmpl",
+        "source_file": "test.cpp",
         "source_revision": "1797",
         "status": "unknown"
     },
