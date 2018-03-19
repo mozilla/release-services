@@ -117,6 +117,7 @@ def cmd(project,
         command = [
             nix, 'copy',
             '--to', 's3://' + cache_bucket,
+            '--no-check-sigs',
             '-vvvv',
         ] + build_results
         click.echo(' => Creating cache artifacts for {} project... '.format(project), nl=False)
