@@ -48,6 +48,11 @@ import please_cli.utils
     default=None,
     )
 @click.option(
+    '--cache-region',
+    required=False,
+    default=None,
+    )
+@click.option(
     '--interactive/--no-interactive',
     default=True,
     )
@@ -56,13 +61,14 @@ def cmd(project,
         nix_build,
         nix,
         cache_bucket,
+        cache_region,
         taskcluster_secret,
         taskcluster_client_id,
         taskcluster_access_token,
         interactive,
         ):
 
-    if cache_bucket:
+    if cache_bucket and cache_region:
         secrets = cli_common.taskcluster.get_secrets(
             taskcluster_secret,
             project,
@@ -101,7 +107,7 @@ def cmd(project,
         ask_for_details=interactive,
     )
 
-    if cache_bucket:
+    if cache_bucket and cache_region:
         tmp_cache_dir = os.path.join(please_cli.config.TMP_DIR, 'cache')
         if not os.path.exists(tmp_cache_dir):
             os.makedirs(tmp_cache_dir)
@@ -116,7 +122,7 @@ def cmd(project,
         os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
         command = [
             nix, 'copy',
-            '--to', 's3://' + cache_bucket,
+            '--to', 's3://{}?region={}'.format(cache_bucket, cache_region),
             '--no-check-sigs',
             '-vvvv',
         ] + build_results

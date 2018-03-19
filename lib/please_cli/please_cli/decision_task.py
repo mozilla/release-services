@@ -29,6 +29,7 @@ def get_build_task(index,
                    owner,
                    channel,
                    cache_bucket,
+                   cache_region,
                    ):
 
     project_config = please_cli.config.PROJECTS.get(project, {})
@@ -42,6 +43,7 @@ def get_build_task(index,
     command = [
         './please', '-vv', 'tools', 'build', project,
         '--cache-bucket="{}"'.format(cache_bucket),
+        '--cache-region="{}"'.format(cache_region),
         '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
         '--no-interactive',
     ] + extra_attributes
@@ -347,6 +349,7 @@ def cmd(ctx,
             project,
             required=(
                 'CACHE_BUCKET',
+                'CACHE_REGION',
             ),
             taskcluster_client_id=taskcluster_client_id,
             taskcluster_access_token=taskcluster_access_token,
@@ -360,6 +363,7 @@ def cmd(ctx,
             owner,
             channel,
             secrets['CACHE_BUCKET'],
+            secrets['CACHE_REGION'],
         )
         tasks.append((project_uuid, build_tasks[project_uuid]))
 
