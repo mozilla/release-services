@@ -32,7 +32,7 @@ class MozLintIssue(Issue):
         self.path = repo_path
         self.column = column
         self.level = level
-        self.line = lineno
+        self.line = int(lineno)  # mozlint sometimes produce strings here
         self.linter = linter
         self.message = message
         self.rule = rule
@@ -69,11 +69,11 @@ class MozLintIssue(Issue):
         '''
         Build the text content for reporters
         '''
-        return '{}: {} [{}: {}]'.format(
+        linter = '{}: {}'.format(self.linter, self.rule) if self.rule else self.linter
+        return '{}: {} [{}]'.format(
             self.level.capitalize(),
             self.message.capitalize(),
-            self.linter,
-            self.rule,
+            linter,
         )
 
     def as_markdown(self):
