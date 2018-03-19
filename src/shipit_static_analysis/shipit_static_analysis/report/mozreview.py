@@ -158,7 +158,6 @@ class MozReview(object):
         self._destfile_to_file = {}
         self._file_to_diffdata = {}
 
-
         # Load current user id
         try:
             self.user = self.api_root.get_session().get_user()

@@ -3,9 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import httpretty
 import pytest
-import re
 
 
 def test_conf(mock_mozreview):
@@ -34,13 +32,6 @@ def test_review_publication(mock_mozreview, mock_issues, mock_phabricator):
     '''
     from shipit_static_analysis.report.mozreview import MozReviewReporter
     from shipit_static_analysis.revisions import MozReviewRevision
-
-    # Add mock files listing
-    httpretty.register_uri(
-        httpretty.POST,
-        re.compile('http://mozreview.test/api/review-requests/(\d+)/diffs/(\w+)/files/'),
-        body='{}',
-    )
 
     # Publish issues on mozreview
     conf = {

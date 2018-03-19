@@ -93,6 +93,8 @@ def mock_mozreview():
     '''
     api_url = 'http://mozreview.test/api/'
     auth_url = api_url + 'extensions/mozreview.extension.MozReviewExtension/bugzilla-api-key-logins/'
+    session_url = api_url + 'session/'
+    user_url = api_url + 'users/devbot/'
 
     def _response(name):
         path = os.path.join(MOCK_DIR, 'mozreview_{}.json'.format(name))
@@ -107,7 +109,7 @@ def mock_mozreview():
         httpretty.GET,
         api_url,
         body=_response('root'),
-        content_type='application/vnd.reviewboard.org.bugzilla-api-key-logins+json',
+        content_type='application/vnd.reviewboard.org.root+json',
     )
 
     # Initial query to get auth endpoints
@@ -116,6 +118,46 @@ def mock_mozreview():
         auth_url,
         body=_response('auth'),
         content_type='application/vnd.reviewboard.org.bugzilla-api-key-logins+json',
+    )
+
+    # Current session query
+    httpretty.register_uri(
+        httpretty.GET,
+        session_url,
+        body=_response('session'),
+        content_type='application/vnd.reviewboard.org.session+json',
+    )
+
+    # User details query
+    httpretty.register_uri(
+        httpretty.GET,
+        user_url,
+        body=_response('user'),
+        content_type='application/vnd.reviewboard.org.user+json',
+    )
+
+    # Dummy Reviews list
+    httpretty.register_uri(
+        httpretty.GET,
+        api_url + 'review-requests/12345/reviews/',
+        body=_response('reviews_12345'),
+        content_type='application/vnd.reviewboard.org.review+json',
+    )
+
+    # Dummy Review comment list
+    httpretty.register_uri(
+        httpretty.GET,
+        api_url + 'review-requests/12345/reviews/51/diff-comments/',
+        body=_response('comments_12345_51'),
+        content_type='application/vnd.reviewboard.org.review-diff-comments+json',
+    )
+
+    # Dummy Review file diff
+    httpretty.register_uri(
+        httpretty.GET,
+        api_url + 'review-requests/12345/diffs/2/files/31/',
+        body=_response('filediff_12345_2'),
+        content_type='application/vnd.reviewboard.org.file+json',
     )
 
     def _check_credentials(request, uri, headers):
