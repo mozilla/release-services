@@ -92,7 +92,7 @@ RUN wget -nv "https://nixos.org/releases/nix/nix-$NIX_VERSION/nix-$NIX_VERSION-x
  && rm -r $HOME/nix-*-x86_64-linux \
  && nix-collect-garbage -d \
  && rm -rf $HOME/.cache/nix \
- && nix-build /app/nix/default.nix -A please-cli --no-out-link
+ && nix-build /app/nix/default.nix -A please-cli -A tools --no-out-link
 
 
 USER root
