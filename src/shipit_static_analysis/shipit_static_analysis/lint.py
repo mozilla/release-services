@@ -69,7 +69,7 @@ class MozLintIssue(Issue):
         '''
         Build the text content for reporters
         '''
-        linter = self.rule and '{}: {}'.format(self.linter, self.rule) or self.linter
+        linter = '{}: {}'.format(self.linter, self.rule) if self.rule else self.linter
         return '{}: {} [{}]'.format(
             self.level.capitalize(),
             self.message.capitalize(),
