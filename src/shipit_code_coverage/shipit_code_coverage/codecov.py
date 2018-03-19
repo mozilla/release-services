@@ -161,7 +161,7 @@ class CodeCov(object):
                     c.executemany('INSERT INTO chunk_to_test VALUES (?,?,?)', chunk_test_iter)
                 except KeyError:
                     # ActiveData is failing too often, so we need to ignore the error here.
-                    pass
+                    logger.error('Failed to retrieve chunk to tests mapping from ActiveData.')
 
         with tarfile.open('code-coverage-reports/chunk_mapping.tar.xz', 'w:xz') as tar:
             tar.add('chunk_mapping.sqlite')
@@ -205,7 +205,7 @@ class CodeCov(object):
                 logger.info('Build ingested by codecov.io')
                 self.notifier.notify()
             else:
-                logger.info('codecov.io took too much time to ingest data.')
+                logger.error('codecov.io took too much time to ingest data.')
         else:
             mkdir('code-coverage-reports')
 
