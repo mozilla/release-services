@@ -30,7 +30,6 @@ case "`uname`" in
     ;;
 esac
 
-USE_DOCKER=1
 if [ "$USE_NIX" = "1" ]; then
   if hash grep 2>/dev/null && [ -e /etc/nix/nix.conf ] && grep -q "https://s3.amazonaws.com/releng-cache" /etc/nix/nix.conf; then
     echo "ERROR: Old cache url detected in /etc/nix/nix.conf.";
