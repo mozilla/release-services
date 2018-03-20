@@ -2,7 +2,7 @@
 import os
 
 from cli_common.log import get_logger
-from cli_common.utils import mkdir, ThreadPoolExecutorResult
+from cli_common.utils import ThreadPoolExecutorResult
 
 from shipit_code_coverage import taskcluster
 
@@ -68,7 +68,7 @@ class ArtifactsHandler(object):
             logger.info('%s artifact downloaded' % artifact_path)
 
     def download_all(self):
-        mkdir(self.parent_dir)
+        os.makedirs(self.parent_dir, exist_ok=True)
 
         # The test tasks for the Linux and Windows builds are in the same group,
         # but the following code is generic and supports build tasks split in

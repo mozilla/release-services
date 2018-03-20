@@ -11,7 +11,7 @@ import sqlite3
 
 from cli_common.log import get_logger
 from cli_common.command import run_check
-from cli_common.utils import mkdir, retry, ThreadPoolExecutorResult
+from cli_common.utils import retry, ThreadPoolExecutorResult
 
 from shipit_code_coverage import taskcluster, uploader
 from shipit_code_coverage.artifacts import ArtifactsHandler
@@ -207,7 +207,7 @@ class CodeCov(object):
             else:
                 logger.error('codecov.io took too much time to ingest data.')
         else:
-            mkdir('code-coverage-reports')
+            os.makedirs('code-coverage-reports', exist_ok=True)
 
             self.generate_suite_reports()
 
