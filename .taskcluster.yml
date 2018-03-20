@@ -16,10 +16,11 @@ tasks:
     routes:
       - index.project.releng.services.requests.pull-request.{{ event.head.sha }}
     scopes:
+      - docker-worker:capability:privileged
       - queue:create-task:highest:aws-provisioner-v1/releng-svc*
       - queue:route:index.project.releng.services.requests.pull-request.*
+      - queue:scheduler-id:taskcluster-github
       - secrets:get:repo:github.com/mozilla-releng/services:pull-request
-      - docker-worker:capability:privileged
     extra:
       github:
         env: true
