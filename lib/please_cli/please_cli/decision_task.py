@@ -206,7 +206,7 @@ def get_task(task_group_id,
         'created': now,
         'deadline': now + datetime.timedelta(**deadline),
         'scopes': [
-          secrets_scope
+          secrets_scope,
           'docker-worker:capability:privileged',
         ] + scopes,
         'priority': priority,
