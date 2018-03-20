@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 import os
 import subprocess
+import tempfile
 
 import click
 import click_spinner
@@ -68,21 +69,36 @@ def cmd(project,
         interactive,
         ):
 
-    if cache_bucket and cache_region:
-        secrets = cli_common.taskcluster.get_secrets(
-            taskcluster_secret,
-            project,
-            required=(
-                'CACHE_ACCESS_KEY_ID',
-                'CACHE_SECRET_ACCESS_KEY',
-            ),
-        )
+    required_secrets = [
+        'NIX_CACHE_SECRET_KEYS',
+    ]
 
-        AWS_ACCESS_KEY_ID = secrets['CACHE_ACCESS_KEY_ID']
-        AWS_SECRET_ACCESS_KEY = secrets['CACHE_SECRET_ACCESS_KEY']
+    if cache_bucket and cache_region:
+        required_secrets += [
+            'CACHE_ACCESS_KEY_ID',
+            'CACHE_SECRET_ACCESS_KEY',
+        ]
+
+    secrets = cli_common.taskcluster.get_secrets(taskcluster_secret,
+                                                 project,
+                                                 required=required_secrets,
+                                                 )
 
     click.echo(' => Building {} project ... '.format(project), nl=False)
     with click_spinner.spinner():
+        temp_files =  []
+        nix_cache_secret_keys = []
+        for secret_key in secrets['NIX_CACHE_SECRET_KEYS']:
+            fd, temp_file = tempfile.mkstemp(text=True)
+            with open(temp_file, 'w') as f:
+                f.write(secret_key)
+            os.close(fd)
+            nix_cache_secret_keys += [
+                '--option',
+                'secret-key-files',
+                temp_file,
+            ]
+
         for attribute in [project] + list(extra_attribute):
             command = [
                 nix_build,
@@ -92,7 +108,7 @@ def cmd(project,
                     project=project,
                     attribute=attribute.lstrip(project + '.'),
                 ),
-            ]
+            ] + nix_cache_secret_keys
             result, output, error = cli_common.command.run(
                 command,
                 stream=True,
@@ -101,6 +117,10 @@ def cmd(project,
             )
             if result != 0:
                 break
+
+        for temp_file in temp_files:
+            os.remove(temp_file)
+
     please_cli.utils.check_result(
         result,
         output,
@@ -118,12 +138,11 @@ def cmd(project,
             if item.startswith('result-build-' + project)
         ]
 
-        os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY_ID
-        os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
+        os.environ['AWS_ACCESS_KEY_ID'] = secrets['CACHE_ACCESS_KEY_ID']
+        os.environ['AWS_SECRET_ACCESS_KEY'] = secrets['CACHE_SECRET_ACCESS_KEY']
         command = [
             nix, 'copy',
             '--to', 's3://{}?region={}'.format(cache_bucket, cache_region),
-            '--no-check-sigs',
             '-vvvv',
         ] + build_results
         click.echo(' => Creating cache artifacts for {} project... '.format(project), nl=False)

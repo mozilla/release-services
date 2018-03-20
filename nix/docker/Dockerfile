@@ -7,6 +7,7 @@ ARG NIXPKGS_REV
 ARG NIXPKGS_SHA256
 ARG NIX_VERSION
 ARG NIX_SHA256
+ARG NIX_CACHE_PUBLIC_KEYS
 
 ENV NIXPKGS_OWNER ${NIXPKGS_OWNER}
 ENV NIXPKGS_REPO ${NIXPKGS_REPO}
@@ -14,6 +15,7 @@ ENV NIXPKGS_REV ${NIXPKGS_REV}
 ENV NIXPKGS_SHA256 ${NIXPKGS_SHA256}
 ENV NIX_VERSION ${NIX_VERSION}
 ENV NIX_SHA256 ${NIX_SHA256}
+ENV NIX_CACHE_PUBLIC_KEYS ${NIX_CACHE_PUBLIC_KEYS}
 ENV NIX_PATH "nixpkgs=/etc/nix/nixpkgs"
 
 #
@@ -61,10 +63,9 @@ RUN wget -nv "https://github.com/$NIXPKGS_OWNER/$NIXPKGS_REPO/archive/$NIXPKGS_R
 RUN mkdir -m 0755 /nix \
  && chown app:app /nix \
  && mkdir -p /etc/nix \
- && echo "substituters = https://cache.mozilla-releng.net https://cache.nixos.org" >> /etc/nix/nix.conf \
- # TODO: sign nix cache and then required signatured
- #       and configure trusted-public-keys and secret-key-files accordingly
- && echo "require-sigs = false" >> /etc/nix/nix.conf \
+ && echo "substituters = https://cache.mozilla-releng.net https://cache-testing.mozilla-releng.net https://cache.nixos.org" >> /etc/nix/nix.conf \
+ && echo "trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= $NIX_CACHE_PUBLIC_KEYS" >> /etc/nix/nix.conf \
+ && echo "require-sigs = true" >> /etc/nix/nix.conf \
  && echo "trusted-users = app" >> /etc/nix/nix.conf \
  && echo "allowed-users = app" >> /etc/nix/nix.conf \
  && echo "build-users-group =" > /etc/nix/nix.conf

@@ -54,11 +54,24 @@ log = cli_common.log.get_logger(__name__)
     default=please_cli.config.DOCKER_BASE_TAG,
     help='Tag of base image (default: {}).'.format(please_cli.config.DOCKER_BASE_TAG),
     )
-def cmd(docker_username, docker_password, docker, docker_repo, docker_tag):
+@click.option(
+    '--nix-cache-public-key',
+    multiple=True,
+    default=[],
+    help='Public key for nix cache',
+    )
+def cmd(docker_username,
+        docker_password,
+        docker,
+        docker_repo,
+        docker_tag,
+        nix_cache_public_key,
+        ):
 
     docker_file = os.path.join(please_cli.config.ROOT_DIR, 'nix', 'docker', 'Dockerfile')
     nixpkgs_json_file = os.path.join(please_cli.config.ROOT_DIR, 'nix', 'nixpkgs.json')
     nix_json_file = os.path.join(please_cli.config.ROOT_DIR, 'nix', 'nix.json')
+    nix_cache_public_keys = ' '.join(nix_cache_public_key)
 
     temp_docker_file = os.path.join(please_cli.config.ROOT_DIR, 'Dockerfile')
 
@@ -100,6 +113,7 @@ def cmd(docker_username, docker_password, docker, docker_repo, docker_tag):
                     '--build-arg', 'NIXPKGS_SHA256=' + nixpkgs_json['sha256_tarball'],
                     '--build-arg', 'NIX_VERSION=' + nix_json['version'],
                     '--build-arg', 'NIX_SHA256=' + nix_json['sha256'],
+                    '--build-arg', 'NIX_CACHE_PUBLIC_KEYS=' + nix_cache_public_keys,
                     '-t',
                     '{}:{}'.format(docker_repo, docker_tag),
                     please_cli.config.ROOT_DIR,
