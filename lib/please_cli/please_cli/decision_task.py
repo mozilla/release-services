@@ -52,6 +52,7 @@ def get_build_task(index,
         [parent_task],
         github_commit,
         channel,
+        taskcluster_secret,
         ' '.join(command),
         {
             'name': '1.{index:02}. Building {project}'.format(
@@ -152,6 +153,7 @@ def get_deploy_task(index,
         [parent_task],
         github_commit,
         channel,
+        taskcluster_secret,
         ' '.join(command),
         {
             'name': '3.{index:02}. Deploying {project}'.format(
@@ -171,6 +173,7 @@ def get_task(task_group_id,
              dependencies,
              github_commit,
              channel,
+             taskcluster_secret,
              command,
              metadata,
              scopes=[],
@@ -180,10 +183,6 @@ def get_task(task_group_id,
     priority = 'high'
     if channel == 'production':
         priority = 'very-high'
-    secrets_scope = 'secrets:get:repo:github.com/mozilla-releng/services:branch:' + channel
-    if os.environ.get('GITHUB_PULL_REQUEST'):
-        secrets_scope = 'secrets:get:repo:github.com/mozilla-releng/services:pull-request'
-
     now = datetime.datetime.utcnow()
     command = (' && '.join([
       'ls -la /etc/services',
@@ -206,7 +205,7 @@ def get_task(task_group_id,
         'created': now,
         'deadline': now + datetime.timedelta(**deadline),
         'scopes': [
-          secrets_scope,
+          taskcluster_secret,
           'docker-worker:capability:privileged',
         ] + scopes,
         'priority': priority,
@@ -294,7 +293,10 @@ def cmd(ctx,
     """A tool to be ran on each commit.
     """
 
+
     taskcluster_secret = 'repo:github.com/mozilla-releng/services:branch:' + channel
+    if os.environ.get('GITHUB_PULL_REQUEST'):
+        taskcluster_secret = 'secrets:get:repo:github.com/mozilla-releng/services:pull-request'
     taskcluster_queue = cli_common.taskcluster.get_service('queue')
     click.echo(' => Retriving taskGroupId ... ', nl=False)
     with click_spinner.spinner():
@@ -385,6 +387,7 @@ def cmd(ctx,
             maintanance_on_dependencies,
             github_commit,
             channel,
+            taskcluster_secret,
             './please -vv tools maintanance:on ' + ' '.join(deploy_projects),
             {
                 'name': '2. Maintanance ON',
@@ -420,6 +423,7 @@ def cmd(ctx,
             [i for i in deploy_tasks.keys()],
             github_commit,
             channel,
+            taskcluster_secret,
             './please -vv tools maintanance:off ' + ' '.join(deploy_projects),
             {
                 'name': '4. Maintanance OFF',
