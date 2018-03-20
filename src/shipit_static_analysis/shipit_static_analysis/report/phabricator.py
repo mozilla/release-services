@@ -49,8 +49,8 @@ class PhabricatorReporter(Reporter):
             'Phabricator API must end with /api/'
 
         # Test authentication
-        user = self.request('user.whoami')
-        logger.info('Authenticated on phabricator', url=self.url, user=user['realName'])
+        self.user = self.request('user.whoami')
+        logger.info('Authenticated on phabricator', url=self.url, user=self.user['realName'])
 
     @property
     def hostname(self):
@@ -90,16 +90,22 @@ class PhabricatorReporter(Reporter):
             logger.info('Phabricator reporter only publishes Phabricator revisions. Skipping.')
             return
 
+        # Load existing comments for this revision
+        existing_comments = self.list_comments(revision)
+        logger.info('Found {} existing comments on review'.format(len(existing_comments)))
+
         # Use only publishable issues
         issues = list(filter(lambda i: i.is_publishable(), issues))
         if issues:
-            stats.api.increment('report.phabricator.issues', len(issues))
 
             # First publish inlines as drafts
-            inlines = [
-                self.comment_inline(revision, issue)
+            inlines = list(filter(None, [
+                self.comment_inline(revision, issue, existing_comments)
                 for issue in issues
-            ]
+            ]))
+            if not inlines:
+                logger.info('No new comments found, skipping Phabricator publication')
+                return
             logger.info('Added inline comments', ids=[i['id'] for i in inlines])
 
             # Then publish top comment
@@ -110,12 +116,36 @@ class PhabricatorReporter(Reporter):
                     diff_url=diff_url,
                 ),
             )
+            stats.api.increment('report.phabricator.issues', len(inlines))
             stats.api.increment('report.phabricator')
             logger.info('Published phabricator comment')
 
         else:
             # TODO: Publish a validated comment ?
             logger.info('No issues to publish on phabricator')
+
+    def list_comments(self, revision):
+        '''
+        List and format existing inline comments for a revision
+        '''
+        transactions = self.request(
+            'transaction.search',
+            objectIdentifier=revision.phid,
+        )
+        return [
+            {
+
+                'diffID': transaction['fields']['diff']['id'],
+                'filePath': transaction['fields']['path'],
+                'lineNumber': transaction['fields']['line'],
+                'lineLength': transaction['fields']['length'],
+                'content': comment['content']['raw'],
+
+            }
+            for transaction in transactions['data']
+            for comment in transaction['comments']
+            if transaction['type'] == 'inline' and transaction['authorPHID'] == self.user['phid']
+        ]
 
     def comment(self, revision, message):
         '''
@@ -132,24 +162,34 @@ class PhabricatorReporter(Reporter):
             attach_inlines=1,
         )
 
-    def comment_inline(self, revision, issue):
+    def comment_inline(self, revision, issue, existing_comments=[]):
         '''
         Post an inline comment on a diff
         '''
         assert isinstance(revision, PhabricatorRevision)
         assert isinstance(issue, Issue)
 
+        # Check if comment is already posted
+        comment = {
+            'diffID': revision.diff_id,
+            'filePath': issue.path,
+            'lineNumber': issue.line,
+            'lineLength': issue.nb_lines,
+            'content': issue.as_text(),
+        }
+        if comment in existing_comments:
+            logger.info('Skipping existing comment', text=comment['content'], filename=comment['filePath'], line=comment['lineNumber'])
+            return
+
         inline = self.request(
             'differential.createinline',
-            diffID=revision.diff_id,
-            filePath=issue.path,
-            lineNumber=issue.line,
-            lineLength=issue.nb_lines,
-            content=issue.as_text(),
 
             # This displays on the new file (right side)
             # Python boolean is not recognized by Conduit :/
             isNewFile=1,
+
+            # Use comment data
+            **comment
         )
         return inline
 

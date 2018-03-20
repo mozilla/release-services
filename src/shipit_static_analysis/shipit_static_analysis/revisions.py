@@ -83,6 +83,7 @@ class PhabricatorRevision(Revision):
         # Load diff details to get the diff revision
         diff = self.api.load_diff(self.diff_phid)
         self.diff_id = diff['id']
+        self.phid = diff['fields']['revisionPHID']
 
     def __str__(self):
         return 'Phabricator #{} - {}'.format(self.diff_id, self.diff_phid)
