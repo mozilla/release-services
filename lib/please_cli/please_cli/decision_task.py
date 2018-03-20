@@ -29,6 +29,7 @@ def get_build_task(index,
                    github_commit,
                    owner,
                    channel,
+                   taskcluster_secret,
                    cache_bucket,
                    cache_region,
                    ):
@@ -45,7 +46,7 @@ def get_build_task(index,
         './please', '-vv', 'tools', 'build', project,
         '--cache-bucket="{}"'.format(cache_bucket),
         '--cache-region="{}"'.format(cache_region),
-        '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
+        '--taskcluster-secret=' + taskcluster_secret,
         '--no-interactive',
     ] + extra_attributes
     return get_task(
@@ -297,7 +298,7 @@ def cmd(ctx,
 
     taskcluster_secret = 'repo:github.com/mozilla-releng/services:branch:' + channel
     if os.environ.get('GITHUB_PULL_REQUEST'):
-        taskcluster_secret = 'secrets:get:repo:github.com/mozilla-releng/services:pull-request'
+        taskcluster_secret = 'repo:github.com/mozilla-releng/services:pull-request'
     taskcluster_queue = cli_common.taskcluster.get_service('queue')
     click.echo(' => Retriving taskGroupId ... ', nl=False)
     with click_spinner.spinner():
@@ -370,6 +371,7 @@ def cmd(ctx,
             github_commit,
             owner,
             channel,
+            taskcluster_secret,
             secrets['CACHE_BUCKET'],
             secrets['CACHE_REGION'],
         )
