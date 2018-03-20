@@ -38,9 +38,10 @@ class Derive:
     )
 @click.option(
     '--cache-url',
-    required=True,
-    default=please_cli.config.CACHE_URL,
-    help='Location of builartifacts.',
+    'cache_urls',
+    multiple=True,
+    default=please_cli.config.CACHE_URLS,
+    help='Locations of build artifacts.',
     )
 @click.option(
     '--nix-instantiate',
@@ -48,7 +49,7 @@ class Derive:
     default='nix-instantiate',
     help='`nix-instantiate` command',
     )
-def cmd(project, cache_url, nix_instantiate, indent=0, interactive=True):
+def cmd(project, cache_urls, nix_instantiate, indent=0, interactive=True):
     """Command to check if project is already in cache.
     """
 
@@ -90,11 +91,14 @@ def cmd(project, cache_url, nix_instantiate, indent=0, interactive=True):
 
     click.echo('{} => Checking cache if build artifacts exists for `{}` ... '.format(indent, project), nl=False)
     with click_spinner.spinner():
-        response = requests.get(
-            '%s/%s.narinfo' % (cache_url, derivation.nix_hash),
-        )
-
-    project_exists = response.status_code == 200
+        project_exists = False
+        for cache_url in cache_urls:
+            response = requests.get(
+                '%s/%s.narinfo' % (cache_url, derivation.nix_hash),
+            )
+            project_exists = response.status_code == 200
+            if project_exists:
+                break
 
     result = 1
     if project_exists:

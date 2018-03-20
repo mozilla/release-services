@@ -30,7 +30,10 @@ for item in reversed(CWD_DIR.split(os.sep)):
 if ROOT_DIR is None:
     raise click.ClickException(NO_ROOT_DIR_ERROR % '\n - '.join(_folders))
 
-CACHE_URL = "https://cache.mozilla-releng.net"
+CACHE_URLS = [
+    'https://cache.mozilla-releng.net',
+    'https://cache-testing.mozilla-releng.net',
+]
 
 SRC_DIR = os.path.join(ROOT_DIR, 'src')
 TMP_DIR = os.path.join(ROOT_DIR, 'tmp')
