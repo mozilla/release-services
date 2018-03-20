@@ -180,6 +180,10 @@ def get_task(task_group_id,
     priority = 'high'
     if channel == 'production':
         priority = 'very-high'
+    secrets_scope = 'secrets:get:repo:github.com/mozilla-releng/services:branch:' + channel
+    if os.environ.get('GITHUB_PULL_REQUEST'):
+        secrets_scope = 'secrets:get:repo:github.com/mozilla-releng/services:pull-request'
+
     now = datetime.datetime.utcnow()
     command = (' && '.join([
       'ls -la /etc/services',
@@ -202,7 +206,7 @@ def get_task(task_group_id,
         'created': now,
         'deadline': now + datetime.timedelta(**deadline),
         'scopes': [
-          'secrets:get:repo:github.com/mozilla-releng/services:branch:' + channel,
+          secrets_scope
           'docker-worker:capability:privileged',
         ] + scopes,
         'priority': priority,
