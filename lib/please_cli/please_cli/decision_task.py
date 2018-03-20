@@ -77,6 +77,7 @@ def get_deploy_task(index,
                     github_commit,
                     owner,
                     channel,
+                    taskcluster_secret,
                     ):
 
     project_config = please_cli.config.PROJECTS.get(project, {})
@@ -414,6 +415,7 @@ def cmd(ctx,
                 github_commit,
                 owner,
                 channel,
+                taskcluster_secret,
             )
             if project_task:
                 deploy_tasks[project_uuid] = project_task
