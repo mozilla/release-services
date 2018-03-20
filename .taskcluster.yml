@@ -21,7 +21,7 @@ tasks:
       - queue:create-task:highest:aws-provisioner-v1/releng-*
       - queue:scheduler-id:taskcluster-github
       - queue:route:index.project.releng.services.requests.pull-request.*
-      - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - secrets:get:repo:github.com/mozilla-releng/services:pull-request
       - docker-worker:capability:privileged
     extra:
       github:
