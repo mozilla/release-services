@@ -648,6 +648,7 @@ PROJECTS = {
         'requires': [
             'postgresql',
         ],
+        'deploy': 'HEROKU',
         'deploy_options': {
             'testing': {
                 'heroku_app': 'shipit-testing-workflow',
