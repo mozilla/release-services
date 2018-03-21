@@ -8,6 +8,7 @@ ARG NIXPKGS_SHA256
 ARG NIX_VERSION
 ARG NIX_SHA256
 ARG NIX_CACHE_PUBLIC_KEYS
+ARG NIX_CACHE_PUBLIC_URLS
 
 ENV NIXPKGS_OWNER ${NIXPKGS_OWNER}
 ENV NIXPKGS_REPO ${NIXPKGS_REPO}
@@ -16,6 +17,7 @@ ENV NIXPKGS_SHA256 ${NIXPKGS_SHA256}
 ENV NIX_VERSION ${NIX_VERSION}
 ENV NIX_SHA256 ${NIX_SHA256}
 ENV NIX_CACHE_PUBLIC_KEYS ${NIX_CACHE_PUBLIC_KEYS}
+ENV NIX_CACHE_PUBLIC_URLS ${NIX_CACHE_PUBLIC_URLS}
 ENV NIX_PATH "nixpkgs=/etc/nix/nixpkgs"
 
 #
@@ -23,7 +25,8 @@ ENV NIX_PATH "nixpkgs=/etc/nix/nixpkgs"
 #
 RUN apt-get -q update \
  && apt-get -q --yes install bash wget bzip2 tar locales sudo \
- && apt-get clean \
+ && apt-get clean && \
+ && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
  && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
  && locale-gen \
  && sed -i 's|mesg n|tty -s \&\& mesg n|' /root/.profile
@@ -61,7 +64,7 @@ RUN wget -nv "https://github.com/$NIXPKGS_OWNER/$NIXPKGS_REPO/archive/$NIXPKGS_R
 RUN mkdir -m 0755 /nix \
  && chown app:app /nix \
  && mkdir -p /etc/nix \
- && echo "substituters = https://cache.mozilla-releng.net https://cache-testing.mozilla-releng.net https://cache.nixos.org" >> /etc/nix/nix.conf \
+ && echo "substituters = https://cache.nixos.org $NIX_CACHE_PUBLIC_URLS" >> /etc/nix/nix.conf \
  && echo "trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= $NIX_CACHE_PUBLIC_KEYS" >> /etc/nix/nix.conf \
  # TODO: this is currently set to false once both cache bucket have only signed binaries we can set this to true
  && echo "require-sigs = false" >> /etc/nix/nix.conf \
