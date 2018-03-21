@@ -7,7 +7,8 @@ set -eu
 
 USE_NIX=0
 USE_DOCKER=0
-DOCKER_NAME="mozilla-releng-services"
+# TODO: in addition to version we should also use hash of nix/docker folder
+DOCKER_NAME="mozilla-releng-services-v`cat ./VERSION`"
 
 case "`uname`" in
   Darwin)
@@ -31,22 +32,15 @@ case "`uname`" in
 esac
 
 USE_DOCKER=1
+
+USE_NIX=0
 if [ -f /.dockerenv ]; then
-    USE_NIX=1
+  USE_NIX=1
+  . /etc/nix/profile.sh;
 fi
 
 if [ "$USE_NIX" = "1" ]; then
-  if hash grep 2>/dev/null && [ -e /etc/nix/nix.conf ] && grep -q "https://s3.amazonaws.com/releng-cache" /etc/nix/nix.conf; then
-    echo "ERROR: Old cache url detected in /etc/nix/nix.conf.";
-    echo "";
-    echo "Please change";
-    echo "    https://s3.amazonaws.com/releng-cache";
-    echo "to";
-    echo "    https://cache.mozilla-releng.net";
-    echo "";
-    echo "Thank you!";
-    exit 1;
-  fi;
+  # TODO: when we need to build please it would be nice to show a nice message that please is being rebuilt
   nix-build nix/default.nix -A please-cli -o result-please-cli 1>/dev/null;
   exec ./result-please-cli/bin/please "$@";
 
@@ -54,12 +48,13 @@ else
   if [ "$USE_DOCKER" = "1" ]; then
     if [ ! "$(docker ps -q -f name=$DOCKER_NAME)" ]; then
       if [ ! "$(docker ps -qa -f name=$DOCKER_NAME)" ]; then
-        docker run --privileged -td --name $DOCKER_NAME --volume="$(pwd)":/app --workdir=/app -p 8000-8100:8000-8100 -e NIX_PATH="nixpkgs=/home/app/nixpkgs" mozillareleng/services:base-new-`cat ./VERSION`
+        docker run --privileged -td --name $DOCKER_NAME --volume="$(pwd)":/app --workdir=/app -p 8000-8100:8000-8100 mozillareleng/services:base-new-`cat ./VERSION`
       else
         docker start $DOCKER_NAME
       fi
    fi
-    docker exec --tty --interactive $DOCKER_NAME ./please "$@"
+   docker exec --tty --interactive --privileged $DOCKER_NAME ./please $@
+   # TODO: stop old docker instances
   else
     # TODO: better error message and point to documentation
     echo "ERROR: please install nix or docker!"
