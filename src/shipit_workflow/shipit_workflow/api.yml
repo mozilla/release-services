@@ -1,19 +1,206 @@
 ---
-swagger: "2.0"
-# TODO: version and title in api.yml should be provided from python code
-# dynamicaly. also additional fields should be picked up from setup.py somehow:
-# - contact (maintainer)
-# - license
+swagger: '2.0'
 info:
-  version: "1.0"
-  title: "Ship-It Workflow"
+  title: Ship-It API
+  description: |
+    Find  out more about Ship-it at
+    [https://github.com/mozilla-releng/ship-it](https://github.com/mozilla-releng/ship-it)
+  version: 1.0.0
+  license:
+    name: MPL 2.0
+    url: https://www.mozilla.org/MPL/2.0/
+
 paths:
 
-  /ping:
+  /releases:
+    post:
+      summary: Add a new release
+      operationId: shipit_workflow.api.add_release
+      consumes:
+      - "application/json"
+      parameters:
+      - in: body
+        name: body
+        description: Release object
+        required: true
+        schema:
+          $ref: '#/definitions/ReleaseInput'
+      responses:
+        405:
+          description: Invalid input
+        201:
+          description: Release added
+          schema:
+            $ref: '#/definitions/Release'
     get:
-      operationId: "shipit_workflow.api.ping"
-      description: |
-        Ping me
+      summary: List releases
+      operationId: shipit_workflow.api.list_releases
+      parameters:
+      - in: query
+        name: full
+        type: boolean
       responses:
         200:
-          description: Nothing to say...
+          description: A list of releases
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Release'
+
+  /releases/{name}:
+    get:
+      summary: Release info
+      operationId: shipit_workflow.api.get_release
+      parameters:
+      - name: name
+        in: path
+        required: true
+        type: string
+        description: release name
+      responses:
+        200:
+          description: Returns release representation
+          schema:
+            $ref: '#/definitions/Release'
+
+  /releases/{name}/{phase}:
+    get:
+      summary: Release info
+      operationId: shipit_workflow.api.get_phase
+      parameters:
+      - name: name
+        in: path
+        required: true
+        type: string
+        description: release name
+      - name: phase
+        in: path
+        required: true
+        type: string
+      responses:
+        200:
+          description: Retruns phase representation
+          schema:
+            $ref: '#/definitions/Phase'
+    put:
+      summary: act on phase
+      operationId: shipit_workflow.api.schedule_phase
+      parameters:
+      - name: name
+        in: path
+        required: true
+        type: string
+        description: release name
+      - name: phase
+        in: path
+        required: true
+        type: string
+      responses:
+        409:
+          description: Already submitted
+        200:
+          description: Phase scheduled
+          schema:
+            $ref: '#/definitions/Phase'
+
+definitions:
+  ReleaseInput:
+    type: object
+    required:
+    - product
+    - version
+    - branch
+    - revision
+    - build_number
+    properties:
+      product:
+        type: string
+        example: firefox
+        enum:
+        - firefox
+        - fennec
+        - devedition
+      version:
+        type: string
+        example: 56.0b12
+      branch:
+        type: string
+        example: projects/maple
+      revision:
+        type: string
+        example: abcd1234
+      build_number:
+        type: integer
+        example: 12
+      release_eta:
+        type: string
+        format: dateTime
+        example: 2006-08-14T02:34:56-06:00
+      partial_updates:
+        type: object
+
+  Phase:
+    type: object
+    required:
+      - name
+      - submitted
+    properties:
+      name:
+        type: string
+        example: promote_firefox
+        description: Release promotion phase name
+      submitted:
+        type: boolean
+        description: Indicated if the phase was submitted to TC
+
+  Release:
+    type: object
+    required:
+    - name
+    - product
+    - version
+    - branch
+    - revision
+    - build_number
+    - status
+    - phases
+    properties:
+      name:
+        type: string
+        example: firefox-69.0b1-build1
+      product:
+        type: string
+        example: firefox
+        enum:
+        - firefox
+        - fennec
+        - devedition
+      version:
+        type: string
+        example: 56.0b12
+      branch:
+        type: string
+        example: projects/maple
+      project:
+        type: string
+        example: maple
+      revision:
+        type: string
+        example: abcd1234
+      build_number:
+        type: integer
+        example: 12
+      release_eta:
+        type: string
+        format: dateTime
+        example: 2006-08-14T02:34:56-06:00
+      status:
+        type: string
+        example: scheduled
+        enum:
+          - scheduled
+          - shipped
+      phases:
+        type: array
+        items:
+          $ref: '#/definitions/Phase'

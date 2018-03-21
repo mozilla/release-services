@@ -8,7 +8,7 @@ from __future__ import absolute_import
 import pytest
 import os
 
-import backend_common
+import backend_common.auth0
 
 
 @pytest.fixture(scope='function')
@@ -16,14 +16,13 @@ def app():
     '''Load shipit_signoff in test mode
     '''
     import shipit_signoff
-    import shipit_signoff.util
 
     config = backend_common.testing.get_app_config({
         'SQLALCHEMY_DATABASE_URI': 'sqlite://',
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
         'SECRET_KEY': os.urandom(24),
         'OIDC_USER_INFO_ENABLED': True,
-        'OIDC_CLIENT_SECRETS': shipit_signoff.util.create_auth0_secrets_file(
+        'OIDC_CLIENT_SECRETS': backend_common.auth0.create_auth0_secrets_file(
             '123',
             '123',
             'https://APP_URL',

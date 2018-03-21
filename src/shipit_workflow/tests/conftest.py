@@ -5,8 +5,8 @@
 
 from __future__ import absolute_import
 
+import os
 import pytest
-
 import backend_common
 
 
@@ -19,6 +19,12 @@ def app():
     config = backend_common.testing.get_app_config({
         'SQLALCHEMY_DATABASE_URI': 'sqlite://',
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'AUTH_CLIENT_ID': 'dummy_id',
+        'AUTH_CLIENT_SECRET': 'dummy_secret',
+        'AUTH_DOMAIN': 'auth.localhost',
+        'AUTH_REDIRECT_URI': 'http://localhost/login',
+        'OIDC_USER_INFO_ENABLED': True,
+        'OIDC_CLIENT_SECRETS': os.path.join(os.path.dirname(__file__), 'client_secrets.json'),
     })
     app = shipit_workflow.create_app(config)
 

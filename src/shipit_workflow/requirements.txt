@@ -4,3 +4,4 @@
 pytz
 psycopg2
 gunicorn
+json-e
