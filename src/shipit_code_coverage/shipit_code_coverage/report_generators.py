@@ -2,8 +2,6 @@
 import json
 import os
 
-from cli_common.utils import mkdir
-
 from shipit_code_coverage import grcov
 
 
@@ -42,7 +40,7 @@ def zero_coverage(artifacts, out_dir='code-coverage-reports'):
     with open(os.path.join(out_dir, 'zero_coverage_files.json'), 'w') as f:
         json.dump(zero_coverage_files, f)
 
-    mkdir(os.path.join(out_dir, 'zero_coverage_functions'))
+    os.makedirs(os.path.join(out_dir, 'zero_coverage_functions'), exist_ok=True)
 
     zero_coverage_function_counts = []
     for fname, functions in zero_coverage_functions.items():
