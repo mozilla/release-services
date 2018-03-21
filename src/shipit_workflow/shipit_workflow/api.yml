@@ -24,10 +24,14 @@ paths:
         description: Release object
         required: true
         schema:
-          $ref: '#/definitions/Release'
+          $ref: '#/definitions/ReleaseInput'
       responses:
         405:
           description: Invalid input
+        201:
+          description: Release added
+          schema:
+            $ref: '#/definitions/Release'
     get:
       summary: List releases
       operationId: shipit_workflow.api.list_releases
@@ -37,7 +41,11 @@ paths:
         type: boolean
       responses:
         200:
-          description: all good
+          description: A list of releases
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Release'
 
   /releases/{name}:
     get:
@@ -51,7 +59,9 @@ paths:
         description: release name
       responses:
         200:
-          description: all good
+          description: Returns release representation
+          schema:
+            $ref: '#/definitions/Release'
 
   /releases/{name}/{phase}:
     get:
@@ -69,7 +79,9 @@ paths:
         type: string
       responses:
         200:
-          description: all good
+          description: Retruns phase representation
+          schema:
+            $ref: '#/definitions/Phase'
     put:
       summary: act on phase
       operationId: shipit_workflow.api.schedule_phase
@@ -83,13 +95,16 @@ paths:
         in: path
         required: true
         type: string
-        required: true
       responses:
         409:
-          description: In case it was submitted already
+          description: Already submitted
+        200:
+          description: Phase scheduled
+          schema:
+            $ref: '#/definitions/Phase'
 
 definitions:
-  Release:
+  ReleaseInput:
     type: object
     required:
     - product
@@ -123,3 +138,69 @@ definitions:
         example: 2006-08-14T02:34:56-06:00
       partial_updates:
         type: object
+
+  Phase:
+    type: object
+    required:
+      - name
+      - submitted
+    properties:
+      name:
+        type: string
+        example: promote_firefox
+        description: Release promotion phase name
+      submitted:
+        type: boolean
+        description: Indicated if the phase was submitted to TC
+
+  Release:
+    type: object
+    required:
+    - name
+    - product
+    - version
+    - branch
+    - revision
+    - build_number
+    - status
+    - phases
+    properties:
+      name:
+        type: string
+        example: firefox-69.0b1-build1
+      product:
+        type: string
+        example: firefox
+        enum:
+        - firefox
+        - fennec
+        - devedition
+      version:
+        type: string
+        example: 56.0b12
+      branch:
+        type: string
+        example: projects/maple
+      project:
+        type: string
+        example: maple
+      revision:
+        type: string
+        example: abcd1234
+      build_number:
+        type: integer
+        example: 12
+      release_eta:
+        type: string
+        format: dateTime
+        example: 2006-08-14T02:34:56-06:00
+      status:
+        type: string
+        example: scheduled
+        enum:
+          - scheduled
+          - shipped
+      phases:
+        type: array
+        items:
+          $ref: '#/definitions/Phase'

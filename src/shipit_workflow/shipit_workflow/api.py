@@ -56,7 +56,7 @@ def add_release(body):
     r.generate_phases()
     session.add(r)
     session.commit()
-    return r.json
+    return r.json, 201
 
 
 def list_releases(full=False):
@@ -111,11 +111,11 @@ def schedule_phase(name, phase):
         },
         'maxRetries': 12
     })
-    result = queue.createTask(phase.task_id, phase.rendered)
+    queue.createTask(phase.task_id, phase.rendered)
     phase.submitted = True
     phase.completed_by = flask.g.userinfo['email']
     phase.completed = datetime.datetime.utcnow()
     if all([ph.submitted for ph in phase.release.phases]):
         phase.release.status = 'shipped'
     session.commit()
-    return result
+    return phase.json
