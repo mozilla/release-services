@@ -40,7 +40,6 @@ RUN groupadd app \
 
 #
 # Downloading nixpkgs
-# TODO: make nixpkgs.json into variables and use them here via `docker build --build-arg`
 RUN wget -nv "https://github.com/$NIXPKGS_OWNER/$NIXPKGS_REPO/archive/$NIXPKGS_REV.tar.gz" \
  && nixpkgs_sha256=$(sha256sum "$NIXPKGS_REV.tar.gz" | cut -d' ' -f1) \
  && if [ "$nixpkgs_sha256" != "$NIXPKGS_SHA256" ]; then \
@@ -59,13 +58,13 @@ RUN wget -nv "https://github.com/$NIXPKGS_OWNER/$NIXPKGS_REPO/archive/$NIXPKGS_R
 
 #
 # Install nix
-# TODO: make nix.json into variables and use them here via `docker build --build-arg`
 RUN mkdir -m 0755 /nix \
  && chown app:app /nix \
  && mkdir -p /etc/nix \
  && echo "substituters = https://cache.mozilla-releng.net https://cache-testing.mozilla-releng.net https://cache.nixos.org" >> /etc/nix/nix.conf \
  && echo "trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= $NIX_CACHE_PUBLIC_KEYS" >> /etc/nix/nix.conf \
- && echo "require-sigs = true" >> /etc/nix/nix.conf \
+ # TODO: this is currently set to false once both cache bucket have only signed binaries we can set this to true
+ && echo "require-sigs = false" >> /etc/nix/nix.conf \
  && echo "trusted-users = app" >> /etc/nix/nix.conf \
  && echo "allowed-users = app" >> /etc/nix/nix.conf \
  && echo "build-users-group =" >> /etc/nix/nix.conf
