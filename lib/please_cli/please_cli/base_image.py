@@ -56,6 +56,14 @@ log = cli_common.log.get_logger(__name__)
     )
 @click.option(
     '--nix-cache-public-key',
+    'nix_cache_public_keys',
+    multiple=True,
+    default=[],
+    help='Public key for nix cache',
+    )
+@click.option(
+    '--nix-cache-public-url',
+    'nix_cache_public_urls',
     multiple=True,
     default=[],
     help='Public key for nix cache',
@@ -65,13 +73,13 @@ def cmd(docker_username,
         docker,
         docker_repo,
         docker_tag,
-        nix_cache_public_key,
+        nix_cache_public_keys,
+        nix_cache_public_urls,
         ):
 
     docker_file = os.path.join(please_cli.config.ROOT_DIR, 'nix', 'docker', 'Dockerfile')
     nixpkgs_json_file = os.path.join(please_cli.config.ROOT_DIR, 'nix', 'nixpkgs.json')
     nix_json_file = os.path.join(please_cli.config.ROOT_DIR, 'nix', 'nix.json')
-    nix_cache_public_keys = ' '.join(nix_cache_public_key)
 
     temp_docker_file = os.path.join(please_cli.config.ROOT_DIR, 'Dockerfile')
 
@@ -107,13 +115,15 @@ def cmd(docker_username,
                     '--no-cache',
                     '--pull',
                     '--force-rm',
+                    '--squash',
                     '--build-arg', 'NIXPKGS_OWNER=' + nixpkgs_json['owner'],
                     '--build-arg', 'NIXPKGS_REPO=' + nixpkgs_json['repo'],
                     '--build-arg', 'NIXPKGS_REV=' + nixpkgs_json['rev'],
                     '--build-arg', 'NIXPKGS_SHA256=' + nixpkgs_json['sha256_tarball'],
                     '--build-arg', 'NIX_VERSION=' + nix_json['version'],
                     '--build-arg', 'NIX_SHA256=' + nix_json['sha256'],
-                    '--build-arg', 'NIX_CACHE_PUBLIC_KEYS=' + nix_cache_public_keys,
+                    '--build-arg', 'NIX_CACHE_PUBLIC_KEYS=' + ' '.join(nix_cache_public_keys),
+                    '--build-arg', 'NIX_CACHE_PUBLIC_URLS=' + ' '.join(nix_cache_public_urls),
                     '-t',
                     '{}:{}'.format(docker_repo, docker_tag),
                     please_cli.config.ROOT_DIR,
