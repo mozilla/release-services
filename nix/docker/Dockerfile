@@ -68,7 +68,7 @@ RUN mkdir -m 0755 /nix \
  && echo "require-sigs = true" >> /etc/nix/nix.conf \
  && echo "trusted-users = app" >> /etc/nix/nix.conf \
  && echo "allowed-users = app" >> /etc/nix/nix.conf \
- && echo "build-users-group =" > /etc/nix/nix.conf
+ && echo "build-users-group =" >> /etc/nix/nix.conf
 
 
 USER app
