@@ -149,7 +149,6 @@ update msg model =
                 ]
             )
 
-
         ShowReleaseDashboard analysisId ->
             -- Fetch analysis and set page
             let
