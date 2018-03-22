@@ -159,19 +159,6 @@ paths:
           schema:
             $ref: '#/definitions/Contributor'
 
-  /coverage/dir:
-    get:
-      operationId: "shipit_uplift.api.coverage_by_dir"
-      parameters:
-      - name: path
-        in: query
-        description: Path
-        required: false
-        type: string
-      responses:
-        200:
-          description: Code coverage information by directory
-
   /coverage/file:
     get:
       operationId: "shipit_uplift.api.coverage_for_file"

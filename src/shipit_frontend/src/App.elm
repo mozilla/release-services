@@ -1,6 +1,5 @@
 port module App exposing (..)
 
-import App.CodeCoverage as CodeCoverage
 import App.Home as Home
 import App.ReleaseDashboard as ReleaseDashboard
 import App.Utils exposing (eventLink)
@@ -20,7 +19,6 @@ import Utils
 type Page
     = Home
     | ReleaseDashboard
-    | CodeCoverage
     | Bugzilla
 
 
@@ -32,11 +30,9 @@ type
     | HomeMsg Home.Msg
     | HawkRequest Hawk.Msg
       -- App code
-    | ShowCodeCoverage (Maybe String)
     | ShowReleaseDashboard Int
     | ShowPage Page
     | ReleaseDashboardMsg ReleaseDashboard.Msg
-    | CodeCoverageMsg CodeCoverage.Msg
 
 
 type alias Role =
@@ -54,7 +50,6 @@ type alias Model =
     -- App code
     , current_page : Page
     , release_dashboard : ReleaseDashboard.Model
-    , code_coverage : CodeCoverage.Model
     }
 
 
@@ -80,15 +75,11 @@ init flags =
         ( dashboard, dashboardCmd ) =
             ReleaseDashboard.init flags.backend_uplift_url
 
-        ( code_coverage, ccCmd ) =
-            CodeCoverage.init flags.backend_uplift_url
-
         model =
             { bugzilla = bz
             , user = user
             , current_page = Home
             , release_dashboard = dashboard
-            , code_coverage = code_coverage
             }
     in
     ( model
@@ -97,7 +88,6 @@ init flags =
         [ -- Extensions integration
           Cmd.map BugzillaMsg bzCmd
         , Cmd.map UserMsg userCmd
-        , Cmd.map CodeCoverageMsg ccCmd
         , loadAllAnalysis model
         ]
     )
@@ -159,16 +149,6 @@ update msg model =
                 ]
             )
 
-        -- Routing
-        ShowCodeCoverage path ->
-            let
-                ( cc, ccCmd ) =
-                    CodeCoverage.setDirectory model.code_coverage path
-            in
-            ( { model | code_coverage = cc, current_page = CodeCoverage }
-            , Cmd.map CodeCoverageMsg ccCmd
-            )
-
         ShowReleaseDashboard analysisId ->
             -- Fetch analysis and set page
             let
@@ -194,15 +174,6 @@ update msg model =
             in
             ( { model | release_dashboard = dashboard }
             , Cmd.map ReleaseDashboardMsg cmd
-            )
-
-        CodeCoverageMsg ccMsg ->
-            let
-                ( code_coverage, cmd ) =
-                    CodeCoverage.update ccMsg model.code_coverage model.user
-            in
-            ( { model | code_coverage = code_coverage }
-            , Cmd.map CodeCoverageMsg cmd
             )
 
 
@@ -241,9 +212,6 @@ viewPage model =
         Bugzilla ->
             Html.map BugzillaMsg (Bugzilla.view model.bugzilla)
 
-        CodeCoverage ->
-            Html.map CodeCoverageMsg (CodeCoverage.view model.code_coverage)
-
         ReleaseDashboard ->
             Html.map ReleaseDashboardMsg (ReleaseDashboard.view model.release_dashboard model.user model.bugzilla)
 
@@ -262,14 +230,7 @@ viewNavBar model =
         [ class "navbar-brand" ]
         [ text "Uplift Dashboard" ]
     , div [ class "collapse navbar-collapse" ]
-        [ ul [ class "navbar-nav mr-auto " ]
-            (viewNavDashboard model
-                ++ [ li [ class "nav-item" ]
-                        [ eventLink (ShowCodeCoverage Nothing) [ class "nav-link" ] [ text "Code Coverage" ]
-                        ]
-                   ]
-            )
-        , ul [ class "navbar-nav" ] (viewUser model)
+        [ ul [ class "navbar-nav" ] (viewUser model)
         ]
     ]
 
@@ -450,16 +411,6 @@ location2messages location =
                     [ ShowPage Bugzilla
                     ]
 
-                "code-coverage" ->
-                    let
-                        path =
-                            if List.length rest > 0 then
-                                Just (String.join "/" rest)
-                            else
-                                Nothing
-                    in
-                    [ ShowCodeCoverage path ]
-
                 "release-dashboard" ->
                     let
                         messages =
@@ -514,20 +465,6 @@ delta2url previous current =
             Bugzilla ->
                 Maybe.map
                     (Builder.prependToPath [ "bugzilla" ])
-                    (Just builder)
-
-            CodeCoverage ->
-                let
-                    parts =
-                        case current.code_coverage.path of
-                            Just path ->
-                                String.split "/" path
-
-                            Nothing ->
-                                []
-                in
-                Maybe.map
-                    (Builder.prependToPath ([ "code-coverage" ] ++ parts))
                     (Just builder)
 
             _ ->

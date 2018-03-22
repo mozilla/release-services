@@ -21,8 +21,7 @@ from shipit_uplift.serializers import (
 )
 from shipit_uplift.config import SCOPES_USER, SCOPES_BOT, SCOPES_ADMIN
 from shipit_uplift import (
-    coverage_by_dir_impl, coverage_for_file_impl,
-    coverage_by_changeset_impl, coverage_summary_by_changeset_impl,
+    coverage_for_file_impl, coverage_by_changeset_impl, coverage_summary_by_changeset_impl,
     coverage
 )
 from rq import Queue
@@ -381,10 +380,6 @@ def create_patch_status(bugzilla_id):
     db.session.commit()
 
     return serialize_patch_status(ps)
-
-
-def coverage_by_dir(path=''):
-    return coverage_by_dir_impl.generate(path)
 
 
 def coverage_for_file(changeset, path):
