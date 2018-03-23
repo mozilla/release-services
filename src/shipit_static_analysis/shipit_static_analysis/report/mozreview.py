@@ -177,7 +177,8 @@ class MozReview(object):
         cache = {}
 
         def from_cache(comment, name, loader):
-            # Cache sub parts ids to avoid too many slow requests
+            # Cache Mozreview comments related resources (users & filediff)
+            # to avoid too many slow requests
             link = comment._payload['links'][name]['href']
             value = cache.get(link)
             if not value:
