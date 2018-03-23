@@ -6,8 +6,9 @@
 from __future__ import absolute_import
 
 import os
-import livereload
 import subprocess
+
+import livereload
 
 HERE = os.path.dirname(__file__)
 

@@ -7,5 +7,4 @@ from __future__ import absolute_import
 
 import shipit_taskcluster
 
-
 app = shipit_taskcluster.create_app()

@@ -8,7 +8,6 @@ from __future__ import absolute_import
 import time
 
 import sqlalchemy as sa
-
 from backend_common.db import UniqueMixin, db
 
 from .config import APP_NAME

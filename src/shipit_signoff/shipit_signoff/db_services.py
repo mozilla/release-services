@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from backend_common.db import db
-
-from shipit_signoff.models import SignoffStep, Signature
+from shipit_signoff.models import Signature, SignoffStep
 
 
 def get_step_by_uid(step_uid):

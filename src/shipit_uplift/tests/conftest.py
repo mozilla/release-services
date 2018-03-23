@@ -5,14 +5,15 @@
 
 from __future__ import absolute_import
 
-import backend_common.testing
 import glob
 import json
 import os
 import pickle
-import pytest
-import responses
 
+import pytest
+
+import backend_common.testing
+import responses
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 

@@ -5,12 +5,12 @@
 
 from __future__ import absolute_import
 
+import os
+
 import cli_common.log
 import flask
 import flask_migrate
 import flask_sqlalchemy
-import os
-
 
 logger = cli_common.log.get_logger(__name__)
 db = flask_sqlalchemy.SQLAlchemy()

@@ -4,9 +4,8 @@
 
 from __future__ import absolute_import
 
-import click
 import cli_common.log
-
+import click
 
 log = cli_common.log.get_logger(__name__)
 

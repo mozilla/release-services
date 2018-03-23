@@ -7,5 +7,4 @@ from __future__ import absolute_import
 
 import shipit_pipeline
 
-
 app = shipit_pipeline.create_app()

@@ -7,15 +7,13 @@ from __future__ import absolute_import
 import os
 import sys
 
+import cli_common.click
 import click
 import click_spinner
-
-import cli_common.click
 import please_cli.config
 import please_cli.create_certs
 import please_cli.shell
 import please_cli.utils
-
 
 CMD_HELP = '''
 Run PROJECT in development mode.

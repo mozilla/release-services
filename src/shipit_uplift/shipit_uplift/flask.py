@@ -7,5 +7,4 @@ from __future__ import absolute_import
 
 import shipit_uplift
 
-
 app = shipit_uplift.create_app()

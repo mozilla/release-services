@@ -6,9 +6,9 @@
 from __future__ import absolute_import
 
 import cli_common.log
-
-from shipit_pipeline.pipeline import get_runnable_steps, get_running_steps, refresh_pipeline_steps, start_steps,\
-    PipelineStep
+from shipit_pipeline.pipeline import (PipelineStep, get_runnable_steps,
+                                      get_running_steps,
+                                      refresh_pipeline_steps, start_steps)
 
 log = cli_common.log.get_logger(__name__)
 

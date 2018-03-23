@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from shipit_pulse_listener.listener import HookCodeCoverage
 from datetime import datetime, timedelta
+
+from shipit_pulse_listener.listener import HookCodeCoverage
 
 
 def test_is_coverage_task():

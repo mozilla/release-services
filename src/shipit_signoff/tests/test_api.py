@@ -6,10 +6,10 @@
 from __future__ import absolute_import
 
 import json
-import jsonschema
 from os import path
-import yaml
 
+import jsonschema
+import yaml
 
 HERE = path.abspath(path.dirname(__file__))
 SIGNOFF_DIR = path.join(HERE, '..', 'shipit_signoff')

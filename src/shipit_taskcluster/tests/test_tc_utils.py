@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-import pytest
-from unittest.mock import patch
-import os
 import json
+import os
+from unittest.mock import patch
+
+import pytest
 
 from shipit_taskcluster.taskcluster_utils import get_queue_group_state
 

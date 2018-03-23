@@ -7,5 +7,4 @@ from __future__ import absolute_import
 
 import shipit_signoff
 
-
 app = shipit_signoff.create_app()

@@ -5,10 +5,10 @@
 from __future__ import absolute_import
 
 import os
-import structlog
-import logbook
-import structlog.exceptions
 
+import logbook
+import structlog
+import structlog.exceptions
 
 CHANNELS = [
     'master',

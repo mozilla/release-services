@@ -9,7 +9,6 @@ import datetime
 import enum
 
 import sqlalchemy as sa
-
 # TODO install backend to venv
 from backend_common.db import db
 

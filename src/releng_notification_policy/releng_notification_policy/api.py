@@ -5,18 +5,21 @@
 
 from __future__ import absolute_import
 
-from datetime import datetime, timedelta
-from flask import current_app
-from typing import Iterator, List, Tuple
-from werkzeug.exceptions import Conflict, NotFound
-from .models import Message, Policy
-from .channels import send_notifications
-from requests import get
-from json import JSONDecodeError
-from cli_common import log
-from backend_common.auth import auth
 import os
+from datetime import datetime, timedelta
+from json import JSONDecodeError
+from typing import Iterator, List, Tuple
+
 import mohawk
+from requests import get
+
+from backend_common.auth import auth
+from cli_common import log
+from flask import current_app
+from werkzeug.exceptions import Conflict, NotFound
+
+from .channels import send_notifications
+from .models import Message, Policy
 
 logger = log.get_logger(__name__)
 

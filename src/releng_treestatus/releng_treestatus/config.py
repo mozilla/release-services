@@ -5,6 +5,5 @@
 
 from __future__ import absolute_import
 
-
 PROJECT_NAME = 'releng-treestatus'
 APP_NAME = 'releng_treestatus'

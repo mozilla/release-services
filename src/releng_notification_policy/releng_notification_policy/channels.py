@@ -5,11 +5,12 @@
 
 from __future__ import absolute_import
 
-from .models import Message
-from flask import current_app
 from taskcluster import TaskclusterFailure
-from cli_common import log
 
+from cli_common import log
+from flask import current_app
+
+from .models import Message
 
 logger = log.get_logger(__name__)
 

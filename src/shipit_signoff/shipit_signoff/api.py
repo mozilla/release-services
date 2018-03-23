@@ -6,25 +6,25 @@
 from __future__ import absolute_import
 
 import pickle
-
-from flask import abort, request, g, redirect
 import urllib.parse
-from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.exc import IntegrityError
-from cli_common import log
+
 from backend_common.auth0 import auth0, mozilla_accept_token
 from backend_common.db import db
-
-from shipit_signoff.balrog import get_current_user_roles, make_signoffs_uri, get_balrog_signoff_state
-from shipit_signoff.db_services import get_step_by_uid, insert_new_signature, delete_existing_signature
-from shipit_signoff.models import SignoffStep, SigningStatus
-from shipit_signoff.policies import (
-    check_whether_policy_can_be_signed,
-    check_whether_policy_can_be_unsigned,
-    is_sign_off_policy_met,
-    UnauthorizedUserError, NoSignoffLeftError, NoSignaturePresentError,
-    NoChangingCompletedPolicyError)
-
+from cli_common import log
+from flask import abort, g, redirect, request
+from shipit_signoff.balrog import (get_balrog_signoff_state,
+                                   get_current_user_roles, make_signoffs_uri)
+from shipit_signoff.db_services import (delete_existing_signature,
+                                        get_step_by_uid, insert_new_signature)
+from shipit_signoff.models import SigningStatus, SignoffStep
+from shipit_signoff.policies import (NoChangingCompletedPolicyError,
+                                     NoSignaturePresentError,
+                                     NoSignoffLeftError, UnauthorizedUserError,
+                                     check_whether_policy_can_be_signed,
+                                     check_whether_policy_can_be_unsigned,
+                                     is_sign_off_policy_met)
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
 
 logger = log.get_logger(__name__)
 

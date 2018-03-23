@@ -5,8 +5,9 @@
 
 from __future__ import absolute_import
 
-import pytest
 import os
+
+import pytest
 
 import backend_common.auth0
 

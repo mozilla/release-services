@@ -8,6 +8,5 @@ from __future__ import absolute_import
 import os.path
 import tempfile
 
-
 PROJECT_NAME = 'shipit-bot-uplift'
 DEFAULT_CACHE = os.path.join(tempfile.gettempdir(), 'shipit_bot_cache')

@@ -5,16 +5,18 @@
 
 from __future__ import absolute_import
 
+import functools
+import time
+
+import taskcluster
+import taskcluster.utils
+
 import backend_common.db
 import cli_common.log
 import flask
 import flask_login
-import functools
 import itsdangerous
 import sqlalchemy as sa
-import taskcluster
-import taskcluster.utils
-import time
 
 logger = cli_common.log.get_logger(__name__)
 

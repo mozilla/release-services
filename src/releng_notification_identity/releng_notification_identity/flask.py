@@ -7,5 +7,4 @@ from __future__ import absolute_import
 
 import releng_notification_identity
 
-
 app = releng_notification_identity.create_app()

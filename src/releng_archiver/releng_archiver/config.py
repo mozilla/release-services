@@ -5,6 +5,5 @@
 
 from __future__ import absolute_import
 
-
 PROJECT_NAME = 'releng-archiver'
 APP_NAME = 'releng_archiver'

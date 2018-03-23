@@ -4,14 +4,12 @@
 
 from __future__ import absolute_import
 
+import cli_common.click
 import click
 import click_spinner
-
-import cli_common.click
 import please_cli.config
-import please_cli.utils
 import please_cli.shell
-
+import please_cli.utils
 
 CMD_HELP = '''
 Run tests, linters, etc.. for an PROJECT.

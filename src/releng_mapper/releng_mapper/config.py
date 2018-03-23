@@ -5,6 +5,5 @@
 
 from __future__ import absolute_import
 
-
 PROJECT_NAME = 'releng-mapper'
 APP_NAME = 'releng_mapper'

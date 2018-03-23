@@ -4,7 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from cli_common.taskcluster import get_secrets
-
 from shipit_code_coverage import config
 
 

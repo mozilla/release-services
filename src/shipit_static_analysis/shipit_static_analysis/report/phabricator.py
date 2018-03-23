@@ -3,12 +3,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from urllib.parse import urlparse
+
+import requests
+
 from cli_common import log
 from shipit_static_analysis import Issue, stats
 from shipit_static_analysis.report.base import Reporter
 from shipit_static_analysis.revisions import PhabricatorRevision
-from urllib.parse import urlparse
-import requests
 
 logger = log.get_logger(__name__)
 

@@ -10,8 +10,9 @@ import json
 import logging
 import threading
 import time
-import cli_common.log
+
 import boto
+import cli_common.log
 from boto.sqs import message as sqs_message
 
 logger = cli_common.log.get_logger()

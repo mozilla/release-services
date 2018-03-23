@@ -4,19 +4,23 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+
 import calendar
-import dateutil.parser
-import time
 import re
-from backend_common.auth import auth
+import time
 from typing import Tuple
+
+import dateutil.parser
+from backend_common.auth import auth
 from cli_common import log
-from flask import current_app, request, Response
-from .models import Project, Hash
-from werkzeug.exceptions import BadRequest, Conflict, InternalServerError, NotFound, UnsupportedMediaType
+from flask import Response, current_app, request
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError, ProgrammingError
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
+from werkzeug.exceptions import (BadRequest, Conflict, InternalServerError,
+                                 NotFound, UnsupportedMediaType)
+
+from .models import Hash, Project
 
 logger = log.get_logger(__name__)
 

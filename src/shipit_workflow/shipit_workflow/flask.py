@@ -7,5 +7,4 @@ from __future__ import absolute_import
 
 import shipit_workflow
 
-
 app = shipit_workflow.create_app()

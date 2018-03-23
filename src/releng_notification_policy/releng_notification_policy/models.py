@@ -4,11 +4,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
+
+from datetime import timedelta
+
 from backend_common.db import db
 from backend_common.notifications import URGENCY_LEVELS
+from sqlalchemy import (Column, DateTime, Enum, ForeignKey, Integer, Interval,
+                        String, Text)
+
 from .config import APP_NAME
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, Interval, String, Text
-from datetime import timedelta
 
 
 class Message(db.Model):

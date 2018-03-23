@@ -8,12 +8,12 @@ import os
 import subprocess
 import tempfile
 
+import awscli.clidriver
+import cli_common.click
+import cli_common.command
+import cli_common.taskcluster
 import click
 import click_spinner
-
-import cli_common.taskcluster
-import cli_common.command
-import cli_common.click
 import please_cli.config
 import please_cli.utils
 

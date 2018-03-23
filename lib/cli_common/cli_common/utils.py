@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import time
 import concurrent.futures
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 

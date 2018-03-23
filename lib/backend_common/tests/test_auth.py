@@ -5,9 +5,11 @@
 
 from __future__ import absolute_import
 
-import flask
 import json
+
 import pytest
+
+import flask
 
 
 def test_anonymous():

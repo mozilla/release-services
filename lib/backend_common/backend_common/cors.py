@@ -8,7 +8,6 @@ from __future__ import absolute_import
 import cli_common.log
 import flask_cors
 
-
 logger = cli_common.log.get_logger(__name__)
 cors = flask_cors.CORS()
 

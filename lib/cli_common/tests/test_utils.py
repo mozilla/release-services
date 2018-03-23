@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from cli_common import utils
 import time
+
 import pytest
+
+from cli_common import utils
 
 
 def do_raise():

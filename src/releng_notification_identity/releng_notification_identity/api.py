@@ -4,13 +4,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
-from flask import current_app
-from typing import List
-from werkzeug.exceptions import BadRequest, Conflict, NotFound
-from .models import Identity, Preference
-from sqlalchemy.exc import IntegrityError
-from backend_common.auth import auth
 
+from typing import List
+
+from backend_common.auth import auth
+from flask import current_app
+from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import BadRequest, Conflict, NotFound
+
+from .models import Identity, Preference
 
 AUTHENTICATION_SCOPE_PREFIX = 'project:releng:services/releng_notification_identity/permission/'
 

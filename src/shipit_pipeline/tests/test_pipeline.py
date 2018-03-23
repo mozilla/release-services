@@ -5,10 +5,13 @@
 
 from __future__ import absolute_import
 
+from unittest.mock import MagicMock
+
 import pytest
 import requests
-from unittest.mock import MagicMock
-from shipit_pipeline.pipeline import PipelineStep, get_runnable_steps, refresh_pipeline_steps
+
+from shipit_pipeline.pipeline import (PipelineStep, get_runnable_steps,
+                                      refresh_pipeline_steps)
 
 
 @pytest.fixture

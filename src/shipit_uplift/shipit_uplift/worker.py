@@ -6,8 +6,7 @@
 from __future__ import absolute_import
 
 import redis
-from rq import SimpleWorker, Queue, Connection
-
+from rq import Connection, Queue, SimpleWorker
 from shipit_uplift import secrets
 
 conn = redis.from_url(secrets.REDIS_URL)

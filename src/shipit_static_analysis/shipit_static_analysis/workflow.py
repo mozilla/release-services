@@ -5,18 +5,18 @@
 
 from __future__ import absolute_import
 
-import tempfile
-import hglib
 import os
+import tempfile
 
-from cli_common.log import get_logger
+import hglib
+
 from cli_common.command import run_check
-from shipit_static_analysis.clang.tidy import ClangTidy
+from cli_common.log import get_logger
+from shipit_static_analysis import CLANG_FORMAT, CLANG_TIDY, MOZLINT, stats
 from shipit_static_analysis.clang.format import ClangFormat
-from shipit_static_analysis.config import settings, REPO_CENTRAL, ARTIFACT_URL
+from shipit_static_analysis.clang.tidy import ClangTidy
+from shipit_static_analysis.config import ARTIFACT_URL, REPO_CENTRAL, settings
 from shipit_static_analysis.lint import MozLint
-from shipit_static_analysis import CLANG_TIDY, CLANG_FORMAT, MOZLINT
-from shipit_static_analysis import stats
 
 logger = get_logger(__name__)
 

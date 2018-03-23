@@ -4,16 +4,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from distutils.spawn import find_executable
-import subprocess
-import responses
 import itertools
-import httpretty
-import os.path
-import pytest
-import hglib
-import time
 import json
+import os.path
 import re
+import subprocess
+import time
+
+import hglib
+import pytest
+
+import httpretty
+import responses
 
 MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
 

@@ -5,6 +5,5 @@
 
 from __future__ import absolute_import
 
-
 PROJECT_NAME = 'shipit-workflow'
 APP_NAME = 'shipit_workflow'

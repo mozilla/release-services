@@ -7,20 +7,16 @@ from __future__ import absolute_import
 
 import datetime
 import json
-import pytz
-import sqlalchemy as sa
-
-from flask import current_app
-from flask_login import current_user
-from werkzeug.exceptions import NotFound, BadRequest
 
 import cli_common.log
-from backend_common.cache import cache
+import pytz
+import sqlalchemy as sa
 from backend_common.auth import auth
-from releng_treestatus.models import (
-    Tree, StatusChange, StatusChangeTree, Log
-)
-
+from backend_common.cache import cache
+from flask import current_app
+from flask_login import current_user
+from releng_treestatus.models import Log, StatusChange, StatusChangeTree, Tree
+from werkzeug.exceptions import BadRequest, NotFound
 
 UNSET = object()
 TREE_SUMMARY_LOG_LIMIT = 5

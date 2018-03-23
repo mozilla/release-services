@@ -3,14 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from shipit_uplift.models import (
-    BugResult, BugContributor, BugAnalysis, Contributor, PatchStatus
-)
-from shipit_uplift.config import SCOPES_ADMIN
-from flask_login import current_user
-from cli_common import log
 import html
 
+from cli_common import log
+from flask_login import current_user
+from shipit_uplift.config import SCOPES_ADMIN
+from shipit_uplift.models import (BugAnalysis, BugContributor, BugResult,
+                                  Contributor, PatchStatus)
 
 logger = log.get_logger(__name__)
 

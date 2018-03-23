@@ -5,9 +5,10 @@
 
 from __future__ import absolute_import
 
-from copy import copy
-import requests
 import time
+from copy import copy
+
+import requests
 
 
 class PipelineStep:

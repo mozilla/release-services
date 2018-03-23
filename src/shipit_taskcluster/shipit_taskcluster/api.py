@@ -7,14 +7,13 @@ from __future__ import absolute_import
 
 import datetime
 
-from flask import abort
-from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.exc import IntegrityError
-
-from backend_common.db import db
 import cli_common.log
+from backend_common.db import db
+from flask import abort
 from shipit_taskcluster.models import TaskclusterStatus, TaskclusterStep
 from shipit_taskcluster.taskcluster_utils import get_taskcluster_tasks_state
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
 
 log = cli_common.log.get_logger(__name__)
 

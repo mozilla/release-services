@@ -5,8 +5,8 @@
 
 from __future__ import absolute_import
 
-import urllib.parse
 import json
+import urllib.parse
 
 
 def assert_query_strings(x, y):

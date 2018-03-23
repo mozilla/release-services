@@ -7,9 +7,10 @@ from __future__ import absolute_import
 
 import base64
 import os
+
+import backend_common.auth0
 import cli_common.taskcluster
 import shipit_workflow.config
-import backend_common.auth0
 
 DEBUG = bool(os.environ.get('DEBUG', False))
 

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import responses
-
 from shipit_code_coverage.github import GitHubUtils
 
 

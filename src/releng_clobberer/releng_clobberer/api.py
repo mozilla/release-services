@@ -10,12 +10,12 @@ import re
 import time
 
 import taskcluster
-from sqlalchemy import and_, desc, func, not_, or_
 
 import cli_common.log
 from backend_common.auth import auth
 from flask import current_app, request
 from flask_login import current_user
+from sqlalchemy import and_, desc, func, not_, or_
 
 from .models import Build, ClobberTime
 

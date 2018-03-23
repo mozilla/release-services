@@ -5,13 +5,17 @@
 
 from __future__ import absolute_import
 
-'''Configure a mock application to run queries against
-'''
+import os.path
+
+import pytest
 
 import flask
 import flask_login
-import os.path
-import pytest
+
+
+'''Configure a mock application to run queries against
+'''
+
 
 
 @pytest.fixture(scope='session')

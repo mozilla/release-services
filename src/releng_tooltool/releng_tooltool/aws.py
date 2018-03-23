@@ -5,16 +5,15 @@
 
 from __future__ import absolute_import
 
-import boto
-import boto.s3
-import boto.sqs
 import importlib
 import json
 import threading
 import time
 
+import boto
+import boto.s3
+import boto.sqs
 from cli_common import log
-
 
 logger = log.get_logger(__name__)
 

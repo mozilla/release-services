@@ -7,5 +7,4 @@ from __future__ import absolute_import
 
 import releng_tooltool
 
-
 app = releng_tooltool.create_app()

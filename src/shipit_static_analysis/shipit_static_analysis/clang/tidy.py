@@ -3,15 +3,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import subprocess
 import fnmatch
 import os
 import re
+import subprocess
 
 from cli_common.log import get_logger
+from shipit_static_analysis import Issue, stats
 from shipit_static_analysis.config import CONFIG_URL, settings
 from shipit_static_analysis.revisions import Revision
-from shipit_static_analysis import Issue, stats
 
 logger = get_logger(__name__)
 

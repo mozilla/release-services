@@ -4,14 +4,14 @@
 
 from __future__ import absolute_import
 
-import click
 import copy
 import os
 import re
+
 import taskcluster
 
+import click
 from cli_common.log import get_logger
-
 
 logger = get_logger(__name__)
 

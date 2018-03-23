@@ -4,14 +4,13 @@
 
 from __future__ import absolute_import
 
-import click
 import os
 import subprocess
 
 import cli_common.click
 import cli_common.log
+import click
 import please_cli.config
-
 
 log = cli_common.log.get_logger(__name__)
 

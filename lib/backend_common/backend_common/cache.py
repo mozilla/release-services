@@ -7,7 +7,6 @@ from __future__ import absolute_import
 
 import flask_cache
 
-
 cache = flask_cache.Cache()
 
 

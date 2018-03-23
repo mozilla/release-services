@@ -4,9 +4,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import itertools
-from shipit_static_analysis.lint import MozLintIssue
-from shipit_static_analysis.clang.tidy import ClangTidyIssue
+
 from shipit_static_analysis.clang.format import ClangFormatIssue
+from shipit_static_analysis.clang.tidy import ClangTidyIssue
+from shipit_static_analysis.lint import MozLintIssue
 
 COMMENT_PARTS = {
     ClangTidyIssue: {

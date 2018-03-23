@@ -9,14 +9,12 @@ import os
 import shutil
 import subprocess
 
+import cli_common.command
+import cli_common.log
 import click
 import click_spinner
-
-import cli_common.log
-import cli_common.command
 import please_cli.config
 import please_cli.utils
-
 
 log = cli_common.log.get_logger(__name__)
 

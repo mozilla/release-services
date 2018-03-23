@@ -8,7 +8,6 @@ from __future__ import absolute_import
 import flask_talisman
 import flask_talisman.talisman
 
-
 # TODO: we need to remove unsafe-inline
 DEFAULT_CSP_POLICY = {
     'default-src': '\'none\'',

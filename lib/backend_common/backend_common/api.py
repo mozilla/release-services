@@ -5,12 +5,12 @@
 
 from __future__ import absolute_import
 
+import pathlib
+
 import cli_common.log
 import connexion
 import flask
-import pathlib
 import werkzeug
-
 
 logger = cli_common.log.get_logger(__name__)
 

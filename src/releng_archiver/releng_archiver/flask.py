@@ -7,5 +7,4 @@ from __future__ import absolute_import
 
 import releng_archiver
 
-
 app = releng_archiver.create_app()

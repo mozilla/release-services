@@ -2,6 +2,7 @@
 from collections import Counter
 
 import taskcluster
+
 import cli_common.log
 
 log = cli_common.log.get_logger(__name__)

@@ -5,16 +5,16 @@
 
 from __future__ import absolute_import
 
-from shipit_static_analysis.workflow import Workflow
-from shipit_static_analysis.revisions import PhabricatorRevision, MozReviewRevision
+import click
+from cli_common.click import taskcluster_options
+from cli_common.log import get_logger, init_logger
+from cli_common.taskcluster import get_secrets
+from shipit_static_analysis import config, stats
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.report import get_reporters
-from shipit_static_analysis import config, stats
-from cli_common.click import taskcluster_options
-from cli_common.log import init_logger
-from cli_common.taskcluster import get_secrets
-from cli_common.log import get_logger
-import click
+from shipit_static_analysis.revisions import (MozReviewRevision,
+                                              PhabricatorRevision)
+from shipit_static_analysis.workflow import Workflow
 
 logger = get_logger(__name__)
 

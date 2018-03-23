@@ -5,14 +5,15 @@
 
 from __future__ import absolute_import
 
-from contextlib import contextmanager
 import json
 import os
-import responses
 import tempfile
 import zipfile
+from contextlib import contextmanager
+
 import pytest
 
+import responses
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 

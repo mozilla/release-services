@@ -1,6 +1,7 @@
-import aioamqp
-import sys
 import asyncio
+import sys
+
+import aioamqp
 from cli_common.log import get_logger
 
 logger = get_logger(__name__)

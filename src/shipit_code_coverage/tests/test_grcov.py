@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-from shipit_code_coverage import grcov
 import json
 import os
-import click
+
 import pytest
+
+import click
+from shipit_code_coverage import grcov
 
 
 def test_report_invalid_output_format(grcov_artifact):

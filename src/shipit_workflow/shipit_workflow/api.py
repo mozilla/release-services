@@ -4,15 +4,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import
 
-import os
-import flask
-import taskcluster
-import functools
-from shipit_workflow.models import Release, Phase
-from cli_common.log import get_logger
-from backend_common.auth0 import mozilla_accept_token, has_scopes, AuthError, requires_auth
-from sqlalchemy.orm.exc import NoResultFound
 import datetime
+import functools
+import os
+
+import taskcluster
+import flask
+from backend_common.auth0 import mozilla_accept_token
+from cli_common.log import get_logger
+from shipit_workflow.models import Phase, Release
+from sqlalchemy.orm.exc import NoResultFound
 
 log = get_logger(__name__)
 

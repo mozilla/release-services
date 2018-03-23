@@ -5,6 +5,5 @@
 
 from __future__ import absolute_import
 
-
 PROJECT_NAME = 'releng-notification-identity'
 APP_NAME = 'releng_notification_identity'

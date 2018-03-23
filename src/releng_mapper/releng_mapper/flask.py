@@ -7,5 +7,4 @@ from __future__ import absolute_import
 
 import releng_mapper
 
-
 app = releng_mapper.create_app()

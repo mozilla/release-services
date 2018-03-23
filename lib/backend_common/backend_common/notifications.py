@@ -12,9 +12,9 @@ import string
 from datetime import datetime
 from typing import List
 
+import mohawk
 from requests import put
 
-import mohawk
 from flask import current_app
 
 '''

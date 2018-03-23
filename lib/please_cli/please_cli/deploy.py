@@ -10,18 +10,17 @@ import shutil
 import tempfile
 
 import awscli.clidriver
+import cli_common.click
+import cli_common.log
+import cli_common.taskcluster
 import click
 import click_spinner
+import please_cli.build
+import please_cli.config
+import please_cli.utils
 import push.image
 import push.registry
 import taskcluster.exceptions
-
-import cli_common.log
-import cli_common.taskcluster
-import cli_common.click
-import please_cli.config
-import please_cli.build
-import please_cli.utils
 
 
 log = cli_common.log.get_logger(__name__)

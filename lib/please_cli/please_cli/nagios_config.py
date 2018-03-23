@@ -5,9 +5,7 @@
 from __future__ import absolute_import
 
 import click
-
 import please_cli.config
-
 
 NAGIOS_TEMPLATE = ''''%s' => {
     parents        => 'fw1.private.releng.scl3.mozilla.net',

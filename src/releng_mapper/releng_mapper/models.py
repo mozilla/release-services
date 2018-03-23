@@ -4,11 +4,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
-from backend_common.db import db
-from .config import APP_NAME
-from sqlalchemy import orm, Column, ForeignKey, Index, Integer, String
-from cli_common import log
 
+from backend_common.db import db
+from cli_common import log
+from sqlalchemy import Column, ForeignKey, Index, Integer, String, orm
+
+from .config import APP_NAME
 
 logger = log.get_logger(__name__)
 

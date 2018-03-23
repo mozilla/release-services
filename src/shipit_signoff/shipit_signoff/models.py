@@ -6,11 +6,10 @@
 from __future__ import absolute_import
 
 import datetime
-import pickle
 import enum
+import pickle
 
 import sqlalchemy as sa
-
 from backend_common.db import db
 
 
