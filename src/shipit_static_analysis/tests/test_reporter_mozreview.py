@@ -3,9 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import httpretty
 import pytest
-import re
 
 
 def test_conf(mock_mozreview):
@@ -35,13 +33,6 @@ def test_review_publication(mock_mozreview, mock_issues, mock_phabricator):
     from shipit_static_analysis.report.mozreview import MozReviewReporter
     from shipit_static_analysis.revisions import MozReviewRevision
 
-    # Add mock files listing
-    httpretty.register_uri(
-        httpretty.POST,
-        re.compile('http://mozreview.test/api/review-requests/(\d+)/diffs/(\w+)/files/'),
-        body='{}',
-    )
-
     # Publish issues on mozreview
     conf = {
         'username': 'devbot',
@@ -52,6 +43,65 @@ def test_review_publication(mock_mozreview, mock_issues, mock_phabricator):
     mrev = MozReviewRevision('abcdef:12345:1')
     out = r.publish(mock_issues, mrev, diff_url=None)
     assert out is None  # no publication (no clang-tidy)
+
+
+def test_review_api(mock_mozreview):
+    '''
+    Test low level mozreview api
+    '''
+    from shipit_static_analysis.report.mozreview import MozReviewReporter, MozReview
+
+    # Publish issues on mozreview
+    conf = {
+        'username': 'devbot',
+        'api_key': 'deadbeef123',
+        'url': 'http://mozreview.test',
+    }
+    reporter = MozReviewReporter(conf, 'test_tc', 'token_tc')
+    review = MozReview(reporter.api, 12345, 2)
+    assert review.user['id'] == 42
+
+    # Test we only have our own comments (no anotherUser)
+    assert len(review.existing_comments) == 2
+    assert review.existing_comments == [
+        {
+            'filediff_id': 31,
+            'first_line': 12,
+            'issue_opened': False,
+            'num_lines': 3,
+            'text': 'Error: Dummy test error [linter]',
+        },
+        {
+            'filediff_id': 31,
+            'first_line': 29,
+            'issue_opened': False,
+            'num_lines': 3,
+            'text': 'Error: another complex test error [linter]',
+        }
+    ]
+
+    # No comments at first
+    assert len(review.comments) == 0
+
+    # Add a new comment
+    review.comment(
+        'test.cpp',
+        2,
+        1,
+        'Error: a new issue detected [linter]',
+    )
+    assert len(review.comments) == 1
+
+    # Add an existing comment
+    # It should be skipped
+    review.comment(
+        'test.cpp',
+        12,
+        3,
+        'Error: Dummy test error [linter]',
+        issue_opened=False,
+    )
+    assert len(review.comments) == 1
 
 
 def test_comment(mock_mozreview):

@@ -1,1 +1,180 @@
-{"stat": "ok", "uri_templates": {"files": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/diffs/{diff_revision}/files/", "diff_comments": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/reviews/{review_id}/replies/{reply_id}/diff-comments/", "diff_validation": "https://reviewboard.mozilla.org/api/validation/diffs/", "replies": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/reviews/{review_id}/replies/", "watched_review_groups": "https://reviewboard.mozilla.org/api/users/{username}/watched/review-groups/", "session": "https://reviewboard.mozilla.org/api/session/", "file_attachments": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/file-attachments/", "file": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/diffs/{diff_revision}/files/{filediff_id}/", "api_token": "https://reviewboard.mozilla.org/api/users/{username}/api-tokens/{api_token_id}/", "watched": "https://reviewboard.mozilla.org/api/users/{username}/watched/", "diff": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/diffs/{diff_revision}/", "patched_file": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/diffs/{diff_revision}/files/{filediff_id}/patched-file/", "users": "https://reviewboard.mozilla.org/api/users/", "api_tokens": "https://reviewboard.mozilla.org/api/users/{username}/api-tokens/", "group": "https://reviewboard.mozilla.org/api/groups/{group_name}/", "screenshot": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/screenshots/{screenshot_id}/", "screenshots": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/screenshots/", "muted_review_request": "https://reviewboard.mozilla.org/api/users/{username}/muted-review-requests/{review_request_id}/", "watched_review_group": "https://reviewboard.mozilla.org/api/users/{username}/watched/review-groups/{watched_obj_id}/", "archived_review_requests": "https://reviewboard.mozilla.org/api/users/{username}/archived-review-requests/", "last_update": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/last-update/", "diff_comment": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/reviews/{review_id}/replies/{reply_id}/diff-comments/{comment_id}/", "draft": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/draft/", "remote_repositories": "https://reviewboard.mozilla.org/api/hosting-service-accounts/{account_id}/remote-repositories/", "file_attachment": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/file-attachments/{file_attachment_id}/", "diff_file_attachments": "https://reviewboard.mozilla.org/api/repositories/{repository_id}/diff-file-attachments/", "reply": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/reviews/{review_id}/replies/{reply_id}/", "review_request": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/", "diff_context": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/diff-context/", "archived_review_request": "https://reviewboard.mozilla.org/api/users/{username}/archived-review-requests/{review_request_id}/", "remote_repository": "https://reviewboard.mozilla.org/api/hosting-service-accounts/{account_id}/remote-repositories/{repository_id}/", "hosting_services": "https://reviewboard.mozilla.org/api/hosting-services/", "repository": "https://reviewboard.mozilla.org/api/repositories/{repository_id}/", "file_attachment_comments": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/file-attachments/{file_attachment_id}/file-attachment-comments/", "commits": "https://reviewboard.mozilla.org/api/repositories/{repository_id}/commits/", "review_draft": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/reviews/draft/", "webhook": "https://reviewboard.mozilla.org/api/webhooks/{webhook_id}/", "change": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/changes/{change_id}/", "muted_review_requests": "https://reviewboard.mozilla.org/api/users/{username}/muted-review-requests/", "watched_review_request": "https://reviewboard.mozilla.org/api/users/{username}/watched/review-requests/{watched_obj_id}/", "user": "https://reviewboard.mozilla.org/api/users/{username}/", "groups": "https://reviewboard.mozilla.org/api/groups/", "review": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/reviews/{review_id}/", "webhooks": "https://reviewboard.mozilla.org/api/webhooks/", "watched_review_requests": "https://reviewboard.mozilla.org/api/users/{username}/watched/review-requests/", "diff_file_attachment": "https://reviewboard.mozilla.org/api/repositories/{repository_id}/diff-file-attachments/{file_attachment_id}/", "original_file": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/diffs/{diff_revision}/files/{filediff_id}/original-file/", "info": "https://reviewboard.mozilla.org/api/info/", "diffs": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/diffs/", "search": "https://reviewboard.mozilla.org/api/search/{username}/", "default_reviewer": "https://reviewboard.mozilla.org/api/default-reviewers/{default_reviewer_id}/", "branches": "https://reviewboard.mozilla.org/api/repositories/{repository_id}/branches/", "screenshot_comment": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/reviews/{review_id}/screenshot-comments/{comment_id}/", "extension": "https://reviewboard.mozilla.org/api/extensions/{extension_name}/", "changes": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/changes/", "review_requests": "https://reviewboard.mozilla.org/api/review-requests/", "file_attachment_comment": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/reviews/{review_id}/file-attachment-comments/{comment_id}/", "repositories": "https://reviewboard.mozilla.org/api/repositories/", "hosting_service": "https://reviewboard.mozilla.org/api/hosting-services/{hosting_service_id}/", "validation": "https://reviewboard.mozilla.org/api/validation/", "reviews": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/reviews/", "reply_draft": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/reviews/{review_id}/replies/draft/", "extensions": "https://reviewboard.mozilla.org/api/extensions/", "screenshot_comments": "https://reviewboard.mozilla.org/api/review-requests/{review_request_id}/screenshots/{screenshot_id}/screenshot-comments/", "default_reviewers": "https://reviewboard.mozilla.org/api/default-reviewers/", "root": "https://reviewboard.mozilla.org/api/", "hosting_service_account": "https://reviewboard.mozilla.org/api/hosting-service-accounts/{account_id}/", "hosting_service_accounts": "https://reviewboard.mozilla.org/api/hosting-service-accounts/"}, "links": {"info": {"href": "https://reviewboard.mozilla.org/api/info/", "method": "GET"}, "search": {"href": "https://reviewboard.mozilla.org/api/search/", "method": "GET"}, "validation": {"href": "https://reviewboard.mozilla.org/api/validation/", "method": "GET"}, "hosting_services": {"href": "https://reviewboard.mozilla.org/api/hosting-services/", "method": "GET"}, "self": {"href": "https://reviewboard.mozilla.org/api/", "method": "GET"}, "repositories": {"href": "https://reviewboard.mozilla.org/api/repositories/", "method": "GET"}, "session": {"href": "https://reviewboard.mozilla.org/api/session/", "method": "GET"}, "extensions": {"href": "https://reviewboard.mozilla.org/api/extensions/", "method": "GET"}, "hosting_service_accounts": {"href": "https://reviewboard.mozilla.org/api/hosting-service-accounts/", "method": "GET"}, "groups": {"href": "https://reviewboard.mozilla.org/api/groups/", "method": "GET"}, "webhooks": {"href": "https://reviewboard.mozilla.org/api/webhooks/", "method": "GET"}, "default_reviewers": {"href": "https://reviewboard.mozilla.org/api/default-reviewers/", "method": "GET"}, "review_requests": {"href": "https://reviewboard.mozilla.org/api/review-requests/", "method": "GET"}, "users": {"href": "https://reviewboard.mozilla.org/api/users/", "method": "GET"}}, "product": {"is_release": true, "package_version": "2.5.4", "version": "2.5.4", "name": "Review Board"}, "capabilities": {"scmtools": {"svn": {"empty_files": true}, "mercurial": {"empty_files": true}, "git": {"empty_files": true}, "perforce": {"moved_files": true, "empty_files": true}}, "diffs": {"moved_files": true, "validation": {"base_commit_ids": true}, "base_commit_ids": true}, "review_requests": {"commit_ids": true, "trivial_publish": true}, "text": {"per_field_text_types": true, "markdown": true, "can_include_raw_values": true}}, "site": {"url": "https://reviewboard.mozilla.org/", "administrators": [{"name": "admin", "email": "klibby@mozilla.com"}], "time_zone": "UTC"}}
+{
+    "capabilities": {
+        "diffs": {
+            "base_commit_ids": true,
+            "moved_files": true,
+            "validation": {
+                "base_commit_ids": true
+            }
+        },
+        "review_requests": {
+            "commit_ids": true,
+            "trivial_publish": true
+        },
+        "scmtools": {
+            "git": {
+                "empty_files": true
+            },
+            "mercurial": {
+                "empty_files": true
+            },
+            "perforce": {
+                "empty_files": true,
+                "moved_files": true
+            },
+            "svn": {
+                "empty_files": true
+            }
+        },
+        "text": {
+            "can_include_raw_values": true,
+            "markdown": true,
+            "per_field_text_types": true
+        }
+    },
+    "links": {
+        "default_reviewers": {
+            "href": "http://mozreview.test/api/default-reviewers/",
+            "method": "GET"
+        },
+        "extensions": {
+            "href": "http://mozreview.test/api/extensions/",
+            "method": "GET"
+        },
+        "groups": {
+            "href": "http://mozreview.test/api/groups/",
+            "method": "GET"
+        },
+        "hosting_service_accounts": {
+            "href": "http://mozreview.test/api/hosting-service-accounts/",
+            "method": "GET"
+        },
+        "hosting_services": {
+            "href": "http://mozreview.test/api/hosting-services/",
+            "method": "GET"
+        },
+        "info": {
+            "href": "http://mozreview.test/api/info/",
+            "method": "GET"
+        },
+        "repositories": {
+            "href": "http://mozreview.test/api/repositories/",
+            "method": "GET"
+        },
+        "review_requests": {
+            "href": "http://mozreview.test/api/review-requests/",
+            "method": "GET"
+        },
+        "search": {
+            "href": "http://mozreview.test/api/search/",
+            "method": "GET"
+        },
+        "self": {
+            "href": "http://mozreview.test/api/",
+            "method": "GET"
+        },
+        "session": {
+            "href": "http://mozreview.test/api/session/",
+            "method": "GET"
+        },
+        "users": {
+            "href": "http://mozreview.test/api/users/",
+            "method": "GET"
+        },
+        "validation": {
+            "href": "http://mozreview.test/api/validation/",
+            "method": "GET"
+        },
+        "webhooks": {
+            "href": "http://mozreview.test/api/webhooks/",
+            "method": "GET"
+        }
+    },
+    "product": {
+        "is_release": true,
+        "name": "Review Board",
+        "package_version": "2.5.4",
+        "version": "2.5.4"
+    },
+    "site": {
+        "administrators": [
+            {
+                "email": "klibby@mozilla.com",
+                "name": "admin"
+            }
+        ],
+        "time_zone": "UTC",
+        "url": "http://mozreview.test/"
+    },
+    "stat": "ok",
+    "uri_templates": {
+        "api_token": "http://mozreview.test/api/users/{username}/api-tokens/{api_token_id}/",
+        "api_tokens": "http://mozreview.test/api/users/{username}/api-tokens/",
+        "archived_review_request": "http://mozreview.test/api/users/{username}/archived-review-requests/{review_request_id}/",
+        "archived_review_requests": "http://mozreview.test/api/users/{username}/archived-review-requests/",
+        "branches": "http://mozreview.test/api/repositories/{repository_id}/branches/",
+        "change": "http://mozreview.test/api/review-requests/{review_request_id}/changes/{change_id}/",
+        "changes": "http://mozreview.test/api/review-requests/{review_request_id}/changes/",
+        "commits": "http://mozreview.test/api/repositories/{repository_id}/commits/",
+        "default_reviewer": "http://mozreview.test/api/default-reviewers/{default_reviewer_id}/",
+        "default_reviewers": "http://mozreview.test/api/default-reviewers/",
+        "diff": "http://mozreview.test/api/review-requests/{review_request_id}/diffs/{diff_revision}/",
+        "diff_comment": "http://mozreview.test/api/review-requests/{review_request_id}/reviews/{review_id}/replies/{reply_id}/diff-comments/{comment_id}/",
+        "diff_comments": "http://mozreview.test/api/review-requests/{review_request_id}/reviews/{review_id}/replies/{reply_id}/diff-comments/",
+        "diff_context": "http://mozreview.test/api/review-requests/{review_request_id}/diff-context/",
+        "diff_file_attachment": "http://mozreview.test/api/repositories/{repository_id}/diff-file-attachments/{file_attachment_id}/",
+        "diff_file_attachments": "http://mozreview.test/api/repositories/{repository_id}/diff-file-attachments/",
+        "diff_validation": "http://mozreview.test/api/validation/diffs/",
+        "diffs": "http://mozreview.test/api/review-requests/{review_request_id}/diffs/",
+        "draft": "http://mozreview.test/api/review-requests/{review_request_id}/draft/",
+        "extension": "http://mozreview.test/api/extensions/{extension_name}/",
+        "extensions": "http://mozreview.test/api/extensions/",
+        "file": "http://mozreview.test/api/review-requests/{review_request_id}/diffs/{diff_revision}/files/{filediff_id}/",
+        "file_attachment": "http://mozreview.test/api/review-requests/{review_request_id}/file-attachments/{file_attachment_id}/",
+        "file_attachment_comment": "http://mozreview.test/api/review-requests/{review_request_id}/reviews/{review_id}/file-attachment-comments/{comment_id}/",
+        "file_attachment_comments": "http://mozreview.test/api/review-requests/{review_request_id}/file-attachments/{file_attachment_id}/file-attachment-comments/",
+        "file_attachments": "http://mozreview.test/api/review-requests/{review_request_id}/file-attachments/",
+        "files": "http://mozreview.test/api/review-requests/{review_request_id}/diffs/{diff_revision}/files/",
+        "group": "http://mozreview.test/api/groups/{group_name}/",
+        "groups": "http://mozreview.test/api/groups/",
+        "hosting_service": "http://mozreview.test/api/hosting-services/{hosting_service_id}/",
+        "hosting_service_account": "http://mozreview.test/api/hosting-service-accounts/{account_id}/",
+        "hosting_service_accounts": "http://mozreview.test/api/hosting-service-accounts/",
+        "hosting_services": "http://mozreview.test/api/hosting-services/",
+        "info": "http://mozreview.test/api/info/",
+        "last_update": "http://mozreview.test/api/review-requests/{review_request_id}/last-update/",
+        "muted_review_request": "http://mozreview.test/api/users/{username}/muted-review-requests/{review_request_id}/",
+        "muted_review_requests": "http://mozreview.test/api/users/{username}/muted-review-requests/",
+        "original_file": "http://mozreview.test/api/review-requests/{review_request_id}/diffs/{diff_revision}/files/{filediff_id}/original-file/",
+        "patched_file": "http://mozreview.test/api/review-requests/{review_request_id}/diffs/{diff_revision}/files/{filediff_id}/patched-file/",
+        "remote_repositories": "http://mozreview.test/api/hosting-service-accounts/{account_id}/remote-repositories/",
+        "remote_repository": "http://mozreview.test/api/hosting-service-accounts/{account_id}/remote-repositories/{repository_id}/",
+        "replies": "http://mozreview.test/api/review-requests/{review_request_id}/reviews/{review_id}/replies/",
+        "reply": "http://mozreview.test/api/review-requests/{review_request_id}/reviews/{review_id}/replies/{reply_id}/",
+        "reply_draft": "http://mozreview.test/api/review-requests/{review_request_id}/reviews/{review_id}/replies/draft/",
+        "repositories": "http://mozreview.test/api/repositories/",
+        "repository": "http://mozreview.test/api/repositories/{repository_id}/",
+        "review": "http://mozreview.test/api/review-requests/{review_request_id}/reviews/{review_id}/",
+        "review_draft": "http://mozreview.test/api/review-requests/{review_request_id}/reviews/draft/",
+        "review_request": "http://mozreview.test/api/review-requests/{review_request_id}/",
+        "review_requests": "http://mozreview.test/api/review-requests/",
+        "reviews": "http://mozreview.test/api/review-requests/{review_request_id}/reviews/",
+        "root": "http://mozreview.test/api/",
+        "screenshot": "http://mozreview.test/api/review-requests/{review_request_id}/screenshots/{screenshot_id}/",
+        "screenshot_comment": "http://mozreview.test/api/review-requests/{review_request_id}/reviews/{review_id}/screenshot-comments/{comment_id}/",
+        "screenshot_comments": "http://mozreview.test/api/review-requests/{review_request_id}/screenshots/{screenshot_id}/screenshot-comments/",
+        "screenshots": "http://mozreview.test/api/review-requests/{review_request_id}/screenshots/",
+        "search": "http://mozreview.test/api/search/{username}/",
+        "session": "http://mozreview.test/api/session/",
+        "user": "http://mozreview.test/api/users/{username}/",
+        "users": "http://mozreview.test/api/users/",
+        "validation": "http://mozreview.test/api/validation/",
+        "watched": "http://mozreview.test/api/users/{username}/watched/",
+        "watched_review_group": "http://mozreview.test/api/users/{username}/watched/review-groups/{watched_obj_id}/",
+        "watched_review_groups": "http://mozreview.test/api/users/{username}/watched/review-groups/",
+        "watched_review_request": "http://mozreview.test/api/users/{username}/watched/review-requests/{watched_obj_id}/",
+        "watched_review_requests": "http://mozreview.test/api/users/{username}/watched/review-requests/",
+        "webhook": "http://mozreview.test/api/webhooks/{webhook_id}/",
+        "webhooks": "http://mozreview.test/api/webhooks/"
+    }
+}

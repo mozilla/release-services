@@ -85,7 +85,7 @@ def mock_issues():
     ]
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture
 def mock_mozreview():
     '''
     Mock mozreview authentication process
@@ -93,9 +93,10 @@ def mock_mozreview():
     '''
     api_url = 'http://mozreview.test/api/'
     auth_url = api_url + 'extensions/mozreview.extension.MozReviewExtension/bugzilla-api-key-logins/'
+    session_url = api_url + 'session/'
 
-    def _response(name):
-        path = os.path.join(MOCK_DIR, 'mozreview_{}.json'.format(name))
+    def _response(name, extension='json'):
+        path = os.path.join(MOCK_DIR, 'mozreview_{}.{}'.format(name, extension))
         assert os.path.exists(path)
         return open(path).read()
 
@@ -107,7 +108,7 @@ def mock_mozreview():
         httpretty.GET,
         api_url,
         body=_response('root'),
-        content_type='application/vnd.reviewboard.org.bugzilla-api-key-logins+json',
+        content_type='application/vnd.reviewboard.org.root+json',
     )
 
     # Initial query to get auth endpoints
@@ -116,6 +117,76 @@ def mock_mozreview():
         auth_url,
         body=_response('auth'),
         content_type='application/vnd.reviewboard.org.bugzilla-api-key-logins+json',
+    )
+
+    # Current session query
+    httpretty.register_uri(
+        httpretty.GET,
+        session_url,
+        body=_response('session'),
+        content_type='application/vnd.reviewboard.org.session+json',
+    )
+
+    # User details queries
+    httpretty.register_uri(
+        httpretty.GET,
+        api_url + 'users/devbot/',
+        body=_response('user'),
+        content_type='application/vnd.reviewboard.org.user+json',
+    )
+    httpretty.register_uri(
+        httpretty.GET,
+        api_url + 'users/anotherUser/',
+        body=_response('user_another'),
+        content_type='application/vnd.reviewboard.org.user+json',
+    )
+
+    # Dummy Reviews list
+    httpretty.register_uri(
+        httpretty.GET,
+        api_url + 'review-requests/12345/reviews/',
+        body=_response('reviews_12345'),
+        content_type='application/vnd.reviewboard.org.review+json',
+    )
+
+    # Dummy Review comment list
+    httpretty.register_uri(
+        httpretty.GET,
+        api_url + 'review-requests/12345/reviews/51/diff-comments/',
+        body=_response('comments_12345_51'),
+        content_type='application/vnd.reviewboard.org.review-diff-comments+json',
+    )
+
+    # Dummy Review file diff
+    httpretty.register_uri(
+        httpretty.GET,
+        api_url + 'review-requests/12345/diffs/2/files/',
+        body=_response('files_12345'),
+        content_type='application/vnd.reviewboard.org.files+json',
+        adding_headers={
+            'Item-Content-Type': 'application/vnd.reviewboard.org.file+json',
+        }
+    )
+
+    def _filediff(request, uri, headers):
+
+        if request.headers.get('Accept') == 'application/vnd.reviewboard.org.diff.data+json':
+            # Diff data
+            body = _response('filediff_12345_2_diffdata')
+            headers['content-type'] = 'application/vnd.reviewboard.org.diff.data+json'
+
+        else:
+
+            # Basic data
+            body = _response('filediff_12345_2')
+            headers['content-type'] = 'application/vnd.reviewboard.org.file+json'
+
+        return (200, headers, body)
+
+    httpretty.register_uri(
+        httpretty.GET,
+        api_url + 'review-requests/12345/diffs/2/files/31/',
+        body=_filediff,
     )
 
     def _check_credentials(request, uri, headers):
