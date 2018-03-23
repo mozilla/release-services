@@ -253,8 +253,8 @@ let
     };
 
     "datadog" = python.mkDerivation {
-      name = "datadog-0.18.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/b2/75/0ace6926ffbc39195ff3cca0dfcfccf4ea85a9532d5c8f6be48539ef423b/datadog-0.18.0.tar.gz"; sha256 = "8e2818dac1f5d742a14dc177c9eaffbc6538c9587131709bfa47cdb47ac93a23"; };
+      name = "datadog-0.19.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/06/53/0aabf2f520cbcce345aba3a625954950a2585fcb1a05dfc071cb7b834aad/datadog-0.19.0.tar.gz"; sha256 = "ec476e6f474955770d414d4cffa272d68b2715e59cbb9d7bb561da037c2041bf"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [

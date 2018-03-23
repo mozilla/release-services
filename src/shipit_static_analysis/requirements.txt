@@ -5,7 +5,7 @@ PyYAML
 parsepatch
 codespell
 yamllint
-datadog==0.18.0
+datadog
 
 # Fixed versions
 six==1.10.0
