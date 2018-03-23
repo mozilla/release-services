@@ -28,6 +28,7 @@ let
         name = "Static analysis automated tests";
         owner = "jan@mozilla.com";
         taskImage = self.docker;
+        workerType = if branch == "production" then "releng-svc-prod" else "releng-svc";
         scopes = [
           # Used by taskclusterProxy
           ("secrets:get:" + secretsKey)
