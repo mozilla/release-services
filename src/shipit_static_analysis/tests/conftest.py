@@ -233,7 +233,10 @@ def mock_stats(mock_config):
 
         def get_metrics(self, metric_name):
             return list(itertools.chain(*[
-                m['points']
+                [
+                    [t, point * m['interval']]
+                    for t, point in m['points']
+                ]
                 for m in self.metrics
                 if m['metric'] == metric_name
             ]))
