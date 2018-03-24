@@ -23,6 +23,11 @@ def FAKE_ARTIFACTS_DIR(tmpdir):
     return tmpdir.strpath
 
 
+@pytest.fixture(autouse=True)
+def no_requests(monkeypatch):
+    monkeypatch.delatrr("resquests.sessions.Session.request")
+
+
 def test_get_chunks(FAKE_ARTIFACTS_DIR):
     a = ArtifactsHandler([], [], parent_dir=FAKE_ARTIFACTS_DIR)
     assert set(a.get_chunks()) == set([
@@ -59,3 +64,9 @@ def test_get_coverage_artifacts(FAKE_ARTIFACTS_DIR):
 
     with pytest.raises(Exception, message='suite and chunk can\'t both have a value'):
         a.get(chunk='xpcshell-7', suite='mochitest')
+
+
+def test_download(FAKE_ARTIFACTS_DIR):
+    a = ArtifactsHandler([], [], parent_dir = FAKE_ARTIFACTS_DIR)
+
+    a.download()
