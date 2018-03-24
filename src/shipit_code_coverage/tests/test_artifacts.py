@@ -2,7 +2,9 @@
 
 import os
 from shipit_code_coverage.artifacts import ArtifactsHandler
+from shipit_code_coverage import taskcluster
 import pytest
+import responses
 
 
 FILES = [
@@ -21,11 +23,6 @@ def FAKE_ARTIFACTS_DIR(tmpdir):
     for f in FILES:
         open(os.path.join(tmpdir.strpath, f), 'w')
     return tmpdir.strpath
-
-
-@pytest.fixture(autouse=True)
-def no_requests(monkeypatch):
-    monkeypatch.delattr("requests.sessions.Session.request")
 
 
 def test_get_chunks(FAKE_ARTIFACTS_DIR):
@@ -66,15 +63,25 @@ def test_get_coverage_artifacts(FAKE_ARTIFACTS_DIR):
         a.get(chunk='xpcshell-7', suite='mochitest')
 
 
-TEST_TASK = {'task' : {'metadata' : {'name' : 'test-linux64-ccov/opt/test'}},
-             'status' : { 'taskId' : 1 }
+#I'm using the LINUX_TASK_ID as taskID here, but the problem is that,
+#when I do taskcluster.get_task_artifacts, none of the names has code-coverage-grcov.zip
+#or code-coverage-jsvm.zip as substring, so artifact.download() never calls
+#taskcluster.download_artifact(). Is there a specific TEST_TASK I should use?
+TEST_TASK = {'task' : {'metadata' : {'name' : 'test-linux64-ccov/opt/test/code-coverage-grcov.zip'}},
+             'status' : { 'taskId' : 'MCIO1RWTRu2GhiE7_jILBw' }
 }
 
 
-def test_download(FAKE_ARTIFACTS_DIR):
+@responses.activate
+def test_download(LINUX_TASK_ID, LINUX_TASK_ARTIFACTS, FAKE_ARTIFACTS_DIR):
+    #I want to use this to write the paths of files downloaded.
     def add_dir(files):
         return set([os.path.join(FAKE_ARTIFACTS_DIR, f) for f in files])
 
-    a = ArtifactsHandler([], [], parent_dir = FAKE_ARTIFACTS_DIR)
+    a = ArtifactsHandler([], [], parent_dir=FAKE_ARTIFACTS_DIR)
 
-    assert a.download(TEST_TASK) == test_download(TEST_TASK)
+    #mock the taskcluster.get_task_artifacts()
+    responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task/{}/artifacts'.format(LINUX_TASK_ID), json=LINUX_TASK_ARTIFACTS, status=200)
+    a.download(TEST_TASK)
+    #I want to mock the taskcluster.download_artifact()
+    responses.add(response.GET, queue_base + 'task/{}/artifacts/{}'.format(TEST_TASK['taskId'], TEST_TASK['name'), )
