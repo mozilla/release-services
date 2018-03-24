@@ -25,7 +25,7 @@ def FAKE_ARTIFACTS_DIR(tmpdir):
 
 @pytest.fixture(autouse=True)
 def no_requests(monkeypatch):
-    monkeypatch.delatrr("resquests.sessions.Session.request")
+    monkeypatch.delattr("requests.sessions.Session.request")
 
 
 def test_get_chunks(FAKE_ARTIFACTS_DIR):
@@ -66,7 +66,15 @@ def test_get_coverage_artifacts(FAKE_ARTIFACTS_DIR):
         a.get(chunk='xpcshell-7', suite='mochitest')
 
 
+TEST_TASK = {'task' : {'metadata' : {'name' : 'test-linux64-ccov/opt/test'}},
+             'status' : { 'taskId' : 1 }
+}
+
+
 def test_download(FAKE_ARTIFACTS_DIR):
+    def add_dir(files):
+        return set([os.path.join(FAKE_ARTIFACTS_DIR, f) for f in files])
+
     a = ArtifactsHandler([], [], parent_dir = FAKE_ARTIFACTS_DIR)
 
-    a.download()
+    assert a.download(TEST_TASK) == test_download(TEST_TASK)
