@@ -38,11 +38,6 @@ class Coverage(ABC):
     def get_latest_build():
         pass
 
-    @staticmethod
-    @abstractmethod
-    def get_directory_coverage(changeset, prev_changeset, directory):
-        pass
-
 
 class CoverallsCoverage(Coverage):
     URL = 'https://coveralls.io'
@@ -79,22 +74,6 @@ class CoverallsCoverage(Coverage):
         builds = r.json()['builds']
 
         return builds[0]['commit_sha'], builds[1]['commit_sha']
-
-    @staticmethod
-    @lru_cache(maxsize=2048)
-    def get_directory_coverage(changeset, prev_changeset, directory):
-        r = requests.get(CoverallsCoverage.URL + '/builds/' + get_github_commit(changeset) + '.json?paths=' + directory + '/*')
-
-        if r.status_code != requests.codes.ok:
-            raise CoverageException('Error while loading coverage data.')
-
-        result = r.json()
-
-        return {
-          'files_num': result['selected_source_files_count'],
-          'cur': result['paths_covered_percent'],
-          'prev': result['paths_previous_covered_percent'],
-        }
 
 
 class CodecovCoverage(Coverage):
@@ -141,29 +120,6 @@ class CodecovCoverage(Coverage):
 
         return commit['commitid'], commit['parent']
 
-    @staticmethod
-    @lru_cache(maxsize=2048)
-    def get_directory_coverage(changeset, prev_changeset, directory):
-        r = CodecovCoverage._get('/tree/{}/{}'.format(get_github_commit(changeset), directory))
-
-        if r.status_code != requests.codes.ok:
-            raise CoverageException('Error while loading coverage data.')
-
-        cur_result = r.json()
-
-        r = CodecovCoverage._get('/tree/{}/{}'.format(get_github_commit(prev_changeset), directory))
-
-        if r.status_code != requests.codes.ok:
-            raise CoverageException('Error while loading coverage data.')
-
-        prev_result = r.json()
-
-        return {
-          'files_num': cur_result['commit']['folder_totals']['files'],
-          'cur': cur_result['commit']['folder_totals']['coverage'],
-          'prev': prev_result['commit']['folder_totals']['coverage'],
-        }
-
 
 class ActiveDataCoverage(Coverage):
     URL = 'https://activedata.allizom.org/query'
@@ -205,11 +161,6 @@ class ActiveDataCoverage(Coverage):
 
     @staticmethod
     def get_latest_build():
-        assert False, 'Not implemented'
-
-    @staticmethod
-    @lru_cache(maxsize=2048)
-    def get_directory_coverage(changeset, prev_changeset, directory):
         assert False, 'Not implemented'
 
 
