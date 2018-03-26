@@ -9,7 +9,6 @@ let
   inherit (releng_pkgs.tools) pypi2nix mercurial;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  moz_clang = import ./mozilla_clang.nix { inherit releng_pkgs ; };
   name = "mozilla-shipit-static-analysis";
   dirname = "shipit_static_analysis";
 
@@ -90,7 +89,6 @@ let
         # Needed for the static analysis
         glibc
         gcc
-        moz_clang
         patch
         shellcheck
 
@@ -106,8 +104,6 @@ let
       mkdir -p $out/bin
       mkdir -p $out/usr/bin
       ln -s ${mercurial}/bin/hg $out/bin
-      ln -s ${moz_clang}/bin/clang-tidy $out/bin
-      ln -s ${moz_clang}/bin/clang-format $out/bin
       ln -s ${patch}/bin/patch $out/bin
 
       # Mozlint deps
@@ -128,7 +124,7 @@ let
     '';
 
     shellHook = ''
-      export PATH="${mercurial}/bin:${git}/bin:${python27}/bin:${python35}/bin:${moz_clang}/bin:${nodejs}/bin:$PATH"
+      export PATH="${mercurial}/bin:${git}/bin:${python27}/bin:${python35}/bin:${nodejs}/bin:$PATH"
 
       # Setup mach automation
       export MOZ_AUTOMATION=1
