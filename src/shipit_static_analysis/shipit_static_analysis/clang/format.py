@@ -44,6 +44,9 @@ class ClangFormat(object):
     def __init__(self, repo_dir):
         assert os.path.isdir(repo_dir)
         self.repo_dir = repo_dir
+        self.binary = os.path.join(self.repo_dir, 'clang', 'bin', 'clang-format')
+        assert os.path.exists(self.binary), \
+            'Missing clang-format in {}'.format(self.binary)
 
     @stats.api.timed('runtime.clang-format')
     def run(self, extensions, revision):
@@ -84,8 +87,7 @@ class ClangFormat(object):
 
         # Build command line for a filename
         cmd = [
-            # Use system clang format
-            'clang-format',
+            self.binary,
 
             # Use style from directories
             '-style=file',

@@ -79,6 +79,9 @@ class ClangTidy(object):
 
         self.repo_dir = repo_dir
         self.build_dir = os.path.join(repo_dir, build_dir)
+        self.binary = os.path.join(self.repo_dir, 'clang', 'bin', 'clang-tidy')
+        assert os.path.exists(self.binary), \
+            'Missing clang-tidy in {}'.format(self.binary)
 
     @stats.api.timed('runtime.clang-tidy')
     def run(self, checks, revision):
@@ -149,13 +152,12 @@ class ClangTidy(object):
 
             # Build command line for a filename
             cmd = [
-                # Use system clang tidy
-                'clang-tidy',
+                self.binary,
 
                 # Limit warnings to current file
                 '-header-filter={}'.format(os.path.basename(filename)),
                 '-checks={}'.format(','.join(checks)),
-                '-p={}'.format(self.build_dir),
+                '-p={}'.format(self.repo_dir),
                 filename,
             ]
             logger.info('Running clang-tidy', cmd=' '.join(cmd))

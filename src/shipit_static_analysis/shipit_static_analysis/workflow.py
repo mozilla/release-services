@@ -103,11 +103,6 @@ class Workflow(object):
         )
         stats.api.increment('analysis')
 
-        # Setup tools (clang & mozlint)
-        clang_tidy = CLANG_TIDY in self.analyzers and ClangTidy(self.repo_dir, settings.target)
-        clang_format = CLANG_FORMAT in self.analyzers and ClangFormat(self.repo_dir)
-        mozlint = MOZLINT in self.analyzers and MozLint(self.repo_dir)
-
         with stats.api.timer('runtime.mercurial'):
             # Force cleanup to reset tip
             # otherwise previous pull are there
@@ -130,6 +125,11 @@ class Workflow(object):
                     cmd = ['gecko-env', './mach', 'build-backend', '--backend=CompileDB']
                     run_check(cmd, cwd=self.repo_dir)
 
+                    # Download clang from Mozilla artifacts
+                    logger.info('Download clang toolchain...')
+                    cmd = ['gecko-env', './mach', 'artifact', 'toolchain', '--from-build', 'linux64-clang-tidy']
+                    run_check(cmd, cwd=self.repo_dir)
+
             else:
                 logger.info('No clang files detected, skipping mach')
 
@@ -137,6 +137,11 @@ class Workflow(object):
             logger.info('Mach lint setup...')
             cmd = ['gecko-env', './mach', 'lint', '--list']
             run_check(cmd, cwd=self.repo_dir)
+
+        # Setup tools (clang & mozlint)
+        clang_tidy = CLANG_TIDY in self.analyzers and ClangTidy(self.repo_dir, settings.target)
+        clang_format = CLANG_FORMAT in self.analyzers and ClangFormat(self.repo_dir)
+        mozlint = MOZLINT in self.analyzers and MozLint(self.repo_dir)
 
         # Run static analysis through clang-tidy
         issues = []
