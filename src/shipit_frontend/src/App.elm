@@ -230,7 +230,9 @@ viewNavBar model =
         [ class "navbar-brand" ]
         [ text "Uplift Dashboard" ]
     , div [ class "collapse navbar-collapse" ]
-        [ ul [ class "navbar-nav" ] (viewUser model)
+        [ ul [ class "navbar-nav mr-auto " ]
+            (viewNavDashboard model)
+        , ul [ class "navbar-nav" ] (viewUser model)
         ]
     ]
 
