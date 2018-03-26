@@ -19,27 +19,6 @@ let
     ALTER TABLE clobber_times RENAME TO releng_clobberer_times;
   '';
 
-  taskcluster_cache = mkTaskclusterHook {
-    name = "create taskcluster cache";
-    owner = "rgarbas@mozilla.com";
-    schedule = [ "0 */20 * * * *" ];  # every 20 min
-    taskImage = self.docker;
-    taskEnv = {
-      DATABASE_URL = "sqlite://";
-    };
-    taskCommand = [
-      "/bin/sh"
-      "-c"
-      "/bin/flask taskcluster_cache > /taskcluster_cache.json"
-    ];
-    taskArtifacts = {
-      "taskcluster_cache.json" = {
-        type = "file";
-        path = "/taskcluster_cache.json";
-      };
-    };
-  };
-
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-releng-clobberer";
   dirname = "releng_clobberer";

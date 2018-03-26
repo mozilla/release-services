@@ -43,13 +43,14 @@ let
 
     passthru = {
       deploy = {
+        testing = self;
         staging = self;
         production = self;
       };
       taskclusterGithubTasks =
         map
           (branch: mkTaskclusterGithubTask { inherit name src_path branch; })
-          [ "master" "staging" "production" ];
+          [ "master" "testing" "staging" "production" ];
       update  = writeScript "update-${name}" ''
         pushd ${src_path}
         ${pypi2nix}/bin/pypi2nix -v \

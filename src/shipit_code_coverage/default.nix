@@ -77,6 +77,7 @@ let
             "APP_CHANNEL" = branch;
           };
         };
+        taskCapabilities = {};
         taskCommand = [
           "/bin/shipit-code-coverage"
           "--taskcluster-secret"
@@ -125,6 +126,7 @@ let
     dockerContents = [ git ];
     passthru = {
       deploy = {
+        testing = mkBot "testing";
         staging = mkBot "staging";
         production = mkBot "production";
       };

@@ -16,12 +16,11 @@ tasks:
     routes:
       - index.project.releng.services.requests.pull-request.{{ event.head.sha }}
     scopes:
-      - assume:hook-id:project-releng/services-master-*
-      - hooks:modify-hook:project-releng/services-master-*
-      - queue:create-task:highest:aws-provisioner-v1/releng-*
-      - queue:scheduler-id:taskcluster-github
+      - docker-worker:capability:privileged
+      - queue:create-task:highest:aws-provisioner-v1/releng-svc*
       - queue:route:index.project.releng.services.requests.pull-request.*
-      - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - queue:scheduler-id:taskcluster-github
+      - secrets:get:repo:github.com/mozilla-releng/services:pull-request
     extra:
       github:
         env: true
@@ -29,18 +28,21 @@ tasks:
           - pull_request.*
         branches:
           - master
-    provisionerId: "{{ taskcluster.docker.provisionerId }}"
-    workerType: "{{ taskcluster.docker.workerType }}"
+    provisionerId: "aws-provisioner-v1"
+    workerType: "releng-svc"
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-36"
+      image: "mozillareleng/services:base-new-36"
       features:
         taskclusterProxy: true
+      capabilities:
+        privileged: true
       command:
         - "/bin/bash"
+        - "-l"
         - "-c"
-        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
+        - "source /etc/nix/profile.sh && cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
 
   - metadata:
       name: "0. Decision task"
@@ -57,6 +59,7 @@ tasks:
       - queue:scheduler-id:taskcluster-github
       - queue:route:index.project.releng.services.requests.{{ event.base.repo.branch }}.*
       - secrets:get:repo:github.com/mozilla-releng/services:branch:master
+      - docker-worker:capability:privileged
     extra:
       github:
         env: true
@@ -64,18 +67,21 @@ tasks:
           - push
         branches:
           - master
-    provisionerId: "{{ taskcluster.docker.provisionerId }}"
-    workerType: "{{ taskcluster.docker.workerType }}"
+    provisionerId: "aws-provisioner-v1"
+    workerType: "releng-svc"
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-36"
+      image: "mozillareleng/services:base-new-36"
       features:
         taskclusterProxy: true
+      capabilities:
+        privileged: true
       command:
         - "/bin/bash"
+        - "-l"
         - "-c"
-        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
+        - "source /etc/nix/profile.sh && cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
 
   - metadata:
       name: "0. Decision task"
@@ -92,6 +98,7 @@ tasks:
       - queue:scheduler-id:taskcluster-github
       - queue:route:index.project.releng.services.requests.{{ event.base.repo.branch }}.*
       - secrets:get:repo:github.com/mozilla-releng/services:branch:testing
+      - docker-worker:capability:privileged
     extra:
       github:
         env: true
@@ -99,18 +106,21 @@ tasks:
           - push
         branches:
           - testing
-    provisionerId: "{{ taskcluster.docker.provisionerId }}"
-    workerType: "{{ taskcluster.docker.workerType }}"
+    provisionerId: "aws-provisioner-v1"
+    workerType: "releng-svc"
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-36"
+      image: "mozillareleng/services:base-new-36"
       features:
         taskclusterProxy: true
+      capabilities:
+        privileged: true
       command:
         - "/bin/bash"
+        - "-l"
         - "-c"
-        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
+        - "source /etc/nix/profile.sh && cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
 
   - metadata:
       name: "0. Decision task"
@@ -127,6 +137,7 @@ tasks:
       - queue:scheduler-id:taskcluster-github
       - queue:route:index.project.releng.services.requests.{{ event.base.repo.branch }}.*
       - secrets:get:repo:github.com/mozilla-releng/services:branch:staging
+      - docker-worker:capability:privileged
     extra:
       github:
         env: true
@@ -134,18 +145,21 @@ tasks:
           - push
         branches:
           - staging
-    provisionerId: "{{ taskcluster.docker.provisionerId }}"
-    workerType: "{{ taskcluster.docker.workerType }}"
+    provisionerId: "aws-provisioner-v1"
+    workerType: "releng-svc"
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-36"
+      image: "mozillareleng/services:base-new-36"
       features:
         taskclusterProxy: true
+      capabilities:
+        privileged: true
       command:
         - "/bin/bash"
+        - "-l"
         - "-c"
-        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
+        - "source /etc/nix/profile.sh && cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
 
   - metadata:
       name: "0. Decision task"
@@ -162,6 +176,7 @@ tasks:
       - queue:scheduler-id:taskcluster-github
       - queue:route:index.project.releng.services.requests.{{ event.base.repo.branch }}.*
       - secrets:get:repo:github.com/mozilla-releng/services:branch:production
+      - docker-worker:capability:privileged
     extra:
       github:
         env: true
@@ -169,15 +184,18 @@ tasks:
           - push
         branches:
           - production
-    provisionerId: "{{ taskcluster.docker.provisionerId }}"
-    workerType: "{{ taskcluster.docker.workerType }}"
+    provisionerId: "aws-provisioner-v1"
+    workerType: "releng-svc"
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-36"
+      image: "mozillareleng/services:base-new-36"
       features:
         taskclusterProxy: true
+      capabilities:
+        privileged: true
       command:
         - "/bin/bash"
+        - "-l"
         - "-c"
-        - "cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
+        - "source /etc/nix/profile.sh && cd /tmp && wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5  https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && env && rm -rf /home/app/.cache/nix && ./please -vv tools decision-task"
