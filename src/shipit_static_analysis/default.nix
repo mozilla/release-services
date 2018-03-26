@@ -49,6 +49,7 @@ let
             "MOZ_AUTOMATION" = "1";
           };
         };
+        taskCapabilities = {};
         taskCommand = [
           "/bin/shipit-static-analysis"
           "--taskcluster-secret"

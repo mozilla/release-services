@@ -172,6 +172,7 @@ in rec {
       , taskCommand
       , taskArtifacts ? {}
       , taskEnv ? {}
+      , taskCapabilities ? { privileged = true; }
       , scopes ? []
       , cache ? {}
       , maxRunTime ? 3600
@@ -191,6 +192,7 @@ in rec {
             artifacts = taskArtifacts;
             env = taskEnv;
             cache = cache;
+            capabilities = taskCapabilities;
           };
           scopes = scopes;
           workerType = workerType;

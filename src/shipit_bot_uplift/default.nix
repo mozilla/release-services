@@ -40,6 +40,7 @@ let
           "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
           "APP_CHANNEL" = branch;
         };
+        taskCapabilities = {};
         taskCommand = [
           "/bin/shipit-bot-uplift"
           "--taskcluster-secret"

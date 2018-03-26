@@ -77,6 +77,7 @@ let
             "APP_CHANNEL" = branch;
           };
         };
+        taskCapabilities = {};
         taskCommand = [
           "/bin/shipit-code-coverage"
           "--taskcluster-secret"
