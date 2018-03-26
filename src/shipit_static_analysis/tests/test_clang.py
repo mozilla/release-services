@@ -64,18 +64,18 @@ def test_expanded_macros(mock_stats):
     assert issue.is_expanded_macro() is False
 
 
-def test_clang_format(tmpdir, mock_stats, mock_revision):
+def test_clang_format(mock_repository, mock_stats, mock_clang, mock_revision):
     '''
     Test clang-format runner
     '''
     from shipit_static_analysis.clang.format import ClangFormat, ClangFormatIssue
 
     # Write badly formatted c file
-    bad_file = tmpdir.join('bad.cpp')
+    bad_file = mock_repository.directory.join('bad.cpp')
     bad_file.write(BAD_CPP_SRC)
 
     # Get formatting issues
-    cf = ClangFormat(str(tmpdir.realpath()))
+    cf = ClangFormat(str(mock_repository.directory.realpath()))
     mock_revision.files = ['bad.cpp', ]
     mock_revision.lines = {
         'bad.cpp': [1, 2, 3],
@@ -113,16 +113,19 @@ def test_clang_format(tmpdir, mock_stats, mock_revision):
     assert metrics[0][1] > 0
 
 
-def test_clang_tidy(tmpdir, mock_config, mock_stats, mock_revision):
+def test_clang_tidy(mock_repository, mock_config, mock_clang, mock_stats, mock_revision):
     '''
     Test clang-tidy runner
     '''
     from shipit_static_analysis.clang.tidy import ClangTidy, ClangTidyIssue
 
     # Init clang tidy runner
-    repo_dir = tmpdir.mkdir('repo')
-    build_dir = tmpdir.mkdir('build')
-    ct = ClangTidy(str(repo_dir), str(build_dir))
+    repo_dir = mock_repository.directory
+    build_dir = repo_dir.mkdir('../build')
+    ct = ClangTidy(
+        str(repo_dir.realpath()),
+        str(build_dir.realpath())
+    )
 
     # Write dummy 3rd party file
     third_party = repo_dir.join(mock_config.third_party)

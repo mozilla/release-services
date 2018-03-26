@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from distutils.spawn import find_executable
 import responses
 import itertools
 import httpretty
@@ -41,15 +42,16 @@ def mock_repository(tmpdir):
     Create a dummy mercurial repository
     '''
     # Init repo
-    repo_dir = str(tmpdir.mkdir('repo').realpath())
-    hglib.init(repo_dir)
+    repo_dir = tmpdir.mkdir('repo')
+    repo_path = str(repo_dir.realpath())
+    hglib.init(repo_path)
 
     # Init clean client
-    client = hglib.open(repo_dir)
+    client = hglib.open(repo_path)
     client.directory = repo_dir
 
     # Add test.txt file
-    path = os.path.join(repo_dir, 'test.txt')
+    path = os.path.join(repo_path, 'test.txt')
     with open(path, 'w') as f:
         f.write('Hello World\n')
 
@@ -326,3 +328,17 @@ def mock_revision():
     rev = Revision()
     rev.mercurial = 'a6ce14f59749c3388ffae2459327a323b6179ef0'
     return rev
+
+
+@pytest.fixture
+def mock_clang(mock_repository):
+    '''
+    Mock clang binary setup by linking the system wide
+    clang tools into the expected repo sub directory
+    '''
+    mock_repository.directory.mkdir('clang').mkdir('bin')
+    for tool in ('clang-tidy', 'clang-format'):
+        os.symlink(
+            find_executable(tool),
+            str(mock_repository.directory.join('clang', 'bin', tool).realpath()),
+        )
