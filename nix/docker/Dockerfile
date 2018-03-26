@@ -25,11 +25,11 @@ ENV NIX_PATH "nixpkgs=/etc/nix/nixpkgs"
 #
 RUN apt-get -q update \
  && apt-get -q --yes install bash wget bzip2 tar locales sudo \
- && apt-get clean && \
+ && apt-get clean \
  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
  && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
  && locale-gen \
- && sed -i 's|mesg n|tty -s \&\& mesg n|' /root/.profile
+ && sed -i "s|mesg n|tty -s && mesg n|" /root/.profile
 
 
 #
