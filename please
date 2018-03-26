@@ -33,7 +33,7 @@ esac
 
 USE_DOCKER=1
 
-USE_NIX=1
+USE_NIX=0
 if [ -f /.dockerenv ]; then
   USE_NIX=1
   . /etc/nix/profile.sh;
