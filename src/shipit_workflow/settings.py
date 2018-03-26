@@ -22,6 +22,7 @@ required = [
     'AUTH_CLIENT_ID',
     'AUTH_CLIENT_SECRET',
     'AUTH_REDIRECT_URI',
+    'AUTH_AUDIENCE',
 ]
 
 secrets = cli_common.taskcluster.get_secrets(

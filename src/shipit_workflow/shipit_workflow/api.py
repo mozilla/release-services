@@ -10,7 +10,7 @@ import taskcluster
 import functools
 from shipit_workflow.models import Release, Phase
 from cli_common.log import get_logger
-from backend_common.auth0 import mozilla_accept_token
+from backend_common.auth0 import mozilla_accept_token, has_scopes, AuthError, requires_auth
 from sqlalchemy.orm.exc import NoResultFound
 import datetime
 
@@ -36,12 +36,15 @@ def validate_user(key, checker):
     return wrapper
 
 
-# TODO: add machine account check so we can use these to submit releases
-@mozilla_accept_token()
-@validate_user(key='https://sso.mozilla.com/claim/groups',
-               checker=lambda xs: 'releng' in xs)
+@requires_auth
 def add_release(body):
-
+    required_scopes = ['{product}:{branch}:create'.format(product=body['product'], branch=body['branch'])]
+    scopes = flask.g.userinfo['scope'].split()
+    if not has_scopes(scopes, required_scopes):
+        raise AuthError({
+            'code': 'invalid_scopes',
+            'description': 'Invalid scopes. Verify that you have the following scopes {}'.format(required_scopes)},
+            401)
     session = flask.g.db.session
     r = Release(
         product=body['product'],

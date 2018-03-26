@@ -259,6 +259,12 @@ in skipOverrides {
     '';
   };
 
+  "python-dateutil" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['setuptools_scm'\],||" setup.py
+    '';
+  };
+
   "attrs" = self: old: {
     propagatedBuildInputs =
       builtins.filter
