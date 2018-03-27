@@ -12,6 +12,7 @@ import please_cli.base_image
 import please_cli.build
 import please_cli.check
 import please_cli.check_cache
+import please_cli.create
 import please_cli.create_certs
 import please_cli.decision_task
 import please_cli.deploy
@@ -30,15 +31,19 @@ CMD_HELP = '''
 Welcome to `please` command line utility which should help you develop
 `mozilla-releng/services` projects.
 
-To enter a development shell of project do:
+To create a new projects run:
+
+  % ./please create <PROJECT>
+
+To enter a development shell of an existing project run:
 
   % ./please shell <PROJECT>
 
-To run project in a foreground mode do:
+To run project in a foreground mode run:
 
   % ./please run <PROJECT>
 
-To run tests, linters, etc... do:
+To run tests, linters, etc... run:
 
   % ./please check <PROJECT>
 
@@ -88,6 +93,7 @@ def cmd(ctx, verbose):
 
 
 cmd.add_command(please_cli.check.cmd, "check")
+cmd.add_command(please_cli.create.cmd, "create")
 cmd.add_command(please_cli.run.cmd, "run")
 cmd.add_command(please_cli.shell.cmd, "shell")
 
