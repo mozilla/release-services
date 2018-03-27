@@ -2,9 +2,8 @@
 
 import os
 from shipit_code_coverage.artifacts import ArtifactsHandler
-from shipit_code_coverage import taskcluster
+from unittest.mock import patch
 import pytest
-import responses
 
 
 FILES = [
@@ -61,15 +60,6 @@ def test_get_coverage_artifacts(FAKE_ARTIFACTS_DIR):
 
     with pytest.raises(Exception, message='suite and chunk can\'t both have a value'):
         a.get(chunk='xpcshell-7', suite='mochitest')
-
-
-#I'm using the LINUX_TASK_ID as taskID here, but the problem is that,
-#when I do taskcluster.get_task_artifacts, none of the names has code-coverage-grcov.zip
-#or code-coverage-jsvm.zip as substring, so artifact.download() never calls
-#taskcluster.download_artifact(). Is there a specific TEST_TASK I should use?
-TEST_TASK = {'task' : {'metadata' : {'name' : 'test-linux64-ccov/opt/test/code-coverage-grcov.zip'}},
-             'status' : { 'taskId' : 'MCIO1RWTRu2GhiE7_jILBw' }
-}
 
 
 @responses.activate

@@ -1,0 +1,24 @@
+{
+	"artifacts": [
+    {
+      "storageType": "s3",
+      "name": "public/build/chrome-map.json",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/json"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/build/host/bin/mar",
+      "expires": "2019-03-02T10:18:14.371Z",
+      "contentType": "application/octet-stream"
+    }],
+
+	"task" : {
+		"metadata" : {
+			"name" : "test-linux64-ccov/opt/test/code-coverage-grcov.zip"
+		},
+		"status" : {
+			"taskId" : "MCIO1RWTRu2GhiE7_jILBw"
+		}
+	}
+}
