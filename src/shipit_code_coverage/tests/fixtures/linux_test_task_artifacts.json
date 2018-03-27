@@ -2,7 +2,7 @@
 	"artifacts": [
     {
       "storageType": "s3",
-      "name": "public/build/chrome-map.json",
+      "name": "public/code-coverage-grcov.zip",
       "expires": "2019-03-02T10:18:14.371Z",
       "contentType": "application/json"
     },
@@ -22,3 +22,4 @@
 		}
 	}
 }
+ 

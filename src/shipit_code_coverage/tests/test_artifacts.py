@@ -2,7 +2,7 @@
 
 import os
 from shipit_code_coverage.artifacts import ArtifactsHandler
-from unittest.mock import patch
+from unittest import mock
 import pytest
 
 
@@ -62,16 +62,12 @@ def test_get_coverage_artifacts(FAKE_ARTIFACTS_DIR):
         a.get(chunk='xpcshell-7', suite='mochitest')
 
 
-@responses.activate
-def test_download(LINUX_TASK_ID, LINUX_TASK_ARTIFACTS, FAKE_ARTIFACTS_DIR):
-    #I want to use this to write the paths of files downloaded.
-    def add_dir(files):
-        return set([os.path.join(FAKE_ARTIFACTS_DIR, f) for f in files])
+@mock.patch('shipit_code_coverage.artifacts.ArtifactsHandler.download', autospec=True)
+def test_download(mock_download, LINUX_TEST_TASK_ARTIFACTS):
+    a = ArtifactsHandler([], [], [])
 
-    a = ArtifactsHandler([], [], parent_dir=FAKE_ARTIFACTS_DIR)
+    @mock.patch('requests.get', autospec=True)
+    def mock_get_task_artifacts(mocked_get):
+        mocked_req_obj = mock.Mock()
 
-    #mock the taskcluster.get_task_artifacts()
-    responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task/{}/artifacts'.format(LINUX_TASK_ID), json=LINUX_TASK_ARTIFACTS, status=200)
-    a.download(TEST_TASK)
-    #I want to mock the taskcluster.download_artifact()
-    responses.add(response.GET, queue_base + 'task/{}/artifacts/{}'.format(TEST_TASK['taskId'], TEST_TASK['name'), )
+    assert True
