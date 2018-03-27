@@ -55,9 +55,16 @@ IN_DOCKER = False
 with open('/proc/1/cgroup', 'rt') as ifh:
     IN_DOCKER = 'docker' in ifh.read()
 
+TEMPLATES = {
+    'backend-json-api': {}
+}
+
+PROJECTS = list(map(lambda x: x.replace('_', '-'),
+                    filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
+                           os.listdir(SRC_DIR))))
 
 # TODO: below data should be placed in src/<app>/default.nix files alongside
-PROJECTS = {
+PROJECTS_CONFIG = {
     'postgresql': {
         'run': 'POSTGRESQL',
         'run_options': {

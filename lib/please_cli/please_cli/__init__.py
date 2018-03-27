@@ -12,12 +12,12 @@ import please_cli.base_image
 import please_cli.build
 import please_cli.check
 import please_cli.check_cache
+import please_cli.create
 import please_cli.create_certs
 import please_cli.decision_task
 import please_cli.deploy
 import please_cli.maintanance
 import please_cli.nagios_config
-import please_cli.nixify
 import please_cli.run
 import please_cli.shell
 import please_cli.terraform_route53_config
@@ -30,15 +30,19 @@ CMD_HELP = '''
 Welcome to `please` command line utility which should help you develop
 `mozilla-releng/services` projects.
 
-To enter a development shell of project do:
+To create a new projects run:
+
+  % ./please create <PROJECT>
+
+To enter a development shell of an existing project run:
 
   % ./please shell <PROJECT>
 
-To run project in a foreground mode do:
+To run project in a foreground mode run:
 
   % ./please run <PROJECT>
 
-To run tests, linters, etc... do:
+To run tests, linters, etc... run:
 
   % ./please check <PROJECT>
 
@@ -88,6 +92,7 @@ def cmd(ctx, verbose):
 
 
 cmd.add_command(please_cli.check.cmd, "check")
+cmd.add_command(please_cli.create.cmd, "create")
 cmd.add_command(please_cli.run.cmd, "run")
 cmd.add_command(please_cli.shell.cmd, "shell")
 
@@ -114,7 +119,6 @@ cmd_tools.add_command(please_cli.deploy.cmd_TASKCLUSTER_HOOK, "deploy:TASKCLUSTE
 cmd_tools.add_command(please_cli.maintanance.cmd_off, "maintanance:off")
 cmd_tools.add_command(please_cli.maintanance.cmd_on, "maintanance:on")
 cmd_tools.add_command(please_cli.nagios_config.cmd, "nagios-config")
-cmd_tools.add_command(please_cli.nixify.cmd, "nixify")
 cmd_tools.add_command(please_cli.terraform_route53_config.cmd, "terraform-route53-config")
 cmd_tools.add_command(please_cli.update_dependencies.cmd, "update-dependencies")
 

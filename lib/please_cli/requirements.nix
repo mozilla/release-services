@@ -82,18 +82,47 @@ let
   python = withPackages {};
 
   generated = self: {
-    "Logbook" = python.mkDerivation {
-      name = "Logbook-1.2.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3d/93/1862b5e453ec92d1068dd2613674d2291d622a3e56a0e250a8e4d88b39cc/Logbook-1.2.1.tar.gz"; sha256 = "ac201ccdb5b37170602a26d8a47df735e8904f11d51a73fa84f09a3014fc6001"; };
+    "Jinja2" = python.mkDerivation {
+      name = "Jinja2-2.10";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/56/e6/332789f295cf22308386cf5bbd1f4e00ed11484299c5d7383378cf48ba47/Jinja2-2.10.tar.gz"; sha256 = "f84be1bb0040caca4cea721fcbbbbd61f9be9464ca236387158b0feea01914a4"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
+      self."MarkupSafe"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://jinja.pocoo.org/";
+        license = licenses.bsdOriginal;
+        description = "A small but fast and easy to use stand-alone template engine written in pure python.";
+      };
+    };
+
+    "Logbook" = python.mkDerivation {
+      name = "Logbook-1.3.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/27/02/e18f2275048ade1288e75e2d09f86e54fdaba0440e190d7adfdc4636f63d/Logbook-1.3.0.tar.gz"; sha256 = "f44562b4ecf529046db0e0a80ee145217c865966834e85479352d986a455488b"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."Jinja2"
       self."pytest"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://logbook.pocoo.org/";
         license = licenses.bsdOriginal;
         description = "A logging replacement for Python";
+      };
+    };
+
+    "MarkupSafe" = python.mkDerivation {
+      name = "MarkupSafe-1.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/4d/de/32d741db316d8fdb7680822dd37001ef7a448255de9699ab4bfcbdf4172b/MarkupSafe-1.0.tar.gz"; sha256 = "a6be69091dac236ea9c6bc7d012beab42010fa914c459791d627dad4910eb665"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://github.com/pallets/markupsafe";
+        license = licenses.bsdOriginal;
+        description = "Implements a XML/HTML/XHTML Markup safe string for Python";
       };
     };
 
@@ -155,6 +184,21 @@ let
       };
     };
 
+    "arrow" = python.mkDerivation {
+      name = "arrow-0.12.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e0/86/4eb5228a43042e9a80fe8c84093a8a36f5db34a3767ebd5e1e7729864e7b/arrow-0.12.1.tar.gz"; sha256 = "a558d3b7b6ce7ffc74206a86c147052de23d3d4ef0e17c210dd478c53575c4cd"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."python-dateutil"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/crsmithdev/arrow/";
+        license = licenses.asl20;
+        description = "Better dates and times for Python";
+      };
+    };
+
     "async-timeout" = python.mkDerivation {
       name = "async-timeout-1.4.0";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/6f/cc/ff80612164fe68bf97767052c5c783a033165df7d47a41ae5c1cc5ea480b/async-timeout-1.4.0.tar.gz"; sha256 = "983891535b1eca6ba82b9df671c8abff53c804fce3fa630058da5bbbda500340"; };
@@ -185,8 +229,8 @@ let
     };
 
     "awscli" = python.mkDerivation {
-      name = "awscli-1.14.48";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/67/3c/837be8ec0e5a7dc5a87bdc8c139e1421b80b9749906a03ca8e14d350f8fb/awscli-1.14.48.tar.gz"; sha256 = "d81c6c85a477c90fa607ce07c98249ab70b04fa660135242003366f4be8f6472"; };
+      name = "awscli-1.14.64";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/6e/73/9b0e50f3dcb3f366b4741b53f8da78041f3e6ef187cb64d4822f4ee60b0d/awscli-1.14.64.tar.gz"; sha256 = "2b7ae7d1ba1d7906625aecc1023900f904c3c305a2c6e647349304d90853b460"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -204,9 +248,24 @@ let
       };
     };
 
+    "binaryornot" = python.mkDerivation {
+      name = "binaryornot-0.4.4";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/a7/fe/7ebfec74d49f97fc55cd38240c7a7d08134002b1e14be8c3897c0dd5e49b/binaryornot-0.4.4.tar.gz"; sha256 = "359501dfc9d40632edc9fac890e19542db1a287bbcfa58175b66658392018061"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."chardet"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/audreyr/binaryornot";
+        license = licenses.bsdOriginal;
+        description = "Ultra-lightweight pure Python package to check if a file is binary or text.";
+      };
+    };
+
     "boto3" = python.mkDerivation {
-      name = "boto3-1.6.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/37/cd/d3fcdb481c6402123cd9dd19726ea89ffe9af0fc50b626fd6bf3a866ad71/boto3-1.6.1.tar.gz"; sha256 = "de924f18c50a496df7298ed462a2673613b384351599624b33175207722dc5bb"; };
+      name = "boto3-1.6.17";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3f/47/10e88f059184f8fc3acc4ee026b9d4e300f5bc56bd045b87a53e72a1696a/boto3-1.6.17.tar.gz"; sha256 = "cde5a52ef8b341a64dcb319cbb7e033d214ede7f25c07b11f7f5bd8c284787e6"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -222,8 +281,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.9.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3f/f4/331e9e7a19b0474061254d40bcdfa69435adbff03e42ea35a2fae13d5f29/botocore-1.9.1.tar.gz"; sha256 = "2a673d9289fc5d14b45fa904673d8f6d226ebfc238c0f354ac8d4e8955329152"; };
+      name = "botocore-1.9.17";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/1d/12/c3b2642bbaafb83a2b0c6ae3fd49170a8a8ad71b2e15f31e94db07b37708/botocore-1.9.17.tar.gz"; sha256 = "64688619a31b969571cf1822a7722e9be6c15fe2e8e9c31249e4096475cc17da"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -307,6 +366,28 @@ let
       };
     };
 
+    "cookiecutter" = python.mkDerivation {
+      name = "cookiecutter-1.6.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/b5/97/581470d950361dd15b4009218420409ecc42ff1a5523544b945ac310b029/cookiecutter-1.6.0.tar.gz"; sha256 = "1316a52e1c1f08db0c9efbf7d876dbc01463a74b155a0d83e722be88beda9a3e"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."Jinja2"
+      self."binaryornot"
+      self."click"
+      self."future"
+      self."jinja2-time"
+      self."poyo"
+      self."requests"
+      self."whichcraft"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/audreyr/cookiecutter";
+        license = licenses.bsdOriginal;
+        description = "A command-line utility that creates projects from project templates, e.g. creating a Python package project from a Python package project template.";
+      };
+    };
+
     "decorator" = python.mkDerivation {
       name = "decorator-4.2.1";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/70/f1/cb9373195639db13063f55eb06116310ad691e1fd125e6af057734dc44ea/decorator-4.2.1.tar.gz"; sha256 = "7d46dd9f3ea1cf5f06ee0e4e1277ae618cf48dfb10ada7c8427cd46c42702a0e"; };
@@ -350,6 +431,19 @@ let
       };
     };
 
+    "future" = python.mkDerivation {
+      name = "future-0.16.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/00/2b/8d082ddfed935f3608cc61140df6dcbf0edea1bc3ab52fb6c29ae3e81e85/future-0.16.0.tar.gz"; sha256 = "e39ced1ab767b5936646cedba8bcce582398233d6a627067d4c6a454c90cfedb"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://python-future.org";
+        license = licenses.mit;
+        description = "Clean single-source support for Python 3 and 2";
+      };
+    };
+
     "idna" = python.mkDerivation {
       name = "idna-2.6";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/f4/bd/0467d62790828c23c47fc1dfa1b1f052b24efdf5290f071c7a91d0d82fd3/idna-2.6.tar.gz"; sha256 = "2c6a5de3089009e3da7c5dde64a141dbc8551d5b7f6cf4ed7c2568d0cc520a8f"; };
@@ -364,15 +458,15 @@ let
     };
 
     "idna-ssl" = python.mkDerivation {
-      name = "idna-ssl-1.0.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/44/f4/97f7a58e814b3523a5e68bc8095c36cfa6daffb35f01b25248ec4605f53e/idna_ssl-1.0.0.tar.gz"; sha256 = "1227e44039bd31e02adaeafdbba61281596d623d222643fb021f87f2144ea147"; };
+      name = "idna-ssl-1.0.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c4/3b/facf5a5009e577e7764e68a2af5ee25c63f41c78277260c2c42b8cfabf2e/idna-ssl-1.0.1.tar.gz"; sha256 = "1293f030bc608e9aa9cdee72aa93c1521bbb9c7698068c61c9ada6772162b979"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."idna"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "https://github.com/aio-libs/idna_ssl";
+        homepage = "https://github.com/aio-libs/idna-ssl";
         license = licenses.mit;
         description = "Patch ssl.match_hostname for Unicode(idna) domains support";
       };
@@ -445,6 +539,22 @@ let
       };
     };
 
+    "jinja2-time" = python.mkDerivation {
+      name = "jinja2-time-0.2.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/de/7c/ee2f2014a2a0616ad3328e58e7dac879251babdb4cb796d770b5d32c469f/jinja2-time-0.2.0.tar.gz"; sha256 = "d14eaa4d315e7688daa4969f616f226614350c48730bfa1692d2caebd8c90d40"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."Jinja2"
+      self."arrow"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/hackebrot/jinja2-time";
+        license = licenses.mit;
+        description = "Jinja2 Extension for Dates and Times";
+      };
+    };
+
     "jmespath" = python.mkDerivation {
       name = "jmespath-0.9.3";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e5/21/795b7549397735e911b032f255cff5fb0de58f96da794274660bca4f58ef/jmespath-0.9.3.tar.gz"; sha256 = "6a81d4c9aa62caf061cb517b4d9ad1dd300374cd4706997aff9cd6aedd61fc64"; };
@@ -483,6 +593,21 @@ let
         homepage = "https://github.com/kumar303/mohawk";
         license = licenses.mpl20;
         description = "Library for Hawk HTTP authorization";
+      };
+    };
+
+    "more-itertools" = python.mkDerivation {
+      name = "more-itertools-4.1.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/db/0b/f5660bf6299ec5b9f17bd36096fa8148a1c843fa77ddfddf9bebac9301f7/more-itertools-4.1.0.tar.gz"; sha256 = "c9ce7eccdcb901a2c75d326ea134e0886abfbea5f93e91cc95de9507c0816c44"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."six"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/erikrose/more-itertools";
+        license = licenses.mit;
+        description = "More routines for operating on iterables, beyond itertools";
       };
     };
 
@@ -590,6 +715,19 @@ let
       };
     };
 
+    "poyo" = python.mkDerivation {
+      name = "poyo-0.4.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/9f/7a/d92b5cc1d2f6bf0f1c1cd427e1665a3b3889563ba25fbb66f50356954c45/poyo-0.4.1.tar.gz"; sha256 = "103b4ee3e1c7765098fe1cabe43f828db2e2a6079646561a2117e1a809f352d6"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/hackebrot/poyo";
+        license = licenses.mit;
+        description = "A lightweight YAML Parser for Python";
+      };
+    };
+
     "prompt-toolkit" = python.mkDerivation {
       name = "prompt-toolkit-1.0.15";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/8a/ad/cf6b128866e78ad6d7f1dc5b7f99885fb813393d9860778b2984582e81b5/prompt_toolkit-1.0.15.tar.gz"; sha256 = "858588f1983ca497f1cf4ffde01d978a3ea02b01c8a26a8bbc5cd2e66d816917"; };
@@ -635,8 +773,8 @@ let
     };
 
     "py" = python.mkDerivation {
-      name = "py-1.5.2";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/90/e3/e075127d39d35f09a500ebb4a90afd10f9ef0a1d28a6d09abeec0e444fdd/py-1.5.2.tar.gz"; sha256 = "ca18943e28235417756316bfada6cd96b23ce60dd532642690dcfdaba988a76d"; };
+      name = "py-1.5.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/f7/84/b4c6e84672c4ceb94f727f3da8344037b62cee960d80e999b1cd9b832d83/py-1.5.3.tar.gz"; sha256 = "29c9fab495d7528e80ba1e343b958684f4ace687327e6f789a94bf3d1915f881"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -687,13 +825,14 @@ let
     };
 
     "pytest" = python.mkDerivation {
-      name = "pytest-3.4.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/84/11/a6fe751118861b4d6587e07633f2e055733fc3678f7e5d7ae30303d90b7e/pytest-3.4.1.tar.gz"; sha256 = "9ddcb879c8cc859d2540204b5399011f842e5e8823674bf429f70ada281b3cc6"; };
+      name = "pytest-3.5.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/2d/56/6019153cdd743300c5688ab3b07702355283e53c83fbf922242c053ffb7b/pytest-3.5.0.tar.gz"; sha256 = "fae491d1874f199537fd5872b5e1f0e74a009b979df9d53d1553fd03da1703e1"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."attrs"
       self."colorama"
+      self."more-itertools"
       self."pluggy"
       self."py"
       self."six"
@@ -929,6 +1068,19 @@ let
         homepage = "https://github.com/jquast/wcwidth";
         license = licenses.mit;
         description = "Measures number of Terminal column cells of wide-character codes";
+      };
+    };
+
+    "whichcraft" = python.mkDerivation {
+      name = "whichcraft-0.4.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e5/cd/7fb54d4b3d43ed59ecb704fb96876831e0b493c4e24eecddd4ecb2442f5e/whichcraft-0.4.1.tar.gz"; sha256 = "9e0d51c9387cb7e9f28b7edb549e6a03da758f7784f991eb4397d7f7808c57fd"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/pydanny/whichcraft";
+        license = licenses.bsdOriginal;
+        description = "This package provides cross-platform cross-python shutil.which functionality.";
       };
     };
 

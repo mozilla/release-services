@@ -17,7 +17,7 @@ import please_cli.config
 
 
 DEPLOYABLE_PROJECTS = {}
-for project_name, project_config in please_cli.config.PROJECTS.items():
+for project_name, project_config in please_cli.config.PROJECTS_CONFIG.items():
     if 'deploy' in project_config:
         DEPLOYABLE_PROJECTS[project_name] = project_config
 
@@ -34,7 +34,7 @@ def get_build_task(index,
                    cache_region,
                    ):
 
-    project_config = please_cli.config.PROJECTS.get(project, {})
+    project_config = please_cli.config.PROJECTS_CONFIG.get(project, {})
 
     extra_attributes = []
     if channel in project_config.get('deploy_options', {}).keys():
@@ -80,7 +80,7 @@ def get_deploy_task(index,
                     taskcluster_secret,
                     ):
 
-    project_config = please_cli.config.PROJECTS.get(project, {})
+    project_config = please_cli.config.PROJECTS_CONFIG.get(project, {})
     deploy_type = project_config.get('deploy')
     deploy_options = project_config.get('deploy_options', {}).get(channel, {})
     scopes = []
@@ -96,7 +96,7 @@ def get_deploy_task(index,
         for url in deploy_options.get('csp', []):
             project_csp.append('--csp="{}"'.format(url))
         for require in project_config.get('requires', []):
-            require_config = please_cli.config.PROJECTS.get(require, {})
+            require_config = please_cli.config.PROJECTS_CONFIG.get(require, {})
             require_deploy_options = require_config.get('deploy_options', {}).get(channel, {})
             require_url = require_deploy_options.get('url')
             if require_url:
@@ -108,7 +108,7 @@ def get_deploy_task(index,
         for env_name, env_value in deploy_options.get('envs', {}).items():
             project_envs.append('--env="{}: {}"'.format(env_name, env_value))
         for require in project_config.get('requires', []):
-            require_config = please_cli.config.PROJECTS.get(require, {})
+            require_config = please_cli.config.PROJECTS_CONFIG.get(require, {})
             require_deploy_options = require_config.get('deploy_options', {}).get(channel, {})
             require_url = require_deploy_options.get('url')
             if require_url:
