@@ -235,6 +235,7 @@ in skipOverrides {
     # Remove useless dependency
     patchPhase = ''
       sed -i -e "s|setuptools>=28.6.1||" requirements.txt
+      sed -i -e "s|python-dateutil.*|python-dateutil|" requirements.txt
     '';
   };
 
