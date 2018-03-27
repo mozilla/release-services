@@ -9,7 +9,7 @@ def zero_coverage(artifacts, out_dir='code-coverage-reports'):
     report = grcov.report(artifacts, out_format='coveralls+')
     report = json.loads(report.decode('utf-8'))  # Decoding is only necessary until Python 3.6.
 
-    zero_coverage_files = []
+    zero_coverage_files = set()
     zero_coverage_functions = {}
     for sf in report['source_files']:
         name = sf['name']
@@ -35,21 +35,20 @@ def zero_coverage(artifacts, out_dir='code-coverage-reports'):
                 all_functions_uncovered = False
 
         if all_lines_uncovered or (len(sf['functions']) > 1 and all_functions_uncovered):
-            zero_coverage_files.append(name)
-
-    with open(os.path.join(out_dir, 'zero_coverage_files.json'), 'w') as f:
-        json.dump(zero_coverage_files, f)
+            zero_coverage_files.add(name)
 
     os.makedirs(os.path.join(out_dir, 'zero_coverage_functions'), exist_ok=True)
 
-    zero_coverage_function_counts = []
+    zero_coverage_report = []
     for fname, functions in zero_coverage_functions.items():
-        zero_coverage_function_counts.append({
+        zero_coverage_report.append({
             'name': fname,
             'funcs': len(functions),
+            'uncovered': True if fname in zero_coverage_files else False
         })
+
         with open(os.path.join(out_dir, 'zero_coverage_functions/%s.json' % fname.replace('/', '_')), 'w') as f:
             json.dump(functions, f)
 
-    with open(os.path.join(out_dir, 'zero_coverage_functions.json'), 'w') as f:
-        json.dump(zero_coverage_function_counts, f)
+    with open(os.path.join(out_dir, 'zero_coverage_report.json'), 'w') as f:
+        json.dump(zero_coverage_report, f)
