@@ -34,8 +34,8 @@ def cmd(channel):
         channels = [channel]
 
 
-    for project_id in sorted(please_cli.config.PROJECTS.keys()):
-        project = please_cli.config.PROJECTS[project_id].get('deploy_options')
+    for project_id in sorted(please_cli.config.PROJECTS_CONFIG.keys()):
+        project = please_cli.config.PROJECTS_CONFIG[project_id].get('deploy_options')
 
         if project:
             for channel in sorted(channels):

@@ -51,7 +51,7 @@ def cmd(ctx, project, nix_shell,
         taskcluster_client_id,
         taskcluster_access_token,
     ):
-    checks = please_cli.config.PROJECTS.get(project, {}).get('checks')
+    checks = please_cli.config.PROJECTS_CONFIG.get(project, {}).get('checks')
 
     if not checks:
         raise click.ClickException('No checks found for `{}` project.'.format(project))

@@ -59,7 +59,7 @@ def cmd(ctx, project, quiet, nix_shell,
         taskcluster_access_token,
         ):
 
-    project_config = please_cli.config.PROJECTS.get(project, {})
+    project_config = please_cli.config.PROJECTS_CONFIG.get(project, {})
     run_type = project_config.get('run')
     run_options = project_config.get('run_options', {})
 
@@ -79,8 +79,8 @@ def cmd(ctx, project, quiet, nix_shell,
     os.environ['DEBUG'] = 'true'
     os.environ['PROJECT_NAME'] = project_name
 
-    pg_host = please_cli.config.PROJECTS['postgresql']['run_options'].get('host', host)
-    pg_port = str(please_cli.config.PROJECTS['postgresql']['run_options']['port'])
+    pg_host = please_cli.config.PROJECTS_CONFIG['postgresql']['run_options'].get('host', host)
+    pg_port = str(please_cli.config.PROJECTS_CONFIG['postgresql']['run_options']['port'])
 
     if 'postgresql' in project_config.get('requires', []):
 
@@ -234,9 +234,9 @@ def cmd(ctx, project, quiet, nix_shell,
         for require in project_config.get('requires', []):
             env_name = 'WEBPACK_{}_URL'.format(require.replace('-', '_').upper())
             env_value = '{}://{}:{}'.format(
-                please_cli.config.PROJECTS[require]['run_options'].get('schema', 'https'),
-                please_cli.config.PROJECTS[require]['run_options'].get('host', host),
-                please_cli.config.PROJECTS[require]['run_options']['port'],
+                please_cli.config.PROJECTS_CONFIG[require]['run_options'].get('schema', 'https'),
+                please_cli.config.PROJECTS_CONFIG[require]['run_options'].get('host', host),
+                please_cli.config.PROJECTS_CONFIG[require]['run_options']['port'],
             )
             os.environ[env_name] = env_value
 
