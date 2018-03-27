@@ -83,8 +83,8 @@ let
 
   generated = self: {
     "Logbook" = python.mkDerivation {
-      name = "Logbook-1.2.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3d/93/1862b5e453ec92d1068dd2613674d2291d622a3e56a0e250a8e4d88b39cc/Logbook-1.2.1.tar.gz"; sha256 = "ac201ccdb5b37170602a26d8a47df735e8904f11d51a73fa84f09a3014fc6001"; };
+      name = "Logbook-1.3.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/27/02/e18f2275048ade1288e75e2d09f86e54fdaba0440e190d7adfdc4636f63d/Logbook-1.3.0.tar.gz"; sha256 = "f44562b4ecf529046db0e0a80ee145217c865966834e85479352d986a455488b"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -227,8 +227,8 @@ let
     };
 
     "codespell" = python.mkDerivation {
-      name = "codespell-1.11.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/01/3d/f00eeb4b513ce5724366026a60867920a63d6d4362977bc18f05816ae740/codespell-1.11.0.tar.gz"; sha256 = "259ad215acc3b3406d65490224d70c6c85068b0b14d997728ed5b1d2ef275b6e"; };
+      name = "codespell-1.12.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/29/85/8098b4252e1ed5f39e9b83db96cd9105ef2572ba1a14a165f7023e86c766/codespell-1.12.0.tar.gz"; sha256 = "f547ef6ea3af4569b0a4d3ef106ef6403f6ee574afdaa8e332650aea87301daf"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -253,8 +253,8 @@ let
     };
 
     "datadog" = python.mkDerivation {
-      name = "datadog-0.19.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/06/53/0aabf2f520cbcce345aba3a625954950a2585fcb1a05dfc071cb7b834aad/datadog-0.19.0.tar.gz"; sha256 = "ec476e6f474955770d414d4cffa272d68b2715e59cbb9d7bb561da037c2041bf"; };
+      name = "datadog-0.20.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/36/29/4c3340db9f5d0ff27e3ce7af621cff4f9b8b45dc3191a445037972fb4757/datadog-0.20.0.tar.gz"; sha256 = "7bb4af836d7422a6138f983b81c16acd56c2d608913982602856cc273ae74768"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -356,15 +356,15 @@ let
     };
 
     "idna-ssl" = python.mkDerivation {
-      name = "idna-ssl-1.0.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/44/f4/97f7a58e814b3523a5e68bc8095c36cfa6daffb35f01b25248ec4605f53e/idna_ssl-1.0.0.tar.gz"; sha256 = "1227e44039bd31e02adaeafdbba61281596d623d222643fb021f87f2144ea147"; };
+      name = "idna-ssl-1.0.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c4/3b/facf5a5009e577e7764e68a2af5ee25c63f41c78277260c2c42b8cfabf2e/idna-ssl-1.0.1.tar.gz"; sha256 = "1293f030bc608e9aa9cdee72aa93c1521bbb9c7698068c61c9ada6772162b979"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."idna"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "https://github.com/aio-libs/idna_ssl";
+        homepage = "https://github.com/aio-libs/idna-ssl";
         license = licenses.mit;
         description = "Patch ssl.match_hostname for Unicode(idna) domains support";
       };
@@ -395,6 +395,21 @@ let
         homepage = "https://github.com/kumar303/mohawk";
         license = licenses.mpl20;
         description = "Library for Hawk HTTP authorization";
+      };
+    };
+
+    "more-itertools" = python.mkDerivation {
+      name = "more-itertools-4.1.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/db/0b/f5660bf6299ec5b9f17bd36096fa8148a1c843fa77ddfddf9bebac9301f7/more-itertools-4.1.0.tar.gz"; sha256 = "c9ce7eccdcb901a2c75d326ea134e0886abfbea5f93e91cc95de9507c0816c44"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."six"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/erikrose/more-itertools";
+        license = licenses.mit;
+        description = "More routines for operating on iterables, beyond itertools";
       };
     };
 
@@ -474,8 +489,8 @@ let
     };
 
     "py" = python.mkDerivation {
-      name = "py-1.5.2";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/90/e3/e075127d39d35f09a500ebb4a90afd10f9ef0a1d28a6d09abeec0e444fdd/py-1.5.2.tar.gz"; sha256 = "ca18943e28235417756316bfada6cd96b23ce60dd532642690dcfdaba988a76d"; };
+      name = "py-1.5.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/f7/84/b4c6e84672c4ceb94f727f3da8344037b62cee960d80e999b1cd9b832d83/py-1.5.3.tar.gz"; sha256 = "29c9fab495d7528e80ba1e343b958684f4ace687327e6f789a94bf3d1915f881"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -526,12 +541,13 @@ let
     };
 
     "pytest" = python.mkDerivation {
-      name = "pytest-3.4.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/84/11/a6fe751118861b4d6587e07633f2e055733fc3678f7e5d7ae30303d90b7e/pytest-3.4.1.tar.gz"; sha256 = "9ddcb879c8cc859d2540204b5399011f842e5e8823674bf429f70ada281b3cc6"; };
+      name = "pytest-3.5.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/2d/56/6019153cdd743300c5688ab3b07702355283e53c83fbf922242c053ffb7b/pytest-3.5.0.tar.gz"; sha256 = "fae491d1874f199537fd5872b5e1f0e74a009b979df9d53d1553fd03da1703e1"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."attrs"
+      self."more-itertools"
       self."pluggy"
       self."py"
       self."six"
@@ -689,8 +705,8 @@ let
     };
 
     "tqdm" = python.mkDerivation {
-      name = "tqdm-4.19.6";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/48/18/7a36d86aded6533ebd66148872f07e489647be6a431a5bf94be2a9dbd232/tqdm-4.19.6.tar.gz"; sha256 = "5ec0d4442358e55cdb4a0471d04c6c831518fd8837f259db5537d90feab380df"; };
+      name = "tqdm-4.19.8";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/a6/74/cb6927443849ec849ad7cdcdc8e38f04d81fce41783150c0d5215ec504a8/tqdm-4.19.8.tar.gz"; sha256 = "2aea9f81fdf127048667e0ba22f5fc10ebc879fb838dc52dcf055242037ec1f7"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
