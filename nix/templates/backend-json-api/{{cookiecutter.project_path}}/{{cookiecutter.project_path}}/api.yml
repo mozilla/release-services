@@ -1,0 +1,18 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "RelEng Archiver"
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+
+  /example:
+    get:
+      operationId: "{{cookiecutter.project_path}}.api.example"
+      responses:
+        200:
+          description: Example
+
