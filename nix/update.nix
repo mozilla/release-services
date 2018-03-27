@@ -7,7 +7,7 @@ let
 in
 
 # ensure we are using correct version of Nix
-if ! builtins ? nixVersion || builtins.compareVersions requiredNixVersion builtins.nixVersion == 1
+if ! builtins ? nixVersion || builtins.compareVersions requiredNixVersion builtins.nixVersion >= 0
 then abort "mozilla-releng/services requires Nix >= ${requiredNixVersion}, please upgrade."
 else
 
