@@ -44,7 +44,10 @@ class ClangFormat(object):
     def __init__(self, repo_dir):
         assert os.path.isdir(repo_dir)
         self.repo_dir = repo_dir
-        self.binary = os.path.join(self.repo_dir, 'clang', 'bin', 'clang-format')
+        self.binary = os.path.join(
+            os.environ['MOZBUILD_STATE_PATH'],
+            'clang-tools', 'clang', 'bin', 'clang-format',
+        )
         assert os.path.exists(self.binary), \
             'Missing clang-format in {}'.format(self.binary)
 

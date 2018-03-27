@@ -116,19 +116,25 @@ class Workflow(object):
         with stats.api.timer('runtime.mach'):
             # Only run mach if revision has any C/C++ files
             if revision.has_clang_files:
-                    # mach configure with mozconfig
-                    logger.info('Mach configure...')
-                    run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
+                # mach configure with mozconfig
+                logger.info('Mach configure...')
+                run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
 
-                    # Build CompileDB backend
-                    logger.info('Mach build backend...')
-                    cmd = ['gecko-env', './mach', 'build-backend', '--backend=CompileDB']
-                    run_check(cmd, cwd=self.repo_dir)
+                # Build CompileDB backend & exports
+                logger.info('Mach build backend...')
+                cmd = ['gecko-env', './mach', 'build-backend', '--backend=CompileDB']
+                run_check(cmd, cwd=self.repo_dir)
+                logger.info('Mach build pre-export...')
+                cmd = ['gecko-env', './mach', 'build', 'pre-export']
+                run_check(cmd, cwd=self.repo_dir)
+                logger.info('Mach build export...')
+                cmd = ['gecko-env', './mach', 'build', 'export']
+                run_check(cmd, cwd=self.repo_dir)
 
-                    # Download clang from Mozilla artifacts
-                    logger.info('Download clang toolchain...')
-                    cmd = ['gecko-env', './mach', 'artifact', 'toolchain', '--from-build', 'linux64-clang-tidy']
-                    run_check(cmd, cwd=self.repo_dir)
+                # Setup static analysis binaries through mach
+                logger.info('Mach setup static-analysis')
+                cmd = ['gecko-env', './mach', 'static-analysis', 'install']
+                run_check(cmd, cwd=self.repo_dir)
 
             else:
                 logger.info('No clang files detected, skipping mach')

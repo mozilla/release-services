@@ -132,6 +132,9 @@ let
       # Use clang mozconfig from gecko-env
       export MOZCONFIG=${gecko-env}/conf/mozconfig
 
+      # Use common mozilla state directory
+      export MOZBUILD_STATE_PATH=/tmp/mozilla-state
+
       # Extras for clang-tidy
       export CPLUS_INCLUDE_PATH=${includes}
       export C_INCLUDE_PATH=${includes}
@@ -147,6 +150,7 @@ let
         "MOZCONFIG=${gecko-env}/conf/mozconfig"
         "CODESPELL=${python.packages.codespell}/bin/codespell"
         "SHELLCHECK=${shellcheck}/bin/shellcheck"
+        "MOZBUILD_STATE_PATH=/tmp/mozilla-state"
         "SHELL=xterm"
       ];
     dockerCmd = [];
