@@ -109,4 +109,3 @@ class ArtifactsHandler(object):
                 executor.submit(self.download, test_task)
 
         logger.info('Code coverage artifacts downloaded')
-        
