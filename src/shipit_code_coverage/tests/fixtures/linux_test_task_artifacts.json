@@ -12,14 +12,12 @@
       "expires": "2019-03-02T10:18:14.371Z",
       "contentType": "application/octet-stream"
     }],
-
 	"task" : {
 		"metadata" : {
 			"name" : "test-linux64-ccov/opt/test/code-coverage-grcov.zip"
-		},
-		"status" : {
-			"taskId" : "MCIO1RWTRu2GhiE7_jILBw"
 		}
+	},
+	"status" : {
+		"taskId" : "MJIO3RWTRu2GhiE7_jILBw"
 	}
 }
- 

@@ -2,6 +2,7 @@
 
 import os
 from shipit_code_coverage.artifacts import ArtifactsHandler
+from shipit_code_coverage import taskcluster
 from unittest import mock
 import pytest
 
@@ -62,12 +63,19 @@ def test_get_coverage_artifacts(FAKE_ARTIFACTS_DIR):
         a.get(chunk='xpcshell-7', suite='mochitest')
 
 
-@mock.patch('shipit_code_coverage.artifacts.ArtifactsHandler.download', autospec=True)
-def test_download(mock_download, LINUX_TEST_TASK_ARTIFACTS):
+@mock.patch('shipit_code_coverage.taskcluster.get_task_artifacts')
+@mock.patch('shipit_code_coverage.taskcluster.download_artifact')
+def test_download(mocked_download_artifact, mocked_get_task, LINUX_TEST_TASK_ARTIFACTS):
     a = ArtifactsHandler([], [], [])
+    mocked_get_task.return_value = LINUX_TEST_TASK_ARTIFACTS['artifacts']
+    mocked_download_artifact.return_value = LINUX_TEST_TASK_ARTIFACTS['artifacts'][0]
 
-    @mock.patch('requests.get', autospec=True)
-    def mock_get_task_artifacts(mocked_get):
-        mocked_req_obj = mock.Mock()
+    a.download(LINUX_TEST_TASK_ARTIFACTS)
 
-    assert True
+    assert mocked_download_artifact.call_count == 1
+    assert mocked_get_task.call_count == 1
+    mocked_download_artifact.assert_called_with(['l', 'i', 'n', 'u', 'x', '_', 't', 'e', 's', 't', '/',
+        'c', 'o', 'd', 'e', '-', 'c', 'o', 'v', 'e', 'r', 'a', 'g', 'e', '-', 'g', 'r', 'c', 'o',
+        'v', '.', 'z', 'i', 'p', '_', 'c', 'o', 'd', 'e', '-', 'c', 'o', 'v', 'e', 'r', 'a', 'g',
+        'e', '-', 'g', 'r', 'c', 'o', 'v', '.', 'z', 'i', 'p'],
+        'MJIO3RWTRu2GhiE7_jILBw', 'public/code-coverage-grcov.zip')
