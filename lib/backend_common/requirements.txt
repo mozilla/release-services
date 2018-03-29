@@ -1,3 +1,6 @@
--e ./../cli_common #egg=mozilla-cli-common
+-e ./../cli_common[log] #egg=mozilla-cli-common
 Flask
-blinker
+blinker  # to support signals in Flask
+
+# botocore requirement which pip didn't resolve correctly
+python-dateutil<2.7.0,>=2.1

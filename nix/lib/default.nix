@@ -267,8 +267,14 @@ in rec {
               then builtins.head split
               else line;
 
+      removeSpaces =
+        builtins.map (builtins.replaceStrings [" "]  [""]);
+
       removeExtras =
         builtins.map (removeAfter "[");
+
+      removeComment =
+        builtins.map (removeAfter "#");
 
       removeSpecs =
         builtins.map
@@ -303,11 +309,13 @@ in rec {
     in
       map
         (pkg_name: builtins.getAttr pkg_name custom_pkgs)
-        (removeExtras
-          (removeSpecs
-            (removeLines
-              (extractEggName
-                (readLines file)))));
+        (removeSpaces
+          (removeComment
+            (removeExtras
+              (removeSpecs
+                (removeLines
+                  (extractEggName
+                    (readLines file)))))));
 
 
 

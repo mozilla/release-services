@@ -1,0 +1,2 @@
+-r ./../cli_common/requirements-dev.txt
+inotify  # needed by gunicorn for faster/better reload

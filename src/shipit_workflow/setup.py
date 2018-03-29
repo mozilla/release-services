@@ -30,6 +30,8 @@ def read_requirements(file_):
                 lines.append(line)
     return lines
 
+# ensure that we depend on cli_common[log]
+__import__('pdb').set_trace()
 
 setup(
     name='mozilla-shipit-workflow',

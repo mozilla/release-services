@@ -1,0 +1,41 @@
+{
+    "log": [
+        "Logbook",
+        "mozdef-client",
+        "raven",
+        "structlog"
+    ],
+    "cli": [
+        "Logbook",
+        "click",
+        "mozdef-client",
+        "raven",
+        "structlog"
+    ],
+    "command": [
+        "Logbook",
+        "click",
+        "mozdef-client",
+        "raven",
+        "structlog"
+    ],
+    "mercurial": [
+        "python-hglib"
+    ],
+    "pulse": [
+        "Logbook",
+        "aioamqp",
+        "asyncio",
+        "mozdef-client",
+        "raven",
+        "structlog"
+    ],
+    "taskcluster": [
+        "Logbook",
+        "click",
+        "mozdef-client",
+        "raven",
+        "structlog",
+        "taskcluster"
+    ]
+}
