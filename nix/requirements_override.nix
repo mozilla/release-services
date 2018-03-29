@@ -235,6 +235,7 @@ in skipOverrides {
     # Remove useless dependency
     patchPhase = ''
       sed -i -e "s|setuptools>=28.6.1||" requirements.txt
+      sed -i -e "s|python-dateutil.*|python-dateutil|" requirements.txt
     '';
   };
 
@@ -256,6 +257,12 @@ in skipOverrides {
   "pytest" = self: old: {
     patchPhase = ''
       sed -i -e "s|setup_requires=\['setuptools-scm'\],||" setup.py
+    '';
+  };
+
+  "python-dateutil" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['setuptools_scm'\],||" setup.py
     '';
   };
 

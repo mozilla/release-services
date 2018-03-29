@@ -153,8 +153,8 @@ let
     };
 
     "Sphinx" = python.mkDerivation {
-      name = "Sphinx-1.7.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/b1/21/b97c0936171669a90e0e7036a112c55fc415699e8707e675b987949221e1/Sphinx-1.7.1.tar.gz"; sha256 = "da987de5fcca21a4acc7f67a86a363039e67ac3e8827161e61b91deb131c0ee8"; };
+      name = "Sphinx-1.7.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/0d/12/843cdf08c9795d1d225c92e099a18143856110cbeff562b8abd60bd26cec/Sphinx-1.7.2.tar.gz"; sha256 = "5a1c9a0fec678c24b9a2f5afba240c04668edb7f45c67ce2ed008996b3f21ae2"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -335,8 +335,8 @@ let
     };
 
     "packaging" = python.mkDerivation {
-      name = "packaging-17.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/6d/72/20bcaab4f7a6bfd108c4ca1dc486906817efa9596e3b15b4c0603da981ba/packaging-17.0.tar.gz"; sha256 = "e9f654a6854321ac39d2e6745b820773ba9efa394e71dea1b387cc717d439f93"; };
+      name = "packaging-17.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/77/32/439f47be99809c12ef2da8b60a2c47987786d2c6c9205549dd6ef95df8bd/packaging-17.1.tar.gz"; sha256 = "f019b770dd64e585a99714f1fd5e01c7a8f11b45635aa953fd41c689a657375b"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -517,8 +517,8 @@ let
     };
 
     "tornado" = python.mkDerivation {
-      name = "tornado-4.5.3";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e3/7b/e29ab3d51c8df66922fea216e2bddfcb6430fb29620e5165b16a216e0d3c/tornado-4.5.3.tar.gz"; sha256 = "6d14e47eab0e15799cf3cdcc86b0b98279da68522caace2bd7ce644287685f0a"; };
+      name = "tornado-5.0.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/66/60/5b34caa5014eb3f1deb16d0e72cc08abeec7a9c9823486da7984ddadc95f/tornado-5.0.1.tar.gz"; sha256 = "3e9a2333362d3dad7876d902595b64aea1a2f91d0df13191ea1f8bca5a447771"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
