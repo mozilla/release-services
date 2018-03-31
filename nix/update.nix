@@ -1,5 +1,22 @@
-let pkgs' = import <nixpkgs> {}; in
-{ pkgs ? import (pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs.json))) {}
+let
+  requiredNixVersion = "2.0pre";
+  pkgs' = import <nixpkgs> {};
+  nixpkgs-json = builtins.fromJSON (builtins.readFile ./nixpkgs.json);
+  src-nixpkgs = pkgs'.fetchFromGitHub { inherit (nixpkgs-json) owner repo rev sha256; };
+  src-nixpkgs-mozilla = pkgs'.fetchFromGitHub (builtins.fromJSON (builtins.readFile ./nixpkgs-mozilla.json));
+in
+
+# ensure we are using correct version of Nix
+if ! builtins ? nixVersion || builtins.compareVersions requiredNixVersion builtins.nixVersion >= 0
+then abort "mozilla-releng/services requires Nix >= ${requiredNixVersion}, please upgrade."
+else
+
+{ pkgs ? import src-nixpkgs {
+    overlays = [
+      (import "${src-nixpkgs-mozilla}/rust-overlay.nix")
+      (import "${src-nixpkgs-mozilla}/firefox-overlay.nix")
+    ];
+  }
 , pkg ? null
 }:
 
@@ -31,6 +48,9 @@ in pkgs.stdenv.mkDerivation {
   shellHook = ''
     export HOME=$PWD
     export NIX_PATH=nixpkgs=${pkgs.path}
+    export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
+    export LANG=en_US.UTF-8
+
     echo "Updating packages ..."
     ${builtins.concatStringsSep "\n\n" (
         map (pkg: "echo ' - ${(builtins.parseDrvName pkg.name).name}'; ${if pkg.update == null then "" else pkg.update}") packages)}

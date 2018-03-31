@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix --basename mysql2pgsql -V 2.7 -e py-mysql2pgsql -E postgresql mysql.lib -v
+#   pypi2nix --basename mysql2pgsql -V 2.7 -e py-mysql2pgsql -E postgresql mysql.connector-c -v
 #
 
 { pkgs ? import <nixpkgs> {}
@@ -20,7 +20,7 @@ let
     python = pkgs.python27Full;
   };
 
-  commonBuildInputs = with pkgs; [ postgresql mysql.lib ];
+  commonBuildInputs = with pkgs; [ postgresql mysql.connector-c ];
   commonDoCheck = false;
 
   withPackages = pkgs':

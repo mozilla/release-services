@@ -30,7 +30,11 @@ for item in reversed(CWD_DIR.split(os.sep)):
 if ROOT_DIR is None:
     raise click.ClickException(NO_ROOT_DIR_ERROR % '\n - '.join(_folders))
 
-CACHE_URL = "https://cache.mozilla-releng.net"
+CACHE_URLS = [
+    'https://cache.mozilla-releng.net',
+    #'https://cache-testing.mozilla-releng.net',
+    'http://releng-cache-testing.s3.amazonaws.com',
+]
 
 SRC_DIR = os.path.join(ROOT_DIR, 'src')
 TMP_DIR = os.path.join(ROOT_DIR, 'tmp')
@@ -40,7 +44,7 @@ DEPLOY_CHANNELS = ['testing', 'staging', 'production']
 
 DOCKER_REGISTRY = "https://index.docker.io"
 DOCKER_REPO = 'mozillareleng/services'
-DOCKER_BASE_TAG = 'base-' + VERSION
+DOCKER_BASE_TAG = 'base-new-' + VERSION
 
 NIX_BIN_DIR = os.environ.get("NIX_BIN_DIR", "")  # must end with /
 OPENSSL_BIN_DIR = os.environ.get("OPENSSL_BIN_DIR", "")  # must end with /

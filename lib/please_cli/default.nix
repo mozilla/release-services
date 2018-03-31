@@ -4,7 +4,7 @@
 let
 
   inherit (releng_pkgs.lib) mkPython fromRequirementsFile filterSource ;
-  inherit (releng_pkgs.pkgs) writeScript makeWrapper glibcLocales nix openssl;
+  inherit (releng_pkgs.pkgs) writeScript makeWrapper glibcLocales openssl;
   inherit (releng_pkgs.pkgs.lib) fileContents ;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -27,13 +27,11 @@ let
       rm -f please_cli/VERSION
       cp ${./../../VERSION} please_cli/VERSION
       sed -i \
-        -e 's|NIX_BIN_DIR = os.environ.get("NIX_BIN_DIR", "")|NIX_BIN_DIR = "${nix}/bin/"|' \
         -e 's|OPENSSL_BIN_DIR = os.environ.get("OPENSSL_BIN_DIR", "")|OPENSSL_BIN_DIR = "${openssl.bin}/bin/"|' \
         -e 's|OPENSSL_ETC_DIR = os.environ.get("OPENSSL_ETC_DIR", "")|OPENSSL_ETC_DIR = "${openssl.out}/etc/ssl/"|' \
         please_cli/config.py
     '';
     shellHook = ''
-      export NIX_BIN_DIR="${nix}/bin/"
       export OPENSSL_BIN_DIR="${openssl.bin}/bin/"
       export OPENSSL_ETC_DIR="${openssl.out}/etc/ssl/"
     '';
