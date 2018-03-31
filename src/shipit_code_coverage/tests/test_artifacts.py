@@ -62,13 +62,13 @@ def test_get_coverage_artifacts(FAKE_ARTIFACTS_DIR):
         a.get(chunk='xpcshell-7', suite='mochitest')
 
 
-MOCKED_PATH = [
-    'l', 'i', 'n', 'u', 'x', '_', 't', 'e', 's', 't', '/',
-    'c', 'o', 'd', 'e', '-', 'c', 'o', 'v', 'e', 'r', 'a', 'g',
-    'e', '-', 'g', 'r', 'c', 'o', 'v', '.', 'z', 'i', 'p', '_',
-    'c', 'o', 'd', 'e', '-', 'c', 'o', 'v', 'e', 'r', 'a', 'g',
-    'e', '-', 'g', 'r', 'c', 'o', 'v', '.', 'z', 'i', 'p',
-]
+# MOCKED_PATH = [
+#     'l', 'i', 'n', 'u', 'x', '_', 't', 'e', 's', 't', '/',
+#     'c', 'o', 'd', 'e', '-', 'c', 'o', 'v', 'e', 'r', 'a', 'g',
+#     'e', '-', 'g', 'r', 'c', 'o', 'v', '.', 'z', 'i', 'p', '_',
+#     'c', 'o', 'd', 'e', '-', 'c', 'o', 'v', 'e', 'r', 'a', 'g',
+#     'e', '-', 'g', 'r', 'c', 'o', 'v', '.', 'z', 'i', 'p',
+# ]
 
 
 @mock.patch('shipit_code_coverage.taskcluster.get_task_artifacts')
@@ -82,4 +82,14 @@ def test_download(mocked_download_artifact, mocked_get_task, LINUX_TEST_TASK_ART
 
     assert mocked_download_artifact.call_count == 1
     assert mocked_get_task.call_count == 1
-    mocked_download_artifact.assert_called_with(MOCKED_PATH, 'MJIO3RWTRu2GhiE7_jILBw', 'public/code-coverage-grcov.zip')
+    mocked_download_artifact.assert_called_with(
+        [
+            'l', 'i', 'n', 'u', 'x', '_', 't', 'e', 's', 't', '/',
+            'c', 'o', 'd', 'e', '-', 'c', 'o', 'v', 'e', 'r', 'a', 'g',
+            'e', '-', 'g', 'r', 'c', 'o', 'v', '.', 'z', 'i', 'p', '_',
+            'c', 'o', 'd', 'e', '-', 'c', 'o', 'v', 'e', 'r', 'a', 'g',
+            'e', '-', 'g', 'r', 'c', 'o', 'v', '.', 'z', 'i', 'p'
+        ],
+        'MJIO3RWTRu2GhiE7_jILBw',
+        'public/code-coverage-grcov.zip',
+    )
