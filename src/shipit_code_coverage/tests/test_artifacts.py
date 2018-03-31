@@ -67,7 +67,6 @@ def test_get_coverage_artifacts(FAKE_ARTIFACTS_DIR):
 def test_download(mocked_download_artifact, mocked_get_task, LINUX_TEST_TASK_ARTIFACTS, FAKE_ARTIFACTS_DIR):
     a = ArtifactsHandler([], [], parent_dir=FAKE_ARTIFACTS_DIR)
     mocked_get_task.return_value = LINUX_TEST_TASK_ARTIFACTS['artifacts']
-    mocked_download_artifact.return_value = LINUX_TEST_TASK_ARTIFACTS['artifacts'][0]
 
     a.download(LINUX_TEST_TASK_ARTIFACTS)
 
