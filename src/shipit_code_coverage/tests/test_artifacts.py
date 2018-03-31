@@ -62,15 +62,6 @@ def test_get_coverage_artifacts(FAKE_ARTIFACTS_DIR):
         a.get(chunk='xpcshell-7', suite='mochitest')
 
 
-# MOCKED_PATH = [
-#     'l', 'i', 'n', 'u', 'x', '_', 't', 'e', 's', 't', '/',
-#     'c', 'o', 'd', 'e', '-', 'c', 'o', 'v', 'e', 'r', 'a', 'g',
-#     'e', '-', 'g', 'r', 'c', 'o', 'v', '.', 'z', 'i', 'p', '_',
-#     'c', 'o', 'd', 'e', '-', 'c', 'o', 'v', 'e', 'r', 'a', 'g',
-#     'e', '-', 'g', 'r', 'c', 'o', 'v', '.', 'z', 'i', 'p',
-# ]
-
-
 @mock.patch('shipit_code_coverage.taskcluster.get_task_artifacts')
 @mock.patch('shipit_code_coverage.taskcluster.download_artifact')
 def test_download(mocked_download_artifact, mocked_get_task, LINUX_TEST_TASK_ARTIFACTS):
