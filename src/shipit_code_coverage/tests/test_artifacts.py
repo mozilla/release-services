@@ -67,13 +67,19 @@ def test_get_coverage_artifacts(FAKE_ARTIFACTS_DIR):
 def test_download(mocked_download_artifact, mocked_get_task, LINUX_TEST_TASK_ARTIFACTS, FAKE_ARTIFACTS_DIR):
     a = ArtifactsHandler([], [], parent_dir=FAKE_ARTIFACTS_DIR)
     mocked_get_task.return_value = LINUX_TEST_TASK_ARTIFACTS['artifacts']
+    mocked_download_artifact.return_value = LINUX_TEST_TASK_ARTIFACTS['artifacts'][0]
 
     a.download(LINUX_TEST_TASK_ARTIFACTS)
 
-    assert mocked_download_artifact.call_count == 1
     assert mocked_get_task.call_count == 1
+    assert mocked_download_artifact.call_count == 2
     mocked_download_artifact.assert_called_with(
-        FAKE_ARTIFACTS_DIR + '/linux_test/code-coverage-grcov.zip_code-coverage-grcov.zip',
+        FAKE_ARTIFACTS_DIR + '/linux_test/code-coverage-grcov.zip_code-coverage-jsvm.zip',
         'MJIO3RWTRu2GhiE7_jILBw',
-        'public/code-coverage-grcov.zip',
+        'public/test_info/code-coverage-jsvm.zip',
+    )
+    mocked_download_artifact.assert_called_with(
+        FAKE_ARTIFACTS_DIR + '/linux_test/code-coverage-grcov.zip_code-coverage-jsvm.zip',
+        'MJIO3RWTRu2GhiE7_jILBw',
+        'public/test_info/code-coverage-jsvm.zip',
     )
