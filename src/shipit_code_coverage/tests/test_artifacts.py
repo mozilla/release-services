@@ -77,8 +77,3 @@ def test_download(mocked_download_artifact, mocked_get_task, LINUX_TEST_TASK_ART
         'MJIO3RWTRu2GhiE7_jILBw',
         'public/test_info/code-coverage-jsvm.zip',
     )
-    mocked_download_artifact.assert_called_with(
-        FAKE_ARTIFACTS_DIR + '/linux_test/code-coverage-grcov.zip_code-coverage-jsvm.zip',
-        'MJIO3RWTRu2GhiE7_jILBw',
-        'public/test_info/code-coverage-jsvm.zip',
-    )
