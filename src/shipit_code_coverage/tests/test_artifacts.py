@@ -64,21 +64,21 @@ def test_get_coverage_artifacts(FAKE_ARTIFACTS_DIR):
 
 @mock.patch('shipit_code_coverage.taskcluster.get_task_artifacts')
 @mock.patch('shipit_code_coverage.taskcluster.download_artifact')
-def test_download(mocked_download_artifact, mocked_get_task, LINUX_TEST_TASK_ARTIFACTS, FAKE_ARTIFACTS_DIR):
-    a = ArtifactsHandler([], [], parent_dir=FAKE_ARTIFACTS_DIR)
+def test_download(mocked_download_artifact, mocked_get_task, LINUX_TEST_TASK_ARTIFACTS):
+    a = ArtifactsHandler([], [], parent_dir='')
     mocked_get_task.return_value = LINUX_TEST_TASK_ARTIFACTS['artifacts']
 
     a.download(LINUX_TEST_TASK_ARTIFACTS)
 
     assert mocked_get_task.call_count == 1
     assert mocked_download_artifact.call_count == 2
-    mocked_download_artifact.assert_called_with(
-        FAKE_ARTIFACTS_DIR + '/linux_test/code-coverage-grcov.zip_code-coverage-jsvm.zip',
+    assert mocked_download_artifact.call_args_list[0] == mock.call(
+        'linux_test/code-coverage-grcov.zip_code-coverage-grcov.zip',
         'MJIO3RWTRu2GhiE7_jILBw',
-        'public/test_info/code-coverage-jsvm.zip',
+        'public/test_info/code-coverage-grcov.zip',
     )
-    mocked_download_artifact.assert_called_with(
-        FAKE_ARTIFACTS_DIR + '/linux_test/code-coverage-grcov.zip_code-coverage-jsvm.zip',
+    assert mocked_download_artifact.call_args_list[1] == mock.call(
+        'linux_test/code-coverage-grcov.zip_code-coverage-jsvm.zip',
         'MJIO3RWTRu2GhiE7_jILBw',
-        'public/test_info/code-coverage-jsvm.zip',
+        'public/test_info/code-coverage-jsvm.zip'
     )
