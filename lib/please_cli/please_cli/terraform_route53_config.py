@@ -3,11 +3,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
-
+import pprint
 import click
 import please_cli.config
 
+HEROKU_COMMENT = "##Heroku {channel} app cnames##"
+HEROKU_PRODUCTION = []
+HEROKU_TESTING = []
+HEROKU_STAGING = []
+SHIPIT_PRODUCTION = []
+SHIPIT_TESTING = []
+SHIPIT_STAGING = []
+
 HEADER = '''
+
 ######################################################################
 #                                                                    #
 # IMPORTANT: mozilla-releng.net resources were generated, do not     #
@@ -121,16 +130,62 @@ def cmd(channel):
                     domain = domain.lstrip('http')
                     domain = domain.lstrip('://')
 
-                if project_target == 'HEROKU':
-                    click.echo(HEROKU_TEMPLATE % dict(
-                        name=to_route53_name(project_id, channel),
-                        domain=domain,
-                        dns=project[channel]['dns'],
-                    ))
+                def heroku(a, b):
 
-                elif project_target == 'S3':
+                    if project_target == 'HEROKU' and a == channel and 'shipit-' not in project_id:
+                        b.append(HEROKU_TEMPLATE % dict(
+                            name=to_route53_name(project_id, channel),
+                            domain=domain,
+                            dns=project[channel]['dns'],
+                         ))
+
+                def shipit(a, b):
+
+                    if project_target == 'HEROKU' and a == channel and 'shipit-' in project_id:
+                        b.append(HEROKU_TEMPLATE % dict(
+                            name=to_route53_name(project_id, channel),
+                            domain=domain,
+                            dns=project[channel]['dns'],
+                         ))
+
+                def comment(a):
+                    line = '#' * len(HEROKU_COMMENT.format(channel=a))
+                    click.echo(line)
+                    click.echo(HEROKU_COMMENT.format(channel=a))
+                    click.echo(line)
+
+                heroku('production', HEROKU_PRODUCTION)
+                heroku('testing', HEROKU_TESTING)
+                heroku('staging', HEROKU_STAGING)
+
+                shipit('production', SHIPIT_PRODUCTION)
+                shipit('testing', SHIPIT_TESTING)
+                shipit('staging', SHIPIT_STAGING)
+
+                if project_target == 'S3':
                     click.echo(S3_TEMPLATE % dict(
                         name=to_route53_name(project_id, channel),
                         domain=domain,
                         dns=project[channel]['dns'],
                     ))
+
+    comment('production')
+    click.echo(pprint.pprint(HEROKU_PRODUCTION))
+
+    comment('testing')
+    click.echo(pprint.pprint(HEROKU_TESTING))
+
+    comment('staging')
+    click.echo(pprint.pprint(HEROKU_STAGING))
+
+    comment('Shiptit production')
+    click.echo(pprint.pprint(SHIPIT_PRODUCTION))
+
+    comment('Shipit testing')
+    click.echo(pprint.pprint(SHIPIT_TESTING))
+
+    comment('Shipit staging')
+    click.echo(pprint.pprint(SHIPIT_STAGING))
+
+
+
