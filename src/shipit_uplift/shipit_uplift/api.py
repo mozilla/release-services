@@ -425,8 +425,10 @@ def coverage_supported_extensions():
 
 
 def coverage_latest():
-    latest, previous = coverage.coverage_service.get_latest_build()
+    latest_rev, previous_rev = coverage.coverage_service.get_latest_build()
+    latest_pushid = coverage.get_changeset_data(latest_rev)['push']
     return {
-      'latest': latest,
-      'previous': previous,
+      'latest_pushid': latest_pushid,
+      'latest_rev': latest_rev,
+      'previous_rev': previous_rev,
     }
