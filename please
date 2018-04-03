@@ -16,6 +16,7 @@ USE_NIX=0
 USE_DOCKER=0
 # TODO: in addition to version we should also use hash of nix/docker folder
 DOCKER_NAME="mozilla-releng-services-v`cat ./VERSION`"
+DOCKER_EXTRAS=""
 
 case "`uname`" in
   Darwin)
@@ -46,6 +47,17 @@ if [ -f /.dockerenv ]; then
   . /etc/nix/profile.sh;
 fi
 
+USE_CACHE=${SERVICE_CACHE:-0}
+
+if [ "$USE_CACHE" != "0" ]; then
+  if [ ! -d $USE_CACHE ]; then
+    echo "Invalid cache directory $USE_CACHE"
+    exit 1
+  fi
+
+  DOCKER_EXTRAS="$DOCKER_EXTRAS --volume=$USE_CACHE:/cache"
+fi
+
 if [ "$USE_NIX" = "1" ]; then
   drv=`nix-instantiate nix/default.nix -A please-cli` 2> /dev/null
   nix_store_file=`cat $drv | cut -c17-91`
@@ -60,7 +72,8 @@ else
   if [ "$USE_DOCKER" = "1" ]; then
     if [ ! "$(docker ps -q -f name=$DOCKER_NAME)" ]; then
       if [ ! "$(docker ps -qa -f name=$DOCKER_NAME)" ]; then
-        docker run --privileged -td --name $DOCKER_NAME --volume="$(pwd)":/app --workdir=/app -p 8000-8100:8000-8100 mozillareleng/services:base-new-`cat ./VERSION`
+
+        docker run --privileged -td --name $DOCKER_NAME --volume="$(pwd)":/app --workdir=/app -p 8000-8100:8000-8100 $DOCKER_EXTRAS mozillareleng/services:base-new-`cat ./VERSION`
       else
         docker start $DOCKER_NAME
       fi
