@@ -331,14 +331,18 @@ def mock_revision():
 
 
 @pytest.fixture
-def mock_clang(mock_repository):
+def mock_clang(tmpdir):
     '''
     Mock clang binary setup by linking the system wide
     clang tools into the expected repo sub directory
     '''
-    mock_repository.directory.mkdir('clang').mkdir('bin')
+
+    # Create a temp mozbuild path
+    clang_dir = tmpdir.mkdir('clang-tools').mkdir('clang').mkdir('bin')
+    os.environ['MOZBUILD_STATE_PATH'] = str(tmpdir.realpath())
+
     for tool in ('clang-tidy', 'clang-format'):
         os.symlink(
             find_executable(tool),
-            str(mock_repository.directory.join('clang', 'bin', tool).realpath()),
+            str(clang_dir.join(tool).realpath()),
         )
