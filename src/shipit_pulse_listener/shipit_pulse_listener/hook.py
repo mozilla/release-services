@@ -39,7 +39,7 @@ class Hook(object):
         '''
         assert self.hooks is not None
 
-        task = self.hooks.triggerHook(self.group_id, self.hook_id, {'extra_env': extra_env})
+        task = self.hooks.triggerHook(self.group_id, self.hook_id, extra_env)
         task_id = task['status']['taskId']
         logger.info('Triggered a new task', id=task_id)
 
