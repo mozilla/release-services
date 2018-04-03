@@ -63,9 +63,12 @@ def codecov(data, commit_sha, flags=None):
 
 
 def get_latest_codecov():
-    r = requests.get('https://codecov.io/api/gh/marco-c/gecko-dev?access_token={}'.format(secrets[secrets.CODECOV_ACCESS_TOKEN]))
-    r.raise_for_status()
-    return r.json()['commit']['commitid']
+    def get_latest_codecov_int():
+        r = requests.get('https://codecov.io/api/gh/marco-c/gecko-dev?access_token={}'.format(secrets[secrets.CODECOV_ACCESS_TOKEN]))
+        r.raise_for_status()
+        return r.json()['commit']['commitid']
+
+    return utils.retry(get_latest_codecov_int)
 
 
 def codecov_wait(commit):
