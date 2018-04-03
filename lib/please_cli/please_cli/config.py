@@ -62,6 +62,7 @@ TEMPLATES = {
 PROJECTS = list(map(lambda x: x.replace('_', '-'),
                     filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
                            os.listdir(SRC_DIR))))
+PROJECTS += ['postgresql']
 
 # TODO: below data should be placed in src/<app>/default.nix files alongside
 PROJECTS_CONFIG = {
