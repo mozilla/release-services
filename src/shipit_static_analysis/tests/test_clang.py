@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import fnmatch
 import json
 
 BAD_CPP_SRC = '''#include <demo>
@@ -173,3 +174,24 @@ def test_clang_tidy(tmpdir, mock_config, mock_stats, mock_revision):
     metrics = mock_stats.get_metrics('runtime.clang-tidy.avg')
     assert len(metrics) == 1
     assert metrics[0][1] > 0
+
+
+def test_clang_tidy_checks():
+    '''
+    Test that all our clang-tidy checks actually exist
+    '''
+    from shipit_static_analysis.clang.tidy import ClangTidy
+    from shipit_static_analysis.config import CONFIG_URL, settings
+
+    # Get the set of all available checks that the local clang-tidy offers
+    available_checks = ClangTidy.list_available_checks()
+
+    # Verify that Firefox's clang-tidy configuration actually specifies checks
+    assert len(settings.clang_checkers) > 0, \
+        'Firefox clang-tidy configuration {} should specify > 0 clang_checkers'.format(CONFIG_URL)
+
+    # Verify that the specified clang-tidy checks actually exist
+    for check in settings.clang_checkers:
+        name = check['name']
+        assert len(fnmatch.filter(available_checks, name)) > 0, \
+            'Specified clang-tidy check "{}" not found in available checks:\n\t{}'.format(name, '\n\t'.join(available_checks))

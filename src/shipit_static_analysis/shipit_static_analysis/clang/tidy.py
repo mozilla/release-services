@@ -6,13 +6,14 @@
 import multiprocessing
 import subprocess
 import threading
+import fnmatch
 import queue
 import json
 import os
 import re
 
 from cli_common.log import get_logger
-from shipit_static_analysis.config import settings
+from shipit_static_analysis.config import CONFIG_URL, settings
 from shipit_static_analysis.revisions import Revision
 from shipit_static_analysis import Issue, stats
 
@@ -66,6 +67,15 @@ class ClangTidy(object):
 
     def __init__(self, repo_dir, build_dir):
         assert os.path.isdir(repo_dir)
+
+        # Verify that all specified clang-tidy checks still exist
+        available_checks = ClangTidy.list_available_checks()
+        if not len(settings.clang_checkers) > 0:
+            logger.error('Firefox clang-tidy configuration {} should specify > 0 clang_checkers'.format(CONFIG_URL))
+        for check in settings.clang_checkers:
+            name = check['name']
+            if not len(fnmatch.filter(available_checks, name)) > 0:
+                logger.error('Specified clang-tidy check "{}" not found in available checks:\n\t{}'.format(name, '\n\t'.join(available_checks)))
 
         self.repo_dir = repo_dir
         self.build_dir = os.path.join(repo_dir, build_dir)
@@ -205,6 +215,19 @@ class ClangTidy(object):
                 issues[-1].notes.append(issue)
 
         return issues
+
+    def list_available_checks():
+        '''
+        Build the set of all available checks that the local clang-tidy offers
+        '''
+        cmd = [
+            'clang-tidy',
+            '-list-checks',
+            '-checks=*'
+        ]
+        clang_output = subprocess.check_output(cmd).decode('utf-8')
+        available_checks = set(line.strip() for line in clang_output.split('\n')[1:])
+        return available_checks
 
 
 class ClangTidyIssue(Issue):
