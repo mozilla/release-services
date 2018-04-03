@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 from backend_common.db import db
-from backend_common.notifications import CHANNELS, URGENCY_LEVELS
-from sqlalchemy import (Column, Enum, ForeignKey, Integer, String,
-                        UniqueConstraint)
+from backend_common.notifications import CHANNELS
+from backend_common.notifications import URGENCY_LEVELS
+from sqlalchemy import Column
+from sqlalchemy import Enum
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import UniqueConstraint
 
 from .config import APP_NAME
 
