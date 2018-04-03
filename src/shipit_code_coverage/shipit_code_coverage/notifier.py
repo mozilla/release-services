@@ -47,7 +47,8 @@ class Notifier(object):
             try:
                 coverage = retry(lambda: self.get_coverage_summary(rev))
             except requests.exceptions.HTTPError:
-                pass
+                logger.warn('Failure to retrieve coverage summary', rev=rev)
+                continue
 
             if coverage is None:
                 continue
