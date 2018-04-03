@@ -210,6 +210,13 @@ paths:
         200:
           description: File extensions supported for code coverage
 
+  /coverage/latest:
+    get:
+      operationId: "shipit_uplift.api.coverage_latest"
+      responses:
+        200:
+          description: Latest coverage builds
+
 definitions:
 
   Success:

@@ -422,3 +422,11 @@ def coverage_summary_by_changeset(changeset):
 
 def coverage_supported_extensions():
     return coverage.COVERAGE_EXTENSIONS
+
+
+def coverage_latest():
+    latest, previous = coverage.coverage_service.get_latest_build()
+    return {
+      'latest': latest,
+      'previous': previous,
+    }
