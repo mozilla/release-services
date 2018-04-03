@@ -45,7 +45,7 @@ class Notifier(object):
 
             try:
                 rev = changeset['node']
-                coverage = retry(lambda: self.get_coverage_summary(rev), retries=10)
+                coverage = retry(lambda: self.get_coverage_summary(rev))
                 if coverage is None:
                     continue
 
