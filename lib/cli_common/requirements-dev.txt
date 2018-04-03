@@ -6,7 +6,7 @@ flake8-debugger
 flake8-isort
 flake8-mypy
 flake8-quotes
-flake8-todo
+#flake8-todo  # TODO: we will need to first remove all TODOs from the code
 
 # testing
 codecov
@@ -18,3 +18,10 @@ responses
 # develop
 pdbpp
 ipdb
+
+# tests dependencies
+Logbook
+click
+mozdef-client
+raven
+structlog

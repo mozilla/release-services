@@ -6,7 +6,7 @@
 from __future__ import absolute_import
 
 import click
-from cli_common.click import taskcluster_options
+from cli_common.cli import taskcluster_options
 from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
 from shipit_bot_uplift import config

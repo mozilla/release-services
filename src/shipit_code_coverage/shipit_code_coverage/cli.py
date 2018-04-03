@@ -6,7 +6,7 @@
 from __future__ import absolute_import
 
 import click
-from cli_common.click import taskcluster_options
+from cli_common.cli import taskcluster_options
 from cli_common.log import init_logger
 from shipit_code_coverage import config
 from shipit_code_coverage.codecov import CodeCov

@@ -7,7 +7,7 @@ from __future__ import absolute_import
 import os
 import subprocess
 
-import cli_common.click
+import cli_common.cli
 import cli_common.log
 import click
 import please_cli.config
@@ -82,7 +82,7 @@ EXAMPLES:
         please_cli.config.NIX_BIN_DIR + 'nix-shell',
         ),
     )
-@cli_common.click.taskcluster_options
+@cli_common.cli.taskcluster_options
 def cmd(project, zsh, quiet, command, nix_shell,
         taskcluster_secret,
         taskcluster_client_id,

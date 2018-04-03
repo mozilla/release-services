@@ -10,7 +10,7 @@ import shutil
 import tempfile
 
 import awscli.clidriver
-import cli_common.click
+import cli_common.cli
 import cli_common.log
 import cli_common.taskcluster
 import click
@@ -27,7 +27,7 @@ log = cli_common.log.get_logger(__name__)
 
 
 @click.command()
-@cli_common.click.taskcluster_options
+@cli_common.cli.taskcluster_options
 @click.argument(
     'project',
     required=True,
@@ -188,7 +188,7 @@ def cmd_S3(ctx,
 
 
 @click.command()
-@cli_common.click.taskcluster_options
+@cli_common.cli.taskcluster_options
 @click.argument(
     'project',
     required=True,
@@ -299,7 +299,7 @@ def cmd_HEROKU(ctx,
 
 
 @click.command()
-@cli_common.click.taskcluster_options
+@cli_common.cli.taskcluster_options
 @click.argument(
     'project',
     required=True,

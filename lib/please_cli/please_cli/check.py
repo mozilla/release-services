@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import
 
-import cli_common.click
+import cli_common.cli
 import click
 import click_spinner
 import please_cli.config
@@ -42,7 +42,7 @@ PROJECTS:
         please_cli.config.NIX_BIN_DIR + 'nix-shell',
         ),
     )
-@cli_common.click.taskcluster_options
+@cli_common.cli.taskcluster_options
 @click.pass_context
 def cmd(ctx, project, nix_shell,
         taskcluster_secret,

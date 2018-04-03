@@ -12,24 +12,20 @@ info endpoint used by the Flask-OIDC accept_token wrapper has some
 issues with validating tokens for certain application types.
 '''
 
-from __future__ import absolute_import
-
 import base64
 import functools
 import hmac
-import json
 import json
 import os
 import tempfile
 import time
 import urllib.parse
 
-import jose
-import requests
-
 import cli_common.log
 import flask
 import flask_oidc
+import jose
+import requests
 
 logger = cli_common.log.get_logger(__name__)
 auth0 = flask_oidc.OpenIDConnect()

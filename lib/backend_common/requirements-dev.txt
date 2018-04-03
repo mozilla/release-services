@@ -1,2 +1,20 @@
 -r ./../cli_common/requirements-dev.txt
+
 inotify  # needed by gunicorn for faster/better reload
+
+# tests dependencies
+Flask
+Flask-Cache
+Flask-Cors
+Flask-Login
+Flask-Migrate
+Flask-SQLAlchemy
+SQLAlchemy
+connexion
+flask-oidc
+itsdangerous
+python-dateutil<2.7.0,>=2.1
+python-jose
+requests
+taskcluster
+kombu

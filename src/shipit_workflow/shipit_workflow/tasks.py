@@ -7,11 +7,10 @@ from __future__ import absolute_import
 
 import copy
 
+import jsone
 import requests
 import slugid
 import taskcluster
-
-import jsone
 from cli_common.log import get_logger
 from shipit_workflow.release import is_rc
 

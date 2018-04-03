@@ -15,9 +15,12 @@ import sqlalchemy.orm
 from backend_common.db import db
 from cli_common.log import get_logger
 from shipit_workflow.release import bump_version
-from shipit_workflow.tasks import (extract_our_flavors, fetch_actions_json,
-                                   find_action, find_decision_task_id,
-                                   generate_action_task, render_action_task)
+from shipit_workflow.tasks import extract_our_flavors
+from shipit_workflow.tasks import fetch_actions_json
+from shipit_workflow.tasks import find_action
+from shipit_workflow.tasks import find_decision_task_id
+from shipit_workflow.tasks import generate_action_task
+from shipit_workflow.tasks import render_action_task
 
 log = get_logger(__name__)
 

@@ -4,9 +4,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import pytest
-
-from shipit_workflow.release import (bump_version, is_beta, is_esr,
-                                     is_final_release, is_rc)
+from shipit_workflow.release import bump_version
+from shipit_workflow.release import is_beta
+from shipit_workflow.release import is_esr
+from shipit_workflow.release import is_final_release
+from shipit_workflow.release import is_rc
 
 
 @pytest.mark.parametrize('version, result', (

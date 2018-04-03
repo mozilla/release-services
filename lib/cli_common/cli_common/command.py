@@ -1,8 +1,7 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-from __future__ import absolute_import
 
 import shlex
 import subprocess
@@ -15,8 +14,8 @@ log = cli_common.log.get_logger(__name__)
 
 def run(command, stream=False, handle_stream_line=None, log_command=True,
         log_output=True, **kwargs):
-    """Run a command through subprocess
-    """
+    '''Run a command through subprocess
+    '''
 
     if type(command) is str:
         command_as_string = command
@@ -64,8 +63,8 @@ def run(command, stream=False, handle_stream_line=None, log_command=True,
 
 
 def run_check(command, **kwargs):
-    """Run a command through subprocess and check for output
-    """
+    '''Run a command through subprocess and check for output
+    '''
 
     if type(command) is str:
         command_as_string = command

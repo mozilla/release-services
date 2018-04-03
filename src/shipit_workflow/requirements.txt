@@ -1,12 +1,13 @@
 -e ./../../lib/cli_common[log] #egg=mozilla-cli-common
 -e ./../../lib/backend_common[log,security,cors,api,auth0,db] #egg=mozilla-backend-common
 
-taskcluster
-slugid
-requests
-json-e
 Flask
 SQLAlchemy
+json-e
+requests
+slugid
+taskcluster
 
-psycopg2
+# deployment
 gunicorn
+psycopg2
