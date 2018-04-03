@@ -42,16 +42,18 @@ class Notifier(object):
             if any(text in desc for text in ['r=merge', 'a=merge']):
                 continue
 
-            try:
-                rev = changeset['node']
-                coverage = retry(lambda: self.get_coverage_summary(rev))
-                if coverage is None:
-                    continue
+            rev = changeset['node']
 
-                if coverage['commit_covered'] < 0.2 * coverage['commit_added']:
-                    content += '* [%s](https://firefox-code-coverage.herokuapp.com/#/changeset/%s): %d covered out of %d added.\n' % (desc, rev, coverage['commit_covered'], coverage['commit_added'])  # noqa
+            try:
+                coverage = retry(lambda: self.get_coverage_summary(rev))
             except requests.exceptions.HTTPError:
+                pass
+
+            if coverage is None:
                 continue
+
+            if coverage['commit_covered'] < 0.2 * coverage['commit_added']:
+                content += '* [%s](https://firefox-code-coverage.herokuapp.com/#/changeset/%s): %d covered out of %d added.\n' % (desc, rev, coverage['commit_covered'], coverage['commit_added'])  # noqa
 
         if content == '':
             return
