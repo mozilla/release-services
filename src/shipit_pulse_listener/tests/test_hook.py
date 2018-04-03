@@ -22,7 +22,7 @@ async def test_create_task(HooksMock):
     assert task_id == 'fake_task_id'
     assert HooksMock.obj['group_id'] == 'aGroup'
     assert HooksMock.obj['hook_id'] == 'aHook'
-    assert HooksMock.obj['payload'] == {'extra_env': {}}
+    assert HooksMock.obj['payload'] == {}
 
     assert task_monitoring.tasks.qsize() == 1
     group_id, hook_id, task_id = await task_monitoring.tasks.get()
@@ -41,7 +41,7 @@ async def test_create_task_extra_env(HooksMock):
     assert task_id == 'fake_task_id'
     assert HooksMock.obj['group_id'] == 'aGroup'
     assert HooksMock.obj['hook_id'] == 'aHook'
-    assert HooksMock.obj['payload'] == {'extra_env': {'test': 'succeeded'}}
+    assert HooksMock.obj['payload'] == {'test': 'succeeded'}
 
     assert task_monitoring.tasks.qsize() == 1
     group_id, hook_id, task_id = await task_monitoring.tasks.get()
