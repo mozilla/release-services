@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from urllib.error import HTTPError
 import requests
 
 from cli_common.log import get_logger
@@ -51,7 +50,7 @@ class Notifier(object):
 
                 if coverage['commit_covered'] < 0.2 * coverage['commit_added']:
                     content += '* [%s](https://firefox-code-coverage.herokuapp.com/#/changeset/%s): %d covered out of %d added.\n' % (desc, rev, coverage['commit_covered'], coverage['commit_added'])  # noqa
-            except HTTPError as e:
+            except requests.exceptions.HTTPError:
                 continue
 
         if content == '':
