@@ -52,7 +52,7 @@ def add_release(body):
         branch=body['branch'],
         revision=body['revision'],
         build_number=body['build_number'],
-        release_eta=body['release_eta'],
+        release_eta=body.get('release_eta'),
         status='scheduled',
         partial_updates=body.get('partial_updates')
     )
