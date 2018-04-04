@@ -107,21 +107,20 @@ class Workflow(object):
             # Force cleanup to reset tip
             # otherwise previous pull are there
             self.hg.update(rev=b'tip', clean=True)
-            tip = self.hg.tip().node
-            logger.info('Set repo back to tip', rev=tip)
+            logger.info('Set repo back to tip', rev=self.hg.tip().node)
 
             # Apply and analyze revision patch
             revision.apply(self.hg)
             revision.analyze_patch()
 
-            # Revert patch to build cleanly on tip
-            self.hg.update(rev=tip, clean=True)
-
         with stats.api.timer('runtime.mach'):
             # Only run mach if revision has any C/C++ files
             if revision.has_clang_files:
+                # mach configure with mozconfig
+                logger.info('Mach configure...')
+                run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
+
                 # Setup static analysis binaries through mach
-                # It will also run needed steps as configure & exports build
                 logger.info('Mach setup static-analysis')
                 cmd = ['gecko-env', './mach', 'static-analysis', 'install']
                 run_check(cmd, cwd=self.repo_dir)
@@ -138,9 +137,6 @@ class Workflow(object):
         clang_tidy = CLANG_TIDY in self.analyzers and ClangTidy(self.repo_dir, settings.target)
         clang_format = CLANG_FORMAT in self.analyzers and ClangFormat(self.repo_dir)
         mozlint = MOZLINT in self.analyzers and MozLint(self.repo_dir)
-
-        # Apply the patch to analyse it
-        revision.apply(self.hg)
 
         # Run static analysis through clang-tidy
         issues = []
