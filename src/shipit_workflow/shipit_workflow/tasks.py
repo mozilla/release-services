@@ -17,10 +17,10 @@ log = get_logger(__name__)
 
 # Phases per product, ordered
 SUPPORTED_FLAVORS = {
-    'firefox': ['promote_firefox', 'promote_firefox_partners', 'push_firefox', 'ship_firefox'],
-    'firefox_rc': ['promote_firefox_rc', 'promote_firefox_partners', 'push_firefox', 'ship_firefox_rc'],
+    'firefox': ['promote_firefox', 'push_firefox', 'ship_firefox'],
+    'firefox_rc': ['promote_firefox_rc', 'ship_firefox_rc', 'push_firefox', 'ship_firefox'],
     'fennec': ['promote_fennec', 'ship_fennec'],
-    'fennec_rc': ['promote_fennec', 'ship_fennec_rc'],
+    'fennec_rc': ['promote_fennec', 'ship_fennec_rc', 'ship_fennec'],
     'devedition': ['promote_devedition', 'push_devedition', 'ship_devedition'],
 }
 
