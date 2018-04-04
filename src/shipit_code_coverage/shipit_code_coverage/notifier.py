@@ -18,7 +18,7 @@ class Notifier(object):
         self.notify_service = get_service('notify', client_id, access_token)
 
     def get_coverage_summary(self, changeset):
-        r = requests.get('https://uplift.shipit.staging.mozilla-releng.net/coverage/changeset_summary/%s' % changeset)
+        r = requests.get('https://uplift.shipit.staging.mozilla-releng.net/coverage/changeset_summary/{}'.format(changeset))
         r.raise_for_status()
 
         if r.status_code == 202:
@@ -31,7 +31,7 @@ class Notifier(object):
 
         # Get pushlog and ask the backend to generate the coverage by changeset
         # data, which will be cached.
-        r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?changeset=%s&version=2&full' % self.revision)
+        r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?changeset={}&version=2&full'.format(self.revision))
         r.raise_for_status()
         push_data = r.json()
         changesets = sum((data['changesets'] for data in push_data['pushes'].values()), [])
@@ -54,7 +54,7 @@ class Notifier(object):
                 continue
 
             if coverage['commit_covered'] < 0.2 * coverage['commit_added']:
-                content += '* [%s](https://firefox-code-coverage.herokuapp.com/#/changeset/%s): %d covered out of %d added.\n' % (desc, rev, coverage['commit_covered'], coverage['commit_added'])  # noqa
+                content += '* [{}](https://firefox-code-coverage.herokuapp.com/#/changeset/{}): {} covered out of {} added.\n'.format(desc, rev, coverage['commit_covered'], coverage['commit_added'])  # noqa
 
         if content == '':
             return
@@ -65,7 +65,7 @@ class Notifier(object):
         for email in secrets[secrets.EMAIL_ADDRESSES]:
             self.notify_service.email({
                 'address': email,
-                'subject': 'Coverage patches for %s' % self.revision,
+                'subject': 'Coverage patches for {}'.format(self.revision),
                 'content': content,
                 'template': 'fullscreen',
             })
