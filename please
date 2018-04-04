@@ -22,7 +22,7 @@ case "`uname`" in
     if hash docker 2>/dev/null; then
        USE_DOCKER=1
     fi
-    ;; 
+    ;;
   Linux)
     if hash nix-build 2>/dev/null; then
          USE_NIX=1
@@ -60,7 +60,7 @@ else
   if [ "$USE_DOCKER" = "1" ]; then
     if [ ! "$(docker ps -q -f name=$DOCKER_NAME)" ]; then
       if [ ! "$(docker ps -qa -f name=$DOCKER_NAME)" ]; then
-        docker run --privileged -td --name $DOCKER_NAME --volume="$(pwd)":/app --workdir=/app -p 8000-8100:8000-8100 mozillareleng/services:base-new-`cat ./VERSION`
+        docker run --privileged -td --name $DOCKER_NAME --volume="$(pwd)":/app --workdir=/app -p 7000:7000 -p 8000-8100:8000-8100 mozillareleng/services:base-new-`cat ./VERSION`
       else
         docker start $DOCKER_NAME
       fi
