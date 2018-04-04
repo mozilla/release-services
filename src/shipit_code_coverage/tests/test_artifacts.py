@@ -64,11 +64,11 @@ def test_get_coverage_artifacts(FAKE_ARTIFACTS_DIR):
 
 @mock.patch('shipit_code_coverage.taskcluster.get_task_artifacts')
 @mock.patch('shipit_code_coverage.taskcluster.download_artifact')
-def test_download(mocked_download_artifact, mocked_get_task_artifact, TEST_TASK, LINUX_TEST_TASK_ARTIFACTS):
+def test_download(mocked_download_artifact, mocked_get_task_artifact, TEST_TASK_FROM_GROUP, LINUX_TEST_TASK_ARTIFACTS):
     a = ArtifactsHandler([], [])
     mocked_get_task_artifact.return_value = LINUX_TEST_TASK_ARTIFACTS['artifacts']
 
-    a.download(TEST_TASK)
+    a.download(TEST_TASK_FROM_GROUP)
 
     assert mocked_get_task_artifact.call_count == 1
     assert mocked_download_artifact.call_count == 2

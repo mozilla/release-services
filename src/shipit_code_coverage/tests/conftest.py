@@ -78,8 +78,8 @@ def LINUX_TEST_TASK_ARTIFACTS():
 
 
 @pytest.fixture(scope='session')
-def TEST_TASK():
-    return load_json('test_task.json')
+def TEST_TASK_FROM_GROUP():
+    return load_json('test_task_from_group.json')
 
 
 @pytest.fixture()
