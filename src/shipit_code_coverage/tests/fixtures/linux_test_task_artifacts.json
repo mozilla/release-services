@@ -1,0 +1,100 @@
+{
+	 "artifacts": [
+    {
+      "storageType": "reference",
+      "name": "public/logs/live.log",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/logs/live_backing.log",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/logs/localconfig.json",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/logs/log_critical.log",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "text/plain"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/logs/log_error.log",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "text/plain"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/logs/log_fatal.log",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "text/plain"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/logs/log_info.log",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "text/plain"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/logs/log_raw.log",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "text/plain"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/logs/log_warning.log",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "text/plain"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/test_info/code-coverage-grcov.zip",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "application/x-zip-compressed"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/test_info/code-coverage-jsvm.zip",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "application/x-zip-compressed"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/test_info/manifests.list",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/test_info/plain-chunked_errorsummary.log",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "text/plain"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/test_info/plain-chunked_raw.log",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "text/plain"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/test_info/resource-usage.json",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "storageType": "s3",
+      "name": "public/test_info/system-info.log",
+      "expires": "2019-02-03T19:27:40.022Z",
+      "contentType": "text/plain"
+    }
+  ]
+}

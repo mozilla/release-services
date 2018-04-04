@@ -2,6 +2,7 @@
 
 import os
 from shipit_code_coverage.artifacts import ArtifactsHandler
+from unittest import mock
 import pytest
 
 
@@ -59,3 +60,25 @@ def test_get_coverage_artifacts(FAKE_ARTIFACTS_DIR):
 
     with pytest.raises(Exception, message='suite and chunk can\'t both have a value'):
         a.get(chunk='xpcshell-7', suite='mochitest')
+
+
+@mock.patch('shipit_code_coverage.taskcluster.get_task_artifacts')
+@mock.patch('shipit_code_coverage.taskcluster.download_artifact')
+def test_download(mocked_download_artifact, mocked_get_task_artifact, TEST_TASK_FROM_GROUP, LINUX_TEST_TASK_ARTIFACTS):
+    a = ArtifactsHandler([], [])
+    mocked_get_task_artifact.return_value = LINUX_TEST_TASK_ARTIFACTS['artifacts']
+
+    a.download(TEST_TASK_FROM_GROUP)
+
+    assert mocked_get_task_artifact.call_count == 1
+    assert mocked_download_artifact.call_count == 2
+    assert mocked_download_artifact.call_args_list[0] == mock.call(
+        'ccov-artifacts/linux_mochitest-devtools-chrome-4_code-coverage-grcov.zip',
+        'AN1M9SW0QY6DZT6suL3zlQ',
+        'public/test_info/code-coverage-grcov.zip',
+    )
+    assert mocked_download_artifact.call_args_list[1] == mock.call(
+        'ccov-artifacts/linux_mochitest-devtools-chrome-4_code-coverage-jsvm.zip',
+        'AN1M9SW0QY6DZT6suL3zlQ',
+        'public/test_info/code-coverage-jsvm.zip',
+    )
