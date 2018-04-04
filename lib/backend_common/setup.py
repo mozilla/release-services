@@ -30,7 +30,7 @@ def read_requirements(file_):
 EXTRAS = dict(
     log=['logbook'],
     api=['connexion'],
-    auth0=['flask-oidc'],
+    auth0=['flask-oidc', 'python-jose'],
     auth=['Flask-Login', 'taskcluster<2.0.0'],
     cache=['Flask-Cache'],
     cors=['Flask-Cors'],

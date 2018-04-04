@@ -100,10 +100,10 @@ def cmd(channel):
 
     click.echo(HEADER)
 
-    for project_id in sorted(please_cli.config.PROJECTS.keys()):
+    for project_id in sorted(please_cli.config.PROJECTS_CONFIG.keys()):
 
-        project = please_cli.config.PROJECTS[project_id].get('deploy_options')
-        project_target = please_cli.config.PROJECTS[project_id].get('deploy')
+        project = please_cli.config.PROJECTS_CONFIG[project_id].get('deploy_options')
+        project_target = please_cli.config.PROJECTS_CONFIG[project_id].get('deploy')
 
         if project:
 
