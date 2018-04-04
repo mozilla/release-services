@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import fnmatch
-import json
 
 BAD_CPP_SRC = '''#include <demo>
 int \tmain(void){
@@ -133,18 +131,7 @@ def test_clang_tidy(mock_repository, mock_config, mock_clang, mock_stats, mock_r
 
     # Write badly formatted c file
     bad_file = repo_dir.join('bad.cpp')
-    bad_file_output = repo_dir.join('bad.bin')
     bad_file.write(BAD_CPP_TIDY)
-
-    # Create dummy json commands file
-    commands = build_dir.join('compile_commands.json')
-    commands.write(json.dumps([
-        {
-            'command': 'g++ -o {} {}'.format(bad_file_output, bad_file),
-            'directory': str(repo_dir),
-            'file': str(bad_file),
-        }
-    ]))
 
     # Get issues found by clang-tidy
     mock_revision.files = ['bad.cpp', ]
@@ -179,7 +166,7 @@ def test_clang_tidy(mock_repository, mock_config, mock_clang, mock_stats, mock_r
     assert metrics[0][1] > 0
 
 
-def test_clang_tidy_checks():
+def test_clang_tidy_checks(mock_repository, mock_clang):
     '''
     Test that all our clang-tidy checks actually exist
     '''
@@ -187,14 +174,19 @@ def test_clang_tidy_checks():
     from shipit_static_analysis.config import CONFIG_URL, settings
 
     # Get the set of all available checks that the local clang-tidy offers
-    available_checks = ClangTidy.list_available_checks()
+    repo_dir = mock_repository.directory
+    build_dir = repo_dir.mkdir('../build')
+    clang_tidy = ClangTidy(
+        str(repo_dir.realpath()),
+        str(build_dir.realpath()),
+        validate_checks=False,
+    )
 
     # Verify that Firefox's clang-tidy configuration actually specifies checks
     assert len(settings.clang_checkers) > 0, \
         'Firefox clang-tidy configuration {} should specify > 0 clang_checkers'.format(CONFIG_URL)
 
     # Verify that the specified clang-tidy checks actually exist
-    for check in settings.clang_checkers:
-        name = check['name']
-        assert len(fnmatch.filter(available_checks, name)) > 0, \
-            'Specified clang-tidy check "{}" not found in available checks:\n\t{}'.format(name, '\n\t'.join(available_checks))
+    missing = clang_tidy.list_missing_checks()
+    assert len(missing) == 0, \
+        'Missing clang-tidy checks: {}'.format(', '.join(missing))

@@ -62,17 +62,8 @@ class ClangTidy(object):
     Clang Tidy Parallel runner
     Inspired by run-clang-tidy.py
     '''
-    def __init__(self, repo_dir, build_dir):
+    def __init__(self, repo_dir, build_dir, validate_checks=True):
         assert os.path.isdir(repo_dir)
-
-        # Verify that all specified clang-tidy checks still exist
-        available_checks = ClangTidy.list_available_checks()
-        if not len(settings.clang_checkers) > 0:
-            logger.error('Firefox clang-tidy configuration {} should specify > 0 clang_checkers'.format(CONFIG_URL))
-        for check in settings.clang_checkers:
-            name = check['name']
-            if not len(fnmatch.filter(available_checks, name)) > 0:
-                logger.error('Specified clang-tidy check "{}" not found in available checks:\n\t{}'.format(name, '\n\t'.join(available_checks)))
 
         self.repo_dir = repo_dir
         self.build_dir = os.path.join(repo_dir, build_dir)
@@ -82,6 +73,11 @@ class ClangTidy(object):
         )
         assert os.path.exists(self.binary), \
             'Missing clang-tidy in {}'.format(self.binary)
+
+        # Verify that all specified clang-tidy checks still exist
+        if validate_checks:
+            for missing in self.list_missing_checks():
+                logger.error('Specified clang-tidy check "{}" not found.'.format(missing))
 
     @stats.api.timed('runtime.clang-tidy')
     def run(self, checks, revision):
@@ -210,18 +206,35 @@ class ClangTidy(object):
 
         return issues
 
-    def list_available_checks():
+    def list_available_checks(self):
         '''
         Build the set of all available checks that the local clang-tidy offers
         '''
         cmd = [
-            'clang-tidy',
+            self.binary,
             '-list-checks',
             '-checks=*'
         ]
         clang_output = subprocess.check_output(cmd).decode('utf-8')
         available_checks = set(line.strip() for line in clang_output.split('\n')[1:])
         return available_checks
+
+    def list_missing_checks(self):
+        '''
+        List all the clang-tidy missing checks according to config
+        '''
+        available_checks = self.list_available_checks()
+        print(available_checks, settings.clang_checkers)
+        if len(settings.clang_checkers) > 0:
+            logger.info('Available clang-tidy checks:\n\t{}'.format('\n\t'.join(available_checks)))
+        else:
+            logger.error('Firefox clang-tidy configuration {} should specify > 0 clang_checkers'.format(CONFIG_URL))
+
+        return [
+            check['name']
+            for check in settings.clang_checkers
+            if not len(fnmatch.filter(available_checks, check['name'])) > 0
+        ]
 
 
 class ClangTidyIssue(Issue):
