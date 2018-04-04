@@ -8,7 +8,6 @@ import subprocess
 import threading
 import fnmatch
 import queue
-import json
 import os
 import re
 
@@ -63,8 +62,6 @@ class ClangTidy(object):
     Clang Tidy Parallel runner
     Inspired by run-clang-tidy.py
     '''
-    db_path = 'compile_commands.json'
-
     def __init__(self, repo_dir, build_dir):
         assert os.path.isdir(repo_dir)
 
@@ -96,10 +93,6 @@ class ClangTidy(object):
         assert isinstance(revision, Revision)
         self.revision = revision
 
-        # Load the database and extract all files.
-        database = json.load(open(os.path.join(self.build_dir, self.db_path)))
-        self.database_files = [entry['file'] for entry in database]
-
         # Build workers queue
         workers = multiprocessing.cpu_count()
         logger.info('Clang tidy will spawn workers', nb=workers)
@@ -107,9 +100,6 @@ class ClangTidy(object):
 
         # Build issues queue to get results
         self.queue_issues = queue.Queue()
-
-        # Build up a big regexy filter from all modified files
-        file_name_re = re.compile('(' + ')|('.join(revision.files) + ')')
 
         issues = []
         try:
@@ -123,9 +113,8 @@ class ClangTidy(object):
                 t.start()
 
             # Fill the queue with files.
-            for name in self.database_files:
-                if file_name_re.search(name):
-                    self.queue_workers.put(name)
+            for filename in revision.files:
+                self.queue_workers.put(filename)
 
             # Wait for all threads to be done.
             self.queue_workers.join()
