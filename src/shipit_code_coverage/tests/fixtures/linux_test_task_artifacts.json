@@ -96,13 +96,5 @@
       "expires": "2019-02-03T19:27:40.022Z",
       "contentType": "text/plain"
     }
-  ],
-	"task" : {
-		"metadata" : {
-			"name" : "test-linux64-ccov/opt/test/code-coverage-grcov.zip"
-		}
-	},
-	"status" : {
-		"taskId" : "MJIO3RWTRu2GhiE7_jILBw"
-	}
+  ]
 }

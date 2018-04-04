@@ -1,0 +1,172 @@
+{
+  "task": {
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-xlarge",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "dependencies": [
+          "MCIO1RWTRu2GhiE7_jILBw",
+          "Xf2CPtHgQmWUedLw3FcJYg"
+        ],
+        "requires": "all-completed",
+        "routes": [
+          "tc-treeherder.v2.mozilla-central.b2a9a4bb5c94de179ae7a3f52fde58c0e2897498.33546",
+          "coalesce.v1.mozilla-central.ed2470044c5ac9b8efe8"
+        ],
+        "priority": "medium",
+        "retries": 5,
+        "created": "2018-03-02T10:18:48.657Z",
+        "deadline": "2018-03-03T10:18:48.657Z",
+        "expires": "2019-03-02T10:18:48.657Z",
+        "scopes": [
+          "secrets:get:project/taskcluster/gecko/hgfingerprint",
+          "docker-worker:feature:allowPtrace",
+          "docker-worker:capability:device:loopbackVideo",
+          "docker-worker:cache:level-3-mozilla-central-test-workspace-v3-697eee6c304d222fdb39",
+          "docker-worker:cache:level-3-checkouts-v3-697eee6c304d222fdb39"
+        ],
+        "payload": {
+          "supersederUrl": "https://coalesce.mozilla-releng.net/v1/list/3600/5/mozilla-central.ed2470044c5ac9b8efe8",
+          "onExitStatus": {
+            "retry": [
+              4
+            ]
+          },
+          "maxRunTime": 5400,
+          "image": {
+            "path": "public/image.tar.zst",
+            "type": "task-image",
+            "taskId": "Xf2CPtHgQmWUedLw3FcJYg"
+          },
+          "cache": {
+            "level-3-checkouts-v3-697eee6c304d222fdb39": "/builds/worker/checkouts",
+            "level-3-mozilla-central-test-workspace-v3-697eee6c304d222fdb39": "/builds/worker/workspace"
+          },
+          "capabilities": {
+            "devices": {
+              "loopbackVideo": true
+            }
+          },
+          "artifacts": {
+            "public/logs/": {
+              "path": "/builds/worker/workspace/build/upload/logs/",
+              "expires": "2019-03-02T10:18:48.657Z",
+              "type": "directory"
+            },
+            "public/test": {
+              "path": "/builds/worker/artifacts/",
+              "expires": "2019-03-02T10:18:48.657Z",
+              "type": "directory"
+            },
+            "public/test_info/": {
+              "path": "/builds/worker/workspace/build/blobber_upload_dir/",
+              "expires": "2019-03-02T10:18:48.657Z",
+              "type": "directory"
+            }
+          },
+          "command": [
+            "/builds/worker/bin/run-task",
+            "--",
+            "/builds/worker/bin/test-linux.sh",
+            "--no-read-buildbot-config",
+            "--installer-url=https://queue.taskcluster.net/v1/task/MCIO1RWTRu2GhiE7_jILBw/artifacts/public/build/target.tar.bz2",
+            "--test-packages-url=https://queue.taskcluster.net/v1/task/MCIO1RWTRu2GhiE7_jILBw/artifacts/public/build/target.test_packages.json",
+            "--mochitest-suite=mochitest-devtools-chrome-chunked",
+            "--code-coverage",
+            "--e10s",
+            "--total-chunk=8",
+            "--this-chunk=4",
+            "--download-symbols=ondemand"
+          ],
+          "env": {
+            "SCCACHE_DISABLE": "1",
+            "MOZ_NODE_PATH": "/usr/local/bin/node",
+            "TASKCLUSTER_CACHES": "/builds/worker/checkouts;/builds/worker/workspace",
+            "HG_STORE_PATH": "/builds/worker/checkouts/hg-store",
+            "GECKO_HEAD_REV": "b2a9a4bb5c94de179ae7a3f52fde58c0e2897498",
+            "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-central",
+            "MOCHITEST_FLAVOR": "chrome",
+            "TASKCLUSTER_VOLUMES": "/builds/worker/.cache;/builds/worker/checkouts;/builds/worker/tooltool-cache;/builds/worker/workspace",
+            "MOZHARNESS_URL": "https://queue.taskcluster.net/v1/task/MCIO1RWTRu2GhiE7_jILBw/artifacts/public/build/mozharness.zip",
+            "NEED_PULSEAUDIO": "true",
+            "MOZ_AUTOMATION": "1",
+            "NEED_WINDOW_MANAGER": "true",
+            "MOZHARNESS_CONFIG": "unittests/linux_unittest.py remove_executables.py",
+            "ENABLE_E10S": "true",
+            "MOZHARNESS_SCRIPT": "desktop_unittest.py",
+            "GECKO_BASE_REPOSITORY": "https://hg.mozilla.org/mozilla-unified",
+            "MOZILLA_BUILD_URL": "https://queue.taskcluster.net/v1/task/MCIO1RWTRu2GhiE7_jILBw/artifacts/public/build/target.tar.bz2"
+          },
+          "features": {
+            "taskclusterProxy": true,
+            "allowPtrace": true
+          }
+        },
+        "metadata": {
+          "owner": "aciure@mozilla.com",
+          "source": "https://hg.mozilla.org/mozilla-central/file/b2a9a4bb5c94de179ae7a3f52fde58c0e2897498/taskcluster/ci/test",
+          "description": "Mochitest devtools-chrome run ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=mozilla-central&revision=b2a9a4bb5c94de179ae7a3f52fde58c0e2897498))",
+          "name": "test-linux64-ccov/opt-mochitest-devtools-chrome-e10s-4"
+        },
+        "tags": {
+          "kind": "test",
+          "worker-implementation": "docker-worker",
+          "createdForUser": "aciure@mozilla.com",
+          "label": "test-linux64-ccov/opt-mochitest-devtools-chrome-e10s-4",
+          "test-type": "mochitest",
+          "os": "linux"
+        },
+        "extra": {
+          "chunks": {
+            "current": 4,
+            "total": 8
+          },
+          "suite": {
+            "flavor": "mochitest-devtools-chrome-chunked",
+            "name": "mochitest"
+          },
+          "treeherder": {
+            "jobKind": "test",
+            "groupSymbol": "M-e10s",
+            "collection": {
+              "opt": true
+            },
+            "machine": {
+              "platform": "linux64-ccov"
+            },
+            "groupName": "Mochitests with e10s",
+            "tier": 2,
+            "symbol": "dt4"
+          },
+          "parent": "aPt9FbIdQwmhwDIPDYLuaw",
+          "index": {
+            "rank": 0
+          }
+        }
+      },
+      "status": {
+        "taskId": "AN1M9SW0QY6DZT6suL3zlQ",
+        "provisionerId": "aws-provisioner-v1",
+        "workerType": "gecko-t-linux-large",
+        "schedulerId": "gecko-level-3",
+        "taskGroupId": "aPt9FbIdQwmhwDIPDYLuaw",
+        "deadline": "2018-03-03T10:18:56.719Z",
+        "expires": "2019-03-02T10:18:56.719Z",
+        "retriesLeft": 5,
+        "state": "failed",
+        "runs": [
+          {
+            "runId": 0,
+            "state": "failed",
+            "reasonCreated": "scheduled",
+            "reasonResolved": "failed",
+            "workerGroup": "us-east-1",
+            "workerId": "i-0de10292a97bd9722",
+            "takenUntil": "2018-03-02T12:59:10.148Z",
+            "scheduled": "2018-03-02T11:03:40.715Z",
+            "started": "2018-03-02T11:06:50.662Z",
+            "resolved": "2018-03-02T12:45:06.017Z"
+          }
+        ]
+      }
+}

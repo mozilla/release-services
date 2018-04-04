@@ -77,6 +77,11 @@ def LINUX_TEST_TASK_ARTIFACTS():
     return load_json('linux_test_task_artifacts.json')
 
 
+@pytest.fixture(scope='session')
+def TEST_TASK():
+    return load_json('test_task.json')
+
+
 @pytest.fixture()
 def MERCURIAL_COMMIT():
     hg_commit = '0d1e55d87931fe70ec1d007e886bcd58015ff770'
