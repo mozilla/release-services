@@ -28,12 +28,6 @@ import please_cli.utils
     type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
-    '--channel',
-    type=click.Choice(please_cli.config.CHANNELS),
-    envvar="GITHUB_BRANCH",
-    required=True,
-    )
-@click.option(
     '--nix-build',
     required=True,
     default=please_cli.config.NIX_BIN_DIR + 'nix-build',
@@ -60,7 +54,6 @@ import please_cli.utils
     default=True,
     )
 def cmd(project,
-        channel,
         nix_build,
         nix,
         cache_bucket,
@@ -101,8 +94,8 @@ def cmd(project,
                 temp_file,
             ]
 
-        for (attribute, channel) in [(project, None),
-                                     (project + '.deploy.' + channel, channel)]:
+        for (attribute, channel) in [(project, None)] + \
+                                     [(project + '.deploy.' + x, x) for x in please_cli.config.DEPLOY_CHANNELS]:
             channel_attribute = ''
             if channel:
                 channel_attribute = '-deploy-' + channel

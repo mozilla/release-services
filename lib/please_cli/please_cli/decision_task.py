@@ -41,7 +41,6 @@ def get_build_task(index,
         '--cache-bucket="{}"'.format(cache_bucket),
         '--cache-region="{}"'.format(cache_region),
         '--taskcluster-secret=' + taskcluster_secret,
-        '--channel=' + channel,
         '--no-interactive',
     ]
     return get_task(
