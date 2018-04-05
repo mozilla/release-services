@@ -1036,6 +1036,19 @@ let
       };
     };
 
+    "json-e" = python.mkDerivation {
+      name = "json-e-2.5.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/4f/8f/13ffbae3327362410719cd6ae89296281e68e3102e1ac042c47795e10bc2/json-e-2.5.0.tar.gz"; sha256 = "f9114a25ed4b575395fbb2daa1183c5b781a647b387fdf28596220bb114673e8"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://taskcluster.github.io/json-e/";
+        license = "MPL2";
+        description = "A data-structure parameterization system written for embedding context in JSON objects";
+      };
+    };
+
     "jsonschema" = python.mkDerivation {
       name = "jsonschema-2.6.0";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/58/b9/171dbb07e18c6346090a37f03c7e74410a1a56123f847efed59af260a298/jsonschema-2.6.0.tar.gz"; sha256 = "6ff5f3180870836cae40f06fa10419f557208175f13ad7bc26caa77beb1f6e02"; };
