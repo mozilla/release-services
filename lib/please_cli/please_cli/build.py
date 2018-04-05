@@ -28,6 +28,12 @@ import please_cli.utils
     type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
+    '--channel',
+    type=click.Choice(please_cli.config.CHANNELS),
+    required=False,
+    default=None,
+    )
+@click.option(
     '--nix-build',
     required=True,
     default=please_cli.config.NIX_BIN_DIR + 'nix-build',
@@ -54,6 +60,7 @@ import please_cli.utils
     default=True,
     )
 def cmd(project,
+        channel,
         nix_build,
         nix,
         cache_bucket,
@@ -94,11 +101,15 @@ def cmd(project,
                 temp_file,
             ]
 
-        for (attribute, channel) in [(project, None)] + \
-                                     [(project + '.deploy.' + x, x) for x in please_cli.config.DEPLOY_CHANNELS]:
+        projects = [(project, None)] + \
+                   [(project + '.deploy.' + x, x) for x in please_cli.config.DEPLOY_CHANNELS]
+        if channel:
+            projects = [(project + '.deploy.' + channel, channel)]
+
+        for (attribute, channel_) in projects:
             channel_attribute = ''
-            if channel:
-                channel_attribute = '-deploy-' + channel
+            if channel_:
+                channel_attribute = '-deploy-' + channel_
             command = [
                 nix_build,
                 please_cli.config.ROOT_DIR + '/nix/default.nix',
