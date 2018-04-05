@@ -152,6 +152,9 @@ definitions:
       submitted:
         type: boolean
         description: Indicated if the phase was submitted to TC
+      actionTaskId:
+        type: string
+        description: Action Task ID for the phase. This is also the taskGroupId for the tasks created for this phase.
 
   Release:
     type: object

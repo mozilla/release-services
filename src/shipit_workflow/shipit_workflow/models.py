@@ -65,6 +65,7 @@ class Phase(db.Model):
         return {
             'name': self.name,
             'submitted': self.submitted,
+            'actionTaskId': self.task_id,
         }
 
 
