@@ -123,6 +123,11 @@ def header_bot(app):
 
 @pytest.fixture
 def coverage_responses():
+    with open(os.path.join(FIXTURES_DIR, 'codecov_main.json')) as f:
+        responses.add(responses.GET,
+                      'https://codecov.io/api/gh/marco-c/gecko-dev',
+                      json=json.load(f))
+
     directories = [
         {
             'path': 'hgmo_json_revs',
@@ -136,6 +141,10 @@ def coverage_responses():
         {
             'path': 'hg_git_map',
             'url': lambda fname: 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/{}'.format(fname),
+        },
+        {
+            'path': 'git_hg_map',
+            'url': lambda fname: 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/{}'.format(fname),
         },
         {
             'path': 'codecov_commits',

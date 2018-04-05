@@ -1,0 +1,15 @@
+{
+"node": "8063b0c54b888fe1f98774b71e1870cc2267f33f",
+"date": [1522490765.0, -10800],
+"desc": "Merge inbound to mozilla-central.  a=merge",
+"backedoutby": "",
+"branch": "default",
+"bookmarks": [],
+"tags": [],
+"user": "Csoregi Natalia \u003cncsoregi@mozilla.com\u003e",
+"parents": ["5401938bde37d0e7f1016bbd7694e72bdbf5e9a1", "b537ebde3ae1393efb0d8ff29ff6838f4b02b914"],
+"phase": "public",
+"pushid": 33743,
+"pushdate": [1522490790, 0],
+"pushuser": "ncsoregi@mozilla.com"
+}

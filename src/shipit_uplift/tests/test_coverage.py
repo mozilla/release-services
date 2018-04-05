@@ -25,6 +25,16 @@ def test_coverage_supported_extensions_api(client):
 
 
 @responses.activate
+def test_coverage_latest_api(client, coverage_responses):
+    resp = client.get('/coverage/latest')
+    assert resp.status_code == 200
+    data = json.loads(resp.data.decode('utf-8'))
+    assert data['latest_rev'] == '8063b0c54b888fe1f98774b71e1870cc2267f33f'
+    assert data['latest_pushid'] == 33743
+    assert data['previous_rev'] == '5401938bde37d0e7f1016bbd7694e72bdbf5e9a1'
+
+
+@responses.activate
 def test_coverage_by_changeset_impl(coverage_responses, coverage_builds):
     # Get changeset coverage information
     for changeset in coverage_builds['info']:

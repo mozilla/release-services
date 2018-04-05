@@ -18,6 +18,12 @@ def get_github_commit(mercurial_commit):
     return r.text.split(' ')[0]
 
 
+@lru_cache(maxsize=2048)
+def get_mercurial_commit(github_commit):
+    r = requests.get('https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/{}'.format(github_commit))
+    return r.text.split(' ')[1]
+
+
 class CoverageException(Exception):
     pass
 
@@ -73,7 +79,7 @@ class CoverallsCoverage(Coverage):
         r = requests.get(CoverallsCoverage.URL + '/github/marco-c/gecko-dev.json?page=1')
         builds = r.json()['builds']
 
-        return builds[0]['commit_sha'], builds[1]['commit_sha']
+        return get_mercurial_commit(builds[0]['commit_sha']), get_mercurial_commit(builds[1]['commit_sha'])
 
 
 class CodecovCoverage(Coverage):
@@ -118,7 +124,7 @@ class CodecovCoverage(Coverage):
         r = CodecovCoverage._get()
         commit = r.json()['commit']
 
-        return commit['commitid'], commit['parent']
+        return get_mercurial_commit(commit['commitid']), get_mercurial_commit(commit['parent'])
 
 
 class ActiveDataCoverage(Coverage):
