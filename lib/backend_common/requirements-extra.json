@@ -1,6 +1,6 @@
 {
     "log": [
-        "logbook",
+        "Logbook",
         "mozilla-cli-common[log]"
     ],
     "api": [

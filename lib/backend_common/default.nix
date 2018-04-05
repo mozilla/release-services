@@ -13,7 +13,17 @@ let
   startsWith = s: x:
     builtins.substring 0 (builtins.stringLength x) s == x;
 
+  readLines = file_:
+    (splitString "\n"
+      (removeSuffix "\n"
+        (builtins.readFile file_)
+      )
+    );
+
   fromRequirementsFile = file:
+    fromRequirements (readLines file);
+
+  fromRequirements = list:
     let
       removeLines =
         builtins.filter
@@ -61,34 +71,25 @@ let
                 else line
           );
 
-      readLines = file_:
-        (splitString "\n"
-          (removeSuffix "\n"
-            (builtins.readFile file_)
-          )
-        );
     in
         (removeSpaces
           (removeComment
             (removeExtras
               (removeSpecs
                 (removeLines
-                  (extractEggName
-                    (readLines file)))))));
+                  (extractEggName list))))));
 
   allDeps = builtins.attrNames self;
 in {
   doCheck = true;
   buildInputs =
     builtins.map (name: self."${name}") (
-      builtins.filter (name: builtins.elem name allDeps) (
-        unique (
-          flatten ((
-            fromRequirementsFile ./../cli_common/requirements-dev.txt) ++ (
-            fromRequirementsFile ./requirements-dev.txt) ++ (
-              builtins.attrValues (
-                builtins.fromJSON (
-                  builtins.readFile ./requirements-extra.json)))))));
+      unique(
+        (fromRequirementsFile ./../cli_common/requirements-dev.txt) ++
+        (fromRequirementsFile ./requirements-dev.txt) ++
+        (fromRequirements(flatten(builtins.attrValues(
+          builtins.fromJSON(builtins.readFile ./requirements-extra.json)))))
+      ));
   patchPhase = ''
     # replace synlink with real file
     rm -f setup.cfg

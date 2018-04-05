@@ -54,6 +54,7 @@ with open('VERSION') as f:
 with open('requirements-extra.json') as f:
     EXTRAS = json.load(f)
 
+
 setuptools.setup(
     name='mozilla-backend-common',
     version=VERSION,
