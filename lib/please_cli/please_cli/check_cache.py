@@ -65,7 +65,7 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
     for tmp_channel in ['master'] + please_cli.config.DEPLOY_CHANNELS:
         project_exists = False
         attribute = project
-        if tmp_channel:
+        if tmp_channel != 'master':
             attribute += '.deploy.' + tmp_channel
 
         click.echo('{} => Calculating `{}` hash ... '.format(indent, attribute), nl=False)
@@ -87,11 +87,6 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
                 stream=True,
                 stderr=subprocess.STDOUT,
             )
-        please_cli.utils.check_result(
-            result,
-            output,
-            ask_for_details=interactive,
-        )
 
         try:
             drv = output.split('\n')[-1].strip()
@@ -100,7 +95,7 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
         except Exception as e:
             log.exception(e)
             raise click.ClickException('Something went wrong when reading derivation file for `{}` project.'.format(attribute))
-        click.echo('{}    Application hash: {}'.format(indent, channel_derivations[tmp_channel].nix_hash))
+        click.echo('{} found.'.format(channel_derivations[tmp_channel].nix_hash))
 
         click.echo('{} => Checking cache if build artifacts exists for `{}` ... '.format(indent, attribute), nl=False)
         with click_spinner.spinner():
