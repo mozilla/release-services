@@ -29,7 +29,7 @@ RUN apt-get -q update \
  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
  && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
  && locale-gen \
- && sed -i "s|mesg n|tty -s && mesg n|" /root/.profile
+ && sed -i "s|mesg n|tty -s \&\& mesg n|" /root/.profile
 
 
 #
@@ -93,9 +93,10 @@ RUN wget -nv "https://nixos.org/releases/nix/nix-$NIX_VERSION/nix-$NIX_VERSION-x
  && sh ./nix-$NIX_VERSION-x86_64-linux/install \
  && . $HOME/.nix-profile/etc/profile.d/nix.sh \
  && rm -r $HOME/nix-*-x86_64-linux \
- && nix-collect-garbage -d \
  && rm -rf $HOME/.cache/nix \
- && nix-build /app/nix/default.nix -A please-cli -A tools --no-out-link
+ && nix-build /app/nix/default.nix -A please-cli -o result \
+ && nix-collect-garbage -d \
+ && rm -f result
 
 
 USER root
