@@ -61,15 +61,11 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
 
     indent = ' ' * indent
 
-    project_channel = project
-    if channel in please_cli.config.DEPLOY_CHANNELS:
-       project_channel += '.deploy.' + channel
-
     click.echo('{} => Calculating `{}` hash ... '.format(indent, project), nl=False)
     command = [
         nix_instantiate,
         os.path.join(please_cli.config.ROOT_DIR, 'nix/default.nix'),
-        '-A', project_channel
+        '-A', project
     ]
     if interactive:
         with click_spinner.spinner():
@@ -120,6 +116,67 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
         raise_exception=False,
         ask_for_details=False,
     )
+
+
+    if channel in please_cli.config.DEPLOY_CHANNELS:
+        project_exists = False
+        project += '.deploy.' + channel
+
+        click.echo('{} => Calculating `{}` hash ... '.format(indent, project), nl=False)
+        command = [
+            nix_instantiate,
+            os.path.join(please_cli.config.ROOT_DIR, 'nix/default.nix'),
+            '-A', project
+        ]
+        if interactive:
+            with click_spinner.spinner():
+                result, output, error = cli_common.command.run(
+                    command,
+                    stream=True,
+                    stderr=subprocess.STDOUT,
+                )
+        else:
+            result, output, error = cli_common.command.run(
+                command,
+                stream=True,
+                stderr=subprocess.STDOUT,
+            )
+        please_cli.utils.check_result(
+            result,
+            output,
+            ask_for_details=interactive,
+        )
+
+        try:
+            drv = output.split('\n')[-1].strip()
+            with open(drv) as f:
+                derivation = eval(f.read())
+        except Exception as e:
+            log.exception(e)
+            raise click.ClickException('Something went wrong when reading derivation file for `{}` project.'.format(project))
+        click.echo('{}    Application hash: {}'.format(indent, derivation.nix_hash))
+
+        click.echo('{} => Checking cache if build artifacts exists for `{}` ... '.format(indent, project), nl=False)
+        with click_spinner.spinner():
+            project_exists = False
+            for cache_url in cache_urls:
+                response = requests.get(
+                    '%s/%s.narinfo' % (cache_url, derivation.nix_hash),
+                )
+                project_exists = response.status_code == 200
+                if project_exists:
+                    break
+
+        result = 1
+        if project_exists:
+            result = 0
+        please_cli.utils.check_result(
+            result,
+            success_message='EXISTS',
+            error_message='NOT EXISTS',
+            raise_exception=False,
+            ask_for_details=False,
+        )
 
     return project_exists, derivation.nix_hash
 
