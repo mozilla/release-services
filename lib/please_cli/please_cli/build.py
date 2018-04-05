@@ -28,8 +28,10 @@ import please_cli.utils
     type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
-    '--extra-attribute',
-    multiple=True,
+    '--channel',
+    type=click.Choice(please_cli.config.CHANNELS),
+    envvar="GITHUB_BRANCH",
+    required=True,
     )
 @click.option(
     '--nix-build',
@@ -58,7 +60,7 @@ import please_cli.utils
     default=True,
     )
 def cmd(project,
-        extra_attribute,
+        channel,
         nix_build,
         nix,
         cache_bucket,
@@ -99,14 +101,18 @@ def cmd(project,
                 temp_file,
             ]
 
-        for attribute in [project] + list(extra_attribute):
+        for (attribute, channel) in [(project, None),
+                                     (project + '.deploy.' + channel, channel)]:
+            channel_attribute = ''
+            if channel:
+                channel_attribute = '-deploy-' + channel
             command = [
                 nix_build,
                 please_cli.config.ROOT_DIR + '/nix/default.nix',
                 '-A', attribute,
-                '-o', please_cli.config.TMP_DIR + '/result-build-{project}-{attribute}'.format(
+                '-o', please_cli.config.TMP_DIR + '/result-build-{project}{channel}'.format(
                     project=project,
-                    attribute=attribute.lstrip(project + '.'),
+                    channel=channel_attribute,
                 ),
             ] + nix_cache_secret_keys
             result, output, error = cli_common.command.run(
