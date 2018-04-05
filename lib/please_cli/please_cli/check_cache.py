@@ -64,6 +64,7 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
 
     for tmp_channel in [None] + please_cli.config.DEPLOY_CHANNELS:
         project_exists = False
+        attribute = project
         if tmp_channel:
             attribute += project + '.deploy.' + tmp_channel
 
