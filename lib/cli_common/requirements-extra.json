@@ -27,6 +27,7 @@
         "aioamqp",
         "asyncio",
         "mozdef-client",
+        "python-dateutil<2.7.0,>=2.1",
         "raven",
         "structlog"
     ],
@@ -36,6 +37,6 @@
         "mozdef-client",
         "raven",
         "structlog",
-        "taskcluster"
+        "taskcluster<3.0.0"
     ]
 }
