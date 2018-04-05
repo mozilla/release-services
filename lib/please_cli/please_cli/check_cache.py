@@ -65,13 +65,13 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
     for tmp_channel in [None] + please_cli.config.DEPLOY_CHANNELS:
         project_exists = False
         if tmp_channel:
-            project += '.deploy.' + tmp_channel
+            attribute += project + '.deploy.' + tmp_channel
 
-        click.echo('{} => Calculating `{}` hash ... '.format(indent, project), nl=False)
+        click.echo('{} => Calculating `{}` hash ... '.format(indent, attribute), nl=False)
         command = [
             nix_instantiate,
             os.path.join(please_cli.config.ROOT_DIR, 'nix/default.nix'),
-            '-A', project
+            '-A', attribute
         ]
         if interactive:
             with click_spinner.spinner():
@@ -98,10 +98,10 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
                 channel_derivations[tmp_channel] = eval(f.read())
         except Exception as e:
             log.exception(e)
-            raise click.ClickException('Something went wrong when reading derivation file for `{}` project.'.format(project))
+            raise click.ClickException('Something went wrong when reading derivation file for `{}` project.'.format(attribute))
         click.echo('{}    Application hash: {}'.format(indent, channel_derivations[tmp_channel].nix_hash))
 
-        click.echo('{} => Checking cache if build artifacts exists for `{}` ... '.format(indent, project), nl=False)
+        click.echo('{} => Checking cache if build artifacts exists for `{}` ... '.format(indent, attribute), nl=False)
         with click_spinner.spinner():
             project_exists = False
             for cache_url in cache_urls:
