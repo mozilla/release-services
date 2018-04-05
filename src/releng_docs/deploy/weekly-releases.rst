@@ -12,6 +12,7 @@ Current administrators that perform this weekly release are:
 
 - `Rok Garbas`_
 - `Bastien Abadie`_
+- `Rail Aliiev`_
 
 Protocal that we follow is:
 
@@ -23,8 +24,7 @@ Protocal that we follow is:
 
         $ git clone git@github.com:mozilla-releng/services.git
         $ cd services
-        $ git checkout -b staging origin/staging
-        $ git push origin staging -f 
+        $ git push -f origin origin/master:staging
 
 #. Verify that all the production projects in staging that they are functioning
    properly. Each project should have a list of steps that you can easily
@@ -52,7 +52,7 @@ Protocal that we follow is:
      ``mozilla-releng/services`` is going to be happen. The channel subject
      should contain ``on duty sysadmin:`` followed by the IRC nickname you need
      to contact.
-   
+
      Example message::
 
          nickname: I am about to release a new version of mozilla-releng/services (*.mozilla-releng.net). Any alerts coming up soon will be best directed to me. I'll let you know when it's all done. Thank you!
@@ -94,7 +94,7 @@ Protocal that we follow is:
 #. Bump version, but **DO NOT** push upstream
 
    .. code-block:: console
-   
+
         $ git clone git@github.com/mozilla-releng/services.git
         $ cd services
         $ echo "$((($(cat VERSION)) + 1))" | tee VERSION2
@@ -151,6 +151,7 @@ Protocal that we follow is:
 
 .. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
 .. _`Bastien Abadie`: https://phonebook.mozilla.org/?search/Bastien%20Abadie
+.. _`Rail Aliiev`: https://phonebook.mozilla.org/?search/Rail%20Aliiev
 .. _`New GitHub Release`: https://github.com/mozilla-releng/services/releases/new
 .. _`staging secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Astaging
 .. _`production secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Aproduction

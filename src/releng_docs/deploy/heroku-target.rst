@@ -17,7 +17,7 @@ hand can also wrap the output in a Docker image format. More below...
 .. _Procfile: https://devcenter.heroku.com/articles/procfile
 
 
-Manual deployment 
+Manual deployment
 -----------------
 
 While we have an automated and regular (weekly) way how to deploy efficiently
@@ -39,7 +39,7 @@ production environment would be:
     $ ./please tools deploy:HEROKU releng-treestatus \
             --heroku-app="releng-production-treestatus" \
             --extra-attribute=".deploy.production" \
-            --taskcluster-secrets="repo:github.com/mozilla-releng/services:branch:production" \
+            --taskcluster-secret="repo:github.com/mozilla-releng/services:branch:production" \
             --taskcluster-client-id="..." \
             --taskcluster-access-token="..."
 
@@ -48,7 +48,7 @@ You will need to have a Taskcluster client with the following scopes:
 - ``assume:hook-id:project-releng/services-production-*``
 - ``assume:repo:github.com/mozilla-releng/services:branch:production``
 - ``hooks:modify-hook:project-releng/services-production-*``
-- ``queue:create-task:aws-provisioner-v1/releng-task``
+- ``queue:create-task:aws-provisioner-v1/releng-svc*``
 - ``secrets:get:repo:github.com/mozilla-releng/services:branch:production``
 
 I suggest you create a custom (and temporary) client via `Takcluster's Client
@@ -72,7 +72,7 @@ To build docker image for ``releng-treestatus`` project do:
     /nix/store/...-docker-image-mozilla-releng-treestatus.tar.gz
 
 A symlink to Docker image is create at ``tmp/result-build-releng-treestatus-1``
-location. 
+location.
 
 Now all you need to do is load image and run it:
 
