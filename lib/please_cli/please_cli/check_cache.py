@@ -49,7 +49,13 @@ class Derive:
     default='nix-instantiate',
     help='`nix-instantiate` command',
     )
-def cmd(project, cache_urls, nix_instantiate, indent=0, interactive=True):
+@click.option(
+    '--channel',
+    type=click.Choice(please_cli.config.CHANNELS),
+    envvar="GITHUB_BRANCH",
+    required=True,
+    )
+def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=True):
     """Command to check if project is already in cache.
     """
 
@@ -59,7 +65,7 @@ def cmd(project, cache_urls, nix_instantiate, indent=0, interactive=True):
     command = [
         nix_instantiate,
         os.path.join(please_cli.config.ROOT_DIR, 'nix/default.nix'),
-        '-A', project
+        '-A', project + '.deploy.' + channel
     ]
     if interactive:
         with click_spinner.spinner():

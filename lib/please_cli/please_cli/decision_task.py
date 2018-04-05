@@ -322,6 +322,7 @@ def cmd(ctx,
             project=project,
             cache_urls=cache_urls,
             nix_instantiate=nix_instantiate,
+            channel=channel,
             indent=8,
             interactive=False,
         )
