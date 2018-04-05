@@ -106,7 +106,7 @@ class ClangTidy(object):
         # Run command
         try:
             clang_output = subprocess.check_output(cmd, cwd=self.repo_dir)
-        except subprocess.CalledProcessErrorexcept as e:
+        except subprocess.CalledProcessError as e:
             logger.error('Mach static analysis failed: {}'.format(e.output))
             raise
 
