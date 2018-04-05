@@ -7,7 +7,7 @@ metadata:
   source: "{{ event.head.repo.url }}"
 tasks:
 
-        
+
   - metadata:
       name: "0. Decision task"
       description: "A task that detects changes and rebuilds application that needs to be rebuilt."
@@ -33,7 +33,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-new-36"
+      image: "mozillareleng/services:base-new-37"
       features:
         taskclusterProxy: true
       capabilities:
@@ -72,7 +72,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-new-36"
+      image: "mozillareleng/services:base-new-37"
       features:
         taskclusterProxy: true
       capabilities:
@@ -111,7 +111,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-new-36"
+      image: "mozillareleng/services:base-new-37"
       features:
         taskclusterProxy: true
       capabilities:
@@ -150,7 +150,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-new-36"
+      image: "mozillareleng/services:base-new-37"
       features:
         taskclusterProxy: true
       capabilities:
@@ -189,7 +189,7 @@ tasks:
     priority: high
     payload:
       maxRunTime: 1800  # 30min
-      image: "mozillareleng/services:base-new-36"
+      image: "mozillareleng/services:base-new-37"
       features:
         taskclusterProxy: true
       capabilities:
