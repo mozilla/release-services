@@ -56,6 +56,16 @@ import please_cli.utils
     default=None,
     )
 @click.option(
+    '--taskcluster-client-id',
+    default=None,
+    required=False,
+    )
+@click.option(
+    '--taskcluster-access-token',
+    default=None,
+    required=False,
+    )
+@click.option(
     '--interactive/--no-interactive',
     default=True,
     )
@@ -84,6 +94,8 @@ def cmd(project,
     secrets = cli_common.taskcluster.get_secrets(taskcluster_secret,
                                                  project,
                                                  required=required_secrets,
+                                                 taskcluster_client_id=taskcluster_client_id,
+                                                 taskcluster_access_token=taskcluster_access_token,
                                                  )
 
     click.echo(' => Building {} project ... '.format(project), nl=False)
@@ -109,7 +121,7 @@ def cmd(project,
         for (attribute, channel_) in projects:
             channel_attribute = ''
             if channel_:
-                channel_attribute = '-deploy-' + channel_
+                channel_attribute = '-channel-' + channel_
             command = [
                 nix_build,
                 please_cli.config.ROOT_DIR + '/nix/default.nix',
