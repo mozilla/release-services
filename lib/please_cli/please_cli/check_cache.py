@@ -61,11 +61,15 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
 
     indent = ' ' * indent
 
+    project_channel = project
+    if channel in please_cli.config.DEPLOY_CHANNELS:
+       project_channel += '.deploy.' + channel
+
     click.echo('{} => Calculating `{}` hash ... '.format(indent, project), nl=False)
     command = [
         nix_instantiate,
         os.path.join(please_cli.config.ROOT_DIR, 'nix/default.nix'),
-        '-A', project + '.deploy.' + channel
+        '-A', project_channel
     ]
     if interactive:
         with click_spinner.spinner():
