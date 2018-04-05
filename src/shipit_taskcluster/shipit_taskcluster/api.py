@@ -3,14 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import datetime
 
 import cli_common.log
 from backend_common.db import db
 from flask import abort
-from shipit_taskcluster.models import TaskclusterStatus, TaskclusterStep
+from shipit_taskcluster.models import TaskclusterStatus
+from shipit_taskcluster.models import TaskclusterStep
 from shipit_taskcluster.taskcluster_utils import get_taskcluster_tasks_state
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound

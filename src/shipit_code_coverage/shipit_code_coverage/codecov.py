@@ -9,12 +9,14 @@ from concurrent.futures import ThreadPoolExecutor
 
 import hglib
 import requests
-
 from cli_common.command import run_check
 from cli_common.log import get_logger
-from cli_common.utils import ThreadPoolExecutorResult, retry
-from shipit_code_coverage import (grcov, report_generators, taskcluster,
-                                  uploader)
+from cli_common.utils import ThreadPoolExecutorResult
+from cli_common.utils import retry
+from shipit_code_coverage import grcov
+from shipit_code_coverage import report_generators
+from shipit_code_coverage import taskcluster
+from shipit_code_coverage import uploader
 from shipit_code_coverage.artifacts import ArtifactsHandler
 from shipit_code_coverage.github import GitHubUtils
 from shipit_code_coverage.notifier import Notifier

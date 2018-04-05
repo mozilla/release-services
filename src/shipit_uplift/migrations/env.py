@@ -1,4 +1,3 @@
-from __future__ import with_statement
 
 from alembic import context
 from cli_common import log

@@ -2,19 +2,19 @@
 from unittest.mock import MagicMock
 
 import pytest
-
-from shipit_signoff.policies import (NoSignaturePresentError,
-                                     NoSignoffLeftError, UnauthorizedUserError,
-                                     _are_there_signoffs_left_for_email,
-                                     _are_there_signoffs_left_for_group,
-                                     _calculate_missing_signoffs,
-                                     _has_user_signed_policy,
-                                     _is_email_defined_in_policy,
-                                     _is_group_defined_in_policy,
-                                     _is_signoff_condition_met,
-                                     check_whether_policy_can_be_signed,
-                                     check_whether_policy_can_be_unsigned,
-                                     is_sign_off_policy_met)
+from shipit_signoff.policies import NoSignaturePresentError
+from shipit_signoff.policies import NoSignoffLeftError
+from shipit_signoff.policies import UnauthorizedUserError
+from shipit_signoff.policies import _are_there_signoffs_left_for_email
+from shipit_signoff.policies import _are_there_signoffs_left_for_group
+from shipit_signoff.policies import _calculate_missing_signoffs
+from shipit_signoff.policies import _has_user_signed_policy
+from shipit_signoff.policies import _is_email_defined_in_policy
+from shipit_signoff.policies import _is_group_defined_in_policy
+from shipit_signoff.policies import _is_signoff_condition_met
+from shipit_signoff.policies import check_whether_policy_can_be_signed
+from shipit_signoff.policies import check_whether_policy_can_be_unsigned
+from shipit_signoff.policies import is_sign_off_policy_met
 
 
 @pytest.mark.parametrize('email, group_name, policy, existing_signatures', (

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
+from collections import namedtuple
 
 from cli_common.log import get_logger
 from shipit_bot_uplift.api import api_client

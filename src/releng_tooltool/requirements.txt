@@ -1,13 +1,7 @@
--e ./../../lib/cli_common[sentry] #egg=mozilla-cli-common
+-e ./../../lib/cli_common[log] #egg=mozilla-cli-common
 -e ./../../lib/backend_common[log,security,cors,api,auth,db] #egg=mozilla-backend-common
 
-Flask
-Flask-Login
-SQLAlchemy
-Werkzeug
 boto
-pytz
 
-# runtime dependiencies
-psycopg2
 gunicorn
+psycopg2

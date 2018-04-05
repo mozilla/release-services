@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service

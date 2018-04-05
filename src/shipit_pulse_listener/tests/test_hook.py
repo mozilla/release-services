@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import pytest
-
 from shipit_pulse_listener import task_monitoring
 from shipit_pulse_listener.hook import Hook
 

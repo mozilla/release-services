@@ -2,17 +2,18 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 from json import dumps as dump_to_json
 from operator import itemgetter
 
 import pytest
-
-from releng_notification_policy.api import (create_identity_preference_url,
-                                            determine_message_action,
-                                            get_identity_url_for_actionable_policies,
-                                            get_policies_in_json_serializable_form)
-from releng_notification_policy.models import Message, Policy
+from releng_notification_policy.api import create_identity_preference_url
+from releng_notification_policy.api import determine_message_action
+from releng_notification_policy.api import get_identity_url_for_actionable_policies
+from releng_notification_policy.api import get_policies_in_json_serializable_form
+from releng_notification_policy.models import Message
+from releng_notification_policy.models import Policy
 
 
 @pytest.fixture

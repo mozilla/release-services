@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 
 from shipit_pulse_listener.listener import HookCodeCoverage
 

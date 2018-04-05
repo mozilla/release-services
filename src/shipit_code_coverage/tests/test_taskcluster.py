@@ -2,7 +2,6 @@
 
 import pytest
 import requests
-
 import responses
 from shipit_code_coverage import taskcluster
 

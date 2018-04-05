@@ -8,7 +8,8 @@ import backend_common.auth0
 import backend_common.testing
 from backend_common.db import db
 from shipit_signoff.api import is_user_in_group
-from shipit_signoff.models import SigningStatus, SignoffStep
+from shipit_signoff.models import SigningStatus
+from shipit_signoff.models import SignoffStep
 
 UID = '1'
 INVALID_UID = '1234'

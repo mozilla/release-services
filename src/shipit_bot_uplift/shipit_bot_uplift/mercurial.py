@@ -3,7 +3,6 @@ import os
 import re
 
 import hglib
-
 from cli_common.log import get_logger
 
 logger = get_logger(__name__)

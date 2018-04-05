@@ -3,15 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 from unittest.mock import MagicMock
 
 import pytest
 import requests
-
-from shipit_pipeline.pipeline import (PipelineStep, get_runnable_steps,
-                                      refresh_pipeline_steps)
+from shipit_pipeline.pipeline import PipelineStep
+from shipit_pipeline.pipeline import get_runnable_steps
+from shipit_pipeline.pipeline import refresh_pipeline_steps
 
 
 @pytest.fixture

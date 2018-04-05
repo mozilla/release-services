@@ -297,13 +297,29 @@ let
       };
     };
 
+    "aioamqp" = python.mkDerivation {
+      name = "aioamqp-0.10.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/22/f2/2b78c982e81eb840de18a419aa5c7d10519ccd81852e91310ebcbcd3e78b/aioamqp-0.10.0.tar.gz"; sha256 = "c618af6d005942a2a8711f7548348f9028fac2673f0dc2d192310cef83486204"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."asyncio"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/polyconseil/aioamqp";
+        license = licenses.bsdOriginal;
+        description = "AMQP implementation using asyncio";
+      };
+    };
+
     "aiohttp" = python.mkDerivation {
-      name = "aiohttp-2.3.10";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c0/b9/853b158f5cb5d218daaff0fb0dbc2bd7de45b2c6c5f563dff0ee530ec52a/aiohttp-2.3.10.tar.gz"; sha256 = "8adda6583ba438a4c70693374e10b60168663ffa6564c5c75d3c7a9055290964"; };
+      name = "aiohttp-3.1.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/53/8a/c93662973020eaad14c9695b80fcbf9d0e23f9a557474089f2dc526650f5/aiohttp-3.1.1.tar.gz"; sha256 = "dc5cab081d4b334d0440b019edf24fe1cb138b8114e0e22d2b0661284bc1775f"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."async-timeout"
+      self."attrs"
       self."chardet"
       self."idna-ssl"
       self."multidict"
@@ -350,8 +366,8 @@ let
     };
 
     "async-timeout" = python.mkDerivation {
-      name = "async-timeout-1.4.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/6f/cc/ff80612164fe68bf97767052c5c783a033165df7d47a41ae5c1cc5ea480b/async-timeout-1.4.0.tar.gz"; sha256 = "983891535b1eca6ba82b9df671c8abff53c804fce3fa630058da5bbbda500340"; };
+      name = "async-timeout-2.0.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/23/6d/e37be168272b7a499111d0ed14940da80644d21b201e27980892c7125abb/async-timeout-2.0.1.tar.gz"; sha256 = "00cff4d2dce744607335cba84e9929c3165632da2d27970dbc55802a0c7873d0"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -359,6 +375,19 @@ let
         homepage = "https://github.com/aio-libs/async_timeout/";
         license = licenses.asl20;
         description = "Timeout context manager for asyncio programs";
+      };
+    };
+
+    "asyncio" = python.mkDerivation {
+      name = "asyncio-3.4.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/da/54/054bafaf2c0fb8473d423743e191fcdf49b2c1fd5e9af3524efbe097bafd/asyncio-3.4.3.tar.gz"; sha256 = "83360ff8bc97980e4ff25c964c7bd3923d333d177aa4f7fb736b019f26c7cb41"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://www.python.org/dev/peps/pep-3156/";
+        license = "";
+        description = "reference implementation of PEP 3156";
       };
     };
 
@@ -405,9 +434,22 @@ let
       };
     };
 
+    "boto" = python.mkDerivation {
+      name = "boto-2.48.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/66/e7/fe1db6a5ed53831b53b8a6695a8f134a58833cadb5f2740802bc3730ac15/boto-2.48.0.tar.gz"; sha256 = "deb8925b734b109679e3de65856018996338758f4b916ff4fe7bb62b6d7000d1"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/boto/boto/";
+        license = licenses.mit;
+        description = "Amazon Web Services Library";
+      };
+    };
+
     "boto3" = python.mkDerivation {
-      name = "boto3-1.6.22";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/9f/d9/ba31201ec1f135fe33cab25a4c1ba459f962e7372a3c409f67d7d2a5c074/boto3-1.6.22.tar.gz"; sha256 = "0f6e11b873c5a7127c17ca614487335e1b8f07f786053fc73c5c4aff81136e36"; };
+      name = "boto3-1.7.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3c/6c/00b00fadb060b8baeb666999807d7ce85d194aedcfb2e09b149b2392bae3/boto3-1.7.1.tar.gz"; sha256 = "91348d9e5c33c2c1aaaa238a3e97be4834c1aff85082ef6d9b249814be20bab4"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -423,8 +465,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.9.22";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/da/81/e4176fc7d50732aef7fe94863681d315adbb4eecc19d143fe526a678e231/botocore-1.9.22.tar.gz"; sha256 = "59933693c329ce059d4a29bdd72c02db5c5119228d88d64f829454f4253feddd"; };
+      name = "botocore-1.10.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/0b/3e/7a2299870d01611e221648484146bed16da2bc69fb256d4b2669c26fea32/botocore-1.10.1.tar.gz"; sha256 = "bc1e6c36b1b570462e3b688b3bd3ba662e521cc21ce0a860f85f877179af77c7"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -1103,6 +1145,7 @@ let
       self."SQLAlchemy"
       self."Werkzeug"
       self."blinker"
+      self."boto"
       self."connexion"
       self."flask-oidc"
       self."flask-talisman"
@@ -1129,8 +1172,12 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."Logbook"
+      self."aioamqp"
+      self."asyncio"
       self."click"
       self."mozdef-client"
+      self."python-dateutil"
+      self."python-hglib"
       self."raven"
       self."structlog"
       self."taskcluster"
@@ -1459,6 +1506,19 @@ let
       };
     };
 
+    "python-hglib" = python.mkDerivation {
+      name = "python-hglib-2.5";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/5a/c8/b8c95d3ee5d57c7961d918c16a09ebb8b3122a87e373bbda9f1f35769ff3/python-hglib-2.5.tar.gz"; sha256 = "fee180bb6796e5d2d25158b2d3c9f048648e427dd28b23a58d369adb14dd67cb"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://www.mercurial-scm.org/wiki/PythonHglibs";
+        license = licenses.mit;
+        description = "Mercurial Python library";
+      };
+    };
+
     "python-jose" = python.mkDerivation {
       name = "python-jose-2.0.2";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/16/03/6aedc1d7675a070ab365028c2f5375e79ebf9d0b3d05769f390c2c0b895e/python-jose-2.0.2.tar.gz"; sha256 = "391f860dbe274223d73dd87de25e4117bf09e8fe5f93a417663b1f2d7b591165"; };
@@ -1550,8 +1610,8 @@ let
     };
 
     "responses" = python.mkDerivation {
-      name = "responses-0.8.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/2e/18/20a4a96365d42f02363ec0062b70ff93f7b6639e569fd0cb174209d59a3a/responses-0.8.1.tar.gz"; sha256 = "a64029dbc6bed7133e2c971ee52153f30e779434ad55a5abf40322bcff91d029"; };
+      name = "responses-0.9.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/67/cb/0a5390f7b8944cfa7e4079a839adba964d858d27a60af7b2683248148339/responses-0.9.0.tar.gz"; sha256 = "c6082710f4abfb60793899ca5f21e7ceb25aabf321560cc0726f8b59006811c9"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -1673,8 +1733,8 @@ let
     };
 
     "taskcluster" = python.mkDerivation {
-      name = "taskcluster-2.1.3";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/9e/c6/a94dc47135d7516f6bf1b877079a08ffa4a420d5be2c39c2fa3d78f28875/taskcluster-2.1.3.tar.gz"; sha256 = "5bc6be5d59bd9a199b445db650081b9a8b7a8f436667172f9623bb34aff97556"; };
+      name = "taskcluster-3.0.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/90/77/8dca8f65f53a299f27a4154cd586dc06a4214008f2f21de062e85882eceb/taskcluster-3.0.0.tar.gz"; sha256 = "e99b11496ad3586c0a4295dc6a2a68534e93037ddc20b0b380e90908d21f1c43"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [

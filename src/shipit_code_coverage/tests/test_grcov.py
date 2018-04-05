@@ -2,9 +2,8 @@
 import json
 import os
 
-import pytest
-
 import click
+import pytest
 from shipit_code_coverage import grcov
 
 

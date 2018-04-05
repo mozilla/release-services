@@ -3,8 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import datetime
 import json
 
@@ -15,8 +13,12 @@ from backend_common.auth import auth
 from backend_common.cache import cache
 from flask import current_app
 from flask_login import current_user
-from releng_treestatus.models import Log, StatusChange, StatusChangeTree, Tree
-from werkzeug.exceptions import BadRequest, NotFound
+from releng_treestatus.models import Log
+from releng_treestatus.models import StatusChange
+from releng_treestatus.models import StatusChangeTree
+from releng_treestatus.models import Tree
+from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import NotFound
 
 UNSET = object()
 TREE_SUMMARY_LOG_LIMIT = 5
