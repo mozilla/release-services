@@ -28,8 +28,10 @@ import please_cli.utils
     type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
-    '--extra-attribute',
-    multiple=True,
+    '--channel',
+    type=click.Choice(please_cli.config.CHANNELS),
+    required=False,
+    default=None,
     )
 @click.option(
     '--nix-build',
@@ -54,11 +56,21 @@ import please_cli.utils
     default=None,
     )
 @click.option(
+    '--taskcluster-client-id',
+    default=None,
+    required=False,
+    )
+@click.option(
+    '--taskcluster-access-token',
+    default=None,
+    required=False,
+    )
+@click.option(
     '--interactive/--no-interactive',
     default=True,
     )
 def cmd(project,
-        extra_attribute,
+        channel,
         nix_build,
         nix,
         cache_bucket,
@@ -82,6 +94,8 @@ def cmd(project,
     secrets = cli_common.taskcluster.get_secrets(taskcluster_secret,
                                                  project,
                                                  required=required_secrets,
+                                                 taskcluster_client_id=taskcluster_client_id,
+                                                 taskcluster_access_token=taskcluster_access_token,
                                                  )
 
     click.echo(' => Building {} project ... '.format(project), nl=False)
@@ -99,14 +113,22 @@ def cmd(project,
                 temp_file,
             ]
 
-        for attribute in [project] + list(extra_attribute):
+        projects = [(project, None)] + \
+                   [(project + '.deploy.' + x, x) for x in please_cli.config.DEPLOY_CHANNELS]
+        if channel:
+            projects = [(project + '.deploy.' + channel, channel)]
+
+        for (attribute, channel_) in projects:
+            channel_attribute = ''
+            if channel_:
+                channel_attribute = '-channel-' + channel_
             command = [
                 nix_build,
                 please_cli.config.ROOT_DIR + '/nix/default.nix',
                 '-A', attribute,
-                '-o', please_cli.config.TMP_DIR + '/result-build-{project}-{attribute}'.format(
+                '-o', please_cli.config.TMP_DIR + '/result-build-{project}{channel}'.format(
                     project=project,
-                    attribute=attribute.lstrip(project + '.'),
+                    channel=channel_attribute,
                 ),
             ] + nix_cache_secret_keys
             result, output, error = cli_common.command.run(

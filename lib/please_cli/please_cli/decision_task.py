@@ -36,19 +36,13 @@ def get_build_task(index,
 
     project_config = please_cli.config.PROJECTS_CONFIG.get(project, {})
 
-    extra_attributes = []
-    if channel in project_config.get('deploy_options', {}).keys():
-        extra_attributes = [
-            '--extra-attribute="{}.deploy.{}"'.format(project, channel),
-        ]
-
     command = [
         './please', '-vv', 'tools', 'build', project,
         '--cache-bucket="{}"'.format(cache_bucket),
         '--cache-region="{}"'.format(cache_region),
         '--taskcluster-secret=' + taskcluster_secret,
         '--no-interactive',
-    ] + extra_attributes
+    ]
     return get_task(
         task_group_id,
         [parent_task],
@@ -85,12 +79,6 @@ def get_deploy_task(index,
     deploy_options = project_config.get('deploy_options', {}).get(channel, {})
     scopes = []
 
-    extra_attributes = []
-    if channel in project_config.get('deploy_options', {}).keys():
-        extra_attributes = [
-            '--extra-attribute="{}.deploy.{}"'.format(project, channel),
-        ]
-
     if deploy_type == 'S3':
         project_csp = []
         for url in deploy_options.get('csp', []):
@@ -120,8 +108,9 @@ def get_deploy_task(index,
             project,
             '--s3-bucket=' + deploy_options['s3_bucket'],
             '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
+            '--channel=' + channel,
             '--no-interactive',
-        ] + project_csp + project_envs + extra_attributes
+        ] + project_csp + project_envs
 
     elif deploy_type == 'HEROKU':
         command = [
@@ -131,8 +120,9 @@ def get_deploy_task(index,
             '--heroku-app=' + deploy_options['heroku_app'],
             '--heroku-dyno-type=' + deploy_options['heroku_dyno_type'],
             '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
+            '--channel=' + channel,
             '--no-interactive',
-        ] + extra_attributes
+        ]
 
     elif deploy_type == 'TASKCLUSTER_HOOK':
         command = [
@@ -141,8 +131,9 @@ def get_deploy_task(index,
             project,
             '--hook-id=services-{}-{}'.format(channel, project),
             '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
+            '--channel=' + channel,
             '--no-interactive',
-        ] + extra_attributes
+        ]
         scopes = [
           'assume:hook-id:project-releng/services-{}-*'.format(channel),
           'hooks:modify-hook:project-releng/services-{}-*'.format(channel),
@@ -322,6 +313,7 @@ def cmd(ctx,
             project=project,
             cache_urls=cache_urls,
             nix_instantiate=nix_instantiate,
+            channel=channel,
             indent=8,
             interactive=False,
         )
