@@ -66,7 +66,7 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
         project_exists = False
         attribute = project
         if tmp_channel:
-            attribute += project + '.deploy.' + tmp_channel
+            attribute += '.deploy.' + tmp_channel
 
         click.echo('{} => Calculating `{}` hash ... '.format(indent, attribute), nl=False)
         command = [
