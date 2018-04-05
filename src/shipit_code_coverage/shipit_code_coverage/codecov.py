@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import hglib
 import requests
+
 from cli_common.command import run_check
 from cli_common.log import get_logger
 from cli_common.utils import ThreadPoolExecutorResult

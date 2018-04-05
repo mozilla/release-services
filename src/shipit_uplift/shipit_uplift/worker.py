@@ -4,7 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import redis
-from rq import Connection, Queue, SimpleWorker
+from rq import Connection
+from rq import Queue
+from rq import SimpleWorker
 from shipit_uplift import secrets
 
 conn = redis.from_url(secrets.REDIS_URL)

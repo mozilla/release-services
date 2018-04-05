@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from collections import Counter
 
-import cli_common.log
 import taskcluster
+
+import cli_common.log
 
 log = cli_common.log.get_logger(__name__)
 

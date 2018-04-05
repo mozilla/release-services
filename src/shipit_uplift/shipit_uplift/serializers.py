@@ -5,11 +5,15 @@
 
 import html
 
-from cli_common import log
 from flask_login import current_user
+
+from cli_common import log
 from shipit_uplift.config import SCOPES_ADMIN
-from shipit_uplift.models import (BugAnalysis, BugContributor, BugResult,
-                                  Contributor, PatchStatus)
+from shipit_uplift.models import BugAnalysis
+from shipit_uplift.models import BugContributor
+from shipit_uplift.models import BugResult
+from shipit_uplift.models import Contributor
+from shipit_uplift.models import PatchStatus
 
 logger = log.get_logger(__name__)
 

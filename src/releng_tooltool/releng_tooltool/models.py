@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import sqlalchemy as sa
+
 from backend_common.db import db
 
 ALLOWED_REGIONS = ('us-east-1', 'us-west-1', 'us-west-2')

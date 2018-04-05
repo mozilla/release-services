@@ -5,8 +5,6 @@
 
 from datetime import timedelta
 
-from backend_common.db import db
-from backend_common.notifications import URGENCY_LEVELS
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import Enum
@@ -15,6 +13,9 @@ from sqlalchemy import Integer
 from sqlalchemy import Interval
 from sqlalchemy import String
 from sqlalchemy import Text
+
+from backend_common.db import db
+from backend_common.notifications import URGENCY_LEVELS
 
 from .config import APP_NAME
 

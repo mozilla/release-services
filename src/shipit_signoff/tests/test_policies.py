@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+
 from shipit_signoff.policies import NoSignaturePresentError
 from shipit_signoff.policies import NoSignoffLeftError
 from shipit_signoff.policies import UnauthorizedUserError

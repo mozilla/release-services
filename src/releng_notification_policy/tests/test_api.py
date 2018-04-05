@@ -8,6 +8,7 @@ from json import dumps as dump_to_json
 from operator import itemgetter
 
 import pytest
+
 from releng_notification_policy.api import create_identity_preference_url
 from releng_notification_policy.api import determine_message_action
 from releng_notification_policy.api import get_identity_url_for_actionable_policies

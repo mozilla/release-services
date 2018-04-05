@@ -5,8 +5,9 @@
 
 import os
 
-import backend_common.auth0
 import pytest
+
+import backend_common.auth0
 
 
 @pytest.fixture(scope='function')

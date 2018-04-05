@@ -11,6 +11,7 @@ import time
 
 import boto
 import boto.sqs
+
 import cli_common.log
 
 logger = cli_common.log.get_logger()

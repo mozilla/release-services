@@ -4,8 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import requests
-
 import yaml
+
 from cli_common.log import get_logger
 
 PROJECT_NAME = 'shipit-static-analysis'

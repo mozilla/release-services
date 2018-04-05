@@ -1,12 +1,14 @@
 
 from alembic import context
-from cli_common import log
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 from flask import current_app
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config
+from sqlalchemy import pool
+
+from cli_common import log
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

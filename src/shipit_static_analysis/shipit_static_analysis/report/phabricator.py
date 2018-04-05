@@ -8,7 +8,8 @@ from urllib.parse import urlparse
 import requests
 
 from cli_common import log
-from shipit_static_analysis import Issue, stats
+from shipit_static_analysis import Issue
+from shipit_static_analysis import stats
 from shipit_static_analysis.report.base import Reporter
 from shipit_static_analysis.revisions import PhabricatorRevision
 

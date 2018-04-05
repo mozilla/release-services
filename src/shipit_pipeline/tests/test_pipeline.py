@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 import requests
+
 from shipit_pipeline.pipeline import PipelineStep
 from shipit_pipeline.pipeline import get_runnable_steps
 from shipit_pipeline.pipeline import refresh_pipeline_steps

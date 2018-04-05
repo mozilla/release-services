@@ -2,8 +2,9 @@
 
 import time
 
-import cli_common.utils
 import pytest
+
+import cli_common.utils
 
 
 def do_raise():

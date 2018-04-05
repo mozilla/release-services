@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import pytest
+
 from shipit_workflow.release import bump_version
 from shipit_workflow.release import is_beta
 from shipit_workflow.release import is_esr

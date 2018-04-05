@@ -9,6 +9,7 @@ import re
 
 import click
 import taskcluster
+
 from cli_common.log import get_logger
 
 logger = get_logger(__name__)

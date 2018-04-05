@@ -21,11 +21,12 @@ import tempfile
 import time
 import urllib.parse
 
-import cli_common.log
 import flask
 import flask_oidc
 import jose
 import requests
+
+import cli_common.log
 
 logger = cli_common.log.get_logger(__name__)
 auth0 = flask_oidc.OpenIDConnect()

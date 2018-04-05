@@ -12,7 +12,8 @@ import hglib
 from cli_common import log
 from parsepatch.patch import Patch
 from shipit_static_analysis import stats
-from shipit_static_analysis.config import REPO_REVIEW, settings
+from shipit_static_analysis.config import REPO_REVIEW
+from shipit_static_analysis.config import settings
 
 logger = log.get_logger(__name__)
 

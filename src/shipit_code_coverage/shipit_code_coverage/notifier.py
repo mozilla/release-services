@@ -3,6 +3,7 @@
 from urllib.error import HTTPError
 
 import requests
+
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
 from cli_common.utils import retry

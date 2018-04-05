@@ -10,6 +10,7 @@ from functools import lru_cache
 
 import sqlalchemy as sa
 import sqlalchemy.orm
+
 from backend_common.db import db
 from cli_common.log import get_logger
 from shipit_workflow.release import bump_version

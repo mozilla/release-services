@@ -8,8 +8,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 import requests
 
-from shipit_uplift.coverage import (coverage_service, coverage_supported,
-                                    get_coverage_build, get_github_commit)
+from shipit_uplift.coverage import coverage_service
+from shipit_uplift.coverage import coverage_supported
+from shipit_uplift.coverage import get_coverage_build
+from shipit_uplift.coverage import get_github_commit
 
 
 def generate(changeset):

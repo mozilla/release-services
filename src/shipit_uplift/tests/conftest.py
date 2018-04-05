@@ -9,9 +9,9 @@ import os
 import pickle
 
 import pytest
+import responses
 
 import backend_common.testing
-import responses
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 

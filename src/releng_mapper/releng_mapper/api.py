@@ -10,8 +10,6 @@ from typing import Optional
 from typing import Tuple
 
 import dateutil.parser
-from backend_common.auth import auth
-from cli_common import log
 from flask import Response
 from flask import current_app
 from flask import request
@@ -25,6 +23,9 @@ from werkzeug.exceptions import Conflict
 from werkzeug.exceptions import InternalServerError
 from werkzeug.exceptions import NotFound
 from werkzeug.exceptions import UnsupportedMediaType
+
+from backend_common.auth import auth
+from cli_common import log
 
 from .models import Hash
 from .models import Project

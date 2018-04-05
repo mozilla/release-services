@@ -5,12 +5,13 @@
 
 from typing import List
 
-from backend_common.auth import auth
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import Conflict
 from werkzeug.exceptions import NotFound
+
+from backend_common.auth import auth
 
 from .models import Identity
 from .models import Preference

@@ -5,23 +5,32 @@
 
 import pickle
 
+from flask import abort
+from flask import request
+from sqlalchemy.orm.exc import NoResultFound
+
 from backend_common.auth import auth
 from backend_common.db import db
 from cli_common import log
-from flask import abort, request
 from rq import Queue
-from shipit_uplift import (coverage, coverage_by_changeset_impl,
-                           coverage_for_file_impl,
-                           coverage_summary_by_changeset_impl)
-from shipit_uplift.config import SCOPES_ADMIN, SCOPES_BOT, SCOPES_USER
+from shipit_uplift import coverage
+from shipit_uplift import coverage_by_changeset_impl
+from shipit_uplift import coverage_for_file_impl
+from shipit_uplift import coverage_summary_by_changeset_impl
+from shipit_uplift.config import SCOPES_ADMIN
+from shipit_uplift.config import SCOPES_BOT
+from shipit_uplift.config import SCOPES_USER
 from shipit_uplift.helpers import gravatar
-from shipit_uplift.models import (BugAnalysis, BugContributor, BugResult,
-                                  Contributor, PatchStatus)
-from shipit_uplift.serializers import (serialize_analysis, serialize_bug,
-                                       serialize_contributor,
-                                       serialize_patch_status)
+from shipit_uplift.models import BugAnalysis
+from shipit_uplift.models import BugContributor
+from shipit_uplift.models import BugResult
+from shipit_uplift.models import Contributor
+from shipit_uplift.models import PatchStatus
+from shipit_uplift.serializers import serialize_analysis
+from shipit_uplift.serializers import serialize_bug
+from shipit_uplift.serializers import serialize_contributor
+from shipit_uplift.serializers import serialize_patch_status
 from shipit_uplift.worker import conn
-from sqlalchemy.orm.exc import NoResultFound
 
 q = Queue(connection=conn)
 

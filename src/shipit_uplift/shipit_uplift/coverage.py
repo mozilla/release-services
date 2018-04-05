@@ -4,7 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from functools import lru_cache
 
 import requests

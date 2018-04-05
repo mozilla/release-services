@@ -5,14 +5,15 @@
 
 import datetime
 
+from flask import abort
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
+
 import cli_common.log
 from backend_common.db import db
-from flask import abort
 from shipit_taskcluster.models import TaskclusterStatus
 from shipit_taskcluster.models import TaskclusterStep
 from shipit_taskcluster.taskcluster_utils import get_taskcluster_tasks_state
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm.exc import NoResultFound
 
 log = cli_common.log.get_logger(__name__)
 

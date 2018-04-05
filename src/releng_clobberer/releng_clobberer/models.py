@@ -6,6 +6,7 @@
 import time
 
 import sqlalchemy as sa
+
 from backend_common.db import UniqueMixin
 from backend_common.db import db
 from releng_clobberer.config import APP_NAME

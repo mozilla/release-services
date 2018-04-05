@@ -6,8 +6,10 @@
 import json
 
 import responses
-from shipit_uplift import (coverage_by_changeset_impl, coverage_for_file_impl,
-                           coverage_summary_by_changeset_impl)
+
+from shipit_uplift import coverage_by_changeset_impl
+from shipit_uplift import coverage_for_file_impl
+from shipit_uplift import coverage_summary_by_changeset_impl
 
 
 def test_coverage_supported_extensions_api(client):

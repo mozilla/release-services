@@ -5,8 +5,9 @@
 
 import os
 
-import backend_common
 import pytest
+
+import backend_common
 
 
 @pytest.fixture(scope='session')

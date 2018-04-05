@@ -10,10 +10,15 @@ import hglib
 
 from cli_common.command import run_check
 from cli_common.log import get_logger
-from shipit_static_analysis import CLANG_FORMAT, CLANG_TIDY, MOZLINT, stats
+from shipit_static_analysis import CLANG_FORMAT
+from shipit_static_analysis import CLANG_TIDY
+from shipit_static_analysis import MOZLINT
+from shipit_static_analysis import stats
 from shipit_static_analysis.clang.format import ClangFormat
 from shipit_static_analysis.clang.tidy import ClangTidy
-from shipit_static_analysis.config import ARTIFACT_URL, REPO_CENTRAL, settings
+from shipit_static_analysis.config import ARTIFACT_URL
+from shipit_static_analysis.config import REPO_CENTRAL
+from shipit_static_analysis.config import settings
 from shipit_static_analysis.lint import MozLint
 
 logger = get_logger(__name__)

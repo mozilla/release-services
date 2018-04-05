@@ -6,7 +6,6 @@
 import json
 
 import pytest
-
 import responses
 
 

@@ -6,19 +6,20 @@
 import datetime
 import json
 
-import cli_common.log
 import pytz
 import sqlalchemy as sa
-from backend_common.auth import auth
-from backend_common.cache import cache
 from flask import current_app
 from flask_login import current_user
+from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import NotFound
+
+import cli_common.log
+from backend_common.auth import auth
+from backend_common.cache import cache
 from releng_treestatus.models import Log
 from releng_treestatus.models import StatusChange
 from releng_treestatus.models import StatusChangeTree
 from releng_treestatus.models import Tree
-from werkzeug.exceptions import BadRequest
-from werkzeug.exceptions import NotFound
 
 UNSET = object()
 TREE_SUMMARY_LOG_LIMIT = 5

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
+
 from shipit_pulse_listener.monitoring import Monitoring
 
 

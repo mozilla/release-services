@@ -5,10 +5,11 @@
 
 import pathlib
 
-import cli_common.log
 import connexion
 import flask
 import werkzeug
+
+import cli_common.log
 
 logger = cli_common.log.get_logger(__name__)
 

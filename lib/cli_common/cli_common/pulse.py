@@ -7,6 +7,7 @@ import asyncio
 import sys
 
 import aioamqp
+
 import cli_common.log
 
 logger = cli_common.log.get_logger(__name__)

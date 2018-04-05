@@ -7,10 +7,11 @@ import json
 
 import pytz
 import sqlalchemy as sa
-from backend_common.db import db
 from sqlalchemy import types
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relation
+
+from backend_common.db import db
 
 
 class UTCDateTime(types.TypeDecorator):

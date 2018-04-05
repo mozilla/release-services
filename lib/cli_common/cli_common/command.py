@@ -6,8 +6,9 @@
 import shlex
 import subprocess
 
-import cli_common.log
 import click
+
+import cli_common.log
 
 log = cli_common.log.get_logger(__name__)
 

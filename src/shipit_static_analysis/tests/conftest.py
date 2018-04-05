@@ -13,9 +13,9 @@ import time
 
 import hglib
 import pytest
+import responses
 
 import httpretty
-import responses
 
 MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
 

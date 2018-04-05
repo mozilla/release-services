@@ -5,6 +5,7 @@ from zipfile import BadZipFile
 from zipfile import is_zipfile
 
 import requests
+
 from cli_common.utils import retry
 
 index_base = 'https://index.taskcluster.net/v1/'

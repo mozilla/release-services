@@ -7,19 +7,20 @@ import collections
 import re
 import time
 
-import cli_common.log
 import taskcluster
-from backend_common.auth import auth
 from flask import current_app
 from flask import request
 from flask_login import current_user
-from releng_clobberer.models import Build
-from releng_clobberer.models import ClobberTime
 from sqlalchemy import and_
 from sqlalchemy import desc
 from sqlalchemy import func
 from sqlalchemy import not_
 from sqlalchemy import or_
+
+import cli_common.log
+from backend_common.auth import auth
+from releng_clobberer.models import Build
+from releng_clobberer.models import ClobberTime
 
 logger = cli_common.log.get_logger()
 

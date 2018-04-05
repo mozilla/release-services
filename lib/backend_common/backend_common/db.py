@@ -5,10 +5,11 @@
 
 import os
 
-import cli_common.log
 import flask
 import flask_migrate
 import flask_sqlalchemy
+
+import cli_common.log
 
 logger = cli_common.log.get_logger(__name__)
 db = flask_sqlalchemy.SQLAlchemy()

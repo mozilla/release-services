@@ -12,12 +12,13 @@ from typing import List
 from typing import Tuple
 
 import mohawk
-from backend_common.auth import auth
-from cli_common import log
 from flask import current_app
 from requests import get
 from werkzeug.exceptions import Conflict
 from werkzeug.exceptions import NotFound
+
+from backend_common.auth import auth
+from cli_common import log
 
 from .channels import send_notifications
 from .models import Message

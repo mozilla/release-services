@@ -2,6 +2,7 @@
 import gzip
 
 import requests
+
 from cli_common import utils
 from cli_common.log import get_logger
 from shipit_code_coverage.secrets import secrets

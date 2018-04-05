@@ -6,14 +6,17 @@
 import pickle
 import urllib.parse
 
-from backend_common.auth0 import auth0
-from backend_common.auth0 import mozilla_accept_token
-from backend_common.db import db
-from cli_common import log
 from flask import abort
 from flask import g
 from flask import redirect
 from flask import request
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
+
+from backend_common.auth0 import auth0
+from backend_common.auth0 import mozilla_accept_token
+from backend_common.db import db
+from cli_common import log
 from shipit_signoff.balrog import get_balrog_signoff_state
 from shipit_signoff.balrog import get_current_user_roles
 from shipit_signoff.balrog import make_signoffs_uri
@@ -29,8 +32,6 @@ from shipit_signoff.policies import UnauthorizedUserError
 from shipit_signoff.policies import check_whether_policy_can_be_signed
 from shipit_signoff.policies import check_whether_policy_can_be_unsigned
 from shipit_signoff.policies import is_sign_off_policy_met
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm.exc import NoResultFound
 
 logger = log.get_logger(__name__)
 

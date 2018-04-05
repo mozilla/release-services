@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import cli_common.command
 import click
 import pytest
+
+import cli_common.command
 
 
 def test_empty_command():

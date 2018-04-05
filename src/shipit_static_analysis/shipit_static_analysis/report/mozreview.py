@@ -8,7 +8,10 @@ import json
 from cli_common import log
 from rbtools.api.client import RBClient
 from rbtools.api.errors import APIError
-from shipit_static_analysis import CLANG_FORMAT, CLANG_TIDY, MOZLINT, stats
+from shipit_static_analysis import CLANG_FORMAT
+from shipit_static_analysis import CLANG_TIDY
+from shipit_static_analysis import MOZLINT
+from shipit_static_analysis import stats
 from shipit_static_analysis.clang.format import ClangFormatIssue
 from shipit_static_analysis.clang.tidy import ClangTidyIssue
 from shipit_static_analysis.lint import MozLintIssue

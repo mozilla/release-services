@@ -6,14 +6,15 @@
 import functools
 import time
 
-import backend_common.db
-import cli_common.log
 import flask
 import flask_login
 import itsdangerous
 import sqlalchemy as sa
 import taskcluster
 import taskcluster.utils
+
+import backend_common.db
+import cli_common.log
 
 logger = cli_common.log.get_logger(__name__)
 

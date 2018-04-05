@@ -4,6 +4,7 @@ import os
 
 import click
 import pytest
+
 from shipit_code_coverage import grcov
 
 

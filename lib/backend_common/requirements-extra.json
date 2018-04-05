@@ -26,7 +26,7 @@
         "SQLAlchemy",
         "itsdangerous",
         "mozilla-cli-common[log]",
-        "taskcluster"
+        "taskcluster<3.0.0"
     ],
     "auth0": [
         "Flask",
