@@ -158,9 +158,7 @@ let
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/22/f2/2b78c982e81eb840de18a419aa5c7d10519ccd81852e91310ebcbcd3e78b/aioamqp-0.10.0.tar.gz"; sha256 = "c618af6d005942a2a8711f7548348f9028fac2673f0dc2d192310cef83486204"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [
-      self."asyncio"
-    ];
+      propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/polyconseil/aioamqp";
         license = licenses.bsdOriginal;
@@ -212,19 +210,6 @@ let
         homepage = "https://github.com/aio-libs/async_timeout/";
         license = licenses.asl20;
         description = "Timeout context manager for asyncio programs";
-      };
-    };
-
-    "asyncio" = python.mkDerivation {
-      name = "asyncio-3.4.3";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/da/54/054bafaf2c0fb8473d423743e191fcdf49b2c1fd5e9af3524efbe097bafd/asyncio-3.4.3.tar.gz"; sha256 = "83360ff8bc97980e4ff25c964c7bd3923d333d177aa4f7fb736b019f26c7cb41"; };
-      doCheck = commonDoCheck;
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "http://www.python.org/dev/peps/pep-3156/";
-        license = "";
-        description = "reference implementation of PEP 3156";
       };
     };
 
@@ -862,7 +847,6 @@ let
       propagatedBuildInputs = [
       self."Logbook"
       self."aioamqp"
-      self."asyncio"
       self."click"
       self."mozdef-client"
       self."python-dateutil"

@@ -1,7 +1,6 @@
 aioamqp==0.10.0
 aiohttp==2.3.10
 async-timeout==1.4.0
-asyncio==3.4.3
 attrs==17.4.0
 backcall==0.1.0
 boto3==1.7.1

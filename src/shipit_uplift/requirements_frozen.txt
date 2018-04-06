@@ -3,7 +3,6 @@ aiohttp==2.3.10
 alembic==0.9.9
 amqp==2.2.2
 async-timeout==1.4.0
-asyncio==3.4.3
 attrs==17.4.0
 backcall==0.1.0
 blinker==1.4

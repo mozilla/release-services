@@ -36,6 +36,13 @@ in skipOverrides {
     '';
   };
 
+  "attrs" = self: old: {
+    propagatedBuildInputs =
+      builtins.filter
+        (x: (builtins.parseDrvName x.name).name != "${python.__old.python.libPrefix}-${python.__old.python.libPrefix}-pytest")
+        old.propagatedBuildInputs;
+  };
+
   "awscli" = self: old: {
     propagatedBuildInputs = old.propagatedBuildInputs ++ (with pkgs; [ groff less ]);
     postInstall = ''
@@ -153,6 +160,14 @@ in skipOverrides {
     '';
   };
 
+  "pytest-asyncio" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|pytest >= 3.0.6|pytest|" setup.py
+      # https://github.com/python/asyncio/issues/406#issuecomment-243739074
+      sed -i -e "s|asyncio.ensure_future|asyncio.async|" pytest_asyncio/plugin.py
+    '';
+  };
+
   "pytest-cov" = self: old: {
     patchPhase = ''
       sed -i -e "s|pytest>=2.6.0|pytest|" setup.py
@@ -162,19 +177,6 @@ in skipOverrides {
   "python-dateutil" = self: old: {
     patchPhase = ''
       sed -i -e "s|setup_requires=\['setuptools_scm'\],||" setup.py
-    '';
-  };
-
-  "attrs" = self: old: {
-    propagatedBuildInputs =
-      builtins.filter
-        (x: (builtins.parseDrvName x.name).name != "${python.__old.python.libPrefix}-${python.__old.python.libPrefix}-pytest")
-        old.propagatedBuildInputs;
-  };
-
-  "pytest-asyncio" = self: old: {
-    patchPhase = ''
-      sed -i -e "s|pytest >= 3.0.6|pytest|" setup.py
     '';
   };
 

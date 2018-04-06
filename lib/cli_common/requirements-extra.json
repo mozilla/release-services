@@ -25,7 +25,6 @@
     "pulse": [
         "Logbook",
         "aioamqp",
-        "asyncio",
         "mozdef-client",
         "python-dateutil<2.7.0,>=2.1",
         "raven",
