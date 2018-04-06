@@ -600,8 +600,8 @@ let
     };
 
     "ipython" = python.mkDerivation {
-      name = "ipython-6.3.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/a5/17/e296678250771b0ffaa4ad11e6e60ad14b2f734c902ee92a745d9fe64b7c/ipython-6.3.0.tar.gz"; sha256 = "c785ab502b1a63624baeb89fedb873a118d4da6c9a796ae06e4f4aaef74e9ea0"; };
+      name = "ipython-6.3.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/4f/a7/fc647e9ce711cd630873c37219c0bd4438b8171211d813c7e6b316811e02/ipython-6.3.1.tar.gz"; sha256 = "a6ac981381b3f5f604b37a293369963485200e3639fb0404fa76092383c10c41"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -1330,8 +1330,8 @@ let
     };
 
     "yamllint" = python.mkDerivation {
-      name = "yamllint-1.11.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/2b/94/0d1fcfe76e2d50bf0b9ab96b2fdd39fa78747757aee4d25829edd5a84664/yamllint-1.11.0.tar.gz"; sha256 = "05cfcaea325f0f0a806b602926e6fb863865d125e69dde3f4b59278dfc5f9684"; };
+      name = "yamllint-1.11.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/70/24/c1db9026a3e4a5d6148344997e97000522833a2a9b9f4a5ba33fae55e45a/yamllint-1.11.1.tar.gz"; sha256 = "e9b7dec24921ef13180902e5dbcaae9157c773e3e3e2780ef77d3a4dd67d799f"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [

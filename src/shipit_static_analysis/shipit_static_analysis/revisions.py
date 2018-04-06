@@ -8,9 +8,9 @@ import os
 import re
 
 import hglib
+from parsepatch.patch import Patch
 
 from cli_common import log
-from parsepatch.patch import Patch
 from shipit_static_analysis import stats
 from shipit_static_analysis.config import REPO_REVIEW
 from shipit_static_analysis.config import settings

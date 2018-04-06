@@ -5,9 +5,10 @@
 
 import json
 
-from cli_common import log
 from rbtools.api.client import RBClient
 from rbtools.api.errors import APIError
+
+from cli_common import log
 from shipit_static_analysis import CLANG_FORMAT
 from shipit_static_analysis import CLANG_TIDY
 from shipit_static_analysis import MOZLINT

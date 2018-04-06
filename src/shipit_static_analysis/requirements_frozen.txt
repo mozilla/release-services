@@ -29,7 +29,7 @@ httpretty==0.8.14
 idna==2.6
 idna-ssl==1.0.1
 ipdb==0.11
-ipython==6.3.0
+ipython==6.3.1
 ipython-genutils==0.2.0
 isort==4.3.4
 jedi==0.11.1
@@ -81,5 +81,5 @@ typed-ast==1.1.0
 urllib3==1.22
 wcwidth==0.1.7
 wmctrl==0.3
-yamllint==1.11.0
+yamllint==1.11.1
 yarl==1.1.1
