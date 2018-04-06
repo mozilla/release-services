@@ -30,19 +30,22 @@ def get_build_task(index,
                    owner,
                    channel,
                    taskcluster_secret,
-                   cache_bucket,
-                   cache_region,
+                   cache_bucket=None,
+                   cache_region=None,
                    ):
 
     project_config = please_cli.config.PROJECTS_CONFIG.get(project, {})
 
     command = [
         './please', '-vv', 'tools', 'build', project,
-        '--cache-bucket="{}"'.format(cache_bucket),
-        '--cache-region="{}"'.format(cache_region),
         '--taskcluster-secret=' + taskcluster_secret,
         '--no-interactive',
     ]
+    if cache_bucket and cache_region:
+        command += [
+            '--cache-bucket="{}"'.format(cache_bucket),
+            '--cache-region="{}"'.format(cache_region),
+        ]
     return get_task(
         task_group_id,
         [parent_task],
@@ -241,6 +244,12 @@ def get_task(task_group_id,
     required=True,
     )
 @click.option(
+    '--pull-request',
+    envvar="GITHUB_PULL_REQUEST",
+    default=None,
+    required=False,
+    )
+@click.option(
     '--task-id',
     envvar="TASK_ID",
     required=True,
@@ -277,6 +286,7 @@ def cmd(ctx,
         github_commit,
         channel,
         owner,
+        pull_request,
         task_id,
         cache_urls,
         nix_instantiate,
@@ -289,7 +299,7 @@ def cmd(ctx,
 
 
     taskcluster_secret = 'repo:github.com/mozilla-releng/services:branch:' + channel
-    if os.environ.get('GITHUB_PULL_REQUEST'):
+    if pull_request is not None:
         taskcluster_secret = 'repo:github.com/mozilla-releng/services:pull-request'
     taskcluster_queue = cli_common.taskcluster.get_service('queue')
     click.echo(' => Retriving taskGroupId ... ', nl=False)
@@ -346,13 +356,16 @@ def cmd(ctx,
     build_tasks = {}
     for index, project in enumerate(sorted(build_projects)):
         project_uuid = slugid.nice().decode('utf-8')
+        required = []
+        if pull_request is not None:
+            required += [
+                'CACHE_BUCKET',
+                'CACHE_REGION',
+            ]
         secrets = cli_common.taskcluster.get_secrets(
             taskcluster_secret,
             project,
-            required=(
-                'CACHE_BUCKET',
-                'CACHE_REGION',
-            ),
+            required=required,
             taskcluster_client_id=taskcluster_client_id,
             taskcluster_access_token=taskcluster_access_token,
         )
@@ -365,8 +378,8 @@ def cmd(ctx,
             owner,
             channel,
             taskcluster_secret,
-            secrets['CACHE_BUCKET'],
-            secrets['CACHE_REGION'],
+            secrets.get('CACHE_BUCKET'),
+            secrets.get('CACHE_REGION'),
         )
         tasks.append((project_uuid, build_tasks[project_uuid]))
 
