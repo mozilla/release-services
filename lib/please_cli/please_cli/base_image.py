@@ -9,17 +9,19 @@ import os
 import shutil
 import subprocess
 
-import cli_common.command
-import cli_common.log
 import click
 import click_spinner
+
+import cli_common.log
+import cli_common.cli
+import cli_common.command
 import please_cli.config
 import please_cli.utils
 
 log = cli_common.log.get_logger(__name__)
 
 
-@click.command(
+@cli.command(
     cls=please_cli.utils.ClickCustomCommand,
     short_help="Build base docker image.",
     epilog="Happy hacking!",
@@ -32,12 +34,14 @@ log = cli_common.log.get_logger(__name__)
     )
 @click.option(
     '--docker-username',
-    required=True,
+    required=False,
+    default=None,
     help='https://hub.docker.com username',
     )
 @click.option(
     '--docker-password',
-    required=True,
+    required=False,
+    default=None,
     help='https://hub.docker.com password',
     )
 @click.option(
@@ -66,6 +70,7 @@ log = cli_common.log.get_logger(__name__)
     default=[],
     help='Public key for nix cache',
     )
+@cli_common.click.taskcluster_options
 def cmd(docker_username,
         docker_password,
         docker,
@@ -73,8 +78,30 @@ def cmd(docker_username,
         docker_tag,
         nix_cache_public_keys,
         nix_cache_public_urls,
+        taskcluster_secret,
+        taskcluster_client_id,
+        taskcluster_access_token,
         ):
 
+    secrets = cli_common.taskcluster.get_secrets(taskcluster_secret,
+                                                 None,
+                                                 required=[
+                                                     'DOCKER_USERNAME',
+                                                     'DOCKER_PASSWORD',
+                                                     'NIX_CACHE_PUBLIC_KEYS',
+                                                     'NIX_CACHE_PUBLIC_URLS',
+                                                 ],
+                                                 taskcluster_client_id=taskcluster_client_id,
+                                                 taskcluster_access_token=taskcluster_access_token,
+                                                 )
+
+
+    docker_username = docker_username or secrets['DOCKER_USERNAME']
+    docker_password = docker_password or secrets['DOCKER_PASSWORD']
+    nix_cache_public_keys = nix_cache_public_keys or secrets['NIX_CACHE_PUBLIC_KEYS']
+    nix_cache_public_urls = nix_cache_public_urls or secrets['NIX_CACHE_PUBLIC_URLS']
+
+    docker = please_cli.utils.which(docker)
     docker_file = os.path.join(please_cli.config.ROOT_DIR, 'nix', 'docker', 'Dockerfile')
     nixpkgs_json_file = os.path.join(please_cli.config.ROOT_DIR, 'nix', 'nixpkgs.json')
     nix_json_file = os.path.join(please_cli.config.ROOT_DIR, 'nix', 'nix.json')
@@ -108,6 +135,7 @@ def cmd(docker_username,
         with click_spinner.spinner():
             result, output, error = cli_common.command.run(
                 [
+                    'sudo',
                     docker,
                     'build',
                     '--no-cache',

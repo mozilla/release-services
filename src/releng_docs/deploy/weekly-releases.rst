@@ -106,10 +106,8 @@ Protocal that we follow is:
    .. code-block:: console
 
         $ ./please -vv tools base-image \
-            --docker-repo="mozillareleng/services" \
-            --docker-tag="base-$(cat ./VERSION)" \
-            --docker-username="..." \
-            --docker-password="..."
+            --taskcluster-client-id="..." \
+            --taskcluster-access-token="..."
 
    Docker username and password you get in `staging secrets`_ or `production
    secrets`_ secrets.

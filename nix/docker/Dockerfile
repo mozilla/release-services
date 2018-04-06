@@ -94,6 +94,7 @@ RUN wget -nv "https://nixos.org/releases/nix/nix-$NIX_VERSION/nix-$NIX_VERSION-x
  && . $HOME/.nix-profile/etc/profile.d/nix.sh \
  && rm -r $HOME/nix-*-x86_64-linux \
  && rm -rf $HOME/.cache/nix \
+ && nix-env -iA nixpkgs.docker \
  && nix-build /app/nix/default.nix -A please-cli -o result \
  && nix-collect-garbage -d \
  && rm -f result

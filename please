@@ -14,8 +14,6 @@ NC='\033[0m'
 
 USE_NIX=0
 USE_DOCKER=0
-# TODO: in addition to version we should also use hash of nix/docker folder
-DOCKER_NAME="mozilla-releng-services-v`cat ./VERSION`"
 
 case "`uname`" in
   Darwin)
@@ -61,9 +59,20 @@ if [ "$USE_NIX" = "1" ]; then
 
 else
   if [ "$USE_DOCKER" = "1" ]; then
+    DOCKER_HASH="`pwd``git rev-parse --abbrev-ref HEAD`"
+    DOCKER_NAME="mozilla-releng-services-v`cat ./VERSION`-`echo -n $DOCKER_HASH | sha256sum | cut -d ' ' -f 1`"
     if [ ! "$(docker ps -q -f name=$DOCKER_NAME)" ]; then
       if [ ! "$(docker ps -qa -f name=$DOCKER_NAME)" ]; then
-        docker run --privileged -td --name $DOCKER_NAME --volume="$(pwd)":/app --workdir=/app -p 7000:7000 -p 8000-8100:8000-8100 mozillareleng/services:base-`cat ./VERSION`
+        docker run \
+            --privileged \
+            -td \
+            --name $DOCKER_NAME \
+            --volume="$(pwd)":/app \
+            --volume=/var/run/docker.sock:/var/run/docker.sock \
+            --workdir=/app \
+            -p 7000:7000 \
+            -p 8000-8100:8000-8100 \
+            mozillareleng/services:base-dnd-`cat ./VERSION`
       else
         docker start $DOCKER_NAME
       fi
