@@ -163,8 +163,6 @@ in skipOverrides {
   "pytest-asyncio" = self: old: {
     patchPhase = ''
       sed -i -e "s|pytest >= 3.0.6|pytest|" setup.py
-      # https://github.com/python/asyncio/issues/406#issuecomment-243739074
-      sed -i -e "s|asyncio.ensure_future|asyncio.async|" pytest_asyncio/plugin.py
     '';
   };
 
