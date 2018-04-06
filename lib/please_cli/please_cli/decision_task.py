@@ -377,8 +377,8 @@ def cmd(ctx,
             owner,
             channel,
             taskcluster_secret,
-            secrets.get('CACHE_BUCKET'),
-            secrets.get('CACHE_REGION'),
+            pull_request and None or secrets.get('CACHE_BUCKET'),
+            pull_request and None or secrets.get('CACHE_REGION'),
         )
         tasks.append((project_uuid, build_tasks[project_uuid]))
 
