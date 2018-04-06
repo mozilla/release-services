@@ -70,6 +70,11 @@ log = cli_common.log.get_logger(__name__)
     default=[],
     help='Public key for nix cache',
     )
+@click.option(
+    '--dont-push',
+    is_flag=True,
+    help='Push to docker registry',
+    )
 @cli_common.click.taskcluster_options
 def cmd(docker_username,
         docker_password,
@@ -81,6 +86,7 @@ def cmd(docker_username,
         taskcluster_secret,
         taskcluster_client_id,
         taskcluster_access_token,
+        dont_push,
         ):
 
     secrets = cli_common.taskcluster.get_secrets(taskcluster_secret,
@@ -159,33 +165,36 @@ def cmd(docker_username,
             )
         please_cli.utils.check_result(result, output)
 
-        click.echo(' => Logging into hub.docker.com ... ', nl=False)
-        with click_spinner.spinner():
-            result, output, error = cli_common.command.run(
-                [
-                    docker,
-                    'login',
-                    '--username', docker_username,
-                    '--password', docker_password,
-                ],
-                stream=True,
-                stderr=subprocess.STDOUT,
-                log_command=False,
-            )
-        please_cli.utils.check_result(result, output)
+        if not dont_push:
 
-        click.echo(' => Pushing base docker image ... ', nl=False)
-        with click_spinner.spinner():
-            result, output, error = cli_common.command.run(
-                [
-                    docker,
-                    'push',
-                    '{}:{}'.format(docker_repo, docker_tag),
-                ],
-                stream=True,
-                stderr=subprocess.STDOUT,
-            )
-        please_cli.utils.check_result(result, output)
+            click.echo(' => Logging into hub.docker.com ... ', nl=False)
+            with click_spinner.spinner():
+                result, output, error = cli_common.command.run(
+                    [
+                        docker,
+                        'login',
+                        '--username', docker_username,
+                        '--password', docker_password,
+                    ],
+                    stream=True,
+                    stderr=subprocess.STDOUT,
+                    log_command=False,
+                )
+            please_cli.utils.check_result(result, output)
+
+            click.echo(' => Pushing base docker image ... ', nl=False)
+            with click_spinner.spinner():
+                result, output, error = cli_common.command.run(
+                    [
+                        docker,
+                        'push',
+                        '{}:{}'.format(docker_repo, docker_tag),
+                    ],
+                    stream=True,
+                    stderr=subprocess.STDOUT,
+                )
+            please_cli.utils.check_result(result, output)
+
     finally:
         if os.path.exists(temp_docker_file):
             os.unlink(temp_docker_file)
