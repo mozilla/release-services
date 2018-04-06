@@ -8,7 +8,9 @@ import cli_common.log
 log = cli_common.log.get_logger(__name__)
 
 TC_QUEUE = taskcluster.Queue()
-TC_SCHEDULER = taskcluster.Scheduler()
+# TODO: new version of taskcluster does not have taskcluster.Scheduler
+# TC_SCHEDULER = taskcluster.Scheduler()
+TC_SCHEDULER = None
 
 
 TASK_GRAPH_STATE_TO_STEP_STATE = {

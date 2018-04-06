@@ -314,13 +314,12 @@ let
     };
 
     "aiohttp" = python.mkDerivation {
-      name = "aiohttp-3.1.2";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/fa/24/8f03b4d839730bf621b57f51d70c5602b9ea6598c01d6aafe786f41fecff/aiohttp-3.1.2.tar.gz"; sha256 = "df49fe4452a942e0031174c78917f9926d122d4603bf56bae4591639f2a3dc6a"; };
+      name = "aiohttp-2.3.10";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c0/b9/853b158f5cb5d218daaff0fb0dbc2bd7de45b2c6c5f563dff0ee530ec52a/aiohttp-2.3.10.tar.gz"; sha256 = "8adda6583ba438a4c70693374e10b60168663ffa6564c5c75d3c7a9055290964"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."async-timeout"
-      self."attrs"
       self."chardet"
       self."idna-ssl"
       self."multidict"
@@ -367,8 +366,8 @@ let
     };
 
     "async-timeout" = python.mkDerivation {
-      name = "async-timeout-2.0.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/23/6d/e37be168272b7a499111d0ed14940da80644d21b201e27980892c7125abb/async-timeout-2.0.1.tar.gz"; sha256 = "00cff4d2dce744607335cba84e9929c3165632da2d27970dbc55802a0c7873d0"; };
+      name = "async-timeout-1.4.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/6f/cc/ff80612164fe68bf97767052c5c783a033165df7d47a41ae5c1cc5ea480b/async-timeout-1.4.0.tar.gz"; sha256 = "983891535b1eca6ba82b9df671c8abff53c804fce3fa630058da5bbbda500340"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -1777,8 +1776,8 @@ let
     };
 
     "taskcluster" = python.mkDerivation {
-      name = "taskcluster-3.0.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/90/77/8dca8f65f53a299f27a4154cd586dc06a4214008f2f21de062e85882eceb/taskcluster-3.0.0.tar.gz"; sha256 = "e99b11496ad3586c0a4295dc6a2a68534e93037ddc20b0b380e90908d21f1c43"; };
+      name = "taskcluster-2.1.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/9e/c6/a94dc47135d7516f6bf1b877079a08ffa4a420d5be2c39c2fa3d78f28875/taskcluster-2.1.3.tar.gz"; sha256 = "5bc6be5d59bd9a199b445db650081b9a8b7a8f436667172f9623bb34aff97556"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [

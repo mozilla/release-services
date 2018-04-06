@@ -7,12 +7,12 @@ import pickle
 
 from flask import abort
 from flask import request
+from rq import Queue
 from sqlalchemy.orm.exc import NoResultFound
 
 from backend_common.auth import auth
 from backend_common.db import db
 from cli_common import log
-from rq import Queue
 from shipit_uplift import coverage
 from shipit_uplift import coverage_by_changeset_impl
 from shipit_uplift import coverage_for_file_impl

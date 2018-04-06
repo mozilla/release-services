@@ -7,6 +7,7 @@ import redis
 from rq import Connection
 from rq import Queue
 from rq import SimpleWorker
+
 from shipit_uplift import secrets
 
 conn = redis.from_url(secrets.REDIS_URL)

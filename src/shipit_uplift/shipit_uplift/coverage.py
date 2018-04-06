@@ -9,8 +9,8 @@ from abc import abstractmethod
 from functools import lru_cache
 
 import requests
-
 from cachetools import LRUCache
+
 from shipit_uplift import secrets
 
 

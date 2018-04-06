@@ -6,11 +6,12 @@
 import itertools
 import os
 
-from cli_common.log import get_logger
 from libmozdata import bugzilla
 from libmozdata import versions
 from libmozdata.patchanalysis import bug_analysis
 from libmozdata.patchanalysis import parse_uplift_comment
+
+from cli_common.log import get_logger
 from shipit_bot_uplift.api import NotFound
 from shipit_bot_uplift.api import api_client
 from shipit_bot_uplift.helpers import compute_dict_hash
