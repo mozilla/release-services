@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from distutils.spawn import find_executable
+import subprocess
 import responses
 import itertools
 import httpretty
@@ -331,7 +332,7 @@ def mock_revision():
 
 
 @pytest.fixture
-def mock_clang(tmpdir):
+def mock_clang(tmpdir, monkeypatch):
     '''
     Mock clang binary setup by linking the system wide
     clang tools into the expected repo sub directory
@@ -346,3 +347,22 @@ def mock_clang(tmpdir):
             find_executable(tool),
             str(clang_dir.join(tool).realpath()),
         )
+
+    # Monkeypatch the mach static analysis by using directly clang-tidy
+    real_check_output = subprocess.check_output
+
+    def mock_mach(command, *args, **kwargs):
+        if command[:4] == ['gecko-env', './mach', 'static-analysis', 'check']:
+            command = ['clang-tidy', ] + command[4:]
+            clang_output = real_check_output(command, *args, **kwargs).decode('utf-8')
+
+            # Prefix every line with timestamps to match mach style
+            return '\n'.join(
+                ' 0:{:02d}.{:02d} {}'.format(int(i / 100), i % 100, line)
+                for i, line in enumerate(clang_output.split('\n'))
+            ).encode('utf-8')
+
+        # Really run command through normal check_output
+        return real_check_output(command, *args, **kwargs)
+
+    monkeypatch.setattr(subprocess, 'check_output', mock_mach)

@@ -86,7 +86,6 @@ class ClangTidy(object):
         assert isinstance(revision, Revision)
         self.revision = revision
 
-
         # Run all files in a single command
         # through mach static-analysis
         cmd = [
@@ -110,7 +109,12 @@ class ClangTidy(object):
             logger.error('Mach static analysis failed: {}'.format(e.output))
             raise
 
-        return self.parse_issues(clang_output.decode('utf-8'))
+        issues = self.parse_issues(clang_output.decode('utf-8'))
+
+        # Report stats for these issues
+        stats.report_issues('clang-tidy', issues)
+
+        return issues
 
     def parse_issues(self, clang_output):
         '''
