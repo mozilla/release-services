@@ -3,7 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import responses
-import os
 from parsepatch.patch import Patch
 
 
@@ -43,8 +42,8 @@ def test_phabricator(mock_phabricator, mock_repository):
     assert r.id == 51  # revision
 
     # Check test.txt content
-    test_txt = os.path.join(mock_repository.directory, 'test.txt')
-    assert open(test_txt).read() == 'Hello World\n'
+    test_txt = mock_repository.directory.join('test.txt')
+    assert test_txt.read() == 'Hello World\n'
 
     # Load full patch
     assert r.patch is None
@@ -63,7 +62,7 @@ def test_phabricator(mock_phabricator, mock_repository):
     }
 
     # Check file is updated
-    assert open(test_txt).read() == 'Hello World\nSecond line\n'
+    assert test_txt.read() == 'Hello World\nSecond line\n'
 
 
 def test_clang_files(mock_revision):

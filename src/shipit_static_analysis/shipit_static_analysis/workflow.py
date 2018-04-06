@@ -103,11 +103,6 @@ class Workflow(object):
         )
         stats.api.increment('analysis')
 
-        # Setup tools (clang & mozlint)
-        clang_tidy = CLANG_TIDY in self.analyzers and ClangTidy(self.repo_dir, settings.target)
-        clang_format = CLANG_FORMAT in self.analyzers and ClangFormat(self.repo_dir)
-        mozlint = MOZLINT in self.analyzers and MozLint(self.repo_dir)
-
         with stats.api.timer('runtime.mercurial'):
             # Force cleanup to reset tip
             # otherwise previous pull are there
@@ -121,14 +116,14 @@ class Workflow(object):
         with stats.api.timer('runtime.mach'):
             # Only run mach if revision has any C/C++ files
             if revision.has_clang_files:
-                    # mach configure with mozconfig
-                    logger.info('Mach configure...')
-                    run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
+                # mach configure with mozconfig
+                logger.info('Mach configure...')
+                run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
 
-                    # Build CompileDB backend
-                    logger.info('Mach build backend...')
-                    cmd = ['gecko-env', './mach', 'build-backend', '--backend=CompileDB']
-                    run_check(cmd, cwd=self.repo_dir)
+                # Setup static analysis binaries through mach
+                logger.info('Mach setup static-analysis')
+                cmd = ['gecko-env', './mach', 'static-analysis', 'install']
+                run_check(cmd, cwd=self.repo_dir)
 
             else:
                 logger.info('No clang files detected, skipping mach')
@@ -137,6 +132,11 @@ class Workflow(object):
             logger.info('Mach lint setup...')
             cmd = ['gecko-env', './mach', 'lint', '--list']
             run_check(cmd, cwd=self.repo_dir)
+
+        # Setup tools (clang & mozlint)
+        clang_tidy = CLANG_TIDY in self.analyzers and ClangTidy(self.repo_dir, settings.target)
+        clang_format = CLANG_FORMAT in self.analyzers and ClangFormat(self.repo_dir)
+        mozlint = MOZLINT in self.analyzers and MozLint(self.repo_dir)
 
         # Run static analysis through clang-tidy
         issues = []

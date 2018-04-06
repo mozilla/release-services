@@ -3,12 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import multiprocessing
 import subprocess
-import threading
 import fnmatch
-import queue
-import json
 import os
 import re
 
@@ -19,7 +15,7 @@ from shipit_static_analysis import Issue, stats
 
 logger = get_logger(__name__)
 
-REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): ([^\[\]\n]+)(?: \[([\.\w-]+)\])?$', re.MULTILINE)
+REGEX_HEADER = re.compile(r'^\s?\d{1,2}:\d{2}.\d{2} (.+):(\d+):(\d+): (warning|error|note): ([^\[\]\n]+)(?: \[([\.\w-]+)\])?$', re.MULTILINE)
 
 ISSUE_MARKDOWN = '''
 ## clang-tidy {type}
@@ -63,22 +59,22 @@ class ClangTidy(object):
     Clang Tidy Parallel runner
     Inspired by run-clang-tidy.py
     '''
-    db_path = 'compile_commands.json'
-
-    def __init__(self, repo_dir, build_dir):
+    def __init__(self, repo_dir, build_dir, validate_checks=True):
         assert os.path.isdir(repo_dir)
-
-        # Verify that all specified clang-tidy checks still exist
-        available_checks = ClangTidy.list_available_checks()
-        if not len(settings.clang_checkers) > 0:
-            logger.error('Firefox clang-tidy configuration {} should specify > 0 clang_checkers'.format(CONFIG_URL))
-        for check in settings.clang_checkers:
-            name = check['name']
-            if not len(fnmatch.filter(available_checks, name)) > 0:
-                logger.error('Specified clang-tidy check "{}" not found in available checks:\n\t{}'.format(name, '\n\t'.join(available_checks)))
 
         self.repo_dir = repo_dir
         self.build_dir = os.path.join(repo_dir, build_dir)
+        self.binary = os.path.join(
+            os.environ['MOZBUILD_STATE_PATH'],
+            'clang-tools', 'clang', 'bin', 'clang-tidy',
+        )
+        assert os.path.exists(self.binary), \
+            'Missing clang-tidy in {}'.format(self.binary)
+
+        # Verify that all specified clang-tidy checks still exist
+        if validate_checks:
+            for missing in self.list_missing_checks():
+                logger.error('Specified clang-tidy check "{}" not found.'.format(missing))
 
     @stats.api.timed('runtime.clang-tidy')
     def run(self, checks, revision):
@@ -90,85 +86,35 @@ class ClangTidy(object):
         assert isinstance(revision, Revision)
         self.revision = revision
 
-        # Load the database and extract all files.
-        database = json.load(open(os.path.join(self.build_dir, self.db_path)))
-        self.database_files = [entry['file'] for entry in database]
+        # Run all files in a single command
+        # through mach static-analysis
+        cmd = [
+            'gecko-env',
+            './mach', 'static-analysis', 'check',
 
-        # Build workers queue
-        workers = multiprocessing.cpu_count()
-        logger.info('Clang tidy will spawn workers', nb=workers)
-        self.queue_workers = queue.Queue(workers)
+            # Limit warnings to current files
+            '--header-filter={}'.format('|'.join(
+                os.path.basename(filename)
+                for filename in revision.files
+            )),
 
-        # Build issues queue to get results
-        self.queue_issues = queue.Queue()
+            '--checks={}'.format(','.join(c['name'] for c in checks)),
+        ] + list(revision.files)
+        logger.info('Running static-analysis', cmd=' '.join(cmd))
 
-        # Build up a big regexy filter from all modified files
-        file_name_re = re.compile('(' + ')|('.join(revision.files) + ')')
-
-        issues = []
+        # Run command
         try:
-            # Spin up a bunch of tidy-launching threads.
-            for _ in range(workers):
-                t = threading.Thread(
-                    target=self.run_clang_tidy,
-                    args=([c['name'] for c in checks], )
-                )
-                t.daemon = True
-                t.start()
-
-            # Fill the queue with files.
-            for name in self.database_files:
-                if file_name_re.search(name):
-                    self.queue_workers.put(name)
-
-            # Wait for all threads to be done.
-            self.queue_workers.join()
-
-            # Now read all issues from queue
-            while not self.queue_issues.empty():
-                issue = self.queue_issues.get()
-                issues.append(issue)
-                self.queue_issues.task_done()
-
-        except KeyboardInterrupt:
-            # This is a sad hack. Unfortunately subprocess goes
-            # bonkers with ctrl-c and we start forking merrily.
-            logger.warn('Ctrl-C detected, exiting...')
-            os.kill(0, 9)
-
-        stats.report_issues('clang-tidy', issues)
-        return issues
-
-    def run_clang_tidy(self, checks):
-        '''
-        The actual clang-tidy worker, working on the queue
-        '''
-        while True:
-            # Get new filename to work on
-            filename = self.queue_workers.get()
-
-            # Build command line for a filename
-            cmd = [
-                # Use system clang tidy
-                'clang-tidy',
-
-                # Limit warnings to current file
-                '-header-filter={}'.format(os.path.basename(filename)),
-                '-checks={}'.format(','.join(checks)),
-                '-p={}'.format(self.build_dir),
-                filename,
-            ]
-            logger.info('Running clang-tidy', cmd=' '.join(cmd))
-
-            # Run command
             clang_output = subprocess.check_output(cmd, cwd=self.repo_dir)
+        except subprocess.CalledProcessError as e:
+            logger.error('Mach static analysis failed: {}'.format(e.output))
+            raise
 
-            # Push output
-            for issue in self.parse_issues(clang_output.decode('utf-8')):
-                self.queue_issues.put(issue)
+        issues = self.parse_issues(clang_output.decode('utf-8'))
 
-            # Mark current task as done
-            self.queue_workers.task_done()
+        # Report stats for these issues
+        stats.report_issues('clang-tidy', issues)
+
+        return issues
 
     def parse_issues(self, clang_output):
         '''
@@ -216,18 +162,34 @@ class ClangTidy(object):
 
         return issues
 
-    def list_available_checks():
+    def list_available_checks(self):
         '''
         Build the set of all available checks that the local clang-tidy offers
         '''
         cmd = [
-            'clang-tidy',
+            self.binary,
             '-list-checks',
             '-checks=*'
         ]
         clang_output = subprocess.check_output(cmd).decode('utf-8')
         available_checks = set(line.strip() for line in clang_output.split('\n')[1:])
         return available_checks
+
+    def list_missing_checks(self):
+        '''
+        List all the clang-tidy missing checks according to config
+        '''
+        available_checks = self.list_available_checks()
+        if len(settings.clang_checkers) > 0:
+            logger.info('Available clang-tidy checks:\n\t{}'.format('\n\t'.join(available_checks)))
+        else:
+            logger.error('Firefox clang-tidy configuration {} should specify > 0 clang_checkers'.format(CONFIG_URL))
+
+        return [
+            check['name']
+            for check in settings.clang_checkers
+            if not len(fnmatch.filter(available_checks, check['name'])) > 0
+        ]
 
 
 class ClangTidyIssue(Issue):
