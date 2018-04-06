@@ -25,9 +25,13 @@ SUPPORTED_FLAVORS = {
 }
 
 
+class UnsupprtedFlavor(Exception):
+    pass
+
+
 def find_decision_task_id(project, revision):
     decision_task_route = 'gecko.v2.{project}.revision.{revision}.firefox.decision'.format(
-         project=project, revision=revision)
+        project=project, revision=revision)
     index = taskcluster.Index()
     return index.findTask(decision_task_route)['taskId']
 
@@ -50,11 +54,12 @@ def find_action(name, actions):
 
 def extract_our_flavors(avail_flavors, product, version, partial_updates):
     # sanity check
-    all_flavors = set([fl for product in SUPPORTED_FLAVORS.keys() for fl in SUPPORTED_FLAVORS[product]])
-    if sorted(all_flavors) != sorted(set(avail_flavors)):
-        raise Exception('Some flavors are not supported {} vs {}'.format(all_flavors, set(avail_flavors)))
+    all_flavors = set([fl for product in SUPPORTED_FLAVORS for fl in SUPPORTED_FLAVORS[product]])
+    if not set(avail_flavors).issuperset(all_flavors):
+        raise UnsupprtedFlavor('Some flavors are not in actions.json: {}.'.format(
+            all_flavors.difference(set(avail_flavors))))
     if is_rc(version, partial_updates):
-        key = '_rc'.format(product)
+        key = '{}_rc'.format(product)
     else:
         key = product
     our_flavors = [fl for fl in avail_flavors if fl in SUPPORTED_FLAVORS[key]]
