@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import os
+from unittest import mock
+from zipfile import BadZipFile
+
 import pytest
 import requests
 import responses
@@ -153,3 +157,33 @@ def test_get_platform():
 
     for (name, platform) in tests:
         assert taskcluster.get_platform(name) == platform
+
+
+@mock.patch('time.sleep')
+@responses.activate
+def test_download_artifact_forbidden(mocked_sleep, tmpdir):
+    responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task/FBdocjnAQOW_GJDOfmgjxw/artifacts/public/test_info/code-coverage-grcov.zip', body='xml error...', status=403)  # noqa
+
+    with pytest.raises(requests.exceptions.HTTPError, message='403 Client Error: Forbidden for url: https://taskcluster-artifacts.net/FBdocjnAQOW_GJDOfmgjxw/0/public/test_info/code-coverage-grcov.zip'):  # noqa
+        taskcluster.download_artifact(
+            os.path.join(tmpdir.strpath, 'windows_reftest-6_code-coverage-grcov.zip'),
+            'FBdocjnAQOW_GJDOfmgjxw',
+            'public/test_info/code-coverage-grcov.zip'
+        )
+
+    assert mocked_sleep.call_count == 4
+
+
+@mock.patch('time.sleep')
+@responses.activate
+def test_download_artifact_badzip(mocked_sleep, tmpdir):
+    responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task/FBdocjnAQOW_GJDOfmgjxw/artifacts/public/test_info/code-coverage-grcov.zip', body='NOT A ZIP FILE', status=200, stream=True)  # noqa
+
+    with pytest.raises(BadZipFile, message='File is not a zip file'):
+        taskcluster.download_artifact(
+            os.path.join(tmpdir.strpath, 'windows_reftest-6_code-coverage-grcov.zip'),
+            'FBdocjnAQOW_GJDOfmgjxw',
+            'public/test_info/code-coverage-grcov.zip'
+        )
+
+    assert mocked_sleep.call_count == 4
