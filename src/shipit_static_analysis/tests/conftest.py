@@ -3,13 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from distutils.spawn import find_executable
 import itertools
 import json
 import os.path
 import re
 import subprocess
 import time
+from distutils.spawn import find_executable
 
 import hglib
 import httpretty
