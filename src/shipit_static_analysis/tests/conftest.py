@@ -367,3 +367,22 @@ def mock_clang(tmpdir, monkeypatch):
         return real_check_output(command, *args, **kwargs)
 
     monkeypatch.setattr(subprocess, 'check_output', mock_mach)
+
+
+@pytest.fixture
+def mock_workflow(tmpdir, mock_repository):
+    '''
+    Mock the full workflow, without cloning
+    '''
+    from shipit_static_analysis.workflow import Workflow
+
+    class MockWorkflow(Workflow):
+        def clone(self):
+            self.repo_dir = str(mock_repository.directory.realpath())
+            return hglib.open(self.repo_dir)
+
+    return MockWorkflow(
+        cache_root=str(tmpdir.realpath()),
+        reporters=[],
+        analyzers=['clang-tidy', 'clang-format', 'mozlint'],
+    )

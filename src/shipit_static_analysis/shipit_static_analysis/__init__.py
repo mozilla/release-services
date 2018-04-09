@@ -41,6 +41,12 @@ class Issue(object):
         '''
         raise NotImplementedError
 
+    def as_diff(self):
+        '''
+        Build the ED compatible diff to build an improvement patch
+        '''
+        raise NotImplementedError
+
     def is_third_party(self):
         '''
         Is this issue in a third party path ?

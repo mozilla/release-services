@@ -93,6 +93,11 @@ class MozLintIssue(Issue):
             disabled_rule=self.is_disabled_rule() and 'yes' or 'no',
         )
 
+    def as_diff():
+        '''
+        No diff available
+        '''
+
 
 class MozLint(object):
     '''

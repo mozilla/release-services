@@ -62,7 +62,7 @@ def test_expanded_macros(mock_stats):
     assert issue.is_expanded_macro() is False
 
 
-def test_clang_format(mock_repository, mock_stats, mock_clang, mock_revision):
+def test_clang_format(mock_repository, mock_stats, mock_clang, mock_revision, mock_workflow):
     '''
     Test clang-format runner
     '''
@@ -93,6 +93,7 @@ def test_clang_format(mock_repository, mock_stats, mock_clang, mock_revision):
     assert issue.as_diff() == BAD_CPP_DIFF
 
     # At the end of the process, original file is patched
+    mock_workflow.build_improvement_patch(mock_revision, issues)
     assert bad_file.read() == BAD_CPP_VALID
 
     # Test stats

@@ -5,7 +5,8 @@
 
 import os
 import tempfile
-
+import subprocess
+import itertools
 import hglib
 
 from cli_common.command import run_check
@@ -16,6 +17,7 @@ from shipit_static_analysis import MOZLINT
 from shipit_static_analysis import stats
 from shipit_static_analysis.clang.format import ClangFormat
 from shipit_static_analysis.clang.tidy import ClangTidy
+from shipit_static_analysis.config import ARTIFACT_URL
 from shipit_static_analysis.config import REPO_CENTRAL
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.lint import MozLint
@@ -152,6 +154,10 @@ class Workflow(object):
             else:
                 logger.info('Skip mozlint')
 
+        if not analyzers:
+            logger.error('No analyzers to use on revision')
+            return
+
         issues = []
         for analyzer_class in analyzers:
             # Build analyzer
@@ -161,8 +167,78 @@ class Workflow(object):
             # Run analyzer on version and store generated issues
             issues += analyzer.run(revision)
 
+        logger.info('Detected {} issue(s)'.format(len(issues)))
+        if not issues:
+            logger.info('No issues, stopping there.')
+            return
+
+        # Build a potential improvement patch
+        self.build_improvement_patch(revision, issues)
+
         # Publish reports about these issues
-        return
         with stats.api.timer('runtime.reports'):
             for reporter in self.reporters.values():
                 reporter.publish(issues, revision)
+
+    def build_improvement_patch(self, revision, issues):
+        '''
+        Build a Diff to improve this revision (styling from clang-format)
+        '''
+        assert isinstance(issues, list)
+
+        # Only use publishable issues
+        # and sort them by filename
+        issues = sorted(
+            filter(lambda i: i.is_publishable(), issues),
+            key=lambda i: i.path,
+        )
+
+        # Apply a patch on each modified file
+        for filename, file_issues in itertools.groupby(issues, lambda i: i.path):
+            full_path = os.path.join(self.repo_dir, filename)
+            assert os.path.exists(full_path), \
+                'Modified file not found {}'.format(full_path)
+
+            # Build raw "ed" patch
+            patch = '\n'.join(issue.as_diff() for issue in file_issues)
+            if not patch:
+                continue
+
+            # Write patch in tmp
+            _, patch_path = tempfile.mkstemp(suffix='.diff')
+            with open(patch_path, 'w') as f:
+                f.write(patch)
+
+            # Apply patch on repository file
+            cmd = [
+                'patch',
+                '-i', patch_path,
+                full_path,
+            ]
+            exit = subprocess.run(cmd)
+            assert exit.returncode == 0
+
+            # Cleanup
+            os.unlink(patch_path)
+
+        # Get clean Mercurial diff on modified files
+        files = list(map(lambda x: os.path.join(self.repo_dir, x).encode('utf-8'), revision.files))
+        diff = self.hg.diff(files)
+        if diff is None or diff == b'':
+            logger.info('No improvement patch')
+            return
+
+        # Write diff in results directory
+        diff_name = revision.build_diff_name()
+        revision.diff_path = os.path.join(self.taskcluster_results_dir, diff_name)
+        with open(revision.diff_path, 'w') as f:
+            length = f.write(diff.decode('utf-8'))
+            logger.info('Improvement diff dumped', path=revision.diff_path, length=length)  # noqa
+
+        # Build diff download url
+        revision.diff_url = ARTIFACT_URL.format(
+            task_id=self.taskcluster_task_id,
+            run_id=self.taskcluster_run_id,
+            diff_name=diff_name,
+        )
+        logger.info('Diff available online', url=revision.diff_url)
