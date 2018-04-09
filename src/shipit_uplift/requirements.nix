@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql -r requirements.txt -r requirements-dev.txt
+#   pypi2nix -v -V 3.6 -E postgresql -r requirements.txt -r requirements-dev.txt
 #
 
 { pkgs ? import <nixpkgs> {}
@@ -17,16 +17,18 @@ let
   import "${toString pkgs.path}/pkgs/top-level/python-packages.nix" {
     inherit pkgs;
     inherit (pkgs) stdenv;
-    python = pkgs.python35;
+    python = pkgs.python36;
     # patching pip so it does not try to remove files when running nix-shell
     overrides =
       self: super: {
         bootstrapped-pip = super.bootstrapped-pip.overrideDerivation (old: {
           patchPhase = old.patchPhase + ''
-            sed -i \
-              -e "s|paths_to_remove.remove(auto_confirm)|#paths_to_remove.remove(auto_confirm)|"  \
-              -e "s|self.uninstalled = paths_to_remove|#self.uninstalled = paths_to_remove|"  \
-                $out/${pkgs.python35.sitePackages}/pip/req/req_install.py
+            if [ -e $out/${pkgs.python35.sitePackages}/pip/req/req_install.py ]; then
+              sed -i \
+                -e "s|paths_to_remove.remove(auto_confirm)|#paths_to_remove.remove(auto_confirm)|"  \
+                -e "s|self.uninstalled = paths_to_remove|#self.uninstalled = paths_to_remove|"  \
+                  $out/${pkgs.python35.sitePackages}/pip/req/req_install.py
+            fi
           '';
         });
       };
@@ -39,7 +41,7 @@ let
     let
       pkgs = builtins.removeAttrs pkgs' ["__unfix__"];
       interpreter = pythonPackages.buildPythonPackage {
-        name = "python35-interpreter";
+        name = "python36-interpreter";
         buildInputs = [ makeWrapper ] ++ (builtins.attrValues pkgs);
         buildCommand = ''
           mkdir -p $out/bin
@@ -433,8 +435,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.7.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3c/6c/00b00fadb060b8baeb666999807d7ce85d194aedcfb2e09b149b2392bae3/boto3-1.7.1.tar.gz"; sha256 = "91348d9e5c33c2c1aaaa238a3e97be4834c1aff85082ef6d9b249814be20bab4"; };
+      name = "boto3-1.7.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/62/cd/64b95009265084ccaefe22e82368de63667dcb7b0f0760e1cd16f477a0a7/boto3-1.7.2.tar.gz"; sha256 = "5c02372447e07bd67f7c19624642dcf5c7aabe126e1c44ff4ad241aeb97fc729"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -450,8 +452,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.10.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/0b/3e/7a2299870d01611e221648484146bed16da2bc69fb256d4b2669c26fea32/botocore-1.10.1.tar.gz"; sha256 = "bc1e6c36b1b570462e3b688b3bd3ba662e521cc21ce0a860f85f877179af77c7"; };
+      name = "botocore-1.10.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/fd/b4/cdc63a7a1fbc416e1b97851573028915cb12c76b994a8b910c56e7168f0e/botocore-1.10.2.tar.gz"; sha256 = "27945af4bfb2a1ff1f11c730d24b84da6e1f40465907029e8980903f3b984070"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -568,7 +570,6 @@ let
       self."six"
       self."swagger-spec-validator"
       self."testfixtures"
-      self."typing"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/zalando/connexion";
@@ -784,8 +785,8 @@ let
     };
 
     "flake8-quotes" = python.mkDerivation {
-      name = "flake8-quotes-0.14.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/1c/6e/33b5f1add3fa2e0ecdcda6267d6154bdeb51d39586a058b698002da1ccab/flake8-quotes-0.14.1.tar.gz"; sha256 = "00c53e41be1cf6d04c4e5974a36320b081ee7e13fc394457a104836cbfc1399e"; };
+      name = "flake8-quotes-1.0.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/83/ff/0461010959158bb7d197691c696f1a85b20f2d3eea7aa23f73a8d07f30f3/flake8-quotes-1.0.0.tar.gz"; sha256 = "fd9127ad8bbcf3b546fa7871a5266fd8623ce765ebe3d5aa5eabb80c01212b26"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -942,8 +943,8 @@ let
     };
 
     "ipython" = python.mkDerivation {
-      name = "ipython-6.3.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/a5/17/e296678250771b0ffaa4ad11e6e60ad14b2f734c902ee92a745d9fe64b7c/ipython-6.3.0.tar.gz"; sha256 = "c785ab502b1a63624baeb89fedb873a118d4da6c9a796ae06e4f4aaef74e9ea0"; };
+      name = "ipython-6.3.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/4f/a7/fc647e9ce711cd630873c37219c0bd4438b8171211d813c7e6b316811e02/ipython-6.3.1.tar.gz"; sha256 = "a6ac981381b3f5f604b37a293369963485200e3639fb0404fa76092383c10c41"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -958,7 +959,6 @@ let
       self."requests"
       self."simplegeneric"
       self."traitlets"
-      self."typing"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://ipython.org";
@@ -1207,7 +1207,6 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."typed-ast"
-      self."typing"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://www.mypy-lang.org/";
@@ -1416,8 +1415,8 @@ let
     };
 
     "pycryptodome" = python.mkDerivation {
-      name = "pycryptodome-3.5.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/86/d1/f1c6b1e4b2dd5e3f2f56f6f3c74ac9893252dbef9ac0e55c8b4538e56db0/pycryptodome-3.5.1.tar.gz"; sha256 = "b7957736f5e868416b06ff033f8525e64630c99a8880b531836605190b0cac96"; };
+      name = "pycryptodome-3.6.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e4/75/035fe0cb481ea379e85d04251aca7c504788cfff6aa35c020466447bbf59/pycryptodome-3.6.0.tar.gz"; sha256 = "c06398137f95539468f46197b46bbb193c1e07d51852ca194b1142f88a38c8be"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -1824,19 +1823,6 @@ let
         homepage = "https://github.com/python/typed_ast";
         license = licenses.asl20;
         description = "a fork of Python 2 and 3 ast modules with type comment support";
-      };
-    };
-
-    "typing" = python.mkDerivation {
-      name = "typing-3.6.4";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/ec/cc/28444132a25c113149cec54618abc909596f0b272a74c55bab9593f8876c/typing-3.6.4.tar.gz"; sha256 = "d400a9344254803a2368533e4533a4200d21eb7b6b729c173bc38201a74db3f2"; };
-      doCheck = commonDoCheck;
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "https://docs.python.org/3/library/typing.html";
-        license = licenses.psfl;
-        description = "Type Hints for Python";
       };
     };
 
