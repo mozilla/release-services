@@ -110,7 +110,11 @@ in rec {
       {
         "$merge" = [
           env
-          { "$eval" = "payload"; }
+          {
+            "$if" = "firedBy == 'triggerHook'";
+            "then" = { "$eval" = "payload"; };
+            "else" = {};
+          }
         ];
       };
 
