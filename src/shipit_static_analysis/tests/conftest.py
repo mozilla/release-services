@@ -381,6 +381,10 @@ def mock_workflow(tmpdir, mock_repository):
             self.repo_dir = str(mock_repository.directory.realpath())
             return hglib.open(self.repo_dir)
 
+    # Needed for Taskcluster build
+    if 'MOZCONFIG' not in os.environ:
+        os.environ['MOZCONFIG'] = str(tmpdir.join('mozconfig').realpath())
+
     return MockWorkflow(
         cache_root=str(tmpdir.realpath()),
         reporters=[],
