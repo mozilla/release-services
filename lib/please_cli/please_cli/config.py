@@ -5,6 +5,7 @@
 from __future__ import absolute_import
 
 import os
+
 import click
 
 CWD_DIR = os.path.abspath(os.getcwd())

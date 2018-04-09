@@ -23,129 +23,10 @@ let
 
 in skipOverrides {
 
-  "mozilla-backend-common" = self: old: {
-    name = "mozilla-backend-common-${fileContents ./../lib/backend_common/VERSION}";
+  # enable test for common packages
 
-    doCheck = true;
-
-    buildInputs =[
-      self."Flask-Cache"
-      self."Flask-Cors"
-      self."Flask-Login"
-      self."Flask-Migrate"
-      self."Flask-SQLAlchemy"
-      self."Jinja2"
-      self."connexion"
-      self."flake8"
-      self."flake8-coding"
-      self."flake8-quotes"
-      self."flask-oidc"
-      self."flask-talisman"
-      self."inotify"
-      self."kombu"
-      self."pdbpp"
-      self."pytest"
-      self."responses"
-      self."taskcluster"
-    ];
-
-    patchPhase = ''
-      # replace synlink with real file
-      rm -f setup.cfg
-      ln -s ${./setup.cfg} setup.cfg
-
-      # generate MANIFEST.in to make sure every file is included
-      rm -f MANIFEST.in
-      cat > MANIFEST.in <<EOF
-      recursive-include backend_common/*
-
-      include VERSION
-      include backend_common/VERSION
-      include backend_common/*.ini
-      include backend_common/*.json
-      include backend_common/*.mako
-      include backend_common/*.yml
-
-      recursive-exclude * __pycache__
-      recursive-exclude * *.py[co]
-      EOF
-    '';
-
-    preConfigure = ''
-      rm -rf build *.egg-info
-    '';
-
-    checkPhase = ''
-      export LANG=en_US.UTF-8
-      export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
-
-      echo "################################################################"
-      echo "## flake8 ######################################################"
-      echo "################################################################"
-      flake8 -v
-      echo "################################################################"
-
-      echo "################################################################"
-      echo "## pytest ######################################################"
-      echo "################################################################"
-      pytest tests/ -vvv -s
-      echo "################################################################"
-    '';
-  };
-
-  "mozilla-cli-common" = self: old: {
-    name = "mozilla-cli-common-${fileContents ./../lib/cli_common/VERSION}";
-
-    doCheck = true;
-
-    buildInputs =
-      [ self."flake8"
-        self."pytest"
-      ];
-
-    patchPhase = ''
-      # replace synlink with real file
-      rm -f setup.cfg
-      ln -s ${./setup.cfg} setup.cfg
-
-      # generate MANIFEST.in to make sure every file is included
-      rm -f MANIFEST.in
-      cat > MANIFEST.in <<EOF
-      recursive-include cli_common/*
-
-      include VERSION
-      include cli_common/VERSION
-      include cli_common/*.ini
-      include cli_common/*.json
-      include cli_common/*.mako
-      include cli_common/*.yml
-
-      recursive-exclude * __pycache__
-      recursive-exclude * *.py[co]
-      EOF
-    '';
-
-    preConfigure = ''
-      rm -rf build *.egg-info
-    '';
-
-    checkPhase = ''
-      export LANG=en_US.UTF-8
-      export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
-
-      echo "################################################################"
-      echo "## flake8 ######################################################"
-      echo "################################################################"
-      flake8 -v
-      echo "################################################################"
-
-      echo "################################################################"
-      echo "## pytest ######################################################"
-      echo "################################################################"
-      pytest tests/ -vvv -s
-      echo "################################################################"
-    '';
-  };
+  "mozilla-cli-common" = import ./../lib/cli_common/default.nix { inherit pkgs; };
+  "mozilla-backend-common" = import ./../lib/backend_common/default.nix { inherit pkgs; };
 
   # -- in alphabetic order --
 
@@ -153,6 +34,13 @@ in skipOverrides {
     patchPhase = ''
       sed -i -e "s|setup_requires=\['pytest-runner'\],||" setup.py
     '';
+  };
+
+  "attrs" = self: old: {
+    propagatedBuildInputs =
+      builtins.filter
+        (x: (builtins.parseDrvName x.name).name != "${python.__old.python.libPrefix}-${python.__old.python.libPrefix}-pytest")
+        old.propagatedBuildInputs;
   };
 
   "awscli" = self: old: {
@@ -194,6 +82,12 @@ in skipOverrides {
     '';
   };
 
+  "coveralls" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['pytest-runner'\],||" setup.py
+    '';
+  };
+
   "fancycompleter" = self: old: {
     patchPhase = ''
       sed -i -e "s|setup_requires=\['setuptools_scm'\],||" setup.py
@@ -201,6 +95,12 @@ in skipOverrides {
   };
 
   "flake8" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['pytest-runner'\],||" setup.py
+    '';
+  };
+
+  "flake8-debugger" = self: old: {
     patchPhase = ''
       sed -i -e "s|setup_requires=\['pytest-runner'\],||" setup.py
     '';
@@ -260,22 +160,21 @@ in skipOverrides {
     '';
   };
 
-  "python-dateutil" = self: old: {
-    patchPhase = ''
-      sed -i -e "s|setup_requires=\['setuptools_scm'\],||" setup.py
-    '';
-  };
-
-  "attrs" = self: old: {
-    propagatedBuildInputs =
-      builtins.filter
-        (x: (builtins.parseDrvName x.name).name != "${python.__old.python.libPrefix}-${python.__old.python.libPrefix}-pytest")
-        old.propagatedBuildInputs;
-  };
-
   "pytest-asyncio" = self: old: {
     patchPhase = ''
       sed -i -e "s|pytest >= 3.0.6|pytest|" setup.py
+    '';
+  };
+
+  "pytest-cov" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|pytest>=2.6.0|pytest|" setup.py
+    '';
+  };
+
+  "python-dateutil" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|setup_requires=\['setuptools_scm'\],||" setup.py
     '';
   };
 

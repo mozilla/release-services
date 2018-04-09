@@ -7,10 +7,9 @@ from __future__ import absolute_import
 import os
 import subprocess
 
+import cli_common.command
 import click
 import click_spinner
-
-import cli_common.command
 import please_cli.config
 import please_cli.utils
 

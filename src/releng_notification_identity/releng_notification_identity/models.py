@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
+from sqlalchemy import Column
+from sqlalchemy import Enum
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import UniqueConstraint
+
 from backend_common.db import db
-from backend_common.notifications import CHANNELS, URGENCY_LEVELS
+from backend_common.notifications import CHANNELS
+from backend_common.notifications import URGENCY_LEVELS
+
 from .config import APP_NAME
-from sqlalchemy import Column, Enum, ForeignKey, Integer, String, UniqueConstraint
 
 
 class Identity(db.Model):

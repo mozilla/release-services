@@ -3,14 +3,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from flask import current_app
 from typing import List
-from werkzeug.exceptions import BadRequest, Conflict, NotFound
-from .models import Identity, Preference
+
+from flask import current_app
 from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import Conflict
+from werkzeug.exceptions import NotFound
+
 from backend_common.auth import auth
 
+from .models import Identity
+from .models import Preference
 
 AUTHENTICATION_SCOPE_PREFIX = 'project:releng:services/releng_notification_identity/permission/'
 

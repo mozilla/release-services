@@ -1,7 +1,7 @@
--e ./../../lib/cli_common[sentry] #egg=mozilla-cli-common
+-e ./../../lib/cli_common[log] #egg=mozilla-cli-common
 -e ./../../lib/backend_common[log,security,cors,api,auth,db,cache,pulse] #egg=mozilla-backend-common
 
+gunicorn
+psycopg2
 pytz
 redis
-psycopg2
-gunicorn

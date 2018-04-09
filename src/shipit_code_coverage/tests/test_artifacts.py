@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import os
-from shipit_code_coverage.artifacts import ArtifactsHandler
 from unittest import mock
+
 import pytest
 
+from shipit_code_coverage.artifacts import ArtifactsHandler
 
 FILES = [
     'windows_mochitest-1_code-coverage-jsvm.info',

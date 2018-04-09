@@ -4,14 +4,12 @@
 
 from __future__ import absolute_import
 
+import cli_common.cli
 import click
 import click_spinner
-
-import cli_common.click
 import please_cli.config
-import please_cli.utils
 import please_cli.shell
-
+import please_cli.utils
 
 CMD_HELP = '''
 Run tests, linters, etc.. for an PROJECT.
@@ -44,7 +42,7 @@ PROJECTS:
         please_cli.config.NIX_BIN_DIR + 'nix-shell',
         ),
     )
-@cli_common.click.taskcluster_options
+@cli_common.cli.taskcluster_options
 @click.pass_context
 def cmd(ctx, project, nix_shell,
         taskcluster_secret,

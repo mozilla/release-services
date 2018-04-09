@@ -3,13 +3,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
-from .models import Message
 from flask import current_app
-from taskcluster import TaskclusterFailure
+
 from cli_common import log
 
+from .models import Message
 
 logger = log.get_logger(__name__)
 
@@ -51,16 +49,10 @@ CHANNEL_MAPPING = {
 
 
 def send_notifications(message: Message, identity_preference: dict) -> dict:
-    try:
-        response = CHANNEL_MAPPING[identity_preference['channel']](message, identity_preference)
-
-        logger.info('{target} notified about {message} on {channel}'.format(
-            target=identity_preference['target'],
-            message=message,
-            channel=identity_preference['channel']
-        ))
-
-        return response
-
-    except TaskclusterFailure:
-        pass
+    response = CHANNEL_MAPPING[identity_preference['channel']](message, identity_preference)
+    logger.info('{target} notified about {message} on {channel}'.format(
+        target=identity_preference['target'],
+        message=message,
+        channel=identity_preference['channel']
+    ))
+    return response

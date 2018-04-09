@@ -3,11 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-from cli_common.log import get_logger
-import yaml
 import requests
+import yaml
 
+from cli_common.log import get_logger
 
 PROJECT_NAME = 'shipit-static-analysis'
 CONFIG_URL = 'https://hg.mozilla.org/mozilla-central/raw-file/tip/tools/clang-tidy/config.yaml'

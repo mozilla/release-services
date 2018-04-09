@@ -3,18 +3,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
-import boto
-import boto.s3
-import boto.sqs
 import importlib
 import json
 import threading
 import time
 
-from cli_common import log
+import boto
+import boto.s3
+import boto.sqs
 
+from cli_common import log
 
 logger = log.get_logger(__name__)
 

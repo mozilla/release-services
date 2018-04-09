@@ -89,6 +89,7 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."pytest"
+      self."pytest-cov"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://logbook.pocoo.org/";
@@ -107,6 +108,19 @@ let
         homepage = "http://pygments.org/";
         license = licenses.bsdOriginal;
         description = "Pygments is a syntax highlighting package written in Python.";
+      };
+    };
+
+    "aioamqp" = python.mkDerivation {
+      name = "aioamqp-0.10.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/22/f2/2b78c982e81eb840de18a419aa5c7d10519ccd81852e91310ebcbcd3e78b/aioamqp-0.10.0.tar.gz"; sha256 = "c618af6d005942a2a8711f7548348f9028fac2673f0dc2d192310cef83486204"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/polyconseil/aioamqp";
+        license = licenses.bsdOriginal;
+        description = "AMQP implementation using asyncio";
       };
     };
 
@@ -161,6 +175,7 @@ let
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
+      self."coverage"
       self."pytest"
       self."six"
     ];
@@ -168,6 +183,53 @@ let
         homepage = "http://www.attrs.org/";
         license = licenses.mit;
         description = "Classes Without Boilerplate";
+      };
+    };
+
+    "backcall" = python.mkDerivation {
+      name = "backcall-0.1.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/84/71/c8ca4f5bb1e08401b916c68003acf0a0655df935d74d93bf3f3364b310e0/backcall-0.1.0.tar.gz"; sha256 = "38ecd85be2c1e78f77fd91700c76e14667dc21e2713b63876c0eb901196e01e4"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/takluyver/backcall";
+        license = licenses.bsdOriginal;
+        description = "Specifications for callback functions passed in to an API";
+      };
+    };
+
+    "boto3" = python.mkDerivation {
+      name = "boto3-1.7.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3c/6c/00b00fadb060b8baeb666999807d7ce85d194aedcfb2e09b149b2392bae3/boto3-1.7.1.tar.gz"; sha256 = "91348d9e5c33c2c1aaaa238a3e97be4834c1aff85082ef6d9b249814be20bab4"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."botocore"
+      self."jmespath"
+      self."s3transfer"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/boto/boto3";
+        license = licenses.asl20;
+        description = "The AWS SDK for Python";
+      };
+    };
+
+    "botocore" = python.mkDerivation {
+      name = "botocore-1.10.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/0b/3e/7a2299870d01611e221648484146bed16da2bc69fb256d4b2669c26fea32/botocore-1.10.1.tar.gz"; sha256 = "bc1e6c36b1b570462e3b688b3bd3ba662e521cc21ce0a860f85f877179af77c7"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."docutils"
+      self."jmespath"
+      self."python-dateutil"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/boto/botocore";
+        license = licenses.asl20;
+        description = "Low-level, data-driven core of boto 3.";
       };
     };
 
@@ -225,9 +287,69 @@ let
       };
     };
 
+    "codecov" = python.mkDerivation {
+      name = "codecov-2.0.15";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/77/f2/9790ee0f04eb0571841aff5ba1709c7869e82aa2145a04a3d4770807ff50/codecov-2.0.15.tar.gz"; sha256 = "8ed8b7c6791010d359baed66f84f061bba5bd41174bf324c31311e8737602788"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."coverage"
+      self."requests"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://github.com/codecov/codecov-python";
+        license = "License :: OSI Approved :: Apache Software License";
+        description = "Hosted coverage reports for Github, Bitbucket and Gitlab";
+      };
+    };
+
+    "cookies" = python.mkDerivation {
+      name = "cookies-2.2.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/f3/95/b66a0ca09c5ec9509d8729e0510e4b078d2451c5e33f47bd6fc33c01517c/cookies-2.2.1.tar.gz"; sha256 = "d6b698788cae4cfa4e62ef8643a9ca332b79bd96cb314294b864ae8d7eb3ee8e"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/sashahart/cookies";
+        license = licenses.mit;
+        description = "Friendlier RFC 6265-compliant cookie parser/renderer";
+      };
+    };
+
+    "coverage" = python.mkDerivation {
+      name = "coverage-4.5.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/35/fe/e7df7289d717426093c68d156e0fd9117c8f4872b6588e8a8928a0f68424/coverage-4.5.1.tar.gz"; sha256 = "56e448f051a201c5ebbaa86a5efd0ca90d327204d8b059ab25ad0f35fbfd79f1"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://bitbucket.org/ned/coveragepy";
+        license = licenses.asl20;
+        description = "Code coverage measurement for Python";
+      };
+    };
+
+    "coveralls" = python.mkDerivation {
+      name = "coveralls-1.3.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3e/dd/61b1365f2d1d3fc459f9e3d36d9c8824fb3c9cd6bf5ee721ca6c8f68c164/coveralls-1.3.0.tar.gz"; sha256 = "664794748d2e5673e347ec476159a9d87f43e0d2d44950e98ed0e27b98da8346"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."coverage"
+      self."docopt"
+      self."requests"
+      self."urllib3"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://github.com/coveralls-clients/coveralls-python";
+        license = licenses.mit;
+        description = "Show coverage stats online via coveralls.io";
+      };
+    };
+
     "cryptography" = python.mkDerivation {
-      name = "cryptography-2.2.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/fd/2c/a9e42f90bda9ebadf4790ed699e44edd630614f1590eb42e11de64a0b9c1/cryptography-2.2.1.tar.gz"; sha256 = "dddad9d322a3f0867009ff9f25477b8f7c0bdbedf143704b384c9472f11cb2d3"; };
+      name = "cryptography-2.2.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/ec/b2/faa78c1ab928d2b2c634c8b41ff1181f0abdd9adf9193211bd606ffa57e2/cryptography-2.2.2.tar.gz"; sha256 = "9fc295bf69130a342e7a19a39d7bbeb15c0bcaabc7382ec33ef3b2b7d18d2f63"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -259,12 +381,39 @@ let
       };
     };
 
+    "docopt" = python.mkDerivation {
+      name = "docopt-0.6.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/a2/55/8f8cab2afd404cf578136ef2cc5dfb50baa1761b68c9da1fb1e4eed343c9/docopt-0.6.2.tar.gz"; sha256 = "49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://docopt.org";
+        license = licenses.mit;
+        description = "Pythonic argument parser, that will make you smile";
+      };
+    };
+
+    "docutils" = python.mkDerivation {
+      name = "docutils-0.14";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/84/f4/5771e41fdf52aabebbadecc9381d11dea0fa34e4759b4071244fa094804c/docutils-0.14.tar.gz"; sha256 = "51e64ef2ebfb29cae1faa133b3710143496eca21c530f3f71424d77687764274"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://docutils.sourceforge.net/";
+        license = licenses.publicDomain;
+        description = "Docutils -- Python Documentation Utilities";
+      };
+    };
+
     "elasticsearch" = python.mkDerivation {
       name = "elasticsearch-6.2.0";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/7b/32/645c407856c2e799d41c8a861e8d707070f82f00abf3089ccbf80b3c1e20/elasticsearch-6.2.0.tar.gz"; sha256 = "b106fa3e01750376a42f8a9882bd84d630fda58c7aba38b4fec797d11c0bd0a2"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
+      self."coverage"
       self."requests"
       self."urllib3"
     ];
@@ -272,6 +421,19 @@ let
         homepage = "https://github.com/elastic/elasticsearch-py";
         license = licenses.asl20;
         description = "Python client for Elasticsearch";
+      };
+    };
+
+    "fancycompleter" = python.mkDerivation {
+      name = "fancycompleter-0.8";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/fd/e3/da39a6cfaffe578a01221261ac1d5d99c48d44f6377ff0de3a12dd332cec/fancycompleter-0.8.tar.gz"; sha256 = "d2522f1f3512371f295379c4c0d1962de06762eb586c199620a2a5d423539b12"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://bitbucket.org/antocuni/fancycompleter";
+        license = licenses.bsdOriginal;
+        description = "colorful TAB completion for Python prompt";
       };
     };
 
@@ -307,6 +469,35 @@ let
       };
     };
 
+    "flake8-copyright" = python.mkDerivation {
+      name = "flake8-copyright-0.2.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3a/22/2973cbdfd5c2df98bbd1b187c19c438653ffa75ea2ed1b0e610b344d70b6/flake8-copyright-0.2.0.tar.gz"; sha256 = "aeef26eb4d5223c9cd5b101e68175fcef6d2b353bf36da688fdde62fccfe2b73"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/savoirfairelinux/flake8-copyright";
+        license = "";
+        description = "Adds copyright checks to flake8";
+      };
+    };
+
+    "flake8-debugger" = python.mkDerivation {
+      name = "flake8-debugger-3.1.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/39/4b/90548607282483dd15f9ce1f4434d735ae756e16e1faf60621b0f8877fcc/flake8-debugger-3.1.0.tar.gz"; sha256 = "be4fb88de3ee8f6dd5053a2d347e2c0a2b54bab6733a2280bb20ebd3c4ca1d97"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."flake8"
+      self."pycodestyle"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/jbkahn/flake8-debugger";
+        license = licenses.mit;
+        description = "ipdb/pdb statement checker plugin for flake8";
+      };
+    };
+
     "flake8-isort" = python.mkDerivation {
       name = "flake8-isort-2.5";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/07/ad/d8d87f1dc4f2ab398ba9e9ad603367d14ba7d614dad7dece66ae0148541b/flake8-isort-2.5.tar.gz"; sha256 = "298d7904ac3a46274edf4ce66fd7e272c2a60c34c3cc999dea000608d64e5e6e"; };
@@ -325,9 +516,26 @@ let
       };
     };
 
+    "flake8-mypy" = python.mkDerivation {
+      name = "flake8-mypy-17.8.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/97/9a/cddd1363d7314bb4eb452089c6fb3092ed9fda9f3350683d1978522a30ec/flake8-mypy-17.8.0.tar.gz"; sha256 = "47120db63aff631ee1f84bac6fe8e64731dc66da3efc1c51f85e15ade4a3ba18"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."attrs"
+      self."flake8"
+      self."mypy"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/ambv/flake8-mypy";
+        license = licenses.mit;
+        description = "A plugin for flake8 integrating mypy.";
+      };
+    };
+
     "flake8-quotes" = python.mkDerivation {
-      name = "flake8-quotes-0.14.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/7b/0b/58547b56c67af98f22ab6a057047d1ebdda19215eeb3cd3dff12568922fc/flake8-quotes-0.14.0.tar.gz"; sha256 = "83efcb4d4dc3ebcc74e2f20330d1f3460393cf8fb1ec045888ce169e0f998e70"; };
+      name = "flake8-quotes-0.14.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/1c/6e/33b5f1add3fa2e0ecdcda6267d6154bdeb51d39586a058b698002da1ccab/flake8-quotes-0.14.1.tar.gz"; sha256 = "00c53e41be1cf6d04c4e5974a36320b081ee7e13fc394457a104836cbfc1399e"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -341,8 +549,8 @@ let
     };
 
     "google-api-python-client" = python.mkDerivation {
-      name = "google-api-python-client-1.6.5";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/07/36/1304550b8a91e4f23258ae5880f56305528ce081cb00668107f02f153817/google-api-python-client-1.6.5.tar.gz"; sha256 = "95ce394028754ec537e5791e811511fdd5fabe6f1f8879407a8daed71ecb0b4c"; };
+      name = "google-api-python-client-1.6.6";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/b3/b8/5306cff119cabc076308d7bb8923d92a549594b76e0a2cfba27db93dc824/google-api-python-client-1.6.6.tar.gz"; sha256 = "ec72991f95201996a4edcea44a079cae0292798086beaadb054d91921632fe1b"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -359,8 +567,8 @@ let
     };
 
     "httplib2" = python.mkDerivation {
-      name = "httplib2-0.11.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/6d/6e/e286c14521000d62bd5aeafe0a27cb1c84f1701c78975693ae21f6222f0e/httplib2-0.11.1.tar.gz"; sha256 = "f2176149e1e1c59e0520db62c925715018b787b2ae901358803bae5d816fda0b"; };
+      name = "httplib2-0.11.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/fd/ce/aa4a385e3e9fd351737fd2b07edaa56e7a730448465aceda6b35086a0d9b/httplib2-0.11.3.tar.gz"; sha256 = "e71daed9a0e6373642db61166fa70beecc9bf04383477f84671348c02a04cbdf"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -431,12 +639,13 @@ let
     };
 
     "ipython" = python.mkDerivation {
-      name = "ipython-6.2.1";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/fa/50/974211502bd72873728d44c3013fe79875c819c8fb69f778bcfd67bc7d38/ipython-6.2.1.tar.gz"; sha256 = "51c158a6c8b899898d1c91c6b51a34110196815cc905f9be0fa5878e19355608"; };
+      name = "ipython-6.3.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/a5/17/e296678250771b0ffaa4ad11e6e60ad14b2f734c902ee92a745d9fe64b7c/ipython-6.3.0.tar.gz"; sha256 = "c785ab502b1a63624baeb89fedb873a118d4da6c9a796ae06e4f4aaef74e9ea0"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."Pygments"
+      self."backcall"
       self."decorator"
       self."jedi"
       self."pexpect"
@@ -485,12 +694,26 @@ let
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
+      self."docopt"
       self."parso"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/davidhalter/jedi";
         license = licenses.mit;
         description = "An autocompletion tool for Python that can be used for text editors.";
+      };
+    };
+
+    "jmespath" = python.mkDerivation {
+      name = "jmespath-0.9.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e5/21/795b7549397735e911b032f255cff5fb0de58f96da794274660bca4f58ef/jmespath-0.9.3.tar.gz"; sha256 = "6a81d4c9aa62caf061cb517b4d9ad1dd300374cd4706997aff9cd6aedd61fc64"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/jmespath/jmespath.py";
+        license = licenses.mit;
+        description = "JSON Matching Expressions";
       };
     };
 
@@ -561,6 +784,23 @@ let
       };
     };
 
+    "mozdef-client" = python.mkDerivation {
+      name = "mozdef-client-1.0.11";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/cd/9b/d783ba277e2120add2709e45db926f8e916c5933df2db9725b7787884ae5/mozdef_client-1.0.11.tar.gz"; sha256 = "86b8c7065c21ce07d3095b5772f70fa152fe97258cde22311e5db4e34f5be26d"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."boto3"
+      self."pytz"
+      self."requests-futures"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/gdestuynder/mozdef_client";
+        license = licenses.mpl20;
+        description = "A client library to send messages/events using MozDef";
+      };
+    };
+
     "mozilla-cli-common" = python.mkDerivation {
       name = "mozilla-cli-common-1.0.0";
       src = pkgs.lib.cleanSource ./../../lib/cli_common;
@@ -568,7 +808,10 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."Logbook"
+      self."aioamqp"
       self."click"
+      self."mozdef-client"
+      self."python-dateutil"
       self."python-hglib"
       self."raven"
       self."structlog"
@@ -591,6 +834,21 @@ let
         homepage = "https://github.com/aio-libs/multidict/";
         license = licenses.asl20;
         description = "multidict implementation";
+      };
+    };
+
+    "mypy" = python.mkDerivation {
+      name = "mypy-0.580";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/3d/5f/86f955690ba3962d6158cd5b720bc53a0713f3e65ac2d14d106bbcb0a88e/mypy-0.580.tar.gz"; sha256 = "3bd95a1369810f7693366911d85be9f0a0bd994f6cb7162b7a994e5ded90e3d9"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."typed-ast"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://www.mypy-lang.org/";
+        license = licenses.mit;
+        description = "Optional static typing for Python";
       };
     };
 
@@ -623,6 +881,23 @@ let
         homepage = "https://github.com/davidhalter/parso";
         license = licenses.mit;
         description = "A Python Parser";
+      };
+    };
+
+    "pdbpp" = python.mkDerivation {
+      name = "pdbpp-0.9.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e6/cc/8bf81f5e53daa4a90d696fa430c2f4e709656e2bf953686bd15c0746616f/pdbpp-0.9.2.tar.gz"; sha256 = "dde77326e4ea41439c243ed065826d53539530eeabd1b6615aae15cfbb9fda05"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."Pygments"
+      self."fancycompleter"
+      self."wmctrl"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://github.com/antocuni/pdb";
+        license = licenses.bsdOriginal;
+        description = "pdb++, a drop-in replacement for pdb";
       };
     };
 
@@ -812,9 +1087,25 @@ let
       };
     };
 
+    "pytest-cov" = python.mkDerivation {
+      name = "pytest-cov-2.5.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/24/b4/7290d65b2f3633db51393bdf8ae66309b37620bc3ec116c5e357e3e37238/pytest-cov-2.5.1.tar.gz"; sha256 = "03aa752cf11db41d281ea1d807d954c4eda35cfa1b21d6971966cc041bbf6e2d"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."coverage"
+      self."pytest"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/pytest-dev/pytest-cov";
+        license = licenses.bsdOriginal;
+        description = "Pytest plugin for measuring coverage.";
+      };
+    };
+
     "python-dateutil" = python.mkDerivation {
-      name = "python-dateutil-2.7.2";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c5/39/4da7c2dbc4f023fba5fb2325febcadf0d0ce0efdc8bd12083a0f65d20653/python-dateutil-2.7.2.tar.gz"; sha256 = "9d8074be4c993fbe4947878ce593052f71dac82932a677d49194d8ce9778002e"; };
+      name = "python-dateutil-2.6.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/54/bb/f1db86504f7a49e1d9b9301531181b00a1c7325dc85a29160ee3eaa73a54/python-dateutil-2.6.1.tar.gz"; sha256 = "891c38b2a02f5bb1be3e4793866c8df49c7d19baabf9c1bad62547e0b4866aca"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -860,9 +1151,11 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."Logbook"
+      self."coverage"
       self."flake8"
       self."pycodestyle"
       self."pytest"
+      self."pytest-cov"
       self."pytz"
       self."requests"
     ];
@@ -908,6 +1201,27 @@ let
       };
     };
 
+    "responses" = python.mkDerivation {
+      name = "responses-0.9.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/67/cb/0a5390f7b8944cfa7e4079a839adba964d858d27a60af7b2683248148339/responses-0.9.0.tar.gz"; sha256 = "c6082710f4abfb60793899ca5f21e7ceb25aabf321560cc0726f8b59006811c9"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."cookies"
+      self."coverage"
+      self."flake8"
+      self."pytest"
+      self."pytest-cov"
+      self."requests"
+      self."six"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/getsentry/responses";
+        license = licenses.asl20;
+        description = "A utility library for mocking out the `requests` Python library.";
+      };
+    };
+
     "rsa" = python.mkDerivation {
       name = "rsa-3.4.2";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/14/89/adf8b72371e37f3ca69c6cb8ab6319d009c4a24b04a31399e5bd77d9bb57/rsa-3.4.2.tar.gz"; sha256 = "25df4e10c263fb88b5ace923dd84bf9aa7f5019687b5e55382ffcdb8bede9db5"; };
@@ -920,6 +1234,21 @@ let
         homepage = "https://stuvel.eu/rsa";
         license = "License :: OSI Approved :: Apache Software License";
         description = "Pure-Python RSA implementation";
+      };
+    };
+
+    "s3transfer" = python.mkDerivation {
+      name = "s3transfer-0.1.13";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/9a/66/c6a5ae4dbbaf253bd662921b805e4972451a6d214d0dc9fb3300cb642320/s3transfer-0.1.13.tar.gz"; sha256 = "90dc18e028989c609146e241ea153250be451e05ecc0c2832565231dacdf59c1"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."botocore"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/boto/s3transfer";
+        license = licenses.asl20;
+        description = "An Amazon S3 Transfer Manager";
       };
     };
 
@@ -968,6 +1297,7 @@ let
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
+      self."coverage"
       self."pytest"
       self."six"
     ];
@@ -999,11 +1329,13 @@ let
     };
 
     "testfixtures" = python.mkDerivation {
-      name = "testfixtures-5.4.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/e0/dc/16e99f214c38267862266cee87574ec841b7c946b3ba3474761614f041fe/testfixtures-5.4.0.tar.gz"; sha256 = "338aed9695c432b7c9b8a271dabb521e3e7e2c96b11f7b4e60552f1c8408a8f0"; };
+      name = "testfixtures-6.0.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/b1/87/1f3e43248af711f09faf05854b4af10a20e9b8c9dc66f500690c5d928bfb/testfixtures-6.0.0.tar.gz"; sha256 = "f6c4cf24d043f9d8e9a9337371ec1d2f6638a0032504bd67dbd724224fd64969"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
+      self."coverage"
+      self."coveralls"
       self."pytest"
     ];
       meta = with pkgs.stdenv.lib; {
@@ -1028,6 +1360,19 @@ let
         homepage = "http://ipython.org";
         license = licenses.bsdOriginal;
         description = "Traitlets Python config system";
+      };
+    };
+
+    "typed-ast" = python.mkDerivation {
+      name = "typed-ast-1.1.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/52/cf/2ebc7d282f026e21eed4987e42e10964a077c13cfc168b42f3573a7f178c/typed-ast-1.1.0.tar.gz"; sha256 = "57fe287f0cdd9ceaf69e7b71a2e94a24b5d268b35df251a88fef5cc241bf73aa"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/python/typed_ast";
+        license = licenses.asl20;
+        description = "a fork of Python 2 and 3 ast modules with type comment support";
       };
     };
 
@@ -1085,6 +1430,19 @@ let
         homepage = "https://github.com/cscorley/whatthepatch";
         license = licenses.mit;
         description = "A patch parsing library.";
+      };
+    };
+
+    "wmctrl" = python.mkDerivation {
+      name = "wmctrl-0.3";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/01/c6/001aefbde5782d6f359af0a8782990c3f4e751e29518fbd59dc8dfc58b18/wmctrl-0.3.tar.gz"; sha256 = "d806f65ac1554366b6e31d29d7be2e8893996c0acbb2824bbf2b1f49cf628a13"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "http://bitbucket.org/antocuni/wmctrl";
+        license = licenses.bsdOriginal;
+        description = "A tool to programmatically control windows inside X";
       };
     };
 

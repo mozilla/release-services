@@ -1,26 +1,27 @@
 # -*- coding: utf-8 -*-
+import concurrent.futures
 import json
 import os
 import shutil
-import tarfile
-import requests
-import hglib
-import concurrent.futures
-from concurrent.futures import ThreadPoolExecutor
 import sqlite3
+import tarfile
+from concurrent.futures import ThreadPoolExecutor
 
-from cli_common.log import get_logger
+import hglib
+import requests
+
 from cli_common.command import run_check
-from cli_common.utils import retry, ThreadPoolExecutorResult
-
-from shipit_code_coverage import taskcluster, uploader
-from shipit_code_coverage.artifacts import ArtifactsHandler
-from shipit_code_coverage.github import GitHubUtils
+from cli_common.log import get_logger
+from cli_common.utils import ThreadPoolExecutorResult
+from cli_common.utils import retry
 from shipit_code_coverage import grcov
 from shipit_code_coverage import report_generators
+from shipit_code_coverage import taskcluster
+from shipit_code_coverage import uploader
+from shipit_code_coverage.artifacts import ArtifactsHandler
+from shipit_code_coverage.github import GitHubUtils
 from shipit_code_coverage.notifier import Notifier
 from shipit_code_coverage.secrets import secrets
-
 
 logger = get_logger(__name__)
 

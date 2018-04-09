@@ -1,5 +1,1 @@
-flake8
-pytest
-flake8-coding
-flake8-quotes
-responses
+-r ./../../lib/cli_common/requirements-dev.txt

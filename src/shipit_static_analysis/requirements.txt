@@ -1,4 +1,4 @@
--e ./../../lib/cli_common[sentry,pulse,taskcluster,mercurial] #egg=mozilla-cli-common
+-e ./../../lib/cli_common[log,pulse,taskcluster,mercurial] #egg=mozilla-cli-common
 
 RBTools
 PyYAML

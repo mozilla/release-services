@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
-from zipfile import BadZipFile, is_zipfile
+from zipfile import BadZipFile
+from zipfile import is_zipfile
+
 import requests
 
 from cli_common.utils import retry

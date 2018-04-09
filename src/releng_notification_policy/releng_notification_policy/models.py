@@ -3,12 +3,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from datetime import timedelta
+
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import Enum
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import Interval
+from sqlalchemy import String
+from sqlalchemy import Text
+
 from backend_common.db import db
 from backend_common.notifications import URGENCY_LEVELS
+
 from .config import APP_NAME
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, Interval, String, Text
-from datetime import timedelta
 
 
 class Message(db.Model):

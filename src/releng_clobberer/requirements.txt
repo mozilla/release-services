@@ -1,4 +1,4 @@
--e ./../../lib/cli_common[taskcluster,sentry] #egg=mozilla-cli-common
+-e ./../../lib/cli_common[taskcluster,log] #egg=mozilla-cli-common
 -e ./../../lib/backend_common[log,security,cors,api,auth,db] #egg=mozilla-backend-common
 
 psycopg2

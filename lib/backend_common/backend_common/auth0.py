@@ -12,21 +12,21 @@ info endpoint used by the Flask-OIDC accept_token wrapper has some
 issues with validating tokens for certain application types.
 '''
 
-from __future__ import absolute_import
-
-import cli_common.log
-from urllib.parse import urlencode
-import time
-import requests
-import flask
-import flask_oidc
-import functools
-from jose import jwt
-import json
-import hmac
 import base64
+import functools
+import hmac
+import json
 import os
 import tempfile
+import time
+import urllib.parse
+
+import flask
+import flask_oidc
+import jose
+import requests
+
+import cli_common.log
 
 logger = cli_common.log.get_logger(__name__)
 auth0 = flask_oidc.OpenIDConnect()
@@ -151,8 +151,8 @@ def verified_userinfo():
     jwks = get_jwks()
     token = get_token()
     try:
-        unverified_header = jwt.get_unverified_header(token)
-    except jwt.JWTError:
+        unverified_header = jose.jwt.get_unverified_header(token)
+    except jose.jwt.JWTError:
         raise AuthError({
             'code': 'invalid_header',
             'description': 'Invalid header. Use an RS256 signed JWT Access Token'},
@@ -174,7 +174,7 @@ def verified_userinfo():
             }
     if rsa_key:
         try:
-            payload = jwt.decode(
+            payload = jose.jwt.decode(
                 token,
                 rsa_key,
                 algorithms=['RS256'],
@@ -182,12 +182,12 @@ def verified_userinfo():
                 issuer='https://{}/'.format(flask.current_app.config.get('AUTH_DOMAIN'))
             )
             return payload
-        except jwt.ExpiredSignatureError:
+        except jose.jwt.ExpiredSignatureError:
             raise AuthError({
                 'code': 'token_expired',
                 'description': 'token is expired'},
                 401)
-        except jwt.JWTClaimsError:
+        except jose.jwt.JWTClaimsError:
             raise AuthError({
                 'code': 'invalid_claims',
                 'description': 'incorrect claims, please check the audience and issuer'},
@@ -259,7 +259,7 @@ def auth0_login():
     }
     return 'https://{}/authorize?{}'.format(
         flask.current_app.config.get('AUTH_DOMAIN'),
-        urlencode(params),
+        urllib.parse.urlencode(params),
     )
 
 

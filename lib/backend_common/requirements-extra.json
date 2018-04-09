@@ -1,0 +1,64 @@
+{
+    "log": [
+        "Logbook",
+        "mozilla-cli-common[log]"
+    ],
+    "api": [
+        "Flask",
+        "Werkzeug",
+        "connexion",
+        "mozilla-cli-common[log]"
+    ],
+    "db": [
+        "python-dateutil<2.7.0,>=2.1",
+        "Flask",
+        "Flask-Migrate",
+        "Flask-SQLAlchemy",
+        "mozilla-cli-common[log]"
+    ],
+    "auth": [
+        "python-dateutil<2.7.0,>=2.1",
+        "Flask",
+        "Flask",
+        "Flask-Login",
+        "Flask-Migrate",
+        "Flask-SQLAlchemy",
+        "SQLAlchemy",
+        "itsdangerous",
+        "mozilla-cli-common[log]",
+        "taskcluster<3.0.0"
+    ],
+    "auth0": [
+        "Flask",
+        "flask-oidc",
+        "mozilla-cli-common[log]",
+        "python-jose",
+        "requests"
+    ],
+    "cache": [
+        "Flask-Cache"
+    ],
+    "cors": [
+        "Flask-Cors",
+        "mozilla-cli-common[log]"
+    ],
+    "pulse": [
+        "kombu"
+    ],
+    "templates": [
+        "Jinja2"
+    ],
+    "notifications": [
+        "Flask",
+        "mohawk",
+        "requests"
+    ],
+    "security": [
+        "flask-talisman"
+    ],
+    "aws": [
+        "python-dateutil<2.7.0,>=2.1",
+        "boto",
+        "mozilla-cli-common[log]"
+    ]
+}

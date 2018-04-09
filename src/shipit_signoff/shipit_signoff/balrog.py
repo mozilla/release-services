@@ -5,9 +5,8 @@
 
 from collections import defaultdict
 
-from flask import current_app as app
-
 import requests
+from flask import current_app as app
 
 from shipit_signoff.models import SigningStatus
 

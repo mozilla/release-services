@@ -3,20 +3,32 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
 import calendar
-import dateutil.parser
-import time
 import re
-from backend_common.auth import auth
+import time
+from typing import Optional
 from typing import Tuple
-from cli_common import log
-from flask import current_app, request, Response
-from .models import Project, Hash
-from werkzeug.exceptions import BadRequest, Conflict, InternalServerError, NotFound, UnsupportedMediaType
+
+import dateutil.parser
+from flask import Response
+from flask import current_app
+from flask import request
 from sqlalchemy import text
-from sqlalchemy.exc import IntegrityError, ProgrammingError
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.orm.exc import MultipleResultsFound
+from sqlalchemy.orm.exc import NoResultFound
+from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import Conflict
+from werkzeug.exceptions import InternalServerError
+from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import UnsupportedMediaType
+
+from backend_common.auth import auth
+from cli_common import log
+
+from .models import Hash
+from .models import Project
 
 logger = log.get_logger(__name__)
 
@@ -67,13 +79,13 @@ def post_hg_git_mapping(project: str, git_commit: str, hg_changeset: str) -> dic
 @auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'mapping/insert'])
 def post_insert_many_ignoredups(project: str, body: str) -> dict:
     session = current_app.db.session
-    return _insert_many(project, body, session, ignore_dups=True)
+    return _insert_many(project, body.encode(), session, ignore_dups=True)
 
 
 @auth.require_scopes([AUTHENTICATION_SCOPE_PREFIX + 'mapping/insert'])
 def post_insert_many(project: str, body: str) -> dict:
     session = current_app.db.session
-    return _insert_many(project, body, session, ignore_dups=False)
+    return _insert_many(project, body.encode(), session, ignore_dups=False)
 
 
 def get_projects() -> dict:
@@ -90,12 +102,12 @@ def get_projects() -> dict:
     }
 
 
-def get_mapfile_since(projects: str, since: str) -> str:
+def get_mapfile_since(projects: str, since: str) -> Tuple[str, int, dict]:
     try:
         since_dt = dateutil.parser.parse(since)
 
     except ValueError as e:
-        raise BadRequest('Invalid date %s specified; see https://labix.org/python-dateutil: %s' % (since, e.message))
+        raise BadRequest('Invalid date %s specified; see https://labix.org/python-dateutil: %s' % (since, str(e)))
 
     since_epoch = calendar.timegm(since_dt.utctimetuple())
 
@@ -106,7 +118,7 @@ def get_mapfile_since(projects: str, since: str) -> str:
     return _stream_mapfile(q)
 
 
-def get_full_mapfile(projects: str) -> str:
+def get_full_mapfile(projects: str) -> Tuple[str, int, dict]:
     q = Hash.query.join(Project).filter(_project_filter(projects))
     q = q.order_by(Hash.hg_changeset)
 
@@ -124,8 +136,6 @@ def get_revision(projects: str, vcs_type: str, commit: str) -> str:
 
     try:
         row = q.one()
-        return '%s %s' % (row.git_commit, row.hg_changeset)
-
     except NoResultFound:
         if vcs_type == 'git':
             raise NotFound('No hg changeset found for git commit id {} in project(s) {}'.format(commit, projects))
@@ -136,6 +146,8 @@ def get_revision(projects: str, vcs_type: str, commit: str) -> str:
     except MultipleResultsFound:
         raise InternalServerError('Internal error - multiple results returned for {} commit {} in project {} - '
                                   'this should not be possible in database'.format(vcs_type, commit, projects))
+
+    return '%s %s' % (row.git_commit, row.hg_changeset)
 
 
 def _project_filter(projects_arg):
@@ -178,7 +190,7 @@ def _stream_mapfile(query) -> Tuple[str, int, dict]:
         return Response(contents(), mimetype='text/plain')
 
 
-def _check_well_formed_sha(vcs: str, sha: str, exact_length: int=40) -> None:
+def _check_well_formed_sha(vcs: str, sha: str, exact_length: Optional[int]=40) -> None:
     '''Helper method to check for a well-formed SHA.
     Args:
         vcs: Name of the vcs system ('hg' or 'git')

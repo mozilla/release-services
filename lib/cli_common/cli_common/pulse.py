@@ -1,16 +1,23 @@
-import aioamqp
-import sys
-import asyncio
-from cli_common.log import get_logger
+# -*- coding: utf-8 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-logger = get_logger(__name__)
+import asyncio
+import sys
+
+import aioamqp
+
+import cli_common.log
+
+logger = cli_common.log.get_logger(__name__)
 
 
 async def create_consumer(user, password, exchange, topic, callback):
-    """
+    '''
     Create an async consumer for Mozilla pulse queues
     Inspired by : https://github.com/mozilla-releng/fennec-aurora-task-creator/blob/master/fennec_aurora_task_creator/worker.py  # noqa
-    """
+    '''
     assert isinstance(user, str)
     assert isinstance(password, str)
     assert isinstance(exchange, str)
@@ -51,9 +58,9 @@ async def create_consumer(user, password, exchange, topic, callback):
 
 
 def run_consumer(consumer):
-    """
+    '''
     Helper to run indefinitely an asyncio consumer
-    """
+    '''
     event_loop = asyncio.get_event_loop()
 
     try:

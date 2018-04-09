@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-from shipit_static_analysis import Issue, stats
-from shipit_static_analysis.revisions import Revision
-from cli_common.command import run
-from cli_common.log import get_logger
 import itertools
 import json
 import os
+
+from cli_common.command import run
+from cli_common.log import get_logger
+from shipit_static_analysis import Issue
+from shipit_static_analysis import stats
+from shipit_static_analysis.revisions import Revision
 
 logger = get_logger(__name__)
 

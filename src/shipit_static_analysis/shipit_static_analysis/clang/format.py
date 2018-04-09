@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-import os
 import difflib
-import tempfile
+import os
 import subprocess
+import tempfile
+
 from cli_common.log import get_logger
-from shipit_static_analysis import Issue, stats
+from shipit_static_analysis import Issue
+from shipit_static_analysis import stats
 from shipit_static_analysis.revisions import Revision
 
 logger = get_logger(__name__)

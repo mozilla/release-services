@@ -3,14 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import json
+
 import responses
-from shipit_uplift import (
-    coverage_by_changeset_impl, coverage_summary_by_changeset_impl,
-    coverage_for_file_impl
-)
+
+from shipit_uplift import coverage_by_changeset_impl
+from shipit_uplift import coverage_for_file_impl
+from shipit_uplift import coverage_summary_by_changeset_impl
 
 
 def test_coverage_supported_extensions_api(client):

@@ -3,20 +3,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
-import tempfile
-import hglib
 import os
+import tempfile
 
-from cli_common.log import get_logger
+import hglib
+
 from cli_common.command import run_check
-from shipit_static_analysis.clang.tidy import ClangTidy
-from shipit_static_analysis.clang.format import ClangFormat
-from shipit_static_analysis.config import settings, REPO_CENTRAL, ARTIFACT_URL
-from shipit_static_analysis.lint import MozLint
-from shipit_static_analysis import CLANG_TIDY, CLANG_FORMAT, MOZLINT
+from cli_common.log import get_logger
+from shipit_static_analysis import CLANG_FORMAT
+from shipit_static_analysis import CLANG_TIDY
+from shipit_static_analysis import MOZLINT
 from shipit_static_analysis import stats
+from shipit_static_analysis.clang.format import ClangFormat
+from shipit_static_analysis.clang.tidy import ClangTidy
+from shipit_static_analysis.config import ARTIFACT_URL
+from shipit_static_analysis.config import REPO_CENTRAL
+from shipit_static_analysis.config import settings
+from shipit_static_analysis.lint import MozLint
 
 logger = get_logger(__name__)
 

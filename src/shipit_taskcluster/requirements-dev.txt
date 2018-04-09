@@ -1,1 +1,2 @@
--e ./../../lib/backend_common[all] #egg=mozilla-backend-common
+-r ./../../lib/backend_common/requirements-dev.txt
+

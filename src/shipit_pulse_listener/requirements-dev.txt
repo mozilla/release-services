@@ -1,5 +1,3 @@
-flake8
-pytest
-flake8-coding
-flake8-quotes
+-r ./../../lib/cli_common/requirements-dev.txt
+
 pytest-asyncio

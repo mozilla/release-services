@@ -1,5 +1,5 @@
--e ./../../lib/cli_common[sentry] #egg=mozilla-cli-common
+-e ./../../lib/cli_common[log] #egg=mozilla-cli-common
 -e ./../../lib/backend_common[log,security,cors,api,auth,auth0,db] #egg=mozilla-backend-common
 
-psycopg2
 gunicorn
+psycopg2

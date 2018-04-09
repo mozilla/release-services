@@ -3,20 +3,26 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
-from datetime import datetime, timedelta
-from flask import current_app
-from typing import Iterator, List, Tuple
-from werkzeug.exceptions import Conflict, NotFound
-from .models import Message, Policy
-from .channels import send_notifications
-from requests import get
-from json import JSONDecodeError
-from cli_common import log
-from backend_common.auth import auth
 import os
+from datetime import datetime
+from datetime import timedelta
+from json import JSONDecodeError
+from typing import Iterator
+from typing import List
+from typing import Tuple
+
 import mohawk
+from flask import current_app
+from requests import get
+from werkzeug.exceptions import Conflict
+from werkzeug.exceptions import NotFound
+
+from backend_common.auth import auth
+from cli_common import log
+
+from .channels import send_notifications
+from .models import Message
+from .models import Policy
 
 logger = log.get_logger(__name__)
 

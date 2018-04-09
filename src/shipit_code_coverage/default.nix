@@ -97,10 +97,11 @@ let
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
-      fromRequirementsFile ./requirements-dev.txt python.packages;
+      (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
-      fromRequirementsFile ./requirements.txt python.packages 
-      ++ [
+      (fromRequirementsFile ./requirements.txt python.packages) ++
+      [
         releng_pkgs.pkgs.gcc
         releng_pkgs.pkgs.lcov
         rustPlatform.rust.rustc

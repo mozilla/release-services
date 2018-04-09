@@ -10,8 +10,8 @@ Create Date: 2017-02-08 16:37:06.437732
 revision = '1eb1ce61f03e'
 down_revision = '85ee332dd4db'
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 TABLE = 'shipit_dashboard_analysis'
 

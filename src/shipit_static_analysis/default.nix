@@ -82,10 +82,11 @@ let
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
-      [ mercurial clang_5 ] ++ fromRequirementsFile ./requirements-dev.txt python.packages;
+      [ mercurial clang_5 ] ++ 
+      (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
-      fromRequirementsFile ./requirements.txt python.packages
-      ++ [
+      [
         # Needed for the static analysis
         glibc
         gcc
@@ -97,8 +98,8 @@ let
 
         # Gecko environment
         gecko-env
-      ];
-
+      ] ++
+      (fromRequirementsFile ./requirements.txt python.packages);
     postInstall = ''
       mkdir -p $out/tmp
       mkdir -p $out/bin
@@ -122,7 +123,6 @@ let
       # Expose gecko env in final output
       ln -s ${gecko-env}/bin/gecko-env $out/bin
     '';
-
     shellHook = ''
       export PATH="${mercurial}/bin:${git}/bin:${python27}/bin:${python35}/bin:${nodejs}/bin:$PATH"
 

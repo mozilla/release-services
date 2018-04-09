@@ -3,13 +3,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import json
-import jsonschema
 from os import path
-import yaml
 
+import jsonschema
+import yaml
 
 HERE = path.abspath(path.dirname(__file__))
 SIGNOFF_DIR = path.join(HERE, '..', 'shipit_signoff')

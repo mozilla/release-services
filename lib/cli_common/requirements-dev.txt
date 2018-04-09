@@ -1,3 +1,31 @@
+# linting
 flake8
+flake8-coding
+flake8-copyright
+flake8-debugger
 flake8-isort
+flake8-mypy
+flake8-quotes
+#flake8-todo  # TODO: we will need to first remove all TODOs from the code
+
+# testing
+codecov
+coveralls
 pytest
+pytest-cov
+responses
+
+# develop
+pdbpp
+ipdb
+
+# tests dependencies
+Logbook
+aioamqp
+click
+mozdef-client
+python-dateutil<2.7.0,>=2.1
+python-hglib
+raven
+structlog
+taskcluster<3.0.0

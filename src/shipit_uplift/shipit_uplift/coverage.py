@@ -3,11 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from abc import ABC, abstractmethod
 import json
+from abc import ABC
+from abc import abstractmethod
 from functools import lru_cache
-from cachetools import LRUCache
+
 import requests
+from cachetools import LRUCache
 
 from shipit_uplift import secrets
 

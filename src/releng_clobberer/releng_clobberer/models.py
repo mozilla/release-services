@@ -3,15 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import time
 
 import sqlalchemy as sa
 
-from backend_common.db import UniqueMixin, db
-
-from .config import APP_NAME
+from backend_common.db import UniqueMixin
+from backend_common.db import db
+from releng_clobberer.config import APP_NAME
 
 
 class ClobbererBase(db.Model):

@@ -10,9 +10,10 @@ Create Date: 2017-03-27 16:37:23.283917
 revision = 'e90a66648db6'
 down_revision = '35fdb610712b'
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
+
 
 def upgrade():
     op.drop_constraint('uniq_patch_status_group', 'shipit_uplift_patch_status', type_='unique')

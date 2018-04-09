@@ -3,16 +3,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
-from contextlib import contextmanager
 import json
 import os
-import responses
 import tempfile
 import zipfile
-import pytest
+from contextlib import contextmanager
 
+import pytest
+import responses
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 

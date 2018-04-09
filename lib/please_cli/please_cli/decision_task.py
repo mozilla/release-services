@@ -8,13 +8,12 @@ import datetime
 import json
 import os
 
-import click
-import click_spinner
 import slugid
 
 import cli_common.taskcluster
+import click
+import click_spinner
 import please_cli.config
-
 
 DEPLOYABLE_PROJECTS = {}
 for project_name, project_config in please_cli.config.PROJECTS_CONFIG.items():

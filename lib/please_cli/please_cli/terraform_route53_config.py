@@ -5,7 +5,6 @@
 from __future__ import absolute_import
 
 import click
-
 import please_cli.config
 
 HEADER = '''
