@@ -21,7 +21,7 @@ import please_cli.utils
 log = cli_common.log.get_logger(__name__)
 
 
-@cli.command(
+@click.command(
     cls=please_cli.utils.ClickCustomCommand,
     short_help="Build base docker image.",
     epilog="Happy hacking!",
@@ -75,7 +75,7 @@ log = cli_common.log.get_logger(__name__)
     is_flag=True,
     help='Push to docker registry',
     )
-@cli_common.click.taskcluster_options
+@cli_common.cli.taskcluster_options
 def cmd(docker_username,
         docker_password,
         docker,
