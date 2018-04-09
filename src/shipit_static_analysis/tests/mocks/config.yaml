@@ -5,5 +5,7 @@ clang_checkers:
    publish: !!bool yes
  - name: clang-analyzer-security.*
    publish: !!bool no
+ - name: modernize-use-nullptr
+   publish: !!bool yes
 
 third_party: 3rdparty.txt

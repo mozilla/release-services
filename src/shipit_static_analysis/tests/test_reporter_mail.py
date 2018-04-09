@@ -91,10 +91,10 @@ def test_mail(mock_issues, mock_phabricator):
 
     # Publish for mozreview
     mrev = MozReviewRevision('abcdef:12345:1')
-    r.publish(mock_issues, mrev, diff_url=None)
+    r.publish(mock_issues, mrev)
 
     prev = PhabricatorRevision('42:PHID-DIFF-test', phab)
-    r.publish(mock_issues, prev, diff_url=None)
+    r.publish(mock_issues, prev)
 
     # Check stats
     mock_cls = mock_issues[0].__class__

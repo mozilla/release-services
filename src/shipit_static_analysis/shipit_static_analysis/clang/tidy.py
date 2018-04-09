@@ -61,11 +61,10 @@ class ClangTidy(object):
     Clang Tidy Parallel runner
     Inspired by run-clang-tidy.py
     '''
-    def __init__(self, repo_dir, build_dir, validate_checks=True):
+    def __init__(self, repo_dir, validate_checks=True):
         assert os.path.isdir(repo_dir)
 
         self.repo_dir = repo_dir
-        self.build_dir = os.path.join(repo_dir, build_dir)
         self.binary = os.path.join(
             os.environ['MOZBUILD_STATE_PATH'],
             'clang-tools', 'clang', 'bin', 'clang-tidy',
@@ -79,7 +78,7 @@ class ClangTidy(object):
                 logger.error('Specified clang-tidy check "{}" not found.'.format(missing))
 
     @stats.api.timed('runtime.clang-tidy')
-    def run(self, checks, revision):
+    def run(self, revision):
         '''
         Run modified files with specified checks through clang-tidy
         using threaded workers (communicate through queues)
@@ -100,7 +99,7 @@ class ClangTidy(object):
                 for filename in revision.files
             )),
 
-            '--checks={}'.format(','.join(c['name'] for c in checks)),
+            '--checks={}'.format(','.join(c['name'] for c in settings.clang_checkers)),
         ] + list(revision.files)
         logger.info('Running static-analysis', cmd=' '.join(cmd))
 

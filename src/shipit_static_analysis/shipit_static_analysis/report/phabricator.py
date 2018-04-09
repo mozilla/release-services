@@ -85,7 +85,7 @@ class PhabricatorReporter(Reporter):
             diffID=diff_id,
         )
 
-    def publish(self, issues, revision, diff_url=None):
+    def publish(self, issues, revision):
         '''
         Publish inline comments for each issues
         '''
@@ -116,7 +116,7 @@ class PhabricatorReporter(Reporter):
                 revision,
                 self.build_comment(
                     issues=issues,
-                    diff_url=diff_url,
+                    diff_url=revision.diff_url,
                 ),
             )
             stats.api.increment('report.phabricator.issues', len(inlines))

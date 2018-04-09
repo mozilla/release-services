@@ -16,7 +16,6 @@ from shipit_static_analysis import MOZLINT
 from shipit_static_analysis import stats
 from shipit_static_analysis.clang.format import ClangFormat
 from shipit_static_analysis.clang.tidy import ClangTidy
-from shipit_static_analysis.config import ARTIFACT_URL
 from shipit_static_analysis.config import REPO_CENTRAL
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.lint import MozLint
@@ -91,6 +90,7 @@ class Workflow(object):
          * Run static analysis
          * Publish results
         '''
+        analyzers = []
 
         # Add log to find Taskcluster task in papertrail
         logger.info(
@@ -128,73 +128,41 @@ class Workflow(object):
                 cmd = ['gecko-env', './mach', 'static-analysis', 'install']
                 run_check(cmd, cwd=self.repo_dir)
 
+                # Use clang-tidy & clang-format
+                if CLANG_TIDY in self.analyzers:
+                    analyzers.append(ClangTidy)
+                else:
+                    logger.info('Skip clang-tidy')
+                if CLANG_FORMAT in self.analyzers:
+                    analyzers.append(ClangFormat)
+                else:
+                    logger.info('Skip clang-format')
+
             else:
-                logger.info('No clang files detected, skipping mach')
+                logger.info('No clang files detected, skipping mach and clang-*')
 
             # Setup python environment
             logger.info('Mach lint setup...')
             cmd = ['gecko-env', './mach', 'lint', '--list']
             run_check(cmd, cwd=self.repo_dir)
 
-        # Setup tools (clang & mozlint)
-        clang_tidy = CLANG_TIDY in self.analyzers and ClangTidy(self.repo_dir, settings.target)
-        clang_format = CLANG_FORMAT in self.analyzers and ClangFormat(self.repo_dir)
-        mozlint = MOZLINT in self.analyzers and MozLint(self.repo_dir)
-
-        # Run static analysis through clang-tidy
-        issues = []
-        if clang_tidy and revision.has_clang_files:
-            logger.info('Run clang-tidy...')
-            issues += clang_tidy.run(settings.clang_checkers, revision)
-        else:
-            logger.info('Skip clang-tidy')
-
-        # Run clang-format on modified files
-        diff_url = None
-        if clang_format and revision.has_clang_files:
-            logger.info('Run clang-format...')
-            format_issues, patched = clang_format.run(settings.cpp_extensions, revision)
-            issues += format_issues
-            if patched:
-                # Get current diff on these files
-                logger.info('Found clang-format issues', files=patched)
-                files = list(map(lambda x: os.path.join(self.repo_dir, x).encode('utf-8'), patched))
-                diff = self.hg.diff(files)
-                assert diff is not None and diff != b'', \
-                    'Empty diff'
-
-                # Write diff in results directory
-                diff_path = os.path.join(self.taskcluster_results_dir, revision.build_diff_name())
-                with open(diff_path, 'w') as f:
-                    length = f.write(diff.decode('utf-8'))
-                    logger.info('Diff from clang-format dumped', path=diff_path, length=length)  # noqa
-
-                # Build diff download url
-                diff_url = ARTIFACT_URL.format(
-                    task_id=self.taskcluster_task_id,
-                    run_id=self.taskcluster_run_id,
-                    diff_name=revision.build_diff_name(),
-                )
-                logger.info('Diff available online', url=diff_url)
+            # Always use mozlint
+            if MOZLINT in self.analyzers:
+                analyzers.append(MozLint)
             else:
-                logger.info('No clang-format issues')
+                logger.info('Skip mozlint')
 
-        else:
-            logger.info('Skip clang-format')
+        issues = []
+        for analyzer_class in analyzers:
+            # Build analyzer
+            logger.info('Run {}'.format(analyzer_class.__name__))
+            analyzer = analyzer_class(self.repo_dir)
 
-        # Run linter
-        if mozlint:
-            logger.info('Run mozlint...')
-            issues += mozlint.run(revision)
-        else:
-            logger.info('Skip mozlint')
-
-        logger.info('Detected {} issue(s)'.format(len(issues)))
-        if not issues:
-            logger.info('No issues, stopping there.')
-            return
+            # Run analyzer on version and store generated issues
+            issues += analyzer.run(revision)
 
         # Publish reports about these issues
+        return
         with stats.api.timer('runtime.reports'):
             for reporter in self.reporters.values():
-                reporter.publish(issues, revision, diff_url)
+                reporter.publish(issues, revision)
