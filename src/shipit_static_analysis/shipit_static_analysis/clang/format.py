@@ -6,8 +6,8 @@ import subprocess
 from cli_common.log import get_logger
 from shipit_static_analysis import Issue
 from shipit_static_analysis import stats
-from shipit_static_analysis.revisions import Revision
 from shipit_static_analysis.config import settings
+from shipit_static_analysis.revisions import Revision
 
 logger = get_logger(__name__)
 
