@@ -6,12 +6,15 @@ import shutil
 import sqlite3
 import tarfile
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from datetime import timedelta
 
 import hglib
 import requests
 
 from cli_common.command import run_check
 from cli_common.log import get_logger
+from cli_common.taskcluster import get_service
 from cli_common.utils import ThreadPoolExecutorResult
 from cli_common.utils import retry
 from shipit_code_coverage import grcov
@@ -42,6 +45,8 @@ class CodeCov(object):
 
         self.client_id = client_id
         self.access_token = access_token
+
+        self.index_service = get_service('index', client_id, access_token)
 
         self.githubUtils = GitHubUtils(cache_root, client_id, access_token)
 
@@ -164,7 +169,7 @@ class CodeCov(object):
                     # ActiveData is failing too often, so we need to ignore the error here.
                     logger.error('Failed to retrieve chunk to tests mapping from ActiveData.')
 
-        with tarfile.open('code-coverage-reports/chunk_mapping.tar.xz', 'w:xz') as tar:
+        with tarfile.open('chunk_mapping.tar.xz', 'w:xz') as tar:
             tar.add('chunk_mapping.sqlite')
 
     def go(self):
@@ -215,6 +220,17 @@ class CodeCov(object):
             report_generators.zero_coverage(self.artifactsHandler.get())
 
             self.generate_chunk_mapping()
+
+            # Index the task in the TaskCluster index.
+            self.index_service.insertTask(
+                'project.releng.services.project.{}.shipit_code_coverage.{}'.format(secrets[secrets.APP_CHANNEL], self.revision),
+                {
+                    'taskId': os.environ['TASK_ID'],
+                    'rank': 0,
+                    'data': {},
+                    'expires': (datetime.utcnow() + timedelta(180)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                }
+            )
 
             os.chdir('code-coverage-reports')
             self.githubUtils.update_codecoveragereports_repo()
