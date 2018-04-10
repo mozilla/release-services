@@ -17,10 +17,10 @@ SHIPIT_STAGING = []
 
 
 
-def comment(a):
-    line = '#' * len(HEROKU_COMMENT.format(channel=a))
+def echo_heroku_comment(channel):
+    line = '#' * len(HEROKU_COMMENT.format(channel=channel))
     click.echo(line)
-    click.echo(HEROKU_COMMENT.format(channel=a))
+    click.echo(HEROKU_COMMENT.format(channel=channel))
     click.echo(line)
 
 
@@ -222,31 +222,31 @@ def cmd(channel):
                         dns=project[channel]['dns'],
                     ))
 
-    comment('production')
+    echo_heroku_comment('production')
 
     for item in HEROKU_PRODUCTION:
         click.echo(HEROKU_TEMPLATE % item)
 
-    comment('testing')
+    echo_heroku_comment('testing')
     for item in HEROKU_TESTING:
         click.echo(HEROKU_TEMPLATE % item)
 
-    comment('staging')
+    echo_heroku_comment('staging')
 
     for item in HEROKU_STAGING:
         click.echo(HEROKU_TEMPLATE % item)
 
-    comment('shiptit production')
+    echo_heroku_comment('shiptit production')
 
     for item in SHIPIT_PRODUCTION:
         click.echo(HEROKU_TEMPLATE % item)
 
-    comment('shipit testing')
+    echo_heroku_comment('shipit testing')
 
     for item in SHIPIT_TESTING:
         click.echo(HEROKU_TEMPLATE % item)
 
-    comment('shipit staging')
+    echo_heroku_comment('shipit staging')
 
     for item in SHIPIT_STAGING:
         click.echo(HEROKU_TEMPLATE % item)
