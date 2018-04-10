@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import
-import pprint
 import click
 import please_cli.config
 
@@ -14,6 +13,16 @@ HEROKU_STAGING = []
 SHIPIT_PRODUCTION = []
 SHIPIT_TESTING = []
 SHIPIT_STAGING = []
+
+
+
+
+def comment(a):
+    line = '#' * len(HEROKU_COMMENT.format(channel=a))
+    click.echo(line)
+    click.echo(HEROKU_COMMENT.format(channel=a))
+    click.echo(line)
+
 
 HEADER = '''
 
@@ -62,13 +71,45 @@ resource "aws_route53_record" "%(name)s" {
 }
 '''
 S3_TEMPLATE = '''
-resource "aws_route53_record" "%(name)s" {
+############################
+## CloudFront CDN aliases ##
+############################
+
+variable "cloudfront_alias" {
+    default = [%(alias)s]
+}
+
+# Cloudfront Alias Targets
+# In the future, these may be sourced directly from terraform cloudfront resources
+# should we decide to manage cloudfronts in terraform
+variable "cloudfront_alias_domain" {
+    type = "map"
+    default = {%(alias_targets)s}
+}
+
+# A (Alias) records for cloudfront apps
+resource "aws_route53_record" "cloudfront-alias" {
     zone_id = "${aws_route53_zone.mozilla-releng.zone_id}"
-    name = "%(domain)s"
+    name = "${element(var.cloudfront_alias, count.index)}.mozilla-releng.net"
     type = "A"
+    count = "${length(var.cloudfront_alias)}"
+
     alias {
-        name = "%(dns)s"
+        name = "${var.cloudfront_alias_domain[element(var.cloudfront_alias, count.index)]}.cloudfront.net."
         zone_id = "Z2FDTNDATAQYW2"
+        evaluate_target_health = false
+    }
+}
+
+# A special root alias that points to www.mozilla-releng.net
+resource "aws_route53_record" "root-alias" {
+    zone_id = "${aws_route53_zone.mozilla-releng.zone_id}"
+    name = "mozilla-releng.net"
+    type = "A"
+
+    alias {
+        name = "www.mozilla-releng.net"
+        zone_id = "${aws_route53_zone.mozilla-releng.zone_id}"
         evaluate_target_health = false
     }
 }
@@ -130,37 +171,49 @@ def cmd(channel):
                     domain = domain.lstrip('http')
                     domain = domain.lstrip('://')
 
-                def heroku(a, b):
 
-                    if project_target == 'HEROKU' and a == channel and 'shipit-' not in project_id:
-                        b.append(HEROKU_TEMPLATE % dict(
-                            name=to_route53_name(project_id, channel),
-                            domain=domain,
-                            dns=project[channel]['dns'],
-                         ))
+                if project_target == 'HEROKU' and channel == 'production' and 'shipit-' not in project_id:
+                    HEROKU_PRODUCTION.append(dict(
+                        name=to_route53_name(project_id, channel),
+                        domain=domain,
+                        dns=project[channel]['dns'],
+                    ))
 
-                def shipit(a, b):
+                if project_target == 'HEROKU' and channel == 'staging' and 'shipit-' not in project_id:
+                    HEROKU_STAGING.append(dict(
+                        name=to_route53_name(project_id, channel),
+                        domain=domain,
+                        dns=project[channel]['dns'],
+                    ))
 
-                    if project_target == 'HEROKU' and a == channel and 'shipit-' in project_id:
-                        b.append(HEROKU_TEMPLATE % dict(
-                            name=to_route53_name(project_id, channel),
-                            domain=domain,
-                            dns=project[channel]['dns'],
-                         ))
+                if project_target == 'HEROKU' and channel == 'testing' and 'shipit-' not in project_id:
+                    HEROKU_TESTING.append(dict(
+                        name=to_route53_name(project_id, channel),
+                        domain=domain,
+                        dns=project[channel]['dns'],
+                    ))
 
-                def comment(a):
-                    line = '#' * len(HEROKU_COMMENT.format(channel=a))
-                    click.echo(line)
-                    click.echo(HEROKU_COMMENT.format(channel=a))
-                    click.echo(line)
+                if project_target == 'HEROKU' and channel == 'production' and 'shipit-' in project_id:
+                    SHIPIT_PRODUCTION.append(dict(
+                        name=to_route53_name(project_id, channel),
+                        domain=domain,
+                        dns=project[channel]['dns'],
+                    ))
 
-                heroku('production', HEROKU_PRODUCTION)
-                heroku('testing', HEROKU_TESTING)
-                heroku('staging', HEROKU_STAGING)
+                if project_target == 'HEROKU' and channel == 'staging' and 'shipit-' in project_id:
+                    SHIPIT_STAGING.append(dict(
+                        name=to_route53_name(project_id, channel),
+                        domain=domain,
+                        dns=project[channel]['dns'],
+                    ))
 
-                shipit('production', SHIPIT_PRODUCTION)
-                shipit('testing', SHIPIT_TESTING)
-                shipit('staging', SHIPIT_STAGING)
+                if project_target == 'HEROKU' and channel == 'testing' and 'shipit-' in project_id:
+                    SHIPIT_TESTING.append(dict(
+                        name=to_route53_name(project_id, channel),
+                        domain=domain,
+                        dns=project[channel]['dns'],
+                    ))
+
 
                 if project_target == 'S3':
                     click.echo(S3_TEMPLATE % dict(
@@ -170,22 +223,34 @@ def cmd(channel):
                     ))
 
     comment('production')
-    click.echo(pprint.pprint(HEROKU_PRODUCTION))
+
+    for item in HEROKU_PRODUCTION:
+        click.echo(HEROKU_TEMPLATE % item)
 
     comment('testing')
-    click.echo(pprint.pprint(HEROKU_TESTING))
+    for item in HEROKU_TESTING:
+        click.echo(HEROKU_TEMPLATE % item)
 
     comment('staging')
-    click.echo(pprint.pprint(HEROKU_STAGING))
 
-    comment('Shiptit production')
-    click.echo(pprint.pprint(SHIPIT_PRODUCTION))
+    for item in HEROKU_STAGING:
+        click.echo(HEROKU_TEMPLATE % item)
 
-    comment('Shipit testing')
-    click.echo(pprint.pprint(SHIPIT_TESTING))
+    comment('shiptit production')
 
-    comment('Shipit staging')
-    click.echo(pprint.pprint(SHIPIT_STAGING))
+    for item in SHIPIT_PRODUCTION:
+        click.echo(HEROKU_TEMPLATE % item)
+
+    comment('shipit testing')
+
+    for item in SHIPIT_TESTING:
+        click.echo(HEROKU_TEMPLATE % item)
+
+    comment('shipit staging')
+
+    for item in SHIPIT_STAGING:
+        click.echo(HEROKU_TEMPLATE % item)
+
 
 
 
