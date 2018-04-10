@@ -179,14 +179,14 @@ def cmd():
         projects = HEROKU_RELENG.get(channel, [])
         if projects:
             echo_heroku_comment(channel)
-            for project in projects:
+            for project in sorted(projects, key=lambda x: x['name']):
                 click.echo(HEROKU_TEMPLATE % project)
 
     for channel in channels:
         projects = HEROKU_SHIPIT.get(channel, [])
         if projects:
             echo_heroku_comment('shipit ' + channel)
-            for project in projects:
+            for project in sorted(projects, key=lambda x: x['name']):
                 click.echo(HEROKU_TEMPLATE % project)
 
 
