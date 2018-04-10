@@ -8,14 +8,6 @@ import please_cli.config
 
 HEROKU_COMMENT = '## Heroku {channel} app cnames ##'
 
-
-def echo_heroku_comment(channel):
-    line = '#' * len(HEROKU_COMMENT.format(channel=channel))
-    click.echo(line)
-    click.echo(HEROKU_COMMENT.format(channel=channel))
-    click.echo(line)
-
-
 HEADER = '''
 
 ######################################################################
@@ -30,27 +22,6 @@ HEADER = '''
 resource "aws_route53_zone" "mozilla-releng" {
     name = "mozilla-releng.net."
 }
-
-# A special root alias that points to www.mozilla-releng.net
-resource "aws_route53_record" "root-alias" {
-    zone_id = "${aws_route53_zone.mozilla-releng.zone_id}"
-    name = "mozilla-releng.net"
-    type = "A"
-
-    alias {
-        name = "www.mozilla-releng.net"
-        zone_id = "${aws_route53_zone.mozilla-releng.zone_id}"
-        evaluate_target_health = false
-    }
-}
-
-resource "aws_route53_record" "heroku-coalease-cname" {
-    zone_id = "${aws_route53_zone.mozilla-releng.zone_id}"
-    name = "coalesce.mozilla-releng.net"
-    type = "CNAME"
-    ttl = "180"
-    records = ["oita-54541.herokussl.com"]
-}
 '''
 
 HEROKU_TEMPLATE = '''
@@ -62,6 +33,7 @@ resource "aws_route53_record" "%(name)s" {
     records = ["%(dns)s"]
 }
 '''
+
 S3_TEMPLATE = '''
 ############################
 ## CloudFront CDN aliases ##
@@ -108,6 +80,13 @@ resource "aws_route53_record" "root-alias" {
 '''
 
 
+def echo_heroku_comment(channel):
+    line = '#' * len(HEROKU_COMMENT.format(channel=channel))
+    click.echo(line)
+    click.echo(HEROKU_COMMENT.format(channel=channel))
+    click.echo(line)
+
+
 def to_route53_name(project_id, channel):
     channel_short = ''
     if channel == 'production':
@@ -127,22 +106,10 @@ def to_route53_name(project_id, channel):
 
 
 @click.command()
-@click.option(
-    '--channel',
-    type=click.Choice(please_cli.config.CHANNELS),
-    default=None,
-    )
-def cmd(channel):
+def cmd():
     HEROKU_RELENG = dict()
     HEROKU_SHIPIT = dict()
     S3 = []
-
-    if channel is None:
-        channels = please_cli.config.CHANNELS
-    else:
-        channels = [channel]
-
-    click.echo(HEADER)
 
     for (project_id, project) in please_cli.config.PROJECTS_CONFIG.items():
 
@@ -150,7 +117,7 @@ def cmd(channel):
 
         if project_deploy_options:
 
-            for channel in sorted(channels):
+            for channel in project_deploy_options.keys():
 
                 if channel not in project_deploy_options or \
                        'url' not in project_deploy_options[channel] or \
@@ -203,6 +170,8 @@ def cmd(channel):
                     alias_target = alias_target.rstrip('.cloudfront.net.')
                     S3.append((alias, alias_target))
 
+
+    click.echo(HEADER)
 
     for channel in please_cli.config.CHANNELS:
         projects = HEROKU_RELENG.get(channel, [])
