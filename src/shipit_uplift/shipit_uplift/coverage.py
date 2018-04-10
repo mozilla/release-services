@@ -182,17 +182,11 @@ async def get_pushes_changesets(push_id, push_id_end):
     if push_id not in push_to_changeset_cache:
         await get_pushes(push_id)
 
-    # TODO: With Python 3.6+, we will be able to yield from an async function.
-    # So we don't need to create a changesets list but we can yield each changeset
-    # in the loop.
-    changesets = []
     for i in range(push_id, push_id_end):
         if i not in push_to_changeset_cache:
             continue
 
-        changesets.append(push_to_changeset_cache[i])
-
-    return changesets
+        yield push_to_changeset_cache[i]
 
 
 async def get_changeset_data(changeset):
@@ -216,7 +210,7 @@ async def get_coverage_build(changeset):
     push_id = changeset_data['push']
 
     # Find the first coverage build after the changeset.
-    for build_changeset in (await get_pushes_changesets(push_id, push_id + 8)):
+    async for build_changeset in get_pushes_changesets(push_id, push_id + 8):
         try:
             overall = await coverage_service.get_coverage(build_changeset)
             return (changeset_data, build_changeset, overall)
