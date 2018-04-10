@@ -6,15 +6,18 @@
 import itertools
 import os
 
+from libmozdata import bugzilla
+from libmozdata import versions
+from libmozdata.patchanalysis import bug_analysis
+from libmozdata.patchanalysis import parse_uplift_comment
+
+from cli_common.log import get_logger
+from shipit_bot_uplift.api import NotFound
+from shipit_bot_uplift.api import api_client
 from shipit_bot_uplift.helpers import compute_dict_hash
 from shipit_bot_uplift.mercurial import Repository
-from shipit_bot_uplift.api import api_client, NotFound
 from shipit_bot_uplift.merge import MergeTest
 from shipit_bot_uplift.report import Report
-from cli_common.log import get_logger
-from libmozdata import bugzilla, versions
-from libmozdata.patchanalysis import bug_analysis, parse_uplift_comment
-
 
 logger = get_logger(__name__)
 

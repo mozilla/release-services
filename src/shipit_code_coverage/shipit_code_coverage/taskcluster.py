@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
-from zipfile import BadZipFile, is_zipfile
+from zipfile import BadZipFile
+from zipfile import is_zipfile
+
 import requests
 
 from cli_common.utils import retry
@@ -82,6 +84,8 @@ def download_artifact(artifact_path, task_id, artifact_name):
 
     def perform_download():
         r = requests.get(queue_base + 'task/{}/artifacts/{}'.format(task_id, artifact_name), stream=True)
+
+        r.raise_for_status()
 
         with open(artifact_path, 'wb') as f:
             r.raw.decode_content = True

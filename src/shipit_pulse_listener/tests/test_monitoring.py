@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from shipit_pulse_listener.monitoring import Monitoring
 import pytest
+
+from shipit_pulse_listener.monitoring import Monitoring
 
 
 @pytest.mark.asyncio

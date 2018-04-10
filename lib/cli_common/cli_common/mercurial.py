@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import hglib
 
 MOZILLA_CENTRAL = 'https://hg.mozilla.org/mozilla-central'
@@ -5,9 +10,9 @@ MOZILLA_UNIFIED = 'https://hg.mozilla.org/mozilla-unified',
 
 
 def robust_checkout(repo_url, repo_dir, branch=b'tip', revision=None):
-    """
+    '''
     Helper to clone Mozilla Central
-    """
+    '''
     assert isinstance(branch, bytes)
 
     shared_dir = repo_dir + '-shared'

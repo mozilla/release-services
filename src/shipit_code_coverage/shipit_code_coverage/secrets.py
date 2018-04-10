@@ -4,7 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from cli_common.taskcluster import get_secrets
-
 from shipit_code_coverage import config
 
 
@@ -15,12 +14,14 @@ class Secrets(dict):
     GECKO_DEV_USER = 'GECKO_DEV_USER'
     GECKO_DEV_PWD = 'GECKO_DEV_PWD'
     EMAIL_ADDRESSES = 'EMAIL_ADDRESSES'
+    APP_CHANNEL = 'APP_CHANNEL'
 
     def load(self, taskcluster_secret, taskcluster_client_id, taskcluster_access_token):
         secrets = get_secrets(
             taskcluster_secret,
             config.PROJECT_NAME,
             required=(
+                Secrets.APP_CHANNEL,
                 Secrets.COVERALLS_TOKEN,
                 Secrets.CODECOV_TOKEN,
                 Secrets.CODECOV_ACCESS_TOKEN,

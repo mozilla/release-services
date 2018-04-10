@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-import mohawk
-import requests
 import json
 import os
+
+import mohawk
+import requests
+
 from cli_common.log import get_logger
 from shipit_bot_uplift.helpers import ShipitJSONEncoder
-
 
 logger = get_logger(__name__)
 

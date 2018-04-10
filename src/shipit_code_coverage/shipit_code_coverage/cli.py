@@ -3,14 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import click
-from cli_common.click import taskcluster_options
+
+from cli_common.cli import taskcluster_options
 from cli_common.log import init_logger
+from shipit_code_coverage import config
 from shipit_code_coverage.codecov import CodeCov
 from shipit_code_coverage.secrets import secrets
-from shipit_code_coverage import config
 
 
 @click.command()

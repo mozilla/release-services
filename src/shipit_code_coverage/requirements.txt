@@ -1,1 +1,1 @@
--e ./../../lib/cli_common[pulse,taskcluster,mercurial,sentry] #egg=mozilla-cli-common
+-e ./../../lib/cli_common[pulse,taskcluster,mercurial,log] #egg=mozilla-cli-common

@@ -3,28 +3,35 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import pickle
-
-from flask import abort, request, g, redirect
 import urllib.parse
-from sqlalchemy.orm.exc import NoResultFound
+
+from flask import abort
+from flask import g
+from flask import redirect
+from flask import request
 from sqlalchemy.exc import IntegrityError
-from cli_common import log
-from backend_common.auth0 import auth0, mozilla_accept_token
+from sqlalchemy.orm.exc import NoResultFound
+
+from backend_common.auth0 import auth0
+from backend_common.auth0 import mozilla_accept_token
 from backend_common.db import db
-
-from shipit_signoff.balrog import get_current_user_roles, make_signoffs_uri, get_balrog_signoff_state
-from shipit_signoff.db_services import get_step_by_uid, insert_new_signature, delete_existing_signature
-from shipit_signoff.models import SignoffStep, SigningStatus
-from shipit_signoff.policies import (
-    check_whether_policy_can_be_signed,
-    check_whether_policy_can_be_unsigned,
-    is_sign_off_policy_met,
-    UnauthorizedUserError, NoSignoffLeftError, NoSignaturePresentError,
-    NoChangingCompletedPolicyError)
-
+from cli_common import log
+from shipit_signoff.balrog import get_balrog_signoff_state
+from shipit_signoff.balrog import get_current_user_roles
+from shipit_signoff.balrog import make_signoffs_uri
+from shipit_signoff.db_services import delete_existing_signature
+from shipit_signoff.db_services import get_step_by_uid
+from shipit_signoff.db_services import insert_new_signature
+from shipit_signoff.models import SigningStatus
+from shipit_signoff.models import SignoffStep
+from shipit_signoff.policies import NoChangingCompletedPolicyError
+from shipit_signoff.policies import NoSignaturePresentError
+from shipit_signoff.policies import NoSignoffLeftError
+from shipit_signoff.policies import UnauthorizedUserError
+from shipit_signoff.policies import check_whether_policy_can_be_signed
+from shipit_signoff.policies import check_whether_policy_can_be_unsigned
+from shipit_signoff.policies import is_sign_off_policy_met
 
 logger = log.get_logger(__name__)
 

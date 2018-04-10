@@ -12,8 +12,8 @@ down_revision = '178ba7a1a742'
 
 TABLE = 'shipit_uplift_patch_status'
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # Declare pseudo table for alembic usage
 patch_status = sa.sql.table(TABLE,

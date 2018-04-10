@@ -3,16 +3,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import importlib
 import json
 import logging
 import threading
 import time
-import cli_common.log
+
 import boto
-from boto.sqs import message as sqs_message
+import boto.sqs
+
+import cli_common.log
 
 logger = cli_common.log.get_logger()
 
@@ -81,7 +81,7 @@ class AWS(object):
 
     def sqs_write(self, region_name, queue_name, body):
         queue = self.get_sqs_queue(region_name, queue_name)
-        m = sqs_message.Message(body=json.dumps(body))
+        m = boto.sqs.message.Message(body=json.dumps(body))
         queue.write(m)
 
     def sqs_listen(self, region_name, queue_name, read_args=None):

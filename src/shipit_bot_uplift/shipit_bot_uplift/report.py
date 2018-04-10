@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
+import itertools
+import operator
+
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
-import operator
-import itertools
-
 
 logger = get_logger(__name__)
 

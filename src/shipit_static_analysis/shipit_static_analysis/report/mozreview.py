@@ -4,16 +4,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
-from cli_common import log
-from rbtools.api.errors import APIError
+
 from rbtools.api.client import RBClient
-from shipit_static_analysis import CLANG_TIDY, CLANG_FORMAT, MOZLINT
-from shipit_static_analysis.revisions import MozReviewRevision
-from shipit_static_analysis.report.base import Reporter
-from shipit_static_analysis.lint import MozLintIssue
-from shipit_static_analysis.clang.tidy import ClangTidyIssue
-from shipit_static_analysis.clang.format import ClangFormatIssue
+from rbtools.api.errors import APIError
+
+from cli_common import log
+from shipit_static_analysis import CLANG_FORMAT
+from shipit_static_analysis import CLANG_TIDY
+from shipit_static_analysis import MOZLINT
 from shipit_static_analysis import stats
+from shipit_static_analysis.clang.format import ClangFormatIssue
+from shipit_static_analysis.clang.tidy import ClangTidyIssue
+from shipit_static_analysis.lint import MozLintIssue
+from shipit_static_analysis.report.base import Reporter
+from shipit_static_analysis.revisions import MozReviewRevision
 
 logger = log.get_logger(__name__)
 
@@ -56,7 +60,7 @@ class MozReviewReporter(Reporter):
 
         logger.info('Mozreview report enabled', url=url, username=username, analyzers=self.analyzers)
 
-    def publish(self, issues, revision, diff_url=None):  # noqa
+    def publish(self, issues, revision):
         '''
         Publish comments on mozreview
         '''
@@ -88,7 +92,7 @@ class MozReviewReporter(Reporter):
             # Build complex top comment
             comment = self.build_comment(
                 issues=issues,
-                diff_url=diff_url,
+                diff_url=revision.diff_url,
                 max_comments=MAX_COMMENTS
             )
 

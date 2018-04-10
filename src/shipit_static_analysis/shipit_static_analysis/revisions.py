@@ -3,14 +3,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from shipit_static_analysis.config import settings, REPO_REVIEW
-from shipit_static_analysis import stats
-from parsepatch.patch import Patch
-from cli_common import log
 import io
-import hglib
 import os
 import re
+
+import hglib
+from parsepatch.patch import Patch
+
+from cli_common import log
+from shipit_static_analysis import stats
+from shipit_static_analysis.config import REPO_REVIEW
+from shipit_static_analysis.config import settings
 
 logger = log.get_logger(__name__)
 
@@ -22,6 +25,7 @@ class Revision(object):
     files = []
     lines = {}
     patch = None
+    diff_url = None
 
     def analyze_patch(self):
         '''

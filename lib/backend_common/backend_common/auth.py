@@ -3,18 +3,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+import functools
+import time
 
-import backend_common.db
-import cli_common.log
 import flask
 import flask_login
-import functools
 import itsdangerous
 import sqlalchemy as sa
 import taskcluster
 import taskcluster.utils
-import time
+
+import backend_common.db
+import cli_common.log
 
 logger = cli_common.log.get_logger(__name__)
 

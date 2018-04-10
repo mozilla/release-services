@@ -18,12 +18,12 @@ let
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
-      fromRequirementsFile ./requirements-dev.txt python.packages
-      ++ [
-        redis
-      ];
+      (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../lib/backend_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./requirements-dev.txt python.packages) ++
+      [ redis ];
     propagatedBuildInputs =
-      fromRequirementsFile ./requirements.txt python.packages;
+      (fromRequirementsFile ./requirements.txt python.packages);
     postInstall = ''
       mkdir -p $out/bin
       cp ${src}/launch.sh $out/bin
@@ -34,7 +34,7 @@ let
       update = writeScript "update-${name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
-          -V 3.5 \
+          -V 3.6 \
           -E "postgresql" \
           -r requirements.txt \
           -r requirements-dev.txt

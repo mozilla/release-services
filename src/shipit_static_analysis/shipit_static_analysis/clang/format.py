@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-import os
 import difflib
-import tempfile
+import os
 import subprocess
+
 from cli_common.log import get_logger
-from shipit_static_analysis import Issue, stats
+from shipit_static_analysis import Issue
+from shipit_static_analysis import stats
+from shipit_static_analysis.config import settings
 from shipit_static_analysis.revisions import Revision
 
 logger = get_logger(__name__)
@@ -44,35 +46,32 @@ class ClangFormat(object):
     def __init__(self, repo_dir):
         assert os.path.isdir(repo_dir)
         self.repo_dir = repo_dir
+        self.binary = os.path.join(
+            os.environ['MOZBUILD_STATE_PATH'],
+            'clang-tools', 'clang', 'bin', 'clang-format',
+        )
+        assert os.path.exists(self.binary), \
+            'Missing clang-format in {}'.format(self.binary)
 
     @stats.api.timed('runtime.clang-format')
-    def run(self, extensions, revision):
+    def run(self, revision):
         '''
         Run clang-format on those modified files
         '''
-        assert isinstance(extensions, frozenset)
         assert isinstance(revision, Revision)
-        all_issues, patched = [], []
+        issues = []
         for path, lines in revision.lines.items():
 
             # Check file extension is supported
             _, ext = os.path.splitext(path)
-            if ext not in extensions:
+            if ext not in settings.cpp_extensions:
                 logger.info('Skip clang-format for non C/C++ file', path=path)
                 continue
 
             # Build issues for modified file
-            issues = self.run_clang_format(path, lines)
-            if not issues:
-                continue
+            issues += self.run_clang_format(path, lines)
 
-            # Build and apply patch
-            if self.apply_patch(path, issues):
-                patched.append(path)
-
-            all_issues += issues
-
-        return all_issues, patched
+        return issues
 
     def run_clang_format(self, filename, modified_lines):
         '''
@@ -84,8 +83,7 @@ class ClangFormat(object):
 
         # Build command line for a filename
         cmd = [
-            # Use system clang format
-            'clang-format',
+            self.binary,
 
             # Use style from directories
             '-style=file',
@@ -114,43 +112,6 @@ class ClangFormat(object):
 
         stats.report_issues('clang-format', issues)
         return issues
-
-    def apply_patch(self, filename, issues):
-        '''
-        Apply patch
-        '''
-        assert isinstance(issues, list)
-        full_path = os.path.join(self.repo_dir, filename)
-        assert os.path.exists(full_path), \
-            'Modified file not found {}'.format(full_path)
-
-        # Build patch with publishable issues
-        patch = '\n'.join([
-            issue.as_diff()
-            for issue in issues
-            if issue.is_publishable()
-        ])
-        if not patch:
-            return False
-
-        # Write patch in tmp
-        _, patch_path = tempfile.mkstemp(suffix='.diff')
-        with open(patch_path, 'w') as f:
-            f.write(patch)
-
-        # Apply patch on repository file
-        cmd = [
-            'patch',
-            '-i', patch_path,
-            full_path,
-        ]
-        exit = subprocess.run(cmd)
-        assert exit.returncode == 0
-
-        # Cleanup
-        os.unlink(patch_path)
-
-        return True
 
 
 class ClangFormatIssue(Issue):

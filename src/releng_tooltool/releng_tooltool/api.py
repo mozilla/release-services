@@ -3,24 +3,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import datetime
+import random
 import time
+
 import flask
 import flask_login
-import random
 import sqlalchemy as sa
 import werkzeug
 import werkzeug.exceptions
 
-import cli_common.log
 import backend_common.auth
-
-import releng_tooltool.models
+import cli_common.log
 import releng_tooltool.aws
+import releng_tooltool.models
 import releng_tooltool.utils
-
 
 logger = cli_common.log.get_logger(__name__)
 

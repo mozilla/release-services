@@ -3,15 +3,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import responses
 import itertools
-import httpretty
-import os.path
-import pytest
-import hglib
-import time
 import json
+import os.path
 import re
+import subprocess
+import time
+from distutils.spawn import find_executable
+
+import hglib
+import httpretty
+import pytest
+import responses
 
 MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
 
@@ -41,15 +44,16 @@ def mock_repository(tmpdir):
     Create a dummy mercurial repository
     '''
     # Init repo
-    repo_dir = str(tmpdir.mkdir('repo').realpath())
-    hglib.init(repo_dir)
+    repo_dir = tmpdir.mkdir('repo')
+    repo_path = str(repo_dir.realpath())
+    hglib.init(repo_path)
 
     # Init clean client
-    client = hglib.open(repo_dir)
+    client = hglib.open(repo_path)
     client.directory = repo_dir
 
     # Add test.txt file
-    path = os.path.join(repo_dir, 'test.txt')
+    path = os.path.join(repo_path, 'test.txt')
     with open(path, 'w') as f:
         f.write('Hello World\n')
 
@@ -326,3 +330,63 @@ def mock_revision():
     rev = Revision()
     rev.mercurial = 'a6ce14f59749c3388ffae2459327a323b6179ef0'
     return rev
+
+
+@pytest.fixture
+def mock_clang(tmpdir, monkeypatch):
+    '''
+    Mock clang binary setup by linking the system wide
+    clang tools into the expected repo sub directory
+    '''
+
+    # Create a temp mozbuild path
+    clang_dir = tmpdir.mkdir('clang-tools').mkdir('clang').mkdir('bin')
+    os.environ['MOZBUILD_STATE_PATH'] = str(tmpdir.realpath())
+
+    for tool in ('clang-tidy', 'clang-format'):
+        os.symlink(
+            find_executable(tool),
+            str(clang_dir.join(tool).realpath()),
+        )
+
+    # Monkeypatch the mach static analysis by using directly clang-tidy
+    real_check_output = subprocess.check_output
+
+    def mock_mach(command, *args, **kwargs):
+        if command[:4] == ['gecko-env', './mach', 'static-analysis', 'check']:
+            command = ['clang-tidy', ] + command[4:]
+            clang_output = real_check_output(command, *args, **kwargs).decode('utf-8')
+
+            # Prefix every line with timestamps to match mach style
+            return '\n'.join(
+                ' 0:{:02d}.{:02d} {}'.format(int(i / 100), i % 100, line)
+                for i, line in enumerate(clang_output.split('\n'))
+            ).encode('utf-8')
+
+        # Really run command through normal check_output
+        return real_check_output(command, *args, **kwargs)
+
+    monkeypatch.setattr(subprocess, 'check_output', mock_mach)
+
+
+@pytest.fixture
+def mock_workflow(tmpdir, mock_repository):
+    '''
+    Mock the full workflow, without cloning
+    '''
+    from shipit_static_analysis.workflow import Workflow
+
+    class MockWorkflow(Workflow):
+        def clone(self):
+            self.repo_dir = str(mock_repository.directory.realpath())
+            return hglib.open(self.repo_dir)
+
+    # Needed for Taskcluster build
+    if 'MOZCONFIG' not in os.environ:
+        os.environ['MOZCONFIG'] = str(tmpdir.join('mozconfig').realpath())
+
+    return MockWorkflow(
+        cache_root=str(tmpdir.realpath()),
+        reporters=[],
+        analyzers=['clang-tidy', 'clang-format', 'mozlint'],
+    )

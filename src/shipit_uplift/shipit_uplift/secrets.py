@@ -8,7 +8,6 @@ import os
 import cli_common.taskcluster
 import shipit_uplift.config
 
-
 secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
     shipit_uplift.config.PROJECT_NAME,

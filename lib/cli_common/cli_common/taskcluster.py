@@ -1,17 +1,16 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
-import click
 import copy
 import os
 import re
+
+import click
 import taskcluster
 
 from cli_common.log import get_logger
-
 
 logger = get_logger(__name__)
 
@@ -25,11 +24,11 @@ with open(taskcluster._client_importer.__file__) as f:
 
 
 def read_hosts():
-    """
+    '''
     Read /etc/hosts to get hostnames
     on a Nix env (used for taskclusterProxy)
     Only reads ipv4 entries to avoid duplicates
-    """
+    '''
     out = {}
     regex = re.compile('([\w:\-\.]+)')
     for line in open('/etc/hosts').readlines():
@@ -45,9 +44,9 @@ def read_hosts():
 
 
 def get_options(service_endpoint, client_id=None, access_token=None):
-    """
+    '''
     Build Taskcluster credentials options
-    """
+    '''
 
     if client_id is not None and access_token is not None:
         # Use provided credentials
@@ -80,14 +79,14 @@ def get_options(service_endpoint, client_id=None, access_token=None):
 
 
 def get_service(service_name, client_id=None, access_token=None):
-    """
+    '''
     Build a Taskcluster service instance from the environment
     Supports:
      * directly provided credentials
      * credentials from click
      * credentials from environment variables
      * taskclusterProxy
-    """
+    '''
     if service_name not in TASKCLUSTER_SERVICES:
         raise Exception('Service `{}` does not exists.'.format(service_name))
 
@@ -117,12 +116,12 @@ def get_secrets(name,
                 taskcluster_client_id=None,
                 taskcluster_access_token=None,
                 ):
-    """
+    '''
     Fetch a specific set of secrets by name
     - merge project specific secrets
     - check that all required secrets are present
     - extend existing set of secrets
-    """
+    '''
 
     secrets = dict()
     if existing:
@@ -151,9 +150,9 @@ def get_secrets(name,
 
 def get_hook_artifact(hook_group_id, hook_id, artifact_name, client_id=None,
                       access_token=None):
-    """
+    '''
     Load an artifact from the last execution of an hook
-    """
+    '''
 
     # Get last run from hook
     hooks = get_service('hooks', client_id, access_token)

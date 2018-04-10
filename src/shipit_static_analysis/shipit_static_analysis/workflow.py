@@ -3,20 +3,26 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
-import tempfile
-import hglib
+import itertools
 import os
+import subprocess
+import tempfile
 
-from cli_common.log import get_logger
+import hglib
+
 from cli_common.command import run_check
-from shipit_static_analysis.clang.tidy import ClangTidy
-from shipit_static_analysis.clang.format import ClangFormat
-from shipit_static_analysis.config import settings, REPO_CENTRAL, ARTIFACT_URL
-from shipit_static_analysis.lint import MozLint
-from shipit_static_analysis import CLANG_TIDY, CLANG_FORMAT, MOZLINT
+from cli_common.log import get_logger
+from shipit_static_analysis import CLANG_FORMAT
+from shipit_static_analysis import CLANG_TIDY
+from shipit_static_analysis import MOZLINT
 from shipit_static_analysis import stats
+from shipit_static_analysis.clang.format import ClangFormat
+from shipit_static_analysis.clang.tidy import ClangTidy
+from shipit_static_analysis.config import ARTIFACT_URL
+from shipit_static_analysis.config import REPO_CENTRAL
+from shipit_static_analysis.config import settings
+from shipit_static_analysis.lint import MozLint
+from shipit_static_analysis.utils import build_temp_file
 
 logger = get_logger(__name__)
 
@@ -88,6 +94,7 @@ class Workflow(object):
          * Run static analysis
          * Publish results
         '''
+        analyzers = []
 
         # Add log to find Taskcluster task in papertrail
         logger.info(
@@ -103,11 +110,6 @@ class Workflow(object):
         )
         stats.api.increment('analysis')
 
-        # Setup tools (clang & mozlint)
-        clang_tidy = CLANG_TIDY in self.analyzers and ClangTidy(self.repo_dir, settings.target)
-        clang_format = CLANG_FORMAT in self.analyzers and ClangFormat(self.repo_dir)
-        mozlint = MOZLINT in self.analyzers and MozLint(self.repo_dir)
-
         with stats.api.timer('runtime.mercurial'):
             # Force cleanup to reset tip
             # otherwise previous pull are there
@@ -121,77 +123,118 @@ class Workflow(object):
         with stats.api.timer('runtime.mach'):
             # Only run mach if revision has any C/C++ files
             if revision.has_clang_files:
-                    # mach configure with mozconfig
-                    logger.info('Mach configure...')
-                    run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
+                # mach configure with mozconfig
+                logger.info('Mach configure...')
+                run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
 
-                    # Build CompileDB backend
-                    logger.info('Mach build backend...')
-                    cmd = ['gecko-env', './mach', 'build-backend', '--backend=CompileDB']
-                    run_check(cmd, cwd=self.repo_dir)
+                # Setup static analysis binaries through mach
+                logger.info('Mach setup static-analysis')
+                cmd = ['gecko-env', './mach', 'static-analysis', 'install']
+                run_check(cmd, cwd=self.repo_dir)
+
+                # Use clang-tidy & clang-format
+                if CLANG_TIDY in self.analyzers:
+                    analyzers.append(ClangTidy)
+                else:
+                    logger.info('Skip clang-tidy')
+                if CLANG_FORMAT in self.analyzers:
+                    analyzers.append(ClangFormat)
+                else:
+                    logger.info('Skip clang-format')
 
             else:
-                logger.info('No clang files detected, skipping mach')
+                logger.info('No clang files detected, skipping mach and clang-*')
 
             # Setup python environment
             logger.info('Mach lint setup...')
             cmd = ['gecko-env', './mach', 'lint', '--list']
             run_check(cmd, cwd=self.repo_dir)
 
-        # Run static analysis through clang-tidy
-        issues = []
-        if clang_tidy and revision.has_clang_files:
-            logger.info('Run clang-tidy...')
-            issues += clang_tidy.run(settings.clang_checkers, revision)
-        else:
-            logger.info('Skip clang-tidy')
-
-        # Run clang-format on modified files
-        diff_url = None
-        if clang_format and revision.has_clang_files:
-            logger.info('Run clang-format...')
-            format_issues, patched = clang_format.run(settings.cpp_extensions, revision)
-            issues += format_issues
-            if patched:
-                # Get current diff on these files
-                logger.info('Found clang-format issues', files=patched)
-                files = list(map(lambda x: os.path.join(self.repo_dir, x).encode('utf-8'), patched))
-                diff = self.hg.diff(files)
-                assert diff is not None and diff != b'', \
-                    'Empty diff'
-
-                # Write diff in results directory
-                diff_path = os.path.join(self.taskcluster_results_dir, revision.build_diff_name())
-                with open(diff_path, 'w') as f:
-                    length = f.write(diff.decode('utf-8'))
-                    logger.info('Diff from clang-format dumped', path=diff_path, length=length)  # noqa
-
-                # Build diff download url
-                diff_url = ARTIFACT_URL.format(
-                    task_id=self.taskcluster_task_id,
-                    run_id=self.taskcluster_run_id,
-                    diff_name=revision.build_diff_name(),
-                )
-                logger.info('Diff available online', url=diff_url)
+            # Always use mozlint
+            if MOZLINT in self.analyzers:
+                analyzers.append(MozLint)
             else:
-                logger.info('No clang-format issues')
+                logger.info('Skip mozlint')
 
-        else:
-            logger.info('Skip clang-format')
+        if not analyzers:
+            logger.error('No analyzers to use on revision')
+            return
 
-        # Run linter
-        if mozlint:
-            logger.info('Run mozlint...')
-            issues += mozlint.run(revision)
-        else:
-            logger.info('Skip mozlint')
+        issues = []
+        for analyzer_class in analyzers:
+            # Build analyzer
+            logger.info('Run {}'.format(analyzer_class.__name__))
+            analyzer = analyzer_class(self.repo_dir)
+
+            # Run analyzer on version and store generated issues
+            issues += analyzer.run(revision)
 
         logger.info('Detected {} issue(s)'.format(len(issues)))
         if not issues:
             logger.info('No issues, stopping there.')
             return
 
+        # Build a potential improvement patch
+        self.build_improvement_patch(revision, issues)
+
         # Publish reports about these issues
         with stats.api.timer('runtime.reports'):
             for reporter in self.reporters.values():
-                reporter.publish(issues, revision, diff_url)
+                reporter.publish(issues, revision)
+
+    def build_improvement_patch(self, revision, issues):
+        '''
+        Build a Diff to improve this revision (styling from clang-format)
+        '''
+        assert isinstance(issues, list)
+
+        # Only use publishable issues
+        # and sort them by filename
+        issues = sorted(
+            filter(lambda i: i.is_publishable(), issues),
+            key=lambda i: i.path,
+        )
+
+        # Apply a patch on each modified file
+        for filename, file_issues in itertools.groupby(issues, lambda i: i.path):
+            full_path = os.path.join(self.repo_dir, filename)
+            assert os.path.exists(full_path), \
+                'Modified file not found {}'.format(full_path)
+
+            # Build raw "ed" patch
+            patch = '\n'.join(issue.as_diff() for issue in file_issues)
+            if not patch:
+                continue
+
+            # Apply patch on repository file
+            with build_temp_file(patch, '.diff') as patch_path:
+                cmd = [
+                    'patch',
+                    '-i', patch_path,
+                    full_path,
+                ]
+                cmd_output = subprocess.run(cmd)
+                assert cmd_output.returncode == 0, \
+                    'Generated patch {} application failed on {}'.format(patch_path, full_path)
+
+        # Get clean Mercurial diff on modified files
+        files = list(map(lambda x: os.path.join(self.repo_dir, x).encode('utf-8'), revision.files))
+        diff = self.hg.diff(files)
+        if diff is None or diff == b'':
+            logger.info('No improvement patch')
+            return
+
+        # Write diff in results directory
+        diff_name = revision.build_diff_name()
+        diff_path = os.path.join(self.taskcluster_results_dir, diff_name)
+        with open(diff_path, 'w') as f:
+            length = f.write(diff.decode('utf-8'))
+            logger.info('Improvement diff dumped', path=diff_path, length=length)
+
+        # Build diff download url
+        revision.diff_url = ARTIFACT_URL.format(
+            task_id=self.taskcluster_task_id,
+            run_id=self.taskcluster_run_id,
+            diff_name=diff_name,
+        )
+        logger.info('Diff available online', url=revision.diff_url)

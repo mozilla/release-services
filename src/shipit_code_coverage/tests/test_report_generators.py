@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from shipit_code_coverage import report_generators
 import json
 import os
+
+from shipit_code_coverage import report_generators
 
 
 def test_zero_coverage(tmpdir,

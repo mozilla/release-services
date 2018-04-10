@@ -8,12 +8,12 @@ import os
 import subprocess
 import tempfile
 
+import awscli.clidriver
+import cli_common.cli
+import cli_common.command
+import cli_common.taskcluster
 import click
 import click_spinner
-
-import cli_common.taskcluster
-import cli_common.command
-import cli_common.click
 import please_cli.config
 import please_cli.utils
 
@@ -21,7 +21,7 @@ import please_cli.utils
 @click.command(
     short_help="Build a project.",
 )
-@cli_common.click.taskcluster_options
+@cli_common.cli.taskcluster_options
 @click.argument(
     'project',
     required=True,
@@ -184,7 +184,7 @@ def cmd(project,
 @click.command(
     short_help="Build the docker image of a project.",
 )
-@cli_common.click.taskcluster_options
+@cli_common.cli.taskcluster_options
 @click.argument(
     'project',
     required=True,

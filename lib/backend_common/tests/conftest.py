@@ -3,20 +3,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
-'''Configure a mock application to run queries against
-'''
+import os.path
 
 import flask
 import flask_login
-import os.path
 import pytest
 
 
 @pytest.fixture(scope='session')
 def app():
-    '''
+    '''Configure a mock application to run queries against
+
     Build an app with an authenticated dummy api
     '''
     import backend_common

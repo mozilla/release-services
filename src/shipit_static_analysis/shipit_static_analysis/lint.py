@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-from shipit_static_analysis import Issue, stats
-from shipit_static_analysis.revisions import Revision
-from cli_common.command import run
-from cli_common.log import get_logger
 import itertools
 import json
 import os
+
+from cli_common.command import run
+from cli_common.log import get_logger
+from shipit_static_analysis import Issue
+from shipit_static_analysis import stats
+from shipit_static_analysis.revisions import Revision
 
 logger = get_logger(__name__)
 
@@ -90,6 +92,11 @@ class MozLintIssue(Issue):
             publishable=self.is_publishable() and 'yes' or 'no',
             disabled_rule=self.is_disabled_rule() and 'yes' or 'no',
         )
+
+    def as_diff():
+        '''
+        No diff available
+        '''
 
 
 class MozLint(object):

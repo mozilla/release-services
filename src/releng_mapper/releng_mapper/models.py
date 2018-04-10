@@ -3,12 +3,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from sqlalchemy import Column
+from sqlalchemy import ForeignKey
+from sqlalchemy import Index
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import orm
+
 from backend_common.db import db
-from .config import APP_NAME
-from sqlalchemy import orm, Column, ForeignKey, Index, Integer, String
 from cli_common import log
 
+from .config import APP_NAME
 
 logger = log.get_logger(__name__)
 

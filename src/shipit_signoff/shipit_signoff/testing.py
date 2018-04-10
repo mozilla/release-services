@@ -6,7 +6,8 @@
 import json
 import os.path
 
-from flask import request, jsonify
+from flask import jsonify
+from flask import request
 
 
 def fake_auth():

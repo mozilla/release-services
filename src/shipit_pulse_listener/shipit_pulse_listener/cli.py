@@ -3,14 +3,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import click
-from cli_common.click import taskcluster_options
+
+from cli_common.cli import taskcluster_options
 from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
+from shipit_pulse_listener import config
+from shipit_pulse_listener import task_monitoring
 from shipit_pulse_listener.listener import PulseListener
-from shipit_pulse_listener import config, task_monitoring
 
 
 @click.command()

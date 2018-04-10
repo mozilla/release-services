@@ -3,11 +3,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
-import cli_common.log
 import flask_cors
 
+import cli_common.log
 
 logger = cli_common.log.get_logger(__name__)
 cors = flask_cors.CORS()

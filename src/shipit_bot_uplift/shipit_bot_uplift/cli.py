@@ -3,15 +3,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import click
-from shipit_bot_uplift.sync import Bot
-from shipit_bot_uplift import config
-from shipit_bot_uplift.api import api_client
+
+from cli_common.cli import taskcluster_options
 from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
-from cli_common.click import taskcluster_options
+from shipit_bot_uplift import config
+from shipit_bot_uplift.api import api_client
+from shipit_bot_uplift.sync import Bot
 
 
 @click.command()

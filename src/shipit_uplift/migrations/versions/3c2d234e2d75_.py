@@ -10,8 +10,9 @@ Create Date: 2017-04-21 17:04:02.772137
 revision = '3c2d234e2d75'
 down_revision = 'e90a66648db6'
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
+
 
 def upgrade():
     op.drop_column('shipit_uplift_analysis', 'parameters')

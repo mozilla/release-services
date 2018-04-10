@@ -5,6 +5,7 @@
 from __future__ import absolute_import
 
 import os
+
 import click
 
 CWD_DIR = os.path.abspath(os.getcwd())
@@ -32,8 +33,6 @@ if ROOT_DIR is None:
 
 CACHE_URLS = [
     'https://cache.mozilla-releng.net',
-    #'https://cache-testing.mozilla-releng.net',
-    'http://releng-cache-testing.s3.amazonaws.com',
 ]
 
 SRC_DIR = os.path.join(ROOT_DIR, 'src')

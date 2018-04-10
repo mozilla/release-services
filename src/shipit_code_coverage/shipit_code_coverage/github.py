@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
+
 import requests
 
 from cli_common.command import run_check
 from cli_common.taskcluster import get_service
 from cli_common.utils import retry
-
 from shipit_code_coverage.secrets import secrets
 
 

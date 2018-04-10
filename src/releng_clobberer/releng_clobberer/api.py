@@ -3,21 +3,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import collections
 import re
 import time
 
 import taskcluster
-from sqlalchemy import and_, desc, func, not_, or_
+from flask import current_app
+from flask import request
+from flask_login import current_user
+from sqlalchemy import and_
+from sqlalchemy import desc
+from sqlalchemy import func
+from sqlalchemy import not_
+from sqlalchemy import or_
 
 import cli_common.log
 from backend_common.auth import auth
-from flask import current_app, request
-from flask_login import current_user
-
-from .models import Build, ClobberTime
+from releng_clobberer.models import Build
+from releng_clobberer.models import ClobberTime
 
 logger = cli_common.log.get_logger()
 

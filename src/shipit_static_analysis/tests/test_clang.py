@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import fnmatch
-import json
 
 BAD_CPP_SRC = '''#include <demo>
 int \tmain(void){
@@ -64,26 +62,25 @@ def test_expanded_macros(mock_stats):
     assert issue.is_expanded_macro() is False
 
 
-def test_clang_format(tmpdir, mock_stats, mock_revision):
+def test_clang_format(mock_repository, mock_stats, mock_clang, mock_revision, mock_workflow):
     '''
     Test clang-format runner
     '''
     from shipit_static_analysis.clang.format import ClangFormat, ClangFormatIssue
 
     # Write badly formatted c file
-    bad_file = tmpdir.join('bad.cpp')
+    bad_file = mock_repository.directory.join('bad.cpp')
     bad_file.write(BAD_CPP_SRC)
 
     # Get formatting issues
-    cf = ClangFormat(str(tmpdir.realpath()))
+    cf = ClangFormat(str(mock_repository.directory.realpath()))
     mock_revision.files = ['bad.cpp', ]
     mock_revision.lines = {
         'bad.cpp': [1, 2, 3],
     }
-    issues, patched = cf.run(frozenset(['.cpp', ]), mock_revision)
+    issues = cf.run(mock_revision)
 
     # Small file, only one issue which group changes
-    assert patched == ['bad.cpp', ]
     assert isinstance(issues, list)
     assert len(issues) == 1
     issue = issues[0]
@@ -96,6 +93,7 @@ def test_clang_format(tmpdir, mock_stats, mock_revision):
     assert issue.as_diff() == BAD_CPP_DIFF
 
     # At the end of the process, original file is patched
+    mock_workflow.build_improvement_patch(mock_revision, issues)
     assert bad_file.read() == BAD_CPP_VALID
 
     # Test stats
@@ -113,16 +111,19 @@ def test_clang_format(tmpdir, mock_stats, mock_revision):
     assert metrics[0][1] > 0
 
 
-def test_clang_tidy(tmpdir, mock_config, mock_stats, mock_revision):
+def test_clang_tidy(mock_repository, mock_config, mock_clang, mock_stats, mock_revision):
     '''
     Test clang-tidy runner
     '''
     from shipit_static_analysis.clang.tidy import ClangTidy, ClangTidyIssue
 
     # Init clang tidy runner
-    repo_dir = tmpdir.mkdir('repo')
-    build_dir = tmpdir.mkdir('build')
-    ct = ClangTidy(str(repo_dir), str(build_dir))
+    repo_dir = mock_repository.directory
+    build_dir = repo_dir.mkdir('../build')
+    ct = ClangTidy(
+        str(repo_dir.realpath()),
+        str(build_dir.realpath())
+    )
 
     # Write dummy 3rd party file
     third_party = repo_dir.join(mock_config.third_party)
@@ -130,29 +131,14 @@ def test_clang_tidy(tmpdir, mock_config, mock_stats, mock_revision):
 
     # Write badly formatted c file
     bad_file = repo_dir.join('bad.cpp')
-    bad_file_output = repo_dir.join('bad.bin')
     bad_file.write(BAD_CPP_TIDY)
-
-    # Create dummy json commands file
-    commands = build_dir.join('compile_commands.json')
-    commands.write(json.dumps([
-        {
-            'command': 'g++ -o {} {}'.format(bad_file_output, bad_file),
-            'directory': str(repo_dir),
-            'file': str(bad_file),
-        }
-    ]))
 
     # Get issues found by clang-tidy
     mock_revision.files = ['bad.cpp', ]
     mock_revision.lines = {
         'bad.cpp': range(len(BAD_CPP_TIDY.split('\n'))),
     }
-    checks = [{
-        'name': 'modernize-use-nullptr',
-        'publish': True,
-    }]
-    issues = ct.run(checks, mock_revision)
+    issues = ct.run(mock_revision)
     assert len(issues) == 2
     assert isinstance(issues[0], ClangTidyIssue)
     assert issues[0].check == 'modernize-use-nullptr'
@@ -169,14 +155,14 @@ def test_clang_tidy(tmpdir, mock_config, mock_stats, mock_revision):
 
     metrics = mock_stats.get_metrics('issues.clang-tidy.publishable')
     assert len(metrics) == 1
-    assert metrics[0][1] == 0
+    assert metrics[0][1] == 2
 
     metrics = mock_stats.get_metrics('runtime.clang-tidy.avg')
     assert len(metrics) == 1
     assert metrics[0][1] > 0
 
 
-def test_clang_tidy_checks():
+def test_clang_tidy_checks(mock_repository, mock_clang):
     '''
     Test that all our clang-tidy checks actually exist
     '''
@@ -184,14 +170,17 @@ def test_clang_tidy_checks():
     from shipit_static_analysis.config import CONFIG_URL, settings
 
     # Get the set of all available checks that the local clang-tidy offers
-    available_checks = ClangTidy.list_available_checks()
+    repo_dir = mock_repository.directory
+    clang_tidy = ClangTidy(
+        str(repo_dir.realpath()),
+        validate_checks=False,
+    )
 
     # Verify that Firefox's clang-tidy configuration actually specifies checks
     assert len(settings.clang_checkers) > 0, \
         'Firefox clang-tidy configuration {} should specify > 0 clang_checkers'.format(CONFIG_URL)
 
     # Verify that the specified clang-tidy checks actually exist
-    for check in settings.clang_checkers:
-        name = check['name']
-        assert len(fnmatch.filter(available_checks, name)) > 0, \
-            'Specified clang-tidy check "{}" not found in available checks:\n\t{}'.format(name, '\n\t'.join(available_checks))
+    missing = clang_tidy.list_missing_checks()
+    assert len(missing) == 0, \
+        'Missing clang-tidy checks: {}'.format(', '.join(missing))

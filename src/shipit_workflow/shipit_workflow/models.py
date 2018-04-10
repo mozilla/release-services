@@ -3,26 +3,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
-import datetime
-import sqlalchemy as sa
-import sqlalchemy.orm
 import copy
+import datetime
 import json
 from functools import lru_cache
+
+import sqlalchemy as sa
+import sqlalchemy.orm
 
 from backend_common.db import db
 from cli_common.log import get_logger
 from shipit_workflow.release import bump_version
-from shipit_workflow.tasks import (
-    find_decision_task_id,
-    fetch_actions_json,
-    find_action,
-    extract_our_flavors,
-    generate_action_task,
-    render_action_task
-)
+from shipit_workflow.tasks import extract_our_flavors
+from shipit_workflow.tasks import fetch_actions_json
+from shipit_workflow.tasks import find_action
+from shipit_workflow.tasks import find_decision_task_id
+from shipit_workflow.tasks import generate_action_task
+from shipit_workflow.tasks import render_action_task
 
 log = get_logger(__name__)
 

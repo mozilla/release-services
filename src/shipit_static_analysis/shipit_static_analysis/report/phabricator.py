@@ -3,12 +3,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from urllib.parse import urlparse
+
+import requests
+
 from cli_common import log
-from shipit_static_analysis import Issue, stats
+from shipit_static_analysis import Issue
+from shipit_static_analysis import stats
 from shipit_static_analysis.report.base import Reporter
 from shipit_static_analysis.revisions import PhabricatorRevision
-from urllib.parse import urlparse
-import requests
 
 logger = log.get_logger(__name__)
 
@@ -82,7 +85,7 @@ class PhabricatorReporter(Reporter):
             diffID=diff_id,
         )
 
-    def publish(self, issues, revision, diff_url=None):
+    def publish(self, issues, revision):
         '''
         Publish inline comments for each issues
         '''
@@ -113,7 +116,7 @@ class PhabricatorReporter(Reporter):
                 revision,
                 self.build_comment(
                     issues=issues,
-                    diff_url=diff_url,
+                    diff_url=revision.diff_url,
                 ),
             )
             stats.api.increment('report.phabricator.issues', len(inlines))

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-import hglib
 import os
 import re
-from cli_common.log import get_logger
 
+import hglib
+
+from cli_common.log import get_logger
 
 logger = get_logger(__name__)
 REGEX_TIP = re.compile(r'(\w+)\s*(tip)? (\w+)')

@@ -3,8 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import json
 import os
 import random
@@ -12,10 +10,9 @@ import string
 from datetime import datetime
 from typing import List
 
-from requests import put
-
 import mohawk
 from flask import current_app
+from requests import put
 
 '''
 Common constants and utilities for releng_notification_* services

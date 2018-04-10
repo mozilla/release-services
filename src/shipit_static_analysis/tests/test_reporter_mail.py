@@ -3,9 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import responses
-import pytest
 import json
+
+import pytest
+import responses
 
 
 @responses.activate
@@ -90,10 +91,10 @@ def test_mail(mock_issues, mock_phabricator):
 
     # Publish for mozreview
     mrev = MozReviewRevision('abcdef:12345:1')
-    r.publish(mock_issues, mrev, diff_url=None)
+    r.publish(mock_issues, mrev)
 
     prev = PhabricatorRevision('42:PHID-DIFF-test', phab)
-    r.publish(mock_issues, prev, diff_url=None)
+    r.publish(mock_issues, prev)
 
     # Check stats
     mock_cls = mock_issues[0].__class__

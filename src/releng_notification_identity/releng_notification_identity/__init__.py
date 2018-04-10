@@ -3,11 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import os
-import backend_common
+
 from backend_common.notifications import CHANNELS, URGENCY_LEVELS
+import backend_common
 import releng_notification_identity.config
 import releng_notification_identity.models  # noqa
 

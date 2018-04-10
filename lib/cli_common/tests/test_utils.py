@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from cli_common import utils
 import time
+
 import pytest
+
+import cli_common.utils
 
 
 def do_raise():
@@ -10,10 +12,10 @@ def do_raise():
 
 
 def test_retry():
-    assert utils.retry(lambda: True) is True
-    assert utils.retry(lambda: False) is False
+    assert cli_common.utils.retry(lambda: True) is True
+    assert cli_common.utils.retry(lambda: False) is False
     with pytest.raises(Exception):
-        utils.retry(do_raise, wait_between_retries=0)
+        cli_common.utils.retry(do_raise, wait_between_retries=0)
 
     i = {}
 
@@ -24,24 +26,24 @@ def test_retry():
             i['tried'] = True
             raise Exception('Please try again.')
 
-    assert utils.retry(try_twice, wait_between_retries=0) is None
+    assert cli_common.utils.retry(try_twice, wait_between_retries=0) is None
 
 
 def test_threadpoolexecutorresult():
-    with utils.ThreadPoolExecutorResult() as executor:
+    with cli_common.utils.ThreadPoolExecutorResult() as executor:
         executor.submit(lambda: True)
         executor.submit(lambda: False)
 
     # Test that ThreadPoolExecutorResult throws an exception when one of the tasks fails.
     with pytest.raises(Exception):
-        with utils.ThreadPoolExecutorResult() as executor:
+        with cli_common.utils.ThreadPoolExecutorResult() as executor:
             executor.submit(lambda: True)
             executor.submit(do_raise)
 
     # Tast that ThreadPoolExecutorResult's context returns as soon as a task fails.
     with pytest.raises(Exception):
         now = time.time()
-        with utils.ThreadPoolExecutorResult() as executor:
+        with cli_common.utils.ThreadPoolExecutorResult() as executor:
             executor.submit(lambda: time.sleep(5))
             executor.submit(do_raise)
 
@@ -49,7 +51,7 @@ def test_threadpoolexecutorresult():
 
     # Test that futures that were not scheduled yet are cancelled.
     with pytest.raises(Exception):
-        with utils.ThreadPoolExecutorResult(max_workers=1) as executor:
+        with cli_common.utils.ThreadPoolExecutorResult(max_workers=1) as executor:
             f1 = executor.submit(lambda: time.sleep(1))
             f2 = executor.submit(do_raise)
             executor.submit(lambda: time.sleep(1))

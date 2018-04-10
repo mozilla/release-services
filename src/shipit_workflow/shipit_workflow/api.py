@@ -2,17 +2,22 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from __future__ import absolute_import
 
+import datetime
+import functools
 import os
+
 import flask
 import taskcluster
-import functools
-from shipit_workflow.models import Release, Phase
-from cli_common.log import get_logger
-from backend_common.auth0 import mozilla_accept_token, has_scopes, AuthError, requires_auth
 from sqlalchemy.orm.exc import NoResultFound
-import datetime
+
+from backend_common.auth0 import AuthError
+from backend_common.auth0 import has_scopes
+from backend_common.auth0 import mozilla_accept_token
+from backend_common.auth0 import requires_auth
+from cli_common.log import get_logger
+from shipit_workflow.models import Phase
+from shipit_workflow.models import Release
 
 log = get_logger(__name__)
 

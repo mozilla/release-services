@@ -3,12 +3,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import cli_common.log
-
-from shipit_pipeline.pipeline import get_runnable_steps, get_running_steps, refresh_pipeline_steps, start_steps,\
-    PipelineStep
+from shipit_pipeline.pipeline import PipelineStep
+from shipit_pipeline.pipeline import get_runnable_steps
+from shipit_pipeline.pipeline import get_running_steps
+from shipit_pipeline.pipeline import refresh_pipeline_steps
+from shipit_pipeline.pipeline import start_steps
 
 log = cli_common.log.get_logger(__name__)
 

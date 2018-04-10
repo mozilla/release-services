@@ -10,15 +10,14 @@ Create Date: 2016-11-02 15:21:54.736383
 revision = '3a54bd40145f'
 down_revision = None
 
-from alembic import op
-import sqlalchemy as sa
-import os
 import json
-
-from sqlalchemy.schema import CreateTable
-from sqlalchemy.ext.compiler import compiles
+import os
 import re
 
+import sqlalchemy as sa
+from alembic import op
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.schema import CreateTable
 
 HERE = os.path.dirname(__file__)
 
