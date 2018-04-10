@@ -172,42 +172,42 @@ def cmd(channel):
                     domain = domain.lstrip('://')
 
 
-                if project_target == 'HEROKU' and channel == 'production' and 'shipit-' not in project_id:
+                if project_target == 'HEROKU' and channel == 'production' and project_id.startswith('releng-'):
                     HEROKU_PRODUCTION.append(dict(
                         name=to_route53_name(project_id, channel),
                         domain=domain,
                         dns=project[channel]['dns'],
                     ))
 
-                if project_target == 'HEROKU' and channel == 'staging' and 'shipit-' not in project_id:
+                if project_target == 'HEROKU' and channel == 'staging' and project_id.startswith('releng-'):
                     HEROKU_STAGING.append(dict(
                         name=to_route53_name(project_id, channel),
                         domain=domain,
                         dns=project[channel]['dns'],
                     ))
 
-                if project_target == 'HEROKU' and channel == 'testing' and 'shipit-' not in project_id:
+                if project_target == 'HEROKU' and channel == 'testing' and project_id.startswith('releng-'):
                     HEROKU_TESTING.append(dict(
                         name=to_route53_name(project_id, channel),
                         domain=domain,
                         dns=project[channel]['dns'],
                     ))
 
-                if project_target == 'HEROKU' and channel == 'production' and 'shipit-' in project_id:
+                if project_target == 'HEROKU' and channel == 'production' and project_id.startswith('shipit-'):
                     SHIPIT_PRODUCTION.append(dict(
                         name=to_route53_name(project_id, channel),
                         domain=domain,
                         dns=project[channel]['dns'],
                     ))
 
-                if project_target == 'HEROKU' and channel == 'staging' and 'shipit-' in project_id:
+                if project_target == 'HEROKU' and channel == 'staging' and project_id.startswith('shipit-'):
                     SHIPIT_STAGING.append(dict(
                         name=to_route53_name(project_id, channel),
                         domain=domain,
                         dns=project[channel]['dns'],
                     ))
 
-                if project_target == 'HEROKU' and channel == 'testing' and 'shipit-' in project_id:
+                if project_target == 'HEROKU' and channel == 'testing' and project_id.startswith('shipit-'):
                     SHIPIT_TESTING.append(dict(
                         name=to_route53_name(project_id, channel),
                         domain=domain,
