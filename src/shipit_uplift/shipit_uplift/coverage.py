@@ -97,6 +97,9 @@ class CodecovCoverage(Coverage):
 
             result = await r.json()
 
+        if result['commit']['state'] == 'error':
+            raise CoverageException('{} is in an errored state.'.format(changeset))
+
         return {
           'cur': result['commit']['totals']['c'],
           'prev': result['commit']['parent_totals']['c'] if result['commit']['parent_totals'] else '?',
@@ -115,6 +118,9 @@ class CodecovCoverage(Coverage):
                     return None
 
                 raise CoverageException('Can\'t load codecov.io report for %s@%s (response: %s)' % (filename, changeset, r.text))
+
+        if data['commit']['state'] == 'error':
+            raise CoverageException('{} is in an errored state.'.format(changeset))
 
         return dict([(int(l), v) for l, v in data['commit']['report']['files'][filename]['l'].items()])
 
