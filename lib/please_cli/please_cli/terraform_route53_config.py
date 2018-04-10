@@ -7,14 +7,9 @@ import click
 import please_cli.config
 
 HEROKU_COMMENT = '##Heroku {channel} app cnames##'
-HEROKU_PRODUCTION = []
-HEROKU_TESTING = []
-HEROKU_STAGING = []
-SHIPIT_PRODUCTION = []
-SHIPIT_TESTING = []
-SHIPIT_STAGING = []
-
-
+HEROKU_RELENG = dict()
+HEROKU_SHIPIT = dict()
+S3 = []
 
 
 def echo_heroku_comment(channel):
@@ -172,85 +167,36 @@ def cmd(channel):
                     domain = domain.lstrip('://')
 
 
-                if project_target == 'HEROKU' and channel == 'production' and project_id.startswith('releng-'):
-                    HEROKU_PRODUCTION.append(dict(
-                        name=to_route53_name(project_id, channel),
-                        domain=domain,
-                        dns=project[channel]['dns'],
-                    ))
-
-                if project_target == 'HEROKU' and channel == 'staging' and project_id.startswith('releng-'):
-                    HEROKU_STAGING.append(dict(
-                        name=to_route53_name(project_id, channel),
-                        domain=domain,
-                        dns=project[channel]['dns'],
-                    ))
-
-                if project_target == 'HEROKU' and channel == 'testing' and project_id.startswith('releng-'):
-                    HEROKU_TESTING.append(dict(
-                        name=to_route53_name(project_id, channel),
-                        domain=domain,
-                        dns=project[channel]['dns'],
-                    ))
-
-                if project_target == 'HEROKU' and channel == 'production' and project_id.startswith('shipit-'):
-                    SHIPIT_PRODUCTION.append(dict(
-                        name=to_route53_name(project_id, channel),
-                        domain=domain,
-                        dns=project[channel]['dns'],
-                    ))
-
-                if project_target == 'HEROKU' and channel == 'staging' and project_id.startswith('shipit-'):
-                    SHIPIT_STAGING.append(dict(
-                        name=to_route53_name(project_id, channel),
-                        domain=domain,
-                        dns=project[channel]['dns'],
-                    ))
-
-                if project_target == 'HEROKU' and channel == 'testing' and project_id.startswith('shipit-'):
-                    SHIPIT_TESTING.append(dict(
-                        name=to_route53_name(project_id, channel),
-                        domain=domain,
-                        dns=project[channel]['dns'],
-                    ))
-
+                if project_target == 'HEROKU'
+                    if project_id.startswith('releng-'):
+                        HEROKU_RELENG.setdefaults(channel, [])
+                        HEROKU_RELENG[channel].append(dict(
+                            name=to_route53_name(project_id, channel),
+                            domain=domain,
+                            dns=project[channel]['dns'],
+                        ))
+                    if project_id.startswith('shipit-'):
+                        HEROKU_SHIPIT.setdefaults(channel, [])
+                        HEROKU_SHIPIT[channel].append(dict(
+                            name=to_route53_name(project_id, channel),
+                            domain=domain,
+                            dns=project[channel]['dns'],
+                        ))
 
                 if project_target == 'S3':
-                    click.echo(S3_TEMPLATE % dict(
+                    S3.append(dict(
                         name=to_route53_name(project_id, channel),
                         domain=domain,
                         dns=project[channel]['dns'],
                     ))
 
-    echo_heroku_comment('production')
 
-    for item in HEROKU_PRODUCTION:
-        click.echo(HEROKU_TEMPLATE % item)
+    for channel in please_cli.config.CHANNELS:
+        echo_heroku_comment(channel)
+        for item in HEROKU_RELENG[channels]:
+            click.echo(HEROKU_TEMPLATE % item)
 
-    echo_heroku_comment('testing')
-    for item in HEROKU_TESTING:
-        click.echo(HEROKU_TEMPLATE % item)
-
-    echo_heroku_comment('staging')
-
-    for item in HEROKU_STAGING:
-        click.echo(HEROKU_TEMPLATE % item)
-
-    echo_heroku_comment('shiptit production')
-
-    for item in SHIPIT_PRODUCTION:
-        click.echo(HEROKU_TEMPLATE % item)
-
-    echo_heroku_comment('shipit testing')
-
-    for item in SHIPIT_TESTING:
-        click.echo(HEROKU_TEMPLATE % item)
-
-    echo_heroku_comment('shipit staging')
-
-    for item in SHIPIT_STAGING:
-        click.echo(HEROKU_TEMPLATE % item)
-
-
-
-
+    for channel in please_cli.config.CHANNELS:
+        echo_heroku_comment('shipit ' + channel)
+        for item in HEROKU_SHIPIT[channels]:
+            click.echo(HEROKU_TEMPLATE % item)
