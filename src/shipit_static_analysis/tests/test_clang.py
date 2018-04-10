@@ -62,7 +62,7 @@ def test_expanded_macros(mock_stats):
     assert issue.is_expanded_macro() is False
 
 
-def test_clang_format(mock_repository, mock_stats, mock_clang, mock_revision):
+def test_clang_format(mock_repository, mock_stats, mock_clang, mock_revision, mock_workflow):
     '''
     Test clang-format runner
     '''
@@ -78,10 +78,9 @@ def test_clang_format(mock_repository, mock_stats, mock_clang, mock_revision):
     mock_revision.lines = {
         'bad.cpp': [1, 2, 3],
     }
-    issues, patched = cf.run(frozenset(['.cpp', ]), mock_revision)
+    issues = cf.run(mock_revision)
 
     # Small file, only one issue which group changes
-    assert patched == ['bad.cpp', ]
     assert isinstance(issues, list)
     assert len(issues) == 1
     issue = issues[0]
@@ -94,6 +93,7 @@ def test_clang_format(mock_repository, mock_stats, mock_clang, mock_revision):
     assert issue.as_diff() == BAD_CPP_DIFF
 
     # At the end of the process, original file is patched
+    mock_workflow.build_improvement_patch(mock_revision, issues)
     assert bad_file.read() == BAD_CPP_VALID
 
     # Test stats
@@ -138,11 +138,7 @@ def test_clang_tidy(mock_repository, mock_config, mock_clang, mock_stats, mock_r
     mock_revision.lines = {
         'bad.cpp': range(len(BAD_CPP_TIDY.split('\n'))),
     }
-    checks = [{
-        'name': 'modernize-use-nullptr',
-        'publish': True,
-    }]
-    issues = ct.run(checks, mock_revision)
+    issues = ct.run(mock_revision)
     assert len(issues) == 2
     assert isinstance(issues[0], ClangTidyIssue)
     assert issues[0].check == 'modernize-use-nullptr'
@@ -159,7 +155,7 @@ def test_clang_tidy(mock_repository, mock_config, mock_clang, mock_stats, mock_r
 
     metrics = mock_stats.get_metrics('issues.clang-tidy.publishable')
     assert len(metrics) == 1
-    assert metrics[0][1] == 0
+    assert metrics[0][1] == 2
 
     metrics = mock_stats.get_metrics('runtime.clang-tidy.avg')
     assert len(metrics) == 1
@@ -175,10 +171,8 @@ def test_clang_tidy_checks(mock_repository, mock_clang):
 
     # Get the set of all available checks that the local clang-tidy offers
     repo_dir = mock_repository.directory
-    build_dir = repo_dir.mkdir('../build')
     clang_tidy = ClangTidy(
         str(repo_dir.realpath()),
-        str(build_dir.realpath()),
         validate_checks=False,
     )
 

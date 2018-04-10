@@ -41,7 +41,7 @@ def test_review_publication(mock_mozreview, mock_issues, mock_phabricator):
     }
     r = MozReviewReporter(conf, 'test_tc', 'token_tc')
     mrev = MozReviewRevision('abcdef:12345:1')
-    out = r.publish(mock_issues, mrev, diff_url=None)
+    out = r.publish(mock_issues, mrev)
     assert out is None  # no publication (no clang-tidy)
 
 

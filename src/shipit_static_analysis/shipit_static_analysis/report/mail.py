@@ -41,7 +41,7 @@ class MailReporter(Reporter):
 
         logger.info('Mail report enabled', emails=self.emails)
 
-    def publish(self, issues, revision, diff_url=None):
+    def publish(self, issues, revision):
         '''
         Send an email to administrators
         '''
@@ -62,7 +62,7 @@ class MailReporter(Reporter):
             publishable=sum([i.is_publishable() for i in issues]),
             stats=stats,
             review_url=revision.url,
-            diff_url=diff_url or 'no clang-format diff',
+            diff_url=revision.diff_url or 'no improvement diff',
         )
         content += '\n\n'.join([i.as_markdown() for i in issues])
         if len(content) > 102400:

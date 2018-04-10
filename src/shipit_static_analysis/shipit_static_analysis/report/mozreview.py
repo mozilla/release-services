@@ -60,7 +60,7 @@ class MozReviewReporter(Reporter):
 
         logger.info('Mozreview report enabled', url=url, username=username, analyzers=self.analyzers)
 
-    def publish(self, issues, revision, diff_url=None):  # noqa
+    def publish(self, issues, revision):
         '''
         Publish comments on mozreview
         '''
@@ -92,7 +92,7 @@ class MozReviewReporter(Reporter):
             # Build complex top comment
             comment = self.build_comment(
                 issues=issues,
-                diff_url=diff_url,
+                diff_url=revision.diff_url,
                 max_comments=MAX_COMMENTS
             )
 
