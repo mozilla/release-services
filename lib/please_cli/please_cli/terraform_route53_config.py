@@ -191,11 +191,15 @@ def cmd(channel):
 
 
     for channel in please_cli.config.CHANNELS:
-        echo_heroku_comment(channel)
-        for item in HEROKU_RELENG.get(channel, []):
-            click.echo(HEROKU_TEMPLATE % item)
+        projects = HEROKU_RELENG.get(channel, [])
+        if projects:
+            echo_heroku_comment(channel)
+            for project in projects:
+                click.echo(HEROKU_TEMPLATE % project)
 
     for channel in please_cli.config.CHANNELS:
-        echo_heroku_comment('shipit ' + channel)
-        for item in HEROKU_SHIPIT.get(channel, []):
-            click.echo(HEROKU_TEMPLATE % item)
+        projects = HEROKU_SHIPIT.get(channel, [])
+        if projects:
+            echo_heroku_comment('shipit ' + channel)
+            for project in projects:
+                click.echo(HEROKU_TEMPLATE % project)
