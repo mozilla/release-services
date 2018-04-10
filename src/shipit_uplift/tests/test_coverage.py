@@ -5,8 +5,9 @@
 
 import json
 
-import responses
+import pytest
 
+from shipit_uplift import coverage
 from shipit_uplift import coverage_by_changeset_impl
 from shipit_uplift import coverage_for_file_impl
 from shipit_uplift import coverage_summary_by_changeset_impl
@@ -23,26 +24,23 @@ def test_coverage_supported_extensions_api(client):
     ])
 
 
-@responses.activate
-def test_coverage_latest_api(client, coverage_responses):
-    resp = client.get('/coverage/latest')
-    assert resp.status_code == 200
-    data = json.loads(resp.data.decode('utf-8'))
+@pytest.mark.asyncio
+async def test_coverage_latest(coverage_responses):
+    data = await coverage.get_latest_build_info()
     assert data['latest_rev'] == '8063b0c54b888fe1f98774b71e1870cc2267f33f'
     assert data['latest_pushid'] == 33743
     assert data['previous_rev'] == '5401938bde37d0e7f1016bbd7694e72bdbf5e9a1'
 
 
-@responses.activate
-def test_coverage_by_changeset_impl(coverage_responses, coverage_builds):
+@pytest.mark.asyncio
+async def test_coverage_by_changeset_impl(event_loop, coverage_responses, coverage_builds):
     # Get changeset coverage information
     for changeset in coverage_builds['info']:
-        data = coverage_by_changeset_impl.generate(changeset)
+        data = await coverage_by_changeset_impl.retrieve_all(event_loop, changeset)
         assert data == coverage_builds['info'][changeset]
 
 
-@responses.activate
-def test_coverage_summary_by_changeset_impl(coverage_responses, coverage_builds):
+def test_coverage_summary_by_changeset_impl(coverage_builds):
     # Get changeset coverage summary from coverage information
     for changeset in coverage_builds['summary']:
         coverage_data = coverage_builds['info'][changeset]
@@ -50,9 +48,9 @@ def test_coverage_summary_by_changeset_impl(coverage_responses, coverage_builds)
         assert summary == coverage_builds['summary'][changeset]
 
 
-@responses.activate
-def test_coverage_for_file_impl(coverage_responses, coverage_changeset_by_file):
+@pytest.mark.asyncio
+async def test_coverage_for_file_impl(coverage_responses, coverage_changeset_by_file):
     # Get code coverage information for a given file at a given changeset
     for file_coverage in coverage_changeset_by_file:
-        data = coverage_for_file_impl.generate(file_coverage['changeset'], file_coverage['path'])
+        data = await coverage_for_file_impl.retrieve(file_coverage['changeset'], file_coverage['path'])
         assert data == file_coverage['data']
