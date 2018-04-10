@@ -7,9 +7,6 @@ import click
 import please_cli.config
 
 HEROKU_COMMENT = '##Heroku {channel} app cnames##'
-HEROKU_RELENG = dict()
-HEROKU_SHIPIT = dict()
-S3 = []
 
 
 def echo_heroku_comment(channel):
@@ -136,6 +133,9 @@ def to_route53_name(project_id, channel):
     default=None,
     )
 def cmd(channel):
+    HEROKU_RELENG = dict()
+    HEROKU_SHIPIT = dict()
+    S3 = []
 
     if channel is None:
         channels = please_cli.config.CHANNELS
