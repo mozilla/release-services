@@ -273,17 +273,16 @@ PROJECTS_CONFIG = {
                     'https://auth.taskcluster.net',
                 ],
             },
-            # TODO: remove comment after freeze period
-            # 'production': {
-            #     's3_bucket': 'releng-production-frontend',
-            #     'url': 'https://mozilla-releng.net',
-            #     'dns': 'd1qqwps52z1e12.cloudfront.net.',
-            #     'dns_domain': 'www.mozilla-releng.net',
-            #     'csp': [
-            #         'https://login.taskcluster.net',
-            #         'https://auth.taskcluster.net',
-            #     ],
-            # },
+            'production': {
+                's3_bucket': 'releng-production-frontend',
+                'url': 'https://mozilla-releng.net',
+                'dns': 'd1qqwps52z1e12.cloudfront.net.',
+                'dns_domain': 'www.mozilla-releng.net',
+                'csp': [
+                    'https://login.taskcluster.net',
+                    'https://auth.taskcluster.net',
+                ],
+            },
         },
     },
     'releng-mapper': {
