@@ -183,11 +183,25 @@ def cmd(channel):
                         ))
 
                 if project.get('deploy') == 'S3':
-                    S3.append(dict(
-                        name=to_route53_name(project_id, channel),
-                        domain=domain,
-                        dns=project_deploy_options[channel]['dns'],
-                    ))
+                    if project_id == 'releng-frontend':
+                        if channel == 'production':
+                            alias = 'www'
+                        else:
+                            alias = channel
+                    elif project_id == 'shipit-frontend':
+                        if channel == 'production':
+                            alias = 'shipit'
+                        else:
+                            alias = 'shipit.' + channel
+                    else:
+                        alias = project_id.lstrip('releng-').lstrip('shipit-'),
+                        alias = '{}.{}'.format(alias, channel)
+                        if channel == 'production':
+                            alias = alias.rstrip('.production')
+
+                    alias_target = project_deploy_options[channel].get('dns', '')
+                    alias_target = alias_target.rstrip('.cloudfront.net.')
+                    S3.append((alias, alias_target))
 
 
     for channel in please_cli.config.CHANNELS:
@@ -203,3 +217,5 @@ def cmd(channel):
             echo_heroku_comment('shipit ' + channel)
             for project in projects:
                 click.echo(HEROKU_TEMPLATE % project)
+
+    click.echo(S3)
