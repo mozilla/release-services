@@ -3,27 +3,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import json
 from abc import ABC
 from abc import abstractmethod
-from functools import lru_cache
 
-import requests
+import aiohttp
+from async_lru import alru_cache
 from cachetools import LRUCache
 
 from shipit_uplift import secrets
 
 
-@lru_cache(maxsize=2048)
-def get_github_commit(mercurial_commit):
-    r = requests.get('https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/{}'.format(mercurial_commit))
-    return r.text.split(' ')[0]
+@alru_cache(maxsize=2048)
+async def get_github_commit(mercurial_commit):
+    async with aiohttp.request('GET', 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/{}'.format(mercurial_commit)) as r:
+        text = await r.text()
+        return text.split(' ')[0]
 
 
-@lru_cache(maxsize=2048)
-def get_mercurial_commit(github_commit):
-    r = requests.get('https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/{}'.format(github_commit))
-    return r.text.split(' ')[1]
+@alru_cache(maxsize=2048)
+async def get_mercurial_commit(github_commit):
+    async with aiohttp.request('GET', 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/{}'.format(github_commit)) as r:
+        text = await r.text()
+        return text.split(' ')[1]
 
 
 class CoverageException(Exception):
@@ -33,32 +34,33 @@ class CoverageException(Exception):
 class Coverage(ABC):
     @staticmethod
     @abstractmethod
-    def get_coverage(changeset):
+    async def get_coverage(changeset):
         pass
 
     @staticmethod
     @abstractmethod
-    def get_file_coverage(changeset, filename):
+    async def get_file_coverage(changeset, filename):
         pass
 
     @staticmethod
     @abstractmethod
-    def get_latest_build():
+    async def get_latest_build():
         pass
 
 
 class CoverallsCoverage(Coverage):
-    URL = 'https://coveralls.io'
+    @staticmethod
+    def _get(url=''):
+        return aiohttp.request('GET', 'https://coveralls.io{}'.format(url))
 
     @staticmethod
-    @lru_cache(maxsize=2048)
-    def get_coverage(changeset):
-        r = requests.get(CoverallsCoverage.URL + '/builds/{}.json'.format(get_github_commit(changeset)))
+    @alru_cache(maxsize=2048)
+    async def get_coverage(changeset):
+        async with CoverallsCoverage._get('/builds/{}.json'.format(await get_github_commit(changeset))) as r:
+            if r.status != 200:
+                raise CoverageException('Error while loading coverage data.')
 
-        if r.status_code != requests.codes.ok:
-            raise CoverageException('Error while loading coverage data.')
-
-        result = r.json()
+            result = await r.json()
 
         return {
           'cur': result['covered_percent'],
@@ -66,38 +68,34 @@ class CoverallsCoverage(Coverage):
         }
 
     @staticmethod
-    def get_file_coverage(changeset, filename):
-        r = requests.get(CoverallsCoverage.URL + '/builds/{}/source.json'.format(get_github_commit(changeset)), params={
-            'filename': filename,
-        })
+    async def get_file_coverage(changeset, filename):
+        async with CoverallsCoverage._get('/builds/{}/source.json?filename={}'.format(await get_github_commit(changeset), filename)) as r:
+            if r.status != 200:
+                return None
 
-        if r.status_code != requests.codes.ok:
-            return None
-
-        return r.json()
+            return await r.json()
 
     @staticmethod
-    def get_latest_build():
-        r = requests.get(CoverallsCoverage.URL + '/github/marco-c/gecko-dev.json?page=1')
-        builds = r.json()['builds']
+    async def get_latest_build():
+        async with CoverallsCoverage._get('/github/marco-c/gecko-dev.json?page=1') as r:
+            builds = (await r.json())['builds']
 
-        return get_mercurial_commit(builds[0]['commit_sha']), get_mercurial_commit(builds[1]['commit_sha'])
+        return await get_mercurial_commit(builds[0]['commit_sha']), await get_mercurial_commit(builds[1]['commit_sha'])
 
 
 class CodecovCoverage(Coverage):
     @staticmethod
     def _get(url=''):
-        return requests.get('https://codecov.io/api/gh/marco-c/gecko-dev{}?access_token={}'.format(url, secrets.CODECOV_ACCESS_TOKEN))
+        return aiohttp.request('GET', 'https://codecov.io/api/gh/marco-c/gecko-dev{}?access_token={}'.format(url, secrets.CODECOV_ACCESS_TOKEN))
 
     @staticmethod
-    @lru_cache(maxsize=2048)
-    def get_coverage(changeset):
-        r = CodecovCoverage._get('/commit/{}'.format(get_github_commit(changeset)))
+    @alru_cache(maxsize=2048)
+    async def get_coverage(changeset):
+        async with CodecovCoverage._get('/commit/{}'.format(await get_github_commit(changeset))) as r:
+            if r.status != 200:
+                raise CoverageException('Error while loading coverage data.')
 
-        if r.status_code != requests.codes.ok:
-            raise CoverageException('Error while loading coverage data.')
-
-        result = r.json()
+            result = await r.json()
 
         return {
           'cur': result['commit']['totals']['c'],
@@ -105,70 +103,43 @@ class CodecovCoverage(Coverage):
         }
 
     @staticmethod
-    def get_file_coverage(changeset, filename):
-        r = CodecovCoverage._get('/src/{}/{}'.format(get_github_commit(changeset), filename))
+    async def get_file_coverage(changeset, filename):
+        async with CodecovCoverage._get('/src/{}/{}'.format(await get_github_commit(changeset), filename)) as r:
+            try:
+                data = await r.json()
+            except Exception as e:
+                raise CoverageException('Can\'t parse codecov.io report for %s@%s (response: %s)' % (filename, changeset, r.text))
 
-        try:
-            data = r.json()
-        except Exception as e:
-            raise CoverageException('Can\'t parse codecov.io report for {}@{} (response: {})'.format(filename, changeset, r.text))
+            if r.status != 200:
+                if data['error']['reason'] == 'File not found in report':
+                    return None
 
-        if r.status_code != requests.codes.ok:
-            if data['error']['reason'] == 'File not found in report':
-                return None
-
-            raise CoverageException('Can\'t load codecov.io report for {}@{} (response: {})'.format(filename, changeset, r.text))
+                raise CoverageException('Can\'t load codecov.io report for %s@%s (response: %s)' % (filename, changeset, r.text))
 
         return dict([(int(l), v) for l, v in data['commit']['report']['files'][filename]['l'].items()])
 
     @staticmethod
-    def get_latest_build():
-        r = CodecovCoverage._get()
-        commit = r.json()['commit']
+    async def get_latest_build():
+        async with CodecovCoverage._get() as r:
+            commit = (await r.json())['commit']
 
-        return get_mercurial_commit(commit['commitid']), get_mercurial_commit(commit['parent'])
+        return await get_mercurial_commit(commit['commitid']), await get_mercurial_commit(commit['parent'])
 
 
 class ActiveDataCoverage(Coverage):
     URL = 'https://activedata.allizom.org/query'
 
     @staticmethod
-    @lru_cache(maxsize=2048)
-    def get_coverage(changeset):
+    @alru_cache(maxsize=2048)
+    async def get_coverage(changeset):
         assert False, 'Not implemented'
 
     @staticmethod
-    def get_file_coverage(changeset, filename):
-        r = requests.post(ActiveDataCoverage.URL, data=json.dumps({
-            'from': 'coverage-summary',
-            'where': {
-                'and': [
-                    {
-                        'eq': {
-                            'source.file.name': filename,
-                        },
-                    },
-                    {
-                        'eq': {
-                            'repo.changeset.id12': changeset[:12],
-                        },
-                    },
-                ],
-            },
-        }))
-
-        f = r.json()['source']['file']
-        uncovered = f['uncovered']
-        covered = [e['line'] for e in f['covered']]
-
-        all_data = [0] * max(uncovered, covered)
-        for c in covered:
-            all_data[c] = 1
-
-        return all_data
+    async def get_file_coverage(changeset, filename):
+        assert False, 'Not implemented'
 
     @staticmethod
-    def get_latest_build():
+    async def get_latest_build():
         assert False, 'Not implemented'
 
 
@@ -183,9 +154,9 @@ MAX_CHANGESETS = 2048
 changeset_cache = LRUCache(maxsize=MAX_CHANGESETS)
 
 
-def get_pushes(push_id):
-    r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?version=2&full=1&startID={}&endID={}'.format(push_id - 1, push_id + 7))
-    data = r.json()
+async def get_pushes(push_id):
+    async with aiohttp.request('GET', 'https://hg.mozilla.org/mozilla-central/json-pushes?version=2&full=1&startID={}&endID={}'.format(push_id - 1, push_id + 7)) as r:  # noqa
+        data = await r.json()
 
     for pushid, pushdata in data['pushes'].items():
         pushid = int(pushid)
@@ -207,40 +178,47 @@ def get_pushes(push_id):
                 }
 
 
-def get_pushes_changesets(push_id, push_id_end):
+async def get_pushes_changesets(push_id, push_id_end):
     if push_id not in push_to_changeset_cache:
-        get_pushes(push_id)
+        await get_pushes(push_id)
 
+    # TODO: With Python 3.6+, we will be able to yield from an async function.
+    # So we don't need to create a changesets list but we can yield each changeset
+    # in the loop.
+    changesets = []
     for i in range(push_id, push_id_end):
         if i not in push_to_changeset_cache:
             continue
 
-        yield push_to_changeset_cache[i]
+        changesets.append(push_to_changeset_cache[i])
+
+    return changesets
 
 
-def get_changeset_data(changeset):
+async def get_changeset_data(changeset):
     if changeset[:12] not in changeset_cache:
-        r = requests.get('https://hg.mozilla.org/mozilla-central/json-rev/{}'.format(changeset))
-        rev = r.json()
+        async with aiohttp.request('GET', 'https://hg.mozilla.org/mozilla-central/json-rev/{}'.format(changeset)) as r:
+            rev = await r.json()
+
         push_id = int(rev['pushid'])
 
-        get_pushes(push_id)
+        await get_pushes(push_id)
 
     return changeset_cache[changeset[:12]]
 
 
-def get_coverage_build(changeset):
+async def get_coverage_build(changeset):
     '''
     This function returns the first successful coverage build after a given
     changeset.
     '''
-    changeset_data = get_changeset_data(changeset)
+    changeset_data = await get_changeset_data(changeset)
     push_id = changeset_data['push']
 
     # Find the first coverage build after the changeset.
-    for build_changeset in get_pushes_changesets(push_id, push_id + 8):
+    for build_changeset in (await get_pushes_changesets(push_id, push_id + 8)):
         try:
-            overall = coverage_service.get_coverage(build_changeset)
+            overall = await coverage_service.get_coverage(build_changeset)
             return (changeset_data, build_changeset, overall)
         except CoverageException:
             pass

@@ -1,9 +1,10 @@
 -e ./../../lib/cli_common[taskcluster,log] #egg=mozilla-cli-common
 -e ./../../lib/backend_common[log,security,cors,api,auth,db,cache] #egg=mozilla-backend-common
 
+aiohttp
+async-lru
 cachetools
 redis
 rq
-
 gunicorn
 psycopg2
