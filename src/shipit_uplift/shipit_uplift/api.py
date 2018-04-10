@@ -390,7 +390,7 @@ def create_patch_status(bugzilla_id):
 def coverage_for_file(changeset, path):
     changeset = changeset[:12]
     try:
-        return coverage_for_file_impl.generate(changeset, path)
+        return asyncio.get_event_loop().run_until_complete(coverage_for_file_impl.generate(changeset, path))
     except Exception as e:
         return {
             'error': str(e)

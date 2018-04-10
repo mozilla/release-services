@@ -52,5 +52,5 @@ def test_coverage_summary_by_changeset_impl(coverage_builds):
 async def test_coverage_for_file_impl(coverage_responses, coverage_changeset_by_file):
     # Get code coverage information for a given file at a given changeset
     for file_coverage in coverage_changeset_by_file:
-        data = await coverage_for_file_impl.retrieve(file_coverage['changeset'], file_coverage['path'])
+        data = await coverage_for_file_impl.generate(file_coverage['changeset'], file_coverage['path'])
         assert data == file_coverage['data']
