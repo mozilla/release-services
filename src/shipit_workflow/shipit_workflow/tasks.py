@@ -25,8 +25,9 @@ SUPPORTED_FLAVORS = {
 }
 
 
-class UnsupprtedFlavor(Exception):
-    pass
+class UnsupportedFlavor(Exception):
+    def __init__(self, description):
+        self.description = description
 
 
 def find_decision_task_id(project, revision):
@@ -56,8 +57,9 @@ def extract_our_flavors(avail_flavors, product, version, partial_updates):
     # sanity check
     all_flavors = set([fl for product in SUPPORTED_FLAVORS for fl in SUPPORTED_FLAVORS[product]])
     if not set(avail_flavors).issuperset(all_flavors):
-        raise UnsupprtedFlavor('Some flavors are not in actions.json: {}.'.format(
-            all_flavors.difference(set(avail_flavors))))
+        description = 'Some flavors are not in actions.json: {}.'.format(
+            all_flavors.difference(set(avail_flavors)))
+        raise UnsupportedFlavor(description=description)
     if is_rc(version, partial_updates):
         key = '{}_rc'.format(product)
     else:
