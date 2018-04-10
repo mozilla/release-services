@@ -25,7 +25,6 @@ class Revision(object):
     files = []
     lines = {}
     patch = None
-    diff_path = None
     diff_url = None
 
     def analyze_patch(self):

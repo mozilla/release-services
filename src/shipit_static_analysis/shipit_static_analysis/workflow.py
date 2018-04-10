@@ -22,6 +22,7 @@ from shipit_static_analysis.config import ARTIFACT_URL
 from shipit_static_analysis.config import REPO_CENTRAL
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.lint import MozLint
+from shipit_static_analysis.utils import build_temp_file
 
 logger = get_logger(__name__)
 
@@ -205,22 +206,16 @@ class Workflow(object):
             if not patch:
                 continue
 
-            # Write patch in tmp
-            _, patch_path = tempfile.mkstemp(suffix='.diff')
-            with open(patch_path, 'w') as f:
-                f.write(patch)
-
             # Apply patch on repository file
-            cmd = [
-                'patch',
-                '-i', patch_path,
-                full_path,
-            ]
-            exit = subprocess.run(cmd)
-            assert exit.returncode == 0
-
-            # Cleanup
-            os.unlink(patch_path)
+            with build_temp_file(patch, '.diff') as patch_path:
+                cmd = [
+                    'patch',
+                    '-i', patch_path,
+                    full_path,
+                ]
+                cmd_output = subprocess.run(cmd)
+                assert cmd_output.returncode == 0, \
+                    'Generated patch {} application failed on {}'.format(patch_path, full_path)
 
         # Get clean Mercurial diff on modified files
         files = list(map(lambda x: os.path.join(self.repo_dir, x).encode('utf-8'), revision.files))
@@ -231,10 +226,10 @@ class Workflow(object):
 
         # Write diff in results directory
         diff_name = revision.build_diff_name()
-        revision.diff_path = os.path.join(self.taskcluster_results_dir, diff_name)
-        with open(revision.diff_path, 'w') as f:
+        diff_path = os.path.join(self.taskcluster_results_dir, diff_name)
+        with open(diff_path, 'w') as f:
             length = f.write(diff.decode('utf-8'))
-            logger.info('Improvement diff dumped', path=revision.diff_path, length=length)  # noqa
+            logger.info('Improvement diff dumped', path=diff_path, length=length)
 
         # Build diff download url
         revision.diff_url = ARTIFACT_URL.format(
