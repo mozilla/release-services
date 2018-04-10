@@ -32,9 +32,8 @@ def setup(product='static-analysis', job_name='linux64-clang-tidy', revision='la
         resp.raise_for_status()
 
         # Extract archive into destination
-        tar = tarfile.open(fileobj=io.BytesIO(resp.content))
-        tar.extractall(target)
-        tar.close()
+        with tarfile.open(fileobj=io.BytesIO(resp.content)) as tar:
+            tar.extractall(target)
 
     # Retry several times the download process
     cli_common.utils.retry(_download)
