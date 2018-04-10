@@ -1,0 +1,15 @@
+{
+"node": "53d64a077a8ef3a34697c7aa3b0776d3e8d11539",
+"date": [1517109313.0, -3600],
+"desc": "Bug 1433591: Update the style of child anon box wrapper after owned anon boxes. r=bz\n\nSince the former could inherit from the latter.\n\nTest incoming in a followup.\n\nMozReview-Commit-ID: LJjprcyjDyU\n",
+"backedoutby": "",
+"branch": "default",
+"bookmarks": [],
+"tags": [],
+"user": "Emilio Cobos \u00c1lvarez \u003cemilio@crisal.io\u003e",
+"parents": ["9b144f79e5122f970a95bd184d1139fc01780a8d"],
+"phase": "public",
+"pushid": 33334,
+"pushdate": [1517175935, 0],
+"pushuser": "apavel@mozilla.com"
+}

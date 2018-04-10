@@ -1,0 +1,434 @@
+{
+"abspath": "dom/security/nsContentSecurityManager.h",
+"node": "3ecc48155838ca413a56920d801a8be0719e9981",
+"author": "ffxbld",
+"date": [1523133795.0, 25200],
+"desc": "No bug, Automated HPKP preload list update from host bld-linux64-spot-303 - a=hpkp-update",
+"parents": ["b2c0699b9bd405300986bc26f256e8bb9c0c53a7"],
+"children": [],
+"permissions": "",
+"annotate": [{
+"node": "1d919946baac36b6137f567632b97fd42518870e",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Add AsyncOpen2 to nsIChannel and perform security checks when opening a channel - securitymanager (r=sicking,tanvi)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 1,
+"line": "/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */\n",
+"lineno": 1,
+"revdate": [1437358331.0, 25200]
+}, {
+"node": "1d919946baac36b6137f567632b97fd42518870e",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Add AsyncOpen2 to nsIChannel and perform security checks when opening a channel - securitymanager (r=sicking,tanvi)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 2,
+"line": "/* vim: set ts=8 sts=2 et sw=2 tw=80: */\n",
+"lineno": 2,
+"revdate": [1437358331.0, 25200]
+}, {
+"node": "1d919946baac36b6137f567632b97fd42518870e",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Add AsyncOpen2 to nsIChannel and perform security checks when opening a channel - securitymanager (r=sicking,tanvi)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 3,
+"line": "/* This Source Code Form is subject to the terms of the Mozilla Public\n",
+"lineno": 3,
+"revdate": [1437358331.0, 25200]
+}, {
+"node": "1d919946baac36b6137f567632b97fd42518870e",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Add AsyncOpen2 to nsIChannel and perform security checks when opening a channel - securitymanager (r=sicking,tanvi)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 4,
+"line": " * License, v. 2.0. If a copy of the MPL was not distributed with this\n",
+"lineno": 4,
+"revdate": [1437358331.0, 25200]
+}, {
+"node": "1d919946baac36b6137f567632b97fd42518870e",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Add AsyncOpen2 to nsIChannel and perform security checks when opening a channel - securitymanager (r=sicking,tanvi)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 5,
+"line": " * file, You can obtain one at http://mozilla.org/MPL/2.0/. */\n",
+"lineno": 5,
+"revdate": [1437358331.0, 25200]
+}, {
+"node": "1d919946baac36b6137f567632b97fd42518870e",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Add AsyncOpen2 to nsIChannel and perform security checks when opening a channel - securitymanager (r=sicking,tanvi)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 6,
+"line": "\n",
+"lineno": 6,
+"revdate": [1437358331.0, 25200]
+}, {
+"node": "1d919946baac36b6137f567632b97fd42518870e",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Add AsyncOpen2 to nsIChannel and perform security checks when opening a channel - securitymanager (r=sicking,tanvi)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 7,
+"line": "#ifndef nsContentSecurityManager_h___\n",
+"lineno": 7,
+"revdate": [1437358331.0, 25200]
+}, {
+"node": "1d919946baac36b6137f567632b97fd42518870e",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Add AsyncOpen2 to nsIChannel and perform security checks when opening a channel - securitymanager (r=sicking,tanvi)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 8,
+"line": "#define nsContentSecurityManager_h___\n",
+"lineno": 8,
+"revdate": [1437358331.0, 25200]
+}, {
+"node": "1d919946baac36b6137f567632b97fd42518870e",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Add AsyncOpen2 to nsIChannel and perform security checks when opening a channel - securitymanager (r=sicking,tanvi)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 9,
+"line": "\n",
+"lineno": 9,
+"revdate": [1437358331.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 10,
+"line": "#include \"nsIContentSecurityManager.h\"\n",
+"lineno": 10,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "1d919946baac36b6137f567632b97fd42518870e",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Add AsyncOpen2 to nsIChannel and perform security checks when opening a channel - securitymanager (r=sicking,tanvi)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 10,
+"line": "#include \"nsIChannel.h\"\n",
+"lineno": 11,
+"revdate": [1437358331.0, 25200]
+}, {
+"node": "e772b5154e0cc25c61307f812d5185296430a07e",
+"author": "Jonas Sicking \u003cjonas@sicking.cc\u003e",
+"desc": "Bug 1226909 part 1: Do security checks in a redirect handler rather than when opening the redirected channel. r=ckerschb",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 12,
+"line": "#include \"nsIChannelEventSink.h\"\n",
+"lineno": 12,
+"revdate": [1449444794.0, 18000]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 12,
+"line": "\n",
+"lineno": 13,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "1d919946baac36b6137f567632b97fd42518870e",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Add AsyncOpen2 to nsIChannel and perform security checks when opening a channel - securitymanager (r=sicking,tanvi)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 11,
+"line": "class nsIStreamListener;\n",
+"lineno": 14,
+"revdate": [1437358331.0, 25200]
+}, {
+"node": "8719c44ef3e2df2124137938d61d7ef83dfac0e9",
+"author": "Christoph Kerschbaumer \u003cckerschb@christophkerschbaumer.com\u003e",
+"desc": "Bug 1408451: Log to web console when blocking toplevel data: URI navigations. r=bz",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 15,
+"line": "class nsIDocument;\n",
+"lineno": 15,
+"revdate": [1508156332.0, -7200]
+}, {
+"node": "1d919946baac36b6137f567632b97fd42518870e",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Add AsyncOpen2 to nsIChannel and perform security checks when opening a channel - securitymanager (r=sicking,tanvi)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 12,
+"line": "\n",
+"lineno": 16,
+"revdate": [1437358331.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 15,
+"line": "#define NS_CONTENTSECURITYMANAGER_CONTRACTID \"@mozilla.org/contentsecuritymanager;1\"\n",
+"lineno": 17,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 16,
+"line": "// cdcc1ab8-3cea-4e6c-a294-a651fa35227f\n",
+"lineno": 18,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 17,
+"line": "#define NS_CONTENTSECURITYMANAGER_CID \\\n",
+"lineno": 19,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 18,
+"line": "{ 0xcdcc1ab8, 0x3cea, 0x4e6c, \\\n",
+"lineno": 20,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 19,
+"line": "  { 0xa2, 0x94, 0xa6, 0x51, 0xfa, 0x35, 0x22, 0x7f } }\n",
+"lineno": 21,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 20,
+"line": "\n",
+"lineno": 22,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 21,
+"line": "class nsContentSecurityManager : public nsIContentSecurityManager\n",
+"lineno": 23,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "e772b5154e0cc25c61307f812d5185296430a07e",
+"author": "Jonas Sicking \u003cjonas@sicking.cc\u003e",
+"desc": "Bug 1226909 part 1: Do security checks in a redirect handler rather than when opening the redirected channel. r=ckerschb",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 23,
+"line": "                               , public nsIChannelEventSink\n",
+"lineno": 24,
+"revdate": [1449444794.0, 18000]
+}, {
+"node": "c2a2e73b931f46d7983b1433e7523e3c9a5c7f5d",
+"author": "Wes Kocher \u003cwkocher@mozilla.com\u003e",
+"desc": "Backed out 3 changesets (bug 1143922) for landing with the wrong bug number\n\nBacked out changeset 309b4d1ab81c (bug 1143922)\nBacked out changeset deda472458fd (bug 1143922)\nBacked out changeset 977d5b7ecba3 (bug 1143922)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 14,
+"line": "{\n",
+"lineno": 25,
+"revdate": [1442610813.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 23,
+"line": "public:\n",
+"lineno": 26,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 24,
+"line": "  NS_DECL_ISUPPORTS\n",
+"lineno": 27,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 25,
+"line": "  NS_DECL_NSICONTENTSECURITYMANAGER\n",
+"lineno": 28,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "e772b5154e0cc25c61307f812d5185296430a07e",
+"author": "Jonas Sicking \u003cjonas@sicking.cc\u003e",
+"desc": "Bug 1226909 part 1: Do security checks in a redirect handler rather than when opening the redirected channel. r=ckerschb",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 28,
+"line": "  NS_DECL_NSICHANNELEVENTSINK\n",
+"lineno": 29,
+"revdate": [1449444794.0, 18000]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 26,
+"line": "\n",
+"lineno": 30,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 27,
+"line": "  nsContentSecurityManager() {}\n",
+"lineno": 31,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 28,
+"line": "\n",
+"lineno": 32,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 29,
+"line": "  static nsresult doContentSecurityCheck(nsIChannel* aChannel,\n",
+"lineno": 33,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 30,
+"line": "                                         nsCOMPtr\u003cnsIStreamListener\u003e& aInAndOutListener);\n",
+"lineno": 34,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "9f7b7ab7dc1f3eaf14e35c2d066600520cc9b842",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1204703 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 31,
+"line": "\n",
+"lineno": 35,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "0c4ecb84046395afd7c5ed4a250b64991c9b0da7",
+"author": "Christoph Kerschbaumer \u003cckerschb@christophkerschbaumer.com\u003e",
+"desc": "Bug 1403814 - Block toplevel data: URI navigations only if openend in the browser. r=smaug",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 36,
+"line": "  static bool AllowTopLevelNavigationToDataURI(nsIChannel* aChannel);\n",
+"lineno": 36,
+"revdate": [1509711791.0, -3600]
+}, {
+"node": "416adbc7c8e71938dd28da6cecd92c4930238090",
+"author": "Christoph Kerschbaumer \u003cckerschb@christophkerschbaumer.com\u003e",
+"desc": "Bug 1434357: Exempt Web Extensions from insecure redirects to data: URIs. r=kmag,mayhemer",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 37,
+"line": "  static bool AllowInsecureRedirectToDataURI(nsIChannel* aNewChannel);\n",
+"lineno": 37,
+"revdate": [1518979972.0, -3600]
+}, {
+"node": "bb932a1656cd4f8850457d85f4916030afbdcdc8",
+"author": "Christoph Kerschbaumer \u003cckerschb@christophkerschbaumer.com\u003e",
+"desc": "Bug 1394554: Block toplevel data: URI navigations after redirect. r=smaug",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 39,
+"line": "\n",
+"lineno": 38,
+"revdate": [1504683190.0, -7200]
+}, {
+"node": "c2a2e73b931f46d7983b1433e7523e3c9a5c7f5d",
+"author": "Wes Kocher \u003cwkocher@mozilla.com\u003e",
+"desc": "Backed out 3 changesets (bug 1143922) for landing with the wrong bug number\n\nBacked out changeset 309b4d1ab81c (bug 1143922)\nBacked out changeset deda472458fd (bug 1143922)\nBacked out changeset 977d5b7ecba3 (bug 1143922)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 15,
+"line": "private:\n",
+"lineno": 39,
+"revdate": [1442610813.0, 25200]
+}, {
+"node": "e772b5154e0cc25c61307f812d5185296430a07e",
+"author": "Jonas Sicking \u003cjonas@sicking.cc\u003e",
+"desc": "Bug 1226909 part 1: Do security checks in a redirect handler rather than when opening the redirected channel. r=ckerschb",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 36,
+"line": "  static nsresult CheckChannel(nsIChannel* aChannel);\n",
+"lineno": 40,
+"revdate": [1449444794.0, 18000]
+}, {
+"node": "b2c0699b9bd405300986bc26f256e8bb9c0c53a7",
+"author": "Tom Schuster \u003cevilpies@gmail.com\u003e",
+"desc": "Bug 1404744 - Check for FTP subresource after applying CSP. r=ckerschb",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 41,
+"line": "  static nsresult CheckFTPSubresourceLoad(nsIChannel* aChannel);\n",
+"lineno": 41,
+"revdate": [1522967222.0, -7200]
+}, {
+"node": "e772b5154e0cc25c61307f812d5185296430a07e",
+"author": "Jonas Sicking \u003cjonas@sicking.cc\u003e",
+"desc": "Bug 1226909 part 1: Do security checks in a redirect handler rather than when opening the redirected channel. r=ckerschb",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 37,
+"line": "\n",
+"lineno": 42,
+"revdate": [1449444794.0, 18000]
+}, {
+"node": "c2a2e73b931f46d7983b1433e7523e3c9a5c7f5d",
+"author": "Wes Kocher \u003cwkocher@mozilla.com\u003e",
+"desc": "Backed out 3 changesets (bug 1143922) for landing with the wrong bug number\n\nBacked out changeset 309b4d1ab81c (bug 1143922)\nBacked out changeset deda472458fd (bug 1143922)\nBacked out changeset 977d5b7ecba3 (bug 1143922)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 17,
+"line": "  virtual ~nsContentSecurityManager() {}\n",
+"lineno": 43,
+"revdate": [1442610813.0, 25200]
+}, {
+"node": "977d5b7ecba32a0617d40c231e2f16963bf4a4ef",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Make nsContentSecurityManager scriptable (r=sicking)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 20,
+"line": "\n",
+"lineno": 44,
+"revdate": [1442593635.0, 25200]
+}, {
+"node": "1d919946baac36b6137f567632b97fd42518870e",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Add AsyncOpen2 to nsIChannel and perform security checks when opening a channel - securitymanager (r=sicking,tanvi)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 22,
+"line": "};\n",
+"lineno": 45,
+"revdate": [1437358331.0, 25200]
+}, {
+"node": "1d919946baac36b6137f567632b97fd42518870e",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Add AsyncOpen2 to nsIChannel and perform security checks when opening a channel - securitymanager (r=sicking,tanvi)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 23,
+"line": "\n",
+"lineno": 46,
+"revdate": [1437358331.0, 25200]
+}, {
+"node": "1d919946baac36b6137f567632b97fd42518870e",
+"author": "Christoph Kerschbaumer \u003cmozilla@christophkerschbaumer.com\u003e",
+"desc": "Bug 1143922 - Add AsyncOpen2 to nsIChannel and perform security checks when opening a channel - securitymanager (r=sicking,tanvi)",
+"abspath": "dom/security/nsContentSecurityManager.h",
+"targetline": 24,
+"line": "#endif /* nsContentSecurityManager_h___ */\n",
+"lineno": 47,
+"revdate": [1437358331.0, 25200]
+}]
+}

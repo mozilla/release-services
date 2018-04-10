@@ -1,0 +1,47 @@
+{
+  "info": {
+    "b2c0699b9bd405300986bc26f256e8bb9c0c53a7": {
+      "build_changeset": "3ecc48155838ca413a56920d801a8be0719e9981",
+      "diffs": [
+      {
+        "changes": [
+          {"coverage": "?", "line": 41}
+        ],
+        "name": "dom/security/nsContentSecurityManager.h"
+      },
+      {
+        "changes": [
+          {"coverage": "?", "line": 162},
+          {"coverage": "Y", "line": 163},
+          {"coverage": "N", "line": 171},
+          {"coverage": "Y", "line": 176},
+          {"coverage": "Y", "line": 181},
+          {"coverage": "Y", "line": 182},
+          {"coverage": "N", "line": 183},
+          {"coverage": "Y", "line": 188},
+          {"coverage": "Y", "line": 208},
+          {"coverage": "?", "line": 658},
+          {"coverage": "Y", "line": 659},
+          {"coverage": "Y", "line": 660},
+          {"coverage": "?", "line": 661},
+          {"coverage": "Y", "line": 679},
+          {"coverage": "Y", "line": 680},
+          {"coverage": "Y", "line": 681}
+        ],
+        "name": "dom/security/nsContentSecurityManager.cpp"
+      }],
+      "git_build_changeset": "115b36861cbf28c8ef44b0dcd0b5dfd230c51c54",
+      "overall_cur": "61.23183",
+      "overall_prev": "61.11536"
+    }
+  },
+  "summary": {
+    "b2c0699b9bd405300986bc26f256e8bb9c0c53a7": {
+      "build_changeset": "3ecc48155838ca413a56920d801a8be0719e9981",
+      "commit_added": 13,
+      "commit_covered": 11,
+      "overall_cur": "61.23183",
+      "overall_prev": "61.11536"
+    }
+  }
+}
