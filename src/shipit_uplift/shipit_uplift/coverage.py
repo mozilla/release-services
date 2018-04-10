@@ -10,7 +10,10 @@ import aiohttp
 from async_lru import alru_cache
 from cachetools import LRUCache
 
+from cli_common import log
 from shipit_uplift import secrets
+
+logger = log.get_logger(__name__)
 
 
 @alru_cache(maxsize=2048)
@@ -98,6 +101,7 @@ class CodecovCoverage(Coverage):
             result = await r.json()
 
         if result['commit']['state'] == 'error':
+            logger.warn('{} is in an errored state.'.format(changeset))
             raise CoverageException('{} is in an errored state.'.format(changeset))
 
         return {
@@ -120,6 +124,7 @@ class CodecovCoverage(Coverage):
                 raise CoverageException('Can\'t load codecov.io report for %s@%s (response: %s)' % (filename, changeset, r.text))
 
         if data['commit']['state'] == 'error':
+            logger.warn('{} is in an errored state.'.format(changeset))
             raise CoverageException('{} is in an errored state.'.format(changeset))
 
         return dict([(int(l), v) for l, v in data['commit']['report']['files'][filename]['l'].items()])
