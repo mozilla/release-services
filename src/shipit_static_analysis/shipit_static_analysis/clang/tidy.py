@@ -287,7 +287,7 @@ class ClangTidyIssue(Issue):
             ]),
         )
 
-    def as_diff():
+    def as_diff(self):
         '''
         No diff available
         '''

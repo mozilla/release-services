@@ -211,7 +211,7 @@ class Workflow(object):
                 'Modified file not found {}'.format(full_path)
 
             # Build raw "ed" patch
-            patch = '\n'.join(issue.as_diff() for issue in file_issues)
+            patch = '\n'.join(filter(None, [issue.as_diff() for issue in file_issues]))
             if not patch:
                 continue
 
