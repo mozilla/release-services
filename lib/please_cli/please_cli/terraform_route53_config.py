@@ -68,7 +68,7 @@ S3_TEMPLATE = '''
 ############################
 
 variable "cloudfront_alias" {
-    default = [%(alias)s]
+    default = [%(aliases)s]
 }
 
 # Cloudfront Alias Targets
@@ -194,7 +194,7 @@ def cmd(channel):
                         else:
                             alias = 'shipit.' + channel
                     else:
-                        alias = project_id.lstrip('releng-').lstrip('shipit-'),
+                        alias = project_id.lstrip('releng-').lstrip('shipit-')
                         alias = '{}.{}'.format(alias, channel)
                         if channel == 'production':
                             alias = alias.rstrip('.production')
@@ -218,4 +218,16 @@ def cmd(channel):
             for project in projects:
                 click.echo(HEROKU_TEMPLATE % project)
 
-    click.echo(S3)
+
+    aliases = ('\n' + ' ' * 8)
+    aliases += ('\n' + ' ' * 8).join(['"{}",'.format(alias) for (alias, alias_target) in S3])
+    aliases += ('\n' + ' ' * 4)
+
+    alias_targets = ('\n' + ' ' * 8)
+    alias_targets += ('\n' + ' ' * 8).join(['{} = "{}",'.format(alias, alias_target) for (alias, alias_target) in S3])
+    alias_targets += ('\n' + ' ' * 4)
+
+    click.echo(S3_TEMPLATE % dict(
+        aliases=aliases,
+        alias_targets=alias_targets,
+    ))
