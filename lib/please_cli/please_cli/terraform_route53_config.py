@@ -173,14 +173,16 @@ def cmd():
 
     click.echo(HEADER)
 
-    for channel in please_cli.config.CHANNELS:
+    channels = ['production', 'staging', 'testing']
+
+    for channel in channels:
         projects = HEROKU_RELENG.get(channel, [])
         if projects:
             echo_heroku_comment(channel)
             for project in projects:
                 click.echo(HEROKU_TEMPLATE % project)
 
-    for channel in please_cli.config.CHANNELS:
+    for channel in channels:
         projects = HEROKU_SHIPIT.get(channel, [])
         if projects:
             echo_heroku_comment('shipit ' + channel)
