@@ -33,6 +33,15 @@ resource "aws_route53_record" "%(name)s" {
     records = ["%(dns)s"]
 }
 '''
+HEROKU_TEMPLATE_EXTRA_PRODUCTION = '''
+resource "aws_route53_record" "heroku-coalease-cname" {
+    zone_id = "${aws_route53_zone.mozilla-releng.zone_id}"
+    name = "coalesce.mozilla-releng.net"
+    type = "CNAME"
+    ttl = "180"
+    records = ["oita-54541.herokussl.com"]
+}
+'''
 
 S3_TEMPLATE = '''
 ############################
@@ -179,6 +188,8 @@ def cmd():
         projects = HEROKU_RELENG.get(channel, [])
         if projects:
             echo_heroku_comment(channel)
+            if channel == 'production':
+                click.echo(HEROKU_TEMPLATE_EXTRA_PRODUCTION)
             for project in sorted(projects, key=lambda x: x['name']):
                 click.echo(HEROKU_TEMPLATE % project)
 
