@@ -33,10 +33,10 @@ async def test_coverage_latest(coverage_responses):
 
 
 @pytest.mark.asyncio
-async def test_coverage_by_changeset_impl(event_loop, coverage_responses, coverage_builds):
+async def test_coverage_by_changeset_impl(coverage_responses, coverage_builds):
     # Get changeset coverage information
     for changeset in coverage_builds['info']:
-        data = await coverage_by_changeset_impl.retrieve_all(event_loop, changeset)
+        data = await coverage_by_changeset_impl.generate(changeset)
         assert data == coverage_builds['info'][changeset]
 
 

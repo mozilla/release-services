@@ -404,7 +404,12 @@ def coverage_by_changeset(changeset):
 
     if job is None:
         RESULT_TTL = 2 * 24 * 60 * 60
-        job = q.enqueue(coverage_by_changeset_impl.generate, changeset, job_id=changeset, result_ttl=RESULT_TTL)
+        job = q.enqueue(
+            lambda c: asyncio.get_event_loop().run_until_complete(coverage_by_changeset_impl.generate(c)),
+            changeset,
+            job_id=changeset,
+            result_ttl=RESULT_TTL
+        )
 
     if job.result is not None:
         return job.result, 200

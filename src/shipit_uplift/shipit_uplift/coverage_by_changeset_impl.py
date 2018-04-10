@@ -13,12 +13,16 @@ from shipit_uplift.coverage import get_coverage_build
 from shipit_uplift.coverage import get_github_commit
 
 
-async def retrieve_all(loop, changeset):
+async def generate(changeset):
+    '''
+    This function generates a report containing the coverage information of the diff
+    introduced by a changeset.
+    '''
     changeset_data, build_changeset, overall = await get_coverage_build(changeset)
     if 'merge' in changeset_data:
         raise Exception('Retrieving coverage for merge commits is not supported.')
 
-    async def retrieve_coverage(loop, path):
+    async def retrieve_coverage(path):
         # If the file is not a source file, we skip it (as we already know
         # we have no coverage information for it).
         if not coverage_supported(path):
@@ -69,13 +73,13 @@ async def retrieve_all(loop, changeset):
             })
 
         return {
-          'name': path,
-          'changes': changes,
+            'name': path,
+            'changes': changes,
         }
 
     futures = []
     for path in changeset_data['files']:
-        futures.append(retrieve_coverage(loop, path))
+        futures.append(retrieve_coverage(path))
 
     diffs = []
     for f in asyncio.as_completed(futures):
@@ -90,12 +94,3 @@ async def retrieve_all(loop, changeset):
         'overall_prev': overall['prev'],
         'diffs': diffs,
     }
-
-
-def generate(changeset):
-    '''
-    This function generates a report containing the coverage information of the diff
-    introduced by a changeset.
-    '''
-    loop = asyncio.get_event_loop()
-    return loop.run_until_complete(retrieve_all(loop, changeset))
