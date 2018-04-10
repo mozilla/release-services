@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from urllib.error import HTTPError
-
 import requests
 
 from cli_common.log import get_logger
@@ -47,7 +45,7 @@ class Notifier(object):
 
             try:
                 coverage = retry(lambda: self.get_coverage_summary(rev))
-            except HTTPError:
+            except requests.exceptions.HTTPError:
                 logger.warn('Failure to retrieve coverage summary', rev=rev)
                 continue
 
