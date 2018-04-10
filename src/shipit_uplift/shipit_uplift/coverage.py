@@ -226,6 +226,16 @@ async def get_coverage_build(changeset):
     assert False, 'Couldn\'t find a build after the changeset'
 
 
+async def get_latest_build_info():
+    latest_rev, previous_rev = await coverage_service.get_latest_build()
+    latest_pushid = (await get_changeset_data(latest_rev))['push']
+    return {
+      'latest_pushid': latest_pushid,
+      'latest_rev': latest_rev,
+      'previous_rev': previous_rev,
+    }
+
+
 COVERAGE_EXTENSIONS = [
     # C
     'c', 'h',
