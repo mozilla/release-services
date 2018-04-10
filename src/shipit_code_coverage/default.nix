@@ -67,6 +67,9 @@ let
 
           # Needed to post build status to GitHub
           ("github:create-status:marco-c/gecko-dev")
+
+          # Needed to index the task in the TaskCluster index
+          ("index:insert-task:project.releng.services.project.staging.shipit_code_coverage.*")
         ];
         cache = {
           "${cacheKey}" = "/cache";
