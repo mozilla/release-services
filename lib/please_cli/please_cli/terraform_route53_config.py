@@ -144,10 +144,9 @@ def cmd(channel):
 
     click.echo(HEADER)
 
-    for project_id in please_cli.config.PROJECTS_CONFIG.keys():
+    for (project_id, project) in please_cli.config.PROJECTS_CONFIG.items():
 
-        project_deploy_options = please_cli.config.PROJECTS_CONFIG[project_id].get('deploy_options')
-        project_target = please_cli.config.PROJECTS_CONFIG[project_id].get('deploy')
+        project_deploy_options = project.get('deploy_options')
 
         if project_deploy_options:
 
@@ -167,23 +166,23 @@ def cmd(channel):
                     domain = domain.lstrip('://')
 
 
-                if project_target == 'HEROKU'
+                if project.get('deploy') == 'HEROKU':
                     if project_id.startswith('releng-'):
-                        HEROKU_RELENG.setdefaults(channel, [])
+                        HEROKU_RELENG.setdefault(channel, [])
                         HEROKU_RELENG[channel].append(dict(
                             name=to_route53_name(project_id, channel),
                             domain=domain,
                             dns=project_deploy_options[channel]['dns'],
                         ))
                     if project_id.startswith('shipit-'):
-                        HEROKU_SHIPIT.setdefaults(channel, [])
+                        HEROKU_SHIPIT.setdefault(channel, [])
                         HEROKU_SHIPIT[channel].append(dict(
                             name=to_route53_name(project_id, channel),
                             domain=domain,
                             dns=project_deploy_options[channel]['dns'],
                         ))
 
-                if project_target == 'S3':
+                if project.get('deploy') == 'S3':
                     S3.append(dict(
                         name=to_route53_name(project_id, channel),
                         domain=domain,
@@ -193,10 +192,10 @@ def cmd(channel):
 
     for channel in please_cli.config.CHANNELS:
         echo_heroku_comment(channel)
-        for item in HEROKU_RELENG[channels]:
+        for item in HEROKU_RELENG.get(channel, []):
             click.echo(HEROKU_TEMPLATE % item)
 
     for channel in please_cli.config.CHANNELS:
         echo_heroku_comment('shipit ' + channel)
-        for item in HEROKU_SHIPIT[channels]:
+        for item in HEROKU_SHIPIT.get(channel, []):
             click.echo(HEROKU_TEMPLATE % item)
