@@ -6,13 +6,14 @@
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.stats import Datadog
 import os
+import abc
 
 CLANG_TIDY = 'clang-tidy'
 CLANG_FORMAT = 'clang-format'
 MOZLINT = 'mozlint'
 
 
-class Issue(object):
+class Issue(abc.ABC):
     '''
     Common reported issue interface
 
@@ -22,6 +23,7 @@ class Issue(object):
     - line: Line where the issue begins
     - nb_lines: Number of lines affected by the issue
     '''
+    @abc.abstractmethod
     def is_publishable(self):
         '''
         Is this issue publishable on reporters ?
@@ -29,18 +31,21 @@ class Issue(object):
         '''
         raise NotImplementedError
 
+    @abc.abstractmethod
     def as_text(self):
         '''
         Build the text content for reporters
         '''
         raise NotImplementedError
 
+    @abc.abstractmethod
     def as_markdown(self):
         '''
         Build the Markdown content for debug email
         '''
         raise NotImplementedError
 
+    @abc.abstractmethod
     def as_diff(self):
         '''
         Build the ED compatible diff to build an improvement patch
