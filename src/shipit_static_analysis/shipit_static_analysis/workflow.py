@@ -16,6 +16,7 @@ from shipit_static_analysis import CLANG_FORMAT
 from shipit_static_analysis import CLANG_TIDY
 from shipit_static_analysis import MOZLINT
 from shipit_static_analysis import stats
+from shipit_static_analysis.clang import setup as setup_clang
 from shipit_static_analysis.clang.format import ClangFormat
 from shipit_static_analysis.clang.tidy import ClangTidy
 from shipit_static_analysis.config import ARTIFACT_URL
@@ -123,14 +124,22 @@ class Workflow(object):
         with stats.api.timer('runtime.mach'):
             # Only run mach if revision has any C/C++ files
             if revision.has_clang_files:
-                # mach configure with mozconfig
+                # Mach pre-setup with mozconfig
                 logger.info('Mach configure...')
                 run_check(['gecko-env', './mach', 'configure'], cwd=self.repo_dir)
 
-                # Setup static analysis binaries through mach
-                logger.info('Mach setup static-analysis')
-                cmd = ['gecko-env', './mach', 'static-analysis', 'install']
-                run_check(cmd, cwd=self.repo_dir)
+                logger.info('Mach compile db...')
+                run_check(['gecko-env', './mach', 'build-backend', '--backend=CompileDB'], cwd=self.repo_dir)
+
+                logger.info('Mach pre-export...')
+                run_check(['gecko-env', './mach', 'build', 'pre-export'], cwd=self.repo_dir)
+
+                logger.info('Mach export...')
+                run_check(['gecko-env', './mach', 'build', 'export'], cwd=self.repo_dir)
+
+                # Download clang build from Taskcluster
+                logger.info('Setup Taskcluster clang build...')
+                setup_clang()
 
                 # Use clang-tidy & clang-format
                 if CLANG_TIDY in self.analyzers:
