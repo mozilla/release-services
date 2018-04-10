@@ -6,7 +6,7 @@ from __future__ import absolute_import
 import click
 import please_cli.config
 
-HEROKU_COMMENT = "##Heroku {channel} app cnames##"
+HEROKU_COMMENT = '##Heroku {channel} app cnames##'
 HEROKU_PRODUCTION = []
 HEROKU_TESTING = []
 HEROKU_STAGING = []
