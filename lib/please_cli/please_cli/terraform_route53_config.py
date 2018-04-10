@@ -144,24 +144,24 @@ def cmd(channel):
 
     click.echo(HEADER)
 
-    for project_id in sorted(please_cli.config.PROJECTS_CONFIG.keys()):
+    for project_id in please_cli.config.PROJECTS_CONFIG.keys():
 
-        project = please_cli.config.PROJECTS_CONFIG[project_id].get('deploy_options')
+        project_deploy_options = please_cli.config.PROJECTS_CONFIG[project_id].get('deploy_options')
         project_target = please_cli.config.PROJECTS_CONFIG[project_id].get('deploy')
 
-        if project:
+        if project_deploy_options:
 
             for channel in sorted(channels):
 
-                if channel not in project or \
-                       'url' not in project[channel] or \
-                       'dns' not in project[channel]:
+                if channel not in project_deploy_options or \
+                       'url' not in project_deploy_options[channel] or \
+                       'dns' not in project_deploy_options[channel]:
                     continue
 
-                if 'dns_url' in project[channel]:
-                    domain = project[channel]['dns_url']
+                if 'dns_url' in project_deploy_options[channel]:
+                    domain = project_deploy_options[channel]['dns_url']
                 else:
-                    domain = project[channel]['url']
+                    domain = project_deploy_options[channel]['url']
                     domain = domain.lstrip('https')
                     domain = domain.lstrip('http')
                     domain = domain.lstrip('://')
@@ -173,21 +173,21 @@ def cmd(channel):
                         HEROKU_RELENG[channel].append(dict(
                             name=to_route53_name(project_id, channel),
                             domain=domain,
-                            dns=project[channel]['dns'],
+                            dns=project_deploy_options[channel]['dns'],
                         ))
                     if project_id.startswith('shipit-'):
                         HEROKU_SHIPIT.setdefaults(channel, [])
                         HEROKU_SHIPIT[channel].append(dict(
                             name=to_route53_name(project_id, channel),
                             domain=domain,
-                            dns=project[channel]['dns'],
+                            dns=project_deploy_options[channel]['dns'],
                         ))
 
                 if project_target == 'S3':
                     S3.append(dict(
                         name=to_route53_name(project_id, channel),
                         domain=domain,
-                        dns=project[channel]['dns'],
+                        dns=project_deploy_options[channel]['dns'],
                     ))
 
 
