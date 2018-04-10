@@ -92,7 +92,7 @@ let
         maxRunTime = 4 * 60 * 60;
         workerType = "releng-svc-compute";
         taskArtifacts = {
-          "chunk_mapping.tar.xz" = {
+          "public/chunk_mapping.tar.xz" = {
             type = "file";
             path = "/chunk_mapping.tar.xz";
           };
