@@ -4,7 +4,7 @@
 let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkPython fromRequirementsFile filterSource ;
-  inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch nodejs git python27 python35 coreutils shellcheck clang_5;
+  inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch nodejs git python27 python35 coreutils shellcheck clang_5 zlib;
   inherit (releng_pkgs.pkgs.lib) fileContents concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
 
@@ -104,6 +104,7 @@ let
       mkdir -p $out/tmp
       mkdir -p $out/bin
       mkdir -p $out/usr/bin
+      mkdir -p $out/lib64
       ln -s ${mercurial}/bin/hg $out/bin
       ln -s ${patch}/bin/patch $out/bin
 
@@ -119,6 +120,10 @@ let
       ln -s ${coreutils}/bin/env $out/usr/bin/env
       ln -s ${coreutils}/bin/ld $out/bin
       ln -s ${coreutils}/bin/as $out/bin
+
+      # Add program interpreter needed to run clang Taskcluster static build
+      # Found this info by using "readelf -l"
+      ln -s ${glibc}/lib/ld-linux-x86-64.so.2 $out/lib64
 
       # Expose gecko env in final output
       ln -s ${gecko-env}/bin/gecko-env $out/bin
@@ -150,8 +155,13 @@ let
         "MOZCONFIG=${gecko-env}/conf/mozconfig"
         "CODESPELL=${python.packages.codespell}/bin/codespell"
         "SHELLCHECK=${shellcheck}/bin/shellcheck"
+        "MOZ_AUTOMATION=1"
         "MOZBUILD_STATE_PATH=/tmp/mozilla-state"
         "SHELL=xterm"
+
+        # Needed to run clang Taskcluster static build
+        # only on built docker image from scratch
+        "LD_LIBRARY_PATH=${zlib}/lib"
       ];
     dockerCmd = [];
 
