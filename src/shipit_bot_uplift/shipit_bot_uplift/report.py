@@ -60,11 +60,13 @@ class Report(object):
             '# Failed automated merge test',
             ''
         ]
+        branches = []
         cmp_func = operator.attrgetter('bugzilla_id', 'branch')
         merges = sorted(self.merges, key=cmp_func)
         merges = itertools.groupby(merges, key=cmp_func)
         for keys, failures in merges:
             bz_id, branch = keys
+            branches.append(_str(branch))
             mail.append('## Bug [{0}](https://bugzil.la/{0}) - Uplift to {1}\n'.format(bz_id, _str(branch)))  # noqa
             for merge_test in failures:
                 mail += [
@@ -72,6 +74,8 @@ class Report(object):
                     for revision, result in merge_test.results.items()
                 ]
             mail.append('')  # newline
+        if len(branches) > 0:
+            subject += ' to ' + ', '.join(branches)
         mail_md = '\n'.join(mail)
 
         # Send mail report to every mail address
