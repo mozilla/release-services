@@ -106,7 +106,7 @@ USER root
 RUN chown -R root:root /nix \
  && chmod 1777 /nix/var/nix/profiles/per-user /nix/var/nix/gcroots/per-user \
  && rm -f /nix/var/nix/profiles/per-user/app/channels* \
- && mv /nix/var/nix/profiles/per-user/app/profile-1-link /nix/var/nix/profiles/default-1-link \
+ && mv /nix/var/nix/profiles/per-user/app/profile-2-link /nix/var/nix/profiles/default-2-link \
  && cd /nix/var/nix/profiles && ln -s default-1-link default && cd $HOME \
  && /nix/var/nix/profiles/default/bin/nix-env -iA bash -p /nix/var/nix/profiles/sandbox -f /etc/nix/nixpkgs \
  && /nix/var/nix/profiles/default/bin/nix-env -iA cacert -p /nix/var/nix/profiles/default -f /etc/nix/nixpkgs \
