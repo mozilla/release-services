@@ -163,5 +163,5 @@ class MozLint(object):
         return [
             MozLintIssue(path, **issue)
             for p in (path, full_path)
-            for issue in payload[full_path]
+            for issue in payload.get(p, [])
         ]
