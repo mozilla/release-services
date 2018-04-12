@@ -29,9 +29,9 @@ ISSUE_MARKDOWN = '''
 
 
 class MozLintIssue(Issue):
-    def __init__(self, repo_path, column, level, lineno, linter, message, rule, **kwargs):
+    def __init__(self, path, column, level, lineno, linter, message, rule, **kwargs):
         self.nb_lines = 1
-        self.path = repo_path
+        self.path = path
         self.column = column
         self.level = level
         self.line = int(lineno)  # mozlint sometimes produce strings here
