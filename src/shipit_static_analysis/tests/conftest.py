@@ -8,6 +8,7 @@ import json
 import os.path
 import re
 import subprocess
+import tempfile
 import time
 from distutils.spawn import find_executable
 
@@ -17,6 +18,15 @@ import pytest
 import responses
 
 MOCK_DIR = os.path.join(os.path.dirname(__file__), 'mocks')
+
+TEST_CPP = '''
+include <cstdio>
+
+int main(void){
+    printf("Hello world!");
+    return 0;
+}
+'''
 
 
 @responses.activate
@@ -34,32 +44,36 @@ def mock_config():
     )
 
     from shipit_static_analysis.config import settings
-    settings.setup('test')
+    tempdir = tempfile.mkdtemp()
+    settings.setup('test', tempdir)
+
     return settings
 
 
-@pytest.fixture
-def mock_repository(tmpdir):
+@pytest.fixture(scope='session')
+def mock_repository(mock_config):
     '''
     Create a dummy mercurial repository
     '''
     # Init repo
-    repo_dir = tmpdir.mkdir('repo')
-    repo_path = str(repo_dir.realpath())
-    hglib.init(repo_path)
+    hglib.init(mock_config.repo_dir)
 
     # Init clean client
-    client = hglib.open(repo_path)
-    client.directory = repo_dir
+    client = hglib.open(mock_config.repo_dir)
 
     # Add test.txt file
-    path = os.path.join(repo_path, 'test.txt')
+    path = os.path.join(mock_config.repo_dir, 'test.txt')
     with open(path, 'w') as f:
         f.write('Hello World\n')
 
     # Initiall commit
     client.add(path.encode('utf-8'))
     client.commit(b'Hello World', user=b'Tester')
+
+    # Write dummy 3rd party file
+    third_party = os.path.join(mock_config.repo_dir, mock_config.third_party)
+    with open(third_party, 'w') as f:
+        f.write('test/dummy')
 
     return client
 
@@ -370,7 +384,7 @@ def mock_clang(tmpdir, monkeypatch):
 
 
 @pytest.fixture
-def mock_workflow(tmpdir, mock_repository):
+def mock_workflow(tmpdir, mock_repository, mock_config):
     '''
     Mock the full workflow, without cloning
     '''
@@ -378,15 +392,23 @@ def mock_workflow(tmpdir, mock_repository):
 
     class MockWorkflow(Workflow):
         def clone(self):
-            self.repo_dir = str(mock_repository.directory.realpath())
-            return hglib.open(self.repo_dir)
+            return hglib.open(mock_config.repo_dir)
 
     # Needed for Taskcluster build
     if 'MOZCONFIG' not in os.environ:
         os.environ['MOZCONFIG'] = str(tmpdir.join('mozconfig').realpath())
 
     return MockWorkflow(
-        cache_root=str(tmpdir.realpath()),
         reporters=[],
         analyzers=['clang-tidy', 'clang-format', 'mozlint'],
     )
+
+
+@pytest.fixture
+def test_cpp(mock_config, mock_repository):
+    '''
+    Build a dummy test.cpp file in repo
+    '''
+    path = os.path.join(mock_config.repo_dir, 'test.cpp')
+    with open(path, 'w') as f:
+        f.write(TEST_CPP)

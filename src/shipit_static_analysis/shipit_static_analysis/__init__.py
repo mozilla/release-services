@@ -57,7 +57,7 @@ class Issue(abc.ABC):
         Is this issue in a third party path ?
         '''
         # List third party directories using mozilla-central file
-        full_path = os.path.join(self.repo_dir, settings.third_party)
+        full_path = os.path.join(settings.repo_dir, settings.third_party)
         assert os.path.exists(full_path), \
             'Missing third party file {}'.format(full_path)
         with open(full_path) as f:

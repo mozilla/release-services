@@ -61,10 +61,7 @@ class ClangTidy(object):
     Clang Tidy Parallel runner
     Inspired by run-clang-tidy.py
     '''
-    def __init__(self, repo_dir, validate_checks=True):
-        assert os.path.isdir(repo_dir)
-
-        self.repo_dir = repo_dir
+    def __init__(self, validate_checks=True):
         self.binary = os.path.join(
             os.environ['MOZBUILD_STATE_PATH'],
             'clang-tools', 'clang', 'bin', 'clang-tidy',
@@ -105,7 +102,7 @@ class ClangTidy(object):
 
         # Run command
         try:
-            clang_output = subprocess.check_output(cmd, cwd=self.repo_dir)
+            clang_output = subprocess.check_output(cmd, cwd=settings.repo_dir)
         except subprocess.CalledProcessError as e:
             logger.error('Mach static analysis failed: {}'.format(e.output))
             raise
@@ -135,7 +132,7 @@ class ClangTidy(object):
 
         issues = []
         for i, header in enumerate(headers):
-            issue = ClangTidyIssue(header.groups(), self.repo_dir)
+            issue = ClangTidyIssue(header.groups())
 
             # Get next header
             if i+1 < len(headers):
@@ -197,14 +194,13 @@ class ClangTidyIssue(Issue):
     '''
     An issue reported by clang-tidy
     '''
-    def __init__(self, header_data, repo_dir):
+    def __init__(self, header_data):
         assert isinstance(header_data, tuple)
         assert len(header_data) == 6
-        assert not repo_dir.endswith('/')
+        assert not settings.repo_dir.endswith('/')
         self.path, self.line, self.char, self.type, self.message, self.check = header_data  # noqa
-        self.repo_dir = repo_dir
-        if self.path.startswith(repo_dir):
-            self.path = self.path[len(repo_dir)+1:]  # skip heading /
+        if self.path.startswith(settings.repo_dir):
+            self.path = self.path[len(settings.repo_dir)+1:]  # skip heading /
         self.line = int(self.line)
         self.nb_lines = 1  # Only 1 line affected on clang-tidy
         self.char = int(self.char)
