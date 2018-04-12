@@ -92,12 +92,12 @@ RUN wget -nv "https://nixos.org/releases/nix/nix-$NIX_VERSION/nix-$NIX_VERSION-x
  && tar jxf "nix-$NIX_VERSION-x86_64-linux.tar.bz2" \
  && sh ./nix-$NIX_VERSION-x86_64-linux/install \
  && . $HOME/.nix-profile/etc/profile.d/nix.sh \
+ #&& nix-env -iA nixpkgs.docker nixpkgs.neovim nixpkgs.git \
+ && nix-build /app/nix/default.nix -A please-cli -o /home/app/result-please-cli \
  && rm -r $HOME/nix-*-x86_64-linux \
  && rm -rf $HOME/.cache/nix \
- && nix-env -iA nixpkgs.docker nixpkgs.neovim nixpkgs.git \
- && nix-build /app/nix/default.nix -A please-cli -o result \
  && nix-collect-garbage -d \
- && rm -f result
+ && nix optimise-store
 
 
 USER root
@@ -113,7 +113,10 @@ RUN chown -R root:root /nix \
  && BASH_PATH=$(realpath /nix/var/nix/profiles/sandbox/bin/bash) \
  && BASH_DEPS=$(sudo "/nix/var/nix/profiles/default/bin/nix-store" -qR "$BASH_PATH" | tr '\n' ' ') \
  && echo "sandbox = true" >> /etc/nix/nix.conf \
- && echo "sandbox-paths = /bin/sh=$BASH_PATH $BASH_DEPS">> /etc/nix/nix.conf
+ && echo "sandbox-paths = /bin/sh=$BASH_PATH $BASH_DEPS">> /etc/nix/nix.conf \
+ && nix-collect-garbage -d \
+ && nix optimise-store
+
 
 COPY nix/docker/profile.sh /etc/nix/
 
