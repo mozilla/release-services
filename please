@@ -12,32 +12,8 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-USE_NIX=0
-USE_DOCKER=0
-
-case "`uname`" in
-  Darwin)
-    if hash docker 2>/dev/null; then
-       USE_DOCKER=1
-    fi
-    ;;
-  Linux)
-    if hash nix-build 2>/dev/null; then
-         USE_NIX=1
-    else
-      if hash docker 2>/dev/null; then
-         USE_DOCKER=1
-      fi
-    fi
-    ;;
-  *)
-    echo "ERROR: Unknown platform '$OSTYPE'"
-    exit 1
-    ;;
-esac
 
 USE_DOCKER=1
-
 USE_NIX=0
 if [ -f /.dockerenv ]; then
   USE_NIX=1
