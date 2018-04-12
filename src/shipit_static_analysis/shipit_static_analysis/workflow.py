@@ -168,7 +168,7 @@ class Workflow(object):
         for analyzer_class in analyzers:
             # Build analyzer
             logger.info('Run {}'.format(analyzer_class.__name__))
-            analyzer = analyzer_class(settings.repo_dir)
+            analyzer = analyzer_class()
 
             # Run analyzer on version and store generated issues
             issues += analyzer.run(revision)
