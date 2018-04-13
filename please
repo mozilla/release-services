@@ -14,7 +14,7 @@ NC='\033[0m'
 
 
 USE_DOCKER=1
-USE_NIX=1
+USE_NIX=0
 if [ -f /.dockerenv ]; then
   USE_NIX=1
   . /etc/nix/profile.sh;
@@ -47,7 +47,7 @@ else
             --workdir=/app \
             -p 7000:7000 \
             -p 8000-8100:8000-8100 \
-            mozillareleng/services:base-`cat ./VERSION`
+            mozillareleng/services:base-dnd-`cat ./VERSION`
       else
         docker start $DOCKER_NAME
       fi
