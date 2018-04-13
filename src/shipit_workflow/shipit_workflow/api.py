@@ -64,7 +64,10 @@ def add_release(body):
         partial_updates=body.get('partial_updates')
     )
     try:
-        r.generate_phases()
+        r.generate_phases(
+            partner_urls=flask.current_app.config.get('PARTNERS_URL'),
+            github_token=flask.current_app.config.get('GITHUB_TOKEN'),
+        )
         session.add(r)
         session.commit()
         return r.json, 201

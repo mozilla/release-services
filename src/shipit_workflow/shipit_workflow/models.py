@@ -13,7 +13,9 @@ import sqlalchemy.orm
 
 from backend_common.db import db
 from cli_common.log import get_logger
+from shipit_workflow.partners import get_partner_config_by_url
 from shipit_workflow.release import bump_version
+from shipit_workflow.release import is_partner_enabled
 from shipit_workflow.tasks import extract_our_flavors
 from shipit_workflow.tasks import fetch_actions_json
 from shipit_workflow.tasks import find_action
@@ -93,7 +95,9 @@ class Release(db.Model):
         self.branch = branch
         self.revision = revision
         self.build_number = build_number
-        self.release_eta = release_eta
+        # Swagger doesn't let passing null values for strings, we use "falsy"
+        # ones instead
+        self.release_eta = release_eta or None
         self.partial_updates = partial_updates
         self.status = status
 
@@ -101,12 +105,12 @@ class Release(db.Model):
     def project(self):
         return self.branch.split('/')[-1]
 
-    def generate_phases(self):
+    def generate_phases(self, partner_urls=None, github_token=None):
         blob = []
         phases = []
         previous_graph_ids = [self.decicion_task_id]
         next_version = bump_version(self.version.replace('esr', ''))
-        action_task_input_common = {
+        input_common = {
             'build_number': self.build_number,
             'next_version': next_version,
             # specify version rather than relying on in-tree version,
@@ -114,17 +118,23 @@ class Release(db.Model):
             # revision, we still use the correct version.
             'version': self.version,
             'release_eta': self.release_eta
-            # TODO: release_type, partner repacks, emefree
         }
+        if is_partner_enabled(self.product, self.version) and partner_urls and github_token:
+            input_common['release_partner_config'] = {}
+            for kind, url in partner_urls.items():
+                input_common['release_partner_config'][kind] = get_partner_config_by_url(
+                    url, kind, github_token
+                )
+
         if self.partial_updates:
-            action_task_input_common['partial_updates'] = {}
+            input_common['partial_updates'] = {}
             for partial_version, info in self.partial_updates.items():
-                action_task_input_common['partial_updates'][partial_version] = {
+                input_common['partial_updates'][partial_version] = {
                     'buildNumber': info['buildNumber'],
                     'locales': info['locales']
                 }
         for phase in self.release_promotion_flavors():
-            action_task_input = copy.deepcopy(action_task_input_common)
+            action_task_input = copy.deepcopy(input_common)
             action_task_input['previous_graph_ids'] = list(previous_graph_ids)
             action_task_input['release_promotion_flavor'] = phase['name']
             action_task_id, action_task, context = generate_action_task(
@@ -167,7 +177,7 @@ class Release(db.Model):
             'version': self.version,
             'revision': self.revision,
             'build_number': self.build_number,
-            'release_eta': self.release_eta,
+            'release_eta': self.release_eta or '',
             'status': self.status,
             'phases': [p.json for p in self.phases],
         }
