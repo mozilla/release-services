@@ -17,11 +17,31 @@ log = get_logger(__name__)
 
 # Phases per product, ordered
 SUPPORTED_FLAVORS = {
-    'firefox': ['promote_firefox', 'push_firefox', 'ship_firefox'],
-    'firefox_rc': ['promote_firefox_rc', 'ship_firefox_rc', 'push_firefox', 'ship_firefox'],
-    'fennec': ['promote_fennec', 'ship_fennec'],
-    'fennec_rc': ['promote_fennec', 'ship_fennec_rc', 'ship_fennec'],
-    'devedition': ['promote_devedition', 'push_devedition', 'ship_devedition'],
+    'firefox': [
+        {'name': 'promote_firefox', 'in_previous_graph_ids': True},
+        {'name': 'push_firefox', 'in_previous_graph_ids': True},
+        {'name': 'ship_firefox', 'in_previous_graph_ids': True},
+    ],
+    'firefox_rc': [
+        {'name': 'promote_firefox_rc', 'in_previous_graph_ids': True},
+        {'name': 'ship_firefox_rc', 'in_previous_graph_ids': False},
+        {'name': 'push_firefox', 'in_previous_graph_ids': True},
+        {'name': 'ship_firefox', 'in_previous_graph_ids': True},
+    ],
+    'fennec': [
+        {'name': 'promote_fennec', 'in_previous_graph_ids': True},
+        {'name': 'ship_fennec', 'in_previous_graph_ids': True},
+    ],
+    'fennec_rc': [
+        {'name': 'promote_fennec', 'in_previous_graph_ids': True},
+        {'name': 'ship_fennec_rc', 'in_previous_graph_ids': False},
+        {'name': 'ship_fennec', 'in_previous_graph_ids': True},
+    ],
+    'devedition': [
+        {'name': 'promote_devedition', 'in_previous_graph_ids': True},
+        {'name': 'push_devedition', 'in_previous_graph_ids': True},
+        {'name': 'ship_devedition', 'in_previous_graph_ids': True},
+    ],
 }
 
 
@@ -55,18 +75,16 @@ def find_action(name, actions):
 
 def extract_our_flavors(avail_flavors, product, version, partial_updates):
     # sanity check
-    all_flavors = set([fl for product in SUPPORTED_FLAVORS for fl in SUPPORTED_FLAVORS[product]])
+    all_flavors = set([fl['name'] for product in SUPPORTED_FLAVORS for fl in SUPPORTED_FLAVORS[product]])
     if not set(avail_flavors).issuperset(all_flavors):
         description = 'Some flavors are not in actions.json: {}.'.format(
             all_flavors.difference(set(avail_flavors)))
         raise UnsupportedFlavor(description=description)
     if is_rc(version, partial_updates):
-        key = '{}_rc'.format(product)
+        product_key = '{}_rc'.format(product)
     else:
-        key = product
-    our_flavors = [fl for fl in avail_flavors if fl in SUPPORTED_FLAVORS[key]]
-    # sort the phases by their appearance in SUPPORTED_FLAVORS
-    return sorted(our_flavors, key=SUPPORTED_FLAVORS[key].index)
+        product_key = product
+    return SUPPORTED_FLAVORS[product_key]
 
 
 def generate_action_task(action_task_input, actions):

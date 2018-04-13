@@ -114,6 +114,7 @@ class Release(db.Model):
             # revision, we still use the correct version.
             'version': self.version,
             'release_eta': self.release_eta
+            # TODO: release_type, partner repacks, emefree
         }
         if self.partial_updates:
             action_task_input_common['partial_updates'] = {}
@@ -125,7 +126,7 @@ class Release(db.Model):
         for phase in self.release_promotion_flavors():
             action_task_input = copy.deepcopy(action_task_input_common)
             action_task_input['previous_graph_ids'] = list(previous_graph_ids)
-            action_task_input['release_promotion_flavor'] = phase
+            action_task_input['release_promotion_flavor'] = phase['name']
             action_task_id, action_task, context = generate_action_task(
                 action_task_input=action_task_input,
                 actions=self.actions,
@@ -135,8 +136,9 @@ class Release(db.Model):
                 'task': action_task,
                 'status': 'pending'
             })
-            previous_graph_ids.append(action_task_id)
-            phases.append(Phase(phase, action_task_id, json.dumps(action_task), json.dumps(context)))
+            if phase['in_previous_graph_ids']:
+                previous_graph_ids.append(action_task_id)
+            phases.append(Phase(phase['name'], action_task_id, json.dumps(action_task), json.dumps(context)))
         self.phases = phases
 
     @property
