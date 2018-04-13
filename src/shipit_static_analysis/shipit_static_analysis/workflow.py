@@ -178,6 +178,11 @@ class Workflow(object):
             # Apply patch
             revision.apply(self.hg)
 
+            if revision.has_clang_files:
+                # Run Configure to avoid issues with patches needing a full clobber
+                logger.info('Mach configure again ...')
+                run_check(['gecko-env', './mach', 'configure'], cwd=settings.repo_dir)
+
             # Detect new issues
             issues = self.detect_issues(analyzers, revision)
             logger.info('Detected {} issue(s) after patch'.format(len(issues)))
@@ -193,8 +198,8 @@ class Workflow(object):
         # Report issues publication stats
         stats.api.increment('analysis.issues.before', len(before_patch))
         stats.api.increment('analysis.issues.after', len(issues))
-        stats.api.increment('analysis.issues.publishable', len(i for i in issues if i.is_publishable()))
-        stats.api.increment('analysis.issues.is_new', len(i for i in issues if i.is_new))
+        stats.api.increment('analysis.issues.publishable', len([i for i in issues if i.is_publishable()]))
+        stats.api.increment('analysis.issues.is_new', len([i for i in issues if i.is_new]))
 
         # Build patch to help developper improve their code
         self.build_improvement_patch(revision, issues)
