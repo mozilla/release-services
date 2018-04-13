@@ -141,7 +141,7 @@ def cmd(docker_username,
         with click_spinner.spinner():
             result, output, error = cli_common.command.run(
                 [
-                    'sudo',
+                    # 'sudo',
                     docker,
                     'build',
                     '--no-cache',
@@ -171,7 +171,7 @@ def cmd(docker_username,
             with click_spinner.spinner():
                 result, output, error = cli_common.command.run(
                     [
-                        'sudo',
+                        # 'sudo',
                         docker,
                         'login',
                         '--username', docker_username,
@@ -187,7 +187,7 @@ def cmd(docker_username,
             with click_spinner.spinner():
                 result, output, error = cli_common.command.run(
                     [
-                        'sudo',
+                        # 'sudo',
                         docker,
                         'push',
                         '{}:{}'.format(docker_repo, docker_tag),
