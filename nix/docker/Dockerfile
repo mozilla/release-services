@@ -114,8 +114,8 @@ RUN chown -R root:root /nix \
  && BASH_DEPS=$(sudo "/nix/var/nix/profiles/default/bin/nix-store" -qR "$BASH_PATH" | tr '\n' ' ') \
  && echo "sandbox = true" >> /etc/nix/nix.conf \
  && echo "sandbox-paths = /bin/sh=$BASH_PATH $BASH_DEPS">> /etc/nix/nix.conf \
- && nix-collect-garbage -d \
- && nix optimise-store
+ && /nix/var/nix/profiles/default/bin/nix-collect-garbage -d \
+ && /nix/var/nix/profiles/default/bin/nix optimise-store
 
 
 COPY nix/docker/profile.sh /etc/nix/
