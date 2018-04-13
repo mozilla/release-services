@@ -224,7 +224,7 @@ PROJECTS_CONFIG = {
             'testing': {
                 's3_bucket': 'releng-testing-docs',
                 'url': 'https://docs.testing.mozilla-releng.net',
-                'dns': 'd32jt14rospqzr.cloudfront.net.',
+                'dns': 'd1sw5c8kdn03y.cloudfront.net.',
             },
             'staging': {
                 's3_bucket': 'releng-staging-docs',
@@ -258,7 +258,7 @@ PROJECTS_CONFIG = {
             'testing': {
                 's3_bucket': 'releng-testing-frontend',
                 'url': 'https://testing.mozilla-releng.net',
-                'dns': 'dpwmwa9tge2p3.cloudfront.net.',
+                'dns': 'd1l70lpksx3ik7.cloudfront.net.',
                 'csp': [
                     'https://login.taskcluster.net',
                     'https://auth.taskcluster.net',
@@ -273,17 +273,16 @@ PROJECTS_CONFIG = {
                     'https://auth.taskcluster.net',
                 ],
             },
-            # TODO: remove comment after freeze period
-            # 'production': {
-            #     's3_bucket': 'releng-production-frontend',
-            #     'url': 'https://mozilla-releng.net',
-            #     'dns': 'd1qqwps52z1e12.cloudfront.net.',
-            #     'dns_domain': 'www.mozilla-releng.net',
-            #     'csp': [
-            #         'https://login.taskcluster.net',
-            #         'https://auth.taskcluster.net',
-            #     ],
-            # },
+            'production': {
+                's3_bucket': 'releng-production-frontend',
+                'url': 'https://mozilla-releng.net',
+                'dns': 'd1qqwps52z1e12.cloudfront.net.',
+                'dns_domain': 'www.mozilla-releng.net',
+                'csp': [
+                    'https://login.taskcluster.net',
+                    'https://auth.taskcluster.net',
+                ],
+            },
         },
     },
     'releng-mapper': {
@@ -434,7 +433,7 @@ PROJECTS_CONFIG = {
             'testing': {
                 's3_bucket': 'shipit-testing-frontend',
                 'url': 'https://shipit.testing.mozilla-releng.net',
-                'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
+                'dns': 'd2jpisuzgldax2.cloudfront.net.',
                 'envs': {
                     'bugzilla-url': 'https://bugzilla.mozilla.org',
                 },
