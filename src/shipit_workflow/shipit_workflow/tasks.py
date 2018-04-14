@@ -34,7 +34,7 @@ SUPPORTED_FLAVORS = {
     ],
     'fennec_rc': [
         {'name': 'promote_fennec', 'in_previous_graph_ids': True},
-        {'name': 'ship_fennec_rc', 'in_previous_graph_ids': False},
+        {'name': 'ship_fennec_rc', 'in_previous_graph_ids': True},
         {'name': 'ship_fennec', 'in_previous_graph_ids': True},
     ],
     'devedition': [
