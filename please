@@ -12,34 +12,8 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-USE_NIX=0
-USE_DOCKER=0
-# TODO: in addition to version we should also use hash of nix/docker folder
-DOCKER_NAME="mozilla-releng-services-v`cat ./VERSION`"
-
-case "`uname`" in
-  Darwin)
-    if hash docker 2>/dev/null; then
-       USE_DOCKER=1
-    fi
-    ;;
-  Linux)
-    if hash nix-build 2>/dev/null; then
-         USE_NIX=1
-    else
-      if hash docker 2>/dev/null; then
-         USE_DOCKER=1
-      fi
-    fi
-    ;;
-  *)
-    echo "ERROR: Unknown platform '$OSTYPE'"
-    exit 1
-    ;;
-esac
 
 USE_DOCKER=1
-
 USE_NIX=0
 if [ -f /.dockerenv ]; then
   USE_NIX=1
@@ -51,7 +25,6 @@ if [ "$USE_NIX" = "1" ]; then
   nix_store_file=`cat $drv | cut -c17-91`
   if [ ! -e $nix_store_file ]; then
     echo -n "Building please command (this might take a minute or two the first time) ... ";
-    echo "${GREEN}DONE${NC}";
   fi
   silent nix-build nix/default.nix -A please-cli -o result-please-cli;
   if [ ! -e $nix_store_file ]; then
@@ -61,9 +34,20 @@ if [ "$USE_NIX" = "1" ]; then
 
 else
   if [ "$USE_DOCKER" = "1" ]; then
+    DOCKER_HASH="`pwd``git rev-parse --abbrev-ref HEAD`"
+    DOCKER_NAME="mozilla-releng-services-v`cat ./VERSION`-`echo -n $DOCKER_HASH | sha256sum | cut -d ' ' -f 1`"
     if [ ! "$(docker ps -q -f name=$DOCKER_NAME)" ]; then
       if [ ! "$(docker ps -qa -f name=$DOCKER_NAME)" ]; then
-        docker run --privileged -td --name $DOCKER_NAME --volume="$(pwd)":/app --workdir=/app -p 7000:7000 -p 8000-8100:8000-8100 mozillareleng/services:base-`cat ./VERSION`
+        docker run \
+            --privileged \
+            -td \
+            --name $DOCKER_NAME \
+            --volume="$(pwd)":/app \
+            --volume=/var/run/docker.sock:/var/run/docker.sock \
+            --workdir=/app \
+            -p 7000:7000 \
+            -p 8000-8100:8000-8100 \
+            mozillareleng/services:base-dnd-`cat ./VERSION`
       else
         docker start $DOCKER_NAME
       fi
