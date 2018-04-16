@@ -60,7 +60,15 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
     indent = ' ' * indent
     channel_derivations = dict()
 
-    for tmp_channel in ['master'] + please_cli.config.DEPLOY_CHANNELS:
+    channels = ['master']
+
+    project_deploys = please_cli.config.PROJECTS_CONFIG.get(project, dict()).get('deploys', [])
+    for deploy in project_deploys:
+        for channel_ in deploy.get('options', dict()).keys():
+            if channel_ in please_cli.config.DEPLOY_CHANNELS:
+                channels.append(channel_)
+
+    for tmp_channel in channels:
         project_exists = False
         attribute = project
         if tmp_channel != 'master':

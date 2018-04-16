@@ -15,11 +15,6 @@ import click
 import click_spinner
 import please_cli.config
 
-DEPLOYABLE_PROJECTS = {}
-for project_name, project_config in please_cli.config.PROJECTS_CONFIG.items():
-    if 'deploy' in project_config:
-        DEPLOYABLE_PROJECTS[project_name] = project_config
-
 
 def get_build_task(index,
                    project,
@@ -32,8 +27,6 @@ def get_build_task(index,
                    cache_bucket=None,
                    cache_region=None,
                    ):
-
-    project_config = please_cli.config.PROJECTS_CONFIG.get(project, {})
 
     command = [
         './please', '-vv', 'tools', 'build', project,
@@ -68,6 +61,9 @@ def get_build_task(index,
 
 def get_deploy_task(index,
                     project,
+                    project_requires,
+                    deploy_target,
+                    deploy_options,
                     task_group_id,
                     parent_task,
                     github_commit,
@@ -76,16 +72,13 @@ def get_deploy_task(index,
                     taskcluster_secret,
                     ):
 
-    project_config = please_cli.config.PROJECTS_CONFIG.get(project, {})
-    deploy_type = project_config.get('deploy')
-    deploy_options = project_config.get('deploy_options', {}).get(channel, {})
     scopes = []
 
-    if deploy_type == 'S3':
+    if deploy_target == 'S3':
         project_csp = []
         for url in deploy_options.get('csp', []):
             project_csp.append('--csp="{}"'.format(url))
-        for require in project_config.get('requires', []):
+        for require in project_requires:
             require_config = please_cli.config.PROJECTS_CONFIG.get(require, {})
             require_deploy_options = require_config.get('deploy_options', {}).get(channel, {})
             require_url = require_deploy_options.get('url')
@@ -97,7 +90,7 @@ def get_deploy_task(index,
         project_envs.append('--env="release-channel: {}"'.format(channel))
         for env_name, env_value in deploy_options.get('envs', {}).items():
             project_envs.append('--env="{}: {}"'.format(env_name, env_value))
-        for require in project_config.get('requires', []):
+        for require in project_requires:
             require_config = please_cli.config.PROJECTS_CONFIG.get(require, {})
             require_deploy_options = require_config.get('deploy_options', {}).get(channel, {})
             require_url = require_deploy_options.get('url')
@@ -114,7 +107,7 @@ def get_deploy_task(index,
             '--no-interactive',
         ] + project_csp + project_envs
 
-    elif deploy_type == 'HEROKU':
+    elif deploy_target == 'HEROKU':
         command = [
             './please', '-vv',
             'tools', 'deploy:HEROKU',
@@ -126,7 +119,7 @@ def get_deploy_task(index,
             '--no-interactive',
         ]
 
-    elif deploy_type == 'TASKCLUSTER_HOOK':
+    elif deploy_target == 'TASKCLUSTER_HOOK':
         command = [
             './please', '-vv',
             'tools', 'deploy:TASKCLUSTER_HOOK',
@@ -136,13 +129,13 @@ def get_deploy_task(index,
             '--channel=' + channel,
             '--no-interactive',
         ]
-        scopes = [
+        scopes += [
           'assume:hook-id:project-releng/services-{}-*'.format(channel),
           'hooks:modify-hook:project-releng/services-{}-*'.format(channel),
         ]
 
     else:
-        raise click.ClickException('Unknown deployment type `{}` for project `{}`'.format(deploy_type, project))
+        raise click.ClickException('Unknown deployment target `{}` for project `{}`'.format(deploy_target, project))
 
     return get_task(
         task_group_id,
@@ -300,22 +293,22 @@ def cmd(ctx,
     taskcluster_secret = 'repo:github.com/mozilla-releng/services:branch:' + channel
     if pull_request is not None:
         taskcluster_secret = 'repo:github.com/mozilla-releng/services:pull-request'
+
     taskcluster_queue = cli_common.taskcluster.get_service('queue')
+
     click.echo(' => Retriving taskGroupId ... ', nl=False)
     with click_spinner.spinner():
         task = taskcluster_queue.task(task_id)
-
-    if 'taskGroupId' not in task:
-        please_cli.utils.check_result(1, 'taskGroupId does not exists in task: {}'.format(json.dumps(task)))
-
-    task_group_id = task['taskGroupId']
-    please_cli.utils.check_result(0, '')
-    click.echo('    taskGroupId: ' + task_group_id)
+        if 'taskGroupId' not in task:
+            please_cli.utils.check_result(1, 'taskGroupId does not exists in task: {}'.format(json.dumps(task)))
+        task_group_id = task['taskGroupId']
+        please_cli.utils.check_result(0, '')
+        click.echo('    taskGroupId: ' + task_group_id)
 
     click.echo(' => Checking cache which project needs to be rebuilt')
     build_projects = []
     project_hashes = dict()
-    for project in sorted(DEPLOYABLE_PROJECTS.keys()):
+    for project in sorted(please_cli.config.PROJECTS):
         click.echo('     => ' + project)
         project_exists_in_cache, project_hash = ctx.invoke(
             please_cli.check_cache.cmd,
@@ -330,23 +323,33 @@ def cmd(ctx,
         if not project_exists_in_cache:
             build_projects.append(project)
 
-    click.echo(' => Checking which project needs to be redeployed')
-    deploy_projects = []
+    projects_to_deploy = {}
+
     if channel in please_cli.config.DEPLOY_CHANNELS:
+        click.echo(' => Checking which project needs to be redeployed')
 
         # TODO: get status for our index branch
-        status = {}
+        deployed_projects = {}
 
-        for project in sorted(DEPLOYABLE_PROJECTS.keys()):
-            project_hash = status.get(project)
+        for project_name in sorted(PROJECTS):
+            deployed_project = deployed_projects.get(project_name)
 
-            if project_hash == project_hashes[project]:
+            if deployed_projects == project_hashes[project_name]:
                 continue
 
-            if channel not in DEPLOYABLE_PROJECTS[project].get('deploy_options', {}):
+            if project_name not in PROJECTS_CONFIG or \
+                    'deploys' not in PROJECTS_CONFIG[project_name]:
                 continue
 
-            deploy_projects.append(project)
+            for deploy in PROJECTS_CONFIG[project_name]['deploys']:
+                for deploy_channel in deploy['options']:
+                    if channel == deploy_channel:
+                        projects_to_deploy.append((
+                            project_name,
+                            PROJECTS_CONFIG[project_name].get('requires', []),
+                            deploy['target'],
+                            deploy['options'],
+                        ))
 
     click.echo(' => Creating taskcluster tasks definitions')
     tasks = []
@@ -382,7 +385,7 @@ def cmd(ctx,
         )
         tasks.append((project_uuid, build_tasks[project_uuid]))
 
-    if deploy_projects:
+    if projects_to_deploy:
 
         # 2. maintanance on task
         maintanance_on_uuid = slugid.nice().decode('utf-8')
@@ -409,11 +412,15 @@ def cmd(ctx,
 
         # 3. deploy tasks (if on production/staging)
         deploy_tasks = {}
-        for index, project in enumerate(sorted(deploy_projects)):
+        for index, (project, project_requires, deploy_target, deploy_options) in \
+                enumerate(sorted(projects_to_deploy, key=lambda x: x[0])):
             project_uuid = slugid.nice().decode('utf-8')
             project_task = get_deploy_task(
                 index,
                 project,
+                project_requires,
+                deploy_target,
+                deploy_options,
                 task_group_id,
                 maintanance_on_uuid,
                 github_commit,

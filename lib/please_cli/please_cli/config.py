@@ -84,27 +84,31 @@ PROJECTS_CONFIG = {
         'requires': [
             'postgresql',
         ],
-        'deploy': 'HEROKU',
-        'deploy_options': {
-            'testing': {
-                'heroku_app': 'releng-testing-notif-policy',
-                'heroku_dyno_type': 'web',
-                'url': 'https://policy.notification.testing.mozilla-releng.net',
-                'dns': 'policy.notification.testing.mozilla-releng.net.herokudns.com',
+        'deploys': [
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'heroku_app': 'releng-testing-notif-policy',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://policy.notification.testing.mozilla-releng.net',
+                        'dns': 'policy.notification.testing.mozilla-releng.net.herokudns.com',
+                    },
+                    'staging': {
+                        'heroku_app': 'releng-staging-notif-policy',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://policy.notification.staging.mozilla-releng.net',
+                        'dns': 'policy.notification.staging.mozilla-releng.net.herokudns.com',
+                    },
+                    'production': {
+                        'heroku_app': 'releng-production-notif-policy',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://policy.notification.mozilla-releng.net',
+                        'dns': 'policy.notification.mozilla-releng.net.herokudns.com',
+                    },
+                },
             },
-            'staging': {
-                'heroku_app': 'releng-staging-notif-policy',
-                'heroku_dyno_type': 'web',
-                'url': 'https://policy.notification.staging.mozilla-releng.net',
-                'dns': 'policy.notification.staging.mozilla-releng.net.herokudns.com',
-            },
-            'production': {
-                'heroku_app': 'releng-production-notif-policy',
-                'heroku_dyno_type': 'web',
-                'url': 'https://policy.notification.mozilla-releng.net',
-                'dns': 'policy.notification.mozilla-releng.net.herokudns.com',
-            },
-        },
+        ],
     },
     'releng-notification-identity': {
         'checks': [
@@ -118,27 +122,31 @@ PROJECTS_CONFIG = {
         'requires': [
             'postgresql',
         ],
-        'deploy': 'HEROKU',
-        'deploy_options': {
-            'testing': {
-                'heroku_app': 'releng-testing-notif-identity',
-                'heroku_dyno_type': 'web',
-                'url': 'https://identity.notification.testing.mozilla-releng.net',
-                'dns': 'identity.notification.testing.mozilla-releng.net.herokudns.com',
+        'deploys': [
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'heroku_app': 'releng-testing-notif-identity',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://identity.notification.testing.mozilla-releng.net',
+                        'dns': 'identity.notification.testing.mozilla-releng.net.herokudns.com',
+                    },
+                    'staging': {
+                        'heroku_app': 'releng-staging-notif-identity',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://identity.notification.staging.mozilla-releng.net',
+                        'dns': 'identity.notification.staging.mozilla-releng.net.herokudns.com',
+                    },
+                    'production': {
+                        'heroku_app': 'releng-production-notif-ident',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://identity.notification.mozilla-releng.net',
+                        'dns': 'identity.notification.mozilla-releng.net.herokudns.com',
+                    },
+                },
             },
-            'staging': {
-                'heroku_app': 'releng-staging-notif-identity',
-                'heroku_dyno_type': 'web',
-                'url': 'https://identity.notification.staging.mozilla-releng.net',
-                'dns': 'identity.notification.staging.mozilla-releng.net.herokudns.com',
-            },
-            'production': {
-                'heroku_app': 'releng-production-notif-ident',
-                'heroku_dyno_type': 'web',
-                'url': 'https://identity.notification.mozilla-releng.net',
-                'dns': 'identity.notification.mozilla-releng.net.herokudns.com',
-            },
-        },
+        ],
     },
     'releng-archiver': {
         'checks': [
@@ -152,30 +160,34 @@ PROJECTS_CONFIG = {
         'requires': [
             'postgresql',
         ],
-        'deploy': 'HEROKU',
-        'deploy_options': {
-            'testing': {
-                'heroku_app': 'releng-testing-archiver',
-                'heroku_dyno_type': 'web',
-                'url': 'https://archiver.testing.mozilla-releng.net',
-                # TODO: switch to SSL Endpoint
-                'dns': 'archiver.testing.mozilla-releng.net.herokudns.com',
+        'deploys': [
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'heroku_app': 'releng-testing-archiver',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://archiver.testing.mozilla-releng.net',
+                        # TODO: switch to SSL Endpoint
+                        'dns': 'archiver.testing.mozilla-releng.net.herokudns.com',
+                    },
+                    'staging': {
+                        'heroku_app': 'releng-staging-archiver',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://archiver.staging.mozilla-releng.net',
+                        # TODO: switch to SSL Endpoint
+                        'dns': 'archiver.staging.mozilla-releng.net.herokudns.com',
+                    },
+                    # 'production': {
+                    #     'heroku_app': 'releng-production-archiver',
+                    #     'heroku_dyno_type': 'web',
+                    #     'url': 'https://archiver.mozilla-releng.net',
+                    #     # TODO: switch to SSL Endpoint
+                    #     'dns': 'archiver.mozilla-releng.net.herokudns.com',
+                    # },
+                },
             },
-            'staging': {
-                'heroku_app': 'releng-staging-archiver',
-                'heroku_dyno_type': 'web',
-                'url': 'https://archiver.staging.mozilla-releng.net',
-                # TODO: switch to SSL Endpoint
-                'dns': 'archiver.staging.mozilla-releng.net.herokudns.com',
-            },
-            # 'production': {
-            #     'heroku_app': 'releng-production-archiver',
-            #     'heroku_dyno_type': 'web',
-            #     'url': 'https://archiver.mozilla-releng.net',
-            #     # TODO: switch to SSL Endpoint
-            #     'dns': 'archiver.mozilla-releng.net.herokudns.com',
-            # },
-        },
+        ],
     },
     'releng-clobberer': {
         'checks': [
@@ -189,29 +201,33 @@ PROJECTS_CONFIG = {
         'requires': [
             'postgresql',
         ],
-        'deploy': 'HEROKU',
-        'deploy_options': {
-            'testing': {
-                'heroku_app': 'releng-testing-clobberer',
-                'heroku_dyno_type': 'web',
-                'url': 'https://clobberer.testing.mozilla-releng.net',
-                # TODO: do testing and production have the same dns?
-                'dns': 'saitama-70467.herokussl.com',
+        'deploys': [
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'heroku_app': 'releng-testing-clobberer',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://clobberer.testing.mozilla-releng.net',
+                        # TODO: do testing and production have the same dns?
+                        'dns': 'saitama-70467.herokussl.com',
+                    },
+                    'staging': {
+                        'heroku_app': 'releng-staging-clobberer',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://clobberer.staging.mozilla-releng.net',
+                        # TODO: do staging and production have the same dns?
+                        'dns': 'saitama-70467.herokussl.com',
+                    },
+                    # 'production': {
+                    #     'heroku_app': 'releng-production-clobberer',
+                    #     'heroku_dyno_type': 'web',
+                    #     'url': 'https://clobberer.mozilla-releng.net',
+                    #     'dns': 'saitama-70467.herokussl.com',
+                    # },
+                },
             },
-            'staging': {
-                'heroku_app': 'releng-staging-clobberer',
-                'heroku_dyno_type': 'web',
-                'url': 'https://clobberer.staging.mozilla-releng.net',
-                # TODO: do staging and production have the same dns?
-                'dns': 'saitama-70467.herokussl.com',
-            },
-            # 'production': {
-            #     'heroku_app': 'releng-production-clobberer',
-            #     'heroku_dyno_type': 'web',
-            #     'url': 'https://clobberer.mozilla-releng.net',
-            #     'dns': 'saitama-70467.herokussl.com',
-            # },
-        },
+        ],
     },
     'releng-docs': {
         'run': 'SPHINX',
@@ -219,24 +235,28 @@ PROJECTS_CONFIG = {
             'schema': 'http',
             'port': 7000,
         },
-        'deploy': 'S3',
-        'deploy_options': {
-            'testing': {
-                's3_bucket': 'releng-testing-docs',
-                'url': 'https://docs.testing.mozilla-releng.net',
-                'dns': 'd1sw5c8kdn03y.cloudfront.net.',
+        'deploys': [
+            {
+                'target': 'S3',
+                'options': {
+                    'testing': {
+                        's3_bucket': 'releng-testing-docs',
+                        'url': 'https://docs.testing.mozilla-releng.net',
+                        'dns': 'd1sw5c8kdn03y.cloudfront.net.',
+                    },
+                    'staging': {
+                        's3_bucket': 'releng-staging-docs',
+                        'url': 'https://docs.staging.mozilla-releng.net',
+                        'dns': 'd32jt14rospqzr.cloudfront.net.',
+                    },
+                    'production': {
+                        's3_bucket': 'releng-production-docs',
+                        'url': 'https://docs.mozilla-releng.net',
+                        'dns': 'd1945er7u4liht.cloudfront.net.',
+                    },
+                },
             },
-            'staging': {
-                's3_bucket': 'releng-staging-docs',
-                'url': 'https://docs.staging.mozilla-releng.net',
-                'dns': 'd32jt14rospqzr.cloudfront.net.',
-            },
-            'production': {
-                's3_bucket': 'releng-production-docs',
-                'url': 'https://docs.mozilla-releng.net',
-                'dns': 'd1945er7u4liht.cloudfront.net.',
-            },
-        }
+        ],
     },
     'releng-frontend': {
         'run': 'ELM',
@@ -253,37 +273,41 @@ PROJECTS_CONFIG = {
             'releng-notification-policy',
             'releng-notification-identity',
         ],
-        'deploy': 'S3',
-        'deploy_options': {
-            'testing': {
-                's3_bucket': 'releng-testing-frontend',
-                'url': 'https://testing.mozilla-releng.net',
-                'dns': 'd1l70lpksx3ik7.cloudfront.net.',
-                'csp': [
-                    'https://login.taskcluster.net',
-                    'https://auth.taskcluster.net',
-                ],
+        'deploys': [
+            {
+                'target': 'S3',
+                'options': {
+                    'testing': {
+                        's3_bucket': 'releng-testing-frontend',
+                        'url': 'https://testing.mozilla-releng.net',
+                        'dns': 'd1l70lpksx3ik7.cloudfront.net.',
+                        'csp': [
+                            'https://login.taskcluster.net',
+                            'https://auth.taskcluster.net',
+                        ],
+                    },
+                    'staging': {
+                        's3_bucket': 'releng-staging-frontend',
+                        'url': 'https://staging.mozilla-releng.net',
+                        'dns': 'dpwmwa9tge2p3.cloudfront.net.',
+                        'csp': [
+                            'https://login.taskcluster.net',
+                            'https://auth.taskcluster.net',
+                        ],
+                    },
+                    'production': {
+                        's3_bucket': 'releng-production-frontend',
+                        'url': 'https://mozilla-releng.net',
+                        'dns': 'd1qqwps52z1e12.cloudfront.net.',
+                        'dns_domain': 'www.mozilla-releng.net',
+                        'csp': [
+                            'https://login.taskcluster.net',
+                            'https://auth.taskcluster.net',
+                        ],
+                    },
+                },
             },
-            'staging': {
-                's3_bucket': 'releng-staging-frontend',
-                'url': 'https://staging.mozilla-releng.net',
-                'dns': 'dpwmwa9tge2p3.cloudfront.net.',
-                'csp': [
-                    'https://login.taskcluster.net',
-                    'https://auth.taskcluster.net',
-                ],
-            },
-            'production': {
-                's3_bucket': 'releng-production-frontend',
-                'url': 'https://mozilla-releng.net',
-                'dns': 'd1qqwps52z1e12.cloudfront.net.',
-                'dns_domain': 'www.mozilla-releng.net',
-                'csp': [
-                    'https://login.taskcluster.net',
-                    'https://auth.taskcluster.net',
-                ],
-            },
-        },
+        ],
     },
     'releng-mapper': {
         'checks': [
@@ -297,30 +321,34 @@ PROJECTS_CONFIG = {
         'requires': [
             'postgresql',
         ],
-        'deploy': 'HEROKU',
-        'deploy_options': {
-            'testing': {
-                'heroku_app': 'releng-testing-mapper',
-                'heroku_dyno_type': 'web',
-                'url': 'https://mapper.testing.mozilla-releng.net',
-                # TODO: switch to SSL Endpoint
-                'dns': 'mapper.testing.mozilla-releng.net.herokudns.com',
+        'deploys': [
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'heroku_app': 'releng-testing-mapper',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://mapper.testing.mozilla-releng.net',
+                        # TODO: switch to SSL Endpoint
+                        'dns': 'mapper.testing.mozilla-releng.net.herokudns.com',
+                    },
+                    'staging': {
+                        'heroku_app': 'releng-staging-mapper',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://mapper.staging.mozilla-releng.net',
+                        # TODO: switch to SSL Endpoint
+                        'dns': 'mapper.staging.mozilla-releng.net.herokudns.com',
+                    },
+                    # 'production': {
+                    #     'heroku_app': 'releng-production-mapper',
+                    #     'heroku_dyno_type': 'web',
+                    #      # TODO: switch to SSL Endpoint
+                    #     'url': 'https://mapper.mozilla-releng.net',
+                    #     'dns': 'mapper.mozilla-releng.net.herokudns.com',
+                    # },
+                },
             },
-            'staging': {
-                'heroku_app': 'releng-staging-mapper',
-                'heroku_dyno_type': 'web',
-                'url': 'https://mapper.staging.mozilla-releng.net',
-                # TODO: switch to SSL Endpoint
-                'dns': 'mapper.staging.mozilla-releng.net.herokudns.com',
-            },
-            # 'production': {
-            #     'heroku_app': 'releng-production-mapper',
-            #     'heroku_dyno_type': 'web',
-            #      # TODO: switch to SSL Endpoint
-            #     'url': 'https://mapper.mozilla-releng.net',
-            #     'dns': 'mapper.mozilla-releng.net.herokudns.com',
-            # },
-        },
+        ],
     },
     'releng-tooltool': {
         'checks': [
@@ -334,27 +362,31 @@ PROJECTS_CONFIG = {
         'requires': [
             'postgresql',
         ],
-        'deploy': 'HEROKU',
-        'deploy_options': {
-            'testing': {
-                'heroku_app': 'releng-testing-tooltool',
-                'heroku_dyno_type': 'web',
-                'url': 'https://tooltool.testing.mozilla-releng.net',
-                'dns': 'shizuoka-60622.herokussl.com',
+        'deploys': [
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'heroku_app': 'releng-testing-tooltool',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://tooltool.testing.mozilla-releng.net',
+                        'dns': 'shizuoka-60622.herokussl.com',
+                    },
+                    'staging': {
+                        'heroku_app': 'releng-staging-tooltool',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://tooltool.staging.mozilla-releng.net',
+                        'dns': 'shizuoka-60622.herokussl.com',
+                    },
+                    'production': {
+                        'heroku_app': 'releng-production-tooltool',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://tooltool.mozilla-releng.net',
+                        'dns': 'kochi-11433.herokussl.com',
+                    },
+                },
             },
-            'staging': {
-                'heroku_app': 'releng-staging-tooltool',
-                'heroku_dyno_type': 'web',
-                'url': 'https://tooltool.staging.mozilla-releng.net',
-                'dns': 'shizuoka-60622.herokussl.com',
-            },
-            'production': {
-                'heroku_app': 'releng-production-tooltool',
-                'heroku_dyno_type': 'web',
-                'url': 'https://tooltool.mozilla-releng.net',
-                'dns': 'kochi-11433.herokussl.com',
-            },
-        },
+        ],
     },
     'releng-treestatus': {
         'checks': [
@@ -368,54 +400,66 @@ PROJECTS_CONFIG = {
         'requires': [
             'postgresql',
         ],
-        'deploy': 'HEROKU',
-        'deploy_options': {
-            'testing': {
-                'heroku_app': 'releng-testing-treestatus',
-                'heroku_dyno_type': 'web',
-                'url': 'https://treestatus.testing.mozilla-releng.net',
-                # TODO: we need to change this to SSL Endpoint
-                'dns': 'treestatus.testing.mozilla-releng.net.herokudns.com',
+        'deploys': [
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'heroku_app': 'releng-testing-treestatus',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://treestatus.testing.mozilla-releng.net',
+                        # TODO: we need to change this to SSL Endpoint
+                        'dns': 'treestatus.testing.mozilla-releng.net.herokudns.com',
+                    },
+                    'staging': {
+                        'heroku_app': 'releng-staging-treestatus',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://treestatus.staging.mozilla-releng.net',
+                        # TODO: we need to change this to SSL Endpoint
+                        'dns': 'treestatus.staging.mozilla-releng.net.herokudns.com',
+                    },
+                    'production': {
+                        'heroku_app': 'releng-production-treestatus',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://treestatus.mozilla-releng.net',
+                        # TODO: this needs to be updated in mozilla-releng/build-cloud-tools
+                        'dns': 'kochi-31413.herokussl.com',
+                    },
+                },
             },
-            'staging': {
-                'heroku_app': 'releng-staging-treestatus',
-                'heroku_dyno_type': 'web',
-                'url': 'https://treestatus.staging.mozilla-releng.net',
-                # TODO: we need to change this to SSL Endpoint
-                'dns': 'treestatus.staging.mozilla-releng.net.herokudns.com',
-            },
-            'production': {
-                'heroku_app': 'releng-production-treestatus',
-                'heroku_dyno_type': 'web',
-                'url': 'https://treestatus.mozilla-releng.net',
-                # TODO: this needs to be updated in mozilla-releng/build-cloud-tools
-                'dns': 'kochi-31413.herokussl.com',
-            },
-        },
+        ],
     },
     'shipit-bot-uplift': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
         ],
-        'deploy': 'TASKCLUSTER_HOOK',
-        'deploy_options': {
-            'testing': {},
-            'staging': {},
-            'production': {},
-        },
+        'deploys': [
+            {
+                'target': 'TASKCLUSTER_HOOK',
+                'options': {
+                    'testing': {},
+                    'staging': {},
+                    'production': {},
+                },
+            },
+        ],
     },
     'shipit-code-coverage': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
         ],
-        'deploy': 'TASKCLUSTER_HOOK',
-        'deploy_options': {
-            'testing': {},
-            'staging': {},
-            'production': {},
-        },
+        'deploys': [
+            {
+                'target': 'TASKCLUSTER_HOOK',
+                'options': {
+                    'testing': {},
+                    'staging': {},
+                    'production': {},
+                },
+            },
+        ],
     },
     'shipit-code-coverage-backend': {
         'checks': [
@@ -429,27 +473,31 @@ PROJECTS_CONFIG = {
         'requires': [
             'redis',
         ],
-        'deploy': 'HEROKU',
-        'deploy_options': {
-            'testing': {
-                'heroku_app': 'shipit-testing-codecoverage',
-                'heroku_dyno_type': 'web',
-                'url': 'https://coverage.testing.moz.tools',
-                'dns': 'coverage.testing.moz.tools.herokudns.com',
+        'deploys': [
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'heroku_app': 'shipit-testing-codecoverage',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://coverage.testing.moz.tools',
+                        'dns': 'coverage.testing.moz.tools.herokudns.com',
+                    },
+                    'staging': {
+                        'heroku_app': 'shipit-staging-codecoverage',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://coverage.staging.moz.tools',
+                        'dns': 'coverage.staging.moz.tools.herokudns.com',
+                    },
+                    'production': {
+                        'heroku_app': 'shipit-production-codecoverage',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://coverage.moz.tools',
+                        'dns': 'coverage.moz.tools.herokudns.com',
+                    },
+                },
             },
-            'staging': {
-                'heroku_app': 'shipit-staging-codecoverage',
-                'heroku_dyno_type': 'web',
-                'url': 'https://coverage.staging.moz.tools',
-                'dns': 'coverage.staging.moz.tools.herokudns.com',
-            },
-            'production': {
-                'heroku_app': 'shipit-production-codecoverage',
-                'heroku_dyno_type': 'web',
-                'url': 'https://coverage.moz.tools',
-                'dns': 'coverage.moz.tools.herokudns.com',
-            },
-        },
+        ],
     },
     'shipit-frontend': {
         'run': 'ELM',
@@ -462,50 +510,54 @@ PROJECTS_CONFIG = {
         'requires': [
             'shipit-uplift',
         ],
-        'deploy': 'S3',
-        'deploy_options': {
-            'testing': {
-                's3_bucket': 'shipit-testing-frontend',
-                'url': 'https://shipit.testing.mozilla-releng.net',
-                'dns': 'd2jpisuzgldax2.cloudfront.net.',
-                'envs': {
-                    'bugzilla-url': 'https://bugzilla.mozilla.org',
+        'deploys': [
+            {
+                'target': 'S3',
+                'options': {
+                    'testing': {
+                        's3_bucket': 'shipit-testing-frontend',
+                        'url': 'https://shipit.testing.mozilla-releng.net',
+                        'dns': 'd2jpisuzgldax2.cloudfront.net.',
+                        'envs': {
+                            'bugzilla-url': 'https://bugzilla.mozilla.org',
+                        },
+                        'csp': [
+                            'https://login.taskcluster.net',
+                            'https://auth.taskcluster.net',
+                            'https://bugzilla.mozilla.org',
+                        ],
+                    },
+                    'staging': {
+                        's3_bucket': 'shipit-staging-frontend',
+                        'url': 'https://shipit.staging.mozilla-releng.net',
+                        'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
+                        'envs': {
+                            'bugzilla-url': 'https://bugzilla.mozilla.org',
+                        },
+                        'csp': [
+                            'https://login.taskcluster.net',
+                            'https://auth.taskcluster.net',
+                            'https://bugzilla.mozilla.org',
+                            'https://uplift.shipit.staging.mozilla-releng.net',
+                        ],
+                    },
+                    'production': {
+                        's3_bucket': 'shipit-production-frontend',
+                        'url': 'https://shipit.mozilla-releng.net',
+                        'dns': 'dve8yd1431ifz.cloudfront.net.',
+                        'envs': {
+                            'bugzilla-url': 'https://bugzilla.mozilla.org',
+                        },
+                        'csp': [
+                            'https://login.taskcluster.net',
+                            'https://auth.taskcluster.net',
+                            'https://bugzilla.mozilla.org',
+                            'https://uplift.shipit.mozilla-releng.net',
+                        ],
+                    },
                 },
-                'csp': [
-                    'https://login.taskcluster.net',
-                    'https://auth.taskcluster.net',
-                    'https://bugzilla.mozilla.org',
-                ],
             },
-            'staging': {
-                's3_bucket': 'shipit-staging-frontend',
-                'url': 'https://shipit.staging.mozilla-releng.net',
-                'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
-                'envs': {
-                    'bugzilla-url': 'https://bugzilla.mozilla.org',
-                },
-                'csp': [
-                    'https://login.taskcluster.net',
-                    'https://auth.taskcluster.net',
-                    'https://bugzilla.mozilla.org',
-                    'https://uplift.shipit.staging.mozilla-releng.net',
-                ],
-            },
-            'production': {
-                's3_bucket': 'shipit-production-frontend',
-                'url': 'https://shipit.mozilla-releng.net',
-                'dns': 'dve8yd1431ifz.cloudfront.net.',
-                'envs': {
-                    'bugzilla-url': 'https://bugzilla.mozilla.org',
-                },
-                'csp': [
-                    'https://login.taskcluster.net',
-                    'https://auth.taskcluster.net',
-                    'https://bugzilla.mozilla.org',
-                    'https://uplift.shipit.mozilla-releng.net',
-                ],
-            },
-        },
+        ],
     },
     'shipit-pipeline': {
         'checks': [
@@ -519,27 +571,31 @@ PROJECTS_CONFIG = {
         'requires': [
             'postgresql',
         ],
-        'deploy': 'HEROKU',
-        'deploy_options': {
-            'testing': {
-                'heroku_app': 'shipit-testing-pipeline',
-                'heroku_dyno_type': 'web',
-                'url': 'https://pipeline.shipit.testing.mozilla-releng.net',
-                'dns': 'pipeline.shipit.testing.mozilla-releng.net.herokudns.com',
+        'deploys': [
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'heroku_app': 'shipit-testing-pipeline',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://pipeline.shipit.testing.mozilla-releng.net',
+                        'dns': 'pipeline.shipit.testing.mozilla-releng.net.herokudns.com',
+                    },
+                    'staging': {
+                        'heroku_app': 'shipit-staging-pipeline',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://pipeline.shipit.staging.mozilla-releng.net',
+                        'dns': 'pipeline.shipit.staging.mozilla-releng.net.herokudns.com',
+                    },
+                    # 'production': {
+                    #     'heroku_app': 'shipit-production-pipeline',
+                    #     'heroku_dyno_type': 'web',
+                    #     'url': 'https://pipeline.shipit.mozilla-releng.net',
+                    #     'dns': 'pipeline.shipit.mozilla-releng.net.herokudns.com',
+                    # },
+                },
             },
-            'staging': {
-                'heroku_app': 'shipit-staging-pipeline',
-                'heroku_dyno_type': 'web',
-                'url': 'https://pipeline.shipit.staging.mozilla-releng.net',
-                'dns': 'pipeline.shipit.staging.mozilla-releng.net.herokudns.com',
-            },
-            # 'production': {
-            #     'heroku_app': 'shipit-production-pipeline',
-            #     'heroku_dyno_type': 'web',
-            #     'url': 'https://pipeline.shipit.mozilla-releng.net',
-            #     'dns': 'pipeline.shipit.mozilla-releng.net.herokudns.com',
-            # },
-        },
+        ],
     },
     'shipit-pulse-listener': {
         'checks': [
@@ -547,21 +603,25 @@ PROJECTS_CONFIG = {
             ('Running tests', 'pytest tests/'),
         ],
         'requires': [],
-        'deploy': 'HEROKU',
-        'deploy_options': {
-            'testing': {
-                'heroku_app': 'shipit-testing-pulse-listener',
-                'heroku_dyno_type': 'worker',
+        'deploys': [
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'heroku_app': 'shipit-testing-pulse-listener',
+                        'heroku_dyno_type': 'worker',
+                    },
+                    'staging': {
+                        'heroku_app': 'shipit-staging-pulse-listener',
+                        'heroku_dyno_type': 'worker',
+                    },
+                    'production': {
+                        'heroku_app': 'shipit-production-pulse-listen',
+                        'heroku_dyno_type': 'worker',
+                    },
+                },
             },
-            'staging': {
-                'heroku_app': 'shipit-staging-pulse-listener',
-                'heroku_dyno_type': 'worker',
-            },
-            'production': {
-                'heroku_app': 'shipit-production-pulse-listen',
-                'heroku_dyno_type': 'worker',
-            },
-        },
+        ],
     },
     'shipit-signoff': {
         'checks': [
@@ -579,39 +639,47 @@ PROJECTS_CONFIG = {
         'requires': [
             'postgresql',
         ],
-        'deploy': 'HEROKU',
-        'deploy_options': {
-            'testing': {
-                'heroku_app': 'shipit-testing-signoff',
-                'heroku_dyno_type': 'web',
-                'url': 'https://signoff.shipit.testing.mozilla-releng.net',
-                'dns': 'signoff.shipit.testing.mozilla-releng.net.herokudns.com',
+        'deploys': [
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'heroku_app': 'shipit-testing-signoff',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://signoff.shipit.testing.mozilla-releng.net',
+                        'dns': 'signoff.shipit.testing.mozilla-releng.net.herokudns.com',
+                    },
+                    'staging': {
+                        'heroku_app': 'shipit-staging-signoff',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://signoff.shipit.staging.mozilla-releng.net',
+                        'dns': 'signoff.shipit.staging.mozilla-releng.net.herokudns.com',
+                    },
+                    # 'production': {
+                    #     'heroku_app': 'shipit-production-signoff',
+                    #     'heroku_dyno_type': 'web',
+                    #     'url': 'https://signoff.shipit.mozilla-releng.net',
+                    #     'dns': 'signoff.shipit.mozilla-releng.net.herokudns.com',
+                    # },
+                },
             },
-            'staging': {
-                'heroku_app': 'shipit-staging-signoff',
-                'heroku_dyno_type': 'web',
-                'url': 'https://signoff.shipit.staging.mozilla-releng.net',
-                'dns': 'signoff.shipit.staging.mozilla-releng.net.herokudns.com',
-            },
-            # 'production': {
-            #     'heroku_app': 'shipit-production-signoff',
-            #     'heroku_dyno_type': 'web',
-            #     'url': 'https://signoff.shipit.mozilla-releng.net',
-            #     'dns': 'signoff.shipit.mozilla-releng.net.herokudns.com',
-            # },
-        },
+        ],
     },
     'shipit-static-analysis': {
         'checks': [
             ('Checking code quality', 'flake8'),
             ('Running tests', 'pytest tests/'),
         ],
-        'deploy': 'TASKCLUSTER_HOOK',
-        'deploy_options': {
-            'testing': {},
-            'staging': {},
-            'production': {},
-        },
+        'deploys': [
+            {
+                'target': 'TASKCLUSTER_HOOK',
+                'options': {
+                    'testing': {},
+                    'staging': {},
+                    'production': {},
+                },
+            },
+        ]
     },
     'shipit-taskcluster': {
         'checks': [
@@ -625,27 +693,31 @@ PROJECTS_CONFIG = {
         'requires': [
             'postgresql',
         ],
-        'deploy': 'HEROKU',
-        'deploy_options': {
-            'testing': {
-                'heroku_app': 'shipit-testing-taskcluster',
-                'heroku_dyno_type': 'web',
-                'url': 'https://taskcluster.shipit.testing.mozilla-releng.net',
-                'dns': 'taskcluster.shipit.testing.mozilla-releng.net.herokudns.com',
+        'deploys': [
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'heroku_app': 'shipit-testing-taskcluster',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://taskcluster.shipit.testing.mozilla-releng.net',
+                        'dns': 'taskcluster.shipit.testing.mozilla-releng.net.herokudns.com',
+                    },
+                    'staging': {
+                        'heroku_app': 'shipit-staging-taskcluster',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://taskcluster.shipit.staging.mozilla-releng.net',
+                        'dns': 'taskcluster.shipit.staging.mozilla-releng.net.herokudns.com',
+                    },
+                    # 'production': {
+                    #     'heroku_app': 'shipit-production-taskcluster',
+                    #     'heroku_dyno_type': 'web',
+                    #     'url': 'https://taskcluster.shipit.mozilla-releng.net',
+                    #     'dns': 'taskcluster.shipit.mozilla-releng.net.herokudns.com',
+                    # },
+                },
             },
-            'staging': {
-                'heroku_app': 'shipit-staging-taskcluster',
-                'heroku_dyno_type': 'web',
-                'url': 'https://taskcluster.shipit.staging.mozilla-releng.net',
-                'dns': 'taskcluster.shipit.staging.mozilla-releng.net.herokudns.com',
-            },
-            # 'production': {
-            #     'heroku_app': 'shipit-production-taskcluster',
-            #     'heroku_dyno_type': 'web',
-            #     'url': 'https://taskcluster.shipit.mozilla-releng.net',
-            #     'dns': 'taskcluster.shipit.mozilla-releng.net.herokudns.com',
-            # },
-        },
+        ],
     },
     'shipit-uplift': {
         'checks': [
@@ -660,27 +732,31 @@ PROJECTS_CONFIG = {
             'postgresql',
             'redis',
         ],
-        'deploy': 'HEROKU',
-        'deploy_options': {
-            'testing': {
-                'heroku_app': 'shipit-testing-uplift',
-                'heroku_dyno_type': 'web',
-                'url': 'https://uplift.shipit.testing.mozilla-releng.net',
-                'dns': 'uplift.shipit.testing.mozilla-releng.net.herokudns.com',
+        'deploys': [
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'heroku_app': 'shipit-testing-uplift',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://uplift.shipit.testing.mozilla-releng.net',
+                        'dns': 'uplift.shipit.testing.mozilla-releng.net.herokudns.com',
+                    },
+                    'staging': {
+                        'heroku_app': 'shipit-staging-uplift',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://uplift.shipit.staging.mozilla-releng.net',
+                        'dns': 'uplift.shipit.staging.mozilla-releng.net.herokudns.com',
+                    },
+                    'production': {
+                        'heroku_app': 'shipit-production-uplift',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://uplift.shipit.mozilla-releng.net',
+                        'dns': 'uplift.shipit.mozilla-releng.net.herokudns.com',
+                    },
+                },
             },
-            'staging': {
-                'heroku_app': 'shipit-staging-uplift',
-                'heroku_dyno_type': 'web',
-                'url': 'https://uplift.shipit.staging.mozilla-releng.net',
-                'dns': 'uplift.shipit.staging.mozilla-releng.net.herokudns.com',
-            },
-            'production': {
-                'heroku_app': 'shipit-production-uplift',
-                'heroku_dyno_type': 'web',
-                'url': 'https://uplift.shipit.mozilla-releng.net',
-                'dns': 'uplift.shipit.mozilla-releng.net.herokudns.com',
-            },
-        },
+        ],
     },
     'shipit-workflow': {
         'checks': [
@@ -694,22 +770,26 @@ PROJECTS_CONFIG = {
         'requires': [
             'postgresql',
         ],
-        'deploy': 'HEROKU',
-        'deploy_options': {
-            'testing': {
-                'heroku_app': 'shipit-testing-workflow',
-                'heroku_dyno_type': 'web',
-                'url': 'https://shipit-workflow.testing.mozilla-releng.net',
-                # TODO: we need to change this to SSL Endpoint
-                'dns': 'shipit-workflow.testing.mozilla-releng.net.herokudns.com',
+        'deploys': [
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'heroku_app': 'shipit-testing-workflow',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://shipit-workflow.testing.mozilla-releng.net',
+                        # TODO: we need to change this to SSL Endpoint
+                        'dns': 'shipit-workflow.testing.mozilla-releng.net.herokudns.com',
+                    },
+                    'staging': {
+                        'heroku_app': 'shipit-staging-workflow',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://shipit-workflow.staging.mozilla-releng.net',
+                        # TODO: we need to change this to SSL Endpoint
+                        'dns': 'shipit-workflow.staging.mozilla-releng.net.herokudns.com',
+                    },
+                },
             },
-            'staging': {
-                'heroku_app': 'shipit-staging-workflow',
-                'heroku_dyno_type': 'web',
-                'url': 'https://shipit-workflow.staging.mozilla-releng.net',
-                # TODO: we need to change this to SSL Endpoint
-                'dns': 'shipit-workflow.staging.mozilla-releng.net.herokudns.com',
-            },
-        },
+        ],
     },
 }

@@ -113,10 +113,15 @@ def cmd(project,
                 temp_file,
             ]
 
-        projects = [(project, None)] + \
-                   [(project + '.deploy.' + x, x) for x in please_cli.config.DEPLOY_CHANNELS]
         if channel:
             projects = [(project + '.deploy.' + channel, channel)]
+        else:
+            projects = [(project, None)]
+            project_deploys = please_cli.config.PROJECTS_CONFIG.get(project, dict()).get('deploys', [])
+            for deploy in project_deploys:
+                for channel_ in deploy.get('options', dict()).keys():
+                    if channel_ in please_cli.config.DEPLOY_CHANNELS:
+                        projects.append((project + '.deploy.' + channel_, channel_))
 
         for (attribute, channel_) in projects:
             channel_attribute = ''
