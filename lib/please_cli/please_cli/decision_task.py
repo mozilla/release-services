@@ -16,6 +16,9 @@ import click_spinner
 import please_cli.config
 
 
+PROJECTS = list(set(please_cli.config.PROJECTS) - set(please_cli.config.DEV_PROJECTS))
+
+
 def get_build_task(index,
                    project,
                    task_group_id,
@@ -289,7 +292,6 @@ def cmd(ctx,
     """A tool to be ran on each commit.
     """
 
-
     taskcluster_secret = 'repo:github.com/mozilla-releng/services:branch:' + channel
     if pull_request is not None:
         taskcluster_secret = 'repo:github.com/mozilla-releng/services:pull-request'
@@ -308,7 +310,7 @@ def cmd(ctx,
     click.echo(' => Checking cache which project needs to be rebuilt')
     build_projects = []
     project_hashes = dict()
-    for project in sorted(please_cli.config.PROJECTS):
+    for project in sorted(PROJECTS):
         click.echo('     => ' + project)
         project_exists_in_cache, project_hash = ctx.invoke(
             please_cli.check_cache.cmd,
@@ -337,16 +339,16 @@ def cmd(ctx,
             if deployed_projects == project_hashes[project_name]:
                 continue
 
-            if project_name not in PROJECTS_CONFIG or \
-                    'deploys' not in PROJECTS_CONFIG[project_name]:
+            if project_name not in please_cli.config.PROJECTS_CONFIG or \
+                    'deploys' not in please_cli.config.PROJECTS_CONFIG[project_name]:
                 continue
 
-            for deploy in PROJECTS_CONFIG[project_name]['deploys']:
+            for deploy in please_cli.config.PROJECTS_CONFIG[project_name]['deploys']:
                 for deploy_channel in deploy['options']:
                     if channel == deploy_channel:
                         projects_to_deploy.append((
                             project_name,
-                            PROJECTS_CONFIG[project_name].get('requires', []),
+                            please_cli.config.PROJECTS_CONFIG[project_name].get('requires', []),
                             deploy['target'],
                             deploy['options'],
                         ))
