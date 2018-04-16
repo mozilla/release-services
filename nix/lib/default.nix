@@ -721,6 +721,7 @@ in rec {
 
         preConfigure = ''
           rm -rf build *.egg-info
+          mkdir $coverage
         '';
 
         patchPhase = prePatch + ''
