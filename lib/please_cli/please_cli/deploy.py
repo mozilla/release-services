@@ -60,7 +60,7 @@ def cmd_COVERAGE(ctx,
 
 
 @click.command()
-@cli_common.click.taskcluster_options
+@cli_common.cli.taskcluster_options
 @click.argument(
     'project',
     required=True,
