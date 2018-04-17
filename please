@@ -47,7 +47,7 @@ else
             --workdir=/app \
             -p 7000:7000 \
             -p 8000-8100:8000-8100 \
-            mozillareleng/services:base-dnd-`cat ./VERSION`
+            mozillareleng/services:base-`cat ./VERSION`
       else
         docker start $DOCKER_NAME
       fi
