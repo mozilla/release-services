@@ -463,3 +463,134 @@ def cmd_TASKCLUSTER_HOOK(ctx,
         output,
         ask_for_details=interactive,
     )
+
+
+@click.command()
+@cli_common.cli.taskcluster_options
+@click.argument(
+    'project',
+    required=True,
+    type=click.Choice(please_cli.config.PROJECTS),
+    )
+@click.option(
+    '--channel',
+    type=click.Choice(please_cli.config.CHANNELS),
+    envvar="GITHUB_BRANCH",
+    required=True,
+    )
+@click.option(
+    '--nix-build',
+    required=True,
+    default=please_cli.config.NIX_BIN_DIR + 'nix-build',
+    help='`nix-build` command',
+    )
+@click.option(
+    '--nix',
+    required=True,
+    default=please_cli.config.NIX_BIN_DIR + 'nix',
+    help='`nix` command',
+    )
+@click.option(
+    '--docker-registry',
+    required=True,
+    default=please_cli.config.DOCKER_REGISTRY,
+    help='Docker registry.',
+    )
+@click.option(
+    '--docker-repo',
+    required=True,
+    default=please_cli.config.DOCKER_REPO,
+    help='Docker repository.',
+    )
+@click.option(
+    '--docker-username',
+    help='Docker username.',
+    )
+@click.option(
+    '--docker-password',
+    help='Docker password.',
+    )
+@click.option(
+    '--docker-image-tag-format',
+    default='{project}-{channel}',
+    help='Docker image tag format. Accepted templates: {project}, {channel}',
+    )
+@click.option(
+    '--interactive/--no-interactive',
+    default=True,
+    )
+@click.pass_context
+def cmd_DOCKERHUB(ctx,
+                  project,
+                  channel,
+                  nix_build,
+                  nix,
+                  docker_registry,
+                  taskcluster_secret,
+                  taskcluster_client_id,
+                  taskcluster_access_token,
+                  docker_username,
+                  docker_password,
+                  docker_repo,
+                  docker_image_tag_format,
+                  interactive,
+                 ):
+    '''Push to Docker Hub.
+
+    Creates versioned ($project-$hash) and stable (*-$channel) tags.
+    '''
+
+    if not (docker_username and docker_password):
+        secrets = cli_common.taskcluster.get_secrets(
+            taskcluster_secret,
+            project,
+            required=(
+                'DOCKER_USERNAME',
+                'DOCKER_PASSWORD',
+            ),
+            taskcluster_client_id=taskcluster_client_id,
+            taskcluster_access_token=taskcluster_access_token,
+        )
+        docker_username = secrets['DOCKER_USERNAME']
+        docker_password = secrets['DOCKER_PASSWORD']
+
+    ctx.invoke(please_cli.build.cmd,
+               project=project,
+               channel=channel,
+               nix_build=nix_build,
+               nix=nix,
+               taskcluster_secret=taskcluster_secret,
+               taskcluster_client_id=taskcluster_client_id,
+               taskcluster_access_token=taskcluster_access_token,
+               interactive=interactive,
+              )
+    project_path = os.path.realpath(os.path.join(
+        please_cli.config.TMP_DIR,
+        'result-build-{}-channel-{}'.format(project, channel),
+    ))
+
+    spec = push.image.spec(project_path)
+    # Stable tag, e.g. shipit-workflow-staging
+    image_tag = docker_image_tag_format.format(project=project, channel=channel)
+    project_basename = os.path.basename(project_path)
+    # remove the docker-image-mozilla- prefix and the extension
+    tag_base = project_basename.replace('docker-image-mozilla-', '').replace('.tar.gz', '')
+    # Puth the hash to the end of the tag
+    image_tag_versioned = '-'.join(reversed(tag_base.split('-', 1)))
+    for tag in (image_tag_versioned, image_tag):
+        click.echo(' => Uploading docker image `{}:{}` ... '.format(docker_repo, tag), nl=False)
+        with click_spinner.spinner():
+            push.registry.push(
+                spec,
+                docker_registry,
+                docker_username,
+                docker_password,
+                docker_repo,
+                tag,
+            )
+
+        please_cli.utils.check_result(
+            0,
+            'Pushed {}:{} docker image.'.format(docker_repo, tag),
+            ask_for_details=interactive,
+        )
