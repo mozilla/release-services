@@ -348,12 +348,13 @@ PROJECTS_CONFIG = {
                 'url': 'https://tooltool.staging.mozilla-releng.net',
                 'dns': 'shizuoka-60622.herokussl.com',
             },
-            'production': {
-                'heroku_app': 'releng-production-tooltool',
-                'heroku_dyno_type': 'web',
-                'url': 'https://tooltool.mozilla-releng.net',
-                'dns': 'kochi-11433.herokussl.com',
-            },
+            # (garbas): commeted out for the period when i'm on parental leave
+            # 'production': {
+            #     'heroku_app': 'releng-production-tooltool',
+            #     'heroku_dyno_type': 'web',
+            #     'url': 'https://tooltool.mozilla-releng.net',
+            #     'dns': 'kochi-11433.herokussl.com',
+            # },
         },
     },
     'releng-treestatus': {
@@ -384,13 +385,14 @@ PROJECTS_CONFIG = {
                 # TODO: we need to change this to SSL Endpoint
                 'dns': 'treestatus.staging.mozilla-releng.net.herokudns.com',
             },
-            'production': {
-                'heroku_app': 'releng-production-treestatus',
-                'heroku_dyno_type': 'web',
-                'url': 'https://treestatus.mozilla-releng.net',
-                # TODO: this needs to be updated in mozilla-releng/build-cloud-tools
-                'dns': 'kochi-31413.herokussl.com',
-            },
+            # (garbas): commeted out for the period when i'm on parental leave
+            # 'production': {
+            #     'heroku_app': 'releng-production-treestatus',
+            #     'heroku_dyno_type': 'web',
+            #     'url': 'https://treestatus.mozilla-releng.net',
+            #     # TODO: this needs to be updated in mozilla-releng/build-cloud-tools
+            #     'dns': 'kochi-31413.herokussl.com',
+            # },
         },
     },
     'shipit-bot-uplift': {
