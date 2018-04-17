@@ -491,13 +491,27 @@ def cmd_TASKCLUSTER_HOOK(ctx,
     help='`nix` command',
     )
 @click.option(
+    '--docker-registry',
+    required=True,
+    default=please_cli.config.DOCKER_REGISTRY,
+    help='Docker registry.',
+    )
+@click.option(
     '--docker-repo',
     required=True,
     default=please_cli.config.DOCKER_REPO,
     help='Docker repository.',
     )
 @click.option(
-    '--image-tag-format',
+    '--docker-username',
+    help='Docker username.',
+    )
+@click.option(
+    '--docker-password',
+    help='Docker password.',
+    )
+@click.option(
+    '--docker-image-tag-format',
     default='{project}-{channel}',
     help='Docker image tag format. Accepted templates: {project}, {channel}',
     )
@@ -511,11 +525,14 @@ def cmd_DOCKERHUB(ctx,
                   channel,
                   nix_build,
                   nix,
+                  docker_registry,
                   taskcluster_secret,
                   taskcluster_client_id,
                   taskcluster_access_token,
+                  docker_username,
+                  docker_password,
                   docker_repo,
-                  image_tag_format,
+                  docker_image_tag_format,
                   interactive,
                  ):
     '''Push to Docker Hub.
@@ -523,19 +540,19 @@ def cmd_DOCKERHUB(ctx,
     Creates versioned ($project-$hash) and stable (*-$channel) tags.
     '''
 
-    secrets = cli_common.taskcluster.get_secrets(
-        taskcluster_secret,
-        project,
-        required=(
-            'DOCKER_USERNAME',
-            'DOCKER_PASSWORD',
-        ),
-        taskcluster_client_id=taskcluster_client_id,
-        taskcluster_access_token=taskcluster_access_token,
-    )
-
-    docker_username = secrets['DOCKER_USERNAME']
-    docker_password = secrets['DOCKER_PASSWORD']
+    if not (docker_username and docker_password):
+        secrets = cli_common.taskcluster.get_secrets(
+            taskcluster_secret,
+            project,
+            required=(
+                'DOCKER_USERNAME',
+                'DOCKER_PASSWORD',
+            ),
+            taskcluster_client_id=taskcluster_client_id,
+            taskcluster_access_token=taskcluster_access_token,
+        )
+        docker_username = secrets['DOCKER_USERNAME']
+        docker_password = secrets['DOCKER_PASSWORD']
 
     ctx.invoke(please_cli.build.cmd,
                project=project,
@@ -554,7 +571,7 @@ def cmd_DOCKERHUB(ctx,
 
     spec = push.image.spec(project_path)
     # Stable tag, e.g. shipit-workflow-staging
-    image_tag = image_tag_format.format(project=project, channel=channel)
+    image_tag = docker_image_tag_format.format(project=project, channel=channel)
     project_basename = os.path.basename(project_path)
     # remove the docker-image-mozilla- prefix and the extension
     tag_base = project_basename.replace('docker-image-mozilla-', '').replace('.tar.gz', '')
@@ -565,7 +582,7 @@ def cmd_DOCKERHUB(ctx,
         with click_spinner.spinner():
             push.registry.push(
                 spec,
-                please_cli.config.DOCKER_REGISTRY,
+                docker_registry,
                 docker_username,
                 docker_password,
                 docker_repo,
