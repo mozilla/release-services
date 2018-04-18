@@ -36,6 +36,6 @@
         "mozdef-client",
         "raven",
         "structlog",
-        "taskcluster<3.0.0"
+        "taskcluster"
     ]
 }

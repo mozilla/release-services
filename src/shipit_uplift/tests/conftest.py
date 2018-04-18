@@ -9,7 +9,6 @@ import os
 import pickle
 
 import pytest
-import responses
 
 import backend_common.testing
 
@@ -121,43 +120,51 @@ def header_bot(app):
 
 
 @pytest.fixture
-def coverage_responses():
+async def coverage_responses(aresponses):
     with open(os.path.join(FIXTURES_DIR, 'codecov_main.json')) as f:
-        responses.add(responses.GET,
-                      'https://codecov.io/api/gh/marco-c/gecko-dev',
-                      json=json.load(f))
+        aresponses.add('codecov.io',
+                       '/api/gh/marco-c/gecko-dev',
+                       'get',
+                       aresponses.Response(text=f.read(), content_type='application/json'))
 
     directories = [
         {
             'path': 'hgmo_json_revs',
-            'url': lambda fname: 'https://hg.mozilla.org/mozilla-central/json-rev/{}'.format(fname),
+            'host': 'hg.mozilla.org',
+            'url': lambda fname: '/mozilla-central/json-rev/{}'.format(fname),
         },
         {
             'path': 'hgmo_json_pushes',
-            'url': lambda fname: 'https://hg.mozilla.org/mozilla-central/json-pushes?version=2&full=1&startID={}&endID={}'.format(int(fname), int(fname) + 8),
+            'host': 'hg.mozilla.org',
+            'url': lambda fname: '/mozilla-central/json-pushes?version=2&full=1&startID={}&endID={}'.format(int(fname), int(fname) + 8),
             'match_querystring': True,
         },
         {
             'path': 'hg_git_map',
-            'url': lambda fname: 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/{}'.format(fname),
+            'host': 'api.pub.build.mozilla.org',
+            'url': lambda fname: '/mapper/gecko-dev/rev/hg/{}'.format(fname),
         },
         {
             'path': 'git_hg_map',
-            'url': lambda fname: 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/{}'.format(fname),
+            'host': 'api.pub.build.mozilla.org',
+            'url': lambda fname: '/mapper/gecko-dev/rev/git/{}'.format(fname),
         },
         {
             'path': 'codecov_commits',
-            'url': lambda fname: 'https://codecov.io/api/gh/marco-c/gecko-dev/commit/{}'.format(fname),
+            'host': 'codecov.io',
+            'url': lambda fname: '/api/gh/marco-c/gecko-dev/commit/{}'.format(fname),
             'status': lambda data: json.loads(data)['meta']['status'],
         },
         {
             'path': 'codecov_src',
-            'url': lambda fname: 'https://codecov.io/api/gh/marco-c/gecko-dev/src/{}'.format(fname.replace('_', '/')),
+            'host': 'codecov.io',
+            'url': lambda fname: '/api/gh/marco-c/gecko-dev/src/{}'.format(fname.replace('_', '/')),
             'status': lambda data: json.loads(data)['meta']['status'],
         },
         {
             'path': 'hgmo_json_annotate',
-            'url': lambda fname: 'https://hg.mozilla.org/mozilla-central/json-annotate/{}'.format(fname.replace('_', '/')),
+            'host': 'hg.mozilla.org',
+            'url': lambda fname: '/mozilla-central/json-annotate/{}'.format(fname.replace('_', '/')),
         },
     ]
 
@@ -169,12 +176,12 @@ def coverage_responses():
                 match_querystring = directory['match_querystring'] if 'match_querystring' in directory else False
                 content_type = 'application/json' if fname.endswith('.json') else 'text/plain'
                 status = directory['status'](data) if 'status' in directory else 200
-                responses.add(responses.GET,
-                              directory['url'](os.path.splitext(fname)[0]),
-                              body=data,
-                              content_type=content_type,
-                              status=status,
-                              match_querystring=match_querystring)
+
+                aresponses.add(directory['host'],
+                               directory['url'](os.path.splitext(fname)[0]),
+                               'get',
+                               aresponses.Response(text=data, content_type=content_type, status=status),
+                               match_querystring=match_querystring)
 
 
 @pytest.fixture(scope='session')

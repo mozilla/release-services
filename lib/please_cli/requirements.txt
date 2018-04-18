@@ -8,4 +8,4 @@ https://github.com/garbas/push/archive/9883706635f1b145bff93d6490b2d9c270d3f674.
 mozdef-client
 requests
 slugid
-taskcluster<3.0.0
+taskcluster

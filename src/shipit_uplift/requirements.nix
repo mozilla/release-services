@@ -314,12 +314,13 @@ let
     };
 
     "aiohttp" = python.mkDerivation {
-      name = "aiohttp-2.3.10";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c0/b9/853b158f5cb5d218daaff0fb0dbc2bd7de45b2c6c5f563dff0ee530ec52a/aiohttp-2.3.10.tar.gz"; sha256 = "8adda6583ba438a4c70693374e10b60168663ffa6564c5c75d3c7a9055290964"; };
+      name = "aiohttp-3.1.2";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/fa/24/8f03b4d839730bf621b57f51d70c5602b9ea6598c01d6aafe786f41fecff/aiohttp-3.1.2.tar.gz"; sha256 = "df49fe4452a942e0031174c78917f9926d122d4603bf56bae4591639f2a3dc6a"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."async-timeout"
+      self."attrs"
       self."chardet"
       self."idna-ssl"
       self."multidict"
@@ -365,9 +366,38 @@ let
       };
     };
 
+    "aresponses" = python.mkDerivation {
+      name = "aresponses-1.0.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/62/41/a915f9fbe3ea896c49ca6f0f371c32b9b817703fd5829dbc641e58a242a0/aresponses-1.0.0.tar.gz"; sha256 = "0v2gaz1y6gr6g9n6zclscz02yz0yss6lmramdvmp2har6cdc5dja"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."aiohttp"
+      self."pytest-asyncio"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/circleup/aresponses";
+        license = "";
+        description = "Asyncio testing server. Similar to the responses library used for 'requests'";
+      };
+    };
+
+    "async-lru" = python.mkDerivation {
+      name = "async-lru-1.0.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/30/fc/a9a15a5fc778c425320b31da972ea241b9d660f6c95f82a2f134704a96fe/async_lru-1.0.1.tar.gz"; sha256 = "ac1f7138b54d68570391615b1ff758e189ce2b841a16653aae1255f5be5d4d0b"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/wikibusiness/async_lru";
+        license = licenses.mit;
+        description = "Simple lru_cache for asyncio";
+      };
+    };
+
     "async-timeout" = python.mkDerivation {
-      name = "async-timeout-1.4.0";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/6f/cc/ff80612164fe68bf97767052c5c783a033165df7d47a41ae5c1cc5ea480b/async-timeout-1.4.0.tar.gz"; sha256 = "983891535b1eca6ba82b9df671c8abff53c804fce3fa630058da5bbbda500340"; };
+      name = "async-timeout-2.0.1";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/23/6d/e37be168272b7a499111d0ed14940da80644d21b201e27980892c7125abb/async-timeout-2.0.1.tar.gz"; sha256 = "00cff4d2dce744607335cba84e9929c3165632da2d27970dbc55802a0c7873d0"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -1459,6 +1489,22 @@ let
       };
     };
 
+    "pytest-asyncio" = python.mkDerivation {
+      name = "pytest-asyncio-0.8.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/c9/28/032baa7ba981928ec31faeb700b19fd7d3434bedff6aaff30b2e630dd82d/pytest-asyncio-0.8.0.tar.gz"; sha256 = "f32804bb58a66e13a3eda11f8942a71b1b6a30466b0d2ffe9214787aab0e172e"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."coverage"
+      self."pytest"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/pytest-dev/pytest-asyncio";
+        license = licenses.asl20;
+        description = "Pytest support for asyncio.";
+      };
+    };
+
     "pytest-cov" = python.mkDerivation {
       name = "pytest-cov-2.5.1";
       src = pkgs.fetchurl { url = "https://pypi.python.org/packages/24/b4/7290d65b2f3633db51393bdf8ae66309b37620bc3ec116c5e357e3e37238/pytest-cov-2.5.1.tar.gz"; sha256 = "03aa752cf11db41d281ea1d807d954c4eda35cfa1b21d6971966cc041bbf6e2d"; };
@@ -1759,8 +1805,8 @@ let
     };
 
     "taskcluster" = python.mkDerivation {
-      name = "taskcluster-2.1.3";
-      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/9e/c6/a94dc47135d7516f6bf1b877079a08ffa4a420d5be2c39c2fa3d78f28875/taskcluster-2.1.3.tar.gz"; sha256 = "5bc6be5d59bd9a199b445db650081b9a8b7a8f436667172f9623bb34aff97556"; };
+      name = "taskcluster-3.0.0";
+      src = pkgs.fetchurl { url = "https://pypi.python.org/packages/90/77/8dca8f65f53a299f27a4154cd586dc06a4214008f2f21de062e85882eceb/taskcluster-3.0.0.tar.gz"; sha256 = "e99b11496ad3586c0a4295dc6a2a68534e93037ddc20b0b380e90908d21f1c43"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [

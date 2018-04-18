@@ -28,4 +28,4 @@ python-dateutil<2.7.0,>=2.1
 python-hglib
 raven
 structlog
-taskcluster<3.0.0
+taskcluster
