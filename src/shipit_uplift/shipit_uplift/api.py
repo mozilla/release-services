@@ -397,6 +397,10 @@ def coverage_for_file(changeset, path):
         }, 500
 
 
+def coverage_by_changeset_job(changeset):
+    return asyncio.get_event_loop().run_until_complete(coverage_by_changeset_impl.generate(changeset))
+
+
 def coverage_by_changeset(changeset):
     changeset = changeset[:12]
 
@@ -405,7 +409,7 @@ def coverage_by_changeset(changeset):
     if job is None:
         RESULT_TTL = 2 * 24 * 60 * 60
         job = q.enqueue(
-            lambda c: asyncio.get_event_loop().run_until_complete(coverage_by_changeset_impl.generate(c)),
+            coverage_by_changeset_job,
             changeset,
             job_id=changeset,
             result_ttl=RESULT_TTL
