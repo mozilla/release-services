@@ -23,7 +23,7 @@ import urllib.parse
 
 import flask
 import flask_oidc
-import jose
+import jose.jwt
 import requests
 
 import cli_common.log
