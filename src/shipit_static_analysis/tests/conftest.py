@@ -367,15 +367,9 @@ def mock_clang(tmpdir, monkeypatch):
     real_check_output = subprocess.check_output
 
     def mock_mach(command, *args, **kwargs):
-        if command[:4] == ['gecko-env', './mach', 'static-analysis', 'check']:
-            command = ['clang-tidy', ] + command[4:]
-            clang_output = real_check_output(command, *args, **kwargs).decode('utf-8')
-
-            # Prefix every line with timestamps to match mach style
-            return '\n'.join(
-                ' 0:{:02d}.{:02d} {}'.format(int(i / 100), i % 100, line)
-                for i, line in enumerate(clang_output.split('\n'))
-            ).encode('utf-8')
+        if command[:5] == ['gecko-env', './mach', '--log-no-times', 'static-analysis', 'check']:
+            command = ['clang-tidy', ] + command[5:]
+            return real_check_output(command, *args, **kwargs)
 
         # Really run command through normal check_output
         return real_check_output(command, *args, **kwargs)
