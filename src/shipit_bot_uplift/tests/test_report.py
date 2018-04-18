@@ -8,7 +8,7 @@ import responses
 
 
 @responses.activate
-def test_mail():
+def test_mail(mock_taskcluster_credentials):
     '''
     Test uplift merge failures email report
     '''
