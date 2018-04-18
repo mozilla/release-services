@@ -17,7 +17,7 @@ from shipit_static_analysis.revisions import Revision
 
 logger = get_logger(__name__)
 
-REGEX_HEADER = re.compile(r'^\s?\d{1,2}:\d{2}.\d{2} (.+):(\d+):(\d+): (warning|error|note): ([^\[\]\n]+)(?: \[([\.\w-]+)\])?$', re.MULTILINE)
+REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): ([^\[\]\n]+)(?: \[([\.\w-]+)\])?$', re.MULTILINE)
 
 ISSUE_MARKDOWN = '''
 ## clang-tidy {type}
@@ -88,7 +88,7 @@ class ClangTidy(object):
         # through mach static-analysis
         cmd = [
             'gecko-env',
-            './mach', 'static-analysis', 'check',
+            './mach', '--log-no-times', 'static-analysis', 'check',
 
             # Limit warnings to current files
             '--header-filter={}'.format('|'.join(
