@@ -1,0 +1,15 @@
+{
+"node": "b2c0699b9bd405300986bc26f256e8bb9c0c53a7",
+"date": [1522967222.0, -7200],
+"desc": "Bug 1404744 - Check for FTP subresource after applying CSP. r=ckerschb",
+"backedoutby": "",
+"branch": "default",
+"bookmarks": [],
+"tags": [],
+"user": "Tom Schuster \u003cevilpies@gmail.com\u003e",
+"parents": ["84acd9df2fe4a6583d5f3cd14106b141c6c6008a"],
+"phase": "public",
+"pushid": 33785,
+"pushdate": [1523051743, 0],
+"pushuser": "nerli@mozilla.com"
+}

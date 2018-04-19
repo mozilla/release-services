@@ -1,0 +1,155 @@
+{
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"node": "3ecc48155838ca413a56920d801a8be0719e9981",
+"author": "ffxbld",
+"date": [1523133795.0, 25200],
+"desc": "No bug, Automated HPKP preload list update from host bld-linux64-spot-303 - a=hpkp-update",
+"parents": ["b2c0699b9bd405300986bc26f256e8bb9c0c53a7"],
+"children": [],
+"permissions": "",
+"annotate": [{
+"node": "abe09d5a7b2a4f096d2e04e54976ffb405e53f4f",
+"author": "James Graham \u003cjames@hoppipolla.co.uk\u003e",
+"desc": "Bug 1435337 - Update web-platform-tests to revision 7174d3e89f3057aae399483194dc4b608ee8c933, a=testonly\n\nMozReview-Commit-ID: CSM0hnryiTp\n",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 1,
+"line": "\u003c!DOCTYPE html\u003e\n",
+"lineno": 1,
+"revdate": [1517597096.0, 0]
+}, {
+"node": "abe09d5a7b2a4f096d2e04e54976ffb405e53f4f",
+"author": "James Graham \u003cjames@hoppipolla.co.uk\u003e",
+"desc": "Bug 1435337 - Update web-platform-tests to revision 7174d3e89f3057aae399483194dc4b608ee8c933, a=testonly\n\nMozReview-Commit-ID: CSM0hnryiTp\n",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 2,
+"line": "\u003chtml\u003e\n",
+"lineno": 2,
+"revdate": [1517597096.0, 0]
+}, {
+"node": "abe09d5a7b2a4f096d2e04e54976ffb405e53f4f",
+"author": "James Graham \u003cjames@hoppipolla.co.uk\u003e",
+"desc": "Bug 1435337 - Update web-platform-tests to revision 7174d3e89f3057aae399483194dc4b608ee8c933, a=testonly\n\nMozReview-Commit-ID: CSM0hnryiTp\n",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 3,
+"line": "\u003chead\u003e\n",
+"lineno": 3,
+"revdate": [1517597096.0, 0]
+}, {
+"node": "abe09d5a7b2a4f096d2e04e54976ffb405e53f4f",
+"author": "James Graham \u003cjames@hoppipolla.co.uk\u003e",
+"desc": "Bug 1435337 - Update web-platform-tests to revision 7174d3e89f3057aae399483194dc4b608ee8c933, a=testonly\n\nMozReview-Commit-ID: CSM0hnryiTp\n",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 4,
+"line": "    \u003cscript src=\"/resources/testharness.js\"\u003e\u003c/script\u003e\n",
+"lineno": 4,
+"revdate": [1517597096.0, 0]
+}, {
+"node": "abe09d5a7b2a4f096d2e04e54976ffb405e53f4f",
+"author": "James Graham \u003cjames@hoppipolla.co.uk\u003e",
+"desc": "Bug 1435337 - Update web-platform-tests to revision 7174d3e89f3057aae399483194dc4b608ee8c933, a=testonly\n\nMozReview-Commit-ID: CSM0hnryiTp\n",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 5,
+"line": "    \u003cscript src=\"/resources/testharnessreport.js\"\u003e\u003c/script\u003e\n",
+"lineno": 5,
+"revdate": [1517597096.0, 0]
+}, {
+"node": "abe09d5a7b2a4f096d2e04e54976ffb405e53f4f",
+"author": "James Graham \u003cjames@hoppipolla.co.uk\u003e",
+"desc": "Bug 1435337 - Update web-platform-tests to revision 7174d3e89f3057aae399483194dc4b608ee8c933, a=testonly\n\nMozReview-Commit-ID: CSM0hnryiTp\n",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 6,
+"line": "    \u003ctitle\u003eContent-Security-Policy-Report-Only violation report is sent even when resource is blocked by actual policy.\u003c/title\u003e\n",
+"lineno": 6,
+"revdate": [1517597096.0, 0]
+}, {
+"node": "abe09d5a7b2a4f096d2e04e54976ffb405e53f4f",
+"author": "James Graham \u003cjames@hoppipolla.co.uk\u003e",
+"desc": "Bug 1435337 - Update web-platform-tests to revision 7174d3e89f3057aae399483194dc4b608ee8c933, a=testonly\n\nMozReview-Commit-ID: CSM0hnryiTp\n",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 7,
+"line": "    \u003c!-- CSP headers\n",
+"lineno": 7,
+"revdate": [1517597096.0, 0]
+}, {
+"node": "abe09d5a7b2a4f096d2e04e54976ffb405e53f4f",
+"author": "James Graham \u003cjames@hoppipolla.co.uk\u003e",
+"desc": "Bug 1435337 - Update web-platform-tests to revision 7174d3e89f3057aae399483194dc4b608ee8c933, a=testonly\n\nMozReview-Commit-ID: CSM0hnryiTp\n",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 8,
+"line": "         Content-Security-Policy: img-src http://*\n",
+"lineno": 8,
+"revdate": [1517597096.0, 0]
+}, {
+"node": "abe09d5a7b2a4f096d2e04e54976ffb405e53f4f",
+"author": "James Graham \u003cjames@hoppipolla.co.uk\u003e",
+"desc": "Bug 1435337 - Update web-platform-tests to revision 7174d3e89f3057aae399483194dc4b608ee8c933, a=testonly\n\nMozReview-Commit-ID: CSM0hnryiTp\n",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 9,
+"line": "         Content-Security-Policy-Report-Only: img-src http://*; report-uri ../support/report.py?op=put&reportID={{$id}}\n",
+"lineno": 9,
+"revdate": [1517597096.0, 0]
+}, {
+"node": "abe09d5a7b2a4f096d2e04e54976ffb405e53f4f",
+"author": "James Graham \u003cjames@hoppipolla.co.uk\u003e",
+"desc": "Bug 1435337 - Update web-platform-tests to revision 7174d3e89f3057aae399483194dc4b608ee8c933, a=testonly\n\nMozReview-Commit-ID: CSM0hnryiTp\n",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 10,
+"line": "      --\u003e\n",
+"lineno": 10,
+"revdate": [1517597096.0, 0]
+}, {
+"node": "abe09d5a7b2a4f096d2e04e54976ffb405e53f4f",
+"author": "James Graham \u003cjames@hoppipolla.co.uk\u003e",
+"desc": "Bug 1435337 - Update web-platform-tests to revision 7174d3e89f3057aae399483194dc4b608ee8c933, a=testonly\n\nMozReview-Commit-ID: CSM0hnryiTp\n",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 11,
+"line": "\u003c/head\u003e\n",
+"lineno": 11,
+"revdate": [1517597096.0, 0]
+}, {
+"node": "abe09d5a7b2a4f096d2e04e54976ffb405e53f4f",
+"author": "James Graham \u003cjames@hoppipolla.co.uk\u003e",
+"desc": "Bug 1435337 - Update web-platform-tests to revision 7174d3e89f3057aae399483194dc4b608ee8c933, a=testonly\n\nMozReview-Commit-ID: CSM0hnryiTp\n",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 12,
+"line": "\u003cbody\u003e\n",
+"lineno": 12,
+"revdate": [1517597096.0, 0]
+}, {
+"node": "b2c0699b9bd405300986bc26f256e8bb9c0c53a7",
+"author": "Tom Schuster \u003cevilpies@gmail.com\u003e",
+"desc": "Bug 1404744 - Check for FTP subresource after applying CSP. r=ckerschb",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 13,
+"line": "    \u003cimg src=\"ftp://blah.test\" /\u003e\n",
+"lineno": 13,
+"revdate": [1522967222.0, -7200]
+}, {
+"node": "abe09d5a7b2a4f096d2e04e54976ffb405e53f4f",
+"author": "James Graham \u003cjames@hoppipolla.co.uk\u003e",
+"desc": "Bug 1435337 - Update web-platform-tests to revision 7174d3e89f3057aae399483194dc4b608ee8c933, a=testonly\n\nMozReview-Commit-ID: CSM0hnryiTp\n",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 14,
+"line": "    \u003cscript async defer src='../support/checkReport.sub.js?reportField=violated-directive&reportValue=img-src%20http%3A%2F%2F%2A'\u003e\u003c/script\u003e\n",
+"lineno": 14,
+"revdate": [1517597096.0, 0]
+}, {
+"node": "abe09d5a7b2a4f096d2e04e54976ffb405e53f4f",
+"author": "James Graham \u003cjames@hoppipolla.co.uk\u003e",
+"desc": "Bug 1435337 - Update web-platform-tests to revision 7174d3e89f3057aae399483194dc4b608ee8c933, a=testonly\n\nMozReview-Commit-ID: CSM0hnryiTp\n",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 15,
+"line": "\u003c/body\u003e\n",
+"lineno": 15,
+"revdate": [1517597096.0, 0]
+}, {
+"node": "abe09d5a7b2a4f096d2e04e54976ffb405e53f4f",
+"author": "James Graham \u003cjames@hoppipolla.co.uk\u003e",
+"desc": "Bug 1435337 - Update web-platform-tests to revision 7174d3e89f3057aae399483194dc4b608ee8c933, a=testonly\n\nMozReview-Commit-ID: CSM0hnryiTp\n",
+"abspath": "testing/web-platform/tests/content-security-policy/reporting/report-uri-multiple.html",
+"targetline": 16,
+"line": "\u003c/html\u003e\n",
+"lineno": 16,
+"revdate": [1517597096.0, 0]
+}]
+}

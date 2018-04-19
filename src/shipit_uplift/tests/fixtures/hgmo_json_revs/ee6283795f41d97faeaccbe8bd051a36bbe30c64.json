@@ -1,0 +1,15 @@
+{
+"node": "ee6283795f41d97faeaccbe8bd051a36bbe30c64",
+"date": [1523051715.0, -10800],
+"desc": "Merge inbound to mozilla-central. a=merge",
+"backedoutby": "",
+"branch": "default",
+"bookmarks": [],
+"tags": [],
+"user": "Noemi Erli \u003cnerli@mozilla.com\u003e",
+"parents": ["0e0ec6c01e25afb67e04cbb4c2539f42e63f6c9b", "95342072369b1f23a7c2ac207ab78626793d99cb"],
+"phase": "public",
+"pushid": 33785,
+"pushdate": [1523051743, 0],
+"pushuser": "nerli@mozilla.com"
+}
