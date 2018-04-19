@@ -96,34 +96,30 @@ class CodeCov(object):
 
         logger.info('mozilla-central cloned')
 
-    def generate_suite_report(self, suite):
-        output = grcov.report(self.artifactsHandler.get(suite=suite), out_format='lcov')
-
-        info_file = '%s.info' % suite
-
-        with open(info_file, 'wb') as f:
-            f.write(output)
-
-        run_check([
-            'genhtml',
-            '-o', os.path.join(os.getcwd(), suite),
-            '--show-details', '--highlight', '--ignore-errors', 'source',
-            '--legend', os.path.join(os.getcwd(), info_file),
-            '--prefix', self.repo_dir
-        ], cwd=self.repo_dir)
-
-        os.remove('%s.info' % suite)
-
-        with tarfile.open('code-coverage-reports/%s.tar.xz' % suite, 'w:xz') as tar:
-            tar.add(suite)
-        shutil.rmtree(os.path.join(os.getcwd(), suite))
-
-        logger.info('Suite report generated', suite=suite)
-
     def generate_suite_reports(self):
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            for suite in self.suites:
-                executor.submit(self.generate_suite_report, suite)
+        for suite in self.suites:
+            output = grcov.report(self.artifactsHandler.get(suite=suite), out_format='lcov')
+
+            info_file = '%s.info' % suite
+
+            with open(info_file, 'wb') as f:
+                f.write(output)
+
+            run_check([
+                'genhtml',
+                '-o', os.path.join(os.getcwd(), suite),
+                '--show-details', '--highlight', '--ignore-errors', 'source',
+                '--legend', os.path.join(os.getcwd(), info_file),
+                '--prefix', self.repo_dir
+            ], cwd=self.repo_dir)
+
+            os.remove('%s.info' % suite)
+
+            with tarfile.open('code-coverage-reports/%s.tar.xz' % suite, 'w:xz') as tar:
+                tar.add(suite)
+            shutil.rmtree(os.path.join(os.getcwd(), suite))
+
+            logger.info('Suite report generated', suite=suite)
 
     def generate_chunk_mapping(self):
         with ThreadPoolExecutor(max_workers=4) as executor:
