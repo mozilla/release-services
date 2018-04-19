@@ -63,8 +63,9 @@ def get_beta_num(version):
         return int(parts[-1])
 
 
-def is_partner_enabled(product, version):
-    if product == 'firefox':
+def is_partner_enabled(product, version, min_version=61):
+    major_version = int(version.split('.')[0])
+    if product == 'firefox' and major_version >= min_version:
         if is_beta(version):
             if get_beta_num(version) >= 8:
                 return True
