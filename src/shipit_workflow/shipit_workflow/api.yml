@@ -62,6 +62,20 @@ paths:
           description: Returns release representation
           schema:
             $ref: '#/definitions/Release'
+    delete:
+      summary: Release info
+      operationId: shipit_workflow.api.abandon_release
+      parameters:
+      - name: name
+        in: path
+        required: true
+        type: string
+        description: release name
+      responses:
+        200:
+          description: Returns release representation
+          schema:
+            $ref: '#/definitions/Release'
 
   /releases/{name}/{phase}:
     get:
@@ -203,6 +217,7 @@ definitions:
         enum:
           - scheduled
           - shipped
+          - aborted
       phases:
         type: array
         items:

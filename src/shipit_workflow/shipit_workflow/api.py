@@ -135,3 +135,17 @@ def schedule_phase(name, phase):
         phase.release.status = 'shipped'
     session.commit()
     return phase.json
+
+
+@mozilla_accept_token()
+@validate_user(key='https://sso.mozilla.com/claim/groups',
+               checker=lambda xs: 'releng' in xs)
+def abandon_release(name):
+    session = flask.g.db.session
+    try:
+        release = session.query(Release).filter(Release.name == name).one()
+        release.status = 'aborted'
+        session.commit()
+        return release.json
+    except NoResultFound:
+        flask.abort(404)
