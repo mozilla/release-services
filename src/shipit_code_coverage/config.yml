@@ -1,0 +1,10 @@
+checks:
+  - cmd: flake8
+    name: 'Checking code quality'
+  - cmd: 'pytest tests/'
+    name: 'Running tests'
+deploy: TASKCLUSTER_HOOK
+deploy_options:
+  staging: {}
+  testing: {}
+  # production: {}

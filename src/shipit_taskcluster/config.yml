@@ -1,0 +1,27 @@
+checks:
+  - cmd: flake8
+    name: 'Checking code quality'
+  - cmd: 'pytest tests/'
+    name: 'Running tests'
+deploy: HEROKU
+deploy_options:
+  staging:
+    dns: taskcluster.shipit.staging.mozilla-releng.net.herokudns.com
+    heroku_app: shipit-staging-taskcluster
+    heroku_dyno_type: web
+    url: https://taskcluster.shipit.staging.mozilla-releng.net
+  testing:
+    dns: taskcluster.shipit.testing.mozilla-releng.net.herokudns.com
+    heroku_app: shipit-testing-taskcluster
+    heroku_dyno_type: web
+    url: https://taskcluster.shipit.testing.mozilla-releng.net
+  #production:
+  #  dns: taskcluster.shipit.mozilla-releng.net.herokudns.com,
+  #  heroku_app: shipit-production-taskcluster,
+  #  heroku_dyno_type: web,
+  #  url: https://taskcluster.shipit.mozilla-releng.net,
+requires:
+  - postgresql
+run: FLASK
+run_options:
+  port: 8014

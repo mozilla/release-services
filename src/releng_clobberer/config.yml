@@ -1,0 +1,29 @@
+checks:
+  - cmd: flake8
+    name: 'Checking code quality'
+  - cmd: 'pytest tests/'
+    name: 'Running tests'
+deploy: HEROKU
+deploy_options:
+  staging:
+    # TODO: do testing and production have the same dns?
+    dns: saitama-70467.herokussl.com
+    heroku_app: releng-staging-clobberer
+    heroku_dyno_type: web
+    url: https://clobberer.staging.mozilla-releng.net
+  testing:
+    # TODO: do testing and production have the same dns?
+    dns: saitama-70467.herokussl.com
+    heroku_app: releng-testing-clobberer
+    heroku_dyno_type: web
+    url: https://clobberer.testing.mozilla-releng.net
+  #production:
+  #  dns: saitama-70467.herokussl.com,
+  #  heroku_app: releng-production-clobberer,
+  #  heroku_dyno_type: web,
+  #  url: https://clobberer.mozilla-releng.net,
+requires:
+  - postgresql
+run: FLASK
+run_options:
+  port: 8001

@@ -1,0 +1,17 @@
+checks:
+  - cmd: flake8
+    name: 'Checking code quality'
+  - cmd: 'pytest tests/'
+    name: 'Running tests'
+deploy: HEROKU
+deploy_options:
+  production:
+    heroku_app: shipit-production-pulse-listen
+    heroku_dyno_type: worker
+  staging:
+    heroku_app: shipit-staging-pulse-listener
+    heroku_dyno_type: worker
+  testing:
+    heroku_app: shipit-testing-pulse-listener
+    heroku_dyno_type: worker
+requires: []

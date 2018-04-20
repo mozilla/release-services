@@ -1,0 +1,30 @@
+checks:
+  - cmd: flake8
+    name: 'Checking code quality'
+  - cmd: 'pytest tests/'
+    name: 'Running tests'
+deploy: HEROKU
+deploy_options:
+  staging:
+    # TODO: switch to SSL Endpoint
+    dns: mapper.staging.mozilla-releng.net.herokudns.com
+    heroku_app: releng-staging-mapper
+    heroku_dyno_type: web
+    url: https://mapper.staging.mozilla-releng.net
+  testing:
+    # TODO: switch to SSL Endpoint
+    dns: mapper.testing.mozilla-releng.net.herokudns.com
+    heroku_app: releng-testing-mapper
+    heroku_dyno_type: web
+    url: https://mapper.testing.mozilla-releng.net
+  #production:
+  #  # TODO: switch to SSL Endpoint
+  #  dns: mapper.mozilla-releng.net.herokudns.com,
+  #  heroku_app: releng-production-mapper,
+  #  heroku_dyno_type: web,
+  #  url: https://mapper.mozilla-releng.net,
+requires:
+  - postgresql
+run: FLASK
+run_options:
+  port: 8004

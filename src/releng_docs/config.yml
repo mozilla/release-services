@@ -1,0 +1,18 @@
+deploy: S3
+deploy_options:
+  production:
+    dns: d1945er7u4liht.cloudfront.net.
+    s3_bucket: releng-production-docs
+    url: https://docs.mozilla-releng.net
+  staging:
+    dns: d32jt14rospqzr.cloudfront.net.
+    s3_bucket: releng-staging-docs
+    url: https://docs.staging.mozilla-releng.net
+  testing:
+    dns: d1sw5c8kdn03y.cloudfront.net.
+    s3_bucket: releng-testing-docs
+    url: https://docs.testing.mozilla-releng.net
+run: SPHINX
+run_options:
+  port: 7000
+  schema: http

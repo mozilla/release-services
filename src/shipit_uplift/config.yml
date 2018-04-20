@@ -1,0 +1,28 @@
+checks:
+  - cmd: flake8
+    name: 'Checking code quality'
+  - cmd: 'pytest tests/'
+    name: 'Running tests'
+deploy: HEROKU
+deploy_options:
+  production:
+    dns: uplift.shipit.mozilla-releng.net.herokudns.com
+    heroku_app: shipit-production-uplift
+    heroku_dyno_type: web
+    url: https://uplift.shipit.mozilla-releng.net
+  staging:
+    dns: uplift.shipit.staging.mozilla-releng.net.herokudns.com
+    heroku_app: shipit-staging-uplift
+    heroku_dyno_type: web
+    url: https://uplift.shipit.staging.mozilla-releng.net
+  testing:
+    dns: uplift.shipit.testing.mozilla-releng.net.herokudns.com
+    heroku_app: shipit-testing-uplift
+    heroku_dyno_type: web
+    url: https://uplift.shipit.testing.mozilla-releng.net
+requires:
+  - postgresql
+  - redis
+run: FLASK
+run_options:
+  port: 8011

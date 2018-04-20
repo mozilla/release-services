@@ -1,0 +1,31 @@
+checks:
+  - cmd: flake8
+    name: 'Checking code quality'
+  - cmd: 'pytest tests/'
+    name: 'Running tests'
+deploy: HEROKU
+deploy_options:
+  staging:
+    # TODO: we need to change this to SSL Endpoint
+    dns: treestatus.staging.mozilla-releng.net.herokudns.com
+    heroku_app: releng-staging-treestatus
+    heroku_dyno_type: web
+    url: https://treestatus.staging.mozilla-releng.net
+  testing:
+    # TODO: we need to change this to SSL Endpoint
+    dns: treestatus.testing.mozilla-releng.net.herokudns.com
+    heroku_app: releng-testing-treestatus
+    heroku_dyno_type: web
+    url: https://treestatus.testing.mozilla-releng.net
+  # (garbas): commeted out for the period when i'm on parental leave
+  #production:
+  #  # TODO: this needs to be updated in mozilla-releng/build-cloud-tools
+  #  dns: kochi-31413.herokussl.com,
+  #  heroku_app: releng-production-treestatus,
+  #  heroku_dyno_type: web,
+  #  url: https://treestatus.mozilla-releng.net,
+requires:
+  - postgresql
+run: FLASK
+run_options:
+  port: 8010
