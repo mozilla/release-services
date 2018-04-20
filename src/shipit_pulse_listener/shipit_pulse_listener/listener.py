@@ -176,6 +176,15 @@ class HookCodeCoverage(PulseHook):
                 return True
         return False
 
+    def is_mozilla_central_task(self, task):
+        branch = task['task']['payload']['env']['MH_BRANCH']
+
+        if branch != 'mozilla-central':
+            logger.warn('Received groupResolved notification for a non-mozilla-central coverage task', branch=branch)
+            return False
+
+        return True
+
     def get_build_task_in_group(self, group_id):
         if group_id in self.triggered_groups:
             logger.info('Received duplicated groupResolved notification', group=group_id)
@@ -212,7 +221,7 @@ class HookCodeCoverage(PulseHook):
 
         try:
             return retry(retrieve_coverage_task)
-        except Exception:
+        except requests.exceptions.HTTPError:
             return None
 
     def parse(self, body):
@@ -227,6 +236,9 @@ class HookCodeCoverage(PulseHook):
 
         if self.is_old_task(build_task):
             logger.info('Received groupResolved notification for an old task', group=taskGroupId)
+            return None
+
+        if not self.is_mozilla_central_task(build_task):
             return None
 
         logger.info('Received groupResolved notification for coverage builds', revision=build_task['task']['payload']['env']['GECKO_HEAD_REV'], group=taskGroupId)  # noqa
