@@ -87,8 +87,8 @@ def extract_our_flavors(avail_flavors, product, version, partial_updates):
     return SUPPORTED_FLAVORS[product_key]
 
 
-def generate_action_task(action_task_input, actions):
-    relpro = find_action('release-promotion', actions)
+def generate_action_task(action_name, action_task_input, actions):
+    target_action = find_action(action_name, actions)
     context = copy.deepcopy(actions['variables'])  # parameters
     action_task_id = slugid.nice().decode('utf-8')
     context.update({
@@ -97,7 +97,7 @@ def generate_action_task(action_task_input, actions):
         'taskId': None,
         'task': None,
     })
-    action_task = copy.deepcopy(relpro['task'])
+    action_task = copy.deepcopy(target_action['task'])
     log.info('TASK: %s', action_task)
     return action_task_id, action_task, context
 
