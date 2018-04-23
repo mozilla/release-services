@@ -416,7 +416,7 @@ PROJECTS_CONFIG = {
         'deploy_options': {
             'testing': {},
             'staging': {},
-            # 'production': {},
+            'production': {},
         },
     },
     'shipit-frontend': {
