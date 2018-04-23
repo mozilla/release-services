@@ -1,0 +1,30 @@
+checks:
+  - cmd: flake8
+    name: 'Checking code quality'
+  - cmd: 'pytest tests/'
+    name: 'Running tests'
+deploy: HEROKU
+deploy_options:
+  staging:
+    dns: signoff.shipit.staging.mozilla-releng.net.herokudns.com
+    heroku_app: shipit-staging-signoff
+    heroku_dyno_type: web
+    url: https://signoff.shipit.staging.mozilla-releng.net
+  testing:
+    dns: signoff.shipit.testing.mozilla-releng.net.herokudns.com
+    heroku_app: shipit-testing-signoff
+    heroku_dyno_type: web
+    url: https://signoff.shipit.testing.mozilla-releng.net
+  #production:
+  #  dns: signoff.shipit.mozilla-releng.net.herokudns.com,
+  #  heroku_app: shipit-production-signoff,
+  #  heroku_dyno_type: web,
+  #  url: https://signoff.shipit.mozilla-releng.net,
+requires:
+  - postgresql
+run: FLASK
+run_options:
+  envs:
+    AUTH0_CLIENT_ID: XXX
+    AUTH0_CLIENT_SECRET: YYY
+  port: 8013

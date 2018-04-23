@@ -1,0 +1,36 @@
+deploy: S3
+deploy_options:
+  production:
+    csp:
+      - https://login.taskcluster.net
+      - https://auth.taskcluster.net
+    dns: d1qqwps52z1e12.cloudfront.net.
+    dns_domain: www.mozilla-releng.net
+    s3_bucket: releng-production-frontend
+    url: https://mozilla-releng.net
+  staging:
+    csp:
+      - https://login.taskcluster.net
+      - https://auth.taskcluster.net
+    dns: dpwmwa9tge2p3.cloudfront.net.
+    s3_bucket: releng-staging-frontend
+    url: https://staging.mozilla-releng.net
+  testing:
+    csp:
+      - https://login.taskcluster.net
+      - https://auth.taskcluster.net
+    dns: d1l70lpksx3ik7.cloudfront.net.
+    s3_bucket: releng-testing-frontend
+    url: https://testing.mozilla-releng.net
+requires:
+  - releng-docs
+  - releng-clobberer
+  - releng-tooltool
+  - releng-treestatus
+  - releng-mapper
+  - releng-archiver
+  - releng-notification-policy
+  - releng-notification-identity
+run: ELM
+run_options:
+  port: 8000

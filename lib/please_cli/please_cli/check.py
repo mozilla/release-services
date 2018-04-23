@@ -54,13 +54,13 @@ def cmd(ctx, project, nix_shell,
     if not checks:
         raise click.ClickException('No checks found for `{}` project.'.format(project))
 
-    for check_title, check_command in checks:
-        click.echo(' => {}: '.format(check_title), nl=False)
+    for check in checks:
+        click.echo(' => {}: '.format(check['name']), nl=False)
         with click_spinner.spinner():
             returncode, output, error = ctx.invoke(please_cli.shell.cmd,
                                                    project=project,
                                                    quiet=True,
-                                                   command=check_command,
+                                                   command=check['cmd'],
                                                    nix_shell=nix_shell,
                                                    taskcluster_secret=taskcluster_secret,
                                                    taskcluster_client_id=taskcluster_client_id,

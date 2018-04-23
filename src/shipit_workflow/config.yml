@@ -1,0 +1,24 @@
+checks:
+  - cmd: flake8
+    name: 'Checking code quality'
+  - cmd: 'pytest tests/'
+    name: 'Running tests'
+deploy: HEROKU
+deploy_options:
+  staging:
+    # TODO: we need to change this to SSL Endpoint
+    dns: shipit-workflow.staging.mozilla-releng.net.herokudns.com
+    heroku_app: shipit-staging-workflow
+    heroku_dyno_type: web
+    url: https://shipit-workflow.staging.mozilla-releng.net
+  testing:
+    # TODO: we need to change this to SSL Endpoint
+    dns: shipit-workflow.testing.mozilla-releng.net.herokudns.com
+    heroku_app: shipit-testing-workflow
+    heroku_dyno_type: web
+    url: https://shipit-workflow.testing.mozilla-releng.net
+requires:
+  - postgresql
+run: FLASK
+run_options:
+  port: 8015

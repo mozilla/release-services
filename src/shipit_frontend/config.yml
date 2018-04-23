@@ -1,0 +1,39 @@
+deploy: S3
+deploy_options:
+  production:
+    csp:
+      - https://login.taskcluster.net
+      - https://auth.taskcluster.net
+      - https://bugzilla.mozilla.org
+    dns: dve8yd1431ifz.cloudfront.net.
+    envs:
+      bugzilla-url: https://bugzilla.mozilla.org
+    s3_bucket: shipit-production-frontend
+    url: https://shipit.mozilla-releng.net
+  staging:
+    csp:
+      - https://login.taskcluster.net
+      - https://auth.taskcluster.net
+      - https://bugzilla.mozilla.org
+    dns: d2ld4e8bl8yd1l.cloudfront.net.
+    envs:
+      bugzilla-url: https://bugzilla.mozilla.org
+    s3_bucket: shipit-staging-frontend
+    url: https://shipit.staging.mozilla-releng.net
+  testing:
+    csp:
+      - https://login.taskcluster.net
+      - https://auth.taskcluster.net
+      - https://bugzilla.mozilla.org
+    dns: d2jpisuzgldax2.cloudfront.net.
+    envs:
+      bugzilla-url: https://bugzilla.mozilla.org
+    s3_bucket: shipit-testing-frontend
+    url: https://shipit.testing.mozilla-releng.net
+requires:
+  - shipit-uplift
+run: ELM
+run_options:
+  envs:
+    bugzilla-url: https://bugzilla-dev.allizom.org
+  port: 8010

@@ -1,0 +1,27 @@
+checks:
+  - cmd: flake8
+    name: 'Checking code quality'
+  - cmd: 'pytest tests/'
+    name: 'Running tests'
+deploy: HEROKU
+deploy_options:
+  staging:
+    dns: pipeline.shipit.staging.mozilla-releng.net.herokudns.com
+    heroku_app: shipit-staging-pipeline
+    heroku_dyno_type: web
+    url: https://pipeline.shipit.staging.mozilla-releng.net
+  testing:
+    dns: pipeline.shipit.testing.mozilla-releng.net.herokudns.com
+    heroku_app: shipit-testing-pipeline
+    heroku_dyno_type: web
+    url: https://pipeline.shipit.testing.mozilla-releng.net
+  #production:
+  #  dns: pipeline.shipit.mozilla-releng.net.herokudns.com,
+  #  heroku_app: shipit-production-pipeline,
+  #  heroku_dyno_type: web,
+  #  url: https://pipeline.shipit.mozilla-releng.net,
+requires:
+  - postgresql
+run: FLASK
+run_options:
+  port: 8012

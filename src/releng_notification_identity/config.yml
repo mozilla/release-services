@@ -1,0 +1,27 @@
+checks:
+  - cmd: flake8
+    name: 'Checking code quality'
+  - cmd: 'pytest tests/'
+    name: 'Running tests'
+deploy: HEROKU
+deploy_options:
+  production:
+    dns: identity.notification.mozilla-releng.net.herokudns.com
+    heroku_app: releng-production-notif-ident
+    heroku_dyno_type: web
+    url: https://identity.notification.mozilla-releng.net
+  staging:
+    dns: identity.notification.staging.mozilla-releng.net.herokudns.com
+    heroku_app: releng-staging-notif-identity
+    heroku_dyno_type: web
+    url: https://identity.notification.staging.mozilla-releng.net
+  testing:
+    dns: identity.notification.testing.mozilla-releng.net.herokudns.com
+    heroku_app: releng-testing-notif-identity
+    heroku_dyno_type: web
+    url: https://identity.notification.testing.mozilla-releng.net
+requires:
+  - postgresql
+run: FLASK
+run_options:
+  port: 8007
