@@ -7,6 +7,7 @@ from __future__ import absolute_import
 import os
 
 import click
+import yaml
 
 CWD_DIR = os.path.abspath(os.getcwd())
 
@@ -58,12 +59,19 @@ TEMPLATES = {
     'backend-json-api': {}
 }
 
+# Load projects and their configuration from src dir.
 PROJECTS = list(map(lambda x: x.replace('_', '-'),
                     filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
                            os.listdir(SRC_DIR))))
-PROJECTS += ['postgresql']
 
-PG_CONF = {
+PROJECTS_CONFIG = {
+    project: yaml.load(open(os.path.join(SRC_DIR, project.replace('-', '_'), 'config.yml')))
+    for project in PROJECTS
+}
+
+# Add postgresql
+PROJECTS += ['postgresql']
+PROJECTS_CONFIG.update({
     'postgresql': {
         'run': 'POSTGRESQL',
         'run_options': {
@@ -71,4 +79,4 @@ PG_CONF = {
             'data_dir': os.path.join(TMP_DIR, 'postgresql'),
         },
     },
-}
+})
