@@ -111,7 +111,8 @@ class CodecovCoverage(Coverage):
 
     @staticmethod
     async def get_file_coverage(changeset, filename):
-        async with CodecovCoverage._get('/src/{}/{}'.format(await get_github_commit(changeset), filename)) as r:
+        github_changeset = await get_github_commit(changeset)
+        async with CodecovCoverage._get('/src/{}/{}'.format(github_changeset, filename)) as r:
             try:
                 data = await r.json()
             except Exception as e:
@@ -127,7 +128,12 @@ class CodecovCoverage(Coverage):
             logger.warn('{} is in an errored state.'.format(changeset))
             raise CoverageException('{} is in an errored state.'.format(changeset))
 
-        return dict([(int(l), v) for l, v in data['commit']['report']['files'][filename]['l'].items()])
+        result = dict([(int(l), v) for l, v in data['commit']['report']['files'][filename]['l'].items()])
+        return {
+            'git_changeset': github_changeset,
+            'hg_changeset': changeset,
+            'data': result
+        }
 
     @staticmethod
     async def get_latest_build():
