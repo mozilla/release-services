@@ -161,7 +161,7 @@ class MozLint(object):
 
         # Mozlint uses both full & relative path to index issues
         return [
-            MozLintIssue(path, **issue)
+            MozLintIssue(**issue)
             for p in (path, full_path)
             for issue in payload.get(p, [])
         ]
