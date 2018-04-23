@@ -187,6 +187,7 @@ class ClangTidy(object):
             check['name']
             for check in settings.clang_checkers
             if not len(fnmatch.filter(available_checks, check['name'])) > 0
+            and check['name'] != '-*'  # Special check -* is not listed by clang-tidy
         ]
 
 
