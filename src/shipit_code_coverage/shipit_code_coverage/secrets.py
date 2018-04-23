@@ -9,6 +9,7 @@ from shipit_code_coverage import config
 
 class Secrets(dict):
     COVERALLS_TOKEN = 'COVERALLS_TOKEN'
+    CODECOV_REPO = 'CODECOV_REPO'
     CODECOV_TOKEN = 'CODECOV_TOKEN'
     CODECOV_ACCESS_TOKEN = 'CODECOV_ACCESS_TOKEN'
     GECKO_DEV_USER = 'GECKO_DEV_USER'
@@ -23,6 +24,7 @@ class Secrets(dict):
             required=(
                 Secrets.APP_CHANNEL,
                 Secrets.COVERALLS_TOKEN,
+                Secrets.CODECOV_REPO,
                 Secrets.CODECOV_TOKEN,
                 Secrets.CODECOV_ACCESS_TOKEN,
             ),
