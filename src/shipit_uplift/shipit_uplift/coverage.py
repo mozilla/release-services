@@ -80,7 +80,7 @@ class CoverallsCoverage(Coverage):
 
     @staticmethod
     async def get_latest_build():
-        async with CoverallsCoverage._get('/github/marco-c/gecko-dev.json?page=1') as r:
+        async with CoverallsCoverage._get('/github/{}.json?page=1'.format(secrets.CODECOV_REPO)) as r:
             builds = (await r.json())['builds']
 
         return await get_mercurial_commit(builds[0]['commit_sha']), await get_mercurial_commit(builds[1]['commit_sha'])
@@ -89,7 +89,7 @@ class CoverallsCoverage(Coverage):
 class CodecovCoverage(Coverage):
     @staticmethod
     def _get(url=''):
-        return aiohttp.request('GET', 'https://codecov.io/api/gh/marco-c/gecko-dev{}?access_token={}'.format(url, secrets.CODECOV_ACCESS_TOKEN))
+        return aiohttp.request('GET', 'https://codecov.io/api/gh/{}{}?access_token={}'.format(secrets.CODECOV_REPO, url, secrets.CODECOV_ACCESS_TOKEN))
 
     @staticmethod
     @alru_cache(maxsize=2048)

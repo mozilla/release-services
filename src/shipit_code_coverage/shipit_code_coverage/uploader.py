@@ -63,7 +63,7 @@ def codecov(data, commit_sha, flags=None):
 
 def get_latest_codecov():
     def get_latest_codecov_int():
-        r = requests.get('https://codecov.io/api/gh/marco-c/gecko-dev?access_token={}'.format(secrets[secrets.CODECOV_ACCESS_TOKEN]))
+        r = requests.get('https://codecov.io/api/gh/{}?access_token={}'.format(secrets[secrets.CODECOV_REPO], secrets[secrets.CODECOV_ACCESS_TOKEN]))
         r.raise_for_status()
         return r.json()['commit']['commitid']
 
@@ -75,7 +75,7 @@ def codecov_wait(commit):
         pass
 
     def check_codecov_job():
-        r = requests.get('https://codecov.io/api/gh/marco-c/gecko-dev/commit/{}?access_token={}'.format(commit, secrets[secrets.CODECOV_ACCESS_TOKEN]))
+        r = requests.get('https://codecov.io/api/gh/{}/commit/{}?access_token={}'.format(secrets[secrets.CODECOV_REPO], commit, secrets[secrets.CODECOV_ACCESS_TOKEN]))  # noqa
         r.raise_for_status()
         totals = r.json()['commit']['totals']
         if totals is None:
