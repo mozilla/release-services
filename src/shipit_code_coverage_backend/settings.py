@@ -3,13 +3,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
 import base64
 import os
+
 import cli_common.taskcluster
 import shipit_code_coverage_backend.config
-
 
 DEBUG = bool(os.environ.get('DEBUG', False))
 
@@ -18,6 +16,12 @@ DEBUG = bool(os.environ.get('DEBUG', False))
 
 required = [
     'SECRET_KEY_BASE64',
+    'AUTH_DOMAIN',
+    'AUTH_CLIENT_ID',
+    'AUTH_CLIENT_SECRET',
+    'AUTH_REDIRECT_URI',
+    'REDIS_URL',
+    'CODECOV_ACCESS_TOKEN',
 ]
 
 secrets = cli_common.taskcluster.get_secrets(
@@ -32,3 +36,24 @@ secrets = cli_common.taskcluster.get_secrets(
 locals().update(secrets)
 
 SECRET_KEY = base64.b64decode(secrets['SECRET_KEY_BASE64'])
+
+
+# -- CACHE --------------------------------------------------------------------
+
+CACHE = {
+    x: os.environ.get(x)
+    for x in os.environ.keys()
+    if x.startswith('CACHE_')
+}
+
+if 'CACHE_DEFAULT_TIMEOUT' not in CACHE:
+    CACHE['CACHE_DEFAULT_TIMEOUT'] = 60 * 5
+else:
+    CACHE['CACHE_DEFAULT_TIMEOUT'] = float(CACHE['CACHE_DEFAULT_TIMEOUT'])
+
+if 'CACHE_KEY_PREFIX' not in CACHE:
+    CACHE['CACHE_KEY_PREFIX'] = shipit_code_coverage_backend.config.PROJECT_NAME + '-'
+
+REDIS_URL = secrets['REDIS_URL']
+CACHE['CACHE_TYPE'] = 'redis'
+CACHE['CACHE_REDIS_URL'] = REDIS_URL
