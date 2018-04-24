@@ -429,7 +429,6 @@ PROJECTS_CONFIG = {
             'port': 8011,
         },
         'requires': [
-            'postgresql',
             'redis',
         ],
         'deploy': 'HEROKU',

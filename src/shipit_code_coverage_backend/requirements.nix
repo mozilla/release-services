@@ -274,9 +274,7 @@ let
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/c1/c8/392fcd2d01534bc871c65cb964e0b39d59feb777e51649e6eaf00f6377b5/SQLAlchemy-1.2.7.tar.gz"; sha256 = "d6cda03b0187d6ed796ff70e87c9a7dce2c2c9650a7bc3c022cd331416853c31"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [
-      self."psycopg2"
-    ];
+      propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://www.sqlalchemy.org";
         license = licenses.mit;
@@ -1362,19 +1360,6 @@ let
         homepage = "https://github.com/jonathanslenders/python-prompt-toolkit";
         license = licenses.bsdOriginal;
         description = "Library for building powerful interactive command lines in Python";
-      };
-    };
-
-    "psycopg2" = python.mkDerivation {
-      name = "psycopg2-2.7.4";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/74/83/51580322ed0e82cba7ad8e0af590b8fb2cf11bd5aaa1ed872661bd36f462/psycopg2-2.7.4.tar.gz"; sha256 = "8bf51191d60f6987482ef0cfe8511bbf4877a5aa7f313d7b488b53189cf26209"; };
-      doCheck = commonDoCheck;
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "http://initd.org/psycopg/";
-        license = licenses.lgpl2;
-        description = "psycopg2 - Python-PostgreSQL Database Adapter";
       };
     };
 
