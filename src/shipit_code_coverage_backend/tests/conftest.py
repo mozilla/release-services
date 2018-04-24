@@ -16,7 +16,8 @@ def app():
     '''
     import shipit_code_coverage_backend
 
-    config = backend_common.testing.get_app_config()
+    config = backend_common.testing.get_app_config({
+    })
     app = shipit_code_coverage_backend.create_app(config)
 
     with app.app_context():
