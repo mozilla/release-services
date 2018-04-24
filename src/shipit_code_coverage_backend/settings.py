@@ -18,7 +18,6 @@ DEBUG = bool(os.environ.get('DEBUG', False))
 
 required = [
     'SECRET_KEY_BASE64',
-    'DATABASE_URL',
 ]
 
 secrets = cli_common.taskcluster.get_secrets(
@@ -33,9 +32,3 @@ secrets = cli_common.taskcluster.get_secrets(
 locals().update(secrets)
 
 SECRET_KEY = base64.b64decode(secrets['SECRET_KEY_BASE64'])
-
-
-# -- DATABASE -----------------------------------------------------------------
-
-SQLALCHEMY_DATABASE_URI = secrets['DATABASE_URL']
-SQLALCHEMY_TRACK_MODIFICATIONS = False

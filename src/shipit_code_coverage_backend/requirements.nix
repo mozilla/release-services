@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -V 3.6 -E postgresql -r requirements.txt -r requirements-dev.txt
+#   pypi2nix -v -V 3.6 -r requirements.txt -r requirements-dev.txt
 #
 
 { pkgs ? import <nixpkgs> {}
@@ -34,7 +34,7 @@ let
       };
   };
 
-  commonBuildInputs = with pkgs; [ postgresql ];
+  commonBuildInputs = [];
   commonDoCheck = false;
 
   withPackages = pkgs':

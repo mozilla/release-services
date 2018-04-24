@@ -20,8 +20,6 @@ def create_app(config=None):
             'security',
             'cors',
             'api',
-            'auth',
-            'db',
         ],
     )
     # TODO: add predefined api.yml
