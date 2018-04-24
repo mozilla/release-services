@@ -19,12 +19,15 @@ def read_requirements(file_):
         for line in f.readlines():
             line = line.strip()
             if line.startswith('-e ') or line.startswith('http://') or line.startswith('https://'):
-                lines.append(line.split('#')[1].split('egg=')[1])
-            elif line.startswith('#') or line.startswith('-'):
-                pass
-            else:
-                lines.append(line)
-    return lines
+                extras = ''
+                if '[' in line:
+                    extras = '[' + line.split('[')[1].split(']')[0] + ']'
+                line = line.split('#')[1].split('egg=')[1] + extras
+            elif line == '' or line.startswith('#') or line.startswith('-'):
+                continue
+            line = line.split('#')[0].strip()
+            lines.append(line)
+    return sorted(list(set(lines)))
 
 
 setup(
