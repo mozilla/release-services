@@ -4,13 +4,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import asyncio
+
+from rq import Queue
+
 from shipit_code_coverage_backend import coverage
 from shipit_code_coverage_backend import coverage_by_changeset_impl
 from shipit_code_coverage_backend import coverage_for_file_impl
 from shipit_code_coverage_backend import coverage_summary_by_changeset_impl
 from shipit_code_coverage_backend.worker import conn
-
-from rq import Queue
 
 q = Queue(connection=conn)
 

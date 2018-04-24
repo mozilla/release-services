@@ -5,6 +5,5 @@
 
 from __future__ import absolute_import
 
-
 PROJECT_NAME = 'shipit-code-coverage-backend'
 PROJECT_PATH = 'shipit_code_coverage_backend'
