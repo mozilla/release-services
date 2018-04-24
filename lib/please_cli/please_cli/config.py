@@ -433,24 +433,24 @@ PROJECTS_CONFIG = {
         ],
         'deploy': 'HEROKU',
         'deploy_options': {
-            #'testing': {
-            #    'heroku_app': 'shipit-testing-codecoverage',
-            #    'heroku_dyno_type': 'web',
-            #    'url': 'https://codecoverage.shipit.testing.mozilla-releng.net',
-            #    'dns': 'codecoverage.shipit.testing.mozilla-releng.net.herokudns.com',
-            #},
-            #'staging': {
-            #    'heroku_app': 'shipit-staging-codecoverage',
-            #    'heroku_dyno_type': 'web',
-            #    'url': 'https://codecoverage.shipit.staging.mozilla-releng.net',
-            #    'dns': 'codecoverage.shipit.staging.mozilla-releng.net.herokudns.com',
-            #},
-            #'production': {
-            #    'heroku_app': 'shipit-production-codecoverage',
-            #    'heroku_dyno_type': 'web',
-            #    'url': 'https://codecoverage.shipit.mozilla-releng.net',
-            #    'dns': 'codecoverage.shipit.mozilla-releng.net.herokudns.com',
-            #},
+            'testing': {
+                'heroku_app': 'shipit-testing-codecoverage',
+                'heroku_dyno_type': 'web',
+                'url': 'https://codecoverage.testing.mozilla-releng.net',
+                'dns': 'codecoverage.testing.mozilla-releng.net.herokudns.com',
+            },
+            'staging': {
+                'heroku_app': 'shipit-staging-codecoverage',
+                'heroku_dyno_type': 'web',
+                'url': 'https://codecoverage.staging.mozilla-releng.net',
+                'dns': 'codecoverage.staging.mozilla-releng.net.herokudns.com',
+            },
+            'production': {
+                'heroku_app': 'shipit-production-codecoverage',
+                'heroku_dyno_type': 'web',
+                'url': 'https://codecoverage.mozilla-releng.net',
+                'dns': 'codecoverage.mozilla-releng.net.herokudns.com',
+            },
         },
     },
     'shipit-frontend': {
