@@ -64,7 +64,9 @@ async def test_coverage_for_file_impl(coverage_responses, coverage_changeset_by_
     # Get code coverage information for a given file at a given changeset
     for file_coverage in coverage_changeset_by_file:
         data = await coverage_for_file_impl.generate(file_coverage['changeset'], file_coverage['path'])
-        assert data == file_coverage['data']
+        assert data['data'] == file_coverage['data']
+        assert data['build_changeset'] == file_coverage['build_changeset']
+        assert data['git_build_changeset'] == file_coverage['git_build_changeset']
 
 
 @pytest.mark.asyncio

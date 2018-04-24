@@ -6,6 +6,7 @@
 from shipit_uplift.coverage import coverage_service
 from shipit_uplift.coverage import coverage_supported
 from shipit_uplift.coverage import get_coverage_build
+from shipit_uplift.coverage import get_github_commit
 
 
 async def generate(changeset, path):
@@ -21,5 +22,11 @@ async def generate(changeset, path):
     _, build_changeset, _ = await get_coverage_build(changeset)
 
     coverage = await coverage_service.get_file_coverage(build_changeset, path)
+    if coverage is None:
+        return {}
 
-    return coverage if coverage is not None else {}
+    return {
+        'git_build_changeset': await get_github_commit(changeset),
+        'build_changeset': build_changeset,
+        'data': coverage
+    }
