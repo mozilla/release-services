@@ -419,6 +419,40 @@ PROJECTS_CONFIG = {
             'production': {},
         },
     },
+    'shipit-code-coverage-backend': {
+        'checks': [
+            ('Checking code quality', 'flake8'),
+            ('Running tests', 'pytest tests/'),
+        ],
+        'run': 'FLASK',
+        'run_options': {
+            'port': 8011,
+        },
+        'requires': [
+            'redis',
+        ],
+        'deploy': 'HEROKU',
+        'deploy_options': {
+            #'testing': {
+            #    'heroku_app': 'shipit-testing-codecoverage',
+            #    'heroku_dyno_type': 'web',
+            #    'url': 'https://codecoverage.shipit.testing.mozilla-releng.net',
+            #    'dns': 'codecoverage.shipit.testing.mozilla-releng.net.herokudns.com',
+            #},
+            #'staging': {
+            #    'heroku_app': 'shipit-staging-codecoverage',
+            #    'heroku_dyno_type': 'web',
+            #    'url': 'https://codecoverage.shipit.staging.mozilla-releng.net',
+            #    'dns': 'codecoverage.shipit.staging.mozilla-releng.net.herokudns.com',
+            #},
+            #'production': {
+            #    'heroku_app': 'shipit-production-codecoverage',
+            #    'heroku_dyno_type': 'web',
+            #    'url': 'https://codecoverage.shipit.mozilla-releng.net',
+            #    'dns': 'codecoverage.shipit.mozilla-releng.net.herokudns.com',
+            #},
+        },
+    },
     'shipit-frontend': {
         'run': 'ELM',
         'run_options': {
