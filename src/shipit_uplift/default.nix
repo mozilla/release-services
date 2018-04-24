@@ -24,12 +24,6 @@ let
       [ redis ];
     propagatedBuildInputs =
       (fromRequirementsFile ./requirements.txt python.packages);
-    postInstall = ''
-      mkdir -p $out/bin
-      cp ${src}/launch.sh $out/bin
-      chmod +x $out/bin/launch.sh
-      cp ${src}/shipit_uplift/worker.py $out/bin/shipit_uplift_worker
-    '';
     passthru = {
       update = writeScript "update-${name}" ''
         pushd ${self.src_path}
@@ -41,9 +35,6 @@ let
         popd
       '';
     };
-    dockerCmd = [
-        "launch.sh"
-    ];
   };
 
 in self
