@@ -11,7 +11,7 @@ from async_lru import alru_cache
 from cachetools import LRUCache
 
 from cli_common import log
-from shipit_uplift import secrets
+from shipit_code_coverage_backend import secrets
 
 logger = log.get_logger(__name__)
 

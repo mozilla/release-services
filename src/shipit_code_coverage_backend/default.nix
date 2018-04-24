@@ -4,7 +4,7 @@
 let
 
   inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource;
-  inherit (releng_pkgs.pkgs) writeScript;
+  inherit (releng_pkgs.pkgs) writeScript redis;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
 
@@ -12,14 +12,24 @@ let
   name = "mozilla-shipit-code-coverage-backend";
   dirname = "shipit_code_coverage_backend";
 
-  self = mkBackend {
+  self = mkBackend rec {
     inherit python name dirname;
+    inProduction = true;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
-      fromRequirementsFile ./requirements-dev.txt python.packages;
+      (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../lib/backend_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./requirements-dev.txt python.packages) ++
+      [ redis ];
     propagatedBuildInputs =
-      fromRequirementsFile ./requirements.txt python.packages;
+      (fromRequirementsFile ./requirements.txt python.packages);
+    postInstall = ''
+      mkdir -p $out/bin
+      cp ${src}/launch.sh $out/bin
+      chmod +x $out/bin/launch.sh
+      cp ${src}/shipit_code_coverage_backend/worker.py $out/bin/shipit_code_coverage_backend_worker
+    '';
     passthru = {
       update = writeScript "update-${name}" ''
         pushd ${self.src_path}
@@ -30,6 +40,9 @@ let
         popd
       '';
     };
+    dockerCmd = [
+        "launch.sh"
+    ];
   };
 
 in self

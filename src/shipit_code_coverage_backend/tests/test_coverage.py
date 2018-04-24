@@ -7,10 +7,10 @@ import json
 
 import pytest
 
-from shipit_uplift import coverage
-from shipit_uplift import coverage_by_changeset_impl
-from shipit_uplift import coverage_for_file_impl
-from shipit_uplift import coverage_summary_by_changeset_impl
+from shipit_code_coverage_backend import coverage
+from shipit_code_coverage_backend import coverage_by_changeset_impl
+from shipit_code_coverage_backend import coverage_for_file_impl
+from shipit_code_coverage_backend import coverage_summary_by_changeset_impl
 
 
 def test_coverage_supported_extensions_api(client):
