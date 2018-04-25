@@ -50,9 +50,16 @@ class UnsupportedFlavor(Exception):
         self.description = description
 
 
+def get_trust_domain(project):
+    if 'comm' in project:
+        return 'comm'
+    else:
+        return 'gecko'
+
+
 def find_decision_task_id(project, revision):
-    decision_task_route = 'gecko.v2.{project}.revision.{revision}.firefox.decision'.format(
-        project=project, revision=revision)
+    decision_task_route = '{trust_domain}.v2.{project}.revision.{revision}.taskgraph.decision'.format(
+        trust_domain=get_trust_domain(project), project=project, revision=revision)
     index = taskcluster.Index()
     return index.findTask(decision_task_route)['taskId']
 
