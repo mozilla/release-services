@@ -42,6 +42,11 @@ SUPPORTED_FLAVORS = {
         {'name': 'push_devedition', 'in_previous_graph_ids': True},
         {'name': 'ship_devedition', 'in_previous_graph_ids': True},
     ],
+    'thunderbird': [
+        {'name': 'promote_thunderbird', 'in_previous_graph_ids': True},
+        {'name': 'push_thunderbird', 'in_previous_graph_ids': True},
+        {'name': 'ship_thunderbird', 'in_previous_graph_ids': True},
+    ],
 }
 
 
