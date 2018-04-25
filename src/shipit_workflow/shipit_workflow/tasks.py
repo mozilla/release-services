@@ -75,7 +75,7 @@ def find_action(name, actions):
 
 def extract_our_flavors(avail_flavors, product, version, partial_updates):
     # sanity check
-    all_flavors = set([fl['name'] for product in SUPPORTED_FLAVORS for fl in SUPPORTED_FLAVORS[product]])
+    all_flavors = set([fl['name'] for prod in SUPPORTED_FLAVORS for fl in SUPPORTED_FLAVORS[prod]])
     if not set(avail_flavors).issuperset(all_flavors):
         description = 'Some flavors are not in actions.json: {}.'.format(
             all_flavors.difference(set(avail_flavors)))
