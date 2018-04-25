@@ -26,7 +26,7 @@ async def generate(changeset, path):
         return {}
 
     return {
-        'git_build_changeset': await get_github_commit(changeset),
+        'git_build_changeset': await get_github_commit(build_changeset),
         'build_changeset': build_changeset,
         'data': coverage
     }
