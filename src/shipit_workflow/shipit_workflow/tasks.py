@@ -42,6 +42,11 @@ SUPPORTED_FLAVORS = {
         {'name': 'push_devedition', 'in_previous_graph_ids': True},
         {'name': 'ship_devedition', 'in_previous_graph_ids': True},
     ],
+    'thunderbird': [
+        {'name': 'promote_thunderbird', 'in_previous_graph_ids': True},
+        {'name': 'push_thunderbird', 'in_previous_graph_ids': True},
+        {'name': 'ship_thunderbird', 'in_previous_graph_ids': True},
+    ],
 }
 
 
@@ -50,9 +55,16 @@ class UnsupportedFlavor(Exception):
         self.description = description
 
 
+def get_trust_domain(project):
+    if 'comm' in project:
+        return 'comm'
+    else:
+        return 'gecko'
+
+
 def find_decision_task_id(project, revision):
-    decision_task_route = 'gecko.v2.{project}.revision.{revision}.firefox.decision'.format(
-        project=project, revision=revision)
+    decision_task_route = '{trust_domain}.v2.{project}.revision.{revision}.taskgraph.decision'.format(
+        trust_domain=get_trust_domain(project), project=project, revision=revision)
     index = taskcluster.Index()
     return index.findTask(decision_task_route)['taskId']
 
@@ -74,16 +86,16 @@ def find_action(name, actions):
 
 
 def extract_our_flavors(avail_flavors, product, version, partial_updates):
-    # sanity check
-    all_flavors = set([fl['name'] for product in SUPPORTED_FLAVORS for fl in SUPPORTED_FLAVORS[product]])
-    if not set(avail_flavors).issuperset(all_flavors):
-        description = 'Some flavors are not in actions.json: {}.'.format(
-            all_flavors.difference(set(avail_flavors)))
-        raise UnsupportedFlavor(description=description)
     if is_rc(version, partial_updates):
         product_key = '{}_rc'.format(product)
     else:
         product_key = product
+    # sanity check
+    all_flavors = set([fl['name'] for fl in SUPPORTED_FLAVORS[product_key]])
+    if not set(avail_flavors).issuperset(all_flavors):
+        description = 'Some flavors are not in actions.json: {}.'.format(
+            all_flavors.difference(set(avail_flavors)))
+        raise UnsupportedFlavor(description=description)
     return SUPPORTED_FLAVORS[product_key]
 
 
