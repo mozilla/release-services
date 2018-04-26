@@ -49,7 +49,7 @@ def test_phabricator(mock_phabricator, mock_repository, mock_config):
 
     # Load full patch
     assert r.patch is None
-    r.apply(mock_repository)
+    r.load(mock_repository)
     assert r.patch is not None
     assert isinstance(r.patch, str)
     assert len(r.patch.split('\n')) == 7
@@ -63,7 +63,11 @@ def test_phabricator(mock_phabricator, mock_repository, mock_config):
         }
     }
 
-    # Check file is updated
+    # Check file is untouched after load
+    assert open(test_txt).read() == 'Hello World\n'
+
+    # Check file is updated after apply
+    r.apply(mock_repository)
     assert open(test_txt).read() == 'Hello World\nSecond line\n'
 
 

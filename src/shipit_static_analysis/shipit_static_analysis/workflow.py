@@ -115,12 +115,9 @@ class Workflow(object):
             tip = self.hg.tip().node
             logger.info('Set repo back to tip', rev=tip)
 
-            # Apply and analyze revision patch
-            revision.apply(self.hg)
+            # Load and analyze revision patch
+            revision.load(self.hg)
             revision.analyze_patch()
-
-            # Revert to tip
-            self.hg.update(rev=tip, clean=True)
 
         with stats.api.timer('runtime.mach'):
             # Only run mach if revision has any C/C++ files
@@ -177,11 +174,6 @@ class Workflow(object):
 
             # Apply patch
             revision.apply(self.hg)
-
-            if revision.has_clang_files:
-                # Run Configure to avoid issues with patches needing a full clobber
-                logger.info('Mach configure again ...')
-                run_check(['gecko-env', './mach', 'configure'], cwd=settings.repo_dir)
 
             # Detect new issues
             issues = self.detect_issues(analyzers, revision)
