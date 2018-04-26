@@ -169,6 +169,15 @@ class CodeCov(object):
             tar.add('chunk_mapping.sqlite')
 
     def go(self):
+        if self.from_pulse:
+            commit_sha = self.githubUtils.get_commit(self.revision)
+            try:
+                uploader.get_codecov(commit_sha)
+                logger.warn('Build was already injested', revision=self.revision)
+                return
+            except requests.exceptions.HTTPError:
+                pass
+
         with ThreadPoolExecutorResult(max_workers=2) as executor:
             # Thread 1 - Download coverage artifacts.
             executor.submit(self.artifactsHandler.download_all)
@@ -179,7 +188,6 @@ class CodeCov(object):
         if self.from_pulse:
             self.githubUtils.update_geckodev_repo()
 
-            commit_sha = self.githubUtils.get_commit(self.revision)
             logger.info('GitHub revision', revision=commit_sha)
 
             self.githubUtils.post_github_status(commit_sha)

@@ -70,14 +70,19 @@ def get_latest_codecov():
     return utils.retry(get_latest_codecov_int)
 
 
+def get_codecov(commit):
+    r = requests.get('https://codecov.io/api/gh/{}/commit/{}?access_token={}'.format(secrets[secrets.CODECOV_REPO], commit, secrets[secrets.CODECOV_ACCESS_TOKEN]))  # noqa
+    r.raise_for_status()
+    return r.json()
+
+
 def codecov_wait(commit):
     class TotalsNoneError(Exception):
         pass
 
     def check_codecov_job():
-        r = requests.get('https://codecov.io/api/gh/{}/commit/{}?access_token={}'.format(secrets[secrets.CODECOV_REPO], commit, secrets[secrets.CODECOV_ACCESS_TOKEN]))  # noqa
-        r.raise_for_status()
-        totals = r.json()['commit']['totals']
+        data = get_codecov(commit)
+        totals = data['commit']['totals']
         if totals is None:
             raise TotalsNoneError()
         return True

@@ -155,3 +155,28 @@ def grcov_uncovered_function_artifact():
 def jsvm_uncovered_function_artifact():
     with generate_coverage_artifact('jsvm_uncovered_function.info') as f:
         yield f
+
+
+@pytest.fixture(scope='session')
+def mock_secrets():
+    from shipit_code_coverage.secrets import secrets
+    secrets.update({
+        'CODECOV_REPO': 'marco-c/gecko-dev',
+        'CODECOV_ACCESS_TOKEN': 'XXX',
+    })
+
+
+@pytest.fixture()
+def codecov_commits():
+    dir_path = os.path.join(FIXTURES_DIR, 'codecov_commits')
+    for fname in os.listdir(dir_path):
+        with open(os.path.join(dir_path, fname)) as f:
+            data = json.load(f)
+            status = data['meta']['status']
+
+            responses.add(
+                responses.GET,
+                'https://codecov.io/api/gh/marco-c/gecko-dev/commit/{}'.format(fname[:-5]),
+                json=data,
+                status=status
+            )
