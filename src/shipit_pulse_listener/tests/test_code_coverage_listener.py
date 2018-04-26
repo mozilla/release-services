@@ -83,6 +83,15 @@ def test_is_old_task():
             }]
         }
     }
+    assert not hook.is_old_task(old_task)
+
+    old_task = {
+        'status': {
+            'runs': [{
+                'resolved': (datetime.utcnow() - timedelta(4)).strftime('%Y-%m-%d'),
+            }]
+        }
+    }
     assert hook.is_old_task(old_task)
 
     old_task = {
