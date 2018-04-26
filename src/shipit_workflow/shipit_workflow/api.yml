@@ -134,6 +134,7 @@ definitions:
         - firefox
         - fennec
         - devedition
+        - thunderbird
       version:
         type: string
         example: 56.0b12
@@ -192,6 +193,7 @@ definitions:
         - firefox
         - fennec
         - devedition
+        - thunderbird
       version:
         type: string
         example: 56.0b12
