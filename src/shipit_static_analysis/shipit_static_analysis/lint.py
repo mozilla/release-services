@@ -38,10 +38,10 @@ class MozLintIssue(Issue):
         self.message = message
         self.rule = rule
 
-        # Check path is always relative to the repository
+        # Ensure path is always relative to the repository
         self.path = path
         if self.path.startswith(settings.repo_dir):
-            self.path = self.path[len(settings.repo_dir)+1:]
+            self.path = os.path.relpath(self.path, settings.repo_dir)
         assert os.path.exists(os.path.join(settings.repo_dir, self.path)), \
             'Missing {} in repo {}'.format(self.path, settings.repo_dir)
 
