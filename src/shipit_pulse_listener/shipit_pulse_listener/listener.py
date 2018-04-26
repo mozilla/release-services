@@ -172,7 +172,7 @@ class HookCodeCoverage(PulseHook):
     def is_old_task(self, task):
         for run in task['status']['runs']:
             run_date = self.as_utc(dateutil.parser.parse(run['resolved']))
-            if run_date < self.as_utc(datetime.utcnow() - timedelta(1)):
+            if run_date < self.as_utc(datetime.utcnow() - timedelta(3)):
                 return True
         return False
 
