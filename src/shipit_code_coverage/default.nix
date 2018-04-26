@@ -65,12 +65,12 @@ let
           # Used by cache
           ("docker-worker:cache:" + cacheKey)
 
-          # Needed to post build status to GitHub
-          ("github:create-status:marco-c/gecko-dev")
-
           # Needed to index the task in the TaskCluster index
-          ("index:insert-task:project.releng.services.project.staging.shipit_code_coverage.*")
-        ];
+          ("index:insert-task:project.releng.services.project." + branch + ".shipit_code_coverage.*")
+        ] ++ (
+          # Needed to post build status to GitHub
+          if (branch == "staging") then ["github:create-status:marco-c/gecko-dev"] else []
+        );
         cache = {
           "${cacheKey}" = "/cache";
         };
