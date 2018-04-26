@@ -31,13 +31,19 @@ ISSUE_MARKDOWN = '''
 class MozLintIssue(Issue):
     def __init__(self, path, column, level, lineno, linter, message, rule, **kwargs):
         self.nb_lines = 1
-        self.path = path
         self.column = column
         self.level = level
         self.line = int(lineno)  # mozlint sometimes produce strings here
         self.linter = linter
         self.message = message
         self.rule = rule
+
+        # Check path is always relative to the repository
+        self.path = path
+        if self.path.startswith(settings.repo_dir):
+            self.path = self.path[len(settings.repo_dir)+1:]
+        assert os.path.exists(os.path.join(settings.repo_dir, self.path)), \
+            'Missing {} in repo {}'.format(self.path, settings.repo_dir)
 
     def __str__(self):
         return '{} issue {} {} line {}'.format(
