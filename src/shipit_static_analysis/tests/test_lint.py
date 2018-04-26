@@ -36,3 +36,19 @@ def test_flake8_rules(tmpdir, mock_config):
     issue = MozLintIssue('test.py', 1, 'error', 1, 'flake8', 'Remove bad quotes or whatever.', 'Q000')
     assert issue.is_disabled_rule()
     assert not issue.is_publishable()
+
+
+def test_issue_path(mock_repository, mock_config):
+    '''
+    A mozlint issue can be absolute or relative
+    But the path sent to reporters must always be relative
+    '''
+    from shipit_static_analysis.lint import MozLintIssue
+
+    relative_path = 'test.txt'
+    issue = MozLintIssue(relative_path, 1, 'error', 1, 'dummy', 'Any error', 'XXX')
+    assert issue.path == 'test.txt'
+
+    absolute_path = os.path.join(mock_config.repo_dir, relative_path)
+    issue = MozLintIssue(absolute_path, 1, 'error', 1, 'dummy', 'Any error', 'XXX')
+    assert issue.path == 'test.txt'
