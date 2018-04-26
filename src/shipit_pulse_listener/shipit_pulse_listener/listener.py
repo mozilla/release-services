@@ -177,6 +177,10 @@ class HookCodeCoverage(PulseHook):
         return False
 
     def is_mozilla_central_task(self, task):
+        if 'MH_BRANCH' not in task['task']['payload']['env']:
+            logger.warn('Received groupResolved notification for a task without MH_BRANCH', task_id=task['status']['taskId'])
+            return False
+
         branch = task['task']['payload']['env']['MH_BRANCH']
 
         if branch != 'mozilla-central':
