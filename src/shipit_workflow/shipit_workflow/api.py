@@ -8,7 +8,6 @@ import functools
 import os
 
 import flask
-import jsone
 import taskcluster
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest
@@ -23,6 +22,7 @@ from shipit_workflow.models import Release
 from shipit_workflow.tasks import UnsupportedFlavor
 from shipit_workflow.tasks import fetch_actions_json
 from shipit_workflow.tasks import generate_action_task
+from shipit_workflow.tasks import render_action_task
 
 log = get_logger(__name__)
 
@@ -159,7 +159,17 @@ def abandon_release(name):
                 action_task_input={},
                 actions=actions,
             )
-            action_task = jsone.render(action_task, context)
+            # existing_tasks contains a lot of entries, so we hit the payload
+            # size limit. We don't use this parameter in any case, safe to
+            # remove
+            context['parameters']['existing_tasks'] = {}
+            # ACTION_TASK_ID should be explicitly specified and be the original
+            # action task that generated this phase.
+            action_task = render_action_task(task=action_task, context=context,
+                                             action_task_id=phase.task_id)
+            # Add the initial action task to the list of dependencies to
+            # prevent early firing
+            action_task['dependencies'].append(phase.task_id)
             log.info('Cancel phase %s by task %s', phase.name, action_task_id)
             _queue().createTask(action_task_id, action_task)
 
