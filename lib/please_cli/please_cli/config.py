@@ -433,24 +433,24 @@ PROJECTS_CONFIG = {
         ],
         'deploy': 'HEROKU',
         'deploy_options': {
-            #'testing': {
-            #    'heroku_app': 'shipit-testing-codecoverage',
-            #    'heroku_dyno_type': 'web',
-            #    'url': 'https://codecoverage.shipit.testing.mozilla-releng.net',
-            #    'dns': 'codecoverage.shipit.testing.mozilla-releng.net.herokudns.com',
-            #},
-            #'staging': {
-            #    'heroku_app': 'shipit-staging-codecoverage',
-            #    'heroku_dyno_type': 'web',
-            #    'url': 'https://codecoverage.shipit.staging.mozilla-releng.net',
-            #    'dns': 'codecoverage.shipit.staging.mozilla-releng.net.herokudns.com',
-            #},
-            #'production': {
-            #    'heroku_app': 'shipit-production-codecoverage',
-            #    'heroku_dyno_type': 'web',
-            #    'url': 'https://codecoverage.shipit.mozilla-releng.net',
-            #    'dns': 'codecoverage.shipit.mozilla-releng.net.herokudns.com',
-            #},
+            'testing': {
+                'heroku_app': 'shipit-testing-codecoverage',
+                'heroku_dyno_type': 'web',
+                'url': 'https://coverage.testing.moz.tools',
+                'dns': 'coverage.testing.moz.tools.herokudns.com',
+            },
+            'staging': {
+                'heroku_app': 'shipit-staging-codecoverage',
+                'heroku_dyno_type': 'web',
+                'url': 'https://coverage.staging.moz.tools',
+                'dns': 'coverage.staging.moz.tools.herokudns.com',
+            },
+            'production': {
+                'heroku_app': 'shipit-production-codecoverage',
+                'heroku_dyno_type': 'web',
+                'url': 'https://coverage.moz.tools',
+                'dns': 'coverage.moz.tools.herokudns.com',
+            },
         },
     },
     'shipit-frontend': {
@@ -485,11 +485,13 @@ PROJECTS_CONFIG = {
                 'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
                 'envs': {
                     'bugzilla-url': 'https://bugzilla.mozilla.org',
+                    'shipit-uplift-url': 'https://uplift.shipit.staging.mozilla-releng.net',
                 },
                 'csp': [
                     'https://login.taskcluster.net',
                     'https://auth.taskcluster.net',
                     'https://bugzilla.mozilla.org',
+                    'https://uplift.shipit.staging.mozilla-releng.net',
                 ],
             },
             'production': {
@@ -498,11 +500,13 @@ PROJECTS_CONFIG = {
                 'dns': 'dve8yd1431ifz.cloudfront.net.',
                 'envs': {
                     'bugzilla-url': 'https://bugzilla.mozilla.org',
+                    'shipit-uplift-url': 'https://uplift.shipit.mozilla-releng.net',
                 },
                 'csp': [
                     'https://login.taskcluster.net',
                     'https://auth.taskcluster.net',
                     'https://bugzilla.mozilla.org',
+                    'https://uplift.shipit.mozilla-releng.net',
                 ],
             },
         },
@@ -668,18 +672,19 @@ PROJECTS_CONFIG = {
                 'url': 'https://uplift.shipit.testing.mozilla-releng.net',
                 'dns': 'uplift.shipit.testing.mozilla-releng.net.herokudns.com',
             },
-            'staging': {
-                'heroku_app': 'shipit-staging-uplift',
-                'heroku_dyno_type': 'web',
-                'url': 'https://uplift.shipit.staging.mozilla-releng.net',
-                'dns': 'uplift.shipit.staging.mozilla-releng.net.herokudns.com',
-            },
-            'production': {
-                'heroku_app': 'shipit-production-uplift',
-                'heroku_dyno_type': 'web',
-                'url': 'https://uplift.shipit.mozilla-releng.net',
-                'dns': 'uplift.shipit.mozilla-releng.net.herokudns.com',
-            },
+            # Do not update until code coverage DNS are fully setup
+            #'staging': {
+            #    'heroku_app': 'shipit-staging-uplift',
+            #    'heroku_dyno_type': 'web',
+            #    'url': 'https://uplift.shipit.staging.mozilla-releng.net',
+            #    'dns': 'uplift.shipit.staging.mozilla-releng.net.herokudns.com',
+            #},
+            #'production': {
+            #    'heroku_app': 'shipit-production-uplift',
+            #    'heroku_dyno_type': 'web',
+            #    'url': 'https://uplift.shipit.mozilla-releng.net',
+            #    'dns': 'uplift.shipit.mozilla-releng.net.herokudns.com',
+            #},
         },
     },
     'shipit-workflow': {
