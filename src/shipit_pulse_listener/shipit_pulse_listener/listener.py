@@ -161,14 +161,14 @@ class HookCodeCoverage(PulseHook):
         return any(task['task']['metadata']['name'].startswith(s) for s in ['build-linux64-ccov', 'build-win64-ccov'])
 
     def is_mozilla_central_task(self, task):
-        if 'MH_BRANCH' not in task['task']['payload']['env']:
-            logger.warn('Received groupResolved notification for a task without MH_BRANCH', task_id=task['status']['taskId'])
+        if 'GECKO_HEAD_REPOSITORY' not in task['task']['payload']['env']:
+            logger.warn('Received groupResolved notification for a task without GECKO_HEAD_REPOSITORY', task_id=task['status']['taskId'])
             return False
 
-        branch = task['task']['payload']['env']['MH_BRANCH']
+        repo = task['task']['payload']['env']['GECKO_HEAD_REPOSITORY']
 
-        if branch != 'mozilla-central':
-            logger.warn('Received groupResolved notification for a non-mozilla-central coverage task', branch=branch)
+        if repo != 'https://hg.mozilla.org/mozilla-central':
+            logger.warn('Received groupResolved notification for a non-mozilla-central coverage task', repo=repo)
             return False
 
         return True
