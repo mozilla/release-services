@@ -17,7 +17,15 @@ class Notifier(object):
         self.notify_service = get_service('notify', client_id, access_token)
 
     def get_coverage_summary(self, changeset):
-        r = requests.get('https://uplift.shipit.staging.mozilla-releng.net/coverage/changeset_summary/{}'.format(changeset))
+        app_channel = secrets[secrets.APP_CHANNEL]
+        if app_channel == 'staging':
+            url = 'https://uplift.shipit.staging.mozilla-releng.net/coverage/changeset_summary/{}'
+        elif app_channel == 'production':
+            url = 'https://uplift.shipit.mozilla-releng.net/coverage/changeset_summary/{}'
+        else:
+            assert False, 'Unexpected channel: {}.'.format(app_channel)
+
+        r = requests.get(url.format(changeset))
         r.raise_for_status()
 
         if r.status_code == 202:
