@@ -173,7 +173,7 @@ class CodeCov(object):
             commit_sha = self.githubUtils.get_commit(self.revision)
             try:
                 uploader.get_codecov(commit_sha)
-                logger.warn('Build was already injested', revision=self.revision)
+                logger.warn('Build was already injested')
                 return
             except requests.exceptions.HTTPError:
                 pass

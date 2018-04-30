@@ -49,7 +49,7 @@ class Notifier(object):
             try:
                 coverage = retry(lambda: self.get_coverage_summary(rev))
             except (requests.exceptions.HTTPError, ResultNotReadyException):
-                logger.warn('Failure to retrieve coverage summary', rev=rev)
+                logger.warn('Failure to retrieve coverage summary')
                 continue
 
             if coverage is None:
