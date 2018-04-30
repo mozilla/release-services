@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
-from datetime import datetime
-from datetime import timedelta
 
-import dateutil.parser
-import pytz
 import requests
 
 from cli_common.log import get_logger
@@ -164,18 +160,6 @@ class HookCodeCoverage(PulseHook):
     def is_coverage_task(self, task):
         return any(task['task']['metadata']['name'].startswith(s) for s in ['build-linux64-ccov', 'build-win64-ccov'])
 
-    def as_utc(self, d):
-        if d.tzinfo is None or d.tzinfo.utcoffset(d) is None:
-            return pytz.utc.localize(d)
-        return d.astimezone(pytz.utc)
-
-    def is_old_task(self, task):
-        for run in task['status']['runs']:
-            run_date = self.as_utc(dateutil.parser.parse(run['resolved']))
-            if run_date < self.as_utc(datetime.utcnow() - timedelta(1)):
-                return True
-        return False
-
     def is_mozilla_central_task(self, task):
         if 'MH_BRANCH' not in task['task']['payload']['env']:
             logger.warn('Received groupResolved notification for a task without MH_BRANCH', task_id=task['status']['taskId'])
@@ -236,10 +220,6 @@ class HookCodeCoverage(PulseHook):
 
         build_task = self.get_build_task_in_group(taskGroupId)
         if build_task is None:
-            return None
-
-        if self.is_old_task(build_task):
-            logger.info('Received groupResolved notification for an old task', group=taskGroupId)
             return None
 
         if not self.is_mozilla_central_task(build_task):

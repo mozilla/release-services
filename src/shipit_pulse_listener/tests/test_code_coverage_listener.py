@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-from datetime import datetime
-from datetime import timedelta
 
 import responses
 
@@ -60,39 +58,6 @@ def test_is_coverage_task():
         }
     }
     assert not hook.is_coverage_task(nocov_task)
-
-
-def test_is_old_task():
-    hook = HookCodeCoverage({
-      'hookId': 'shipit-staging-code-coverage'
-    })
-
-    new_task = {
-        'status': {
-            'runs': [{
-                'resolved': datetime.utcnow().strftime('%Y-%m-%d'),
-            }]
-        }
-    }
-    assert not hook.is_old_task(new_task)
-
-    old_task = {
-        'status': {
-            'runs': [{
-                'resolved': (datetime.utcnow() - timedelta(2)).strftime('%Y-%m-%d'),
-            }]
-        }
-    }
-    assert hook.is_old_task(old_task)
-
-    old_task = {
-        'status': {
-            'runs': [{
-                'resolved': '2017-07-31T19:32:04.855Z',
-            }]
-        }
-    }
-    assert hook.is_old_task(old_task)
 
 
 def test_get_build_task_in_group():
@@ -173,14 +138,7 @@ def test_wrong_branch():
 @responses.activate
 def test_success():
     with open(os.path.join(FIXTURES_DIR, 'RS0UwZahQ_qAcdZzEb_Y9g.json')) as f:
-
-        # Update resolved date
-        mockup = json.load(f)
-        now = datetime.now().isoformat()
-        for i, task in enumerate(mockup['tasks']):
-            mockup['tasks'][i]['status']['runs'][0]['resolved'] = now
-
-        responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/RS0UwZahQ_qAcdZzEb_Y9g/list?limit=200', json=mockup, status=200, match_querystring=True)  # noqa
+        responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task-group/RS0UwZahQ_qAcdZzEb_Y9g/list?limit=200', json=json.load(f), status=200, match_querystring=True)  # noqa
 
     hook = HookCodeCoverage({
       'hookId': 'shipit-staging-code-coverage'
