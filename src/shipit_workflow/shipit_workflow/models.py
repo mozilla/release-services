@@ -13,7 +13,6 @@ import sqlalchemy.orm
 
 from backend_common.db import db
 from cli_common.log import get_logger
-from shipit_workflow.partners import get_partner_config_by_url
 from shipit_workflow.release import bump_version
 from shipit_workflow.release import is_partner_enabled
 from shipit_workflow.tasks import extract_our_flavors
