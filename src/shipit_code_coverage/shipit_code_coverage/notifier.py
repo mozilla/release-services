@@ -10,8 +10,11 @@ from shipit_code_coverage.secrets import secrets
 logger = get_logger(__name__)
 
 
-class Notifier(object):
+class ResultNotReadyException(Exception):
+    pass
 
+
+class Notifier(object):
     def __init__(self, revision, client_id, access_token):
         self.revision = revision
         self.notify_service = get_service('notify', client_id, access_token)
@@ -21,7 +24,7 @@ class Notifier(object):
         r.raise_for_status()
 
         if r.status_code == 202:
-            return None
+            raise ResultNotReadyException()
 
         return r.json()
 
@@ -45,7 +48,7 @@ class Notifier(object):
 
             try:
                 coverage = retry(lambda: self.get_coverage_summary(rev))
-            except requests.exceptions.HTTPError:
+            except (requests.exceptions.HTTPError, ResultNotReadyException):
                 logger.warn('Failure to retrieve coverage summary', rev=rev)
                 continue
 
