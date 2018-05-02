@@ -37,8 +37,16 @@ paths:
       operationId: shipit_workflow.api.list_releases
       parameters:
       - in: query
-        name: full
-        type: boolean
+        name: product
+        type: string
+      - in: query
+        name: branch
+        type: string
+      - in: query
+        name: status
+        type: array
+        items:
+          type: string
       responses:
         200:
           description: A list of releases

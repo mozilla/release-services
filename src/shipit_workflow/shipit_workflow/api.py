@@ -89,11 +89,14 @@ def add_release(body):
         raise BadRequest(description=e.description)
 
 
-def list_releases(full=False):
+def list_releases(product=None, branch=None, status=['scheduled']):
     session = flask.g.db.session
     releases = session.query(Release)
-    if not full:
-        releases = releases.filter(Release.status == 'scheduled')
+    if product:
+        releases = releases.filter(Release.product == product)
+    if branch:
+        releases = releases.filter(Release.branch == branch)
+    releases = releases.filter(Release.status.in_(status))
     return [r.json for r in releases.all()]
 
 
