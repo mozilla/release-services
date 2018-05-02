@@ -119,12 +119,9 @@ class Release(db.Model):
             'version': self.version,
             'release_eta': self.release_eta
         }
-        if is_partner_enabled(self.product, self.version) and partner_urls and github_token:
-            input_common['release_partner_config'] = {}
-            for kind, url in partner_urls.items():
-                input_common['release_partner_config'][kind] = get_partner_config_by_url(
-                    url, kind, github_token
-                )
+        if not is_partner_enabled(self.product, self.version):
+            input_common['release_enable_emefree'] = False
+            input_common['release_enable_partners'] = False
 
         if self.partial_updates:
             input_common['partial_updates'] = {}
