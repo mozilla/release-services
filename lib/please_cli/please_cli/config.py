@@ -281,7 +281,23 @@ PROJECTS_CONFIG = {
                 'csp': [
                     'https://login.taskcluster.net',
                     'https://auth.taskcluster.net',
+
+                    # TODO: remove lines below when garbas restores these projects on production
+                    'https://clobberer.mozilla-releng.net',
+                    'https://tooltool.mozilla-releng.net',
+                    'https://treestatus.mozilla-releng.net',
+                    'https://mapper.mozilla-releng.net',
+                    'https://archiver.mozilla-releng.net',
                 ],
+
+                # TODO: remove all envs when garbas restores these projects on production
+                'envs': {
+                    'releng-clobberer-url': 'https://clobberer.mozilla-releng.net',
+                    'releng-tooltool-url': 'https://tooltool.mozilla-releng.net',
+                    'releng-treestatus-url': 'https://treestatus.mozilla-releng.net',
+                    'releng-mapper-url': 'https://mapper.mozilla-releng.net',
+                    'releng-archiver-url': 'https://archiver.mozilla-releng.net',
+                },
             },
         },
     },
