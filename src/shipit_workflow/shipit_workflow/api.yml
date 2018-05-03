@@ -43,6 +43,9 @@ paths:
         name: branch
         type: string
       - in: query
+        name: version
+        type: string
+      - in: query
         name: status
         type: array
         items:
