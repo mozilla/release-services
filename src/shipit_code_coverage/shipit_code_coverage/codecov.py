@@ -221,7 +221,7 @@ class CodeCov(object):
 
             self.generate_suite_reports()
 
-            report_generators.zero_coverage(self.artifactsHandler.get())
+            report_generators.ZeroCov(self.repo_dir).zero_coverage(self.artifactsHandler.get())
 
             self.generate_chunk_mapping()
 
