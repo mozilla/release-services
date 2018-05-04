@@ -16,13 +16,12 @@ logger = get_logger(__name__)
 
 class ZeroCov(object):
 
-    def __init__(self, cache_root, mc_repo_dir, hgmo_port=8000):
-        self.cache_root = cache_root
+    def __init__(self, mc_repo_dir, hgmo_port=8000):
         self.mc_repo_dir = mc_repo_dir
         self.hgmo_port = str(hgmo_port)
 
     def get_pid_file(self):
-        return '{}/hgmo.pid'.format(self.cache_root)
+        return '/tmp/hgmo.pid'
 
     def get_pid(self):
         with open(self.get_pid_file(), 'r') as In:

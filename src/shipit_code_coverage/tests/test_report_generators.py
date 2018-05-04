@@ -11,7 +11,7 @@ def test_zero_coverage(tmpdir,
                        grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact):
     tmp_path = tmpdir.strpath
 
-    report_generators.ZeroCov(tmp_path, '').zero_coverage([
+    report_generators.ZeroCov('').zero_coverage([
         grcov_artifact, grcov_uncovered_artifact,
         jsvm_artifact, jsvm_uncovered_artifact,
         grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact
