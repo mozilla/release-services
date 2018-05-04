@@ -58,6 +58,7 @@ def main(phabricator,
                               'APP_CHANNEL': 'development',
                               'REPORTERS': [],
                               'ANALYZERS': ['clang-tidy', ],
+                              'PUBLICATION': 'in_patch',
                           },
                           taskcluster_client_id=taskcluster_client_id,
                           taskcluster_access_token=taskcluster_access_token,
@@ -71,7 +72,7 @@ def main(phabricator,
                 )
 
     # Setup settings before stats
-    settings.setup(secrets['APP_CHANNEL'], cache_root)
+    settings.setup(secrets['APP_CHANNEL'], cache_root, secrets['PUBLICATION'])
 
     # Setup statistics
     datadog_api_key = secrets.get('DATADOG_API_KEY')

@@ -11,6 +11,7 @@ import hglib
 from parsepatch.patch import Patch
 
 from cli_common import log
+from shipit_static_analysis import Issue
 from shipit_static_analysis import stats
 from shipit_static_analysis.config import REPO_REVIEW
 from shipit_static_analysis.config import settings
@@ -53,6 +54,22 @@ class Revision(object):
         # Report nb of files and lines analyzed
         stats.api.increment('analysis.files', len(self.files))
         stats.api.increment('analysis.lines', sum(len(line) for line in self.lines.values()))
+
+    def contains(self, issue):
+        '''
+        Check if the issue is this patch
+        '''
+        assert isinstance(issue, Issue)
+
+        # Get modified lines for this issue
+        modified_lines = self.lines.get(issue.path)
+        if modified_lines is None:
+            logger.warn('Issue path in not in revision', path=issue.path, revision=self)
+            return False
+
+        # Detect if isssue is in the patch
+        lines = set(range(issue.line, issue.line + issue.nb_lines))
+        return not lines.isdisjoint(modified_lines)
 
     @property
     def has_clang_files(self):

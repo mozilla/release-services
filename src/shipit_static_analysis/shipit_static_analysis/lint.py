@@ -30,7 +30,7 @@ ISSUE_MARKDOWN = '''
 
 
 class MozLintIssue(Issue):
-    def __init__(self, path, column, level, lineno, linter, message, rule, **kwargs):
+    def __init__(self, path, column, level, lineno, linter, message, rule, revision, **kwargs):
         self.nb_lines = 1
         self.column = column
         self.level = level
@@ -38,6 +38,7 @@ class MozLintIssue(Issue):
         self.linter = linter
         self.message = message
         self.rule = rule
+        self.revision = revision
 
         # Ensure path is always relative to the repository
         self.path = path
@@ -77,9 +78,9 @@ class MozLintIssue(Issue):
 
         return False
 
-    def is_publishable(self):
+    def validates(self):
         '''
-        Publishable when:
+        A mozlint issues is publishable when:
         * file is not 3rd party
         * rule is not disabled
         '''
@@ -137,7 +138,7 @@ class MozLint(object):
         assert isinstance(revision, Revision)
 
         issues = list(itertools.chain.from_iterable([
-            self.find_issues(path) or []
+            self.find_issues(path, revision) or []
             for path in revision.files
         ]))
 
@@ -145,7 +146,7 @@ class MozLint(object):
 
         return issues
 
-    def find_issues(self, path):
+    def find_issues(self, path, revision):
         '''
         Run mozlint through mach, using gecko-env
         '''
@@ -184,7 +185,7 @@ class MozLint(object):
 
         # Mozlint uses both full & relative path to index issues
         return [
-            MozLintIssue(**issue)
+            MozLintIssue(revision=revision, **issue)
             for p in (path, full_path)
             for issue in payload.get(p, [])
         ]

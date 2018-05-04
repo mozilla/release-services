@@ -108,14 +108,14 @@ class ClangTidy(object):
             logger.error('Mach static analysis failed: {}'.format(e.output))
             raise
 
-        issues = self.parse_issues(clang_output.decode('utf-8'))
+        issues = self.parse_issues(clang_output.decode('utf-8'), revision)
 
         # Report stats for these issues
         stats.report_issues('clang-tidy', issues)
 
         return issues
 
-    def parse_issues(self, clang_output):
+    def parse_issues(self, clang_output, revision):
         '''
         Parse clang-tidy output into structured issues
         '''
@@ -133,7 +133,7 @@ class ClangTidy(object):
 
         issues = []
         for i, header in enumerate(headers):
-            issue = ClangTidyIssue(header.groups())
+            issue = ClangTidyIssue(header.groups(), revision)
 
             # Get next header
             if i+1 < len(headers):
@@ -141,9 +141,6 @@ class ClangTidy(object):
                 issue.body = clang_output[header.end():next_header.start() - 1]
             else:
                 issue.body = clang_output[header.end():]
-
-            # Detect if issue is in patch
-            issue.in_patch = issue.line in self.revision.lines.get(issue.path, [])  # noqa
 
             if issue.is_problem():
                 # Save problem to append notes
@@ -196,10 +193,11 @@ class ClangTidyIssue(Issue):
     '''
     An issue reported by clang-tidy
     '''
-    def __init__(self, header_data):
+    def __init__(self, header_data, revision):
         assert isinstance(header_data, tuple)
         assert len(header_data) == 6
         assert not settings.repo_dir.endswith('/')
+        self.revision = revision
         self.path, self.line, self.char, self.type, self.message, self.check = header_data  # noqa
         if self.path.startswith(settings.repo_dir):
             self.path = self.path[len(settings.repo_dir)+1:]  # skip heading /
@@ -207,7 +205,6 @@ class ClangTidyIssue(Issue):
         self.nb_lines = 1  # Only 1 line affected on clang-tidy
         self.char = int(self.char)
         self.body = None
-        self.in_patch = False
         self.notes = []
 
     def __str__(self):
@@ -226,18 +223,16 @@ class ClangTidyIssue(Issue):
     def is_problem(self):
         return self.type in ('warning', 'error')
 
-    def is_publishable(self):
+    def validates(self):
         '''
-        Is this issue publishable on Mozreview ?
+        Publish clang-tidy issuew when:
         * not a third party code
         * check is marked as publishable
-        * is in modified lines (in patch)
         * is not from an expanded macro
         '''
         return self.has_publishable_check() \
             and not self.is_third_party() \
-            and not self.is_expanded_macro() \
-            and self.in_patch
+            and not self.is_expanded_macro()
 
     def is_expanded_macro(self):
         '''
@@ -281,7 +276,7 @@ class ClangTidyIssue(Issue):
             location='{}:{}:{}'.format(self.path, self.line, self.char),
             body=self.body,
             check=self.check,
-            in_patch=self.in_patch and 'yes' or 'no',
+            in_patch=self.in_patch() and 'yes' or 'no',
             third_party=self.is_third_party() and 'yes' or 'no',
             publishable_check=self.has_publishable_check() and 'yes' or 'no',
             publishable=self.is_publishable() and 'yes' or 'no',

@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from shipit_static_analysis.config import settings
+from shipit_static_analysis.config import Publication
 from shipit_static_analysis.stats import Datadog
 import itertools
 import hashlib
@@ -28,6 +29,7 @@ class Issue(abc.ABC):
     '''
     lines_hash = None
     is_new = False
+    revision = None
 
     def __eq__(self, other):
         return self.__hash__() == other.__hash__()
@@ -74,11 +76,33 @@ class Issue(abc.ABC):
         '''
         return {}
 
-    @abc.abstractmethod
     def is_publishable(self):
         '''
         Is this issue publishable on reporters ?
-        Should return a boolean
+        Supports both publication mode
+        '''
+        assert self.revision is not None, \
+            'Missing revision'
+
+        # Always check specific rules validate
+        if not self.validates():
+            return False
+
+        if settings.publication == Publication.in_patch:
+            # Only check that the issue is in this revision
+            return self.revision.contains(self)
+
+        if settings.publication == Publication.before_after:
+            # Simply use marker set on workflow
+            return self.is_new
+
+        raise Exception('Unsupported publication mode {}'.format(settings.publication))
+
+    @abc.abstractmethod
+    def validates(self):
+        '''
+        Is this issue publishable on reporters using in_patch publication ?
+        Should check specific rules and return a boolean
         '''
         raise NotImplementedError
 

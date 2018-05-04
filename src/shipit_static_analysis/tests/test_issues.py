@@ -22,7 +22,7 @@ class DummyIssue(Issue):
     def as_text(self):
         return 'empty'
 
-    def is_publishable(self):
+    def validates(self):
         return False
 
 

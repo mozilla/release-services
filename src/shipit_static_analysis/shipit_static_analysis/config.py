@@ -5,6 +5,7 @@
 
 from __future__ import absolute_import
 
+import enum
 import os
 
 import requests
@@ -22,23 +23,40 @@ ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{task_id}/runs/{run_id}/ar
 logger = get_logger(__name__)
 
 
+class Publication(enum.Enum):
+    # Only check if the issue is in the developer patch
+    # This is the original mode
+    in_patch = 1
+
+    # Every new issue (not found before applying the patch)
+    # will be published
+    before_after = 2
+
+
 class Settings(object):
     def __init__(self):
         self.config = None
         self.app_channel = None
+        self.publication = None
 
         # Paths
         self.cache_root = None
         self.repo_dir = None
         self.repo_shared_dir = None
 
-    def setup(self, app_channel, cache_root):
+    def setup(self, app_channel, cache_root, publication):
         self.app_channel = app_channel
         self.download({
             'cpp_extensions': frozenset(['.c', '.h', '.cpp', '.cc', '.cxx', '.hh', '.hpp', '.hxx', '.m', '.mm']),
         })
         assert 'clang_checkers' in self.config
         assert 'target' in self.config
+
+        assert isinstance(publication, str)
+        try:
+            self.publication = Publication[publication]
+        except KeyError:
+            raise Exception('Publication mode should be {}'.format('|'.join(map(lambda p: p .name, Publication))))
 
         assert os.path.isdir(cache_root)
         self.cache_root = cache_root

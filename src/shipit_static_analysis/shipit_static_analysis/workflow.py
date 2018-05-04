@@ -23,6 +23,7 @@ from shipit_static_analysis.clang.format import ClangFormat
 from shipit_static_analysis.clang.tidy import ClangTidy
 from shipit_static_analysis.config import ARTIFACT_URL
 from shipit_static_analysis.config import REPO_CENTRAL
+from shipit_static_analysis.config import Publication
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.lint import MozLint
 from shipit_static_analysis.utils import build_temp_file
@@ -100,6 +101,7 @@ class Workflow(object):
             taskcluster_task=self.taskcluster_task_id,
             taskcluster_run=self.taskcluster_run_id,
             channel=settings.app_channel,
+            publication=settings.publication.name,
             revision=str(revision),
         )
         stats.api.event(
@@ -169,8 +171,10 @@ class Workflow(object):
 
         with stats.api.timer('runtime.issues'):
             # Detect initial issues
-            before_patch = self.detect_issues(analyzers, revision)
-            logger.info('Detected {} issue(s) before patch'.format(len(before_patch)))
+            if settings.publication == Publication.before_after:
+                before_patch = self.detect_issues(analyzers, revision)
+                logger.info('Detected {} issue(s) before patch'.format(len(before_patch)))
+                stats.api.increment('analysis.issues.before', len(before_patch))
 
             # Apply patch
             revision.apply(self.hg)
@@ -178,20 +182,19 @@ class Workflow(object):
             # Detect new issues
             issues = self.detect_issues(analyzers, revision)
             logger.info('Detected {} issue(s) after patch'.format(len(issues)))
+            stats.api.increment('analysis.issues.after', len(issues))
 
             # Mark newly found issues
-            for issue in issues:
-                issue.is_new = issue not in before_patch
+            if settings.publication == Publication.before_after:
+                for issue in issues:
+                    issue.is_new = issue not in before_patch
 
         if not issues:
             logger.info('No issues, stopping there.')
             return
 
         # Report issues publication stats
-        stats.api.increment('analysis.issues.before', len(before_patch))
-        stats.api.increment('analysis.issues.after', len(issues))
         stats.api.increment('analysis.issues.publishable', len([i for i in issues if i.is_publishable()]))
-        stats.api.increment('analysis.issues.is_new', len([i for i in issues if i.is_new]))
 
         # Build patch to help developper improve their code
         self.build_improvement_patch(revision, issues)

@@ -104,7 +104,7 @@ def test_review_api(mock_mozreview):
     assert len(review.comments) == 1
 
 
-def test_comment(mock_mozreview, test_cpp):
+def test_comment(mock_mozreview, test_cpp, mock_revision):
     '''
     Test comment creation for specific issues
     '''
@@ -121,7 +121,7 @@ def test_comment(mock_mozreview, test_cpp):
 
     # Build clang tidy fake issue, while forcing publication status
     header = ('test.cpp', 1, 1, 'error', 'Dummy message', 'test-check')
-    clang_tidy_publishable = ClangTidyIssue(header)
+    clang_tidy_publishable = ClangTidyIssue(header, mock_revision)
     clang_tidy_publishable.is_publishable = lambda: True
     assert clang_tidy_publishable.is_publishable()
     issues = [clang_tidy_publishable, ]
@@ -138,7 +138,7 @@ If you see a problem in this automated review, please report it here: http://bit
 '''
 
     # Now add a clang-format issue
-    clang_format_publishable = ClangFormatIssue('test.cpp', '', '', [1, 2], 'delete', 1, 2, 3, 4)
+    clang_format_publishable = ClangFormatIssue('test.cpp', '', '', ('delete', 1, 2, 3, 4), mock_revision)
     clang_format_publishable.is_publishable = lambda: True
     assert clang_tidy_publishable.is_publishable()
     issues.append(clang_format_publishable)
@@ -157,7 +157,7 @@ If you see a problem in this automated review, please report it here: http://bit
 '''
 
     # Now add a mozlint issue
-    mozlint_publishable = MozLintIssue('test.cpp', 1, 'error', 1, 'test', 'Dummy test', 'dummy rule')
+    mozlint_publishable = MozLintIssue('test.cpp', 1, 'error', 1, 'test', 'Dummy test', 'dummy rule', mock_revision)
     mozlint_publishable.is_publishable = lambda: True
     assert mozlint_publishable.is_publishable()
     issues.append(mozlint_publishable)

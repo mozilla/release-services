@@ -59,7 +59,7 @@ class ClangFormat(object):
         '''
         assert isinstance(revision, Revision)
         issues = []
-        for path, lines in revision.lines.items():
+        for path in revision.files:
 
             # Check file extension is supported
             _, ext = os.path.splitext(path)
@@ -68,11 +68,11 @@ class ClangFormat(object):
                 continue
 
             # Build issues for modified file
-            issues += self.run_clang_format(path, lines)
+            issues += self.run_clang_format(path, revision)
 
         return issues
 
-    def run_clang_format(self, filename, modified_lines):
+    def run_clang_format(self, filename, revision):
         '''
         Clang-format is very fast, no need for a worker queue here
         '''
@@ -106,7 +106,7 @@ class ClangFormat(object):
             b=clang_lines,
         )
         issues = [
-            ClangFormatIssue(filename, src_lines, clang_lines, modified_lines, *opcode)
+            ClangFormatIssue(filename, src_lines, clang_lines, opcode, revision)
             for opcode in diff.get_opcodes()
             if opcode[0] in OPCODES
         ]
@@ -119,13 +119,13 @@ class ClangFormatIssue(Issue):
     '''
     An issue created by Clang Format tool
     '''
-    def __init__(self, path, a, b, modified_lines, mode, *positions):
-        assert mode in OPCODES
-        assert isinstance(positions, tuple)
-        assert len(positions) == 4
+    def __init__(self, path, a, b, opcode, revision):
+        self.mode, self.positions = opcode[0], opcode[1:]
+        assert self.mode in OPCODES
+        assert isinstance(self.positions, tuple)
+        assert len(self.positions) == 4
         self.path = path
-        self.mode = mode
-        self.positions = positions
+        self.revision = revision
 
         # Lines used to make the diff
         # replace: a[i1:i2] should be replaced by b[j1:j2].
@@ -147,10 +147,6 @@ class ClangFormatIssue(Issue):
             assert i2 > i1
             self.nb_lines = i2 - i1 + 1
 
-        # Detect if isssue is in the patch
-        lines = set(range(self.line, self.line + self.nb_lines))
-        self.in_patch = not lines.isdisjoint(modified_lines)
-
     def build_extra_identifiers(self):
         '''
         Used to compare with same-class issues
@@ -167,11 +163,11 @@ class ClangFormatIssue(Issue):
             self.nb_lines,
         )
 
-    def is_publishable(self):
+    def validates(self):
         '''
-        Publish issues when they affect a line in the patch
+        No specific rule on clang-format issues
         '''
-        return self.in_patch
+        return True
 
     def as_text(self):
         '''
