@@ -22,6 +22,7 @@ def create_fake_repo(tmp):
         os.makedirs(d)
         hglib.init(d)
 
+    os.environ['USER'] = 'app'
     oldcwd = os.getcwd()
     os.chdir(local)
     hg = hglib.open(local)
