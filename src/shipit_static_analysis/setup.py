@@ -32,8 +32,8 @@ setuptools.setup(
     version=VERSION,
     description='Listens to bugzilla entries, executes'
     'some static analysis and reports results.',
-    author='Mozilla Release Management',
-    author_email='release-mgmt@mozilla.com',
+    author='Mozilla Release Services Team',
+    author_email='release-services@mozilla.com',
     url='https://shipit.mozilla-releng.net',
     tests_require=read_requirements('requirements-dev.txt'),
     install_requires=read_requirements('requirements.txt'),
