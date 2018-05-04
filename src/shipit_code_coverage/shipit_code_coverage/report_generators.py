@@ -68,7 +68,7 @@ class ZeroCov(object):
         if has_hgmo:
             url = 'http://localhost:8000/json-pushes'
         else:
-            url = 'https://hg.mozilla.org/mozilla-central/json-pushes'
+            return {}
 
         logger.info('Get pushlog', url=url)
 
