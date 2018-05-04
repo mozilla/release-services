@@ -44,7 +44,8 @@ def create_fake_repo(tmp):
             with open(fname, 'w') as Out:
                 Out.write(c * f['size'])
             hg.add(files=[tobytes(fname)])
-            hg.commit(message='Commit file {} with {} inside'.format(fname, c))
+            hg.commit(message='Commit file {} with {} inside'.format(fname, c),
+                      user='Moz Illa <milla@mozilla.org>')
             hg.push(dest=tobytes(remote))
             time.sleep(1.01)
 

@@ -45,9 +45,6 @@ in python2Packages.buildPythonApplication {
   postInstall = ''
     mkdir -p $out/etc/mercurial
     cat > $out/etc/mercurial/hgrc <<EOF
-    [ui]
-    username = Richard Hendricks <rhendricks@pied-piper.com>
-    
     [web]
     cacerts = ${cacert}/etc/ssl/certs/ca-bundle.crt
     
