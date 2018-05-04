@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
 import json
 import os
-import pytz
-import requests
 import signal
 import subprocess
+from datetime import datetime
+
+import pytz
+import requests
 
 from cli_common.log import get_logger
 from shipit_code_coverage import grcov
