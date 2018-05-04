@@ -52,14 +52,12 @@ class ZeroCov(object):
             logger.warning('Not a directory for m-c', dir=self.repo_dir)
             return False
 
-        oldcwd = os.getcwd()
-        os.chdir(self.repo_dir)
         proc = subprocess.Popen(['hg', 'serve',
                                  '--hgmo',
                                  '--daemon',
-                                 '--pid-file', self.get_pid_file()])
+                                 '--pid-file', self.get_pid_file()],
+                                cwd=self.repo_dir)
         proc.wait()
-        os.chdir(oldcwd)
 
         pid = self.get_pid()
         logger.info('hgmo is running', pid=pid)
