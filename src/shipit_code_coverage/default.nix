@@ -20,6 +20,7 @@ let
 
     buildInputs = [
         llvm_4
+        mercurial
     ];
 
     src = releng_pkgs.pkgs.fetchFromGitHub {

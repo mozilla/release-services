@@ -45,6 +45,9 @@ in python2Packages.buildPythonApplication {
   postInstall = ''
     mkdir -p $out/etc/mercurial
     cat > $out/etc/mercurial/hgrc <<EOF
+    [ui]
+    username = Richard Hendricks <rhendricks@pied-piper.com>
+    
     [web]
     cacerts = ${cacert}/etc/ssl/certs/ca-bundle.crt
     
@@ -52,6 +55,7 @@ in python2Packages.buildPythonApplication {
     purge =
     robustcheckout = ${hg_tools}/hgext/robustcheckout/__init__.py
     hgmo = ${hg_tools}/hgext/hgmo
+    pushlog = ${hg_tools}/hgext/pushlog
     EOF
   '';
 }

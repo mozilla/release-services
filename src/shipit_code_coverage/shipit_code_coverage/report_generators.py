@@ -16,6 +16,8 @@ logger = get_logger(__name__)
 
 class ZeroCov(object):
 
+    DATE_FORMAT = '%Y-%m-%d %H:%M:%S %z'
+
     def __init__(self, mc_repo_dir, hgmo_port=8000):
         self.mc_repo_dir = mc_repo_dir
         self.hgmo_port = str(hgmo_port)
@@ -39,6 +41,9 @@ class ZeroCov(object):
     def get_utc_from_timestamp(self, ts):
         d = datetime.utcfromtimestamp(ts)
         return d.replace(tzinfo=pytz.utc)
+
+    def get_date_str(self, d):
+        return d.strftime(ZeroCov.DATE_FORMAT)
 
     def kill_hgmo(self):
         pid = self.get_pid()
@@ -119,8 +124,8 @@ class ZeroCov(object):
 
         # stringify the pushdates
         for v in res.values():
-            v['first_push_date'] = str(v['first_push_date'])
-            v['last_push_date'] = str(v['last_push_date'])
+            v['first_push_date'] = self.get_date_str(v['first_push_date'])
+            v['last_push_date'] = self.get_date_str(v['last_push_date'])
 
         # add default data for files which are not in res
         for f in filenames:

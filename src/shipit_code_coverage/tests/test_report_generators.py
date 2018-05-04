@@ -1,8 +1,60 @@
 # -*- coding: utf-8 -*-
 import json
 import os
+import time
+from datetime import datetime
+
+import hglib
 
 from shipit_code_coverage import report_generators
+
+
+def create_fake_repo(tmp):
+
+    def tobytes(x):
+        return bytes(x, 'ascii')
+
+    dest = os.path.join(tmp, 'repos')
+    local = os.path.join(dest, 'local')
+    remote = os.path.join(dest, 'remote')
+    for d in [local, remote]:
+        os.makedirs(d)
+        hglib.init(d)
+
+    oldcwd = os.getcwd()
+    os.chdir(local)
+    hg = hglib.open(local)
+
+    files = [{'name': 'mozglue/build/dummy.cpp',
+              'size': 1},
+             {'name': 'toolkit/components/osfile/osfile.jsm',
+              'size': 2},
+             {'name': 'js/src/jit/JIT.cpp',
+              'size': 3},
+             {'name': 'toolkit/components/osfile/osfile-win.jsm',
+              'size': 4}]
+
+    for c in '?!':
+        for f in files:
+            fname = f['name']
+            parent = os.path.dirname(fname)
+            if not os.path.exists(parent):
+                os.makedirs(parent)
+            with open(fname, 'w') as Out:
+                Out.write(c * f['size'])
+            hg.add(files=[tobytes(fname)])
+            hg.commit(message='Commit file {} with {} inside'.format(fname, c))
+            hg.push(dest=tobytes(remote))
+            time.sleep(1.01)
+
+    hg.close()
+    os.chdir(oldcwd)
+
+    return remote
+
+
+def get_date(s):
+    return datetime.strptime(s, report_generators.ZeroCov.DATE_FORMAT)
 
 
 def test_zero_coverage(tmpdir,
@@ -10,8 +62,9 @@ def test_zero_coverage(tmpdir,
                        jsvm_artifact, jsvm_uncovered_artifact,
                        grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact):
     tmp_path = tmpdir.strpath
+    fake_repo = create_fake_repo(tmp_path)
 
-    report_generators.ZeroCov('').zero_coverage([
+    report_generators.ZeroCov(fake_repo).zero_coverage([
         grcov_artifact, grcov_uncovered_artifact,
         jsvm_artifact, jsvm_uncovered_artifact,
         grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact
@@ -29,16 +82,16 @@ def test_zero_coverage(tmpdir,
 
     expected_zero_coverage_functions = [
         {'funcs': 1, 'name': 'mozglue/build/dummy.cpp', 'uncovered': True,
-         'size': 0, 'commits': 4,
-         'first_push_date': '2011-12-28 19:04:19+00:00', 'last_push_date': '2012-05-21 11:54:09+00:00'},
+         'size': 1, 'commits': 2,
+         'first_push_date': '', 'last_push_date': ''},
         {'funcs': 2, 'name': 'toolkit/components/osfile/osfile.jsm', 'uncovered': False,
-         'size': 0, 'commits': 31,
-         'first_push_date': '2012-06-10 02:04:57+00:00', 'last_push_date': '2018-03-29 22:05:29+00:00'},
+         'size': 2, 'commits': 2,
+         'first_push_date': '', 'last_push_date': ''},
         {'funcs': 1, 'name': 'js/src/jit/JIT.cpp', 'uncovered': False,
-         'size': 0, 'commits': 0,
+         'size': 3, 'commits': 2,
          'first_push_date': '', 'last_push_date': ''},
         {'funcs': 1, 'name': 'toolkit/components/osfile/osfile-win.jsm', 'uncovered': True,
-         'size': 0, 'commits': 0,
+         'size': 4, 'commits': 2,
          'first_push_date': '', 'last_push_date': ''},
     ]
     assert len(zero_coverage_functions) == len(expected_zero_coverage_functions)
@@ -51,4 +104,4 @@ def test_zero_coverage(tmpdir,
                 break
         assert found
         assert found_item['funcs'] == exp_item['funcs']
-        assert found_item['first_push_date'] == exp_item['first_push_date']
+        assert get_date(found_item['last_push_date']) > get_date(found_item['first_push_date'])
