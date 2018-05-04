@@ -83,7 +83,7 @@ def test_zero_coverage(tmpdir,
     today = datetime.utcnow()
     today = pytz.utc.localize(today)
     today = today.strftime(report_generators.ZeroCov.DATE_FORMAT)
-        
+
     expected_zero_coverage_functions = [
         {'funcs': 1, 'name': 'mozglue/build/dummy.cpp', 'uncovered': True,
          'size': 1, 'commits': 2,
