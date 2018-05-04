@@ -2,7 +2,6 @@
 import json
 import os
 import shutil
-import time
 from datetime import datetime
 
 import hglib
@@ -47,7 +46,6 @@ def create_fake_repo(tmp):
             hg.commit(message='Commit file {} with {} inside'.format(fname, c),
                       user='Moz Illa <milla@mozilla.org>')
             hg.push(dest=tobytes(remote))
-            time.sleep(1.01)
 
     hg.close()
     os.chdir(oldcwd)
@@ -109,6 +107,6 @@ def test_zero_coverage(tmpdir,
                 break
         assert found
         assert found_item['funcs'] == exp_item['funcs']
-        assert get_date(found_item['last_push_date']) > get_date(found_item['first_push_date'])
+        assert get_date(found_item['last_push_date']) >= get_date(found_item['first_push_date'])
         assert found_item['size'] == exp_item['size']
         assert found_item['commits'] == exp_item['commits']

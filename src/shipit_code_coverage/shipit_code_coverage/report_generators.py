@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 
 class ZeroCov(object):
 
-    DATE_FORMAT = '%Y-%m-%d %H:%M:%S %z'
+    DATE_FORMAT = '%Y-%m-%d'
 
     def __init__(self, repo_dir):
         self.repo_dir = repo_dir
