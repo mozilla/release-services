@@ -18,8 +18,8 @@ class ZeroCov(object):
 
     DATE_FORMAT = '%Y-%m-%d %H:%M:%S %z'
 
-    def __init__(self, mc_repo_dir):
-        self.mc_repo_dir = mc_repo_dir
+    def __init__(self, repo_dir):
+        self.repo_dir = repo_dir
 
     def get_pid_file(self):
         return '/tmp/hgmo.pid'
@@ -31,8 +31,8 @@ class ZeroCov(object):
         return -1
 
     def get_file_size(self, filename):
-        if self.mc_repo_dir:
-            filename = os.path.join(self.mc_repo_dir, filename)
+        if self.repo_dir:
+            filename = os.path.join(self.repo_dir, filename)
             if os.path.isfile(filename):
                 return os.path.getsize(filename)
         return 0
@@ -49,12 +49,12 @@ class ZeroCov(object):
         os.killpg(os.getpgid(pid), signal.SIGTERM)
 
     def run_hgmo(self):
-        if not os.path.isdir(self.mc_repo_dir):
-            logger.warning('Not a directory for m-c', dir=self.mc_repo_dir)
+        if not os.path.isdir(self.repo_dir):
+            logger.warning('Not a directory for m-c', dir=self.repo_dir)
             return False
 
         oldcwd = os.getcwd()
-        os.chdir(self.mc_repo_dir)
+        os.chdir(self.repo_dir)
         proc = subprocess.Popen(['hg', 'serve',
                                  '--hgmo',
                                  '--daemon',
