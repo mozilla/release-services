@@ -19,6 +19,7 @@ class ZeroCov(object):
     DATE_FORMAT = '%Y-%m-%d'
 
     def __init__(self, repo_dir):
+        assert os.path.isdir(repo_dir), '{} is not a directory'.format(repo_dir)
         self.repo_dir = repo_dir
 
     def get_pid_file(self):
@@ -48,10 +49,6 @@ class ZeroCov(object):
         os.killpg(os.getpgid(pid), signal.SIGTERM)
 
     def run_hgmo(self):
-        if not os.path.isdir(self.repo_dir):
-            logger.warning('Not a directory for m-c', dir=self.repo_dir)
-            return False
-
         proc = subprocess.Popen(['hg', 'serve',
                                  '--hgmo',
                                  '--daemon',
@@ -59,24 +56,18 @@ class ZeroCov(object):
                                 cwd=self.repo_dir)
         proc.wait()
 
-        pid = self.get_pid()
-        logger.info('hgmo is running', pid=pid)
-        return True
+        logger.info('hgmo is running', pid=self.get_pid())
 
     def get_pushlog(self):
-        has_hgmo = self.run_hgmo()
-        if has_hgmo:
-            url = 'http://localhost:8000/json-pushes'
-        else:
-            return {}
+        self.run_hgmo()
+        url = 'http://localhost:8000/json-pushes'
 
         logger.info('Get pushlog', url=url)
 
         r = requests.get(url, params={'startID': 0,
                                       'version': 2,
                                       'full': 1})
-        if has_hgmo:
-            self.kill_hgmo()
+        self.kill_hgmo()
 
         if not r.ok:
             logger.error('Pushlog cannot be retrieved', url=r.url, status_code=r.status_code)
