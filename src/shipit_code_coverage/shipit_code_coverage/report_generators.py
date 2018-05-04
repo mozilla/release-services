@@ -28,7 +28,6 @@ class ZeroCov(object):
         with open(self.get_pid_file(), 'r') as In:
             pid = In.read()
             return int(pid)
-        return -1
 
     def get_file_size(self, filename):
         if self.repo_dir:
@@ -63,10 +62,6 @@ class ZeroCov(object):
         os.chdir(oldcwd)
 
         pid = self.get_pid()
-        if pid == -1:
-            logger.error('hgmo is not running')
-            return False
-
         logger.info('hgmo is running', pid=pid)
         return True
 
