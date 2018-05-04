@@ -18,9 +18,8 @@ class ZeroCov(object):
 
     DATE_FORMAT = '%Y-%m-%d %H:%M:%S %z'
 
-    def __init__(self, mc_repo_dir, hgmo_port=8000):
+    def __init__(self, mc_repo_dir):
         self.mc_repo_dir = mc_repo_dir
-        self.hgmo_port = str(hgmo_port)
 
     def get_pid_file(self):
         return '/tmp/hgmo.pid'
@@ -58,7 +57,6 @@ class ZeroCov(object):
         os.chdir(self.mc_repo_dir)
         proc = subprocess.Popen(['hg', 'serve',
                                  '--hgmo',
-                                 '--port', self.hgmo_port,
                                  '--daemon',
                                  '--pid-file', self.get_pid_file()])
         proc.wait()
@@ -75,7 +73,7 @@ class ZeroCov(object):
     def get_pushlog(self):
         has_hgmo = self.run_hgmo()
         if has_hgmo:
-            url = 'http://localhost:{}/json-pushes'.format(self.hgmo_port)
+            url = 'http://localhost:8000/json-pushes'
         else:
             url = 'https://hg.mozilla.org/mozilla-central/json-pushes'
 
