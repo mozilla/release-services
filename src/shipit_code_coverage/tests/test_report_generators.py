@@ -5,6 +5,7 @@ import shutil
 from datetime import datetime
 
 import hglib
+import pytz
 
 from shipit_code_coverage import report_generators
 
@@ -56,10 +57,6 @@ def create_fake_repo(tmp):
     return local
 
 
-def get_date(s):
-    return datetime.strptime(s, report_generators.ZeroCov.DATE_FORMAT)
-
-
 def test_zero_coverage(tmpdir,
                        grcov_artifact, grcov_uncovered_artifact,
                        jsvm_artifact, jsvm_uncovered_artifact,
@@ -83,19 +80,23 @@ def test_zero_coverage(tmpdir,
     with open(os.path.join(tmp_path, 'zero_coverage_report.json'), 'r') as f:
         zero_coverage_functions = json.load(f)
 
+    today = datetime.utcnow()
+    today = pytz.utc.localize(today)
+    today = today.strftime(report_generators.ZeroCov.DATE_FORMAT)
+        
     expected_zero_coverage_functions = [
         {'funcs': 1, 'name': 'mozglue/build/dummy.cpp', 'uncovered': True,
          'size': 1, 'commits': 2,
-         'first_push_date': '', 'last_push_date': ''},
+         'first_push_date': today, 'last_push_date': today},
         {'funcs': 2, 'name': 'toolkit/components/osfile/osfile.jsm', 'uncovered': False,
          'size': 2, 'commits': 2,
-         'first_push_date': '', 'last_push_date': ''},
+         'first_push_date': today, 'last_push_date': today},
         {'funcs': 1, 'name': 'js/src/jit/JIT.cpp', 'uncovered': False,
          'size': 3, 'commits': 2,
-         'first_push_date': '', 'last_push_date': ''},
+         'first_push_date': today, 'last_push_date': today},
         {'funcs': 1, 'name': 'toolkit/components/osfile/osfile-win.jsm', 'uncovered': True,
          'size': 4, 'commits': 2,
-         'first_push_date': '', 'last_push_date': ''},
+         'first_push_date': today, 'last_push_date': today},
     ]
     assert len(zero_coverage_functions) == len(expected_zero_coverage_functions)
     while len(expected_zero_coverage_functions):
@@ -107,6 +108,7 @@ def test_zero_coverage(tmpdir,
                 break
         assert found
         assert found_item['funcs'] == exp_item['funcs']
-        assert get_date(found_item['last_push_date']) >= get_date(found_item['first_push_date'])
+        assert found_item['first_push_date'] == exp_item['first_push_date']
+        assert found_item['last_push_date'] == exp_item['last_push_date']
         assert found_item['size'] == exp_item['size']
         assert found_item['commits'] == exp_item['commits']
