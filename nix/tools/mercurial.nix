@@ -51,6 +51,7 @@ in python2Packages.buildPythonApplication {
     [extensions]
     purge =
     robustcheckout = ${hg_tools}/hgext/robustcheckout/__init__.py
+    hgmo = ${hg_tools}/hgext/hgmo
     EOF
   '';
 }

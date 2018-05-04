@@ -11,7 +11,7 @@ def test_zero_coverage(tmpdir,
                        grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact):
     tmp_path = tmpdir.strpath
 
-    report_generators.zero_coverage([
+    report_generators.ZeroCov(tmp_path, '').zero_coverage([
         grcov_artifact, grcov_uncovered_artifact,
         jsvm_artifact, jsvm_uncovered_artifact,
         grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact
@@ -28,10 +28,18 @@ def test_zero_coverage(tmpdir,
         zero_coverage_functions = json.load(f)
 
     expected_zero_coverage_functions = [
-        {'funcs': 1, 'name': 'mozglue/build/dummy.cpp', 'uncovered': True},
-        {'funcs': 2, 'name': 'toolkit/components/osfile/osfile.jsm', 'uncovered': False},
-        {'funcs': 1, 'name': 'js/src/jit/JIT.cpp', 'uncovered': False},
-        {'funcs': 1, 'name': 'toolkit/components/osfile/osfile-win.jsm', 'uncovered': True},
+        {'funcs': 1, 'name': 'mozglue/build/dummy.cpp', 'uncovered': True,
+         'size': 0, 'commits': 4,
+         'first_push_date': '2011-12-28 19:04:19+00:00', 'last_push_date': '2012-05-21 11:54:09+00:00'},
+        {'funcs': 2, 'name': 'toolkit/components/osfile/osfile.jsm', 'uncovered': False,
+         'size': 0, 'commits': 31,
+         'first_push_date': '2012-06-10 02:04:57+00:00', 'last_push_date': '2018-03-29 22:05:29+00:00'},
+        {'funcs': 1, 'name': 'js/src/jit/JIT.cpp', 'uncovered': False,
+         'size': 0, 'commits': 0,
+         'first_push_date': '', 'last_push_date': ''},
+        {'funcs': 1, 'name': 'toolkit/components/osfile/osfile-win.jsm', 'uncovered': True,
+         'size': 0, 'commits': 0,
+         'first_push_date': '', 'last_push_date': ''},
     ]
     assert len(zero_coverage_functions) == len(expected_zero_coverage_functions)
     while len(expected_zero_coverage_functions):
@@ -43,3 +51,4 @@ def test_zero_coverage(tmpdir,
                 break
         assert found
         assert found_item['funcs'] == exp_item['funcs']
+        assert found_item['first_push_date'] == exp_item['first_push_date']
