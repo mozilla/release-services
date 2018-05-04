@@ -20,15 +20,9 @@ class Notifier(object):
         self.notify_service = get_service('notify', client_id, access_token)
 
     def get_coverage_summary(self, changeset):
-        app_channel = secrets[secrets.APP_CHANNEL]
-        if app_channel == 'staging':
-            url = 'https://uplift.shipit.staging.mozilla-releng.net/coverage/changeset_summary/{}'
-        elif app_channel == 'production':
-            url = 'https://uplift.shipit.mozilla-releng.net/coverage/changeset_summary/{}'
-        else:
-            assert False, 'Unexpected channel: {}.'.format(app_channel)
+        backend_host = secrets[secrets.BACKEND_HOST]
 
-        r = requests.get(url.format(changeset))
+        r = requests.get('{}/coverage/changeset_summary/{}'.format(backend_host, changeset))
         r.raise_for_status()
 
         if r.status_code == 202:
@@ -58,9 +52,6 @@ class Notifier(object):
                 coverage = retry(lambda: self.get_coverage_summary(rev))
             except (requests.exceptions.HTTPError, ResultNotReadyException):
                 logger.warn('Failure to retrieve coverage summary')
-                continue
-
-            if coverage is None:
                 continue
 
             if coverage['commit_covered'] < 0.2 * coverage['commit_added']:
