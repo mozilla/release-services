@@ -21,13 +21,6 @@ def _get_build_platform_name(platform):
         raise Exception('Unsupported platform: %s' % platform)
 
 
-def get_last_task(platform):
-    r = requests.get(index_base + 'task/gecko.v2.mozilla-central.latest.firefox.{}'.format(_get_build_platform_name(platform)))
-    r.raise_for_status()
-    last_task = r.json()
-    return last_task['taskId']
-
-
 def get_task(branch, revision, platform):
     r = requests.get(index_base + 'task/gecko.v2.{}.revision.{}.firefox.{}'.format(branch, revision, _get_build_platform_name(platform)))
     task = r.json()
