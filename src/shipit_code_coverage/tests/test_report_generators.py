@@ -1,71 +1,21 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-import shutil
 from datetime import datetime
 
-import hglib
 import pytz
 
 from shipit_code_coverage import report_generators
 
 
-def create_fake_repo(tmp):
-
-    def tobytes(x):
-        return bytes(x, 'ascii')
-
-    dest = os.path.join(tmp, 'repos')
-    local = os.path.join(dest, 'local')
-    remote = os.path.join(dest, 'remote')
-    for d in [local, remote]:
-        os.makedirs(d)
-        hglib.init(d)
-
-    os.environ['USER'] = 'app'
-    oldcwd = os.getcwd()
-    os.chdir(local)
-    hg = hglib.open(local)
-
-    files = [{'name': 'mozglue/build/dummy.cpp',
-              'size': 1},
-             {'name': 'toolkit/components/osfile/osfile.jsm',
-              'size': 2},
-             {'name': 'js/src/jit/JIT.cpp',
-              'size': 3},
-             {'name': 'toolkit/components/osfile/osfile-win.jsm',
-              'size': 4}]
-
-    for c in '?!':
-        for f in files:
-            fname = f['name']
-            parent = os.path.dirname(fname)
-            if not os.path.exists(parent):
-                os.makedirs(parent)
-            with open(fname, 'w') as Out:
-                Out.write(c * f['size'])
-            hg.add(files=[tobytes(fname)])
-            hg.commit(message='Commit file {} with {} inside'.format(fname, c),
-                      user='Moz Illa <milla@mozilla.org>')
-            hg.push(dest=tobytes(remote))
-
-    hg.close()
-    os.chdir(oldcwd)
-
-    shutil.copyfile(os.path.join(remote, '.hg/pushlog2.db'),
-                    os.path.join(local, '.hg/pushlog2.db'))
-
-    return local
-
-
 def test_zero_coverage(tmpdir,
                        grcov_artifact, grcov_uncovered_artifact,
                        jsvm_artifact, jsvm_uncovered_artifact,
-                       grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact):
+                       grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact,
+                       fake_hg_repo):
     tmp_path = tmpdir.strpath
-    fake_repo = create_fake_repo(tmp_path)
 
-    report_generators.ZeroCov(fake_repo).zero_coverage([
+    report_generators.ZeroCov(fake_hg_repo).zero_coverage([
         grcov_artifact, grcov_uncovered_artifact,
         jsvm_artifact, jsvm_uncovered_artifact,
         grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact
