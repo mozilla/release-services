@@ -12,26 +12,6 @@ from shipit_code_coverage import taskcluster
 
 
 @responses.activate
-def test_last_task_linux(LINUX_TASK_ID, LATEST_LINUX):
-    responses.add(responses.GET, 'https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.latest.firefox.linux64-ccov-opt', json=LATEST_LINUX, status=200)  # noqa
-    assert taskcluster.get_last_task('linux') == LINUX_TASK_ID
-
-
-@responses.activate
-def test_last_task_windows(WIN_TASK_ID, LATEST_WIN):
-    responses.add(responses.GET, 'https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.latest.firefox.win64-ccov-debug', json=LATEST_WIN, status=200)
-    assert taskcluster.get_last_task('win') == WIN_TASK_ID
-
-
-@responses.activate
-def test_last_task_failure(TASK_NOT_FOUND):
-    responses.add(responses.GET, 'https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.latest.firefox.linux64-ccov-opt', json=TASK_NOT_FOUND, status=404)  # noqa
-
-    with pytest.raises(requests.exceptions.HTTPError):
-        taskcluster.get_last_task('linux')
-
-
-@responses.activate
 def test_get_task_status(LINUX_TASK_ID, LINUX_TASK_STATUS):
     responses.add(responses.GET, 'https://queue.taskcluster.net/v1/task/{}/status'.format(LINUX_TASK_ID), json=LINUX_TASK_STATUS, status=200)
     assert taskcluster.get_task_status(LINUX_TASK_ID) == LINUX_TASK_STATUS
