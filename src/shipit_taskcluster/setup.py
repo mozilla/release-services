@@ -33,8 +33,8 @@ setuptools.setup(
     description=(
         'The code behind https://taskcluster.shipit.mozilla-releng.net'
     ),
-    author='Mozilla Release Engineering',
-    author_email='release@mozilla.com',
+    author='Mozilla Release Services Team',
+    author_email='release-services@mozilla.com',
     url='https://taskcluster.shipit.mozilla-releng.net',
     tests_require=read_requirements('requirements-dev.txt'),
     install_requires=read_requirements('requirements.txt'),
