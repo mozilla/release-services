@@ -16,6 +16,7 @@ class Secrets(dict):
     GECKO_DEV_PWD = 'GECKO_DEV_PWD'
     EMAIL_ADDRESSES = 'EMAIL_ADDRESSES'
     APP_CHANNEL = 'APP_CHANNEL'
+    BACKEND_HOST = 'BACKEND_HOST'
 
     def load(self, taskcluster_secret, taskcluster_client_id, taskcluster_access_token):
         secrets = get_secrets(
@@ -23,6 +24,7 @@ class Secrets(dict):
             config.PROJECT_NAME,
             required=(
                 Secrets.APP_CHANNEL,
+                Secrets.BACKEND_HOST,
                 Secrets.COVERALLS_TOKEN,
                 Secrets.CODECOV_REPO,
                 Secrets.CODECOV_TOKEN,
