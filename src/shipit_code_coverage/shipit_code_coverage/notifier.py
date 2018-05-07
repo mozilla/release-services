@@ -5,6 +5,7 @@ import requests
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
 from cli_common.utils import retry
+from shipit_code_coverage import hgmo
 from shipit_code_coverage.secrets import secrets
 
 logger = get_logger(__name__)
@@ -15,7 +16,8 @@ class ResultNotReadyException(Exception):
 
 
 class Notifier(object):
-    def __init__(self, revision, client_id, access_token):
+    def __init__(self, repo_dir, revision, client_id, access_token):
+        self.repo_dir = repo_dir
         self.revision = revision
         self.notify_service = get_service('notify', client_id, access_token)
 
@@ -35,9 +37,15 @@ class Notifier(object):
 
         # Get pushlog and ask the backend to generate the coverage by changeset
         # data, which will be cached.
-        r = requests.get('https://hg.mozilla.org/mozilla-central/json-pushes?changeset={}&version=2&full'.format(self.revision))
+        with hgmo.HGMO(self.repo_dir) as url:
+            url += '/json-pushes'
+            r = requests.get(url, params={'changeset': self.revision,
+                                          'version': 2,
+                                          'full': 1})
+
         r.raise_for_status()
         push_data = r.json()
+
         changesets = sum((data['changesets'] for data in push_data['pushes'].values()), [])
 
         for changeset in changesets:

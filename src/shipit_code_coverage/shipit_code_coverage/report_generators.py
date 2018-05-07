@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-import signal
-import subprocess
 from datetime import datetime
 
 import pytz
@@ -10,6 +8,7 @@ import requests
 
 from cli_common.log import get_logger
 from shipit_code_coverage import grcov
+from shipit_code_coverage import hgmo
 
 logger = get_logger(__name__)
 
@@ -21,14 +20,6 @@ class ZeroCov(object):
     def __init__(self, repo_dir):
         assert os.path.isdir(repo_dir), '{} is not a directory'.format(repo_dir)
         self.repo_dir = repo_dir
-
-    def get_pid_file(self):
-        return '/tmp/hgmo.pid'
-
-    def get_pid(self):
-        with open(self.get_pid_file(), 'r') as In:
-            pid = In.read()
-            return int(pid)
 
     def get_file_size(self, filename):
         if self.repo_dir:
@@ -44,30 +35,13 @@ class ZeroCov(object):
     def get_date_str(self, d):
         return d.strftime(ZeroCov.DATE_FORMAT)
 
-    def kill_hgmo(self):
-        pid = self.get_pid()
-        os.killpg(os.getpgid(pid), signal.SIGTERM)
-
-    def run_hgmo(self):
-        proc = subprocess.Popen(['hg', 'serve',
-                                 '--hgmo',
-                                 '--daemon',
-                                 '--pid-file', self.get_pid_file()],
-                                cwd=self.repo_dir)
-        proc.wait()
-
-        logger.info('hgmo is running', pid=self.get_pid())
-
     def get_pushlog(self):
-        self.run_hgmo()
-        url = 'http://localhost:8000/json-pushes'
-
-        logger.info('Get pushlog', url=url)
-
-        r = requests.get(url, params={'startID': 0,
-                                      'version': 2,
-                                      'full': 1})
-        self.kill_hgmo()
+        with hgmo.HGMO(self.repo_dir) as url:
+            url += '/json-pushes'
+            logger.info('Get pushlog', url=url)
+            r = requests.get(url, params={'startID': 0,
+                                          'version': 2,
+                                          'full': 1})
 
         if not r.ok:
             logger.error('Pushlog cannot be retrieved', url=r.url, status_code=r.status_code)

@@ -60,7 +60,7 @@ class CodeCov(object):
             self.revision = revision
             self.from_pulse = True
             suites_to_ignore = ['awsy', 'talos']
-            self.notifier = Notifier(revision, client_id, access_token)
+            self.notifier = Notifier(self.repo_dir, revision, client_id, access_token)
 
         logger.info('Mercurial revision', revision=self.revision)
 
