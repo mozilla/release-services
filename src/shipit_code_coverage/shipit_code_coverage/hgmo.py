@@ -10,14 +10,13 @@ logger = get_logger(__name__)
 
 class HGMO(object):
 
+    PID_FILE = '/tmp/hgmo.pid'
+
     def __init__(self, repo_dir):
         self.repo_dir = repo_dir
 
-    def __get_pid_file(self):
-        return '/tmp/hgmo.pid'
-
     def __get_pid(self):
-        with open(self.__get_pid_file(), 'r') as In:
+        with open(HGMO.PID_FILE, 'r') as In:
             pid = In.read()
             return int(pid)
 
@@ -25,7 +24,7 @@ class HGMO(object):
         proc = subprocess.Popen(['hg', 'serve',
                                  '--hgmo',
                                  '--daemon',
-                                 '--pid-file', self.__get_pid_file()],
+                                 '--pid-file', HGMO.PID_FILE],
                                 cwd=self.repo_dir)
         proc.wait()
 
