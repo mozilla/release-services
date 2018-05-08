@@ -12,6 +12,10 @@ index_base = 'https://index.taskcluster.net/v1/'
 queue_base = 'https://queue.taskcluster.net/v1/'
 
 
+class TaskclusterException(Exception):
+    pass
+
+
 def get_task(branch, revision, platform):
     if platform == 'linux':
         # A few days after https://bugzilla.mozilla.org/show_bug.cgi?id=1457393 is fixed,
@@ -21,7 +25,7 @@ def get_task(branch, revision, platform):
     elif platform == 'win':
         platform_names = ['win64-ccov-debug']
     else:
-        raise Exception('Unsupported platform: %s' % platform)
+        raise TaskclusterException('Unsupported platform: %s' % platform)
 
     while True:
         platform_name = platform_names.pop(0)
@@ -32,10 +36,10 @@ def get_task(branch, revision, platform):
                 return task['taskId']
             else:
                 if task['code'] == 'ResourceNotFound':
-                    raise Exception('Code coverage build failed and was not indexed.')
+                    raise TaskclusterException('Code coverage build failed and was not indexed.')
                 else:
-                    raise Exception('Unknown TaskCluster index error.')
-        except Exception:
+                    raise TaskclusterException('Unknown TaskCluster index error.')
+        except TaskclusterException:
             if len(platform_names) == 0:
                 raise
 
