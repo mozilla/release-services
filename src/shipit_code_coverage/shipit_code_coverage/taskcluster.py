@@ -12,25 +12,35 @@ index_base = 'https://index.taskcluster.net/v1/'
 queue_base = 'https://queue.taskcluster.net/v1/'
 
 
-def _get_build_platform_name(platform):
-    if platform == 'linux':
-        return 'linux64-ccov-opt'
-    elif platform == 'win':
-        return 'win64-ccov-debug'
-    else:
-        raise Exception('Unsupported platform: %s' % platform)
+class TaskclusterException(Exception):
+    pass
 
 
 def get_task(branch, revision, platform):
-    r = requests.get(index_base + 'task/gecko.v2.{}.revision.{}.firefox.{}'.format(branch, revision, _get_build_platform_name(platform)))
-    task = r.json()
-    if r.status_code == requests.codes.ok:
-        return task['taskId']
+    if platform == 'linux':
+        # A few days after https://bugzilla.mozilla.org/show_bug.cgi?id=1457393 is fixed,
+        # we should only have 'linux64-ccov-debug' here and only support one platform_name
+        # and no fallback.
+        platform_names = ['linux64-ccov-debug', 'linux64-ccov-opt']
+    elif platform == 'win':
+        platform_names = ['win64-ccov-debug']
     else:
-        if task['code'] == 'ResourceNotFound':
-            raise Exception('Code coverage build failed and was not indexed.')
-        else:
-            raise Exception('Unknown TaskCluster index error.')
+        raise TaskclusterException('Unsupported platform: %s' % platform)
+
+    for i, platform_name in enumerate(platform_names):
+        try:
+            r = requests.get(index_base + 'task/gecko.v2.{}.revision.{}.firefox.{}'.format(branch, revision, platform_name))
+            task = r.json()
+            if r.status_code == requests.codes.ok:
+                return task['taskId']
+            else:
+                if task['code'] == 'ResourceNotFound':
+                    raise TaskclusterException('Code coverage build failed and was not indexed.')
+                else:
+                    raise TaskclusterException('Unknown TaskCluster index error.')
+        except TaskclusterException:
+            if i == len(platform_names) - 1:
+                raise
 
 
 def get_task_details(task_id):
