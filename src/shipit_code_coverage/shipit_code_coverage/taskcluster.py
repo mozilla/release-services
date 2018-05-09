@@ -27,8 +27,7 @@ def get_task(branch, revision, platform):
     else:
         raise TaskclusterException('Unsupported platform: %s' % platform)
 
-    while True:
-        platform_name = platform_names.pop(0)
+    for i, platform_name in enumerate(platform_names):
         try:
             r = requests.get(index_base + 'task/gecko.v2.{}.revision.{}.firefox.{}'.format(branch, revision, platform_name))
             task = r.json()
@@ -40,7 +39,7 @@ def get_task(branch, revision, platform):
                 else:
                     raise TaskclusterException('Unknown TaskCluster index error.')
         except TaskclusterException:
-            if len(platform_names) == 0:
+            if i == len(platform_names) - 1:
                 raise
 
 
