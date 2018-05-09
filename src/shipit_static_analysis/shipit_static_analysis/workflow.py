@@ -171,7 +171,7 @@ class Workflow(object):
 
         with stats.api.timer('runtime.issues'):
             # Detect initial issues
-            if settings.publication == Publication.before_after:
+            if settings.publication == Publication.BEFORE_AFTER:
                 before_patch = self.detect_issues(analyzers, revision)
                 logger.info('Detected {} issue(s) before patch'.format(len(before_patch)))
                 stats.api.increment('analysis.issues.before', len(before_patch))
@@ -185,7 +185,7 @@ class Workflow(object):
             stats.api.increment('analysis.issues.after', len(issues))
 
             # Mark newly found issues
-            if settings.publication == Publication.before_after:
+            if settings.publication == Publication.BEFORE_AFTER:
                 for issue in issues:
                     issue.is_new = issue not in before_patch
 

@@ -44,7 +44,7 @@ def mock_config():
 
     from shipit_static_analysis.config import settings
     tempdir = tempfile.mkdtemp()
-    settings.setup('test', tempdir, 'in_patch')
+    settings.setup('test', tempdir, 'IN_PATCH')
 
     return settings
 

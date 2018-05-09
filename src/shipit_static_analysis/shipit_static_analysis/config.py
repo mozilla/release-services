@@ -26,11 +26,11 @@ logger = get_logger(__name__)
 class Publication(enum.Enum):
     # Only check if the issue is in the developer patch
     # This is the original mode
-    in_patch = 1
+    IN_PATCH = 1
 
     # Every new issue (not found before applying the patch)
     # will be published
-    before_after = 2
+    BEFORE_AFTER = 2
 
 
 class Settings(object):

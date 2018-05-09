@@ -88,11 +88,11 @@ class Issue(abc.ABC):
         if not self.validates():
             return False
 
-        if settings.publication == Publication.in_patch:
+        if settings.publication == Publication.IN_PATCH:
             # Only check that the issue is in this revision
             return self.revision.contains(self)
 
-        if settings.publication == Publication.before_after:
+        if settings.publication == Publication.BEFORE_AFTER:
             # Simply use marker set on workflow
             return self.is_new
 
@@ -101,7 +101,7 @@ class Issue(abc.ABC):
     @abc.abstractmethod
     def validates(self):
         '''
-        Is this issue publishable on reporters using in_patch publication ?
+        Is this issue publishable on reporters using IN_PATCH publication ?
         Should check specific rules and return a boolean
         '''
         raise NotImplementedError
