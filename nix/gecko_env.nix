@@ -48,6 +48,7 @@ in gecko.overrideDerivation (old: {
     ac_add_options --enable-clang-plugin
     ac_add_options --with-clang-path=${clang_4}/bin/clang
     ac_add_options --with-libclang-path=${llvmPackages_4.libclang}/lib
+    mk_add_options AUTOCLOBBER=1
     "
     echo "export CLANG_MOZCONFIG=$mozconfig" >> $geckoenv
 

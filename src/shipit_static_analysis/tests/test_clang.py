@@ -35,13 +35,13 @@ int *ret_ptr() {
 '''
 
 
-def test_expanded_macros(mock_stats, test_cpp):
+def test_expanded_macros(mock_stats, test_cpp, mock_revision):
     '''
     Test expanded macros are detected by clang issue
     '''
     from shipit_static_analysis.clang.tidy import ClangTidyIssue
     parts = ('test.cpp', '42', '51', 'error', 'dummy message', 'dummy-check')
-    issue = ClangTidyIssue(parts)
+    issue = ClangTidyIssue(parts, mock_revision)
     assert issue.is_problem()
     assert issue.line == 42
     assert issue.char == 51
@@ -50,12 +50,12 @@ def test_expanded_macros(mock_stats, test_cpp):
 
     # Add a note starting with "expanded from macro..."
     parts = ('test.cpp', '42', '51', 'note', 'expanded from macro Blah dummy.cpp', 'dummy-check-note')
-    issue.notes.append(ClangTidyIssue(parts))
+    issue.notes.append(ClangTidyIssue(parts, mock_revision))
     assert issue.is_expanded_macro() is True
 
     # Add another note does not change it
     parts = ('test.cpp', '42', '51', 'note', 'This is not an expanded macro', 'dummy-check-note')
-    issue.notes.append(ClangTidyIssue(parts))
+    issue.notes.append(ClangTidyIssue(parts, mock_revision))
     assert issue.is_expanded_macro() is True
 
     # But if we swap them, it does not work anymore

@@ -3,6 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import itertools
 import os
 import subprocess
@@ -21,6 +23,7 @@ from shipit_static_analysis.clang.format import ClangFormat
 from shipit_static_analysis.clang.tidy import ClangTidy
 from shipit_static_analysis.config import ARTIFACT_URL
 from shipit_static_analysis.config import REPO_CENTRAL
+from shipit_static_analysis.config import Publication
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.lint import MozLint
 from shipit_static_analysis.utils import build_temp_file
@@ -98,6 +101,7 @@ class Workflow(object):
             taskcluster_task=self.taskcluster_task_id,
             taskcluster_run=self.taskcluster_run_id,
             channel=settings.app_channel,
+            publication=settings.publication.name,
             revision=str(revision),
         )
         stats.api.event(
@@ -110,10 +114,11 @@ class Workflow(object):
             # Force cleanup to reset tip
             # otherwise previous pull are there
             self.hg.update(rev=b'tip', clean=True)
-            logger.info('Set repo back to tip', rev=self.hg.tip().node)
+            tip = self.hg.tip().node
+            logger.info('Set repo back to tip', rev=tip)
 
-            # Apply and analyze revision patch
-            revision.apply(self.hg)
+            # Load and analyze revision patch
+            revision.load(self.hg)
             revision.analyze_patch()
 
         with stats.api.timer('runtime.mach'):
@@ -164,27 +169,55 @@ class Workflow(object):
             logger.error('No analyzers to use on revision')
             return
 
-        issues = []
-        for analyzer_class in analyzers:
-            # Build analyzer
-            logger.info('Run {}'.format(analyzer_class.__name__))
-            analyzer = analyzer_class()
+        with stats.api.timer('runtime.issues'):
+            # Detect initial issues
+            if settings.publication == Publication.BEFORE_AFTER:
+                before_patch = self.detect_issues(analyzers, revision)
+                logger.info('Detected {} issue(s) before patch'.format(len(before_patch)))
+                stats.api.increment('analysis.issues.before', len(before_patch))
 
-            # Run analyzer on version and store generated issues
-            issues += analyzer.run(revision)
+            # Apply patch
+            revision.apply(self.hg)
 
-        logger.info('Detected {} issue(s)'.format(len(issues)))
+            # Detect new issues
+            issues = self.detect_issues(analyzers, revision)
+            logger.info('Detected {} issue(s) after patch'.format(len(issues)))
+            stats.api.increment('analysis.issues.after', len(issues))
+
+            # Mark newly found issues
+            if settings.publication == Publication.BEFORE_AFTER:
+                for issue in issues:
+                    issue.is_new = issue not in before_patch
+
         if not issues:
             logger.info('No issues, stopping there.')
             return
 
-        # Build a potential improvement patch
+        # Report issues publication stats
+        stats.api.increment('analysis.issues.publishable', len([i for i in issues if i.is_publishable()]))
+
+        # Build patch to help developer improve their code
         self.build_improvement_patch(revision, issues)
 
         # Publish reports about these issues
         with stats.api.timer('runtime.reports'):
             for reporter in self.reporters.values():
                 reporter.publish(issues, revision)
+
+    def detect_issues(self, analyzers, revision):
+        '''
+        Detect issues for this revision
+        '''
+        issues = []
+        for analyzer_class in analyzers:
+            # Build analyzer
+            logger.info('Run {}'.format(analyzer_class.__name__))
+            analyzer = analyzer_class()
+
+            # Run analyzer on revision and store generated issues
+            issues += analyzer.run(revision)
+
+        return issues
 
     def build_improvement_patch(self, revision, issues):
         '''

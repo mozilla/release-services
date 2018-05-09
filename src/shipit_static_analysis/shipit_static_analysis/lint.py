@@ -21,6 +21,7 @@ ISSUE_MARKDOWN = '''
 - **Third Party**: {third_party}
 - **Disabled rule**: {disabled_rule}
 - **Publishable**: {publishable}
+- **Is new**: {is_new}
 
 ```
 {message}
@@ -29,7 +30,7 @@ ISSUE_MARKDOWN = '''
 
 
 class MozLintIssue(Issue):
-    def __init__(self, path, column, level, lineno, linter, message, rule, **kwargs):
+    def __init__(self, path, column, level, lineno, linter, message, rule, revision, **kwargs):
         self.nb_lines = 1
         self.column = column
         self.level = level
@@ -37,6 +38,7 @@ class MozLintIssue(Issue):
         self.linter = linter
         self.message = message
         self.rule = rule
+        self.revision = revision
 
         # Ensure path is always relative to the repository
         self.path = path
@@ -53,6 +55,17 @@ class MozLintIssue(Issue):
             self.line,
         )
 
+    def build_extra_identifiers(self):
+        '''
+        Used to compare with same-class issues
+        '''
+        return {
+            'level': self.level,
+            'rule': self.rule,
+            'linter': self.linter,
+            'column': self.column,
+        }
+
     def is_disabled_rule(self):
         '''
         Some rules are disabled:
@@ -65,9 +78,9 @@ class MozLintIssue(Issue):
 
         return False
 
-    def is_publishable(self):
+    def validates(self):
         '''
-        Publishable when:
+        A mozlint issues is publishable when:
         * file is not 3rd party
         * rule is not disabled
         '''
@@ -97,6 +110,7 @@ class MozLintIssue(Issue):
             third_party=self.is_third_party() and 'yes' or 'no',
             publishable=self.is_publishable() and 'yes' or 'no',
             disabled_rule=self.is_disabled_rule() and 'yes' or 'no',
+            is_new=self.is_new and 'yes' or 'no',
         )
 
     def as_diff(self):
@@ -124,7 +138,7 @@ class MozLint(object):
         assert isinstance(revision, Revision)
 
         issues = list(itertools.chain.from_iterable([
-            self.find_issues(path) or []
+            self.find_issues(path, revision) or []
             for path in revision.files
         ]))
 
@@ -132,10 +146,15 @@ class MozLint(object):
 
         return issues
 
-    def find_issues(self, path):
+    def find_issues(self, path, revision):
         '''
         Run mozlint through mach, using gecko-env
         '''
+        # Check file exists (before mode)
+        full_path = os.path.join(settings.repo_dir, path)
+        if not os.path.exists(full_path):
+            logger.info('Modified file not found {}'.format(full_path))
+            return
 
         # Run mozlint on a file
         command = [
@@ -160,14 +179,13 @@ class MozLint(object):
             logger.warn('Invalid json output', path=path, lines=lines)
             raise
 
-        full_path = os.path.join(settings.repo_dir, path)
         if full_path not in payload and path not in payload:
             logger.warn('Missing path in linter output', path=path)
             return
 
         # Mozlint uses both full & relative path to index issues
         return [
-            MozLintIssue(**issue)
+            MozLintIssue(revision=revision, **issue)
             for p in (path, full_path)
             for issue in payload.get(p, [])
         ]

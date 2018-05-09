@@ -11,6 +11,7 @@ import hglib
 from parsepatch.patch import Patch
 
 from cli_common import log
+from shipit_static_analysis import Issue
 from shipit_static_analysis import stats
 from shipit_static_analysis.config import REPO_REVIEW
 from shipit_static_analysis.config import settings
@@ -53,6 +54,22 @@ class Revision(object):
         # Report nb of files and lines analyzed
         stats.api.increment('analysis.files', len(self.files))
         stats.api.increment('analysis.lines', sum(len(line) for line in self.lines.values()))
+
+    def contains(self, issue):
+        '''
+        Check if the issue is this patch
+        '''
+        assert isinstance(issue, Issue)
+
+        # Get modified lines for this issue
+        modified_lines = self.lines.get(issue.path)
+        if modified_lines is None:
+            logger.warn('Issue path in not in revision', path=issue.path, revision=self)
+            return False
+
+        # Detect if this issue is in the patch
+        lines = set(range(issue.line, issue.line + issue.nb_lines))
+        return not lines.isdisjoint(modified_lines)
 
     @property
     def has_clang_files(self):
@@ -101,14 +118,20 @@ class PhabricatorRevision(Revision):
     def url(self):
         return 'https://{}/{}/'.format(self.api.hostname, self.diff_phid)
 
-    def apply(self, repo):
+    def load(self, repo):
         '''
-        Apply patch from Phabricator to Mercurial local repository
+        Load patch from Phabricator
         '''
         assert isinstance(repo, hglib.client.hgclient)
 
         # Load raw patch
         self.patch = self.api.load_raw_diff(self.diff_id)
+
+    def apply(self, repo):
+        '''
+        Apply patch from Phabricator to Mercurial local repository
+        '''
+        assert isinstance(repo, hglib.client.hgclient)
 
         # Apply the patch on top of repository
         repo.import_(
@@ -147,9 +170,10 @@ class MozReviewRevision(Revision):
             self.diffset_revision,
         )
 
-    def apply(self, repo):
+    def load(self, repo):
         '''
         Load required revision from mercurial remote repo
+        The repository will then be set to the ancestor of analysed revision
         '''
         assert isinstance(repo, hglib.client.hgclient)
 
@@ -161,11 +185,23 @@ class MozReviewRevision(Revision):
             force=True,
         )
 
+        # Load changes from specific revision
+        self.patch = repo.diff(change=self.mercurial, git=True).decode('utf-8')
+
+        # Move repo to ancestor so we don't trigger an unecessary clobber
+        repo.update(
+            rev='ancestor(tip, {})'.format(self.mercurial),
+            clean=True,
+        )
+
+    def apply(self, repo):
+        '''
+        Load required revision from mercurial remote repo
+        '''
+        assert isinstance(repo, hglib.client.hgclient)
+
         # Update to the target revision
         repo.update(
             rev=self.mercurial,
             clean=True,
         )
-
-        # Load patch from hg diff
-        self.patch = repo.diff(change=self.mercurial, git=True).decode('utf-8')
