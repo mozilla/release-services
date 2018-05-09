@@ -17,9 +17,10 @@ class ZeroCov(object):
 
     DATE_FORMAT = '%Y-%m-%d'
 
-    def __init__(self, repo_dir):
+    def __init__(self, repo_dir, revision):
         assert os.path.isdir(repo_dir), '{} is not a directory'.format(repo_dir)
         self.repo_dir = repo_dir
+        self.revision = revision
 
     def get_file_size(self, filename):
         if self.repo_dir:
@@ -130,16 +131,19 @@ class ZeroCov(object):
 
         filesinfo = self.get_fileinfo(zero_coverage_functions.keys())
 
-        zero_coverage_report = []
+        zero_coverage_files = []
         for fname, functions in zero_coverage_functions.items():
             info = filesinfo[fname]
             info.update({'name': fname,
                          'funcs': len(functions),
                          'uncovered': fname in zero_coverage_files})
-            zero_coverage_report.append(info)
+            zero_coverage_files.append(info)
 
             with open(os.path.join(out_dir, 'zero_coverage_functions/%s.json' % fname.replace('/', '_')), 'w') as f:
                 json.dump(functions, f)
+
+        zero_coverage_report = {'revision': self.revision,
+                                'files': zero_coverage_files}
 
         with open(os.path.join(out_dir, 'zero_coverage_report.json'), 'w') as f:
             json.dump(zero_coverage_report, f)

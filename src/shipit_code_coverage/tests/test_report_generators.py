@@ -15,7 +15,8 @@ def test_zero_coverage(tmpdir,
                        fake_hg_repo):
     tmp_path = tmpdir.strpath
 
-    report_generators.ZeroCov(fake_hg_repo).zero_coverage([
+    revision = '314159265358'
+    report_generators.ZeroCov(fake_hg_repo, revision).zero_coverage([
         grcov_artifact, grcov_uncovered_artifact,
         jsvm_artifact, jsvm_uncovered_artifact,
         grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact
@@ -29,7 +30,11 @@ def test_zero_coverage(tmpdir,
         assert set(json.load(f)) == set(['read', 'write'])
 
     with open(os.path.join(tmp_path, 'zero_coverage_report.json'), 'r') as f:
-        zero_coverage_functions = json.load(f)
+        zero_coverage_report = json.load(f)
+
+    assert 'revision' in zero_coverage_report and zero_coverage_report['revision'] == revision
+    assert 'files' in zero_coverage_report
+    zero_coverage_functions = zero_coverage_report['files']
 
     today = datetime.utcnow()
     today = pytz.utc.localize(today)
