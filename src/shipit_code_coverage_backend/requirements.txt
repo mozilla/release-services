@@ -7,3 +7,4 @@ cachetools
 redis
 rq
 gunicorn
+elasticsearch
