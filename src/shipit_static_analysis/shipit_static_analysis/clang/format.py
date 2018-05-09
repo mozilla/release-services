@@ -200,7 +200,7 @@ class ClangFormatIssue(Issue):
             mode=self.mode,
             line=self.line,
             nb_lines=self.nb_lines,
-            is_new=self.is_new and 'yes' or 'no',
+            is_new='yes' if self.is_new else 'no',
             old=self.old,
             new=self.new,
         )

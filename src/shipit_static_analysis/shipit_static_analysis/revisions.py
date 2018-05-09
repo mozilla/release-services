@@ -67,7 +67,7 @@ class Revision(object):
             logger.warn('Issue path in not in revision', path=issue.path, revision=self)
             return False
 
-        # Detect if isssue is in the patch
+        # Detect if this issue is in the patch
         lines = set(range(issue.line, issue.line + issue.nb_lines))
         return not lines.isdisjoint(modified_lines)
 

@@ -196,7 +196,7 @@ class Workflow(object):
         # Report issues publication stats
         stats.api.increment('analysis.issues.publishable', len([i for i in issues if i.is_publishable()]))
 
-        # Build patch to help developper improve their code
+        # Build patch to help developer improve their code
         self.build_improvement_patch(revision, issues)
 
         # Publish reports about these issues
@@ -214,7 +214,7 @@ class Workflow(object):
             logger.info('Run {}'.format(analyzer_class.__name__))
             analyzer = analyzer_class()
 
-            # Run analyzer on version and store generated issues
+            # Run analyzer on revision and store generated issues
             issues += analyzer.run(revision)
 
         return issues

@@ -225,7 +225,7 @@ class ClangTidyIssue(Issue):
 
     def validates(self):
         '''
-        Publish clang-tidy issuew when:
+        Publish clang-tidy issues when:
         * not a third party code
         * check is marked as publishable
         * is not from an expanded macro
@@ -276,12 +276,12 @@ class ClangTidyIssue(Issue):
             location='{}:{}:{}'.format(self.path, self.line, self.char),
             body=self.body,
             check=self.check,
-            in_patch=self.in_patch() and 'yes' or 'no',
-            third_party=self.is_third_party() and 'yes' or 'no',
-            publishable_check=self.has_publishable_check() and 'yes' or 'no',
-            publishable=self.is_publishable() and 'yes' or 'no',
-            expanded_macro=self.is_expanded_macro() and 'yes' or 'no',
-            is_new=self.is_new and 'yes' or 'no',
+            in_patch='yes' if self.in_patch() else 'no',
+            third_party='yes' if self.is_third_party() else 'no',
+            publishable_check='yes' if self.has_publishable_check() else 'no',
+            publishable='yes' if self.is_publishable() else 'no',
+            expanded_macro='yes' if self.is_expanded_macro() else 'no',
+            is_new='yes' if self.is_new else 'no',
             notes='\n'.join([
                 ISSUE_NOTE_MARKDOWN.format(
                     message=n.message,
