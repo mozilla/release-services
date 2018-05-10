@@ -10,7 +10,6 @@ def report(artifacts, source_dir=None, service_number=None, commit_sha='unused',
       'grcov',
       '-t', out_format,
       '-p', '/home/worker/workspace/build/src/',
-      '--ignore-dir', 'gcc',
     ]
 
     if 'coveralls' in out_format:
