@@ -83,7 +83,7 @@ class ArtifactsHandler(object):
         download_tasks = {}
         for test_task in test_tasks:
             status = test_task['status']['state']
-            assert status in ALL_STATUSES
+            assert status in ALL_STATUSES, "State '{}' not recognized".format(status)
 
             chunk_name = taskcluster.get_chunk(test_task['task']['metadata']['name'])
             platform_name = taskcluster.get_platform(test_task['task']['metadata']['name'])
@@ -103,7 +103,7 @@ class ArtifactsHandler(object):
                     download_tasks[(chunk_name, platform_name)] = test_task
 
         with ThreadPoolExecutorResult() as executor:
-            for test_task in test_tasks:
+            for test_task in download_tasks.values():
                 executor.submit(self.download, test_task)
 
         logger.info('Code coverage artifacts downloaded')
