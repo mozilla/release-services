@@ -17,10 +17,9 @@ class ZeroCov(object):
 
     DATE_FORMAT = '%Y-%m-%d'
 
-    def __init__(self, repo_dir, revision):
+    def __init__(self, repo_dir):
         assert os.path.isdir(repo_dir), '{} is not a directory'.format(repo_dir)
         self.repo_dir = repo_dir
-        self.revision = revision
 
     def get_file_size(self, filename):
         if self.repo_dir:
@@ -95,7 +94,7 @@ class ZeroCov(object):
 
         return res
 
-    def zero_coverage(self, artifacts, out_dir='code-coverage-reports'):
+    def zero_coverage(self, artifacts, hgrev, gitrev, out_dir='code-coverage-reports'):
         report = grcov.report(artifacts, out_format='coveralls+')
         report = json.loads(report.decode('utf-8'))  # Decoding is only necessary until Python 3.6.
 
@@ -142,7 +141,8 @@ class ZeroCov(object):
             with open(os.path.join(out_dir, 'zero_coverage_functions/%s.json' % fname.replace('/', '_')), 'w') as f:
                 json.dump(functions, f)
 
-        zero_coverage_report = {'revision': self.revision,
+        zero_coverage_report = {'github_revision': gitrev,
+                                'hg_revision': hgrev,
                                 'files': zero_coverage_files}
 
         with open(os.path.join(out_dir, 'zero_coverage_report.json'), 'w') as f:

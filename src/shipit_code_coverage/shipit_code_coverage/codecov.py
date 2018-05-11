@@ -52,11 +52,12 @@ class CodeCov(object):
 
         if revision is None:
             # Retrieve revision of latest codecov build
-            github_revision = uploader.get_latest_codecov()
-            self.revision = self.githubUtils.get_mercurial(github_revision)
+            self.github_revision = uploader.get_latest_codecov()
+            self.revision = self.githubUtils.get_mercurial(self.github_revision)
             self.from_pulse = False
             suites_to_ignore = []
         else:
+            self.github_revision = self.githubUtils.get_commit(self.revision)
             self.revision = revision
             self.from_pulse = True
             suites_to_ignore = ['awsy', 'talos']
@@ -221,7 +222,8 @@ class CodeCov(object):
 
             self.generate_suite_reports()
 
-            report_generators.ZeroCov(self.repo_dir, self.revision).zero_coverage(self.artifactsHandler.get())
+            zc = report_generators.ZeroCov(self.repo_dir)
+            zc.zero_coverage(self.artifactsHandler.get(), self.revision, self.github_revision)
 
             self.generate_chunk_mapping()
 

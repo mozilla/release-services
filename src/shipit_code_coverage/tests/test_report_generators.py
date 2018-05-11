@@ -15,12 +15,13 @@ def test_zero_coverage(tmpdir,
                        fake_hg_repo):
     tmp_path = tmpdir.strpath
 
-    revision = '314159265358'
-    report_generators.ZeroCov(fake_hg_repo, revision).zero_coverage([
+    hgrev = '314159265358'
+    gitrev = '271828182845'
+    report_generators.ZeroCov(fake_hg_repo).zero_coverage([
         grcov_artifact, grcov_uncovered_artifact,
         jsvm_artifact, jsvm_uncovered_artifact,
         grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact
-    ], out_dir=tmp_path)
+    ], hgrev, gitrev, out_dir=tmp_path)
 
     with open(os.path.join(tmp_path, 'zero_coverage_functions/mozglue_build_dummy.cpp.json'), 'r') as f:
         assert set(json.load(f)) == set(['main'])
@@ -32,7 +33,8 @@ def test_zero_coverage(tmpdir,
     with open(os.path.join(tmp_path, 'zero_coverage_report.json'), 'r') as f:
         zero_coverage_report = json.load(f)
 
-    assert 'revision' in zero_coverage_report and zero_coverage_report['revision'] == revision
+    assert 'hg_revision' in zero_coverage_report and zero_coverage_report['hg_revision'] == hgrev
+    assert 'github_revision' in zero_coverage_report and zero_coverage_report['github_revision'] == gitrev
     assert 'files' in zero_coverage_report
     zero_coverage_functions = zero_coverage_report['files']
 
