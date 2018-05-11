@@ -109,7 +109,7 @@ def test_report_token(grcov_artifact):
 
 
 def test_report_options(grcov_artifact, jsvm_artifact):
-    output = grcov.report([grcov_artifact, jsvm_artifact], out_format='coveralls', options=['--ignore-dir', 'toolkit'])
+    output = grcov.report([grcov_artifact, jsvm_artifact], out_format='coveralls', options=['--ignore-dir', 'toolkit/*'])
     report = json.loads(output.decode('utf-8'))
     assert len(report['source_files']) == 1
     assert report['source_files'][0]['name'] == 'js/src/jit/BitSet.cpp'

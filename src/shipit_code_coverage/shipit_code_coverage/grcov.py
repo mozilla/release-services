@@ -10,7 +10,6 @@ def report(artifacts, source_dir=None, service_number=None, commit_sha='unused',
       'grcov',
       '-t', out_format,
       '-p', '/home/worker/workspace/build/src/',
-      '--ignore-dir', 'gcc',
     ]
 
     if 'coveralls' in out_format:
@@ -35,6 +34,6 @@ def report(artifacts, source_dir=None, service_number=None, commit_sha='unused',
 
 
 def files_list(artifacts, source_dir=None):
-    options = ['--filter-covered', '--threads', '2']
+    options = ['--filter', 'covered', '--threads', '2']
     files = report(artifacts, source_dir=source_dir, out_format='files', options=options)
     return files.decode('utf-8').splitlines()
