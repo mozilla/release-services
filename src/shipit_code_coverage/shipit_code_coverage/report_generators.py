@@ -130,20 +130,20 @@ class ZeroCov(object):
 
         filesinfo = self.get_fileinfo(zero_coverage_functions.keys())
 
-        zero_coverage_files = []
+        zero_coverage_info = []
         for fname, functions in zero_coverage_functions.items():
             info = filesinfo[fname]
             info.update({'name': fname,
                          'funcs': len(functions),
                          'uncovered': fname in zero_coverage_files})
-            zero_coverage_files.append(info)
+            zero_coverage_info.append(info)
 
             with open(os.path.join(out_dir, 'zero_coverage_functions/%s.json' % fname.replace('/', '_')), 'w') as f:
                 json.dump(functions, f)
 
         zero_coverage_report = {'github_revision': gitrev,
                                 'hg_revision': hgrev,
-                                'files': zero_coverage_files}
+                                'files': zero_coverage_info}
 
         with open(os.path.join(out_dir, 'zero_coverage_report.json'), 'w') as f:
             json.dump(zero_coverage_report, f)
