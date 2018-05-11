@@ -83,7 +83,7 @@ class ArtifactsHandler(object):
         download_tasks = {}
         for test_task in test_tasks:
             status = test_task['status']['state']
-            assert status in ALL_STATUSES
+            assert status in ALL_STATUSES, "State '{}' not recognized".format(status)
 
             chunk_name = taskcluster.get_chunk(test_task['task']['metadata']['name'])
             platform_name = taskcluster.get_platform(test_task['task']['metadata']['name'])
