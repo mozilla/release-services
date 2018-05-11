@@ -70,3 +70,4 @@ def test_zero_coverage(tmpdir,
         assert found_item['last_push_date'] == exp_item['last_push_date']
         assert found_item['size'] == exp_item['size']
         assert found_item['commits'] == exp_item['commits']
+        assert found_item['uncovered'] == exp_item['uncovered']
