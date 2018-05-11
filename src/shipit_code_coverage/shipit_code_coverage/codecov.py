@@ -57,7 +57,7 @@ class CodeCov(object):
             self.from_pulse = False
             suites_to_ignore = []
         else:
-            self.github_revision = self.githubUtils.get_commit(self.revision)
+            self.github_revision = None
             self.revision = revision
             self.from_pulse = True
             suites_to_ignore = ['awsy', 'talos']
