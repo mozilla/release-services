@@ -90,3 +90,24 @@ async def test_skip_broken_build(coverage_responses):
     assert build_changeset == '3ecc48155838ca413a56920d801a8be0719e9981'
     assert overall['cur'] == '61.23183'
     assert overall['prev'] == '61.11536'
+
+
+@pytest.mark.asyncio
+async def test_fake_activedata():
+    from shipit_code_coverage_backend import coverage
+    activeDataCoverage = coverage.ActiveDataCoverage()
+
+    assert await activeDataCoverage.get_file_coverage('plop', 'dom/ipc/ContentProcess.cpp') is None
+    assert await activeDataCoverage.get_file_coverage('aabfe960ab59fea2e85896b1f8050786e16ab23b', 'test.cpp') is None
+
+    lines = await activeDataCoverage.get_file_coverage('aabfe960ab59fea2e85896b1f8050786e16ab23b', 'dom/ipc/ContentProcess.cpp')
+    assert len(lines) == 63
+    assert lines[204] == 111
+    assert lines[167] == 185
+    assert lines.get(42) is None
+
+    assert await activeDataCoverage.get_coverage('dummy') is None
+    assert await activeDataCoverage.get_coverage('aabfe960ab59fea2e85896b1f8050786e16ab23b') == {
+        'cur': 0.8199533799533769,
+        'prev': '?',
+    }

@@ -3,6 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import collections
+import itertools
 from abc import ABC
 from abc import abstractmethod
 
@@ -138,20 +140,70 @@ class CodecovCoverage(Coverage):
 
 
 class ActiveDataCoverage(Coverage):
-    URL = 'https://activedata.allizom.org/query'
+
+    @staticmethod
+    def query(changeset=None, filename=None):
+        '''
+        Fake some ES data using a local file
+        Should query from an ElasticSearch server
+        '''
+        import gzip
+        import json
+        import os.path
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../tests/fixtures/active_data.json.gz')
+        with gzip.open(path, 'rb') as f:
+            data = json.load(f)['data']
+
+            # Apply changeset filter
+            if changeset:
+                data = filter(lambda f: f['repo']['changeset']['id'] == changeset, data)
+
+            # Apply filename filter
+            if filename:
+                data = filter(lambda f: f['source']['file']['name'] == filename, data)
+
+            return list(data)
 
     @staticmethod
     @alru_cache(maxsize=2048)
     async def get_coverage(changeset):
-        assert False, 'Not implemented'
+        '''
+        Get total coverage stat for a changeset
+        '''
+        data = ActiveDataCoverage().query(changeset=changeset)
+        if not data:
+            return
+
+        nb = len(data)
+        return {
+            'cur': sum(f['source']['file']['percentage_covered'] for f in data) / nb,
+            'prev': '?',  # TODO: find parent data
+        }
 
     @staticmethod
     async def get_file_coverage(changeset, filename):
-        assert False, 'Not implemented'
+
+        # Look for matching file+changeset in queried data
+        # This will give us lists of covered lines per test
+        data = ActiveDataCoverage().query(changeset=changeset, filename=filename)
+        if not data:
+            return
+
+        # Count all the lines covered per some tests
+        lines_covered = itertools.chain(*[
+            test['source']['file']['covered']
+            for test in data
+        ])
+
+        return dict(collections.Counter(lines_covered))
 
     @staticmethod
     async def get_latest_build():
-        assert False, 'Not implemented'
+        '''
+        Gives current and previous revisions as Mercurial SHA1 hashes
+        '''
+        # TODO : use another query
+        return '?', '?'
 
 
 coverage_service = CodecovCoverage()
