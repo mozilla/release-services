@@ -94,7 +94,7 @@ class ZeroCov(object):
 
         return res
 
-    def zero_coverage(self, artifacts, out_dir='code-coverage-reports'):
+    def zero_coverage(self, artifacts, hgrev, gitrev, out_dir='code-coverage-reports'):
         report = grcov.report(artifacts, out_format='coveralls+')
         report = json.loads(report.decode('utf-8'))  # Decoding is only necessary until Python 3.6.
 
@@ -130,16 +130,20 @@ class ZeroCov(object):
 
         filesinfo = self.get_fileinfo(zero_coverage_functions.keys())
 
-        zero_coverage_report = []
+        zero_coverage_files = []
         for fname, functions in zero_coverage_functions.items():
             info = filesinfo[fname]
             info.update({'name': fname,
                          'funcs': len(functions),
                          'uncovered': fname in zero_coverage_files})
-            zero_coverage_report.append(info)
+            zero_coverage_files.append(info)
 
             with open(os.path.join(out_dir, 'zero_coverage_functions/%s.json' % fname.replace('/', '_')), 'w') as f:
                 json.dump(functions, f)
+
+        zero_coverage_report = {'github_revision': gitrev,
+                                'hg_revision': hgrev,
+                                'files': zero_coverage_files}
 
         with open(os.path.join(out_dir, 'zero_coverage_report.json'), 'w') as f:
             json.dump(zero_coverage_report, f)
