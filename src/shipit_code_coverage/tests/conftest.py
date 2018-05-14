@@ -17,6 +17,11 @@ import responses
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
 
+def load_file(path):
+    with open(os.path.join(FIXTURES_DIR, path)) as f:
+        return f.read()
+
+
 def load_json(path):
     with open(os.path.join(FIXTURES_DIR, path)) as f:
         return json.load(f)
@@ -203,14 +208,20 @@ def fake_hg_repo(tmpdir):
     os.chdir(local)
     hg = hglib.open(local)
 
-    files = [{'name': 'mozglue/build/dummy.cpp',
-              'size': 1},
-             {'name': 'toolkit/components/osfile/osfile.jsm',
-              'size': 2},
-             {'name': 'js/src/jit/JIT.cpp',
-              'size': 3},
-             {'name': 'toolkit/components/osfile/osfile-win.jsm',
-              'size': 4}]
+    files = [
+        {'name': 'mozglue/build/dummy.cpp',
+         'size': 1},
+        {'name': 'toolkit/components/osfile/osfile.jsm',
+         'size': 2},
+        {'name': 'js/src/jit/JIT.cpp',
+         'size': 3},
+        {'name': 'toolkit/components/osfile/osfile-win.jsm',
+         'size': 4},
+        {'name': 'js/src/jit/BitSet.cpp',
+         'size': 5},
+        {'name': 'shipit_code_coverage/cli.py',
+         'size': 6},
+    ]
 
     for c in '?!':
         for f in files:
@@ -232,3 +243,13 @@ def fake_hg_repo(tmpdir):
                     os.path.join(local, '.hg/pushlog2.db'))
 
     return local
+
+
+@pytest.fixture()
+def ACTIVEDATA_CHUNK_TO_TESTS():
+    responses.add(
+        responses.POST,
+        'https://activedata.allizom.org/query',
+        body=load_file('activedata_chunk_to_tests.json'),
+        content_type='application/json',
+        status=200)
