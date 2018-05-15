@@ -11,6 +11,8 @@ from abc import abstractmethod
 import aiohttp
 from async_lru import alru_cache
 from cachetools import LRUCache
+from elasticsearch import Elasticsearch
+from elasticsearch.helpers import scan as es_scan
 
 from cli_common import log
 from shipit_code_coverage_backend import secrets
@@ -144,25 +146,87 @@ class ActiveDataCoverage(Coverage):
     @staticmethod
     def query(changeset=None, filename=None):
         '''
-        Fake some ES data using a local file
-        Should query from an ElasticSearch server
+        Query the elastic search server
         '''
-        import gzip
-        import json
-        import os.path
-        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../tests/fixtures/active_data.json.gz')
-        with gzip.open(path, 'rb') as f:
-            data = json.load(f)['data']
 
-            # Apply changeset filter
-            if changeset:
-                data = filter(lambda f: f['repo']['changeset']['id'] == changeset, data)
+        es = Elasticsearch(hosts=secrets.ACTIVE_DATA_HOSTS)
+        assert es.ping(), \
+            'Connection failed on ElasticSearch servers'
 
-            # Apply filename filter
-            if filename:
-                data = filter(lambda f: f['source']['file']['name'] == filename, data)
+        filters = [
+            # Always query on Mozilla Central
+            {
+                'term': {'repo.branch.name.~s~': 'mozilla-central'}
+            }
+        ]
 
-            return list(data)
+        # Filter by filename and changeset
+        if filename is not None:
+            filters.append({
+                'term': {'source.file.name.~s~': filename}
+            })
+
+        if changeset is not None:
+            filters.append({
+                'term': {'repo.changeset.id.~s~': changeset}
+            })
+
+        # Build full ES query using mandatory filters
+        query = {'query': {'bool': {'must':  filters}}}
+
+        # First, count results
+        count = es.count(index=secrets.ACTIVE_DATA_INDEX, body=query)['count']
+
+        # Load available results using an iterator
+        if count > 0:
+            return count, es_scan(es, index=secrets.ACTIVE_DATA_INDEX, query=query)
+
+        return count, []
+
+    @staticmethod
+    def available_revisions(nb=2):
+        '''
+        Search the N last revisions available in the ES cluster
+        '''
+        es = Elasticsearch(hosts=secrets.ACTIVE_DATA_HOSTS)
+        query = {
+            # no search results please
+            'size': 0,
+
+            'query': {
+                'bool': {
+                    'must': {
+                        'term': {'repo.branch.name.~s~': 'mozilla-central'}
+                    }
+                },
+            },
+            'aggs': {
+                'revisions': {
+                    'terms': {
+                        # List changeset ids, sorted by changeset_date
+                        'field': 'repo.changeset.id.~s~',
+                        'order': {'_date': 'desc'},
+                        'size': nb,
+                    },
+
+                    'aggs': {
+                        # Calc average changeset date per bucket (as timestamp)
+                        '_date': {
+                            'avg': {
+                                'field': 'repo.changeset.date.~n~',
+                                'missing': 0,
+                            },
+                        }
+                    },
+                },
+            },
+        }
+
+        out = es.search(
+            index=secrets.ACTIVE_DATA_INDEX,
+            body=query,
+        )
+        return out['aggregations']['revisions']['buckets']
 
     @staticmethod
     @alru_cache(maxsize=2048)
@@ -170,11 +234,10 @@ class ActiveDataCoverage(Coverage):
         '''
         Get total coverage stat for a changeset
         '''
-        data = ActiveDataCoverage().query(changeset=changeset)
-        if not data:
+        nb, data = ActiveDataCoverage().query(changeset=changeset)
+        if not nb:
             return
 
-        nb = len(data)
         return {
             'cur': sum(f['source']['file']['percentage_covered'] for f in data) / nb,
             'prev': '?',  # TODO: find parent data
@@ -185,7 +248,7 @@ class ActiveDataCoverage(Coverage):
 
         # Look for matching file+changeset in queried data
         # This will give us lists of covered lines per test
-        data = ActiveDataCoverage().query(changeset=changeset, filename=filename)
+        nb, data = ActiveDataCoverage().query(changeset=changeset, filename=filename)
         if not data:
             return
 

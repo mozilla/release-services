@@ -20,4 +20,5 @@ secrets = cli_common.taskcluster.get_secrets(
 REDIS_URL = secrets['REDIS_URL'] if 'REDIS_URL' in secrets else 'redis://localhost:6379'
 CODECOV_ACCESS_TOKEN = secrets['CODECOV_ACCESS_TOKEN'] if 'CODECOV_ACCESS_TOKEN' in secrets else ''
 CODECOV_REPO = secrets['CODECOV_REPO'] if 'CODECOV_REPO' in secrets else 'marco-c/gecko-dev'
-ACTIVE_DATA_HOST = secrets['ACTIVE_DATA_HOST'] if 'ACTIVE_DATA_HOST' in secrets else 'active-data.allizom.org'
+ACTIVE_DATA_HOSTS = secrets['ACTIVE_DATA_HOSTS'] if 'ACTIVE_DATA_HOSTS' in secrets else ['active-data.allizom.org', ]
+ACTIVE_DATA_INDEX = secrets['ACTIVE_DATA_INDEX'] if 'ACTIVE_DATA_INDEX' in secrets else 'coverage'
