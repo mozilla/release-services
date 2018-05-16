@@ -36,6 +36,8 @@ Once logged on Taskcluster, please check that you can view the contents of the T
 
 This secret holds the configuration for all the services, you can look at the ``shipit-static-analysis`` section for more details.
 
+If you need to make some changes to this secret, create a copy of this secret in your own namespace; and use its name everywhere the ``master`` secret is mentioned in this documentation.
+
 2. Taskcluster client
 """""""""""""""""""""
 
@@ -78,6 +80,20 @@ Once the initial build finishes, you should get a green Nix shell, running in ``
 4. Setup a Mozreview test
 """""""""""""""""""""""""
 
+.. note::
+  Make sure your Taskcluster secret has a ``mozreview`` reporter setup, as follows (with a valid ReviewBoard url, username and api_key):
+
+  .. code-block:: yaml
+
+    shipit-static-analysis:
+      ...
+      REPORTERS:
+        - reporter: mozreview
+          url: 'https://reviewboard.mozilla.org/'
+          username: XXXX@mozilla.com
+          api_key: YYYYY
+
+
 The bot needs an environment variable ``MOZREVIEW`` with the following informations:
 
 * the Mozreview mercurial revision of the patch to analyze (named ``<HG_SHA>`` here),
@@ -106,6 +122,47 @@ So the command would be:
 
 5. Setup a Phabricator test
 """""""""""""""""""""""""""
+
+
+.. note::
+  Make sure your Taskcluster secret has a ``phabricator`` reporter setup, as follows (with a valid Phabricator uri & token):
+
+  .. code-block:: yaml
+
+    shipit-static-analysis:
+      ...
+      REPORTERS:
+        - reporter: phabricator
+          url: 'https://phabricator-dev.allizom.org/api/'
+          api_key: api-XXXX
+
+
+
+The bot needs an environment variable ``PHABRICATOR`` with the following informations:
+
+1. The phabricator Differential ID (named ``DIFF_ID`` here)
+2. The phabricator Diff PHID (named ``PHID`` here)
+
+So you'll need to do the following in the nix shell:
+
+.. code-block:: shell
+  
+  export PHABRICATOR="<DIFF_ID>:<PHID>"
+
+Here is an example with this `Phabricator Diff review <https://phabricator-dev.allizom.org/D41>`_:
+
+1. You can get ``DIFF_ID`` from the url (this is ``41``)
+2. Login on the Phabricator instance (needed for API queries)
+3. Go to the Conduit API web interface (``/conduit`` of the Phabricator instance), and click on the endpoint ``differential.query`` (direct link to `Phabricator DEV <https://phabricator-dev.allizom.org/conduit/method/differential.query/>`_)
+4. Fill the form field ``ids`` as a JSON list of integer using ``DIFF_ID``, so for our example : ``[41]``
+5. Click ``Call Method``
+6. The method result should have a ``activeDiffPHID`` key, that's our ``PHID`` (in our example: ``PHID-DIFF-b5wsvctabxjmwqonwryv``)
+
+Here is the final command line:
+
+.. code-block:: shell
+  
+  export PHABRICATOR="41:PHID-DIFF-b5wsvctabxjmwqonwryv"
 
 
 6. Run the bot
