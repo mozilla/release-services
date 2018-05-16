@@ -12,10 +12,7 @@ import taskcluster
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest
 
-from backend_common.auth0 import AuthError
-from backend_common.auth0 import has_scopes
 from backend_common.auth0 import mozilla_accept_token
-from backend_common.auth0 import requires_auth
 from cli_common.log import get_logger
 from shipit_workflow.models import Phase
 from shipit_workflow.models import Release
