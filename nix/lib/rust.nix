@@ -1,6 +1,7 @@
 pkgs:
 { crates_json ? null
-, rust ? pkgs.latest.rustChannels.stable
+, rust ? { rustc = pkgs.latest.rustChannels.stable.rust;
+           cargo = pkgs.latest.rustChannels.stable.cargo;}
 }:
 
 let
