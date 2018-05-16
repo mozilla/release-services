@@ -66,7 +66,7 @@ def cmd(ctx, project, quiet, nix_shell,
 
     host = run_options.get('host', 'localhost')
     if please_cli.config.IN_DOCKER:
-        host = run_options.get('host', '0.0.0.0')
+        host = run_options.get('host', '127.0.0.1')
     port = str(run_options.get('port', 8000))
     schema = 'https://'
     project_name = project.replace('-', '_')
