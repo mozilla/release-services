@@ -177,8 +177,27 @@ Finally, you can run the bot with this command (in the Nix Shell):
     --cache-root=/app/tmp
 
 
+Test the bot in real conditions
+-------------------------------
+
+During a release, the release manager needs to test if the static analyis is working on staging or production environment.
+
+As the Taskcluster is triggered by **shipit pulse listener**, you need to login on the Heroku dashboard and see the logs of the pulse listener instances:
+
+* `Pulse listener staging logs <https://dashboard.heroku.com/apps/shipit-staging-pulse-listener/logs>`_
+* `Pulse listener production logs <https://dashboard.heroku.com/apps/shipit-production-pulse-listen/logs>`_
+
+Once you see a log message ``Received new commits (commits=...)``, the following line should be ``Triggered a new task (id=XXXX)``
+
+You can then check on the task status through `Taskcluster task inspector`_ (input the task id from log).
+
+You'll be redirected to the task running (hopefully), and will see the logs. A static analysis task should always end up completed (even if issues are detected !).
+
+
+
 .. _`Bastien Abadie`: https://github.com/La0
 .. _`Release Management`: https://wiki.mozilla.org/Release_Management
 .. _`Taskcluster`: https://tools.taskcluster.net/
 .. _`Taskcluster client`: https://tools.taskcluster.net/auth/clients
 
+.. _`Taskcluster task inspector`: https://tools.taskcluster.net/task-inspector
