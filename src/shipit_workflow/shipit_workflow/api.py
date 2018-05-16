@@ -57,15 +57,10 @@ def validate_user(key, checker):
     return wrapper
 
 
-@requires_auth
+@mozilla_accept_token()
+@validate_user(key='https://sso.mozilla.com/claim/groups',
+               checker=lambda xs: 'releng' in xs)
 def add_release(body):
-    required_scopes = ['{product}:{branch}:create'.format(product=body['product'], branch=body['branch'])]
-    scopes = flask.g.userinfo['scope'].split()
-    if not has_scopes(scopes, required_scopes):
-        raise AuthError({
-            'code': 'invalid_scopes',
-            'description': 'Invalid scopes. Verify that you have the following scopes {}'.format(required_scopes)},
-            401)
     session = flask.g.db.session
     r = Release(
         product=body['product'],
