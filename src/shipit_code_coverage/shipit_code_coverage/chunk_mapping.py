@@ -82,6 +82,10 @@ def generate(repo_dir, revision, artifactsHandler, out_dir='.'):
 
             for platform in PLATFORMS:
                 for suite in get_suites(revision):
+                    # Ignore test-coverage, test-coverage-wpt, awsy and talos
+                    if suite in ['awsy', 'talos', 'test-coverage', 'test-coverage-wpt']:
+                        continue
+
                     tests_data = get_tests_chunks(revision, platform, suite)
                     if len(tests_data) == 0:
                         continue
