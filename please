@@ -45,8 +45,7 @@ else
             --volume="$(pwd)":/app \
             --volume=/var/run/docker.sock:/var/run/docker.sock \
             --workdir=/app \
-            -p 7000:7000 \
-            -p 8000-8100:8000-8100 \
+            --network="host" \
             mozillareleng/services:base-`cat ./VERSION`
       else
         docker start $DOCKER_NAME
