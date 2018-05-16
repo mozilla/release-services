@@ -38,6 +38,7 @@ Projects
     shipit-code-coverage <projects/shipit-code-coverage>
     shipit-frontend <projects/shipit-frontend>
     shipit-uplift <projects/shipit-uplift>
+    shipit-static-analysis <projects/shipit-static-analysis>
 
 
 Develop
