@@ -165,6 +165,7 @@ class ActiveDataCoverage(Coverage):
     FIELD_FILENAME = 'source.file.name.~s~'
     FIELD_CHANGESET = 'repo.changeset.id.~s~'
     FIELD_CHANGESET_DATE = 'repo.changeset.date.~n~'
+    FIELD_TOTAL_PERCENT = 'source.file.percentage_covered.~n~'
 
     @staticmethod
     async def list_tests(changeset, filename):
@@ -197,19 +198,32 @@ class ActiveDataCoverage(Coverage):
         return count, []
 
     @staticmethod
-    async def available_revisions(nb=2):
+    async def available_revisions(nb=2, max_date=None):
         '''
         Search the N last revisions available in the ES cluster
         '''
+
+        filters = [
+            {'term': {ActiveDataCoverage.FIELD_REPO: 'mozilla-central'}}
+        ]
+
+        # Limit search to a maximum date
+        if max_date:
+            filters.append({
+                'range': {
+                    ActiveDataCoverage.FIELD_CHANGESET_DATE: {
+                        'lt': max_date,
+                    },
+                },
+            })
+
         query = {
             # no search results please
             'size': 0,
 
             'query': {
                 'bool': {
-                    'must': {
-                        'term': {ActiveDataCoverage.FIELD_REPO: 'mozilla-central'}
-                    }
+                    'must': filters,
                 },
             },
             'aggs': {
@@ -242,18 +256,94 @@ class ActiveDataCoverage(Coverage):
             return out['aggregations']['revisions']['buckets']
 
     @staticmethod
+    async def get_revision_date(changeset):
+        '''
+        Get the date of a revision
+        '''
+        query = {
+            # no search results please
+            'size': 0,
+
+            'query': {
+                'bool': {
+                    'must': [
+                        {'term': {ActiveDataCoverage.FIELD_REPO: 'mozilla-central'}},
+                        {'term': {ActiveDataCoverage.FIELD_CHANGESET: changeset}},
+                    ],
+                },
+            },
+            'aggs': {
+                'date': {
+                    'avg': {
+                        'field': ActiveDataCoverage.FIELD_CHANGESET_DATE,
+                    },
+                },
+            },
+        }
+        async with ActiveDataClient() as es:
+            out = await es.search(
+                index=secrets.ACTIVE_DATA_INDEX,
+                body=query,
+            )
+            return out['aggregations']['date']['value']
+
+    @staticmethod
+    async def calc_revision_coverage(changeset):
+        '''
+        Calculate total coverage in percent for a changeset
+        Directly done through an aggregation on ES
+        '''
+        query = {
+            # no search results please
+            'size': 0,
+
+            'query': {
+                'bool': {
+                    'must': [
+                        {'term': {ActiveDataCoverage.FIELD_REPO: 'mozilla-central'}},
+                        {'term': {ActiveDataCoverage.FIELD_CHANGESET: changeset}},
+                    ],
+                },
+            },
+            'aggs': {
+                'percentage': {
+                    'avg': {
+                        'field': ActiveDataCoverage.FIELD_TOTAL_PERCENT,
+                    },
+                },
+            },
+        }
+        async with ActiveDataClient() as es:
+            out = await es.search(
+                index=secrets.ACTIVE_DATA_INDEX,
+                body=query,
+            )
+            return out['aggregations']['percentage']['value']
+
+    @staticmethod
     @alru_cache(maxsize=2048)
     async def get_coverage(changeset):
         '''
         Get total coverage stat for a changeset
         '''
-        nb, data = ActiveDataCoverage().query(changeset=changeset)
-        if not nb:
-            return
+
+        # Get date of this changeset
+        max_date = await ActiveDataCoverage.get_revision_date(changeset)
+
+        # Get previous changeset
+        revisions = await ActiveDataCoverage.available_revisions(nb=1, max_date=max_date)
+        assert revisions[0]['key'] != changeset, \
+            'Should not be the same changeset'
+
+        # Get percentage for current
+        current = await ActiveDataCoverage.calc_revision_coverage(changeset)
+
+        # Get percentage for previous
+        previous = await ActiveDataCoverage.calc_revision_coverage(revisions[0]['key'])
 
         return {
-            'cur': sum(f['source']['file']['percentage_covered'] for f in data) / nb,
-            'prev': '?',  # TODO: find parent data
+            'cur': current,
+            'prev': previous,
         }
 
     @staticmethod
