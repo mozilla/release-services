@@ -10,13 +10,15 @@ logger = get_logger(__name__)
 
 class HGMO(object):
 
-    PID_FILE = '/tmp/hgmo.pid'
+    PID_FILE = 'hgmo.pid'
 
     def __init__(self, repo_dir):
         self.repo_dir = repo_dir
+        self.pid_file = os.path.join(os.getcwd(),
+                                     HGMO.PID_FILE)
 
     def __get_pid(self):
-        with open(HGMO.PID_FILE, 'r') as In:
+        with open(self.pid_file, 'r') as In:
             pid = In.read()
             return int(pid)
 
@@ -24,7 +26,7 @@ class HGMO(object):
         proc = subprocess.Popen(['hg', 'serve',
                                  '--hgmo',
                                  '--daemon',
-                                 '--pid-file', HGMO.PID_FILE],
+                                 '--pid-file', self.pid_file],
                                 cwd=self.repo_dir)
         proc.wait()
 
@@ -35,4 +37,5 @@ class HGMO(object):
     def __exit__(self, type, value, traceback):
         pid = self.__get_pid()
         os.killpg(os.getpgid(pid), signal.SIGTERM)
+        os.remove(self.pid_file)
         logger.info('hgmo has been killed')
