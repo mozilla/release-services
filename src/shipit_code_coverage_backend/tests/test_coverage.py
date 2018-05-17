@@ -7,9 +7,6 @@ import json
 
 import pytest
 
-from shipit_code_coverage_backend import coverage
-from shipit_code_coverage_backend import coverage_by_changeset_impl
-from shipit_code_coverage_backend import coverage_for_file_impl
 from shipit_code_coverage_backend import coverage_summary_by_changeset_impl
 
 
@@ -26,6 +23,7 @@ def test_coverage_supported_extensions_api(client):
 
 @pytest.mark.asyncio
 async def test_coverage_latest(coverage_responses):
+    from shipit_code_coverage_backend import coverage
     data = await coverage.get_latest_build_info()
     assert data['latest_rev'] == '8063b0c54b888fe1f98774b71e1870cc2267f33f'
     assert data['latest_pushid'] == 33743
@@ -34,6 +32,7 @@ async def test_coverage_latest(coverage_responses):
 
 @pytest.mark.asyncio
 async def test_coverage_by_changeset_impl(coverage_responses, coverage_builds):
+    from shipit_code_coverage_backend import coverage_by_changeset_impl
     # Get changeset coverage information
     for changeset, expected in coverage_builds['info'].items():
         data = await coverage_by_changeset_impl.generate(changeset)
@@ -61,6 +60,7 @@ def test_coverage_summary_by_changeset_impl(coverage_builds):
 
 @pytest.mark.asyncio
 async def test_coverage_for_file_impl(coverage_responses, coverage_changeset_by_file):
+    from shipit_code_coverage_backend import coverage_for_file_impl
     # Get code coverage information for a given file at a given changeset
     for file_coverage in coverage_changeset_by_file:
         data = await coverage_for_file_impl.generate(file_coverage['changeset'], file_coverage['path'])
@@ -71,6 +71,7 @@ async def test_coverage_for_file_impl(coverage_responses, coverage_changeset_by_
 
 @pytest.mark.asyncio
 async def test_skip_broken_build(coverage_responses):
+    from shipit_code_coverage_backend import coverage
     codecovCoverage = coverage.CodecovCoverage()
 
     with pytest.raises(coverage.CoverageException, message='ee6283795f41d97faeaccbe8bd051a36bbe30c64 is in an errored state.'):

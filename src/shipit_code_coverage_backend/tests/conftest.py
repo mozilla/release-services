@@ -15,7 +15,7 @@ import backend_common.testing
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_secrets():
     '''
     Provide configuration through mock Taskcluster secrets
