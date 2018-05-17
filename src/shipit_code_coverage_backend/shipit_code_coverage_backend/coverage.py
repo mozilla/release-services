@@ -141,17 +141,32 @@ class CodecovCoverage(Coverage):
         return await get_mercurial_commit(commit['commitid']), await get_mercurial_commit(commit['parent'])
 
 
+class ActiveDataClient():
+    '''
+    Active data async client, through Elastic Search
+    '''
+    def __init__(self):
+        self.client = AsyncElasticsearch(hosts=secrets.ACTIVE_DATA_HOSTS)
+
+    async def __aenter__(self):
+        # TODO: Should we ping the server here (overkill ?)
+        return self.client
+
+    async def __aexit__(self, *args, **kwargs):
+
+        # TODO: Find out why this line fails on
+        # RuntimeWarning: coroutine 'ClientSession.close' was never awaited
+        # It should remove the warning about unclosed connector
+        pass
+
+
 class ActiveDataCoverage(Coverage):
 
     @staticmethod
-    def query(changeset=None, filename=None):
+    async def query(changeset=None, filename=None):
         '''
         Query the elastic search server
         '''
-
-        es = AsyncElasticsearch(hosts=secrets.ACTIVE_DATA_HOSTS)
-        assert es.ping(), \
-            'Connection failed on ElasticSearch servers'
 
         filters = [
             # Always query on Mozilla Central
@@ -174,12 +189,13 @@ class ActiveDataCoverage(Coverage):
         # Build full ES query using mandatory filters
         query = {'query': {'bool': {'must':  filters}}}
 
-        # First, count results
-        count = es.count(index=secrets.ACTIVE_DATA_INDEX, body=query)['count']
+        async with ActiveDataClient() as es:
+            # First, count results
+            count = es.count(index=secrets.ACTIVE_DATA_INDEX, body=query)['count']
 
-        # Load available results using an iterator
-        if count > 0:
-            return count, es_scan(es, index=secrets.ACTIVE_DATA_INDEX, query=query)
+            # Load available results using an iterator
+            if count > 0:
+                return count, es_scan(es, index=secrets.ACTIVE_DATA_INDEX, query=query)
 
         return count, []
 
@@ -188,7 +204,6 @@ class ActiveDataCoverage(Coverage):
         '''
         Search the N last revisions available in the ES cluster
         '''
-        es = AsyncElasticsearch(hosts=secrets.ACTIVE_DATA_HOSTS)
         query = {
             # no search results please
             'size': 0,
@@ -222,11 +237,12 @@ class ActiveDataCoverage(Coverage):
             },
         }
 
-        out = await es.search(
-            index=secrets.ACTIVE_DATA_INDEX,
-            body=query,
-        )
-        return out['aggregations']['revisions']['buckets']
+        async with ActiveDataClient() as es:
+            out = await es.search(
+                index=secrets.ACTIVE_DATA_INDEX,
+                body=query,
+            )
+            return out['aggregations']['revisions']['buckets']
 
     @staticmethod
     @alru_cache(maxsize=2048)
@@ -248,7 +264,7 @@ class ActiveDataCoverage(Coverage):
 
         # Look for matching file+changeset in queried data
         # This will give us lists of covered lines per test
-        nb, data = ActiveDataCoverage().query(changeset=changeset, filename=filename)
+        nb, data = await ActiveDataCoverage().query(changeset=changeset, filename=filename)
         if not data:
             return
 
