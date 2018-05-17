@@ -6,6 +6,7 @@
 import glob
 import json
 import os
+import unittest
 
 import pytest
 
@@ -14,8 +15,19 @@ import backend_common.testing
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
 
-@pytest.fixture(scope='session')
-def app():
+@pytest.fixture
+def mock_secrets():
+    '''
+    Provide configuration through mock Taskcluster secrets
+    '''
+    import cli_common.taskcluster
+    cli_common.taskcluster.get_secrets = unittest.mock.Mock(return_value={
+        'ACTIVE_DATA_HOSTS': 'mock-active-data',
+    })
+
+
+@pytest.fixture()
+def app(mock_secrets):
     '''
     Load shipit_code_coverage_backend app in test mode
     '''
@@ -117,3 +129,18 @@ def coverage_builds():
         builds['summary'].update(build_data['summary'])
 
     return builds
+
+
+@pytest.fixture
+def mock_active_data(mock_secrets, aresponses):
+    '''
+    Mock elastic search HTTP responses
+     * available revisions
+    '''
+    payload = open(os.path.join(FIXTURES_DIR, 'active_data', 'revisions.json')).read()
+    aresponses.add(
+        'mock-active-data:9200',
+        '/coverage/_search',
+        'get',
+        aresponses.Response(text=payload, content_type='application/json')
+    )

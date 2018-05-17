@@ -11,8 +11,8 @@ from abc import abstractmethod
 import aiohttp
 from async_lru import alru_cache
 from cachetools import LRUCache
-from elasticsearch_async import AsyncElasticsearch
 from elasticsearch.helpers import scan as es_scan
+from elasticsearch_async import AsyncElasticsearch
 
 from cli_common import log
 from shipit_code_coverage_backend import secrets
