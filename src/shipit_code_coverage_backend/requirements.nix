@@ -722,6 +722,26 @@ let
       };
     };
 
+    "elasticsearch-async" = python.mkDerivation {
+      name = "elasticsearch-async-6.0.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/43/d9/edb0d872091d35255e004b15a97d643f9dbe37323b18b2b4e972354d23f4/elasticsearch-async-6.0.0.tar.gz"; sha256 = "555f9b7bc97c3f0484d940525aabd559e0c87feccefa4448a4d11ddbf4870c5f"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."aiohttp"
+      self."async-timeout"
+      self."elasticsearch"
+      self."pytest"
+      self."pytest-asyncio"
+      self."pytest-cov"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/elastic/elasticsearch-py-async";
+        license = licenses.asl20;
+        description = "Async backend for elasticsearch-py";
+      };
+    };
+
     "fancycompleter" = python.mkDerivation {
       name = "fancycompleter-0.8";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/fd/e3/da39a6cfaffe578a01221261ac1d5d99c48d44f6377ff0de3a12dd332cec/fancycompleter-0.8.tar.gz"; sha256 = "d2522f1f3512371f295379c4c0d1962de06762eb586c199620a2a5d423539b12"; };

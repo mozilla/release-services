@@ -11,7 +11,7 @@ from abc import abstractmethod
 import aiohttp
 from async_lru import alru_cache
 from cachetools import LRUCache
-from elasticsearch import Elasticsearch
+from elasticsearch_async import AsyncElasticsearch
 from elasticsearch.helpers import scan as es_scan
 
 from cli_common import log
@@ -149,7 +149,7 @@ class ActiveDataCoverage(Coverage):
         Query the elastic search server
         '''
 
-        es = Elasticsearch(hosts=secrets.ACTIVE_DATA_HOSTS)
+        es = AsyncElasticsearch(hosts=secrets.ACTIVE_DATA_HOSTS)
         assert es.ping(), \
             'Connection failed on ElasticSearch servers'
 
@@ -184,11 +184,11 @@ class ActiveDataCoverage(Coverage):
         return count, []
 
     @staticmethod
-    def available_revisions(nb=2):
+    async def available_revisions(nb=2):
         '''
         Search the N last revisions available in the ES cluster
         '''
-        es = Elasticsearch(hosts=secrets.ACTIVE_DATA_HOSTS)
+        es = AsyncElasticsearch(hosts=secrets.ACTIVE_DATA_HOSTS)
         query = {
             # no search results please
             'size': 0,
@@ -222,7 +222,7 @@ class ActiveDataCoverage(Coverage):
             },
         }
 
-        out = es.search(
+        out = await es.search(
             index=secrets.ACTIVE_DATA_INDEX,
             body=query,
         )
@@ -265,8 +265,8 @@ class ActiveDataCoverage(Coverage):
         '''
         Gives current and previous revisions as Mercurial SHA1 hashes
         '''
-        # TODO : use another query
-        return '?', '?'
+        revisions = await ActiveDataCoverage.available_revisions(nb=2)
+        return revisions[0]['key'], revisions[-1]['key']
 
 
 coverage_service = CodecovCoverage()
