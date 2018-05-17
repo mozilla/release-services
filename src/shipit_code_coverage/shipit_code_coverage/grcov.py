@@ -30,7 +30,11 @@ def report(artifacts, source_dir=None, service_number=None, commit_sha='unused',
     cmd.extend(artifacts)
     cmd.extend(options)
 
-    return run_check(cmd)
+    try:
+        return run_check(cmd)
+    except Exception:
+        logger.error('Error while running grcov')
+        raise
 
 
 def files_list(artifacts, source_dir=None):
