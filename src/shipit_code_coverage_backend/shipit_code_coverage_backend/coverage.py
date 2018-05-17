@@ -11,7 +11,6 @@ from abc import abstractmethod
 import aiohttp
 from async_lru import alru_cache
 from cachetools import LRUCache
-from elasticsearch.helpers import scan as es_scan
 from elasticsearch_async import AsyncElasticsearch
 
 from cli_common import log
@@ -162,40 +161,38 @@ class ActiveDataClient():
 
 class ActiveDataCoverage(Coverage):
 
-    @staticmethod
-    async def query(changeset=None, filename=None):
-        '''
-        Query the elastic search server
-        '''
+    FIELD_REPO = 'repo.branch.name.~s~'
+    FIELD_FILENAME = 'source.file.name.~s~'
+    FIELD_CHANGESET = 'repo.changeset.id.~s~'
+    FIELD_CHANGESET_DATE = 'repo.changeset.date.~n~'
 
+    @staticmethod
+    async def list_tests(changeset, filename):
+        '''
+        List all the tests available for file in a changeset
+        '''
         filters = [
             # Always query on Mozilla Central
-            {
-                'term': {'repo.branch.name.~s~': 'mozilla-central'}
-            }
+            {'term': {ActiveDataCoverage.FIELD_REPO: 'mozilla-central'}},
+
+            # Filter by filename and changeset
+            {'term': {ActiveDataCoverage.FIELD_FILENAME: filename}},
+            {'term': {ActiveDataCoverage.FIELD_CHANGESET: changeset}},
         ]
-
-        # Filter by filename and changeset
-        if filename is not None:
-            filters.append({
-                'term': {'source.file.name.~s~': filename}
-            })
-
-        if changeset is not None:
-            filters.append({
-                'term': {'repo.changeset.id.~s~': changeset}
-            })
 
         # Build full ES query using mandatory filters
         query = {'query': {'bool': {'must':  filters}}}
 
         async with ActiveDataClient() as es:
             # First, count results
-            count = es.count(index=secrets.ACTIVE_DATA_INDEX, body=query)['count']
+            res = await es.count(index=secrets.ACTIVE_DATA_INDEX, body=query)
+            count = res['count']
 
-            # Load available results using an iterator
+            # Load available results
             if count > 0:
-                return count, es_scan(es, index=secrets.ACTIVE_DATA_INDEX, query=query)
+                # TODO: support pagination / scroll ?
+                tests = await es.search(index=secrets.ACTIVE_DATA_INDEX, body=query)
+                return count, tests['hits']['hits']
 
         return count, []
 
@@ -211,7 +208,7 @@ class ActiveDataCoverage(Coverage):
             'query': {
                 'bool': {
                     'must': {
-                        'term': {'repo.branch.name.~s~': 'mozilla-central'}
+                        'term': {ActiveDataCoverage.FIELD_REPO: 'mozilla-central'}
                     }
                 },
             },
@@ -219,7 +216,7 @@ class ActiveDataCoverage(Coverage):
                 'revisions': {
                     'terms': {
                         # List changeset ids, sorted by changeset_date
-                        'field': 'repo.changeset.id.~s~',
+                        'field': ActiveDataCoverage.FIELD_CHANGESET,
                         'order': {'_date': 'desc'},
                         'size': nb,
                     },
@@ -228,7 +225,7 @@ class ActiveDataCoverage(Coverage):
                         # Calc average changeset date per bucket (as timestamp)
                         '_date': {
                             'avg': {
-                                'field': 'repo.changeset.date.~n~',
+                                'field': ActiveDataCoverage.FIELD_CHANGESET_DATE,
                                 'missing': 0,
                             },
                         }
@@ -264,14 +261,14 @@ class ActiveDataCoverage(Coverage):
 
         # Look for matching file+changeset in queried data
         # This will give us lists of covered lines per test
-        nb, data = await ActiveDataCoverage().query(changeset=changeset, filename=filename)
-        if not data:
+        nb, tests = await ActiveDataCoverage().list_tests(changeset, filename)
+        if not tests:
             return
 
         # Count all the lines covered per some tests
         lines_covered = itertools.chain(*[
-            test['source']['file']['covered']
-            for test in data
+            test['_source']['source']['file']['covered']['~n~']
+            for test in tests
         ])
 
         return dict(collections.Counter(lines_covered))

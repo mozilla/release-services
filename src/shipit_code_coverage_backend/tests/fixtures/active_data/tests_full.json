@@ -1,0 +1,1015 @@
+{
+    "_shards": {
+        "failed": 0,
+        "skipped": 0,
+        "successful": 40,
+        "total": 40
+    },
+    "hits": {
+        "hits": [
+            {
+                "_id": "tc.1535463:153545463.15.0.386",
+                "_index": "coverage20180429_000000",
+                "_score": 16.84988,
+                "_source": {
+                    "action": {
+                        "duration": {
+                            "~n~": 2301.789
+                        },
+                        "end_time": {
+                            "~n~": 1525301291.002
+                        },
+                        "start_time": {
+                            "~n~": 1525298989.213
+                        },
+                        "~e~": 1
+                    },
+                    "build": {
+                        "branch": {
+                            "~s~": "mozilla-central"
+                        },
+                        "date": {
+                            "~n~": 1525295142
+                        },
+                        "platform": {
+                            "~s~": "linux64"
+                        },
+                        "revision": {
+                            "~s~": "2d83e1843241d869a2fc5cf06f96d3af44c70e70"
+                        },
+                        "revision12": {
+                            "~s~": "2d83e1843241"
+                        },
+                        "task": {
+                            "~e~": 0
+                        },
+                        "type": {
+                            "~s~": [
+                                "opt",
+                                "ccov"
+                            ]
+                        },
+                        "url": {
+                            "~s~": "https://queue.taskcluster.net/v1/task/Ae94wAgRT8SmbirDu3An2A/artifacts/public/build/target.tar.bz2"
+                        },
+                        "~e~": 1
+                    },
+                    "etl": {
+                        "id": {
+                            "~n~": 386
+                        },
+                        "machine": {
+                            "name": {
+                                "~s~": "ip-172-31-2-76"
+                            },
+                            "os": {
+                                "~s~": "Linux4.4.0-1020-aws"
+                            },
+                            "pid": {
+                                "~n~": 19884
+                            },
+                            "python": {
+                                "~s~": "CPython"
+                            },
+                            "~e~": 1
+                        },
+                        "source": {
+                            "id": {
+                                "~n~": 0
+                            },
+                            "revision": {
+                                "~s~": "d877c0f1d1669be06434622971f6082a3d956a43"
+                            },
+                            "source": {
+                                "id": {
+                                    "~n~": 15
+                                },
+                                "machine": {
+                                    "name": {
+                                        "~s~": "ip-172-31-2-109"
+                                    },
+                                    "os": {
+                                        "~s~": "Linux4.4.0-1020-aws"
+                                    },
+                                    "pid": {
+                                        "~n~": 19875
+                                    },
+                                    "python": {
+                                        "~s~": "CPython"
+                                    },
+                                    "~e~": 1
+                                },
+                                "source": {
+                                    "bucket": {
+                                        "~s~": "active-data-task-cluster-logger"
+                                    },
+                                    "id": {
+                                        "~n~": 1535463
+                                    },
+                                    "name": {
+                                        "~s~": "Pulse block"
+                                    },
+                                    "source": {
+                                        "count": {
+                                            "~n~": 153545463
+                                        },
+                                        "id": {
+                                            "~n~": 153545463
+                                        },
+                                        "source": {
+                                            "id": {
+                                                "~s~": "tc"
+                                            },
+                                            "~e~": 1
+                                        },
+                                        "type": {
+                                            "~s~": "join"
+                                        },
+                                        "~e~": 1
+                                    },
+                                    "timestamp": {
+                                        "~n~": 1525301328.425616
+                                    },
+                                    "type": {
+                                        "~s~": "aggregation"
+                                    },
+                                    "~e~": 1
+                                },
+                                "timestamp": {
+                                    "~n~": 1525302727.514684
+                                },
+                                "type": {
+                                    "~s~": "join"
+                                },
+                                "~e~": 1
+                            },
+                            "timestamp": {
+                                "~n~": 1525307368.840102
+                            },
+                            "type": {
+                                "~s~": "join"
+                            },
+                            "url": {
+                                "~s~": "https://queue.taskcluster.net/v1/task/ZQBZDcK7RR-IkFowG2jrbw/artifacts/public/test_info//code-coverage-grcov.zip"
+                            },
+                            "~e~": 1
+                        },
+                        "timestamp": {
+                            "~n~": 1525307368.840462
+                        },
+                        "type": {
+                            "~s~": "join"
+                        },
+                        "~e~": 1
+                    },
+                    "repo": {
+                        "branch": {
+                            "locale": {
+                                "~s~": "en-US"
+                            },
+                            "name": {
+                                "~s~": "mozilla-central"
+                            },
+                            "url": {
+                                "~s~": "https://hg.mozilla.org/mozilla-central"
+                            },
+                            "~e~": 1
+                        },
+                        "changeset": {
+                            "author": {
+                                "~s~": "Gurzau Raul <rgurzau@mozilla.com>"
+                            },
+                            "date": {
+                                "~n~": 1525295040
+                            },
+                            "description": {
+                                "~s~": "Merge inbound to mozilla-central.  a=merge"
+                            },
+                            "id": {
+                                "~s~": "2d83e1843241d869a2fc5cf06f96d3af44c70e70"
+                            },
+                            "id12": {
+                                "~s~": "2d83e1843241"
+                            },
+                            "~e~": 1
+                        },
+                        "index": {
+                            "~n~": 416731
+                        },
+                        "push": {
+                            "date": {
+                                "~n~": 1525295142
+                            },
+                            "id": {
+                                "~n~": 33933
+                            },
+                            "user": {
+                                "~s~": "rgurzau@mozilla.com"
+                            },
+                            "~e~": 1
+                        },
+                        "rev": {
+                            "~n~": 416731
+                        },
+                        "tags": {
+                            "~s~": [
+                                "tip",
+                                "tip"
+                            ]
+                        },
+                        "~e~": 1
+                    },
+                    "run": {
+                        "chunk": {
+                            "~n~": 1
+                        },
+                        "key": {
+                            "~s~": "test-linux64-ccov/opt-mochitest-media-e10s-1"
+                        },
+                        "machine": {
+                            "aws": {
+                                "instance_type": {
+                                    "~s~": "c3.xlarge"
+                                },
+                                "~e~": 1
+                            },
+                            "platform": {
+                                "~s~": "linux64-ccov"
+                            },
+                            "tc_worker_type": {
+                                "~s~": "gecko-t-linux-xlarge"
+                            },
+                            "~e~": 1
+                        },
+                        "name": {
+                            "~s~": "test-linux64-ccov/opt-mochitest-media-e10s-1"
+                        },
+                        "suite": {
+                            "flavor": {
+                                "~s~": "media"
+                            },
+                            "fullname": {
+                                "~s~": "mochitest-media"
+                            },
+                            "name": {
+                                "~s~": "mochitest"
+                            },
+                            "~e~": 1
+                        },
+                        "timestamp": {
+                            "~n~": 1525298989.213
+                        },
+                        "type": {
+                            "~s~": [
+                                "e10s",
+                                "chunked"
+                            ]
+                        },
+                        "~e~": 1
+                    },
+                    "source": {
+                        "file": {
+                            "covered": {
+                                "~n~": [
+                                    53,
+                                    54,
+                                    58,
+                                    59,
+                                    60,
+                                    170,
+                                    172,
+                                    173,
+                                    176,
+                                    180
+                                ]
+                            },
+                            "is_firefox": {
+                                "~b~": true
+                            },
+                            "name": {
+                                "~s~": "js/src/jsutil.cpp"
+                            },
+                            "percentage_covered": {
+                                "~n~": 0.42
+                            },
+                            "total_covered": {
+                                "~n~": 10
+                            },
+                            "total_uncovered": {
+                                "~n~": 78
+                            },
+                            "uncovered": {
+                                "~n~": [
+                                    63,
+                                    64,
+                                    74,
+                                    76,
+                                    77,
+                                    78,
+                                    79,
+                                    82,
+                                    83,
+                                    84,
+                                    85,
+                                    86,
+                                    87,
+                                    90,
+                                    92,
+                                    93,
+                                    94,
+                                    95,
+                                    98,
+                                    99,
+                                    100,
+                                    101,
+                                    104,
+                                    106,
+                                    107,
+                                    108,
+                                    109,
+                                    112,
+                                    113,
+                                    114,
+                                    115,
+                                    116,
+                                    117,
+                                    120,
+                                    122,
+                                    123,
+                                    124,
+                                    125,
+                                    128,
+                                    129,
+                                    130,
+                                    131,
+                                    134,
+                                    136,
+                                    137,
+                                    138,
+                                    139,
+                                    142,
+                                    143,
+                                    144,
+                                    145,
+                                    146,
+                                    147,
+                                    150,
+                                    152,
+                                    153,
+                                    154,
+                                    155,
+                                    158,
+                                    159,
+                                    160,
+                                    161,
+                                    183,
+                                    185,
+                                    186,
+                                    200,
+                                    209,
+                                    210,
+                                    211,
+                                    212,
+                                    213,
+                                    214,
+                                    215,
+                                    216,
+                                    220,
+                                    222,
+                                    224,
+                                    226
+                                ]
+                            },
+                            "~e~": 1
+                        },
+                        "is_file": {
+                            "~b~": true
+                        },
+                        "language": {
+                            "~s~": "c/c++"
+                        },
+                        "~e~": 1
+                    },
+                    "task": {
+                        "capabilities": {
+                            "devices": {
+                                "loopbackVideo": {
+                                    "~b~": true
+                                },
+                                "~e~": 1
+                            },
+                            "~e~": 1
+                        },
+                        "deadline": {
+                            "~n~": 1525381650.9
+                        },
+                        "dependencies": {
+                            "~s~": [
+                                "Ae94wAgRT8SmbirDu3An2A",
+                                "exyt3MqBR22vEUJ8APZw_g"
+                            ]
+                        },
+                        "group": {
+                            "id": {
+                                "~s~": "Rt00XMkXQECTAxvF6-xPZw"
+                            },
+                            "~e~": 1
+                        },
+                        "id": {
+                            "~s~": "ZQBZDcK7RR-IkFowG2jrbw"
+                        },
+                        "kind": {
+                            "~s~": "test"
+                        },
+                        "maxRunTime": {
+                            "~n~": 5400
+                        },
+                        "parent": {
+                            "id": {
+                                "~s~": "Rt00XMkXQECTAxvF6-xPZw"
+                            },
+                            "~e~": 1
+                        },
+                        "priority": {
+                            "~s~": "medium"
+                        },
+                        "provisioner": {
+                            "id": {
+                                "~s~": "aws-provisioner-v1"
+                            },
+                            "~e~": 1
+                        },
+                        "requires": {
+                            "~s~": "all-completed"
+                        },
+                        "scheduler": {
+                            "id": {
+                                "~s~": "gecko-level-3"
+                            },
+                            "~e~": 1
+                        },
+                        "state": {
+                            "~s~": "failed"
+                        },
+                        "version": {
+                            "~n~": 1
+                        },
+                        "worker": {
+                            "group": {
+                                "~s~": "us-west-2"
+                            },
+                            "id": {
+                                "~s~": "i-0c11dd4deceed688f"
+                            },
+                            "type": {
+                                "~s~": "gecko-t-linux-xlarge"
+                            },
+                            "~e~": 1
+                        },
+                        "~e~": 1
+                    },
+                    "test": {
+                        "chunk": {
+                            "~n~": 1
+                        },
+                        "suite": {
+                            "~s~": "mochitest"
+                        },
+                        "~e~": 1
+                    },
+                    "treeherder": {
+                        "collection": {
+                            "opt": {
+                                "~b~": true
+                            },
+                            "~e~": 1
+                        },
+                        "groupName": {
+                            "~s~": "Mochitests with e10s"
+                        },
+                        "groupSymbol": {
+                            "~s~": "M-e10s"
+                        },
+                        "jobKind": {
+                            "~s~": "test"
+                        },
+                        "machine": {
+                            "platform": {
+                                "~s~": "linux64-ccov"
+                            },
+                            "~e~": 1
+                        },
+                        "symbol": {
+                            "~s~": "mda1"
+                        },
+                        "tier": {
+                            "~n~": 2
+                        },
+                        "~e~": 1
+                    },
+                    "worker": {
+                        "~e~": 0
+                    },
+                    "~e~": 1
+                },
+                "_type": "code_coverage"
+            },
+            {
+                "_id": "tc.1535434:153542563.73.0.6355",
+                "_index": "coverage20180429_000000",
+                "_score": 16.811142,
+                "_source": {
+                    "action": {
+                        "duration": {
+                            "~n~": 1182.092
+                        },
+                        "end_time": {
+                            "~n~": 1525300184.92
+                        },
+                        "start_time": {
+                            "~n~": 1525299002.828
+                        },
+                        "~e~": 1
+                    },
+                    "build": {
+                        "branch": {
+                            "~s~": "mozilla-central"
+                        },
+                        "date": {
+                            "~n~": 1525295142
+                        },
+                        "platform": {
+                            "~s~": "linux64"
+                        },
+                        "revision": {
+                            "~s~": "2d83e1843241d869a2fc5cf06f96d3af44c70e70"
+                        },
+                        "revision12": {
+                            "~s~": "2d83e1843241"
+                        },
+                        "task": {
+                            "~e~": 0
+                        },
+                        "type": {
+                            "~s~": [
+                                "opt",
+                                "ccov"
+                            ]
+                        },
+                        "url": {
+                            "~s~": "https://queue.taskcluster.net/v1/task/Ae94wAgRT8SmbirDu3An2A/artifacts/public/build/target.tar.bz2"
+                        },
+                        "~e~": 1
+                    },
+                    "etl": {
+                        "id": {
+                            "~n~": 6355
+                        },
+                        "machine": {
+                            "name": {
+                                "~s~": "ip-172-31-2-56"
+                            },
+                            "os": {
+                                "~s~": "Linux4.4.0-1020-aws"
+                            },
+                            "pid": {
+                                "~n~": 10493
+                            },
+                            "python": {
+                                "~s~": "CPython"
+                            },
+                            "~e~": 1
+                        },
+                        "source": {
+                            "id": {
+                                "~n~": 0
+                            },
+                            "revision": {
+                                "~s~": "d877c0f1d1669be06434622971f6082a3d956a43"
+                            },
+                            "source": {
+                                "id": {
+                                    "~n~": 73
+                                },
+                                "machine": {
+                                    "name": {
+                                        "~s~": "ip-172-31-2-250"
+                                    },
+                                    "os": {
+                                        "~s~": "Linux4.4.0-1020-aws"
+                                    },
+                                    "pid": {
+                                        "~n~": 19871
+                                    },
+                                    "python": {
+                                        "~s~": "CPython"
+                                    },
+                                    "~e~": 1
+                                },
+                                "source": {
+                                    "bucket": {
+                                        "~s~": "active-data-task-cluster-logger"
+                                    },
+                                    "id": {
+                                        "~n~": 1535434
+                                    },
+                                    "name": {
+                                        "~s~": "Pulse block"
+                                    },
+                                    "source": {
+                                        "count": {
+                                            "~n~": 153542563
+                                        },
+                                        "id": {
+                                            "~n~": 153542563
+                                        },
+                                        "source": {
+                                            "id": {
+                                                "~s~": "tc"
+                                            },
+                                            "~e~": 1
+                                        },
+                                        "type": {
+                                            "~s~": "join"
+                                        },
+                                        "~e~": 1
+                                    },
+                                    "timestamp": {
+                                        "~n~": 1525300194.234345
+                                    },
+                                    "type": {
+                                        "~s~": "aggregation"
+                                    },
+                                    "~e~": 1
+                                },
+                                "timestamp": {
+                                    "~n~": 1525300850.434293
+                                },
+                                "type": {
+                                    "~s~": "join"
+                                },
+                                "~e~": 1
+                            },
+                            "timestamp": {
+                                "~n~": 1525304505.291156
+                            },
+                            "type": {
+                                "~s~": "join"
+                            },
+                            "url": {
+                                "~s~": "https://queue.taskcluster.net/v1/task/MdH32pVWQY--IyO25fvH3g/artifacts/public/test_info//code-coverage-grcov.zip"
+                            },
+                            "~e~": 1
+                        },
+                        "timestamp": {
+                            "~n~": 1525304505.291727
+                        },
+                        "type": {
+                            "~s~": "join"
+                        },
+                        "~e~": 1
+                    },
+                    "repo": {
+                        "branch": {
+                            "locale": {
+                                "~s~": "en-US"
+                            },
+                            "name": {
+                                "~s~": "mozilla-central"
+                            },
+                            "url": {
+                                "~s~": "https://hg.mozilla.org/mozilla-central"
+                            },
+                            "~e~": 1
+                        },
+                        "changeset": {
+                            "author": {
+                                "~s~": "Gurzau Raul <rgurzau@mozilla.com>"
+                            },
+                            "date": {
+                                "~n~": 1525295040
+                            },
+                            "description": {
+                                "~s~": "Merge inbound to mozilla-central.  a=merge"
+                            },
+                            "id": {
+                                "~s~": "2d83e1843241d869a2fc5cf06f96d3af44c70e70"
+                            },
+                            "id12": {
+                                "~s~": "2d83e1843241"
+                            },
+                            "~e~": 1
+                        },
+                        "index": {
+                            "~n~": 416731
+                        },
+                        "push": {
+                            "date": {
+                                "~n~": 1525295142
+                            },
+                            "id": {
+                                "~n~": 33933
+                            },
+                            "user": {
+                                "~s~": "rgurzau@mozilla.com"
+                            },
+                            "~e~": 1
+                        },
+                        "rev": {
+                            "~n~": 416731
+                        },
+                        "tags": {
+                            "~s~": [
+                                "tip",
+                                "tip"
+                            ]
+                        },
+                        "~e~": 1
+                    },
+                    "run": {
+                        "chunk": {
+                            "~n~": 1
+                        },
+                        "key": {
+                            "~s~": "test-linux64-ccov/opt-xpcshell-1"
+                        },
+                        "machine": {
+                            "aws": {
+                                "instance_type": {
+                                    "~s~": "m3.xlarge"
+                                },
+                                "~e~": 1
+                            },
+                            "platform": {
+                                "~s~": "linux64-ccov"
+                            },
+                            "tc_worker_type": {
+                                "~s~": "gecko-t-linux-xlarge"
+                            },
+                            "~e~": 1
+                        },
+                        "name": {
+                            "~s~": "test-linux64-ccov/opt-xpcshell-1"
+                        },
+                        "suite": {
+                            "fullname": {
+                                "~s~": "xpcshell"
+                            },
+                            "name": {
+                                "~s~": "xpcshell"
+                            },
+                            "~e~": 1
+                        },
+                        "timestamp": {
+                            "~n~": 1525299002.828
+                        },
+                        "type": {
+                            "~s~": "chunked"
+                        },
+                        "~e~": 1
+                    },
+                    "source": {
+                        "file": {
+                            "covered": {
+                                "~n~": [
+                                    42,
+                                    53,
+                                    54,
+                                    58,
+                                    59,
+                                    60,
+                                    170,
+                                    172,
+                                    173,
+                                    176
+                                ]
+                            },
+                            "is_firefox": {
+                                "~b~": true
+                            },
+                            "name": {
+                                "~s~": "js/src/jsutil.cpp"
+                            },
+                            "percentage_covered": {
+                                "~n~": 0.1136363636363636
+                            },
+                            "total_covered": {
+                                "~n~": 10
+                            },
+                            "total_uncovered": {
+                                "~n~": 78
+                            },
+                            "uncovered": {
+                                "~n~": [
+                                    63,
+                                    64,
+                                    74,
+                                    76,
+                                    77,
+                                    78,
+                                    79,
+                                    82,
+                                    83,
+                                    84,
+                                    85,
+                                    86,
+                                    87,
+                                    90,
+                                    92,
+                                    93,
+                                    94,
+                                    95,
+                                    98,
+                                    99,
+                                    100,
+                                    101,
+                                    104,
+                                    106,
+                                    107,
+                                    108,
+                                    109,
+                                    112,
+                                    113,
+                                    114,
+                                    115,
+                                    116,
+                                    117,
+                                    120,
+                                    122,
+                                    123,
+                                    124,
+                                    125,
+                                    128,
+                                    129,
+                                    130,
+                                    131,
+                                    134,
+                                    136,
+                                    137,
+                                    138,
+                                    139,
+                                    142,
+                                    143,
+                                    144,
+                                    145,
+                                    146,
+                                    147,
+                                    150,
+                                    152,
+                                    153,
+                                    154,
+                                    155,
+                                    158,
+                                    159,
+                                    160,
+                                    161,
+                                    183,
+                                    185,
+                                    186,
+                                    200,
+                                    209,
+                                    210,
+                                    211,
+                                    212,
+                                    213,
+                                    214,
+                                    215,
+                                    216,
+                                    220,
+                                    222,
+                                    224,
+                                    226
+                                ]
+                            },
+                            "~e~": 1
+                        },
+                        "is_file": {
+                            "~b~": true
+                        },
+                        "language": {
+                            "~s~": "c/c++"
+                        },
+                        "~e~": 1
+                    },
+                    "task": {
+                        "deadline": {
+                            "~n~": 1525381633.903
+                        },
+                        "dependencies": {
+                            "~s~": [
+                                "Ae94wAgRT8SmbirDu3An2A",
+                                "exyt3MqBR22vEUJ8APZw_g"
+                            ]
+                        },
+                        "group": {
+                            "id": {
+                                "~s~": "Rt00XMkXQECTAxvF6-xPZw"
+                            },
+                            "~e~": 1
+                        },
+                        "id": {
+                            "~s~": "MdH32pVWQY--IyO25fvH3g"
+                        },
+                        "kind": {
+                            "~s~": "test"
+                        },
+                        "maxRunTime": {
+                            "~n~": 5400
+                        },
+                        "parent": {
+                            "id": {
+                                "~s~": "Rt00XMkXQECTAxvF6-xPZw"
+                            },
+                            "~e~": 1
+                        },
+                        "priority": {
+                            "~s~": "medium"
+                        },
+                        "provisioner": {
+                            "id": {
+                                "~s~": "aws-provisioner-v1"
+                            },
+                            "~e~": 1
+                        },
+                        "requires": {
+                            "~s~": "all-completed"
+                        },
+                        "scheduler": {
+                            "id": {
+                                "~s~": "gecko-level-3"
+                            },
+                            "~e~": 1
+                        },
+                        "state": {
+                            "~s~": "completed"
+                        },
+                        "version": {
+                            "~n~": 1
+                        },
+                        "worker": {
+                            "group": {
+                                "~s~": "us-west-1"
+                            },
+                            "id": {
+                                "~s~": "i-082025ddf03dec73e"
+                            },
+                            "type": {
+                                "~s~": "gecko-t-linux-xlarge"
+                            },
+                            "~e~": 1
+                        },
+                        "~e~": 1
+                    },
+                    "test": {
+                        "chunk": {
+                            "~n~": 1
+                        },
+                        "suite": {
+                            "~s~": "xpcshell"
+                        },
+                        "~e~": 1
+                    },
+                    "treeherder": {
+                        "collection": {
+                            "opt": {
+                                "~b~": true
+                            },
+                            "~e~": 1
+                        },
+                        "groupName": {
+                            "~s~": "Xpcshell tests"
+                        },
+                        "groupSymbol": {
+                            "~s~": "X"
+                        },
+                        "jobKind": {
+                            "~s~": "test"
+                        },
+                        "machine": {
+                            "platform": {
+                                "~s~": "linux64-ccov"
+                            },
+                            "~e~": 1
+                        },
+                        "symbol": {
+                            "~s~": "X1"
+                        },
+                        "tier": {
+                            "~n~": 2
+                        },
+                        "~e~": 1
+                    },
+                    "worker": {
+                        "~e~": 0
+                    },
+                    "~e~": 1
+                },
+                "_type": "code_coverage"
+            }
+        ],
+        "max_score": 16.84988,
+        "total": 14
+    },
+    "timed_out": false,
+    "took": 129
+}
