@@ -164,10 +164,11 @@ def abandon_release(name):
                 action_task_input={},
                 actions=actions,
             )
-            # existing_tasks contains a lot of entries, so we hit the payload
+            # some parameters contain a lot of entries, so we hit the payload
             # size limit. We don't use this parameter in any case, safe to
             # remove
-            context['parameters']['existing_tasks'] = {}
+            for long_param in ('existing_tasks', 'release_history', 'release_partner_config'):
+                del context['parameters'][long_param]
             # ACTION_TASK_ID should be explicitly specified and be the original
             # action task that generated this phase.
             action_task = render_action_task(task=action_task, context=context,
