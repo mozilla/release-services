@@ -22,17 +22,17 @@ TEST_COVERAGE_SUITES = ['reftest', 'web-platform', 'mochitest', 'xpcshell', 'jsr
 
 def get_suites(revision):
     r = requests.post('https://activedata.allizom.org/query', json={
-        "from":"unittest",
-        "where":{"and":[
-            {"eq":{"repo.branch.name":"mozilla-central"}},
-            {"eq":{"repo.changeset.id12":revision[:12]}},
-            {"or":[
-                {"prefix":{"run.key":"test-linux64-ccov"}},
-                {"prefix":{"run.key":"test-windows10-64-ccov"}}
+        'from': 'unittest',
+        'where': {'and': [
+            {'eq': {'repo.branch.name': 'mozilla-central'}},
+            {'eq': {'repo.changeset.id12': revision[:12]}},
+            {'or': [
+                {'prefix': {'run.key': 'test-linux64-ccov'}},
+                {'prefix': {'run.key': 'test-windows10-64-ccov'}}
             ]}
         ]},
-        "limit":500000,
-        "groupby":["run.suite"]
+        'limit': 500000,
+        'groupby': ['run.suite']
     })
 
     suites_data = r.json()['data']
@@ -52,7 +52,7 @@ def get_tests_chunks(revision, platform, suite):
         'where': {'and': [
             {'eq': {'repo.branch.name': 'mozilla-central'}},
             {'eq': {'repo.changeset.id12': revision[:12]}},
-            {"eq":{"run.suite": suite}},
+            {'eq': {'run.suite': suite}},
             {'prefix': {'run.key': run_key_prefix}},
         ]},
         'limit': 50000,
@@ -75,15 +75,15 @@ def group_by_20k(data):
 
 def get_test_coverage_suites():
     r = requests.post('https://activedata.allizom.org/query', json={
-        "from":"coverage",
-        "where":{"and":[
-            {"gte":{"repo.push.date":{"date":"today-week"}}},
-            {"gt":{"source.file.total_covered":0}},
-            {"exists":"test.name"}
+        'from': 'coverage',
+        'where': {'and': [
+            {'gte': {'repo.push.date': {'date': 'today-week'}}},
+            {'gt': {'source.file.total_covered': 0}},
+            {'exists': 'test.name'}
         ]},
-        "limit":50000,
-        "select":{"aggregate":"cardinality","value":"test.name"},
-        "groupby":["test.suite"]
+        'limit': 50000,
+        'select': {'aggregate': 'cardinality', 'value': 'test.name'},
+        'groupby': ['test.suite']
     })
 
     return r.json()['data']
@@ -91,16 +91,16 @@ def get_test_coverage_suites():
 
 def get_test_coverage_tests(suites):
     r = requests.post('https://activedata.allizom.org/query', json={
-        "from":"coverage",
-        "where":{"and":[
-            {"gte":{"repo.push.date":{"date":"today-week"}}},
-            {"gt":{"source.file.total_covered":0}},
-            {"exists":"test.name"},
-            {"in":{"test.suite":suites}}
+        'from': 'coverage',
+        'where': {'and': [
+            {'gte': {'repo.push.date': {'date': 'today-week'}}},
+            {'gt': {'source.file.total_covered': 0}},
+            {'exists': 'test.name'},
+            {'in': {'test.suite': suites}}
         ]},
-        "limit":50000,
-        "select":{"aggregate":"cardinality","value":"source.file.name"},
-        "groupby":["test.name"]
+        'limit': 50000,
+        'select': {'aggregate': 'cardinality', 'value': 'source.file.name'},
+        'groupby': ['test.name']
     })
 
     return r.json()['data']
@@ -108,15 +108,15 @@ def get_test_coverage_tests(suites):
 
 def get_test_coverage_files(tests):
     r = requests.post('https://activedata.allizom.org/query', json={
-        "from":"coverage",
-        "where":{"and":[
-            {"gte":{"repo.push.date":{"date":"today-week"}}},
-            {"gt":{"source.file.total_covered":0}},
-            {"exists":"test.name"},
-            {"in":{"test.name":tests}}
+        'from': 'coverage',
+        'where': {'and': [
+            {'gte': {'repo.push.date': {'date': 'today-week'}}},
+            {'gt': {'source.file.total_covered': 0}},
+            {'exists': 'test.name'},
+            {'in': {'test.name': tests}}
         ]},
-        "limit":50000,
-        "select":["source.file.name", "test.name"]
+        'limit': 50000,
+        'select': ['source.file.name', 'test.name']
     })
 
     return r.json()['data']
@@ -156,7 +156,7 @@ def generate(repo_dir, revision, artifactsHandler, out_dir='.'):
                     if any(test_coverage_suite in suite for test_coverage_suite in TEST_COVERAGE_SUITES):
                         continue
 
-                    future = executor.submit(grcov.files_list, artifactsHandler.get(platform=platform, chunk=chunk))
+                    future = executor.submit(grcov.files_list, artifactsHandler.get(platform=platform, chunk=chunk), source_dir=repo_dir)
                     futures[future] = (platform, chunk)
 
                 for suite in get_suites(revision):
@@ -173,7 +173,7 @@ def generate(repo_dir, revision, artifactsHandler, out_dir='.'):
 
                     task_names = tests_data['run.key']
                     test_iter = enumerate(tests_data['result.test'])
-                    chunk_test_iter = ((taskcluster.get_platform(task_names[i]), taskcluster.get_chunk(task_names[i]), test) for i, test in test_iter)
+                    chunk_test_iter = ((platform, taskcluster.get_chunk(task_names[i]), test) for i, test in test_iter)
                     c.executemany('INSERT INTO chunk_to_test VALUES (?,?,?)', chunk_test_iter)
 
             for future in concurrent.futures.as_completed(futures):
