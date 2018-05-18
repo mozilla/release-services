@@ -68,10 +68,10 @@ def group_by_20k(data):
         total_count += count
         groups[total_count // 20000].append(elem)
 
-    return list(groups.values())
+    return groups.values()
 
 
-def get_test_coverage_suite_groups():
+def get_test_coverage_suites():
     r = requests.post('https://activedata.allizom.org/query', json={
         "from":"coverage",
         "where":{"and":[
@@ -84,10 +84,10 @@ def get_test_coverage_suite_groups():
         "groupby":["test.suite"]
     })
 
-    return group_by_20k(r.json()['data'])
+    return r.json()['data']
 
 
-def get_test_coverage_test_groups(suites):
+def get_test_coverage_tests(suites):
     r = requests.post('https://activedata.allizom.org/query', json={
         "from":"coverage",
         "where":{"and":[
@@ -101,7 +101,7 @@ def get_test_coverage_test_groups(suites):
         "groupby":["test.name"]
     })
 
-    return group_by_20k(r.json()['data'])
+    return r.json()['data']
 
 
 def get_test_coverage_files(tests):
@@ -142,8 +142,10 @@ def generate(repo_dir, revision, artifactsHandler, out_dir='.'):
                 files = future.result()
                 c.executemany('INSERT INTO file_to_chunk VALUES (?,?,?)', ((f, platform, chunk) for f in files))
 
-            for suites in get_test_coverage_suite_groups():
-                for tests in get_test_coverage_test_groups(suites):
+            test_coverage_suites = get_test_coverage_suites()
+            for suites in group_by_20k(test_coverage_suites):
+                test_coverage_tests = get_test_coverage_tests(suites)
+                for tests in group_by_20k(test_coverage_tests):
                     tests_files_data = get_test_coverage_files(tests)
 
                     source_names = tests_files_data['source.file.name']
