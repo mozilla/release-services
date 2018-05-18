@@ -12,10 +12,7 @@ import taskcluster
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import BadRequest
 
-from backend_common.auth0 import AuthError
-from backend_common.auth0 import has_scopes
 from backend_common.auth0 import mozilla_accept_token
-from backend_common.auth0 import requires_auth
 from cli_common.log import get_logger
 from shipit_workflow.models import Phase
 from shipit_workflow.models import Release
@@ -57,15 +54,10 @@ def validate_user(key, checker):
     return wrapper
 
 
-@requires_auth
+@mozilla_accept_token()
+@validate_user(key='https://sso.mozilla.com/claim/groups',
+               checker=lambda xs: 'releng' in xs)
 def add_release(body):
-    required_scopes = ['{product}:{branch}:create'.format(product=body['product'], branch=body['branch'])]
-    scopes = flask.g.userinfo['scope'].split()
-    if not has_scopes(scopes, required_scopes):
-        raise AuthError({
-            'code': 'invalid_scopes',
-            'description': 'Invalid scopes. Verify that you have the following scopes {}'.format(required_scopes)},
-            401)
     session = flask.g.db.session
     r = Release(
         product=body['product'],
