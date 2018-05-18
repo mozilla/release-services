@@ -106,13 +106,13 @@
           "owner": "aciure@mozilla.com",
           "source": "https://hg.mozilla.org/mozilla-central/file/b2a9a4bb5c94de179ae7a3f52fde58c0e2897498/taskcluster/ci/test",
           "description": "Mochitest devtools-chrome run ([Treeherder push](https://treeherder.mozilla.org/#/jobs?repo=mozilla-central&revision=b2a9a4bb5c94de179ae7a3f52fde58c0e2897498))",
-          "name": "test-linux64-ccov/opt-mochitest-devtools-chrome-e10s-4"
+          "name": "test-linux64-ccov/debug-mochitest-devtools-chrome-e10s-4"
         },
         "tags": {
           "kind": "test",
           "worker-implementation": "docker-worker",
           "createdForUser": "aciure@mozilla.com",
-          "label": "test-linux64-ccov/opt-mochitest-devtools-chrome-e10s-4",
+          "label": "test-linux64-ccov/debug-mochitest-devtools-chrome-e10s-4",
           "test-type": "mochitest",
           "os": "linux"
         },

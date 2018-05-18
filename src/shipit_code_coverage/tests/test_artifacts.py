@@ -93,21 +93,21 @@ def test_download(mocked_download_artifact, mocked_get_task_artifact, TEST_TASK_
 def _group_tasks():
     task_state_groups = [
         [
-            ('test-linux64-ccov/opt-mochitest-devtools-chrome-e10s-4', 'exception'),
-            ('test-linux64-ccov/opt-mochitest-devtools-chrome-e10s-4', 'failed'),
-            ('test-linux64-ccov/opt-mochitest-devtools-chrome-e10s-4', 'completed'),
+            ('test-linux64-ccov/debug-mochitest-devtools-chrome-e10s-4', 'exception'),
+            ('test-linux64-ccov/debug-mochitest-devtools-chrome-e10s-4', 'failed'),
+            ('test-linux64-ccov/debug-mochitest-devtools-chrome-e10s-4', 'completed'),
         ],
         [
-            ('test-linux64-ccov/opt-xpcshell-4', 'exception'),
-            ('test-linux64-ccov/opt-xpcshell-4', 'failed'),
+            ('test-linux64-ccov/debug-xpcshell-4', 'exception'),
+            ('test-linux64-ccov/debug-xpcshell-4', 'failed'),
         ],
         [
             ('test-windows10-64-ccov/debug-talos-dromaeojs-e10s', 'failed'),
             ('test-windows10-64-ccov/debug-talos-dromaeojs-e10s', 'completed'),
         ],
         [
-            ('test-linux64-ccov/opt-cppunit', 'exception'),
-            ('test-linux64-ccov/opt-cppunit', 'completed'),
+            ('test-linux64-ccov/debug-cppunit', 'exception'),
+            ('test-linux64-ccov/debug-cppunit', 'completed'),
         ],
         [
             ('test-linux64-stylo-disabled/debug-crashtest-e10s', 'completed'),
@@ -158,10 +158,10 @@ def test_download_all(LINUX_TASK_ID, LINUX_TASK, GROUP_TASKS_1, GROUP_TASKS_2, F
         a.download_all()
 
         assert downloaded == set([
-            'test-linux64-ccov/opt-mochitest-devtools-chrome-e10s-4-completed',
-            'test-linux64-ccov/opt-xpcshell-4-failed',
+            'test-linux64-ccov/debug-mochitest-devtools-chrome-e10s-4-completed',
+            'test-linux64-ccov/debug-xpcshell-4-failed',
             'test-windows10-64-ccov/debug-talos-dromaeojs-e10s-completed',
-            'test-linux64-ccov/opt-cppunit-completed',
+            'test-linux64-ccov/debug-cppunit-completed',
         ])
 
 
@@ -182,6 +182,6 @@ def test_download_all_ignore(LINUX_TASK_ID, LINUX_TASK, GROUP_TASKS_1, GROUP_TAS
         a.download_all()
 
         assert downloaded == set([
-            'test-linux64-ccov/opt-mochitest-devtools-chrome-e10s-4-completed',
-            'test-linux64-ccov/opt-cppunit-completed',
+            'test-linux64-ccov/debug-mochitest-devtools-chrome-e10s-4-completed',
+            'test-linux64-ccov/debug-cppunit-completed',
         ])

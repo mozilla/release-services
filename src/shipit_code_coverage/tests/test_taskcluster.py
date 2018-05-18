@@ -77,7 +77,7 @@ def test_is_coverage_task():
     cov_task = {
         'task': {
             'metadata': {
-                'name': 'test-linux64-ccov/opt-mochitest-1'
+                'name': 'test-linux64-ccov/debug-mochitest-1'
             }
         }
     }
@@ -86,7 +86,7 @@ def test_is_coverage_task():
     nocov_task = {
         'task': {
             'metadata': {
-                'name': 'test-linux64/opt-mochitest-1'
+                'name': 'test-linux64/debug-mochitest-1'
             }
         }
     }
@@ -113,10 +113,10 @@ def test_is_coverage_task():
 
 def test_get_chunk():
     tests = [
-        ('test-linux64-ccov/opt-mochitest-1', 'mochitest-1'),
-        ('test-linux64-ccov/opt-mochitest-e10s-7', 'mochitest-7'),
-        ('test-linux64-ccov/opt-cppunit', 'cppunit'),
-        ('test-linux64-ccov/opt-firefox-ui-functional-remote-e10s', 'firefox-ui-functional-remote'),
+        ('test-linux64-ccov/debug-mochitest-1', 'mochitest-1'),
+        ('test-linux64-ccov/debug-mochitest-e10s-7', 'mochitest-7'),
+        ('test-linux64-ccov/debug-cppunit', 'cppunit'),
+        ('test-linux64-ccov/debug-firefox-ui-functional-remote-e10s', 'firefox-ui-functional-remote'),
         ('test-windows10-64-ccov/debug-mochitest-1', 'mochitest-1'),
         ('test-windows10-64-ccov/debug-mochitest-e10s-7', 'mochitest-7'),
         ('test-windows10-64-ccov/debug-cppunit', 'cppunit'),
@@ -140,7 +140,7 @@ def test_get_suite():
 
 def test_get_platform():
     tests = [
-        ('test-linux64-ccov/opt-mochitest-1', 'linux'),
+        ('test-linux64-ccov/debug-mochitest-1', 'linux'),
         ('test-windows10-64-ccov/debug-mochitest-1', 'windows'),
     ]
 
