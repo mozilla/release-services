@@ -3,6 +3,7 @@ import concurrent.futures
 import os
 import sqlite3
 import tarfile
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
@@ -59,6 +60,66 @@ def get_tests_chunks(revision, platform, suite):
     return r.json()['data']
 
 
+def group_by_20k(data):
+    groups = defaultdict(list)
+    total_count = 0
+
+    for elem, count in data:
+        total_count += count
+        groups[total_count // 20000].append(elem)
+
+    return list(groups.values())
+
+
+def get_test_coverage_suite_groups():
+    r = requests.post('https://activedata.allizom.org/query', json={
+        "from":"coverage",
+        "where":{"and":[
+            {"gte":{"repo.push.date":{"date":"today-week"}}},
+            {"gt":{"source.file.total_covered":0}},
+            {"exists":"test.name"}
+        ]},
+        "limit":50000,
+        "select":{"aggregate":"cardinality","value":"test.name"},
+        "groupby":["test.suite"]
+    })
+
+    return group_by_20k(r.json()['data'])
+
+
+def get_test_coverage_test_groups(suites):
+    r = requests.post('https://activedata.allizom.org/query', json={
+        "from":"coverage",
+        "where":{"and":[
+            {"gte":{"repo.push.date":{"date":"today-week"}}},
+            {"gt":{"source.file.total_covered":0}},
+            {"exists":"test.name"},
+            {"in":{"test.suite":suites}}
+        ]},
+        "limit":50000,
+        "select":{"aggregate":"cardinality","value":"source.file.name"},
+        "groupby":["test.name"]
+    })
+
+    return group_by_20k(r.json()['data'])
+
+
+def get_test_coverage_files(tests):
+    r = requests.post('https://activedata.allizom.org/query', json={
+        "from":"coverage",
+        "where":{"and":[
+            {"gte":{"repo.push.date":{"date":"today-week"}}},
+            {"gt":{"source.file.total_covered":0}},
+            {"exists":"test.name"},
+            {"in":{"test.name":tests}}
+        ]},
+        "limit":50000,
+        "select":["source.file.name", "test.name"]
+    })
+
+    return r.json()['data']
+
+
 def generate(repo_dir, revision, artifactsHandler, out_dir='.'):
     sqlite_file = os.path.join(out_dir, 'chunk_mapping.sqlite')
     tarxz_file = os.path.join(out_dir, 'chunk_mapping.tar.xz')
@@ -74,11 +135,22 @@ def generate(repo_dir, revision, artifactsHandler, out_dir='.'):
             c = conn.cursor()
             c.execute('CREATE TABLE file_to_chunk (path text, platform text, chunk text)')
             c.execute('CREATE TABLE chunk_to_test (platform text, chunk text, path text)')
+            c.execute('CREATE TABLE file_to_test (source text, test text)')
 
             for future in concurrent.futures.as_completed(futures):
                 (platform, chunk) = futures[future]
                 files = future.result()
                 c.executemany('INSERT INTO file_to_chunk VALUES (?,?,?)', ((f, platform, chunk) for f in files))
+
+            for suites in get_test_coverage_suite_groups():
+                for tests in get_test_coverage_test_groups(suites):
+                    tests_files_data = get_test_coverage_files(tests)
+
+                    source_names = tests_files_data['source.file.name']
+                    test_iter = enumerate(tests_files_data['test.name'])
+                    source_test_iter = ((source_names[i], test) for i, test in test_iter)
+
+                    c.executemany('INSERT INTO file_to_test VALUES (?,?)', source_test_iter)
 
             for platform in PLATFORMS:
                 for suite in get_suites(revision):
