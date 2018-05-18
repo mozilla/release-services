@@ -16,6 +16,8 @@ logger = get_logger(__name__)
 
 
 PLATFORMS = ['linux', 'windows']
+# TODO: Calculate this dinamically when https://github.com/klahnakoski/ActiveData-ETL/issues/40 is fixed.
+TEST_COVERAGE_SUITES = ['reftest', 'web-platform', 'mochitest', 'xpcshell', 'jsreftest', 'crashtest']
 
 
 def get_suites(revision):
@@ -124,40 +126,45 @@ def generate(repo_dir, revision, artifactsHandler, out_dir='.'):
     sqlite_file = os.path.join(out_dir, 'chunk_mapping.sqlite')
     tarxz_file = os.path.join(out_dir, 'chunk_mapping.tar.xz')
 
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        futures = {}
-        for platform in PLATFORMS:
-            for chunk in artifactsHandler.get_chunks():
-                future = executor.submit(grcov.files_list, artifactsHandler.get(platform=platform, chunk=chunk))
-                futures[future] = (platform, chunk)
+    with sqlite3.connect(sqlite_file) as conn:
+        c = conn.cursor()
+        c.execute('CREATE TABLE file_to_chunk (path text, platform text, chunk text)')
+        c.execute('CREATE TABLE chunk_to_test (platform text, chunk text, path text)')
+        c.execute('CREATE TABLE file_to_test (source text, test text)')
 
-        with sqlite3.connect(sqlite_file) as conn:
-            c = conn.cursor()
-            c.execute('CREATE TABLE file_to_chunk (path text, platform text, chunk text)')
-            c.execute('CREATE TABLE chunk_to_test (platform text, chunk text, path text)')
-            c.execute('CREATE TABLE file_to_test (source text, test text)')
+        test_coverage_suites = get_test_coverage_suites()
+        for suites in group_by_20k(test_coverage_suites):
+            test_coverage_tests = get_test_coverage_tests(suites)
+            for tests in group_by_20k(test_coverage_tests):
+                tests_files_data = get_test_coverage_files(tests)
 
-            for future in concurrent.futures.as_completed(futures):
-                (platform, chunk) = futures[future]
-                files = future.result()
-                c.executemany('INSERT INTO file_to_chunk VALUES (?,?,?)', ((f, platform, chunk) for f in files))
+                source_names = tests_files_data['source.file.name']
+                test_iter = enumerate(tests_files_data['test.name'])
+                source_test_iter = ((source_names[i], test) for i, test in test_iter)
 
-            test_coverage_suites = get_test_coverage_suites()
-            for suites in group_by_20k(test_coverage_suites):
-                test_coverage_tests = get_test_coverage_tests(suites)
-                for tests in group_by_20k(test_coverage_tests):
-                    tests_files_data = get_test_coverage_files(tests)
+                c.executemany('INSERT INTO file_to_test VALUES (?,?)', source_test_iter)
 
-                    source_names = tests_files_data['source.file.name']
-                    test_iter = enumerate(tests_files_data['test.name'])
-                    source_test_iter = ((source_names[i], test) for i, test in test_iter)
-
-                    c.executemany('INSERT INTO file_to_test VALUES (?,?)', source_test_iter)
-
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = {}
             for platform in PLATFORMS:
+                for chunk in artifactsHandler.get_chunks():
+                    suite = taskcluster.get_suite(chunk)
+                    # Ignore test-coverage, test-coverage-wpt, awsy and talos
+                    if suite in ['awsy', 'talos', 'test-coverage', 'test-coverage-wpt']:
+                        continue
+                    # Ignore suites supported by test-coverage.
+                    if any(test_coverage_suite in suite for test_coverage_suite in TEST_COVERAGE_SUITES):
+                        continue
+
+                    future = executor.submit(grcov.files_list, artifactsHandler.get(platform=platform, chunk=chunk))
+                    futures[future] = (platform, chunk)
+
                 for suite in get_suites(revision):
                     # Ignore test-coverage, test-coverage-wpt, awsy and talos
                     if suite in ['awsy', 'talos', 'test-coverage', 'test-coverage-wpt']:
+                        continue
+                    # Ignore suites supported by test-coverage.
+                    if any(test_coverage_suite in suite for test_coverage_suite in TEST_COVERAGE_SUITES):
                         continue
 
                     tests_data = get_tests_chunks(revision, platform, suite)
@@ -168,6 +175,11 @@ def generate(repo_dir, revision, artifactsHandler, out_dir='.'):
                     test_iter = enumerate(tests_data['result.test'])
                     chunk_test_iter = ((taskcluster.get_platform(task_names[i]), taskcluster.get_chunk(task_names[i]), test) for i, test in test_iter)
                     c.executemany('INSERT INTO chunk_to_test VALUES (?,?,?)', chunk_test_iter)
+
+            for future in concurrent.futures.as_completed(futures):
+                (platform, chunk) = futures[future]
+                files = future.result()
+                c.executemany('INSERT INTO file_to_chunk VALUES (?,?,?)', ((f, platform, chunk) for f in files))
 
     with tarfile.open(tarxz_file, 'w:xz') as tar:
         tar.add(sqlite_file, os.path.basename(sqlite_file))
