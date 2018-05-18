@@ -81,7 +81,8 @@ def add_release(body):
         raise BadRequest(description=e.description)
 
 
-def list_releases(product=None, branch=None, version=None, status=['scheduled']):
+def list_releases(product=None, branch=None, version=None, build_number=None,
+                  status=['scheduled']):
     session = flask.g.db.session
     releases = session.query(Release)
     if product:
@@ -90,6 +91,11 @@ def list_releases(product=None, branch=None, version=None, status=['scheduled'])
         releases = releases.filter(Release.branch == branch)
     if version:
         releases = releases.filter(Release.version == version)
+        if build_number:
+            releases = releases.filter(Release.build_number == build_number)
+    elif build_number:
+        raise BadRequest(description='Filtering by build_number without version'
+                         ' is not supported.')
     releases = releases.filter(Release.status.in_(status))
     return [r.json for r in releases.all()]
 
