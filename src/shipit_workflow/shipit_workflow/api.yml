@@ -46,6 +46,9 @@ paths:
         name: version
         type: string
       - in: query
+        name: build_number
+        type: integer
+      - in: query
         name: status
         type: array
         items:
