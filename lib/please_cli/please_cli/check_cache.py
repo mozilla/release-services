@@ -60,25 +60,27 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
     indent = ' ' * indent
     channel_derivations = dict()
 
-    channels = ['master']
+    nix_path_attributes = [project]
+    deploys = please_cli.config.PROJECTS_CONFIG.get(project, dict()).get('deploys', [])
+    for deploy in deploys:
+        for _channel, options in deploy.get('options', dict()).items():
+            if _channel in please_cli.config.DEPLOY_CHANNELS:
+                nix_path_attribute = options.get('nix_path_attribute')
+                if nix_path_attribute:
+                    nix_path_attributes.append(project + '.' + nix_path_attribute)
+                else:
+                    nix_path_attributes.append(project)
 
-    project_deploys = please_cli.config.PROJECTS_CONFIG.get(project, dict()).get('deploys', [])
-    for deploy in project_deploys:
-        for channel_ in deploy.get('options', dict()).keys():
-            if channel_ in please_cli.config.DEPLOY_CHANNELS:
-                channels.append(channel_)
+    nix_path_attributes = list(set(nix_path_attributes))
 
-    for tmp_channel in channels:
+    for nix_path_attribute in nix_path_attributes:
         project_exists = False
-        attribute = project
-        if tmp_channel != 'master':
-            attribute += '.deploy.' + tmp_channel
 
-        click.echo('{} => Calculating `{}` hash ... '.format(indent, attribute), nl=False)
+        click.echo('{} => Calculating `{}` hash ... '.format(indent, nix_path_attribute), nl=False)
         command = [
             nix_instantiate,
             os.path.join(please_cli.config.ROOT_DIR, 'nix/default.nix'),
-            '-A', attribute
+            '-A', nix_path_attribute,
         ]
         if interactive:
             with click_spinner.spinner():
@@ -97,18 +99,18 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
         try:
             drv = output.split('\n')[-1].strip()
             with open(drv) as f:
-                channel_derivations[tmp_channel] = eval(f.read())
+                channel_derivations[nix_path_attribute] = eval(f.read())
         except Exception as e:
             log.exception(e)
-            raise click.ClickException('Something went wrong when reading derivation file for `{}` project.'.format(attribute))
-        click.echo('{} found.'.format(channel_derivations[tmp_channel].nix_hash))
+            raise click.ClickException('Something went wrong when reading derivation file for `{}` project.'.format(nix_path_attribute))
+        click.echo('{} found.'.format(channel_derivations[nix_path_attribute].nix_hash))
 
-        click.echo('{} => Checking cache if build artifacts exists for `{}` ... '.format(indent, attribute), nl=False)
+        click.echo('{} => Checking cache if build artifacts exists for `{}` ... '.format(indent, nix_path_attribute), nl=False)
         with click_spinner.spinner():
             project_exists = False
             for cache_url in cache_urls:
                 response = requests.get(
-                    '%s/%s.narinfo' % (cache_url, channel_derivations[tmp_channel].nix_hash),
+                    '%s/%s.narinfo' % (cache_url, channel_derivations[nix_path_attribute].nix_hash),
                 )
                 project_exists = response.status_code == 200
                 if project_exists:
@@ -125,7 +127,7 @@ def cmd(project, cache_urls, nix_instantiate, channel, indent=0, interactive=Tru
             ask_for_details=False,
         )
 
-    return project_exists, channel_derivations[channel].nix_hash
+    return project_exists, channel_derivations[project].nix_hash
 
 
 if __name__ == "__main__":
