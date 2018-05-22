@@ -77,6 +77,7 @@ def get_test_coverage_suites():
     r = requests.post('https://activedata.allizom.org/query', json={
         'from': 'coverage',
         'where': {'and': [
+            {'eq': {'repo.branch.name': 'mozilla-central'}},
             {'gte': {'repo.push.date': {'date': 'today-week'}}},
             {'gt': {'source.file.total_covered': 0}},
             {'exists': 'test.name'}
@@ -93,6 +94,7 @@ def get_test_coverage_tests(suites):
     r = requests.post('https://activedata.allizom.org/query', json={
         'from': 'coverage',
         'where': {'and': [
+            {'eq': {'repo.branch.name': 'mozilla-central'}},
             {'gte': {'repo.push.date': {'date': 'today-week'}}},
             {'gt': {'source.file.total_covered': 0}},
             {'exists': 'test.name'},
@@ -110,6 +112,7 @@ def get_test_coverage_files(tests):
     r = requests.post('https://activedata.allizom.org/query', json={
         'from': 'coverage',
         'where': {'and': [
+            {'eq': {'repo.branch.name': 'mozilla-central'}},
             {'gte': {'repo.push.date': {'date': 'today-week'}}},
             {'gt': {'source.file.total_covered': 0}},
             {'exists': 'test.name'},
