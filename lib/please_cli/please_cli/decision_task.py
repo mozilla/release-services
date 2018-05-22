@@ -325,7 +325,7 @@ def cmd(ctx,
         if not project_exists_in_cache:
             build_projects.append(project)
 
-    projects_to_deploy = {}
+    projects_to_deploy = []
 
     if channel in please_cli.config.DEPLOY_CHANNELS:
         click.echo(' => Checking which project needs to be redeployed')
