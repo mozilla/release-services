@@ -71,7 +71,7 @@ def test_zero_coverage(tmpdir, fake_artifacts_handler, fake_hg_repo):
                         ['jsreftest', 1],
                     ]
                 elif payload['groupby'] == ['test.name']:
-                    assert payload['where']['and'][3]['in']['test.suite'] == ['chrome', 'jsreftest']
+                    assert payload['where']['and'][4]['in']['test.suite'] == ['chrome', 'jsreftest']
                     data = [
                         ['js/xpconnect/tests/unit/test_lazyproxy.js', 60],
                         ['netwerk/test/unit/test_substituting_protocol_handler.js', 55],
@@ -100,6 +100,7 @@ def test_zero_coverage(tmpdir, fake_artifacts_handler, fake_hg_repo):
                     data = [
                         ['marionette', 3590],
                         ['gtest', 2078],
+                        ['talos', 3000],
                     ]
                 else:
                     assert False, 'Unexpected groupby'
