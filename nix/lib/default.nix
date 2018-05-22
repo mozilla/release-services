@@ -837,12 +837,6 @@ in rec {
 
           docker = self_docker;
 
-          deploy = {
-            testing = self_docker;
-            staging = self_docker;
-            production = self_docker;
-          };
-
         } // passthru;
       };
     in self;
