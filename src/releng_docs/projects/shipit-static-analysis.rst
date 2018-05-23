@@ -172,6 +172,7 @@ Finally, you can run the bot with this command (in the Nix Shell):
 
 .. code-block:: shell
 
+  mkdir -p /app/tmp
   shipit-static-analysis \
     --taskcluster-secret=repo:github.com/mozilla-releng/services:branch:master \
     --cache-root=/app/tmp
