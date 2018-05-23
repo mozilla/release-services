@@ -105,6 +105,7 @@ def generate_action_task(action_name, action_task_input, actions):
     action_task_id = slugid.nice().decode('utf-8')
     context.update({
         'input': action_task_input,
+        'taskGroupId': action_task_id,
         'ownTaskId': action_task_id,
         'taskId': None,
         'task': None,
