@@ -106,6 +106,7 @@ def generate_action_task(action_name, action_task_input, actions):
     context.update({
         'input': action_task_input,
         'taskGroupId': action_task_id,
+        'ownTaskId': action_task_id,
         'taskId': None,
         'task': None,
     })
