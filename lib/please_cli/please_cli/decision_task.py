@@ -77,6 +77,10 @@ def get_deploy_task(index,
 
     scopes = []
 
+    nix_path_attribute = deploy_options.get('nix_path_attribute')
+    if nix_path_attribute:
+        nix_path_attribute = ' ({})'.format(nix_path_attribute)
+
     if deploy_target == 'S3':
         project_csp = []
         for url in deploy_options.get('csp', []):
@@ -100,6 +104,11 @@ def get_deploy_task(index,
             if require_url:
                 project_envs.append('--env="{}-url: {}"'.format(require, require_url))
 
+        project_name = '{}{} to AWS S3 ({})'.format(
+            project,
+            nix_path_attribute,
+            deploy_options['s3_bucket'],
+        )
         command = [
             './please', '-vv',
             'tools', 'deploy:S3',
@@ -111,6 +120,12 @@ def get_deploy_task(index,
         ] + project_csp + project_envs
 
     elif deploy_target == 'HEROKU':
+        project_name = '{}{} to HEROKU ({}/{})'.format(
+            project,
+            nix_path_attribute,
+            deploy_options['heroku_app'],
+            deploy_options['heroku_dyno_type'],
+        )
         command = [
             './please', '-vv',
             'tools', 'deploy:HEROKU',
@@ -123,11 +138,20 @@ def get_deploy_task(index,
         ]
 
     elif deploy_target == 'TASKCLUSTER_HOOK':
+        hook_group_id = 'project-releng'
+        hook_id = 'services-{}-{}'.format(channel, project)
+        project_name = '{}{} to TASKCLUSTER HOOK ({}/{})'.format(
+            project,
+            nix_path_attribute,
+            hook_group_id,
+            hook_id,
+        )
         command = [
             './please', '-vv',
             'tools', 'deploy:TASKCLUSTER_HOOK',
             project,
-            '--hook-id=services-{}-{}'.format(channel, project),
+            '--hook-group-id={}'.format(hook_group_id),
+            '--hook-id={}'.format(hook_id),
             '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
             '--channel=' + channel,
             '--no-interactive',
@@ -148,9 +172,9 @@ def get_deploy_task(index,
         taskcluster_secret,
         ' '.join(command),
         {
-            'name': '3.{index:02}. Deploying {project}'.format(
+            'name': '3.{index:02}. Deploying {project_name}'.format(
                 index=index + 1,
-                project=project,
+                project_name=project_name,
             ),
             'description': '',
             'owner': owner,
@@ -458,14 +482,14 @@ def cmd(ctx,
     if dry_run:
         tasks2 = {task_id: task for task_id, task in tasks}
         for task_id, task in tasks:
-            click.echo(' => %s (%s)' % (task['metadata']['name'], task_id))
+            click.echo(' => %s [taskId: %s]' % (task['metadata']['name'], task_id))
             click.echo('    dependencies:')
             deps = []
             for dep in task['dependencies']:
                 depName = "0. Decision task"
                 if dep in tasks2:
                     depName = tasks2[dep]['metadata']['name']
-                    deps.append('      - %s (%s)' % (depName, dep))
+                    deps.append('      - %s [taskId: %s]' % (depName, dep))
             for dep in sorted(deps):
                 click.echo(dep)
     else:
