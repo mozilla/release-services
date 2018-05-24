@@ -11,14 +11,14 @@ FINAL_RELEASE_REGEX = '^\d+\.\d+$'
 
 
 VERSION_REGEX = re.compile(
-    '^'
-    '(?P<major_minor>[0-9]+\.[0-9]+)'  # Major and minor version
-    '(?:'  # Patch or beta version is optional
-    '(?P<point>[.b])'  # Separator from patch or beta version
-    '(?P<patch>[0-9]+)'  # Patch or beta version
-    ')?'
-    '(?P<esr>(?:esr)?)'  # ESR indicator
-    '$'
+    r'^'
+    r'(?P<major_minor>[0-9]+\.[0-9]+)'  # Major and minor version
+    r'(?:'  # Patch or beta version is optional
+    r'(?P<point>[.ba])'  # Separator from patch or beta version
+    r'(?P<patch>[0-9]+)'  # Patch or beta version
+    r')?'
+    r'(?P<esr>(?:esr)?)'  # ESR indicator
+    r'$'
 )
 
 
