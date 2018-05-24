@@ -77,7 +77,7 @@ def get_deploy_task(index,
 
     scopes = []
 
-    nix_path_attribute = deploy_options.get('nix_path_attribute')
+    nix_path_attribute = deploy_options.get('nix_path_attribute', '')
     if nix_path_attribute:
         nix_path_attribute = ' ({})'.format(nix_path_attribute)
 
