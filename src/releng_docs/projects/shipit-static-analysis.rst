@@ -72,7 +72,7 @@ Run the following (where ``XXX`` is the Taskcluster access token):
 .. code-block:: shell
 
   ./please shell shipit-static-analysis \
-    --taskcluster-client-id=mozilla-auth0/ad|Mozilla-LDAP|bastien/static-analysis-dev \
+    --taskcluster-client-id="mozilla-auth0/ad|Mozilla-LDAP|bastien/static-analysis-dev" \
     --taskcluster-access-token=XXX
 
 Once the initial build finishes, you should get a green Nix shell, running in ``/app/src/shipit_static_analysis``.
