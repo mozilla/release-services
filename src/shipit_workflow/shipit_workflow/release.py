@@ -10,16 +10,35 @@ import re
 FINAL_RELEASE_REGEX = '^\d+\.\d+$'
 
 
+VERSION_REGEX = re.compile(
+    r'^'
+    r'(?P<major_minor>[0-9]+\.[0-9]+)'  # Major and minor version
+    r'(?:'  # Patch or beta version is optional
+    r'(?P<point>[.ba])'  # Separator from patch or beta version
+    r'(?P<patch>[0-9]+)'  # Patch or beta version
+    r')?'
+    r'(?P<esr>(?:esr)?)'  # ESR indicator
+    r'$'
+)
+
+
+def parse_version(version):
+    match = VERSION_REGEX.match(version)
+    if not match:
+        raise Exception('Unknown version format.')
+    return match.groupdict()
+
+
 def is_final_release(version):
     return bool(re.match(FINAL_RELEASE_REGEX, version))
 
 
 def is_beta(version):
-    return 'b' in version
+    return parse_version(version)['point'] == 'b'
 
 
 def is_esr(version):
-    return 'esr' in version
+    return parse_version(version)['esr'] == 'esr'
 
 
 def is_rc(version, partial_updates):
@@ -40,21 +59,14 @@ def is_rc(version, partial_updates):
 
 def bump_version(version):
     '''Bump last digit'''
-    split_by = '.'
-    digit_index = 2
-    suffix = ''
-    if 'b' in version:
-        split_by = 'b'
-        digit_index = 1
-    if 'esr' in version:
-        version = version.replace('esr', '')
-        suffix = 'esr'
-    v = version.split(split_by)
-    if len(v) < digit_index + 1:
-        # 45.0 is 45.0.0 actually
-        v.append('0')
-    v[-1] = str(int(v[-1]) + 1)
-    return split_by.join(v) + suffix
+    parts = parse_version(version)
+    if parts['patch']:
+        parts['patch'] = int(parts['patch']) + 1
+    else:
+        parts['patch'] = 1
+    if not parts['point']:
+        parts['point'] = '.'
+    return '{major_minor}{point}{patch}{esr}'.format(**parts)
 
 
 def get_beta_num(version):
