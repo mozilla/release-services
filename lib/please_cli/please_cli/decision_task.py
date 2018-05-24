@@ -350,7 +350,7 @@ def cmd(ctx,
                             project_name,
                             please_cli.config.PROJECTS_CONFIG[project_name].get('requires', []),
                             deploy['target'],
-                            deploy['options'],
+                            deploy['options'][channel],
                         ))
 
     click.echo(' => Creating taskcluster tasks definitions')
@@ -401,7 +401,7 @@ def cmd(ctx,
             github_commit,
             channel,
             taskcluster_secret,
-            './please -vv tools maintanance:on ' + ' '.join(deploy_projects),
+            './please -vv tools maintanance:on ' + ' '.join(list(set([i[0] for i in projects_to_deploy]))),
             {
                 'name': '2. Maintanance ON',
                 'description': '',
@@ -442,7 +442,7 @@ def cmd(ctx,
             github_commit,
             channel,
             taskcluster_secret,
-            './please -vv tools maintanance:off ' + ' '.join(deploy_projects),
+            './please -vv tools maintanance:off ' + ' '.join(list(set([i[0] for i in projects_to_deploy]))),
             {
                 'name': '4. Maintanance OFF',
                 'description': '',
@@ -460,11 +460,14 @@ def cmd(ctx,
         for task_id, task in tasks:
             click.echo(' => %s (%s)' % (task['metadata']['name'], task_id))
             click.echo('    dependencies:')
+            deps = []
             for dep in task['dependencies']:
                 depName = "0. Decision task"
                 if dep in tasks2:
                     depName = tasks2[dep]['metadata']['name']
-                click.echo('      - %s (%s)' % (depName, dep))
+                    deps.append('      - %s (%s)' % (depName, dep))
+            for dep in sorted(deps):
+                click.echo(dep)
     else:
         for task_id, task in tasks:
             taskcluster_queue.createTask(task_id, task)
