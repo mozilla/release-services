@@ -72,7 +72,7 @@ Run the following (where ``XXX`` is the Taskcluster access token):
 .. code-block:: shell
 
   ./please shell shipit-static-analysis \
-    --taskcluster-client-id=mozilla-auth0/ad|Mozilla-LDAP|bastien/static-analysis-dev \
+    --taskcluster-client-id="mozilla-auth0/ad|Mozilla-LDAP|bastien/static-analysis-dev" \
     --taskcluster-access-token=XXX
 
 Once the initial build finishes, you should get a green Nix shell, running in ``/app/src/shipit_static_analysis``.
@@ -169,6 +169,7 @@ Finally, you can run the bot with this command (in the Nix Shell):
 
 .. code-block:: shell
 
+  mkdir -p /app/tmp
   shipit-static-analysis \
     --taskcluster-secret=repo:github.com/mozilla-releng/services:branch:master \
     --cache-root=/app/tmp
