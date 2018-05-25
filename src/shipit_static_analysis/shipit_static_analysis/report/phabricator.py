@@ -62,7 +62,7 @@ class PhabricatorReporter(Reporter):
 
     def load_diff(self, phid):
         '''
-        Find a differential diff details
+        Find details of a differential diff
         '''
         out = self.request(
             'differential.diff.search',
@@ -73,7 +73,7 @@ class PhabricatorReporter(Reporter):
 
         data = out['data']
         assert len(data) == 1, \
-            'Not found'
+            'Diff not found'
         return data[0]
 
     def load_raw_diff(self, diff_id):
@@ -84,6 +84,22 @@ class PhabricatorReporter(Reporter):
             'differential.getrawdiff',
             diffID=diff_id,
         )
+
+    def load_revision(self, phid):
+        '''
+        Find details of a differential revision
+        '''
+        out = self.request(
+            'differential.revision.search',
+            constraints={
+                'phids': [phid, ],
+            },
+        )
+
+        data = out['data']
+        assert len(data) == 1, \
+            'Revision not found'
+        return data[0]
 
     def publish(self, issues, revision):
         '''

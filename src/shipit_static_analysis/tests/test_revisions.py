@@ -35,7 +35,7 @@ def test_phabricator(mock_phabricator, mock_repository, mock_config):
         'api_key': 'deadbeef',
     })
 
-    r = PhabricatorRevision('51:PHID-DIFF-testABcd12', api)
+    r = PhabricatorRevision('PHID-DIFF-testABcd12', api)
     assert not hasattr(r, 'mercurial')
     assert r.diff_id == 42
     assert r.diff_phid == 'PHID-DIFF-testABcd12'

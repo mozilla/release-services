@@ -138,31 +138,28 @@ So the command would be:
 
 
 
-The bot needs an environment variable ``PHABRICATOR`` with the following information:
-
-1. The phabricator Differential ID (named ``DIFF_ID`` here)
-2. The phabricator Diff PHID (named ``PHID`` here)
+The bot needs an environment variable ``PHABRICATOR`` containing the PHID of the diff to be reviewed.
 
 So you'll need to do the following in the nix shell:
 
 .. code-block:: shell
   
-  export PHABRICATOR="<DIFF_ID>:<PHID>"
+  export PHABRICATOR="<DIFF_PHID>"
 
 Here is an example with this `Phabricator Diff review <https://phabricator-dev.allizom.org/D41>`_:
 
-1. You can get ``DIFF_ID`` from the url (this is ``41``)
+1. You can get the diff ID from the url (this is ``41``)
 2. Login on the Phabricator instance (needed for API queries)
 3. Go to the Conduit API web interface (``/conduit`` of the Phabricator instance), and click on the endpoint ``differential.query`` (direct link to `Phabricator DEV <https://phabricator-dev.allizom.org/conduit/method/differential.query/>`_)
-4. Fill the form field ``ids`` as a JSON list of integer using ``DIFF_ID``, so for our example : ``[41]``
+4. Fill the form field ``ids`` as a JSON list of integer using the diff ID, so for our example : ``[41]``
 5. Click ``Call Method``
-6. The method result should have a ``activeDiffPHID`` key, that's our ``PHID`` (in our example: ``PHID-DIFF-b5wsvctabxjmwqonwryv``)
+6. The method result should have a ``activeDiffPHID`` key, that's our ``DIFF_PHID`` (in our example: ``PHID-DIFF-b5wsvctabxjmwqonwryv``)
 
 Here is the final command line:
 
 .. code-block:: shell
   
-  export PHABRICATOR="41:PHID-DIFF-b5wsvctabxjmwqonwryv"
+  export PHABRICATOR="PHID-DIFF-b5wsvctabxjmwqonwryv"
 
 
 6. Run the bot
