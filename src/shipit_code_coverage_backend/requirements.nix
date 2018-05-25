@@ -742,6 +742,23 @@ let
       };
     };
 
+    "esFrontLine" = python.mkDerivation {
+      name = "esFrontLine-1.1.14230";
+      src = pkgs.fetchurl { url = "https://github.com/mozilla/esFrontLine/archive/125a53c4bf95b53f4a5b09a3408d5b4e6f843d80.tar.gz"; sha256 = "15sfdjfa1jr7mif6rbrdhyd2y18g3byp55y399ppl3nn0a91n40l"; };
+      doCheck = commonDoCheck;
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."Flask"
+      self."mohawk"
+      self."requests"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/klahnakoski/esFrontLine";
+        license = licenses.mpl20;
+        description = "Limit restful requests to backend ElasticSearch cluster:  Queries only.";
+      };
+    };
+
     "fancycompleter" = python.mkDerivation {
       name = "fancycompleter-0.8";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/fd/e3/da39a6cfaffe578a01221261ac1d5d99c48d44f6377ff0de3a12dd332cec/fancycompleter-0.8.tar.gz"; sha256 = "d2522f1f3512371f295379c4c0d1962de06762eb586c199620a2a5d423539b12"; };
