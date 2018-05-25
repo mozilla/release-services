@@ -88,7 +88,7 @@ class PhabricatorRevision(Revision):
     '''
     A phabricator revision to process
     '''
-    regex = re.compile(r'^(\d+):(PHID-DIFF-(?:\w+))$')
+    regex = re.compile(r'^(PHID-DIFF-(?:\w+))$')
 
     def __init__(self, description, api):
         self.api = api
@@ -98,13 +98,14 @@ class PhabricatorRevision(Revision):
         if match is None:
             raise Exception('Invalid Phabricator description')
         groups = match.groups()
-        self.id = int(groups[0])
-        self.diff_phid = groups[1]
+        self.diff_phid = groups[0]
 
         # Load diff details to get the diff revision
         diff = self.api.load_diff(self.diff_phid)
         self.diff_id = diff['id']
         self.phid = diff['fields']['revisionPHID']
+        revision = self.api.load_revision(self.phid)
+        self.id = revision['id']
 
     def __str__(self):
         return 'Phabricator #{} - {}'.format(self.diff_id, self.diff_phid)

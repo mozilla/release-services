@@ -95,7 +95,7 @@ class HookPhabricator(Hook):
 
                 # Create new task
                 await self.create_task({
-                    'PHABRICATOR': '{id}:{phid}'.format(**diff)
+                    'PHABRICATOR': diff['phid']
                 })
 
             # Sleep a bit before trying new diffs
