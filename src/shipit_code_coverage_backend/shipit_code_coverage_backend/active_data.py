@@ -47,23 +47,48 @@ class ActiveDataCoverage(Coverage):
     FIELD_CHANGESET = 'repo.changeset.id.~s~'
     FIELD_CHANGESET_DATE = 'repo.changeset.date.~n~'
     FIELD_TOTAL_PERCENT = 'source.file.percentage_covered.~n~'
+    FIELD_TEST_SUITE = 'test.suite.~s~'
+
+    @staticmethod
+    def base_query(filters=[], excludes=[]):
+        '''
+        Build an ElasticSearch base query used for all more complex ones
+        '''
+        base_filters = [
+            # Always query on Mozilla Central
+            {'term': {ActiveDataCoverage.FIELD_REPO: 'mozilla-central'}},
+        ]
+
+        base_excludes = [
+            # Ignore awsy and talos suites
+            {'term': {ActiveDataCoverage.FIELD_TEST_SUITE : 'awsy'}},
+            {'term': {ActiveDataCoverage.FIELD_TEST_SUITE : 'talos'}},
+
+            # Ignore obj-firefox/*
+            {'prefix': {ActiveDataCoverage.FIELD_FILENAME: 'obj-firefox/'}},
+        ]
+
+        return {
+            'query': {
+                'bool': {
+                    'must': base_filters + filters,
+                    'must_not': base_excludes + excludes,
+                }
+            }
+        }
 
     @staticmethod
     async def list_tests(changeset, filename):
         '''
         List all the tests available for file in a changeset
         '''
-        filters = [
-            # Always query on Mozilla Central
-            {'term': {ActiveDataCoverage.FIELD_REPO: 'mozilla-central'}},
-
-            # Filter by filename and changeset
-            {'term': {ActiveDataCoverage.FIELD_FILENAME: filename}},
-            {'term': {ActiveDataCoverage.FIELD_CHANGESET: changeset}},
-        ]
-
-        # Build full ES query using mandatory filters
-        query = {'query': {'bool': {'must':  filters}}}
+        query = ActiveDataCoverage.base_query(
+            filters=[
+                # Filter by filename and changeset
+                {'term': {ActiveDataCoverage.FIELD_FILENAME: filename}},
+                {'term': {ActiveDataCoverage.FIELD_CHANGESET: changeset}},
+            ]
+        )
 
         async with ActiveDataClient() as es:
             # First, count results
@@ -84,11 +109,8 @@ class ActiveDataCoverage(Coverage):
         Search the N last revisions available in the ES cluster
         '''
 
-        filters = [
-            {'term': {ActiveDataCoverage.FIELD_REPO: 'mozilla-central'}}
-        ]
-
         # Limit search to a maximum date
+        filters = []
         if max_date:
             filters.append({
                 'range': {
@@ -98,15 +120,11 @@ class ActiveDataCoverage(Coverage):
                 },
             })
 
-        query = {
+        query = ActiveDataCoverage.base_query(filters)
+        query.update({
             # no search results please
             'size': 0,
 
-            'query': {
-                'bool': {
-                    'must': filters,
-                },
-            },
             'aggs': {
                 'revisions': {
                     'terms': {
@@ -127,7 +145,7 @@ class ActiveDataCoverage(Coverage):
                     },
                 },
             },
-        }
+        })
 
         async with ActiveDataClient() as es:
             out = await es.search(
@@ -141,18 +159,13 @@ class ActiveDataCoverage(Coverage):
         '''
         Get the date of a revision
         '''
-        query = {
+        query = ActiveDataCoverage.base_query([
+            {'term': {ActiveDataCoverage.FIELD_CHANGESET: changeset}},
+        ])
+        query.update({
             # no search results please
             'size': 0,
 
-            'query': {
-                'bool': {
-                    'must': [
-                        {'term': {ActiveDataCoverage.FIELD_REPO: 'mozilla-central'}},
-                        {'term': {ActiveDataCoverage.FIELD_CHANGESET: changeset}},
-                    ],
-                },
-            },
             'aggs': {
                 'date': {
                     'avg': {
@@ -160,7 +173,7 @@ class ActiveDataCoverage(Coverage):
                     },
                 },
             },
-        }
+        })
         async with ActiveDataClient() as es:
             out = await es.search(
                 index=secrets.ACTIVE_DATA_INDEX,
@@ -174,18 +187,13 @@ class ActiveDataCoverage(Coverage):
         Calculate total coverage in percent for a changeset
         Directly done through an aggregation on ES
         '''
-        query = {
+        query = ActiveDataCoverage.base_query([
+            {'term': {ActiveDataCoverage.FIELD_CHANGESET: changeset}},
+        ])
+        query.update({
             # no search results please
             'size': 0,
 
-            'query': {
-                'bool': {
-                    'must': [
-                        {'term': {ActiveDataCoverage.FIELD_REPO: 'mozilla-central'}},
-                        {'term': {ActiveDataCoverage.FIELD_CHANGESET: changeset}},
-                    ],
-                },
-            },
             'aggs': {
                 'percentage': {
                     'avg': {
@@ -193,7 +201,7 @@ class ActiveDataCoverage(Coverage):
                     },
                 },
             },
-        }
+        })
         async with ActiveDataClient() as es:
             out = await es.search(
                 index=secrets.ACTIVE_DATA_INDEX,
