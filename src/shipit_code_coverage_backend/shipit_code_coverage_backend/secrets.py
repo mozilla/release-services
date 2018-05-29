@@ -21,4 +21,5 @@ REDIS_URL = secrets['REDIS_URL'] if 'REDIS_URL' in secrets else 'redis://localho
 CODECOV_ACCESS_TOKEN = secrets['CODECOV_ACCESS_TOKEN'] if 'CODECOV_ACCESS_TOKEN' in secrets else ''
 CODECOV_REPO = secrets['CODECOV_REPO'] if 'CODECOV_REPO' in secrets else 'marco-c/gecko-dev'
 ESFRONTLINE = secrets['ESFRONTLINE']
+COVERAGE_SERVICE = secrets['COVERAGE_SERVICE'] if 'COVERAGE_SERVICE' in secrets else 'codecov'
 ACTIVE_DATA_INDEX = secrets['ACTIVE_DATA_INDEX'] if 'ACTIVE_DATA_INDEX' in secrets else 'coverage'

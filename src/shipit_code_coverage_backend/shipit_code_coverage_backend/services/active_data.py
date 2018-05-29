@@ -12,7 +12,7 @@ from esFrontLine.client.async import AsyncHawkConnection
 
 from cli_common import log
 from shipit_code_coverage_backend import secrets
-from shipit_code_coverage_backend.coverage import Coverage
+from shipit_code_coverage_backend.services.base import Coverage
 
 logger = log.get_logger(__name__)
 
@@ -61,8 +61,8 @@ class ActiveDataCoverage(Coverage):
 
         base_excludes = [
             # Ignore awsy and talos suites
-            {'term': {ActiveDataCoverage.FIELD_TEST_SUITE : 'awsy'}},
-            {'term': {ActiveDataCoverage.FIELD_TEST_SUITE : 'talos'}},
+            {'term': {ActiveDataCoverage.FIELD_TEST_SUITE: 'awsy'}},
+            {'term': {ActiveDataCoverage.FIELD_TEST_SUITE: 'talos'}},
 
             # Ignore obj-firefox/*
             {'prefix': {ActiveDataCoverage.FIELD_FILENAME: 'obj-firefox/'}},

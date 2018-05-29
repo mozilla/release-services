@@ -7,10 +7,10 @@ import asyncio
 
 import aiohttp
 
-from shipit_code_coverage_backend.coverage import coverage_service
 from shipit_code_coverage_backend.coverage import coverage_supported
 from shipit_code_coverage_backend.coverage import get_coverage_build
-from shipit_code_coverage_backend.coverage import get_github_commit
+from shipit_code_coverage_backend.services import coverage_service
+from shipit_code_coverage_backend.services.base import get_github_commit
 
 
 async def generate(changeset):

@@ -71,13 +71,15 @@ async def test_coverage_for_file_impl(coverage_responses, coverage_changeset_by_
 
 @pytest.mark.asyncio
 async def test_skip_broken_build(coverage_responses):
+    from shipit_code_coverage_backend.services.codecov import CodecovCoverage
+    from shipit_code_coverage_backend.services.base import CoverageException
     from shipit_code_coverage_backend import coverage
-    codecovCoverage = coverage.CodecovCoverage()
+    codecovCoverage = CodecovCoverage()
 
-    with pytest.raises(coverage.CoverageException, message='ee6283795f41d97faeaccbe8bd051a36bbe30c64 is in an errored state.'):
+    with pytest.raises(CoverageException, message='ee6283795f41d97faeaccbe8bd051a36bbe30c64 is in an errored state.'):
         await codecovCoverage.get_coverage('ee6283795f41d97faeaccbe8bd051a36bbe30c64')
 
-    with pytest.raises(coverage.CoverageException, message='ee6283795f41d97faeaccbe8bd051a36bbe30c64 is in an errored state.'):
+    with pytest.raises(CoverageException, message='ee6283795f41d97faeaccbe8bd051a36bbe30c64 is in an errored state.'):
         await codecovCoverage.get_file_coverage('ee6283795f41d97faeaccbe8bd051a36bbe30c64', 'widget/gtk/nsWindow.cpp')
 
     changeset_data, build_changeset, overall = await coverage.get_coverage_build('ee6283795f41d97faeaccbe8bd051a36bbe30c64')
