@@ -100,7 +100,7 @@ def download_artifact(artifact_path, task_id, artifact_name):
     retry(perform_download)
 
 
-TEST_PLATFORMS = ['test-linux64-ccov/opt', 'test-windows10-64-ccov/debug']
+TEST_PLATFORMS = ['test-linux64-ccov/debug', 'test-windows10-64-ccov/debug']
 
 
 def is_coverage_task(task):

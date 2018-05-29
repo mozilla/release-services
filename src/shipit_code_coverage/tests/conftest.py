@@ -243,13 +243,3 @@ def fake_hg_repo(tmpdir):
                     os.path.join(local, '.hg/pushlog2.db'))
 
     return local
-
-
-@pytest.fixture()
-def ACTIVEDATA_CHUNK_TO_TESTS():
-    responses.add(
-        responses.POST,
-        'https://activedata.allizom.org/query',
-        body=load_file('activedata_chunk_to_tests.json'),
-        content_type='application/json',
-        status=200)
