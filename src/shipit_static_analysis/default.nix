@@ -4,7 +4,7 @@
 let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkPython fromRequirementsFile filterSource ;
-  inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch nodejs git python27 python35 coreutils shellcheck clang_5 zlib;
+  inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch nodejs-8_x git python27 python35 coreutils shellcheck clang_5 zlib;
   inherit (releng_pkgs.pkgs.lib) fileContents concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
 
@@ -15,7 +15,7 @@ let
   # Customize gecko environment with Nodejs & Python 3 for linters
   gecko-env = releng_pkgs.gecko-env.overrideDerivation(old : {
     buildPhase = old.buildPhase + ''
-      echo "export PATH=${nodejs}/bin:${python35}/bin:\$PATH" >> $out/bin/gecko-env
+      echo "export PATH=${nodejs-8_x}/bin:${python35}/bin:\$PATH" >> $out/bin/gecko-env
     '';
  } );
 
@@ -94,7 +94,7 @@ let
         shellcheck
 
         # Needed for linters
-        nodejs
+        nodejs-8_x
 
         # Gecko environment
         gecko-env
@@ -110,8 +110,8 @@ let
 
       # Mozlint deps
       ln -s ${gcc}/bin/gcc $out/bin
-      ln -s ${nodejs}/bin/node $out/bin
-      ln -s ${nodejs}/bin/npm $out/bin
+      ln -s ${nodejs-8_x}/bin/node $out/bin
+      ln -s ${nodejs-8_x}/bin/npm $out/bin
       ln -s ${git}/bin/git $out/bin
       ln -s ${python27}/bin/python2.7 $out/bin/python2.7
       ln -s ${python27}/bin/python2.7 $out/bin/python2
@@ -129,7 +129,7 @@ let
       ln -s ${gecko-env}/bin/gecko-env $out/bin
     '';
     shellHook = ''
-      export PATH="${mercurial}/bin:${git}/bin:${python27}/bin:${python35}/bin:${nodejs}/bin:$PATH"
+      export PATH="${mercurial}/bin:${git}/bin:${python27}/bin:${python35}/bin:${nodejs-8_x}/bin:$PATH"
 
       # Setup mach automation
       export MOZ_AUTOMATION=1
