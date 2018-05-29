@@ -22,7 +22,14 @@ def mock_secrets():
     '''
     import cli_common.taskcluster
     cli_common.taskcluster.get_secrets = unittest.mock.Mock(return_value={
-        'ACTIVE_DATA_HOSTS': 'mock-active-data',
+        'ESFRONTLINE': {
+            'url': 'http://mock-active-data:8000',
+            'user': {
+                'algorithm': 'sha256',
+                'id': 'test@allizom.org',
+                'key': 'dummySecret',
+            },
+        }
     })
 
 
@@ -173,5 +180,5 @@ def mock_active_data(mock_secrets, aresponses):
         return aresponses.Response(text=payload, content_type='application/json')
 
     # Activate callbacks for coverage endpoints on mock server
-    aresponses.add('mock-active-data:9200', '/coverage/_count', 'get', _count)
-    aresponses.add('mock-active-data:9200', '/coverage/_search', 'get', _search)
+    aresponses.add('mock-active-data:8000', '/coverage/_count', 'get', _count)
+    aresponses.add('mock-active-data:8000', '/coverage/_search', 'get', _search)

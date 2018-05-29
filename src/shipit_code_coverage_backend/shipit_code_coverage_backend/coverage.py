@@ -12,6 +12,7 @@ import aiohttp
 from async_lru import alru_cache
 from cachetools import LRUCache
 from elasticsearch_async import AsyncElasticsearch
+from esFrontLine.client.async import AsyncHawkConnection
 
 from cli_common import log
 from shipit_code_coverage_backend import secrets
@@ -145,7 +146,11 @@ class ActiveDataClient():
     Active data async client, through Elastic Search
     '''
     def __init__(self):
-        self.client = AsyncElasticsearch(hosts=secrets.ACTIVE_DATA_HOSTS)
+        self.client = AsyncElasticsearch(
+            hosts=[secrets.ESFRONTLINE['url']],
+            connection_class=AsyncHawkConnection,
+            hawk_credentials=secrets.ESFRONTLINE['user'],
+        )
 
     async def __aenter__(self):
         # TODO: Should we ping the server here (overkill ?)
