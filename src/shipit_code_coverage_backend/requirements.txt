@@ -9,4 +9,4 @@ rq
 gunicorn
 elasticsearch-async
 
-https://github.com/mozilla/esFrontLine/archive/125a53c4bf95b53f4a5b09a3408d5b4e6f843d80.tar.gz#egg=esFrontLine
+https://github.com/mozilla/esFrontLine/archive/987f924750ae1ec7bd684fc37c80003473ae9bed.tar.gz#egg=esFrontLine

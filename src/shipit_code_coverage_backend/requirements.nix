@@ -744,7 +744,7 @@ let
 
     "esFrontLine" = python.mkDerivation {
       name = "esFrontLine-1.1.14230";
-      src = pkgs.fetchurl { url = "https://github.com/La0/esFrontLine/archive/7145e5876a2ab2e781f5c6478defdbe9f2755169.tar.gz"; sha256 = "0v24g835dnax1mzgyhclnxijic99qrxjh5d16ilyczs1wk1b9zcw"; };
+      src = pkgs.fetchurl { url = "https://github.com/mozilla/esFrontLine/archive/987f924750ae1ec7bd684fc37c80003473ae9bed.tar.gz"; sha256 = "10hc8m2xkjjnmxassxwc1zya4x2sfj7qd5ynamvg5p1pajaa8xbd"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
