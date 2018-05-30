@@ -96,7 +96,6 @@ def test_mercurial_patch(mock_config, mock_repository):
     Test mercurial patch creation
     '''
     from shipit_static_analysis.revisions import MozReviewRevision
-    print(mock_config.repo_dir)
 
     def _commit(name):
         path = os.path.join(mock_config.repo_dir, 'review_{}.txt'.format(name))

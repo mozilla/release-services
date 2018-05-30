@@ -186,7 +186,7 @@ class MozReviewRevision(Revision):
             force=True,
         )
 
-        # Find ancestor revision
+        # Find common ancestor revision
         out = repo.log('ancestor(tip, {})'.format(self.mercurial))
         assert out is not None and len(out) > 0, \
             'Failed to find ancestor for {}'.format(self.mercurial)
