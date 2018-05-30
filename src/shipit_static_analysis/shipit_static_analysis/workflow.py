@@ -83,7 +83,13 @@ class Workflow(object):
             raise hglib.error.CommandError(cmd, proc.returncode, out, err)
 
         # Open new hg client
-        return hglib.open(settings.repo_dir)
+        client = hglib.open(settings.repo_dir)
+
+        # Store MC top revision after robustcheckout
+        self.top_revision = client.identify(id=True).strip()
+        logger.info('Mozilla central top revision', revision=self.top_revision)
+
+        return client
 
     def run(self, revision):
         '''
@@ -111,11 +117,10 @@ class Workflow(object):
         stats.api.increment('analysis')
 
         with stats.api.timer('runtime.mercurial'):
-            # Force cleanup to reset tip
+            # Force cleanup to reset top of MC
             # otherwise previous pull are there
-            self.hg.update(rev=b'tip', clean=True)
-            tip = self.hg.tip().node
-            logger.info('Set repo back to tip', rev=tip)
+            self.hg.update(rev=self.top_revision, clean=True)
+            logger.info('Set repo back to Mozilla central top', rev=self.hg.identify())
 
             # Load and analyze revision patch
             revision.load(self.hg)
