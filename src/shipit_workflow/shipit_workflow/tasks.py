@@ -117,4 +117,6 @@ def generate_action_task(action_name, action_task_input, actions):
 
 def render_action_task(task, context, action_task_id):
     action_task = jsone.render(task, context)
+    # override ACTION_TASK_GROUP_ID, so we know the new ID in advance
+    action_task['payload']['env']['ACTION_TASK_GROUP_ID'] = action_task_id
     return action_task
