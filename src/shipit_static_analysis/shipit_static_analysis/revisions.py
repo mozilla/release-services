@@ -186,14 +186,19 @@ class MozReviewRevision(Revision):
             force=True,
         )
 
-        # Load changes from specific revision
-        self.patch = repo.diff(change=self.mercurial, git=True).decode('utf-8')
+        # Find common ancestor revision
+        out = repo.log('ancestor(tip, {})'.format(self.mercurial))
+        assert out is not None and len(out) > 0, \
+            'Failed to find ancestor for {}'.format(self.mercurial)
+        ancestor = out[0].node.decode('utf-8')
+        logger.info('Found HG ancestor', current=self.mercurial, ancestor=ancestor)
+
+        # Load full diff from revision up to ancestor
+        # using Git format for compatibility with improvement patch builder
+        self.patch = repo.diff(revs=[ancestor, self.mercurial], git=True).decode('utf-8')
 
         # Move repo to ancestor so we don't trigger an unecessary clobber
-        repo.update(
-            rev='ancestor(tip, {})'.format(self.mercurial),
-            clean=True,
-        )
+        repo.update(rev=ancestor, clean=True)
 
     def apply(self, repo):
         '''

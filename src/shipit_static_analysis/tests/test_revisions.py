@@ -89,3 +89,46 @@ def test_clang_files(mock_revision):
 
     mock_revision.files = ['test.h', 'test.js', 'xxx.txt']
     assert mock_revision.has_clang_files
+
+
+def test_mercurial_patch(mock_config, mock_repository):
+    '''
+    Test mercurial patch creation
+    '''
+    from shipit_static_analysis.revisions import MozReviewRevision
+
+    def _commit(name):
+        path = os.path.join(mock_config.repo_dir, 'review_{}.txt'.format(name))
+        with open(path, 'w') as f:
+            f.write('Review commit {}'.format(name))
+        mock_repository.add(path.encode('utf-8'))
+        msg = 'Content commit {}'.format(name).encode('utf-8')
+        _, node = mock_repository.commit(msg, user=b'Tester')
+        return node
+
+    # Add an initial commit to exclude
+    assert mock_repository.branch() == b'default'
+    _commit('base')
+
+    # Create a branch
+    mock_repository.branch(b'test-review')
+
+    # Add some commits on test-review
+    commits = [_commit(i) for i in range(5)]
+    revision = commits[-1]
+
+    # Revert to default
+    mock_repository.update(b'default', clean=True)
+
+    # Add a new tip
+    tip = _commit('exclude')
+    assert mock_repository.tip().node == tip
+
+    # Load the revision
+    mozrev = MozReviewRevision('{}:12345:1'.format(revision.decode('utf-8')))
+    mozrev.load(mock_repository)
+    mozrev.analyze_patch()
+
+    # Check the review has all 5 files impacted by branch
+    # but does not have the exclude or base, or anything previous
+    assert mozrev.files == {'review_0.txt', 'review_1.txt', 'review_2.txt', 'review_3.txt', 'review_4.txt'}
