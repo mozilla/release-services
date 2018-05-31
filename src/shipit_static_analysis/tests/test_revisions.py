@@ -97,13 +97,14 @@ def test_mercurial_patch(mock_config, mock_repository):
     '''
     from shipit_static_analysis.revisions import MozReviewRevision
 
-    def _commit(name):
+    def _commit(name, public=True):
         path = os.path.join(mock_config.repo_dir, 'review_{}.txt'.format(name))
         with open(path, 'w') as f:
             f.write('Review commit {}'.format(name))
         mock_repository.add(path.encode('utf-8'))
         msg = 'Content commit {}'.format(name).encode('utf-8')
         _, node = mock_repository.commit(msg, user=b'Tester')
+        mock_repository.phase(node, public=public)
         return node
 
     # Add an initial commit to exclude
@@ -114,7 +115,7 @@ def test_mercurial_patch(mock_config, mock_repository):
     mock_repository.branch(b'test-review')
 
     # Add some commits on test-review
-    commits = [_commit(i) for i in range(5)]
+    commits = [_commit(i, public=False) for i in range(5)]
     revision = commits[-1]
 
     # Revert to default
