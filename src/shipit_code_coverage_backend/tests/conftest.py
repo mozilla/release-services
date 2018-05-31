@@ -6,6 +6,7 @@
 import glob
 import json
 import os
+import unittest
 
 import pytest
 
@@ -14,8 +15,26 @@ import backend_common.testing
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
 
-@pytest.fixture(scope='session')
-def app():
+@pytest.fixture(autouse=True)
+def mock_secrets():
+    '''
+    Provide configuration through mock Taskcluster secrets
+    '''
+    import cli_common.taskcluster
+    cli_common.taskcluster.get_secrets = unittest.mock.Mock(return_value={
+        'ESFRONTLINE': {
+            'url': 'http://mock-active-data:8000',
+            'user': {
+                'algorithm': 'sha256',
+                'id': 'test@allizom.org',
+                'key': 'dummySecret',
+            },
+        }
+    })
+
+
+@pytest.fixture()
+def app(mock_secrets):
     '''
     Load shipit_code_coverage_backend app in test mode
     '''
@@ -117,3 +136,49 @@ def coverage_builds():
         builds['summary'].update(build_data['summary'])
 
     return builds
+
+
+@pytest.fixture
+def mock_active_data(mock_secrets, aresponses):
+    '''
+    Mock elastic search HTTP responses
+     * available revisions
+     * count
+    '''
+    async def _search(request):
+        assert request.has_body
+        body = json.loads(await request.read())
+
+        if 'aggs' in body:
+            # Available revisions
+            filename = 'revisions.json'
+
+        else:
+            filename = 'tests_full.json'
+
+        payload = open(os.path.join(FIXTURES_DIR, 'active_data', filename)).read()
+        return aresponses.Response(text=payload, content_type='application/json')
+
+    # Tests count per filename/changeset
+    async def _count(request):
+        # By default gives empty count
+        filename = 'count_empty.json'
+
+        # Detect specific queries
+        if request.has_body:
+            body = json.loads(await request.read())
+            terms = {
+                k: v
+                for t in body['query']['bool']['must']
+                for k, v in t['term'].items()
+            }
+
+            if terms['source.file.name.~s~'] == 'js/src/jsutil.cpp' and terms['repo.changeset.id.~s~'] == '2d83e1843241d869a2fc5cf06f96d3af44c70e70':  # noqa
+                filename = 'count_full.json'
+
+        payload = open(os.path.join(FIXTURES_DIR, 'active_data', filename)).read()
+        return aresponses.Response(text=payload, content_type='application/json')
+
+    # Activate callbacks for coverage endpoints on mock server
+    aresponses.add('mock-active-data:8000', '/coverage/_count', 'get', _count)
+    aresponses.add('mock-active-data:8000', '/coverage/_search', 'get', _search)

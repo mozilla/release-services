@@ -184,6 +184,12 @@ in skipOverrides {
     '';
   };
 
+  "esFrontLine" = self: old: {
+    patchPhase = ''
+      sed -i -e "s|Flask==0.10.1|Flask==0.12.2|" -e "s|requests==2.3.0|requests==2.18.4|" setup.py
+    '';
+  };
+
   "RBTools" = self: old: {
     patches = [
          (pkgs.fetchurl {

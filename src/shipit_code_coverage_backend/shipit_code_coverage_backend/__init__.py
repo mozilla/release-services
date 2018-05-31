@@ -6,11 +6,12 @@
 from __future__ import absolute_import
 
 import os
-import backend_common
 import shipit_code_coverage_backend.config
 
 
 def create_app(config=None):
+    import backend_common
+
     app = backend_common.create_app(
         project_name=shipit_code_coverage_backend.config.PROJECT_NAME,
         app_name=shipit_code_coverage_backend.config.PROJECT_PATH,
