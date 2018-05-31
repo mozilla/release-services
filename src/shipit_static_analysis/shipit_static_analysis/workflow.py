@@ -86,7 +86,7 @@ class Workflow(object):
         client = hglib.open(settings.repo_dir)
 
         # Store MC top revision after robustcheckout
-        self.top_revision = client.identify(id=True).strip()
+        self.top_revision = client.log('reverse(public())', limit=1)[0].node
         logger.info('Mozilla central top revision', revision=self.top_revision)
 
         return client

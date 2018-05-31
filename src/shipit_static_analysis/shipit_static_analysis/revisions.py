@@ -178,8 +178,8 @@ class MozReviewRevision(Revision):
         '''
         assert isinstance(repo, hglib.client.hgclient)
 
-        # Get current revision
-        tip = repo.identify(id=True).strip().decode('utf-8')
+        # Get top revision
+        top = repo.log('reverse(public())', limit=1)[0].node.decode('utf-8')
 
         # Pull revision from review
         repo.pull(
@@ -190,7 +190,7 @@ class MozReviewRevision(Revision):
         )
 
         # Find common ancestor revision
-        out = repo.log('ancestor({}, {})'.format(tip, self.mercurial))
+        out = repo.log('ancestor({}, {})'.format(top, self.mercurial))
         assert out is not None and len(out) > 0, \
             'Failed to find ancestor for {}'.format(self.mercurial)
         ancestor = out[0].node.decode('utf-8')
