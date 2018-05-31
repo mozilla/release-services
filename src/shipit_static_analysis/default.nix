@@ -8,6 +8,7 @@ let
   inherit (releng_pkgs.pkgs.lib) fileContents concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
 
+  nodejs = nodejs-8_x;
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-shipit-static-analysis";
   dirname = "shipit_static_analysis";
@@ -15,7 +16,7 @@ let
   # Customize gecko environment with Nodejs & Python 3 for linters
   gecko-env = releng_pkgs.gecko-env.overrideDerivation(old : {
     buildPhase = old.buildPhase + ''
-      echo "export PATH=${nodejs-8_x}/bin:${python35}/bin:\$PATH" >> $out/bin/gecko-env
+      echo "export PATH=${nodejs}/bin:${python35}/bin:\$PATH" >> $out/bin/gecko-env
     '';
  } );
 
@@ -94,7 +95,7 @@ let
         shellcheck
 
         # Needed for linters
-        nodejs-8_x
+        nodejs
 
         # Gecko environment
         gecko-env
@@ -110,8 +111,8 @@ let
 
       # Mozlint deps
       ln -s ${gcc}/bin/gcc $out/bin
-      ln -s ${nodejs-8_x}/bin/node $out/bin
-      ln -s ${nodejs-8_x}/bin/npm $out/bin
+      ln -s ${nodejs}/bin/node $out/bin
+      ln -s ${nodejs}/bin/npm $out/bin
       ln -s ${git}/bin/git $out/bin
       ln -s ${python27}/bin/python2.7 $out/bin/python2.7
       ln -s ${python27}/bin/python2.7 $out/bin/python2
@@ -129,7 +130,7 @@ let
       ln -s ${gecko-env}/bin/gecko-env $out/bin
     '';
     shellHook = ''
-      export PATH="${mercurial}/bin:${git}/bin:${python27}/bin:${python35}/bin:${nodejs-8_x}/bin:$PATH"
+      export PATH="${mercurial}/bin:${git}/bin:${python27}/bin:${python35}/bin:${nodejs}/bin:$PATH"
 
       # Setup mach automation
       export MOZ_AUTOMATION=1
