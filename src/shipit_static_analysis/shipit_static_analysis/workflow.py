@@ -162,7 +162,9 @@ class Workflow(object):
             # Setup python environment
             logger.info('Mach lint setup...')
             cmd = ['gecko-env', './mach', 'lint', '--list']
-            run_check(cmd, cwd=settings.repo_dir)
+            out = run_check(cmd, cwd=settings.repo_dir)
+            assert 'error: problem with lint setup' not in out.decode('utf-8'), \
+                'Mach lint setup failed'
 
             # Always use mozlint
             if MOZLINT in self.analyzers:
