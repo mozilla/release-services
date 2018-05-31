@@ -4,10 +4,11 @@
 let
 
   inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkPython fromRequirementsFile filterSource ;
-  inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch nodejs git python27 python35 coreutils shellcheck clang_5 zlib;
+  inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch nodejs-8_x git python27 python35 coreutils shellcheck clang_5 zlib;
   inherit (releng_pkgs.pkgs.lib) fileContents concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
 
+  nodejs = nodejs-8_x;
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
   name = "mozilla-shipit-static-analysis";
   dirname = "shipit_static_analysis";

@@ -168,6 +168,8 @@ class MozLint(object):
         if returncode == 0:
             logger.debug('No Mozlint errors', path=path)
             return
+        assert 'error: problem with lint setup' not in output.decode('utf-8'), \
+            'Mach lint setup failed'
 
         # Load output as json
         # Only consider last line, as ./mach lint may output
