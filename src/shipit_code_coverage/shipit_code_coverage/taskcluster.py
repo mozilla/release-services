@@ -18,29 +18,21 @@ class TaskclusterException(Exception):
 
 def get_task(branch, revision, platform):
     if platform == 'linux':
-        # A few days after https://bugzilla.mozilla.org/show_bug.cgi?id=1457393 is fixed,
-        # we should only have 'linux64-ccov-debug' here and only support one platform_name
-        # and no fallback.
-        platform_names = ['linux64-ccov-debug', 'linux64-ccov-opt']
+        platform_name = 'linux64-ccov-debug'
     elif platform == 'win':
-        platform_names = ['win64-ccov-debug']
+        platform_name = 'win64-ccov-debug'
     else:
         raise TaskclusterException('Unsupported platform: %s' % platform)
 
-    for i, platform_name in enumerate(platform_names):
-        try:
-            r = requests.get(index_base + 'task/gecko.v2.{}.revision.{}.firefox.{}'.format(branch, revision, platform_name))
-            task = r.json()
-            if r.status_code == requests.codes.ok:
-                return task['taskId']
-            else:
-                if task['code'] == 'ResourceNotFound':
-                    raise TaskclusterException('Code coverage build failed and was not indexed.')
-                else:
-                    raise TaskclusterException('Unknown TaskCluster index error.')
-        except TaskclusterException:
-            if i == len(platform_names) - 1:
-                raise
+    r = requests.get(index_base + 'task/gecko.v2.{}.revision.{}.firefox.{}'.format(branch, revision, platform_name))
+    task = r.json()
+    if r.status_code == requests.codes.ok:
+        return task['taskId']
+    else:
+        if task['code'] == 'ResourceNotFound':
+            raise TaskclusterException('Code coverage build failed and was not indexed.')
+        else:
+            raise TaskclusterException('Unknown TaskCluster index error.')
 
 
 def get_task_details(task_id):
