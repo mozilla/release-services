@@ -32,16 +32,19 @@ def cmd(channel):
         channels = [channel]
 
 
-    for project_id in sorted(please_cli.config.PROJECTS_CONFIG.keys()):
-        project = please_cli.config.PROJECTS_CONFIG[project_id].get('deploy_options')
+    for project_name in sorted(please_cli.config.PROJECTS):
+        deployments = please_cli.config.PROJECTS_CONFIG.get(project_name, dict()).get('deploys', [])
 
-        if project:
-            for channel in sorted(channels):
+        for deployment in deployments:
+            channels = deployment.get('options', dict()).keys()
 
-                if channel not in project or 'url' not in project[channel]:
+            for channel in channels:
+                deployment_options = deployment['options'][channel]
+
+                if 'url' not in deployment_options:
                     continue
 
-                project_url = project[channel]['url']
+                project_url = deployment_options['url']
                 project_url = project_url.lstrip('https')
                 project_url = project_url.lstrip('http')
                 project_url = project_url.lstrip('://')
@@ -49,6 +52,5 @@ def cmd(channel):
                 contact_groups = 'shipitalerts'
                 if channel == 'production':
                     contact_groups = 'build'
-
 
                 click.echo(NAGIOS_TEMPLATE % (project_url, contact_groups))

@@ -11,6 +11,7 @@ import structlog.exceptions
 
 CHANNELS = [
     'master',
+    'testing',
     'staging',
     'production',
 ]

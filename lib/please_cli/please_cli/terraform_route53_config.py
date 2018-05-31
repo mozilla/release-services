@@ -120,62 +120,63 @@ def cmd():
     HEROKU_SHIPIT = dict()
     S3 = []
 
-    for (project_id, project) in please_cli.config.PROJECTS_CONFIG.items():
+    for project_name in sorted(please_cli.config.PROJECTS):
+        deployments = please_cli.config.PROJECTS_CONFIG.get(project_name, dict()).get('deploys', [])
 
-        project_deploy_options = project.get('deploy_options')
+        for deployment in deployments:
+            deployment_target= deployment['target']
+            channels = deployment.get('options', dict()).keys()
 
-        if project_deploy_options:
+            for channel in channels:
+                deployment_options = deployment['options'][channel]
 
-            for channel in project_deploy_options.keys():
-
-                if channel not in project_deploy_options or \
-                       'url' not in project_deploy_options[channel] or \
-                       'dns' not in project_deploy_options[channel]:
+                if 'dns' not in deployment_options:
                     continue
 
-                if 'dns_url' in project_deploy_options[channel]:
-                    domain = project_deploy_options[channel]['dns_url']
-                else:
-                    domain = project_deploy_options[channel]['url']
+                if 'dns_url' in deployment_options:
+                    domain = deployment_options['dns_url']
+                elif 'url' in deployment_options:
+                    domain = deployment_options['url']
                     domain = domain.lstrip('https')
                     domain = domain.lstrip('http')
                     domain = domain.lstrip('://')
+                else:
+                    continue
 
-
-                if project.get('deploy') == 'HEROKU':
-                    if project_id.startswith('releng-'):
+                if deployment_target == 'HEROKU':
+                    if project_name.startswith('releng-'):
                         HEROKU_RELENG.setdefault(channel, [])
                         HEROKU_RELENG[channel].append(dict(
-                            name=to_route53_name(project_id, channel),
+                            name=to_route53_name(project_name, channel),
                             domain=domain,
-                            dns=project_deploy_options[channel]['dns'],
+                            dns=deployment_options['dns'],
                         ))
-                    if project_id.startswith('shipit-'):
+                    if project_name.startswith('shipit-'):
                         HEROKU_SHIPIT.setdefault(channel, [])
                         HEROKU_SHIPIT[channel].append(dict(
-                            name=to_route53_name(project_id, channel),
+                            name=to_route53_name(project_name, channel),
                             domain=domain,
-                            dns=project_deploy_options[channel]['dns'],
+                            dns=deployment_options['dns'],
                         ))
 
-                if project.get('deploy') == 'S3':
-                    if project_id == 'releng-frontend':
+                if deployment_target == 'S3':
+                    if project_name == 'releng-frontend':
                         if channel == 'production':
                             alias = 'www'
                         else:
                             alias = channel
-                    elif project_id == 'shipit-frontend':
+                    elif project_name == 'shipit-frontend':
                         if channel == 'production':
                             alias = 'shipit'
                         else:
                             alias = 'shipit.' + channel
                     else:
-                        alias = project_id.lstrip('releng-').lstrip('shipit-')
+                        alias = project_name.lstrip('releng-').lstrip('shipit-')
                         alias = '{}.{}'.format(alias, channel)
                         if channel == 'production':
                             alias = alias.rstrip('.production')
 
-                    alias_target = project_deploy_options[channel].get('dns', '')
+                    alias_target = deployment_options.get('dns', '')
                     alias_target = alias_target.rstrip('.cloudfront.net.')
                     S3.append((alias, alias_target))
 

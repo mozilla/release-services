@@ -113,22 +113,36 @@ def cmd(project,
                 temp_file,
             ]
 
-        projects = [(project, None)] + \
-                   [(project + '.deploy.' + x, x) for x in please_cli.config.DEPLOY_CHANNELS]
+        nix_path_attributes = []
         if channel:
-            projects = [(project + '.deploy.' + channel, channel)]
+            deploys = please_cli.config.PROJECTS_CONFIG.get(project, dict()).get('deploys', [])
+            for deploy in deploys:
+                nix_path_attribute = deploy.get('options', dict()).get(channel, dict()).get('nix_path_attribute')
+                if nix_path_attribute:
+                    nix_path_attributes.append(project + '.' + nix_path_attribute)
+                else:
+                    nix_path_attributes.append(project)
 
-        for (attribute, channel_) in projects:
-            channel_attribute = ''
-            if channel_:
-                channel_attribute = '-channel-' + channel_
+        else:
+            deploys = please_cli.config.PROJECTS_CONFIG.get(project, dict()).get('deploys', [])
+            for deploy in deploys:
+                for _channel, options in deploy.get('options', dict()).items():
+                    if _channel in please_cli.config.DEPLOY_CHANNELS:
+                        nix_path_attribute = options.get('nix_path_attribute')
+                        if nix_path_attribute:
+                            nix_path_attributes.append(project + '.' + nix_path_attribute)
+                        else:
+                            nix_path_attributes.append(project)
+
+        nix_path_attributes = list(set(nix_path_attributes))
+
+        for nix_path_attribute in nix_path_attributes:
             command = [
                 nix_build,
                 please_cli.config.ROOT_DIR + '/nix/default.nix',
-                '-A', attribute,
-                '-o', please_cli.config.TMP_DIR + '/result-build-{project}{channel}'.format(
-                    project=project,
-                    channel=channel_attribute,
+                '-A', nix_path_attribute,
+                '-o', please_cli.config.TMP_DIR + '/result-build-{}'.format(
+                    nix_path_attribute.replace('.', '-').replace('_', '-'),
                 ),
             ] + nix_cache_secret_keys
             result, output, error = cli_common.command.run(
