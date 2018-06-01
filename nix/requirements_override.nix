@@ -88,6 +88,15 @@ in skipOverrides {
     '';
   };
 
+  "esFrontLine" = self: old: {
+     patchPhase = ''
+      sed -i \
+        -e "s|Flask==0.10.1|Flask|" \
+        -e "s|requests==2.3.0|requests|" \
+          setup.py
+     '';
+  };
+
   "fancycompleter" = self: old: {
     patchPhase = ''
       sed -i -e "s|setup_requires=\['setuptools_scm'\],||" setup.py
@@ -114,15 +123,6 @@ in skipOverrides {
         -e "s|flask.request.endpoint\]|flask.request.endpoint)|" \
           flask_talisman/talisman.py
     '';
-  };
-
-  "gunicorn" = self: old: {
-    patches = [
-         (pkgs.fetchurl {
-           url = "https://github.com/benoitc/gunicorn/pull/1527.patch";
-           sha256 = "14zvlm4dh432gd5n32i2x60rkq3d8wz1xlj45ldkp2z4qgp7chbk";
-         })
-      ];
   };
 
   "jsonschema" = self: old: {
@@ -184,9 +184,10 @@ in skipOverrides {
     '';
   };
 
-  "esFrontLine" = self: old: {
+  "Flask-Cache" = self: old: {
+    # XXX: from https://github.com/thadeusb/flask-cache/pull/189
     patchPhase = ''
-      sed -i -e "s|Flask==0.10.1|Flask==0.12.2|" -e "s|requests==2.3.0|requests==2.18.4|" setup.py
+      sed -i -e "s|flask.ext.cache|flask_cache|" flask_cache/jinja2ext.py
     '';
   };
 
