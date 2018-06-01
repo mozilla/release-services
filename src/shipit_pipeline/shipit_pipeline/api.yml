@@ -156,20 +156,19 @@ definitions:
   Pipeline:
     type: object
     required:
-      - uid
-      - parameters
+      - name
+      - steps
     properties:
-      uid:
+      name:
         type: string
-      parameters:
-        type: object
-        required:
-          - steps
-        properties:
-          steps:
-            type: array
-            items:
-              $ref: '#/definitions/PipelineStep'
+        description: Name of the pipeline
+      steps:
+        type: array
+        items:
+          $ref: '#/definitions/PipelineStep'
+      description:
+        type: string
+        description: Description of the pipeline
 
   PipelineStep:
     type: object
