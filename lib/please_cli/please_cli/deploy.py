@@ -20,6 +20,7 @@ import please_cli.config
 import please_cli.utils
 import push.image
 import push.registry
+import requests
 import taskcluster.exceptions
 
 
@@ -292,10 +293,14 @@ def cmd_HEROKU(ctx,
             item,
         ))
 
-        click.echo(' => Pushing {} to heroku ... '.format(project), nl=False)
+        click.echo(' => Looking up Docker ID ... ', nl=False)
+        project_spec = push.image.spec(project_path)
+        project_docker_id = project_spec['layers'][0]['json_digest']
+
+        click.echo(' => Pushing {} to heroku docker registry ... '.format(project), nl=False)
         with click_spinner.spinner():
             push.registry.push(
-                push.image.spec(project_path),
+                project_spec,
                 "https://registry.heroku.com",
                 heroku_username,
                 heroku_api_token,
@@ -305,6 +310,35 @@ def cmd_HEROKU(ctx,
         please_cli.utils.check_result(
             0,
             'Pushed {} to heroku.'.format(project),
+            ask_for_details=interactive,
+        )
+
+        click.echo(' => Releasing heroku app .. '.format(project), nl=False)
+        result, output = 1, 'works'
+        with click_spinner.spinner():
+            r = requests.patch(
+                'https://api.heroku.com/apps/{}/formation'.format(heroku_app),
+                json=dict(
+                    updates=[
+                        dict(
+                            type=heroku_dyno_type,
+                            docker_image=project_docker_id,
+                            # XXX: we could have command here
+                        ),
+                    ],
+                ),
+                headers={
+                    'Accept': 'application/vnd.heroku+json; version=3.docker-releases',
+                    'Authorization': 'Bearer {}'.format(secrets['HEROKU_PASSWORD']),
+                },
+            )
+            output = r.text
+            if r.status_code == 200:
+                result = 0
+
+        please_cli.utils.check_result(
+            result,
+            output,
             ask_for_details=interactive,
         )
 
