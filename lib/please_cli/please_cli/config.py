@@ -434,12 +434,15 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'nix_path_attribute': 'cron.replicate.testing',
+                        'name-suffix': '-replicate',
                     },
                     'staging': {
                         'nix_path_attribute': 'cron.replicate.staging',
+                        'name-suffix': '-replicate',
                     },
                     'production': {
                         'nix_path_attribute': 'cron.replicate.production',
+                        'name-suffix': '-replicate',
                     },
                 },
             },
@@ -448,12 +451,15 @@ PROJECTS_CONFIG = {
                 'options': {
                     'testing': {
                         'nix_path_attribute': 'cron.check_pending_uploads.testing',
+                        'name-suffix': '-check_pending_uploads',
                     },
                     'staging': {
                         'nix_path_attribute': 'cron.check_pending_uploads.staging',
+                        'name-suffix': '-check_pending_uploads',
                     },
                     'production': {
                         'nix_path_attribute': 'cron.check_pending_uploads.production',
+                        'name-suffix': '-check_pending_uploads',
                     },
                 },
             },

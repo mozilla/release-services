@@ -8,7 +8,6 @@ import os
 import subprocess
 import tempfile
 
-import awscli.clidriver
 import cli_common.cli
 import cli_common.command
 import cli_common.taskcluster
@@ -28,10 +27,11 @@ import please_cli.utils
     type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
-    '--channel',
-    type=click.Choice(please_cli.config.CHANNELS),
-    required=False,
-    default=None,
+    '--nix-path-attribute',
+    'nix_path_attributes',
+    type=str,
+    multiple=True,
+    required=True,
     )
 @click.option(
     '--nix-build',
@@ -70,7 +70,7 @@ import please_cli.utils
     default=True,
     )
 def cmd(project,
-        channel,
+        nix_path_attributes,
         nix_build,
         nix,
         cache_bucket,
@@ -98,81 +98,61 @@ def cmd(project,
                                                  taskcluster_access_token=taskcluster_access_token,
                                                  )
 
-    click.echo(' => Building {} project ... '.format(project), nl=False)
-    with click_spinner.spinner():
-        temp_files =  []
-        nix_cache_secret_keys = []
-        for secret_key in secrets['NIX_CACHE_SECRET_KEYS']:
-            fd, temp_file = tempfile.mkstemp(text=True)
-            with open(temp_file, 'w') as f:
-                f.write(secret_key)
-            os.close(fd)
-            nix_cache_secret_keys += [
-                '--option',
-                'secret-key-files',
-                temp_file,
-            ]
+    temp_files = []
+    nix_cache_secret_keys = []
+    for secret_key in secrets['NIX_CACHE_SECRET_KEYS']:
+        fd, temp_file = tempfile.mkstemp(text=True)
+        with open(temp_file, 'w') as f:
+            f.write(secret_key)
+        os.close(fd)
+        nix_cache_secret_keys += [
+            '--option',
+            'secret-key-files',
+            temp_file,
+        ]
+        temp_files.append(temp_file)
 
-        nix_path_attributes = []
-        if channel:
-            deploys = please_cli.config.PROJECTS_CONFIG.get(project, dict()).get('deploys', [])
-            for deploy in deploys:
-                nix_path_attribute = deploy.get('options', dict()).get(channel, dict()).get('nix_path_attribute')
-                if nix_path_attribute:
-                    nix_path_attributes.append(project + '.' + nix_path_attribute)
-                else:
-                    nix_path_attributes.append(project)
+    outputs = []
+    for nix_path_attribute in nix_path_attributes:
+        click.echo(' => Building {} ... '.format(nix_path_attribute), nl=False)
 
-        else:
-            deploys = please_cli.config.PROJECTS_CONFIG.get(project, dict()).get('deploys', [])
-            for deploy in deploys:
-                for _channel, options in deploy.get('options', dict()).items():
-                    if _channel in please_cli.config.DEPLOY_CHANNELS:
-                        nix_path_attribute = options.get('nix_path_attribute')
-                        if nix_path_attribute:
-                            nix_path_attributes.append(project + '.' + nix_path_attribute)
-                        else:
-                            nix_path_attributes.append(project)
+        output = os.path.join(
+            please_cli.config.TMP_DIR,
+            'result-build-{}'.format(nix_path_attribute.replace('.', '-').replace('_', '-')),
+        )
+        outputs.append(output)
 
-        nix_path_attributes = list(set(nix_path_attributes))
-
-        for nix_path_attribute in nix_path_attributes:
-            command = [
-                nix_build,
-                please_cli.config.ROOT_DIR + '/nix/default.nix',
-                '-A', nix_path_attribute,
-                '-o', please_cli.config.TMP_DIR + '/result-build-{}'.format(
-                    nix_path_attribute.replace('.', '-').replace('_', '-'),
-                ),
-            ] + nix_cache_secret_keys
+        with click_spinner.spinner():
             result, output, error = cli_common.command.run(
-                command,
+                [
+                    nix_build,
+                    please_cli.config.ROOT_DIR + '/nix/default.nix',
+                    '-A', nix_path_attribute,
+                    '-o', output,
+                ] + nix_cache_secret_keys,
                 stream=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
             )
+            please_cli.utils.check_result(
+                result,
+                output,
+                ask_for_details=interactive,
+            )
             if result != 0:
                 break
-
-        for temp_file in temp_files:
-            os.remove(temp_file)
-
-    please_cli.utils.check_result(
-        result,
-        output,
-        ask_for_details=interactive,
-    )
 
     if cache_bucket and cache_region:
         tmp_cache_dir = os.path.join(please_cli.config.TMP_DIR, 'cache')
         if not os.path.exists(tmp_cache_dir):
             os.makedirs(tmp_cache_dir)
 
-        build_results = [
-            os.path.join(please_cli.config.TMP_DIR, item)
-            for item in os.listdir(please_cli.config.TMP_DIR)
-            if item.startswith('result-build-' + project)
-        ]
+        build_results = []
+        for nix_path_attribute in nix_path_attributes:
+            build_results.append(os.path.join(
+                please_cli.config.TMP_DIR,
+                'result-build-{}'.format(nix_path_attribute),
+            ))
 
         os.environ['AWS_ACCESS_KEY_ID'] = secrets['CACHE_ACCESS_KEY_ID']
         os.environ['AWS_SECRET_ACCESS_KEY'] = secrets['CACHE_SECRET_ACCESS_KEY']
@@ -181,7 +161,7 @@ def cmd(project,
             '--to', 's3://{}?region={}'.format(cache_bucket, cache_region),
             '-vvvv',
         ] + build_results
-        click.echo(' => Creating cache artifacts for {} project... '.format(project), nl=False)
+        click.echo(' => Creating cache artifacts for {} project ... '.format(project), nl=False)
         with click_spinner.spinner():
             result, output, error = cli_common.command.run(
                 command,
@@ -193,6 +173,11 @@ def cmd(project,
             output,
             ask_for_details=interactive,
         )
+
+    for temp_file in temp_files:
+        os.remove(temp_file)
+
+    return outputs
 
 
 @click.command(

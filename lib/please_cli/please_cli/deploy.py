@@ -40,9 +40,8 @@ log = cli_common.log.get_logger(__name__)
     type=str,
     )
 @click.option(
-    '--channel',
-    type=click.Choice(please_cli.config.CHANNELS),
-    envvar="GITHUB_BRANCH",
+    '--nix-path-attribute',
+    type=str,
     required=True,
     )
 @click.option(
@@ -77,7 +76,7 @@ log = cli_common.log.get_logger(__name__)
 def cmd_S3(ctx,
            project,
            s3_bucket,
-           channel,
+           nix_path_attribute,
            csp,
            env,
            nix_build,
@@ -105,26 +104,19 @@ def cmd_S3(ctx,
     AWS_SECRET_ACCESS_KEY = secrets['DEPLOY_S3_SECRET_ACCESS_KEY']
 
     # 1. build project (TODO: but only pull from cache)
-    ctx.invoke(please_cli.build.cmd,
-               project=project,
-               channel=channel,
-               nix_build=nix_build,
-               nix=nix,
-               taskcluster_secret=taskcluster_secret,
-               taskcluster_client_id=taskcluster_client_id,
-               taskcluster_access_token=taskcluster_access_token,
-               interactive=interactive,
-               )
+    project_paths = ctx.invoke(please_cli.build.cmd,
+                               project=project,
+                               nix_path_attributes=[nix_path_attribute],
+                               nix_build=nix_build,
+                               nix=nix,
+                               taskcluster_secret=taskcluster_secret,
+                               taskcluster_client_id=taskcluster_client_id,
+                               taskcluster_access_token=taskcluster_access_token,
+                               interactive=interactive,
+                               )
 
-    for item in os.listdir(please_cli.config.TMP_DIR):
-
-        if not item.startswith('result-build-{}-'.format(project)):
-            continue
-
-        project_path = os.path.realpath(os.path.join(
-            please_cli.config.TMP_DIR,
-            item,
-        ))
+    for project_path in project_paths:
+        project_path = os.path.realpath(project_path)
 
         # 2. create temporary copy of project
         click.echo(' => Copying build artifacs to temporary location ... ', nl=False)
@@ -225,9 +217,8 @@ def cmd_S3(ctx,
     type=str,
     )
 @click.option(
-    '--channel',
-    type=click.Choice(please_cli.config.CHANNELS),
-    envvar="GITHUB_BRANCH",
+    '--nix-path-attribute',
+    type=str,
     required=True,
     )
 @click.option(
@@ -254,7 +245,7 @@ def cmd_HEROKU(ctx,
                heroku_api_token,
                heroku_dyno_type,
                heroku_command,
-               channel,
+               nix_path_attribute,
                nix_build,
                nix,
                taskcluster_secret,
@@ -278,26 +269,19 @@ def cmd_HEROKU(ctx,
         heroku_username = secrets['HEROKU_USERNAME']
         heroku_api_token = secrets['HEROKU_PASSWORD']
 
-    ctx.invoke(please_cli.build.cmd,
-               project=project,
-               channel=channel,
-               nix_build=nix_build,
-               nix=nix,
-               taskcluster_secret=taskcluster_secret,
-               taskcluster_client_id=taskcluster_client_id,
-               taskcluster_access_token=taskcluster_access_token,
-               interactive=interactive,
-               )
+    project_paths = ctx.invoke(please_cli.build.cmd,
+                               project=project,
+                               nix_path_attributes=[nix_path_attribute],
+                               nix_build=nix_build,
+                               nix=nix,
+                               taskcluster_secret=taskcluster_secret,
+                               taskcluster_client_id=taskcluster_client_id,
+                               taskcluster_access_token=taskcluster_access_token,
+                               interactive=interactive,
+                               )
 
-    for item in os.listdir(please_cli.config.TMP_DIR):
-
-        if not item.startswith('result-build-{}-'.format(project)):
-            continue
-
-        project_path = os.path.realpath(os.path.join(
-            please_cli.config.TMP_DIR,
-            item,
-        ))
+    for project_path in project_paths:
+        project_path = os.path.realpath(project_path)
 
         click.echo(' => Looking up Docker ID ... ', nl=False)
         project_spec = push.image.spec(project_path)
@@ -355,9 +339,8 @@ def cmd_HEROKU(ctx,
     type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
-    '--channel',
-    type=click.Choice(please_cli.config.CHANNELS),
-    envvar="GITHUB_BRANCH",
+    '--nix-path-attribute',
+    type=str,
     required=True,
     )
 @click.option(
@@ -394,7 +377,7 @@ def cmd_HEROKU(ctx,
 @click.pass_context
 def cmd_TASKCLUSTER_HOOK(ctx,
                          project,
-                         channel,
+                         nix_path_attribute,
                          hook_id,
                          hook_group_id,
                          nix_build,
@@ -443,26 +426,19 @@ def cmd_TASKCLUSTER_HOOK(ctx,
         raise_exception=False,
     )
 
-    ctx.invoke(please_cli.build.cmd,
-               project=project,
-               channel=channel,
-               nix_build=nix_build,
-               nix=nix,
-               taskcluster_secret=taskcluster_secret,
-               taskcluster_client_id=taskcluster_client_id,
-               taskcluster_access_token=taskcluster_access_token,
-               interactive=interactive,
-               )
+    project_paths = ctx.invoke(please_cli.build.cmd,
+                               project=project,
+                               nix_path_attributes=[nix_path_attribute],
+                               nix_build=nix_build,
+                               nix=nix,
+                               taskcluster_secret=taskcluster_secret,
+                               taskcluster_client_id=taskcluster_client_id,
+                               taskcluster_access_token=taskcluster_access_token,
+                               interactive=interactive,
+                               )
 
-    for item in os.listdir(please_cli.config.TMP_DIR):
-
-        if not item.startswith('result-build-{}-'.format(project)):
-            continue
-
-        project_path = os.path.realpath(os.path.join(
-            please_cli.config.TMP_DIR,
-            item,
-        ))
+    for project_path in project_paths:
+        project_path = os.path.realpath(project_path)
 
         with open(project_path) as f:
             hook = json.load(f)
@@ -528,10 +504,14 @@ def cmd_TASKCLUSTER_HOOK(ctx,
     type=click.Choice(please_cli.config.PROJECTS),
     )
 @click.option(
-    '--channel',
-    type=click.Choice(please_cli.config.CHANNELS),
-    envvar="GITHUB_BRANCH",
+    '--nix-path-attribute',
+    type=str,
     required=True,
+    )
+@click.option(
+    '--channel',
+    type=str,
+    required=False,
     )
 @click.option(
     '--nix-build',
@@ -567,8 +547,8 @@ def cmd_TASKCLUSTER_HOOK(ctx,
     )
 @click.option(
     '--docker-image-tag-format',
-    default='{project}-{channel}',
-    help='Docker image tag format. Accepted templates: {project}, {channel}',
+    default='{project}-{nix_path_attribute}-{channel}',
+    help='Docker image tag format. Accepted templates: {project}, {nix_path_attribute}, {channel}',
     )
 @click.option(
     '--interactive/--no-interactive',
@@ -577,6 +557,7 @@ def cmd_TASKCLUSTER_HOOK(ctx,
 @click.pass_context
 def cmd_DOCKERHUB(ctx,
                   project,
+                  nix_path_attribute,
                   channel,
                   nix_build,
                   nix,
@@ -589,10 +570,10 @@ def cmd_DOCKERHUB(ctx,
                   docker_repo,
                   docker_image_tag_format,
                   interactive,
-                 ):
+                  ):
     '''Push to Docker Hub.
 
-    Creates versioned ($project-$hash) and stable (*-$channel) tags.
+    Creates versioned ($project-$hash) and stable ($project-$nix_path_attribute-$channel) tags.
     '''
 
     if not (docker_username and docker_password):
@@ -609,30 +590,25 @@ def cmd_DOCKERHUB(ctx,
         docker_username = secrets['DOCKER_USERNAME']
         docker_password = secrets['DOCKER_PASSWORD']
 
-    ctx.invoke(please_cli.build.cmd,
+    project_paths = ctx.invoke(please_cli.build.cmd,
                project=project,
-               channel=channel,
+               nix_path_attributes=[nix_path_attribute],
                nix_build=nix_build,
                nix=nix,
                taskcluster_secret=taskcluster_secret,
                taskcluster_client_id=taskcluster_client_id,
                taskcluster_access_token=taskcluster_access_token,
                interactive=interactive,
-              )
+               )
 
-    for item in os.listdir(please_cli.config.TMP_DIR):
-
-        if not item.startswith('result-build-{}-'.format(project)):
-            continue
-
-        project_path = os.path.realpath(os.path.join(
-            please_cli.config.TMP_DIR,
-            item,
-        ))
+    for project_path in project_paths:
+        project_path = os.path.realpath(project_path)
 
         spec = push.image.spec(project_path)
         # Stable tag, e.g. shipit-workflow-staging
-        image_tag = docker_image_tag_format.format(project=project, channel=channel)
+        image_tag = docker_image_tag_format.format(project=project,
+                                                   nix_path_attributes=nix_path_attribute,
+                                                   channel=channel)
         project_basename = os.path.basename(project_path)
         # remove the docker-image-mozilla- prefix and the extension
         tag_base = project_basename.replace('docker-image-mozilla-', '').replace('.tar.gz', '')
