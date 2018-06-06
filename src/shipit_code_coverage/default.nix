@@ -15,7 +15,7 @@ let
 
   # Marco grcov
   grcov = rustPlatform.buildRustPackage rec {
-    version = "0.1.37";
+    version = "0.1.38";
     name = "grcov-${version}";
 
     buildInputs = [
@@ -26,7 +26,7 @@ let
       owner = "marco-c";
       repo = "grcov";
       rev = "v${version}";
-      sha256 = "1mbv3j7j35pcsi0pfy8fnqhqcip8l52ybciai9d2052glg7xa4v6";
+      sha256 = "1nlc70f122bagkdyfy12pzjcjxcvakza40gx4fjccxqqjvvczd5g";
     };
 
 	# ...
