@@ -220,6 +220,11 @@ def cmd_S3(ctx,
     default='web'
     )
 @click.option(
+    '--heroku-command',
+    default=None,
+    type=str,
+    )
+@click.option(
     '--channel',
     type=click.Choice(please_cli.config.CHANNELS),
     envvar="GITHUB_BRANCH",
@@ -248,6 +253,7 @@ def cmd_HEROKU(ctx,
                heroku_username,
                heroku_api_token,
                heroku_dyno_type,
+               heroku_command,
                channel,
                nix_build,
                nix,
@@ -316,17 +322,15 @@ def cmd_HEROKU(ctx,
         click.echo(' => Releasing heroku app .. '.format(project), nl=False)
         result, output = 1, 'works'
         with click_spinner.spinner():
+            update = dict(
+                type=heroku_dyno_type,
+                docker_image=project_docker_id,
+            )
+            if heroku_command:
+                update['command'] = heroku_command
             r = requests.patch(
                 'https://api.heroku.com/apps/{}/formation'.format(heroku_app),
-                json=dict(
-                    updates=[
-                        dict(
-                            type=heroku_dyno_type,
-                            docker_image=project_docker_id,
-                            # XXX: we could have command here
-                        ),
-                    ],
-                ),
+                json=dict(updates=[update]),
                 headers={
                     'Accept': 'application/vnd.heroku+json; version=3.docker-releases',
                     'Authorization': 'Bearer {}'.format(secrets['HEROKU_PASSWORD']),
