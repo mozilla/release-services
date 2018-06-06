@@ -136,14 +136,21 @@ class Api:
         return self.__api
 
 
-def handle_default_exceptions(e):
-    return flask.jsonify({
+def handle_default_exceptions_raw(e):
+    code = getattr(e, 'code', 500)
+    description = getattr(e, 'description', str(e))
+    return {
         'type': 'about:blank',
         'title': str(e),
-        'status': e.code,
-        'detail': e.description,
+        'status': code,
+        'detail': description,
         'instance': 'about:blank',
-    }), e.code
+    }
+
+
+def handle_default_exceptions(e):
+    error = handle_default_exceptions_raw(e)
+    return flask.jsonify(error), error['status']
 
 
 def init_app(app):
