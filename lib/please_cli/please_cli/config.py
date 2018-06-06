@@ -406,6 +406,57 @@ PROJECTS_CONFIG = {
                     },
                 },
             },
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'nix_path_attribute': 'docker',
+                        'heroku_app': 'releng-testing-tooltool',
+                        'heroku_dyno_type': 'worker',
+                        'heroku_command': 'flask worker',
+                    },
+                    'staging': {
+                        'nix_path_attribute': 'docker',
+                        'heroku_app': 'releng-staging-tooltool',
+                        'heroku_dyno_type': 'worker',
+                        'heroku_command': 'flask worker',
+                    },
+                    'production': {
+                        'nix_path_attribute': 'docker',
+                        'heroku_app': 'releng-production-tooltool',
+                        'heroku_dyno_type': 'worker',
+                        'heroku_command': 'flask worker',
+                    },
+                },
+            },
+            {
+                'target': 'TASKCLUSTER_HOOK',
+                'options': {
+                    'testing': {
+                        'nix_path_attribute': 'cron.replicate.testing',
+                    },
+                    'staging': {
+                        'nix_path_attribute': 'cron.replicate.staging',
+                    },
+                    'production': {
+                        'nix_path_attribute': 'cron.replicate.production',
+                    },
+                },
+            },
+            {
+                'target': 'TASKCLUSTER_HOOK',
+                'options': {
+                    'testing': {
+                        'nix_path_attribute': 'cron.check_pending_uploads.testing',
+                    },
+                    'staging': {
+                        'nix_path_attribute': 'cron.check_pending_uploads.staging',
+                    },
+                    'production': {
+                        'nix_path_attribute': 'cron.check_pending_uploads.production',
+                    },
+                },
+            },
         ],
     },
     'releng-treestatus': {

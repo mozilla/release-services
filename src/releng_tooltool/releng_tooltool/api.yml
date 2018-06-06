@@ -62,13 +62,19 @@ paths:
             The region query argument ``region=us-west-1`` indicates a
             preference for URLs in that region, although if the region is not
             available then URLs in other regions may be returned.
-          required: true
+          required: false
+          default: null
           type: string
       responses:
         200:
           description: Upload batch.
           schema:
-            $ref: '#/definitions/UploadBatch'
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                $ref: '#/definitions/UploadBatch'
 
 
   /upload/{id}:
@@ -308,7 +314,6 @@ definitions:
       together -- similar to a version-control commit.  The message and files
       list must be non-empty.
     required:
-      - id
       - message
       - files
     properties:

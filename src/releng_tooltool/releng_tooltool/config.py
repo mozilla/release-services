@@ -5,3 +5,5 @@
 
 PROJECT_NAME = 'releng-tooltool'
 APP_NAME = 'releng_tooltool'
+
+PULSE_ROUTE_CHECK_FILE_PENDING_UPLOADS = 'check_file_pending_uploads'

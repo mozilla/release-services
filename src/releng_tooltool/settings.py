@@ -15,6 +15,7 @@ DEBUG = bool(os.environ.get('DEBUG', False))
 # -- LOAD SECRETS -------------------------------------------------------------
 
 required = [
+    'APP_CHANNEL',
     'SECRET_KEY_BASE64',
     'DATABASE_URL',
     # https://github.com/mozilla/build-cloud-tools/blob/master/configs/cloudformation/tooltool.py
@@ -22,6 +23,8 @@ required = [
     # https://github.com/mozilla/build-cloud-tools/blob/master/configs/cloudformation/iam_relengapi.py
     'S3_REGIONS_ACCESS_KEY_ID',
     'S3_REGIONS_SECRET_ACCESS_KEY',
+    'PULSE_USER',
+    'PULSE_PASSWORD',
 ]
 
 existing = {x: os.environ.get(x) for x in required if x in os.environ}
