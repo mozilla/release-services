@@ -36,7 +36,7 @@ let
     # error: test failed, to rerun pass '--test test'
     doCheck = false;
 
-    cargoSha256 = "0wp26nw7kgysfk94hzm3dj8m0xj2wzzkah5lvv038chqmr6xvzjv";
+    cargoSha256 = "07s0pcyz6vxw3p219vk70f5pyvcnv18dln5xzxlyp8qmgwbpcv1c";
 
     meta = with releng_pkgs.pkgs.stdenv.lib; {
       description = "grcov collects and aggregates code coverage information for multiple source files.";
