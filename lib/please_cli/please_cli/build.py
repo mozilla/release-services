@@ -147,20 +147,13 @@ def cmd(project,
         if not os.path.exists(tmp_cache_dir):
             os.makedirs(tmp_cache_dir)
 
-        build_results = []
-        for nix_path_attribute in nix_path_attributes:
-            build_results.append(os.path.join(
-                please_cli.config.TMP_DIR,
-                'result-build-{}'.format(nix_path_attribute),
-            ))
-
         os.environ['AWS_ACCESS_KEY_ID'] = secrets['CACHE_ACCESS_KEY_ID']
         os.environ['AWS_SECRET_ACCESS_KEY'] = secrets['CACHE_SECRET_ACCESS_KEY']
         command = [
             nix, 'copy',
             '--to', 's3://{}?region={}'.format(cache_bucket, cache_region),
             '-vvvv',
-        ] + build_results
+        ] + outputs
         click.echo(' => Creating cache artifacts for {} project ... '.format(project), nl=False)
         with click_spinner.spinner():
             result, output, error = cli_common.command.run(

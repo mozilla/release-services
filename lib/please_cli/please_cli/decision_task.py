@@ -52,8 +52,8 @@ def get_build_task(index,
 
     if cache_bucket and cache_region:
         command += [
-            '--cache-bucket="{}"'.format(cache_bucket),
-            '--cache-region="{}"'.format(cache_region),
+            '--cache-bucket={}'.format(cache_bucket),
+            '--cache-region={}'.format(cache_region),
         ]
     return get_task(
         task_group_id,
