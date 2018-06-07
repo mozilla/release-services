@@ -28,7 +28,6 @@ if not DEBUG:
         'REDIS_URL',
         'PULSE_USER',
         'PULSE_TREESTATUS_EXCHANGE',
-        'PULSE_TREESTATUS_EXCHANGE',
         'PULSE_USE_SSL',
         'PULSE_CONNECTION_TIMEOUT',
         'PULSE_HOST',
