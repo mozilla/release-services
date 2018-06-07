@@ -120,16 +120,14 @@ class ClangTidy(object):
         Parse clang-tidy output into structured issues
         '''
 
-        # Limit clang output parsing to 'Enabled checks:'
-        end = re.search(r'^Enabled checks:\n', clang_output, re.MULTILINE)
-        if end is not None:
-            clang_output = clang_output[:end.start()-1]
-
         # Sort headers by positions
         headers = sorted(
             REGEX_HEADER.finditer(clang_output),
             key=lambda h: h.start()
         )
+        if not headers:
+            logger.warn('No clang-tidy header was found even though a clang output was provided')
+            return []
 
         issues = []
         for i, header in enumerate(headers):
