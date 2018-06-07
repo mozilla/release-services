@@ -131,7 +131,7 @@ def get_deploy_task(index,
             project,
             '--s3-bucket=' + deploy_options['s3_bucket'],
             '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
-            '--channel=' + channel,
+            '--nix-path-attribute=' + nix_path_attribute,
             '--no-interactive',
         ] + project_csp + project_envs
 
@@ -156,7 +156,7 @@ def get_deploy_task(index,
 
         command += [
             '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
-            '--channel=' + channel,
+            '--nix-path-attribute=' + nix_path_attribute,
             '--no-interactive',
         ]
 
@@ -180,7 +180,7 @@ def get_deploy_task(index,
             '--hook-group-id={}'.format(hook_group_id),
             '--hook-id={}'.format(hook_id),
             '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
-            '--channel=' + channel,
+            '--nix-path-attribute=' + nix_path_attribute,
             '--no-interactive',
         ]
         scopes += [
