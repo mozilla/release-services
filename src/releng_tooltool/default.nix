@@ -30,7 +30,7 @@ let
                   ];
                 taskImage = self.docker;
                 taskEnv = {
-                  "APP_CHANNEL" = channel;
+                  TASKCLUSTER_SECRET = "repo:github.com/mozilla-releng/services:branch:${channel}";
                 };
                 taskCapabilities = {};
                 taskCommand = [
