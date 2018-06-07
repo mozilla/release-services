@@ -152,7 +152,7 @@ def get_deploy_task(index,
 
         heroku_command = deploy_options.get('heroku_command')
         if heroku_command:
-            command.append('--heroku-dyno-type=' + deploy_options['heroku_dyno_type'])
+            command.append('--heroku-command=' + heroku_command)
 
         command += [
             '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,

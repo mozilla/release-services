@@ -303,7 +303,7 @@ def cmd_HEROKU(ctx,
             ask_for_details=interactive,
         )
 
-        click.echo(' => Releasing heroku app .. '.format(project), nl=False)
+        click.echo(' => Releasing heroku app .. ', nl=False)
         result, output = 1, 'works'
         with click_spinner.spinner():
             update = dict(
