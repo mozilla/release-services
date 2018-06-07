@@ -18,6 +18,7 @@ from shipit_static_analysis.revisions import Revision
 logger = get_logger(__name__)
 
 REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): ([^\[\]\n]+)(?: \[([\.\w-]+)\])?$', re.MULTILINE)
+REGEX_HAS_WARNINGS = re.compile(r'^(\d+) warnings present.$', re.MULTILINE)
 
 ISSUE_MARKDOWN = '''
 ## clang-tidy {type}
@@ -119,17 +120,25 @@ class ClangTidy(object):
         '''
         Parse clang-tidy output into structured issues
         '''
-
-        # Limit clang output parsing to 'Enabled checks:'
-        end = re.search(r'^Enabled checks:\n', clang_output, re.MULTILINE)
-        if end is not None:
-            clang_output = clang_output[:end.start()-1]
+        # Detect end of file warnings count
+        # When an invalid file is used, this line does not appear
+        has_warnings = REGEX_HAS_WARNINGS.search(clang_output)
+        if has_warnings is None:
+            logger.info('Empty clang output, skipping analysis.')
+            return []
+        nb_warnings = int(has_warnings.group(1))
+        if nb_warnings == 0:
+            logger.info('Mach static analysis did not find any issue')
+            return []
+        logger.info('Mach static analysis found some issues', nb=nb_warnings)
 
         # Sort headers by positions
         headers = sorted(
             REGEX_HEADER.finditer(clang_output),
             key=lambda h: h.start()
         )
+        if not headers:
+            raise Exception('No clang-tidy header was found even though a clang output was provided')
 
         issues = []
         for i, header in enumerate(headers):

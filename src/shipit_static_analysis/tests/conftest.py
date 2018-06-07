@@ -372,7 +372,8 @@ def mock_clang(tmpdir, monkeypatch):
     def mock_mach(command, *args, **kwargs):
         if command[:5] == ['gecko-env', './mach', '--log-no-times', 'static-analysis', 'check']:
             command = ['clang-tidy', ] + command[5:]
-            return real_check_output(command, *args, **kwargs)
+            output = real_check_output(command, *args, **kwargs)
+            return output + b'\n42 warnings present.'
 
         # Really run command through normal check_output
         return real_check_output(command, *args, **kwargs)
