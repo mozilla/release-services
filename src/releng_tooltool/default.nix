@@ -27,6 +27,7 @@ let
                 scopes =
                   [ "secrets:get:repo:github.com/mozilla-releng/services:branch:${channel}"
                     "index:insert-task:project.releng.services.project.${channel}.${name}.*"
+                    "queue:create-task:aws-provisioner-v1/releng-svc"
                   ];
                 taskImage = self.docker;
                 taskEnv = {};
