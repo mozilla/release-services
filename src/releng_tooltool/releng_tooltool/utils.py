@@ -5,16 +5,18 @@
 
 import datetime
 import re
+import typing
 
 import pytz
 
 
-def now():
+def now() -> datetime.datetime:
     return datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
 
 
-def keyname(digest):
+def keyname(digest: str) -> str:
     return 'sha512/{}'.format(digest)
 
 
-is_valid_sha512 = re.compile(r'^[0-9a-f]{128}$').match
+def is_valid_sha512(sha512: str) -> typing.Optional[typing.Match[str]]:
+    return re.compile(r'^[0-9a-f]{128}$').match(sha512)

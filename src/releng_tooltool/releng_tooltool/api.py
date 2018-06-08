@@ -5,6 +5,7 @@
 
 import datetime
 import random
+import typing
 
 import flask
 import flask_login
@@ -22,28 +23,30 @@ import releng_tooltool.utils
 logger = cli_common.log.get_logger(__name__)
 
 
-def _get_region_and_bucket(region, regions):
+def _get_region_and_bucket(region: typing.Optional[str],
+                           regions: typing.Dict[str, str],
+                           ) -> typing.Tuple[str, str]:
     if region and region in regions:
         return region, regions[region]
     # no region specified, so return one at random
     return random.choice(list(regions.items()))
 
 
-def search_batches(q):
+def search_batches(q: str) -> typing.List[dict]:
     return [row.to_dict()
             for row in releng_tooltool.models.Batch.query.filter(
                 sa.or_(releng_tooltool.models.Batch.author.contains(q),
                        releng_tooltool.models.Batch.message.contains(q))).all()]
 
 
-def get_batch(id):
+def get_batch(id: int) -> dict:
     row = releng_tooltool.models.Batch.query.filter(releng_tooltool.models.Batch.id == id).first()
     if not row:
         raise werkzeug.exceptions.NotFound
     return row.to_dict()
 
 
-def upload_batch(body, region=None):
+def upload_batch(body: dict, region: typing.Optional[str]=None) -> dict:
     if not body['message']:
         raise werkzeug.exceptions.BadRequest('message must be non-empty')
 
@@ -57,7 +60,7 @@ def upload_batch(body, region=None):
     if type(UPLOAD_EXPIRES_IN) is not int:
         raise werkzeug.exceptions.InternalServerError('UPLOAD_EXPIRES_IN should be of type int.')
 
-    S3_REGIONS = flask.current_app.config['S3_REGIONS']
+    S3_REGIONS = flask.current_app.config['S3_REGIONS']  # type: typing.Dict[str, str]
     if type(S3_REGIONS) is not dict:
         raise werkzeug.exceptions.InternalServerError('S3_REGIONS should be of type dict.')
     region, bucket = _get_region_and_bucket(region, S3_REGIONS)
@@ -142,7 +145,8 @@ def upload_batch(body, region=None):
     return dict(result=body)
 
 
-def upload_complete(digest):
+def upload_complete(digest: str) -> typing.Union[werkzeug.Response,
+                                                 typing.Tuple[str, int]]:
 
     if not releng_tooltool.utils.is_valid_sha512(digest):
         raise werkzeug.exceptions.BadRequest('Invalid sha512 digest')
@@ -183,7 +187,7 @@ def upload_complete(digest):
     return '{}', 202
 
 
-def search_files(q):
+def search_files(q: str) -> typing.List[dict]:
     session = flask.g.db.session
     query = session.query(releng_tooltool.models.File).join(releng_tooltool.models.BatchFile)
     query = query.filter(sa.or_(releng_tooltool.models.BatchFile.filename.contains(q),
@@ -191,7 +195,7 @@ def search_files(q):
     return [row.to_dict() for row in query.all()]
 
 
-def get_file(digest):
+def get_file(digest: str) -> dict:
 
     if not releng_tooltool.utils.is_valid_sha512(digest):
         raise werkzeug.exceptions.BadRequest('Invalid sha512 digest')
@@ -204,8 +208,8 @@ def get_file(digest):
 
 
 @backend_common.auth.auth.require_scopes(['project:releng:tooltool/manage'])
-def patch_file(digest, body):
-    S3_REGIONS = flask.current_app.config['S3_REGIONS']
+def patch_file(digest: str, body: dict) -> dict:
+    S3_REGIONS = flask.current_app.config['S3_REGIONS']  # type: typing.Dict[str, str]
     if type(S3_REGIONS) is not dict:
         raise werkzeug.exceptions.InternalServerError('S3_REGIONS should be of type dict.')
 
@@ -249,10 +253,10 @@ def patch_file(digest, body):
     return file.to_dict(include_instances=True)
 
 
-def download_file(digest, region=None):
+def download_file(digest: str, region: typing.Optional[str]=None) -> werkzeug.Response:
     logger2 = logger.bind(tooltool_sha512=digest, tooltool_operation='download_file')
 
-    S3_REGIONS = flask.current_app.config['S3_REGIONS']
+    S3_REGIONS = flask.current_app.config['S3_REGIONS']  # type: typing.Dict[str, str]
     if type(S3_REGIONS) is not dict:
         raise werkzeug.exceptions.InternalServerError('S3_REGIONS should be of type dict.')
 
