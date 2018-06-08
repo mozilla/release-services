@@ -3,8 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import flask
 import os
 import werkzeug.exceptions
+import typing
 
 import backend_common
 import backend_common.api
@@ -14,7 +16,7 @@ import releng_tooltool.config
 import releng_tooltool.models  # noqa
 
 
-def custom_handle_default_exceptions(e):
+def custom_handle_default_exceptions(e: Exception) -> typing.Tuple[int, str]:
     '''Conform structure of errors as before, to make it work with client (tooltool.py).
     '''
     error = backend_common.api.handle_default_exceptions_raw(e)
@@ -24,7 +26,7 @@ def custom_handle_default_exceptions(e):
     return flask.jsonify(dict(error=error)), error['status']
 
 
-def create_app(config=None):
+def create_app(config: dict=None) -> flask.Flask:
     app = backend_common.create_app(
         project_name=releng_tooltool.config.PROJECT_NAME,
         app_name=releng_tooltool.config.APP_NAME,
