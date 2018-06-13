@@ -285,7 +285,7 @@ class ClangTidyIssue(Issue):
             location='{}:{}:{}'.format(self.path, self.line, self.char),
             body=self.body,
             check=self.check,
-            in_patch='yes' if self.in_patch() else 'no',
+            in_patch='yes' if self.revision.contains(self) else 'no',
             third_party='yes' if self.is_third_party() else 'no',
             publishable_check='yes' if self.has_publishable_check() else 'no',
             publishable='yes' if self.is_publishable() else 'no',
