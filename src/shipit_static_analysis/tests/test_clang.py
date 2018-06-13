@@ -208,3 +208,33 @@ def test_clang_tidy_parser(mock_config, mock_repository, mock_revision):
     assert issues[0].path == '/path/to/test.cpp'
     assert issues[0].line == 42
     assert issues[0].check == 'mozilla-dangling-on-temporary'
+
+
+def test_as_markdown(mock_revision):
+    '''
+    Test markdown generation for ClangTidyIssue
+    '''
+    from shipit_static_analysis.clang.tidy import ClangTidyIssue
+    parts = ('test.cpp', '42', '51', 'error', 'dummy message', 'dummy-check')
+    issue = ClangTidyIssue(parts, mock_revision)
+    issue.body = 'Dummy body'
+
+    assert issue.as_markdown() == '''
+## clang-tidy error
+
+- **Message**: dummy message
+- **Location**: test.cpp:42:51
+- **In patch**: no
+- **Clang check**: dummy-check
+- **Publishable check**: no
+- **Third Party**: no
+- **Expanded Macro**: no
+- **Publishable **: no
+- **Is new**: no
+
+```
+Dummy body
+```
+
+
+'''
