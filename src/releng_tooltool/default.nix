@@ -61,7 +61,7 @@ let
         check_pending_uploads = mkCronJob { schedule = [ "*/10 * * * *" ];  # every 10 min;
                                             command = "check_pending_uploads";
                                           };
-        replicate = mkCronJob { schedule = [ "*/1 * * *" ];  # every 1 hour;
+        replicate = mkCronJob { schedule = [ "0 * * * *" ];  # every 1 hour;
                                 command = "replicate";
                               };
       };
