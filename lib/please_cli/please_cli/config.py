@@ -495,7 +495,7 @@ PROJECTS_CONFIG = {
                         'heroku_dyno_type': 'web',
                         'url': 'https://treestatus.staging.mozilla-releng.net',
                         # TODO: we need to change this to SSL Endpoint
-                        'dns': 'treestatus.staging.mozilla-releng.net.herokudns.com',
+                        'dns': 'nagasaki-25852.herokussl.com',
                     },
                     'production': {
                         'nix_path_attribute': 'docker',

@@ -41,12 +41,14 @@ Protocal that we follow is:
 
 #. Announce that new deployment to production is going to happen
 
-   - announce in ``#releng`` channel that a push to production is about to
+   - announce in ``#ci`` channel that a push to production is about to
      happen.
 
      Example message::
 
-         I am about to release a new version of mozilla-releng/services (*.mozilla-releng.net). Any alerts coming up soon will be best directed to me. I'll let you know when it's all done. Thank you!
+         I am about to release a new version of mozilla-releng/services
+         (*.mozilla-releng.net, *.moz.tools). Any alerts coming up soon will be
+         best directed to me. I'll let you know when it's all done. Thank you!
 
    - inform MOC person on duty (in ``#moc`` channel) that new deployment of
      ``mozilla-releng/services`` is going to be happen. The channel subject
@@ -55,20 +57,23 @@ Protocal that we follow is:
 
      Example message::
 
-         nickname: I am about to release a new version of mozilla-releng/services (*.mozilla-releng.net). Any alerts coming up soon will be best directed to me. I'll let you know when it's all done. Thank you!
+         nickname: I am about to release a new version of
+         mozilla-releng/services (*.mozilla-releng.net, *.moz.tools). Any
+         alerts coming up soon will be best directed to me. I'll let you know
+         when it's all done. Thank you!
 
 #. Push to ``production``. Create a merge commit of master branch and tag it.
    Don't forget to push just created tag.
 
    .. code-block:: console
 
-        $ git clone git@github.com/mozilla-releng/services.git
-        $ cd services
-        $ git checkout -b production origin/production
-        $ git merge master -m "Release: v$(git show master:VERSION)"
-        $ git push origin production
-        $ git tag v$(cat ./VERSION)
-        $ git push origin v$(cat ./VERSION)
+       $ git clone git@github.com/mozilla-releng/services.git
+       $ cd services
+       $ git checkout -b production origin/production
+       $ git merge master -m "Release: v$(git show master:VERSION)"
+       $ git push origin production
+       $ git tag v$(cat ./VERSION)
+       $ git push origin v$(cat ./VERSION)
 
 #. Verify that all production projects are now deployed and working properly in
    production environment. Use the same checks as we did before when we were
@@ -95,17 +100,17 @@ Protocal that we follow is:
 
    .. code-block:: console
 
-        $ git clone git@github.com/mozilla-releng/services.git
-        $ cd services
-        $ echo "$((($(cat VERSION)) + 1))" | tee VERSION2
-        $ sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
-        $ mv VERSION2 VERSION
+       $ git clone git@github.com/mozilla-releng/services.git
+       $ cd services
+       $ echo "$((($(cat VERSION)) + 1))" | tee VERSION2
+       $ sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
+       $ mv VERSION2 VERSION
 
 #. Push new base image for new version
 
    .. code-block:: console
 
-        $ ./please -vv tools base-image \
+       $ ./please -vv tools base-image \
             --taskcluster-client-id="..." \
             --taskcluster-access-token="..."
 
@@ -125,26 +130,31 @@ Protocal that we follow is:
 
    .. code-block:: console
 
-        $ git commit VERSION .taskcluster.yml -m "setup: bumping to v$(cat ./VERSION)"
-        $ git push origin master
+       $ git commit VERSION .taskcluster.yml -m "setup: bumping to v$(cat ./VERSION)"
+       $ git push origin master
 
-    Make sure that commit gets properly build before proceeding. This will
-    ensure that docker base image created in previous steps is working.
+   Make sure that commit gets properly build before proceeding. This will
+   ensure that docker base image created in previous steps is working.
 
 #. Announce that deployment to production is done.
 
-   - announce in ``#releng`` channel that a push to production is complete.
+   - announce in ``#ci`` channel that a push to production is complete.
 
      Example message::
 
-         Previously annonced release of mozilla-releng/services (*.mozilla-releng.net) to productions is now complete. If you see anything behaving weird please let me know. Changes -> <link-to-release-notes>.
+         Previously annonced release of mozilla-releng/services
+         (*.mozilla-releng.net, *.moz.tools) to productions is now complete. If
+         you see anything behaving weird please let me know. Changes ->
+         <link-to-release-notes>.
 
    - inform MOC person on duty (in ``#moc`` channel) that deployment of
      ``mozilla-releng/services`` is complete.
 
      Example message::
 
-         nickname: Previously annonced release of mozilla-releng/services (*.mozilla-releng.net) to productions is now complete. Changes -> <link-to-release-notes>.
+         nickname: Previously annonced release of mozilla-releng/services
+         (*.mozilla-releng.net, *.moz.tools) to productions is now complete.
+         Changes -> <link-to-release-notes>.
 
 
 .. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
