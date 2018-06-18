@@ -94,7 +94,7 @@ class ZeroCov(object):
 
         return res
 
-    def generate(self, artifacts, hgrev, gitrev, out_dir='code-coverage-reports'):
+    def generate(self, artifacts, hgrev, gitrev, out_dir='.'):
         report = grcov.report(artifacts, out_format='coveralls+', source_dir=self.repo_dir)
         report = json.loads(report.decode('utf-8'))  # Decoding is only necessary until Python 3.6.
 
