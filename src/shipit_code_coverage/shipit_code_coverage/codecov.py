@@ -12,7 +12,6 @@ from cli_common.command import run_check
 from cli_common.log import get_logger
 from cli_common.taskcluster import get_service
 from cli_common.utils import ThreadPoolExecutorResult
-from cli_common.utils import retry
 from shipit_code_coverage import chunk_mapping
 from shipit_code_coverage import grcov
 from shipit_code_coverage import taskcluster
@@ -76,17 +75,15 @@ class CodeCov(object):
                                     self.repo_dir,
                                     purge=True,
                                     sharebase=shared_dir,
-                                    revision=revision)
+                                    revision=revision,
+                                    networkattempts=7)
 
         cmd.insert(0, hglib.HGPATH)
 
-        def do_clone():
-            proc = hglib.util.popen(cmd)
-            out, err = proc.communicate()
-            if proc.returncode:
-                raise hglib.error.CommandError(cmd, proc.returncode, out, err)
-
-        retry(do_clone)
+        proc = hglib.util.popen(cmd)
+        out, err = proc.communicate()
+        if proc.returncode:
+            raise hglib.error.CommandError(cmd, proc.returncode, out, err)
 
         logger.info('mozilla-central cloned')
 
