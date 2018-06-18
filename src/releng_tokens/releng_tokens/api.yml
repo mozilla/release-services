@@ -27,6 +27,7 @@ paths:
           type: string
       responses:
         200:
+          description: List of Tokens
           schema:
             type: array
             items:
@@ -50,6 +51,7 @@ paths:
             $ref: '#/definitions/Token'
       responses:
         200:
+          description: Token
           schema:
             $ref: '#/definitions/Token'
 
@@ -67,6 +69,7 @@ paths:
           type: integer
       responses:
         200:
+          description: Token
           schema:
             $ref: '#/definitions/Token'
 
@@ -80,8 +83,15 @@ paths:
 
         The response status is 204 on success.  Revoking an already-revoked token
         returns 403.
+      parameters:
+        - name: id
+          in: path
+          description: Token id.
+          required: true
+          type: integer
       responses:
         204:
+          description: None
           schema:
             type: string
 
@@ -105,6 +115,7 @@ paths:
             type: string
       responses:
         200:
+          description: Token
           schema:
             $ref: '#/definitions/Token'
 

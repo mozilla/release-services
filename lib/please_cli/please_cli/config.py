@@ -388,21 +388,21 @@ PROJECTS_CONFIG = {
                         'heroku_app': 'releng-testing-tokens',
                         'heroku_dyno_type': 'web',
                         'url': 'https://tokens.testing.mozilla-releng.net',
-                        'dns': 'tokens.testing.mozilla-releng.net.herokudns.com'.
+                        'dns': 'tokens.testing.mozilla-releng.net.herokudns.com',
                     },
                     'staging': {
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'releng-staging-tokens',
                         'heroku_dyno_type': 'web',
                         'url': 'https://tokens.staging.mozilla-releng.net',
-                        'dns': 'tokens.staging.mozilla-releng.net.herokudns.com'.
+                        'dns': 'tokens.staging.mozilla-releng.net.herokudns.com',
                     },
                     'production': {
                         'nix_path_attribute': 'docker',
                         'heroku_app': 'releng-production-tokens',
                         'heroku_dyno_type': 'web',
                         'url': 'https://tokens.mozilla-releng.net',
-                        'dns': 'tokens.mozilla-releng.net.herokudns.com'.
+                        'dns': 'tokens.mozilla-releng.net.herokudns.com',
                     },
                 },
             },
