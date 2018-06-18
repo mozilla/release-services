@@ -138,9 +138,6 @@ class ZeroCov(object):
                          'uncovered': fname in zero_coverage_files})
             zero_coverage_info.append(info)
 
-            with open(os.path.join(out_dir, 'zero_coverage_functions/%s.json' % fname.replace('/', '_')), 'w') as f:
-                json.dump(functions, f)
-
         zero_coverage_report = {'github_revision': gitrev,
                                 'hg_revision': hgrev,
                                 'files': zero_coverage_info}
