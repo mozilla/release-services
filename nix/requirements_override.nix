@@ -156,7 +156,10 @@ in skipOverrides {
 
   "pytest" = self: old: {
     patchPhase = ''
-      sed -i -e "s|setup_requires=\['setuptools-scm'\],||" setup.py
+      sed -i \
+        -e "s|setup_requires=\['setuptools-scm'\],||" \
+        -e "s|setup_requires=\[\"setuptools-scm\"\],||" \
+        setup.py
     '';
   };
 
