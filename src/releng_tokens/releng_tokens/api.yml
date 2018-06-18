@@ -124,7 +124,7 @@ definitions:
   Token:
     type: object
     required:
-      - permisisons
+      - permissions
     properties:
       typ:
         type: string
