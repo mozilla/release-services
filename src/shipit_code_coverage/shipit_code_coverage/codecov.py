@@ -76,7 +76,7 @@ class CodeCov(object):
                                     self.repo_dir,
                                     purge=True,
                                     sharebase=shared_dir,
-                                    branch=b'tip')
+                                    revision=revision)
 
         cmd.insert(0, hglib.HGPATH)
 
@@ -85,10 +85,6 @@ class CodeCov(object):
             out, err = proc.communicate()
             if proc.returncode:
                 raise hglib.error.CommandError(cmd, proc.returncode, out, err)
-
-            hg = hglib.open(self.repo_dir)
-
-            hg.update(rev=revision, clean=True)
 
         retry(do_clone)
 
