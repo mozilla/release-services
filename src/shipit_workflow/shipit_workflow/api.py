@@ -158,6 +158,7 @@ def abandon_release(name):
         for phase in filter(lambda x: x.submitted, release.phases):
             actions = fetch_actions_json(phase.task_id)
             action_task_id, action_task, context = generate_action_task(
+                decision_task_id=phase.task_id,
                 action_name='cancel-all',
                 action_task_input={},
                 actions=actions,

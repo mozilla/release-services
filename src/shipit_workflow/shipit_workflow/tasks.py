@@ -99,13 +99,13 @@ def extract_our_flavors(avail_flavors, product, version, partial_updates):
     return SUPPORTED_FLAVORS[product_key]
 
 
-def generate_action_task(action_name, action_task_input, actions):
+def generate_action_task(decision_task_id, action_name, action_task_input, actions):
     target_action = find_action(action_name, actions)
     context = copy.deepcopy(actions['variables'])  # parameters
     action_task_id = slugid.nice().decode('utf-8')
     context.update({
         'input': action_task_input,
-        'taskGroupId': action_task_id,
+        'taskGroupId': decision_task_id,
         'ownTaskId': action_task_id,
         'taskId': None,
         'task': None,

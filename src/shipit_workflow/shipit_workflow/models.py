@@ -134,6 +134,7 @@ class Release(db.Model):
             action_task_input['previous_graph_ids'] = list(previous_graph_ids)
             action_task_input['release_promotion_flavor'] = phase['name']
             action_task_id, action_task, context = generate_action_task(
+                decision_task_id=self.decision_task_id,
                 action_name='release-promotion',
                 action_task_input=action_task_input,
                 actions=self.actions,
