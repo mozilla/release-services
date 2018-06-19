@@ -96,6 +96,10 @@ let
             type = "file";
             path = "/chunk_mapping.tar.xz";
           };
+          "public/zero_coverage_report.json" = {
+            type = "file";
+            path = "/zero_coverage_report.json";
+          };
         };
       };
     in

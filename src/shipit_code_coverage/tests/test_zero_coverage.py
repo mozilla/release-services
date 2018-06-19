@@ -23,13 +23,6 @@ def test_zero_coverage(tmpdir,
         grcov_uncovered_function_artifact, jsvm_uncovered_function_artifact
     ], hgrev, gitrev, out_dir=tmp_path)
 
-    with open(os.path.join(tmp_path, 'zero_coverage_functions/mozglue_build_dummy.cpp.json'), 'r') as f:
-        assert set(json.load(f)) == set(['main'])
-    with open(os.path.join(tmp_path, 'zero_coverage_functions/js_src_jit_JIT.cpp.json'), 'r') as f:
-        assert set(json.load(f)) == set(['anUncoveredFunction'])
-    with open(os.path.join(tmp_path, 'zero_coverage_functions/toolkit_components_osfile_osfile.jsm.json'), 'r') as f:
-        assert set(json.load(f)) == set(['read', 'write'])
-
     with open(os.path.join(tmp_path, 'zero_coverage_report.json'), 'r') as f:
         zero_coverage_report = json.load(f)
 
