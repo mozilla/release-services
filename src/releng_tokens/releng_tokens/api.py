@@ -5,9 +5,11 @@
 
 import calendar
 import datetime
+import dateutil.parser
 import time
 
 import flask
+import flask_login
 import pytz
 import sqlalchemy as sa
 import werkzeug.exceptions
@@ -30,17 +32,17 @@ def can_access_token(access, typ, user):
     # ensure the user can see this token; for non-user-associated
     # tokens, that's just a permission check
     if typ in ('prm',):
-        if not user.has_permissions('base.tokens.{}.{}'.format(typ, access)):
+        if not user.has_permissions('project:releng:relengapi/base/tokens/{}/{}'.format(typ, access)):
             return False
     # for user-associated tokens, if the .all permission is set,
     # the access is fine; otherwise very that the user matches and
     # the .my permission is set.
     elif typ in ('usr',):
-        if not user.has_permissions('base.tokens.{}.{}.all'.format(typ, access)):
-            email = get_user_email(flask.current_user)
+        if not user.has_permissions('project:releng:relengapi/base/tokens/{}/{}/all'.format(typ, access)):
+            email = get_user_email(flask_login.current_user)
             if not email or not user or user != email:
                 return False
-            if not user.has_permissions('base.tokens.{}.{}.my'.format(typ, access)):
+            if not user.has_permissions('project:releng:relengapi/base/tokens/{}/{}/my'.format(typ, access)):
                 return False
 
     return True
@@ -48,15 +50,15 @@ def can_access_token(access, typ, user):
 
 def list_tokens(typ=None):
     tbl = releng_tokens.models.Token
-    user = flask.current_user
+    user = flask_login.current_user
     email = get_user_email(user)
 
     conds = []
-    if user.has_permissions('base.tokens.prm.view'):
+    if user.has_permissions('project:releng:relengapi/base/tokens/prm/view'):
         conds.append(tbl.typ == 'prm')
-    if user.has_permissions('base.tokens.usr.view.all'):
+    if user.has_permissions('project:releng:relengapi/base/tokens/usr/view/all'):
         conds.append(tbl.typ == 'usr')
-    elif email and user.has_permission('base.tokens.usr.view.my'):
+    elif email and user.has_permissions('project:releng:relengapi/base/tokens/usr/view/my'):
         conds.append(sa.and_(tbl.typ == 'usr',
                              tbl.user == email))
     if not conds:
@@ -68,7 +70,7 @@ def list_tokens(typ=None):
         filter_cond = disjunction
 
     q = releng_tokens.models.Token.query.filter(filter_cond)
-    return [t.to_jsontoken() for t in q.all()]
+    return [t.to_dict() for t in q.all()]
 
 
 token_issuers = {}
@@ -85,24 +87,25 @@ def issue_prm(body, requested_permissions):
     session = flask.g.db.session('relengapi')
     token_row = releng_tokens.models.Token(
         typ='prm',
-        description=body.description,
+        description=body['description'],
         permissions=requested_permissions,
         disabled=False)
     session.add(token_row)
     session.commit()
 
-    rv = token_row.to_jsontoken()
-    rv.token = backend_common.auth.claims_to_str(
+    rv = token_row.to_dict()
+    rv['token'] = backend_common.auth.claims_to_str(
         {'iss': 'ra2', 'typ': 'prm', 'jti': 't%d' % token_row.id})
     return rv
 
 
 @token_issuer('tmp')
 def issue_tmp(body, requested_permissions):
-    if body.not_before:
+    if 'not_before' in body:
         raise werkzeug.exceptions.BadRequest('do not specify not_before when creating a tmp token')
     nbf = int(time.time())
-    exp = calendar.timegm(body.expires.utctimetuple())
+    expires = dateutil.parser.parse(body['expires'])
+    exp = calendar.timegm(expires.utctimetuple())
     if exp <= nbf:
         raise werkzeug.exceptions.BadRequest('expiration time must be in the future')
     max_lifetime = flask.current_app.config.get(
@@ -117,22 +120,22 @@ def issue_tmp(body, requested_permissions):
         'nbf': nbf,
         'exp': exp,
         'prm': perm_strs,
-        'mta': body.metadata,
+        'mta': body['metadata'],
     })
     return dict(
         typ='tmp',
         token=token,
         not_before=datetime.datetime.utcfromtimestamp(nbf).replace(tzinfo=pytz.UTC),
-        expires=body.expires,
+        expires=expires,
         permissions=perm_strs,
-        metadata=body.metadata,
+        metadata=body['metadata'],
         disabled=False,
     )
 
 
 @token_issuer('usr')
 def issue_usr(body, requested_permissions):
-    email = get_user_email(flask.current_user)
+    email = get_user_email(flask_login.current_user)
     if not email:
         raise werkzeug.exceptions.Forbidden(
             'Authenticate with a user-related mechanism to issue user tokens')
@@ -141,14 +144,14 @@ def issue_usr(body, requested_permissions):
     token_row = releng_tokens.models.Token(
         typ='usr',
         user=email,
-        description=body.description,
+        description=body['description'],
         permissions=requested_permissions,
         disabled=False)
     session.add(token_row)
     session.commit()
 
-    rv = token_row.to_jsontoken()
-    rv.token = backend_common.auth.claims_to_str(
+    rv = token_row.to_dict()
+    rv['token'] = backend_common.auth.claims_to_str(
         {'iss': 'ra2', 'typ': 'usr', 'jti': 't%d' % token_row.id})
     return rv
 
@@ -166,41 +169,44 @@ def issue_token(body):
     but should include a ``typ`` and the necessary fields for that type.  The
     response will contain both ``token`` and ``id``.  You must have permission
     to issue the given token type.'''
-    typ = body.typ
-    user = flask.current_user
+    typ = body['typ']
+    user = flask_login.current_user
 
     # verify permission to issue this type
-    if not user.has_permissions('base.tokens.{}.issue'.format(typ)):
+    if not user.has_permissions('project:releng:relengapi/base/tokens/{}/issue'.format(typ)):
         raise werkzeug.exceptions.Forbidden(
             'You do not have permission to create this token type')
 
     # verify required parameters; any extras will be ignored
     for attr in required_token_attributes[typ]:
-        if getattr(body, attr, UNSET) is UNSET:
+        if body.get(attr, UNSET) is UNSET:
             raise werkzeug.exceptions.BadRequest('missing %s' % attr)
 
     # prohibit silly requests
-    if body.disabled:
+    if body.get('disabled'):
         raise werkzeug.exceptions.BadRequest('can\'t issue disabled tokens')
 
     # All types have permissions, so handle those here -- ensure the request is
     # for a subset of the permissions the user can perform
-    permissions = user.get_permissions()
-    requested_permissions = [p for p in body.permissions if p in permissions]
+    permissions = set([
+        p[len('project:releng:relengapi/'):].replace('/', '.')
+        for p in user.get_permissions()])
+    requested_permissions = [p for p in body['permissions'] if p in permissions]
+
     if None in requested_permissions:
         raise werkzeug.exceptions.BadRequest('bad permissions')
-    if not set(requested_permissions) <= flask.current_user.permissions:
+    if not set(requested_permissions) <= permissions:
         raise werkzeug.exceptions.BadRequest('bad permissions')
 
     # Dispatch the rest to the per-type function.  Note that WSME has already
     # ensured `typ` is one of the recognized types.
     token = token_issuers[typ](body, requested_permissions)
     perms_str = ', '.join(str(p) for p in requested_permissions)
-    log = logger.bind(token_typ=token.typ, token_permissions=perms_str, mozdef=True)
-    if token.id:
-        log = log.bind(token_id=token.id)
+    log = logger.bind(token_typ=token['typ'], token_permissions=perms_str, mozdef=True)
+    if token.get('id'):
+        log = log.bind(token_id=token['id'])
     log.info('Issuing {} token to {} with permissions {}'.format(
-        token.typ, flask.current_user, perms_str))
+        token['typ'], user, perms_str))
     return token
 
 
@@ -213,7 +219,7 @@ def get_token(token_id):
     if not can_access_token('view', token_data.typ, token_data.user):
         raise werkzeug.exceptions.NotFound
 
-    return token_data.to_jsontoken()
+    return token_data.to_dict()
 
 
 def query_token(body):

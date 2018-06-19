@@ -24,6 +24,5 @@ def create_app(config=None):
             'db',
         ],
     )
-    # TODO: add predefined api.yml
     app.api.register(os.path.join(os.path.dirname(__file__), 'api.yml'))
     return app

@@ -232,10 +232,22 @@ class RelengapiToken(backend_common.db.db.Model):
     @property
     def permissions(self):
         return [
-            'project:releng:{}'.format(permission.strip().replace('.', '/'))
+            'project:releng:relengapi/{}'.format(permission.strip().replace('.', '/'))
             for permission in self._permissions.split(',')
             if permission
         ]
+
+    def to_dict(self):
+        tok = dict(
+            id=self.id,
+            typ=self.typ,
+            description=self.description,
+            permissions=[str(a) for a in self.permissions],
+            disabled=self.disabled
+        )
+        if self.user:
+            tok['user'] = self.user
+        return tok
 
 
 IS_NOT_RELENAPI_TOKEN_USER = object()
@@ -291,7 +303,7 @@ def is_relengapi_token(token_str):
 
 def claims_to_str(claims):
     assert claims['iss'] == RELENGAPI_TOKENAUTH_ISSUER
-    return flask.current_app.auth_relengapi_serializer.dumps(claims)
+    return flask.current_app.auth_relengapi_serializer.dumps(claims).decode('utf-8')
 
 
 def user_to_jsontoken(user):
