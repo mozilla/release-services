@@ -193,7 +193,7 @@ class PhabricatorReporter(Reporter):
             'diffID': revision.diff_id,
             'filePath': issue.path,
             'lineNumber': issue.line,
-            'lineLength': issue.nb_lines,
+            'lineLength': issue.nb_lines - 1,
             'content': issue.as_text(),
         }
         if comment in existing_comments:
