@@ -97,6 +97,11 @@ def mock_issues():
         def as_text(self):
             return str(self.nb)
 
+        def as_dict(self):
+            return {
+                'nb': self.nb,
+            }
+
         def is_publishable(self):
             return self.nb % 2 == 0
 
@@ -397,7 +402,7 @@ def mock_workflow(tmpdir, mock_repository, mock_config):
         os.environ['MOZCONFIG'] = str(tmpdir.join('mozconfig').realpath())
 
     return MockWorkflow(
-        reporters=[],
+        reporters={},
         analyzers=['clang-tidy', 'clang-format', 'mozlint'],
     )
 
