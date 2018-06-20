@@ -304,3 +304,29 @@ class ClangTidyIssue(Issue):
         '''
         No diff available
         '''
+
+    def as_dict(self):
+        '''
+        Outputs all available information into a serializable dict
+        '''
+        return {
+            'analyzer': 'clang-tidy',
+            'path': self.path,
+            'line': self.line,
+            'nb_lines': self.nb_lines,
+            'char': self.char,
+            'check': self.check,
+            'type': self.type,
+            'message': self.message,
+            'body': self.body,
+            'notes': [note.as_dict() for note in self.notes],
+            'validation': {
+                'publishable_check': self.has_publishable_check(),
+                'third_party': self.is_third_party(),
+                'is_expanded_macro': self.is_expanded_macro(),
+            },
+            'in_patch': self.revision.contains(self),
+            'is_new': self.is_new,
+            'validates': self.validates(),
+            'publishable': self.is_publishable(),
+        }

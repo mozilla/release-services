@@ -127,6 +127,14 @@ class Issue(abc.ABC):
         '''
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def as_dict(self):
+        '''
+        Build the serializable dict representation of the issue
+        Used by debugging tools
+        '''
+        raise NotImplementedError
+
     def is_third_party(self):
         '''
         Is this issue in a third party path ?

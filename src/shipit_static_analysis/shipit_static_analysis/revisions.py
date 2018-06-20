@@ -140,6 +140,19 @@ class PhabricatorRevision(Revision):
             nocommit=True,
         )
 
+    def as_dict(self):
+        '''
+        Outputs a serializable representation of this revision
+        '''
+        return {
+            'source': 'phabricator',
+            'diff_phid': self.diff_phid,
+            'phid': self.phid,
+            'id': self.id,
+            'url': self.url,
+            'has_clang_files': self.has_clang_files,
+        }
+
 
 class MozReviewRevision(Revision):
     '''
@@ -214,3 +227,16 @@ class MozReviewRevision(Revision):
             rev=self.mercurial,
             clean=True,
         )
+
+    def as_dict(self):
+        '''
+        Outputs a serializable representation of this revision
+        '''
+        return {
+            'source': 'mozreview',
+            'rev': self.mercurial,
+            'review_request': self.review_request_id,
+            'diffset': self.diffset_revision,
+            'url': self.url,
+            'has_clang_files': self.has_clang_files,
+        }

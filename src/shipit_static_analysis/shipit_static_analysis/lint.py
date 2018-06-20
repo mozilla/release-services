@@ -118,6 +118,30 @@ class MozLintIssue(Issue):
         No diff available
         '''
 
+    def as_dict(self):
+        '''
+        Outputs all available information into a serializable dict
+        '''
+        return {
+            'analyzer': 'mozlint',
+            'level': self.level,
+            'path': self.path,
+            'linter': self.linter,
+            'line': self.line,
+            'column': self.column,
+            'nb_lines': self.nb_lines,
+            'rule': self.rule,
+            'message': self.message,
+            'validation': {
+                'third_party': self.is_third_party(),
+                'disabled_rule': self.is_disabled_rule(),
+            },
+            'in_patch': self.revision.contains(self),
+            'is_new': self.is_new,
+            'validates': self.validates(),
+            'publishable': self.is_publishable(),
+        }
+
 
 class MozLint(object):
     '''
