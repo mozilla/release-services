@@ -25,6 +25,7 @@ MAX_COMMENTS = 30
 COMMENT_SUCCESS = '''
 C/C++ static analysis didn't find any defects in this patch. Hooray!
 '''
+BUG_REPORT_URL = 'http://bit.ly/2y9N9Vx'
 
 
 class MozReviewReporter(Reporter):
@@ -93,6 +94,7 @@ class MozReviewReporter(Reporter):
             comment = self.build_comment(
                 issues=issues,
                 diff_url=revision.diff_url,
+                bug_report_url=BUG_REPORT_URL,
                 max_comments=MAX_COMMENTS
             )
 

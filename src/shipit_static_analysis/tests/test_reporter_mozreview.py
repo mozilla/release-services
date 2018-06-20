@@ -126,7 +126,7 @@ def test_comment(mock_mozreview, test_cpp, mock_revision):
     assert clang_tidy_publishable.is_publishable()
     issues = [clang_tidy_publishable, ]
 
-    assert reporter.build_comment(issues) == '''
+    assert reporter.build_comment(issues, 'https://report.example.com') == '''
 Code analysis found 1 defect in this patch:
  - 1 defect found by clang-tidy
 
@@ -134,7 +134,7 @@ You can run this analysis locally with:
  - `./mach static-analysis check path/to/file.cpp` (C/C++)
 
 
-If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx
+If you see a problem in this automated review, please report it here: https://report.example.com
 '''
 
     # Now add a clang-format issue
@@ -143,7 +143,7 @@ If you see a problem in this automated review, please report it here: http://bit
     assert clang_tidy_publishable.is_publishable()
     issues.append(clang_format_publishable)
 
-    assert reporter.build_comment(issues) == '''
+    assert reporter.build_comment(issues, 'https://report.example.com') == '''
 Code analysis found 2 defects in this patch:
  - 1 defect found by clang-format
  - 1 defect found by clang-tidy
@@ -153,7 +153,7 @@ You can run this analysis locally with:
  - `./mach static-analysis check path/to/file.cpp` (C/C++)
 
 
-If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx
+If you see a problem in this automated review, please report it here: https://report.example.com
 '''
 
     # Now add a mozlint issue
@@ -162,7 +162,7 @@ If you see a problem in this automated review, please report it here: http://bit
     assert mozlint_publishable.is_publishable()
     issues.append(mozlint_publishable)
 
-    assert reporter.build_comment(issues) == '''
+    assert reporter.build_comment(issues, 'https://report.example.com') == '''
 Code analysis found 3 defects in this patch:
  - 1 defect found by clang-format
  - 1 defect found by clang-tidy
@@ -174,5 +174,5 @@ You can run this analysis locally with:
  - `./mach lint path/to/file` (JS/Python)
 
 
-If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx
+If you see a problem in this automated review, please report it here: https://report.example.com
 '''
