@@ -367,6 +367,47 @@ PROJECTS_CONFIG = {
             },
         ],
     },
+    'releng-tokens': {
+        'checks': [
+            ('Checking code quality', 'flake8'),
+            ('Running tests', 'pytest tests/'),
+        ],
+        'run': 'FLASK',
+        'run_options': {
+            'port': 8003,
+        },
+        'requires': [
+            'postgresql',
+        ],
+        'deploys': [
+            {
+                'target': 'HEROKU',
+                'options': {
+                    'testing': {
+                        'nix_path_attribute': 'docker',
+                        'heroku_app': 'releng-testing-tokens',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://tokens.testing.mozilla-releng.net',
+                        'dns': 'tokens.testing.mozilla-releng.net.herokudns.com',
+                    },
+                    'staging': {
+                        'nix_path_attribute': 'docker',
+                        'heroku_app': 'releng-staging-tokens',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://tokens.staging.mozilla-releng.net',
+                        'dns': 'tokens.staging.mozilla-releng.net.herokudns.com',
+                    },
+                    'production': {
+                        'nix_path_attribute': 'docker',
+                        'heroku_app': 'releng-production-tokens',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://tokens.mozilla-releng.net',
+                        'dns': 'tokens.mozilla-releng.net.herokudns.com',
+                    },
+                },
+            },
+        ],
+    },
     'releng-tooltool': {
         'checks': [
             ('Checking code quality', 'flake8'),

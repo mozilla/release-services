@@ -3,12 +3,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import datetime
 import functools
 import time
 
 import flask
 import flask_login
 import itsdangerous
+import pytz
 import sqlalchemy as sa
 import taskcluster
 import taskcluster.utils
@@ -230,21 +232,32 @@ class RelengapiToken(backend_common.db.db.Model):
     @property
     def permissions(self):
         return [
-            'project:releng:{}'.format(permission.strip().replace('.', '/'))
+            'project:releng:relengapi/{}'.format(permission.strip().replace('.', '/'))
             for permission in self._permissions.split(',')
             if permission
         ]
 
+    def to_dict(self):
+        tok = dict(
+            id=self.id,
+            typ=self.typ,
+            description=self.description,
+            permissions=[str(a) for a in self.permissions],
+            disabled=self.disabled
+        )
+        if self.user:
+            tok['user'] = self.user
+        return tok
+
 
 IS_NOT_RELENAPI_TOKEN_USER = object()
+RELENGAPI_TOKENAUTH_ISSUER = 'ra2'
 
 
 def is_relengapi_token(token_str):
-    TOKENAUTH_ISSUER = 'ra2'
-    tokenauth_serializer = itsdangerous.JSONWebSignatureSerializer(flask.current_app.secret_key)
 
     try:
-        claims = tokenauth_serializer.loads(token_str)
+        claims = flask.current_app.auth_relengapi_serializer.loads(token_str)
 
     except itsdangerous.BadData as e:
         logger.warning('Got invalid signature in token %r', token_str)
@@ -259,7 +272,7 @@ def is_relengapi_token(token_str):
     if claims.get('v') == 1:
         claims = {'iss': 'ra2', 'typ': 'prm', 'jti': 't%d' % claims['id']}
 
-    if claims.get('iss') != TOKENAUTH_ISSUER:
+    if claims.get('iss') != RELENGAPI_TOKENAUTH_ISSUER:
         return
 
     if claims['typ'] == 'prm':
@@ -286,6 +299,58 @@ def is_relengapi_token(token_str):
                                       permissions=token_data.permissions,
                                       token_data=token_data,
                                       authenticated_email=token_data.user)
+
+
+def claims_to_str(claims):
+    assert claims['iss'] == RELENGAPI_TOKENAUTH_ISSUER
+    return flask.current_app.auth_relengapi_serializer.dumps(claims).decode('utf-8')
+
+
+def user_to_jsontoken(user):
+    attrs = {}
+    cl = user.claims
+    attrs['typ'] = user.claims['typ']
+    if 'nbf' in cl:
+        attrs['not_before'] = datetime.datetime.utcfromtimestamp(cl['nbf']).replace(tzinfo=pytz.UTC)
+    if 'exp' in cl:
+        attrs['expires'] = datetime.datetime.utcfromtimestamp(cl['exp']).replace(tzinfo=pytz.UTC)
+    if 'mta' in cl:
+        attrs['metadata'] = cl['mta']
+    if 'prm' in cl:
+        attrs['permissions'] = cl['prm']
+
+    # we never load disabled users, so this one isn't disabled
+    attrs['disabled'] = False
+
+    if user.token_data:
+        td = user.token_data
+        attrs['id'] = td.id
+        attrs['description'] = td.description
+        attrs['permissions'] = [str(p) for p in td.permissions]
+        if td.user:
+            attrs['user'] = td.user
+
+    return attrs
+
+
+def str_to_claims(token_str):
+    try:
+        claims = flask.current_app.tokenauth_serializer.loads(token_str)
+    except itsdangerous.BadData:
+        logger.warning('Got invalid signature in token %r', token_str)
+        return None
+    except Exception:
+        logger.exception('Error processing signature in token %r', token_str)
+        return None
+
+    # convert v1 to ra2
+    if claims.get('v') == 1:
+        return {'iss': 'ra2', 'typ': 'prm', 'jti': 't%d' % claims['id']}
+
+    if claims.get('iss') != RELENGAPI_TOKENAUTH_ISSUER:
+        return None
+
+    return claims
 
 
 @auth.login_manager.request_loader
@@ -342,5 +407,8 @@ def parse_header(request):
 def init_app(app):
     if app.config.get('SECRET_KEY') is None:
         raise Exception('When using `auth` extention you need to specify SECRET_KEY.')
+    if app.config.get('CHECK_FOR_RELENGAPI_TOKEN') is True:
+        app.auth_relengapi_serializer = itsdangerous.JSONWebSignatureSerializer(app.config.get('SECRET_KEY'))
+
     auth.init_app(app)
     return auth

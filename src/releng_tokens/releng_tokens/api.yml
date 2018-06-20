@@ -1,0 +1,179 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "RelEng Tokens"
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+
+  /:
+
+    get:
+      operationId: "releng_tokens.api.list_tokens"
+      description: |
+        Get a list of all unlimited-duration tokens the user has permisison to
+        see.
+
+        Note that the response does not include the actual token strings.
+        Such strings are only revealed when creating a new token.
+      parameters:
+        - name: typ
+          in: query
+          description: |
+            With ``?typ=..``, limit to tokens of that type.
+          type: string
+      responses:
+        200:
+          description: List of Tokens
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Token'
+
+    post:
+      operationId: "releng_tokens.api.issue_token"
+      description: |
+        Issue a new token.
+
+        The response will contain both ``token`` and ``id``.  You must have
+        permission to issue the given token type.
+      parameters:
+        - name: body
+          in: body
+          description: |
+            The body should not include a ``token`` or ``id``, but should
+            include a ``typ`` and the necessary fields for that type.
+          required: true
+          schema:
+            $ref: '#/definitions/Token'
+      responses:
+        200:
+          description: Token
+          schema:
+            $ref: '#/definitions/Token'
+
+  /{id}:
+
+    get:
+      operationId: "releng_tokens.api.get_token"
+      description: |
+        Get a token, identified by its ``id``.
+      parameters:
+        - name: id
+          in: path
+          description: Token id.
+          required: true
+          type: integer
+      responses:
+        200:
+          description: Token
+          schema:
+            $ref: '#/definitions/Token'
+
+    delete:
+      operationId: "releng_tokens.api.revoke_token"
+      description: |
+        Revoke an authentication token, identified by its ID.
+
+        The caller must have permission to revoke this type of token; if
+        that is a ``.my`` permission, then the user email must match.
+
+        The response status is 204 on success.  Revoking an already-revoked token
+        returns 403.
+      parameters:
+        - name: id
+          in: path
+          description: Token id.
+          required: true
+          type: integer
+      responses:
+        204:
+          description: None
+          schema:
+            type: string
+
+  /query:
+
+    post:
+      operationId: "releng_tokens.api.query_token"
+      description: |
+        Get a token, specified by the token key given in the request body (this
+        avoids embedding a token in a URL, where it might be logged).
+
+        The caller must have permission to view this type of token, unless
+        the token is limited-duration (in which case the API is simply
+        decoding the JSON web token anyway).
+      parameters:
+        - name: body
+          in: body
+          description: Token key.
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Token
+          schema:
+            $ref: '#/definitions/Token'
+
+definitions:
+
+  Token:
+    type: object
+    required:
+      - permissions
+    properties:
+      typ:
+        type: string
+        description: |
+          token type (short string).  This defaults to ``prm`` for backward
+          compatibility, but should always be specified.
+        default: prm
+        enum:
+          - prm
+          - tmp
+          - usr
+      id:
+        type: integer
+        description: |
+          token ID for revokable tokens
+      not_before:
+        type: string
+        description: |
+          not-before time for limited-duration tokens (see
+          :ref:`Datetime-Format` for format information)
+      expires:
+        type: string
+        description: |
+          expiration time for limited-duration tokens
+      metadata:
+        type: object
+        description: |
+          metadata fro limited-duration tokens (arbitrary JSON object)
+        additionalProperties: true
+      disabled:
+        type: boolean
+        description: |
+          if true, the token is disabled because the associated user's
+          permissions are no longer sufficient.
+      permissions:
+        type: array
+        items:
+          type: string
+        description: |
+          List of permissions this token grants
+      description:
+        type: string
+        description: |
+          the user-supplied token description for revokable tokens
+      user:
+        type: string
+        description: |
+          user email for user-associated tokens
+      token:
+        type: string
+        description: |
+          the opaque token string (only set on new tokens)
