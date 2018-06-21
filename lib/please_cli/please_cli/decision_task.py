@@ -176,6 +176,7 @@ def get_deploy_task(index,
             '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:{}'.format(channel),
             '--nix-path-attribute={}'.format(nix_path_attribute),
             '--docker-repo={}'.format(docker_repo),
+            '--channel={}'.format(channel),
             '--no-interactive',
         ]
 
