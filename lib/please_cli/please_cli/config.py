@@ -949,6 +949,17 @@ PROJECTS_CONFIG = {
                     },
                 },
             },
+            {
+                'target': 'DOCKERHUB',
+                'options': {
+                    'testing': {
+                        'nix_path_attribute': 'docker',
+                    },
+                    'staging': {
+                        'nix_path_attribute': 'docker',
+                    },
+                },
+            },
         ],
     },
 }
