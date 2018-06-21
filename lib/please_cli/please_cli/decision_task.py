@@ -164,7 +164,7 @@ def get_deploy_task(index,
         docker_repo = please_cli.config.DOCKER_REPO
         project_name = (
             '{project} ({nix_path_attribute}) to DOCKERHUB '
-            '({docker_repo}/{project}-{nix_path_attribute}-{channel})'.format(
+            '({docker_repo}:{project}-{nix_path_attribute}-{channel})'.format(
                 project=project,
                 nix_path_attribute=nix_path_attribute,
                 docker_repo=docker_repo,
