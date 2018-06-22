@@ -160,6 +160,26 @@ def get_deploy_task(index,
             '--no-interactive',
         ]
 
+    elif deploy_target == 'DOCKERHUB':
+        docker_repo = please_cli.config.DOCKER_REPO
+        project_name = (
+            '{project} ({nix_path_attribute}) to DOCKERHUB '
+            '({docker_repo}:{project}-{nix_path_attribute}-{channel})'.format(
+                project=project,
+                nix_path_attribute=nix_path_attribute,
+                docker_repo=docker_repo,
+                channel=channel,
+            )
+        )
+        command = [
+            './please', '-vv', 'tools', 'deploy:DOCKERHUB', project,
+            '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:{}'.format(channel),
+            '--nix-path-attribute={}'.format(nix_path_attribute),
+            '--docker-repo={}'.format(docker_repo),
+            '--channel={}'.format(channel),
+            '--no-interactive',
+        ]
+
     elif deploy_target == 'TASKCLUSTER_HOOK':
         hook_group_id = 'project-releng'
         hook_id = 'services-{}-{}{}'.format(

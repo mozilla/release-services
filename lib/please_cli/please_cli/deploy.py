@@ -607,7 +607,7 @@ def cmd_DOCKERHUB(ctx,
         spec = push.image.spec(project_path)
         # Stable tag, e.g. shipit-workflow-staging
         image_tag = docker_image_tag_format.format(project=project,
-                                                   nix_path_attributes=nix_path_attribute,
+                                                   nix_path_attribute=nix_path_attribute,
                                                    channel=channel)
         project_basename = os.path.basename(project_path)
         # remove the docker-image-mozilla- prefix and the extension
