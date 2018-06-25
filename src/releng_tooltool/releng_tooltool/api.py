@@ -75,7 +75,7 @@ def upload_batch(body: dict, region: typing.Optional[str]=None) -> dict:
             releng_tooltool.config.SCOPE_PREFIX,
             visibility,
         )
-        if not flask_login.current_user.has_permissions():
+        if not flask_login.current_user.has_permissions(permission):
             raise werkzeug.exceptions.Forbidden('no permission to upload {} files'.format(visibility))
 
     session = flask.g.db.session
