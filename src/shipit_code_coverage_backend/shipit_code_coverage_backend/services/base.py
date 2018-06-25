@@ -8,6 +8,8 @@ from abc import abstractmethod
 import aiohttp
 from async_lru import alru_cache
 
+from shipit_code_coverage_backend.services import secrets
+
 
 class Coverage(ABC):
     @staticmethod
@@ -32,13 +34,13 @@ class CoverageException(Exception):
 
 @alru_cache(maxsize=2048)
 async def get_github_commit(mercurial_commit):
-    async with aiohttp.request('GET', 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/{}'.format(mercurial_commit)) as r:
+    async with aiohttp.request('GET', '{}/gecko-dev/rev/hg/{}'.format(secrets.HG_GIT_MAPPER, mercurial_commit)) as r:
         text = await r.text()
         return text.split(' ')[0]
 
 
 @alru_cache(maxsize=2048)
 async def get_mercurial_commit(github_commit):
-    async with aiohttp.request('GET', 'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/{}'.format(github_commit)) as r:
+    async with aiohttp.request('GET', '{}/gecko-dev/rev/git/{}'.format(secrets.HG_GIT_MAPPER, github_commit)) as r:
         text = await r.text()
         return text.split(' ')[1]
