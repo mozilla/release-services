@@ -15,6 +15,7 @@ import werkzeug.exceptions
 
 import backend_common.auth
 import cli_common
+import releng_mapper.config
 import releng_mapper.models
 
 logger = cli_common.log.get_logger(__name__)
