@@ -344,7 +344,6 @@ PROJECTS_CONFIG = {
                         'heroku_app': 'releng-testing-mapper',
                         'heroku_dyno_type': 'web',
                         'url': 'https://mapper.testing.mozilla-releng.net',
-                        # TODO: switch to SSL Endpoint
                         'dns': 'mapper.testing.mozilla-releng.net.herokudns.com',
                     },
                     'staging': {
@@ -352,17 +351,15 @@ PROJECTS_CONFIG = {
                         'heroku_app': 'releng-staging-mapper',
                         'heroku_dyno_type': 'web',
                         'url': 'https://mapper.staging.mozilla-releng.net',
-                        # TODO: switch to SSL Endpoint
                         'dns': 'mapper.staging.mozilla-releng.net.herokudns.com',
                     },
-                    # 'production': {
-                    #     'nix_path_attribute': 'docker',
-                    #     'heroku_app': 'releng-production-mapper',
-                    #     'heroku_dyno_type': 'web',
-                    #      # TODO: switch to SSL Endpoint
-                    #     'url': 'https://mapper.mozilla-releng.net',
-                    #     'dns': 'mapper.mozilla-releng.net.herokudns.com',
-                    # },
+                    'production': {
+                        'nix_path_attribute': 'docker',
+                        'heroku_app': 'releng-production-mapper',
+                        'heroku_dyno_type': 'web',
+                        'url': 'https://mapper.mozilla-releng.net',
+                        'dns': 'mapper.mozilla-releng.net.herokudns.com',
+                    },
                 },
             },
         ],
