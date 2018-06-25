@@ -32,7 +32,7 @@ You can run this analysis locally with:
 
 '''
 BUG_REPORT = '''
-If you see a problem in this automated review, please report it here: http://bit.ly/2y9N9Vx
+If you see a problem in this automated review, please report it here: {bug_report_url}
 '''
 COMMENT_DIFF_DOWNLOAD = '''
 
@@ -98,7 +98,7 @@ class Reporter(object):
             for cls, items in groups
         ])
 
-    def build_comment(self, issues, diff_url=None, max_comments=None):
+    def build_comment(self, issues, bug_report_url, diff_url=None, max_comments=None):
         '''
         Build a human readable comment about published issues
         '''
@@ -134,7 +134,7 @@ class Reporter(object):
             defects='\n'.join(defects),
             analyzers='\n'.join(analyzers),
         )
-        comment += BUG_REPORT
+        comment += BUG_REPORT.format(bug_report_url=bug_report_url)
         if ClangFormatIssue in stats and diff_url is not None:
             comment += COMMENT_DIFF_DOWNLOAD.format(
                 url=diff_url,

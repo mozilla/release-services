@@ -15,6 +15,8 @@ from shipit_static_analysis.revisions import PhabricatorRevision
 
 logger = log.get_logger(__name__)
 
+BUG_REPORT_URL = 'https://bit.ly/2tb8Qk3'
+
 
 class ConduitError(Exception):
     '''
@@ -133,6 +135,7 @@ class PhabricatorReporter(Reporter):
                 self.build_comment(
                     issues=issues,
                     diff_url=revision.diff_url,
+                    bug_report_url=BUG_REPORT_URL,
                 ),
             )
             stats.api.increment('report.phabricator.issues', len(inlines))
@@ -193,7 +196,7 @@ class PhabricatorReporter(Reporter):
             'diffID': revision.diff_id,
             'filePath': issue.path,
             'lineNumber': issue.line,
-            'lineLength': issue.nb_lines,
+            'lineLength': issue.nb_lines - 1,
             'content': issue.as_text(),
         }
         if comment in existing_comments:

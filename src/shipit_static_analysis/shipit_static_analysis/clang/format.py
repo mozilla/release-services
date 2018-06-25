@@ -240,3 +240,24 @@ class ClangFormatIssue(Issue):
             raise Exception('Invalid mode')
 
         return '\n'.join(patch) + '\n'
+
+    def as_dict(self):
+        '''
+        Outputs all available information into a serializable dict
+        '''
+        return {
+            'analyzer': 'clang-format',
+            'mode': self.mode,
+            'path': self.path,
+            'line': self.line,
+            'nb_lines': self.nb_lines,
+            'old_lines': self.old,
+            'new_lines': self.new,
+            'diff': self.as_diff(),
+            'validation': {
+            },
+            'in_patch': self.revision.contains(self),
+            'is_new': self.is_new,
+            'validates': self.validates(),
+            'publishable': self.is_publishable(),
+        }

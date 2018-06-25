@@ -26,6 +26,7 @@ from shipit_static_analysis.config import REPO_CENTRAL
 from shipit_static_analysis.config import Publication
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.lint import MozLint
+from shipit_static_analysis.report.debug import DebugReporter
 from shipit_static_analysis.utils import build_temp_file
 
 logger = get_logger(__name__)
@@ -59,6 +60,9 @@ class Workflow(object):
         self.reporters = reporters
         if not self.reporters:
             logger.warn('No reporters configured, this analysis will not be published')
+
+        # Always add debug reporter and Diff reporter
+        self.reporters['debug'] = DebugReporter(output_dir=self.taskcluster_results_dir)
 
         # Finally, clone the mercurial repository
         self.hg = self.clone()

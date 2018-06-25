@@ -22,6 +22,9 @@ class DummyIssue(Issue):
     def as_text(self):
         return 'empty'
 
+    def as_dict(self):
+        return {}
+
     def validates(self):
         return False
 
