@@ -93,7 +93,7 @@ def MERCURIAL_COMMIT():
 
     responses.add(
         responses.GET,
-        'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/{}'.format(hg_commit),
+        'https://mapper.mozilla-releng.net/gecko-dev/rev/hg/{}'.format(hg_commit),
         body='40e8eb46609dcb8780764774ec550afff1eed3a5 {}'.format(hg_commit),
         status=200)
 
@@ -106,7 +106,7 @@ def GITHUB_COMMIT():
 
     responses.add(
         responses.GET,
-        'https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/{}'.format(git_commit),
+        'https://mapper.mozilla-releng.net/gecko-dev/rev/git/{}'.format(git_commit),
         body='{} 0d1e55d87931fe70ec1d007e886bcd58015ff770'.format(git_commit),
         status=200)
 

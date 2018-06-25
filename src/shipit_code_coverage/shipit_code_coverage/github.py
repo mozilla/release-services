@@ -15,6 +15,7 @@ class GitHubUtils(object):
         self.cache_root = cache_root
         self.gecko_dev_user = secrets.get(secrets.GECKO_DEV_USER)
         self.gecko_dev_pwd = secrets.get(secrets.GECKO_DEV_PWD)
+        self.hg_git_mapper = secrets[secrets.HG_GIT_MAPPER] if secrets.HG_GIT_MAPPER in secrets else 'https://mapper.mozilla-releng.net'
         self.client_id = client_id
         self.access_token = access_token
 
@@ -42,7 +43,7 @@ class GitHubUtils(object):
 
     def get_commit(self, mercurial_commit):
         def get_commit():
-            r = requests.get('https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/hg/%s' % mercurial_commit)
+            r = requests.get('{}/gecko-dev/rev/hg/{}'.format(self.hg_git_mapper, mercurial_commit))
 
             if not r.ok:
                 raise Exception('Mercurial commit is not available yet on mozilla/gecko-dev.')
@@ -53,7 +54,7 @@ class GitHubUtils(object):
 
     def get_mercurial(self, github_commit):
         def get_commit():
-            r = requests.get('https://api.pub.build.mozilla.org/mapper/gecko-dev/rev/git/%s' % github_commit)
+            r = requests.get('{}/gecko-dev/rev/git/{}'.format(self.hg_git_mapper, github_commit))
 
             if not r.ok:
                 raise Exception('Failed mapping git commit to mercurial commit.')

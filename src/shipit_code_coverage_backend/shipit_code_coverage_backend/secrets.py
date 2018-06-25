@@ -23,3 +23,4 @@ CODECOV_REPO = secrets['CODECOV_REPO'] if 'CODECOV_REPO' in secrets else 'marco-
 ESFRONTLINE = secrets['ESFRONTLINE']
 COVERAGE_SERVICE = secrets['COVERAGE_SERVICE'] if 'COVERAGE_SERVICE' in secrets else 'codecov'
 ACTIVE_DATA_INDEX = secrets['ACTIVE_DATA_INDEX'] if 'ACTIVE_DATA_INDEX' in secrets else 'coverage'
+HG_GIT_MAPPER = secrets['HG_GIT_MAPPER'] if 'HG_GIT_MAPPER' in secrets else 'https://mapper.mozilla-releng.net'
