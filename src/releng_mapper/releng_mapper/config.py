@@ -5,4 +5,4 @@
 
 PROJECT_NAME = 'releng-mapper'
 APP_NAME = 'releng_mapper'
-SCOPE_PREFIX = 'project:releng:services/releng_mapper/'
+SCOPE_PREFIX = 'project:releng:services/{}'.format(APP_NAME)

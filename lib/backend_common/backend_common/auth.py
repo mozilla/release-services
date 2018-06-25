@@ -214,6 +214,32 @@ def jti2id(jti):
     return int(jti[1:])
 
 
+IS_NOT_RELENAPI_TOKEN_USER = object()
+RELENGAPI_TOKENAUTH_ISSUER = 'ra2'
+RELENGAPI_PROJECT_PERMISSION_MAPPING = {
+    'tooltool/': 'releng_tooltool/',
+    'base/tokens/': 'releng_tokens/',
+    'mapper/': 'releng_mapper',
+}
+
+
+def to_relengapi_permission(permission):
+    if permission.startswith('project:releng:services/'):
+        permission = permission[len('project:releng:services/'):]
+    for prefix, project in RELENGAPI_PROJECT_PERMISSION_MAPPING.items():
+        if permission.startswith(project):
+            permission = prefix + permission[len(project):]
+    return permission.replace('/', '.')
+
+
+def from_relengapi_permission(permission):
+    permission = permission.strip().replace('.', '/')
+    for prefix, project in RELENGAPI_PROJECT_PERMISSION_MAPPING.items():
+        if permission.startswith(prefix):
+            permission = project + permission[len(prefix):]
+    return 'project:releng:services/{}'.format(permission)
+
+
 class RelengapiToken(backend_common.db.db.Model):
     __tablename__ = 'relengapi_auth_tokens'
 
@@ -232,7 +258,7 @@ class RelengapiToken(backend_common.db.db.Model):
     @property
     def permissions(self):
         return [
-            'project:releng:relengapi/{}'.format(permission.strip().replace('.', '/'))
+            from_relengapi_permission(permission)
             for permission in self._permissions.split(',')
             if permission
         ]
@@ -248,10 +274,6 @@ class RelengapiToken(backend_common.db.db.Model):
         if self.user:
             tok['user'] = self.user
         return tok
-
-
-IS_NOT_RELENAPI_TOKEN_USER = object()
-RELENGAPI_TOKENAUTH_ISSUER = 'ra2'
 
 
 def is_relengapi_token(token_str):

@@ -21,7 +21,7 @@ import releng_mapper.models
 logger = cli_common.log.get_logger(__name__)
 
 
-@backend_common.auth.auth.require_scopes([releng_mapper.config.SCOPE_PREFIX + 'project/insert'])
+@backend_common.auth.auth.require_scopes([releng_mapper.config.SCOPE_PREFIX + '/project/insert'])
 def post_project(project: str) -> dict:
     session = flask.current_app.db.session
 
@@ -39,7 +39,7 @@ def post_project(project: str) -> dict:
     return {}
 
 
-@backend_common.auth.auth.require_scopes([releng_mapper.config.SCOPE_PREFIX + 'mapping/insert'])
+@backend_common.auth.auth.require_scopes([releng_mapper.config.SCOPE_PREFIX + '/mapping/insert'])
 def post_hg_git_mapping(project: str,
                         git_commit: str,
                         hg_changeset: str,
@@ -94,7 +94,7 @@ def post_hg_git_mapping(project: str,
         )
 
 
-@backend_common.auth.auth.require_scopes([releng_mapper.config.SCOPE_PREFIX + 'mapping/insert'])
+@backend_common.auth.auth.require_scopes([releng_mapper.config.SCOPE_PREFIX + '/mapping/insert'])
 def post_insert_many_ignoredups(project: str,
                                 body: str,
                                 ) -> dict:
@@ -106,7 +106,7 @@ def post_insert_many_ignoredups(project: str,
     )
 
 
-@backend_common.auth.auth.require_scopes([releng_mapper.config.SCOPE_PREFIX + 'mapping/insert'])
+@backend_common.auth.auth.require_scopes([releng_mapper.config.SCOPE_PREFIX + '/mapping/insert'])
 def post_insert_many(project: str,
                      body: str,
                      ) -> dict:

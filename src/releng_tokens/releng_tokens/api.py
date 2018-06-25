@@ -16,6 +16,7 @@ import werkzeug.exceptions
 
 import backend_common.auth
 import cli_common.log
+import releng_tokens.config
 import releng_tokens.models
 
 logger = cli_common.log.get_logger(__name__)
@@ -32,17 +33,20 @@ def can_access_token(access, typ, user):
     # ensure the user can see this token; for non-user-associated
     # tokens, that's just a permission check
     if typ in ('prm',):
-        if not user.has_permissions('project:releng:relengapi/base/tokens/{}/{}'.format(typ, access)):
+        permission = '{}/{}/{}'.format(releng_tokens.config.SCOPE_PREFIX, typ, access)
+        if not user.has_permissions(permission):
             return False
     # for user-associated tokens, if the .all permission is set,
     # the access is fine; otherwise very that the user matches and
     # the .my permission is set.
     elif typ in ('usr',):
-        if not user.has_permissions('project:releng:relengapi/base/tokens/{}/{}/all'.format(typ, access)):
+        permission = '{}/{}/{}/all'.format(releng_tokens.config.SCOPE_PREFIX, typ, access)
+        if not user.has_permissions(permission):
             email = get_user_email(flask_login.current_user)
             if not email or not user or user != email:
                 return False
-            if not user.has_permissions('project:releng:relengapi/base/tokens/{}/{}/my'.format(typ, access)):
+            permission = '{}/{}/{}/my'.format(releng_tokens.config.SCOPE_PREFIX, typ, access)
+            if not user.has_permissions(permission):
                 return False
 
     return True
@@ -54,11 +58,11 @@ def list_tokens(typ=None):
     email = get_user_email(user)
 
     conds = []
-    if user.has_permissions('project:releng:relengapi/base/tokens/prm/view'):
+    if user.has_permissions(releng_tokens.config.SCOPE_PREFIX + '/prm/view'):
         conds.append(tbl.typ == 'prm')
-    if user.has_permissions('project:releng:relengapi/base/tokens/usr/view/all'):
+    if user.has_permissions(releng_tokens.config.SCOPE_PREFIX + '/usr/view/all'):
         conds.append(tbl.typ == 'usr')
-    elif email and user.has_permissions('project:releng:relengapi/base/tokens/usr/view/my'):
+    elif email and user.has_permissions(releng_tokens.config.SCOPE_PREFIX + '/usr/view/my'):
         conds.append(sa.and_(tbl.typ == 'usr',
                              tbl.user == email))
     if not conds:
@@ -173,7 +177,8 @@ def issue_token(body):
     user = flask_login.current_user
 
     # verify permission to issue this type
-    if not user.has_permissions('project:releng:relengapi/base/tokens/{}/issue'.format(typ)):
+    permission = '{}/{}/issue'.format(releng_tokens.config.SCOPE_PREFIX, typ)
+    if not user.has_permissions(permission):
         raise werkzeug.exceptions.Forbidden(
             'You do not have permission to create this token type')
 
@@ -189,7 +194,7 @@ def issue_token(body):
     # All types have permissions, so handle those here -- ensure the request is
     # for a subset of the permissions the user can perform
     permissions = set([
-        p[len('project:releng:relengapi/'):].replace('/', '.')
+        backend_common.auth.to_relengapi_permission(p)
         for p in user.get_permissions()])
     requested_permissions = [p for p in body['permissions'] if p in permissions]
 
