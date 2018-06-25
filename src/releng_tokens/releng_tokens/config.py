@@ -5,3 +5,4 @@
 
 PROJECT_NAME = 'releng-tokens'
 PROJECT_PATH = 'releng_tokens'
+SCOPE_PREFIX = 'project:releng:services/{}'.format(PROJECT_PATH)

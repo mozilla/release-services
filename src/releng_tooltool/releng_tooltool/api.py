@@ -17,6 +17,7 @@ import werkzeug.exceptions
 import backend_common.auth
 import cli_common.log
 import releng_tooltool.aws
+import releng_tooltool.config
 import releng_tooltool.models
 import releng_tooltool.utils
 
@@ -70,7 +71,11 @@ def upload_batch(body: dict, region: typing.Optional[str]=None) -> dict:
     # verify permissions based on visibilities
     visibilities = set(f['visibility'] for f in body['files'].values())
     for visibility in visibilities:
-        if not flask_login.current_user.has_permissions('project:releng:relengapi/tooltool/upload/{}'.format(visibility)):
+        permission = '{}/upload/{}'.format(
+            releng_tooltool.config.SCOPE_PREFIX,
+            visibility,
+        )
+        if not flask_login.current_user.has_permissions(permission):
             raise werkzeug.exceptions.Forbidden('no permission to upload {} files'.format(visibility))
 
     session = flask.g.db.session
@@ -207,7 +212,7 @@ def get_file(digest: str) -> dict:
     return row.to_dict(include_instances=True)
 
 
-@backend_common.auth.auth.require_scopes(['project:releng:tooltool/manage'])
+@backend_common.auth.auth.require_scopes([releng_tooltool.config.SCOPE_PREFIX + '/manage'])
 def patch_file(digest: str, body: dict) -> dict:
     S3_REGIONS = flask.current_app.config['S3_REGIONS']  # type: typing.Dict[str, str]
     if type(S3_REGIONS) is not dict:
@@ -281,7 +286,11 @@ def download_file(digest: str, region: typing.Optional[str]=None) -> werkzeug.Re
 
     # check visibility
     if file_row.visibility != 'public' or not ALLOW_ANONYMOUS_PUBLIC_DOWNLOAD:
-        if not flask_login.current_user.has_permissions('project:releng:relengapi/tooltool/download/{}'.format(file_row.visibility)):
+        permission = '{}/download/{}'.format(
+            releng_tooltool.config.SCOPE_PREFIX,
+            file_row.visibility,
+        )
+        if not flask_login.current_user.has_permissions(permission):
             raise werkzeug.exceptions.Forbidden
 
     # figure out which region to use, and from there which bucket
