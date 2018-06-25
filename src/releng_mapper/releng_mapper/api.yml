@@ -20,7 +20,9 @@ produces:
   - application/json
 
 paths:
-  '/{project}':
+
+  /{project}:
+
     post:
       summary: Post a new project to the mapper.
       operationId: 'releng_mapper.api.post_project'
@@ -30,22 +32,19 @@ paths:
           type: string
           description: Project name.
           required: true
-
-
       responses:
         200:
           description: New project successfully inserted into the database.
           schema:
             type: object
             description: Empty JSON response.
-
         409:
           description: Project with specified name already exists.
           schema:
             $ref: '#/definitions/Problem'
 
+  /{project}/insert/{git_commit}/{hg_changeset}:
 
-  '/{project}/insert/{git_commit}/{hg_changeset}':
     post:
       summary: Insert a single Git-Hg mapping.
       operationId: 'releng_mapper.api.post_hg_git_mapping'
@@ -55,19 +54,16 @@ paths:
           in: path
           type: string
           required: true
-
         - name: git_commit
           description: 40-character hexadecimal Git commit number.
           in: path
           type: string
           required: true
-
         - name: hg_changeset
           description: 40-character hexadecimal Mercurial changeset SHA.
           in: path
           type: string
           required: true
-
       responses:
         200:
           description: Git-Hg mapping successfully inserted.
@@ -79,88 +75,76 @@ paths:
                 description: Date of insertion into database.
                 type: string
                 format: date-time
-
               project_name:
                 description: Name of project for mapping.
                 type: string
-
               git_commit:
                 description: 40-character hexadecimal Git commit number.
                 type: string
-
               hg_changeset:
                 description: 40-character hexadecimal Mercurial changeset SHA.
                 type: string
-
         400:
           description: Malformed SHA.
           schema:
             $ref: '#/definitions/Problem'
-
         404:
           description: Project not found in database.
           schema:
             $ref: '#/definitions/Problem'
-
         409:
           description: Mapping already exists for this project.
           schema:
             $ref: '#/definitions/Problem'
-
         500:
           description: Multiple matching projects found with new name.
           schema:
             $ref: '#/definitions/Problem'
 
-  '/{project}/insert/ignoredups':
+  /{project}/insert/ignoredups:
+
     post:
       summary: Insert many Git-Hg mapping entries and ignore duplicate entries silently.
       operationId: releng_mapper.api.post_insert_many_ignoredups
       consumes:
         - text/plain
-
       parameters:
         - name: project
           in: path
           type: string
           description: Project name.
           required: true
-
         - name: body
           in: body
           required: true
           description: Git-Hg mapfile.
           schema:
             type: string
-
       responses:
         200:
           description: Mapfile successfully inserted.
           schema:
             type: object
             description: Empty JSON response.
-
         400:
           description: Malformed SHA.
           schema:
             $ref: '#/definitions/Problem'
-
         404:
           description: Project not found in database.
           schema:
             $ref: '#/definitions/Problem'
-
         415:
           description: Request content-type is not 'text/plain'.
           schema:
             $ref: '#/definitions/Problem'
-
         500:
           description: Multiple matching projects found with new name.
           schema:
             $ref: '#/definitions/Problem'
 
-  '/{project}/insert':
+  /{project}/insert:
+
     post:
       summary: Insert many Git-Hg mapping entries and return an error on duplicate SHAs.
       operationId: releng_mapper.api.post_insert_many
@@ -172,47 +156,41 @@ paths:
           type: string
           description: Project name.
           required: true
-
         - name: body
           in: body
           required: true
           description: Git-Hg mapfile.
           schema:
             type: string
-
       responses:
         200:
           description: Mapfile successfully inserted.
           schema:
             type: object
             description: Empty JSON response.
-
         400:
           description: Malformed SHA.
           schema:
             $ref: '#/definitions/Problem'
-
         404:
           description: Project not found in database.
           schema:
             $ref: '#/definitions/Problem'
-
         409:
           description: Mapping already exists for this project.
           schema:
             $ref: '#/definitions/Problem'
-
         415:
           description: Request content-type is not 'text/plain'.
           schema:
             $ref: '#/definitions/Problem'
-
         500:
           description: Multiple matching projects found with new name.
           schema:
             $ref: '#/definitions/Problem'
 
-  '/projects':
+  /projects:
+
     get:
       summary: Return the list of defined project names, which are valid for the {project} parameter in other API calls.
       operationId: releng_mapper.api.get_projects
@@ -228,14 +206,13 @@ paths:
                 items:
                   description: Project name.
                   type: string
-
         404:
           description: Could not find any projects in the database.
           schema:
             $ref: '#/definitions/Problem'
 
+  /{projects}/mapfile/since/{since}:
 
-  '/{projects}/mapfile/since/{since}':
     get:
       summary: Get a map file of insertions since the given date
       operationId: releng_mapper.api.get_mapfile_since
@@ -245,7 +222,6 @@ paths:
           type: string
           description: Comma-delimited project names(s) string
           required: true
-
         - name: since
           in: path
           type: string
@@ -254,26 +230,23 @@ paths:
             Timestamp in a format parsed by dateutil.parser.parse evaluated based on
             the time the record was inserted into mapper database,
             not the time of commit and not the time of conversion.
-
       responses:
         200:
           description: Mapfile successfully retrieved.
           schema:
             title: Mapfile since specified date.
             type: string
-
         400:
           description: Invalid date format specified.
           schema:
             $ref: '#/definitions/Problem'
-
         404:
           description: No results found.
           schema:
             $ref: '#/definitions/Problem'
 
+  /{projects}/mapfile/full:
 
-  '/{projects}/mapfile/full':
     get:
       summary: Get a map file containing mappings for one or more projects.
       operationId: releng_mapper.api.get_full_mapfile
@@ -283,21 +256,19 @@ paths:
           type: string
           description: Comma delimited project name(s) string.
           required: true
-
       responses:
         200:
           description: Mapfile successfully retrieved.
           schema:
             title: Mapfile since specified date.
             type: string
-
         400:
           description: Invalid date format specified.
           schema:
             $ref: '#/definitions/Problem'
 
+  /{projects}/rev/{vcs_type}/{commit}:
 
-  '/{projects}/rev/{vcs_type}/{commit}':
     get:
       summary: Return the Hg changeset SHA for a Git commit ID, or vice-versa.
       operationId: releng_mapper.api.get_revision
@@ -307,7 +278,6 @@ paths:
           type: string
           description: Comma delimited project name(s) string.
           required: true
-
         - name: vcs_type
           in: path
           type: string
@@ -315,38 +285,32 @@ paths:
             - hg
             - git
           required: true
-
         - name: commit
           in: path
           type: string
           description: Git commit ID or Hg changeset (depending on vcs_type value).
           required: true
-
       responses:
         200:
           description: Revision successfully mapped.
           schema:
             description: Single-line mapfile.
             type: string
-
         400:
           description: Unknown VCS or malformed SHA.
           schema:
             $ref: '#/definitions/Problem'
-
         404:
           description: No corresponding SHA found.
           schema:
             $ref: '#/definitions/Problem'
-
         500:
           description: Multiple corresponding SHAs found.
           schema:
             $ref: '#/definitions/Problem'
 
-
-
 definitions:
+
   Problem:
     type: object
     properties:
