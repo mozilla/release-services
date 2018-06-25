@@ -71,13 +71,13 @@ async def coverage_responses(aresponses):
         },
         {
             'path': 'hg_git_map',
-            'host': 'api.pub.build.mozilla.org',
-            'url': lambda fname: '/mapper/gecko-dev/rev/hg/{}'.format(fname),
+            'host': 'mapper.mozilla-releng.net',
+            'url': lambda fname: '/gecko-dev/rev/hg/{}'.format(fname),
         },
         {
             'path': 'git_hg_map',
-            'host': 'api.pub.build.mozilla.org',
-            'url': lambda fname: '/mapper/gecko-dev/rev/git/{}'.format(fname),
+            'host': 'mapper.mozilla-releng.net',
+            'url': lambda fname: '/gecko-dev/rev/git/{}'.format(fname),
         },
         {
             'path': 'codecov_commits',

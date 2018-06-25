@@ -15,7 +15,7 @@ class GitHubUtils(object):
         self.cache_root = cache_root
         self.gecko_dev_user = secrets.get(secrets.GECKO_DEV_USER)
         self.gecko_dev_pwd = secrets.get(secrets.GECKO_DEV_PWD)
-        self.hg_git_mapper = secrets[secrets.HG_GIT_MAPPER] if secrets.HG_GIT_MAPPER in secrets else 'https://api.pub.build.mozilla.org/mapper'
+        self.hg_git_mapper = secrets[secrets.HG_GIT_MAPPER] if secrets.HG_GIT_MAPPER in secrets else 'https://mapper.mozilla-releng.net'
         self.client_id = client_id
         self.access_token = access_token
 
