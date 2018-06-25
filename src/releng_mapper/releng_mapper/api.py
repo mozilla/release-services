@@ -208,7 +208,10 @@ def get_revision(projects: str,
             )
         )
 
-    return '%s %s' % (row.git_commit, row.hg_changeset)
+    return flask.Response(
+        '%s %s' % (row.git_commit, row.hg_changeset),
+        mimetype='plain/text',
+    )
 
 
 def _project_filter(projects_arg):
