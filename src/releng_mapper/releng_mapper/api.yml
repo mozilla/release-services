@@ -256,6 +256,8 @@ paths:
           type: string
           description: Comma delimited project name(s) string.
           required: true
+      produces:
+        - text/plain
       responses:
         200:
           description: Mapfile successfully retrieved.
@@ -290,6 +292,8 @@ paths:
           type: string
           description: Git commit ID or Hg changeset (depending on vcs_type value).
           required: true
+      produces:
+        - text/plain
       responses:
         200:
           description: Revision successfully mapped.
