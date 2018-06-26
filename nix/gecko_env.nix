@@ -1,8 +1,11 @@
 { releng_pkgs }:
 
 let
-  inherit (releng_pkgs.pkgs) rustChannels bash autoconf213 clang_4 llvm_4 llvmPackages_4;
+  inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_4 llvm_4 llvmPackages_4;
   inherit (releng_pkgs.pkgs.devEnv) gecko;
+
+  # Rust 1.26.2
+  rustChannel = rustChannelOf { date = "2018-06-05"; channel = "stable"; };
 
 in gecko.overrideDerivation (old: {
   # Dummy src, cannot be null
@@ -53,7 +56,7 @@ in gecko.overrideDerivation (old: {
     echo "export CLANG_MOZCONFIG=$mozconfig" >> $geckoenv
 
     # Use updated rust version
-    echo "export PATH=${rustChannels.stable.rust}/bin:${rustChannels.stable.cargo}/bin:\$PATH" >> $geckoenv
+    echo "export PATH=${rustChannel.rust}/bin:${rustChannel.cargo}/bin:\$PATH" >> $geckoenv
   '';
   installPhase = ''
     geckoenv=$out/bin/gecko-env
@@ -67,7 +70,7 @@ in gecko.overrideDerivation (old: {
   propagatedBuildInputs = old.propagatedBuildInputs
     ++ [
       # Update rust to latest stable
-      rustChannels.stable.rust
-      rustChannels.stable.cargo
+      rustChannel.rust
+      rustChannel.cargo
     ];
 })
