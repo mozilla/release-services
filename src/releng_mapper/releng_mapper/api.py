@@ -379,6 +379,9 @@ def _insert_many(project: str,
     for line in body.split('\n'):
         line = line.rstrip()
 
+        if line == '':
+            continue
+
         try:
             git_commit, hg_changeset = line.split(' ')
 
