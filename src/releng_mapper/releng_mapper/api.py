@@ -96,11 +96,11 @@ def post_hg_git_mapping(project: str,
 
 @backend_common.auth.auth.require_scopes([releng_mapper.config.SCOPE_PREFIX + '/mapping/insert'])
 def post_insert_many_ignoredups(project: str,
-                                body: str,
+                                body: typing.Union[bytes, str],
                                 ) -> dict:
     return _insert_many(
         project,
-        body.encode(),
+        body,
         flask.current_app.db.session,
         ignore_dups=True,
     )
@@ -108,11 +108,11 @@ def post_insert_many_ignoredups(project: str,
 
 @backend_common.auth.auth.require_scopes([releng_mapper.config.SCOPE_PREFIX + '/mapping/insert'])
 def post_insert_many(project: str,
-                     body: str,
+                     body: typing.Union[bytes, str],
                      ) -> dict:
     return _insert_many(
         project,
-        body.encode(),
+        body,
         flask.current_app.db.session,
         ignore_dups=False,
     )
@@ -347,7 +347,7 @@ def _add_hash(session, git_commit: str, hg_changeset: str, project: str) -> None
 
 
 def _insert_many(project: str,
-                 body: bytes,
+                 body: typing.Union[bytes, str],
                  session,
                  ignore_dups: bool=False,
                  ) -> dict:
@@ -365,13 +365,22 @@ def _insert_many(project: str,
         HTTP 415: Request content-type is not 'text/plain'
         HTTP 500: Multiple projects found with matching project name
     '''
+    if isinstance(body, bytes):
+        body = body.decode('utf-8')
+
+    if body == '':
+        return {}
+
     if flask.request.content_type != 'text/plain':
         raise werkzeug.exceptions.UnsupportedMediaType(
             'HTTP request header "Content-Type" must be set to "text/plain"')
 
     proj = _get_project(session, project)  # can raise HTTP 404 or HTTP 500
-    for line in body.decode('utf-8').split('\n'):
+    for line in body.split('\n'):
         line = line.rstrip()
+
+        if line == '':
+            continue
 
         try:
             git_commit, hg_changeset = line.split(' ')
