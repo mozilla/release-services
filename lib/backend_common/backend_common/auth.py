@@ -107,7 +107,7 @@ class TaskclusterUser(BaseUser):
            and not isinstance(permissions[0], (tuple, list)):
                 permissions = [permissions]
 
-        return taskcluster.utils.scope_match(self.get_permissions(), permissions)
+        return taskcluster.utils.scopeMatch(self.get_permissions(), permissions)
 
 
 class RelengapiTokenUser(BaseUser):
@@ -154,7 +154,7 @@ class Auth(object):
 
         with flask.current_app.app_context():
             user_scopes = flask_login.current_user.get_permissions()
-            if not taskcluster.utils.scope_match(user_scopes, scopes):
+            if not taskcluster.utils.scopeMatch(user_scopes, scopes):
                 diffs = [', '.join(set(s).difference(user_scopes)) for s in scopes]  # noqa
                 logger.error('User {} misses some scopes: {}'.format(flask_login.current_user.get_id(), ' OR '.join(diffs)))  # noqa
                 return False
@@ -214,7 +214,7 @@ def jti2id(jti):
     return int(jti[1:])
 
 
-IS_NOT_RELENAPI_TOKEN_USER = object()
+EMPTY = object()
 RELENGAPI_TOKENAUTH_ISSUER = 'ra2'
 RELENGAPI_PROJECT_PERMISSION_MAPPING = {
     'tooltool/': 'releng_tooltool/',
@@ -236,7 +236,7 @@ def from_relengapi_permission(permission):
     permission = permission.strip().replace('.', '/')
     for prefix, project in RELENGAPI_PROJECT_PERMISSION_MAPPING.items():
         if permission.startswith(prefix):
-            permission = project + permission[len(prefix):]
+            permission = '{}/{}'.format(project, permission[len(prefix):])
     return 'project:releng:services/{}'.format(permission)
 
 
@@ -283,19 +283,19 @@ def is_relengapi_token(token_str):
 
     except itsdangerous.BadData as e:
         logger.warning('Got invalid signature in token %r', token_str)
-        logger.debug(e)
-        return IS_NOT_RELENAPI_TOKEN_USER
+        logger.exception(e)
+        return EMPTY
 
     except Exception as e:
         logger.error('Error processing signature in token %r', token_str)
-        return
+        return EMPTY
 
     # convert v1 to ra2
     if claims.get('v') == 1:
         claims = {'iss': 'ra2', 'typ': 'prm', 'jti': 't%d' % claims['id']}
 
     if claims.get('iss') != RELENGAPI_TOKENAUTH_ISSUER:
-        return
+        return EMPTY
 
     if claims['typ'] == 'prm':
         token_id = jti2id(claims['jti'])
@@ -308,7 +308,7 @@ def is_relengapi_token(token_str):
     elif claims['typ'] == 'tmp':
         now = time.time()
         if now < claims['nbf'] or now > claims['exp']:
-            return
+            return EMPTY
         permissions = [i for i in claims['prm'] if i]
         return RelengapiTokenUser(claims, permissions=permissions)
 
@@ -380,16 +380,16 @@ def parse_header(request):
 
     auth_header = request.headers.get('Authorization')
     if not auth_header:
-        return
+        auth_header = request.headers.get('Authentication')
+        if not auth_header:
+            return
 
     if flask.current_app.config.get('CHECK_FOR_RELENGAPI_TOKEN') is True:
         header = auth_header.split()
-        if len(header) != 2:
-            return
-
-        user = is_relengapi_token(header[1])
-        if user != IS_NOT_RELENAPI_TOKEN_USER:
-            return user
+        if len(header) == 2:
+            user = is_relengapi_token(header[1])
+            if user != EMPTY:
+                return user
 
     # Get Endpoint configuration
     if ':' in request.host:
@@ -419,9 +419,7 @@ def parse_header(request):
     except Exception as e:
         logger.error('TC auth error: {}'.format(e))
         logger.error('TC auth details: {}'.format(payload))
-
-        # Abort with a 401 status code
-        return UNAUTHORIZED_JSON, 401
+        return
 
     return TaskclusterUser(resp)
 
