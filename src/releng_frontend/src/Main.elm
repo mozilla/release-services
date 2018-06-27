@@ -6,6 +6,8 @@ import App.Layout
 import App.Notifications
 import App.Notifications.Api
 import App.Notifications.Types
+import App.Tokens
+import App.ToolTool
 import App.TreeStatus
 import App.TreeStatus.Api
 import App.TreeStatus.Types
@@ -47,6 +49,8 @@ init flags location =
             , user = user
             , userScopes = App.UserScopes.init
             , trychooser = App.TryChooser.init
+            , tokens = App.Tokens.init
+            , tooltool = App.ToolTool.init
             , treestatus = App.TreeStatus.init flags.treestatusUrl
             , notifications = App.Notifications.init flags.identityUrl flags.policyUrl
             }
@@ -77,6 +81,8 @@ initRoute model route =
         App.HomeRoute ->
             { model
                 | trychooser = App.TryChooser.init
+                , tokens = App.Tokens.init
+                , tooltool = App.ToolTool.init
                 , treestatus =
                     App.TreeStatus.init model.treestatus.baseUrl
             }
@@ -108,10 +114,13 @@ initRoute model route =
                   ]
 
         App.TryChooserRoute ->
-            model
-                ! [ Utils.performMsg (App.TryChooserMsg App.TryChooser.Load)
-                  , Utils.performMsg (App.UserScopesMsg App.UserScopes.FetchScopes)
-                  ]
+            model ! []
+
+        App.TokensRoute ->
+            model ! []
+
+        App.ToolToolRoute ->
+            model ! []
 
         App.TreeStatusRoute route ->
             model
@@ -228,6 +237,24 @@ update msg model =
             , Cmd.map App.TryChooserMsg newCmd
             )
 
+        App.TokensMsg msg_ ->
+            let
+                ( newModel, newCmd ) =
+                    App.Tokens.update msg_ model.tokens
+            in
+            ( { model | tokens = newModel }
+            , Cmd.map App.TokensMsg newCmd
+            )
+
+        App.ToolToolMsg msg_ ->
+            let
+                ( newModel, newCmd ) =
+                    App.ToolTool.update msg_ model.tooltool
+            in
+            ( { model | tooltool = newModel }
+            , Cmd.map App.ToolToolMsg newCmd
+            )
+
         App.TreeStatusMsg msg_ ->
             let
                 route =
@@ -336,6 +363,12 @@ viewRoute model =
 
         App.TryChooserRoute ->
             Html.map App.TryChooserMsg (App.TryChooser.view model.trychooser)
+
+        App.TokensRoute ->
+            Html.map App.TokensMsg (App.Tokens.view model.tokens)
+
+        App.ToolToolRoute ->
+            Html.map App.ToolToolMsg (App.ToolTool.view model.tooltool)
 
         App.TreeStatusRoute route ->
             App.TreeStatus.view

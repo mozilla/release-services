@@ -221,6 +221,49 @@ RELENGAPI_PROJECT_PERMISSION_MAPPING = {
     'base/tokens/': 'releng_tokens/',
     'mapper/': 'releng_mapper',
 }
+RELENGAPI_PERMISSIONS = {
+    'base.badpenny.run': 'Force a run of a badpenny task',
+    'base.badpenny.view': 'See scheduled tasks and logs of previous jobs',
+    'base.tokens.prm.issue': 'Issue permanent tokens',
+    'base.tokens.prm.revoke': 'Revoke permanent tokens',
+    'base.tokens.prm.view': 'See permanent tokens',
+    'base.tokens.tmp.issue': 'Issue temporary tokens',
+    'base.tokens.usr.issue': 'Issue user tokens',
+    'base.tokens.usr.revoke.all': 'Revoke any user token',
+    'base.tokens.usr.revoke.my': 'Revoke my user tokens',
+    'base.tokens.usr.view.all': 'See all user tokens',
+    'base.tokens.usr.view.my': 'See my user tokens',
+    'clobberer.post.clobber': 'Submit clobber requests',
+    'mapper.mapping.insert': 'Allows new hg-git mappings to be inserted into mapper db (hashes table)',
+    'mapper.project.insert': 'Allows new projects to be inserted into mapper db (projects table)',
+    'tooltool.download.internal': 'Download INTERNAL files from tooltool',
+    'tooltool.download.public': 'Download PUBLIC files from tooltool',
+    'tooltool.manage': 'Manage tooltool files, including deleting and changing visibility levels',
+    'tooltool.upload.internal': 'Upload INTERNAL files to tooltool',
+    'tooltool.upload.public': 'Upload PUBLIC files to tooltool'
+}
+
+
+def initial_data():
+    user = dict()
+    user['type'] = flask_login.current_user.type
+
+    user['permissions'] = []
+    for permission in flask_login.current_user.permissions:
+        permission = to_relengapi_permission(permission)
+        if permission in RELENGAPI_PERMISSIONS:
+            user['permissions'].append(dict(
+                name=permission,
+                doc=RELENGAPI_PERMISSIONS[permission],
+            ))
+
+    if getattr(flask_login.current_user, 'authenticated_email', EMPTY) != EMPTY:
+        user['authenticated_email'] = flask_login.current_user.authenticated_email
+
+    return dict(
+        user=user,
+        perms=RELENGAPI_PERMISSIONS,
+    )
 
 
 def to_relengapi_permission(permission):

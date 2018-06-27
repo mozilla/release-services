@@ -135,34 +135,43 @@ def cmd_S3(ctx,
             ask_for_details=interactive,
         )
 
-        # 3. apply csp and flags to index.html
-        click.echo(' => Applying CSP and environment flags to index.html ... ', nl=False)
-        with click_spinner.spinner():
-            index_html_file = os.path.join(tmp_dir, 'index.html')
-            with io.open(index_html_file, 'r', encoding='utf-8') as f:
-                index_html = f.read()
-            if csp:
-                index_html = index_html.replace(
-                    'font-src \'self\';',
-                    'font-src \'self\'; connect-src {};'.format(' '.join(csp)),
-                )
-            if env:
-                index_html = index_html.replace(
-                    '<body',
-                    '<body ' + (' '.join([
-                        'data-{}="{}"'.format(*[j.strip() for j in i.split(':', 1)])
-                        for i in env
-                    ])),
-                )
+        # 3. apply csp and flags to index.html files
+        index_html_files = []
+        if os.path.exists(os.path.join(tmp_dir, 'index.html')):
+            index_html_files.append('index.html')
+        if os.path.isdir(os.path.join(tmp_dir, 'static')):
+            for item in os.listdir(os.path.join(tmp_dir, 'static')):
+                if os.path.exists(os.path.join(tmp_dir, 'static', item, 'index.html')):
+                    index_html_files.append(os.path.join('static', item, 'index.html'))
 
-            os.chmod(index_html_file, 0o755)
-            with io.open(index_html_file, 'w', encoding='utf-8') as f:
-                f.write(index_html)
-        please_cli.utils.check_result(
-            0,
-            'Applied CSP and environment flags to index.html',
-            ask_for_details=interactive,
-        )
+        for index_html_file in index_html_files:
+            click.echo(' => Applying CSP and environment flags to index.html ... ', nl=False)
+            with click_spinner.spinner():
+                index_html_file = os.path.join(tmp_dir, index_html_file)
+                with io.open(index_html_file, 'r', encoding='utf-8') as f:
+                    index_html = f.read()
+                if csp:
+                    index_html = index_html.replace(
+                        'font-src \'self\';',
+                        'font-src \'self\'; connect-src {};'.format(' '.join(csp)),
+                    )
+                if env:
+                    index_html = index_html.replace(
+                        '<body',
+                        '<body ' + (' '.join([
+                            'data-{}="{}"'.format(*[j.strip() for j in i.split(':', 1)])
+                            for i in env
+                        ])),
+                    )
+
+                os.chmod(index_html_file, 0o755)
+                with io.open(index_html_file, 'w', encoding='utf-8') as f:
+                    f.write(index_html)
+            please_cli.utils.check_result(
+                0,
+                'Applied CSP and environment flags to index.html',
+                ask_for_details=interactive,
+            )
 
         # 4. sync to S3
         click.echo(' => Syncing to S3  ... ', nl=False)

@@ -65,30 +65,15 @@ viewUser model =
 
 viewNavBar : App.Model -> List (Html App.Msg)
 viewNavBar model =
-    [ button
-        [ class "navbar-toggler navbar-toggler-right"
-        , type_ "button"
-        , attribute "data-toggle" "collapse"
-        , attribute "data-target" "#navbarNavDropdown"
-        , attribute "aria-controls" "navbarNavDropdown"
-        , attribute "aria-expanded" "false"
-        , attribute "aria-label" "Toggle navigation"
-        ]
-        [ span [ class "navbar-toggler-icon" ] [] ]
-    , a
+    [ a
         [ Utils.onClick (App.NavigateTo App.HomeRoute)
         , href "#"
         , class "navbar-brand"
         ]
         [ text "Release Engineering" ]
-    , div
-        [ class "collapse navbar-collapse"
-        , id "navbarNavDropdown"
-        ]
-        [ ul [ class "navbar-nav" ]
-            [ li [ class "nav-item" ] (viewUser model)
-            ]
-        ]
+    , ul [ class "navbar-nav" ]
+         [ li [ class "nav-item" ] (viewUser model)
+         ]
     ]
 
 

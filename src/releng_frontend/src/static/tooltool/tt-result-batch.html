@@ -1,0 +1,25 @@
+<div>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     License, v. 2.0. If a copy of the MPL was not distributed with this
+     file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+    <div class="tt-result-controls">
+        <span ng-click="details = !details"
+                class="glyphicon details-link"
+                ng-class="{'glyphicon-chevron-up': details,
+                           'glyphicon-chevron-down': !details}"
+                aria-hidden="true"></span>
+    </div>
+    <div class="tt-result-info">
+        <span class="tt-upload-date">{{res.uploaded | amDateFormat:'l LTS'}}</span> -
+        <span class="tt-upload-author">{{res.author}}</span> -
+        <!-- TODO: filter to replace Bug XXXXXX by a link -->
+        <span class="tt-upload-message">{{res.message}}</span>
+    </div>
+    <div ng-if="details">
+        <div class="list-group">
+            <div ng-repeat="file in res.files" class="list-group-item">
+                <tt-result-file res="file"></tt-result-file>
+            </div>
+        </div>
+    </div>
+</div>

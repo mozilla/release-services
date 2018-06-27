@@ -1,0 +1,63 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.navbar {
+    background-color: #4d4f53;
+    border-radius: 0;
+}
+
+.navbar .navbar-brand {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.navbar .nav a {
+    color: #ccc;
+}
+
+.navbar .nav a:hover,
+.navbar .nav a:focus{
+    color: #ccc;
+    background: transparent;
+    border: 0;
+    outline: none;
+}
+
+.navbar .nav .dropdown-menu a {
+    color: #292b2c
+}
+
+
+
+/* Phones (<768px) */
+@media (max-width: 768px) {
+
+}
+
+/* Tablets (≥768px) */
+@media (max-width: 992px) and (min-width: 768px) {
+    #content .container-fluid,
+    .navbar .container-fluid {
+        max-width: 733px;
+    }
+}
+
+/* Desktops (≥992px) */
+@media (max-width: 1200px) and (min-width: 992px) {
+    #content .container-fluid,
+    .navbar .container-fluid {
+        max-width: 957px;
+    }
+}
+
+/* Desktops (≥1200px) */
+@media (min-width: 1200px) {
+    #content .container-fluid,
+    .navbar .container-fluid {
+        max-width: 1165px;
+    }
+}

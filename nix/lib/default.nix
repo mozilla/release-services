@@ -492,7 +492,14 @@ in rec {
         installPhase = ''
           mkdir $out
           cp build/* $out/ -R
-          sed -i -e "s|<head>|<head>\n  <meta http-equiv=\"Content-Security-Policy\" content=\"${csp}\">|" $out/index.html
+          if [ -e $out/index.html ]; then
+            sed -i -e "s|<head>|<head>\n  <meta http-equiv=\"Content-Security-Policy\" content=\"${csp}\">|" $out/index.html
+          fi
+          for item in $out/*; do
+            if [ -e $out/$item/index.html ]; then
+              sed -i -e "s|<head>|<head>\n  <meta http-equiv=\"Content-Security-Policy\" content=\"${csp}\">|" $out/$item/index.html
+            fi
+          done
           runHook postInstall
         '';
 

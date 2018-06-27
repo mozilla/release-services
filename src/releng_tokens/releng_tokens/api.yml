@@ -9,6 +9,47 @@ produces:
   - application/json
 paths:
 
+  /init:
+
+    get:
+      operationId: "backend_common.auth.initial_data"
+      description: Initial data for frontend
+      responses:
+        200:
+          description: Initial data
+          schema:
+            type: object
+            required:
+              - user
+              - perms
+            properties:
+              user:
+                type: object
+                required:
+                  - type
+                  - permissions
+                properties:
+                  type:
+                    type: string
+                  permissions:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - doc
+                        - name
+                      properties:
+                        doc:
+                          type: string
+                        name:
+                          type: string
+                  authenticated_email:
+                    type: string
+              perms:
+                type: object
+                additionalProperties:
+                  type: string
+
   /:
 
     get:
