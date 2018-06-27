@@ -3,11 +3,11 @@
 <head> 
   <meta charset="UTF-8">
   <title>Releng API</title>
-  <link href="css/relengapi.css" media="screen" rel="stylesheet" type="text/css" />
   <link href="css/alertify.core.css" media="screen" rel="stylesheet" type="text/css" />
   <link href="css/alertify.default.css" media="screen" rel="stylesheet" type="text/css" />
   <link href="css/bootstrap.min.css" media="screen" rel="stylesheet" type="text/css" />
   <link href="css/bootstrap-theme.min.css" media="screen" rel="stylesheet" type="text/css" />
+  <link href="css/relengapi.css" media="screen" rel="stylesheet" type="text/css" />
   <link href="css/tokens.css" media="screen" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -17,20 +17,16 @@
       <div class="navbar-header">
         <a class="navbar-brand" href="#">Release Engineering</a>
       </div>
-
-      <!-- Collect the nav links, forms, and other content for toggling -->
-      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <ul class="nav navbar-nav navbar-right">
-          <li><a id="login" href="#">Login</a></li>
-          <li id="loggedin" class="dropdown hidden">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">username<span class="caret"></span></a>
-            <ul class="dropdown-menu">
-              <li><a href="#">Manage credentials</a></li>
-              <li><a id="logout" href="#">Logout</a></li>
-            </ul>
-          </li>
-        </ul>
-      </div>
+      <ul class="nav navbar-nav navbar-right">
+        <li><a id="login" href="#">Login</a></li>
+        <li id="loggedin" class="dropdown hidden">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">username<span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="#">Manage credentials</a></li>
+            <li><a id="logout" href="#">Logout</a></li>
+          </ul>
+        </li>
+      </ul>
     </div>
   </nav>
 
@@ -174,21 +170,67 @@
   <script src="js/relengapi.js" type="text/javascript"></script>
   <script type="text/javascript">
 
-    $(document).ready(function() {
-        $login.on('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            // TODO: redirect to auth0 login
-        });
+    var $login = $('#login');
+    var $loggedin = $('#loggedin');
+    var $logout= $('#logout');
 
-        $logout.on('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            window.localStorage.removeItem('auth');
-            $('#login').toggleClass('hidden');
-            $('#loggedin').toggleClass('hidden');
+    var setup = function() {
+        var auth = window.localStorage.getItem('auth');
+        var url = $('body').attr('data-releng-tokens-url') || 'https://localhost:8003';
+        try {
+            auth = JSON.parse(auth);
+        } catch(err) {
+            auth = null;
+        }
+        if (auth != null && auth.access_token) {
+            $.ajax({
+                'url': url + '/init',
+                'async': false,
+                'method': 'GET',
+                'dataType': 'json',
+                'accepts': {'json': 'application/json'},
+                'beforeSend': function (xhr) {
+                    xhr.setRequestHeader("Authorization", "Bearer " + auth.access_token);
+                    return true;
+                },
+                error: function(xhr, status, error) {
+                },
+                success: function(data, status, xhr) {
+                    $login.toggleClass('hidden');
+                    $loggedin.toggleClass('hidden');
+                    angular.module('initial_data', []).constant('initial_data', data || {});
+                }
+            });
+        } else {
+            angular.module('initial_data', []).constant('initial_data', {});
+        }
+
+    };
+
+    $login.on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var url = $('body').attr('data-releng-treestatus-url') || 'https://localhost:8000';
+        $.ajax({
+            url: url + '/auth0/login',
+            error: function(xhr, status, error) {
+            },
+            success: function(redirect_url, status, xhr) {
+                window.location = redirect_url;
+            }
+
         });
     });
+
+    $logout.on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.localStorage.removeItem('auth');
+        $login.toggleClass('hidden');
+        $loggedin.toggleClass('hidden');
+    });
+
+    setup();
 
   </script>
 </body>

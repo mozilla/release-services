@@ -50,7 +50,7 @@ paths:
                 additionalProperties:
                   type: string
 
-  /:
+  /tokens:
 
     get:
       operationId: "releng_tokens.api.list_tokens"
@@ -96,7 +96,7 @@ paths:
           schema:
             $ref: '#/definitions/Token'
 
-  /{id}:
+  /tokens/{id}:
 
     get:
       operationId: "releng_tokens.api.get_token"
@@ -136,7 +136,7 @@ paths:
           schema:
             type: string
 
-  /query:
+  /tokens/query:
 
     post:
       operationId: "releng_tokens.api.query_token"

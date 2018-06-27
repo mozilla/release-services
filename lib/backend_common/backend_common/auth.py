@@ -245,6 +245,10 @@ RELENGAPI_PERMISSIONS = {
 
 
 def initial_data():
+    if not isinstance(flask_login.current_user, BaseUser):
+        logger.error("wrong user type", user=flask_login.current_user)
+        return dict()
+
     user = dict()
     user['type'] = flask_login.current_user.type
 

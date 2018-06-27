@@ -2,120 +2,89 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-angular.module('tokens', ['relengapi']);
+angular.module('tokens', ['relengapi', 'initial_data']);
 
 angular.module('tokens').controller('TokenController',
-                                    function($scope, restapi) {
+                                    function($scope, restapi, initial_data) {
 
-    $('#login').on('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        // TODO: redirect to auth0 login
-    });
+    initial_data = initial_data || {};
+    initial_data.user = initial_data.user || {};
+    initial_data.user.permissions = initial_data.user.permissions || [];
+    initial_data.tokens = initial_data.tokens || [];
 
-    $('#logout').on('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        window.localStorage.removeItem('auth');
-        $('#login').toggleClass('hidden');
-        $('#loggedin').toggleClass('hidden');
-    });
+                                        console.log(initial_data)
+    $scope.available_permissions = initial_data.user.permissions;
+    $scope.tokens = initial_data.tokens;
 
-    var auth = window.localStorage.getItem('auth');
-    var url = $('body').attr('data-releng-tokens-url') || 'https://localhost:8003';
-    try {
-        auth = JSON.parse(auth);
-    } catch(err) {
-        auth = null;
-    }
-    if (auth != null && auth.access_token) {
-        $.ajax({
-            'url': url + '/init',
-            'beforeSend': function (xhr) {
-                xhr.setRequestHeader("Authorization", auth.access_token);
-            },
-            'error': function(xhr, status, error) {
-            },
-            'success': function(initial_data, status, xhr) {
-                $('#login').toggleClass('hidden');
-                $('#loggedin').toggleClass('hidden');
-
-                $scope.available_permissions = (initial_data.user || {}).permissions || [];
-                $scope.tokens = initial_data.tokens || [];
-
-                // calculate permissions; it's up to the server to actually *enforce* the
-                // permissions -- this is just used to decide which pages to show.
-                $scope.can_view = false;
-                $scope.can_issue = false;
-                angular.forEach(['view', 'issue'], function (action) {
-                    var re = new RegExp("^base\.tokens\.[^.]*\." + action + "(?:\.my|\.all)?");
-                    angular.forEach(((initial_data.user || {}).permissions || []), function (perm) {
-                        if (perm.name.match(re)) {
-                            $scope['can_' + action] = true;
-                        }
-                    });
-                });
-
-                $scope.can = function(query_perm) {
-                    return ((initial_data.user || {}).permissions || []).some(function(perm) {
-                        return perm.name == query_perm;
-                    });
-                };
-                $scope.any = function(token_typ) {
-                    return (initial_data.tokens || []).some(function(token) {
-                        return token.typ == token_typ;
-                    });
-                };
-
-                // 'can_revoke' := 'can_the_current_user_revoke_any_of_the_active_tokens'
-                $scope.can_revoke = false;
-
-                // 'prm' tokens exist & user can revoke
-                if ($scope.any('prm') && $scope.can('base.tokens.prm.revoke')) {
-                    $scope.can_revoke = true;
-                }
-
-                // 'usr' tokens exist & user can revoke
-                if ($scope.any('usr')) {
-                    if ($scope.can('base.tokens.usr.revoke.all')) {
-                        $scope.can_revoke = true;
-                    } else {
-                        if ($scope.can('base.tokens.usr.revoke.my')) {
-                            angular.forEach((initial_data.tokens || []), function (token) {
-                                if (token.user == initial_data.user.authenticated_email) {
-                                    $scope.can_revoke = true;
-                                }
-                            });
-                        }
-                    }
-                }
-
-                $scope.canRevokeToken = function(token) {
-                    if (token.typ == 'usr') {
-                        if ($scope.can('base.tokens.usr.revoke.all')) {
-                            return true;
-                        }
-                        if ($scope.can('base.tokens.usr.revoke.my')) {
-                            if (token.user == initial_data.user.authenticated_email) {
-                                return true;
-                            }
-                        }
-                    } else {
-                        return $scope.can('base.tokens.' + token.typ + '.revoke');
-                    }
-                };
-
-                $scope.refreshTokens = function() {
-                    var url = $('body').attr('data-releng-tokens-url') || 'https://localhost:8003';
-                    return restapi.get(url + '/tokens', {while: 'refreshing tokens'})
-                    .then(function (response) {
-                        $scope.tokens = response.data.result;
-                    });
-                };
+    // calculate permissions; it's up to the server to actually *enforce* the
+    // permissions -- this is just used to decide which pages to show.
+    $scope.can_view = false;
+    $scope.can_issue = false;
+    angular.forEach(['view', 'issue'], function (action) {
+        var re = new RegExp("^base\.tokens\.[^.]*\." + action + "(?:\.my|\.all)?");
+        angular.forEach(initial_data.user.permissions, function (perm) {
+            if (perm.name.match(re)) {
+                $scope['can_' + action] = true;
             }
         });
+    });
+
+    $scope.can = function(query_perm) {
+        return initial_data.user.permissions.some(function(perm) {
+            return perm.name == query_perm;
+        });
+    };
+    $scope.any = function(token_typ) {
+        return initial_data.tokens.some(function(token) {
+            return token.typ == token_typ;
+        });
+    };
+
+    // 'can_revoke' := 'can_the_current_user_revoke_any_of_the_active_tokens'
+    $scope.can_revoke = false;
+
+    // 'prm' tokens exist & user can revoke
+    if ($scope.any('prm') && $scope.can('base.tokens.prm.revoke')) {
+        $scope.can_revoke = true;
     }
 
+    // 'usr' tokens exist & user can revoke
+    if ($scope.any('usr')) {
+        if ($scope.can('base.tokens.usr.revoke.all')) {
+            $scope.can_revoke = true;
+        } else {
+            if ($scope.can('base.tokens.usr.revoke.my')) {
+                angular.forEach(initial_data.tokens, function (token) {
+                    if (token.user == initial_data.user.authenticated_email) {
+                        $scope.can_revoke = true;
+                    }
+                });
+            }
+        }
+    }
+
+    $scope.canRevokeToken = function(token) {
+        if (token.typ == 'usr') {
+            if ($scope.can('base.tokens.usr.revoke.all')) {
+                return true;
+            }
+            if ($scope.can('base.tokens.usr.revoke.my')) {
+                if (token.user == initial_data.user.authenticated_email) {
+                    return true;
+                }
+            }
+        } else {
+            return $scope.can('base.tokens.' + token.typ + '.revoke');
+        }
+    };
+
+    $scope.refreshTokens = function() {
+        var url = $('body').attr('data-releng-tokens-url') || 'https://localhost:8003';
+        return restapi.get(url + '/tokens', {while: 'refreshing tokens'})
+        .then(function (response) {
+            $scope.tokens = response.data.result;
+        });
+    };
 });
 
 angular.module('tokens').controller('TokenListController', function($scope, restapi) {

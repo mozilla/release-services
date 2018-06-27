@@ -139,10 +139,9 @@ def cmd_S3(ctx,
         index_html_files = []
         if os.path.exists(os.path.join(tmp_dir, 'index.html')):
             index_html_files.append('index.html')
-        if os.path.isdir(os.path.join(tmp_dir, 'static')):
-            for item in os.listdir(os.path.join(tmp_dir, 'static')):
-                if os.path.exists(os.path.join(tmp_dir, 'static', item, 'index.html')):
-                    index_html_files.append(os.path.join('static', item, 'index.html'))
+        for item in os.listdir(tmp_dir):
+            if os.path.exists(os.path.join(tmp_dir, item, 'index.html')):
+                index_html_files.append(os.path.join(item, 'index.html'))
 
         for index_html_file in index_html_files:
             click.echo(' => Applying CSP and environment flags to index.html ... ', nl=False)

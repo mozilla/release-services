@@ -188,7 +188,7 @@ PROJECTS_CONFIG = {
     'releng-frontend': {
         'run': 'ELM',
         'run_options': {
-            'port': 8000,
+            'port': 8010,
         },
         'requires': [
             'releng-docs',
@@ -422,7 +422,7 @@ PROJECTS_CONFIG = {
         ],
         'run': 'FLASK',
         'run_options': {
-            'port': 8010,
+            'port': 8000,
         },
         'requires': [
             'postgresql',

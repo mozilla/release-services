@@ -72,8 +72,8 @@ viewNavBar model =
         ]
         [ text "Release Engineering" ]
     , ul [ class "navbar-nav" ]
-         [ li [ class "nav-item" ] (viewUser model)
-         ]
+        [ li [ class "nav-item" ] (viewUser model)
+        ]
     ]
 
 

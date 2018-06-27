@@ -103,10 +103,15 @@ def get_deploy_task(index,
             project_csp.append('--csp="{}"'.format(url))
         for require in project_requires:
             require_config = please_cli.config.PROJECTS_CONFIG.get(require, {})
-            require_deploy_options = require_config.get('deploy_options', {}).get(channel, {})
-            require_url = require_deploy_options.get('url')
-            if require_url:
-                project_csp.append('--csp="{}"'.format(require_url))
+
+            require_urls = [
+                i.get('options', {}).get(channel, {}).get('url')
+                for i in require_config.get('deploys', [])
+            ]
+            require_urls = filter(lambda x: x is not None, require_urls)
+            require_urls = map(lambda x: '--csp="{}"'.format(x), require_urls)
+
+            project_csp += require_urls
 
         project_envs = []
         project_envs.append('--env="release-version: {}"'.format(please_cli.config.VERSION))
@@ -115,10 +120,18 @@ def get_deploy_task(index,
             project_envs.append('--env="{}: {}"'.format(env_name, env_value))
         for require in project_requires:
             require_config = please_cli.config.PROJECTS_CONFIG.get(require, {})
-            require_deploy_options = require_config.get('deploy_options', {}).get(channel, {})
-            require_url = require_deploy_options.get('url')
-            if require_url:
-                project_envs.append('--env="{}-url: {}"'.format(require, require_url))
+
+            require_urls = [
+                (
+                    i.get('options', {}).get(channel, {}).get('url'),
+                    i.get('options', {}).get(channel, {}).get('name-suffix', ''),
+                )
+                for i in require_config.get('deploys', [])
+            ]
+            require_urls = filter(lambda x: x[0] is not None, require_urls)
+            require_urls = map(lambda x: '--env="{}{}-url: {}"'.format(require, x[1], x[0]), require_urls)
+
+            project_envs += require_urls
 
         project_name = '{}{} to AWS S3 ({})'.format(
             project,
