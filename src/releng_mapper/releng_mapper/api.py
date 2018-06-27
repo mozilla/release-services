@@ -368,7 +368,7 @@ def _insert_many(project: str,
     if isinstance(body, bytes):
         body = body.decode('utf-8')
 
-    if body == "":
+    if body == '':
         return {}
 
     if flask.request.content_type != 'text/plain':
