@@ -60,11 +60,10 @@ class BaseUser(object):
         raise NotImplementedError
 
     def has_permissions(self, permissions):
-        if len(permissions) > 0 \
-           and not isinstance(permissions[0], (tuple, list)):
-                permissions = [permissions]
+        if isinstance(permissions, str):
+            permissions = [permissions]
         user_permissions = self.get_permissions()
-        return all([permission in user_permissions for permission in permissions])
+        return all([permission in list(user_permissions) for permission in permissions])
 
     def __str__(self):
         return self.get_id()
@@ -103,11 +102,9 @@ class TaskclusterUser(BaseUser):
         Check user has some required permissions
         Using Taskcluster comparison algorithm
         '''
-        if len(permissions) > 0 \
-           and not isinstance(permissions[0], (tuple, list)):
-                permissions = [permissions]
-
-        return taskcluster.utils.scopeMatch(self.get_permissions(), permissions)
+        if isinstance(permissions, str):
+            permissions = [permissions]
+        return taskcluster.utils.scopeMatch(self.get_permissions(), [permissions])
 
 
 class RelengapiTokenUser(BaseUser):
@@ -219,7 +216,7 @@ RELENGAPI_TOKENAUTH_ISSUER = 'ra2'
 RELENGAPI_PROJECT_PERMISSION_MAPPING = {
     'tooltool/': 'releng_tooltool/',
     'base/tokens/': 'releng_tokens/',
-    'mapper/': 'releng_mapper',
+    'mapper/': 'releng_mapper/',
 }
 RELENGAPI_PERMISSIONS = {
     'base.badpenny.run': 'Force a run of a badpenny task',
@@ -251,7 +248,7 @@ def initial_data():
     user['permissions'] = []
     for permission, permission_doc in RELENGAPI_PERMISSIONS.items():
         new_permission = from_relengapi_permission(permission)
-        if flask_login.current_user.has_permissions([new_permission]):
+        if flask_login.current_user.has_permissions(new_permission):
             user['permissions'].append(dict(
                 name=permission,
                 doc=permission_doc,
@@ -279,7 +276,7 @@ def from_relengapi_permission(permission):
     permission = permission.strip().replace('.', '/')
     for prefix, project in RELENGAPI_PROJECT_PERMISSION_MAPPING.items():
         if permission.startswith(prefix):
-            permission = '{}/{}'.format(project, permission[len(prefix):])
+            permission = '{}{}'.format(project, permission[len(prefix):])
     return 'project:releng:services/{}'.format(permission)
 
 

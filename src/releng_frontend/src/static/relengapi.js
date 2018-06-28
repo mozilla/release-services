@@ -18,17 +18,7 @@ angular.module('relengapi').config(function($httpProvider) {
         return {
             'request': function(config) {
                 if (config.is_restapi_request) {
-                    var auth = window.localStorage.getItem('auth');
-                    try {
-                        auth = JSON.parse(auth);
-                    } catch(err) {
-                        auth = null;
-                    }
-                    if (auth != null && auth.access_token) {
-                        config.beforeSend = function (xhr) {
-                            xhr.setRequestHeader("Authorization", auth.access_token);
-                        };
-                    }
+                    config.headers["Authorization"] = tcauth.get_header(config.url, config.method);
 
                     if (config.data) {
                         // Firefox will helpfully produce a clickable rendition of the data

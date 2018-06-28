@@ -12,7 +12,7 @@ paths:
   /init:
 
     get:
-      operationId: "backend_common.auth.initial_data"
+      operationId: "releng_tokens.api.initial_data"
       description: Initial data for frontend
       responses:
         200:
@@ -70,9 +70,14 @@ paths:
         200:
           description: List of Tokens
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/Token'
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                type: array
+                items:
+                  $ref: '#/definitions/Token'
 
     post:
       operationId: "releng_tokens.api.issue_token"
@@ -94,7 +99,12 @@ paths:
         200:
           description: Token
           schema:
-            $ref: '#/definitions/Token'
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                $ref: '#/definitions/Token'
 
   /tokens/{id}:
 

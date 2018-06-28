@@ -12,7 +12,6 @@ angular.module('tokens').controller('TokenController',
     initial_data.user.permissions = initial_data.user.permissions || [];
     initial_data.tokens = initial_data.tokens || [];
 
-                                        console.log(initial_data)
     $scope.available_permissions = initial_data.user.permissions;
     $scope.tokens = initial_data.tokens;
 
