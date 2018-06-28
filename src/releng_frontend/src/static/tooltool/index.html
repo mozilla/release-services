@@ -128,7 +128,7 @@
                 $.ajax({
                     'url': url + '/init',
                     'beforeSend': function (xhr) {
-                        xhr.setRequestHeader("Authorization", auth.access_token);
+                        xhr.setRequestHeader("Authorization", "Bearer " + auth.access_token);
                     },
                     'error': function(xhr, status, error) {
                     },

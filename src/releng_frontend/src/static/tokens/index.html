@@ -20,7 +20,7 @@
       <ul class="nav navbar-nav navbar-right">
         <li><a id="login" href="#">Login</a></li>
         <li id="loggedin" class="dropdown hidden">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">username<span class="caret"></span></a>
+          <a id="email" href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></a>
           <ul class="dropdown-menu">
             <li><a href="#">Manage credentials</a></li>
             <li><a id="logout" href="#">Logout</a></li>
@@ -166,6 +166,8 @@
   <script src="js/angular.min.js" type="text/javascript"></script>
   <script src="js/moment.min.js" type="text/javascript"></script>
   <script src="js/angular-moment.min.js" type="text/javascript"></script>
+  <script src="js/buffer.js" type="text/javascript"></script>
+  <script src="js/hawk.js" type="text/javascript"></script>
   <script src="js/tokens.js" type="text/javascript"></script>
   <script src="js/relengapi.js" type="text/javascript"></script>
   <script type="text/javascript">
@@ -173,10 +175,10 @@
     var $login = $('#login');
     var $loggedin = $('#loggedin');
     var $logout= $('#logout');
+    var $email = $('#email');
 
     var setup = function() {
         var auth = window.localStorage.getItem('auth');
-        var url = $('body').attr('data-releng-tokens-url') || 'https://localhost:8003';
         try {
             auth = JSON.parse(auth);
         } catch(err) {
@@ -184,21 +186,52 @@
         }
         if (auth != null && auth.access_token) {
             $.ajax({
-                'url': url + '/init',
-                'async': false,
-                'method': 'GET',
-                'dataType': 'json',
-                'accepts': {'json': 'application/json'},
-                'beforeSend': function (xhr) {
+                url: 'https://login.taskcluster.net/v1/oidc-credentials/mozilla-auth0',
+                async: false,
+                beforeSend: function (xhr) {
                     xhr.setRequestHeader("Authorization", "Bearer " + auth.access_token);
-                    return true;
                 },
                 error: function(xhr, status, error) {
                 },
                 success: function(data, status, xhr) {
+                    window.localStorage.setItem('tc_auth', JSON.stringify(data));
+
+                    $email.text(data.credentials.clientId);
                     $login.toggleClass('hidden');
                     $loggedin.toggleClass('hidden');
-                    angular.module('initial_data', []).constant('initial_data', data || {});
+
+                    var url = $('body').attr('data-releng-tokens-url') || 'https://localhost:8003';
+                    url += '/init';
+
+                    $.ajax({
+                        url: url,
+                        async: false,
+                        beforeSend: function (xhr, config) {
+                            tc_auth = JSON.parse(window.localStorage.getItem('tc_auth'));
+
+                            var extData = null;
+                            if (tc_auth.credentials.certificate) {
+                                extData = new buffer.Buffer(JSON.stringify({certificate: JSON.parse(tc_auth.credentials.certificate)})).toString('base64');
+                            }
+
+                            var header = hawk.client.header(
+                                config.url,
+                                config.method || 'GET',
+                                {
+                                    credentials: {
+                                        id: tc_auth.credentials.clientId,
+                                        key: tc_auth.credentials.accessToken,
+                                        algorithm: 'sha256'
+                                    },
+                                    ext: extData,
+                                }
+                            );
+                            xhr.setRequestHeader("Authorization", header.field)
+                        },
+                        success: function(data, status, xhr) {
+                            angular.module('initial_data', []).constant('initial_data', data || {});
+                        }
+                    });
                 }
             });
         } else {

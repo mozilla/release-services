@@ -245,20 +245,16 @@ RELENGAPI_PERMISSIONS = {
 
 
 def initial_data():
-    if not isinstance(flask_login.current_user, BaseUser):
-        logger.error("wrong user type", user=flask_login.current_user)
-        return dict()
-
     user = dict()
     user['type'] = flask_login.current_user.type
 
     user['permissions'] = []
-    for permission in flask_login.current_user.permissions:
-        permission = to_relengapi_permission(permission)
-        if permission in RELENGAPI_PERMISSIONS:
+    for permission, permission_doc in RELENGAPI_PERMISSIONS.items():
+        new_permission = from_relengapi_permission(permission)
+        if flask_login.current_user.has_permissions([new_permission]):
             user['permissions'].append(dict(
                 name=permission,
-                doc=RELENGAPI_PERMISSIONS[permission],
+                doc=permission_doc,
             ))
 
     if getattr(flask_login.current_user, 'authenticated_email', EMPTY) != EMPTY:

@@ -37,7 +37,7 @@ view model =
         , viewCard
             "Tokens"
             "Tokens are used to allow automated services to authenticate to Releng API without being tied to a user's identity."
-            (href "/trychooser")
+            (href "/tokens")
         , viewCard
             "ToolTool"
             "Tooltool is tool for fetching binary artifacts for builds and tests. The web interface lets you browse the files currently available from the service."
