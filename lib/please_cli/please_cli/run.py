@@ -80,7 +80,7 @@ def cmd(ctx, project, quiet, nix_shell,
     pg_host = please_cli.config.PROJECTS_CONFIG['postgresql']['run_options'].get('host', host)
     pg_port = str(please_cli.config.PROJECTS_CONFIG['postgresql']['run_options']['port'])
 
-    if 'postgresql' in project_config.get('requires', []):
+    if False and 'postgresql' in project_config.get('requires', []):
 
         dbname = 'services'
 

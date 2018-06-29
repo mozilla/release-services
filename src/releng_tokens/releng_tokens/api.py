@@ -22,31 +22,28 @@ import releng_tokens.models
 logger = cli_common.log.get_logger(__name__)
 
 
-def get_user_email(user):
-    try:
-        return user.authenticated_email
-    except AttributeError:
-        return None
+def initial_data():
+    initial_data = backend_common.auth.initial_data()
+    initial_data['tokens'] = list_tokens()['result']
+    return initial_data
 
 
-def can_access_token(access, typ, user):
+def can_access_token(access, typ):
     # ensure the user can see this token; for non-user-associated
     # tokens, that's just a permission check
     if typ in ('prm',):
         permission = '{}/{}/{}'.format(releng_tokens.config.SCOPE_PREFIX, typ, access)
-        if not user.has_permissions(permission):
+        if not flask_login.current_user.has_permissions([permission]):
             return False
+
     # for user-associated tokens, if the .all permission is set,
     # the access is fine; otherwise very that the user matches and
     # the .my permission is set.
     elif typ in ('usr',):
         permission = '{}/{}/{}/all'.format(releng_tokens.config.SCOPE_PREFIX, typ, access)
-        if not user.has_permissions(permission):
-            email = get_user_email(flask_login.current_user)
-            if not email or not user or user != email:
-                return False
+        if not flask_login.current_user.has_permissions([permission]):
             permission = '{}/{}/{}/my'.format(releng_tokens.config.SCOPE_PREFIX, typ, access)
-            if not user.has_permissions(permission):
+            if not flask_login.current_user.has_permissions([permission]):
                 return False
 
     return True
@@ -54,19 +51,17 @@ def can_access_token(access, typ, user):
 
 def list_tokens(typ=None):
     tbl = releng_tokens.models.Token
-    user = flask_login.current_user
-    email = get_user_email(user)
 
     conds = []
-    if user.has_permissions(releng_tokens.config.SCOPE_PREFIX + '/prm/view'):
+    if flask_login.current_user.has_permissions([releng_tokens.config.SCOPE_PREFIX + '/prm/view']):
         conds.append(tbl.typ == 'prm')
-    if user.has_permissions(releng_tokens.config.SCOPE_PREFIX + '/usr/view/all'):
+    if flask_login.current_user.has_permissions([releng_tokens.config.SCOPE_PREFIX + '/usr/view/all']):
         conds.append(tbl.typ == 'usr')
-    elif email and user.has_permissions(releng_tokens.config.SCOPE_PREFIX + '/usr/view/my'):
+    elif flask_login.current_user.has_permissions([releng_tokens.config.SCOPE_PREFIX + '/usr/view/my']):
         conds.append(sa.and_(tbl.typ == 'usr',
-                             tbl.user == email))
+                             tbl.user == flask_login.current_user.get_id()))
     if not conds:
-        return []
+        return dict(result=[])
     disjunction = sa.or_(*conds)
     if typ:
         filter_cond = sa.and_(disjunction, tbl.typ == typ)
@@ -74,7 +69,7 @@ def list_tokens(typ=None):
         filter_cond = disjunction
 
     q = releng_tokens.models.Token.query.filter(filter_cond)
-    return [t.to_dict() for t in q.all()]
+    return dict(result=[t.to_dict() for t in q.all()])
 
 
 token_issuers = {}
@@ -88,7 +83,7 @@ def token_issuer(typ):
 
 @token_issuer('prm')
 def issue_prm(body, requested_permissions):
-    session = flask.g.db.session('relengapi')
+    session = flask.current_app.db.session
     token_row = releng_tokens.models.Token(
         typ='prm',
         description=body['description'],
@@ -139,15 +134,10 @@ def issue_tmp(body, requested_permissions):
 
 @token_issuer('usr')
 def issue_usr(body, requested_permissions):
-    email = get_user_email(flask_login.current_user)
-    if not email:
-        raise werkzeug.exceptions.Forbidden(
-            'Authenticate with a user-related mechanism to issue user tokens')
-
-    session = flask.g.db.session('relengapi')
+    session = flask.current_app.db.session
     token_row = releng_tokens.models.Token(
         typ='usr',
-        user=email,
+        user=flask_login.current_user.get_id(),
         description=body['description'],
         permissions=requested_permissions,
         disabled=False)
@@ -174,11 +164,10 @@ def issue_token(body):
     response will contain both ``token`` and ``id``.  You must have permission
     to issue the given token type.'''
     typ = body['typ']
-    user = flask_login.current_user
 
     # verify permission to issue this type
     permission = '{}/{}/issue'.format(releng_tokens.config.SCOPE_PREFIX, typ)
-    if not user.has_permissions(permission):
+    if not flask_login.current_user.has_permissions([permission]):
         raise werkzeug.exceptions.Forbidden(
             'You do not have permission to create this token type')
 
@@ -193,14 +182,19 @@ def issue_token(body):
 
     # All types have permissions, so handle those here -- ensure the request is
     # for a subset of the permissions the user can perform
-    permissions = set([
-        backend_common.auth.to_relengapi_permission(p)
-        for p in user.get_permissions()])
-    requested_permissions = [p for p in body['permissions'] if p in permissions]
+    all_relengapi_permissions = [
+        (i, backend_common.auth.from_relengapi_permission(i))
+        for i in backend_common.auth.RELENGAPI_PERMISSIONS.keys()
+    ]
+    requested_permissions = [
+        old
+        for old, new in all_relengapi_permissions
+        if flask_login.current_user.has_permissions([new]) and old in body['permissions']
+    ]
 
     if None in requested_permissions:
         raise werkzeug.exceptions.BadRequest('bad permissions')
-    if not set(requested_permissions) <= permissions:
+    if not set(requested_permissions) <= set([i for i, j in all_relengapi_permissions]):
         raise werkzeug.exceptions.BadRequest('bad permissions')
 
     # Dispatch the rest to the per-type function.  Note that WSME has already
@@ -211,8 +205,8 @@ def issue_token(body):
     if token.get('id'):
         log = log.bind(token_id=token['id'])
     log.info('Issuing {} token to {} with permissions {}'.format(
-        token['typ'], user, perms_str))
-    return token
+        token['typ'], flask_login.current_user, perms_str))
+    return dict(result=token)
 
 
 def get_token(token_id):
@@ -221,7 +215,7 @@ def get_token(token_id):
     if not token_data:
         raise werkzeug.exceptions.NotFound
 
-    if not can_access_token('view', token_data.typ, token_data.user):
+    if not can_access_token('view', token_data.typ):
         raise werkzeug.exceptions.NotFound
 
     return token_data.to_dict()
@@ -239,15 +233,13 @@ def query_token(body):
     if not user:
         raise werkzeug.exceptions.NotFound
 
-    if not can_access_token('view',
-                            user.claims['typ'],
-                            getattr(user, 'authenticated_email', None)):
+    if not can_access_token('view', user.claims['typ']):
         raise werkzeug.exceptions.Forbidden
 
     return backend_common.auth.user_to_jsontoken(user)
 
 
-def revoke_token(token_id):
+def revoke_token(id):
     '''Revoke an authentication token, identified by its ID.
 
     The caller must have permission to revoke this type of token; if
@@ -255,22 +247,22 @@ def revoke_token(token_id):
 
     The response status is 204 on success.  Revoking an already-revoked token
     returns 403.'''
-    session = flask.g.db.session('relengapi')
-    token_data = releng_tokens.models.Token.query.filter_by(id=token_id).first()
+    session = flask.current_app.db.session
+    token_data = releng_tokens.models.Token.query.filter_by(id=id).first()
     # don't leak info about which tokens exist -- return the same
     # status whether the token is missing or permission is missing
     if not token_data:
         raise werkzeug.exceptions.Forbidden
 
-    if not can_access_token('revoke', token_data.typ, token_data.user):
+    if not can_access_token('revoke', token_data.typ):
         raise werkzeug.exceptions.Forbidden
 
     perms_str = ', '.join(str(p) for p in token_data.permissions)
     log = logger.bind(token_typ=token_data.typ, token_permissions=perms_str,
-                      token_id=token_id, mozdef=True)
+                      token_id=id, mozdef=True)
     log.info('Revoking {} token #{} with permissions {}'.format(
         token_data.typ, token_data.id, perms_str))
 
-    releng_tokens.models.Token.query.filter_by(id=token_id).delete()
+    releng_tokens.models.Token.query.filter_by(id=id).delete()
     session.commit()
     return None, 204

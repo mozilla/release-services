@@ -64,7 +64,7 @@ class BaseUser(object):
            and not isinstance(permissions[0], (tuple, list)):
                 permissions = [permissions]
         user_permissions = self.get_permissions()
-        return all([permission in user_permissions for permission in permissions])
+        return all([permission in list(user_permissions) for permission in permissions])
 
     def __str__(self):
         return self.get_id()
@@ -219,8 +219,51 @@ RELENGAPI_TOKENAUTH_ISSUER = 'ra2'
 RELENGAPI_PROJECT_PERMISSION_MAPPING = {
     'tooltool/': 'releng_tooltool/',
     'base/tokens/': 'releng_tokens/',
-    'mapper/': 'releng_mapper',
+    'mapper/': 'releng_mapper/',
 }
+RELENGAPI_PERMISSIONS = {
+    'base.badpenny.run': 'Force a run of a badpenny task',
+    'base.badpenny.view': 'See scheduled tasks and logs of previous jobs',
+    'base.tokens.prm.issue': 'Issue permanent tokens',
+    'base.tokens.prm.revoke': 'Revoke permanent tokens',
+    'base.tokens.prm.view': 'See permanent tokens',
+    'base.tokens.tmp.issue': 'Issue temporary tokens',
+    'base.tokens.usr.issue': 'Issue user tokens',
+    'base.tokens.usr.revoke.all': 'Revoke any user token',
+    'base.tokens.usr.revoke.my': 'Revoke my user tokens',
+    'base.tokens.usr.view.all': 'See all user tokens',
+    'base.tokens.usr.view.my': 'See my user tokens',
+    'clobberer.post.clobber': 'Submit clobber requests',
+    'mapper.mapping.insert': 'Allows new hg-git mappings to be inserted into mapper db (hashes table)',
+    'mapper.project.insert': 'Allows new projects to be inserted into mapper db (projects table)',
+    'tooltool.download.internal': 'Download INTERNAL files from tooltool',
+    'tooltool.download.public': 'Download PUBLIC files from tooltool',
+    'tooltool.manage': 'Manage tooltool files, including deleting and changing visibility levels',
+    'tooltool.upload.internal': 'Upload INTERNAL files to tooltool',
+    'tooltool.upload.public': 'Upload PUBLIC files to tooltool'
+}
+
+
+def initial_data():
+    user = dict()
+    user['type'] = flask_login.current_user.type
+
+    user['permissions'] = []
+    for permission, permission_doc in RELENGAPI_PERMISSIONS.items():
+        new_permission = from_relengapi_permission(permission)
+        if flask_login.current_user.has_permissions([new_permission]):
+            user['permissions'].append(dict(
+                name=permission,
+                doc=permission_doc,
+            ))
+
+    if getattr(flask_login.current_user, 'authenticated_email', EMPTY) != EMPTY:
+        user['authenticated_email'] = flask_login.current_user.authenticated_email
+
+    return dict(
+        user=user,
+        perms=RELENGAPI_PERMISSIONS,
+    )
 
 
 def to_relengapi_permission(permission):
@@ -236,7 +279,7 @@ def from_relengapi_permission(permission):
     permission = permission.strip().replace('.', '/')
     for prefix, project in RELENGAPI_PROJECT_PERMISSION_MAPPING.items():
         if permission.startswith(prefix):
-            permission = '{}/{}'.format(project, permission[len(prefix):])
+            permission = '{}{}'.format(project, permission[len(prefix):])
     return 'project:releng:services/{}'.format(permission)
 
 
@@ -377,7 +420,6 @@ def str_to_claims(token_str):
 
 @auth.login_manager.request_loader
 def parse_header(request):
-
     auth_header = request.headers.get('Authorization')
     if not auth_header:
         auth_header = request.headers.get('Authentication')

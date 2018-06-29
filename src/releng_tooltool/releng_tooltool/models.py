@@ -97,7 +97,7 @@ class Batch(db.Model):
             message=self.message,
             files={
                 filename: file.to_dict()
-                for filename, file in self.files.iteritems()
+                for filename, file in self.files.items()
             }
         )
 

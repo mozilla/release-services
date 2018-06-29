@@ -69,6 +69,11 @@ $headings-font-weight: 300;
         letter-spacing: 1px;
         padding: 0 1em 0 0;
         text-transform: uppercase;
+        float: left;
+    }
+    .navbar-nav {
+        flex-direction: row-reverse;
+        width: 100%;
     }
     .dropdown-menu-right {
         right: 0.1em;
@@ -99,7 +104,7 @@ $headings-font-weight: 300;
 
 #content {
     .container {
-        margin: 1em auto;
+        margin: 1.25em auto 0 auto;
     }
 }
 
@@ -182,6 +187,8 @@ footer {
 }
 
 #page-home .card {
+    margin-bottom: 1.25em;
+
     &:hover {
         text-decoration: none;
         cursor: pointer;
@@ -379,4 +386,33 @@ footer {
 
 #treestatus-tree-details p {
     margin-top: 1em;
+}
+
+
+@include media-breakpoint-down(xs) {
+    .container {
+        margin: 0em;
+    }
+    #navbar .navbar-brand {
+        float: none;
+        margin: 0 0 1em 0;
+        padding: 0;
+        width: 100%;
+        text-align: center;
+    };
+    #navbar .dropdown-menu {
+        background: transparent;
+        border: 0;
+    }
+    #navbar .dropdown-menu a {
+        color: #ccc;
+        text-align: center;
+    }
+    #navbar .dropdown-menu a:hover {
+        color: #292b2c;
+    }
+    #navbar .nav-item {
+        width: 100%;
+        text-align: center;
+    }
 }

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head> 
+  <meta charset="utf-8">
+  <title>Tokens - Mozilla RelEng Services</title>
+  <link href="../alertify.core.css" media="screen" rel="stylesheet" type="text/css" />
+  <link href="../alertify.default.css" media="screen" rel="stylesheet" type="text/css" />
+  <link href="../bootstrap.min.css" media="screen" rel="stylesheet" type="text/css" />
+  <link href="../bootstrap-theme.min.css" media="screen" rel="stylesheet" type="text/css" />
+  <link href="../relengapi.css" media="screen" rel="stylesheet" type="text/css" />
+  <link href="tokens.css" media="screen" rel="stylesheet" type="text/css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="../">Release Engineering</a>
+      </div>
+      <ul class="nav navbar-nav navbar-right">
+        <li><a id="login" href="#">Login</a></li>
+        <li id="loggedin" class="dropdown hidden">
+          <a id="email" href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"></a>
+          <ul class="dropdown-menu">
+            <li><a href="https://tools.taskcluster.net/credentials">Manage credentials</a></li>
+            <li><a id="logout" href="#">Logout</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div id="content">
+    <div class="container-fluid">
+
+      <!-- This Source Code Form is subject to the terms of the Mozilla Public
+           License, v. 2.0. If a copy of the MPL was not distributed with this
+           file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+      <div ng-app='tokens' ng-controller="TokenController" ng-switch="view">
+        <div class="row">
+          <div class="col-xs-12 col-lg-7"
+               ng-controller="TokenListController"
+               ng-show="can_view">
+            <div class="pull-right">
+              <button class="btn btn-warning"
+                      ng-show="can_revoke && !revoke_enabled"
+                      ng-click="enableRevoke()">Revoke Tokens</button>
+              <button class="btn btn-default"
+                      ng-click="refreshTokens()">
+                <span class="glyphicon glyphicon-refresh"></span>
+              </button>
+            </div>
+            <h3>Active Tokens</h3>
+            <ul class="list-group">
+              <li ng-repeat="token in tokens|orderBy:'id'" class="list-group-item">
+                <div class="row">
+                  <div class="col-sm-10">
+                    <small>
+                      <span ng-if="token.disabled" class="text-danger">
+                        (DISABLED)
+                      </span>
+                      <span ng-if="token.typ == 'prm'" class="text-warning">
+                        (permanent)
+                      </span>
+                      <span ng-if="token.typ == 'usr'" class="text-info">
+                        {{token.user}}
+                      </span> - {{token.description}}
+                      <span class="text-muted">({{ token.typ }})</span>
+                    </small>
+                    <br />
+                    <span ng-repeat="perm in token.permissions">
+                      <perm name="{{perm}}" />
+                    </span>
+                  </div>
+                  <div class="col-sm-2">
+                    <button class="btn btn-xs btn-danger pull-right"
+                            ng-click="revokeToken(token.id)"
+                            ng-hide="!revoke_enabled || !canRevokeToken(token)">Revoke</button>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="col-xs-12 col-lg-5"
+               ng-controller="NewTokenController"
+               ng-show="can_issue">
+            <div class="panel panel-primary">
+              <div class="panel-heading">
+                <h3 class="panel-title">Issue New Token</h3>
+              </div>
+              <div class="panel-body">
+                <form name="form" novalidate>
+                  <p>
+                    Select the permissions for the new token. Note that you can
+                    only issue tokens with permissions that you possess.
+                  </p>
+                  <permission-selector
+                      ng-model="newtoken.permissions"
+                      permissions="available_permissions"></permission-selector>
+                  <div class="radio" ng-if="can_issue_prm && can_issue_usr">
+                    <label><input ng-model="newtoken.typ" type="radio" name="typ" value="usr" /> User Token</label>
+                    <span class="text-muted">- <small>tied to your account</small></span>
+                  </div>
+                  <!-- always show this radio, even if it's the only choice -->
+                  <div class="radio" ng-if="can_issue_prm">
+                    <label><input ng-model="newtoken.typ" type="radio" name="typ" value="prm" /> Permanent</label>
+                    <span class="text-muted">- <small>not tied to your account (use for permanent infrastructure)</small></span>
+                  </div>
+                  <p>Describe this token so that others can identify its use later</p>
+                  <input class="form-control"
+                         placeholder="Bug 1234567: Frobnicator access to update and delete frobs"
+                         ng-model="newtoken.description"
+                         ng-required="true"/>
+                  <button class="btn btn-primary btn-block"
+                          ng-disabled="form.$invalid"
+                          ng-click="issueToken()">Issue</button>
+                </form>
+              </div>
+            </div>
+            <div class="modal fade" id="tokenIssuedModal">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <button type="button"
+                            class="close"
+                            data-dismiss="modal">
+                      <span aria-hidden="true">&times;</span>
+                      <span class="sr-only">Close</span>
+                    </button>
+                    <h3 class="modal-title">Token Issued</h3>
+                  </div>
+                  <div class="modal-body">
+                    Token string:
+                    <pre class="token">{{token}}</pre>
+                    <div class="alert alert-warning">
+                      This string will not be shown again!
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-xs-12"
+               ng-controller="TokenListController"
+               ng-show="!can_view && !can_issue">
+            <div class="alert alert-danger">
+              <b>Can't Do Much!</b>
+              You can't see or issue tokens.
+              If you think this is incorrect, head to <a target="_blank" href="https://irccloud.mozilla.com/#ci">#ci</a> for help.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <script src="../jquery-1.11.1.min.js" type="text/javascript"></script>
+  <script src="../bootstrap.min.js" type="text/javascript"></script>
+  <script src="../alertify.min.js" type="text/javascript"></script>
+  <script src="../auth_external.js" type="text/javascript"></script>
+  <script src="../angular.min.js" type="text/javascript"></script>
+  <script src="../moment.min.js" type="text/javascript"></script>
+  <script src="../angular-moment.min.js" type="text/javascript"></script>
+  <script src="../buffer.js" type="text/javascript"></script>
+  <script src="../hawk.js" type="text/javascript"></script>
+  <script src="../relengapi.js" type="text/javascript"></script>
+  <script src="../tcauth.js" type="text/javascript"></script>
+  <script src="tokens.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    window.tcauth.setup('tokens', 'https://localhost:8003');
+  </script>
+</body>
+</html>

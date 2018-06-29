@@ -9,7 +9,48 @@ produces:
   - application/json
 paths:
 
-  /:
+  /init:
+
+    get:
+      operationId: "releng_tokens.api.initial_data"
+      description: Initial data for frontend
+      responses:
+        200:
+          description: Initial data
+          schema:
+            type: object
+            required:
+              - user
+              - perms
+            properties:
+              user:
+                type: object
+                required:
+                  - type
+                  - permissions
+                properties:
+                  type:
+                    type: string
+                  permissions:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - doc
+                        - name
+                      properties:
+                        doc:
+                          type: string
+                        name:
+                          type: string
+                  authenticated_email:
+                    type: string
+              perms:
+                type: object
+                additionalProperties:
+                  type: string
+
+  /tokens:
 
     get:
       operationId: "releng_tokens.api.list_tokens"
@@ -29,9 +70,14 @@ paths:
         200:
           description: List of Tokens
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/Token'
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                type: array
+                items:
+                  $ref: '#/definitions/Token'
 
     post:
       operationId: "releng_tokens.api.issue_token"
@@ -53,9 +99,14 @@ paths:
         200:
           description: Token
           schema:
-            $ref: '#/definitions/Token'
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                $ref: '#/definitions/Token'
 
-  /{id}:
+  /tokens/{id}:
 
     get:
       operationId: "releng_tokens.api.get_token"
@@ -95,7 +146,7 @@ paths:
           schema:
             type: string
 
-  /query:
+  /tokens/query:
 
     post:
       operationId: "releng_tokens.api.query_token"

@@ -35,7 +35,15 @@ view model =
             "Current status of Mozilla's version-control repositories."
             (Utils.onClick <| App.NavigateTo (App.TreeStatusRoute App.TreeStatus.Types.ShowTreesRoute))
         , viewCard
-            "RelEng NagBot"
+            "Tokens"
+            "Tokens are used to allow automated services to authenticate to Releng API without being tied to a user's identity."
+            (href "/tokens")
+        , viewCard
+            "ToolTool"
+            "Tooltool is tool for fetching binary artifacts for builds and tests. The web interface lets you browse the files currently available from the service."
+            (href "/tooltool")
+        , viewCard
+            "Notifications"
             "Manage notification policies and preferences for RelEng Notification services (aka NagBot)."
             (Utils.onClick <| App.NavigateTo (App.NotificationRoute App.Notifications.Types.BaseRoute))
         ]

@@ -1,5 +1,0 @@
--e ./../../lib/cli_common #egg=mozilla-cli-common
--e ./../../lib/backend_common #egg=mozilla-backend-common
-
-gunicorn
-psycopg2

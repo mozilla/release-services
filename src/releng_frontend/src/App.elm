@@ -2,6 +2,8 @@ module App exposing (..)
 
 import App.Notifications
 import App.Notifications.Types
+import App.Tokens
+import App.ToolTool
 import App.TreeStatus
 import App.TreeStatus.Form
 import App.TreeStatus.Types
@@ -28,12 +30,16 @@ type Route
     | LogoutRoute
     | NotificationRoute App.Notifications.Types.Route
     | TryChooserRoute
+    | TokensRoute
+    | ToolToolRoute
     | TreeStatusRoute App.TreeStatus.Types.Route
 
 
 pages : List (App.Types.Page Route b)
 pages =
     [ App.TryChooser.page TryChooserRoute
+    , App.Tokens.page TokensRoute
+    , App.ToolTool.page ToolToolRoute
     , App.TreeStatus.page TreeStatusRoute
     , App.Notifications.page NotificationRoute
     ]
@@ -76,6 +82,12 @@ reverseRoute route =
 
         TryChooserRoute ->
             "/trychooser"
+
+        TokensRoute ->
+            "/tokens"
+
+        ToolToolRoute ->
+            "/tooltool"
 
         TreeStatusRoute route ->
             App.TreeStatus.reverseRoute route
@@ -123,6 +135,8 @@ type alias Model =
     , user : TaskclusterLogin.Model
     , userScopes : App.UserScopes.Model
     , trychooser : App.TryChooser.Model
+    , tokens : App.Tokens.Model
+    , tooltool : App.ToolTool.Model
     , treestatus : App.TreeStatus.Types.Model App.TreeStatus.Form.AddTree App.TreeStatus.Form.UpdateTree
     , docsUrl : String
     , version : String
@@ -143,5 +157,7 @@ type Msg
     | HawkMsg Hawk.Msg
     | UserScopesMsg App.UserScopes.Msg
     | TryChooserMsg App.TryChooser.Msg
+    | TokensMsg App.Tokens.Msg
+    | ToolToolMsg App.ToolTool.Msg
     | TreeStatusMsg App.TreeStatus.Types.Msg
     | NotificationMsg App.Notifications.Types.Msg

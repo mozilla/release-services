@@ -33,11 +33,18 @@ def _get_region_and_bucket(region: typing.Optional[str],
     return random.choice(list(regions.items()))
 
 
-def search_batches(q: str) -> typing.List[dict]:
-    return [row.to_dict()
+def search_batches(q: str) -> dict:
+    return dict(
+        result=[
+            row.to_dict()
             for row in releng_tooltool.models.Batch.query.filter(
-                sa.or_(releng_tooltool.models.Batch.author.contains(q),
-                       releng_tooltool.models.Batch.message.contains(q))).all()]
+                sa.or_(
+                    releng_tooltool.models.Batch.author.contains(q),
+                    releng_tooltool.models.Batch.message.contains(q)
+                )
+            ).all()
+        ]
+    )
 
 
 def get_batch(id: int) -> dict:
@@ -192,12 +199,12 @@ def upload_complete(digest: str) -> typing.Union[werkzeug.Response,
     return '{}', 202
 
 
-def search_files(q: str) -> typing.List[dict]:
+def search_files(q: str) -> dict:
     session = flask.g.db.session
     query = session.query(releng_tooltool.models.File).join(releng_tooltool.models.BatchFile)
     query = query.filter(sa.or_(releng_tooltool.models.BatchFile.filename.contains(q),
                                 releng_tooltool.models.File.sha512.startswith(q)))
-    return [row.to_dict() for row in query.all()]
+    return dict(result=[row.to_dict() for row in query.all()])
 
 
 def get_file(digest: str) -> dict:

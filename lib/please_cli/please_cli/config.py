@@ -156,93 +156,6 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'releng-archiver': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8005,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-archiver',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://archiver.testing.mozilla-releng.net',
-                        # TODO: switch to SSL Endpoint
-                        'dns': 'archiver.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-archiver',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://archiver.staging.mozilla-releng.net',
-                        # TODO: switch to SSL Endpoint
-                        'dns': 'archiver.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    # 'production': {
-                    #     'nix_path_attribute': 'docker',
-                    #     'heroku_app': 'releng-production-archiver',
-                    #     'heroku_dyno_type': 'web',
-                    #     'url': 'https://archiver.mozilla-releng.net',
-                    #     # TODO: switch to SSL Endpoint
-                    #     'dns': 'archiver.mozilla-releng.net.herokudns.com',
-                    # },
-                },
-            },
-        ],
-    },
-    'releng-clobberer': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8001,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-testing-clobberer',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://clobberer.testing.mozilla-releng.net',
-                        # TODO: do testing and production have the same dns?
-                        'dns': 'saitama-70467.herokussl.com',
-                    },
-                    'staging': {
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'releng-staging-clobberer',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://clobberer.staging.mozilla-releng.net',
-                        # TODO: do staging and production have the same dns?
-                        'dns': 'saitama-70467.herokussl.com',
-                    },
-                    # 'production': {
-                    #     'nix_path_attribute': 'docker',
-                    #     'heroku_app': 'releng-production-clobberer',
-                    #     'heroku_dyno_type': 'web',
-                    #     'url': 'https://clobberer.mozilla-releng.net',
-                    #     'dns': 'saitama-70467.herokussl.com',
-                    # },
-                },
-            },
-        ],
-    },
     'releng-docs': {
         'run': 'SPHINX',
         'run_options': {
@@ -275,15 +188,14 @@ PROJECTS_CONFIG = {
     'releng-frontend': {
         'run': 'ELM',
         'run_options': {
-            'port': 8000,
+            'port': 8010,
         },
         'requires': [
             'releng-docs',
-            'releng-clobberer',
             'releng-tooltool',
+            'releng-tokens',
             'releng-treestatus',
             'releng-mapper',
-            'releng-archiver',
             'releng-notification-policy',
             'releng-notification-identity',
         ],
@@ -510,7 +422,7 @@ PROJECTS_CONFIG = {
         ],
         'run': 'FLASK',
         'run_options': {
-            'port': 8010,
+            'port': 8000,
         },
         'requires': [
             'postgresql',
