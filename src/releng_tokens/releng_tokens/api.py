@@ -182,14 +182,19 @@ def issue_token(body):
 
     # All types have permissions, so handle those here -- ensure the request is
     # for a subset of the permissions the user can perform
-    permissions = set([
-        backend_common.auth.to_relengapi_permission(p)
-        for p in flask_login.current_user.get_permissions()])
-    requested_permissions = [p for p in body['permissions'] if p in permissions]
+    all_relengapi_permissions = [
+        (i, backend_common.auth.from_relengapi_permission(i))
+        for i in backend_common.auth.RELENGAPI_PERMISSIONS.keys()
+    ]
+    requested_permissions = [
+        old
+        for old, new in all_relengapi_permissions
+        if flask_login.current_user.has_permissions([new]) and old in body['permissions']
+    ]
 
     if None in requested_permissions:
         raise werkzeug.exceptions.BadRequest('bad permissions')
-    if not set(requested_permissions) <= permissions:
+    if not set(requested_permissions) <= set([i for i, j in all_relengapi_permissions]):
         raise werkzeug.exceptions.BadRequest('bad permissions')
 
     # Dispatch the rest to the per-type function.  Note that WSME has already
