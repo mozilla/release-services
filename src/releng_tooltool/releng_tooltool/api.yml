@@ -68,9 +68,14 @@ paths:
         200:
           description: An array of upload batches.
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/UploadBatch'
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                type: array
+                items:
+                  $ref: '#/definitions/UploadBatch'
 
     post:
       operationId: "releng_tooltool.api.upload_batch"
@@ -195,9 +200,14 @@ paths:
         200:
           description: File
           schema:
-            type: array
-            items:
-              $ref: '#/definitions/File'
+            type: object
+            required:
+              - result
+            properties:
+              result:
+                type: array
+                items:
+                  $ref: '#/definitions/File'
 
 
 

@@ -8,7 +8,7 @@ angular.module('tooltool').controller('TTSearchController',
                                     function($scope, restapi) {
     $scope.search_query = ''
     $scope.show_help = true;
-
+    $scope.backend_url = $('body').attr('data-releng-tooltool-url') || 'https://localhost:8002';
     $scope.file_results = []
     $scope.batch_results = []
 
@@ -16,11 +16,10 @@ angular.module('tooltool').controller('TTSearchController',
     $scope.startSearch = function() {
         $scope.show_help = false;
         var q = $scope.search_query;
-        var url = $('body').attr('data-releng-tooltool-url') || 'https://localhost:8002';
 
         // search for files and batches at the same time
         restapi({
-            url: url + '/file?q=' + q,
+            url: $scope.backend_url + '/file?q=' + q,
             method: 'GET',
             while: 'searching files',
         }).then(function(response) {
@@ -28,7 +27,7 @@ angular.module('tooltool').controller('TTSearchController',
         });
 
         restapi({
-            url: url + '/upload?q=' + q,
+            url: $scope.backend_url + '/upload?q=' + q,
             method: 'GET',
             while: 'searching upload batches',
         }).then(function(response) {
@@ -53,6 +52,7 @@ angular.module('tooltool').directive('ttResultFile', function() {
         templateUrl: 'tt-result-file.html',
         scope: {
             res: '=',
+            backend_url: '=',
         },  
     };  
 });

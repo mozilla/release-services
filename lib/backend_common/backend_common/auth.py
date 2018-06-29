@@ -60,8 +60,9 @@ class BaseUser(object):
         raise NotImplementedError
 
     def has_permissions(self, permissions):
-        if isinstance(permissions, str):
-            permissions = [permissions]
+        if len(permissions) > 0 \
+           and not isinstance(permissions[0], (tuple, list)):
+                permissions = [permissions]
         user_permissions = self.get_permissions()
         return all([permission in list(user_permissions) for permission in permissions])
 
@@ -102,9 +103,11 @@ class TaskclusterUser(BaseUser):
         Check user has some required permissions
         Using Taskcluster comparison algorithm
         '''
-        if isinstance(permissions, str):
-            permissions = [permissions]
-        return taskcluster.utils.scopeMatch(self.get_permissions(), [permissions])
+        if len(permissions) > 0 \
+           and not isinstance(permissions[0], (tuple, list)):
+                permissions = [permissions]
+
+        return taskcluster.utils.scopeMatch(self.get_permissions(), permissions)
 
 
 class RelengapiTokenUser(BaseUser):
@@ -248,7 +251,7 @@ def initial_data():
     user['permissions'] = []
     for permission, permission_doc in RELENGAPI_PERMISSIONS.items():
         new_permission = from_relengapi_permission(permission)
-        if flask_login.current_user.has_permissions(new_permission):
+        if flask_login.current_user.has_permissions([new_permission]):
             user['permissions'].append(dict(
                 name=permission,
                 doc=permission_doc,
@@ -417,7 +420,6 @@ def str_to_claims(token_str):
 
 @auth.login_manager.request_loader
 def parse_header(request):
-
     auth_header = request.headers.get('Authorization')
     if not auth_header:
         auth_header = request.headers.get('Authentication')
