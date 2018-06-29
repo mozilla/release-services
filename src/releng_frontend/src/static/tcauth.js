@@ -21,7 +21,9 @@ window.tcauth.get_header = function(url, method) {
 
         var extData = null;
         if (tc_auth.credentials.certificate) {
-            extData = new buffer.Buffer(JSON.stringify({certificate: JSON.parse(tc_auth.credentials.certificate)})).toString('base64');
+            extData = new buffer.Buffer(JSON.stringify({
+                certificate: JSON.parse(tc_auth.credentials.certificate)
+            })).toString('base64');
         }
 
         var header = hawk.client.header(
