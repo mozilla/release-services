@@ -52,8 +52,10 @@ angular.module('tooltool').directive('ttResultFile', function() {
         templateUrl: 'tt-result-file.html',
         scope: {
             res: '=',
-            backend_url: '=',
         },  
+        link: function(scope, element, attrs) {
+            scope.backend_url = $('body').attr('data-releng-tooltool-url') || 'https://localhost:8002';
+        },
     };  
 });
 
@@ -68,6 +70,7 @@ angular.module('tooltool').directive('ttResultBatch', function() {
         },  
         link: function(scope, element, attrs) {
             scope.details = false;
+            scope.backend_url = $('body').attr('data-releng-tooltool-url') || 'https://localhost:8002';
         },
     };  
 });
