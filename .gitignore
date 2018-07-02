@@ -7,6 +7,7 @@
 /.elm
 /.floo
 /Dockerfile
+/TODOs.org
 /docs/build/
 /lib/**/*.egg-info/
 /lib/**/.coverage
@@ -23,3 +24,4 @@
 /src/**/elm-stuff/
 /src/**/node_modules/
 /tmp
+/w
