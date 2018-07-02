@@ -264,9 +264,12 @@ class ClangTidyIssue(Issue):
         '''
         Build the text body published on reporters
         '''
+        message = self.message
+        if len(message) > 0:
+            message = message[0].capitalize() + message[1:]
         body = '{}: {} [clang-tidy: {}]'.format(
             self.type.capitalize(),
-            self.message.capitalize(),
+            message,
             self.check,
         )
 

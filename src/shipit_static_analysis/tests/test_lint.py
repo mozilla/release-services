@@ -52,3 +52,13 @@ def test_issue_path(mock_repository, mock_config, mock_revision):
     absolute_path = os.path.join(mock_config.repo_dir, relative_path)
     issue = MozLintIssue(absolute_path, 1, 'error', 1, 'dummy', 'Any error', 'XXX', mock_revision)
     assert issue.path == 'test.txt'
+
+
+def test_as_text(mock_revision):
+    '''
+    Test text export for ClangTidyIssue
+    '''
+    from shipit_static_analysis.lint import MozLintIssue
+    issue = MozLintIssue('test.py', 1, 'error', 1, 'flake8', 'dummy test withUppercaseChars', 'dummy rule', mock_revision)
+
+    assert issue.as_text() == 'Error: Dummy test withUppercaseChars [flake8: dummy rule]'
