@@ -33,7 +33,7 @@ def can_access_token(access, typ):
     # tokens, that's just a permission check
     if typ in ('prm',):
         permission = '{}/{}/{}'.format(releng_tokens.config.SCOPE_PREFIX, typ, access)
-        if not flask_login.current_user.has_permissions([permission]):
+        if not flask_login.current_user.has_permissions(permission):
             return False
 
     # for user-associated tokens, if the .all permission is set,
@@ -41,9 +41,9 @@ def can_access_token(access, typ):
     # the .my permission is set.
     elif typ in ('usr',):
         permission = '{}/{}/{}/all'.format(releng_tokens.config.SCOPE_PREFIX, typ, access)
-        if not flask_login.current_user.has_permissions([permission]):
+        if not flask_login.current_user.has_permissions(permission):
             permission = '{}/{}/{}/my'.format(releng_tokens.config.SCOPE_PREFIX, typ, access)
-            if not flask_login.current_user.has_permissions([permission]):
+            if not flask_login.current_user.has_permissions(permission):
                 return False
 
     return True
@@ -53,11 +53,11 @@ def list_tokens(typ=None):
     tbl = releng_tokens.models.Token
 
     conds = []
-    if flask_login.current_user.has_permissions([releng_tokens.config.SCOPE_PREFIX + '/prm/view']):
+    if flask_login.current_user.has_permissions(releng_tokens.config.SCOPE_PREFIX + '/prm/view'):
         conds.append(tbl.typ == 'prm')
-    if flask_login.current_user.has_permissions([releng_tokens.config.SCOPE_PREFIX + '/usr/view/all']):
+    if flask_login.current_user.has_permissions(releng_tokens.config.SCOPE_PREFIX + '/usr/view/all'):
         conds.append(tbl.typ == 'usr')
-    elif flask_login.current_user.has_permissions([releng_tokens.config.SCOPE_PREFIX + '/usr/view/my']):
+    elif flask_login.current_user.has_permissions(releng_tokens.config.SCOPE_PREFIX + '/usr/view/my'):
         conds.append(sa.and_(tbl.typ == 'usr',
                              tbl.user == flask_login.current_user.get_id()))
     if not conds:
@@ -167,7 +167,7 @@ def issue_token(body):
 
     # verify permission to issue this type
     permission = '{}/{}/issue'.format(releng_tokens.config.SCOPE_PREFIX, typ)
-    if not flask_login.current_user.has_permissions([permission]):
+    if not flask_login.current_user.has_permissions(permission):
         raise werkzeug.exceptions.Forbidden(
             'You do not have permission to create this token type')
 
@@ -189,7 +189,7 @@ def issue_token(body):
     requested_permissions = [
         old
         for old, new in all_relengapi_permissions
-        if flask_login.current_user.has_permissions([new]) and old in body['permissions']
+        if flask_login.current_user.has_permissions(new) and old in body.get('permissions', [])
     ]
 
     if None in requested_permissions:
