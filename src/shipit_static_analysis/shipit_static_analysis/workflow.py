@@ -33,7 +33,7 @@ from shipit_static_analysis.utils import build_temp_file
 
 logger = get_logger(__name__)
 
-TASKCLUSTER_NAMESPACE = 'index.project.releng.services.project.{channel}.shipit_static_analysis.{name}'
+TASKCLUSTER_NAMESPACE = 'project.releng.services.project.{channel}.shipit_static_analysis.{name}'
 
 
 class Workflow(object):

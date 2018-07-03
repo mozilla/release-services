@@ -16,6 +16,6 @@ def test_taskcluster_index(mock_workflow):
     mock_workflow.index('dummy.namespace', data={'test': 'dummy'})
 
     args = mock_workflow.index_service.insertTask.call_args[0]
-    assert args[0] == 'index.project.releng.services.project.test.shipit_static_analysis.dummy.namespace'
+    assert args[0] == 'project.releng.services.project.test.shipit_static_analysis.dummy.namespace'
     assert args[1]['taskId'] == '12345deadbeef'
     assert args[1]['data'] == {'test': 'dummy'}
