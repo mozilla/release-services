@@ -115,9 +115,6 @@ class Workflow(object):
         for namespace in revision.namespaces:
             self.index(namespace, revision.as_dict())
 
-        # Start by cloning the mercurial repository
-        self.hg = self.clone()
-
         # Add log to find Taskcluster task in papertrail
         logger.info(
             'New static analysis',
@@ -132,6 +129,9 @@ class Workflow(object):
             text='Task {} #{}'.format(self.taskcluster_task_id, self.taskcluster_run_id),
         )
         stats.api.increment('analysis')
+
+        # Start by cloning the mercurial repository
+        self.hg = self.clone()
 
         with stats.api.timer('runtime.mercurial'):
             # Force cleanup to reset top of MC

@@ -110,7 +110,10 @@ class PhabricatorRevision(Revision):
     @property
     def namespaces(self):
         return [
-            'phabricator.{}.{}'.format(self.id, self.diff_id)
+            'phabricator.{}'.format(self.id),
+            'phabricator.diff.{}'.format(self.diff_id),
+            'phabricator.phid.{}'.format(self.phid),
+            'phabricator.diffphid.{}'.format(self.diff_phid),
         ]
 
     def __str__(self):
@@ -179,7 +182,9 @@ class MozReviewRevision(Revision):
     @property
     def namespaces(self):
         return [
-            'mozreview.{}.{}'.format(self.review_request_id, self.diffset_revision)
+            'mozreview.{}'.format(self.review_request_id),
+            'mozreview.{}.{}'.format(self.review_request_id, self.diffset_revision),
+            'mozreview.rev.{}'.format(self.mercurial),
         ]
 
     def build_diff_name(self):
