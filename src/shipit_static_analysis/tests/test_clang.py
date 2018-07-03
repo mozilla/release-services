@@ -210,6 +210,18 @@ def test_clang_tidy_parser(mock_config, mock_repository, mock_revision):
     assert issues[0].check == 'mozilla-dangling-on-temporary'
 
 
+def test_as_text(mock_revision):
+    '''
+    Test text export for ClangTidyIssue
+    '''
+    from shipit_static_analysis.clang.tidy import ClangTidyIssue
+    parts = ('test.cpp', '42', '51', 'error', 'dummy message withUppercaseChars', 'dummy-check')
+    issue = ClangTidyIssue(parts, mock_revision)
+    issue.body = 'Dummy body withUppercaseChars'
+
+    assert issue.as_text() == 'Error: Dummy message withUppercaseChars [clang-tidy: dummy-check]'
+
+
 def test_as_markdown(mock_revision):
     '''
     Test markdown generation for ClangTidyIssue
