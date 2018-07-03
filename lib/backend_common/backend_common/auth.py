@@ -253,7 +253,7 @@ def initial_data():
     user['permissions'] = []
     for permission, permission_doc in RELENGAPI_PERMISSIONS.items():
         new_permission = from_relengapi_permission(permission)
-        if flask_login.current_user.has_permissions([new_permission]):
+        if flask_login.current_user.has_permissions(new_permission):
             user['permissions'].append(dict(
                 name=permission,
                 doc=permission_doc,
