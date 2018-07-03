@@ -178,7 +178,7 @@ def test_clang_tidy_checks(mock_config, mock_repository, mock_clang):
         'Missing clang-tidy checks: {}'.format(', '.join(missing))
 
 
-def test_clang_tidy_parser(mock_config, mock_repository, mock_revision):
+def test_clang_tidy_parser(mock_config, mock_repository, mock_revision, mock_clang_output, mock_clang_issues):
     '''
     Test the clang-tidy (or mach static-analysis) parser
     '''
@@ -209,6 +209,13 @@ def test_clang_tidy_parser(mock_config, mock_repository, mock_revision):
     assert issues[0].line == 42
     assert issues[0].check == 'mozilla-dangling-on-temporary'
 
+    # Real case
+    issues = clang_tidy.parse_issues(mock_clang_output, mock_revision)
+    assert len(issues) == 13
+    sep = '\n' + '-'*20 + '\n'
+    summary = sep.join(issue.as_text() for issue in issues)
+    assert summary == mock_clang_issues
+
 
 def test_as_text(mock_revision):
     '''
@@ -219,7 +226,7 @@ def test_as_text(mock_revision):
     issue = ClangTidyIssue(parts, mock_revision)
     issue.body = 'Dummy body withUppercaseChars'
 
-    assert issue.as_text() == 'Error: Dummy message withUppercaseChars [clang-tidy: dummy-check]'
+    assert issue.as_text() == 'Error: Dummy message withUppercaseChars [clang-tidy: dummy-check]\nDummy body withUppercaseChars'
 
 
 def test_as_markdown(mock_revision):

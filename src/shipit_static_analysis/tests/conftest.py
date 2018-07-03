@@ -415,3 +415,23 @@ def test_cpp(mock_config, mock_repository):
     path = os.path.join(mock_config.repo_dir, 'test.cpp')
     with open(path, 'w') as f:
         f.write(TEST_CPP)
+
+
+@pytest.fixture
+def mock_clang_output():
+    '''
+    Load a real case clang output
+    '''
+    path = os.path.join(MOCK_DIR, 'clang-output.txt')
+    with open(path) as f:
+        return f.read()
+
+
+@pytest.fixture
+def mock_clang_issues():
+    '''
+    Load parsed issues from a real case (above)
+    '''
+    path = os.path.join(MOCK_DIR, 'clang-issues.txt')
+    with open(path) as f:
+        return f.read()
