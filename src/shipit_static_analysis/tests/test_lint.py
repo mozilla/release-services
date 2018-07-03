@@ -61,4 +61,4 @@ def test_as_text(mock_revision):
     from shipit_static_analysis.lint import MozLintIssue
     issue = MozLintIssue('test.py', 1, 'error', 1, 'flake8', 'dummy test withUppercaseChars', 'dummy rule', mock_revision)
 
-    assert issue.as_text() == 'Error: Dummy test withUppercaseChars [flake8: dummy rule]'
+    assert issue.as_text() == 'SHOULD FAIL'
