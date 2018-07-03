@@ -60,11 +60,13 @@ class BaseUser(object):
         raise NotImplementedError
 
     def has_permissions(self, permissions):
-        if len(permissions) > 0 \
-           and not isinstance(permissions[0], (tuple, list)):
-                permissions = [permissions]
+        if not isinstance(permissions, (tuple, list)):
+            permissions = [permissions]
         user_permissions = self.get_permissions()
-        return all([permission in list(user_permissions) for permission in permissions])
+        return all([
+            permission in list(user_permissions)
+            for permission in permissions
+        ])
 
     def __str__(self):
         return self.get_id()
@@ -117,7 +119,7 @@ class RelengapiTokenUser(BaseUser):
     def __init__(self, claims, authenticated_email=None, permissions=[], token_data={}):
 
         self.claims = claims
-        self._permissions = set(permissions)
+        self._permissions = set([from_relengapi_permission(p) for p in permissions])
         self.token_data = token_data
 
         if authenticated_email:
@@ -251,7 +253,7 @@ def initial_data():
     user['permissions'] = []
     for permission, permission_doc in RELENGAPI_PERMISSIONS.items():
         new_permission = from_relengapi_permission(permission)
-        if flask_login.current_user.has_permissions([new_permission]):
+        if flask_login.current_user.has_permissions(new_permission):
             user['permissions'].append(dict(
                 name=permission,
                 doc=permission_doc,
@@ -266,21 +268,21 @@ def initial_data():
     )
 
 
-def to_relengapi_permission(permission):
-    if permission.startswith('project:releng:services/'):
-        permission = permission[len('project:releng:services/'):]
-    for prefix, project in RELENGAPI_PROJECT_PERMISSION_MAPPING.items():
-        if permission.startswith(project):
-            permission = prefix + permission[len(project):]
-    return permission.replace('/', '.')
+def to_relengapi_permission(_permission):
+    if _permission.startswith('project:releng:services/'):
+        permission = _permission[len('project:releng:services/'):]
+        for prefix, project in RELENGAPI_PROJECT_PERMISSION_MAPPING.items():
+            if permission.startswith(project):
+                return (prefix + permission[len(project):]).replace('/', '.')
+    return _permission
 
 
-def from_relengapi_permission(permission):
-    permission = permission.strip().replace('.', '/')
+def from_relengapi_permission(_permission):
+    permission = _permission.strip().replace('.', '/')
     for prefix, project in RELENGAPI_PROJECT_PERMISSION_MAPPING.items():
         if permission.startswith(prefix):
-            permission = '{}{}'.format(project, permission[len(prefix):])
-    return 'project:releng:services/{}'.format(permission)
+            return 'project:releng:services/{}{}'.format(project, permission[len(prefix):])
+    return _permission
 
 
 class RelengapiToken(backend_common.db.db.Model):
