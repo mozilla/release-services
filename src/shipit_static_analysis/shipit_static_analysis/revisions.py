@@ -107,6 +107,12 @@ class PhabricatorRevision(Revision):
         revision = self.api.load_revision(self.phid)
         self.id = revision['id']
 
+    @property
+    def namespaces(self):
+        return [
+            'phabricator.{}.{}'.format(self.id, self.diff_id)
+        ]
+
     def __str__(self):
         return 'Phabricator #{} - {}'.format(self.diff_id, self.diff_phid)
 
@@ -158,17 +164,10 @@ class MozReviewRevision(Revision):
     '''
     A mozreview revision to process
     '''
-    regex = re.compile(r'^(\w+):(\d+):(\d+)$')
-
-    def __init__(self, description):
-        match = self.regex.match(description)
-        if match is None:
-            raise Exception('Invalid Mozreview description')
-
-        groups = match.groups()
-        self.mercurial = groups[0]
-        self.review_request_id = int(groups[1])
-        self.diffset_revision = int(groups[2])
+    def __init__(self, review_request_id, mercurial, diffset_revision):
+        self.mercurial = mercurial
+        self.review_request_id = int(review_request_id)
+        self.diffset_revision = int(diffset_revision)
 
     def __str__(self):
         return 'MozReview #{} - {}'.format(self.review_request_id, self.diffset_revision)
@@ -176,6 +175,12 @@ class MozReviewRevision(Revision):
     @property
     def url(self):
         return 'https://reviewboard.mozilla.org/r/{}/'.format(self.review_request_id) # noqa
+
+    @property
+    def namespaces(self):
+        return [
+            'mozreview.{}.{}'.format(self.review_request_id, self.diffset_revision)
+        ]
 
     def build_diff_name(self):
         return '{}-{}-{}-clang-format.diff'.format(

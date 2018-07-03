@@ -14,7 +14,7 @@ def test_mozreview():
     '''
     from shipit_static_analysis.revisions import MozReviewRevision
 
-    r = MozReviewRevision('308c22e7899048467002de4ffb126cac0875c994:164530:7')
+    r = MozReviewRevision('164530', '308c22e7899048467002de4ffb126cac0875c994', '7')
     assert r.mercurial == '308c22e7899048467002de4ffb126cac0875c994'
     assert r.review_request_id == 164530
     assert r.diffset_revision == 7
@@ -126,7 +126,7 @@ def test_mercurial_patch(mock_config, mock_repository):
     assert mock_repository.tip().node == tip
 
     # Load the revision
-    mozrev = MozReviewRevision('{}:12345:1'.format(revision.decode('utf-8')))
+    mozrev = MozReviewRevision('12345', revision.decode('utf-8'), '1')
     mozrev.load(mock_repository)
     mozrev.analyze_patch()
 

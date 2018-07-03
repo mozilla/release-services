@@ -9,6 +9,7 @@ from cli_common.cli import taskcluster_options
 from cli_common.log import get_logger
 from cli_common.log import init_logger
 from cli_common.taskcluster import get_secrets
+from cli_common.taskcluster import get_service
 from shipit_static_analysis import config
 from shipit_static_analysis import stats
 from shipit_static_analysis.config import settings
@@ -23,12 +24,20 @@ logger = get_logger(__name__)
 @click.command()
 @taskcluster_options
 @click.option(
-    '--phabricator',
-    envvar='PHABRICATOR',
+    '--source',
+    envvar='ANALYSIS_SOURCE',
 )
 @click.option(
-    '--mozreview',
-    envvar='MOZREVIEW',
+    '--id',
+    envvar='ANALYSIS_ID',
+)
+@click.option(
+    '--mozreview-diffset',
+    envvar='MOZREVIEW_DIFFSET',
+)
+@click.option(
+    '--mozreview-revision',
+    envvar='MOZREVIEW_REVISION',
 )
 @click.option(
     '--cache-root',
@@ -36,16 +45,15 @@ logger = get_logger(__name__)
     help='Cache root, used to pull changesets'
 )
 @stats.api.timer('runtime.analysis')
-def main(phabricator,
-         mozreview,
+def main(source,
+         id,
          cache_root,
+         mozreview_diffset,
+         mozreview_revision,
          taskcluster_secret,
          taskcluster_client_id,
          taskcluster_access_token,
          ):
-
-    assert (phabricator is None) ^ (mozreview is None), \
-        'Specify a phabricator XOR mozreview parameters'
 
     secrets = get_secrets(taskcluster_secret,
                           config.PROJECT_NAME,
@@ -86,35 +94,39 @@ def main(phabricator,
         taskcluster_access_token,
     )
 
-    # Load revisions
-    revisions = []
-    if phabricator:
-        # Only one phabricator revision at a time
+    # Load index service
+    index_service = get_service(
+        'index',
+        taskcluster_client_id,
+        taskcluster_access_token,
+    )
+
+    # Load unique revision
+    if source == 'phabricator':
         api = reporters.get('phabricator')
         assert api is not None, \
             'Cannot use a phabricator revision without a phabricator reporter'
-        revisions.append(PhabricatorRevision(phabricator, api))
-    if mozreview:
-        # Multiple mozreview revisions are possible
-        revisions += [
-            MozReviewRevision(r)
-            for r in mozreview.split(' ')
-        ]
+        revision = PhabricatorRevision(id, api)
 
-    w = Workflow(reporters, secrets['ANALYZERS'])
-    for revision in revisions:
-        try:
-            w.run(revision)
-        except Exception as e:
-            # Log errors to papertrail
-            logger.error(
-                'Static analysis failure',
-                revision=revision,
-                error=e,
-            )
+    elif source == 'mozreview':
+        revision = MozReviewRevision(id, mozreview_revision, mozreview_diffset)
 
-            # Then raise to mark task as erroneous
-            raise
+    else:
+        raise Exception('Unsupported analysis source: {}'.format(source))
+
+    w = Workflow(reporters, secrets['ANALYZERS'], index_service)
+    try:
+        w.run(revision)
+    except Exception as e:
+        # Log errors to papertrail
+        logger.error(
+            'Static analysis failure',
+            revision=revision,
+            error=e,
+        )
+
+        # Then raise to mark task as erroneous
+        raise
 
 
 if __name__ == '__main__':
