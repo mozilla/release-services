@@ -34,6 +34,7 @@ from shipit_static_analysis.utils import build_temp_file
 logger = get_logger(__name__)
 
 TASKCLUSTER_NAMESPACE = 'project.releng.services.project.{channel}.shipit_static_analysis.{name}'
+TASKCLUSTER_INDEX_TTL = 7  # in days
 
 
 class Workflow(object):
@@ -308,6 +309,11 @@ class Workflow(object):
             logger.info('Skipping taskcluster indexation', name=name)
             return
 
+        # Always add the indexation
+        now = datetime.utcnow()
+        date_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+        data['indexed'] = now.strftime(date_format)
+
         namespace = TASKCLUSTER_NAMESPACE.format(channel=settings.app_channel, name=name)
         self.index_service.insertTask(
             namespace,
@@ -315,6 +321,6 @@ class Workflow(object):
                 'taskId': self.taskcluster_task_id,
                 'rank': 0,
                 'data': data,
-                'expires': (datetime.utcnow() + timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                'expires': (now + timedelta(days=TASKCLUSTER_INDEX_TTL)).strftime(date_format),
             }
         )
