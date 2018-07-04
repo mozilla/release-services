@@ -18,7 +18,9 @@ from shipit_static_analysis.revisions import Revision
 logger = get_logger(__name__)
 
 REGEX_HEADER = re.compile(r'^(.+):(\d+):(\d+): (warning|error|note): ([^\[\]\n]+)(?: \[([\.\w-]+)\])?$', re.MULTILINE)
-REGEX_HAS_WARNINGS = re.compile(r'^(\d+) warnings present.$', re.MULTILINE)
+REGEX_FOOTER = re.compile(r'^(Warning: [\.\w-]+ in .+:)|(Suppressed \d+ warnings)|(\d+ warnings? and \d+ errors? generated.)|(Error while processing)', re.MULTILINE)  # noqa
+REGEX_HAS_WARNINGS = re.compile(r'^(\d+) warnings|errors present.$', re.MULTILINE)
+
 
 ISSUE_MARKDOWN = '''
 ## clang-tidy {type}
@@ -140,16 +142,31 @@ class ClangTidy(object):
         if not headers:
             raise Exception('No clang-tidy header was found even though a clang output was provided')
 
+        def _remove_footer(start_pos, end_pos):
+            '''
+            Build an issue body from clang-tidy output
+            and stops when an extra paylaod is detected (footer)
+            '''
+            assert isinstance(start_pos, int)
+            assert isinstance(end_pos, int)
+            body = clang_output[start_pos:end_pos]
+            footer = REGEX_FOOTER.search(body)
+            if footer is None:
+                return body
+            return body[:footer.start()-1]
+
         issues = []
         for i, header in enumerate(headers):
             issue = ClangTidyIssue(header.groups(), revision)
 
             # Get next header
             if i+1 < len(headers):
+                # Parse body until next header
                 next_header = headers[i+1]
-                issue.body = clang_output[header.end():next_header.start() - 1]
+                issue.body = _remove_footer(header.end(), next_header.start() - 1)
             else:
-                issue.body = clang_output[header.end():]
+                # Limit last element to 3 lines to avoid parsing extra metadatas
+                issue.body = _remove_footer(header.end(), header.end() + 3)
 
             if issue.is_problem():
                 # Save problem to append notes
@@ -273,10 +290,8 @@ class ClangTidyIssue(Issue):
             self.check,
         )
 
-        # Add body when it's more than 2 lines
-        # it generally contains useful info
-        lines = len(list(filter(None, self.body.split('\n'))))
-        if lines > 2:
+        # Always add body as it's been cleaned up
+        if self.body:
             body += '\n{}'.format(self.body)
 
         return body
