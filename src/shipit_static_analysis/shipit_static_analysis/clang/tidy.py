@@ -142,7 +142,11 @@ class ClangTidy(object):
         if not headers:
             raise Exception('No clang-tidy header was found even though a clang output was provided')
 
-        def _parse_body(start_pos, end_pos):
+        def _remove_footer(start_pos, end_pos):
+            '''
+            Build an issue body from clang-tidy output
+            and stops when an extra paylaod is detected (footer)
+            '''
             assert isinstance(start_pos, int)
             assert isinstance(end_pos, int)
             body = clang_output[start_pos:end_pos]
@@ -159,10 +163,10 @@ class ClangTidy(object):
             if i+1 < len(headers):
                 # Parse body until next header
                 next_header = headers[i+1]
-                issue.body = _parse_body(header.end(), next_header.start() - 1)
+                issue.body = _remove_footer(header.end(), next_header.start() - 1)
             else:
                 # Limit last element to 3 lines to avoid parsing extra metadatas
-                issue.body = _parse_body(header.end(), header.end() + 3)
+                issue.body = _remove_footer(header.end(), header.end() + 3)
 
             if issue.is_problem():
                 # Save problem to append notes
