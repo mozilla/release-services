@@ -736,17 +736,17 @@ in rec {
             User = dockerUser;
             WorkingDir = "/";
           };
-          runAsRoot = if dockerUser == null then null else ''
-            #!${stdenv.shell}
-            ${dockerTools.shadowSetup}
-            groupadd --gid ${toString dockerGroupId} ${dockerGroup}
-            useradd --gid ${dockerGroup} --uid ${toString dockerUserId} --home-dir /app ${dockerUser}
-            # gunicorn requires /tmp, /var/tmp, or /usr/tmp
-            mkdir -p --mode=1777 /tmp
-            mkdir -p /app
-            # TODO: copy the source using the nix library?
-            # cp -a ${self.src}/* /app
-          '';
+        runAsRoot = if dockerUser == null then null else ''
+          #!${stdenv.shell}
+          ${dockerTools.shadowSetup}
+          groupadd --gid ${toString dockerGroupId} ${dockerGroup}
+          useradd --gid ${dockerGroup} --uid ${toString dockerUserId} --home-dir /app ${dockerUser}
+          # gunicorn requires /tmp, /var/tmp, or /usr/tmp
+          mkdir -p --mode=1777 /tmp
+          mkdir -p /app
+          # TODO: copy the source using the nix library?
+          # cp -a ${self.src}/* /app
+        '';
       };
 
       self = python.mkDerivation {
