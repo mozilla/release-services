@@ -710,10 +710,10 @@ in rec {
     , dockerCmd ? []
     , dockerEnv ? []
     , dockerContents ? []
-    , dockerUser
-    , dockerUserId
-    , dockerGroup
-    , dockerGroupId
+    , dockerUser ? "app"
+    , dockerUserId ? 1001
+    , dockerGroup ? "app"
+    , dockerGroupId ? 1001
     , passthru ? {}
     , inTesting ? true
     , inStaging ? true
