@@ -34,6 +34,8 @@ def get_build_task(index,
         './please', '-vv', 'tools', 'build', project,
         '--taskcluster-secret=' + taskcluster_secret,
         '--no-interactive',
+        '--task-group-id', task_group_id,
+        '--github-commit', github_commit,
     ]
 
     nix_path_attributes = [project]

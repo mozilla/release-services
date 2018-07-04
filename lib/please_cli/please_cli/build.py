@@ -34,6 +34,16 @@ import please_cli.utils
     required=True,
     )
 @click.option(
+    '--github-commit',
+    required=False,
+    default=None,
+    )
+@click.option(
+    '--task-group-id',
+    required=False,
+    default=None,
+    )
+@click.option(
     '--nix-build',
     required=True,
     default=please_cli.config.NIX_BIN_DIR + 'nix-build',
@@ -70,6 +80,8 @@ import please_cli.utils
     default=True,
     )
 def cmd(project,
+        github_commit,
+        task_group_id,
         nix_path_attributes,
         nix_build,
         nix,
@@ -116,6 +128,12 @@ def cmd(project,
     for nix_path_attribute in nix_path_attributes:
         click.echo(' => Building {} ... '.format(nix_path_attribute), nl=False)
 
+        argstrs = []
+        if github_commit:
+            argstrs.extend(['--argstr', 'githubCommit', github_commit])
+        if task_group_id:
+            argstrs.extend(['--argstr', 'taskGroupId', task_group_id])
+
         output = os.path.join(
             please_cli.config.TMP_DIR,
             'result-build-{}'.format(nix_path_attribute.replace('.', '-').replace('_', '-')),
@@ -129,7 +147,7 @@ def cmd(project,
                     please_cli.config.ROOT_DIR + '/nix/default.nix',
                     '-A', nix_path_attribute,
                     '-o', output,
-                ] + nix_cache_secret_keys,
+                ] + nix_cache_secret_keys + argstrs,
                 stream=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
