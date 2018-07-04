@@ -120,6 +120,7 @@ def test_clang_tidy(mock_repository, mock_config, mock_clang, mock_stats, mock_r
     Test clang-tidy runner
     '''
     from shipit_static_analysis.clang.tidy import ClangTidy, ClangTidyIssue
+    from shipit_static_analysis.config import settings
 
     # Init clang tidy runner
     ct = ClangTidy()
@@ -142,6 +143,13 @@ def test_clang_tidy(mock_repository, mock_config, mock_clang, mock_stats, mock_r
     assert isinstance(issues[1], ClangTidyIssue)
     assert issues[1].check == 'modernize-use-nullptr'
     assert issues[1].line == 8
+
+    # Ensure the raw output dump exists
+    clang_output_path = os.path.join(
+        settings.taskcluster_results_dir,
+        '{}-clang-tidy.txt'.format(repr(mock_revision)),
+    )
+    assert os.path.isfile(clang_output_path)
 
     # Test stats
     mock_stats.flush()
