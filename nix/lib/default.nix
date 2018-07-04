@@ -96,12 +96,13 @@ in rec {
     , version
     , config ? {}
     , contents ? []
+    , runAsRoot
     }:
     dockerTools.buildImage {
       name = name;
       tag = version;
       fromImage = null;
-      inherit contents config;
+      inherit contents config runAsRoot;
     };
 
     mkTaskclusterMergeEnv =
@@ -583,6 +584,10 @@ in rec {
       ]
     , dockerEnv ? []
     , dockerContents ? []
+    , dockerUser ? "app"
+    , dockerUserId ? 1001
+    , dockerGroup ? "app"
+    , dockerGroupId ? 1001
     , passthru ? {}
     , inTesting ? true
     , inStaging ? true
@@ -705,6 +710,10 @@ in rec {
     , dockerCmd ? []
     , dockerEnv ? []
     , dockerContents ? []
+    , dockerUser
+    , dockerUserId
+    , dockerGroup
+    , dockerGroupId
     , passthru ? {}
     , inTesting ? true
     , inStaging ? true
@@ -724,8 +733,20 @@ in rec {
               "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
             ] ++ dockerEnv;
             Cmd = dockerCmd;
+            User = dockerUser;
             WorkingDir = "/";
           };
+          runAsRoot = if dockerUser == null then null else ''
+            #!${stdenv.shell}
+            ${dockerTools.shadowSetup}
+            groupadd --gid ${toString dockerGroupId} ${dockerGroup}
+            useradd --gid ${dockerGroup} --uid ${toString dockerUserId} --home-dir /app ${dockerUser}
+            # gunicorn requires /tmp, /var/tmp, or /usr/tmp
+            mkdir -p --mode=1777 /tmp
+            mkdir -p /app
+            # TODO: copy the source using the nix library?
+            # cp -a ${self.src}/* /app
+          '';
       };
 
       self = python.mkDerivation {
