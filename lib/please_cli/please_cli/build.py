@@ -238,9 +238,19 @@ def cmd_docker(project,
     )
 
     if not load_image:
-        click.echo('You can load the image with this command: \n$ {docker} load -i {image_path}'.format(
+        real_image_path = os.path.realpath(image_path)
+        click.echo(' => Copying docker image {} to {}'.format(real_image_path, please_cli.config.TMP_DIR))
+        with click_spinner.spinner():
+            command = ['cp', real_image_path, please_cli.config.TMP_DIR]
+            result, output, error = cli_common.command.run(
+                command,
+                stream=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+        click.echo('You can load the image with this command: \n$ {docker} load -i {real_image_path}'.format(
             docker=docker,
-            image_path=image_path,
+            real_image_path=real_image_path,
         ))
         return
 
