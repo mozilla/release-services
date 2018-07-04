@@ -1,6 +1,11 @@
 { releng_pkgs
 }:
 
+{ githubCommit ? "unknown"
+, taskGroupId ? null
+, enableDockerflow ? false
+}:
+
 let
 
   inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource;
@@ -13,9 +18,9 @@ let
   dirname = "shipit_workflow";
 
   self = mkBackend {
-    inherit python name dirname;
+    inherit python name dirname githubCommit taskGroupId enableDockerflow;
     inProduction = false;
-    version = fileContents ./VERSION;
+    version = fileContents ../../VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
       (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++

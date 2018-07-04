@@ -588,6 +588,9 @@ in rec {
     , dockerUserId ? 1001
     , dockerGroup ? "app"
     , dockerGroupId ? 1001
+    , githubCommit ? "unknown"
+    , taskGroupId  ? null
+    , enableDockerflow ? false
     , passthru ? {}
     , inTesting ? true
     , inStaging ? true
@@ -714,6 +717,9 @@ in rec {
     , dockerUserId ? 1001
     , dockerGroup ? "app"
     , dockerGroupId ? 1001
+    , githubCommit ? "unknown"
+    , taskGroupId  ? null
+    , enableDockerflow ? false
     , passthru ? {}
     , inTesting ? true
     , inStaging ? true
@@ -746,6 +752,31 @@ in rec {
           mkdir -p /app
           # TODO: copy the source using the nix library?
           # cp -a ${self.src}/* /app
+        '';
+      };
+
+      version_json = {
+        inherit version;
+        source = "https://github.com/mozilla/release-services";
+        commit = githubCommit;
+        build =
+          if taskGroupId != null
+            then "https://tools.taskcluster.net/groups/${taskGroupId}"
+            else "unknown";
+      };
+
+      self_dockerflow = dockerTools.buildImage {
+        inherit name;
+        tag = version;
+        fromImage = self_docker;
+        runAsRoot = ''
+          cp -a ${self.src}/* /app
+          cat > /app/version.json  <<EOF
+          ${builtins.toJSON version_json}
+          EOF
+          echo "/app/version.json content:"
+          cat /app/version.json
+
         '';
       };
 
@@ -860,7 +891,7 @@ in rec {
                               ++ optional inProduction "production"
                 );
 
-          docker = self_docker;
+          docker = if enableDockerflow != false then self_dockerflow else self_docker;
 
         } // passthru;
       };
