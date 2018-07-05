@@ -170,9 +170,9 @@ class ClangTidy(object):
 
             if issue.is_problem():
                 # Save problem to append notes
-                # Skip diagnostic errors
+                # Skip diagnostic errors, but warn through Sentry
                 if issue.check == 'clang-diagnostic-error':
-                    logger.info('Skipping clang-diagnostic-error: {}'.format(issue))
+                    logger.error('Encountered a clang-diagnostic-error: {}'.format(issue))
                 else:
                     issues.append(issue)
                     mode = issue.is_third_party() and '3rd party' or 'in-tree'
