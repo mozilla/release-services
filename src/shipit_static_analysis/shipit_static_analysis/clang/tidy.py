@@ -275,6 +275,10 @@ class ClangTidyIssue(Issue):
         '''
         Is this issue using a publishable check ?
         '''
+        # Never publish a note (no check attached)
+        if not self.is_problem():
+            return False
+
         return settings.is_publishable_check(self.check)
 
     def as_text(self):

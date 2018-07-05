@@ -89,6 +89,9 @@ class Settings(object):
         Is this check publishable ?
         Support the wildcard expansion
         '''
+        if check is None:
+            return False
+
         for c in self.clang_checkers:
             name = c['name']
 
