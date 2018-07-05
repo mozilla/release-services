@@ -1,11 +1,19 @@
 { releng_pkgs }:
 
 let
-  inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_4 llvm_4 llvmPackages_4;
+  inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_4 llvm_4 llvmPackages_4 gcc-unwrapped glibc;
   inherit (releng_pkgs.pkgs.devEnv) gecko;
 
   # Rust 1.26.2
   rustChannel = rustChannelOf { date = "2018-06-05"; channel = "stable"; };
+
+  # Add missing gcc libraries needed by clang (see https://github.com/mozilla-releng/services/issues/1256)
+  gcc_libs = builtins.concatStringsSep ":" [
+    "${gcc-unwrapped}/include/c++/${gcc-unwrapped.version}"
+    "${gcc-unwrapped}/include/c++/${gcc-unwrapped.version}/backward"
+    "${gcc-unwrapped}/include/c++/${gcc-unwrapped.version}/x86_64-unknown-linux-gnu"
+    "${glibc.dev}/include"
+  ];
 
 in gecko.overrideDerivation (old: {
   # Dummy src, cannot be null
@@ -22,9 +30,9 @@ in gecko.overrideDerivation (old: {
     echo "#!${bash}/bin/sh" > $geckoenv
     echo "export SHELL=xterm" >> $geckoenv
     env | grep -E '^(PATH|PKG_CONFIG_PATH|CMAKE_INCLUDE_PATH)='| sed 's/^/export /' >> $geckoenv
-    echo "export CPLUS_INCLUDE_PATH=$CMAKE_INCLUDE_PATH:\$EXTRAS_INCLUDE_PATH" >> $geckoenv
-    echo "export C_INCLUDE_PATH=$CMAKE_INCLUDE_PATH:\$EXTRAS_INCLUDE_PATH" >> $geckoenv
-    echo "export INCLUDE_PATH=$CMAKE_INCLUDE_PATH:\$EXTRAS_INCLUDE_PATH" >> $geckoenv
+    echo "export CPLUS_INCLUDE_PATH=$CMAKE_INCLUDE_PATH:${gcc_libs}:\$EXTRAS_INCLUDE_PATH" >> $geckoenv
+    echo "export C_INCLUDE_PATH=$CMAKE_INCLUDE_PATH:${gcc_libs}:\$EXTRAS_INCLUDE_PATH" >> $geckoenv
+    echo "export INCLUDE_PATH=$CMAKE_INCLUDE_PATH:${gcc_libs}:\$EXTRAS_INCLUDE_PATH" >> $geckoenv
 
     # Add self in PATH, needed to exec
     echo "export PATH=$out/bin:\$PATH" >> $geckoenv
