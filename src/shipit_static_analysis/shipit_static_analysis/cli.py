@@ -125,6 +125,9 @@ def main(source,
             error=e,
         )
 
+        # Index analysis state
+        w.index(revision, state='error')
+
         # Then raise to mark task as erroneous
         raise
 

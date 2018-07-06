@@ -216,12 +216,13 @@ class Workflow(object):
                 for issue in issues:
                     issue.is_new = issue not in before_patch
 
-        self.index(revision, state='analyzed', issues=len(issues))
         if not issues:
             logger.info('No issues, stopping there.')
+            self.index(revision, state='done', issues=0)
             return
 
         # Report issues publication stats
+        self.index(revision, state='analyzed', issues=len(issues))
         stats.api.increment('analysis.issues.publishable', len([i for i in issues if i.is_publishable()]))
 
         # Build patch to help developer improve their code
@@ -232,7 +233,7 @@ class Workflow(object):
             for reporter in self.reporters.values():
                 reporter.publish(issues, revision)
 
-        self.index(revision, state='done')
+        self.index(revision, state='done', issues=len(issues))
 
     def detect_issues(self, analyzers, revision):
         '''
