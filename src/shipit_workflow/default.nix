@@ -20,7 +20,7 @@ let
   self = mkBackend {
     inherit python name dirname githubCommit taskGroupId enableDockerflow;
     inProduction = false;
-    version = fileContents ../../VERSION;
+    version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
     buildInputs =
       (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
