@@ -8,7 +8,7 @@ from unittest import mock
 
 def test_taskcluster_index(mock_workflow, mock_revision):
     '''
-    Test the Taskcluster indexation API
+    Test the Taskcluster indexing API
     '''
     mock_workflow.index_service = mock.Mock()
     mock_workflow.on_taskcluster = True

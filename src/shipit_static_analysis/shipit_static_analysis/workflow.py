@@ -316,14 +316,14 @@ class Workflow(object):
         assert isinstance(revision, Revision)
 
         if not self.on_taskcluster:
-            logger.info('Skipping taskcluster indexation', rev=str(revision), **kwargs)
+            logger.info('Skipping taskcluster indexing', rev=str(revision), **kwargs)
             return
 
         # Build payload
         payload = revision.as_dict()
         payload.update(kwargs)
 
-        # Always add the indexation
+        # Always add the indexing
         now = datetime.utcnow()
         date_format = '%Y-%m-%dT%H:%M:%S.%fZ'
         payload['indexed'] = now.strftime(date_format)
