@@ -39,7 +39,7 @@ def test_phabricator(mock_phabricator, mock_repository, mock_config):
     assert not hasattr(r, 'mercurial')
     assert r.diff_id == 42
     assert r.diff_phid == 'PHID-DIFF-testABcd12'
-    assert r.url == 'https://phabricator.test/PHID-DIFF-testABcd12/'
+    assert r.url == 'https://phabricator.test/D51'
     assert r.build_diff_name() == 'PHID-DIFF-testABcd12-clang-format.diff'
     assert r.id == 51  # revision
 

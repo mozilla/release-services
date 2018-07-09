@@ -222,8 +222,10 @@ class Workflow(object):
             return
 
         # Report issues publication stats
-        self.index(revision, state='analyzed', issues=len(issues))
-        stats.api.increment('analysis.issues.publishable', len([i for i in issues if i.is_publishable()]))
+        nb_issues = len(issues)
+        nb_publishable = len([i for i in issues if i.is_publishable()])
+        self.index(revision, state='analyzed', issues=nb_issues, issues_publishable=nb_publishable)
+        stats.api.increment('analysis.issues.publishable', nb_publishable)
 
         # Build patch to help developer improve their code
         self.build_improvement_patch(revision, issues)
@@ -233,7 +235,7 @@ class Workflow(object):
             for reporter in self.reporters.values():
                 reporter.publish(issues, revision)
 
-        self.index(revision, state='done', issues=len(issues))
+        self.index(revision, state='done', issues=nb_issues, issues_publishable=nb_publishable)
 
     def detect_issues(self, analyzers, revision):
         '''

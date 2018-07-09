@@ -126,7 +126,7 @@ class PhabricatorRevision(Revision):
 
     @property
     def url(self):
-        return 'https://{}/{}/'.format(self.api.hostname, self.diff_phid)
+        return 'https://{}/D{}'.format(self.api.hostname, self.id)
 
     def load(self, repo):
         '''
