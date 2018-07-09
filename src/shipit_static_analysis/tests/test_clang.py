@@ -70,6 +70,7 @@ def test_clang_format(mock_config, mock_repository, mock_stats, mock_clang, mock
     Test clang-format runner
     '''
     from shipit_static_analysis.clang.format import ClangFormat, ClangFormatIssue
+    from shipit_static_analysis.config import settings
 
     # Write badly formatted c file
     bad_file = os.path.join(mock_config.repo_dir, 'bad.cpp')
@@ -99,6 +100,13 @@ def test_clang_format(mock_config, mock_repository, mock_stats, mock_clang, mock
     # At the end of the process, original file is patched
     mock_workflow.build_improvement_patch(mock_revision, issues)
     assert open(bad_file).read() == BAD_CPP_VALID
+
+    # Ensure the raw output dump exists
+    clang_output_path = os.path.join(
+        settings.taskcluster_results_dir,
+        '{}-clang-format.txt'.format(repr(mock_revision)),
+    )
+    assert os.path.isfile(clang_output_path)
 
     # Test stats
     mock_stats.flush()
