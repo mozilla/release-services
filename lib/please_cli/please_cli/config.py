@@ -740,6 +740,9 @@ PROJECTS_CONFIG = {
                     'staging': {
                         'nix_path_attribute': 'docker',
                     },
+                    'production': {
+                        'nix_path_attribute': 'dockerflow',
+                    },
                 },
             },
         ],

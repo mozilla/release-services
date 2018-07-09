@@ -3,7 +3,6 @@
 
 { githubCommit ? "unknown"
 , taskGroupId ? null
-, enableDockerflow ? false
 }:
 
 let
@@ -18,7 +17,7 @@ let
   dirname = "shipit_workflow";
 
   self = mkBackend {
-    inherit python name dirname githubCommit taskGroupId enableDockerflow;
+    inherit python name dirname githubCommit taskGroupId;
     inProduction = false;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };

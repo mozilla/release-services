@@ -590,7 +590,6 @@ in rec {
     , dockerGroupId ? 1001
     , githubCommit ? "unknown"
     , taskGroupId  ? null
-    , enableDockerflow ? false
     , passthru ? {}
     , inTesting ? true
     , inStaging ? true
@@ -719,7 +718,6 @@ in rec {
     , dockerGroupId ? 1001
     , githubCommit ? "unknown"
     , taskGroupId  ? null
-    , enableDockerflow ? false
     , passthru ? {}
     , inTesting ? true
     , inStaging ? true
@@ -891,7 +889,8 @@ in rec {
                               ++ optional inProduction "production"
                 );
 
-          docker = if enableDockerflow != false then self_dockerflow else self_docker;
+          docker = self_docker;
+          dockerflow = self_dockerflow;
 
         } // passthru;
       };
