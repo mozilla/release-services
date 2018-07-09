@@ -585,9 +585,9 @@ in rec {
     , dockerEnv ? []
     , dockerContents ? []
     , dockerUser ? "app"
-    , dockerUserId ? 1001
+    , dockerUserId ? 10001
     , dockerGroup ? "app"
-    , dockerGroupId ? 1001
+    , dockerGroupId ? 10001
     , githubCommit ? "unknown"
     , taskGroupId  ? null
     , passthru ? {}
@@ -713,9 +713,9 @@ in rec {
     , dockerEnv ? []
     , dockerContents ? []
     , dockerUser ? "app"
-    , dockerUserId ? 1001
+    , dockerUserId ? 10001
     , dockerGroup ? "app"
-    , dockerGroupId ? 1001
+    , dockerGroupId ? 10001
     , githubCommit ? "unknown"
     , taskGroupId  ? null
     , passthru ? {}
