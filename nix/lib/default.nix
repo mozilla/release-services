@@ -748,8 +748,7 @@ in rec {
           # gunicorn requires /tmp, /var/tmp, or /usr/tmp
           mkdir -p --mode=1777 /tmp
           mkdir -p /app
-          # TODO: copy the source using the nix library?
-          # cp -a ${self.src}/* /app
+          cp -a ${self.src}/. /app/
         '';
       };
 
