@@ -151,6 +151,9 @@ class ActiveDataCoverage(Coverage):
             out = await es.search(
                 index=secrets.ACTIVE_DATA_INDEX,
                 body=query,
+
+                # Longer timeout, the sub aggregation is long
+                request_timeout=30,
             )
             return out['aggregations']['revisions']['buckets']
 
