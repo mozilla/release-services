@@ -290,7 +290,7 @@ class Workflow(object):
             return
 
         # Write diff in results directory
-        diff_name = revision.build_diff_name()
+        diff_name = '{}-clang-format.diff'.format(repr(revision))
         diff_path = os.path.join(settings.taskcluster_results_dir, diff_name)
         with open(diff_path, 'w') as f:
             length = f.write(diff.decode('utf-8'))

@@ -19,7 +19,7 @@ def test_mozreview():
     assert r.review_request_id == 164530
     assert r.diffset_revision == 7
     assert r.url == 'https://reviewboard.mozilla.org/r/164530/'
-    assert r.build_diff_name() == '308c22e7-164530-7-clang-format.diff'
+    assert repr(r) == '308c22e7-164530-7'
 
 
 @responses.activate
@@ -40,7 +40,7 @@ def test_phabricator(mock_phabricator, mock_repository, mock_config):
     assert r.diff_id == 42
     assert r.diff_phid == 'PHID-DIFF-testABcd12'
     assert r.url == 'https://phabricator.test/D51'
-    assert r.build_diff_name() == 'PHID-DIFF-testABcd12-clang-format.diff'
+    assert repr(r) == 'PHID-DIFF-testABcd12'
     assert r.id == 51  # revision
 
     # Check test.txt content
