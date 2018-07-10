@@ -95,7 +95,8 @@ class HookPhabricator(Hook):
 
                 # Create new task
                 await self.create_task({
-                    'PHABRICATOR': diff['phid']
+                    'ANALYSIS_SOURCE': 'phabricator',
+                    'ANALYSIS_ID': diff['phid']
                 })
 
             # Sleep a bit before trying new diffs
@@ -133,14 +134,18 @@ class HookStaticAnalysis(PulseHook):
             return
 
         # Extract commits
-        commits = [
-            '{rev}:{review_request_id}:{diffset_revision}'.format(**c)
+        envs = [
+            {
+                'ANALYSIS_SOURCE': 'mozreview',
+                'ANALYSIS_ID': c['review_request_id'],
+                'MOZREVIEW_REVISION': c['rev'],
+                'MOZREVIEW_DIFFSET': c['diffset_revision'],
+            }
+
             for c in payload.get('commits', [])
         ]
-        logger.info('Received new commits', commits=commits)
-        return {
-            'MOZREVIEW': ' '.join(commits),
-        }
+        logger.info('Received new commits', revs=[e['MOZREVIEW_REVISION'] for e in envs])
+        return envs
 
 
 class HookCodeCoverage(PulseHook):
@@ -227,9 +232,9 @@ class HookCodeCoverage(PulseHook):
 
         logger.info('Received groupResolved notification for coverage builds', revision=build_task['task']['payload']['env']['GECKO_HEAD_REV'], group=taskGroupId)  # noqa
 
-        return {
+        return [{
             'REVISION': build_task['task']['payload']['env']['GECKO_HEAD_REV'],
-        }
+        }]
 
 
 class PulseListener(object):

@@ -90,7 +90,7 @@ def test_mail(mock_issues, mock_phabricator):
     r = MailReporter(conf, 'test_tc', 'token_tc')
 
     # Publish for mozreview
-    mrev = MozReviewRevision('abcdef:12345:1')
+    mrev = MozReviewRevision('12345', 'abcdef', '1')
     r.publish(mock_issues, mrev)
 
     prev = PhabricatorRevision('PHID-DIFF-test', phab)

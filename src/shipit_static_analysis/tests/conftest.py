@@ -401,10 +401,13 @@ def mock_workflow(tmpdir, mock_repository, mock_config):
     if 'MOZCONFIG' not in os.environ:
         os.environ['MOZCONFIG'] = str(tmpdir.join('mozconfig').realpath())
 
-    return MockWorkflow(
+    workflow = MockWorkflow(
         reporters={},
         analyzers=['clang-tidy', 'clang-format', 'mozlint'],
+        index_service=None,
     )
+    workflow.hg = workflow.clone()
+    return workflow
 
 
 @pytest.fixture

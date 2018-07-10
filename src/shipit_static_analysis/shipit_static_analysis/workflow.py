@@ -9,6 +9,8 @@ import itertools
 import os
 import subprocess
 import tempfile
+from datetime import datetime
+from datetime import timedelta
 
 import hglib
 
@@ -27,16 +29,20 @@ from shipit_static_analysis.config import Publication
 from shipit_static_analysis.config import settings
 from shipit_static_analysis.lint import MozLint
 from shipit_static_analysis.report.debug import DebugReporter
+from shipit_static_analysis.revisions import Revision
 from shipit_static_analysis.utils import build_temp_file
 
 logger = get_logger(__name__)
+
+TASKCLUSTER_NAMESPACE = 'project.releng.services.project.{channel}.shipit_static_analysis.{name}'
+TASKCLUSTER_INDEX_TTL = 7  # in days
 
 
 class Workflow(object):
     '''
     Static analysis workflow
     '''
-    def __init__(self, reporters, analyzers):
+    def __init__(self, reporters, analyzers, index_service):
         assert isinstance(analyzers, list)
         assert len(analyzers) > 0, \
             'No analyzers specified, will not run.'
@@ -49,10 +55,12 @@ class Workflow(object):
             self.taskcluster_task_id = os.environ['TASK_ID']
             self.taskcluster_run_id = os.environ['RUN_ID']
             self.taskcluster_results_dir = '/tmp/results'
+            self.on_taskcluster = True
         else:
             self.taskcluster_task_id = 'local instance'
             self.taskcluster_run_id = 0
             self.taskcluster_results_dir = tempfile.mkdtemp()
+            self.on_taskcluster = False
         if not os.path.isdir(self.taskcluster_results_dir):
             os.makedirs(self.taskcluster_results_dir)
 
@@ -64,8 +72,8 @@ class Workflow(object):
         # Always add debug reporter and Diff reporter
         self.reporters['debug'] = DebugReporter(output_dir=self.taskcluster_results_dir)
 
-        # Finally, clone the mercurial repository
-        self.hg = self.clone()
+        # Use TC index service client
+        self.index_service = index_service
 
     @stats.api.timed('runtime.clone')
     def clone(self):
@@ -105,6 +113,9 @@ class Workflow(object):
         '''
         analyzers = []
 
+        # Index ASAP Taskcluster task for this revision
+        self.index(revision, state='started')
+
         # Add log to find Taskcluster task in papertrail
         logger.info(
             'New static analysis',
@@ -119,6 +130,10 @@ class Workflow(object):
             text='Task {} #{}'.format(self.taskcluster_task_id, self.taskcluster_run_id),
         )
         stats.api.increment('analysis')
+
+        # Start by cloning the mercurial repository
+        self.hg = self.clone()
+        self.index(revision, state='cloned')
 
         with stats.api.timer('runtime.mercurial'):
             # Force cleanup to reset top of MC
@@ -180,6 +195,7 @@ class Workflow(object):
             logger.error('No analyzers to use on revision')
             return
 
+        self.index(revision, state='analyzing')
         with stats.api.timer('runtime.issues'):
             # Detect initial issues
             if settings.publication == Publication.BEFORE_AFTER:
@@ -202,10 +218,14 @@ class Workflow(object):
 
         if not issues:
             logger.info('No issues, stopping there.')
+            self.index(revision, state='done', issues=0)
             return
 
         # Report issues publication stats
-        stats.api.increment('analysis.issues.publishable', len([i for i in issues if i.is_publishable()]))
+        nb_issues = len(issues)
+        nb_publishable = len([i for i in issues if i.is_publishable()])
+        self.index(revision, state='analyzed', issues=nb_issues, issues_publishable=nb_publishable)
+        stats.api.increment('analysis.issues.publishable', nb_publishable)
 
         # Build patch to help developer improve their code
         self.build_improvement_patch(revision, issues)
@@ -214,6 +234,8 @@ class Workflow(object):
         with stats.api.timer('runtime.reports'):
             for reporter in self.reporters.values():
                 reporter.publish(issues, revision)
+
+        self.index(revision, state='done', issues=nb_issues, issues_publishable=nb_publishable)
 
     def detect_issues(self, analyzers, revision):
         '''
@@ -286,3 +308,35 @@ class Workflow(object):
             diff_name=diff_name,
         )
         logger.info('Diff available online', url=revision.diff_url)
+
+    def index(self, revision, **kwargs):
+        '''
+        Index current task on Taskcluster index
+        '''
+        assert isinstance(revision, Revision)
+
+        if not self.on_taskcluster:
+            logger.info('Skipping taskcluster indexing', rev=str(revision), **kwargs)
+            return
+
+        # Build payload
+        payload = revision.as_dict()
+        payload.update(kwargs)
+
+        # Always add the indexing
+        now = datetime.utcnow()
+        date_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+        payload['indexed'] = now.strftime(date_format)
+
+        # Index for all required namespaces
+        for name in revision.namespaces:
+            namespace = TASKCLUSTER_NAMESPACE.format(channel=settings.app_channel, name=name)
+            self.index_service.insertTask(
+                namespace,
+                {
+                    'taskId': self.taskcluster_task_id,
+                    'rank': 0,
+                    'data': payload,
+                    'expires': (now + timedelta(days=TASKCLUSTER_INDEX_TTL)).strftime(date_format),
+                }
+            )

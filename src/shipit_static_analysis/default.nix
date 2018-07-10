@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkPython fromRequirementsFile filterSource ;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkTaskclusterMergeEnv mkTaskclusterMergeRoutes mkPython fromRequirementsFile filterSource ;
   inherit (releng_pkgs.pkgs) writeScript gcc cacert gcc-unwrapped glibc glibcLocales xorg patch nodejs-8_x git python27 python35 coreutils shellcheck clang_5 zlib;
   inherit (releng_pkgs.pkgs.lib) fileContents concatStringsSep ;
   inherit (releng_pkgs.tools) pypi2nix mercurial;
@@ -38,6 +38,9 @@ let
 
           # Used by cache
           ("docker-worker:cache:" + cacheKey)
+
+          # Needed to index the task in the TaskCluster index
+          ("index:insert-task:project.releng.services.project." + branch + ".shipit_static_analysis.*")
         ];
         cache = {
           "${cacheKey}" = "/cache";
@@ -49,6 +52,12 @@ let
             "MOZ_AUTOMATION" = "1";
           };
         };
+
+        taskRoutes = [
+          # Latest route
+          ("index.project.releng.services.project." + branch + ".shipit_static_analysis.latest")
+        ];
+
         taskCapabilities = {};
         taskCommand = [
           "/bin/shipit-static-analysis"

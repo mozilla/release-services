@@ -146,7 +146,7 @@ def test_success():
 
     assert hook.parse({
         'taskGroupId': 'RS0UwZahQ_qAcdZzEb_Y9g'
-    }) == {'REVISION': 'ec3dd3ee2ae4b3a63529a912816a110e925eb2d0'}
+    }) == [{'REVISION': 'ec3dd3ee2ae4b3a63529a912816a110e925eb2d0'}]
 
 
 @responses.activate
@@ -160,4 +160,4 @@ def test_success_windows():
 
     assert hook.parse({
         'taskGroupId': 'MibGDsa4Q7uFNzDf7EV6nw'
-    }) == {'REVISION': '63519bfd42ee379f597c0357af2e712ec3cd9f50'}
+    }) == [{'REVISION': '63519bfd42ee379f597c0357af2e712ec3cd9f50'}]

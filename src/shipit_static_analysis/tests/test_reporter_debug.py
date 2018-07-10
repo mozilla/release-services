@@ -18,7 +18,7 @@ def test_publication(tmpdir, mock_issues):
     assert not os.path.exists(report_path)
 
     r = DebugReporter(report_dir)
-    mrev = MozReviewRevision('abcdef:12345:1')
+    mrev = MozReviewRevision('12345', 'abcdef', '1')
     r.publish(mock_issues, mrev)
 
     assert os.path.exists(report_path)
