@@ -29,15 +29,10 @@ class ActiveDataClient():
         )
 
     async def __aenter__(self):
-        # TODO: Should we ping the server here (overkill ?)
         return self.client
 
     async def __aexit__(self, *args, **kwargs):
-
-        # TODO: Find out why this line fails on
-        # RuntimeWarning: coroutine 'ClientSession.close' was never awaited
-        # It should remove the warning about unclosed connector
-        pass
+        await self.client.transport.close()
 
 
 class ActiveDataCoverage(Coverage):
@@ -48,6 +43,8 @@ class ActiveDataCoverage(Coverage):
     FIELD_CHANGESET_DATE = 'repo.changeset.date.~n~'
     FIELD_TOTAL_PERCENT = 'source.file.percentage_covered.~n~'
     FIELD_TEST_SUITE = 'test.suite.~s~'
+    FIELD_BUILD_TYPE = 'build.type.~s~'
+    FIELD_RUN_NAME = 'run.name.~s~'
 
     @staticmethod
     def base_query(filters=[], excludes=[]):
@@ -63,6 +60,12 @@ class ActiveDataCoverage(Coverage):
             # Ignore awsy and talos suites
             {'term': {ActiveDataCoverage.FIELD_TEST_SUITE: 'awsy'}},
             {'term': {ActiveDataCoverage.FIELD_TEST_SUITE: 'talos'}},
+
+            # Ignore jsdcov builds
+            {'term': {ActiveDataCoverage.FIELD_BUILD_TYPE: 'jsdcov'}},
+
+            # Ignore per-test suites by disabling debug-test runs
+            {'wildcard': {ActiveDataCoverage.FIELD_RUN_NAME: 'test-*/debug-test-coverage-*'}},
 
             # Ignore obj-firefox/*
             {'prefix': {ActiveDataCoverage.FIELD_FILENAME: 'obj-firefox/'}},
@@ -151,6 +154,9 @@ class ActiveDataCoverage(Coverage):
             out = await es.search(
                 index=secrets.ACTIVE_DATA_INDEX,
                 body=query,
+
+                # Longer timeout, the sub aggregation is long
+                request_timeout=30,
             )
             return out['aggregations']['revisions']['buckets']
 
