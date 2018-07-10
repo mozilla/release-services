@@ -65,7 +65,7 @@ class ActiveDataCoverage(Coverage):
             {'term': {ActiveDataCoverage.FIELD_BUILD_TYPE: 'jsdcov'}},
 
             # Ignore per-test suites by disabling debug-test runs
-            {'prefix': {ActiveDataCoverage.FIELD_RUN_NAME: 'test-linux64-ccov/debug-test-coverage-'}},
+            {'wildcard': {ActiveDataCoverage.FIELD_RUN_NAME: 'test-*/debug-test-coverage-*'}},
 
             # Ignore obj-firefox/*
             {'prefix': {ActiveDataCoverage.FIELD_FILENAME: 'obj-firefox/'}},
