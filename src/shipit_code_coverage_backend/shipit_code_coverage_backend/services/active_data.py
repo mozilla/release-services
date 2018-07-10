@@ -29,15 +29,10 @@ class ActiveDataClient():
         )
 
     async def __aenter__(self):
-        # TODO: Should we ping the server here (overkill ?)
         return self.client
 
     async def __aexit__(self, *args, **kwargs):
-
-        # TODO: Find out why this line fails on
-        # RuntimeWarning: coroutine 'ClientSession.close' was never awaited
-        # It should remove the warning about unclosed connector
-        pass
+        await self.client.transport.close()
 
 
 class ActiveDataCoverage(Coverage):
