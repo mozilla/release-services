@@ -43,6 +43,7 @@ class ActiveDataCoverage(Coverage):
     FIELD_CHANGESET_DATE = 'repo.changeset.date.~n~'
     FIELD_TOTAL_PERCENT = 'source.file.percentage_covered.~n~'
     FIELD_TEST_SUITE = 'test.suite.~s~'
+    FIELD_BUILD_TYPE = 'build.type.~s~'
 
     @staticmethod
     def base_query(filters=[], excludes=[]):
@@ -58,6 +59,9 @@ class ActiveDataCoverage(Coverage):
             # Ignore awsy and talos suites
             {'term': {ActiveDataCoverage.FIELD_TEST_SUITE: 'awsy'}},
             {'term': {ActiveDataCoverage.FIELD_TEST_SUITE: 'talos'}},
+
+            # Ignore jsdcov builds
+            {'term': {ActiveDataCoverage.FIELD_BUILD_TYPE: 'jsdcov'}},
 
             # Ignore obj-firefox/*
             {'prefix': {ActiveDataCoverage.FIELD_FILENAME: 'obj-firefox/'}},
