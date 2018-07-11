@@ -265,3 +265,28 @@ class ActiveDataCoverage(Coverage):
         '''
         revisions = await ActiveDataCoverage.available_revisions(nb=2)
         return revisions[0]['key'], revisions[-1]['key']
+
+    @staticmethod
+    async def get_push(changeset, repository='mozilla-central'):
+        '''
+        Load push data for a given changeset on a repository
+        '''
+        query = {
+            '_source': ['push'],
+            'query': {
+                'bool': {
+                    'must': [
+                        {'match': {'changeset.id': changeset}},
+                        {'match': {'branch.name': repository}},
+                    ]
+                }
+            }
+        }
+        async with ActiveDataClient() as es:
+            out = await es.search(
+                index='repo',
+                body=query,
+            )
+            assert out['hits']['total'] == 1, \
+                'Push search failed'
+            return out['hits']['hits'][0]['_source']['push']

@@ -22,6 +22,8 @@ changeset_cache = LRUCache(maxsize=MAX_CHANGESETS)
 
 
 async def get_pushes(push_id):
+    assert isinstance(push_id, int), 'push_id must be an integer'
+
     async with aiohttp.request('GET', 'https://hg.mozilla.org/mozilla-central/json-pushes?version=2&full=1&startID={}&endID={}'.format(push_id - 1, push_id + 7)) as r:  # noqa
         data = await r.json()
 
@@ -45,6 +47,13 @@ async def get_pushes(push_id):
                 }
 
 
+async def get_push_id(changeset):
+    async with aiohttp.request('GET', 'https://hg.mozilla.org/mozilla-central/json-rev/{}'.format(changeset)) as r:
+        rev = await r.json()
+
+    return int(rev['pushid'])
+
+
 async def get_pushes_changesets(push_id, push_id_end):
     if push_id not in push_to_changeset_cache:
         await get_pushes(push_id)
@@ -58,12 +67,7 @@ async def get_pushes_changesets(push_id, push_id_end):
 
 async def get_changeset_data(changeset):
     if changeset[:12] not in changeset_cache:
-        async with aiohttp.request('GET', 'https://hg.mozilla.org/mozilla-central/json-rev/{}'.format(changeset)) as r:
-            rev = await r.json()
-
-        push_id = int(rev['pushid'])
-
-        await get_pushes(push_id)
+        await get_pushes(await get_push_id(changeset))
 
     return changeset_cache[changeset[:12]]
 
@@ -90,7 +94,15 @@ async def get_coverage_build(changeset):
 
 async def get_latest_build_info():
     latest_rev, previous_rev = await coverage_service.get_latest_build()
-    latest_pushid = (await get_changeset_data(latest_rev))['push']
+
+    # Load push from service when available
+    try:
+        push = await coverage_service.get_push(latest_rev)
+        latest_pushid = push['id']
+    except Exception as e:
+        logger.info('Failed to retrieve push through service: {}'.format(e))
+        latest_pushid = (await get_changeset_data(latest_rev))['push']
+
     return {
       'latest_pushid': latest_pushid,
       'latest_rev': latest_rev,
