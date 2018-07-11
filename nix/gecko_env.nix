@@ -4,8 +4,8 @@ let
   inherit (releng_pkgs.pkgs) rustChannelOf bash autoconf213 clang_4 llvm_4 llvmPackages_4 gcc-unwrapped glibc;
   inherit (releng_pkgs.pkgs.devEnv) gecko;
 
-  # Rust 1.26.2
-  rustChannel = rustChannelOf { date = "2018-06-05"; channel = "stable"; };
+  # Rust 1.28.1-beta6
+  rustChannel = rustChannelOf { date = "2018-06-30"; channel = "beta"; };
 
   # Add missing gcc libraries needed by clang (see https://github.com/mozilla-releng/services/issues/1256)
   gcc_libs = builtins.concatStringsSep ":" [
