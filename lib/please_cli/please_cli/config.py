@@ -604,47 +604,6 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-pipeline': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8012,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-testing-pipeline',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://pipeline.shipit.testing.mozilla-releng.net',
-                        'dns': 'pipeline.shipit.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-staging-pipeline',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://pipeline.shipit.staging.mozilla-releng.net',
-                        'dns': 'pipeline.shipit.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    # 'production': {
-                    #     'nix_path_attribute': 'docker',
-                    #     'heroku_app': 'shipit-production-pipeline',
-                    #     'heroku_dyno_type': 'web',
-                    #     'url': 'https://pipeline.shipit.mozilla-releng.net',
-                    #     'dns': 'pipeline.shipit.mozilla-releng.net.herokudns.com',
-                    # },
-                },
-            },
-        ],
-    },
     'shipit-pulse-listener': {
         'checks': [
             ('Checking code quality', 'flake8'),
@@ -674,51 +633,6 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-signoff': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8013,
-            'envs': {
-                'AUTH0_CLIENT_ID': 'XXX',
-                'AUTH0_CLIENT_SECRET': 'YYY',
-            }
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-testing-signoff',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://signoff.shipit.testing.mozilla-releng.net',
-                        'dns': 'signoff.shipit.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-staging-signoff',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://signoff.shipit.staging.mozilla-releng.net',
-                        'dns': 'signoff.shipit.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    # 'production': {
-                    #     'nix_path_attribute': 'docker',
-                    #     'heroku_app': 'shipit-production-signoff',
-                    #     'heroku_dyno_type': 'web',
-                    #     'url': 'https://signoff.shipit.mozilla-releng.net',
-                    #     'dns': 'signoff.shipit.mozilla-releng.net.herokudns.com',
-                    # },
-                },
-            },
-        ],
-    },
     'shipit-static-analysis': {
         'checks': [
             ('Checking code quality', 'flake8'),
@@ -740,47 +654,6 @@ PROJECTS_CONFIG = {
                 },
             },
         ]
-    },
-    'shipit-taskcluster': {
-        'checks': [
-            ('Checking code quality', 'flake8'),
-            ('Running tests', 'pytest tests/'),
-        ],
-        'run': 'FLASK',
-        'run_options': {
-            'port': 8014,
-        },
-        'requires': [
-            'postgresql',
-        ],
-        'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-testing-taskcluster',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://taskcluster.shipit.testing.mozilla-releng.net',
-                        'dns': 'taskcluster.shipit.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-staging-taskcluster',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://taskcluster.shipit.staging.mozilla-releng.net',
-                        'dns': 'taskcluster.shipit.staging.mozilla-releng.net.herokudns.com',
-                    },
-                    # 'production': {
-                    #     'nix_path_attribute': 'docker',
-                    #     'heroku_app': 'shipit-production-taskcluster',
-                    #     'heroku_dyno_type': 'web',
-                    #     'url': 'https://taskcluster.shipit.mozilla-releng.net',
-                    #     'dns': 'taskcluster.shipit.mozilla-releng.net.herokudns.com',
-                    # },
-                },
-            },
-        ],
     },
     'shipit-uplift': {
         'checks': [
