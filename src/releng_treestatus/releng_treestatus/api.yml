@@ -248,7 +248,7 @@ paths:
             properties:
               result:
                 type: array
-                additionalProperties:
+                items:
                   $ref: '#/definitions/Tree'
     delete:
       operationId: "releng_treestatus.api.kill_trees"
