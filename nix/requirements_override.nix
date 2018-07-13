@@ -154,9 +154,18 @@ in skipOverrides {
     '';
   };
 
+  "py" = self: old: {
+    patchPhase = ''
+      sed -i \
+        -e "s|setup_requires=\[\"setuptools-scm\"\],||" \
+        setup.py
+    '';
+  };
+
   "pytest" = self: old: {
     patchPhase = ''
       sed -i \
+        -e "s|py>=1.5.0|py|" \
         -e "s|setup_requires=\['setuptools-scm'\],||" \
         -e "s|setup_requires=\[\"setuptools-scm\"\],||" \
         setup.py
