@@ -192,17 +192,27 @@ class MozLint(object):
             path
         ]
         returncode, output, error = run(' '.join(command), cwd=settings.repo_dir)
+        output = output.decode('utf-8')
+
+        # Dump raw mozlint output as a Taskcluster artifact (for debugging)
+        output_path = os.path.join(
+            settings.taskcluster_results_dir,
+            '{}-mozlint.txt'.format(repr(revision)),
+        )
+        with open(output_path, 'a') as f:
+            f.write(output)
+
         if returncode == 0:
             logger.debug('No Mozlint errors', path=path)
             return
-        assert 'error: problem with lint setup' not in output.decode('utf-8'), \
+        assert 'error: problem with lint setup' not in output, \
             'Mach lint setup failed'
 
         # Load output as json
         # Only consider last line, as ./mach lint may output
         # linter setup output on stdout :/
         try:
-            lines = list(filter(None, output.decode('utf-8').split('\n')))
+            lines = list(filter(None, output.split('\n')))
             payload = json.loads(lines[-1])
         except json.decoder.JSONDecodeError:
             logger.warn('Invalid json output', path=path, lines=lines)

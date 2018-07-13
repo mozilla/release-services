@@ -8,7 +8,6 @@ from __future__ import absolute_import
 import itertools
 import os
 import subprocess
-import tempfile
 from datetime import datetime
 from datetime import timedelta
 
@@ -54,15 +53,11 @@ class Workflow(object):
         if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
             self.taskcluster_task_id = os.environ['TASK_ID']
             self.taskcluster_run_id = os.environ['RUN_ID']
-            self.taskcluster_results_dir = '/tmp/results'
             self.on_taskcluster = True
         else:
             self.taskcluster_task_id = 'local instance'
             self.taskcluster_run_id = 0
-            self.taskcluster_results_dir = tempfile.mkdtemp()
             self.on_taskcluster = False
-        if not os.path.isdir(self.taskcluster_results_dir):
-            os.makedirs(self.taskcluster_results_dir)
 
         # Load reporters to use
         self.reporters = reporters
@@ -70,7 +65,7 @@ class Workflow(object):
             logger.warn('No reporters configured, this analysis will not be published')
 
         # Always add debug reporter and Diff reporter
-        self.reporters['debug'] = DebugReporter(output_dir=self.taskcluster_results_dir)
+        self.reporters['debug'] = DebugReporter(output_dir=settings.taskcluster_results_dir)
 
         # Use TC index service client
         self.index_service = index_service
@@ -295,8 +290,8 @@ class Workflow(object):
             return
 
         # Write diff in results directory
-        diff_name = revision.build_diff_name()
-        diff_path = os.path.join(self.taskcluster_results_dir, diff_name)
+        diff_name = '{}-clang-format.diff'.format(repr(revision))
+        diff_path = os.path.join(settings.taskcluster_results_dir, diff_name)
         with open(diff_path, 'w') as f:
             length = f.write(diff.decode('utf-8'))
             logger.info('Improvement diff dumped', path=diff_path, length=length)

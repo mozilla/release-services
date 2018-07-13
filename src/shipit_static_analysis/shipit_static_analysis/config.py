@@ -7,6 +7,7 @@ from __future__ import absolute_import
 
 import enum
 import os
+import tempfile
 
 import requests
 import yaml
@@ -43,6 +44,7 @@ class Settings(object):
         self.cache_root = None
         self.repo_dir = None
         self.repo_shared_dir = None
+        self.taskcluster_results_dir = None
 
     def setup(self, app_channel, cache_root, publication):
         self.app_channel = app_channel
@@ -62,6 +64,13 @@ class Settings(object):
         self.cache_root = cache_root
         self.repo_dir = os.path.join(self.cache_root, 'sa-central')
         self.repo_shared_dir = os.path.join(self.cache_root, 'sa-central-shared')
+
+        if 'TASK_ID' in os.environ and 'RUN_ID' in os.environ:
+            self.taskcluster_results_dir = '/tmp/results'
+        else:
+            self.taskcluster_results_dir = tempfile.mkdtemp()
+        if not os.path.isdir(self.taskcluster_results_dir):
+            os.makedirs(self.taskcluster_results_dir)
 
     def __getattr__(self, key):
         if key not in self.config:

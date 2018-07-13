@@ -94,11 +94,19 @@ class ClangFormat(object):
         logger.info('Running clang-format', cmd=' '.join(cmd))
 
         # Run command
-        clang_output = subprocess.check_output(cmd, cwd=settings.repo_dir)
+        clang_output = subprocess.check_output(cmd, cwd=settings.repo_dir).decode('utf-8')
+
+        # Dump raw clang-format output as a Taskcluster artifact (for debugging)
+        clang_output_path = os.path.join(
+            settings.taskcluster_results_dir,
+            '{}-clang-format.txt'.format(repr(revision)),
+        )
+        with open(clang_output_path, 'w') as f:
+            f.write(clang_output)
 
         # Compare output with original file
         src_lines = [x.rstrip('\n') for x in open(full_path).readlines()]
-        clang_lines = clang_output.decode('utf-8').split('\n')
+        clang_lines = clang_output.split('\n')
 
         # Build issues from diff of diff !
         diff = difflib.SequenceMatcher(

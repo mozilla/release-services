@@ -116,13 +116,11 @@ class PhabricatorRevision(Revision):
             'phabricator.diffphid.{}'.format(self.diff_phid),
         ]
 
+    def __repr__(self):
+        return self.diff_phid
+
     def __str__(self):
         return 'Phabricator #{} - {}'.format(self.diff_id, self.diff_phid)
-
-    def build_diff_name(self):
-        return '{}-clang-format.diff'.format(
-            self.diff_phid,
-        )
 
     @property
     def url(self):
@@ -172,6 +170,13 @@ class MozReviewRevision(Revision):
         self.review_request_id = int(review_request_id)
         self.diffset_revision = int(diffset_revision)
 
+    def __repr__(self):
+        return '{}-{}-{}'.format(
+            self.mercurial[:8],
+            self.review_request_id,
+            self.diffset_revision,
+        )
+
     def __str__(self):
         return 'MozReview #{} - {}'.format(self.review_request_id, self.diffset_revision)
 
@@ -186,13 +191,6 @@ class MozReviewRevision(Revision):
             'mozreview.{}.{}'.format(self.review_request_id, self.diffset_revision),
             'mozreview.rev.{}'.format(self.mercurial),
         ]
-
-    def build_diff_name(self):
-        return '{}-{}-{}-clang-format.diff'.format(
-            self.mercurial[:8],
-            self.review_request_id,
-            self.diffset_revision,
-        )
 
     def load(self, repo):
         '''
