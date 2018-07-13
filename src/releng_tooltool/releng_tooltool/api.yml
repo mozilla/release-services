@@ -109,7 +109,6 @@ paths:
             preference for URLs in that region, although if the region is not
             available then URLs in other regions may be returned.
           required: false
-          default: null
           type: string
       responses:
         200:
