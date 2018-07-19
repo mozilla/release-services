@@ -465,8 +465,8 @@ let
     };
 
     "boto" = python.mkDerivation {
-      name = "boto-2.48.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/66/e7/fe1db6a5ed53831b53b8a6695a8f134a58833cadb5f2740802bc3730ac15/boto-2.48.0.tar.gz"; sha256 = "deb8925b734b109679e3de65856018996338758f4b916ff4fe7bb62b6d7000d1"; };
+      name = "boto-2.49.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/c8/af/54a920ff4255664f5d238b5aebd8eedf7a07c7a5e71e27afcfe840b82f51/boto-2.49.0.tar.gz"; sha256 = "ea0d3b40a2d852767be77ca343b58a9e3a4b00d9db440efb8da74b4e58025e5a"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -478,8 +478,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.7.54";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/9c/63/522dcda9be96d8edfb8b5788aa09604a589b0662e1074257430cb752848f/boto3-1.7.54.tar.gz"; sha256 = "d42a5340e80bb3150521507aac0b50da6b6e7cc5f673a37c7e6878dda5b56516"; };
+      name = "boto3-1.7.57";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/f0/f5/55d4e19021cf4b6ee716861c1eb2d7a58c964b0518d77af732acde42b27f/boto3-1.7.57.tar.gz"; sha256 = "e98692ba74c85ed45b7cf4cfbafd8676ca85a9313f2433d4c3275f7dd9e80263"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -495,8 +495,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.10.54";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/8e/1d/0bfa51951b5f950f4290794c5f888fc9b641029df1dff09db3d97deb8f59/botocore-1.10.54.tar.gz"; sha256 = "b417131456f779bc6174ce790988e39a564d90df0d12fd52626d01b82e2aa38f"; };
+      name = "botocore-1.10.57";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/bf/d5/bf00026563a628a96b3f32ab7831dfa06360ba0712df436276a936baa5dd/botocore-1.10.57.tar.gz"; sha256 = "f15a09885492ea8b4c5d01d44af11e9938c9c17e09e1fe0d53701023023b2e56"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
@@ -1347,8 +1347,8 @@ let
     };
 
     "parso" = python.mkDerivation {
-      name = "parso-0.3.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/29/c1/fd8a3e5eec85bf160c2b1ea369fdfa585620cf753db021d5db895801e701/parso-0.3.0.tar.gz"; sha256 = "d250235e52e8f9fc5a80cc2a5f804c9fefd886b2e67a2b1099cf085f403f8e33"; };
+      name = "parso-0.3.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/46/31/60de7c9cbb97cac56b193a5b61a1fd4d21df84843a570b370ec34781316b/parso-0.3.1.tar.gz"; sha256 = "35704a43a3c113cce4de228ddb39aab374b8004f4f2407d070b6a2ca784ce8a2"; };
       doCheck = commonDoCheck;
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
@@ -1450,7 +1450,7 @@ let
       name = "py-1.5.4";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/35/77/a0a2a4126cf454e6ac772942898379e2fe78f2b7885df0461a5b8f8a8040/py-1.5.4.tar.gz"; sha256 = "3fd59af7435864e1a243790d322d763925431213b6b8529c6ca71081ace3bbf7"; };
       doCheck = commonDoCheck;
-      buildInputs = commonBuildInputs ++ [self."setuptools-scm"];
+      buildInputs = commonBuildInputs;
       propagatedBuildInputs = [ ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://py.readthedocs.io/";

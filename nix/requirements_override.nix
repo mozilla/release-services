@@ -154,9 +154,18 @@ in skipOverrides {
     '';
   };
 
+  "py" = self: old: {
+    patchPhase = ''
+      sed -i \
+        -e "s|setup_requires=\[\"setuptools-scm\"\],||" \
+        setup.py
+    '';
+  };
+
   "pytest" = self: old: {
     patchPhase = ''
       sed -i \
+        -e "s|py>=1.5.0|py|" \
         -e "s|setup_requires=\['setuptools-scm'\],||" \
         -e "s|setup_requires=\[\"setuptools-scm\"\],||" \
         setup.py
@@ -197,8 +206,8 @@ in skipOverrides {
   "RBTools" = self: old: {
     patches = [
          (pkgs.fetchurl {
-           url = "https://github.com/La0/rbtools/commit/190b4adb768897f65cf7ec57806649bc14c8e45d.diff";
-           sha256 = "1hh6i3cffsc4fxr4jqlxralnf78529i0pspm7jn686a2s6bh26mw";
+           url = "https://github.com/La0/rbtools/commit/60a96a29c26fd1a546bb66a5860e2b6b36649d58.diff";
+           sha256 = "1q0gpknxymm3qg4mb1459ka4ralqa1bndyfv3g3pn4sj7rixv05f";
          })
       ];
   };
