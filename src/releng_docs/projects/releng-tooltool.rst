@@ -112,6 +112,7 @@ follow the following steps:
 
 #. Known private sha512 should stay protected (return code: 403)
 
+   TODO: should be under error
    .. code-block:: console
 
       $ curl $URL/sha512/06a1cf7b1918ffd94210e8089cf48985fbf9af95f15cd9dd5007df76b934c2b825147334ba176c3f19a9f7d86585c58e017bc23a606e8831872c8b40560be874
@@ -125,6 +126,7 @@ follow the following steps:
 
 #. Unknown sha512 should return invalid error (return code: 400)
 
+   TODO: should be under error
    .. code-block:: console
 
        $ curl $URL/sha512/invalid

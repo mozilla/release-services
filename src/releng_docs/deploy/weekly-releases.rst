@@ -1,21 +1,25 @@
 .. _deploy-weekly-releases:
 
-Regular weekly releases
-=======================
+Regular releases
+================
 
 Push to production happen in weekly batches. Once a week (usually on Thursday)
 a release happens.
 
 .. _deploy-release-managers:
 
-Current administrators that perform this weekly release are:
+Current administrators that perform this regular release are:
 
 - `Rok Garbas`_
 - `Bastien Abadie`_
 - `Rail Aliiev`_
+- `Jan Keromnes`_
+
 
 Protocal that we follow is:
 
+
+TODO: this should happen on Wed morning, point to the calendar
 
 #. Prior to release a push to ``staging`` branch must happen. This will
    trigger a deploy of all projects to staging environments.
@@ -25,6 +29,10 @@ Protocal that we follow is:
         $ git clone git@github.com:mozilla/release-services.git
         $ cd release-services
         $ git push -f origin origin/master:staging
+
+TODO: locked staging branch
+
+TODO: verification happens over wed and we get green light at the wed meeting
 
 #. Verify that all the production projects in staging that they are functioning
    properly. Each project should have a list of steps that you can easily
@@ -43,6 +51,8 @@ Protocal that we follow is:
 
    - announce in ``#ci`` channel that a push to production is about to
      happen.
+
+     TODO: direct this to the person on duty
 
      Example message::
 
@@ -65,15 +75,19 @@ Protocal that we follow is:
 #. Push to ``production``. Create a merge commit of master branch and tag it.
    Don't forget to push just created tag.
 
+  TODO: is this the correct branching model
+
    .. code-block:: console
 
        $ git clone git@github.com/mozilla/release-services.git
        $ cd release-services
        $ git checkout -b production origin/production
-       $ git merge master -m "Release: v$(git show master:VERSION)"
+       $ git merge origin/master -m "Release: v$(git show origin/master:VERSION)"
        $ git push origin production
        $ git tag v$(cat ./VERSION)
        $ git push origin v$(cat ./VERSION)
+
+TODO: release is in flight + link to taskcluster
 
 #. Verify that all production projects are now deployed and working properly in
    production environment. Use the same checks as we did before when we were
@@ -83,6 +97,7 @@ Protocal that we follow is:
 
    .. todo:: need to explain how to revert when a deployment goes bad.
 
+TODO: we can already do this while waiting for the release to happen
 #. Fill in the release notes on GitHub
 
    `New GitHub Release`_
