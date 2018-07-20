@@ -15,6 +15,7 @@ else
     overlays = [
       (import "${src-nixpkgs-mozilla}/rust-overlay.nix")
       (import "${src-nixpkgs-mozilla}/firefox-overlay.nix")
+      (import ./overlay/default.nix)
     ];
   }
 }:
