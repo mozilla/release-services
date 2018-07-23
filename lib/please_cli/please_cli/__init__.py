@@ -28,7 +28,7 @@ import please_cli.utils
 CMD_HELP = '''
 
 Welcome to `please` command line utility which should help you develop
-`mozilla-releng/services` projects.
+`mozilla/release-services` projects.
 
 To create a new projects run:
 

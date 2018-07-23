@@ -7,7 +7,7 @@ Project: releng-docs
 :staging: https://docs.staging.mozilla-releng.net
 :contact: `Rok Garbas`_, (backup `Release Engineering`_)
 
-A documentation for ``mozilla-releng/services`` and projects within. You are
+A documentation for ``mozilla/release-services`` and projects within. You are
 currently reading it.
 
 ``releng-docs`` (which is a static html page) is deployed :ref:`using

@@ -31,7 +31,7 @@ def read_requirements(file_):
 setup(
     name='please-cli',
     version=version,
-    description='Helper utilities for mozilla-releng/services',
+    description='Helper utilities for mozilla/release-services',
     author='Mozilla Release Management',
     author_email='release-mgmt@mozilla.com',
     url='https://docs.mozilla-releng.net',

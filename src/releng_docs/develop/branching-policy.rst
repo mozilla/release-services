@@ -2,7 +2,7 @@ Branching policy
 ================
 
 This document will describe the branching policy and the git workflow we follow
-at ``mozilla-releng/services``
+at ``mozilla/release-services``
 
 
 `master` branch
@@ -25,7 +25,7 @@ All of squashing and and merging can be done via GitHub UI.
 This is where testing happens. Sometimes it is needed to test multiple services
 in *almost* like production environment and see how they interact.
 
-Every developer of ``mozilla-releng/services`` can force push their code to
+Every developer of ``mozilla/release-services`` can force push their code to
 this branch and projects will get deployed to testing environment.
 
 To avoid pushing over each others code we require to announce the usage of

@@ -347,7 +347,7 @@ viewFooter : Html msg
 viewFooter =
     footer []
         [ ul []
-            [ li [] [ a [ href "https://github.com/mozilla-releng/services" ] [ text "Github" ] ]
+            [ li [] [ a [ href "https://github.com/mozilla/release-services" ] [ text "Github" ] ]
             , li [] [ a [ href "#" ] [ text "Contribute" ] ]
             , li [] [ a [ href "#" ] [ text "Contact" ] ]
 

@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
     "summary": "Mozilla ShipIt Frontend",
-    "repository": "https://github.com/mozilla-releng/services.git",
+    "repository": "https://github.com/mozilla/release-services.git",
     "license": "MPL2",
     "source-directories": [
         "src"

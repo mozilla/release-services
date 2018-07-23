@@ -72,7 +72,7 @@ class MozLintIssue(Issue):
         * Python "bad" quotes
         '''
 
-        # See https://github.com/mozilla-releng/services/issues/777
+        # See https://github.com/mozilla/release-services/issues/777
         if self.linter == 'flake8' and self.rule == 'Q000':
             return True
 

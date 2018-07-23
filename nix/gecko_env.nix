@@ -7,7 +7,7 @@ let
   # Rust 1.28.1-beta6
   rustChannel = rustChannelOf { date = "2018-06-30"; channel = "beta"; };
 
-  # Add missing gcc libraries needed by clang (see https://github.com/mozilla-releng/services/issues/1256)
+  # Add missing gcc libraries needed by clang (see https://github.com/mozilla/release-services/issues/1256)
   gcc_libs = builtins.concatStringsSep ":" [
     "${gcc-unwrapped}/include/c++/${gcc-unwrapped.version}"
     "${gcc-unwrapped}/include/c++/${gcc-unwrapped.version}/backward"

@@ -8,7 +8,7 @@ in
 
 # ensure we are using correct version of Nix
 if ! builtins ? nixVersion || builtins.compareVersions requiredNixVersion builtins.nixVersion >= 0
-then abort "mozilla-releng/services requires Nix >= ${requiredNixVersion}, please upgrade."
+then abort "mozilla/release-services requires Nix >= ${requiredNixVersion}, please upgrade."
 else
 
 { pkgs ? import src-nixpkgs {

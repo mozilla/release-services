@@ -6,8 +6,8 @@ A goal of *Release Engineering Services* is to *converge efforts* to
 **document** all projects that *Release Engineering Team* is providing or
 supporting.
 
-:Code: https://github.com/mozilla-releng/services
-:Issues: https://github.com/mozilla-releng/services/issues
+:Code: https://github.com/mozilla/release-services
+:Issues: https://github.com/mozilla/release-services/issues
 :Documentation: https://docs.mozilla-releng.net
 
 

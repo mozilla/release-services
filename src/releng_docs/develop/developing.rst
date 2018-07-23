@@ -20,8 +20,8 @@ To install ``shipit_taskcluster`` using **virtualenv + pip** do:
 
 .. code-block:: console
 
-    $ git clone git@github.com:mozilla-releng/services.git
-    $ cd services/src/shipit_taskcluster
+    $ git clone git@github.com:mozilla/release-services.git
+    $ cd release-services/src/shipit_taskcluster
     $ virtualenv env
     $ ./env/bin/pip install -r requirements.txt -r requirements-dev.txt
     $ ./env/bin/pip install -e .
