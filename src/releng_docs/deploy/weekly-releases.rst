@@ -23,7 +23,7 @@ Protocal that we follow is:
    .. code-block:: console
 
         $ git clone git@github.com:mozilla/release-services.git
-        $ cd services
+        $ cd release-services
         $ git push -f origin origin/master:staging
 
 #. Verify that all the production projects in staging that they are functioning
@@ -68,7 +68,7 @@ Protocal that we follow is:
    .. code-block:: console
 
        $ git clone git@github.com/mozilla/release-services.git
-       $ cd services
+       $ cd release-services
        $ git checkout -b production origin/production
        $ git merge master -m "Release: v$(git show master:VERSION)"
        $ git push origin production
@@ -101,7 +101,7 @@ Protocal that we follow is:
    .. code-block:: console
 
        $ git clone git@github.com/mozilla/release-services.git
-       $ cd services
+       $ cd release-services
        $ echo "$((($(cat VERSION)) + 1))" | tee VERSION2
        $ sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
        $ mv VERSION2 VERSION

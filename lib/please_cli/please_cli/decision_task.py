@@ -267,7 +267,7 @@ def get_task(task_group_id,
       'cd /tmp/app',
       'wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/mozilla/release-services/archive/{github_commit}.tar.gz',
       'tar zxf {github_commit}.tar.gz',
-      'cd services-{github_commit}',
+      'cd release-services-{github_commit}',
       'env',
       'rm -rf /home/app/.cache/nix',
       command
