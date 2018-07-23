@@ -54,7 +54,6 @@ def heartbeat_response():
         if extension_name not in backend_common.EXTENSIONS:
             continue
 
-
         extension_heartbeat = None
         try:
             extension_heartbeat = getattr(importlib.import_module('backend_common.' + extension_name), 'app_heartbeat')
