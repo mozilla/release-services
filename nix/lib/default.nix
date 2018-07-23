@@ -96,12 +96,13 @@ in rec {
     , version
     , config ? {}
     , contents ? []
+    , runAsRoot
     }:
     dockerTools.buildImage {
       name = name;
       tag = version;
       fromImage = null;
-      inherit contents config;
+      inherit contents config runAsRoot;
     };
 
     mkTaskclusterMergeEnv =
@@ -583,6 +584,10 @@ in rec {
       ]
     , dockerEnv ? []
     , dockerContents ? []
+    , dockerUser ? "app"
+    , dockerUserId ? 10001
+    , dockerGroup ? "app"
+    , dockerGroupId ? 10001
     , passthru ? {}
     , inTesting ? true
     , inStaging ? true
@@ -705,6 +710,10 @@ in rec {
     , dockerCmd ? []
     , dockerEnv ? []
     , dockerContents ? []
+    , dockerUser ? "app"
+    , dockerUserId ? 10001
+    , dockerGroup ? "app"
+    , dockerGroupId ? 10001
     , passthru ? {}
     , inTesting ? true
     , inStaging ? true
@@ -724,8 +733,47 @@ in rec {
               "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
             ] ++ dockerEnv;
             Cmd = dockerCmd;
+            User = dockerUser;
             WorkingDir = "/";
           };
+        runAsRoot = if dockerUser == null then null else ''
+          #!${stdenv.shell}
+          ${dockerTools.shadowSetup}
+          groupadd --gid ${toString dockerGroupId} ${dockerGroup}
+          useradd --gid ${dockerGroup} --uid ${toString dockerUserId} --home-dir /app ${dockerUser}
+          # gunicorn requires /tmp, /var/tmp, or /usr/tmp
+          mkdir -p --mode=1777 /tmp
+          mkdir -p /app
+          cp -a ${self.src}/. /app/
+        '';
+      };
+
+      githubCommit = builtins.getEnv "GITHUB_COMMIT";
+      taskGroupId = builtins.getEnv "TASK_GROUP_ID";
+
+      version_json = {
+        inherit version;
+        source = "https://github.com/mozilla/release-services";
+        commit = githubCommit;
+        build =
+          if taskGroupId != ""
+            then "https://tools.taskcluster.net/groups/${taskGroupId}"
+            else "unknown";
+      };
+
+      self_dockerflow = dockerTools.buildImage {
+        inherit name;
+        tag = version;
+        fromImage = self_docker;
+        runAsRoot = ''
+          cp -a ${self.src}/* /app
+          cat > /app/version.json  <<EOF
+          ${builtins.toJSON version_json}
+          EOF
+          echo "/app/version.json content:"
+          cat /app/version.json
+
+        '';
       };
 
       self = python.mkDerivation {
@@ -840,6 +888,7 @@ in rec {
                 );
 
           docker = self_docker;
+          dockerflow = self_dockerflow;
 
         } // passthru;
       };

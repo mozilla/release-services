@@ -16,6 +16,7 @@ import taskcluster
 import taskcluster.utils
 
 import backend_common.db
+import backend_common.dockerflow
 import cli_common.log
 
 logger = cli_common.log.get_logger(__name__)
@@ -476,3 +477,11 @@ def init_app(app):
 
     auth.init_app(app)
     return auth
+
+
+def app_heartbeat():
+    try:
+        ping = taskcluster.Auth().ping()
+        assert ping['alive'] is True
+    except Exception as e:
+        raise backend_common.dockerflow.HeartbeatException('Cannot connect to the taskcluster auth service.')
