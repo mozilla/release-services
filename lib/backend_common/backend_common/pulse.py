@@ -5,6 +5,7 @@
 
 import datetime
 
+import flask
 import kombu
 
 
@@ -26,6 +27,15 @@ class Pulse(object):
             ssl=ssl,
             connect_timeout=connect_timeout,
         )
+
+    def ping(self):
+        with self.connection as connection:
+            if connection.connected:
+                connection.close()
+                connection.connect()
+            else:
+                connection.connect()
+                connection.close()
 
     def publish(self, exchange_name, routing_key, payload):
         with self.connection as connection:
@@ -61,3 +71,12 @@ def init_app(app):
         app.config.get('PULSE_USE_SSL'),
         app.config.get('PULSE_CONNECTION_TIMEOUT'),
     )
+
+
+def app_heartbeat():
+    response = None
+    try:
+        flask.current_app.pulse.ping()
+    except Exception as e:
+        response = 'Cannot connect to pulse the service.'
+    return response

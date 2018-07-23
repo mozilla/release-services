@@ -122,3 +122,13 @@ def init_app(app):
         flask.g.db = app.db
 
     return db
+
+
+def app_heartbeat():
+    response = None
+    try:
+        db = flask.current_app.db
+        db.session.execute('SELECT 1').fetchall()
+    except Exception as e:
+        response = 'Cannot connect to the database.'
+    return response

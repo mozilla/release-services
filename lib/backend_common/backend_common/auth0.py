@@ -331,3 +331,13 @@ def create_auth0_secrets_file(AUTH_CLIENT_ID, AUTH_CLIENT_SECRET, APP_URL,
             }
         }))
     return secrets_file
+
+
+def app_heartbeat():
+    response = None
+    try:
+        r = requests.get('https://auth.mozilla.auth0.com/test')
+        assert 'clock' in r.json()
+    except Exception as e:
+        response = 'Cannot connect to the mozilla auth0 service.'
+    return response

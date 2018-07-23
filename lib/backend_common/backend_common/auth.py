@@ -476,3 +476,13 @@ def init_app(app):
 
     auth.init_app(app)
     return auth
+
+
+def app_heartbeat():
+    response = None
+    try:
+        ping = taskcluster.Auth().ping()
+        assert ping['alive'] is True
+    except Exception as e:
+        response = 'Cannot connect to the taskcluster auth service.'
+    return response
