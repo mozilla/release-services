@@ -213,7 +213,7 @@ in rec {
     { name
     , branch
     , src_path
-    , secrets ? "repo:github.com/mozilla/release-services:branch:${branch}"
+    , secrets ? "repo:github.com/mozilla-releng/services:branch:${branch}"
     }:
     let
       name' = builtins.substring 8 (builtins.stringLength name) name;

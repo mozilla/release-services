@@ -376,9 +376,9 @@ def cmd(ctx,
     """A tool to be ran on each commit.
     """
 
-    taskcluster_secret = 'repo:github.com/mozilla/release-services:branch:' + channel
+    taskcluster_secret = 'repo:github.com/mozilla-releng/services:branch:' + channel
     if pull_request is not None:
-        taskcluster_secret = 'repo:github.com/mozilla/release-services:pull-request'
+        taskcluster_secret = 'repo:github.com/mozilla-releng/services:pull-request'
 
     taskcluster_queue = cli_common.taskcluster.get_service('queue')
 
