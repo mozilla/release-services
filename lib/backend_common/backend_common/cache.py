@@ -8,6 +8,8 @@ import uuid
 import flask
 import flask_cache
 
+import backend_common.dockerflow
+
 cache = flask_cache.Cache()
 
 
@@ -18,7 +20,6 @@ def init_app(app):
 
 
 def app_heartbeat():
-    response = None
     cache_key = str(uuid.uuid4().get_hex().upper()[0:6])
     cache_value = str(uuid.uuid4().get_hex().upper()[0:6])
     try:
@@ -29,5 +30,4 @@ def app_heartbeat():
         assert cache.cache.delete(cache_key) is True
         assert cache.cache.get(cache_key)
     except Exception as e:
-        response = 'Cannot get/set/delete items to the cache.'
-    return response
+        raise backend_common.dockerflow.HeartbeatException('Cannot get/set/delete items to the cache.')

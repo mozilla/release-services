@@ -14,9 +14,20 @@ import json
 import flask
 
 import backend_common
+import backend_common.dockerflow
 import cli_common.log
 
 logger = cli_common.log.get_logger(__name__)
+
+
+class HeartbeatException(Exception):
+    '''Error messages that are being collected from each extension which
+       implements app_heartbeat.
+    '''
+
+    def __init__(self, message, *arg, **kw)
+        super().__init__(*arg, **kw)
+        self.message = message
 
 
 def get_version():
@@ -56,11 +67,11 @@ def heartbeat_response():
 
         extension_heartbeat = None
         try:
-            extension_heartbeat = getattr(importlib.import_module('backend_common.' + extension_name), 'app_heartbeat')
+            app_heartbeat = getattr(importlib.import_module('backend_common.' + extension_name), 'app_heartbeat')
             logger.info('Testing heartbeat of {} extension'.format(extension_name))
-            extension_heartbeat = extension_heartbeat()
-        except Exception as e:
-            pass
+            app_heartbeat()
+        except HeartbeatException as e:
+            extension_heartbeat = e.message
 
         if extension_heartbeat is None:
             continue

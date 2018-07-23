@@ -8,6 +8,8 @@ import datetime
 import flask
 import kombu
 
+import backend_common.dockerflow
+
 
 class Pulse(object):
     ''' Documentation about Pulse
@@ -74,9 +76,7 @@ def init_app(app):
 
 
 def app_heartbeat():
-    response = None
     try:
         flask.current_app.pulse.ping()
     except Exception as e:
-        response = 'Cannot connect to pulse the service.'
-    return response
+        raise backend_common.dockerflow.HeartbeatException('Cannot connect to pulse the service.')

@@ -9,6 +9,7 @@ import flask
 import flask_migrate
 import flask_sqlalchemy
 
+import backend_common.dockerflow
 import cli_common.log
 
 logger = cli_common.log.get_logger(__name__)
@@ -125,10 +126,8 @@ def init_app(app):
 
 
 def app_heartbeat():
-    response = None
     try:
         db = flask.current_app.db
         db.session.execute('SELECT 1').fetchall()
     except Exception as e:
-        response = 'Cannot connect to the database.'
-    return response
+        raise backend_common.dockerflow.HeartbeatException('Cannot connect to the database.')
