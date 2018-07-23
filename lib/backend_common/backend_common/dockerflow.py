@@ -25,7 +25,7 @@ class HeartbeatException(Exception):
        implements app_heartbeat.
     '''
 
-    def __init__(self, message, *arg, **kw)
+    def __init__(self, message, *arg, **kw):
         super().__init__(*arg, **kw)
         self.message = message
 
