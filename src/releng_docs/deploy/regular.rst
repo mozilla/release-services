@@ -1,28 +1,30 @@
-.. _deploy-weekly-releases:
+.. _deploy-regular:
 
-Regular releases
-================
+Regular deployment
+==================
 
-Push to production happen in weekly batches. Once a week (usually on Thursday)
-a release happens.
+Regular production deployment of all projects happens once every two weeks.
 
-.. _deploy-release-managers:
+.. _deploy-managers:
 
-Current administrators that perform this regular release are:
+Administrators that perform this regular release are:
 
 - `Rok Garbas`_
 - `Bastien Abadie`_
 - `Rail Aliiev`_
 - `Jan Keromnes`_
 
-
-Protocal that we follow is:
-
+Release schedule is published in `Release Services calendar`_. Protocol we follow is:
 
 TODO: this should happen on Wed morning, point to the calendar
 
-#. Prior to release a push to ``staging`` branch must happen. This will
-   trigger a deploy of all projects to staging environments.
+#. Push to staging channel.
+
+   A day before pushing to production, on Wednesday morning, we push to
+   projects to **staging channel**.
+
+   To trigger automatic deployment to staging channel you need to force push
+   from ``master`` to ``staging`` branch.
 
    .. code-block:: console
 
@@ -30,9 +32,41 @@ TODO: this should happen on Wed morning, point to the calendar
         $ cd release-services
         $ git push -f origin origin/master:staging
 
-TODO: locked staging branch
+   Once pushed to staging branch a deployment will start via taskcluster github
+   integration. You can find a link to taskcluster deployment group at the
+   `page listing commits of staging branch`_.
 
-TODO: verification happens over wed and we get green light at the wed meeting
+   .. image:: page_listing_commits_of_staging_branch.png
+
+   To make everybody aware that this is happening announce staging deployment on
+   `#release-services` IRC channel.::
+
+      I'm pushed commit `<SHORT_SHA_OF_COMMIT>' to staging branch. Until
+      tomorrow, when we deploy to production, staging branch is closed.
+      Deployment to staging is happening here: `<LINK_TO_TASKCLUSTER>'.
+
+   Now you need to close staging branch by checking **Protect this branch** via
+   `staging settings page`_.
+
+   .. image:: staging_settings_page.png
+
+#. Testing projects on staging channel
+
+   When deployment succeeds send email to ``release-services@mozilla.com``
+   announcing that staging channel was successful and that maintainers need to
+   test their projects.
+
+   .. todo:: email template,  QA feedback need to be collected via email.
+   .. todo:: how to list maintainers of projects?
+
+
+#. Wednesday meeting
+
+   .. todo:: go or no go decision
+
+      are there any manual things we need to do
+      when do we do a release? since maintainers need to be able to verify
+    
 
 #. Verify that all the production projects in staging that they are functioning
    properly. Each project should have a list of steps that you can easily
@@ -175,6 +209,10 @@ TODO: we can already do this while waiting for the release to happen
 .. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
 .. _`Bastien Abadie`: https://phonebook.mozilla.org/?search/Bastien%20Abadie
 .. _`Rail Aliiev`: https://phonebook.mozilla.org/?search/Rail%20Aliiev
+.. _`Jan Keromnes`: https://phonebook.mozilla.org/?search/Jan%20Keromnes
 .. _`New GitHub Release`: https://github.com/mozilla/release-services/releases/new
 .. _`staging secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Astaging
 .. _`production secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Aproduction
+.. _`Release Services calendar`: https://calendar.google.com/calendar/embed?src=mozilla.com_sq62ki4vs3cgpclvkdbhe3rgic%40group.calendar.google.com
+.. _`page listing commits of staging branch`: https://github.com/mozilla/release-services/commits/staging
+.. _`staging settings page`: https://github.com/mozilla/release-services/settings/branches/staging
