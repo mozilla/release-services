@@ -69,7 +69,7 @@ def get_build_task(index,
             ),
             'description': '',
             'owner': owner,
-            'source': 'https://github.com/mozilla-releng/services/tree/' + channel,
+            'source': 'https://github.com/mozilla/release-services/tree/' + channel,
 
         },
         max_run_time_in_hours=5,
@@ -143,7 +143,7 @@ def get_deploy_task(index,
             'tools', 'deploy:S3',
             project,
             '--s3-bucket=' + deploy_options['s3_bucket'],
-            '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
+            '--taskcluster-secret=repo:github.com/mozilla/release-services:branch:' + channel,
             '--nix-path-attribute=' + nix_path_attribute,
             '--no-interactive',
         ] + project_csp + project_envs
@@ -168,7 +168,7 @@ def get_deploy_task(index,
             command.append('--heroku-command="{}"'.format(heroku_command))
 
         command += [
-            '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
+            '--taskcluster-secret=repo:github.com/mozilla/release-services:branch:' + channel,
             '--nix-path-attribute=' + nix_path_attribute,
             '--no-interactive',
         ]
@@ -186,7 +186,7 @@ def get_deploy_task(index,
         )
         command = [
             './please', '-vv', 'tools', 'deploy:DOCKERHUB', project,
-            '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:{}'.format(channel),
+            '--taskcluster-secret=repo:github.com/mozilla/release-services:branch:{}'.format(channel),
             '--nix-path-attribute={}'.format(nix_path_attribute),
             '--docker-repo={}'.format(docker_repo),
             '--channel={}'.format(channel),
@@ -212,7 +212,7 @@ def get_deploy_task(index,
             project,
             '--hook-group-id={}'.format(hook_group_id),
             '--hook-id={}'.format(hook_id),
-            '--taskcluster-secret=repo:github.com/mozilla-releng/services:branch:' + channel,
+            '--taskcluster-secret=repo:github.com/mozilla/release-services:branch:' + channel,
             '--nix-path-attribute=' + nix_path_attribute,
             '--no-interactive',
         ]
@@ -238,7 +238,7 @@ def get_deploy_task(index,
             ),
             'description': '',
             'owner': owner,
-            'source': 'https://github.com/mozilla-releng/services/tree/' + channel,
+            'source': 'https://github.com/mozilla/release-services/tree/' + channel,
 
         },
         scopes,
@@ -265,7 +265,7 @@ def get_task(task_group_id,
       'source /etc/nix/profile.sh',
       'mkdir -p /tmp/app',
       'cd /tmp/app',
-      'wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/mozilla-releng/services/archive/{github_commit}.tar.gz',
+      'wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/mozilla/release-services/archive/{github_commit}.tar.gz',
       'tar zxf {github_commit}.tar.gz',
       'cd services-{github_commit}',
       'env',
@@ -376,9 +376,9 @@ def cmd(ctx,
     """A tool to be ran on each commit.
     """
 
-    taskcluster_secret = 'repo:github.com/mozilla-releng/services:branch:' + channel
+    taskcluster_secret = 'repo:github.com/mozilla/release-services:branch:' + channel
     if pull_request is not None:
-        taskcluster_secret = 'repo:github.com/mozilla-releng/services:pull-request'
+        taskcluster_secret = 'repo:github.com/mozilla/release-services:pull-request'
 
     taskcluster_queue = cli_common.taskcluster.get_service('queue')
 
@@ -490,7 +490,7 @@ def cmd(ctx,
                 'name': '2. Maintanance ON',
                 'description': '',
                 'owner': owner,
-                'source': 'https://github.com/mozilla-releng/services/tree/' + channel,
+                'source': 'https://github.com/mozilla/release-services/tree/' + channel,
 
             },
         )
@@ -531,7 +531,7 @@ def cmd(ctx,
                 'name': '4. Maintanance OFF',
                 'description': '',
                 'owner': owner,
-                'source': 'https://github.com/mozilla-releng/services/tree/' + channel,
+                'source': 'https://github.com/mozilla/release-services/tree/' + channel,
 
             },
         )

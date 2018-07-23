@@ -61,7 +61,7 @@ setuptools.setup(
     description='Services behind https://mozilla-releng.net',
     author='Mozilla Release Engineering',
     author_email='release@mozilla.com',
-    url='https://github.com/mozilla-releng/services',
+    url='https://github.com/mozilla/release-services',
     tests_require=join_requirements(
         functools.reduce(lambda x, y: x + y, EXTRAS.values()),
         read_requirements('requirements-dev.txt'),

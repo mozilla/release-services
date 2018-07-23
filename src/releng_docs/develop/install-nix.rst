@@ -23,13 +23,13 @@ A fully automated script is available on the `Github Repository`_. It has been
 succesfully tested on a fresh install of Ubuntu 16.04, and simply does the
 following steps.
 
-.. _`Github Repository`: https://raw.githubusercontent.com/mozilla-releng/services/master/nix/setup.sh
+.. _`Github Repository`: https://raw.githubusercontent.com/mozilla/release-services/master/nix/setup.sh
 
 To quickly install Nix please run the following command:
 
 .. code-block:: bash
 
-    % curl https://raw.githubusercontent.com/mozilla-releng/services/master/nix/setup.sh | bash
+    % curl https://raw.githubusercontent.com/mozilla/release-services/master/nix/setup.sh | bash
 
 For those more advance you can execute command manually:
 

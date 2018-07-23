@@ -4,7 +4,7 @@ Contribute
 ==========
 
 If you like to get involved in the development of project mentioned in
-``mozilla-releng/services``, there’re lots of areas where we could use some
+``mozilla/release-services``, there’re lots of areas where we could use some
 help.
 
 .. _develop-requirements:
@@ -22,8 +22,8 @@ follow the links for installation instructions).
 Cloning the Repository
 ----------------------
 
-- Fork the `mozilla-releng/services
-  <https://github.com/mozilla-releng/services>`_ repository on GitHub.
+- Fork the `mozilla/release-services
+  <https://github.com/mozilla/release-services>`_ repository on GitHub.
 - Clone the fork using
 
   .. code-block:: console

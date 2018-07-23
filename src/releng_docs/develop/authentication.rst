@@ -157,7 +157,7 @@ Security wise, this is not an issue: the api token is then stored in :code:`loca
 .. _`Mozilla Taskcluster`: https://docs.taskcluster.net
 .. _`HAWK`: https://github.com/hueniverse/hawk
 .. _`login provider`: https://login.taskcluster.net/
-.. _`backend_common`: https://github.com/mozilla-releng/services/blob/master/lib/backend_common/backend_common/auth.py
+.. _`backend_common`: https://github.com/mozilla/release-services/blob/master/lib/backend_common/backend_common/auth.py
 .. _`authenticateHawk`: https://docs.taskcluster.net/reference/platform/auth/api-docs#authenticateHawk
 .. _`Flask Login`: https://flask-login.readthedocs.io/en/latest/
 .. _`Taskcluster tools`: https://tools.taskcluster.net/credentials/

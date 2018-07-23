@@ -57,7 +57,7 @@ if (sentry_dsn != null) {
                 release: release_version,
                 environment: release_channel,
                 tags: {
-                    server_name: 'mozilla-releng/services',
+                    server_name: 'mozilla/release-services',
                     site: 'releng-frontend'
                 }
             })

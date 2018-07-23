@@ -56,7 +56,7 @@ def setup_mozdef(project_name, channel, MOZDEF):
 
             msg.summary = event_dict.get('event', '')
             msg.tags = [
-                'mozilla-releng/services/' + channel,
+                'mozilla/release-services/' + channel,
                 project_name,
             ]
 
@@ -85,7 +85,7 @@ def setup_papertrail(project_name, channel, PAPERTRAIL_HOST, PAPERTRAIL_PORT):
 
     # Setup papertrail
     papertrail = logbook.SyslogHandler(
-        application_name='mozilla-releng/services/{}/{}'.format(channel, project_name),
+        application_name='mozilla/release-services/{}/{}'.format(channel, project_name),
         address=(PAPERTRAIL_HOST, int(PAPERTRAIL_PORT)),
         format_string='{record.time} {record.channel}: {record.message}',
         bubble=True,
@@ -104,7 +104,7 @@ def setup_sentry(project_name, channel, SENTRY_DSN, flask_app=None):
     sentry_client = raven.Client(
         dsn=SENTRY_DSN,
         site=project_name,
-        name='mozilla-releng/services',
+        name='mozilla/release-services',
         environment=channel,
         # TODO:
         # release=read(VERSION) we need to promote that as well via secrets

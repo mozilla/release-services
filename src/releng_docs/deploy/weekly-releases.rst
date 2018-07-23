@@ -22,7 +22,7 @@ Protocal that we follow is:
 
    .. code-block:: console
 
-        $ git clone git@github.com:mozilla-releng/services.git
+        $ git clone git@github.com:mozilla/release-services.git
         $ cd services
         $ git push -f origin origin/master:staging
 
@@ -46,19 +46,19 @@ Protocal that we follow is:
 
      Example message::
 
-         I am about to release a new version of mozilla-releng/services
+         I am about to release a new version of mozilla/release-services
          (*.mozilla-releng.net, *.moz.tools). Any alerts coming up soon will be
          best directed to me. I'll let you know when it's all done. Thank you!
 
    - inform MOC person on duty (in ``#moc`` channel) that new deployment of
-     ``mozilla-releng/services`` is going to be happen. The channel subject
+     ``mozilla/release-services`` is going to be happen. The channel subject
      should contain ``on duty sysadmin:`` followed by the IRC nickname you need
      to contact.
 
      Example message::
 
          nickname: I am about to release a new version of
-         mozilla-releng/services (*.mozilla-releng.net, *.moz.tools). Any
+         mozilla/release-services (*.mozilla-releng.net, *.moz.tools). Any
          alerts coming up soon will be best directed to me. I'll let you know
          when it's all done. Thank you!
 
@@ -67,7 +67,7 @@ Protocal that we follow is:
 
    .. code-block:: console
 
-       $ git clone git@github.com/mozilla-releng/services.git
+       $ git clone git@github.com/mozilla/release-services.git
        $ cd services
        $ git checkout -b production origin/production
        $ git merge master -m "Release: v$(git show master:VERSION)"
@@ -100,7 +100,7 @@ Protocal that we follow is:
 
    .. code-block:: console
 
-       $ git clone git@github.com/mozilla-releng/services.git
+       $ git clone git@github.com/mozilla/release-services.git
        $ cd services
        $ echo "$((($(cat VERSION)) + 1))" | tee VERSION2
        $ sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
@@ -142,17 +142,17 @@ Protocal that we follow is:
 
      Example message::
 
-         Previously annonced release of mozilla-releng/services
+         Previously annonced release of mozilla/release-services
          (*.mozilla-releng.net, *.moz.tools) to productions is now complete. If
          you see anything behaving weird please let me know. Changes ->
          <link-to-release-notes>.
 
    - inform MOC person on duty (in ``#moc`` channel) that deployment of
-     ``mozilla-releng/services`` is complete.
+     ``mozilla/release-services`` is complete.
 
      Example message::
 
-         nickname: Previously annonced release of mozilla-releng/services
+         nickname: Previously annonced release of mozilla/release-services
          (*.mozilla-releng.net, *.moz.tools) to productions is now complete.
          Changes -> <link-to-release-notes>.
 
@@ -160,6 +160,6 @@ Protocal that we follow is:
 .. _`Rok Garbas`: https://phonebook.mozilla.org/?search/Rok%20Garbas
 .. _`Bastien Abadie`: https://phonebook.mozilla.org/?search/Bastien%20Abadie
 .. _`Rail Aliiev`: https://phonebook.mozilla.org/?search/Rail%20Aliiev
-.. _`New GitHub Release`: https://github.com/mozilla-releng/services/releases/new
+.. _`New GitHub Release`: https://github.com/mozilla/release-services/releases/new
 .. _`staging secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Astaging
 .. _`production secrets`: https://tools.taskcluster.net/secrets/repo%3Agithub.com%2Fmozilla-releng%2Fservices%3Abranch%3Aproduction

@@ -122,7 +122,7 @@ in rec {
       { name
       , description ? ""
       , owner
-      , source ? "https://github.com/mozilla-releng/services"
+      , source ? "https://github.com/mozilla/release-services"
       }:
       { inherit name description owner source; };
 
@@ -213,7 +213,7 @@ in rec {
     { name
     , branch
     , src_path
-    , secrets ? "repo:github.com/mozilla-releng/services:branch:${branch}"
+    , secrets ? "repo:github.com/mozilla/release-services:branch:${branch}"
     }:
     let
       name' = builtins.substring 8 (builtins.stringLength name) name;
@@ -224,7 +224,7 @@ in rec {
           name: "${name'}"
           description: "Test, build and deploy ${name'}"
           owner: "{{ event.head.user.email }}"
-          source: "https://github.com/mozilla-releng/services/tree/${branch}/${src_path}"
+          source: "https://github.com/mozilla/release-services/tree/${branch}/${src_path}"
         scopes:
           - secrets:get:${secrets}
           - hooks:modify-hook:project-releng/services-${branch}-${name'}-*
@@ -255,7 +255,7 @@ in rec {
             - "/bin/bash"
             - "-l"
             - "-c"
-            - "source /etc/nix/profile.sh && nix-env -iA nixpkgs.gnumake nixpkgs.curl nixpkgs.cacert && export SSL_CERT_FILE=$HOME/.nix-profile/etc/ssl/certs/ca-bundle.crt && mkdir /src && cd /src && curl -L https://github.com/mozilla-releng/services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
+            - "source /etc/nix/profile.sh && nix-env -iA nixpkgs.gnumake nixpkgs.curl nixpkgs.cacert && export SSL_CERT_FILE=$HOME/.nix-profile/etc/ssl/certs/ca-bundle.crt && mkdir /src && cd /src && curl -L https://github.com/mozilla/release-services/archive/$GITHUB_HEAD_SHA.tar.gz -o $GITHUB_HEAD_SHA.tar.gz && tar zxf $GITHUB_HEAD_SHA.tar.gz && cd services-$GITHUB_HEAD_SHA && ./.taskcluster.sh"
     '';
 
   fromRequirementsFile = file: custom_pkgs:

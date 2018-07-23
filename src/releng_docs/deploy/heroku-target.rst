@@ -46,7 +46,7 @@ production environment would be:
 You will need to have a Taskcluster client with the following scopes:
 
 - ``assume:hook-id:project-releng/services-production-*``
-- ``assume:repo:github.com/mozilla-releng/services:branch:production``
+- ``assume:repo:github.com/mozilla/release-services:branch:production``
 - ``hooks:modify-hook:project-releng/services-production-*``
 - ``queue:create-task:aws-provisioner-v1/releng-svc*``
 - ``secrets:get:repo:github.com/mozilla-releng/services:branch:production``
