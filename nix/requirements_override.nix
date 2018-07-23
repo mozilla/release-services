@@ -56,7 +56,10 @@ in skipOverrides {
 
   "chardet" = self: old: {
     patchPhase = ''
-      sed -i -e "s|setup_requires=\['pytest-runner'\],||" setup.py
+      sed -i \
+          -e "s|setup_requires=\['pytest-runner'\],||" \
+          -e "s|setup_requires=pytest_runner,||" \
+          setup.py
     '';
   };
 

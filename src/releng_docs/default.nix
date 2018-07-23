@@ -54,7 +54,7 @@ let
       update  = writeScript "update-${name}" ''
         pushd ${src_path}
         ${pypi2nix}/bin/pypi2nix -v \
-          -V 3.5 \
+          -V 3.6 \
           -E "pkgconfig zlib libjpeg openjpeg libtiff freetype lcms2 libwebp tcl" \
           -r requirements.txt
         popd
