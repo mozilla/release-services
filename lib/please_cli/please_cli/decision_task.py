@@ -297,6 +297,10 @@ def get_task(task_group_id,
             'capabilities': {
                 'privileged': True,
             },
+            'env': {
+                'GITHUB_COMMIT': github_commit,
+                'TASK_GROUP_ID': task_group_id,
+            },
             'command': [
                 '/bin/bash',
                 '-c',

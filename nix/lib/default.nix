@@ -588,8 +588,6 @@ in rec {
     , dockerUserId ? 10001
     , dockerGroup ? "app"
     , dockerGroupId ? 10001
-    , githubCommit ? "unknown"
-    , taskGroupId  ? null
     , passthru ? {}
     , inTesting ? true
     , inStaging ? true
@@ -716,8 +714,6 @@ in rec {
     , dockerUserId ? 10001
     , dockerGroup ? "app"
     , dockerGroupId ? 10001
-    , githubCommit ? "unknown"
-    , taskGroupId  ? null
     , passthru ? {}
     , inTesting ? true
     , inStaging ? true
@@ -752,12 +748,15 @@ in rec {
         '';
       };
 
+      githubCommit = builtins.getEnv "GITHUB_COMMIT";
+      taskGroupId = builtins.getEnv "TASK_GROUP_ID";
+
       version_json = {
         inherit version;
         source = "https://github.com/mozilla/release-services";
         commit = githubCommit;
         build =
-          if taskGroupId != null
+          if taskGroupId != ""
             then "https://tools.taskcluster.net/groups/${taskGroupId}"
             else "unknown";
       };
