@@ -21,12 +21,22 @@ let
           )
         );
 
+  cli_common_path =
+    if builtins.pathExists ./../lib/cli_common
+    then ./../lib/cli_common/default.nix
+    else ./../../lib/cli_common/default.nix;
+
+  backend_common_path =
+    if builtins.pathExists ./../lib/backend_common
+    then ./../lib/backend_common/default.nix
+    else ./../../lib/backend_common/default.nix;
+
 in skipOverrides {
 
   # enable test for common packages
 
-  "mozilla-cli-common" = import ./../lib/cli_common/default.nix { inherit pkgs; };
-  "mozilla-backend-common" = import ./../lib/backend_common/default.nix { inherit pkgs; };
+  "mozilla-cli-common" = import cli_common_path { inherit pkgs; };
+  "mozilla-backend-common" = import backend_common_path { inherit pkgs; };
 
   # -- in alphabetic order --
 

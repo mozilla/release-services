@@ -188,7 +188,7 @@ def cmd(ctx, project, quiet, nix_shell,
 
         command = [
             'gunicorn',
-            project_name + '.flask:app',
+            project_name.replace('/', '_') + '.flask:app',
             '--bind', '{}:{}'.format(host, port),
             '--ca-certs={}'.format(ca_cert_file),
             '--certfile={}'.format(server_cert_file),
