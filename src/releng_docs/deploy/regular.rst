@@ -14,111 +14,111 @@ Administrators that perform this regular release are:
 - `Rail Aliiev`_
 - `Jan Keromnes`_
 
-Release schedule is published in `Release Services calendar`_. Protocol we follow is:
-
-TODO: this should happen on Wed morning, point to the calendar
-
-#. Push to staging channel.
-
-   A day before pushing to production, on Wednesday morning, we push to
-   projects to **staging channel**.
-
-   To trigger automatic deployment to staging channel you need to force push
-   from ``master`` to ``staging`` branch.
-
-   .. code-block:: console
-
-        $ git clone git@github.com:mozilla/release-services.git
-        $ cd release-services
-        $ git push -f origin origin/master:staging
-
-   Once pushed to staging branch a deployment will start via taskcluster github
-   integration. You can find a link to taskcluster deployment group at the
-   `page listing commits of staging branch`_.
-
-   .. image:: page_listing_commits_of_staging_branch.png
-
-   To make everybody aware that this is happening announce staging deployment on
-   `#release-services` IRC channel.::
-
-      I'm pushed commit `<SHORT_SHA_OF_COMMIT>' to staging branch. Until
-      tomorrow, when we deploy to production, staging branch is closed.
-      Deployment to staging is happening here: `<LINK_TO_TASKCLUSTER>'.
-
-   Now you need to close staging branch by checking **Protect this branch** via
-   `staging settings page`_.
-
-   .. image:: staging_settings_page.png
-
-#. Testing projects on staging channel
-
-   When deployment succeeds send email to ``release-services@mozilla.com``
-   announcing that staging channel was successful and that maintainers need to
-   test their projects.
-
-   .. todo:: email template,  QA feedback need to be collected via email.
-   .. todo:: how to list maintainers of projects?
+Release schedule is published in `Release Services calendar`_.
+Protocol we follow is:
 
 
-#. Wednesday meeting
+1. Push to staging channel
+--------------------------
 
-   .. todo:: go or no go decision
+A day before pushing to production, on Wednesday morning, we push to projects
+to **staging channel**.
 
-      are there any manual things we need to do
-      when do we do a release? since maintainers need to be able to verify
-    
+To trigger automatic deployment to staging channel you need to **force push** from
+``master`` to ``staging`` branch.
 
-#. Verify that all the production projects in staging that they are functioning
-   properly. Each project should have a list of steps that you can easily
-   verify that a deployment was sucessful.
+.. code-block:: console
 
-    .. todo:: ref to list of production projects.
-    .
-   Example: :ref:`verify releng-tooltool project <verify-releng-tooltool>`
+    $ git clone git@github.com:mozilla/release-services.git
+    $ cd release-services
+    $ git push -f origin origin/master:staging
 
-   Only proceed further once production projects work in staging environment.
 
-   .. todo:: explain that some projects are only enabled on staging, but you
-             only need to check projects which are enabled on production.
+2. Notify about running staging deployment
+------------------------------------------
 
-#. Announce that new deployment to production is going to happen
+Once pushed to staging branch a deployment will start via taskcluster github
+integration. You can find a link to taskcluster deployment group at the
+`page listing commits of staging branch`_.
 
-   - announce in ``#ci`` channel that a push to production is about to
-     happen.
+.. image:: page_listing_commits_of_staging_branch.png
 
-     TODO: direct this to the person on duty
+To make everybody aware that this is happening announce staging deployment on
+`#release-services` IRC channel.::
 
-     Example message::
+    I'm pushed commit `<SHORT_SHA_OF_COMMIT>' to staging branch. Until
+    tomorrow, when we deploy to production, staging branch is closed.
+    Deployment to staging is happening here: `<LINK_TO_TASKCLUSTER>'.
 
-         I am about to release a new version of mozilla/release-services
-         (*.mozilla-releng.net, *.moz.tools). Any alerts coming up soon will be
-         best directed to me. I'll let you know when it's all done. Thank you!
 
-   - inform MOC person on duty (in ``#moc`` channel) that new deployment of
-     ``mozilla/release-services`` is going to be happen. The channel subject
-     should contain ``on duty sysadmin:`` followed by the IRC nickname you need
-     to contact.
+3. Close staging branch
+-----------------------
 
-     Example message::
+Now you need to close staging branch by checking **Protect this branch** via
+`staging settings page`_.
 
-         nickname: I am about to release a new version of
-         mozilla/release-services (*.mozilla-releng.net, *.moz.tools). Any
-         alerts coming up soon will be best directed to me. I'll let you know
-         when it's all done. Thank you!
+.. image:: staging_settings_page.png
 
-#. Push to ``production``. Create a merge commit of master branch and tag it.
-   Don't forget to push just created tag.
 
-  TODO: is this the correct branching model
+4. Testing projects on staging channel
+--------------------------------------
+
+When deployment succeeds send email to ``release-services@mozilla.com``
+announcing that staging channel was successful deployed and that maintainers
+need to test their projects.
+
+Email subject: ``Deployment to staging was successful, please start QA.``
+Email body:::
+
+    Hi,
+
+    `<SHORT_SHA_OF_COMMIT>' was just deployed to staging[1].
+
+    Please QA your projects and reply to this email which project you tested and
+    if everything still works. If something is not working, please contact me.
+
+    Please also let me know, if any manual steps are needed when pushing to
+    production.
+
+    See you later today at Wednesday release-services meeting.
+
+    [1] <LINK_TO_TASKCLUSTER>
+
+
+Make sure QA was performed on all projects in production.
+
+.. todo:: how to list maintainers of projects? should we write some command to do this.
+
+
+5. Announce deployment to production
+------------------------------------
+
+.. todo:: why are we announcing to #ci and #moc
+
+On the following channels announce that new deployment is about to happen:
+
+- ``#ci`` irc channel and direct message to the ci person on duty
+- ``#moc`` irc channel and direct message to the sysadmin on duty
+
+Example message::
+
+    nickname: I am about to release a new version of
+    mozilla/release-services (*.mozilla-releng.net, *.moz.tools). Any
+    alerts coming up soon will be best directed to me. I'll let you know
+    when it's all done. Thank you!
+
+
+6. Deploy to production
+-----------------------
+
+On Thursday morning (or when you agree at Wednesday meeting) a deployment to production starts by pushing from ``staging`` to ``production`` branch.
 
    .. code-block:: console
 
        $ git clone git@github.com/mozilla/release-services.git
        $ cd release-services
-       $ git checkout -b production origin/production
-       $ git merge origin/master -m "Release: v$(git show origin/master:VERSION)"
-       $ git push origin production
-       $ git tag v$(cat ./VERSION)
+       $ git tag v$(cat ./VERSION) origin/production
+       $ git push origin origin/staging:origin/production
        $ git push origin v$(cat ./VERSION)
 
 TODO: release is in flight + link to taskcluster
