@@ -8,8 +8,8 @@ attrs==18.1.0
 backcall==0.1.0
 blinker==1.4
 boto==2.49.0
-boto3==1.7.61
-botocore==1.10.61
+boto3==1.7.62
+botocore==1.10.62
 certifi==2018.4.16
 chardet==3.0.4
 click==6.7
@@ -108,7 +108,6 @@ taskcluster==3.0.2
 testfixtures==6.2.0
 traitlets==4.3.2
 typed-ast==1.1.0
-typing==3.6.4
 urllib3==1.23
 vine==1.1.4
 wcwidth==0.1.7
