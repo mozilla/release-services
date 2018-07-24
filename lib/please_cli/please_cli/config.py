@@ -731,20 +731,21 @@ PROJECTS_CONFIG = {
                     },
                 },
             },
-            {
-                'target': 'DOCKERHUB',
-                'options': {
-                    'testing': {
-                        'nix_path_attribute': 'dockerflow',
-                    },
-                    'staging': {
-                        'nix_path_attribute': 'dockerflow',
-                    },
-                    'production': {
-                        'nix_path_attribute': 'dockerflow',
-                    },
-                },
-            },
+            # XXX: commenting out dockerhub deployment (for now)
+            # {
+            #     'target': 'DOCKERHUB',
+            #     'options': {
+            #         'testing': {
+            #             'nix_path_attribute': 'dockerflow',
+            #         },
+            #         'staging': {
+            #             'nix_path_attribute': 'dockerflow',
+            #         },
+            #         'production': {
+            #             'nix_path_attribute': 'dockerflow',
+            #         },
+            #     },
+            # },
         ],
     },
 }
