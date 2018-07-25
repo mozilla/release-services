@@ -66,34 +66,7 @@ async def test_monitoring(QueueMock, NotifyMock):
     await monitoring.check_task()
     assert monitoring.tasks.qsize() == 1
 
-    content = '''# Hook2 tasks for the last period
-
-
-## exception
-
-100.00% of all tasks (1/1)
-
-* [Task-exception](https://tools.taskcluster.net/task-inspector/#Task-exception)
-
-## completed
-
-0.00% of all tasks (0/1)
-
-
-
-## failed
-
-0.00% of all tasks (0/1)
-
-
-
-# Hook1 tasks for the last period
-
-
-## exception
-
-0.00% of all tasks (0/3)
-
+    content = '''# Hook1 tasks for the last period
 
 
 ## completed
@@ -103,11 +76,38 @@ async def test_monitoring(QueueMock, NotifyMock):
 * [Task1-completed](https://tools.taskcluster.net/task-inspector/#Task1-completed)
 * [Task2-completed](https://tools.taskcluster.net/task-inspector/#Task2-completed)
 
+## exception
+
+0.00% of all tasks (0/3)
+
+
+
 ## failed
 
 33.33% of all tasks (1/3)
 
-* [Task-failed](https://tools.taskcluster.net/task-inspector/#Task-failed)'''
+* [Task-failed](https://tools.taskcluster.net/task-inspector/#Task-failed)
+
+# Hook2 tasks for the last period
+
+
+## completed
+
+0.00% of all tasks (0/1)
+
+
+
+## exception
+
+100.00% of all tasks (1/1)
+
+* [Task-exception](https://tools.taskcluster.net/task-inspector/#Task-exception)
+
+## failed
+
+0.00% of all tasks (0/1)
+
+'''
 
     monitoring.send_report()
     assert NotifyMock.email_obj['address'] == 'pinco@pallino'
@@ -158,16 +158,16 @@ async def test_monitoring_whiteline_between_failed_and_hook(QueueMock, NotifyMoc
     assert monitoring.stats['Hook2']['failed'] == ['Task-failed']
     assert monitoring.tasks.qsize() == 0
 
-    content = '''# Hook2 tasks for the last period
+    content = '''# Hook1 tasks for the last period
 
 
-## exception
+## completed
 
 0.00% of all tasks (0/1)
 
 
 
-## completed
+## exception
 
 0.00% of all tasks (0/1)
 
@@ -179,16 +179,16 @@ async def test_monitoring_whiteline_between_failed_and_hook(QueueMock, NotifyMoc
 
 * [Task-failed](https://tools.taskcluster.net/task-inspector/#Task-failed)
 
-# Hook1 tasks for the last period
+# Hook2 tasks for the last period
 
 
-## exception
+## completed
 
 0.00% of all tasks (0/1)
 
 
 
-## completed
+## exception
 
 0.00% of all tasks (0/1)
 
