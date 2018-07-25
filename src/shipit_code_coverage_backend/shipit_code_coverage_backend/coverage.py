@@ -48,10 +48,20 @@ async def get_pushes(push_id):
 
 
 async def get_push_id(changeset):
-    async with aiohttp.request('GET', 'https://hg.mozilla.org/mozilla-central/json-rev/{}'.format(changeset)) as r:
-        rev = await r.json()
+    '''
+    Get push ID for a given changetet, using ActiveData when available
+    '''
+    try:
+        push = await coverage_service.get_push(changeset)
+        push_id = push['id']
+    except Exception as e:
+        # Fallback to hgweb query
+        url = 'https://hg.mozilla.org/mozilla-central/json-rev/{}'.format(changeset)
+        async with aiohttp.request('GET', url) as r:
+            rev = await r.json()
+        push_id = int(rev['pushid'])
 
-    return int(rev['pushid'])
+    return push_id
 
 
 async def get_pushes_changesets(push_id, push_id_end):
@@ -94,14 +104,7 @@ async def get_coverage_build(changeset):
 
 async def get_latest_build_info():
     latest_rev, previous_rev = await coverage_service.get_latest_build()
-
-    # Load push from service when available
-    try:
-        push = await coverage_service.get_push(latest_rev)
-        latest_pushid = push['id']
-    except Exception as e:
-        logger.info('Failed to retrieve push through service: {}'.format(e))
-        latest_pushid = (await get_changeset_data(latest_rev))['push']
+    latest_pushid = await get_push_id(latest_rev)
 
     return {
       'latest_pushid': latest_pushid,
