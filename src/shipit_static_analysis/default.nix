@@ -120,10 +120,11 @@ let
       ] ++
       (fromRequirementsFile ./requirements.txt python.packages);
     postInstall = ''
-      mkdir -p $out/tmp
+      mkdir -p $out/tmp/results
       mkdir -p $out/bin
       mkdir -p $out/usr/bin
       mkdir -p $out/lib64
+      chown app:app $out/tmp/results
       ln -s ${mercurial}/bin/hg $out/bin
       ln -s ${patch}/bin/patch $out/bin
 
