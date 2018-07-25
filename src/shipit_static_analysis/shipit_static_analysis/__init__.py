@@ -61,7 +61,7 @@ class Issue(abc.ABC):
 
         # Only read necessary lines
         with open(full_path) as source:
-            start = self.line - 1
+            start = max(self.line - 1, 0)
             end = start + self.nb_lines
             lines = itertools.islice(source, start, end)
             content = ''.join(l.lstrip() for l in lines)
