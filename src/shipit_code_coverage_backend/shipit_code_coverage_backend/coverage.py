@@ -51,10 +51,10 @@ async def get_push_id(changeset):
     '''
     Get push ID for a given changetet, using ActiveData when available
     '''
-    try:
+    if hasattr(coverage_service, 'get_push'):
         push = await coverage_service.get_push(changeset)
         push_id = push['id']
-    except Exception as e:
+    else:
         # Fallback to hgweb query
         url = 'https://hg.mozilla.org/mozilla-central/json-rev/{}'.format(changeset)
         async with aiohttp.request('GET', url) as r:
