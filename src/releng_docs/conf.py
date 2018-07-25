@@ -54,9 +54,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Release Services'
-copyright = u'2016, Mozilla Release Team'
-author = u'Mozilla Release Team'
+project = u'Release Engineering Services'
+copyright = u'2016, Mozilla Release Engineering'
+author = u'Mozilla Release Engineering Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -237,8 +237,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'releng_services.tex', u'Release Services',
-     u'Release Team', 'manual'),
+    (master_doc, 'releng_services.tex', u'Release Engineering Services',
+     u'Release Engineering Team', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -267,7 +267,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'releng-services', u'Release Services',
+    (master_doc, 'releng-services', u'Release Engineering Services',
      [author], 1)
 ]
 
@@ -281,8 +281,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'releng-services', u'Release Services',
-     author, 'RelEng', 'Services ran by Mozilla\'s Release Team.',
+    (master_doc, 'releng-services', u'Release Engineering Services',
+     author, 'RelEng', 'Services ran by Mozilla\'s Release Engineering Team.',
      'Miscellaneous'),
 ]
 

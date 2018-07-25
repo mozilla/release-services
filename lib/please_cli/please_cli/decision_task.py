@@ -34,8 +34,6 @@ def get_build_task(index,
         './please', '-vv', 'tools', 'build', project,
         '--taskcluster-secret=' + taskcluster_secret,
         '--no-interactive',
-        '--task-group-id', task_group_id,
-        '--github-commit', github_commit,
     ]
 
     nix_path_attributes = [project]
@@ -296,10 +294,6 @@ def get_task(task_group_id,
             },
             'capabilities': {
                 'privileged': True,
-            },
-            'env': {
-                'GITHUB_COMMIT': github_commit,
-                'TASK_GROUP_ID': task_group_id,
             },
             'command': [
                 '/bin/bash',
