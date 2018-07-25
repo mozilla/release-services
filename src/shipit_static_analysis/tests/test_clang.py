@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os.path
+from collections import Counter
 
 import pytest
 
@@ -273,3 +274,27 @@ Dummy body
 
 
 '''
+
+
+def test_repeats(mock_clang_repeats, mock_revision, mock_config):
+    '''
+    Test repeated issues are removed through set usage
+    '''
+
+    from shipit_static_analysis.clang.tidy import ClangTidy
+    clang_tidy = ClangTidy()
+
+    issues = clang_tidy.parse_issues(mock_clang_repeats, mock_revision)
+    assert isinstance(issues, list)
+
+    # We have 2 issues for modernize-loop-convert
+    # on the same file/line/char
+    assert len(issues) == 4
+    count = Counter(i.check for i in issues)
+    assert count['modernize-loop-convert'] == 2
+
+    # A set should remove repeats
+    issues = set(issues)
+    assert len(issues) == 3
+    count = Counter(i.check for i in issues)
+    assert count['modernize-loop-convert'] == 1

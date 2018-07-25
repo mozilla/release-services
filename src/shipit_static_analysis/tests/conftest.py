@@ -438,3 +438,20 @@ def mock_clang_issues():
     path = os.path.join(MOCK_DIR, 'clang-issues.txt')
     with open(path) as f:
         return f.read()
+
+
+@pytest.fixture
+def mock_clang_repeats(mock_config):
+    '''
+    Load parsed issues with repeated issues
+    '''
+    # Write dummy test_repeat.cpp file in repo
+    # Needed to build line hash
+    test_cpp = os.path.join(mock_config.repo_dir, 'test_repeats.cpp')
+    with open(test_cpp, 'w') as f:
+        for i in range(5):
+            f.write('line {}\n'.format(i))
+
+    path = os.path.join(MOCK_DIR, 'clang-repeats.txt')
+    with open(path) as f:
+        return f.read().replace('{REPO}', mock_config.repo_dir)
