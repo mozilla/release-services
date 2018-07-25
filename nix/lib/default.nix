@@ -96,7 +96,7 @@ in rec {
     , version
     , config ? {}
     , contents ? []
-    , runAsRoot
+    , runAsRoot ? null
     }:
     dockerTools.buildImage {
       name = name;
