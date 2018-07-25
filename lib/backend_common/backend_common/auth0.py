@@ -26,7 +26,6 @@ import flask_oidc
 import jose.jwt
 import requests
 
-import backend_common.dockerflow
 import cli_common.log
 
 logger = cli_common.log.get_logger(__name__)
@@ -332,11 +331,3 @@ def create_auth0_secrets_file(AUTH_CLIENT_ID, AUTH_CLIENT_SECRET, APP_URL,
             }
         }))
     return secrets_file
-
-
-def app_heartbeat():
-    try:
-        r = requests.get('https://auth.mozilla.auth0.com/test')
-        assert 'clock' in r.json()
-    except Exception as e:
-        raise backend_common.dockerflow.HeartbeatException('Cannot connect to the mozilla auth0 service.')

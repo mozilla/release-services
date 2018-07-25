@@ -34,16 +34,6 @@ import please_cli.utils
     required=True,
     )
 @click.option(
-    '--github-commit',
-    required=False,
-    default=None,
-    )
-@click.option(
-    '--task-group-id',
-    required=False,
-    default=None,
-    )
-@click.option(
     '--nix-build',
     required=True,
     default=please_cli.config.NIX_BIN_DIR + 'nix-build',
@@ -80,8 +70,6 @@ import please_cli.utils
     default=True,
     )
 def cmd(project,
-        github_commit,
-        task_group_id,
         nix_path_attributes,
         nix_build,
         nix,
@@ -128,12 +116,6 @@ def cmd(project,
     for nix_path_attribute in nix_path_attributes:
         click.echo(' => Building {} ... '.format(nix_path_attribute), nl=False)
 
-        argstrs = []
-        if github_commit:
-            argstrs.extend(['--argstr', 'githubCommit', github_commit])
-        if task_group_id:
-            argstrs.extend(['--argstr', 'taskGroupId', task_group_id])
-
         output = os.path.join(
             please_cli.config.TMP_DIR,
             'result-build-{}'.format(nix_path_attribute.replace('.', '-').replace('_', '-')),
@@ -147,7 +129,7 @@ def cmd(project,
                     please_cli.config.ROOT_DIR + '/nix/default.nix',
                     '-A', nix_path_attribute,
                     '-o', output,
-                ] + nix_cache_secret_keys + argstrs,
+                ] + nix_cache_secret_keys,
                 stream=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -256,19 +238,9 @@ def cmd_docker(project,
     )
 
     if not load_image:
-        real_image_path = os.path.realpath(image_path)
-        click.echo(' => Copying docker image {} to {}'.format(real_image_path, please_cli.config.TMP_DIR))
-        with click_spinner.spinner():
-            command = ['cp', real_image_path, please_cli.config.TMP_DIR]
-            result, output, error = cli_common.command.run(
-                command,
-                stream=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-            )
-        click.echo('You can load the image with this command: \n$ {docker} load -i {real_image_path}'.format(
+        click.echo('You can load the image with this command: \n$ {docker} load -i {image_path}'.format(
             docker=docker,
-            real_image_path=real_image_path,
+            image_path=image_path,
         ))
         return
 

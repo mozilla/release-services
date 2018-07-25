@@ -8,8 +8,6 @@ import flask
 import importlib
 import os
 
-import backend_common.dockerflow
-
 
 EXTENSIONS = [
     'log',
@@ -28,13 +26,13 @@ logger = cli_common.log.get_logger(__name__)
 
 
 def create_app(
-        project_name,
-        app_name,
-        extensions=[],
-        config=None,
-        redirect_root_to_api=True,
-        enable_dockerflow=True,
-        **kw):
+            project_name,
+            app_name,
+            extensions=[],
+            config=None,
+            redirect_root_to_api=True,
+            **kw
+        ):
     '''
     Create a new Flask backend application
     app_name is the Python application name, used as Flask import_name
@@ -81,14 +79,6 @@ def create_app(
 
     if redirect_root_to_api:
         app.add_url_rule('/', 'root', lambda: flask.redirect(app.api.swagger_url))
-
-    if enable_dockerflow:
-        app.add_url_rule('/__heartbeat__',
-                         view_func=backend_common.dockerflow.heartbeat_response)
-        app.add_url_rule('/__lbheartbeat__',
-                         view_func=backend_common.dockerflow.lbheartbeat_response)
-        app.add_url_rule('/__version__',
-                         view_func=backend_common.dockerflow.get_version)
 
     logger.debug('Initialized', app=app.name)
     return app
