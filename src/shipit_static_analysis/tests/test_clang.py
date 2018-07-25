@@ -98,7 +98,7 @@ def test_clang_format(mock_config, mock_repository, mock_stats, mock_clang, mock
     assert issue.as_diff() == BAD_CPP_DIFF
 
     # At the end of the process, original file is patched
-    mock_workflow.build_improvement_patch(mock_revision, issues)
+    mock_workflow.build_improvement_patch(mock_revision, set(issues))
     assert open(bad_file).read() == BAD_CPP_VALID
 
     # Ensure the raw output dump exists
