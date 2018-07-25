@@ -721,10 +721,7 @@ in rec {
     }:
     let
 
-      self_docker = mkDocker {
-        inherit name version;
-        contents = [ busybox self ] ++ dockerContents;
-        config =
+      self_docker_config =
           { Env = [
               "APP_NAME=${name}-${version}"
               "PATH=/bin"
@@ -733,19 +730,12 @@ in rec {
               "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
             ] ++ dockerEnv;
             Cmd = dockerCmd;
-            User = dockerUser;
             WorkingDir = "/";
           };
-        runAsRoot = if dockerUser == null then null else ''
-          #!${stdenv.shell}
-          ${dockerTools.shadowSetup}
-          groupadd --gid ${toString dockerGroupId} ${dockerGroup}
-          useradd --gid ${dockerGroup} --uid ${toString dockerUserId} --home-dir /app ${dockerUser}
-          # gunicorn requires /tmp, /var/tmp, or /usr/tmp
-          mkdir -p --mode=1777 /tmp
-          mkdir -p /app
-          cp -a ${self.src}/. /app/
-        '';
+      self_docker = mkDocker {
+        inherit name version;
+        contents = [ busybox self ] ++ dockerContents;
+        config = self_docker_config;
       };
 
       githubCommit = builtins.getEnv "GITHUB_COMMIT";
@@ -765,7 +755,19 @@ in rec {
         inherit name;
         tag = version;
         fromImage = self_docker;
-        runAsRoot = ''
+        config = self_docker_config // {
+            User = dockerUser;
+        };
+        runAsRoot = (if dockerUser == null then "" else ''
+          #!${stdenv.shell}
+          ${dockerTools.shadowSetup}
+          groupadd --gid ${toString dockerGroupId} ${dockerGroup}
+          useradd --gid ${dockerGroup} --uid ${toString dockerUserId} --home-dir /app ${dockerUser}
+          # gunicorn requires /tmp, /var/tmp, or /usr/tmp
+          mkdir -p --mode=1777 /tmp
+          mkdir -p /app
+          cp -a ${self.src}/. /app/
+        '') + ''
           cp -a ${self.src}/* /app
           cat > /app/version.json  <<EOF
           ${builtins.toJSON version_json}
