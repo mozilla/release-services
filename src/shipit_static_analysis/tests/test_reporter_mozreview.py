@@ -171,7 +171,7 @@ Code analysis found 3 defects in this patch:
 You can run this analysis locally with:
  - `./mach clang-format -p path/to/file.cpp` (C/C++)
  - `./mach static-analysis check path/to/file.cpp` (C/C++)
- - `./mach lint path/to/file` (JS/Python)
+ - `./mach lint path/to/file` (JS/Python/etc)
 
 
 If you see a problem in this automated review, please report it here: https://report.example.com
