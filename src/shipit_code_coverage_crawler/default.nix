@@ -60,6 +60,11 @@ let
     propagatedBuildInputs =
       fromRequirementsFile ./requirements.txt python.packages;
     passthru = {
+      deploy = {
+        testing = mkBot "testing";
+        staging = mkBot "staging";
+        production = mkBot "production";
+      };
       update = writeScript "update-${name}" ''
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
