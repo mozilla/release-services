@@ -12,6 +12,9 @@ from shipit_code_coverage_backend.services.active_data import ActiveDataCoverage
 logger = log.get_logger(__name__)
 
 
+INDEX_COVERAGE = 'coverage'
+INDEX_REPO = 'repo'
+
 class NoResults(Exception):
     '''
     Raised when no results were found
@@ -34,9 +37,9 @@ class ActiveData(object):
         except Exception as e:
             logger.warn('ES client failure: {}'.format(e))
 
-    def search(self, name, body, timeout=10):
+    def search(self, name, body, timeout=10, index=INDEX_COVERAGE):
         out = self.client.search(
-            index=secrets.ACTIVE_DATA_INDEX,
+            index=index,
             body=body,
             request_timeout=timeout,
         )
@@ -68,6 +71,25 @@ class ActiveData(object):
         if out['aggregations']:
             return out['aggregations']['revisions']['buckets'][0]['key']
 
+    def get_changeset(self, changeset, repository='mozilla-central'):
+        '''
+        Load changeset data from a repository, with push, desc, bugzilla_id, files
+        '''
+        query = {
+            'query': {
+                'bool': {
+                    'must': [
+                        {'match': {'changeset.id': changeset}},
+                        {'match': {'branch.name': repository}},
+                    ]
+                }
+            }
+        }
+        out = self.search('changeset-coverage', query, index=INDEX_REPO)
+        assert out['hits']['total'] == 1, \
+            'Too many items found for {}'.format(changeset)
+
+        return out['hits']['hits'][0]['_source']
 
 # Shared instance
 active_data = ActiveData()

@@ -45,6 +45,7 @@ class ActiveDataCoverage(Coverage):
     FIELD_TEST_SUITE = 'test.suite.~s~'
     FIELD_BUILD_TYPE = 'build.type.~s~'
     FIELD_RUN_NAME = 'run.name.~s~'
+    FIELD_PUSH = 'repo.push.id.~n~'
 
     @staticmethod
     def base_query(filters=[], excludes=[]):

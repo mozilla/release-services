@@ -6,6 +6,7 @@ from cli_common import log
 from flask import abort
 from shipit_code_coverage_backend.v2.base import active_data, NoResults
 from shipit_code_coverage_backend.v2.path import coverage_paths
+from shipit_code_coverage_backend.v2.diff import coverage_diff
 
 logger = log.get_logger(__name__)
 
@@ -42,3 +43,13 @@ def coverage_for_path(path='', changeset=None):
         'type': 'directory',
         'children': paths
     }
+
+
+def coverage_for_revision(changeset):
+    '''
+    List coverage changes for any revision
+    '''
+    assert active_data.enabled, \
+        'Only ActiveData is supported'
+
+    return coverage_diff(changeset)
