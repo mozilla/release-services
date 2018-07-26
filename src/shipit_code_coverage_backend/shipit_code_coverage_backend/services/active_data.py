@@ -107,7 +107,7 @@ class ActiveDataCoverage(Coverage):
         return count, []
 
     @staticmethod
-    async def available_revisions(nb=2, max_date=None):
+    def available_revisions_query(nb=2, max_date=None):
         '''
         Search the N last revisions available in the ES cluster
         '''
@@ -149,11 +149,14 @@ class ActiveDataCoverage(Coverage):
                 },
             },
         })
+        return query
 
+    @staticmethod
+    async def available_revisions(nb=2, max_date=None):
         async with ActiveDataClient() as es:
             out = await es.search(
                 index=secrets.ACTIVE_DATA_INDEX,
-                body=query,
+                body=ActiveDataCoverage.available_revisions_query(nb, max_date),
 
                 # Longer timeout, the sub aggregation is long
                 request_timeout=30,
