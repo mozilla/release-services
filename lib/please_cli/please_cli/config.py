@@ -544,6 +544,28 @@ PROJECTS_CONFIG = {
             },
         ],
     },
+    'shipit-code-coverage-crawler': {
+        'checks': [
+            ('Checking code quality', 'flake8'),
+            ('Running tests', 'pytest tests/'),
+        ],
+        'deploys': [
+            {
+                'target': 'TASKCLUSTER_HOOK',
+                'options': {
+                    'testing': {
+                        'nix_path_attribute': 'deploy.testing',
+                    },
+                    'staging': {
+                        'nix_path_attribute': 'deploy.staging',
+                    },
+                    'production': {
+                        'nix_path_attribute': 'deploy.production',
+                    },
+                },
+            },
+        ],
+    },
     'shipit-frontend': {
         'run': 'ELM',
         'run_options': {

@@ -3,7 +3,7 @@
 
 let
 
-  inherit (releng_pkgs.lib) mkBackend fromRequirementsFile filterSource;
+  inherit (releng_pkgs.lib) mkTaskclusterHook mkPython fromRequirementsFile filterSource;
   inherit (releng_pkgs.pkgs) writeScript;
   inherit (releng_pkgs.pkgs.lib) fileContents;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -12,7 +12,46 @@ let
   name = "mozilla-shipit-code-coverage-crawler";
   dirname = "shipit_code_coverage_crawler";
 
-  self = mkBackend {
+  mkBot = branch:
+    let
+      cacheKey = "services-" + branch + "-shipit-code-coverage-crawler";
+      secretsKey = "repo:github.com/mozilla-releng/services:branch:" + branch;
+      hook = mkTaskclusterHook {
+        name = "Shipit bot for coverage crawler project";
+        owner = "mcastelluccio@mozilla.com";
+        schedule = [ "0 0 0 * * 0" ]; # every week
+        taskImage = self.docker;
+        scopes = [
+          # Used by taskclusterProxy
+          ("secrets:get:" + secretsKey)
+
+          # Email notifications
+          "notify:email:mcastelluccio@mozilla.com"
+          "notify:email:akhuzyakhmetova@mozilla.com"
+
+          # Used by cache
+          ("docker-worker:cache:" + cacheKey)
+        ];
+        cache = {
+          "${cacheKey}" = "/cache";
+        };
+        taskEnv = {
+          "SSL_CERT_FILE" = "${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+          "APP_CHANNEL" = branch;
+        };
+        taskCapabilities = {};
+        taskCommand = [
+          "/bin/shipit-code-coverage-crawler"
+          "--taskcluster-secret"
+          secretsKey
+          "--cache-root"
+          "/cache"
+        ];
+      };
+    in
+      releng_pkgs.pkgs.writeText "taskcluster-hook-${self.name}.json" (builtins.toJSON hook);
+
+  self = mkPython {
     inherit python name dirname;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
@@ -25,7 +64,6 @@ let
         pushd ${self.src_path}
         ${pypi2nix}/bin/pypi2nix -v \
           -V 3.6 \
-          -E "postgresql" \
           -r requirements.txt \
           -r requirements-dev.txt
         popd

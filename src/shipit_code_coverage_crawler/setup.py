@@ -30,7 +30,7 @@ def read_requirements(file_):
 setup(
     name='mozilla-shipit-code-coverage-crawler',
     version=version,
-    description='The code behind code-coverage-crawler.shipit.mozilla-releng.net',
+    description='A crawler to find websites that exercise code in Firefox that is not covered by unit tests',
     author='Mozilla Release Services Team',
     author_email='release-services@mozilla.com',
     url='code-coverage-crawler.shipit.mozilla-releng.net',
