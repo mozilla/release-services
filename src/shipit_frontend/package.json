@@ -1,0 +1,41 @@
+{
+  "name": "mozilla-shipit-frontend",
+  "version": "0.0.1",
+  "description": "Mozilla Release Ship-It UI",
+  "repository": "https://github.com/mozilla/release-services",
+  "author": "Rail Aliiev <rail@mozilla.com>",
+  "license": "MPLv2",
+  "devDependencies": {
+    "@neutrinojs/airbnb": "^8.1.2",
+    "@neutrinojs/env": "^8.1.2",
+    "@neutrinojs/hot": "^8.1.2",
+    "@neutrinojs/jest": "^8.1.2",
+    "@neutrinojs/react": "^8.1.2",
+    "neutrino": "^8.1.2"
+  },
+  "scripts": {
+    "build": "neutrino build",
+    "start": "neutrino start",
+    "lint": "neutrino lint",
+    "test": "neutrino test"
+  },
+  "dependencies": {
+    "auth0-js": "^9.3.0",
+    "bootstrap": "^3.3.7",
+    "font-awesome": "^4.7.0",
+    "history": "^4.7.2",
+    "json-e": "^2.3.5",
+    "mitt": "^1.1.2",
+    "prop-types": "^15.6.1",
+    "react": "^16.2.0",
+    "react-bootstrap": "^0.31.5",
+    "react-dom": "^16.2.0",
+    "react-helmet": "^5.2.0",
+    "react-hot-loader": "^4.0.0",
+    "react-interval": "^2.0.2",
+    "react-router-bootstrap": "^0.24.4",
+    "react-router-dom": "^4.2.2",
+    "taskcluster-client-web": "^5.0.1",
+    "webpack-merge": "^4.1.3"
+  }
+}

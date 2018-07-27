@@ -400,6 +400,85 @@ in rec {
           else false
         ) src;
 
+  mkYarnFrontend =
+    { src
+    , src_path ? null
+    , csp ? "default-src 'none'; img-src 'self' data:; script-src 'self'; style-src 'self'; font-src 'self';"
+    , patchPhase ? ""
+    , postInstall ? ""
+    , shellHook ? ""
+    , inTesting ? true
+    , inStaging ? true
+    , inProduction ? false
+    }:
+    let
+
+      self = releng_pkgs.pkgs.yarn2nix.mkYarnPackage {
+        # yarn2nix knows how to extract the name/version from package.json
+        inherit src;
+
+        doCheck = true;
+
+        checkPhase = ''
+          yarn lint
+          yarn test
+        '';
+
+        postInstall = ''
+          export PATH=$PWD/node_modules/.bin:$PATH
+          export NODE_PATH=$PWD/node_modules:$NODE_PATH
+          yarn build
+          rm -rf $out
+          mkdir -p $out
+          cp -r build/. $out/
+          if [ -e $out/index.html ]; then
+            sed -i -e "s|<head>|<head>\n  <meta http-equiv=\"Content-Security-Policy\" content=\"${csp}\">|" $out/index.html
+          fi
+        '' + postInstall;
+
+
+        shellHook = ''
+          cd ${self.src_path}
+          rm -rf node_modules
+          ln -s ${self.node_modules} ./node_modules
+          export PATH=$PWD/node_modules/.bin:$PATH
+          export NODE_PATH=$PWD/node_modules:$NODE_PATH
+        '' + shellHook;
+
+        passthru = {
+
+          deploy = {
+            testing = self;
+            staging = self;
+            production = self;
+          };
+
+          src_path =
+            if src_path != null
+              then src_path
+              else
+                "src/" +
+                  (replaceStrings ["-"] ["_"]
+                    (builtins.substring 8
+                      (builtins.stringLength self.package.name - 8) self.package.name));
+
+          taskclusterGithubTasks =
+            map (branch: mkTaskclusterGithubTask { inherit (self.package) name; inherit branch; inherit (self) src_path; })
+                ([ "master" ] ++ optional inTesting "testing"
+                              ++ optional inStaging "staging"
+                              ++ optional inProduction "production"
+                );
+
+          update = writeScript "update-${self.package.name}" ''
+            export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
+            pushd "$SERVICES_ROOT"${self.src_path} >> /dev/null
+            yarn upgrade
+            popd
+          '';
+        };
+      };
+    in self;
+
   mkFrontend =
     { name
     , version

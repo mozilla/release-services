@@ -14,7 +14,7 @@
 /lib/**/.coverage-html
 /lib/**/build
 /lib/**/elm-stuff/
-/lib/**/node_modules/
+/lib/**/node_modules
 /result*
 /src/**/*.egg-info/
 /src/**/.coverage
@@ -22,6 +22,7 @@
 /src/**/build
 /src/**/cache/
 /src/**/elm-stuff/
-/src/**/node_modules/
+/src/**/node_modules
+/src/**/yarn-error.log
 /tmp
 /w

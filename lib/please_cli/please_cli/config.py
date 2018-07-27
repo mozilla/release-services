@@ -710,4 +710,64 @@ PROJECTS_CONFIG = {
             # },
         ],
     },
+    'shipit-frontend': {
+        'run': 'NEUTRINO',
+        'run_options': {
+            'port': 8010,
+            'envs': {
+                'CONFIG': 'dev',
+            },
+        },
+        'requires': [
+            'shipit-workflow',
+        ],
+        'checks': [
+            ('Checking code quality', 'yarn lint'),
+            ('Running tests', 'yarn test'),
+        ],
+        'deploys': [
+            {
+                'target': 'S3',
+                'options': {
+                    'testing': {
+                        's3_bucket': 'shipit-testing-frontend',
+                        'url': 'https://shipit.testing.mozilla-releng.net',
+                        'dns': 'd2jpisuzgldax2.cloudfront.net.',
+                        'envs': {
+                            # Use the same API as staging
+                            'CONFIG': 'staging',
+                        },
+                        'csp': [
+                            'https://hg.mozilla.org',
+                            'https://queue.taskcluster.net',
+                        ],
+                    },
+                    'staging': {
+                        's3_bucket': 'shipit-staging-frontend',
+                        'url': 'https://shipit.staging.mozilla-releng.net',
+                        'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
+                        'envs': {
+                            'CONFIG': 'staging',
+                        },
+                        'csp': [
+                            'https://hg.mozilla.org',
+                            'https://queue.taskcluster.net',
+                        ],
+                    },
+                    'production': {
+                        's3_bucket': 'shipit-production-frontend',
+                        'url': 'https://shipit.mozilla-releng.net',
+                        'dns': 'dve8yd1431ifz.cloudfront.net.',
+                        'envs': {
+                            'CONFIG': 'production',
+                        },
+                        'csp': [
+                            'https://hg.mozilla.org',
+                            'https://queue.taskcluster.net',
+                        ],
+                    },
+                },
+            },
+        ],
+    },
 }

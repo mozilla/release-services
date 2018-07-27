@@ -245,6 +245,34 @@ def cmd(ctx, project, quiet, nix_shell,
             '--config', os.path.join(please_cli.config.ROOT_DIR, 'src', project_name, 'webpack.config.js'),
         ]
 
+    elif run_type == 'NEUTRINO':
+
+        if not os.path.exists(ca_cert_file) or \
+           not os.path.exists(server_cert_file) or \
+           not os.path.exists(server_key_file):
+            ctx.invoke(please_cli.create_certs.cmd,
+                       certificates_dir=os.path.join(please_cli.config.TMP_DIR, 'certs'),
+                       )
+
+        for require in project_config.get('requires', []):
+            env_name = '{}_URL'.format(require.replace('-', '_').upper())
+            env_value = '{}://{}:{}'.format(
+                please_cli.config.PROJECTS_CONFIG[require]['run_options'].get('schema', 'https'),
+                please_cli.config.PROJECTS_CONFIG[require]['run_options'].get('host', host),
+                please_cli.config.PROJECTS_CONFIG[require]['run_options']['port'],
+            )
+            os.environ[env_name] = env_value
+
+        os.environ['SSL_CACERT'] = ca_cert_file
+        os.environ['SSL_CERT'] = server_cert_file
+        os.environ['SSL_KEY'] = server_key_file
+
+        for env_name, env_value in project_config['run_options'].get('envs', {}).items():
+            click.echo('Setting {}:{} ...'.format(env_name, env_value))
+            os.environ[env_name] = env_value
+
+        command = ['yarn', 'start']
+
     click.echo(' => Running {} on {}{}:{} ...'.format(project, schema, host, port))
     returncode, output, error = ctx.invoke(please_cli.shell.cmd,
                                            project=project,
