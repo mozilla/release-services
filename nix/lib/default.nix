@@ -458,9 +458,7 @@ in rec {
               then src_path
               else
                 "src/" +
-                  (replaceStrings ["-"] ["_"]
-                    (builtins.substring 8
-                      (builtins.stringLength self.package.name - 8) self.package.name));
+                  (replaceStrings ["-"] ["_"] self.package.name);
 
           taskclusterGithubTasks =
             map (branch: mkTaskclusterGithubTask { inherit (self.package) name; inherit branch; inherit (self) src_path; })

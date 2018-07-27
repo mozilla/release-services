@@ -1,5 +1,5 @@
 {
-  "name": "mozilla-shipit-frontend",
+  "name": "shipit-frontend",
   "version": "0.0.1",
   "description": "Mozilla Release Ship-It UI",
   "repository": "https://github.com/mozilla/release-services",
