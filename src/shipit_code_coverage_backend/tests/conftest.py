@@ -6,16 +6,19 @@
 import glob
 import json
 import os
+import re
 import unittest
+import urllib.parse
 
 import pytest
+import responses
 
 import backend_common.testing
 
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope='function')
 def mock_secrets():
     '''
     Provide configuration through mock Taskcluster secrets
@@ -29,8 +32,18 @@ def mock_secrets():
                 'id': 'test@allizom.org',
                 'key': 'dummySecret',
             },
-        }
+        },
+        'PHABRICATOR_TOKEN': 'api-correct',
     })
+
+
+@pytest.fixture(scope='function')
+def mock_secrets_bad_phabricator_token(mock_secrets):
+    import shipit_code_coverage_backend.secrets as s
+    old = s.PHABRICATOR_TOKEN
+    s.PHABRICATOR_TOKEN = 'api-bad-token'
+    yield
+    s.PHABRICATOR_TOKEN = old
 
 
 @pytest.fixture()
@@ -112,6 +125,49 @@ async def coverage_responses(aresponses):
                                'get',
                                aresponses.Response(text=data, content_type=content_type, status=status),
                                match_querystring=match_querystring)
+
+
+@pytest.fixture
+def hgmo_phab_rev_responses():
+    rev = '2ed1506d1dc7db3d70a3feed95f1456bce05bbee'
+    with open(os.path.join(FIXTURES_DIR, 'hgmo_json_revs', '{}.json'.format(rev))) as f:
+        responses.add(responses.GET,
+                      'https://hg.mozilla.org/mozilla-central/json-rev/{}'.format(rev),
+                      status=200,
+                      body=f.read(),
+                      content_type='application/json')
+
+    with open(os.path.join(FIXTURES_DIR, 'hgmo-json-rev-miss.json')) as f:
+        responses.add(responses.GET,
+                      re.compile(r'https://hg.mozilla.org/mozilla-central/json-rev/.*'),
+                      status=404,
+                      body=f.read(),
+                      content_type='application/json')
+
+
+@pytest.fixture
+def phabricator_responses():
+    resp = {}
+    for ftype in ['hit', 'miss', 'wrong-api-key']:
+        with open(os.path.join(FIXTURES_DIR, 'phabricator-{}.json'.format(ftype))) as f:
+            resp[ftype] = f.read()
+
+    def callback(request):
+        headers = {'Content-Type': 'application/json'}
+        query = urllib.parse.parse_qs(request.body)
+        if query['api.token'] != ['api-correct']:
+            return 200, headers, resp['wrong-api-key']
+        elif query['constraints[revisionPHIDs][0]'] == ['PHID-DREV-esv6jbcptwuju667eiyx']:
+            return 200, headers, resp['hit']
+        else:
+            return 200, headers, resp['miss']
+
+    responses.add_callback(
+        responses.POST,
+        'https://phabricator.services.mozilla.com/api/differential.diff.search',
+        callback=callback,
+        content_type='application/json',
+    )
 
 
 @pytest.fixture(scope='session')

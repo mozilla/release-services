@@ -11,7 +11,7 @@ import shipit_code_coverage_backend.config
 secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
     shipit_code_coverage_backend.config.PROJECT_NAME,
-    required=['ESFRONTLINE'],
+    required=['ESFRONTLINE', 'PHABRICATOR_TOKEN'],
     existing={x: os.environ.get(x) for x in ['REDIS_URL'] if x in os.environ},
     taskcluster_client_id=os.environ.get('TASKCLUSTER_CLIENT_ID'),
     taskcluster_access_token=os.environ.get('TASKCLUSTER_ACCESS_TOKEN'),
@@ -24,3 +24,4 @@ ESFRONTLINE = secrets['ESFRONTLINE']
 COVERAGE_SERVICE = secrets['COVERAGE_SERVICE'] if 'COVERAGE_SERVICE' in secrets else 'codecov'
 ACTIVE_DATA_INDEX = secrets['ACTIVE_DATA_INDEX'] if 'ACTIVE_DATA_INDEX' in secrets else 'coverage'
 HG_GIT_MAPPER = secrets['HG_GIT_MAPPER'] if 'HG_GIT_MAPPER' in secrets else 'https://mapper.mozilla-releng.net'
+PHABRICATOR_TOKEN = secrets['PHABRICATOR_TOKEN']
