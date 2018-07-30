@@ -1218,6 +1218,21 @@ let
       };
     };
 
+    "setuptools-scm" = python.mkDerivation {
+      name = "setuptools-scm-2.1.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/e5/62/f9e1ac314464eb5945c97542acb6bf6f3381dfa5d7a658de7730c36f31a1/setuptools_scm-2.1.0.tar.gz"; sha256 = "a767141fecdab1c0b3c8e4c788ac912d7c94a0d6c452d40777ba84f918316379"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/pypa/setuptools_scm/";
+        license = licenses.mit;
+        description = "the blessed package to manage your versions by scm tags";
+      };
+    };
+
     "simplegeneric" = python.mkDerivation {
       name = "simplegeneric-0.8.1";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/3d/57/4d9c9e3ae9a255cd4e1106bb57e24056d3d0709fc01b2e3e345898e49d5b/simplegeneric-0.8.1.zip"; sha256 = "dc972e06094b9af5b855b3df4a646395e43d1c9d0d39ed345b7393560d0b9173"; };
