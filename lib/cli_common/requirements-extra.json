@@ -19,6 +19,9 @@
         "raven",
         "structlog"
     ],
+    "phabricator": [
+        "requests"
+    ],
     "mercurial": [
         "python-hglib"
     ],
