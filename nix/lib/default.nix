@@ -427,7 +427,7 @@ in rec {
         postInstall = ''
           export PATH=$PWD/node_modules/.bin:$PATH
           export NODE_PATH=$PWD/node_modules:$NODE_PATH
-          yarn build
+          ${releng_pkgs.pkgs.yarn}/bin/yarn build
           rm -rf $out
           mkdir -p $out
           cp -r build/. $out/
