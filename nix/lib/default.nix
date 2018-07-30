@@ -925,7 +925,10 @@ in rec {
           ln -s ${python.__old.python.interpreter} $out/bin
           ln -s ${python.__old.python.interpreter} $out/bin/python
           for i in $out/bin/*; do
-            wrapProgram $i --set PYTHONPATH $PYTHONPATH
+            wrapProgram $i \
+              --set PYTHONPATH $PYTHONPATH \
+              --set LANG "en_US.UTF-8" \
+              --set LOCALE_ARCHIVE "${glibcLocales}/lib/locale/locale-archive"
           done
           find $out -type d -name "__pycache__" -exec 'rm -r "{}"' \;
           find $out -type d -name "*.py" -exec '${python.__old.python.executable} -m compileall -f "{}"' \;
@@ -938,6 +941,7 @@ in rec {
           export APP_SETTINGS="$PWD/${self.src_path}/settings.py"
           export SECRET_KEY_BASE64=`dd if=/dev/urandom bs=24 count=1 | base64`
           export APP_NAME="${name}-${version}"
+          export LANG=en_US.UTF-8
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 
           pushd "$SERVICES_ROOT"${self.src_path} >> /dev/null
