@@ -106,9 +106,11 @@ class TaskclusterUser(BaseUser):
         Check user has some required permissions
         Using Taskcluster comparison algorithm
         '''
-        if len(permissions) > 0 \
-           and not isinstance(permissions[0], (tuple, list)):
-                permissions = [permissions]
+        if not isinstance(permissions, (tuple, list)):
+            permissions = [permissions]
+
+        if not isinstance(permissions[0], (tuple, list)):
+            permissions = [permissions]
 
         return taskcluster.utils.scopeMatch(self.get_permissions(), permissions)
 
@@ -225,8 +227,6 @@ RELENGAPI_PROJECT_PERMISSION_MAPPING = {
     'mapper/': 'releng_mapper/',
 }
 RELENGAPI_PERMISSIONS = {
-    'base.badpenny.run': 'Force a run of a badpenny task',
-    'base.badpenny.view': 'See scheduled tasks and logs of previous jobs',
     'base.tokens.prm.issue': 'Issue permanent tokens',
     'base.tokens.prm.revoke': 'Revoke permanent tokens',
     'base.tokens.prm.view': 'See permanent tokens',
@@ -236,7 +236,6 @@ RELENGAPI_PERMISSIONS = {
     'base.tokens.usr.revoke.my': 'Revoke my user tokens',
     'base.tokens.usr.view.all': 'See all user tokens',
     'base.tokens.usr.view.my': 'See my user tokens',
-    'clobberer.post.clobber': 'Submit clobber requests',
     'mapper.mapping.insert': 'Allows new hg-git mappings to be inserted into mapper db (hashes table)',
     'mapper.project.insert': 'Allows new projects to be inserted into mapper db (projects table)',
     'tooltool.download.internal': 'Download INTERNAL files from tooltool',

@@ -2,7 +2,7 @@
 # See more at: https://github.com/garbas/pypi2nix
 #
 # COMMAND:
-#   pypi2nix -v -V 3.5 -E postgresql -r requirements.txt -r requirements-dev.txt
+#   pypi2nix -v -V 3.6 -E postgresql -r requirements.txt -r requirements-dev.txt
 #
 
 { pkgs ? import <nixpkgs> {}
@@ -17,17 +17,17 @@ let
   import "${toString pkgs.path}/pkgs/top-level/python-packages.nix" {
     inherit pkgs;
     inherit (pkgs) stdenv;
-    python = pkgs.python35;
+    python = pkgs.python36;
     # patching pip so it does not try to remove files when running nix-shell
     overrides =
       self: super: {
         bootstrapped-pip = super.bootstrapped-pip.overrideDerivation (old: {
           patchPhase = old.patchPhase + ''
-            if [ -e $out/${pkgs.python35.sitePackages}/pip/req/req_install.py ]; then
+            if [ -e $out/${pkgs.python36.sitePackages}/pip/req/req_install.py ]; then
               sed -i \
                 -e "s|paths_to_remove.remove(auto_confirm)|#paths_to_remove.remove(auto_confirm)|"  \
                 -e "s|self.uninstalled = paths_to_remove|#self.uninstalled = paths_to_remove|"  \
-                $out/${pkgs.python35.sitePackages}/pip/req/req_install.py
+                $out/${pkgs.python36.sitePackages}/pip/req/req_install.py
             fi
           '';
         });
@@ -41,7 +41,7 @@ let
     let
       pkgs = builtins.removeAttrs pkgs' ["__unfix__"];
       interpreterWithPackages = selectPkgsFn: pythonPackages.buildPythonPackage {
-        name = "python35-interpreter";
+        name = "python36-interpreter";
         buildInputs = [ makeWrapper ] ++ (selectPkgsFn pkgs);
         buildCommand = ''
           mkdir -p $out/bin
@@ -501,8 +501,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.7.61";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/7d/61/0f93af22f125789ed8b962c373a04402df0f95672c5b6262063f4dc60951/boto3-1.7.61.tar.gz"; sha256 = "d41d8a44041b12da73f740765338d5d6fe656f704702d709b4686b1c1729ef9b"; };
+      name = "boto3-1.7.62";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b6/e7/e13540cf09a8263a7e40c24f54a3552ec00dd519e7d8eb24d40f0dd18a3c/boto3-1.7.62.tar.gz"; sha256 = "474c2c3aa070a2dae9ecf9d14d974e726960539deec43707385e02cdedae2221"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -520,8 +520,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.10.61";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/1c/ea/b292c8a6bc4382ee0a30112c1ba2ed20648a615dd8c2938d9b382c4c3540/botocore-1.10.61.tar.gz"; sha256 = "279b63c99298298a3a313a2481503696fcf627728cbcf5075f253561a95d06cd"; };
+      name = "botocore-1.10.62";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/90/ef/c6618be9c5e9278af1d82690b044561be83954fb62ecdbe4433910aaf224/botocore-1.10.62.tar.gz"; sha256 = "047d553ec2a4c7f80f9ca02f73c3ab443577bad6bcb079c698fb9dd8cc93c0af"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -640,7 +640,6 @@ let
       self."six"
       self."swagger-spec-validator"
       self."testfixtures"
-      self."typing"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://github.com/zalando/connexion";
@@ -1082,7 +1081,6 @@ let
       self."requests"
       self."simplegeneric"
       self."traitlets"
-      self."typing"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "https://ipython.org";
@@ -1345,7 +1343,7 @@ let
       self."taskcluster"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "https://github.com/mozilla-releng/services";
+        homepage = "https://github.com/mozilla/release-services";
         license = "MPL2";
         description = "Services behind https://mozilla-releng.net";
       };
@@ -1375,7 +1373,6 @@ let
       buildInputs = commonBuildInputs;
       propagatedBuildInputs = [
       self."typed-ast"
-      self."typing"
     ];
       meta = with pkgs.stdenv.lib; {
         homepage = "http://www.mypy-lang.org/";
@@ -2026,21 +2023,6 @@ let
         homepage = "https://github.com/python/typed_ast";
         license = licenses.asl20;
         description = "a fork of Python 2 and 3 ast modules with type comment support";
-      };
-    };
-
-    "typing" = python.mkDerivation {
-      name = "typing-3.6.4";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ec/cc/28444132a25c113149cec54618abc909596f0b272a74c55bab9593f8876c/typing-3.6.4.tar.gz"; sha256 = "d400a9344254803a2368533e4533a4200d21eb7b6b729c173bc38201a74db3f2"; };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [ ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "https://docs.python.org/3/library/typing.html";
-        license = licenses.psfl;
-        description = "Type Hints for Python";
       };
     };
 

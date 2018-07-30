@@ -96,7 +96,7 @@ in rec {
     , version
     , config ? {}
     , contents ? []
-    , runAsRoot
+    , runAsRoot ? null
     }:
     dockerTools.buildImage {
       name = name;
@@ -399,6 +399,84 @@ in rec {
           else if builtins.any (x: x) (builtins.map (startsWith (relativePath path)) _include) then true
           else false
         ) src;
+
+  mkYarnFrontend =
+    { src
+    , src_path ? null
+    , csp ? "default-src 'none'; img-src 'self' data:; script-src 'self'; style-src 'self'; font-src 'self';"
+    , patchPhase ? ""
+    , postInstall ? ""
+    , shellHook ? ""
+    , inTesting ? true
+    , inStaging ? true
+    , inProduction ? false
+    }:
+    let
+
+      self = releng_pkgs.pkgs.yarn2nix.mkYarnPackage {
+        # yarn2nix knows how to extract the name/version from package.json
+        inherit src;
+
+        doCheck = true;
+
+        checkPhase = ''
+          yarn lint
+          yarn test
+        '';
+
+        postInstall = ''
+          export PATH=$PWD/node_modules/.bin:$PATH
+          export NODE_PATH=$PWD/node_modules:$NODE_PATH
+          ${releng_pkgs.pkgs.yarn}/bin/yarn build
+          rm -rf $out
+          mkdir -p $out
+          cp -r build/. $out/
+          if [ -e $out/index.html ]; then
+            sed -i -e "s|<head>|<head>\n  <meta http-equiv=\"Content-Security-Policy\" content=\"${csp}\">|" $out/index.html
+          fi
+        '' + postInstall;
+
+
+        shellHook = ''
+          cd ${self.src_path}
+          rm -rf node_modules
+          ln -s ${self.node_modules} ./node_modules
+          export PATH=$PWD/node_modules/.bin:$PATH
+          export NODE_PATH=$PWD/node_modules:$NODE_PATH
+        '' + shellHook;
+
+        passthru = {
+
+          deploy = {
+            testing = self;
+            staging = self;
+            production = self;
+          };
+
+          src_path =
+            if src_path != null
+              then src_path
+              else
+                "src/" +
+                  (replaceStrings ["-"] ["_"] self.package.name);
+
+          taskclusterGithubTasks =
+            map (branch: mkTaskclusterGithubTask { inherit (self.package) name; inherit branch; inherit (self) src_path; })
+                ([ "master" ] ++ optional inTesting "testing"
+                              ++ optional inStaging "staging"
+                              ++ optional inProduction "production"
+                );
+
+          update = writeScript "update-${self.package.name}" ''
+            set -e
+            export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
+            pushd "$SERVICES_ROOT"${self.src_path} >> /dev/null
+            ${releng_pkgs.pkgs.yarn}/bin/yarn upgrade
+            popd
+          '';
+        };
+      };
+    in self;
 
   mkFrontend =
     { name
@@ -721,10 +799,7 @@ in rec {
     }:
     let
 
-      self_docker = mkDocker {
-        inherit name version;
-        contents = [ busybox self ] ++ dockerContents;
-        config =
+      self_docker_config =
           { Env = [
               "APP_NAME=${name}-${version}"
               "PATH=/bin"
@@ -733,19 +808,12 @@ in rec {
               "SSL_CERT_FILE=${releng_pkgs.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
             ] ++ dockerEnv;
             Cmd = dockerCmd;
-            User = dockerUser;
             WorkingDir = "/";
           };
-        runAsRoot = if dockerUser == null then null else ''
-          #!${stdenv.shell}
-          ${dockerTools.shadowSetup}
-          groupadd --gid ${toString dockerGroupId} ${dockerGroup}
-          useradd --gid ${dockerGroup} --uid ${toString dockerUserId} --home-dir /app ${dockerUser}
-          # gunicorn requires /tmp, /var/tmp, or /usr/tmp
-          mkdir -p --mode=1777 /tmp
-          mkdir -p /app
-          cp -a ${self.src}/. /app/
-        '';
+      self_docker = mkDocker {
+        inherit name version;
+        contents = [ busybox self ] ++ dockerContents;
+        config = self_docker_config;
       };
 
       githubCommit = builtins.getEnv "GITHUB_COMMIT";
@@ -765,7 +833,19 @@ in rec {
         inherit name;
         tag = version;
         fromImage = self_docker;
-        runAsRoot = ''
+        config = self_docker_config // {
+            User = dockerUser;
+        };
+        runAsRoot = (if dockerUser == null then "" else ''
+          #!${stdenv.shell}
+          ${dockerTools.shadowSetup}
+          groupadd --gid ${toString dockerGroupId} ${dockerGroup}
+          useradd --gid ${dockerGroup} --uid ${toString dockerUserId} --home-dir /app ${dockerUser}
+          # gunicorn requires /tmp, /var/tmp, or /usr/tmp
+          mkdir -p --mode=1777 /tmp
+          mkdir -p /app
+          cp -a ${self.src}/. /app/
+        '') + ''
           cp -a ${self.src}/* /app
           cat > /app/version.json  <<EOF
           ${builtins.toJSON version_json}
@@ -845,7 +925,10 @@ in rec {
           ln -s ${python.__old.python.interpreter} $out/bin
           ln -s ${python.__old.python.interpreter} $out/bin/python
           for i in $out/bin/*; do
-            wrapProgram $i --set PYTHONPATH $PYTHONPATH
+            wrapProgram $i \
+              --set PYTHONPATH $PYTHONPATH \
+              --set LANG "en_US.UTF-8" \
+              --set LOCALE_ARCHIVE "${glibcLocales}/lib/locale/locale-archive"
           done
           find $out -type d -name "__pycache__" -exec 'rm -r "{}"' \;
           find $out -type d -name "*.py" -exec '${python.__old.python.executable} -m compileall -f "{}"' \;
@@ -858,6 +941,7 @@ in rec {
           export APP_SETTINGS="$PWD/${self.src_path}/settings.py"
           export SECRET_KEY_BASE64=`dd if=/dev/urandom bs=24 count=1 | base64`
           export APP_NAME="${name}-${version}"
+          export LANG=en_US.UTF-8
           export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
 
           pushd "$SERVICES_ROOT"${self.src_path} >> /dev/null

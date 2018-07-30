@@ -167,6 +167,14 @@ in skipOverrides {
     '';
   };
 
+  "pluggy" = self: old: {
+    patchPhase = ''
+      sed -i \
+        -e "s|setup_requires=\['setuptools-scm'\],||" \
+        setup.py
+    '';
+  };
+
   "py" = self: old: {
     patchPhase = ''
       sed -i \
@@ -179,6 +187,7 @@ in skipOverrides {
     patchPhase = ''
       sed -i \
         -e "s|py>=1.5.0|py|" \
+        -e "s|pluggy>=0.5,<0.8|pluggy|" \
         -e "s|setup_requires=\['setuptools-scm'\],||" \
         -e "s|setup_requires=\[\"setuptools-scm\"\],||" \
         setup.py

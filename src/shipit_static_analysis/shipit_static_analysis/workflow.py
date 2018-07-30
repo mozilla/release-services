@@ -211,6 +211,9 @@ class Workflow(object):
                 for issue in issues:
                     issue.is_new = issue not in before_patch
 
+        # Avoid duplicates
+        issues = set(issues)
+
         if not issues:
             logger.info('No issues, stopping there.')
             self.index(revision, state='done', issues=0)
@@ -251,7 +254,7 @@ class Workflow(object):
         '''
         Build a Diff to improve this revision (styling from clang-format)
         '''
-        assert isinstance(issues, list)
+        assert isinstance(issues, set)
 
         # Only use publishable issues
         # and sort them by filename

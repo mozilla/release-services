@@ -34,7 +34,7 @@ class MozLintIssue(Issue):
         self.nb_lines = 1
         self.column = column
         self.level = level
-        self.line = int(lineno)  # mozlint sometimes produce strings here
+        self.line = lineno and int(lineno) or 0  # mozlint sometimes produce strings here
         self.linter = linter
         self.message = message
         self.rule = rule

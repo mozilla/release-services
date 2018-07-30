@@ -145,7 +145,7 @@ def get_deploy_task(index,
             'tools', 'deploy:S3',
             project,
             '--s3-bucket=' + deploy_options['s3_bucket'],
-            '--taskcluster-secret=repo:github.com/mozilla/release-services:branch:' + channel,
+            '--taskcluster-secret=' + taskcluster_secret,
             '--nix-path-attribute=' + nix_path_attribute,
             '--no-interactive',
         ] + project_csp + project_envs
@@ -170,7 +170,7 @@ def get_deploy_task(index,
             command.append('--heroku-command="{}"'.format(heroku_command))
 
         command += [
-            '--taskcluster-secret=repo:github.com/mozilla/release-services:branch:' + channel,
+            '--taskcluster-secret=' + taskcluster_secret,
             '--nix-path-attribute=' + nix_path_attribute,
             '--no-interactive',
         ]
@@ -188,7 +188,7 @@ def get_deploy_task(index,
         )
         command = [
             './please', '-vv', 'tools', 'deploy:DOCKERHUB', project,
-            '--taskcluster-secret=repo:github.com/mozilla/release-services:branch:{}'.format(channel),
+            '--taskcluster-secret=' + taskcluster_secret,
             '--nix-path-attribute={}'.format(nix_path_attribute),
             '--docker-repo={}'.format(docker_repo),
             '--channel={}'.format(channel),
@@ -214,7 +214,7 @@ def get_deploy_task(index,
             project,
             '--hook-group-id={}'.format(hook_group_id),
             '--hook-id={}'.format(hook_id),
-            '--taskcluster-secret=repo:github.com/mozilla/release-services:branch:' + channel,
+            '--taskcluster-secret=' + taskcluster_secret,
             '--nix-path-attribute=' + nix_path_attribute,
             '--no-interactive',
         ]

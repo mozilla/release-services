@@ -7,10 +7,12 @@ import asyncio
 
 from rq import Queue
 
+from cli_common import phabricator
 from shipit_code_coverage_backend import coverage
 from shipit_code_coverage_backend import coverage_by_changeset_impl
 from shipit_code_coverage_backend import coverage_for_file_impl
 from shipit_code_coverage_backend import coverage_summary_by_changeset_impl
+from shipit_code_coverage_backend import secrets
 from shipit_code_coverage_backend.worker import conn
 
 q = Queue(connection=conn)
@@ -69,3 +71,15 @@ def coverage_supported_extensions():
 
 def coverage_latest():
     return asyncio.get_event_loop().run_until_complete(coverage.get_latest_build_info())
+
+
+def phabricator_base_revision_from_phid(revision_phid):
+    try:
+        revision = phabricator.get_base_revision(secrets.PHABRICATOR_TOKEN, revision_phid)
+        if revision:
+            return {'revision': revision}, 200
+        return {'error': 'Base revision not found.'}, 404
+    except Exception as e:
+        return {
+            'error': str(e)
+        }, 500

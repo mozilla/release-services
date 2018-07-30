@@ -107,7 +107,7 @@ class ActiveDataCoverage(Coverage):
         return count, []
 
     @staticmethod
-    async def available_revisions(nb=2, max_date=None):
+    def available_revisions_query(nb=2, max_date=None):
         '''
         Search the N last revisions available in the ES cluster
         '''
@@ -149,11 +149,14 @@ class ActiveDataCoverage(Coverage):
                 },
             },
         })
+        return query
 
+    @staticmethod
+    async def available_revisions(nb=2, max_date=None):
         async with ActiveDataClient() as es:
             out = await es.search(
                 index=secrets.ACTIVE_DATA_INDEX,
-                body=query,
+                body=ActiveDataCoverage.available_revisions_query(nb, max_date),
 
                 # Longer timeout, the sub aggregation is long
                 request_timeout=30,
@@ -265,3 +268,28 @@ class ActiveDataCoverage(Coverage):
         '''
         revisions = await ActiveDataCoverage.available_revisions(nb=2)
         return revisions[0]['key'], revisions[-1]['key']
+
+    @staticmethod
+    async def get_push(changeset, repository='mozilla-central'):
+        '''
+        Load push data for a given changeset on a repository
+        '''
+        query = {
+            '_source': ['push'],
+            'query': {
+                'bool': {
+                    'must': [
+                        {'match': {'changeset.id': changeset}},
+                        {'match': {'branch.name': repository}},
+                    ]
+                }
+            }
+        }
+        async with ActiveDataClient() as es:
+            out = await es.search(
+                index='repo',
+                body=query,
+            )
+            assert out['hits']['total'] == 1, \
+                'Push search failed'
+            return out['hits']['hits'][0]['_source']['push']
