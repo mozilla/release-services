@@ -222,8 +222,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.7.64";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/2a/00/b75ebad64dc8a2966ca2bee1f006feefccc1ba0571db5ec43650a04b8df9/boto3-1.7.64.tar.gz"; sha256 = "7d9de4269451fd4cb99cbd2c18075bf9d3a70f7fbc3bd3cc350c954403ad4ebd"; };
+      name = "boto3-1.7.65";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/15/43/81d8437ca09b7bc3370424582fd984aac44458573e9fdb4bfcdd03466503/boto3-1.7.65.tar.gz"; sha256 = "c8492a53e0bfeca83fa03273dff7ab7d5ac5cf78a0ce1b7e9fc7f241ca6f4dd4"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -241,8 +241,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.10.64";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/09/58/74fce0ddfebbd2dbd357b70c77b39275fc7caf1c2cf78a0f9b7ac504f721/botocore-1.10.64.tar.gz"; sha256 = "977e8ab657747b3e60f4b597b9f732cbe467b12ecc52a9c5b2121c0006d41a63"; };
+      name = "botocore-1.10.65";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/8d/a2/4e9643b248aec2280aa5dcd2cb2e372fa05ab8c317d52abbf8ff87003d9a/botocore-1.10.65.tar.gz"; sha256 = "35f626029a6b17bfd503ce3379b121606e3f965edcab2612bc75ce8603fdf08c"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -352,6 +352,26 @@ let
       };
     };
 
+    "coverage-crawler" = python.mkDerivation {
+      name = "coverage-crawler-1.0.0";
+      src = pkgs.fetchurl { url = "https://github.com/mozilla/coverage-crawler/archive/4124150264dd714484be483db56160ba4ee73234.zip"; sha256 = "153b3657f8f10fcfe28fd64003e035bb795f4ce4712c8a7a2ce4e92267ef3480"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [
+      self."firefox-code-coverage"
+      self."selenium"
+      self."six"
+      self."taskcluster"
+    ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = "MPL2";
+        description = "A crawler to find websites that exercise code in Firefox that is not covered by unit tests";
+      };
+    };
+
     "coveralls" = python.mkDerivation {
       name = "coveralls-1.3.0";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/3e/dd/61b1365f2d1d3fc459f9e3d36d9c8824fb3c9cd6bf5ee721ca6c8f68c164/coveralls-1.3.0.tar.gz"; sha256 = "664794748d2e5673e347ec476159a9d87f43e0d2d44950e98ed0e27b98da8346"; };
@@ -429,6 +449,21 @@ let
         homepage = "http://bitbucket.org/antocuni/fancycompleter";
         license = licenses.bsdOriginal;
         description = "colorful TAB completion for Python prompt";
+      };
+    };
+
+    "firefox-code-coverage" = python.mkDerivation {
+      name = "firefox-code-coverage-1.0.0";
+      src = pkgs.fetchurl { url = "https://github.com/marco-c/firefox-code-coverage/archive/e9073166968dd4ac33510a61116f8b8855b933af.tar.gz"; sha256 = "1e2e2ae973b21e1332b4bba69ac2ba50ced4e9c0fd135e522f397d581284fd48"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "";
+        license = "MPL2";
+        description = "Code Coverage Report generator for Firefox";
       };
     };
 
@@ -607,8 +642,8 @@ let
     };
 
     "ipython" = python.mkDerivation {
-      name = "ipython-6.4.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/ee/01/2a85cd07f5a43fa2e86d60001c213647252662d44a0c2e3d69471a058f1b/ipython-6.4.0.tar.gz"; sha256 = "eca537aa61592aca2fef4adea12af8e42f5c335004dfa80c78caf80e8b525e5c"; };
+      name = "ipython-6.5.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/1a/76/0b51dc7dd3a801477d00e6db065f50cce9fe5bdbea3c911fce62c9f02c23/ipython-6.5.0.tar.gz"; sha256 = "b0f2ef9eada4a68ef63ee10b6dde4f35c840035c50fd24265f8052c98947d5a4"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -778,11 +813,12 @@ let
       self."python-dateutil"
       self."python-hglib"
       self."raven"
+      self."requests"
       self."structlog"
       self."taskcluster"
     ];
       meta = with pkgs.stdenv.lib; {
-        homepage = "https://github.com/mozilla-releng/services";
+        homepage = "https://github.com/mozilla/release-services";
         license = "MPL2";
         description = "Services behind https://mozilla-releng.net";
       };
@@ -887,8 +923,8 @@ let
     };
 
     "pluggy" = python.mkDerivation {
-      name = "pluggy-0.6.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/11/bf/cbeb8cdfaffa9f2ea154a30ae31a9d04a1209312e2919138b4171a1f8199/pluggy-0.6.0.tar.gz"; sha256 = "7f8ae7f5bdf75671a718d2daf0a64b7885f74510bcd98b1a0bb420eb9a9d0cff"; };
+      name = "pluggy-0.7.1";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/a1/83/ef7d976c12d67a5c7a5bc2a47f0501c926cabae9d9fcfdc26d72abc9ba15/pluggy-0.7.1.tar.gz"; sha256 = "95eb8364a4708392bae89035f45341871286a333f749c3141c20573d2b3876e1"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -980,8 +1016,8 @@ let
     };
 
     "pytest" = python.mkDerivation {
-      name = "pytest-3.6.3";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/55/50/399419c03c39bf41faa7cbd5a8976c076037b2d76adf2535610919806d67/pytest-3.6.3.tar.gz"; sha256 = "0453c8676c2bee6feb0434748b068d5510273a916295fd61d306c4f22fbfd752"; };
+      name = "pytest-3.6.4";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/05/b5/3197f0ae65c0b3037acd64c216a6d67a94693dad957f4e83e777b36688ae/pytest-3.6.4.tar.gz"; sha256 = "341ec10361b64a24accaec3c7ba5f7d5ee1ca4cebea30f76fad3dd12db9f0541"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1167,6 +1203,21 @@ let
       };
     };
 
+    "selenium" = python.mkDerivation {
+      name = "selenium-3.13.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/6d/4b/30b28589f2b6051b04d6f8014537749dc08fa787a5569cebb33e892d34d3/selenium-3.13.0.tar.gz"; sha256 = "f35bb209cab740c195276a323c1b750dbcfdb9f6983e7d6e3abba9cd8838f355"; };
+      doCheck = commonDoCheck;
+      checkPhase = "";
+      installCheckPhase = "";
+      buildInputs = commonBuildInputs;
+      propagatedBuildInputs = [ ];
+      meta = with pkgs.stdenv.lib; {
+        homepage = "https://github.com/SeleniumHQ/selenium/";
+        license = licenses.asl20;
+        description = "Python bindings for Selenium";
+      };
+    };
+
     "simplegeneric" = python.mkDerivation {
       name = "simplegeneric-0.8.1";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/3d/57/4d9c9e3ae9a255cd4e1106bb57e24056d3d0709fc01b2e3e345898e49d5b/simplegeneric-0.8.1.zip"; sha256 = "dc972e06094b9af5b855b3df4a646395e43d1c9d0d39ed345b7393560d0b9173"; };
@@ -1183,8 +1234,8 @@ let
     };
 
     "six" = python.mkDerivation {
-      name = "six-1.11.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/16/d8/bc6316cf98419719bd59c91742194c111b6f2e85abac88e496adefaf7afe/six-1.11.0.tar.gz"; sha256 = "70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9"; };
+      name = "six-1.10.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/b3/b2/238e2590826bfdd113244a40d9d3eb26918bd798fc187e2360a8367068db/six-1.10.0.tar.gz"; sha256 = "105f8d68616f8248e24bf0e9372ef04d3cc10104f1980f54d57b2ce73a5ad56a"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
