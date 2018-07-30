@@ -95,3 +95,20 @@ paths:
           description: Code coverage information for a given file or directory at a given changeset
       tags:
         - v2
+
+  /phabricator/base_revision_from_phid/{revision_phid}:
+    get:
+      operationId: "shipit_code_coverage_backend.api.phabricator_base_revision_from_phid"
+      parameters:
+      - name: revision_phid
+        in: path
+        description: Revision PHID
+        required: true
+        type: string
+      responses:
+        200:
+          description: hg.mozilla.org/mozilla-central base revision of the given revision
+        404:
+          description: No base revision has been found on hg.mozilla.org/mozilla-central
+      tags:
+        - legacy
