@@ -222,8 +222,8 @@ let
     };
 
     "boto3" = python.mkDerivation {
-      name = "boto3-1.7.65";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/15/43/81d8437ca09b7bc3370424582fd984aac44458573e9fdb4bfcdd03466503/boto3-1.7.65.tar.gz"; sha256 = "c8492a53e0bfeca83fa03273dff7ab7d5ac5cf78a0ce1b7e9fc7f241ca6f4dd4"; };
+      name = "boto3-1.7.66";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/e7/58/6cde46663d9cec6e81a0ce4d05e8d2d174b8526b519c4afab03860f5fbe5/boto3-1.7.66.tar.gz"; sha256 = "8f0f16ad7a6672b7748f2fa753f44007ada17ffb8767bb59dbd73f26ec6d265a"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -241,8 +241,8 @@ let
     };
 
     "botocore" = python.mkDerivation {
-      name = "botocore-1.10.65";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/8d/a2/4e9643b248aec2280aa5dcd2cb2e372fa05ab8c317d52abbf8ff87003d9a/botocore-1.10.65.tar.gz"; sha256 = "35f626029a6b17bfd503ce3379b121606e3f965edcab2612bc75ce8603fdf08c"; };
+      name = "botocore-1.10.66";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/16/7d/c091ee78ec3117a37f0ac8676bb412f013d42094dca6a4e9c93975c7863a/botocore-1.10.66.tar.gz"; sha256 = "cc09308c7923331a330d02df055a966bd28657cb7b68b00ea1f3264599df133b"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -354,7 +354,7 @@ let
 
     "coverage-crawler" = python.mkDerivation {
       name = "coverage-crawler-1.0.0";
-      src = pkgs.fetchurl { url = "https://github.com/mozilla/coverage-crawler/archive/4124150264dd714484be483db56160ba4ee73234.zip"; sha256 = "153b3657f8f10fcfe28fd64003e035bb795f4ce4712c8a7a2ce4e92267ef3480"; };
+      src = pkgs.fetchurl { url = "https://github.com/mozilla/coverage-crawler/archive/28f6a827d6cd6c6a28ae9a7b8a48984c3ee16c99.tar.gz"; sha256 = "2a73b53803bdddec0b0fb248a4c7a4f495422c411e722441dff8814be2033ede"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -454,7 +454,7 @@ let
 
     "firefox-code-coverage" = python.mkDerivation {
       name = "firefox-code-coverage-1.0.0";
-      src = pkgs.fetchurl { url = "https://github.com/marco-c/firefox-code-coverage/archive/e9073166968dd4ac33510a61116f8b8855b933af.tar.gz"; sha256 = "1e2e2ae973b21e1332b4bba69ac2ba50ced4e9c0fd135e522f397d581284fd48"; };
+      src = pkgs.fetchurl { url = "https://github.com/marco-c/firefox-code-coverage/archive/3c70be1de846dde18bc5e8d51320e67ec6601e4f.tar.gz"; sha256 = "4c0637b4f55acc1f1b2b5302b6484ec30bf99e9e885b7d71d37ef7e04fa14a0b"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -763,8 +763,8 @@ let
     };
 
     "more-itertools" = python.mkDerivation {
-      name = "more-itertools-4.2.0";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/c0/2f/6773347277d76c5ade4414a6c3f785ef27e7f5c4b0870ec7e888e66a8d83/more-itertools-4.2.0.tar.gz"; sha256 = "2b6b9893337bfd9166bee6a62c2b0c9fe7735dcf85948b387ec8cba30e85d8e8"; };
+      name = "more-itertools-4.3.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/88/ff/6d485d7362f39880810278bdc906c13300db05485d9c65971dec1142da6a/more-itertools-4.3.0.tar.gz"; sha256 = "c476b5d3a34e12d40130bc2f935028b5f636df8f372dc2c1c01dc19681b2039e"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
@@ -1016,8 +1016,8 @@ let
     };
 
     "pytest" = python.mkDerivation {
-      name = "pytest-3.6.4";
-      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/05/b5/3197f0ae65c0b3037acd64c216a6d67a94693dad957f4e83e777b36688ae/pytest-3.6.4.tar.gz"; sha256 = "341ec10361b64a24accaec3c7ba5f7d5ee1ca4cebea30f76fad3dd12db9f0541"; };
+      name = "pytest-3.7.0";
+      src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/38/de/250ed9efc73d43b23d849754cb36e8f50cb5535850c1a1c92552986ad409/pytest-3.7.0.tar.gz"; sha256 = "8214ab8446104a1d0c17fbd218ec6aac743236c6ffbe23abc038e40213c60b88"; };
       doCheck = commonDoCheck;
       checkPhase = "";
       installCheckPhase = "";
