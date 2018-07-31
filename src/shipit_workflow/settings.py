@@ -39,8 +39,18 @@ SECRET_KEY = base64.b64decode(secrets['SECRET_KEY_BASE64'])
 
 
 # -- DATABASE -----------------------------------------------------------------
-SQLALCHEMY_DATABASE_URI = secrets['DATABASE_URL']
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+# We require DATABASE_URL set by environment variables for branches deployed to Dockerflow.
+if secrets['APP_CHANNEL'] in ('testing', 'staging', 'production'):
+    if 'DATABASE_URL' not in os.environ:
+        raise RuntimeError(
+            'DATABASE_URL has to be set as an environment variable, when APP_CHANNEL is set '
+            'to {}'.format(secrets['APP_CHANNEL']))
+    else:
+        SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
+else:
+    SQLALCHEMY_DATABASE_URI = secrets['DATABASE_URL']
 
 # -- AUTH --------------------------------------------------------------------
 OIDC_USER_INFO_ENABLED = True

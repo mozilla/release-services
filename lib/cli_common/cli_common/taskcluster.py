@@ -117,10 +117,15 @@ def get_secrets(name,
                 taskcluster_access_token=None,
                 ):
     '''
-    Fetch a specific set of secrets by name
-    - merge project specific secrets
-    - check that all required secrets are present
-    - extend existing set of secrets
+    Fetch a specific set of secrets by name and verify that the required
+    secrets exist.
+
+    Merge secrets in the following order (the latter overrides the former):
+        - `existing` argument
+        - common secrets, specified under the `common` key in the secrets
+          object
+        - project specific secrets, specified under the `project_name` key in
+          the secrets object
     '''
 
     secrets = dict()
