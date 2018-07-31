@@ -40,4 +40,9 @@ setup(
     include_package_data=True,
     zip_safe=False,
     license='MPL2',
+    entry_points={
+        'console_scripts': [
+            'shipit-code-coverage-crawler = shipit_code_coverage_crawler.cli:main',
+        ]
+    },
 )
