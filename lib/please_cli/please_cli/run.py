@@ -62,7 +62,7 @@ def cmd(ctx, project, quiet, nix_shell,
     run_options = project_config.get('run_options', {})
 
     if not run_type:
-        raise click.ClickException('Application `{}` is not configured to be runnable.')
+        raise click.ClickException('Application `{}` is not configured to be runnable.'.format(project))
 
     host = run_options.get('host', 'localhost')
     if please_cli.config.IN_DOCKER:
