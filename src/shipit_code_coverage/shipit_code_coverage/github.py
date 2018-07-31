@@ -41,8 +41,8 @@ class GitHubUtils(object):
             'state': 'success',
         })
 
-    def get_commit(self, mercurial_commit):
-        def get_commit():
+    def hg_to_git(self, mercurial_commit):
+        def hg_to_git():
             r = requests.get('{}/gecko-dev/rev/hg/{}'.format(self.hg_git_mapper, mercurial_commit))
 
             if not r.ok:
@@ -50,10 +50,10 @@ class GitHubUtils(object):
 
             return r.text.split(' ')[0]
 
-        return retry(get_commit, retries=30)
+        return retry(hg_to_git, retries=30)
 
-    def get_mercurial(self, github_commit):
-        def get_commit():
+    def git_to_hg(self, github_commit):
+        def hg_to_git():
             r = requests.get('{}/gecko-dev/rev/git/{}'.format(self.hg_git_mapper, github_commit))
 
             if not r.ok:
@@ -61,7 +61,7 @@ class GitHubUtils(object):
 
             return r.text.split(' ')[1]
 
-        return retry(get_commit, retries=30)
+        return retry(hg_to_git, retries=30)
 
     def update_codecoveragereports_repo(self):
         if self.gecko_dev_user is None or self.gecko_dev_pwd is None:
