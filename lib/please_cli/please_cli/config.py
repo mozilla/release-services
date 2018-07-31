@@ -2,8 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
-
+import glob
 import os
 
 import click
@@ -59,9 +58,9 @@ TEMPLATES = {
 }
 
 DEV_PROJECTS = ['postgresql']
-PROJECTS = list(map(lambda x: x.replace('_', '-'),
+PROJECTS = list(map(lambda x: x.replace('_', '-')[len(SRC_DIR) + 1:],
                     filter(lambda x: os.path.exists(os.path.join(SRC_DIR, x, 'default.nix')),
-                           os.listdir(SRC_DIR))))
+                           glob.glob(SRC_DIR + '/*') + glob.glob(SRC_DIR + '/*/*'))))
 PROJECTS += DEV_PROJECTS
 
 

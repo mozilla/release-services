@@ -22,7 +22,18 @@ else
 
 let
 
+  filter_dirs = x:
+    builtins.filter
+      (p: (builtins.getAttr p x) == "directory")
+      (builtins.attrNames x);
+
   src_dir = ./../src;
+  level_one_dirs = filter_dirs (builtins.readDir src_dir);
+  level_two_dirs = pkgs.lib.flatten (builtins.map (x: builtins.map
+                                                        (y: "${x}/${y}")
+                                                        (filter_dirs (builtins.readDir "${src_dir}/${x}")))
+                                     level_one_dirs);
+
   releng_pkgs = {
     inherit pkgs;
     lib = import ./lib/default.nix { inherit releng_pkgs; };
@@ -44,13 +55,13 @@ let
   } // (
     # list projects (folders in src/ folder with default.nix) and imports them
     builtins.listToAttrs (
-	  builtins.map
-	    (project: { name = builtins.replaceStrings ["_"] ["-"] project;
-					value = import (src_dir + "/${project}/default.nix") { inherit releng_pkgs; };
-				  })
-		(builtins.filter
-		  (project: builtins.pathExists (src_dir + "/${project}/default.nix"))
-		  (builtins.attrNames (builtins.readDir src_dir))))
-  );
+      builtins.map
+        (project: { name = builtins.replaceStrings ["_"] ["-"] project;
+                    value = import (src_dir + "/${project}/default.nix") { inherit releng_pkgs; };
+                  })
+        (builtins.filter
+          (project: builtins.pathExists (src_dir + "/${project}/default.nix"))
+          (level_one_dirs ++ level_two_dirs)))
+    );
 
 in releng_pkgs
