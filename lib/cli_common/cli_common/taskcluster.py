@@ -135,6 +135,7 @@ def get_secrets(name,
                                       )
         all_secrets = secrets_service.get(name).get('secret', dict())
 
+    # TODO: add comments
     secrets_common = all_secrets.get('common', dict())
     secrets.update(secrets_common)
 

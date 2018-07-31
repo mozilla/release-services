@@ -28,12 +28,10 @@ secrets = cli_common.taskcluster.get_secrets(
     os.environ.get('TASKCLUSTER_SECRET'),
     shipit_workflow.config.PROJECT_NAME,
     required=required,
+    existing={x: os.environ.get(x) for x in required if x in os.environ},
     taskcluster_client_id=os.environ.get('TASKCLUSTER_CLIENT_ID'),
     taskcluster_access_token=os.environ.get('TASKCLUSTER_ACCESS_TOKEN'),
 )
-
-# override TC secrets with env variables
-secrets.update({x: os.environ.get(x) for x in required if x in os.environ})
 
 locals().update(secrets)
 
@@ -41,8 +39,18 @@ SECRET_KEY = base64.b64decode(secrets['SECRET_KEY_BASE64'])
 
 
 # -- DATABASE -----------------------------------------------------------------
-SQLALCHEMY_DATABASE_URI = secrets['DATABASE_URL']
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+# We require DATABASE_URL set by environment variables for branches deployed to Dockerflow.
+if secrets['APP_CHANNEL'] in ('testing', 'staging', 'production'):
+    if 'DATABASE_URL' not in os.environ:
+        raise RuntimeError(
+            'DATABASE_URL has to be set as an environment variable, when APP_CHANNEL is set '
+            'to {}'.format(secrets['APP_CHANNEL']))
+    else:
+        SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
+else:
+    SQLALCHEMY_DATABASE_URI = secrets['DATABASE_URL']
 
 # -- AUTH --------------------------------------------------------------------
 OIDC_USER_INFO_ENABLED = True
