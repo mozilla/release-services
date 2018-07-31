@@ -49,7 +49,7 @@ class CodeCov(object):
         if revision is None:
             # Retrieve revision of latest codecov build
             self.github_revision = uploader.get_latest_codecov()
-            self.revision = self.githubUtils.get_mercurial(self.github_revision)
+            self.revision = self.githubUtils.git_to_mercurial(self.github_revision)
             self.from_pulse = False
             suites_to_ignore = []
         else:
@@ -114,7 +114,7 @@ class CodeCov(object):
 
     def go(self):
         if self.from_pulse:
-            commit_sha = self.githubUtils.get_commit(self.revision)
+            commit_sha = self.githubUtils.mercurial_to_git(self.revision)
             try:
                 uploader.get_codecov(commit_sha)
                 logger.warn('Build was already injested')
