@@ -671,41 +671,20 @@ PROJECTS_CONFIG = {
             'postgresql',
         ],
         'deploys': [
-            {
-                'target': 'HEROKU',
-                'options': {
-                    'testing': {
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-testing-workflow',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://shipit-workflow.testing.mozilla-releng.net',
-                        # TODO: we need to change this to SSL Endpoint
-                        'dns': 'shipit-workflow.testing.mozilla-releng.net.herokudns.com',
-                    },
-                    'staging': {
-                        'nix_path_attribute': 'docker',
-                        'heroku_app': 'shipit-staging-workflow',
-                        'heroku_dyno_type': 'web',
-                        'url': 'https://shipit-workflow.staging.mozilla-releng.net',
-                        # TODO: we need to change this to SSL Endpoint
-                        'dns': 'shipit-workflow.staging.mozilla-releng.net.herokudns.com',
-                    },
-                },
-            },
-            {
-                'target': 'DOCKERHUB',
-                'options': {
-                    'testing': {
-                        'nix_path_attribute': 'dockerflow',
-                    },
-                    'staging': {
-                        'nix_path_attribute': 'dockerflow',
-                    },
-                    'production': {
-                        'nix_path_attribute': 'dockerflow',
-                    },
-                },
-            },
+            # {
+            #     'target': 'DOCKERHUB',
+            #     'options': {
+            #         'testing': {
+            #             'nix_path_attribute': 'dockerflow',
+            #         },
+            #         'staging': {
+            #             'nix_path_attribute': 'dockerflow',
+            #         },
+            #         'production': {
+            #             'nix_path_attribute': 'dockerflow',
+            #         },
+            #     },
+            # },
         ],
     },
     'shipit-frontend': {
