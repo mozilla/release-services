@@ -1146,23 +1146,6 @@ let
       };
     };
 
-    "push" = python.mkDerivation {
-      name = "push-0.0.1";
-      src = pkgs.fetchurl { url = "https://github.com/garbas/push/archive/9883706635f1b145bff93d6490b2d9c270d3f674.zip"; sha256 = "fcb1db8b37a623ea452b2542e041c265f0677777e447c1c67bb63e04bfba78a9"; };
-      doCheck = commonDoCheck;
-      checkPhase = "";
-      installCheckPhase = "";
-      buildInputs = commonBuildInputs;
-      propagatedBuildInputs = [
-      self."requests"
-    ];
-      meta = with pkgs.stdenv.lib; {
-        homepage = "https://github.com/matejc/push";
-        license = "";
-        description = "Utility to push tar.gz docker images to v2 registry";
-      };
-    };
-
     "py" = python.mkDerivation {
       name = "py-1.5.4";
       src = pkgs.fetchurl { url = "https://files.pythonhosted.org/packages/35/77/a0a2a4126cf454e6ac772942898379e2fe78f2b7885df0461a5b8f8a8040/py-1.5.4.tar.gz"; sha256 = "3fd59af7435864e1a243790d322d763925431213b6b8529c6ca71081ace3bbf7"; };
@@ -1654,7 +1637,7 @@ let
   localOverridesFile = ./requirements_override.nix;
   overrides = import localOverridesFile { inherit pkgs python; };
   commonOverrides = [
-    
+
   ];
   allOverrides =
     (if (builtins.pathExists localOverridesFile)

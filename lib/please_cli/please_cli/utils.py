@@ -2,10 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import base64
+import contextlib
+import hashlib
+import json
 import os
+import subprocess
+import tarfile
+import tempfile
 
 import click
 
+import cli_common.command
 import cli_common.log
 
 
@@ -117,3 +125,66 @@ def which(program):
                 return exe_file
 
     return None
+
+
+def generate_docker_auth(registry, username, password):
+    """Generate docker-specific auth JSON
+    """
+    # b64encode accepts bytes
+    auth_pair = '{}:{}'.format(username, password).encode('utf-8')
+    # JSON accepts unicode
+    auth_pair_base64 = base64.b64encode(auth_pair).decode('utf-8')
+    return {
+        'auths': {
+            'https://{}/v1'.format(registry): {
+                'auth': auth_pair_base64
+            }
+        }
+    }
+
+
+@contextlib.contextmanager
+def authfile(registry, username, password):
+    auth = generate_docker_auth(registry, username, password)
+    with tempfile.TemporaryDirectory() as tempdir:
+
+        # This file will be automatically deleted
+        auth_file = os.path.join(tempdir, 'auth.json')
+        with open(auth_file, 'w') as fd:
+            json.dump(auth, fd)
+
+        yield auth_file
+
+
+def push_docker_image(registry, username, password, image, repo, tag,
+                      interactive=False):
+    with authfile(registry, username, password) as auth_file:
+        command = ['skopeo', 'copy',
+                   '--authfile', auth_file,
+                   'docker-archive://{}'.format(image),
+                   'docker://{}/{}:{}'.format(registry, repo, tag)
+                  ]
+        result, output, error = cli_common.command.run(
+            command,
+            stream=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        check_result(
+            result,
+            output,
+            ask_for_details=interactive,
+        )
+
+
+def docker_image_id(image):
+    """Get docker image ID
+
+    Docker image ID corresponds to the sha256 hash of the config file
+    """
+    tar = tarfile.open(image)
+    manifest = json.load(tar.extractfile('manifest.json'))
+    config = tar.extractfile(manifest[0]['Config'])
+    image_sha256 = hashlib.sha256(config.read()).hexdigest()
+    return 'sha256:{}'.format(image_sha256)
+

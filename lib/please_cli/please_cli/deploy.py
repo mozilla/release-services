@@ -18,8 +18,6 @@ import click_spinner
 import please_cli.build
 import please_cli.config
 import please_cli.utils
-import push.image
-import push.registry
 import requests
 import taskcluster.exceptions
 
@@ -242,6 +240,12 @@ def cmd_S3(ctx,
     help='`nix` command',
     )
 @click.option(
+    '--docker-registry',
+    required=True,
+    default='registry.heroku.com',
+    help='Docker registry.',
+    )
+@click.option(
     '--interactive/--no-interactive',
     default=True,
     )
@@ -259,6 +263,7 @@ def cmd_HEROKU(ctx,
                taskcluster_secret,
                taskcluster_client_id,
                taskcluster_access_token,
+               docker_registry,
                interactive,
                ):
 
@@ -290,33 +295,31 @@ def cmd_HEROKU(ctx,
 
     for project_path in project_paths:
         project_path = os.path.realpath(project_path)
-
-        click.echo(' => Looking up Docker ID ... ', nl=False)
-        project_spec = push.image.spec(project_path)
-        project_docker_id = project_spec['layers'][0]['json_digest']
+        repo = '{}/{}'.format(heroku_app, heroku_dyno_type)
+        tag = 'latest'
 
         click.echo(' => Pushing {} to heroku docker registry ... '.format(project), nl=False)
         with click_spinner.spinner():
-            push.registry.push(
-                project_spec,
-                "https://registry.heroku.com",
-                heroku_username,
-                heroku_api_token,
-                heroku_app + "/" + heroku_dyno_type,
-                "latest",
+            please_cli.utils.push_docker_image(
+                registry=docker_registry,
+                username=heroku_username,
+                password=heroku_api_token,
+                image=project_path,
+                repo=repo,
+                tag=tag,
+                interactive=interactive,
             )
-        please_cli.utils.check_result(
-            0,
-            'Pushed {} to heroku.'.format(project),
-            ask_for_details=interactive,
-        )
+
+        click.echo(' => Looking up Docker ID ... ', nl=False)
+        with click_spinner.spinner():
+            image_id = please_cli.utils.docker_image_id(project_path)
 
         click.echo(' => Releasing heroku app .. ', nl=False)
         result, output = 1, 'works'
         with click_spinner.spinner():
             update = dict(
                 type=heroku_dyno_type,
-                docker_image=project_docker_id,
+                docker_image=image_id,
             )
             if heroku_command:
                 update['command'] = heroku_command
@@ -373,6 +376,12 @@ def cmd_HEROKU(ctx,
     help='`nix` command',
     )
 @click.option(
+    '--docker-registry',
+    required=True,
+    default=please_cli.config.DOCKER_REGISTRY,
+    help='Docker registry.',
+    )
+@click.option(
     '--docker-repo',
     required=True,
     default=please_cli.config.DOCKER_REPO,
@@ -393,6 +402,7 @@ def cmd_TASKCLUSTER_HOOK(ctx,
                          taskcluster_secret,
                          taskcluster_client_id,
                          taskcluster_access_token,
+                         docker_registry,
                          docker_repo,
                          interactive,
                          ):
@@ -457,20 +467,15 @@ def cmd_TASKCLUSTER_HOOK(ctx,
             image_tag = '-'.join(reversed(image[11:-7].split('-', 1)))
             click.echo(' => Uploading docker image `{}:{}` ... '.format(docker_repo, image_tag), nl=False)
             with click_spinner.spinner():
-                push.registry.push(
-                    push.image.spec(image),
-                    please_cli.config.DOCKER_REGISTRY,
-                    docker_username,
-                    docker_password,
-                    docker_repo,
-                    image_tag,
+                please_cli.utils.push_docker_image(
+                    registry=docker_registry,
+                    username=docker_username,
+                    password=docker_password,
+                    image=image,
+                    repo=docker_repo,
+                    tag=image_tag,
+                    interactive=interactive,
                 )
-
-            please_cli.utils.check_result(
-                0,
-                'Pushed {}:{} docker image.'.format(docker_repo, image_tag),
-                ask_for_details=interactive,
-            )
 
             hook['task']['payload']['image'] = '{}:{}'.format(docker_repo, image_tag)
 
@@ -611,31 +616,24 @@ def cmd_DOCKERHUB(ctx,
 
     for project_path in project_paths:
         project_path = os.path.realpath(project_path)
-
-        spec = push.image.spec(project_path)
-        # Stable tag, e.g. shipit-workflow-staging
-        image_tag = docker_image_tag_format.format(project=project,
-                                                   nix_path_attribute=nix_path_attribute,
-                                                   channel=channel)
         project_basename = os.path.basename(project_path)
         # remove the docker-image-mozilla- prefix and the extension
         tag_base = project_basename.replace('docker-image-mozilla-', '').replace('.tar.gz', '')
         # Puth the hash to the end of the tag
         image_tag_versioned = '-'.join(reversed(tag_base.split('-', 1)))
+        # Stable tag, e.g. shipit-workflow-staging
+        image_tag = docker_image_tag_format.format(project=project,
+                                                   nix_path_attribute=nix_path_attribute,
+                                                   channel=channel)
         for tag in (image_tag_versioned, image_tag):
             click.echo(' => Uploading docker image `{}:{}` ... '.format(docker_repo, tag), nl=False)
             with click_spinner.spinner():
-                push.registry.push(
-                    spec,
-                    docker_registry,
-                    docker_username,
-                    docker_password,
-                    docker_repo,
-                    tag,
+                please_cli.utils.push_docker_image(
+                    registry=docker_registry,
+                    username=docker_username,
+                    password=docker_password,
+                    image=project_path,
+                    repo=docker_repo,
+                    tag=tag,
+                    interactive=interactive,
                 )
-
-            please_cli.utils.check_result(
-                0,
-                'Pushed {}:{} docker image.'.format(docker_repo, tag),
-                ask_for_details=interactive,
-            )
