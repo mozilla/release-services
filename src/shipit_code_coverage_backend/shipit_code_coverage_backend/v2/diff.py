@@ -5,8 +5,58 @@
 from cli_common import log
 from shipit_code_coverage_backend.services.active_data import ActiveDataCoverage
 from shipit_code_coverage_backend.v2.base import active_data, NoResults
+from pprint import pprint
 
 logger = log.get_logger(__name__)
+
+
+def coverage_in_push(files, push):
+    '''
+    Load coverage for several files, on a specific push
+    Aggregate covered lines directly through ES "painless"
+    '''
+    assert isinstance(files, (list, tuple))
+    assert isinstance(push, int)
+
+    filters = [
+        # Filter by files
+        {'terms': {ActiveDataCoverage.FIELD_FILENAME: files}},
+
+        # Filter by push
+        {'term': {ActiveDataCoverage.FIELD_PUSH: push}},
+    ]
+    query = ActiveDataCoverage.base_query(filters)
+    query.update({
+        'size': 0,
+        'aggs': {
+            'files': {
+                'terms': {'field': ActiveDataCoverage.FIELD_FILENAME},
+
+                'aggs': {
+                    'covered': {
+                        "scripted_metric": {
+                            "init_script" : "params._agg.covered = []",
+
+                            # Merge all the covered lines, per ES shard
+                            "map_script" : "params._agg.covered.addAll(doc['source.file.covered.~n~'])",
+
+                            # Make a set per shard
+                            "combine_script" : "return params._agg.covered.stream().distinct().collect(Collectors.toList())",
+
+                            # Merge all sets into a unique result per file (top aggregation)
+                            "reduce_script" : "return params._aggs.stream().flatMap(Collection::stream).distinct().sorted().collect(Collectors.toList())"
+                        }
+                    }
+                }
+            },
+        },
+    })
+    out = active_data.search('coverage_files_push', query, timeout=100)
+
+    return {
+        bucket['key']: list(map(int, bucket['covered']['value']))
+        for bucket in out['aggregations']['files']['buckets']
+    }
 
 
 def coverage_diff(changeset):
@@ -19,7 +69,8 @@ def coverage_diff(changeset):
     # Load revision from MC
     rev = active_data.get_changeset(changeset)
 
-    from pprint import pprint
+    print('-'* 80)
+    print('REVISION:')
     pprint(rev)
 
     files = rev['changeset']['files']
@@ -57,49 +108,21 @@ def coverage_diff(changeset):
         # Probably should use scan/scroll
         'size': 100,
     }
-    try:
-        others = active_data.search('commits_above', body=query, index='repo')
-    except NoResults:
-        others = None
+#    try:
+#        others = active_data.search('commits_above', body=query, index='repo')
+#    except NoResults:
+#        others = None
+#
+#    print('-'* 80)
+#    print('OTHERS:')
+#    if others:
+#        for o in others['hits']['hits']:
+#            print('-' * 40)
+#            print(o['_source']['changeset']['description'])
+#
 
-    if others:
-        for o in others['hits']['hits']:
-            print('-' * 40)
-            print(o['_source']['changeset']['description'])
 
-    # Load coverage for these files, on this push
-    # TODO: aggregate covered/uncovered
-    filters = [
-        # Filter by files
-        {'terms': {ActiveDataCoverage.FIELD_FILENAME: files}},
-
-        # Filter by push
-        {'term': {ActiveDataCoverage.FIELD_PUSH: push}},
-    ]
-    query = ActiveDataCoverage.base_query(filters)
-    #query.update({
-    #    'size': 0,
-    #    'aggs': {
-    #        'files': {
-    #            'terms': {'field': ActiveDataCoverage.FIELD_FILENAME},
-
-    #            'aggs': {
-    #                'covered': {
-    #    		"scripted_metric": {
-    #    		    "init_script" : "params._agg.covered = []",
-    #    		    #"map_script" : "params._agg.covered.addAll(doc.source.file.covered)",
-    #    		    "map_script" : "params._agg.covered.add(42)",
-    #    		    "reduce_script" : "Set out = new Set();for (a in params._aggs) { out.addAll(a); } return out.toArray();",
-    #    		}
-    #    	    }
-    #            }
-    #        },
-    #    },
-    #})
-    #query['size'] = 100
-
-    out = active_data.search('coverage_files_push', query, timeout=100)
-
-    from pprint import pprint
-    pprint(out)
+    print('-'* 80)
+    print('FILES PUSH:')
+    pprint(coverage_in_push(files, push))
     return {}
