@@ -3,5 +3,5 @@
 
 releng_pkgs.lib.mkYarnFrontend {
   src = ./.;
-	src_path = ./.;
+  src_path = ./.;
 }
