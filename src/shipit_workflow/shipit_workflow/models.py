@@ -107,7 +107,7 @@ class Release(db.Model):
     def generate_phases(self, partner_urls=None, github_token=None):
         blob = []
         phases = []
-        previous_graph_ids = [self.decicion_task_id]
+        previous_graph_ids = [self.decision_task_id]
         next_version = bump_version(self.version.replace('esr', ''))
         input_common = {
             'build_number': self.build_number,
@@ -151,12 +151,12 @@ class Release(db.Model):
 
     @property
     @lru_cache(maxsize=2048)
-    def decicion_task_id(self):
+    def decision_task_id(self):
         return find_decision_task_id(self.project, self.revision)
 
     @property
     def actions(self):
-        return fetch_actions_json(self.decicion_task_id)
+        return fetch_actions_json(self.decision_task_id)
 
     def release_promotion_flavors(self):
         relpro = find_action('release-promotion', self.actions)
