@@ -59,6 +59,60 @@ def coverage_in_push(files, push):
     }
 
 
+def changes_on_files(files, push, revision_index, branch_name):
+    '''
+    List all the operations that happened on some files, in a push
+    '''
+    assert isinstance(files, (list, tuple))
+    assert isinstance(push, int)
+    query = {
+        'query': {
+            'bool': {
+
+                # Files intersection
+                'should': [
+                    { 'match': {'changeset.files': f}}
+                    for f in files
+                ],
+
+                'must': [
+                    # After our commit
+                    {'range': {
+                        'index': {'gt': revision_index},
+                    }},
+
+                    # Same push and repo
+                    {'match': {'push.id': push}},
+                    {'match': {'branch.name': branch_name}},
+                ]
+            }
+        },
+
+        # Only load moves
+        '_source': ['changeset.moves', 'changeset.description'],
+
+        # Probably should use scan/scroll
+        'size': 100,
+    }
+    try:
+        others = active_data.search('commits_above', body=query, index='repo')
+    except NoResults:
+        others = None
+
+    if others:
+
+        # Group by files, with only our interesting files
+        return {
+            filename: [
+                move['changes']
+                for other in others['hits']['hits']
+                for move in other['_source']['changeset']['moves']
+                if move['new']['name'].endswith(filename) or move['old']['name'].endswith(filename)
+            ]
+            for filename in files
+        }
+
+
 def coverage_diff(changeset):
     '''
     List all the coverage changes introduced by a diff
@@ -79,48 +133,11 @@ def coverage_diff(changeset):
 
     # Load all the other commits on this push, above this changeset
     # and for these files
-    query = {
-        'query': {
-            'bool': {
+    changes = changes_on_files(files, push, rev['index'], rev['branch']['name'])
 
-                # Files intersection
-                'should': [
-                    { 'match': {'changeset.files': f}}
-                    for f in files
-                ],
-
-                'must': [
-                    # After our commit
-                    {'range': {
-                        'index': {'gt': rev['index']},
-                    }},
-
-                    # Same push and repo
-                    {'match': {'push.id': push}},
-                    {'match': {'branch.name': rev['branch']['name']}},
-                ]
-            }
-        },
-
-        # Only load moves
-        '_source': ['changeset.moves', 'changeset.description'],
-
-        # Probably should use scan/scroll
-        'size': 100,
-    }
-#    try:
-#        others = active_data.search('commits_above', body=query, index='repo')
-#    except NoResults:
-#        others = None
-#
-#    print('-'* 80)
-#    print('OTHERS:')
-#    if others:
-#        for o in others['hits']['hits']:
-#            print('-' * 40)
-#            print(o['_source']['changeset']['description'])
-#
-
+    print('-'* 80)
+    print('Changes:')
+    pprint(changes)
 
     print('-'* 80)
     print('FILES PUSH:')
