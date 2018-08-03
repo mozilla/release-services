@@ -15,6 +15,7 @@ logger = log.get_logger(__name__)
 INDEX_COVERAGE = 'coverage'
 INDEX_REPO = 'repo'
 
+
 class NoResults(Exception):
     '''
     Raised when no results were found
@@ -90,6 +91,7 @@ class ActiveData(object):
             'Too many items found for {}'.format(changeset)
 
         return out['hits']['hits'][0]['_source']
+
 
 # Shared instance
 active_data = ActiveData()

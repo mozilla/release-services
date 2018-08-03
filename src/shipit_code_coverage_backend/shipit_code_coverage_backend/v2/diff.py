@@ -2,10 +2,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from pprint import pprint
+
 from cli_common import log
 from shipit_code_coverage_backend.services.active_data import ActiveDataCoverage
-from shipit_code_coverage_backend.v2.base import active_data, NoResults
-from pprint import pprint
+from shipit_code_coverage_backend.v2.base import NoResults
+from shipit_code_coverage_backend.v2.base import active_data
 
 logger = log.get_logger(__name__)
 
@@ -34,17 +36,17 @@ def coverage_in_push(files, push):
 
                 'aggs': {
                     'covered': {
-                        "scripted_metric": {
-                            "init_script" : "params._agg.covered = []",
+                        'scripted_metric': {
+                            'init_script': 'params._agg.covered = []',
 
                             # Merge all the covered lines, per ES shard
-                            "map_script" : "params._agg.covered.addAll(doc['source.file.covered.~n~'])",
+                            'map_script': 'params._agg.covered.addAll(doc[\'source.file.covered.~n~\'])',
 
                             # Make a set per shard
-                            "combine_script" : "return params._agg.covered.stream().distinct().collect(Collectors.toList())",
+                            'combine_script': 'return params._agg.covered.stream().distinct().collect(Collectors.toList())',
 
                             # Merge all sets into a unique result per file (top aggregation)
-                            "reduce_script" : "return params._aggs.stream().flatMap(Collection::stream).distinct().sorted().collect(Collectors.toList())"
+                            'reduce_script': 'return params._aggs.stream().flatMap(Collection::stream).distinct().sorted().collect(Collectors.toList())'
                         }
                     }
                 }
@@ -71,7 +73,7 @@ def changes_on_files(files, push, revision_index, branch_name):
 
                 # Files intersection
                 'should': [
-                    { 'match': {'changeset.files': f}}
+                    {'match': {'changeset.files': f}}
                     for f in files
                 ],
 
@@ -123,7 +125,7 @@ def coverage_diff(changeset):
     # Load revision from MC
     rev = active_data.get_changeset(changeset)
 
-    print('-'* 80)
+    print('-' * 80)
     print('REVISION:')
     pprint(rev)
 
@@ -135,11 +137,11 @@ def coverage_diff(changeset):
     # and for these files
     changes = changes_on_files(files, push, rev['index'], rev['branch']['name'])
 
-    print('-'* 80)
+    print('-' * 80)
     print('Changes:')
     pprint(changes)
 
-    print('-'* 80)
+    print('-' * 80)
     print('FILES PUSH:')
     pprint(coverage_in_push(files, push))
     return {}
