@@ -2,7 +2,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from pprint import pprint
+import itertools
 
 from cli_common import log
 from shipit_code_coverage_backend.services.active_data import ActiveDataCoverage
@@ -40,7 +40,7 @@ def coverage_in_push(files, push):
                             'init_script': 'params._agg.covered = []',
 
                             # Merge all the covered lines, per ES shard
-                            'map_script': 'params._agg.covered.addAll(doc[\'source.file.covered.~n~\'])',
+                            'map_script': "params._agg.covered.addAll(doc['source.file.covered.~n~'])",
 
                             # Make a set per shard
                             'combine_script': 'return params._agg.covered.stream().distinct().collect(Collectors.toList())',
@@ -99,49 +99,86 @@ def changes_on_files(files, push, revision_index, branch_name):
     try:
         others = active_data.search('commits_above', body=query, index='repo')
     except NoResults:
-        others = None
+        return {}
 
-    if others:
+    # Group by files, with only our interesting files
+    return {
+        filename: [
+            move['changes']
+            for other in others['hits']['hits']
+            for move in other['_source']['changeset']['moves']
+            if move['new']['name'].endswith(filename) or move['old']['name'].endswith(filename)
+        ]
+        for filename in files
+    }
 
-        # Group by files, with only our interesting files
-        return {
-            filename: [
-                move['changes']
-                for other in others['hits']['hits']
-                for move in other['_source']['changeset']['moves']
-                if move['new']['name'].endswith(filename) or move['old']['name'].endswith(filename)
-            ]
-            for filename in files
-        }
+
+def rewind(all_changes, original_lines):
+
+    # TODO: move offsets calc in changes_on_files ?
+    offsets = {}
+    for changes in all_changes:
+        for change in changes:
+            if change['line'] not in offsets:
+                offsets[change['line']] = 0
+
+            offsets[change['line']] += change['action'] == '+' and 1 or -1
+
+    # Apply the sum of all changes above the line to each line
+    return {
+        line: line + sum([
+            offsets.get(i, 0)
+            for i in range(1, line)
+        ])
+        for line in original_lines
+    }
 
 
 def coverage_diff(changeset):
     '''
     List all the coverage changes introduced by a diff
     '''
-
-    print('DIFF', changeset)
-
     # Load revision from MC
     rev = active_data.get_changeset(changeset)
-
-    print('-' * 80)
-    print('REVISION:')
-    pprint(rev)
-
     files = rev['changeset']['files']
     push = rev['push']['id']
     logger.info('Looking up coverage', files=files, push=push)
+
+    # Get the lines affected by the patch, per files
+    lines = {
+        filename: set(itertools.chain(*[
+            [c['line'] for c in move['changes']]
+            for move in rev['changeset']['moves']
+            if move['new']['name'].endswith(filename) or move['old']['name'].endswith(filename)
+        ]))
+        for filename in files
+    }
 
     # Load all the other commits on this push, above this changeset
     # and for these files
     changes = changes_on_files(files, push, rev['index'], rev['branch']['name'])
 
-    print('-' * 80)
-    print('Changes:')
-    pprint(changes)
+    # Get final coverage on these files, for this push
+    coverage = coverage_in_push(files, push)
 
-    print('-' * 80)
-    print('FILES PUSH:')
-    pprint(coverage_in_push(files, push))
-    return {}
+    # Rewind the lines covered by unapplying every change
+    out = {}
+    for filename in files:
+
+        file_changes = changes.get(filename)
+        if file_changes is None:
+            logger.warn('Missing changes', filename=filename)
+            continue
+
+        file_lines = rewind(file_changes, lines.get(filename))
+
+        file_coverage = coverage.get(filename)
+        out[filename] = [
+            {
+                'line': original_line,
+                'covered': final_line in file_coverage
+            }
+            for original_line, final_line in file_lines.items()
+        ]
+
+    return out
