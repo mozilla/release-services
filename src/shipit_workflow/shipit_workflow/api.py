@@ -39,17 +39,20 @@ def validate_user(key, checker):
     def wrapper(view_func):
         @functools.wraps(view_func)
         def decorated(*args, **kwargs):
+            has_permissions = False
             try:
-                if checker(flask.g.userinfo[key]):
-                    return view_func(*args, **kwargs)
+                has_permissions = checker(flask.g.userinfo[key])
             except (AttributeError, KeyError):
                 response_body = {'error': 'missing_userinfo',
                                  'error_description': 'Userinfo is missing'}
                 return response_body, 401, {'WWW-Authenticate': 'Bearer'}
 
-            response_body = {'error': 'invalid_permissions',
-                             'error_description': 'Check your permissions'}
-            return response_body, 401, {'WWW-Authenticate': 'Bearer'}
+            if has_permissions:
+                return view_func(*args, **kwargs)
+            else:
+                response_body = {'error': 'invalid_permissions',
+                                 'error_description': 'Check your permissions'}
+                return response_body, 401, {'WWW-Authenticate': 'Bearer'}
         return decorated
     return wrapper
 
