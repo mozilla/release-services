@@ -633,10 +633,11 @@ PROJECTS_CONFIG = {
             {
                 'target': 'S3',
                 'options': {
+
                     'testing': {
                         's3_bucket': 'static-analysis-testing-frontend',
                         'url': 'https://static-analysis.testing.moz.tools',
-                        'dns': 'd2jpisuzgldax2.cloudfront.net.',
+                        'dns': 'd1blqs705aw8h9.cloudfront.net.',
                         'envs': {
                             # Use the same API as staging
                             'CONFIG': 'staging',
@@ -649,7 +650,7 @@ PROJECTS_CONFIG = {
                     'staging': {
                         's3_bucket': 'static-analysis-staging-frontend',
                         'url': 'https://static-analysis.staging.moz.tools',
-                        'dns': 'd2ld4e8bl8yd1l.cloudfront.net.',
+                        'dns': 'd21hzgxp28m0tc.cloudfront.net.',
                         'envs': {
                             'CONFIG': 'staging',
                         },
@@ -661,7 +662,7 @@ PROJECTS_CONFIG = {
                     'production': {
                         's3_bucket': 'static-analysis-production-frontend',
                         'url': 'https://static-analysis.moz.tools',
-                        'dns': 'dve8yd1431ifz.cloudfront.net.',
+                        'dns': 'd2ezri92497z3m.cloudfront.net.',
                         'envs': {
                             'CONFIG': 'production',
                         },
