@@ -616,6 +616,65 @@ PROJECTS_CONFIG = {
             },
         ]
     },
+    'staticanalysis/frontend': {
+        'run': 'NEUTRINO',
+        'run_options': {
+            'port': 8010,
+            'envs': {
+                'CONFIG': 'dev',
+            },
+        },
+        'requires': [],
+        'checks': [
+            ('Checking code quality', 'yarn lint'),
+            ('Running tests', 'yarn test'),
+        ],
+        'deploys': [
+            {
+                'target': 'S3',
+                'options': {
+
+                    'testing': {
+                        's3_bucket': 'static-analysis-testing-frontend',
+                        'url': 'https://static-analysis.testing.moz.tools',
+                        'dns': 'd1blqs705aw8h9.cloudfront.net.',
+                        'envs': {
+                            # Use the same API as staging
+                            'CONFIG': 'staging',
+                        },
+                        'csp': [
+                            'https://index.taskcluster.net',
+                            'https://queue.taskcluster.net',
+                        ],
+                    },
+                    'staging': {
+                        's3_bucket': 'static-analysis-staging-frontend',
+                        'url': 'https://static-analysis.staging.moz.tools',
+                        'dns': 'd21hzgxp28m0tc.cloudfront.net.',
+                        'envs': {
+                            'CONFIG': 'staging',
+                        },
+                        'csp': [
+                            'https://index.taskcluster.net',
+                            'https://queue.taskcluster.net',
+                        ],
+                    },
+                    'production': {
+                        's3_bucket': 'static-analysis-production-frontend',
+                        'url': 'https://static-analysis.moz.tools',
+                        'dns': 'd2ezri92497z3m.cloudfront.net.',
+                        'envs': {
+                            'CONFIG': 'production',
+                        },
+                        'csp': [
+                            'https://index.taskcluster.net',
+                            'https://queue.taskcluster.net',
+                        ],
+                    },
+                },
+            },
+        ],
+    },
     'shipit-uplift': {
         'checks': [
             ('Checking code quality', 'flake8'),
