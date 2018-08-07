@@ -1,10 +1,10 @@
-{ releng_pkgs 
-}: 
+{ releng_pkgs
+}:
 
 let
 
   inherit (releng_pkgs.lib) mkPython fromRequirementsFile filterSource ;
-  inherit (releng_pkgs.pkgs) writeScript makeWrapper glibcLocales openssl;
+  inherit (releng_pkgs.pkgs) writeScript makeWrapper glibcLocales openssl skopeo;
   inherit (releng_pkgs.pkgs.lib) fileContents ;
   inherit (releng_pkgs.pkgs.stdenv) mkDerivation;
   inherit (releng_pkgs.tools) pypi2nix;
@@ -22,6 +22,7 @@ let
       [ makeWrapper ] ++
       fromRequirementsFile ./requirements-dev.txt python.packages;
     propagatedBuildInputs =
+      [ skopeo ] ++
       fromRequirementsFile ./requirements.txt python.packages;
     prePatch= ''
       rm -f please_cli/VERSION
