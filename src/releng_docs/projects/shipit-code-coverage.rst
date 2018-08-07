@@ -3,6 +3,37 @@
 Project: shipit-code-coverage
 ==========================
 
+:contact: `Marco Castelluccio`_, (backup `Release Management`_)
+
+This project implements two things:
+
+#. A task that runs on every ``mozilla-central`` push and uploads coverage
+   reports to codecov.io_ and coveralls.io_.
+#. A task that is run weekly and generates:
+
+   - A report of files that are not covered by tests
+     (``zero_coverage_report.json``). This report can be viewed at
+     `code-coverage-reports`_. This is useful both at `detecting and removing
+     dead code`_, and `figuring out where to add tests`_.
+   - A file (``chunk_mapping.sqlite``) that maps:
+      - from source files to test chunks that cover them,
+      - from source files to tests that cover them,
+      - from test chunks to the test files that they contain.
+   - A coverage report of `web-platform-tests`, uploaded to `the
+     code-coverage-reports GitHub repo`_ .
+
+These artifacts can be obtained from the `taskcluster index`_.
+
+.. _Marco Castelluccio: https://github.com/marco-c
+.. _Release Management: https://wiki.mozilla.org/Release_Management
+.. _codecov.io: https://codecov.io/gh/marco-c/gecko-dev
+.. _coveralls.io: https://coveralls.io/github/marco-c/gecko-dev
+.. _detecting and removing dead code: https://bugzilla.mozilla.org/show_bug.cgi?id=1415819
+.. _figuring out where to add tests: https://bugzilla.mozilla.org/show_bug.cgi?id=1415824
+.. _code-coverage-reports: https://marco-c.github.io/code-coverage-reports
+.. _the code-coverage-reports GitHub repo: https://github.com/marco-c/code-coverage-reports/tree/master
+.. _taskcluster index: https://tools.taskcluster.net/index/project.releng.services.project.production.shipit_code_coverage/latest
+
 Is the code coverage project working correctly?
 --------------------------------
 
