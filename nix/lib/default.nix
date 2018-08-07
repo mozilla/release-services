@@ -404,6 +404,7 @@ in rec {
     { src
     , src_path ? null
     , csp ? "default-src 'none'; img-src 'self' data:; script-src 'self'; style-src 'self'; font-src 'self';"
+    , extraBuildInputs ? []
     , patchPhase ? ""
     , postInstall ? ""
     , shellHook ? ""
@@ -418,6 +419,8 @@ in rec {
         inherit src;
 
         doCheck = true;
+
+        extraBuildInputs = extraBuildInputs;
 
         checkPhase = ''
           yarn lint
@@ -474,6 +477,7 @@ in rec {
             set -e
             export SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt"
             pushd "$SERVICES_ROOT"${self.src_path} >> /dev/null
+            rm -f ./node_modules
             ${releng_pkgs.pkgs.yarn}/bin/yarn upgrade
             popd
           '';
