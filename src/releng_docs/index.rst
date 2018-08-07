@@ -39,6 +39,7 @@ Projects
     shipit-frontend <projects/shipit-frontend>
     shipit-uplift <projects/shipit-uplift>
     shipit-static-analysis <projects/shipit-static-analysis>
+    shipit-pulse-listener <projects/shipit-pulse-listener>
 
 
 Develop
