@@ -223,6 +223,8 @@ def cmd(ctx, project, quiet, nix_shell,
         os.environ['SSL_CACERT'] = ca_cert_file
         os.environ['SSL_CERT'] = server_cert_file
         os.environ['SSL_KEY'] = server_key_file
+        os.environ['HOST'] = host
+        os.environ['PORT'] = port
 
         for env_name, env_value in run_options.get('envs', {}).items():
             env_name = 'WEBPACK_' + env_name.replace('-', '_').upper()
@@ -254,18 +256,27 @@ def cmd(ctx, project, quiet, nix_shell,
                        certificates_dir=os.path.join(please_cli.config.TMP_DIR, 'certs'),
                        )
 
+        os.environ['SSL_CACERT'] = ca_cert_file
+        os.environ['SSL_CERT'] = server_cert_file
+        os.environ['SSL_KEY'] = server_key_file
+        os.environ['HOST'] = host
+        os.environ['PORT'] = port
+
+        os.environ['RELEASE_VERSION'] = please_cli.config.VERSION
+        os.environ['RELEASE_CHANNEL'] = 'development'
+
+        for env_name, env_value in run_options.get('envs', {}).items():
+            env_name = env_name.replace('/', '_').replace('-', '_').upper()
+            os.environ[env_name] = env_value
+
         for require in project_config.get('requires', []):
-            env_name = '{}_URL'.format(require.replace('-', '_').upper())
+            env_name = '{}_URL'.format(require.replace('/', '_').replace('-', '_').upper())
             env_value = '{}://{}:{}'.format(
                 please_cli.config.PROJECTS_CONFIG[require]['run_options'].get('schema', 'https'),
                 please_cli.config.PROJECTS_CONFIG[require]['run_options'].get('host', host),
                 please_cli.config.PROJECTS_CONFIG[require]['run_options']['port'],
             )
             os.environ[env_name] = env_value
-
-        os.environ['SSL_CACERT'] = ca_cert_file
-        os.environ['SSL_CERT'] = server_cert_file
-        os.environ['SSL_KEY'] = server_key_file
 
         for env_name, env_value in project_config['run_options'].get('envs', {}).items():
             click.echo('Setting {}:{} ...'.format(env_name, env_value))
