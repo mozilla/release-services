@@ -635,7 +635,7 @@ PROJECTS_CONFIG = {
                 'options': {
 
                     'testing': {
-                        's3_bucket': 'static-analysis-testing-frontend',
+                        's3_bucket': 'release-services-staticanalysis-frontend-testing',
                         'url': 'https://static-analysis.testing.moz.tools',
                         'dns': 'd1blqs705aw8h9.cloudfront.net.',
                         'envs': {
@@ -648,7 +648,7 @@ PROJECTS_CONFIG = {
                         ],
                     },
                     'staging': {
-                        's3_bucket': 'static-analysis-staging-frontend',
+                        's3_bucket': 'release-services-staticanalysis-frontend-staging',
                         'url': 'https://static-analysis.staging.moz.tools',
                         'dns': 'd21hzgxp28m0tc.cloudfront.net.',
                         'envs': {
@@ -660,7 +660,7 @@ PROJECTS_CONFIG = {
                         ],
                     },
                     'production': {
-                        's3_bucket': 'static-analysis-production-frontend',
+                        's3_bucket': 'release-services-staticanalysis-frontend-production',
                         'url': 'https://static-analysis.moz.tools',
                         'dns': 'd2ezri92497z3m.cloudfront.net.',
                         'envs': {
