@@ -446,9 +446,6 @@ in rec {
           ln -s ${self.node_modules} ./node_modules
           export PATH=$PWD/node_modules/.bin:$PATH
           export NODE_PATH=$PWD/node_modules:$NODE_PATH
-          export SSL_CERT=$SSL_DEV_CA/server.crt
-          export SSL_KEY=$SSL_DEV_CA/server.key
-          export SSL_CACERT=$SSL_DEV_CA/ca.crt
         '' + shellHook;
 
         passthru = {
