@@ -64,9 +64,7 @@ def cmd(ctx, project, quiet, nix_shell,
     if not run_type:
         raise click.ClickException('Application `{}` is not configured to be runnable.'.format(project))
 
-    host = run_options.get('host', 'localhost')
-    if please_cli.config.IN_DOCKER:
-        host = run_options.get('host', '127.0.0.1')
+    host = run_options.get('host', '127.0.0.1')
     port = str(run_options.get('port', 8000))
     schema = 'https://'
     project_name = project.replace('-', '_')
@@ -139,7 +137,7 @@ def cmd(ctx, project, quiet, nix_shell,
 
     if 'redis' in project_config.get('requires', []):
         # TODO: Support checking if redis is running and support starting redis using please.
-        os.environ['REDIS_URL'] = 'redis://localhost:6379'
+        os.environ['REDIS_URL'] = 'redis://127.0.0.1:6379'
 
     if run_type == 'POSTGRESQL':
         data_dir = run_options.get('data_dir', os.path.join(please_cli.config.TMP_DIR, 'postgresql'))
@@ -256,18 +254,15 @@ def cmd(ctx, project, quiet, nix_shell,
                        certificates_dir=os.path.join(please_cli.config.TMP_DIR, 'certs'),
                        )
 
-        os.environ['SSL_CACERT'] = ca_cert_file
-        os.environ['SSL_CERT'] = server_cert_file
-        os.environ['SSL_KEY'] = server_key_file
-        os.environ['HOST'] = host
-        os.environ['PORT'] = port
-
-        os.environ['RELEASE_VERSION'] = please_cli.config.VERSION
-        os.environ['RELEASE_CHANNEL'] = 'development'
-
-        for env_name, env_value in run_options.get('envs', {}).items():
-            env_name = env_name.replace('/', '_').replace('-', '_').upper()
-            os.environ[env_name] = env_value
+        envs = dict(
+            SSL_CACERT=ca_cert_file,
+            SSL_CERT=server_cert_file,
+            SSL_KEY=server_key_file,
+            HOST=host,
+            PORT=port,
+            RELEASE_VERSION=please_cli.config.VERSION,
+            RELEASE_CHANNEL='development',
+        )
 
         for require in project_config.get('requires', []):
             env_name = '{}_URL'.format(require.replace('/', '_').replace('-', '_').upper())
@@ -276,11 +271,15 @@ def cmd(ctx, project, quiet, nix_shell,
                 please_cli.config.PROJECTS_CONFIG[require]['run_options'].get('host', host),
                 please_cli.config.PROJECTS_CONFIG[require]['run_options']['port'],
             )
-            os.environ[env_name] = env_value
+            envs[env_name] = env_value
 
-        for env_name, env_value in project_config['run_options'].get('envs', {}).items():
-            click.echo('Setting {}:{} ...'.format(env_name, env_value))
-            os.environ[env_name] = env_value
+        for env_name, env_value in run_options.get('envs', {}).items():
+            env_name = env_name.replace('/', '_').replace('-', '_').upper()
+            envs[env_name] = env_value
+
+        if len(envs) > 0:
+            for env_name, env_value in envs.items():
+                os.environ[env_name] = env_value
 
         command = ['yarn', 'start']
 
