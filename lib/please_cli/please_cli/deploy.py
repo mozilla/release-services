@@ -176,7 +176,7 @@ def cmd_S3(ctx,
             os.environ['AWS_ACCESS_KEY_ID'] = AWS_ACCESS_KEY_ID
             os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
             aws = awscli.clidriver.create_clidriver().main
-            aws([
+            result = aws([
                 's3',
                 'sync',
                 '--quiet',
@@ -186,7 +186,7 @@ def cmd_S3(ctx,
                 's3://' + s3_bucket,
             ])
         please_cli.utils.check_result(
-            0,
+            result,
             'Synced {} to S3 bucket {}'.format(project, s3_bucket),
             ask_for_details=interactive,
         )
