@@ -13,10 +13,7 @@ const envs = {
 
 // Set environment variables to their default values if not defined
 Object.keys(envs).forEach(env => {
-  if (envs[env] === undefined) {
-    console.log(`ERROR: ${env} variable not defined!`);
-    process.exit(1);
-  } else {
+  if (envs[env] !== undefined) {
     process.env[env] = envs[env];
   }
 });
