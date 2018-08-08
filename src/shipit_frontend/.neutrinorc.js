@@ -1,9 +1,26 @@
 fs = require('fs');
 
 const envs = {
-  CONFIG: process.env.CONFIG || 'staging',
+    //XXX once migrate away from using in code configuration we remove CONFIG env
+    CONFIG: process.env.CONFIG || 'staging',
+    SHIPIT_WORKFLOW_URL: process.env.SHIPIT_WORKFLOW_URL,
+    RELEASE_CHANNEL: process.env.RELEASE_CHANNEL,
+    RELEASE_VERSION: process.env.RELEASE_VERSION,
+    SENTRY_DSN: process.env.SENTRY_DSN || null,
+    HOST: process.env.HOST,
+    PORT: process.env.PORT,
 };
-const PORT = process.env.PORT || 8010;
+
+// Set environment variables to their default values if not defined
+Object.keys(envs).forEach(env => {
+  if (envs[env] === undefined) {
+    console.log(`ERROR: ${env} variable not defined!`);
+    process.exit(1);
+  } else {
+    process.env[env] = envs[env];
+  }
+});
+
 // HTTPS can be disabled by setting HTTPS_DISABLED environment variable to
 // true. Otherwise it will enforced either using automatically generated
 // certificates or pre-generated ones.
@@ -15,9 +32,6 @@ const HTTPS = process.env.HTTPS_DISABLED ? false :
       ca: fs.readFileSync(process.env.SSL_CACERT)
     }
     : true;
-
-// Set environment variables to their default values if not defined
-Object.keys(envs).forEach(env => !(env in process.env) && (process.env[env] = envs[env]));
 
 module.exports = {
   use: [
@@ -51,7 +65,8 @@ module.exports = {
           ]
         },
         devServer: {
-          port: PORT,
+          host: envs.HOST,
+          port: envs.PORT,
           https: HTTPS,
           disableHostCheck: true,
           historyApiFallback: {
@@ -65,6 +80,10 @@ module.exports = {
       }
     ],
     ['@neutrinojs/env', Object.keys(envs)],
+    (neutrino) => {
+        neutrino.config.when(process.env.NODE_ENV === 'production', config => {
+            config.devtool('source-map');
+        });
+    }
   ]
-  // TODO: add source-map, see https://github.com/mozilla/firefox-code-coverage-frontend/commit/36f362f72667e2f309b43b23a84e6db14266b21a
 };
