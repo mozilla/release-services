@@ -122,7 +122,7 @@ def cmd_S3(ctx,
             if not os.path.exists(please_cli.config.TMP_DIR):
                 os.makedirs(please_cli.config.TMP_DIR)
             tmp_dir = tempfile.mkdtemp(
-                prefix='copy-of-result-{}-'.format(project),
+                prefix='copy-of-result-{}-'.format(project.replace('/', '-')),
                 dir=please_cli.config.TMP_DIR,
             )
             shutil.rmtree(tmp_dir)
