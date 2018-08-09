@@ -3,7 +3,7 @@
 set -eu
 
 # DEBUG
-#set -x
+set -x
 
 silent() {
   out=`$@ 2>&1` || echo $out
@@ -26,7 +26,7 @@ if [ "$USE_NIX" = "1" ]; then
   if [ ! -e $nix_store_file ]; then
     echo -n "Building please command (this might take a minute or two the first time) ... ";
   fi
-  silent nix-build nix/default.nix -A please-cli -o result-please-cli;
+  nix-build nix/default.nix -A please-cli -o result-please-cli;
   if [ ! -e $nix_store_file ]; then
     echo "${GREEN}DONE${NC}";
   fi

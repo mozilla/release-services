@@ -7,6 +7,7 @@ from esFrontLine.client.sync import HawkConnection
 
 from cli_common import log
 from shipit_code_coverage_backend import secrets
+from shipit_code_coverage_backend.services.active_data import ActiveDataClient
 from shipit_code_coverage_backend.services.active_data import ActiveDataCoverage
 
 logger = log.get_logger(__name__)
@@ -22,11 +23,37 @@ class NoResults(Exception):
     '''
 
 
-class ActiveData(object):
+class ActiveDataBase(object):
+    '''
+    Base class for ActiveData clients
+    '''
+    client = None
+
+    @property
+    def enabled(self):
+        return self.client is not None
+
+    def process_results(self, name, results):
+        if results is None:
+            raise Exception('No response from ES server')
+        if results['timed_out']:
+            logger.warn('ES query {} timed out'.format(name))
+        else:
+            logger.info('ES query {name} took {time}s to hit {nb} items'.format(
+                name=name,
+                time=results['took'] / 1000.0,
+                nb=results['hits'].get('total', 0),
+                scroll='1m',
+            ))
+        if results['hits']['total'] == 0:
+            raise NoResults
+        return results
+
+
+class ActiveDataSync(ActiveDataBase):
     '''
     API v2 ActiveData synchronous client, sharing common queries
     '''
-    client = None
 
     def __init__(self):
         try:
@@ -39,29 +66,12 @@ class ActiveData(object):
             logger.warn('ES client failure: {}'.format(e))
 
     def search(self, name, body, timeout=10, index=INDEX_COVERAGE):
-        out = self.client.search(
+        results = self.client.search(
             index=index,
             body=body,
             request_timeout=timeout,
         )
-        if out is None:
-            raise Exception('No response from ES server')
-        if out['timed_out']:
-            logger.warn('ES query {} timed out'.format(name))
-        else:
-            logger.info('ES query {name} took {time}s to hit {nb} items'.format(
-                name=name,
-                time=out['took'] / 1000.0,
-                nb=out['hits'].get('total', 0),
-                scroll='1m',
-            ))
-        if out['hits']['total'] == 0:
-            raise NoResults
-        return out
-
-    @property
-    def enabled(self):
-        return self.client is not None
+        return self.process_results(name, results)
 
     def get_latest_changeset(self):
         '''
@@ -93,5 +103,20 @@ class ActiveData(object):
         return out['hits']['hits'][0]['_source']
 
 
-# Shared instance
-active_data = ActiveData()
+class ActiveDataAsync(ActiveDataBase):
+    '''
+    API v2 ActiveData asynchronous client
+    '''
+    async def search(self, name, body, timeout=10, index=INDEX_COVERAGE):
+        async with ActiveDataClient() as client:
+            results = await client.search(
+                index=secrets.ACTIVE_DATA_INDEX,
+                body=body,
+                request_timeout=timeout,
+            )
+            return self.process_results(name, results)
+
+
+# Shared instances
+active_data = ActiveDataSync()
+active_data_async = ActiveDataAsync()
