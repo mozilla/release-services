@@ -2,17 +2,21 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import asyncio
 import itertools
+
+import aiohttp
 
 from cli_common import log
 from shipit_code_coverage_backend.services.active_data import ActiveDataCoverage
 from shipit_code_coverage_backend.v2.base import NoResults
 from shipit_code_coverage_backend.v2.base import active_data
+from shipit_code_coverage_backend.v2.base import active_data_async
 
 logger = log.get_logger(__name__)
 
 
-def coverage_in_push(files, push):
+async def coverage_in_push(files, push):
     '''
     Load coverage for several files, on a specific push
     Aggregate covered lines directly through ES "painless"
@@ -53,7 +57,10 @@ def coverage_in_push(files, push):
             },
         },
     })
-    out = active_data.search('coverage_files_push', query, timeout=100)
+    try:
+        out = await active_data_async.search('coverage_files_push', query, timeout=100)
+    except NoResults:
+        return {}
 
     return {
         bucket['key']: list(map(int, bucket['covered']['value']))
@@ -61,7 +68,7 @@ def coverage_in_push(files, push):
     }
 
 
-def changes_on_files(files, push, revision_index, branch_name):
+async def changes_on_files(files, push, revision_index, branch_name):
     '''
     List all the operations that happened on some files, in a push
     '''
@@ -97,7 +104,7 @@ def changes_on_files(files, push, revision_index, branch_name):
         'size': 100,
     }
     try:
-        others = active_data.search('commits_above', body=query, index='repo')
+        others = await active_data_async.search('commits_above', body=query, index='repo')
     except NoResults:
         return {}
 
@@ -134,7 +141,7 @@ def rewind(all_changes, original_lines):
     }
 
 
-def coverage_diff(changeset):
+async def coverage_diff(changeset):
     '''
     List all the coverage changes introduced by a diff
     '''
@@ -154,29 +161,21 @@ def coverage_diff(changeset):
         for filename in files
     }
 
-    # Load all the other commits on this push, above this changeset
-    # and for these files
-    changes = changes_on_files(files, push, rev['index'], rev['branch']['name'])
+    changes, coverage = await asyncio.gather(
+        # Load all the other commits on this push, above this changeset
+        # and for these files
+        changes_on_files(files, push, rev['index'], rev['branch']['name']),
 
-    # Get final coverage on these files, for this push
-    try:
-        coverage = coverage_in_push(files, push)
-    except NoResults:
-        coverage = {}
+        # Get final coverage on these files, for this push
+        coverage_in_push(files, push),
+    )
 
     # Rewind the lines covered by unapplying every change
-    out = {}
+    rev['coverage'] = {}
     for filename in files:
-
-        file_changes = changes.get(filename)
-        if file_changes is None:
-            logger.warn('Missing changes', filename=filename)
-            continue
-
-        file_lines = rewind(file_changes, lines.get(filename))
-
+        file_lines = rewind(changes.get(filename, []), lines.get(filename))
         file_coverage = coverage.get(filename, [])
-        out[filename] = [
+        rev['coverage'][filename] = [
             {
                 'line': original_line,
                 'covered': final_line in file_coverage
@@ -184,4 +183,18 @@ def coverage_diff(changeset):
             for original_line, final_line in file_lines.items()
         ]
 
-    return rev, out
+    return rev
+
+
+async def load_raw_patch(revision, branch='mozilla-central'):
+    '''
+    Load a raw patch using hgweb raw-rev endpoint
+    '''
+    url = 'https://hg.mozilla.org/{}/raw-rev/{}'.format(branch, revision)
+    logger.info('Loading raw patch', url=url)
+
+    async with aiohttp.request('GET', url) as resp:
+        if resp.status != 200:
+            raise Exception('Error while loading raw patch')
+
+        return await resp.text()
