@@ -29,9 +29,9 @@ To trigger automatic deployment to staging channel you need to **force push** fr
 
 .. code-block:: console
 
-    $ git clone git@github.com:mozilla/release-services.git
-    $ cd release-services
-    $ git push -f origin origin/master:staging
+    git clone git@github.com:mozilla/release-services.git
+    cd release-services
+    git push -f origin origin/master:staging
 
 
 2. Notify about running staging deployment
@@ -115,11 +115,11 @@ On Thursday morning (or when you agree at Wednesday meeting) a deployment to pro
 
    .. code-block:: console
 
-       $ git clone git@github.com/mozilla/release-services.git
-       $ cd release-services
-       $ git tag v$(cat ./VERSION) origin/production
-       $ git push origin origin/staging:origin/production
-       $ git push origin v$(cat ./VERSION)
+       git clone git@github.com/mozilla/release-services.git
+       cd release-services
+       git tag v$(cat ./VERSION) origin/production
+       git push origin origin/staging:origin/production
+       git push origin v$(cat ./VERSION)
 
 TODO: release is in flight + link to taskcluster
 
@@ -140,7 +140,7 @@ TODO: we can already do this while waiting for the release to happen
 
    .. code-block:: console
 
-       $ git log --oneline v$((($(cat VERSION)) - 1)).. HEAD \
+       git log --oneline v$((($(cat VERSION)) - 1)).. HEAD \
            | cut -d' ' -f2- \
            | sort \
            | grep -v 'setup: bumping to'
@@ -149,17 +149,17 @@ TODO: we can already do this while waiting for the release to happen
 
    .. code-block:: console
 
-       $ git clone git@github.com/mozilla/release-services.git
-       $ cd release-services
-       $ echo "$((($(cat VERSION)) + 1))" | tee VERSION2
-       $ sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
-       $ mv VERSION2 VERSION
+       git clone git@github.com/mozilla/release-services.git
+       cd release-services
+       echo "$((($(cat VERSION)) + 1))" | tee VERSION2
+       sed -i -e "s|base-$(cat VERSION)|base-$(cat VERSION2)|" .taskcluster.yml
+       mv VERSION2 VERSION
 
 #. Push new base image for new version
 
    .. code-block:: console
 
-       $ ./please -vv tools base-image \
+       ./please -vv tools base-image \
             --taskcluster-client-id="..." \
             --taskcluster-access-token="..."
 
@@ -172,15 +172,15 @@ TODO: we can already do this while waiting for the release to happen
 
    .. code-block:: console
 
-       $ docker push mozillareleng/services:base-$(cat ./VERSION)
+       docker push mozillareleng/services:base-$(cat ./VERSION)
 
 #. Once base image is pushed to docker hub, commit the version bump and push it
    to upstream repository.
 
    .. code-block:: console
 
-       $ git commit VERSION .taskcluster.yml -m "setup: bumping to v$(cat ./VERSION)"
-       $ git push origin master
+       git commit VERSION .taskcluster.yml -m "setup: bumping to v$(cat ./VERSION)"
+       git push origin master
 
    Make sure that commit gets properly build before proceeding. This will
    ensure that docker base image created in previous steps is working.
