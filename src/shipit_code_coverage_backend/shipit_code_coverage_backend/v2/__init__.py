@@ -52,4 +52,20 @@ def coverage_for_revision(changeset):
     assert active_data.enabled, \
         'Only ActiveData is supported'
 
-    return coverage_diff(changeset)
+    revision, coverage = coverage_diff(changeset)
+
+    return {
+        'changeset': {
+            'author': revision['changeset']['author'],
+            'bug': revision['changeset']['bug'],
+            'date': revision['changeset']['date'],
+            'description': revision['changeset']['description'],
+            'mercurial': {
+                'hash': revision['changeset']['id'],
+                'repo': revision['branch']['url'],
+                'index': revision['index'],
+            },
+            'push': revision['push']['id'],
+        },
+        'coverage': coverage,
+    }
