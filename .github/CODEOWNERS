@@ -12,7 +12,7 @@
 /src/shipit_code_coverage             @mozilla/release-management
 /src/shipit_code_coverage_backend     @mozilla/release-management
 /src/shipit_code_coverage_crawler     @mozilla/release-management
-/src/shipit_frontend                  @mozilla/Releng @mozilla/release-management
+/src/shipit/frontend                  @mozilla/Releng
 /src/shipit_pipeline                  @mozilla/Releng
 /src/shipit_pulse_listener            @mozilla/release-management
 /src/shipit_signoff                   @mozilla/Releng

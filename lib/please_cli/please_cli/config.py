@@ -767,7 +767,7 @@ PROJECTS_CONFIG = {
             },
         ],
     },
-    'shipit-frontend': {
+    'shipit/frontend': {
         'run': 'NEUTRINO',
         'run_options': {
             'port': 8010,
