@@ -5,14 +5,14 @@
 
 import os
 import backend_common
-import shipit_workflow.config
-import shipit_workflow.models  # noqa
+import shipit_api.config
+import shipit_api.models  # noqa
 
 
 def create_app(config=None):
     app = backend_common.create_app(
-        project_name=shipit_workflow.config.PROJECT_NAME,
-        app_name=shipit_workflow.config.APP_NAME,
+        project_name=shipit_api.config.PROJECT_NAME,
+        app_name=shipit_api.config.APP_NAME,
         config=config,
         extensions=[
             'log',

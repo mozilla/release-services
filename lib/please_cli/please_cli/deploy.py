@@ -621,7 +621,7 @@ def cmd_DOCKERHUB(ctx,
         tag_base = project_basename.replace('docker-image-mozilla-', '').replace('.tar.gz', '')
         # Puth the hash to the end of the tag
         image_tag_versioned = '-'.join(reversed(tag_base.split('-', 1)))
-        # Stable tag, e.g. shipit-workflow-staging
+        # Stable tag, e.g. shipit-api-staging
         image_tag = docker_image_tag_format.format(project=project,
                                                    nix_path_attribute=nix_path_attribute,
                                                    channel=channel)

@@ -33,12 +33,12 @@ Mozilla workflows and tools.
 '''
 
 setuptools.setup(
-    name='mozilla-shipit-workflow',
+    name='mozilla-shipit-api',
     version=VERSION,
     description=DESCRIPTION,
     author='Mozilla Release Services Team',
     author_email='release-services@mozilla.com',
-    url='https://treestatus.mozilla-releng.net',
+    url='https://api.shipit.mozilla-releng.net',
     tests_require=read_requirements('requirements-dev.txt'),
     install_requires=read_requirements('requirements.txt'),
     packages=setuptools.find_packages(),

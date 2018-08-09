@@ -9,17 +9,18 @@ let
   inherit (releng_pkgs.tools) pypi2nix;
 
   python = import ./requirements.nix { inherit (releng_pkgs) pkgs; };
-  name = "mozilla-shipit-workflow";
-  dirname = "shipit_workflow";
+  name = "mozilla-shipit-api";
+  dirname = "shipit_api";
 
   self = mkBackend {
     inherit python name dirname;
     inProduction = false;
     version = fileContents ./VERSION;
     src = filterSource ./. { inherit name; };
+    src_path = "src/shipit/api";
     buildInputs =
-      (fromRequirementsFile ./../../lib/cli_common/requirements-dev.txt python.packages) ++
-      (fromRequirementsFile ./../../lib/backend_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../../lib/cli_common/requirements-dev.txt python.packages) ++
+      (fromRequirementsFile ./../../../lib/backend_common/requirements-dev.txt python.packages) ++
       (fromRequirementsFile ./requirements-dev.txt python.packages);
     propagatedBuildInputs =
       (fromRequirementsFile ./requirements.txt python.packages);

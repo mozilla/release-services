@@ -12,9 +12,9 @@ import backend_common
 
 @pytest.fixture(scope='session')
 def app():
-    '''Load shipit_workflow in test mode
+    '''Load shipit_api in test mode
     '''
-    import shipit_workflow
+    import shipit_api
 
     config = backend_common.testing.get_app_config({
         'SQLALCHEMY_DATABASE_URI': 'sqlite://',
@@ -26,7 +26,7 @@ def app():
         'OIDC_USER_INFO_ENABLED': True,
         'OIDC_CLIENT_SECRETS': os.path.join(os.path.dirname(__file__), 'client_secrets.json'),
     })
-    app = shipit_workflow.create_app(config)
+    app = shipit_api.create_app(config)
 
     with app.app_context():
         backend_common.testing.configure_app(app)

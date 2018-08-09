@@ -14,12 +14,12 @@ from werkzeug.exceptions import BadRequest
 
 from backend_common.auth0 import mozilla_accept_token
 from cli_common.log import get_logger
-from shipit_workflow.models import Phase
-from shipit_workflow.models import Release
-from shipit_workflow.tasks import UnsupportedFlavor
-from shipit_workflow.tasks import fetch_actions_json
-from shipit_workflow.tasks import generate_action_task
-from shipit_workflow.tasks import render_action_task
+from shipit_api.models import Phase
+from shipit_api.models import Release
+from shipit_api.tasks import UnsupportedFlavor
+from shipit_api.tasks import fetch_actions_json
+from shipit_api.tasks import generate_action_task
+from shipit_api.tasks import render_action_task
 
 log = get_logger(__name__)
 

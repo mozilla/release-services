@@ -652,6 +652,7 @@ in rec {
     , version
     , src
     , python
+    , src_path ? null
     , buildInputs ? []
     , propagatedBuildInputs ? []
     , doCheck ? true
@@ -781,6 +782,7 @@ in rec {
     , version
     , src
     , python
+    , src_path ? null
     , buildInputs ? []
     , propagatedBuildInputs ? []
     , doCheck ? true
@@ -963,10 +965,13 @@ in rec {
           inherit python;
 
           src_path =
-            "src/" +
-              (replaceStrings ["-"] ["_"]
-                (builtins.substring 8
-                  (builtins.stringLength name - 8) name));
+            if src_path != null
+              then src_path
+              else
+                "src/" +
+                  (replaceStrings ["-"] ["_"]
+                    (builtins.substring 8
+                      (builtins.stringLength name - 8) name));
 
           taskclusterGithubTasks =
             map (branch: mkTaskclusterGithubTask { inherit name branch; inherit (self) src_path; })

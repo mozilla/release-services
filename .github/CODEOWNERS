@@ -19,4 +19,4 @@
 /src/shipit_static_analysis           @mozilla/release-management
 /src/shipit_taskcluster               @mozilla/Releng
 /src/shipit_uplift                    @mozilla/release-management
-/src/shipit_workflow                  @mozilla/Releng
+/src/shipit/api                       @mozilla/Releng

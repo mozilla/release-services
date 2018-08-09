@@ -13,20 +13,20 @@ import sqlalchemy.orm
 
 from backend_common.db import db
 from cli_common.log import get_logger
-from shipit_workflow.release import bump_version
-from shipit_workflow.release import is_partner_enabled
-from shipit_workflow.tasks import extract_our_flavors
-from shipit_workflow.tasks import fetch_actions_json
-from shipit_workflow.tasks import find_action
-from shipit_workflow.tasks import find_decision_task_id
-from shipit_workflow.tasks import generate_action_task
-from shipit_workflow.tasks import render_action_task
+from shipit_api.release import bump_version
+from shipit_api.release import is_partner_enabled
+from shipit_api.tasks import extract_our_flavors
+from shipit_api.tasks import fetch_actions_json
+from shipit_api.tasks import find_action
+from shipit_api.tasks import find_decision_task_id
+from shipit_api.tasks import generate_action_task
+from shipit_api.tasks import render_action_task
 
 log = get_logger(__name__)
 
 
 class Phase(db.Model):
-    __tablename__ = 'shipit_workflow_phases'
+    __tablename__ = 'shipit_api_phases'
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String, nullable=False)
     submitted = sa.Column(sa.Boolean, nullable=False, default=False)
@@ -36,7 +36,7 @@ class Phase(db.Model):
     created = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
     completed = sa.Column(sa.DateTime)
     completed_by = sa.Column(sa.String)
-    release_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_workflow_releases.id'))
+    release_id = sa.Column(sa.Integer, sa.ForeignKey('shipit_api_releases.id'))
     release = sqlalchemy.orm.relationship('Release', back_populates='phases')
 
     def __init__(self, name, task_id, task, context, submitted=False):
@@ -68,7 +68,7 @@ class Phase(db.Model):
 
 
 class Release(db.Model):
-    __tablename__ = 'shipit_workflow_releases'
+    __tablename__ = 'shipit_api_releases'
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String(80), nullable=False, unique=True)

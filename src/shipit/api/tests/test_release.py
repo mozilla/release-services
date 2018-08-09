@@ -5,11 +5,11 @@
 
 import pytest
 
-from shipit_workflow.release import bump_version
-from shipit_workflow.release import is_beta
-from shipit_workflow.release import is_esr
-from shipit_workflow.release import is_final_release
-from shipit_workflow.release import is_rc
+from shipit_api.release import bump_version
+from shipit_api.release import is_beta
+from shipit_api.release import is_esr
+from shipit_api.release import is_final_release
+from shipit_api.release import is_rc
 
 
 @pytest.mark.parametrize('version, result', (
