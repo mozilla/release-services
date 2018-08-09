@@ -42,11 +42,11 @@ def coverage_in_push(files, push):
                             # Merge all the covered lines, per ES shard
                             'map_script': "params._agg.covered.addAll(doc['source.file.covered.~n~'])",
 
-                            # Make a set per shard
-                            'combine_script': 'return params._agg.covered.stream().distinct().collect(Collectors.toList())',
+                            # Make a list with all items per shard
+                            'combine_script': 'return params._agg.covered.stream().collect(Collectors.toList())',
 
-                            # Merge all sets into a unique result per file (top aggregation)
-                            'reduce_script': 'return params._aggs.stream().flatMap(Collection::stream).distinct().sorted().collect(Collectors.toList())'
+                            # Merge all shards lists into a sorted set per file (top aggregation)
+                            'reduce_script': 'return params._aggs.stream().flatMap(Collection::stream).sorted().distinct().collect(Collectors.toList())'
                         }
                     }
                 }
