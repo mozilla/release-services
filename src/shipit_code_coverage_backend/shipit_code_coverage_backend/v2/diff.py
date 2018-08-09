@@ -159,7 +159,10 @@ def coverage_diff(changeset):
     changes = changes_on_files(files, push, rev['index'], rev['branch']['name'])
 
     # Get final coverage on these files, for this push
-    coverage = coverage_in_push(files, push)
+    try:
+        coverage = coverage_in_push(files, push)
+    except NoResults:
+        coverage = {}
 
     # Rewind the lines covered by unapplying every change
     out = {}
@@ -172,7 +175,7 @@ def coverage_diff(changeset):
 
         file_lines = rewind(file_changes, lines.get(filename))
 
-        file_coverage = coverage.get(filename)
+        file_coverage = coverage.get(filename, [])
         out[filename] = [
             {
                 'line': original_line,
@@ -181,4 +184,4 @@ def coverage_diff(changeset):
             for original_line, final_line in file_lines.items()
         ]
 
-    return out
+    return rev, out
