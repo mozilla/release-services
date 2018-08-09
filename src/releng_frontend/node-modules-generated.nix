@@ -7113,7 +7113,7 @@ in
       patch -p1 < ${
         fetchurl
           { url = "https://github.com/webpack/webpack-dev-server/commit/e6ccbaffc30bdcbc74285d30d1d93c0109019654.patch";
-            sha256 = "116v5nmjs7jdaavr3dn169wkpwcdlpiwjkkw99dwxyh8qjprjlvw";
+            sha256 = "199c0nznnhww35f6bg5dmm5z64xamdi0vy58587vpxq7w1kcyfp5";
           }
       }
     '';
