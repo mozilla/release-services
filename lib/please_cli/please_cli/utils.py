@@ -190,4 +190,4 @@ def docker_image_id(image):
 
 
 def normalize_name(x):
-    x.replace('/', '_').replace('-', '_')
+    return x.replace('/', '_').replace('-', '_')
